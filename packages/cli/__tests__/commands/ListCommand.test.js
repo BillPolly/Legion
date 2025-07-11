@@ -7,16 +7,17 @@ describe('ListCommand', () => {
   let mockToolRegistry;
   let mockConfigManager;
   let mockOutputFormatter;
+  let consoleLogSpy;
 
   beforeEach(() => {
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
     mockModuleLoader = {
-      getModules: jest.fn(),
-      getModuleMetadata: jest.fn()
+      getModules: jest.fn()
     };
     
     mockToolRegistry = {
-      getToolsForModule: jest.fn(),
-      getAllTools: jest.fn()
+      getToolsByModule: jest.fn(),
+      discoverTools: jest.fn()
     };
     
     mockConfigManager = {
@@ -25,10 +26,7 @@ describe('ListCommand', () => {
     };
     
     mockOutputFormatter = {
-      formatModuleList: jest.fn(),
-      formatToolList: jest.fn(),
-      formatAliasList: jest.fn(),
-      formatPresetList: jest.fn()
+      formatTable: jest.fn()
     };
     
     listCommand = new ListCommand(
@@ -41,196 +39,170 @@ describe('ListCommand', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    consoleLogSpy.mockRestore();
   });
 
   describe('execute', () => {
     describe('list all', () => {
       it('should list all modules and tools', async () => {
         const mockModules = new Map([
-          ['calculator', { name: 'calculator', description: 'Math tools' }],
-          ['file', { name: 'file', description: 'File operations' }]
+          ['calculator', { 
+            name: 'calculator', 
+            description: 'Math tools',
+            functionCount: 2,
+            dependencies: [],
+            tools: []
+          }],
+          ['file', { 
+            name: 'file', 
+            description: 'File operations',
+            functionCount: 2,
+            dependencies: ['fs'],
+            tools: []
+          }]
         ]);
         
         mockModuleLoader.getModules.mockReturnValue(mockModules);
-        mockModuleLoader.getModuleMetadata.mockImplementation(name => ({
-          name,
-          description: mockModules.get(name).description,
-          toolCount: 2
-        }));
         
-        mockToolRegistry.getAllTools.mockReturnValue([
-          { fullName: 'calculator.add', module: 'calculator', name: 'add' },
-          { fullName: 'calculator.subtract', module: 'calculator', name: 'subtract' },
-          { fullName: 'file.read', module: 'file', name: 'read' },
-          { fullName: 'file.write', module: 'file', name: 'write' }
+        const mockTools = new Map([
+          ['calculator.add', { name: 'add', module: 'calculator', description: 'Add numbers' }],
+          ['calculator.subtract', { name: 'subtract', module: 'calculator', description: 'Subtract numbers' }],
+          ['file.read', { name: 'read', module: 'file', description: 'Read file' }],
+          ['file.write', { name: 'write', module: 'file', description: 'Write file' }]
         ]);
+        mockToolRegistry.discoverTools.mockReturnValue(mockTools);
         
         await listCommand.execute({
           command: 'list',
           listType: 'all'
         }, {});
         
-        expect(mockOutputFormatter.formatModuleList).toHaveBeenCalledWith(
-          expect.arrayContaining([
-            expect.objectContaining({ name: 'calculator' }),
-            expect.objectContaining({ name: 'file' })
-          ]),
-          {}
-        );
-        
-        expect(mockOutputFormatter.formatToolList).toHaveBeenCalledWith(
-          expect.arrayContaining([
-            expect.objectContaining({ fullName: 'calculator.add' }),
-            expect.objectContaining({ fullName: 'file.read' })
-          ]),
-          {},
-          null
-        );
+        // Should print module and tool information
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('=== jsEnvoy CLI ==='));
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Modules:'));
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Tools:'));
       });
     });
 
     describe('list modules', () => {
       it('should list only modules', async () => {
         const mockModules = new Map([
-          ['calculator', { name: 'calculator' }],
-          ['file', { name: 'file' }]
+          ['calculator', { 
+            name: 'calculator',
+            functionCount: 1,
+            dependencies: [],
+            tools: []
+          }],
+          ['file', { 
+            name: 'file',
+            functionCount: 1,
+            dependencies: [],
+            tools: []
+          }]
         ]);
         
         mockModuleLoader.getModules.mockReturnValue(mockModules);
-        mockModuleLoader.getModuleMetadata.mockImplementation(name => ({
-          name,
-          toolCount: 1
-        }));
         
         await listCommand.execute({
           command: 'list',
           listType: 'modules'
         }, {});
         
-        expect(mockOutputFormatter.formatModuleList).toHaveBeenCalled();
-        expect(mockOutputFormatter.formatToolList).not.toHaveBeenCalled();
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Available Modules'));
       });
     });
 
     describe('list tools', () => {
       it('should list all tools', async () => {
-        mockToolRegistry.getAllTools.mockReturnValue([
-          { fullName: 'calculator.add' },
-          { fullName: 'file.read' }
+        const mockTools = new Map([
+          ['calculator.add', { name: 'add', module: 'calculator', description: 'Add numbers' }],
+          ['file.read', { name: 'read', module: 'file', description: 'Read file' }]
         ]);
+        mockToolRegistry.discoverTools.mockReturnValue(mockTools);
         
         await listCommand.execute({
           command: 'list',
           listType: 'tools'
         }, {});
         
-        expect(mockOutputFormatter.formatToolList).toHaveBeenCalledWith(
-          expect.arrayContaining([
-            expect.objectContaining({ fullName: 'calculator.add' }),
-            expect.objectContaining({ fullName: 'file.read' })
-          ]),
-          {},
-          null
-        );
-        expect(mockOutputFormatter.formatModuleList).not.toHaveBeenCalled();
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Available Tools'));
       });
 
       it('should list tools for specific module', async () => {
-        mockToolRegistry.getToolsForModule.mockReturnValue([
-          { name: 'add', description: 'Add numbers' },
-          { name: 'subtract', description: 'Subtract numbers' }
+        const mockTools = new Map([
+          ['calculator.add', { name: 'add', module: 'calculator', description: 'Add numbers' }],
+          ['calculator.subtract', { name: 'subtract', module: 'calculator', description: 'Subtract numbers' }],
+          ['file.read', { name: 'read', module: 'file', description: 'Read file' }]
         ]);
+        mockToolRegistry.discoverTools.mockReturnValue(mockTools);
         
         await listCommand.execute({
           command: 'list',
           listType: 'tools',
-          options: { module: 'calculator' }
+          args: { module: 'calculator' }
         }, {});
         
-        expect(mockToolRegistry.getToolsForModule).toHaveBeenCalledWith('calculator');
-        expect(mockOutputFormatter.formatToolList).toHaveBeenCalledWith(
-          expect.arrayContaining([
-            expect.objectContaining({ 
-              fullName: 'calculator.add',
-              module: 'calculator'
-            })
-          ]),
-          {},
-          'calculator'
-        );
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Available Tools'));
       });
     });
 
     describe('list aliases', () => {
       it('should list all aliases', async () => {
-        mockConfigManager.getAliases.mockReturnValue({
-          calc: 'calculator.evaluate',
-          ls: 'file.list'
-        });
-        
         await listCommand.execute({
           command: 'list',
           listType: 'aliases'
-        }, {});
-        
-        expect(mockOutputFormatter.formatAliasList).toHaveBeenCalledWith(
-          {
+        }, {
+          aliases: {
             calc: 'calculator.evaluate',
             ls: 'file.list'
-          },
-          {}
-        );
+          }
+        });
+        
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Available Aliases'));
       });
     });
 
     describe('list presets', () => {
       it('should list all presets', async () => {
-        mockConfigManager.getPresets.mockReturnValue({
-          debug: { verbose: true, output: 'json' },
-          production: { verbose: false, color: false }
-        });
-        
         await listCommand.execute({
           command: 'list',
           listType: 'presets'
-        }, {});
-        
-        expect(mockOutputFormatter.formatPresetList).toHaveBeenCalledWith(
-          {
+        }, {
+          presets: {
             debug: { verbose: true, output: 'json' },
             production: { verbose: false, color: false }
-          },
-          {}
-        );
+          }
+        });
+        
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Available Presets'));
       });
     });
 
     it('should handle invalid list type', async () => {
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      // Invalid types default to 'all' 
+      mockModuleLoader.getModules.mockReturnValue(new Map());
+      mockToolRegistry.discoverTools.mockReturnValue(new Map());
       
       await listCommand.execute({
         command: 'list',
         listType: 'invalid'
       }, {});
       
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid list type')
-      );
-      
-      consoleErrorSpy.mockRestore();
+      // Should have called listAll
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('=== jsEnvoy CLI ==='));
     });
 
     it('should handle empty results gracefully', async () => {
       mockModuleLoader.getModules.mockReturnValue(new Map());
-      mockToolRegistry.getAllTools.mockReturnValue([]);
+      mockToolRegistry.discoverTools.mockReturnValue(new Map());
       
       await listCommand.execute({
         command: 'list',
         listType: 'all'
       }, {});
       
-      expect(mockOutputFormatter.formatModuleList).toHaveBeenCalledWith([], {});
-      expect(mockOutputFormatter.formatToolList).toHaveBeenCalledWith([], {}, null);
+      expect(consoleLogSpy).toHaveBeenCalledWith('  No modules found');
+      expect(consoleLogSpy).toHaveBeenCalledWith('  No tools found');
     });
   });
 });

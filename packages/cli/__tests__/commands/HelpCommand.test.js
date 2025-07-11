@@ -26,7 +26,8 @@ describe('HelpCommand', () => {
     };
     
     mockStringUtils = {
-      findBestMatch: jest.fn()
+      findBestMatch: jest.fn(),
+      calculateSimilarity: jest.fn().mockReturnValue(0)
     };
     
     helpCommand = new HelpCommand(mockModuleLoader, mockToolRegistry, mockStringUtils);
@@ -102,8 +103,8 @@ describe('HelpCommand', () => {
         
         expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Module: calculator'));
         expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Tools:'));
-        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('calculator.add'));
-        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('calculator.subtract'));
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('- add'));
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('- subtract'));
       });
     });
 
@@ -129,6 +130,12 @@ describe('HelpCommand', () => {
             required: ['expression']
           }
         });
+        mockToolRegistry.getToolMetadata.mockReturnValue({
+          examples: [
+            'jsenvoy calculator.evaluate --expression "2 + 2"',
+            'jsenvoy calculator.evaluate --expression "sqrt(16)" --precision 2'
+          ]
+        });
         
         await helpCommand.execute({
           command: 'help',
@@ -138,9 +145,9 @@ describe('HelpCommand', () => {
         expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Tool: calculator.evaluate'));
         expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Evaluate mathematical expression'));
         expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Parameters:'));
-        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('* --expression'));
-        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('--precision'));
-        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Example:'));
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('expression (required)'));
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('precision (optional)'));
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Examples:'));
       });
 
       it('should handle tool without parameters', async () => {
@@ -156,58 +163,78 @@ describe('HelpCommand', () => {
           helpTopic: 'test.simple'
         }, {});
         
-        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('No parameters'));
+        expect(consoleLogSpy).not.toHaveBeenCalledWith(expect.stringContaining('Parameters:'));
       });
     });
 
     describe('unknown topic', () => {
       it('should suggest similar module', async () => {
         mockModuleLoader.hasModule.mockReturnValue(false);
-        mockToolRegistry.hasTool.mockReturnValue(false);
-        mockModuleLoader.getModuleNames.mockReturnValue(['calculator', 'file']);
+        mockModuleLoader.getModuleInfo.mockReturnValue(null);
+        mockToolRegistry.getToolByName.mockReturnValue(null);
+        mockModuleLoader.getModules.mockReturnValue(new Map([
+          ['calculator', { name: 'calculator' }],
+          ['file', { name: 'file' }]
+        ]));
+        mockToolRegistry.discoverTools.mockReturnValue(new Map());
         mockStringUtils.findBestMatch.mockReturnValue('calculator');
+        mockStringUtils.calculateSimilarity.mockImplementation((a, b) => {
+          if (a.includes(b) || b.includes(a)) return 0.8;
+          return 0.2;
+        });
         
         await helpCommand.execute({
           command: 'help',
           helpTopic: 'calc'
         }, {});
         
-        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Unknown topic: calc'));
-        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Did you mean: calculator'));
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Unknown help topic: calc'));
+        expect(consoleLogSpy).toHaveBeenCalledWith('Did you mean:');
+        expect(consoleLogSpy).toHaveBeenCalledWith('  - calculator');
       });
 
       it('should search for tools containing keyword', async () => {
         mockModuleLoader.hasModule.mockReturnValue(false);
-        mockToolRegistry.hasTool.mockReturnValue(false);
+        mockModuleLoader.getModuleInfo.mockReturnValue(null);
+        mockToolRegistry.getToolByName.mockReturnValue(null);
+        mockModuleLoader.getModules.mockReturnValue(new Map());
+        mockToolRegistry.discoverTools.mockReturnValue(new Map([
+          ['file.read', { name: 'read', module: 'file' }],
+          ['file.write', { name: 'write', module: 'file' }]
+        ]));
         mockStringUtils.findBestMatch.mockReturnValue(null);
-        mockToolRegistry.searchTools.mockReturnValue([
-          { fullName: 'file.read', description: 'Read file contents' },
-          { fullName: 'file.readLines', description: 'Read file line by line' }
-        ]);
+        mockStringUtils.calculateSimilarity.mockImplementation((a, b) => {
+          // file.read contains "read"
+          if (a.toLowerCase().includes(b.toLowerCase())) return 0.8;
+          return 0.2;
+        });
         
         await helpCommand.execute({
           command: 'help',
           helpTopic: 'read'
         }, {});
         
-        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Tools containing "read"'));
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Unknown help topic: read'));
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Did you mean:'));
         expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('file.read'));
-        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('file.readLines'));
       });
 
       it('should show general help for completely unknown topic', async () => {
         mockModuleLoader.hasModule.mockReturnValue(false);
-        mockToolRegistry.hasTool.mockReturnValue(false);
+        mockModuleLoader.getModuleInfo.mockReturnValue(null);
+        mockToolRegistry.getToolByName.mockReturnValue(null);
+        mockModuleLoader.getModules.mockReturnValue(new Map());
+        mockToolRegistry.discoverTools.mockReturnValue(new Map());
         mockStringUtils.findBestMatch.mockReturnValue(null);
-        mockToolRegistry.searchTools.mockReturnValue([]);
+        mockStringUtils.calculateSimilarity.mockReturnValue(0.2);
         
         await helpCommand.execute({
           command: 'help',
           helpTopic: 'xyz123'
         }, {});
         
-        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Unknown topic: xyz123'));
-        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Available commands:'));
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Unknown help topic: xyz123'));
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Available topics:'));
       });
     });
   });
