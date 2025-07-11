@@ -10,8 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 
-const corePath = path.resolve(__dirname, '../../core/src/core/index.js');
-const { ResourceManager } = require(corePath);
+const { ResourceManager } = require('@jsenvoy/core');
 
 describe('ResourceManager Integration', () => {
   let cli;

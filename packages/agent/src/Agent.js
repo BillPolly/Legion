@@ -5,7 +5,6 @@ const ora = require("ora");
 const { StructuredResponse } = require("./structured-response");
 const { writeFile, appendFile } = require("fs/promises");
 const readline = require("readline");
-const { RetryManager } = require("./RetryManager");
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -13,9 +12,9 @@ const rl = readline.createInterface({
 });
 
 /**
- * Enhanced Agent class with robust response parsing and retry logic
+ * Agent class for handling AI agent interactions
  */
-class AgentWithRetry {
+class Agent {
   constructor(config) {
     this.name = config.name || "default_agent";
     this.bio = config.bio;
@@ -26,8 +25,6 @@ class AgentWithRetry {
     this.responseStructure = config.responseStructure;
     this.showToolUsage = config.showToolUsage || false;
     this.metaData = config.metaData || {};
-    this.maxRetries = config.maxRetries || 3;
-    this.retryBackoff = config.retryBackoff || 1000;
     
     this.responseMessages = [];
     this.messages = [];
@@ -43,13 +40,6 @@ class AgentWithRetry {
     // Initialize the model
     this.model = new Model({ modelConfig: this.modelConfig });
     this.model.initializeModel();
-
-    // Initialize retry manager with tools
-    this.retryManager = new RetryManager({
-      maxRetries: this.maxRetries,
-      backoffMultiplier: this.retryBackoff,
-      tools: this.tools
-    });
 
     this.initialiseAgent();
   }
@@ -96,9 +86,6 @@ class AgentWithRetry {
     });
   }
 
-  /**
-   * Enhanced prompt method with retry logic
-   */
   async prompt(prompt, imageBase64) {
     if (this._debugMode) {
       await appendFile("agentOut.txt", " awaiting llm response\n");
@@ -110,25 +97,15 @@ class AgentWithRetry {
       this.addMessage(prompt);
     }
 
-    // Use retry manager to get response
-    const result = await this.retryManager.processResponse(this.model, this.messages);
+    const response = await this.model.sendAndReceiveResponse(this.messages);
 
     if (this._debugMode) {
-      await appendFile("agentOut.txt", ` llm responded (retries: ${result.retries})\n`);
+      await appendFile("agentOut.txt", " llm responded\n");
     }
 
-    if (!result.success) {
-      // If we still failed after retries, throw an error
-      throw new Error(`Failed to get valid response: ${result.error}`);
-    }
+    this.addMessage(JSON.stringify(response));
 
-    // Add the successful response to messages
-    this.messages.push({
-      role: "assistant",
-      content: JSON.stringify(result.data)
-    });
-
-    return result.data;
+    return response;
   }
 
   async newProcess(response) {
@@ -149,23 +126,15 @@ class AgentWithRetry {
       const tool = this.getTool(response.use_tool.identifier);
 
       if (!tool) {
-        // Instead of exiting, return an error to retry
-        return {
-          taskCompleted: false,
-          nextPrompt: `Error: Tool '${response.use_tool.identifier}' not found. Please check the tool identifier and try again.`,
-        };
+        console.error(
+          "Fatal error: Couldn't find a tool with identifier ",
+          response.use_tool.identifier
+        );
+        process.exit(0);
       }
 
       const fn = response.use_tool.function_name;
       const args = response.use_tool.args;
-
-      // Check if function exists
-      if (!tool.functionMap || !tool.functionMap[fn]) {
-        return {
-          taskCompleted: false,
-          nextPrompt: `Error: Function '${fn}' not found in tool '${response.use_tool.identifier}'. Please check the function name and try again.`,
-        };
-      }
 
       let functionResponse;
       try {
@@ -212,19 +181,7 @@ class AgentWithRetry {
       if (this._debugMode) {
         await appendFile("agentOut.txt", "Prompt: " + prompt + "\n");
       }
-      
-      let response;
-      try {
-        response = await this.prompt(prompt, imageBase64);
-      } catch (error) {
-        // If we couldn't get a valid response after retries, give up
-        console.error("Failed to get valid response:", error.message);
-        finalResponse = {
-          type: "string",
-          message: `Error: ${error.message}`
-        };
-        break;
-      }
+      const response = await this.prompt(prompt, imageBase64);
       
       if (this._debugMode) {
         await appendFile(
@@ -288,4 +245,4 @@ class AgentWithRetry {
   }
 }
 
-module.exports = { AgentWithRetry };
+module.exports = { Agent };

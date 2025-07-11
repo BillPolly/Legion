@@ -87,11 +87,11 @@ describe('Module Loader', () => {
   });
 
   describe('getModulePath method', () => {
-    it('should resolve the correct path to @jsenvoy/core modules', () => {
+    it('should resolve the correct path to @jsenvoy/tools modules', () => {
       const modulesPath = cli.getModulePath();
       
       expect(modulesPath).toBeDefined();
-      expect(modulesPath).toContain('core');
+      expect(modulesPath).toContain('tools');
       expect(modulesPath).toContain('modules');
     });
   });

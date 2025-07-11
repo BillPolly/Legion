@@ -8,8 +8,7 @@ const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 
 // Import from the core package
-const corePath = path.resolve(__dirname, '../../core/src/core/index.js');
-const { ResourceManager, ModuleFactory, OpenAIModule, OpenAITool } = require(corePath);
+const { ResourceManager, ModuleFactory, OpenAIModule, OpenAITool } = require('@jsenvoy/core');
 
 describe('@jsenvoy/core imports', () => {
   it('should import ResourceManager from @jsenvoy/core', () => {
