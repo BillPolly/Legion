@@ -8,6 +8,7 @@ coverage/
 packages/tools/__tests__/testdata/
 packages/response-parser/__tests__/testdata/
 packages/model-providers/__tests__/testdata/
+packages/agent/__tests__/testdata/
 
 # Environment variables
 .env

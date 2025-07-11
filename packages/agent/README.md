@@ -46,10 +46,10 @@ console.log(result);
 - Graceful error handling without process termination
 - Detailed retry tracking and reporting
 
-### Structured Responses
-- Consistent response format
-- Detailed execution logs
-- Error tracking and reporting
+### Response Processing
+- Robust JSON parsing and validation
+- Automatic retry with intelligent error feedback
+- Detailed retry tracking and error reporting
 
 
 ## API Reference
@@ -75,21 +75,16 @@ Methods:
 - `removeTool(toolName)` - Remove a tool
 
 
-### StructuredResponse
+### Response Format
 
-Standardized response format:
+Agent responses follow a standardized format handled by the RetryManager:
 
 ```javascript
 {
-  success: boolean,
-  data: any,
-  error: Error | null,
-  metadata: {
-    duration: number,
-    toolsUsed: string[],
-    retries: number,
-    model: string
-  }
+  success: boolean,     // Whether the operation succeeded
+  data: any,           // The parsed response data
+  error: string|null,  // Error message if failed
+  retries: number      // Number of retry attempts made
 }
 ```
 

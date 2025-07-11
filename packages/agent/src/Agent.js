@@ -3,7 +3,6 @@ import { ToolResult } from "@jsenvoy/modules";
 import { Model } from "@jsenvoy/model-providers";
 import { getMasterPrompt } from "./lib/master-prompt.js";
 import ora from "ora";
-import { StructuredResponse } from "./structured-response/index.js";
 import { writeFile, appendFile } from "fs/promises";
 import readline from "readline";
 import { RetryManager } from "./RetryManager.js";
