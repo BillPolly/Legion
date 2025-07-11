@@ -1,6 +1,6 @@
 const { Tool } = require('@jsenvoy/modules');
 
-class SerperOpenAI extends Tool {
+class Serper extends Tool {
   constructor() {
     super();
     this.name = 'google_search';
@@ -21,7 +21,7 @@ class SerperOpenAI extends Tool {
   }
 
   /**
-   * Returns the tool description in OpenAI function calling format
+   * Returns the tool description in standard function calling format
    */
   getToolDescription() {
     return {
@@ -186,4 +186,4 @@ class SerperOpenAI extends Tool {
   }
 }
 
-module.exports = SerperOpenAI;
+module.exports = Serper;

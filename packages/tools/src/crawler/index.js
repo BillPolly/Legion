@@ -1,7 +1,7 @@
 const { Tool } = require('@jsenvoy/modules');
 const puppeteer = require('puppeteer');
 
-class CrawlerOpenAI extends Tool {
+class Crawler extends Tool {
   constructor() {
     super();
     this.name = 'web_crawler';
@@ -9,7 +9,7 @@ class CrawlerOpenAI extends Tool {
   }
 
   /**
-   * Returns the tool description in OpenAI function calling format
+   * Returns the tool description in standard function calling format
    */
   getToolDescription() {
     return {
@@ -183,4 +183,4 @@ class CrawlerOpenAI extends Tool {
   }
 }
 
-module.exports = CrawlerOpenAI;
+module.exports = Crawler;

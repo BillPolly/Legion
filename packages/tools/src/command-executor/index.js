@@ -4,7 +4,7 @@ const { promisify } = require('util');
 
 const execAsync = promisify(exec);
 
-class CommandExecutorOpenAI extends Tool {
+class CommandExecutor extends Tool {
   constructor() {
     super();
     this.name = 'command_executor';
@@ -12,7 +12,7 @@ class CommandExecutorOpenAI extends Tool {
   }
 
   /**
-   * Returns the tool description in OpenAI function calling format
+   * Returns the tool description in standard function calling format
    */
   getToolDescription() {
     return {
@@ -106,4 +106,4 @@ class CommandExecutorOpenAI extends Tool {
   }
 }
 
-module.exports = CommandExecutorOpenAI;
+module.exports = CommandExecutor;

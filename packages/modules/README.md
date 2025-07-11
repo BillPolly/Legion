@@ -11,18 +11,19 @@ Core infrastructure for building modular tool systems. This package provides the
 
 ## Key Components
 
-- `OpenAITool` - Base class for individual tools
-- `OpenAIModule` - Container for related tools  
+- `Tool` - Base class for tools that follow standard function calling format
+- `ModularTool` - Base class for tools with dependency injection support
+- `Module` - Container for related tools  
 - `ResourceManager` - Dependency injection container
 - `ModuleFactory` - Creates modules with dependency resolution
 
 ## Usage
 
 ```javascript
-const { OpenAITool, OpenAIModule, ResourceManager, ModuleFactory } = require('@jsenvoy/modules');
+const { Tool, ModularTool, Module, ResourceManager, ModuleFactory } = require('@jsenvoy/modules');
 
 // Create a tool
-class MyTool extends OpenAITool {
+class MyTool extends ModularTool {
   constructor() {
     super();
     this.name = 'my_tool';
@@ -35,7 +36,7 @@ class MyTool extends OpenAITool {
 }
 
 // Create a module
-class MyModule extends OpenAIModule {
+class MyModule extends Module {
   constructor() {
     super();
     this.name = 'my_module';

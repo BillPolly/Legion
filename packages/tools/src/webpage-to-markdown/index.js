@@ -1,7 +1,7 @@
 const { Tool } = require('@jsenvoy/modules');
 const puppeteer = require('puppeteer');
 
-class WebPageToMarkdownOpenAI extends Tool {
+class WebPageToMarkdown extends Tool {
   constructor() {
     super();
     this.name = 'webpage_to_markdown';
@@ -9,7 +9,7 @@ class WebPageToMarkdownOpenAI extends Tool {
   }
 
   /**
-   * Returns the tool description in OpenAI function calling format
+   * Returns the tool description in standard function calling format
    */
   getToolDescription() {
     return {
@@ -253,4 +253,4 @@ class WebPageToMarkdownOpenAI extends Tool {
   }
 }
 
-module.exports = WebPageToMarkdownOpenAI;
+module.exports = WebPageToMarkdown;

@@ -1,4 +1,4 @@
-const { Tool, OpenAIModule } = require('@jsenvoy/modules');
+const { Tool, Module } = require('@jsenvoy/modules');
 
 /**
  * Calculator tool that evaluates mathematical expressions
@@ -11,7 +11,7 @@ class CalculatorTool extends Tool {
   }
 
   /**
-   * Returns the tool description in OpenAI function calling format
+   * Returns the tool description in standard function calling format
    */
   getToolDescription() {
     return {
@@ -92,7 +92,7 @@ class CalculatorTool extends Tool {
  * Calculator module that provides mathematical calculation tools
  * This is a self-contained module with no external dependencies
  */
-class CalculatorModule extends OpenAIModule {
+class CalculatorModule extends Module {
   // No external dependencies needed
   static dependencies = [];
 

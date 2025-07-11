@@ -1,6 +1,6 @@
 /**
  * Base class for all tools in the jsEnvoy system
- * Provides standard interface for OpenAI function calling format
+ * Provides standard interface for function calling format
  */
 class Tool {
   constructor() {
@@ -9,7 +9,7 @@ class Tool {
   }
 
   /**
-   * Returns the tool description in OpenAI function calling format
+   * Returns the tool description in standard function calling format
    * @returns {Object} Tool description object
    */
   getToolDescription() {
@@ -24,7 +24,7 @@ class Tool {
    * @param {Object} toolCall.function - Function details
    * @param {string} toolCall.function.name - Name of the function to call
    * @param {string} toolCall.function.arguments - JSON string of arguments
-   * @returns {Promise<Object>} Tool response in OpenAI format
+   * @returns {Promise<Object>} Tool response in standard format
    */
   async invoke(toolCall) {
     throw new Error('invoke() must be implemented by subclass');

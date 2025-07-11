@@ -1,11 +1,11 @@
-const { OpenAITool } = require("@jsenvoy/modules");
+const { ModularTool } = require("@jsenvoy/modules");
 const fs = require('fs').promises;
 const path = require('path');
 
 /**
  * Tool for reading files from the file system
  */
-class FileReaderTool extends OpenAITool {
+class FileReaderTool extends ModularTool {
   constructor({ basePath, encoding = 'utf-8', maxFileSize = 10 * 1024 * 1024 }) {
     super();
     this.name = 'file_reader';

@@ -1,6 +1,6 @@
 # @jsenvoy/tools
 
-Collection of AI agent tools for various tasks. All tools follow the OpenAI function calling format.
+Collection of AI agent tools for various tasks. All tools follow the standard function calling format.
 
 ## Installation
 
@@ -34,19 +34,19 @@ src/
 
 ## Tool Types
 
-1. **Tool** (from @jsenvoy/modules) - Base class for OpenAI-compatible tools that work with LLMs
-2. **OpenAITool** (from @jsenvoy/modules) - Base class for tools that can be used in OpenAI Modules
-3. **OpenAIModule** (from @jsenvoy/modules) - Base class for collections of related tools
+1. **Tool** (from @jsenvoy/modules) - Base class for tools that work with LLMs using standard function calling
+2. **ModularTool** (from @jsenvoy/modules) - Base class for tools that can be used in Modules with dependency injection
+3. **Module** (from @jsenvoy/modules) - Base class for collections of related tools
 
 ## Usage
 
-### Using OpenAI Tools
+### Using Tools
 
 ```javascript
-const { openAITools, getAllOpenAIToolDescriptions, invokeOpenAIToolByFunctionName } = require('@jsenvoy/tools');
+const { tools, getAllToolDescriptions, invokeToolByFunctionName } = require('@jsenvoy/tools');
 
-// Get all tool descriptions for OpenAI function calling
-const toolDescriptions = getAllOpenAIToolDescriptions();
+// Get all tool descriptions for function calling
+const toolDescriptions = getAllToolDescriptions();
 
 // Invoke a tool by function name
 const toolCall = {
@@ -58,11 +58,11 @@ const toolCall = {
   }
 };
 
-const result = await invokeOpenAIToolByFunctionName('calculator_evaluate', toolCall);
+const result = await invokeToolByFunctionName('calculator_evaluate', toolCall);
 console.log(result); // { tool_call_id: "call_123", role: "tool", name: "calculator_evaluate", content: '{"result":50}' }
 ```
 
-### Using OpenAI Modules
+### Using Modules
 
 ```javascript
 const { CalculatorModule, FileModule } = require('@jsenvoy/tools');
@@ -75,7 +75,7 @@ const fileModule = new FileModule({ basePath: '/tmp', encoding: 'utf8' });
 const calcTools = calcModule.getTools();
 ```
 
-### Using OpenAITool Implementations
+### Using ModularTool Implementations
 
 ```javascript
 const { CalculatorEvaluateTool, FileReaderTool } = require('@jsenvoy/tools');
@@ -91,7 +91,7 @@ console.log(result); // { result: 4 }
 
 ## Available Tools
 
-### OpenAI Tools (in openai/ directory)
+### Available Tools
 - **calculator** - Evaluate mathematical expressions
 - **file_reader** - Read file contents
 - **file_writer** - Write content to files

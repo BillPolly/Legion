@@ -1,7 +1,7 @@
 const { Tool } = require('@jsenvoy/modules');
 const { YoutubeTranscript } = require('youtube-transcript');
 
-class YoutubeTranscriptOpenAI extends Tool {
+class YoutubeTranscript extends Tool {
   constructor() {
     super();
     this.name = 'youtube_transcript';
@@ -9,7 +9,7 @@ class YoutubeTranscriptOpenAI extends Tool {
   }
 
   /**
-   * Returns the tool description in OpenAI function calling format
+   * Returns the tool description in standard function calling format
    */
   getToolDescription() {
     return {
@@ -148,4 +148,4 @@ class YoutubeTranscriptOpenAI extends Tool {
   }
 }
 
-module.exports = YoutubeTranscriptOpenAI;
+module.exports = YoutubeTranscript;

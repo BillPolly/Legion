@@ -22,7 +22,7 @@ class ModuleFactory {
   /**
    * Create a module instance with resolved dependencies
    * @param {Class} ModuleClass - The module class to instantiate
-   * @returns {OpenAIModule} The instantiated module
+   * @returns {Module} The instantiated module
    */
   createModule(ModuleClass) {
     // Get declared dependencies
@@ -41,7 +41,7 @@ class ModuleFactory {
   /**
    * Create multiple modules at once
    * @param {Array<Class>} moduleClasses - Array of module classes to instantiate
-   * @returns {Array<OpenAIModule>} Array of instantiated modules
+   * @returns {Array<Module>} Array of instantiated modules
    */
   createAllModules(moduleClasses) {
     return moduleClasses.map(ModuleClass => this.createModule(ModuleClass));

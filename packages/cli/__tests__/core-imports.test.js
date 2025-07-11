@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 
 // Import from the core package
-const { ResourceManager, ModuleFactory, OpenAIModule, OpenAITool } = require('@jsenvoy/modules');
+const { ResourceManager, ModuleFactory, Module, ModularTool } = require('@jsenvoy/modules');
 
 describe('@jsenvoy/modules imports', () => {
   it('should import ResourceManager from @jsenvoy/modules', () => {
@@ -21,14 +21,14 @@ describe('@jsenvoy/modules imports', () => {
     expect(typeof ModuleFactory).toBe('function');
   });
 
-  it('should import OpenAIModule from @jsenvoy/modules', () => {
-    expect(OpenAIModule).toBeDefined();
-    expect(typeof OpenAIModule).toBe('function');
+  it('should import Module from @jsenvoy/modules', () => {
+    expect(Module).toBeDefined();
+    expect(typeof Module).toBe('function');
   });
 
-  it('should import OpenAITool from @jsenvoy/modules', () => {
-    expect(OpenAITool).toBeDefined();
-    expect(typeof OpenAITool).toBe('function');
+  it('should import ModularTool from @jsenvoy/modules', () => {
+    expect(ModularTool).toBeDefined();
+    expect(typeof ModularTool).toBe('function');
   });
 
   it('should be able to instantiate ResourceManager', () => {

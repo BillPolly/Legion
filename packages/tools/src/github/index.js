@@ -7,7 +7,7 @@ const path = require('path');
 
 const execAsync = promisify(exec);
 
-class GitHubOpenAI extends Tool {
+class GitHub extends Tool {
   constructor() {
     super();
     this.name = 'github';
@@ -16,7 +16,7 @@ class GitHubOpenAI extends Tool {
   }
 
   /**
-   * Returns all tool functions in OpenAI format
+   * Returns all tool functions in standard function calling format
    */
   getAllToolDescriptions() {
     return [
@@ -377,4 +377,4 @@ class GitHubOpenAI extends Tool {
   }
 }
 
-module.exports = GitHubOpenAI;
+module.exports = GitHub;

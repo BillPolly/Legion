@@ -1,9 +1,9 @@
-const { ModuleFactory } = require('../../src/core/ModuleFactory');
-const { ResourceManager } = require('../../src/core/ResourceManager');
-const { OpenAIModule } = require('../../src/core/OpenAIModule');
+const { ModuleFactory } = require('../src/ModuleFactory');
+const { ResourceManager } = require('../src/ResourceManager');
+const { Module } = require('../src/Module');
 
 // Test modules
-class SimpleModule extends OpenAIModule {
+class SimpleModule extends Module {
   static dependencies = [];
   
   constructor() {
@@ -13,7 +13,7 @@ class SimpleModule extends OpenAIModule {
   }
 }
 
-class SingleDependencyModule extends OpenAIModule {
+class SingleDependencyModule extends Module {
   static dependencies = ['apiKey'];
   
   constructor({ apiKey }) {
@@ -23,7 +23,7 @@ class SingleDependencyModule extends OpenAIModule {
   }
 }
 
-class MultipleDependencyModule extends OpenAIModule {
+class MultipleDependencyModule extends Module {
   static dependencies = ['database', 'logger', 'config'];
   
   constructor({ database, logger, config }) {
@@ -69,7 +69,7 @@ describe('ModuleFactory', () => {
       });
 
       it('should handle module with undefined dependencies', () => {
-        class NoDepsPropertyModule extends OpenAIModule {
+        class NoDepsPropertyModule extends Module {
           // No static dependencies property
           constructor() {
             super();
@@ -221,7 +221,7 @@ describe('ModuleFactory', () => {
 
   describe('edge cases', () => {
     it('should handle module with empty dependency name', () => {
-      class WeirdDepsModule extends OpenAIModule {
+      class WeirdDepsModule extends Module {
         static dependencies = [''];
         
         constructor(deps) {
@@ -236,7 +236,7 @@ describe('ModuleFactory', () => {
     });
 
     it('should handle module that throws in constructor', () => {
-      class ThrowingModule extends OpenAIModule {
+      class ThrowingModule extends Module {
         static dependencies = [];
         
         constructor() {
@@ -251,7 +251,7 @@ describe('ModuleFactory', () => {
     });
 
     it('should preserve dependency object structure', () => {
-      class ComplexDepsModule extends OpenAIModule {
+      class ComplexDepsModule extends Module {
         static dependencies = ['complexResource'];
         
         constructor({ complexResource }) {

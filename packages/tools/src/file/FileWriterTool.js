@@ -1,11 +1,11 @@
-const { OpenAITool } = require("@jsenvoy/modules");
+const { ModularTool } = require("@jsenvoy/modules");
 const fs = require('fs').promises;
 const path = require('path');
 
 /**
  * Tool for writing files to the file system
  */
-class FileWriterTool extends OpenAITool {
+class FileWriterTool extends ModularTool {
   constructor({ basePath, encoding = 'utf-8', createDirectories = false }) {
     super();
     this.name = 'file_writer';

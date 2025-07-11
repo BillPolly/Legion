@@ -1,7 +1,7 @@
 /**
  * Base class for modules that contain related tools
  */
-class OpenAIModule {
+class Module {
   constructor() {
     this.name = '';
     this.tools = [];
@@ -9,11 +9,11 @@ class OpenAIModule {
 
   /**
    * Get all tools provided by this module
-   * @returns {Array<OpenAITool>} Array of tools
+   * @returns {Array<ModularTool>} Array of tools
    */
   getTools() {
     return this.tools;
   }
 }
 
-module.exports = { OpenAIModule };
+module.exports = { Module };

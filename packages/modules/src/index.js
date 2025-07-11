@@ -11,5 +11,5 @@ exports.ModuleFactory = require("./ModuleFactory").ModuleFactory;
 
 // Export base classes
 exports.Tool = require("./Tool");
-exports.OpenAIModule = require("./OpenAIModule").OpenAIModule;
-exports.OpenAITool = require("./OpenAITool").OpenAITool;
+exports.Module = require("./Module").Module;
+exports.ModularTool = require("./ModularTool").ModularTool;

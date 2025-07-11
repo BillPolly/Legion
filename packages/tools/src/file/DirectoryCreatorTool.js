@@ -1,11 +1,11 @@
-const { OpenAITool } = require("@jsenvoy/modules");
+const { ModularTool } = require("@jsenvoy/modules");
 const fs = require('fs').promises;
 const path = require('path');
 
 /**
  * Tool for creating directories in the file system
  */
-class DirectoryCreatorTool extends OpenAITool {
+class DirectoryCreatorTool extends ModularTool {
   constructor({ basePath, permissions = 0o755 }) {
     super();
     this.name = 'directory_creator';

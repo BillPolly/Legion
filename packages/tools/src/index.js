@@ -2,23 +2,22 @@
  * @jsenvoy/tools - Collection of AI agent tools
  * 
  * This package provides ready-to-use tool implementations for various tasks
- * All tools follow the OpenAI function calling format
+ * All tools follow the standard function calling format
  */
 
 // Import modules
 const CalculatorModule = require('./calculator');
 const FileModule = require('./file');
-const { FileReaderTool, FileWriterTool, DirectoryCreatorTool } = require('./file');
 
 // Import individual tools that aren't modules yet
-const CommandExecutorOpenAI = require('./command-executor');
-const ServerStarterOpenAI = require('./server-starter');
-const SerperOpenAI = require('./serper');
-const CrawlerOpenAI = require('./crawler');
-const PageScreenshotOpenAI = require('./page-screenshoter');
-const WebPageToMarkdownOpenAI = require('./webpage-to-markdown');
-const YoutubeTranscriptOpenAI = require('./youtube-transcript');
-const GitHubOpenAI = require('./github');
+const CommandExecutor = require('./command-executor');
+const ServerStarter = require('./server-starter');
+const Serper = require('./serper');
+const Crawler = require('./crawler');
+const PageScreenshot = require('./page-screenshoter');
+const WebPageToMarkdown = require('./webpage-to-markdown');
+const YoutubeTranscript = require('./youtube-transcript');
+const GitHub = require('./github');
 
 // Create module instances for the tool registry
 const calculatorModule = new CalculatorModule();
@@ -29,24 +28,24 @@ const calculatorTool = calculatorModule.getTools()[0];
 const fileTool = fileModule.getTools()[0];
 
 // Create tool instances
-const openAITools = {
+const tools = {
   calculator: calculatorTool,
   file: fileTool,
-  commandExecutor: new CommandExecutorOpenAI(),
-  serverStarter: new ServerStarterOpenAI(),
-  googleSearch: new SerperOpenAI(),
-  crawler: new CrawlerOpenAI(),
-  pageScreenshot: new PageScreenshotOpenAI(),
-  webpageToMarkdown: new WebPageToMarkdownOpenAI(),
-  youtubeTranscript: new YoutubeTranscriptOpenAI(),
-  github: new GitHubOpenAI()
+  commandExecutor: new CommandExecutor(),
+  serverStarter: new ServerStarter(),
+  googleSearch: new Serper(),
+  crawler: new Crawler(),
+  pageScreenshot: new PageScreenshot(),
+  webpageToMarkdown: new WebPageToMarkdown(),
+  youtubeTranscript: new YoutubeTranscript(),
+  github: new GitHub()
 };
 
 // Helper function to get all tool descriptions
-function getAllOpenAIToolDescriptions() {
+function getAllToolDescriptions() {
   const descriptions = [];
   
-  for (const [name, tool] of Object.entries(openAITools)) {
+  for (const [name, tool] of Object.entries(tools)) {
     // Handle tools with multiple functions
     if (typeof tool.getAllToolDescriptions === 'function') {
       descriptions.push(...tool.getAllToolDescriptions());
@@ -59,8 +58,8 @@ function getAllOpenAIToolDescriptions() {
 }
 
 // Helper function to find and invoke a tool by function name
-async function invokeOpenAIToolByFunctionName(functionName, toolCall) {
-  for (const [name, tool] of Object.entries(openAITools)) {
+async function invokeToolByFunctionName(functionName, toolCall) {
+  for (const [name, tool] of Object.entries(tools)) {
     const toolDesc = tool.getToolDescription();
     if (toolDesc.function.name === functionName) {
       return await tool.invoke(toolCall);
@@ -86,22 +85,17 @@ module.exports = {
   FileModule,
   
   // Individual tool classes (not modules yet)
-  CommandExecutorOpenAI,
-  ServerStarterOpenAI,
-  SerperOpenAI,
-  CrawlerOpenAI,
-  PageScreenshotOpenAI,
-  WebPageToMarkdownOpenAI,
-  YoutubeTranscriptOpenAI,
-  GitHubOpenAI,
+  CommandExecutor,
+  ServerStarter,
+  Serper,
+  Crawler,
+  PageScreenshot,
+  WebPageToMarkdown,
+  YoutubeTranscript,
+  GitHub,
   
   // Tool registry
-  openAITools,
-  getAllOpenAIToolDescriptions,
-  invokeOpenAIToolByFunctionName,
-  
-  // Individual exports from file module (for backward compatibility)
-  FileReaderTool,
-  FileWriterTool,
-  DirectoryCreatorTool
+  tools,
+  getAllToolDescriptions,
+  invokeToolByFunctionName
 };

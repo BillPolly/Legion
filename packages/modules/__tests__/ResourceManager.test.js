@@ -1,4 +1,4 @@
-const { ResourceManager } = require('../../src/core/ResourceManager');
+const { ResourceManager } = require('../src/ResourceManager');
 
 describe('ResourceManager', () => {
   let resourceManager;

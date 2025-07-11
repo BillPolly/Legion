@@ -1,7 +1,7 @@
 /**
  * Base class for individual tools that can be called by LLMs
  */
-class OpenAITool {
+class ModularTool {
   constructor() {
     this.name = '';
     this.description = '';
@@ -19,7 +19,7 @@ class OpenAITool {
   }
 
   /**
-   * Get the tool description in OpenAI function format
+   * Get the tool description in standard function format
    * @returns {Object} The tool description
    */
   getDescription() {
@@ -34,4 +34,4 @@ class OpenAITool {
   }
 }
 
-module.exports = { OpenAITool };
+module.exports = { ModularTool };

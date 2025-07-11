@@ -1,13 +1,9 @@
 /**
- * Calculator module for OpenAI function calling
+ * Calculator module for standard function calling
  * Exports the CalculatorModule which contains calculator tools
  */
 
 const CalculatorModule = require('./CalculatorModule');
 
-// Default export is the CalculatorModule
+// Export only the module
 module.exports = CalculatorModule;
-
-// Also export individual components
-module.exports.CalculatorModule = CalculatorModule;
-module.exports.CalculatorTool = CalculatorModule.CalculatorTool;

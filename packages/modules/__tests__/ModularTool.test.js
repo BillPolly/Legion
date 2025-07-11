@@ -1,7 +1,7 @@
-const { OpenAITool } = require('../../src/core/OpenAITool');
+const { ModularTool } = require('../src/ModularTool');
 
-// Test implementation of OpenAITool
-class TestTool extends OpenAITool {
+// Test implementation of ModularTool
+class TestTool extends ModularTool {
   constructor() {
     super();
     this.name = 'test_tool';
@@ -30,10 +30,10 @@ class TestTool extends OpenAITool {
   }
 }
 
-describe('OpenAITool', () => {
+describe('ModularTool', () => {
   describe('constructor', () => {
     it('should initialize with default properties', () => {
-      const tool = new OpenAITool();
+      const tool = new ModularTool();
       expect(tool.name).toBe('');
       expect(tool.description).toBe('');
       expect(tool.parameters).toEqual({});
@@ -49,7 +49,7 @@ describe('OpenAITool', () => {
   });
 
   describe('getDescription()', () => {
-    it('should return correct OpenAI function format', () => {
+    it('should return correct function format', () => {
       const tool = new TestTool();
       const description = tool.getDescription();
 
@@ -77,7 +77,7 @@ describe('OpenAITool', () => {
     });
 
     it('should work with empty parameters', () => {
-      const tool = new OpenAITool();
+      const tool = new ModularTool();
       tool.name = 'empty_tool';
       tool.description = 'Tool with no parameters';
       
@@ -93,7 +93,7 @@ describe('OpenAITool', () => {
     });
 
     it('should handle all parameter types', () => {
-      const tool = new OpenAITool();
+      const tool = new ModularTool();
       tool.name = 'complex_tool';
       tool.description = 'Tool with all parameter types';
       tool.parameters = {
@@ -130,7 +130,7 @@ describe('OpenAITool', () => {
 
   describe('execute()', () => {
     it('should throw error when not implemented', async () => {
-      const tool = new OpenAITool();
+      const tool = new ModularTool();
       
       await expect(tool.execute({})).rejects.toThrow('execute() must be implemented by subclass');
     });
@@ -146,7 +146,7 @@ describe('OpenAITool', () => {
     });
 
     it('should handle async execution', async () => {
-      class AsyncTool extends OpenAITool {
+      class AsyncTool extends ModularTool {
         async execute(args) {
           await new Promise(resolve => setTimeout(resolve, 10));
           return { delayed: true, ...args };
@@ -161,7 +161,7 @@ describe('OpenAITool', () => {
 
   describe('edge cases', () => {
     it('should handle tool with no description', () => {
-      const tool = new OpenAITool();
+      const tool = new ModularTool();
       tool.name = 'minimal_tool';
       
       const description = tool.getDescription();
@@ -170,7 +170,7 @@ describe('OpenAITool', () => {
     });
 
     it('should handle special characters in name and description', () => {
-      const tool = new OpenAITool();
+      const tool = new ModularTool();
       tool.name = 'tool-with.special_chars$123';
       tool.description = 'Description with "quotes" and \'apostrophes\' and \n newlines';
       
@@ -188,7 +188,7 @@ describe('OpenAITool', () => {
         }
       };
       
-      const tool = new OpenAITool();
+      const tool = new ModularTool();
       tool.parameters = originalParams;
       
       const description = tool.getDescription();

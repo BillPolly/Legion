@@ -111,8 +111,8 @@ The CLI integrates with @jsenvoy/core infrastructure:
 
 1. **ResourceManager** (from @jsenvoy/core): Manages dependencies required by modules
 2. **ModuleFactory** (from @jsenvoy/core): Creates module instances with resolved dependencies
-3. **OpenAIModule** (from @jsenvoy/core): Base class for all modules containing tools
-4. **OpenAITool** (from @jsenvoy/core): Base class for individual tools with execute() method
+3. **Module** (from @jsenvoy/modules): Base class for all modules containing tools
+4. **ModularTool** (from @jsenvoy/modules): Base class for individual tools with execute() method
 
 The CLI package imports these components:
 ```javascript
@@ -287,7 +287,7 @@ class ToolExecutor {
   }
 
   validateArguments(args, parameters) {
-    // Validate against OpenAI function parameters schema
+    // Validate against function parameters schema
     const schema = parameters.properties || {};
     const required = parameters.required || [];
     const validated = {};

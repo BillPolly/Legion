@@ -1,8 +1,8 @@
-const { OpenAIModule } = require('../../src/core/OpenAIModule');
-const { OpenAITool } = require('../../src/core/OpenAITool');
+const { Module } = require('../src/Module');
+const { ModularTool } = require('../src/ModularTool');
 
 // Mock tools for testing
-class MockTool1 extends OpenAITool {
+class MockTool1 extends ModularTool {
   constructor() {
     super();
     this.name = 'mock_tool_1';
@@ -10,7 +10,7 @@ class MockTool1 extends OpenAITool {
   }
 }
 
-class MockTool2 extends OpenAITool {
+class MockTool2 extends ModularTool {
   constructor() {
     super();
     this.name = 'mock_tool_2';
@@ -19,7 +19,7 @@ class MockTool2 extends OpenAITool {
 }
 
 // Test module with no dependencies
-class NoDependencyModule extends OpenAIModule {
+class NoDependencyModule extends Module {
   static dependencies = [];
 
   constructor() {
@@ -32,7 +32,7 @@ class NoDependencyModule extends OpenAIModule {
 }
 
 // Test module with dependencies
-class WithDependencyModule extends OpenAIModule {
+class WithDependencyModule extends Module {
   static dependencies = ['apiKey', 'config', 'logger'];
 
   constructor({ apiKey, config, logger }) {
@@ -49,10 +49,10 @@ class WithDependencyModule extends OpenAIModule {
   }
 }
 
-describe('OpenAIModule', () => {
+describe('Module', () => {
   describe('constructor', () => {
     it('should initialize with empty tools array', () => {
-      const module = new OpenAIModule();
+      const module = new Module();
       expect(module.name).toBe('');
       expect(module.tools).toEqual([]);
       expect(Array.isArray(module.tools)).toBe(true);
@@ -68,7 +68,7 @@ describe('OpenAIModule', () => {
 
   describe('getTools()', () => {
     it('should return empty array for base module', () => {
-      const module = new OpenAIModule();
+      const module = new Module();
       expect(module.getTools()).toEqual([]);
     });
 
@@ -165,7 +165,7 @@ describe('OpenAIModule', () => {
 
   describe('edge cases', () => {
     it('should handle module with undefined static dependencies', () => {
-      class NoStaticDepsModule extends OpenAIModule {
+      class NoStaticDepsModule extends Module {
         // No static dependencies property
         constructor() {
           super();
@@ -179,7 +179,7 @@ describe('OpenAIModule', () => {
     });
 
     it('should handle empty module name', () => {
-      class EmptyNameModule extends OpenAIModule {
+      class EmptyNameModule extends Module {
         constructor() {
           super();
           // name not set
@@ -193,7 +193,7 @@ describe('OpenAIModule', () => {
     });
 
     it('should allow adding tools after construction', () => {
-      const module = new OpenAIModule();
+      const module = new Module();
       expect(module.tools).toHaveLength(0);
       
       module.tools.push(new MockTool1());

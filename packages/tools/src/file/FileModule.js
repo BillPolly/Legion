@@ -1,4 +1,4 @@
-const { Tool, OpenAIModule } = require('@jsenvoy/modules');
+const { Tool, Module } = require('@jsenvoy/modules');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -13,7 +13,7 @@ class FileOperationsTool extends Tool {
   }
 
   /**
-   * Returns all available file operation functions in OpenAI format
+   * Returns all available file operation functions in standard function calling format
    */
   getAllToolDescriptions() {
     return [
@@ -217,7 +217,7 @@ class FileOperationsTool extends Tool {
  * File system module that provides all file-related tools
  * This is a complete module with built-in tools, no external dependencies needed
  */
-class FileModule extends OpenAIModule {
+class FileModule extends Module {
   // Declare required dependencies
   static dependencies = ['basePath', 'encoding', 'createDirectories', 'permissions'];
 

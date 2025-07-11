@@ -3,7 +3,7 @@ const { spawn } = require('child_process');
 const fs = require('fs').promises;
 const path = require('path');
 
-class ServerStarterOpenAI extends Tool {
+class ServerStarter extends Tool {
   constructor() {
     super();
     this.name = 'server_starter';
@@ -14,7 +14,7 @@ class ServerStarterOpenAI extends Tool {
   }
 
   /**
-   * Returns all tool functions in OpenAI format
+   * Returns all tool functions in standard function calling format
    */
   getAllToolDescriptions() {
     return [
@@ -239,4 +239,4 @@ class ServerStarterOpenAI extends Tool {
   }
 }
 
-module.exports = ServerStarterOpenAI;
+module.exports = ServerStarter;
