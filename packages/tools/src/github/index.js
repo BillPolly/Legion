@@ -1,4 +1,4 @@
-import { Tool } from '@jsenvoy/modules';
+import { Tool, ToolResult } from '@jsenvoy/modules';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import https from 'https';
@@ -152,16 +152,14 @@ class GitHub extends Tool {
           throw new Error(`Unknown function: ${toolCall.function.name}`);
       }
 
-      return this.createSuccessResponse(
-        toolCall.id,
-        toolCall.function.name,
-        result
-      );
+      return ToolResult.success(result);
     } catch (error) {
-      return this.createErrorResponse(
-        toolCall.id,
-        toolCall.function.name,
-        error
+      return ToolResult.failure(
+        error.message || 'GitHub operation failed',
+        {
+          operation: toolCall.function.name,
+          errorType: 'execution_error'
+        }
       );
     }
   }

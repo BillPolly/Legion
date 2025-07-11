@@ -1,4 +1,4 @@
-import { Tool } from '@jsenvoy/modules';
+import { Tool, ToolResult } from '@jsenvoy/modules';
 import puppeteer from 'puppeteer';
 
 class Crawler extends Tool {
@@ -43,9 +43,10 @@ class Crawler extends Tool {
    * Invokes the crawler with the given tool call
    */
   async invoke(toolCall) {
+    let args;
     try {
       // Parse the arguments
-      const args = this.parseArguments(toolCall.function.arguments);
+      args = this.parseArguments(toolCall.function.arguments);
       
       // Validate required parameters
       this.validateRequiredParameters(args, ['url']);
@@ -54,17 +55,15 @@ class Crawler extends Tool {
       const result = await this.crawl(args.url, args.waitForSelector, args.limit);
       
       // Return success response
-      return this.createSuccessResponse(
-        toolCall.id,
-        toolCall.function.name,
-        result
-      );
+      return ToolResult.success(result);
     } catch (error) {
       // Return error response
-      return this.createErrorResponse(
-        toolCall.id,
-        toolCall.function.name,
-        error
+      return ToolResult.failure(
+        error.message || 'Failed to crawl webpage',
+        {
+          url: args?.url || 'unknown',
+          errorType: 'crawl_error'
+        }
       );
     }
   }

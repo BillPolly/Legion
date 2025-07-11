@@ -1,4 +1,4 @@
-import { Tool } from '@jsenvoy/modules';
+import { Tool, ToolResult } from '@jsenvoy/modules';
 import { YoutubeTranscript as YTTranscript } from 'youtube-transcript';
 
 class YoutubeTranscript extends Tool {
@@ -49,18 +49,16 @@ class YoutubeTranscript extends Tool {
       // Get the transcript
       const result = await this.getTranscript(args.videoUrl, args.lang || 'en');
       
-      // Return success response
-      return this.createSuccessResponse(
-        toolCall.id,
-        toolCall.function.name,
-        result
-      );
+      // Return ToolResult success
+      return ToolResult.success(result);
     } catch (error) {
-      // Return error response
-      return this.createErrorResponse(
-        toolCall.id,
-        toolCall.function.name,
-        error
+      // Return ToolResult failure
+      return ToolResult.failure(
+        error.message || 'Failed to fetch YouTube transcript',
+        {
+          videoUrl: toolCall.function.arguments ? JSON.parse(toolCall.function.arguments).videoUrl : 'unknown',
+          errorType: 'fetch_error'
+        }
       );
     }
   }

@@ -1,4 +1,4 @@
-import { Tool } from '@jsenvoy/modules';
+import { Tool, ToolResult } from '@jsenvoy/modules';
 import puppeteer from 'puppeteer';
 
 class WebPageToMarkdown extends Tool {
@@ -51,9 +51,10 @@ class WebPageToMarkdown extends Tool {
    * Invokes the webpage to markdown converter with the given tool call
    */
   async invoke(toolCall) {
+    let args;
     try {
       // Parse the arguments
-      const args = this.parseArguments(toolCall.function.arguments);
+      args = this.parseArguments(toolCall.function.arguments);
       
       // Validate required parameters
       this.validateRequiredParameters(args, ['url']);
@@ -68,17 +69,15 @@ class WebPageToMarkdown extends Tool {
       );
       
       // Return success response
-      return this.createSuccessResponse(
-        toolCall.id,
-        toolCall.function.name,
-        result
-      );
+      return ToolResult.success(result);
     } catch (error) {
       // Return error response
-      return this.createErrorResponse(
-        toolCall.id,
-        toolCall.function.name,
-        error
+      return ToolResult.failure(
+        error.message || 'Failed to convert webpage to markdown',
+        {
+          url: args?.url || 'unknown',
+          errorType: 'conversion_error'
+        }
       );
     }
   }

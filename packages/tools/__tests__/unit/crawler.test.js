@@ -24,45 +24,46 @@ describe('Crawler', () => {
   beforeEach(() => {
     crawler = new Crawler();
     jest.clearAllMocks();
+    
+    // Mock the crawl method directly
+    crawler.crawl = jest.fn();
   });
 
   describe('constructor', () => {
     test('should initialize with correct properties', () => {
-      expect(crawler.name).toBe('crawler');
-      expect(crawler.description).toContain('crawl websites');
+      expect(crawler.name).toBe('web_crawler');
+      expect(crawler.description).toContain('web pages');
     });
   });
 
   describe('invoke method', () => {
     test('should crawl website successfully', async () => {
-      const mockHtml = '<html><body><a href="/page1">Link 1</a><a href="/page2">Link 2</a></body></html>';
-      mockAxios.get.mockResolvedValue({ data: mockHtml });
-
-      const mockElement = {
-        find: jest.fn().mockReturnThis(),
-        map: jest.fn((fn) => {
-          // Simulate map returning array of hrefs
-          return ['/page1', '/page2'];
-        }),
-        get: jest.fn().mockReturnValue(['/page1', '/page2'])
-      };
-      mockCheerio.load.mockReturnValue(() => mockElement);
-
-      const toolCall = createMockToolCall('crawler_crawl', { 
+      const mockResult = {
         url: 'https://example.com',
-        maxDepth: 1
+        success: true,
+        content: 'This is test content',
+        links: ['https://example.com/page1', 'https://example.com/page2'],
+        images: ['https://example.com/image1.jpg'],
+        metadata: { title: 'Test Page', description: 'A test page' }
+      };
+      
+      crawler.crawl.mockResolvedValue(mockResult);
+
+      const toolCall = createMockToolCall('web_crawler_crawl', { 
+        url: 'https://example.com'
       });
       const result = await crawler.invoke(toolCall);
 
       validateToolResult(result);
       expect(result.success).toBe(true);
-      expect(Array.isArray(result.data.urls)).toBe(true);
+      expect(Array.isArray(result.data.links)).toBe(true);
+      expect(result.data.url).toBe('https://example.com');
     });
 
     test('should handle crawl failure', async () => {
-      mockAxios.get.mockRejectedValue(new Error('Network timeout'));
+      crawler.crawl.mockRejectedValue(new Error('Network timeout'));
 
-      const toolCall = createMockToolCall('crawler_crawl', { 
+      const toolCall = createMockToolCall('web_crawler_crawl', { 
         url: 'https://invalid-url.com'
       });
       const result = await crawler.invoke(toolCall);

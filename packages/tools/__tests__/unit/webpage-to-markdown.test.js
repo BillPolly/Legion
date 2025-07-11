@@ -24,26 +24,29 @@ describe('WebPageToMarkdown', () => {
   beforeEach(() => {
     webpageToMarkdown = new WebPageToMarkdown();
     jest.clearAllMocks();
+    
+    // Mock the convertToMarkdown method directly
+    webpageToMarkdown.convertToMarkdown = jest.fn();
   });
 
   describe('constructor', () => {
     test('should initialize with correct properties', () => {
       expect(webpageToMarkdown.name).toBe('webpage_to_markdown');
-      expect(webpageToMarkdown.description).toContain('webpage content to markdown');
+      expect(webpageToMarkdown.description).toContain('web pages to markdown');
     });
   });
 
   describe('invoke method', () => {
     test('should convert webpage to markdown successfully', async () => {
-      const mockHtml = '<html><body><h1>Test Title</h1><p>Test content</p></body></html>';
-      mockAxios.get.mockResolvedValue({ data: mockHtml });
-
-      const mockElement = {
-        find: jest.fn().mockReturnThis(),
-        remove: jest.fn().mockReturnThis(),
-        html: jest.fn().mockReturnValue('<h1>Test Title</h1><p>Test content</p>')
+      const mockResult = {
+        success: true,
+        url: 'https://example.com',
+        markdown: '# Test Title\n\nTest content',
+        length: 25,
+        truncated: false
       };
-      mockCheerio.load.mockReturnValue(() => mockElement);
+      
+      webpageToMarkdown.convertToMarkdown.mockResolvedValue(mockResult);
 
       const toolCall = createMockToolCall('webpage_to_markdown_convert', { 
         url: 'https://example.com' 
@@ -53,10 +56,11 @@ describe('WebPageToMarkdown', () => {
       validateToolResult(result);
       expect(result.success).toBe(true);
       expect(result.data.markdown).toContain('Test Title');
+      expect(result.data.url).toBe('https://example.com');
     });
 
     test('should handle fetch failure', async () => {
-      mockAxios.get.mockRejectedValue(new Error('Network error'));
+      webpageToMarkdown.convertToMarkdown.mockRejectedValue(new Error('Network error'));
 
       const toolCall = createMockToolCall('webpage_to_markdown_convert', { 
         url: 'https://invalid-url.com' 

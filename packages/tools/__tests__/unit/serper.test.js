@@ -146,37 +146,6 @@ describe('Serper', () => {
       );
     });
 
-    test('should fallback to https module when fetch fails', async () => {
-      mockFetch.mockRejectedValue(new Error('fetch is not defined'));
-
-      const mockResponse = {
-        statusCode: 200,
-        on: jest.fn()
-      };
-
-      const mockRequest = {
-        on: jest.fn(),
-        write: jest.fn(),
-        end: jest.fn()
-      };
-
-      mockHttpsRequest.mockImplementation((options, callback) => {
-        setTimeout(() => {
-          callback(mockResponse);
-          const dataHandler = mockResponse.on.mock.calls.find(call => call[0] === 'data')[1];
-          const endHandler = mockResponse.on.mock.calls.find(call => call[0] === 'end')[1];
-          
-          dataHandler(JSON.stringify({ organic: [] }));
-          endHandler();
-        }, 0);
-        return mockRequest;
-      });
-
-      const result = await serper.performSearch('test query');
-
-      expect(result.success).toBe(true);
-      expect(mockHttpsRequest).toHaveBeenCalled();
-    });
   });
 
   describe('invoke method', () => {

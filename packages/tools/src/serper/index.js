@@ -142,11 +142,25 @@ class Serper extends Tool {
       return ToolResult.failure(
         error.message,
         {
-          query: toolCall.function.arguments ? 
-            JSON.parse(toolCall.function.arguments).query : 'unknown',
+          query: this.safeParseQuery(toolCall.function.arguments),
           errorType: 'validation_error'
         }
       );
+    }
+  }
+
+  /**
+   * Safely parses query from JSON arguments
+   */
+  safeParseQuery(argumentsJson) {
+    try {
+      if (argumentsJson) {
+        const parsed = JSON.parse(argumentsJson);
+        return parsed.query || 'unknown';
+      }
+      return 'unknown';
+    } catch (error) {
+      return 'invalid_json';
     }
   }
 

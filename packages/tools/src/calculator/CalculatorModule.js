@@ -97,11 +97,19 @@ class CalculatorTool extends Tool {
       }
       
       // Return failure ToolResult with partial data
+      let expression = 'unknown';
+      try {
+        if (toolCall.function.arguments) {
+          expression = JSON.parse(toolCall.function.arguments).expression || 'unknown';
+        }
+      } catch (parseError) {
+        expression = 'invalid_json';
+      }
+      
       return ToolResult.failure(
         error.message,
         {
-          expression: toolCall.function.arguments ? 
-            JSON.parse(toolCall.function.arguments).expression : 'unknown',
+          expression: expression,
           errorType: errorType,
           details: error.stack
         }

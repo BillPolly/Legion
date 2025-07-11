@@ -1,4 +1,4 @@
-import { Tool } from '@jsenvoy/modules';
+import { Tool, ToolResult } from '@jsenvoy/modules';
 import { spawn } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -99,16 +99,14 @@ class ServerStarter extends Tool {
           throw new Error(`Unknown function: ${toolCall.function.name}`);
       }
 
-      return this.createSuccessResponse(
-        toolCall.id,
-        toolCall.function.name,
-        result
-      );
+      return ToolResult.success(result);
     } catch (error) {
-      return this.createErrorResponse(
-        toolCall.id,
-        toolCall.function.name,
-        error
+      return ToolResult.failure(
+        error.message || 'Server operation failed',
+        {
+          operation: toolCall.function.name,
+          errorType: 'execution_error'
+        }
       );
     }
   }
