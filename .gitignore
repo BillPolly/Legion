@@ -4,6 +4,9 @@ node_modules/
 # Test coverage
 coverage/
 
+# Test data directories
+packages/tools/__tests__/testdata/
+
 # Environment variables
 .env
 

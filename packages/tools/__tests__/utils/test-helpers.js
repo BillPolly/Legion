@@ -90,10 +90,10 @@ export function delay(ms) {
 }
 
 /**
- * Creates a temporary test file path
+ * Creates a test file path within the testdata directory
  */
 export function createTempFilePath(filename = 'test-file.txt') {
-  return `/tmp/jsenvoy-test-${Date.now()}-${filename}`;
+  return `__tests__/testdata/jsenvoy-test-${Date.now()}-${filename}`;
 }
 
 /**

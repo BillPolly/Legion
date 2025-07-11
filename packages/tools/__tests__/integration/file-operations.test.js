@@ -1,7 +1,331 @@
 /**
  * Integration tests for File Tool with real filesystem operations
+ * All file operations are contained within __tests__/testdata directory
  */
 
 import { jest } from '@jest/globals';
 import { FileOperationsTool } from '../../src/file/FileModule.js';
-import { createMockToolCall, validateToolResult, createTempFilePath } from '../utils/test-helpers.js';\nimport { promises as fs } from 'fs';\nimport path from 'path';\nimport os from 'os';\n\ndescribe('File Operations Integration Tests', () => {\n  let fileTool;\n  let tempDir;\n  let createdFiles = [];\n  let createdDirs = [];\n\n  beforeAll(async () => {\n    fileTool = new FileOperationsTool();\n    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'jsenvoy-file-test-'));\n  });\n\n  afterAll(async () => {\n    // Cleanup all created files and directories\n    for (const file of createdFiles) {\n      try {\n        await fs.unlink(file);\n      } catch (error) {\n        // File may already be deleted\n      }\n    }\n    \n    for (const dir of createdDirs.reverse()) {\n      try {\n        await fs.rmdir(dir);\n      } catch (error) {\n        // Directory may already be deleted or not empty\n      }\n    }\n    \n    try {\n      await fs.rmdir(tempDir);\n    } catch (error) {\n      // Temp dir cleanup\n    }\n  });\n\n  describe('file read operations', () => {\n    test('should read existing file successfully', async () => {\n      const testContent = 'Hello, World!\\nThis is a test file.';\n      const testFile = path.join(tempDir, 'test-read.txt');\n      \n      // Create test file\n      await fs.writeFile(testFile, testContent, 'utf8');\n      createdFiles.push(testFile);\n\n      const toolCall = createMockToolCall('file_read', { \n        filepath: testFile \n      });\n      const result = await fileTool.invoke(toolCall);\n\n      validateToolResult(result);\n      expect(result.success).toBe(true);\n      expect(result.data.content).toBe(testContent);\n      expect(result.data.filepath).toBe(testFile);\n      expect(result.data.size).toBe(testContent.length);\n    });\n\n    test('should handle non-existent file', async () => {\n      const nonExistentFile = path.join(tempDir, 'does-not-exist.txt');\n      \n      const toolCall = createMockToolCall('file_read', { \n        filepath: nonExistentFile \n      });\n      const result = await fileTool.invoke(toolCall);\n\n      validateToolResult(result);\n      expect(result.success).toBe(false);\n      expect(result.data.errorCode).toBe('ENOENT');\n      expect(result.data.filepath).toBe(nonExistentFile);\n    });\n\n    test('should handle directory instead of file', async () => {\n      const testDir = path.join(tempDir, 'test-dir');\n      await fs.mkdir(testDir);\n      createdDirs.push(testDir);\n      \n      const toolCall = createMockToolCall('file_read', { \n        filepath: testDir \n      });\n      const result = await fileTool.invoke(toolCall);\n\n      validateToolResult(result);\n      expect(result.success).toBe(false);\n      expect(result.data.errorCode).toBe('EISDIR');\n    });\n\n    test('should read large file successfully', async () => {\n      const largeContent = 'x'.repeat(10000); // 10KB file\n      const largeFile = path.join(tempDir, 'large-file.txt');\n      \n      await fs.writeFile(largeFile, largeContent, 'utf8');\n      createdFiles.push(largeFile);\n\n      const toolCall = createMockToolCall('file_read', { \n        filepath: largeFile \n      });\n      const result = await fileTool.invoke(toolCall);\n\n      validateToolResult(result);\n      expect(result.success).toBe(true);\n      expect(result.data.content.length).toBe(10000);\n      expect(result.data.size).toBe(10000);\n    });\n  });\n\n  describe('file write operations', () => {\n    test('should create new file successfully', async () => {\n      const testContent = 'This is new file content.';\n      const newFile = path.join(tempDir, 'new-file.txt');\n      \n      const toolCall = createMockToolCall('file_write', { \n        filepath: newFile,\n        content: testContent\n      });\n      const result = await fileTool.invoke(toolCall);\n\n      validateToolResult(result);\n      expect(result.success).toBe(true);\n      expect(result.data.filepath).toBe(newFile);\n      expect(result.data.bytesWritten).toBe(testContent.length);\n      expect(result.data.created).toBe(true);\n      \n      // Verify file was actually created\n      const fileContent = await fs.readFile(newFile, 'utf8');\n      expect(fileContent).toBe(testContent);\n      \n      createdFiles.push(newFile);\n    });\n\n    test('should overwrite existing file', async () => {\n      const originalContent = 'Original content';\n      const newContent = 'Updated content';\n      const existingFile = path.join(tempDir, 'existing-file.txt');\n      \n      // Create original file\n      await fs.writeFile(existingFile, originalContent, 'utf8');\n      createdFiles.push(existingFile);\n      \n      const toolCall = createMockToolCall('file_write', { \n        filepath: existingFile,\n        content: newContent\n      });\n      const result = await fileTool.invoke(toolCall);\n\n      validateToolResult(result);\n      expect(result.success).toBe(true);\n      expect(result.data.created).toBe(false); // File was overwritten\n      expect(result.data.bytesWritten).toBe(newContent.length);\n      \n      // Verify file was updated\n      const fileContent = await fs.readFile(existingFile, 'utf8');\n      expect(fileContent).toBe(newContent);\n    });\n\n    test('should create nested directories', async () => {\n      const nestedPath = path.join(tempDir, 'nested', 'deep', 'directory', 'file.txt');\n      const content = 'Nested file content';\n      \n      const toolCall = createMockToolCall('file_write', { \n        filepath: nestedPath,\n        content: content\n      });\n      const result = await fileTool.invoke(toolCall);\n\n      validateToolResult(result);\n      expect(result.success).toBe(true);\n      expect(result.data.created).toBe(true);\n      \n      // Verify file was created in nested directory\n      const fileContent = await fs.readFile(nestedPath, 'utf8');\n      expect(fileContent).toBe(content);\n      \n      createdFiles.push(nestedPath);\n      createdDirs.push(path.dirname(nestedPath));\n      createdDirs.push(path.join(tempDir, 'nested', 'deep'));\n      createdDirs.push(path.join(tempDir, 'nested'));\n    });\n\n    test('should handle empty content', async () => {\n      const emptyFile = path.join(tempDir, 'empty-file.txt');\n      \n      const toolCall = createMockToolCall('file_write', { \n        filepath: emptyFile,\n        content: ''\n      });\n      const result = await fileTool.invoke(toolCall);\n\n      validateToolResult(result);\n      expect(result.success).toBe(true);\n      expect(result.data.bytesWritten).toBe(0);\n      \n      const fileContent = await fs.readFile(emptyFile, 'utf8');\n      expect(fileContent).toBe('');\n      \n      createdFiles.push(emptyFile);\n    });\n  });\n\n  describe('directory creation operations', () => {\n    test('should create new directory successfully', async () => {\n      const newDir = path.join(tempDir, 'new-directory');\n      \n      const toolCall = createMockToolCall('directory_create', { \n        dirpath: newDir \n      });\n      const result = await fileTool.invoke(toolCall);\n\n      validateToolResult(result);\n      expect(result.success).toBe(true);\n      expect(result.data.dirpath).toBe(newDir);\n      expect(result.data.created).toBe(true);\n      \n      // Verify directory was created\n      const stats = await fs.stat(newDir);\n      expect(stats.isDirectory()).toBe(true);\n      \n      createdDirs.push(newDir);\n    });\n\n    test('should handle existing directory', async () => {\n      const existingDir = path.join(tempDir, 'existing-directory');\n      \n      // Create directory first\n      await fs.mkdir(existingDir);\n      createdDirs.push(existingDir);\n      \n      const toolCall = createMockToolCall('directory_create', { \n        dirpath: existingDir \n      });\n      const result = await fileTool.invoke(toolCall);\n\n      validateToolResult(result);\n      expect(result.success).toBe(true);\n      expect(result.data.created).toBe(false); // Directory already existed\n    });\n\n    test('should create nested directories', async () => {\n      const nestedDir = path.join(tempDir, 'level1', 'level2', 'level3');\n      \n      const toolCall = createMockToolCall('directory_create', { \n        dirpath: nestedDir \n      });\n      const result = await fileTool.invoke(toolCall);\n\n      validateToolResult(result);\n      expect(result.success).toBe(true);\n      expect(result.data.created).toBe(true);\n      \n      // Verify nested directories were created\n      const stats = await fs.stat(nestedDir);\n      expect(stats.isDirectory()).toBe(true);\n      \n      createdDirs.push(nestedDir);\n      createdDirs.push(path.join(tempDir, 'level1', 'level2'));\n      createdDirs.push(path.join(tempDir, 'level1'));\n    });\n  });\n\n  describe('edge cases and error handling', () => {\n    test('should handle very long file paths', async () => {\n      const longFileName = 'a'.repeat(100) + '.txt';\n      const longFilePath = path.join(tempDir, longFileName);\n      const content = 'Long filename test';\n      \n      const toolCall = createMockToolCall('file_write', { \n        filepath: longFilePath,\n        content: content\n      });\n      const result = await fileTool.invoke(toolCall);\n\n      validateToolResult(result);\n      expect(result.success).toBe(true);\n      \n      createdFiles.push(longFilePath);\n    });\n\n    test('should handle special characters in paths', async () => {\n      const specialFile = path.join(tempDir, 'file with spaces & symbols!.txt');\n      const content = 'Special characters test';\n      \n      const toolCall = createMockToolCall('file_write', { \n        filepath: specialFile,\n        content: content\n      });\n      const result = await fileTool.invoke(toolCall);\n\n      validateToolResult(result);\n      expect(result.success).toBe(true);\n      \n      const fileContent = await fs.readFile(specialFile, 'utf8');\n      expect(fileContent).toBe(content);\n      \n      createdFiles.push(specialFile);\n    });\n\n    test('should handle Unicode content', async () => {\n      const unicodeContent = 'Hello 世界 🌍 café naïve résumé';\n      const unicodeFile = path.join(tempDir, 'unicode-test.txt');\n      \n      const toolCall = createMockToolCall('file_write', { \n        filepath: unicodeFile,\n        content: unicodeContent\n      });\n      const result = await fileTool.invoke(toolCall);\n\n      validateToolResult(result);\n      expect(result.success).toBe(true);\n      \n      const fileContent = await fs.readFile(unicodeFile, 'utf8');\n      expect(fileContent).toBe(unicodeContent);\n      \n      createdFiles.push(unicodeFile);\n    });\n  });\n});
+import { createMockToolCall, validateToolResult } from '../utils/test-helpers.js';
+import { promises as fs } from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+describe('File Operations Integration Tests', () => {
+  let fileTool;
+  let testDataDir;
+  let createdFiles = [];
+  let createdDirs = [];
+
+  beforeAll(async () => {
+    fileTool = new FileOperationsTool();
+    testDataDir = path.join(__dirname, '..', 'testdata');
+    
+    // Ensure testdata directory exists
+    try {
+      await fs.mkdir(testDataDir, { recursive: true });
+    } catch (error) {
+      // Directory may already exist
+    }
+  });
+
+  afterAll(async () => {
+    // Cleanup all created files and directories within testdata
+    for (const file of createdFiles) {
+      try {
+        await fs.unlink(file);
+      } catch (error) {
+        // File may already be deleted
+      }
+    }
+    
+    for (const dir of createdDirs.reverse()) {
+      try {
+        await fs.rmdir(dir);
+      } catch (error) {
+        // Directory may already be deleted or not empty
+      }
+    }
+  });
+
+  describe('file read operations', () => {
+    test('should read existing file successfully', async () => {
+      const testContent = 'Hello, World!\nThis is a test file.';
+      const testFile = path.join(testDataDir, 'test-read.txt');
+      
+      // Create test file
+      await fs.writeFile(testFile, testContent, 'utf8');
+      createdFiles.push(testFile);
+
+      const toolCall = createMockToolCall('file_read', { 
+        filepath: testFile 
+      });
+      const result = await fileTool.invoke(toolCall);
+
+      validateToolResult(result);
+      expect(result.success).toBe(true);
+      expect(result.data.content).toBe(testContent);
+      expect(result.data.filepath).toBe(testFile);
+      expect(result.data.size).toBe(testContent.length);
+    });
+
+    test('should handle non-existent file', async () => {
+      const nonExistentFile = path.join(testDataDir, 'does-not-exist.txt');
+      
+      const toolCall = createMockToolCall('file_read', { 
+        filepath: nonExistentFile 
+      });
+      const result = await fileTool.invoke(toolCall);
+
+      validateToolResult(result);
+      expect(result.success).toBe(false);
+      expect(result.data.errorCode).toBe('ENOENT');
+      expect(result.data.filepath).toBe(nonExistentFile);
+    });
+
+    test('should handle directory instead of file', async () => {
+      const testDir = path.join(testDataDir, 'test-dir');
+      await fs.mkdir(testDir, { recursive: true });
+      createdDirs.push(testDir);
+      
+      const toolCall = createMockToolCall('file_read', { 
+        filepath: testDir 
+      });
+      const result = await fileTool.invoke(toolCall);
+
+      validateToolResult(result);
+      expect(result.success).toBe(false);
+      expect(result.data.errorCode).toBe('EISDIR');
+    });
+
+    test('should read large file successfully', async () => {
+      const largeContent = 'x'.repeat(10000); // 10KB file
+      const largeFile = path.join(testDataDir, 'large-file.txt');
+      
+      await fs.writeFile(largeFile, largeContent, 'utf8');
+      createdFiles.push(largeFile);
+
+      const toolCall = createMockToolCall('file_read', { 
+        filepath: largeFile 
+      });
+      const result = await fileTool.invoke(toolCall);
+
+      validateToolResult(result);
+      expect(result.success).toBe(true);
+      expect(result.data.content.length).toBe(10000);
+      expect(result.data.size).toBe(10000);
+    });
+  });
+
+  describe('file write operations', () => {
+    test('should create new file successfully', async () => {
+      const testContent = 'This is new file content.';
+      const newFile = path.join(testDataDir, 'new-file.txt');
+      
+      const toolCall = createMockToolCall('file_write', { 
+        filepath: newFile,
+        content: testContent
+      });
+      const result = await fileTool.invoke(toolCall);
+
+      validateToolResult(result);
+      expect(result.success).toBe(true);
+      expect(result.data.filepath).toBe(newFile);
+      expect(result.data.bytesWritten).toBe(testContent.length);
+      expect(result.data.created).toBe(true);
+      
+      // Verify file was actually created
+      const fileContent = await fs.readFile(newFile, 'utf8');
+      expect(fileContent).toBe(testContent);
+      
+      createdFiles.push(newFile);
+    });
+
+    test('should overwrite existing file', async () => {
+      const originalContent = 'Original content';
+      const newContent = 'Updated content';
+      const existingFile = path.join(testDataDir, 'existing-file.txt');
+      
+      // Create original file
+      await fs.writeFile(existingFile, originalContent, 'utf8');
+      createdFiles.push(existingFile);
+      
+      const toolCall = createMockToolCall('file_write', { 
+        filepath: existingFile,
+        content: newContent
+      });
+      const result = await fileTool.invoke(toolCall);
+
+      validateToolResult(result);
+      expect(result.success).toBe(true);
+      expect(result.data.created).toBe(false); // File was overwritten
+      expect(result.data.bytesWritten).toBe(newContent.length);
+      
+      // Verify file was updated
+      const fileContent = await fs.readFile(existingFile, 'utf8');
+      expect(fileContent).toBe(newContent);
+    });
+
+    test('should create nested directories within testdata', async () => {
+      const nestedPath = path.join(testDataDir, 'nested', 'deep', 'directory', 'file.txt');
+      const content = 'Nested file content';
+      
+      const toolCall = createMockToolCall('file_write', { 
+        filepath: nestedPath,
+        content: content
+      });
+      const result = await fileTool.invoke(toolCall);
+
+      validateToolResult(result);
+      expect(result.success).toBe(true);
+      expect(result.data.created).toBe(true);
+      
+      // Verify file was created in nested directory
+      const fileContent = await fs.readFile(nestedPath, 'utf8');
+      expect(fileContent).toBe(content);
+      
+      createdFiles.push(nestedPath);
+      createdDirs.push(path.dirname(nestedPath));
+      createdDirs.push(path.join(testDataDir, 'nested', 'deep'));
+      createdDirs.push(path.join(testDataDir, 'nested'));
+    });
+
+    test('should handle empty content', async () => {
+      const emptyFile = path.join(testDataDir, 'empty-file.txt');
+      
+      const toolCall = createMockToolCall('file_write', { 
+        filepath: emptyFile,
+        content: ''
+      });
+      const result = await fileTool.invoke(toolCall);
+
+      validateToolResult(result);
+      expect(result.success).toBe(true);
+      expect(result.data.bytesWritten).toBe(0);
+      
+      const fileContent = await fs.readFile(emptyFile, 'utf8');
+      expect(fileContent).toBe('');
+      
+      createdFiles.push(emptyFile);
+    });
+  });
+
+  describe('directory creation operations', () => {
+    test('should create new directory successfully', async () => {
+      const newDir = path.join(testDataDir, 'new-directory');
+      
+      const toolCall = createMockToolCall('directory_create', { 
+        dirpath: newDir 
+      });
+      const result = await fileTool.invoke(toolCall);
+
+      validateToolResult(result);
+      expect(result.success).toBe(true);
+      expect(result.data.dirpath).toBe(newDir);
+      expect(result.data.created).toBe(true);
+      
+      // Verify directory was created
+      const stats = await fs.stat(newDir);
+      expect(stats.isDirectory()).toBe(true);
+      
+      createdDirs.push(newDir);
+    });
+
+    test('should handle existing directory', async () => {
+      const existingDir = path.join(testDataDir, 'existing-directory');
+      
+      // Create directory first
+      await fs.mkdir(existingDir, { recursive: true });
+      createdDirs.push(existingDir);
+      
+      const toolCall = createMockToolCall('directory_create', { 
+        dirpath: existingDir 
+      });
+      const result = await fileTool.invoke(toolCall);
+
+      validateToolResult(result);
+      expect(result.success).toBe(true);
+      expect(result.data.created).toBe(false); // Directory already existed
+    });
+
+    test('should create nested directories within testdata', async () => {
+      const nestedDir = path.join(testDataDir, 'level1', 'level2', 'level3');
+      
+      const toolCall = createMockToolCall('directory_create', { 
+        dirpath: nestedDir 
+      });
+      const result = await fileTool.invoke(toolCall);
+
+      validateToolResult(result);
+      expect(result.success).toBe(true);
+      expect(result.data.created).toBe(true);
+      
+      // Verify nested directories were created
+      const stats = await fs.stat(nestedDir);
+      expect(stats.isDirectory()).toBe(true);
+      
+      createdDirs.push(nestedDir);
+      createdDirs.push(path.join(testDataDir, 'level1', 'level2'));
+      createdDirs.push(path.join(testDataDir, 'level1'));
+    });
+  });
+
+  describe('edge cases and error handling', () => {
+    test('should handle very long file paths within testdata', async () => {
+      const longFileName = 'a'.repeat(100) + '.txt';
+      const longFilePath = path.join(testDataDir, longFileName);
+      const content = 'Long filename test';
+      
+      const toolCall = createMockToolCall('file_write', { 
+        filepath: longFilePath,
+        content: content
+      });
+      const result = await fileTool.invoke(toolCall);
+
+      validateToolResult(result);
+      expect(result.success).toBe(true);
+      
+      createdFiles.push(longFilePath);
+    });
+
+    test('should handle special characters in paths within testdata', async () => {
+      const specialFile = path.join(testDataDir, 'file with spaces & symbols!.txt');
+      const content = 'Special characters test';
+      
+      const toolCall = createMockToolCall('file_write', { 
+        filepath: specialFile,
+        content: content
+      });
+      const result = await fileTool.invoke(toolCall);
+
+      validateToolResult(result);
+      expect(result.success).toBe(true);
+      
+      const fileContent = await fs.readFile(specialFile, 'utf8');
+      expect(fileContent).toBe(content);
+      
+      createdFiles.push(specialFile);
+    });
+
+    test('should handle Unicode content within testdata', async () => {
+      const unicodeContent = 'Hello 世界 🌍 café naïve résumé';
+      const unicodeFile = path.join(testDataDir, 'unicode-test.txt');
+      
+      const toolCall = createMockToolCall('file_write', { 
+        filepath: unicodeFile,
+        content: unicodeContent
+      });
+      const result = await fileTool.invoke(toolCall);
+
+      validateToolResult(result);
+      expect(result.success).toBe(true);
+      
+      const fileContent = await fs.readFile(unicodeFile, 'utf8');
+      expect(fileContent).toBe(unicodeContent);
+      
+      createdFiles.push(unicodeFile);
+    });
+  });
+});
