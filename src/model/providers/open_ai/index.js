@@ -21,17 +21,14 @@ class OpenAIProvider {
     async sendAndReceiveResponse(messages) {
         const response = await this.client.chat.completions.create({
             messages,
-            model: this.model,
-            response_format: {
-                'type': 'json_object'
-            }
+            model: this.model
         });
 
         const content = response.choices[0].message.content;
         if (!content || content.trim() === '') {
-            return {};
+            return '{}';
         }
-        return JSON.parse(content);
+        return content;
     }
 }
 

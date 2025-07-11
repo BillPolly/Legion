@@ -19,6 +19,7 @@
   "description": "EnvoyJS JavaScript core - A simple JavaScript framework for building AI Agents.",
   "dependencies": {
     "axios": "^1.7.9",
+    "json5": "^2.2.3",
     "openai": "^4.79.3",
     "ora": "^5.4.0",
     "puppeteer": "^24.1.1",

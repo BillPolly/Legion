@@ -64,16 +64,10 @@ describe('Model Providers', () => {
 
             expect(mockCreate).toHaveBeenCalledWith({
                 messages,
-                model: 'gpt-4',
-                response_format: {
-                    'type': 'json_object'
-                }
+                model: 'gpt-4'
             });
 
-            expect(result).toEqual({
-                task_completed: true,
-                response: { message: "Hi there!" }
-            });
+            expect(result).toEqual('{"task_completed": true, "response": {"message": "Hi there!"}}');
         });
 
         it('should handle empty response content', async () => {
@@ -101,7 +95,7 @@ describe('Model Providers', () => {
 
             const result = await provider.sendAndReceiveResponse(messages);
 
-            expect(result).toEqual({});
+            expect(result).toEqual('{}');
         });
     });
 });

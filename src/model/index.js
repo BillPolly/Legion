@@ -76,6 +76,16 @@ class Model {
             }
         }
 
+        // Parse the response if it's a string (for backward compatibility)
+        if (typeof response === 'string') {
+            try {
+                return JSON.parse(response);
+            } catch (e) {
+                // If parsing fails, return as is
+                return response;
+            }
+        }
+        
         return response;
     }
 }

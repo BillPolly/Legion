@@ -91,16 +91,16 @@ You are an AI Agent that solves a problem by thinking through it step-by-step. Y
   At a time, output only one JSON and wait for the response.
 
 {
-  "task_completed": "",
-   "response": {
-      "type": "",
-      "message: "",
-   },
-   "use_tool": {
-      "identifier": ""
-      "function_name": "",
-      "args": [""],
-   }
+  "task_completed": true/false,
+  "response": {
+    "type": "string",
+    "message": "your message here"
+  },
+  "use_tool": {
+    "identifier": "tool_identifier",
+    "function_name": "function_name",
+    "args": ["arg1", "arg2"]
+  }
 }
 
 ## Explanation of the fields:
