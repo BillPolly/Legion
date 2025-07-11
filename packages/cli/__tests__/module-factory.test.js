@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 
-const { ResourceManager, ModuleFactory } = require('@jsenvoy/core');
+const { ResourceManager, ModuleFactory } = require('@jsenvoy/modules');
 
 describe('ModuleFactory Integration', () => {
   let cli;

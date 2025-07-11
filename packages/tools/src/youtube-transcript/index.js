@@ -1,36 +1,151 @@
+const { Tool } = require('@jsenvoy/modules');
 const { YoutubeTranscript } = require('youtube-transcript');
-const { Tool } = require('../base/base-tool');
 
-class YoutubeTranscriptTool extends Tool {
-    constructor() {
-        super();
-        this.identifier = "youtube_transcript_tool";
-        this.name = "Youtube transcript tool";
-        this.abilities = ["Can fetch transcript of a Youtube video"];
-        this.instructions = ["Fetch the transcript of the video using the fetchTranscript function"];
-        this.functions = [{
-            name: 'fetchTranscript',
-            purpose: 'Fetch the transcription by youtube video id',
-            arguments: [{
-                name: 'videoId',
-                description: 'ID of the youtube video. It can be found in the URL query parameter "v"',
-                dataType: "string"
-            }],
-            response: "The entire transcript of the given youtube video"
-        }];
+class YoutubeTranscriptOpenAI extends Tool {
+  constructor() {
+    super();
+    this.name = 'youtube_transcript';
+    this.description = 'Fetches transcripts from YouTube videos';
+  }
 
-        this.functionMap = {
-            'fetchTranscript': this.fetchTranscript.bind(this)
-        };
+  /**
+   * Returns the tool description in OpenAI function calling format
+   */
+  getToolDescription() {
+    return {
+      type: 'function',
+      function: {
+        name: 'youtube_transcript_get',
+        description: 'Get the transcript/captions from a YouTube video',
+        parameters: {
+          type: 'object',
+          properties: {
+            videoUrl: {
+              type: 'string',
+              description: 'The YouTube video URL (e.g., "https://www.youtube.com/watch?v=VIDEO_ID")'
+            },
+            lang: {
+              type: 'string',
+              description: 'Language code for the transcript (default: "en" for English)'
+            }
+          },
+          required: ['videoUrl']
+        }
+      }
+    };
+  }
+
+  /**
+   * Invokes the YouTube transcript fetcher with the given tool call
+   */
+  async invoke(toolCall) {
+    try {
+      // Parse the arguments
+      const args = this.parseArguments(toolCall.function.arguments);
+      
+      // Validate required parameters
+      this.validateRequiredParameters(args, ['videoUrl']);
+      
+      // Get the transcript
+      const result = await this.getTranscript(args.videoUrl, args.lang || 'en');
+      
+      // Return success response
+      return this.createSuccessResponse(
+        toolCall.id,
+        toolCall.function.name,
+        result
+      );
+    } catch (error) {
+      // Return error response
+      return this.createErrorResponse(
+        toolCall.id,
+        toolCall.function.name,
+        error
+      );
     }
+  }
 
-    async fetchTranscript(videoId) {
-        const response = await YoutubeTranscript.fetchTranscript(videoId);
-        const string = response.map(obj => obj.text).join('\n');
-        return string;
+  /**
+   * Extracts video ID from various YouTube URL formats
+   */
+  extractVideoId(url) {
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+      /youtube\.com\/v\/([^&\n?#]+)/,
+      /youtube\.com\/shorts\/([^&\n?#]+)/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) {
+        return match[1];
+      }
     }
+    
+    // If no pattern matches, assume the input might be just the video ID
+    if (url.length === 11 && /^[a-zA-Z0-9_-]+$/.test(url)) {
+      return url;
+    }
+    
+    throw new Error('Invalid YouTube URL or video ID');
+  }
+
+  /**
+   * Fetches transcript from a YouTube video
+   */
+  async getTranscript(videoUrl, lang = 'en') {
+    try {
+      console.log(`Fetching transcript for: ${videoUrl}`);
+      
+      // Extract video ID
+      const videoId = this.extractVideoId(videoUrl);
+      console.log(`Video ID: ${videoId}`);
+      
+      // Fetch transcript
+      const transcriptData = await YoutubeTranscript.fetchTranscript(videoId, {
+        lang: lang
+      });
+      
+      if (!transcriptData || transcriptData.length === 0) {
+        throw new Error('No transcript available for this video');
+      }
+      
+      // Format transcript
+      const formattedTranscript = transcriptData.map(item => ({
+        text: item.text,
+        start: item.start,
+        duration: item.duration
+      }));
+      
+      // Create full text version
+      const fullText = transcriptData.map(item => item.text).join(' ');
+      
+      // Calculate total duration
+      const lastItem = transcriptData[transcriptData.length - 1];
+      const totalDuration = lastItem ? lastItem.start + lastItem.duration : 0;
+      
+      console.log(`Successfully fetched transcript with ${transcriptData.length} segments`);
+      
+      return {
+        success: true,
+        videoId: videoId,
+        videoUrl: `https://www.youtube.com/watch?v=${videoId}`,
+        language: lang,
+        segments: formattedTranscript,
+        fullText: fullText,
+        totalDuration: totalDuration,
+        segmentCount: transcriptData.length
+      };
+      
+    } catch (error) {
+      if (error.message.includes('Could not find transcript')) {
+        throw new Error('No transcript available for this video. The video might not have captions enabled.');
+      } else if (error.message.includes('Video unavailable')) {
+        throw new Error('Video is unavailable. It might be private, deleted, or geo-restricted.');
+      }
+      throw new Error(`Failed to fetch transcript: ${error.message}`);
+    }
+  }
 }
 
-const youtubeTranscriptTool = new YoutubeTranscriptTool();
-
-module.exports = { youtubeTranscriptTool };
+module.exports = YoutubeTranscriptOpenAI;

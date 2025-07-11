@@ -1,61 +1,109 @@
-const { Tool } = require("../base/base-tool");
-const { exec } = require("child_process");
-const { appendFile, readFile, writeFile } = require("fs/promises");
+const { Tool } = require('@jsenvoy/modules');
+const { exec } = require('child_process');
 const { promisify } = require('util');
 
-const execPromise = promisify(exec);
+const execAsync = promisify(exec);
 
-class BashExecutorTool extends Tool {
-    constructor() {
-        super();
-        this.name = "bash executor tool";
-        this.identifier = "bash-executor-tool";
-        this.abilities = ["Can execute a command in bash and return the response"];
-        this.instructions = [
-            "Execute the bash command using execute function",
-        ];
+class CommandExecutorOpenAI extends Tool {
+  constructor() {
+    super();
+    this.name = 'command_executor';
+    this.description = 'Executes bash commands in the terminal';
+  }
 
-        this.functions = [
-            {
-                name: "execute",
-                purpose: "Execute a bash command in terminal",
-                arguments: [
-                    {
-                        name: "command",
-                        description: "Command to be executed",
-                        dataType: "string",
-                    },
-                ],
-                response: "The output of executed command",
+  /**
+   * Returns the tool description in OpenAI function calling format
+   */
+  getToolDescription() {
+    return {
+      type: 'function',
+      function: {
+        name: 'command_executor_execute',
+        description: 'Execute a bash command in the terminal and return the output',
+        parameters: {
+          type: 'object',
+          properties: {
+            command: {
+              type: 'string',
+              description: 'The bash command to execute (e.g., "ls -la", "pwd", "echo hello")'
+            },
+            timeout: {
+              type: 'number',
+              description: 'Optional timeout in milliseconds (default: 30000ms)'
             }
-        ];
-
-        this.functionMap = {
-            execute: this.execute.bind(this)
-        };
-    }
-
-    async execute(command) {
-        try {
-            // Execute command and wait for completion
-            const { stdout, stderr } = await execPromise(command, { timeout: 50000 });
-
-            // If there's stderr output but the command didn't fail, you might want to include it
-            if (stderr) {
-                return `${stdout}\nSTDERR: ${stderr}`;
-            }
-
-            return stdout;
-        } catch (error) {
-            // Handle any errors that occurred during execution
-            if (error.code === 'ETIMEDOUT') {
-                return 'Command timed out. Maybe because it needed an input from you, which is impossible as per your first instruction. Remember - interactive prompts are not supported. You must find alternative ways to run the command or use a different command!';
-            }
-            return 'Command execution failed: ' + error.message;
+          },
+          required: ['command']
         }
+      }
+    };
+  }
+
+  /**
+   * Invokes the command executor with the given tool call
+   */
+  async invoke(toolCall) {
+    try {
+      // Parse the arguments
+      const args = this.parseArguments(toolCall.function.arguments);
+      
+      // Validate required parameters
+      this.validateRequiredParameters(args, ['command']);
+      
+      // Execute the command
+      const result = await this.execute(args.command, args.timeout);
+      
+      // Return success response
+      return this.createSuccessResponse(
+        toolCall.id,
+        toolCall.function.name,
+        result
+      );
+    } catch (error) {
+      // Return error response
+      return this.createErrorResponse(
+        toolCall.id,
+        toolCall.function.name,
+        error
+      );
     }
+  }
+
+  /**
+   * Executes a bash command
+   */
+  async execute(command, timeout = 30000) {
+    try {
+      console.log(`Executing command: ${command}`);
+      
+      // Security warning for production use
+      if (command.includes('rm -rf') || command.includes('dd if=')) {
+        console.warn('WARNING: Potentially dangerous command detected');
+      }
+      
+      // Execute the command with timeout
+      const { stdout, stderr } = await execAsync(command, {
+        timeout: timeout,
+        maxBuffer: 1024 * 1024 * 10, // 10MB buffer
+        shell: '/bin/bash'
+      });
+      
+      console.log('Command executed successfully');
+      
+      return {
+        success: true,
+        stdout: stdout,
+        stderr: stderr,
+        command: command
+      };
+    } catch (error) {
+      if (error.killed && error.signal === 'SIGTERM') {
+        throw new Error(`Command timed out after ${timeout}ms: ${command}`);
+      } else if (error.code) {
+        throw new Error(`Command failed with exit code ${error.code}: ${error.message}`);
+      }
+      throw new Error(`Failed to execute command: ${error.message}`);
+    }
+  }
 }
 
-const bashExecutorTool = new BashExecutorTool();
-
-module.exports = { bashExecutorTool };
+module.exports = CommandExecutorOpenAI;

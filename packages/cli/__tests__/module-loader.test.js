@@ -16,7 +16,7 @@ describe('Module Loader', () => {
   });
 
   describe('loadModules method', () => {
-    it('should discover modules from @jsenvoy/core', async () => {
+    it('should discover modules from @jsenvoy/modules', async () => {
       await cli.loadModules();
       
       expect(cli.modules).toBeDefined();

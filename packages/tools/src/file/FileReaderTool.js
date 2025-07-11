@@ -1,4 +1,4 @@
-const OpenAITool = require('../base/OpenAITool');
+const { OpenAITool } = require("@jsenvoy/modules");
 const fs = require('fs').promises;
 const path = require('path');
 

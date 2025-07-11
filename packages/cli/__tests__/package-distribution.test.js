@@ -35,7 +35,7 @@ describe('Package and Distribution', () => {
       expect(packageJson.scripts).toHaveProperty('test:coverage');
       
       // Dependencies
-      expect(packageJson.dependencies).toHaveProperty('@jsenvoy/core');
+      expect(packageJson.dependencies).toHaveProperty('@jsenvoy/modules');
       expect(packageJson.dependencies).toHaveProperty('chalk');
       expect(packageJson.dependencies).toHaveProperty('ora');
       
@@ -88,16 +88,16 @@ describe('Package and Distribution', () => {
   });
   
   describe('dependency management', () => {
-    it('should correctly reference @jsenvoy/core as dependency', async () => {
+    it('should correctly reference @jsenvoy/modules as dependency', async () => {
       const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
       
       // Should be a regular dependency, not dev or peer
-      expect(packageJson.dependencies).toHaveProperty('@jsenvoy/core');
-      expect(packageJson.devDependencies || {}).not.toHaveProperty('@jsenvoy/core');
-      expect(packageJson.peerDependencies || {}).not.toHaveProperty('@jsenvoy/core');
+      expect(packageJson.dependencies).toHaveProperty('@jsenvoy/modules');
+      expect(packageJson.devDependencies || {}).not.toHaveProperty('@jsenvoy/modules');
+      expect(packageJson.peerDependencies || {}).not.toHaveProperty('@jsenvoy/modules');
       
       // Version should be workspace reference
-      expect(packageJson.dependencies['@jsenvoy/core']).toBe('*');
+      expect(packageJson.dependencies['@jsenvoy/modules']).toBe('*');
     });
     
     it('should have no missing dependencies', () => {

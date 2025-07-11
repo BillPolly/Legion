@@ -1,66 +1,189 @@
-const axios = require("axios");
-const { Tool } = require("../base/base-tool");
+const { Tool } = require('@jsenvoy/modules');
 
-class GoogleSearchTool extends Tool {
-    constructor() {
-        super();
-        this.serperApiKey = null;
-        this.name = "Google Search Tool";
-        this.identifier = "google-search-tool";
-        this.abilities = ["You can perform google search and get results"];
-        this.functions = [{
-            name: "search",
-            purpose: "To do google search and get the results in JSON format",
-            arguments: [{
-                name: "query",
-                description: "The query to be searched",
-                dataType: "string"
-            }, {
-                name: "dateRange",
-                description: "To return search results within the given date range. Values can be week, month, year",
-                dataType: "string"
-            }],
-            response: "The search results in JSON format or some error message",
-        }];
+class SerperOpenAI extends Tool {
+  constructor() {
+    super();
+    this.name = 'google_search';
+    this.description = 'Performs Google searches using the Serper API';
+    this.apiKey = null;
+    this.baseUrl = 'https://google.serper.dev/search';
+  }
 
-        this.instructions = ["Use the search function to perform google search"];
-
-        this.functionMap = {
-            'search': this.search.bind(this)
-        };
+  /**
+   * Initialize the tool with API key
+   */
+  async initialize(config) {
+    if (!config || !config.apiKey) {
+      throw new Error('Serper API key is required. Please provide it in the config object.');
     }
+    this.apiKey = config.apiKey;
+    return true;
+  }
 
-    init(config) {
-        this.serperApiKey = config.serperApiKey;
-    }
-
-    async search(query, dateRange) {
-        const dateMap = {
-            week: "qdr:w",
-            month: "qdr:m",
-            year: "qdr:y",
-        };
-
-        if (!this.serperApiKey) {
-            return 'Cannot do search, because search tool was not initialised with a serper api key!';
-        }
-
-        let dRQuery = "";
-        if (dateRange) {
-            "&tbs=" + dateMap[dateRange] || '';
-        }
-
-        const response = await axios.get("https://google.serper.dev/search?q=" + query + dateRange, {
-            headers: {
-                'X-API-KEY': this.serperApiKey,
-                'Content-Type': 'application/json'
+  /**
+   * Returns the tool description in OpenAI function calling format
+   */
+  getToolDescription() {
+    return {
+      type: 'function',
+      function: {
+        name: 'google_search_search',
+        description: 'Search Google and get results',
+        parameters: {
+          type: 'object',
+          properties: {
+            query: {
+              type: 'string',
+              description: 'The search query to send to Google'
+            },
+            num: {
+              type: 'number',
+              description: 'Number of results to return (default: 10, max: 100)'
+            },
+            dateRange: {
+              type: 'string',
+              description: 'Filter results by date range',
+              enum: ['day', 'week', 'month', 'year']
             }
-        });
+          },
+          required: ['query']
+        }
+      }
+    };
+  }
 
-        return JSON.stringify(response.data);
+  /**
+   * Invokes the Google search with the given tool call
+   */
+  async invoke(toolCall) {
+    try {
+      // Parse the arguments
+      const args = this.parseArguments(toolCall.function.arguments);
+      
+      // Validate required parameters
+      this.validateRequiredParameters(args, ['query']);
+      
+      // Check if initialized
+      if (!this.apiKey) {
+        throw new Error('Serper tool not initialized. Please call initialize() with your API key first.');
+      }
+      
+      // Perform the search
+      const results = await this.search(args.query, args.num, args.dateRange);
+      
+      // Return success response
+      return this.createSuccessResponse(
+        toolCall.id,
+        toolCall.function.name,
+        results
+      );
+    } catch (error) {
+      // Return error response
+      return this.createErrorResponse(
+        toolCall.id,
+        toolCall.function.name,
+        error
+      );
     }
+  }
+
+  /**
+   * Performs a Google search using Serper API
+   */
+  async search(query, num = 10, dateRange = null) {
+    try {
+      console.log(`Searching Google for: ${query}`);
+      
+      // Build request payload
+      const payload = {
+        q: query,
+        num: Math.min(num, 100)
+      };
+
+      if (dateRange && ['day', 'week', 'month', 'year'].includes(dateRange)) {
+        payload.tbs = `qdr:${dateRange.charAt(0)}`;
+      }
+
+      // Make API request
+      const response = await fetch(this.baseUrl, {
+        method: 'POST',
+        headers: {
+          'X-API-KEY': this.apiKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Serper API error (${response.status}): ${error}`);
+      }
+
+      const data = await response.json();
+      
+      // Format results
+      const results = {
+        query: query,
+        searchInformation: data.searchInformation,
+        organic: data.organic || [],
+        answerBox: data.answerBox || null,
+        knowledgeGraph: data.knowledgeGraph || null,
+        relatedSearches: data.relatedSearches || []
+      };
+
+      console.log(`Found ${results.organic.length} search results`);
+      
+      return results;
+    } catch (error) {
+      if (error.message.includes('fetch is not defined')) {
+        // Fallback for Node.js versions without fetch
+        const https = require('https');
+        return new Promise((resolve, reject) => {
+          const payload = JSON.stringify({
+            q: query,
+            num: Math.min(num || 10, 100),
+            ...(dateRange && { tbs: `qdr:${dateRange.charAt(0)}` })
+          });
+
+          const options = {
+            hostname: 'google.serper.dev',
+            path: '/search',
+            method: 'POST',
+            headers: {
+              'X-API-KEY': this.apiKey,
+              'Content-Type': 'application/json',
+              'Content-Length': payload.length
+            }
+          };
+
+          const req = https.request(options, (res) => {
+            let data = '';
+            res.on('data', (chunk) => { data += chunk; });
+            res.on('end', () => {
+              if (res.statusCode === 200) {
+                const parsed = JSON.parse(data);
+                resolve({
+                  query: query,
+                  searchInformation: parsed.searchInformation,
+                  organic: parsed.organic || [],
+                  answerBox: parsed.answerBox || null,
+                  knowledgeGraph: parsed.knowledgeGraph || null,
+                  relatedSearches: parsed.relatedSearches || []
+                });
+              } else {
+                reject(new Error(`Serper API error (${res.statusCode}): ${data}`));
+              }
+            });
+          });
+
+          req.on('error', reject);
+          req.write(payload);
+          req.end();
+        });
+      }
+      throw new Error(`Failed to search: ${error.message}`);
+    }
+  }
 }
 
-const googleSearchTool = new GoogleSearchTool();
-
-module.exports = { googleSearchTool };
+module.exports = SerperOpenAI;

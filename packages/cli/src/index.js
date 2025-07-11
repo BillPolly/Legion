@@ -18,7 +18,7 @@ const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 
 // Import core classes
-const { ResourceManager, ModuleFactory } = require('@jsenvoy/core');
+const { ResourceManager, ModuleFactory } = require('@jsenvoy/modules');
 
 class CLI {
   constructor() {
@@ -321,8 +321,8 @@ class CLI {
   }
   
   getModulePath() {
-    // Resolve path to @jsenvoy/tools modules directory
-    const toolsPath = path.resolve(__dirname, '../../tools/src/modules');
+    // Resolve path to @jsenvoy/tools src directory where modules are located
+    const toolsPath = path.resolve(__dirname, '../../tools/src');
     return toolsPath;
   }
   
@@ -331,12 +331,20 @@ class CLI {
     const moduleFiles = [];
     
     try {
-      const files = await fs.readdir(modulesPath);
+      const entries = await fs.readdir(modulesPath, { withFileTypes: true });
       
-      for (const file of files) {
-        if (file.endsWith('Module.js')) {
-          const fullPath = path.join(modulesPath, file);
-          moduleFiles.push(fullPath);
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          // Look for Module.js files in subdirectories
+          const subPath = path.join(modulesPath, entry.name);
+          const subFiles = await fs.readdir(subPath);
+          
+          for (const file of subFiles) {
+            if (file.endsWith('Module.js')) {
+              const fullPath = path.join(subPath, file);
+              moduleFiles.push(fullPath);
+            }
+          }
         }
       }
     } catch (error) {

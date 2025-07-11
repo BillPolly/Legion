@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 
-const { ResourceManager } = require('@jsenvoy/core');
+const { ResourceManager } = require('@jsenvoy/modules');
 
 describe('ResourceManager Integration', () => {
   let cli;

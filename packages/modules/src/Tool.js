@@ -1,4 +1,8 @@
-class OpenAICompatibleTool {
+/**
+ * Base class for all tools in the jsEnvoy system
+ * Provides standard interface for OpenAI function calling format
+ */
+class Tool {
   constructor() {
     this.name = '';
     this.description = '';
@@ -87,4 +91,4 @@ class OpenAICompatibleTool {
   }
 }
 
-module.exports = OpenAICompatibleTool;
+module.exports = Tool;

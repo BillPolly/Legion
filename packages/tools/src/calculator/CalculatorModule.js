@@ -1,6 +1,9 @@
-const OpenAICompatibleTool = require('../../base/openai-compatible-tool');
+const { Tool, OpenAIModule } = require('@jsenvoy/modules');
 
-class CalculatorOpenAI extends OpenAICompatibleTool {
+/**
+ * Calculator tool that evaluates mathematical expressions
+ */
+class CalculatorTool extends Tool {
   constructor() {
     super();
     this.name = 'calculator';
@@ -66,7 +69,17 @@ class CalculatorOpenAI extends OpenAICompatibleTool {
   async evaluate(expression) {
     try {
       console.log('Evaluating expression:', expression);
-      const result = eval(expression);
+      
+      // Check for potentially dangerous code
+      const dangerous = ['import', 'require', 'process', 'fs', 'child_process', 'exec', 'spawn'];
+      for (const keyword of dangerous) {
+        if (expression.includes(keyword)) {
+          throw new Error(`Expression contains forbidden keyword: ${keyword}`);
+        }
+      }
+      
+      // Use Function constructor for safer evaluation
+      const result = Function('"use strict"; return (' + expression + ')')();
       console.log('Result:', result);
       return result;
     } catch (error) {
@@ -75,4 +88,28 @@ class CalculatorOpenAI extends OpenAICompatibleTool {
   }
 }
 
-module.exports = CalculatorOpenAI;
+/**
+ * Calculator module that provides mathematical calculation tools
+ * This is a self-contained module with no external dependencies
+ */
+class CalculatorModule extends OpenAIModule {
+  // No external dependencies needed
+  static dependencies = [];
+
+  constructor({} = {}) {
+    super();
+    this.name = 'calculator';
+    
+    // Create the calculator tool
+    this.tools = [
+      new CalculatorTool()
+    ];
+  }
+}
+
+// Export the module as the default
+module.exports = CalculatorModule;
+
+// Also export the tool class for direct usage
+module.exports.CalculatorTool = CalculatorTool;
+module.exports.CalculatorModule = CalculatorModule;

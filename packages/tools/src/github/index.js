@@ -1,4 +1,4 @@
-const { Tool } = require("../base/base-tool");
+const { Tool } = require('@jsenvoy/modules');
 const { exec } = require('child_process');
 const { promisify } = require('util');
 const https = require('https');
@@ -7,88 +7,170 @@ const path = require('path');
 
 const execAsync = promisify(exec);
 
-class GitHubTool extends Tool {
+class GitHubOpenAI extends Tool {
   constructor() {
     super();
-    this.name = "GitHub Repository Tool";
-    this.identifier = "github_tool";
-    this.abilities = [
-      "Create new GitHub repositories",
-      "Push code to GitHub repositories",
-      "Create and push in one operation"
-    ];
-    this.instructions = [
-      "Use createRepo to create a new repository",
-      "Use pushToRepo to push to an existing repository",
-      "Use createAndPush to do both operations at once"
-    ];
-    this.functions = [
-      {
-        name: "createRepo",
-        purpose: "Create a new GitHub repository",
-        arguments: [
-          {
-            name: "repoName",
-            description: "Name of the repository to create",
-            dataType: "string"
-          },
-          {
-            name: "description",
-            description: "Description of the repository",
-            dataType: "string"
-          },
-          {
-            name: "isPrivate",
-            description: "Whether the repository should be private",
-            dataType: "boolean"
-          }
-        ],
-        response: "Repository creation result with URLs"
-      },
-      {
-        name: "pushToRepo",
-        purpose: "Push current repository to GitHub",
-        arguments: [
-          {
-            name: "repoUrl",
-            description: "The GitHub repository URL",
-            dataType: "string"
-          },
-          {
-            name: "branch",
-            description: "Branch name to push to",
-            dataType: "string"
-          }
-        ],
-        response: "Push operation result"
-      },
-      {
-        name: "createAndPush",
-        purpose: "Create a new repository and push code to it",
-        arguments: [
-          {
-            name: "repoName",
-            description: "Name of the repository to create",
-            dataType: "string"
-          },
-          {
-            name: "description",
-            description: "Description of the repository",
-            dataType: "string"
-          }
-        ],
-        response: "Combined operation result"
-      }
-    ];
-    
-    this.functionMap = {
-      'createRepo': this.createRepo.bind(this),
-      'pushToRepo': this.pushToRepo.bind(this),
-      'createAndPush': this.createAndPush.bind(this)
-    };
+    this.name = 'github';
+    this.description = 'Creates GitHub repositories and manages git operations';
+    this.githubApiBase = 'api.github.com';
   }
 
+  /**
+   * Returns all tool functions in OpenAI format
+   */
+  getAllToolDescriptions() {
+    return [
+      {
+        type: 'function',
+        function: {
+          name: 'github_create_repo',
+          description: 'Create a new GitHub repository',
+          parameters: {
+            type: 'object',
+            properties: {
+              repoName: {
+                type: 'string',
+                description: 'Name of the repository to create'
+              },
+              description: {
+                type: 'string',
+                description: 'Description of the repository'
+              },
+              private: {
+                type: 'boolean',
+                description: 'Whether the repository should be private (default: false)'
+              },
+              autoInit: {
+                type: 'boolean',
+                description: 'Whether to initialize with a README (default: false)'
+              }
+            },
+            required: ['repoName']
+          }
+        }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'github_push_to_repo',
+          description: 'Push current repository to a GitHub repository',
+          parameters: {
+            type: 'object',
+            properties: {
+              repoUrl: {
+                type: 'string',
+                description: 'The GitHub repository URL (e.g., "https://github.com/username/repo.git")'
+              },
+              branch: {
+                type: 'string',
+                description: 'Branch name to push to (default: "main")'
+              },
+              force: {
+                type: 'boolean',
+                description: 'Whether to force push (default: false)'
+              }
+            },
+            required: ['repoUrl']
+          }
+        }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'github_create_and_push',
+          description: 'Create a new GitHub repository and push the current code to it',
+          parameters: {
+            type: 'object',
+            properties: {
+              repoName: {
+                type: 'string',
+                description: 'Name of the repository to create'
+              },
+              description: {
+                type: 'string',
+                description: 'Description of the repository'
+              },
+              private: {
+                type: 'boolean',
+                description: 'Whether the repository should be private (default: false)'
+              },
+              branch: {
+                type: 'string',
+                description: 'Branch name to push to (default: "main")'
+              }
+            },
+            required: ['repoName']
+          }
+        }
+      }
+    ];
+  }
+
+  /**
+   * Returns the primary tool function description
+   */
+  getToolDescription() {
+    return this.getAllToolDescriptions()[0];
+  }
+
+  /**
+   * Invokes the GitHub tool with the given tool call
+   */
+  async invoke(toolCall) {
+    try {
+      const args = this.parseArguments(toolCall.function.arguments);
+      let result;
+
+      switch (toolCall.function.name) {
+        case 'github_create_repo':
+          this.validateRequiredParameters(args, ['repoName']);
+          result = await this.createRepo(
+            args.repoName,
+            args.description,
+            args.private,
+            args.autoInit
+          );
+          break;
+        case 'github_push_to_repo':
+          this.validateRequiredParameters(args, ['repoUrl']);
+          result = await this.pushToRepo(
+            args.repoUrl,
+            args.branch || 'main',
+            args.force || false
+          );
+          break;
+        case 'github_create_and_push':
+          this.validateRequiredParameters(args, ['repoName']);
+          result = await this.createAndPush(
+            args.repoName,
+            args.description,
+            args.private,
+            args.branch || 'main'
+          );
+          break;
+        default:
+          throw new Error(`Unknown function: ${toolCall.function.name}`);
+      }
+
+      return this.createSuccessResponse(
+        toolCall.id,
+        toolCall.function.name,
+        result
+      );
+    } catch (error) {
+      return this.createErrorResponse(
+        toolCall.id,
+        toolCall.function.name,
+        error
+      );
+    }
+  }
+
+  /**
+   * Get GitHub credentials from environment
+   */
   async getCredentials() {
+    // Try to read from .env file
     const envPath = path.join(process.cwd(), '.env');
     try {
       const envContent = await fs.readFile(envPath, 'utf8');
@@ -97,9 +179,10 @@ class GitHubTool extends Tool {
         return { token: patMatch[1].trim() };
       }
     } catch (error) {
-      // .env file not found
+      // .env file not found or not readable
     }
 
+    // Fallback to environment variable
     if (process.env.GITHUB_PAT) {
       return { token: process.env.GITHUB_PAT };
     }
@@ -107,10 +190,13 @@ class GitHubTool extends Tool {
     throw new Error('GitHub PAT not found. Please set GITHUB_PAT in .env file or environment variable.');
   }
 
+  /**
+   * Get GitHub username from git config or API
+   */
   async getGitHubUsername(token) {
     return new Promise((resolve, reject) => {
       const options = {
-        hostname: 'api.github.com',
+        hostname: this.githubApiBase,
         path: '/user',
         method: 'GET',
         headers: {
@@ -128,7 +214,7 @@ class GitHubTool extends Tool {
             const user = JSON.parse(data);
             resolve(user.login);
           } else {
-            reject(new Error(`Failed to get user info: ${res.statusCode}`));
+            reject(new Error(`Failed to get user info: ${res.statusCode} ${data}`));
           }
         });
       });
@@ -138,7 +224,12 @@ class GitHubTool extends Tool {
     });
   }
 
-  async createRepo(repoName, description = '', isPrivate = false) {
+  /**
+   * Create a new GitHub repository
+   */
+  async createRepo(repoName, description = '', isPrivate = false, autoInit = false) {
+    console.log(`Creating GitHub repository: ${repoName}`);
+    
     const { token } = await this.getCredentials();
     
     return new Promise((resolve, reject) => {
@@ -146,11 +237,11 @@ class GitHubTool extends Tool {
         name: repoName,
         description: description,
         private: isPrivate,
-        auto_init: false
+        auto_init: autoInit
       });
 
       const options = {
-        hostname: 'api.github.com',
+        hostname: this.githubApiBase,
         path: '/user/repos',
         method: 'POST',
         headers: {
@@ -169,14 +260,17 @@ class GitHubTool extends Tool {
           const parsed = JSON.parse(responseData);
           
           if (res.statusCode === 201) {
+            console.log(`Repository created successfully: ${parsed.html_url}`);
             resolve({
               success: true,
               name: parsed.name,
               url: parsed.html_url,
-              cloneUrl: parsed.clone_url
+              cloneUrl: parsed.clone_url,
+              sshUrl: parsed.ssh_url,
+              private: parsed.private
             });
           } else {
-            reject(new Error(`Failed to create repository: ${parsed.message}`));
+            reject(new Error(`Failed to create repository: ${parsed.message || responseData}`));
           }
         });
       });
@@ -187,59 +281,100 @@ class GitHubTool extends Tool {
     });
   }
 
-  async pushToRepo(repoUrl, branch = 'main') {
-    await execAsync('git rev-parse --git-dir');
+  /**
+   * Push current repository to GitHub
+   */
+  async pushToRepo(repoUrl, branch = 'main', force = false) {
+    console.log(`Pushing to repository: ${repoUrl}`);
     
-    const { stdout: currentBranch } = await execAsync('git branch --show-current');
-    const sourceBranch = currentBranch.trim() || 'main';
-    
-    const remoteName = 'github-push';
     try {
+      // Check if we're in a git repository
+      await execAsync('git rev-parse --git-dir');
+      
+      // Get current branch
+      const { stdout: currentBranch } = await execAsync('git branch --show-current');
+      const sourceBranch = currentBranch.trim() || 'main';
+      
+      // Add remote if it doesn't exist
+      const remoteName = 'github-push';
+      try {
+        await execAsync(`git remote remove ${remoteName}`);
+      } catch (e) {
+        // Remote doesn't exist, that's fine
+      }
+      
+      await execAsync(`git remote add ${remoteName} ${repoUrl}`);
+      
+      // Push to the repository
+      const forceFlag = force ? '--force' : '';
+      const { stdout, stderr } = await execAsync(
+        `git push ${remoteName} ${sourceBranch}:${branch} ${forceFlag}`
+      );
+      
+      // Remove the temporary remote
       await execAsync(`git remote remove ${remoteName}`);
-    } catch (e) {
-      // Remote doesn't exist
+      
+      console.log('Push completed successfully');
+      
+      return {
+        success: true,
+        sourceBranch: sourceBranch,
+        targetBranch: branch,
+        repoUrl: repoUrl,
+        forced: force,
+        output: stdout + stderr
+      };
+    } catch (error) {
+      throw new Error(`Failed to push to repository: ${error.message}`);
     }
-    
-    await execAsync(`git remote add ${remoteName} ${repoUrl}`);
-    await execAsync(`git push ${remoteName} ${sourceBranch}:${branch}`);
-    await execAsync(`git remote remove ${remoteName}`);
-    
-    return {
-      success: true,
-      sourceBranch: sourceBranch,
-      targetBranch: branch,
-      repoUrl: repoUrl
-    };
   }
 
-  async createAndPush(repoName, description = '') {
+  /**
+   * Create a new repository and push current code to it
+   */
+  async createAndPush(repoName, description = '', isPrivate = false, branch = 'main') {
+    console.log(`Creating repository and pushing code: ${repoName}`);
+    
     try {
-      await execAsync('git rev-parse --git-dir');
+      // First, ensure we're in a git repository
+      try {
+        await execAsync('git rev-parse --git-dir');
+      } catch (error) {
+        // Not a git repo, initialize it
+        console.log('Initializing git repository...');
+        await execAsync('git init');
+        
+        // Add all files and create initial commit
+        await execAsync('git add .');
+        await execAsync('git commit -m "Initial commit"');
+      }
+      
+      // Create the repository
+      const repoInfo = await this.createRepo(repoName, description, isPrivate, false);
+      
+      // Get credentials and username
+      const { token } = await this.getCredentials();
+      const username = await this.getGitHubUsername(token);
+      
+      // Construct the authenticated URL
+      const authenticatedUrl = repoInfo.cloneUrl.replace(
+        'https://github.com',
+        `https://${username}:${token}@github.com`
+      );
+      
+      // Push to the new repository
+      const pushResult = await this.pushToRepo(authenticatedUrl, branch, false);
+      
+      return {
+        success: true,
+        repository: repoInfo,
+        push: pushResult,
+        message: `Successfully created repository and pushed code to ${repoInfo.url}`
+      };
     } catch (error) {
-      await execAsync('git init');
-      await execAsync('git add .');
-      await execAsync('git commit -m "Initial commit"');
+      throw new Error(`Failed to create and push: ${error.message}`);
     }
-    
-    const repoInfo = await this.createRepo(repoName, description, false);
-    const { token } = await this.getCredentials();
-    const username = await this.getGitHubUsername(token);
-    
-    const authenticatedUrl = repoInfo.cloneUrl.replace(
-      'https://github.com',
-      `https://${username}:${token}@github.com`
-    );
-    
-    const pushResult = await this.pushToRepo(authenticatedUrl, 'main');
-    
-    return {
-      success: true,
-      repository: repoInfo,
-      push: pushResult
-    };
   }
 }
 
-const githubTool = new GitHubTool();
-
-module.exports = { GitHubTool, githubTool };
+module.exports = GitHubOpenAI;

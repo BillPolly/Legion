@@ -36,7 +36,7 @@ describe('Core Integration Tests', () => {
     }
   });
 
-  describe('@jsenvoy/core calculator module', () => {
+  describe('@jsenvoy/modules calculator module', () => {
     it('should execute calculator operations through CLI', async () => {
       const { stdout, stderr } = await execAsync(
         `node ${binPath} calculator.calculator_evaluate --expression "42 * 10"`
@@ -76,7 +76,7 @@ describe('Core Integration Tests', () => {
     });
   });
 
-  describe('@jsenvoy/core file module', () => {
+  describe('@jsenvoy/modules file module', () => {
     it('should read files through CLI', async () => {
       // Create a test file
       const testFile = path.join(tempDir, 'test.txt');
