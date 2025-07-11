@@ -27,3 +27,10 @@ pids
 *.pid
 *.seed
 *.pid.lock
+
+# Monorepo specific
+packages/*/node_modules
+packages/*/coverage
+packages/*/dist
+packages/*/.env
+lerna-debug.log
