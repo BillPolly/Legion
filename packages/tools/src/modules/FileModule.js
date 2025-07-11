@@ -1,6 +1,6 @@
-const { OpenAIModule } = require('../core');
-// Import tools from @jsenvoy/tools package
-const { FileReaderTool, FileWriterTool, DirectoryCreatorTool } = require('@jsenvoy/tools/src/file');
+const { OpenAIModule } = require('@jsenvoy/core');
+// Import tools from local file package
+const { FileReaderTool, FileWriterTool, DirectoryCreatorTool } = require('../file');
 
 /**
  * Module containing file system related tools

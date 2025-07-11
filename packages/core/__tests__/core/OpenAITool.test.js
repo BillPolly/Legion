@@ -1,4 +1,4 @@
-const OpenAITool = require('../../src/core/OpenAITool');
+const { OpenAITool } = require('../../src/core/OpenAITool');
 
 // Test implementation of OpenAITool
 class TestTool extends OpenAITool {

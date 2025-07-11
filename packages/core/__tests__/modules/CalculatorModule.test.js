@@ -1,4 +1,4 @@
-const CalculatorModule = require('../../src/modules/CalculatorModule');
+const { CalculatorModule } = require('@jsenvoy/tools');
 const { CalculatorEvaluateTool } = require('@jsenvoy/tools/src/calculator');
 const { OpenAIModule } = require('../../src/core');
 
@@ -17,7 +17,7 @@ describe('CalculatorModule', () => {
 
   describe('constructor', () => {
     it('should extend OpenAIModule', () => {
-      expect(module).toBeInstanceOf(OpenAIModule);
+      expect(module).toBeInstanceOf(OpenAIModule.OpenAIModule);
     });
 
     it('should set module name', () => {

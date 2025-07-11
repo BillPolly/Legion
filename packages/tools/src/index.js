@@ -19,6 +19,9 @@ const { githubTool } = require("./github");
 // Export OpenAI-compatible tools
 const openAI = require("./openai");
 
+// Export modules
+const modules = require("./modules");
+
 module.exports = {
     // Base classes
     Tool,
@@ -42,5 +45,8 @@ module.exports = {
     ...openAI,
     openAITools: openAI.openAITools,
     getAllOpenAIToolDescriptions: openAI.getAllToolDescriptions,
-    invokeOpenAIToolByFunctionName: openAI.invokeByFunctionName
+    invokeOpenAIToolByFunctionName: openAI.invokeByFunctionName,
+    
+    // Modules
+    ...modules
 };

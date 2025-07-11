@@ -16,4 +16,4 @@ class OpenAIModule {
   }
 }
 
-module.exports = OpenAIModule;
+module.exports = { OpenAIModule };

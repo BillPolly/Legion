@@ -18,8 +18,7 @@ const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 
 // Import core classes
-const corePath = path.resolve(__dirname, '../../core/src/core/index.js');
-const { ResourceManager, ModuleFactory } = require(corePath);
+const { ResourceManager, ModuleFactory } = require('@jsenvoy/core');
 
 class CLI {
   constructor() {
@@ -322,9 +321,9 @@ class CLI {
   }
   
   getModulePath() {
-    // Resolve path to @jsenvoy/core modules directory
-    const corePath = path.resolve(__dirname, '../../core/src/modules');
-    return corePath;
+    // Resolve path to @jsenvoy/tools modules directory
+    const toolsPath = path.resolve(__dirname, '../../tools/src/modules');
+    return toolsPath;
   }
   
   async discoverModules() {

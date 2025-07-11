@@ -34,4 +34,4 @@ class OpenAITool {
   }
 }
 
-module.exports = OpenAITool;
+module.exports = { OpenAITool };

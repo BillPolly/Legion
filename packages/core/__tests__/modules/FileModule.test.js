@@ -1,4 +1,4 @@
-const FileModule = require('../../src/modules/FileModule');
+const { FileModule } = require('@jsenvoy/tools');
 const { FileReaderTool, FileWriterTool, DirectoryCreatorTool } = require('@jsenvoy/tools/src/file');
 const { OpenAIModule } = require('../../src/core');
 
@@ -26,7 +26,7 @@ describe('FileModule', () => {
 
   describe('constructor', () => {
     it('should extend OpenAIModule', () => {
-      expect(module).toBeInstanceOf(OpenAIModule);
+      expect(module).toBeInstanceOf(OpenAIModule.OpenAIModule);
     });
 
     it('should set module name', () => {

@@ -1,5 +1,5 @@
-const OpenAIModule = require('../../src/core/OpenAIModule');
-const OpenAITool = require('../../src/core/OpenAITool');
+const { OpenAIModule } = require('../../src/core/OpenAIModule');
+const { OpenAITool } = require('../../src/core/OpenAITool');
 
 // Mock tools for testing
 class MockTool1 extends OpenAITool {

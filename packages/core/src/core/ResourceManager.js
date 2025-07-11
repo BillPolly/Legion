@@ -38,4 +38,4 @@ class ResourceManager {
   }
 }
 
-module.exports = ResourceManager;
+module.exports = { ResourceManager };

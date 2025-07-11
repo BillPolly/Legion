@@ -1,6 +1,6 @@
-const ModuleFactory = require('../../src/core/ModuleFactory');
-const ResourceManager = require('../../src/core/ResourceManager');
-const OpenAIModule = require('../../src/core/OpenAIModule');
+const { ModuleFactory } = require('../../src/core/ModuleFactory');
+const { ResourceManager } = require('../../src/core/ResourceManager');
+const { OpenAIModule } = require('../../src/core/OpenAIModule');
 
 // Test modules
 class SimpleModule extends OpenAIModule {

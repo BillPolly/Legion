@@ -1,4 +1,4 @@
-const ResourceManager = require('./ResourceManager');
+const { ResourceManager } = require('./ResourceManager');
 
 /**
  * Factory for creating modules with dependency injection
@@ -48,4 +48,4 @@ class ModuleFactory {
   }
 }
 
-module.exports = ModuleFactory;
+module.exports = { ModuleFactory };
