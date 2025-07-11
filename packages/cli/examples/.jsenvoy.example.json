@@ -1,0 +1,98 @@
+{
+  "verbose": false,
+  "output": "text",
+  "color": true,
+  "resources": {
+    "// Global resources available to all modules": "",
+    "basePath": "${HOME}/jsenvoy-data",
+    "encoding": "utf8",
+    "API_KEY": "${JSENVOY_API_KEY}",
+    "API_URL": "${JSENVOY_API_URL:-https://api.example.com}",
+    "maxRetries": 3,
+    "timeout": 30000
+  },
+  "modules": {
+    "// Module-specific configuration": "",
+    "file": {
+      "createDirectories": true,
+      "permissions": 755,
+      "maxFileSize": 10485760,
+      "// 10MB limit for file operations": ""
+    },
+    "calculator": {
+      "precision": 10,
+      "timeout": 5000
+    },
+    "github": {
+      "token": "${GITHUB_TOKEN}",
+      "defaultBranch": "main",
+      "autoCommit": false
+    }
+  },
+  "aliases": {
+    "// Shorthand commands for common operations": "",
+    "calc": "calculator.calculator_evaluate --expression",
+    "eval": "calculator.calculator_evaluate",
+    "read": "file.file_reader --filePath",
+    "write": "file.file_writer --filePath",
+    "mkdir": "file.directory_creator --directoryPath",
+    "ls": "list",
+    "i": "interactive",
+    
+    "// Complex aliases with default arguments": "",
+    "json-write": "file.file_writer --json",
+    "append": "file.file_writer --append true --filePath",
+    "calc-verbose": "calculator.calculator_evaluate --verbose --expression"
+  },
+  "presets": {
+    "// Environment-specific configurations": "",
+    "dev": {
+      "verbose": true,
+      "output": "json",
+      "color": true,
+      "resources": {
+        "API_URL": "http://localhost:3000",
+        "DEBUG": "true"
+      },
+      "modules": {
+        "file": {
+          "createDirectories": true
+        }
+      }
+    },
+    "prod": {
+      "verbose": false,
+      "output": "text",
+      "color": false,
+      "resources": {
+        "API_URL": "https://api.production.com",
+        "DEBUG": "false"
+      },
+      "modules": {
+        "file": {
+          "createDirectories": false,
+          "permissions": 644
+        }
+      }
+    },
+    "test": {
+      "verbose": true,
+      "output": "json",
+      "resources": {
+        "basePath": "/tmp/jsenvoy-test",
+        "API_URL": "http://localhost:8080"
+      }
+    }
+  },
+  "toolDefaults": {
+    "// Default timeout for all tool executions": "",
+    "timeout": 30000
+  },
+  "interactive": {
+    "// Interactive mode specific settings": "",
+    "historySize": 100,
+    "prompt": "jsenvoy> ",
+    "welcomeMessage": true,
+    "autoComplete": true
+  }
+}

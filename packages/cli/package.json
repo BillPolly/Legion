@@ -2,31 +2,50 @@
   "name": "@jsenvoy/cli",
   "version": "0.0.1",
   "description": "jsEnvoy CLI - A generic command-line interface for executing modular AI agent tools",
-  "main": "src/index.js",
+  "type": "module",
+  "main": "./src/index.js",
   "bin": {
-    "jsenvoy": "bin/jsenvoy"
+    "jsenvoy": "./bin/jsenvoy"
   },
   "scripts": {
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
   },
   "keywords": [
     "cli",
     "jsenvoy",
     "ai",
     "tools",
-    "command-line"
+    "command-line",
+    "modular",
+    "extensible"
   ],
   "author": "Anand Sukumaran",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/jsenvoy.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/yourusername/jsenvoy/tree/main/packages/cli#readme",
+  "bugs": {
+    "url": "https://github.com/yourusername/jsenvoy/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "src",
+    "bin",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
   "dependencies": {
-    "@jsenvoy/core": "^0.0.1",
-    "commander": "^11.1.0",
+    "@jsenvoy/core": "workspace:*",
     "chalk": "^4.1.2",
-    "inquirer": "^8.2.6",
-    "ora": "^5.4.1",
-    "yargs": "^17.7.2"
+    "ora": "^5.4.1"
   },
   "devDependencies": {
     "jest": "^29.7.0",
@@ -34,6 +53,7 @@
   },
   "jest": {
     "testEnvironment": "node",
+    "transform": {},
     "coverageDirectory": "coverage",
     "collectCoverageFrom": [
       "src/**/*.js",
