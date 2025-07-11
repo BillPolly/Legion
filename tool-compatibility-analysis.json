@@ -1,0 +1,326 @@
+{
+  "timestamp": "2025-07-11T06:27:50.594Z",
+  "summary": {
+    "total": 10,
+    "singleFunction": 8,
+    "multipleFunction": 2,
+    "hasComplexTypes": 0,
+    "hasOptionalArgs": 0,
+    "requiresInit": 1,
+    "hasSpecialReturns": 1
+  },
+  "tools": [
+    {
+      "name": "Calculator",
+      "identifier": "calculator_tool",
+      "functionCount": 1,
+      "functions": [
+        {
+          "name": "evaluate",
+          "purpose": "To evaluate a mathematical expression in Javascript",
+          "arguments": [
+            {
+              "name": "expression",
+              "type": "string",
+              "description": "Javascript mathematical expression, for example: 784*566"
+            }
+          ],
+          "issues": []
+        }
+      ],
+      "issues": [],
+      "compatibility": "full"
+    },
+    {
+      "name": "Bash Executor",
+      "identifier": "bash-executor-tool",
+      "functionCount": 1,
+      "functions": [
+        {
+          "name": "execute",
+          "purpose": "Execute a bash command in terminal",
+          "arguments": [
+            {
+              "name": "command",
+              "type": "string",
+              "description": "Command to be executed"
+            }
+          ],
+          "issues": []
+        }
+      ],
+      "issues": [],
+      "compatibility": "full"
+    },
+    {
+      "name": "Crawler",
+      "identifier": "crawler-tool",
+      "functionCount": 1,
+      "functions": [
+        {
+          "name": "crawl",
+          "purpose": "crawl a given url and gets its raw HTML body",
+          "arguments": [
+            {
+              "name": "url",
+              "type": "string",
+              "description": "URL of the page to be crawled"
+            },
+            {
+              "name": "maxChars",
+              "type": "number",
+              "description": "Maximum characters to be returned in response. Use this if the LLM model has token limits"
+            }
+          ],
+          "issues": []
+        }
+      ],
+      "issues": [],
+      "compatibility": "full"
+    },
+    {
+      "name": "File Reader",
+      "identifier": "file-reader-tool",
+      "functionCount": 1,
+      "functions": [
+        {
+          "name": "read",
+          "purpose": "Read a file from disk",
+          "arguments": [
+            {
+              "name": "filePath",
+              "type": "string",
+              "description": "Path of the file to read"
+            }
+          ],
+          "issues": []
+        }
+      ],
+      "issues": [],
+      "compatibility": "full"
+    },
+    {
+      "name": "File Writer",
+      "identifier": "file_reader_tool",
+      "functionCount": 2,
+      "functions": [
+        {
+          "name": "writeFile",
+          "purpose": "create a new file and write text to it",
+          "arguments": [
+            {
+              "name": "fileName",
+              "type": "string",
+              "description": "the full relative path including the filename of the file to be created"
+            },
+            {
+              "name": "content",
+              "type": "string",
+              "description": "text content for the file"
+            }
+          ],
+          "issues": []
+        },
+        {
+          "name": "createDirectory",
+          "purpose": "create a new directory",
+          "arguments": [
+            {
+              "name": "dirPath",
+              "type": "string",
+              "description": "relative path of the directory to be created"
+            }
+          ],
+          "issues": []
+        }
+      ],
+      "issues": [
+        {
+          "type": "multiple_functions",
+          "severity": "high",
+          "description": "Tool has 2 functions but adapter only exposes the first one",
+          "functions": [
+            "writeFile",
+            "createDirectory"
+          ]
+        },
+        {
+          "type": "identifier_mismatch",
+          "severity": "medium",
+          "description": "Tool identifier doesn't match tool purpose (file_reader_tool for file writer)"
+        }
+      ],
+      "compatibility": "partial"
+    },
+    {
+      "name": "Page Screenshot",
+      "identifier": "page_screenshot_tool",
+      "functionCount": 1,
+      "functions": [
+        {
+          "name": "screenshot",
+          "purpose": "Take the screenshot of given page and save it in the path provided",
+          "arguments": [
+            {
+              "name": "url",
+              "type": "string",
+              "description": "Url of the page to be screenshotted"
+            },
+            {
+              "name": "path",
+              "type": "string",
+              "description": "Path to save the screenshot"
+            }
+          ],
+          "issues": []
+        }
+      ],
+      "issues": [
+        {
+          "type": "special_return",
+          "severity": "low",
+          "description": "Returns object with isImage flag and base64 data instead of simple string"
+        }
+      ],
+      "compatibility": "full_with_warnings"
+    },
+    {
+      "name": "Google Search (Serper)",
+      "identifier": "google-search-tool",
+      "functionCount": 1,
+      "functions": [
+        {
+          "name": "search",
+          "purpose": "To do google search and get the results in JSON format",
+          "arguments": [
+            {
+              "name": "query",
+              "type": "string",
+              "description": "The query to be searched"
+            },
+            {
+              "name": "dateRange",
+              "type": "string",
+              "description": "To return search results within the given date range. Values can be week, month, year"
+            }
+          ],
+          "issues": []
+        }
+      ],
+      "issues": [
+        {
+          "type": "requires_init",
+          "severity": "medium",
+          "description": "Tool has init() method that needs to be called before use"
+        }
+      ],
+      "compatibility": "full_with_warnings"
+    },
+    {
+      "name": "Server Starter",
+      "identifier": "server-starter-tool",
+      "functionCount": 2,
+      "functions": [
+        {
+          "name": "start",
+          "purpose": "Runs npm run start on the folder you specifies as the argument",
+          "arguments": [
+            {
+              "name": "folder",
+              "type": "string",
+              "description": "Folder where npm run start should be executed"
+            }
+          ],
+          "issues": []
+        },
+        {
+          "name": "readServerOutput",
+          "purpose": "To read the output from a started server",
+          "arguments": [],
+          "issues": [
+            {
+              "type": "no_arguments",
+              "note": "Function has no arguments - adapter should handle empty args object"
+            }
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "type": "multiple_functions",
+          "severity": "high",
+          "description": "Tool has 2 functions but adapter only exposes the first one",
+          "functions": [
+            "start",
+            "readServerOutput"
+          ]
+        }
+      ],
+      "compatibility": "partial"
+    },
+    {
+      "name": "Web Page to Markdown",
+      "identifier": "webpage-to-markdown",
+      "functionCount": 1,
+      "functions": [
+        {
+          "name": "convertToMarkdown",
+          "purpose": "To crawl the given URL and return a markdown string with relevant tags such as H1, H2 etc",
+          "arguments": [
+            {
+              "name": "url",
+              "type": "string",
+              "description": "Url to be crawled"
+            },
+            {
+              "name": "maxChars",
+              "type": "number",
+              "description": "Maximum characters to be returned in response. Use this if the LLM model has token limits"
+            }
+          ],
+          "issues": []
+        }
+      ],
+      "issues": [],
+      "compatibility": "full"
+    },
+    {
+      "name": "YouTube Transcript",
+      "identifier": "youtube_transcript_tool",
+      "functionCount": 1,
+      "functions": [
+        {
+          "name": "fetchTranscript",
+          "purpose": "Fetch the transcription by youtube video id",
+          "arguments": [
+            {
+              "name": "videoId",
+              "type": "string",
+              "description": "ID of the youtube video. It can be found in the URL query parameter \"v\""
+            }
+          ],
+          "issues": []
+        }
+      ],
+      "issues": [],
+      "compatibility": "full"
+    }
+  ],
+  "recommendations": [
+    {
+      "issue": "Multiple Functions per Tool",
+      "affected": [
+        "File Writer (2 functions)",
+        "Server Starter (2 functions)"
+      ],
+      "recommendation": "Modify ToolAdapter to handle multiple functions by either:\n  1. Creating separate tool instances for each function\n  2. Returning an array of function descriptions\n  3. Creating a multiplexer that routes to the correct function"
+    },
+    {
+      "issue": "Tools Requiring Initialization",
+      "affected": [
+        "Google Search (Serper)"
+      ],
+      "recommendation": "Add initialization support to ToolAdapter:\n  1. Check for init() method in constructor\n  2. Add setConfig() method to adapter\n  3. Pass through initialization before first use"
+    }
+  ]
+}
