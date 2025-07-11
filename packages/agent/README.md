@@ -1,6 +1,6 @@
 # @jsenvoy/agent
 
-AI agent implementation with retry logic, tool execution, and structured responses for jsEnvoy.
+AI agent implementation with built-in retry logic, tool execution, and structured responses for jsEnvoy.
 
 ## Installation
 
@@ -13,7 +13,7 @@ npm install @jsenvoy/agent
 ```javascript
 const { Agent } = require('@jsenvoy/agent');
 
-// Create an agent
+// Create an agent with built-in retry logic
 const agent = new Agent({
   modelConfig: {
     provider: 'openai',
@@ -21,7 +21,8 @@ const agent = new Agent({
     apiKey: process.env.OPENAI_API_KEY
   },
   tools: [calculatorTool, fileReaderTool],
-  maxRetries: 3
+  maxRetries: 3,
+  retryBackoff: 1000 // Optional: backoff multiplier for retries
 });
 
 // Execute a task
@@ -38,29 +39,18 @@ console.log(result);
 - Chains multiple tools for complex operations
 - Handles tool failures gracefully
 
-### Retry Logic
+### Robust Retry Logic
 - Built-in retry mechanism with exponential backoff
 - Configurable retry strategies
 - Error classification for smart retries
+- Graceful error handling without process termination
+- Detailed retry tracking and reporting
 
 ### Structured Responses
 - Consistent response format
 - Detailed execution logs
 - Error tracking and reporting
 
-### AgentWithRetry
-Enhanced agent with advanced retry capabilities:
-
-```javascript
-const { AgentWithRetry } = require('@jsenvoy/agent');
-
-const agent = new AgentWithRetry({
-  modelConfig: { /* ... */ },
-  maxRetries: 5,
-  retryDelay: 1000,
-  backoffMultiplier: 2
-});
-```
 
 ## API Reference
 
@@ -74,7 +64,8 @@ Config options:
 - `modelConfig` - Model provider configuration
 - `tools` - Array of available tools
 - `systemPrompt` - Custom system prompt
-- `maxRetries` - Maximum retry attempts
+- `maxRetries` - Maximum retry attempts (default: 3)
+- `retryBackoff` - Backoff multiplier for retries (default: 1000ms)
 - `timeout` - Execution timeout
 
 Methods:
@@ -83,19 +74,6 @@ Methods:
 - `addTool(tool)` - Add a tool dynamically
 - `removeTool(toolName)` - Remove a tool
 
-### AgentWithRetry Class
-
-Extends Agent with enhanced retry capabilities:
-
-```javascript
-new AgentWithRetry(config)
-```
-
-Additional config options:
-- `retryDelay` - Initial retry delay
-- `backoffMultiplier` - Exponential backoff factor
-- `maxRetryDelay` - Maximum delay between retries
-- `retryableErrors` - List of retryable error types
 
 ### StructuredResponse
 

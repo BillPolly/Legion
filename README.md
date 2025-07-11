@@ -42,7 +42,7 @@ Response handling utilities:
 ### [@jsenvoy/agent](packages/agent) - AI Agent Implementation
 Complete agent system:
 - 🤖 **Agent**: Base agent with tool execution
-- 🔄 **AgentWithRetry**: Enhanced retry capabilities
+- 🔄 **Built-in Retry Logic**: Robust retry capabilities with exponential backoff
 - 📊 **StructuredResponse**: Consistent response format
 
 ## Quick Start
