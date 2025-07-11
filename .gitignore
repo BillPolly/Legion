@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Test coverage
+coverage/
+
+# Environment variables
+.env
+
+# Debug files
+agentOut.txt
+agentRawMessageStack.txt
+
+# OS files
+.DS_Store
+
+# IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock

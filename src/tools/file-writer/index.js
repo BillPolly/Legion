@@ -1,0 +1,65 @@
+const { promises: fs } = require('fs');
+const { Tool } = require('../base/base-tool');
+
+class FileWriterTool extends Tool {
+    constructor() {
+        super();
+        this.identifier = "file_reader_tool";
+        this.name = "File writer tool";
+        this.abilities = ["Can create a file on the system and write text to it"];
+        this.instructions = ["Use the writeFile function to create a new file and write content to it"];
+        this.functions = [{
+            name: 'writeFile',
+            purpose: 'create a new file and write text to it',
+            arguments: [{
+                name: 'fileName',
+                description: 'the full relative path including the filename of the file to be created',
+                dataType: "string"
+            }, {
+                name: 'content',
+                description: 'text content for the file',
+                dataType: "string"
+            }],
+            response: "success or failure with error message"
+        }, {
+            name: "createDirectory",
+            purpose: "create a new directory",
+            arguments: [{
+                name: "dirPath",
+                description: "relative path of the directory to be created",
+                dataType: "string",
+            }],
+            response: "success or failure with error message"
+        }];
+
+        this.functionMap = {
+            'writeFile': this.writeFile.bind(this),
+            'createDirectory': this.createDirectory.bind(this)
+        };
+    }
+
+    async writeFile(fileName, content) {
+        try {
+            await fs.writeFile(fileName, content);
+            return 'success';
+        } catch (err) {
+            return 'Error writing file:' + err;
+        }
+    }
+
+    async createDirectory(dirPath) {
+        try {
+            await fs.mkdir(dirPath, { recursive: true });
+            return `Directory created successfully: ${dirPath}`;
+        } catch (err) {
+            if (err instanceof Error) {
+                return "Error creating directory:" + err.message;
+            }
+            throw err;
+        }
+    }
+}
+
+const fileWriterTool = new FileWriterTool();
+
+module.exports = { fileWriterTool };
