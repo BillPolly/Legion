@@ -1,34 +1,30 @@
 {
-  "name": "@jsenvoy/cli",
+  "name": "@jsenvoy/model-providers",
   "version": "0.0.1",
-  "description": "jsEnvoy CLI - A generic command-line interface for executing modular AI agent tools",
-  "type": "module",
+  "description": "LLM model provider implementations for jsEnvoy",
+  "type": "commonjs",
   "main": "./src/index.js",
-  "bin": {
-    "jsenvoy": "./bin/jsenvoy"
-  },
   "scripts": {
-    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
-    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
-    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "keywords": [
-    "cli",
     "jsenvoy",
+    "llm",
     "ai",
-    "tools",
-    "command-line",
-    "modular",
-    "extensible"
+    "openai",
+    "deepseek",
+    "openrouter"
   ],
   "author": "Anand Sukumaran",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yourusername/jsenvoy.git",
-    "directory": "packages/cli"
+    "directory": "packages/model-providers"
   },
-  "homepage": "https://github.com/yourusername/jsenvoy/tree/main/packages/cli#readme",
+  "homepage": "https://github.com/yourusername/jsenvoy/tree/main/packages/model-providers#readme",
   "bugs": {
     "url": "https://github.com/yourusername/jsenvoy/issues"
   },
@@ -37,23 +33,20 @@
   },
   "files": [
     "src",
-    "bin",
     "README.md",
     "LICENSE",
     "CHANGELOG.md"
   ],
   "dependencies": {
-    "@jsenvoy/core": "*",
-    "chalk": "^4.1.2",
-    "ora": "^5.4.1"
+    "openai": "^4.79.3",
+    "axios": "^1.7.9"
   },
   "devDependencies": {
     "jest": "^29.7.0",
-    "@jest/globals": "^29.7.0"
+    "dotenv": "^16.3.1"
   },
   "jest": {
     "testEnvironment": "node",
-    "transform": {},
     "coverageDirectory": "coverage",
     "collectCoverageFrom": [
       "src/**/*.js",

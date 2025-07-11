@@ -1,5 +1,6 @@
 const { OpenAIModule } = require('../core');
-const CalculatorEvaluateTool = require('../tools/calculator/CalculatorEvaluateTool');
+// Import tool from @jsenvoy/tools package
+const { CalculatorEvaluateTool } = require('@jsenvoy/tools/src/calculator');
 
 /**
  * Module containing calculator-related tools

@@ -1,4 +1,4 @@
-const { OpenAITool } = require('../../core');
+const OpenAITool = require('../base/OpenAITool');
 
 /**
  * Tool for evaluating mathematical expressions

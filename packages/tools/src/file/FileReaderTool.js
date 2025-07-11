@@ -1,4 +1,4 @@
-const { OpenAITool } = require('../../core');
+const OpenAITool = require('../base/OpenAITool');
 const fs = require('fs').promises;
 const path = require('path');
 

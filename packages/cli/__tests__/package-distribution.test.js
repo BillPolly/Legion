@@ -97,7 +97,7 @@ describe('Package and Distribution', () => {
       expect(packageJson.peerDependencies || {}).not.toHaveProperty('@jsenvoy/core');
       
       // Version should be workspace reference
-      expect(packageJson.dependencies['@jsenvoy/core']).toBe('workspace:*');
+      expect(packageJson.dependencies['@jsenvoy/core']).toBe('*');
     });
     
     it('should have no missing dependencies', () => {

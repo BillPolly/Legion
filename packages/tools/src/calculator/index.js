@@ -1,4 +1,5 @@
 const { Tool } = require("../base/base-tool");
+const CalculatorEvaluateTool = require('./CalculatorEvaluateTool');
 
 class CalculatorTool extends Tool {
 
@@ -32,4 +33,4 @@ class CalculatorTool extends Tool {
 
 const calculatorTool = new CalculatorTool();
 
-module.exports = { CalculatorTool, calculatorTool };
+module.exports = { CalculatorTool, calculatorTool, CalculatorEvaluateTool };

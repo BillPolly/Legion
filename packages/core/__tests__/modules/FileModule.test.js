@@ -1,7 +1,5 @@
 const FileModule = require('../../src/modules/FileModule');
-const FileReaderTool = require('../../src/tools/file/FileReaderTool');
-const FileWriterTool = require('../../src/tools/file/FileWriterTool');
-const DirectoryCreatorTool = require('../../src/tools/file/DirectoryCreatorTool');
+const { FileReaderTool, FileWriterTool, DirectoryCreatorTool } = require('@jsenvoy/tools/src/file');
 const { OpenAIModule } = require('../../src/core');
 
 describe('FileModule', () => {

@@ -1,24 +1,49 @@
 # jsEnvoy - Modular AI Agent Tools Framework
 
-A monorepo containing a modular framework for building AI agent tools with OpenAI function calling format and a generic CLI for tool execution.
+A modular framework for building AI agent tools with consistent interfaces. This monorepo has been restructured into focused packages for better modularity and maintainability.
 
 ## Packages
 
-### [@jsenvoy/core](packages/core)
+### [@jsenvoy/core](packages/core) - Lightweight Infrastructure
 Core framework providing:
-- 🏗️ **Modular Architecture**: Modules contain related tools
-- 💉 **Dependency Injection**: Declarative dependency management
-- 🤖 **OpenAI Compatible**: Tools use OpenAI function calling format
-- 🛡️ **Type Safe**: Built-in parameter validation
-- 🔧 **Extensible**: Easy to add new modules and tools
+- 🏗️ **ResourceManager**: Dependency injection system
+- 🏭 **ModuleFactory**: Module instantiation with automatic dependency resolution
+- 🧩 **Base Classes**: OpenAIModule and OpenAITool for creating new modules
+- 📦 **Built-in Modules**: Calculator and File modules
 
-### [@jsenvoy/cli](packages/cli) 
-Generic command-line interface providing:
+### [@jsenvoy/cli](packages/cli) - Command Line Interface
+Feature-complete CLI providing:
 - 🔍 **Dynamic Discovery**: Auto-discovers all modules and tools
-- ⚡ **Zero Config**: Works out-of-the-box
-- 💬 **Interactive Mode**: REPL with autocomplete
-- 🎯 **Flexible**: Multiple argument formats
-- 📦 **Module Agnostic**: Works with any jsEnvoy module
+- 💬 **Interactive Mode**: REPL with autocomplete and multi-line input
+- 🎯 **Flexible**: Command aliases, chaining, and batch execution
+- 📊 **Multiple Formats**: Text, JSON, and colored output
+- ⚡ **Optimized**: Caching and lazy loading for performance
+
+### [@jsenvoy/tools](packages/tools) - AI Agent Tools
+Comprehensive tool collection:
+- 🧮 **Calculator**: Mathematical expression evaluation
+- 📁 **File Operations**: Read, write, and manage files
+- 🌐 **Web Tools**: Scraping, screenshots, and search
+- 💻 **Development**: Code analysis, GitHub integration
+- 🎥 **Content**: YouTube transcripts, format conversion
+
+### [@jsenvoy/model-providers](packages/model-providers) - LLM Providers
+Multi-provider LLM support:
+- 🤖 **OpenAI**: GPT-4, GPT-3.5, function calling
+- 🧠 **DeepSeek**: DeepSeek Chat and Coder models
+- 🌐 **OpenRouter**: Access to multiple providers
+
+### [@jsenvoy/response-parser](packages/response-parser) - Response Processing
+Response handling utilities:
+- 📝 **Parsing**: Extract structured data from AI responses
+- ✅ **Validation**: Schema-based validation with Zod
+- 🔄 **Retry Management**: Smart retry with exponential backoff
+
+### [@jsenvoy/agent](packages/agent) - AI Agent Implementation
+Complete agent system:
+- 🤖 **Agent**: Base agent with tool execution
+- 🔄 **AgentWithRetry**: Enhanced retry capabilities
+- 📊 **StructuredResponse**: Consistent response format
 
 ## Quick Start
 
@@ -26,27 +51,63 @@ Generic command-line interface providing:
 
 ```bash
 # Install globally
-npm install -g @jsenvoy/cli
+npm install -g @jsenvoy/cli @jsenvoy/core
 
 # Execute a tool
 jsenvoy calculator.calculator_evaluate --expression "2 + 2"
 
 # Interactive mode
-jsenvoy -i
+jsenvoy interactive
+
+# List available tools
+jsenvoy list tools
 ```
 
-### Using the Core Framework
+### Building an Agent
 
 ```javascript
-const { ResourceManager, ModuleFactory } = require('@jsenvoy/core');
-const { CalculatorModule } = require('@jsenvoy/core/modules');
+const { Agent } = require('@jsenvoy/agent');
+const { calculatorTool, fileReaderTool } = require('@jsenvoy/tools');
 
-const resourceManager = new ResourceManager();
-const moduleFactory = new ModuleFactory(resourceManager);
-const calculator = moduleFactory.createModule(CalculatorModule);
+const agent = new Agent({
+  modelConfig: {
+    provider: 'openai',
+    model: 'gpt-4',
+    apiKey: process.env.OPENAI_API_KEY
+  },
+  tools: [calculatorTool, fileReaderTool]
+});
 
-const tool = calculator.getTools()[0];
-const result = await tool.execute({ expression: '2 + 2' });
+const result = await agent.execute("Calculate the sum of numbers in data.txt");
+```
+
+### Creating Custom Modules
+
+```javascript
+const { OpenAIModule, OpenAITool } = require('@jsenvoy/core');
+
+class MyTool extends OpenAITool {
+  constructor() {
+    super('my_tool', 'Description', {
+      type: 'object',
+      properties: {
+        input: { type: 'string' }
+      },
+      required: ['input']
+    });
+  }
+  
+  async execute(args) {
+    return { result: `Processed: ${args.input}` };
+  }
+}
+
+class MyModule extends OpenAIModule {
+  constructor(dependencies = {}) {
+    super('MyModule', dependencies);
+    this.tools = [new MyTool()];
+  }
+}
 ```
 
 ## Project Structure
@@ -54,16 +115,14 @@ const result = await tool.execute({ expression: '2 + 2' });
 ```
 jsEnvoy/
 ├── packages/
-│   ├── core/           # Core framework
-│   │   ├── src/
-│   │   ├── __tests__/
-│   │   └── package.json
-│   └── cli/            # CLI tool
-│       ├── src/
-│       ├── docs/
-│       └── package.json
-├── docs/               # Project documentation
-└── package.json        # Monorepo root
+│   ├── core/              # Core infrastructure
+│   ├── cli/               # Command-line interface
+│   ├── tools/             # AI agent tools
+│   ├── model-providers/   # LLM providers
+│   ├── response-parser/   # Response processing
+│   └── agent/             # Agent implementation
+├── docs/                  # Project documentation
+└── package.json           # Monorepo root
 ```
 
 ## Development
@@ -71,29 +130,49 @@ jsEnvoy/
 This is a monorepo managed with npm workspaces.
 
 ```bash
-# Install dependencies
+# Install all dependencies
 npm install
 
-# Run tests for all packages
+# Run all tests
 npm test
 
-# Run tests for specific package
+# Run tests for specific packages
 npm run test:core
 npm run test:cli
+npm run test:tools
+npm run test:model-providers
+npm run test:response-parser
+npm run test:agent
 
 # Run tests with coverage
 npm run test:coverage
+
+# Clean install
+npm run clean
+npm install
 ```
 
-## Available Modules
+## Benefits of the New Architecture
 
-### Core Modules
-- **CalculatorModule**: Mathematical calculations
-- **FileModule**: File system operations (read, write, create directories)
+1. **Smaller Bundle Sizes** - Applications only include needed packages
+2. **Independent Versioning** - Each package can be updated separately
+3. **Clearer Dependencies** - Each package declares its own dependencies
+4. **Better Testing** - Packages can be tested in isolation
+5. **Improved Modularity** - Clear separation of concerns
 
-### Additional Tools
-- **GitHub Tool**: Repository creation and management
-- Web crawler, screenshot, and other legacy tools
+## Migration Guide
+
+If upgrading from the monolithic @jsenvoy/core:
+
+```javascript
+// Old imports
+const { Agent, Model, calculatorTool } = require('@jsenvoy/core');
+
+// New imports
+const { Agent } = require('@jsenvoy/agent');
+const { Model } = require('@jsenvoy/model-providers');
+const { calculatorTool } = require('@jsenvoy/tools');
+```
 
 ## Architecture
 
@@ -103,15 +182,17 @@ The framework uses a modular architecture with dependency injection:
 2. **Tools** implement specific functionality in OpenAI function format
 3. **ResourceManager** handles dependency injection
 4. **ModuleFactory** creates module instances with resolved dependencies
+5. **Agent** orchestrates tool execution with LLM integration
 
 See [Architecture Documentation](docs/ARCHITECTURE.md) for details.
 
 ## Contributing
 
-1. Create new modules in `packages/core/src/modules/`
-2. Follow the existing patterns for OpenAIModule and OpenAITool
+1. Choose the appropriate package for your contribution
+2. Follow existing patterns and conventions
 3. Write tests using TDD approach
-4. Update documentation
+4. Update package-specific documentation
+5. Ensure all tests pass before submitting PR
 
 ## License
 

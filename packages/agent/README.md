@@ -1,0 +1,218 @@
+# @jsenvoy/agent
+
+AI agent implementation with retry logic, tool execution, and structured responses for jsEnvoy.
+
+## Installation
+
+```bash
+npm install @jsenvoy/agent
+```
+
+## Usage
+
+```javascript
+const { Agent } = require('@jsenvoy/agent');
+
+// Create an agent
+const agent = new Agent({
+  modelConfig: {
+    provider: 'openai',
+    model: 'gpt-4',
+    apiKey: process.env.OPENAI_API_KEY
+  },
+  tools: [calculatorTool, fileReaderTool],
+  maxRetries: 3
+});
+
+// Execute a task
+const result = await agent.execute(
+  "Calculate the sum of numbers in data.txt"
+);
+console.log(result);
+```
+
+## Features
+
+### Intelligent Tool Selection
+- Automatically selects appropriate tools based on the task
+- Chains multiple tools for complex operations
+- Handles tool failures gracefully
+
+### Retry Logic
+- Built-in retry mechanism with exponential backoff
+- Configurable retry strategies
+- Error classification for smart retries
+
+### Structured Responses
+- Consistent response format
+- Detailed execution logs
+- Error tracking and reporting
+
+### AgentWithRetry
+Enhanced agent with advanced retry capabilities:
+
+```javascript
+const { AgentWithRetry } = require('@jsenvoy/agent');
+
+const agent = new AgentWithRetry({
+  modelConfig: { /* ... */ },
+  maxRetries: 5,
+  retryDelay: 1000,
+  backoffMultiplier: 2
+});
+```
+
+## API Reference
+
+### Agent Class
+
+```javascript
+new Agent(config)
+```
+
+Config options:
+- `modelConfig` - Model provider configuration
+- `tools` - Array of available tools
+- `systemPrompt` - Custom system prompt
+- `maxRetries` - Maximum retry attempts
+- `timeout` - Execution timeout
+
+Methods:
+- `execute(task, context)` - Execute a task
+- `executeWithTools(prompt, tools)` - Execute with specific tools
+- `addTool(tool)` - Add a tool dynamically
+- `removeTool(toolName)` - Remove a tool
+
+### AgentWithRetry Class
+
+Extends Agent with enhanced retry capabilities:
+
+```javascript
+new AgentWithRetry(config)
+```
+
+Additional config options:
+- `retryDelay` - Initial retry delay
+- `backoffMultiplier` - Exponential backoff factor
+- `maxRetryDelay` - Maximum delay between retries
+- `retryableErrors` - List of retryable error types
+
+### StructuredResponse
+
+Standardized response format:
+
+```javascript
+{
+  success: boolean,
+  data: any,
+  error: Error | null,
+  metadata: {
+    duration: number,
+    toolsUsed: string[],
+    retries: number,
+    model: string
+  }
+}
+```
+
+## Examples
+
+### Basic Task Execution
+
+```javascript
+const { Agent } = require('@jsenvoy/agent');
+const { calculatorTool } = require('@jsenvoy/tools');
+
+const agent = new Agent({
+  modelConfig: {
+    provider: 'openai',
+    model: 'gpt-3.5-turbo'
+  },
+  tools: [calculatorTool]
+});
+
+const result = await agent.execute("What is 15% of 200?");
+console.log(result.data); // 30
+```
+
+### Multi-Tool Task
+
+```javascript
+const agent = new Agent({
+  modelConfig: { /* ... */ },
+  tools: [fileReaderTool, calculatorTool, fileWriterTool]
+});
+
+const result = await agent.execute(
+  "Read numbers from input.txt, calculate their average, and save to output.txt"
+);
+```
+
+### Custom System Prompt
+
+```javascript
+const agent = new Agent({
+  modelConfig: { /* ... */ },
+  systemPrompt: "You are a helpful data analyst. Always explain your calculations.",
+  tools: [/* ... */]
+});
+```
+
+### Error Handling
+
+```javascript
+try {
+  const result = await agent.execute("Complex task");
+  if (!result.success) {
+    console.error("Task failed:", result.error);
+    console.log("Partial results:", result.data);
+  }
+} catch (error) {
+  console.error("Agent error:", error);
+}
+```
+
+### Streaming Responses
+
+```javascript
+const stream = await agent.executeStreaming("Generate a report");
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk);
+}
+```
+
+## Advanced Usage
+
+### Custom Tool Integration
+
+```javascript
+const customTool = {
+  name: 'custom_tool',
+  description: 'My custom tool',
+  execute: async (params) => {
+    // Tool implementation
+    return { result: 'success' };
+  }
+};
+
+agent.addTool(customTool);
+```
+
+### Execution Context
+
+```javascript
+const context = {
+  user: 'john_doe',
+  session: 'abc123',
+  preferences: {
+    verbosity: 'high'
+  }
+};
+
+const result = await agent.execute("Task description", context);
+```
+
+## License
+
+MIT

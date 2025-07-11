@@ -1,7 +1,6 @@
 const { OpenAIModule } = require('../core');
-const FileReaderTool = require('../tools/file/FileReaderTool');
-const FileWriterTool = require('../tools/file/FileWriterTool');
-const DirectoryCreatorTool = require('../tools/file/DirectoryCreatorTool');
+// Import tools from @jsenvoy/tools package
+const { FileReaderTool, FileWriterTool, DirectoryCreatorTool } = require('@jsenvoy/tools/src/file');
 
 /**
  * Module containing file system related tools

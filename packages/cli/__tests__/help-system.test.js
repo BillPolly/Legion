@@ -150,10 +150,10 @@ describe('Help System', () => {
       const output = consoleSpy.mock.calls.map(call => call[0]).join('\n');
       
       expect(output).toContain('Module: file');
-      expect(output).toContain('Available tools:');
-      expect(output).toContain('file.file_reader');
-      expect(output).toContain('file.file_writer');
-      expect(output).toContain('file.directory_creator');
+      expect(output).toContain('Tools:');
+      expect(output).toContain('file_reader');
+      expect(output).toContain('file_writer');
+      expect(output).toContain('directory_creator');
     });
 
     it('should show module dependencies', async () => {

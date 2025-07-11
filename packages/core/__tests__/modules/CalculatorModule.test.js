@@ -1,5 +1,5 @@
 const CalculatorModule = require('../../src/modules/CalculatorModule');
-const CalculatorEvaluateTool = require('../../src/tools/calculator/CalculatorEvaluateTool');
+const { CalculatorEvaluateTool } = require('@jsenvoy/tools/src/calculator');
 const { OpenAIModule } = require('../../src/core');
 
 describe('CalculatorModule', () => {
