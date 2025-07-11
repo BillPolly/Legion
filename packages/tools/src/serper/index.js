@@ -1,4 +1,4 @@
-const { Tool } = require('@jsenvoy/modules');
+const { Tool, ToolResult } = require('@jsenvoy/modules');
 
 class Serper extends Tool {
   constructor() {
@@ -47,6 +47,66 @@ class Serper extends Tool {
             }
           },
           required: ['query']
+        },
+        output: {
+          success: {
+            type: 'object',
+            properties: {
+              query: {
+                type: 'string',
+                description: 'The search query that was used'
+              },
+              searchInformation: {
+                type: 'object',
+                description: 'Information about the search results'
+              },
+              organic: {
+                type: 'array',
+                description: 'Organic search results',
+                items: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    link: { type: 'string' },
+                    snippet: { type: 'string' }
+                  }
+                }
+              },
+              answerBox: {
+                type: 'object',
+                description: 'Featured snippet or answer box if available'
+              },
+              knowledgeGraph: {
+                type: 'object',
+                description: 'Knowledge graph data if available'
+              },
+              relatedSearches: {
+                type: 'array',
+                description: 'Related search suggestions',
+                items: { type: 'string' }
+              }
+            },
+            required: ['query', 'organic']
+          },
+          failure: {
+            type: 'object',
+            properties: {
+              query: {
+                type: 'string',
+                description: 'The search query that failed'
+              },
+              errorType: {
+                type: 'string',
+                enum: ['not_initialized', 'api_error', 'network_error', 'validation_error'],
+                description: 'Type of error that occurred'
+              },
+              statusCode: {
+                type: 'number',
+                description: 'HTTP status code if API error'
+              }
+            },
+            required: ['errorType']
+          }
         }
       }
     };
@@ -65,24 +125,26 @@ class Serper extends Tool {
       
       // Check if initialized
       if (!this.apiKey) {
-        throw new Error('Serper tool not initialized. Please call initialize() with your API key first.');
+        return ToolResult.failure(
+          'Serper tool not initialized. Please call initialize() with your API key first.',
+          {
+            query: args.query,
+            errorType: 'not_initialized'
+          }
+        );
       }
       
       // Perform the search
-      const results = await this.search(args.query, args.num, args.dateRange);
-      
-      // Return success response
-      return this.createSuccessResponse(
-        toolCall.id,
-        toolCall.function.name,
-        results
-      );
+      return await this.performSearch(args.query, args.num, args.dateRange);
     } catch (error) {
-      // Return error response
-      return this.createErrorResponse(
-        toolCall.id,
-        toolCall.function.name,
-        error
+      // Handle parameter validation errors
+      return ToolResult.failure(
+        error.message,
+        {
+          query: toolCall.function.arguments ? 
+            JSON.parse(toolCall.function.arguments).query : 'unknown',
+          errorType: 'validation_error'
+        }
       );
     }
   }
@@ -90,7 +152,7 @@ class Serper extends Tool {
   /**
    * Performs a Google search using Serper API
    */
-  async search(query, num = 10, dateRange = null) {
+  async performSearch(query, num = 10, dateRange = null) {
     try {
       console.log(`Searching Google for: ${query}`);
       
@@ -116,7 +178,14 @@ class Serper extends Tool {
 
       if (!response.ok) {
         const error = await response.text();
-        throw new Error(`Serper API error (${response.status}): ${error}`);
+        return ToolResult.failure(
+          `Serper API error: ${error}`,
+          {
+            query: query,
+            errorType: 'api_error',
+            statusCode: response.status
+          }
+        );
       }
 
       const data = await response.json();
@@ -133,7 +202,7 @@ class Serper extends Tool {
 
       console.log(`Found ${results.organic.length} search results`);
       
-      return results;
+      return ToolResult.success(results);
     } catch (error) {
       if (error.message.includes('fetch is not defined')) {
         // Fallback for Node.js versions without fetch
@@ -162,16 +231,23 @@ class Serper extends Tool {
             res.on('end', () => {
               if (res.statusCode === 200) {
                 const parsed = JSON.parse(data);
-                resolve({
+                resolve(ToolResult.success({
                   query: query,
                   searchInformation: parsed.searchInformation,
                   organic: parsed.organic || [],
                   answerBox: parsed.answerBox || null,
                   knowledgeGraph: parsed.knowledgeGraph || null,
                   relatedSearches: parsed.relatedSearches || []
-                });
+                }));
               } else {
-                reject(new Error(`Serper API error (${res.statusCode}): ${data}`));
+                resolve(ToolResult.failure(
+                  `Serper API error: ${data}`,
+                  {
+                    query: query,
+                    errorType: 'api_error',
+                    statusCode: res.statusCode
+                  }
+                ));
               }
             });
           });
@@ -181,8 +257,25 @@ class Serper extends Tool {
           req.end();
         });
       }
-      throw new Error(`Failed to search: ${error.message}`);
+      return ToolResult.failure(
+        `Failed to search: ${error.message}`,
+        {
+          query: query,
+          errorType: error.message.includes('API error') ? 'api_error' : 'network_error'
+        }
+      );
     }
+  }
+
+  /**
+   * Legacy search method for CLI compatibility
+   */
+  async search(query, num = 10, dateRange = null) {
+    const result = await this.performSearch(query, num, dateRange);
+    if (!result.success) {
+      throw new Error(result.error);
+    }
+    return result.data;
   }
 }
 

@@ -11,5 +11,6 @@ exports.ModuleFactory = require("./ModuleFactory").ModuleFactory;
 
 // Export base classes
 exports.Tool = require("./Tool");
+exports.ToolResult = require("./ToolResult");
 exports.Module = require("./Module").Module;
 exports.ModularTool = require("./ModularTool").ModularTool;

@@ -1,4 +1,4 @@
-const { Tool } = require('@jsenvoy/modules');
+const { Tool, ToolResult } = require('@jsenvoy/modules');
 const { exec } = require('child_process');
 const { promisify } = require('util');
 
@@ -33,6 +33,57 @@ class CommandExecutor extends Tool {
             }
           },
           required: ['command']
+        },
+        output: {
+          success: {
+            type: 'object',
+            properties: {
+              stdout: {
+                type: 'string',
+                description: 'Standard output from the command'
+              },
+              stderr: {
+                type: 'string',
+                description: 'Standard error output from the command (may be empty)'
+              },
+              command: {
+                type: 'string',
+                description: 'The command that was executed'
+              },
+              exitCode: {
+                type: 'number',
+                description: 'Exit code of the command (0 for success)'
+              }
+            },
+            required: ['stdout', 'stderr', 'command']
+          },
+          failure: {
+            type: 'object',
+            properties: {
+              command: {
+                type: 'string',
+                description: 'The command that failed'
+              },
+              errorType: {
+                type: 'string',
+                enum: ['timeout', 'exit_code', 'execution_error', 'dangerous_command'],
+                description: 'Type of error that occurred'
+              },
+              exitCode: {
+                type: 'number',
+                description: 'Exit code if the command completed but failed'
+              },
+              stdout: {
+                type: 'string',
+                description: 'Any partial stdout before failure'
+              },
+              stderr: {
+                type: 'string',
+                description: 'Error output from the command'
+              }
+            },
+            required: ['command', 'errorType']
+          }
         }
       }
     };
@@ -50,20 +101,16 @@ class CommandExecutor extends Tool {
       this.validateRequiredParameters(args, ['command']);
       
       // Execute the command
-      const result = await this.execute(args.command, args.timeout);
-      
-      // Return success response
-      return this.createSuccessResponse(
-        toolCall.id,
-        toolCall.function.name,
-        result
-      );
+      return await this.executeCommand(args.command, args.timeout);
     } catch (error) {
-      // Return error response
-      return this.createErrorResponse(
-        toolCall.id,
-        toolCall.function.name,
-        error
+      // Handle parameter validation errors
+      return ToolResult.failure(
+        error.message,
+        { 
+          command: toolCall.function.arguments ? 
+            JSON.parse(toolCall.function.arguments).command : 'unknown',
+          errorType: 'execution_error'
+        }
       );
     }
   }
@@ -71,13 +118,20 @@ class CommandExecutor extends Tool {
   /**
    * Executes a bash command
    */
-  async execute(command, timeout = 30000) {
+  async executeCommand(command, timeout = 30000) {
     try {
       console.log(`Executing command: ${command}`);
       
-      // Security warning for production use
-      if (command.includes('rm -rf') || command.includes('dd if=')) {
+      // Security check for dangerous commands
+      if (command.includes('rm -rf /') || command.includes('dd if=/dev/zero')) {
         console.warn('WARNING: Potentially dangerous command detected');
+        return ToolResult.failure(
+          'Command blocked for safety reasons',
+          {
+            command: command,
+            errorType: 'dangerous_command'
+          }
+        );
       }
       
       // Execute the command with timeout
@@ -89,20 +143,46 @@ class CommandExecutor extends Tool {
       
       console.log('Command executed successfully');
       
-      return {
-        success: true,
-        stdout: stdout,
-        stderr: stderr,
-        command: command
-      };
+      return ToolResult.success({
+        stdout: stdout || '',
+        stderr: stderr || '',
+        command: command,
+        exitCode: 0
+      });
     } catch (error) {
+      let errorType = 'execution_error';
+      let errorMessage = `Failed to execute command: ${error.message}`;
+      let data = {
+        command: command,
+        errorType: errorType
+      };
+      
       if (error.killed && error.signal === 'SIGTERM') {
-        throw new Error(`Command timed out after ${timeout}ms: ${command}`);
-      } else if (error.code) {
-        throw new Error(`Command failed with exit code ${error.code}: ${error.message}`);
+        errorType = 'timeout';
+        errorMessage = `Command timed out after ${timeout}ms`;
+      } else if (error.code !== undefined) {
+        errorType = 'exit_code';
+        errorMessage = `Command failed with exit code ${error.code}`;
+        data.exitCode = error.code;
+        data.stdout = error.stdout || '';
+        data.stderr = error.stderr || '';
       }
-      throw new Error(`Failed to execute command: ${error.message}`);
+      
+      data.errorType = errorType;
+      
+      return ToolResult.failure(errorMessage, data);
     }
+  }
+
+  /**
+   * Legacy execute method for CLI compatibility
+   */
+  async execute(command, timeout = 30000) {
+    const result = await this.executeCommand(command, timeout);
+    if (!result.success) {
+      throw new Error(result.error);
+    }
+    return result.data;
   }
 }
 

@@ -1,4 +1,5 @@
 const { Tool } = require("@jsenvoy/tools");
+const { ToolResult } = require("@jsenvoy/modules");
 const { Model } = require("@jsenvoy/model-providers");
 const { getMasterPrompt } = require("./lib/master-prompt");
 const ora = require("ora");
@@ -159,23 +160,63 @@ class Agent {
       const fn = response.use_tool.function_name;
       const args = response.use_tool.args;
 
-      // Check if function exists
-      if (!tool.functionMap || !tool.functionMap[fn]) {
-        return {
-          taskCompleted: false,
-          nextPrompt: `Error: Function '${fn}' not found in tool '${response.use_tool.identifier}'. Please check the function name and try again.`,
-        };
-      }
-
       let functionResponse;
       try {
-        functionResponse = await tool.functionMap[fn](...args);
+        // Check if this is a new-style tool with invoke method
+        if (typeof tool.invoke === 'function' || typeof tool.safeInvoke === 'function') {
+          // Create a tool call in OpenAI format
+          const toolCall = {
+            id: `agent-${Date.now()}`,
+            type: 'function',
+            function: {
+              name: fn,
+              arguments: JSON.stringify(args)
+            }
+          };
 
-        if (functionResponse.isImage) {
+          // Use safeInvoke if available, otherwise invoke
+          const invokeMethod = tool.safeInvoke ? 'safeInvoke' : 'invoke';
+          const toolResult = await tool[invokeMethod](toolCall);
+
+          // Handle ToolResult format
+          if (toolResult instanceof ToolResult) {
+            if (!toolResult.success) {
+              return {
+                taskCompleted: false,
+                nextPrompt: `<tool_error>${toolResult.error}</tool_error>\n<tool_data>${JSON.stringify(toolResult.data)}</tool_data>`,
+              };
+            }
+
+            // Check if result contains an image
+            if (toolResult.data.isImage || toolResult.data.image) {
+              return {
+                taskCompleted: response.task_completed,
+                nextPrompt: "Here is the image",
+                image: toolResult.data.image,
+              };
+            }
+
+            functionResponse = JSON.stringify(toolResult.data);
+          } else {
+            // Handle legacy response format
+            functionResponse = toolResult;
+          }
+        } 
+        // Legacy tool with functionMap
+        else if (tool.functionMap && tool.functionMap[fn]) {
+          functionResponse = await tool.functionMap[fn](...args);
+
+          if (functionResponse.isImage) {
+            return {
+              taskCompleted: response.task_completed,
+              nextPrompt: "Here is the image",
+              image: functionResponse.image,
+            };
+          }
+        } else {
           return {
-            taskCompleted: response.task_completed,
-            nextPrompt: "Here is the image",
-            image: functionResponse.image,
+            taskCompleted: false,
+            nextPrompt: `Error: Function '${fn}' not found in tool '${response.use_tool.identifier}'. Tool does not have invoke method or functionMap.`,
           };
         }
 

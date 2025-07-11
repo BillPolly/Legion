@@ -1,4 +1,4 @@
-const { Tool, Module } = require('@jsenvoy/modules');
+const { Tool, ToolResult, Module } = require('@jsenvoy/modules');
 
 /**
  * Calculator tool that evaluates mathematical expressions
@@ -28,6 +28,41 @@ class CalculatorTool extends Tool {
             }
           },
           required: ['expression']
+        },
+        output: {
+          success: {
+            type: 'object',
+            properties: {
+              result: {
+                type: 'number',
+                description: 'The calculated result of the expression'
+              },
+              expression: {
+                type: 'string',
+                description: 'The original expression that was evaluated'
+              }
+            },
+            required: ['result', 'expression']
+          },
+          failure: {
+            type: 'object',
+            properties: {
+              expression: {
+                type: 'string',
+                description: 'The expression that failed to evaluate'
+              },
+              errorType: {
+                type: 'string',
+                enum: ['syntax_error', 'forbidden_keyword', 'evaluation_error'],
+                description: 'The type of error that occurred'
+              },
+              details: {
+                type: 'string',
+                description: 'Additional error details if available'
+              }
+            },
+            required: ['expression', 'errorType']
+          }
         }
       }
     };
@@ -47,18 +82,29 @@ class CalculatorTool extends Tool {
       // Execute the calculation
       const result = await this.evaluate(args.expression);
       
-      // Return success response
-      return this.createSuccessResponse(
-        toolCall.id,
-        toolCall.function.name,
-        { result }
-      );
+      // Return success ToolResult
+      return ToolResult.success({
+        result: result,
+        expression: args.expression
+      });
     } catch (error) {
-      // Return error response
-      return this.createErrorResponse(
-        toolCall.id,
-        toolCall.function.name,
-        error
+      // Determine error type
+      let errorType = 'evaluation_error';
+      if (error.message.includes('forbidden keyword')) {
+        errorType = 'forbidden_keyword';
+      } else if (error.message.includes('SyntaxError') || error.name === 'SyntaxError') {
+        errorType = 'syntax_error';
+      }
+      
+      // Return failure ToolResult with partial data
+      return ToolResult.failure(
+        error.message,
+        {
+          expression: toolCall.function.arguments ? 
+            JSON.parse(toolCall.function.arguments).expression : 'unknown',
+          errorType: errorType,
+          details: error.stack
+        }
       );
     }
   }

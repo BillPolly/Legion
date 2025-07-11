@@ -1,4 +1,4 @@
-const { Tool, Module } = require('@jsenvoy/modules');
+const { Tool, ToolResult, Module } = require('@jsenvoy/modules');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -31,6 +31,45 @@ class FileOperationsTool extends Tool {
               }
             },
             required: ['filepath']
+          },
+          output: {
+            success: {
+              type: 'object',
+              properties: {
+                content: {
+                  type: 'string',
+                  description: 'The contents of the file'
+                },
+                filepath: {
+                  type: 'string',
+                  description: 'The path of the file that was read'
+                },
+                size: {
+                  type: 'number',
+                  description: 'Size of the file in bytes'
+                }
+              },
+              required: ['content', 'filepath']
+            },
+            failure: {
+              type: 'object',
+              properties: {
+                filepath: {
+                  type: 'string',
+                  description: 'The path that was attempted'
+                },
+                errorCode: {
+                  type: 'string',
+                  enum: ['ENOENT', 'EACCES', 'EISDIR', 'UNKNOWN'],
+                  description: 'System error code if applicable'
+                },
+                details: {
+                  type: 'string',
+                  description: 'Additional error details'
+                }
+              },
+              required: ['filepath', 'errorCode']
+            }
           }
         }
       },
@@ -52,6 +91,45 @@ class FileOperationsTool extends Tool {
               }
             },
             required: ['filepath', 'content']
+          },
+          output: {
+            success: {
+              type: 'object',
+              properties: {
+                filepath: {
+                  type: 'string',
+                  description: 'The path of the file that was written'
+                },
+                bytesWritten: {
+                  type: 'number',
+                  description: 'Number of bytes written to the file'
+                },
+                created: {
+                  type: 'boolean',
+                  description: 'Whether a new file was created (true) or existing file was overwritten (false)'
+                }
+              },
+              required: ['filepath', 'bytesWritten']
+            },
+            failure: {
+              type: 'object',
+              properties: {
+                filepath: {
+                  type: 'string',
+                  description: 'The path where write was attempted'
+                },
+                errorCode: {
+                  type: 'string',
+                  enum: ['EACCES', 'ENOENT', 'EISDIR', 'ENOSPC', 'UNKNOWN'],
+                  description: 'System error code if applicable'
+                },
+                details: {
+                  type: 'string',
+                  description: 'Additional error details'
+                }
+              },
+              required: ['filepath', 'errorCode']
+            }
           }
         }
       },
@@ -69,6 +147,41 @@ class FileOperationsTool extends Tool {
               }
             },
             required: ['dirpath']
+          },
+          output: {
+            success: {
+              type: 'object',
+              properties: {
+                dirpath: {
+                  type: 'string',
+                  description: 'The path of the directory that was created'
+                },
+                created: {
+                  type: 'boolean',
+                  description: 'Whether a new directory was created (true) or it already existed (false)'
+                }
+              },
+              required: ['dirpath', 'created']
+            },
+            failure: {
+              type: 'object',
+              properties: {
+                dirpath: {
+                  type: 'string',
+                  description: 'The path where directory creation was attempted'
+                },
+                errorCode: {
+                  type: 'string',
+                  enum: ['EACCES', 'EEXIST', 'ENOENT', 'ENOTDIR', 'UNKNOWN'],
+                  description: 'System error code if applicable'
+                },
+                details: {
+                  type: 'string',
+                  description: 'Additional error details'
+                }
+              },
+              required: ['dirpath', 'errorCode']
+            }
           }
         }
       }
@@ -88,38 +201,34 @@ class FileOperationsTool extends Tool {
   async invoke(toolCall) {
     try {
       const args = this.parseArguments(toolCall.function.arguments);
-      let result;
       
       switch (toolCall.function.name) {
         case 'file_read':
           this.validateRequiredParameters(args, ['filepath']);
-          result = await this.readFile(args.filepath);
-          break;
+          return await this.readFile(args.filepath);
           
         case 'file_write':
           this.validateRequiredParameters(args, ['filepath', 'content']);
-          result = await this.writeFile(args.filepath, args.content);
-          break;
+          return await this.writeFile(args.filepath, args.content);
           
         case 'directory_create':
           this.validateRequiredParameters(args, ['dirpath']);
-          result = await this.createDirectory(args.dirpath);
-          break;
+          return await this.createDirectory(args.dirpath);
           
         default:
-          throw new Error(`Unknown function: ${toolCall.function.name}`);
+          return ToolResult.failure(
+            `Unknown function: ${toolCall.function.name}`,
+            { functionName: toolCall.function.name }
+          );
       }
-      
-      return this.createSuccessResponse(
-        toolCall.id,
-        toolCall.function.name,
-        result
-      );
     } catch (error) {
-      return this.createErrorResponse(
-        toolCall.id,
-        toolCall.function.name,
-        error
+      // Handle parameter validation errors
+      return ToolResult.failure(
+        error.message,
+        { 
+          functionName: toolCall.function.name,
+          errorType: 'validation_error'
+        }
       );
     }
   }
@@ -136,22 +245,47 @@ class FileOperationsTool extends Tool {
       // Check if file exists and is readable
       const stats = await fs.stat(resolvedPath);
       if (!stats.isFile()) {
-        throw new Error(`Path is not a file: ${filepath}`);
+        return ToolResult.failure(
+          `Path is not a file: ${filepath}`,
+          { 
+            filepath: filepath,
+            errorCode: 'EISDIR',
+            details: 'The specified path points to a directory'
+          }
+        );
       }
       
       const content = await fs.readFile(resolvedPath, 'utf8');
       console.log(`Successfully read ${content.length} characters from ${filepath}`);
       
-      return { content };
+      return ToolResult.success({
+        content: content,
+        filepath: filepath,
+        size: content.length
+      });
     } catch (error) {
+      let errorCode = 'UNKNOWN';
+      let errorMessage = `Failed to read file: ${error.message}`;
+      
       if (error.code === 'ENOENT') {
-        throw new Error(`File not found: ${filepath}`);
+        errorCode = 'ENOENT';
+        errorMessage = `File not found: ${filepath}`;
       } else if (error.code === 'EACCES') {
-        throw new Error(`Permission denied: ${filepath}`);
+        errorCode = 'EACCES';
+        errorMessage = `Permission denied: ${filepath}`;
       } else if (error.code === 'EISDIR') {
-        throw new Error(`Path is a directory, not a file: ${filepath}`);
+        errorCode = 'EISDIR';
+        errorMessage = `Path is a directory, not a file: ${filepath}`;
       }
-      throw new Error(`Failed to read file: ${error.message}`);
+      
+      return ToolResult.failure(
+        errorMessage,
+        { 
+          filepath: filepath,
+          errorCode: errorCode,
+          details: error.stack
+        }
+      );
     }
   }
 
@@ -164,6 +298,15 @@ class FileOperationsTool extends Tool {
       
       const resolvedPath = path.resolve(filepath);
       
+      // Check if file already exists
+      let fileExists = false;
+      try {
+        await fs.stat(resolvedPath);
+        fileExists = true;
+      } catch (e) {
+        // File doesn't exist, which is fine
+      }
+      
       // Ensure the directory exists
       const dir = path.dirname(resolvedPath);
       await fs.mkdir(dir, { recursive: true });
@@ -171,18 +314,37 @@ class FileOperationsTool extends Tool {
       await fs.writeFile(resolvedPath, content, 'utf8');
       console.log(`Successfully wrote ${content.length} characters to ${filepath}`);
       
-      return {
-        success: true,
+      return ToolResult.success({
         filepath: filepath,
-        bytesWritten: content.length
-      };
+        bytesWritten: content.length,
+        created: !fileExists
+      });
     } catch (error) {
+      let errorCode = 'UNKNOWN';
+      let errorMessage = `Failed to write file: ${error.message}`;
+      
       if (error.code === 'EACCES') {
-        throw new Error(`Permission denied: ${filepath}`);
+        errorCode = 'EACCES';
+        errorMessage = `Permission denied: ${filepath}`;
       } else if (error.code === 'ENOSPC') {
-        throw new Error(`No space left on device: ${filepath}`);
+        errorCode = 'ENOSPC';
+        errorMessage = `No space left on device: ${filepath}`;
+      } else if (error.code === 'EISDIR') {
+        errorCode = 'EISDIR';
+        errorMessage = `Path is a directory: ${filepath}`;
+      } else if (error.code === 'ENOENT') {
+        errorCode = 'ENOENT';
+        errorMessage = `Parent directory does not exist: ${filepath}`;
       }
-      throw new Error(`Failed to write file: ${error.message}`);
+      
+      return ToolResult.failure(
+        errorMessage,
+        {
+          filepath: filepath,
+          errorCode: errorCode,
+          details: error.stack
+        }
+      );
     }
   }
 
@@ -195,20 +357,48 @@ class FileOperationsTool extends Tool {
       
       const resolvedPath = path.resolve(dirpath);
       
+      // Check if directory already exists
+      let dirExists = false;
+      try {
+        const stats = await fs.stat(resolvedPath);
+        dirExists = stats.isDirectory();
+      } catch (e) {
+        // Directory doesn't exist, which is fine
+      }
+      
       await fs.mkdir(resolvedPath, { recursive: true });
       console.log(`Successfully created directory: ${dirpath}`);
       
-      return {
-        success: true,
-        dirpath: dirpath
-      };
+      return ToolResult.success({
+        dirpath: dirpath,
+        created: !dirExists
+      });
     } catch (error) {
+      let errorCode = 'UNKNOWN';
+      let errorMessage = `Failed to create directory: ${error.message}`;
+      
       if (error.code === 'EACCES') {
-        throw new Error(`Permission denied: ${dirpath}`);
+        errorCode = 'EACCES';
+        errorMessage = `Permission denied: ${dirpath}`;
       } else if (error.code === 'EEXIST') {
-        throw new Error(`Directory already exists: ${dirpath}`);
+        errorCode = 'EEXIST';
+        errorMessage = `File already exists at path: ${dirpath}`;
+      } else if (error.code === 'ENOENT') {
+        errorCode = 'ENOENT';
+        errorMessage = `Parent directory does not exist: ${dirpath}`;
+      } else if (error.code === 'ENOTDIR') {
+        errorCode = 'ENOTDIR';
+        errorMessage = `Parent path is not a directory: ${dirpath}`;
       }
-      throw new Error(`Failed to create directory: ${error.message}`);
+      
+      return ToolResult.failure(
+        errorMessage,
+        {
+          dirpath: dirpath,
+          errorCode: errorCode,
+          details: error.stack
+        }
+      );
     }
   }
 }
