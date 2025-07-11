@@ -73,6 +73,7 @@ class Model {
 
             case 'OPEN_ROUTER': {
                 response = await this.openRouterProvider.sendAndReceiveResponse(messages);
+                break;
             }
         }
 
