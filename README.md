@@ -1,71 +1,117 @@
-# @envoyjs/jscore
+# jsEnvoy - Modular AI Agent Tools Framework
 
-JavaScript implementation of EnvoyJS - A simple JavaScript framework for building AI Agents.
+A monorepo containing a modular framework for building AI agent tools with OpenAI function calling format and a generic CLI for tool execution.
 
-This is a pure JavaScript (CommonJS) version of the @envoyjs/core package, converted from TypeScript.
+## Packages
 
-## Installation
+### [@jsenvoy/core](packages/core)
+Core framework providing:
+- 🏗️ **Modular Architecture**: Modules contain related tools
+- 💉 **Dependency Injection**: Declarative dependency management
+- 🤖 **OpenAI Compatible**: Tools use OpenAI function calling format
+- 🛡️ **Type Safe**: Built-in parameter validation
+- 🔧 **Extensible**: Easy to add new modules and tools
+
+### [@jsenvoy/cli](packages/cli) 
+Generic command-line interface providing:
+- 🔍 **Dynamic Discovery**: Auto-discovers all modules and tools
+- ⚡ **Zero Config**: Works out-of-the-box
+- 💬 **Interactive Mode**: REPL with autocomplete
+- 🎯 **Flexible**: Multiple argument formats
+- 📦 **Module Agnostic**: Works with any jsEnvoy module
+
+## Quick Start
+
+### Using the CLI
 
 ```bash
-npm install
+# Install globally
+npm install -g @jsenvoy/cli
+
+# Execute a tool
+jsenvoy calculator.calculator_evaluate --expression "2 + 2"
+
+# Interactive mode
+jsenvoy -i
 ```
 
-## Usage
+### Using the Core Framework
 
 ```javascript
-const { Agent, Model, calculatorTool } = require('@envoyjs/jscore');
+const { ResourceManager, ModuleFactory } = require('@jsenvoy/core');
+const { CalculatorModule } = require('@jsenvoy/core/modules');
 
-// Create an agent
-const agent = new Agent({
-    name: 'MyAgent',
-    bio: 'I am a helpful assistant',
-    modelConfig: {
-        provider: 'OPEN_AI',
-        model: 'gpt-4',
-        apiKey: 'your-api-key'
-    },
-    tools: [calculatorTool],
-    showToolUsage: true
-});
+const resourceManager = new ResourceManager();
+const moduleFactory = new ModuleFactory(resourceManager);
+const calculator = moduleFactory.createModule(CalculatorModule);
 
-// Run the agent
-const response = await agent.run('What is 100 * 50?');
-console.log(response);
+const tool = calculator.getTools()[0];
+const result = await tool.execute({ expression: '2 + 2' });
 ```
 
-## Available Tools
+## Project Structure
 
-- Calculator Tool
-- File Reader Tool
-- File Writer Tool
-- Command Executor Tool
-- Web Crawler Tool
-- Page Screenshoter Tool
-- Serper (Google Search) Tool
-- Server Starter Tool
-- Webpage to Markdown Tool
-- YouTube Transcript Tool
+```
+jsEnvoy/
+├── packages/
+│   ├── core/           # Core framework
+│   │   ├── src/
+│   │   ├── __tests__/
+│   │   └── package.json
+│   └── cli/            # CLI tool
+│       ├── src/
+│       ├── docs/
+│       └── package.json
+├── docs/               # Project documentation
+└── package.json        # Monorepo root
+```
 
-## Testing
+## Development
 
-Run the test suite:
+This is a monorepo managed with npm workspaces.
 
 ```bash
+# Install dependencies
+npm install
+
+# Run tests for all packages
 npm test
-```
 
-Run tests with coverage:
+# Run tests for specific package
+npm run test:core
+npm run test:cli
 
-```bash
+# Run tests with coverage
 npm run test:coverage
 ```
 
-## Differences from TypeScript Version
+## Available Modules
 
-- Uses CommonJS modules instead of ES modules
-- No TypeScript type annotations
-- Runtime validation for Tool base class implementation
-- API keys passed directly in modelConfig instead of environment variables
+### Core Modules
+- **CalculatorModule**: Mathematical calculations
+- **FileModule**: File system operations (read, write, create directories)
+
+### Additional Tools
+- **GitHub Tool**: Repository creation and management
+- Web crawler, screenshot, and other legacy tools
+
+## Architecture
+
+The framework uses a modular architecture with dependency injection:
+
+1. **Modules** are containers for related tools
+2. **Tools** implement specific functionality in OpenAI function format
+3. **ResourceManager** handles dependency injection
+4. **ModuleFactory** creates module instances with resolved dependencies
+
+See [Architecture Documentation](docs/ARCHITECTURE.md) for details.
+
+## Contributing
+
+1. Create new modules in `packages/core/src/modules/`
+2. Follow the existing patterns for OpenAIModule and OpenAITool
+3. Write tests using TDD approach
+4. Update documentation
 
 ## License
 
