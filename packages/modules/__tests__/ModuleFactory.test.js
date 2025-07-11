@@ -1,6 +1,7 @@
-const { ModuleFactory } = require('../src/ModuleFactory');
-const { ResourceManager } = require('../src/ResourceManager');
-const { Module } = require('../src/Module');
+import { jest } from '@jest/globals';
+import { ModuleFactory } from '../src/ModuleFactory.js';
+import { ResourceManager } from '../src/ResourceManager.js';
+import { Module } from '../src/Module.js';
 
 // Test modules
 class SimpleModule extends Module {

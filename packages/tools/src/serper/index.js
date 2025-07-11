@@ -1,4 +1,5 @@
-const { Tool, ToolResult } = require('@jsenvoy/modules');
+import { Tool, ToolResult } from '@jsenvoy/modules';
+import https from 'https';
 
 class Serper extends Tool {
   constructor() {
@@ -206,7 +207,7 @@ class Serper extends Tool {
     } catch (error) {
       if (error.message.includes('fetch is not defined')) {
         // Fallback for Node.js versions without fetch
-        const https = require('https');
+        // https already imported at top
         return new Promise((resolve, reject) => {
           const payload = JSON.stringify({
             q: query,
@@ -279,4 +280,4 @@ class Serper extends Tool {
   }
 }
 
-module.exports = Serper;
+export default Serper;

@@ -1,4 +1,4 @@
-const OpenAI = require("openai");
+import OpenAI from "openai";
 
 class OpenAIProvider {
     /**
@@ -32,4 +32,4 @@ class OpenAIProvider {
     }
 }
 
-module.exports = { OpenAIProvider };
+export { OpenAIProvider };

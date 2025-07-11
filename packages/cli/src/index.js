@@ -4,7 +4,6 @@
  * This will be implemented following the TDD plan in docs/CLI_IMPLEMENTATION_PLAN.md
  */
 
-import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs/promises';
@@ -13,14 +12,11 @@ import chalk from 'chalk';
 import ora from 'ora';
 import readline from 'readline';
 
+// Import core classes  
+import { ResourceManager, ModuleFactory } from '@jsenvoy/modules';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const require = createRequire(import.meta.url);
-
-// ResourceManager will automatically load .env file
-
-// Import core classes
-const { ResourceManager, ModuleFactory } = require('@jsenvoy/modules');
 
 class CLI {
   constructor() {
@@ -1680,6 +1676,9 @@ class CLI {
 
   async initializeResourceManager() {
     this.resourceManager = new ResourceManager();
+    
+    // Initialize ResourceManager (loads .env if needed)
+    await this.resourceManager.initialize();
     
     // Register resources in order of precedence
     await this.registerDefaultResources();

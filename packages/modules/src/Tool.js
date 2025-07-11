@@ -1,4 +1,4 @@
-const ToolResult = require('./ToolResult');
+import ToolResult from './ToolResult.js';
 
 /**
  * Base class for all tools in the jsEnvoy system
@@ -214,4 +214,4 @@ class Tool {
   }
 }
 
-module.exports = Tool;
+export default Tool;

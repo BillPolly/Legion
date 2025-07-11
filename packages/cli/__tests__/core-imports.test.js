@@ -1,14 +1,10 @@
 import { jest } from '@jest/globals';
-import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import { ResourceManager, ModuleFactory, Module, ModularTool } from '@jsenvoy/modules';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const require = createRequire(import.meta.url);
-
-// Import from the core package
-const { ResourceManager, ModuleFactory, Module, ModularTool } = require('@jsenvoy/modules');
 
 describe('@jsenvoy/modules imports', () => {
   it('should import ResourceManager from @jsenvoy/modules', () => {

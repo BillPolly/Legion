@@ -1,5 +1,5 @@
-const { Tool } = require('@jsenvoy/modules');
-const puppeteer = require('puppeteer');
+import { Tool } from '@jsenvoy/modules';
+import puppeteer from 'puppeteer';
 
 class PageScreenshot extends Tool {
   constructor() {
@@ -156,4 +156,4 @@ class PageScreenshot extends Tool {
   }
 }
 
-module.exports = PageScreenshot;
+export default PageScreenshot;

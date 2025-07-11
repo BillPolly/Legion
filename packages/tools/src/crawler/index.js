@@ -1,5 +1,5 @@
-const { Tool } = require('@jsenvoy/modules');
-const puppeteer = require('puppeteer');
+import { Tool } from '@jsenvoy/modules';
+import puppeteer from 'puppeteer';
 
 class Crawler extends Tool {
   constructor() {
@@ -183,4 +183,4 @@ class Crawler extends Tool {
   }
 }
 
-module.exports = Crawler;
+export default Crawler;

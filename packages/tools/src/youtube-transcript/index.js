@@ -1,5 +1,5 @@
-const { Tool } = require('@jsenvoy/modules');
-const { YoutubeTranscript } = require('youtube-transcript');
+import { Tool } from '@jsenvoy/modules';
+import { YoutubeTranscript as YTTranscript } from 'youtube-transcript';
 
 class YoutubeTranscript extends Tool {
   constructor() {
@@ -102,7 +102,7 @@ class YoutubeTranscript extends Tool {
       console.log(`Video ID: ${videoId}`);
       
       // Fetch transcript
-      const transcriptData = await YoutubeTranscript.fetchTranscript(videoId, {
+      const transcriptData = await YTTranscript.fetchTranscript(videoId, {
         lang: lang
       });
       
@@ -148,4 +148,4 @@ class YoutubeTranscript extends Tool {
   }
 }
 
-module.exports = YoutubeTranscript;
+export default YoutubeTranscript;

@@ -1,7 +1,7 @@
-const { Tool } = require('@jsenvoy/modules');
-const { spawn } = require('child_process');
-const fs = require('fs').promises;
-const path = require('path');
+import { Tool } from '@jsenvoy/modules';
+import { spawn } from 'child_process';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 class ServerStarter extends Tool {
   constructor() {
@@ -239,4 +239,4 @@ class ServerStarter extends Tool {
   }
 }
 
-module.exports = ServerStarter;
+export default ServerStarter;

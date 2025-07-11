@@ -240,4 +240,4 @@ class ResponseValidator {
   }
 }
 
-module.exports = ResponseValidator;
+export default ResponseValidator;

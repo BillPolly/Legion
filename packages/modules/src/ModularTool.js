@@ -34,4 +34,4 @@ class ModularTool {
   }
 }
 
-module.exports = { ModularTool };
+export { ModularTool };

@@ -2,12 +2,12 @@
   "name": "@jsenvoy/model-providers",
   "version": "0.0.1",
   "description": "LLM model provider implementations for jsEnvoy",
-  "type": "commonjs",
+  "type": "module",
   "main": "./src/index.js",
   "scripts": {
-    "test": "jest --passWithNoTests",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
   },
   "keywords": [
     "jsenvoy",
@@ -47,6 +47,7 @@
   },
   "jest": {
     "testEnvironment": "node",
+    "transform": {},
     "coverageDirectory": "coverage",
     "collectCoverageFrom": [
       "src/**/*.js",

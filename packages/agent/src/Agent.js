@@ -1,12 +1,12 @@
-const { Tool } = require("@jsenvoy/tools");
-const { ToolResult } = require("@jsenvoy/modules");
-const { Model } = require("@jsenvoy/model-providers");
-const { getMasterPrompt } = require("./lib/master-prompt");
-const ora = require("ora");
-const { StructuredResponse } = require("./structured-response");
-const { writeFile, appendFile } = require("fs/promises");
-const readline = require("readline");
-const { RetryManager } = require("./RetryManager");
+import { Tool } from "@jsenvoy/tools";
+import { ToolResult } from "@jsenvoy/modules";
+import { Model } from "@jsenvoy/model-providers";
+import { getMasterPrompt } from "./lib/master-prompt.js";
+import ora from "ora";
+import { StructuredResponse } from "./structured-response/index.js";
+import { writeFile, appendFile } from "fs/promises";
+import readline from "readline";
+import { RetryManager } from "./RetryManager.js";
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -329,4 +329,4 @@ class Agent {
   }
 }
 
-module.exports = { Agent };
+export { Agent };

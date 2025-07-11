@@ -1,5 +1,5 @@
-const { Tool } = require('@jsenvoy/modules');
-const puppeteer = require('puppeteer');
+import { Tool } from '@jsenvoy/modules';
+import puppeteer from 'puppeteer';
 
 class WebPageToMarkdown extends Tool {
   constructor() {
@@ -253,4 +253,4 @@ class WebPageToMarkdown extends Tool {
   }
 }
 
-module.exports = WebPageToMarkdown;
+export default WebPageToMarkdown;

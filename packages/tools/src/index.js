@@ -6,18 +6,18 @@
  */
 
 // Import modules
-const CalculatorModule = require('./calculator');
-const FileModule = require('./file');
+import CalculatorModule from './calculator/index.js';
+import FileModule from './file/index.js';
 
 // Import individual tools that aren't modules yet
-const CommandExecutor = require('./command-executor');
-const ServerStarter = require('./server-starter');
-const Serper = require('./serper');
-const Crawler = require('./crawler');
-const PageScreenshot = require('./page-screenshoter');
-const WebPageToMarkdown = require('./webpage-to-markdown');
-const YoutubeTranscript = require('./youtube-transcript');
-const GitHub = require('./github');
+import CommandExecutor from './command-executor/index.js';
+import ServerStarter from './server-starter/index.js';
+import Serper from './serper/index.js';
+import Crawler from './crawler/index.js';
+import PageScreenshot from './page-screenshoter/index.js';
+import WebPageToMarkdown from './webpage-to-markdown/index.js';
+import YoutubeTranscript from './youtube-transcript/index.js';
+import GitHub from './github/index.js';
 
 // Create module instances for the tool registry
 const calculatorModule = new CalculatorModule();
@@ -79,7 +79,7 @@ async function invokeToolByFunctionName(functionName, toolCall) {
   throw new Error(`Tool function not found: ${functionName}`);
 }
 
-module.exports = {
+export {
   // Modules
   CalculatorModule,
   FileModule,

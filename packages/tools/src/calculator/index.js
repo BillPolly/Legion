@@ -3,7 +3,7 @@
  * Exports the CalculatorModule which contains calculator tools
  */
 
-const CalculatorModule = require('./CalculatorModule');
+import CalculatorModule from './CalculatorModule.js';
 
 // Export only the module
-module.exports = CalculatorModule;
+export default CalculatorModule;

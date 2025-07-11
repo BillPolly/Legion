@@ -6,11 +6,11 @@
  */
 
 // Export core infrastructure
-exports.ResourceManager = require("./ResourceManager").ResourceManager;
-exports.ModuleFactory = require("./ModuleFactory").ModuleFactory;
+export { ResourceManager } from "./ResourceManager.js";
+export { ModuleFactory } from "./ModuleFactory.js";
 
 // Export base classes
-exports.Tool = require("./Tool");
-exports.ToolResult = require("./ToolResult");
-exports.Module = require("./Module").Module;
-exports.ModularTool = require("./ModularTool").ModularTool;
+export { default as Tool } from "./Tool.js";
+export { default as ToolResult } from "./ToolResult.js";
+export { Module } from "./Module.js";
+export { ModularTool } from "./ModularTool.js";

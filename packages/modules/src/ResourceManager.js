@@ -1,5 +1,9 @@
-const path = require('path');
-const fs = require('fs');
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Central registry for all resources needed by modules
@@ -8,10 +12,19 @@ const fs = require('fs');
 class ResourceManager {
   constructor(options = {}) {
     this.resources = new Map();
+    this.options = options;
     
-    // Load .env file by default unless explicitly disabled
-    if (options.loadEnv !== false) {
-      this.loadEnvFile(options.envPath);
+    // Note: .env loading will be done in initialize() method
+    // since it needs to be async with ES6 modules
+  }
+  
+  /**
+   * Initialize the ResourceManager (async operations)
+   * Must be called after construction if loadEnv is needed
+   */
+  async initialize() {
+    if (this.options.loadEnv !== false) {
+      await this.loadEnvFile(this.options.envPath);
     }
   }
   
@@ -19,7 +32,7 @@ class ResourceManager {
    * Load environment variables from .env file
    * @param {string} envPath - Optional path to .env file
    */
-  loadEnvFile(envPath) {
+  async loadEnvFile(envPath) {
     try {
       // If no path provided, search for .env file
       if (!envPath) {
@@ -43,7 +56,8 @@ class ResourceManager {
       
       if (envPath && fs.existsSync(envPath)) {
         // Load dotenv
-        require('dotenv').config({ path: envPath });
+        const dotenv = await import('dotenv');
+        dotenv.config({ path: envPath });
         
         // Register all environment variables as resources
         for (const [key, value] of Object.entries(process.env)) {
@@ -88,4 +102,4 @@ class ResourceManager {
   }
 }
 
-module.exports = { ResourceManager };
+export { ResourceManager };

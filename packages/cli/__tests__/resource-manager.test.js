@@ -1,16 +1,13 @@
 import { jest } from '@jest/globals';
 import CLI from '../src/index.js';
-import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs/promises';
 import os from 'os';
+import { ResourceManager } from '@jsenvoy/modules';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const require = createRequire(import.meta.url);
-
-const { ResourceManager } = require('@jsenvoy/modules');
 
 describe('ResourceManager Integration', () => {
   let cli;

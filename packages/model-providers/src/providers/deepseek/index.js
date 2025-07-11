@@ -1,4 +1,4 @@
-const OpenAI = require("openai");
+import OpenAI from "openai";
 
 class DeepSeekProvider {
     /**
@@ -37,4 +37,4 @@ class DeepSeekProvider {
     }
 }
 
-module.exports = { DeepSeekProvider };
+export { DeepSeekProvider };

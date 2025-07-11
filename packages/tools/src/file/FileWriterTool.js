@@ -1,6 +1,6 @@
-const { ModularTool } = require("@jsenvoy/modules");
-const fs = require('fs').promises;
-const path = require('path');
+import { ModularTool } from '@jsenvoy/modules';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 /**
  * Tool for writing files to the file system
@@ -151,4 +151,4 @@ class FileWriterTool extends ModularTool {
   }
 }
 
-module.exports = FileWriterTool;
+export default FileWriterTool;

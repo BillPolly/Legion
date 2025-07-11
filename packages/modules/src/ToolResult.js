@@ -144,4 +144,4 @@ class ToolResult {
   }
 }
 
-module.exports = ToolResult;
+export default ToolResult;

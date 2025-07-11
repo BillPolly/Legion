@@ -3,7 +3,7 @@
  * Exports the FileModule which contains all file-related tools
  */
 
-const FileModule = require('./FileModule');
+import FileModule from './FileModule.js';
 
 // Export only the module
-module.exports = FileModule;
+export default FileModule;

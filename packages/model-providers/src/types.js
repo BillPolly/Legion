@@ -64,6 +64,6 @@ const ModelType = {
  * @typedef {Object} ModelConfig
  */
 
-module.exports = {
+export {
     ModelType
 };

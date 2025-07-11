@@ -1,6 +1,6 @@
-const { Tool, ToolResult, Module } = require('@jsenvoy/modules');
-const fs = require('fs').promises;
-const path = require('path');
+import { Tool, ToolResult, Module } from '@jsenvoy/modules';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 /**
  * Internal tool class for file operations
@@ -431,8 +431,7 @@ class FileModule extends Module {
 }
 
 // Export the module as the default
-module.exports = FileModule;
+export default FileModule;
 
 // Also export the tool class for direct usage
-module.exports.FileOperationsTool = FileOperationsTool;
-module.exports.FileModule = FileModule;
+export { FileOperationsTool, FileModule };

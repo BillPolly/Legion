@@ -131,4 +131,4 @@ ${config.steps.join("\n")}
 `;
 };
 
-module.exports = { getMasterPrompt };
+export { getMasterPrompt };

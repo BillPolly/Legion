@@ -1,7 +1,7 @@
-const { DeepSeekProvider } = require("./providers/deepseek");
-const { OpenAIProvider } = require("./providers/open_ai");
-const { OpenRouterProvider } = require("./providers/openrouter");
-const ora = require('ora');
+import { DeepSeekProvider } from "./providers/deepseek/index.js";
+import { OpenAIProvider } from "./providers/open_ai/index.js";
+import { OpenRouterProvider } from "./providers/openrouter/index.js";
+import ora from 'ora';
 
 // Re-export all types (for documentation purposes)
 // In JS, we'll document types using JSDoc comments
@@ -90,4 +90,4 @@ class Model {
     }
 }
 
-module.exports = { Model };
+export { Model };

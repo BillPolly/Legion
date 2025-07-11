@@ -1,4 +1,4 @@
-const { ResponseParser, ResponseValidator } = require('@jsenvoy/response-parser');
+import { ResponseParser, ResponseValidator } from '@jsenvoy/response-parser';
 
 /**
  * Manages retry logic for LLM responses with error feedback
@@ -209,4 +209,4 @@ class RetryManager {
   }
 }
 
-module.exports = { RetryManager };
+export { RetryManager };

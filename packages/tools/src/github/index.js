@@ -1,9 +1,9 @@
-const { Tool } = require('@jsenvoy/modules');
-const { exec } = require('child_process');
-const { promisify } = require('util');
-const https = require('https');
-const fs = require('fs').promises;
-const path = require('path');
+import { Tool } from '@jsenvoy/modules';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import https from 'https';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 const execAsync = promisify(exec);
 
@@ -377,4 +377,4 @@ class GitHub extends Tool {
   }
 }
 
-module.exports = GitHub;
+export default GitHub;

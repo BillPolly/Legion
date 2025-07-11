@@ -20,4 +20,4 @@
 
 // This file exports type definitions as JSDoc comments
 // No actual code is exported since these are just type definitions
-module.exports = {};
+export {};

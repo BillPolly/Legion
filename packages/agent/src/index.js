@@ -1,8 +1,8 @@
-const { Agent } = require('./Agent');
-const { RetryManager } = require('./RetryManager');
-const { StructuredResponse } = require('./structured-response');
+import { Agent } from './Agent.js';
+import { RetryManager } from './RetryManager.js';
+import { StructuredResponse } from './structured-response/index.js';
 
-module.exports = {
+export {
   Agent,
   RetryManager,
   StructuredResponse

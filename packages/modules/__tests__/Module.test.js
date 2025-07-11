@@ -1,5 +1,6 @@
-const { Module } = require('../src/Module');
-const { ModularTool } = require('../src/ModularTool');
+import { jest } from '@jest/globals';
+import { Module } from '../src/Module.js';
+import { ModularTool } from '../src/ModularTool.js';
 
 // Mock tools for testing
 class MockTool1 extends ModularTool {

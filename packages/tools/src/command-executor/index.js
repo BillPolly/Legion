@@ -1,6 +1,6 @@
-const { Tool, ToolResult } = require('@jsenvoy/modules');
-const { exec } = require('child_process');
-const { promisify } = require('util');
+import { Tool, ToolResult } from '@jsenvoy/modules';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
@@ -186,4 +186,4 @@ class CommandExecutor extends Tool {
   }
 }
 
-module.exports = CommandExecutor;
+export default CommandExecutor;

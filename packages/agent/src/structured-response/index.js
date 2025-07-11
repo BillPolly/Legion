@@ -10,4 +10,4 @@ class StructuredResponse {
     }
 }
 
-module.exports = { StructuredResponse };
+export { StructuredResponse };

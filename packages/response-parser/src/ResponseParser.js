@@ -1,4 +1,4 @@
-const JSON5 = require('json5');
+// Note: Using native JSON parsing instead of JSON5
 
 /**
  * Robust parser for LLM responses that handles various formats and common issues
@@ -72,11 +72,11 @@ class ResponseParser {
   }
 
   /**
-   * Try to parse the input directly as JSON5
+   * Try to parse the input directly as JSON
    */
   tryDirectParse(input) {
     try {
-      return JSON5.parse(input.trim());
+      return JSON.parse(input.trim());
     } catch (e) {
       // Re-throw to capture the error in main parse method
       if (input.trim().startsWith('{') || input.trim().startsWith('[')) {
@@ -243,16 +243,11 @@ class ResponseParser {
     if (!input) return null;
     
     try {
-      return JSON5.parse(input);
+      return JSON.parse(input);
     } catch (e) {
-      // Try standard JSON as fallback
-      try {
-        return JSON.parse(input);
-      } catch (e2) {
-        return null;
-      }
+      return null;
     }
   }
 }
 
-module.exports = ResponseParser;
+export default ResponseParser;

@@ -1,4 +1,4 @@
-const { Tool, ToolResult, Module } = require('@jsenvoy/modules');
+import { Tool, ToolResult, Module } from '@jsenvoy/modules';
 
 /**
  * Calculator tool that evaluates mathematical expressions
@@ -154,8 +154,7 @@ class CalculatorModule extends Module {
 }
 
 // Export the module as the default
-module.exports = CalculatorModule;
+export default CalculatorModule;
 
 // Also export the tool class for direct usage
-module.exports.CalculatorTool = CalculatorTool;
-module.exports.CalculatorModule = CalculatorModule;
+export { CalculatorTool, CalculatorModule };

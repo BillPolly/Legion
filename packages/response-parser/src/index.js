@@ -1,7 +1,7 @@
-const ResponseParser = require('./ResponseParser');
-const ResponseValidator = require('./ResponseValidator');
+import ResponseParser from './ResponseParser.js';
+import ResponseValidator from './ResponseValidator.js';
 
-module.exports = {
+export {
   ResponseParser,
   ResponseValidator
 };

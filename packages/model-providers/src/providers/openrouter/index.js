@@ -1,4 +1,4 @@
-const OpenAI = require("openai");
+import OpenAI from "openai";
 
 class OpenRouterProvider {
     /**
@@ -34,4 +34,4 @@ class OpenRouterProvider {
     }
 }
 
-module.exports = { OpenRouterProvider };
+export { OpenRouterProvider };

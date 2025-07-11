@@ -1,4 +1,5 @@
-const { ResourceManager } = require('../src/ResourceManager');
+import { jest } from '@jest/globals';
+import { ResourceManager } from '../src/ResourceManager.js';
 
 describe('ResourceManager', () => {
   let resourceManager;
