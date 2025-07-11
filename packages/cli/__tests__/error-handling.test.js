@@ -168,7 +168,7 @@ describe('Error Handling and Recovery', () => {
     });
 
     it('should handle file not found errors', async () => {
-      await cli.run(['node', 'jsenvoy', 'file.file_reader', '--filePath', '/nonexistent/file.txt']);
+      await cli.run(['node', 'jsenvoy', 'file.file_read', '--filepath', '/nonexistent/file.txt']);
       
       expect(errorSpy).toHaveBeenCalledWith('Error:', expect.any(String));
     });

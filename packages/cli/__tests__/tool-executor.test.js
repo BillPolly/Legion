@@ -32,7 +32,7 @@ describe('Tool Executor', () => {
         expression: '40 + 2'
       });
       
-      expect(mockExecute).toHaveBeenCalledWith({ expression: '40 + 2' });
+      expect(mockExecute).toHaveBeenCalledWith({ expression: '40 + 2' }, 'calculator_evaluate');
       expect(result).toEqual({ result: 42 });
     });
 
@@ -211,7 +211,7 @@ describe('Tool Executor', () => {
       
       await cli.executeCommand();
       
-      expect(mockExecute).toHaveBeenCalledWith({ expression: '2 + 2' });
+      expect(mockExecute).toHaveBeenCalledWith({ expression: '2 + 2' }, 'calculator_evaluate');
       expect(consoleSpy).toHaveBeenCalledWith(JSON.stringify({ result: 4 }));
     });
 

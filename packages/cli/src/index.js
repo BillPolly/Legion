@@ -17,6 +17,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 
+// ResourceManager will automatically load .env file
+
 // Import core classes
 const { ResourceManager, ModuleFactory } = require('@jsenvoy/modules');
 
@@ -297,11 +299,24 @@ class CLI {
         const tempInstance = new ModuleClass(mockDependencies);
         
         // Store module metadata
+        const tools = tempInstance.getTools ? tempInstance.getTools() : [];
+        
+        // Count the actual number of functions
+        let functionCount = 0;
+        for (const tool of tools) {
+          if (typeof tool.getAllToolDescriptions === 'function') {
+            functionCount += tool.getAllToolDescriptions().length;
+          } else {
+            functionCount += 1;
+          }
+        }
+        
         const moduleInfo = {
           name: moduleName,
           className: ModuleClass.name,
           dependencies: ModuleClass.dependencies || [],
-          tools: tempInstance.getTools ? tempInstance.getTools() : []
+          tools: tools,
+          functionCount: functionCount
         };
         
         this.modules.set(moduleName, moduleInfo);
@@ -459,7 +474,7 @@ class CLI {
     
     // Prepare table data
     const tableData = modules.map(module => {
-      const toolCount = module.tools.length;
+      const toolCount = module.functionCount || module.tools.length;
       const deps = module.dependencies.length;
       
       return {
@@ -563,7 +578,7 @@ class CLI {
       console.log('  No modules found');
     } else {
       modules.forEach(module => {
-        const toolCount = module.tools.length;
+        const toolCount = module.functionCount || module.tools.length;
         console.log(`  ${chalk.green(module.name)} (${toolCount} ${toolCount === 1 ? 'tool' : 'tools'})`);
       });
     }
@@ -880,8 +895,22 @@ class CLI {
     
     console.log(useColor ? chalk.bold('Tools:') : 'Tools:');
     
-    if (module.tools && module.tools.length > 0) {
-      module.tools.forEach(tool => {
+    // Get the actual function names from the tool registry
+    const tools = this.discoverTools();
+    const moduleTools = [];
+    
+    for (const [key, tool] of tools) {
+      if (tool.module === moduleName) {
+        moduleTools.push({
+          key: key,
+          name: tool.name,
+          description: tool.description
+        });
+      }
+    }
+    
+    if (moduleTools.length > 0) {
+      moduleTools.forEach(tool => {
         console.log(`  - ${tool.name}${tool.description ? `: ${tool.description}` : ''}`);
       });
     } else {
@@ -1807,16 +1836,36 @@ class CLI {
       const tools = moduleInstance.getTools ? moduleInstance.getTools() : [];
       
       for (const tool of tools) {
-        const toolKey = `${moduleName}.${tool.name}`;
-        const toolMetadata = {
-          name: tool.name,
-          module: moduleName,
-          description: tool.description,
-          parameters: tool.parameters,
-          instance: tool
-        };
-        
-        registry.set(toolKey, toolMetadata);
+        // Check if tool has multiple functions
+        if (typeof tool.getAllToolDescriptions === 'function') {
+          // Tool has multiple functions, register each one
+          const allDescriptions = tool.getAllToolDescriptions();
+          for (const desc of allDescriptions) {
+            const functionName = desc.function.name;
+            const toolKey = `${moduleName}.${functionName}`;
+            const toolMetadata = {
+              name: functionName,
+              module: moduleName,
+              description: desc.function.description,
+              parameters: desc.function.parameters,
+              instance: tool
+            };
+            registry.set(toolKey, toolMetadata);
+          }
+        } else {
+          // Tool has single function
+          const toolDesc = tool.getToolDescription();
+          const functionName = toolDesc.function.name;
+          const toolKey = `${moduleName}.${functionName}`;
+          const toolMetadata = {
+            name: functionName,
+            module: moduleName,
+            description: toolDesc.function.description,
+            parameters: toolDesc.function.parameters,
+            instance: tool
+          };
+          registry.set(toolKey, toolMetadata);
+        }
       }
     }
     
@@ -1936,14 +1985,17 @@ class CLI {
       throw new Error(`Tool not found: ${toolName}`);
     }
     
+    // Pass the function name from the tool metadata
+    const functionName = tool.name;
+    
     // Handle timeout if configured
     const timeout = this.config.toolTimeout;
     if (timeout && timeout > 0) {
-      return await this.executeWithTimeout(tool.instance.execute(args), timeout);
+      return await this.executeWithTimeout(tool.instance.execute(args, functionName), timeout);
     }
     
     // Execute without timeout
-    return await tool.instance.execute(args);
+    return await tool.instance.execute(args, functionName);
   }
 
   async executeWithTimeout(promise, timeoutMs) {
@@ -2204,16 +2256,26 @@ class CLI {
     
     if (match) {
       const [, moduleName, toolName] = match;
-      const module = this.modules.get(moduleName);
       
-      if (module) {
+      // Get all tools for this module from the registry
+      const tools = this.discoverTools();
+      const moduleTools = [];
+      const toolNames = [];
+      
+      for (const [key, tool] of tools) {
+        if (tool.module === moduleName) {
+          moduleTools.push(key);
+          toolNames.push(tool.name);
+        }
+      }
+      
+      if (moduleTools.length > 0) {
         console.log(`\nAvailable tools in ${moduleName}:`);
-        module.tools.forEach(tool => {
-          console.log(`  - ${moduleName}.${tool.name}`);
+        moduleTools.forEach(toolKey => {
+          console.log(`  - ${toolKey}`);
         });
         
         // Try to find a close match
-        const toolNames = module.tools.map(t => t.name);
         const suggestion = this.findBestMatch(toolName, toolNames);
         if (suggestion) {
           console.log(`\nDid you mean: ${useColor ? chalk.green(`${moduleName}.${suggestion}`) : `${moduleName}.${suggestion}`}?`);

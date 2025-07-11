@@ -23,9 +23,9 @@ describe('Tool Discovery and Metadata', () => {
       expect(tools.has('calculator.calculator_evaluate')).toBe(true);
       
       // Should have file tools
-      expect(tools.has('file.file_reader')).toBe(true);
-      expect(tools.has('file.file_writer')).toBe(true);
-      expect(tools.has('file.directory_creator')).toBe(true);
+      expect(tools.has('file.file_read')).toBe(true);
+      expect(tools.has('file.file_write')).toBe(true);
+      expect(tools.has('file.directory_create')).toBe(true);
     });
 
     it('should include tool metadata', () => {
@@ -77,7 +77,7 @@ describe('Tool Discovery and Metadata', () => {
       const tools = cli.getToolsByModule('file');
       
       expect(Array.isArray(tools)).toBe(true);
-      expect(tools.length).toBe(3); // file_reader, file_writer, directory_creator
+      expect(tools.length).toBe(3); // file_read, file_write, directory_create
       expect(tools.every(t => t.module === 'file')).toBe(true);
     });
 
@@ -92,7 +92,7 @@ describe('Tool Discovery and Metadata', () => {
   describe('validateToolName', () => {
     it('should validate correct tool names', () => {
       expect(cli.validateToolName('calculator.calculator_evaluate')).toBe(true);
-      expect(cli.validateToolName('file.file_reader')).toBe(true);
+      expect(cli.validateToolName('file.file_read')).toBe(true);
     });
 
     it('should reject invalid tool names', () => {
@@ -141,7 +141,7 @@ describe('Tool Discovery and Metadata', () => {
       expect(Array.isArray(names)).toBe(true);
       expect(names.length).toBeGreaterThan(0);
       expect(names).toContain('calculator.calculator_evaluate');
-      expect(names).toContain('file.file_reader');
+      expect(names).toContain('file.file_read');
       
       // Should be sorted
       const sorted = [...names].sort();

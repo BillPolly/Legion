@@ -116,14 +116,14 @@ describe('Help System', () => {
 
     it('should show parameter details', async () => {
       cli.command = 'help';
-      cli.helpTopic = 'file.file_reader';
+      cli.helpTopic = 'file.file_read';
       
       await cli.executeHelpCommand();
       
       const output = consoleSpy.mock.calls.map(call => call[0]).join('\n');
       
-      expect(output).toContain('file.file_reader');
-      expect(output).toContain('filePath');
+      expect(output).toContain('file.file_read');
+      expect(output).toContain('filepath');
       expect(output).toContain('The path to the file to read');
     });
 
@@ -151,9 +151,9 @@ describe('Help System', () => {
       
       expect(output).toContain('Module: file');
       expect(output).toContain('Tools:');
-      expect(output).toContain('file_reader');
-      expect(output).toContain('file_writer');
-      expect(output).toContain('directory_creator');
+      expect(output).toContain('file_read');
+      expect(output).toContain('file_write');
+      expect(output).toContain('directory_create');
     });
 
     it('should show module dependencies', async () => {

@@ -4,7 +4,8 @@ describe('ResourceManager', () => {
   let resourceManager;
 
   beforeEach(() => {
-    resourceManager = new ResourceManager();
+    // Create ResourceManager without loading .env for tests
+    resourceManager = new ResourceManager({ loadEnv: false });
   });
 
   describe('constructor', () => {

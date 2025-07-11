@@ -89,6 +89,57 @@ class Tool {
       throw new Error(`Missing required parameters: ${missing.join(', ')}`);
     }
   }
+
+  /**
+   * Execute method for CLI compatibility
+   * Adapts simple arguments to the OpenAI function calling format
+   * @param {Object} args - Simple key-value arguments
+   * @param {string} functionName - Optional function name for multi-function tools
+   * @returns {Promise<*>} The result of the tool execution
+   */
+  async execute(args, functionName = null) {
+    // If no function name provided, get it from the tool description
+    if (!functionName) {
+      const toolDesc = this.getToolDescription();
+      functionName = toolDesc.function.name;
+    }
+    
+    // Create a mock tool call in OpenAI format
+    const toolCall = {
+      id: `cli-${Date.now()}`,
+      type: 'function',
+      function: {
+        name: functionName,
+        arguments: JSON.stringify(args)
+      }
+    };
+    
+    // Invoke the tool
+    const response = await this.invoke(toolCall);
+    
+    // Extract the result from the response
+    if (response.content) {
+      try {
+        const parsed = JSON.parse(response.content);
+        // If it's an error response, throw the error
+        if (parsed.error) {
+          throw new Error(parsed.error);
+        }
+        // Return the parsed content or the content itself
+        return parsed.result !== undefined ? parsed.result : parsed;
+      } catch (e) {
+        // If the error is from JSON parsing, check if it might be an error response
+        if (e instanceof SyntaxError) {
+          // If content is not JSON, return it as-is
+          return response.content;
+        }
+        // Otherwise, re-throw the error (e.g., from parsed.error)
+        throw e;
+      }
+    }
+    
+    return response;
+  }
 }
 
 module.exports = Tool;

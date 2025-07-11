@@ -74,9 +74,9 @@ describe('List Commands', () => {
       
       expect(output).toContain('Available Tools');
       expect(output).toContain('calculator.calculator_evaluate');
-      expect(output).toContain('file.file_reader');
-      expect(output).toContain('file.file_writer');
-      expect(output).toContain('file.directory_creator');
+      expect(output).toContain('file.file_read');
+      expect(output).toContain('file.file_write');
+      expect(output).toContain('file.directory_create');
     });
 
     it('should show tool descriptions', async () => {
@@ -85,7 +85,7 @@ describe('List Commands', () => {
       const output = consoleSpy.mock.calls.map(call => call[0]).join('\n');
       
       expect(output).toContain('Evaluates a mathematical expression');
-      expect(output).toContain('Reads the contents of a file');
+      expect(output).toContain('Read the contents of a file');
     });
 
     it('should group tools by module', async () => {
@@ -113,7 +113,7 @@ describe('List Commands', () => {
       expect(output).toContain('Modules');
       expect(output).toContain('Tools');
       expect(output).toContain('calculator');
-      expect(output).toContain('file.file_reader');
+      expect(output).toContain('file.file_read');
     });
   });
 
@@ -127,7 +127,7 @@ describe('List Commands', () => {
       
       const output = consoleSpy.mock.calls.map(call => call[0]).join('\n');
       
-      expect(output).toContain('file.file_reader');
+      expect(output).toContain('file.file_read');
       expect(output).not.toContain('calculator.calculator_evaluate');
     });
 
