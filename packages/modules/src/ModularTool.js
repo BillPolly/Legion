@@ -4,6 +4,7 @@
 class ModularTool {
   constructor() {
     this.name = '';
+    this.shortName = ''; // Optional short command name
     this.description = '';
     this.parameters = {};
   }

@@ -15,59 +15,66 @@ export class ExecuteCommand {
    */
   async execute(parsedArgs, config) {
     const { moduleName, toolName, args } = parsedArgs;
-    const fullToolName = `${moduleName}.${toolName}`;
     
-    // Check if module exists
-    const modules = this.toolRegistry.moduleLoader.getModules();
-    if (!modules.has(moduleName)) {
-      throw new Error(`Module not found: ${moduleName}`);
-    }
+    // Try to resolve the tool
+    let toolData = null;
+    let resolvedToolName = null;
     
-    // Check if tool exists
-    const tool = this.toolRegistry.getToolByName(fullToolName);
-    if (!tool) {
-      throw new Error(`Tool not found: ${fullToolName}`);
-    }
-    
-    // Validate arguments
-    const validation = this.toolRegistry.validateToolArguments(fullToolName, args);
-    if (!validation.valid) {
-      // Find the first missing required parameter
-      const missingParam = validation.errors.find(e => e.includes('Missing required'));
-      if (missingParam) {
-        throw new Error(missingParam);
+    if (moduleName && toolName) {
+      // Traditional module.tool format
+      resolvedToolName = `${moduleName}_${toolName}`;
+      toolData = this.toolRegistry.resolveTool(resolvedToolName);
+      
+      if (!toolData) {
+        resolvedToolName = toolName;
+        toolData = this.toolRegistry.resolveTool(toolName);
       }
-      // Handle other validation errors
-      validation.errors.forEach(error => console.error(`  - ${error}`));
-      throw new Error('Invalid arguments provided');
+    } else if (toolName) {
+      // Direct tool name
+      resolvedToolName = toolName;
+      toolData = this.toolRegistry.resolveTool(toolName);
     }
     
-    // Check for unknown parameters and suggest corrections
-    const knownParams = Object.keys(tool.parameters?.properties || {});
-    for (const argKey of Object.keys(args)) {
-      if (!knownParams.includes(argKey)) {
-        const suggestion = this.findBestMatch(argKey, knownParams);
-        if (suggestion) {
-          console.log(`\nDid you mean: --${suggestion}?`);
-        } else {
-          console.log('\nAvailable parameters:');
-          knownParams.forEach(param => console.log(`  --${param}`));
-        }
-        throw new Error(`Unknown parameter: --${argKey}`);
-      }
+    if (!toolData) {
+      throw new Error(`Tool not found: ${toolName}`);
     }
-    
-    // Convert arguments to correct types
-    const convertedArgs = this.toolRegistry.convertArguments(fullToolName, args);
     
     try {
       // Execute the tool
-      const result = await this.toolRegistry.executeTool(fullToolName, convertedArgs, config);
+      const tool = toolData.tool;
+      let result;
       
-      // Format and display output
-      this.outputFormatter.format(result, parsedArgs.options);
+      // Handle different tool types
+      if (typeof tool.invoke === 'function') {
+        // Tool with invoke method (GitHub, PolyRepo)
+        const functionName = toolData.metadata.functionName || toolName;
+        result = await tool.invoke({
+          function: {
+            name: functionName,
+            arguments: JSON.stringify(args)
+          }
+        });
+      } else if (typeof tool.execute === 'function') {
+        // ModularTool with execute method
+        result = await tool.execute(args);
+      } else {
+        throw new Error(`Tool ${toolName} does not have a valid execution method`);
+      }
+      
+      // Format output based on config
+      if (config?.output === 'json') {
+        console.log(JSON.stringify(result, null, 2));
+      } else {
+        if (result && typeof result === 'object' && result.content) {
+          console.log(result.content);
+        } else if (result && typeof result === 'object' && result.result !== undefined) {
+          console.log(`Result: ${result.result}`);
+        } else {
+          console.log(result);
+        }
+      }
     } catch (error) {
-      throw error;
+      throw new Error(`Tool execution failed: ${error.message}`);
     }
   }
 

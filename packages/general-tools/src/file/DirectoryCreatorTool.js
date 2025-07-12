@@ -9,6 +9,7 @@ class DirectoryCreatorTool extends ModularTool {
   constructor({ basePath, permissions = 0o755 }) {
     super();
     this.name = 'directory_creator';
+    this.shortName = 'mkdir';
     this.description = 'Creates directories in the file system';
     this.parameters = {
       type: 'object',

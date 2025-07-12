@@ -23,7 +23,13 @@
     "split:check": "node scripts/run-split.js",
     "split:simple": "node scripts/split-monorepo.js",
     "split:history": "node scripts/split-with-history.js",
-    "split": "node scripts/split-package.js"
+    "split": "node scripts/split-package.js",
+    "subtree:discover": "node scripts/discover-subtrees.js",
+    "subtree:push": "node scripts/push-all-subtrees.js",
+    "subtree:pull": "node scripts/pull-all-subtrees.js",
+    "cli": "node packages/cli/src/index.js interactive",
+    "cli:help": "node packages/cli/src/index.js help",
+    "cli:list": "node packages/cli/src/index.js list"
   },
   "devDependencies": {
     "eslint": "^8.56.0",

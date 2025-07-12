@@ -9,6 +9,7 @@ class FileWriterTool extends ModularTool {
   constructor({ basePath, encoding = 'utf-8', createDirectories = false }) {
     super();
     this.name = 'file_writer';
+    this.shortName = 'write';
     this.description = 'Writes content to a file in the file system';
     this.parameters = {
       type: 'object',

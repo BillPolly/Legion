@@ -51,43 +51,56 @@ export class ModuleLoader {
    * @param {object} options - Loading options
    */
   async loadModule(moduleFile, options = {}) {
-    // Import the module class
-    const ModuleClass = require(moduleFile);
-    
-    // Extract module name from class name (e.g., CalculatorModule -> calculator)
-    const moduleName = ModuleClass.name
-      .replace(/Module$/, '')
-      .toLowerCase();
-    
-    // Store the module class for later instantiation
-    this.moduleClasses.set(moduleName, ModuleClass);
-    
-    // Create a temporary instance to extract metadata
-    const mockDependencies = this.createMockDependencies(ModuleClass);
-    const tempInstance = new ModuleClass(mockDependencies);
-    
-    // Store module metadata
-    const tools = tempInstance.getTools ? tempInstance.getTools() : [];
-    
-    // Count the actual number of functions
-    let functionCount = 0;
-    for (const tool of tools) {
-      if (typeof tool.getAllToolDescriptions === 'function') {
-        functionCount += tool.getAllToolDescriptions().length;
-      } else {
-        functionCount += 1;
+    try {
+      // Import the module class (ES modules)
+      const moduleExports = await import(`file://${moduleFile}`);
+      const ModuleClass = moduleExports.default;
+      
+      if (!ModuleClass) {
+        return;
       }
+      
+      // Extract module name from class name (e.g., CalculatorModule -> calculator)
+      const moduleName = ModuleClass.name
+        .replace(/Module$/, '')
+        .toLowerCase();
+      
+      // Store the module class for later instantiation
+      this.moduleClasses.set(moduleName, ModuleClass);
+      
+      // Create a temporary instance to extract metadata
+      const mockDependencies = this.createMockDependencies(ModuleClass);
+      const tempInstance = new ModuleClass(mockDependencies);
+      
+      // Store module metadata
+      const tools = tempInstance.getTools ? tempInstance.getTools() : [];
+      
+      // Count the actual number of functions
+      let functionCount = 0;
+      for (const tool of tools) {
+        if (typeof tool.getAllToolDescriptions === 'function') {
+          functionCount += tool.getAllToolDescriptions().length;
+        } else {
+          functionCount += 1;
+        }
+      }
+      
+      const moduleInfo = {
+        name: moduleName,
+        className: ModuleClass.name,
+        dependencies: ModuleClass.dependencies || [],
+        tools: tools,
+        functionCount: functionCount
+      };
+      
+      this.modules.set(moduleName, moduleInfo);
+      
+    } catch (error) {
+      if (options.verbose) {
+        console.error(`Failed to load module from ${moduleFile}:`, error.message);
+      }
+      throw error;
     }
-    
-    const moduleInfo = {
-      name: moduleName,
-      className: ModuleClass.name,
-      dependencies: ModuleClass.dependencies || [],
-      tools: tools,
-      functionCount: functionCount
-    };
-    
-    this.modules.set(moduleName, moduleInfo);
   }
 
   /**
@@ -123,8 +136,9 @@ export class ModuleLoader {
    * @returns {string} Path to modules directory
    */
   getModulePath() {
-    // Resolve path to @jsenvoy/tools src directory where modules are located
-    const toolsPath = path.resolve(__dirname, '../../../tools/src');
+    // Resolve path to @jsenvoy/general-tools src directory where modules are located
+    // From /packages/cli/src/core/ to /packages/general-tools/src/
+    const toolsPath = path.resolve(__dirname, '../../../general-tools/src');
     return toolsPath;
   }
 

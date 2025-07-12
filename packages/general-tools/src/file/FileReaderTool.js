@@ -9,6 +9,7 @@ class FileReaderTool extends ModularTool {
   constructor({ basePath, encoding = 'utf-8', maxFileSize = 10 * 1024 * 1024 }) {
     super();
     this.name = 'file_reader';
+    this.shortName = 'read';
     this.description = 'Reads the contents of a file from the file system';
     this.parameters = {
       type: 'object',

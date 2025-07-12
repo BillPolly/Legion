@@ -1,0 +1,10 @@
+# Git Subtree Configuration
+# Format: prefix remote branch
+# Lines starting with # are comments
+
+packages/agent https://github.com/BillPolly/agent.git main
+packages/modules https://github.com/BillPolly/modules.git main
+packages/cli https://github.com/BillPolly/cli.git main
+packages/general-tools https://github.com/BillPolly/general-tools.git main
+packages/model-providers https://github.com/BillPolly/model-providers.git main
+packages/response-parser https://github.com/BillPolly/response-parser.git main

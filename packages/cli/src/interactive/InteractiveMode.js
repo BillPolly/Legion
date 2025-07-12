@@ -147,59 +147,100 @@ export class InteractiveMode {
         await this.cli.commands.list.execute({ listType: 'aliases', options: {} }, config);
       } else if (processedCommand === 'list presets') {
         await this.cli.commands.list.execute({ listType: 'presets', options: {} }, config);
-      } else if (processedCommand.includes('.')) {
-        // Tool command
+      } else {
+        // Try to resolve as a tool command (with or without module prefix)
         const parts = processedCommand.split(' ');
-        const [moduleName, toolName] = parts[0].split('.');
+        const commandName = parts[0];
         
-        // Parse remaining arguments
-        const toolArgs = {};
-        const parsedArgs = this.parseInteractiveLine(trimmed);
-        let i = 1;
-        while (i < parsedArgs.length) {
-          if (parsedArgs[i].startsWith('--')) {
-            const key = parsedArgs[i].substring(2);
-            if (i + 1 < parsedArgs.length && !parsedArgs[i + 1].startsWith('--')) {
-              let value = parsedArgs[i + 1];
-              
-              // Handle JSON arguments
-              if (key === 'json' && (value.startsWith('{') || value.startsWith('['))) {
-                // Find where JSON starts in the original command
-                const jsonIndex = processedCommand.indexOf(value);
-                const jsonString = processedCommand.substring(jsonIndex);
-                try {
-                  const parsed = JSON.parse(jsonString);
-                  // Merge parsed JSON into toolArgs
-                  Object.assign(toolArgs, parsed);
-                  break; // JSON consumes rest of args
-                } catch (e) {
-                  console.error(`Invalid JSON: ${e.message}`);
-                  rl.prompt();
-                  return;
-                }
-              } else {
-                toolArgs[key] = value;
-              }
-              i += 2;
-            } else {
-              toolArgs[key] = true;
-              i++;
-            }
-          } else {
-            i++;
-          }
+        // Check if it's a direct tool command or module.tool format
+        let toolData = null;
+        let moduleName = null;
+        let toolName = null;
+        
+        if (commandName.includes('.')) {
+          // Module.tool format
+          [moduleName, toolName] = commandName.split('.');
+          toolData = this.cli.toolRegistry.resolveTool(`${moduleName}_${toolName}`) || 
+                     this.cli.toolRegistry.resolveTool(toolName);
+        } else {
+          // Direct tool name or short name
+          toolData = this.cli.toolRegistry.resolveTool(commandName);
         }
         
-        // Execute tool
-        await this.cli.commands.execute.execute({
-          moduleName,
-          toolName,
-          args: toolArgs,
-          options: {}
-        }, config);
-      } else {
-        console.log(`Unknown command: ${processedCommand}`);
-        console.log('Type "help" for available commands');
+        if (toolData) {
+          // Parse remaining arguments
+          const toolArgs = {};
+          const parsedArgs = this.parseInteractiveLine(trimmed);
+          
+          // Get tool parameters to determine positional argument mapping
+          const toolParams = toolData.metadata.parameters;
+          const paramNames = toolParams?.properties ? Object.keys(toolParams.properties) : [];
+          const requiredParams = toolParams?.required || [];
+          
+          let positionalIndex = 0;
+          let i = 1;
+          
+          while (i < parsedArgs.length) {
+            if (parsedArgs[i].startsWith('--')) {
+              // Named argument
+              const key = parsedArgs[i].substring(2);
+              if (i + 1 < parsedArgs.length && !parsedArgs[i + 1].startsWith('--')) {
+                let value = parsedArgs[i + 1];
+                
+                // Handle JSON arguments
+                if (key === 'json' && (value.startsWith('{') || value.startsWith('['))) {
+                  // Find where JSON starts in the original command
+                  const jsonIndex = processedCommand.indexOf(value);
+                  const jsonString = processedCommand.substring(jsonIndex);
+                  try {
+                    const parsed = JSON.parse(jsonString);
+                    Object.assign(toolArgs, parsed);
+                    break; // JSON consumes rest of args
+                  } catch (e) {
+                    console.error(`Invalid JSON: ${e.message}`);
+                    rl.prompt();
+                    return;
+                  }
+                } else {
+                  toolArgs[key] = value;
+                }
+                i += 2;
+              } else {
+                toolArgs[key] = true;
+                i++;
+              }
+            } else {
+              // Positional argument
+              if (positionalIndex < paramNames.length) {
+                const paramName = paramNames[positionalIndex];
+                
+                // Handle multi-word content for the last parameter or when quotes are used
+                if (positionalIndex === paramNames.length - 1 && i < parsedArgs.length - 1) {
+                  // Last parameter gets all remaining args joined
+                  const remainingArgs = parsedArgs.slice(i);
+                  toolArgs[paramName] = remainingArgs.join(' ');
+                  break;
+                } else {
+                  toolArgs[paramName] = parsedArgs[i];
+                }
+                
+                positionalIndex++;
+              }
+              i++;
+            }
+          }
+          
+          // Execute tool
+          await this.cli.commands.execute.execute({
+            moduleName: toolData.module,
+            toolName: toolData.metadata.name || toolData.metadata.functionName,
+            args: toolArgs,
+            options: {}
+          }, config);
+        } else {
+          console.log(`Unknown command: ${processedCommand}`);
+          console.log('Type "help" for available commands or "list" to see available tools');
+        }
       }
     } catch (error) {
       this.cli.errorHandler.handle(error, config);
@@ -210,7 +251,7 @@ export class InteractiveMode {
   }
 
   /**
-   * Parse interactive command line
+   * Parse interactive command line with smart argument handling
    * @param {string} line - Command line to parse
    * @returns {string[]} Parsed arguments
    */
@@ -219,8 +260,9 @@ export class InteractiveMode {
     let current = '';
     let inQuotes = false;
     let quoteChar = '';
+    let i = 0;
     
-    for (let i = 0; i < line.length; i++) {
+    while (i < line.length) {
       const char = line[i];
       
       if (inQuotes) {
@@ -234,15 +276,20 @@ export class InteractiveMode {
         if (char === '"' || char === "'") {
           inQuotes = true;
           quoteChar = char;
-        } else if (char === ' ') {
+        } else if (char === ' ' || char === '\t') {
           if (current) {
             args.push(current);
             current = '';
+          }
+          // Skip multiple spaces
+          while (i + 1 < line.length && (line[i + 1] === ' ' || line[i + 1] === '\t')) {
+            i++;
           }
         } else {
           current += char;
         }
       }
+      i++;
     }
     
     if (current) {

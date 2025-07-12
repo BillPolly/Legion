@@ -7,6 +7,7 @@ class CalculatorTool extends Tool {
   constructor() {
     super();
     this.name = 'calculator';
+    this.shortName = 'calc';
     this.description = 'Performs mathematical calculations';
   }
 

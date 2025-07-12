@@ -219,8 +219,9 @@ export class ListCommand {
   async listAll(options, config) {
     if (options?.output === 'json') {
       const modules = Array.from(this.moduleLoader.getModules().values());
-      const tools = Array.from(this.toolRegistry.discoverTools().entries()).map(([key, tool]) => ({
-        name: key,
+      const tools = this.toolRegistry.getAllTools().map(tool => ({
+        name: tool.name,
+        shortNames: tool.shortNames,
         module: tool.module,
         description: tool.description
       }));
@@ -238,8 +239,10 @@ export class ListCommand {
     if (modules.length === 0) {
       console.log('  No modules found');
     } else {
+      const toolsByModule = this.toolRegistry.getToolsByModule();
       modules.forEach(module => {
-        const toolCount = module.functionCount || module.tools.length;
+        const moduleTools = toolsByModule.get(module.name) || [];
+        const toolCount = moduleTools.length;
         console.log(`  ${chalk.green(module.name)} (${toolCount} ${toolCount === 1 ? 'tool' : 'tools'})`);
       });
     }
@@ -248,29 +251,31 @@ export class ListCommand {
     
     // List tools
     console.log(chalk.bold('Tools:'));
-    const tools = this.toolRegistry.discoverTools();
+    const totalTools = this.toolRegistry.getCount();
     
-    if (tools.size === 0) {
+    if (totalTools === 0) {
       console.log('  No tools found');
     } else {
       // Group by module for better display
-      const toolsByModule = {};
-      tools.forEach((tool, key) => {
-        if (!toolsByModule[tool.module]) {
-          toolsByModule[tool.module] = [];
-        }
-        toolsByModule[tool.module].push(key);
-      });
+      const toolsByModule = this.toolRegistry.getToolsByModule();
       
-      Object.entries(toolsByModule).forEach(([moduleName, toolKeys]) => {
+      toolsByModule.forEach((moduleTools, moduleName) => {
         console.log(`  ${moduleName}:`);
-        toolKeys.forEach(key => {
-          console.log(`    - ${chalk.cyan(key)}`);
+        moduleTools.forEach(tool => {
+          let toolLine = `    - ${chalk.cyan(tool.name)}`;
+          
+          // Add short names if available
+          if (tool.shortNames && tool.shortNames.length > 0) {
+            const shortNamesStr = tool.shortNames.join(', ');
+            toolLine += ` (${chalk.yellow(shortNamesStr)})`;
+          }
+          
+          console.log(toolLine);
         });
       });
     }
     
-    console.log(`\nTotal: ${modules.length} modules, ${tools.size} tools`);
+    console.log(`\nTotal: ${modules.length} modules, ${totalTools} tools`);
   }
 }
 

@@ -11,7 +11,7 @@ import ora from 'ora';
 import { ArgumentParser } from './core/ArgumentParser.js';
 import { ConfigManager } from './core/ConfigManager.js';
 import { ModuleLoader } from './core/ModuleLoader.js';
-import { ToolRegistry } from './core/ToolRegistry.js';
+import { GlobalToolRegistry } from './core/GlobalToolRegistry.js';
 
 // Command modules
 import { ExecuteCommand } from './commands/ExecuteCommand.js';
@@ -105,7 +105,7 @@ class CLI {
       this.moduleLoader.setResourceManager(this.resourceManager);
       
       // Initialize tool registry
-      this.toolRegistry = new ToolRegistry(this.moduleLoader);
+      this.toolRegistry = new GlobalToolRegistry(this.moduleLoader);
       
       // Initialize error handler
       this.errorHandler = new ErrorHandler(
@@ -327,6 +327,15 @@ class CLI {
     
     return spinner;
   }
+}
+
+// Auto-run if this is the main module
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const cli = new CLI();
+  cli.run(process.argv).catch(error => {
+    console.error('CLI Error:', error.message);
+    process.exit(1);
+  });
 }
 
 export default CLI;
