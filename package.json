@@ -1,0 +1,72 @@
+{
+  "name": "@jsenvoy/tools",
+  "version": "0.0.1",
+  "description": "Collection of tools for jsEnvoy - AI agent tools for various tasks",
+  "type": "module",
+  "main": "./src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+  },
+  "keywords": [
+    "jsenvoy",
+    "tools",
+    "ai",
+    "agent",
+    "automation"
+  ],
+  "author": "Anand Sukumaran",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BillPolly/general-tools.git"
+  },
+  "homepage": "https://github.com/yourusername/jsenvoy/tree/main/packages/tools#readme",
+  "bugs": {
+    "url": "https://github.com/yourusername/jsenvoy/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "dependencies": {
+    "@jsenvoy/modules": "*",
+    "axios": "^1.6.2",
+    "cheerio": "^1.0.0-rc.12",
+    "puppeteer": "^21.5.2",
+    "youtube-transcript": "^1.0.6",
+    "pdf-parse": "^1.1.1",
+    "mammoth": "^1.6.0",
+    "papaparse": "^5.4.1",
+    "node-xlsx": "^0.23.0",
+    "js-beautify": "^1.14.11",
+    "dotenv": "^16.3.1",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/**/*.test.js"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.test.js",
+      "**/?(*.)+(spec|test).js"
+    ],
+    "testPathIgnorePatterns": [
+      "/__tests__/utils/",
+      "/__tests__/setup.js"
+    ]
+  }
+}
