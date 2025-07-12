@@ -1,0 +1,63 @@
+{
+  "name": "@jsenvoy/response-parser",
+  "version": "0.0.1",
+  "description": "Response parsing, validation, and retry management for jsEnvoy",
+  "type": "module",
+  "main": "./src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+  },
+  "keywords": [
+    "jsenvoy",
+    "parser",
+    "validation",
+    "retry",
+    "response"
+  ],
+  "author": "Anand Sukumaran",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BillPolly/response-parser.git"
+  },
+  "homepage": "https://github.com/yourusername/jsenvoy/tree/main/packages/response-parser#readme",
+  "bugs": {
+    "url": "https://github.com/yourusername/jsenvoy/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "dependencies": {
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "setupFilesAfterEnv": [
+      "<rootDir>/__tests__/setup.js"
+    ],
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/**/*.test.js"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "testPathIgnorePatterns": [
+      "__tests__/setup.js",
+      "__tests__/utils/"
+    ]
+  }
+}
