@@ -124,7 +124,7 @@ async function main() {
   // Create agent configuration
   const config = {
     name: 'jsEnvoy Assistant',
-    bio: 'An AI assistant with access to various tools for file operations, calculations, web tasks, and more',
+    bio: 'A conversational AI assistant with access to various tools. I maintain context across messages and help with file operations, calculations, web tasks, and more. I respond naturally and wait for your next message.',
     tools,
     modelConfig: {
       provider: process.env.MODEL_PROVIDER || 'OPEN_AI',
@@ -133,11 +133,14 @@ async function main() {
     },
     showToolUsage: true,
     steps: [
-      'Analyze the user request carefully',
-      'Select appropriate tools if needed',
-      'Execute the task step by step',
-      'Provide clear and helpful responses'
-    ]
+      'Respond naturally to the user message',
+      'Remember context from previous messages in our conversation',
+      'Use tools when they would be helpful',
+      'Keep responses conversational and friendly',
+      'Always mark task_completed as true to continue the conversation'
+    ],
+    // Don't include responseStructure to keep responses conversational
+    _debugMode: false
   };
   
   // Create agent
@@ -167,13 +170,29 @@ async function main() {
     
     if (trimmed) {
       try {
-        // Use agent's printResponse method
-        await agent.printResponse(trimmed);
+        // Get response from agent but don't let it complete the conversation
+        const response = await agent.run(trimmed);
+        
+        // Print the response
+        if (response && response.message) {
+          console.log('\n' + response.message);
+        } else if (typeof response === 'string') {
+          console.log('\n' + response);
+        } else {
+          console.log('\n' + JSON.stringify(response));
+        }
+        
+        // Keep the conversation going by not marking the overall session as complete
+        // The agent maintains conversation history internally
       } catch (error) {
         console.error('\nError:', error.message);
+        if (agent._debugMode) {
+          console.error(error.stack);
+        }
       }
     }
     
+    // Always prompt for the next input
     rl.prompt();
   });
   
