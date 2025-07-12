@@ -295,8 +295,16 @@ class FileOperationsTool extends Tool {
   async writeFile(filepath, content) {
     try {
       console.log(`Writing file: ${filepath}`);
+      console.log(`Content length: ${content ? content.length : 0} chars`);
+      console.log(`Content type: ${typeof content}`);
+      
+      if (content === undefined || content === null) {
+        console.error('ERROR: Content is undefined or null!');
+        return ToolResult.failure('Content is required', { filepath });
+      }
       
       const resolvedPath = path.resolve(filepath);
+      console.log(`Resolved path: ${resolvedPath}`);
       
       // Check if file already exists
       let fileExists = false;
@@ -311,7 +319,18 @@ class FileOperationsTool extends Tool {
       const dir = path.dirname(resolvedPath);
       await fs.mkdir(dir, { recursive: true });
       
+      console.log(`Calling fs.writeFile with path: ${resolvedPath}, content: "${content}"`);
       await fs.writeFile(resolvedPath, content, 'utf8');
+      console.log(`fs.writeFile completed without error`);
+      
+      // Verify file was written
+      try {
+        const verifyStats = await fs.stat(resolvedPath);
+        console.log(`File verified: ${verifyStats.size} bytes`);
+      } catch (e) {
+        console.error(`ERROR: File was not written! ${e.message}`);
+      }
+      
       console.log(`Successfully wrote ${content.length} characters to ${filepath}`);
       
       return ToolResult.success({

@@ -58,8 +58,8 @@ export class GlobalToolRegistry {
           }
         });
         
-        // Also register with a short name if the tool name is prefixed
-        // e.g., "github_create_repo" -> "create_repo"
+        // Register short names
+        // 1. Remove module prefix: "github_create_repo" -> "create_repo"
         if (functionName.includes('_')) {
           const parts = functionName.split('_');
           if (parts.length > 1 && parts[0] === moduleName) {
@@ -68,6 +68,18 @@ export class GlobalToolRegistry {
               this.shortNameMap.set(shortName, functionName);
             }
           }
+        }
+        
+        // 2. Add common short names
+        const commonShortNames = {
+          'file_read': 'read',
+          'file_write': 'write',
+          'directory_create': 'mkdir',
+          'calculator_evaluate': 'calc'
+        };
+        
+        if (commonShortNames[functionName]) {
+          this.shortNameMap.set(commonShortNames[functionName], functionName);
         }
       }
     } 

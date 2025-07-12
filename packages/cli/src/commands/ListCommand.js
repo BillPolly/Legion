@@ -94,18 +94,19 @@ export class ListCommand {
    */
   async listTools(args, options, config) {
     const moduleFilter = args?.module;
-    const tools = this.toolRegistry.discoverTools();
+    const allTools = this.toolRegistry.getAllTools();
     
-    let toolList = Array.from(tools.entries());
+    let toolList = allTools;
     
     // Apply module filter if provided
     if (moduleFilter) {
-      toolList = toolList.filter(([key, tool]) => tool.module === moduleFilter);
+      toolList = toolList.filter(tool => tool.module === moduleFilter);
     }
     
     if (options?.output === 'json') {
-      const jsonData = toolList.map(([key, tool]) => ({
-        name: key,
+      const jsonData = toolList.map(tool => ({
+        name: tool.name,
+        shortNames: tool.shortNames,
         module: tool.module,
         description: tool.description
       }));
@@ -121,21 +122,30 @@ export class ListCommand {
     }
     
     // Group tools by module
-    const toolsByModule = {};
-    toolList.forEach(([key, tool]) => {
-      if (!toolsByModule[tool.module]) {
-        toolsByModule[tool.module] = [];
-      }
-      toolsByModule[tool.module].push({ key, ...tool });
-    });
+    const toolsByModule = this.toolRegistry.getToolsByModule();
     
     // Display tools grouped by module
-    Object.entries(toolsByModule).forEach(([moduleName, moduleTools]) => {
+    toolsByModule.forEach((moduleTools, moduleName) => {
+      if (moduleFilter && moduleName !== moduleFilter) {
+        return;
+      }
+      
       console.log(chalk.bold(`${moduleName}:`));
       
       moduleTools.forEach(tool => {
-        console.log(`  ${chalk.cyan(tool.key)}`);
-        console.log(`    ${tool.description}`);
+        // Find the shortest name to display first
+        let primaryName = tool.name;
+        if (tool.shortNames && tool.shortNames.length > 0) {
+          // Use the shortest short name as primary
+          const shortest = tool.shortNames.reduce((a, b) => a.length <= b.length ? a : b);
+          primaryName = shortest;
+        }
+        
+        // Build the line with primary name and description
+        const namePart = chalk.cyan(primaryName.padEnd(20));
+        const descPart = tool.description;
+        
+        console.log(`  ${namePart} ${descPart}`);
       });
       
       console.log(); // Empty line between modules
@@ -262,15 +272,15 @@ export class ListCommand {
       toolsByModule.forEach((moduleTools, moduleName) => {
         console.log(`  ${moduleName}:`);
         moduleTools.forEach(tool => {
-          let toolLine = `    - ${chalk.cyan(tool.name)}`;
-          
-          // Add short names if available
+          // Find the shortest name to display first
+          let primaryName = tool.name;
           if (tool.shortNames && tool.shortNames.length > 0) {
-            const shortNamesStr = tool.shortNames.join(', ');
-            toolLine += ` (${chalk.yellow(shortNamesStr)})`;
+            // Use the shortest short name as primary
+            const shortest = tool.shortNames.reduce((a, b) => a.length <= b.length ? a : b);
+            primaryName = shortest;
           }
           
-          console.log(toolLine);
+          console.log(`    - ${chalk.cyan(primaryName)}`);
         });
       });
     }

@@ -35,6 +35,10 @@ describe('InteractiveMode', () => {
       },
       errorHandler: {
         handle: jest.fn()
+      },
+      toolRegistry: {
+        resolveTool: jest.fn(),
+        getAllTools: jest.fn().mockReturnValue([])
       }
     };
 
@@ -230,6 +234,20 @@ describe('InteractiveMode', () => {
     });
 
     it('should handle tool execution', async () => {
+      // Mock the tool resolution
+      mockCli.toolRegistry.resolveTool.mockReturnValue({
+        module: 'calculator',
+        metadata: {
+          name: 'add',
+          parameters: {
+            properties: {
+              a: { type: 'string' },
+              b: { type: 'string' }
+            }
+          }
+        }
+      });
+      
       await interactiveMode.processCommand('calculator.add --a 5 --b 3', mockRl, {});
       
       expect(mockCli.commands.execute.execute).toHaveBeenCalledWith({
@@ -241,6 +259,20 @@ describe('InteractiveMode', () => {
     });
 
     it('should handle tool with boolean flags', async () => {
+      // Mock the tool resolution
+      mockCli.toolRegistry.resolveTool.mockReturnValue({
+        module: 'file',
+        metadata: {
+          name: 'read',
+          parameters: {
+            properties: {
+              path: { type: 'string' },
+              verbose: { type: 'boolean' }
+            }
+          }
+        }
+      });
+      
       await interactiveMode.processCommand('file.read --path test.txt --verbose', mockRl, {});
       
       expect(mockCli.commands.execute.execute).toHaveBeenCalledWith({
@@ -254,6 +286,19 @@ describe('InteractiveMode', () => {
     it('should expand aliases', async () => {
       mockCli.argumentParser.expandAlias.mockReturnValue('calculator.evaluate');
       
+      // Mock the tool resolution
+      mockCli.toolRegistry.resolveTool.mockReturnValue({
+        module: 'calculator',
+        metadata: {
+          name: 'evaluate',
+          parameters: {
+            properties: {
+              expression: { type: 'string' }
+            }
+          }
+        }
+      });
+      
       await interactiveMode.processCommand('calc --expression "2+2"', mockRl, {});
       
       expect(mockCli.argumentParser.expandAlias).toHaveBeenCalledWith('calc');
@@ -266,6 +311,19 @@ describe('InteractiveMode', () => {
     });
 
     it('should handle JSON arguments', async () => {
+      // Mock the tool resolution
+      mockCli.toolRegistry.resolveTool.mockReturnValue({
+        module: 'api',
+        metadata: {
+          name: 'request',
+          parameters: {
+            properties: {
+              data: { type: 'string' }
+            }
+          }
+        }
+      });
+      
       // Test that JSON argument handling attempts to parse the JSON
       // Even though the parseInteractiveLine doesn't preserve quotes properly,
       // the JSON parsing should still work when using single quotes
@@ -281,6 +339,19 @@ describe('InteractiveMode', () => {
     });
 
     it('should handle invalid JSON', async () => {
+      // Mock the tool resolution
+      mockCli.toolRegistry.resolveTool.mockReturnValue({
+        module: 'api',
+        metadata: {
+          name: 'request',
+          parameters: {
+            properties: {
+              json: { type: 'object' }
+            }
+          }
+        }
+      });
+      
       await interactiveMode.processCommand('api.request --json {invalid}', mockRl, {});
       
       expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid JSON'));
@@ -291,7 +362,7 @@ describe('InteractiveMode', () => {
       await interactiveMode.processCommand('unknown', mockRl, {});
       
       expect(consoleLogSpy).toHaveBeenCalledWith('Unknown command: unknown');
-      expect(consoleLogSpy).toHaveBeenCalledWith('Type "help" for available commands');
+      expect(consoleLogSpy).toHaveBeenCalledWith('\nType "help" for available commands or "list" to see available tools');
     });
 
     it('should handle errors', async () => {

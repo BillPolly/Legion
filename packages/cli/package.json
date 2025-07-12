@@ -10,7 +10,9 @@
   "scripts": {
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
-    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathPattern='(?<!integration).*\\.test\\.js$'",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathPattern='integration.*\\.test\\.js$'"
   },
   "keywords": [
     "cli",
@@ -57,11 +59,14 @@
     "coverageDirectory": "coverage",
     "collectCoverageFrom": [
       "src/**/*.js",
-      "!src/**/*.test.js"
+      "!src/**/*.test.js",
+      "!src/**/__tests__/**"
     ],
     "testMatch": [
-      "**/__tests__/**/*.js",
-      "**/?(*.)+(spec|test).js"
-    ]
+      "**/__tests__/**/*.test.js",
+      "**/src/**/__tests__/**/*.test.js"
+    ],
+    "setupFilesAfterEnv": ["<rootDir>/__tests__/setup.js"],
+    "testTimeout": 10000
   }
 }

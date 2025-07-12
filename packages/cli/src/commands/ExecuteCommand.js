@@ -65,11 +65,51 @@ export class ExecuteCommand {
       if (config?.output === 'json') {
         console.log(JSON.stringify(result, null, 2));
       } else {
-        if (result && typeof result === 'object' && result.content) {
-          console.log(result.content);
-        } else if (result && typeof result === 'object' && result.result !== undefined) {
-          console.log(`Result: ${result.result}`);
-        } else {
+        // Handle ToolResult objects
+        if (result && typeof result === 'object') {
+          // Check if it's a ToolResult with success/error structure
+          if ('success' in result && 'data' in result) {
+            if (!result.success) {
+              // Handle errors
+              console.error(`Error: ${result.error || 'Unknown error'}`);
+              if (result.data && Object.keys(result.data).length > 0) {
+                console.error('Details:', JSON.stringify(result.data, null, 2));
+              }
+            } else {
+              // Success - don't print the ToolResult wrapper, just handle the data
+              // The tool itself should have already printed relevant output
+              // Only print additional data if it wasn't already displayed
+              if (result.data && typeof result.data === 'object') {
+                // Check for specific data patterns that weren't already printed
+                if (result.data.created !== undefined || result.data.updated !== undefined) {
+                  // File operation metadata - already printed by tool
+                  return;
+                }
+                if (result.data.result !== undefined && result.data.expression !== undefined) {
+                  // Calculator - already printed by tool
+                  return;
+                }
+                // For other data, print it if it seems relevant
+                if (result.data.content !== undefined) {
+                  // File read operation - print the content
+                  console.log(result.data.content);
+                } else if (Object.keys(result.data).length > 0) {
+                  console.log('Additional info:', JSON.stringify(result.data, null, 2));
+                }
+              }
+            }
+          } 
+          // Handle other object results
+          else if (result.content) {
+            console.log(result.content);
+          } else if (result.result !== undefined) {
+            console.log(`Result: ${result.result}`);
+          } else if (Object.keys(result).length > 0) {
+            // Only print if it's not an empty object
+            console.log(JSON.stringify(result, null, 2));
+          }
+        } else if (result !== undefined && result !== null) {
+          // Simple values
           console.log(result);
         }
       }

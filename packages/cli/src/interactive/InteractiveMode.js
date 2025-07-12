@@ -177,8 +177,16 @@ export class InteractiveMode {
           const paramNames = toolParams?.properties ? Object.keys(toolParams.properties) : [];
           const requiredParams = toolParams?.required || [];
           
-          let positionalIndex = 0;
+          // Debug logging
+          if (config?.verbose) {
+            console.log('DEBUG: parsedArgs:', parsedArgs);
+            console.log('DEBUG: paramNames:', paramNames);
+          }
+          
+          // First pass: collect all named arguments
           let i = 1;
+          const namedArgs = {};
+          const positionalArgs = [];
           
           while (i < parsedArgs.length) {
             if (parsedArgs[i].startsWith('--')) {
@@ -202,31 +210,42 @@ export class InteractiveMode {
                     return;
                   }
                 } else {
-                  toolArgs[key] = value;
+                  namedArgs[key] = value;
                 }
                 i += 2;
               } else {
-                toolArgs[key] = true;
+                namedArgs[key] = true;
                 i++;
               }
             } else {
-              // Positional argument
-              if (positionalIndex < paramNames.length) {
-                const paramName = paramNames[positionalIndex];
-                
-                // Handle multi-word content for the last parameter or when quotes are used
-                if (positionalIndex === paramNames.length - 1 && i < parsedArgs.length - 1) {
-                  // Last parameter gets all remaining args joined
-                  const remainingArgs = parsedArgs.slice(i);
-                  toolArgs[paramName] = remainingArgs.join(' ');
-                  break;
-                } else {
-                  toolArgs[paramName] = parsedArgs[i];
-                }
-                
-                positionalIndex++;
-              }
+              // Collect positional arguments
+              positionalArgs.push(parsedArgs[i]);
               i++;
+            }
+          }
+          
+          // Apply named arguments
+          Object.assign(toolArgs, namedArgs);
+          
+          // Second pass: map positional arguments to unfilled parameters
+          let positionalIndex = 0;
+          for (let paramIndex = 0; paramIndex < paramNames.length && positionalIndex < positionalArgs.length; paramIndex++) {
+            const paramName = paramNames[paramIndex];
+            
+            // Skip if already filled by named argument
+            if (paramName in toolArgs) {
+              continue;
+            }
+            
+            // Check if this is the last unfilled parameter
+            const remainingParams = paramNames.slice(paramIndex).filter(p => !(p in toolArgs));
+            if (remainingParams.length === 1 && positionalArgs.length - positionalIndex > 1) {
+              // Last unfilled parameter gets all remaining positional args
+              toolArgs[paramName] = positionalArgs.slice(positionalIndex).join(' ');
+              break;
+            } else {
+              toolArgs[paramName] = positionalArgs[positionalIndex];
+              positionalIndex++;
             }
           }
           
@@ -238,8 +257,32 @@ export class InteractiveMode {
             options: {}
           }, config);
         } else {
-          console.log(`Unknown command: ${processedCommand}`);
-          console.log('Type "help" for available commands or "list" to see available tools');
+          console.log(`Unknown command: ${commandName}`);
+          
+          // Try to find similar commands
+          const allTools = this.cli.toolRegistry.getAllTools();
+          const allCommands = [];
+          
+          // Add tool names and short names
+          for (const tool of allTools) {
+            allCommands.push(tool.name);
+            if (tool.shortNames) {
+              allCommands.push(...tool.shortNames);
+            }
+          }
+          
+          // Add built-in commands
+          allCommands.push('help', 'list', 'exit', 'quit', 'clear');
+          
+          // Find similar commands
+          const similar = this.findSimilarCommands(commandName, allCommands);
+          
+          if (similar.length > 0) {
+            console.log(`\nDid you mean:`);
+            similar.forEach(cmd => console.log(`  ${cmd}`));
+          }
+          
+          console.log('\nType "help" for available commands or "list" to see available tools');
         }
       }
     } catch (error) {
@@ -269,6 +312,9 @@ export class InteractiveMode {
         if (char === quoteChar) {
           inQuotes = false;
           quoteChar = '';
+          // Push the current string even if empty (for empty quotes)
+          args.push(current);
+          current = '';
         } else {
           current += char;
         }
@@ -333,6 +379,65 @@ export class InteractiveMode {
     if (Object.keys(this.interactiveContext).length === 0) {
       console.log('  (empty)');
     }
+  }
+
+  /**
+   * Find similar commands using Levenshtein distance
+   * @param {string} input - User input
+   * @param {string[]} commands - Available commands
+   * @returns {string[]} Similar commands
+   */
+  findSimilarCommands(input, commands) {
+    const maxDistance = 2; // Maximum edit distance
+    const similar = [];
+    
+    for (const cmd of commands) {
+      const distance = this.levenshteinDistance(input.toLowerCase(), cmd.toLowerCase());
+      if (distance <= maxDistance && distance > 0) {
+        similar.push(cmd);
+      }
+    }
+    
+    // Sort by similarity (lower distance first)
+    return similar.sort((a, b) => {
+      const distA = this.levenshteinDistance(input.toLowerCase(), a.toLowerCase());
+      const distB = this.levenshteinDistance(input.toLowerCase(), b.toLowerCase());
+      return distA - distB;
+    }).slice(0, 3); // Return top 3 suggestions
+  }
+  
+  /**
+   * Calculate Levenshtein distance between two strings
+   * @param {string} a - First string
+   * @param {string} b - Second string
+   * @returns {number} Edit distance
+   */
+  levenshteinDistance(a, b) {
+    const matrix = [];
+    
+    for (let i = 0; i <= b.length; i++) {
+      matrix[i] = [i];
+    }
+    
+    for (let j = 0; j <= a.length; j++) {
+      matrix[0][j] = j;
+    }
+    
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) === a.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1, // substitution
+            matrix[i][j - 1] + 1,     // insertion
+            matrix[i - 1][j] + 1      // deletion
+          );
+        }
+      }
+    }
+    
+    return matrix[b.length][a.length];
   }
 
   /**
