@@ -1,0 +1,66 @@
+{
+  "name": "@jsenvoy/model-providers",
+  "version": "0.0.1",
+  "description": "LLM model provider implementations for jsEnvoy",
+  "type": "module",
+  "main": "./src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+  },
+  "keywords": [
+    "jsenvoy",
+    "llm",
+    "ai",
+    "openai",
+    "deepseek",
+    "openrouter"
+  ],
+  "author": "Anand Sukumaran",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BillPolly/model-providers.git"
+  },
+  "homepage": "https://github.com/yourusername/jsenvoy/tree/main/packages/model-providers#readme",
+  "bugs": {
+    "url": "https://github.com/yourusername/jsenvoy/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "dependencies": {
+    "openai": "^4.79.3",
+    "axios": "^1.7.9"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "dotenv": "^16.3.1"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "setupFilesAfterEnv": [
+      "<rootDir>/__tests__/setup.js"
+    ],
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/**/*.test.js"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "testPathIgnorePatterns": [
+      "__tests__/setup.js",
+      "__tests__/utils/"
+    ]
+  }
+}
