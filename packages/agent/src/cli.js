@@ -94,7 +94,7 @@ async function loadTools(resourceManager, moduleFactory) {
  * Main CLI function
  */
 async function main() {
-  console.log('Initializing jsEnvoy Agent...\n');
+  process.stdout.write('Initializing jsEnvoy Agent...\n\n');
   
   // Initialize ResourceManager
   const resourceManager = new ResourceManager();
@@ -110,7 +110,7 @@ async function main() {
   
   // Load tools
   const tools = await loadTools(resourceManager, moduleFactory);
-  console.log(`Loaded ${tools.length} tools\n`);
+  process.stdout.write(`Loaded ${tools.length} tools\n\n`);
   
   // Get API key from environment (ResourceManager loads .env)
   const apiKey = process.env.OPENAI_API_KEY;
@@ -146,14 +146,16 @@ async function main() {
   // Create agent
   const agent = new Agent(config);
   
-  // Create readline interface
+  // Create readline interface with proper terminal settings
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-    prompt: '\n> '
+    prompt: '\n> ',
+    terminal: true,
+    historySize: 100
   });
   
-  console.log('Agent ready! Type your message (or "exit" to quit)\n');
+  process.stdout.write('Agent ready! Type your message (or "exit" to quit)\n');
   
   // Show initial prompt
   rl.prompt();
@@ -169,27 +171,41 @@ async function main() {
     }
     
     if (trimmed) {
+      // Pause readline while processing
+      rl.pause();
+      
+      // Show a simple processing indicator without spinner
+      process.stdout.write('\nThinking...\r');
+      
       try {
         // Get response from agent but don't let it complete the conversation
         const response = await agent.run(trimmed);
         
+        // Clear the "Thinking..." message
+        process.stdout.write('\x1b[2K\r');
+        
         // Print the response
         if (response && response.message) {
-          console.log('\n' + response.message);
+          console.log(response.message);
         } else if (typeof response === 'string') {
-          console.log('\n' + response);
+          console.log(response);
         } else {
-          console.log('\n' + JSON.stringify(response));
+          console.log(JSON.stringify(response));
         }
         
         // Keep the conversation going by not marking the overall session as complete
         // The agent maintains conversation history internally
       } catch (error) {
-        console.error('\nError:', error.message);
+        // Clear the "Thinking..." message
+        process.stdout.write('\x1b[2K\r');
+        console.error('Error:', error.message);
         if (agent._debugMode) {
           console.error(error.stack);
         }
       }
+      
+      // Resume readline
+      rl.resume();
     }
     
     // Always prompt for the next input
