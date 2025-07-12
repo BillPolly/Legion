@@ -8,6 +8,7 @@
 // Import modules
 import CalculatorModule from './calculator/index.js';
 import FileModule from './file/index.js';
+import GitHubModule from './github/GitHubModule.js';
 
 // Import individual tools that aren't modules yet
 import CommandExecutor from './command-executor/index.js';
@@ -18,10 +19,12 @@ import PageScreenshot from './page-screenshoter/index.js';
 import WebPageToMarkdown from './webpage-to-markdown/index.js';
 import YoutubeTranscript from './youtube-transcript/index.js';
 import GitHub from './github/index.js';
+import PolyRepoManager from './github/PolyRepoManager.js';
 
 // Create module instances for the tool registry
 const calculatorModule = new CalculatorModule();
 const fileModule = new FileModule();
+// Note: GitHubModule requires ResourceManager, so it's exported as a class
 
 // Extract tools from modules
 const calculatorTool = calculatorModule.getTools()[0];
@@ -83,6 +86,7 @@ export {
   // Modules
   CalculatorModule,
   FileModule,
+  GitHubModule,
   
   // Individual tool classes (not modules yet)
   CommandExecutor,
@@ -93,6 +97,7 @@ export {
   WebPageToMarkdown,
   YoutubeTranscript,
   GitHub,
+  PolyRepoManager,
   
   // Tool registry
   tools,

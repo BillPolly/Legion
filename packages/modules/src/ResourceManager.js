@@ -102,4 +102,4 @@ class ResourceManager {
   }
 }
 
-export { ResourceManager };
+export default ResourceManager;

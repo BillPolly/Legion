@@ -6,7 +6,7 @@
  */
 
 // Export core infrastructure
-export { ResourceManager } from "./ResourceManager.js";
+export { default as ResourceManager } from "./ResourceManager.js";
 export { ModuleFactory } from "./ModuleFactory.js";
 
 // Export base classes

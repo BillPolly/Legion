@@ -8,11 +8,14 @@ import path from 'path';
 const execAsync = promisify(exec);
 
 class GitHub extends Tool {
-  constructor() {
+  constructor(config = {}) {
     super();
     this.name = 'github';
     this.description = 'Creates GitHub repositories and manages git operations';
-    this.githubApiBase = 'api.github.com';
+    this.config = config;
+    this.githubApiBase = config.apiBase || 'api.github.com';
+    this.token = config.token;
+    this.org = config.org;
   }
 
   /**
@@ -165,27 +168,13 @@ class GitHub extends Tool {
   }
 
   /**
-   * Get GitHub credentials from environment
+   * Get GitHub credentials from config
    */
-  async getCredentials() {
-    // Try to read from .env file
-    const envPath = path.join(process.cwd(), '.env');
-    try {
-      const envContent = await fs.readFile(envPath, 'utf8');
-      const patMatch = envContent.match(/GITHUB_PAT=(.+)/);
-      if (patMatch) {
-        return { token: patMatch[1].trim() };
-      }
-    } catch (error) {
-      // .env file not found or not readable
+  getCredentials() {
+    if (!this.token) {
+      throw new Error('GitHub PAT not configured. Please provide token in config.');
     }
-
-    // Fallback to environment variable
-    if (process.env.GITHUB_PAT) {
-      return { token: process.env.GITHUB_PAT };
-    }
-
-    throw new Error('GitHub PAT not found. Please set GITHUB_PAT in .env file or environment variable.');
+    return { token: this.token };
   }
 
   /**
@@ -228,7 +217,7 @@ class GitHub extends Tool {
   async createRepo(repoName, description = '', isPrivate = false, autoInit = false) {
     console.log(`Creating GitHub repository: ${repoName}`);
     
-    const { token } = await this.getCredentials();
+    const { token } = this.getCredentials();
     
     return new Promise((resolve, reject) => {
       const data = JSON.stringify({
@@ -351,7 +340,7 @@ class GitHub extends Tool {
       const repoInfo = await this.createRepo(repoName, description, isPrivate, false);
       
       // Get credentials and username
-      const { token } = await this.getCredentials();
+      const { token } = this.getCredentials();
       const username = await this.getGitHubUsername(token);
       
       // Construct the authenticated URL

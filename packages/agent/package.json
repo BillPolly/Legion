@@ -20,8 +20,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/jsenvoy.git",
-    "directory": "packages/agent"
+    "url": "https://github.com/BillPolly/agent.git"
   },
   "homepage": "https://github.com/yourusername/jsenvoy/tree/main/packages/agent#readme",
   "bugs": {
