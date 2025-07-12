@@ -21,8 +21,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/jsenvoy.git",
-    "directory": "packages/model-providers"
+    "url": "https://github.com/BillPolly/model-providers.git"
   },
   "homepage": "https://github.com/yourusername/jsenvoy/tree/main/packages/model-providers#readme",
   "bugs": {
@@ -48,7 +47,9 @@
   "jest": {
     "testEnvironment": "node",
     "transform": {},
-    "setupFilesAfterEnv": ["<rootDir>/__tests__/setup.js"],
+    "setupFilesAfterEnv": [
+      "<rootDir>/__tests__/setup.js"
+    ],
     "coverageDirectory": "coverage",
     "collectCoverageFrom": [
       "src/**/*.js",

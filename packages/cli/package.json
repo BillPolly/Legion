@@ -25,8 +25,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/jsenvoy.git",
-    "directory": "packages/cli"
+    "url": "https://github.com/BillPolly/cli.git"
   },
   "homepage": "https://github.com/yourusername/jsenvoy/tree/main/packages/cli#readme",
   "bugs": {

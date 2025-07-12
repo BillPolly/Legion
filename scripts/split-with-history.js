@@ -4,7 +4,7 @@
  */
 
 import { ResourceManager } from '@jsenvoy/modules';
-import GitHubModule from '../packages/tools/src/github/GitHubModule.js';
+import GitHubModule from '../packages/general-tools/src/github/GitHubModule.js';
 import path from 'path';
 import { promises as fs } from 'fs';
 import { fileURLToPath } from 'url';
@@ -154,7 +154,7 @@ async function main() {
         description: 'Command-line interface for executing jsEnvoy tools with REPL and autocomplete'
       },
       {
-        path: path.join(rootDir, 'packages/tools'),
+        path: path.join(rootDir, 'packages/general-tools'),
         repoName: 'general-tools',
         description: 'Collection of AI agent tools (file operations, web tools, GitHub integration, etc.) for jsEnvoy'
       },

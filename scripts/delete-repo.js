@@ -3,7 +3,7 @@
  */
 
 import { ResourceManager, ModuleFactory } from '@jsenvoy/modules';
-import GitHubModule from '../packages/tools/src/github/GitHubModule.js';
+import GitHubModule from '../packages/general-tools/src/github/GitHubModule.js';
 
 async function main() {
   const args = process.argv.slice(2);
