@@ -63,20 +63,37 @@ When you have a new package directory (e.g., `packages/llm` and `packages/llm-cl
 
 ### 2. Create GitHub Repositories
 
-The `split-monorepo.js` script uses the PolyRepoManager tool to handle repository creation and initial push:
+You can either modify the existing `split-monorepo.js` script or use the dedicated `add-package-to-polyrepo.js` script:
 
-1. **Modify the script** to include your new packages:
+#### Option A: Using the Dedicated Script (Recommended)
+
+1. **Run the add package script**:
+   ```bash
+   npm run polyrepo:add <package-name>
+   # Or directly: node scripts/add-package-to-polyrepo.js <package-name>
+   
+   # Example: npm run polyrepo:add llm
+   ```
+
+   The script will automatically:
+   - Validate the package exists
+   - Update package.json to follow naming conventions
+   - Create .gitignore if missing
+   - Initialize a local git repository
+   - Create the GitHub repository
+   - Push the initial code
+   - Update .gitsubtree configuration
+   - Provide next steps for subtree setup
+
+#### Option B: Modify split-monorepo.js
+
+1. **Add your packages to the script**:
    ```javascript
    // In scripts/split-monorepo.js, add to the packages array:
    {
      path: path.join(rootDir, 'packages/llm'),
      repoName: 'jsenvoy-llm',
      description: 'LLM integration package for jsEnvoy'
-   },
-   {
-     path: path.join(rootDir, 'packages/llm-cli'),
-     repoName: 'jsenvoy-llm-cli',
-     description: 'CLI for LLM operations in jsEnvoy'
    }
    ```
 
@@ -85,42 +102,40 @@ The `split-monorepo.js` script uses the PolyRepoManager tool to handle repositor
    node scripts/split-monorepo.js
    ```
 
-   The script will automatically:
-   - Prepare each package for standalone repository use
-   - Initialize git repositories in each package directory
-   - Create remote repositories on GitHub under BillPolly organization
-   - Add remotes with authentication
-   - Push the initial code to the remotes
-
 ### 3. Add as Git Subtrees
 
 After repositories are created, add them as subtrees to the main repository:
 
-1. **Update .gitsubtree configuration**:
+1. **Important**: Remove any `.git` directory from the package:
    ```bash
-   # Add these lines to .gitsubtree
-   packages/llm https://github.com/BillPolly/jsenvoy-llm.git main
-   packages/llm-cli https://github.com/BillPolly/jsenvoy-llm-cli.git main
+   rm -rf packages/<package-name>/.git
+   ```
+   This prevents the package from being treated as a submodule.
+
+2. **Update .gitsubtree configuration**:
+   ```bash
+   # Add this line to .gitsubtree
+   packages/<package-name> https://github.com/BillPolly/jsenvoy-<package-name>.git main
    ```
 
-2. **Setup subtree remotes** (for VSCode integration):
+3. **Setup subtree remotes** (for VSCode integration):
    ```bash
    npm run subtree:setup
    ```
 
-3. **Establish subtree connection**:
-   
-   Since the packages already exist in the monorepo and have been pushed to remotes, you need to establish the subtree connection:
-   
+4. **Commit the package to the monorepo**:
    ```bash
-   # First, ensure all changes are committed
    git add .
-   git commit -m "Add new llm packages"
-   
-   # Push existing content to the remotes as subtrees
-   git subtree push --prefix=packages/llm https://github.com/BillPolly/jsenvoy-llm.git main
-   git subtree push --prefix=packages/llm-cli https://github.com/BillPolly/jsenvoy-llm-cli.git main
+   git commit -m "Add <package-name> package to polyrepo structure"
    ```
+
+5. **Establish subtree connection**:
+   ```bash
+   # Push existing content to the remote as a subtree
+   git subtree push --prefix=packages/<package-name> https://github.com/BillPolly/jsenvoy-<package-name>.git main
+   ```
+
+   Note: If you get "no new revisions were found", the content is already synchronized.
 
 ### 4. Verify Setup
 
@@ -182,17 +197,34 @@ npm run subtree:discover
 
 2. **"Updates were rejected"**:
    - The remote has changes not in your local
-   - Pull first: `npm run subtree:pull`
-   - The scripts handle authentication automatically
+   - This often happens when the initial push creates commits
+   - Solution: The content is likely already synchronized
 
 3. **"No new revisions were found"**:
-   - No changes to push
-   - Make sure you've committed changes locally first
+   - This is often not an error - it means content is already synchronized
+   - Only a problem if you expected new changes to be pushed
 
 4. **Authentication errors**:
    - Check your GITHUB_PAT in .env
    - Ensure the token has proper permissions
    - The scripts automatically inject authentication into URLs
+
+5. **"Package is in submodule"**:
+   - The package was accidentally added as a git submodule
+   - Fix: `git rm --cached packages/<name>` then `rm -rf packages/<name>/.git`
+   - Re-add with `git add packages/<name>/`
+
+6. **Git repository in parent directory**:
+   - The script detects the monorepo's .git directory
+   - This is expected - the script will create a new standalone repo
+
+### Important Lessons
+
+1. **Always remove .git directories** from packages before committing to avoid submodule issues
+2. **Package naming** must follow the `@jsenvoy/` convention
+3. **Repository naming** follows the pattern `jsenvoy-<package-name>`
+4. **Initial push conflicts** are common - the content is usually already synchronized
+5. **Use dedicated scripts** for single package additions rather than modifying the bulk script
 
 ### Best Practices
 

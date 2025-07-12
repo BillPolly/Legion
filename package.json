@@ -28,6 +28,7 @@
     "subtree:push": "node scripts/push-all-subtrees.js",
     "subtree:pull": "node scripts/pull-all-subtrees.js",
     "subtree:setup": "node scripts/setup-subtree-remotes.js",
+    "polyrepo:add": "node scripts/add-package-to-polyrepo.js",
     "cli": "node packages/cli/src/index.js interactive",
     "cli:help": "node packages/cli/src/index.js help",
     "cli:list": "node packages/cli/src/index.js list",
