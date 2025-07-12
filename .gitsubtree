@@ -9,3 +9,4 @@ packages/general-tools https://github.com/BillPolly/general-tools.git main
 packages/model-providers https://github.com/BillPolly/model-providers.git main
 packages/response-parser https://github.com/BillPolly/response-parser.git main
 packages/llm https://github.com/BillPolly/jsenvoy-llm.git main
+packages/llm-cli https://github.com/BillPolly/llm-cli.git main

@@ -1,5 +1,5 @@
 {
-  "name": "llm-cli",
+  "name": "@jsenvoy/llm-cli",
   "version": "1.0.0",
   "description": "A powerful TypeScript framework for building command-line interfaces with natural language understanding",
   "main": "dist/index.js",
@@ -57,5 +57,9 @@
     "anthropic": {
       "optional": true
     }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BillPolly/llm-cli.git"
   }
 }
