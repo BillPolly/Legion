@@ -18,9 +18,9 @@ A powerful TypeScript framework for building command-line interfaces with natura
 ### Installation
 
 ```bash
-npm install llm-cli
+npm install @jsenvoy/llm-cli
 # or
-yarn add llm-cli
+yarn add @jsenvoy/llm-cli
 ```
 
 ### Basic Usage
@@ -392,11 +392,11 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ## Installation
 
 ```bash
-npm install llm-cli
+npm install @jsenvoy/llm-cli
 # or
-yarn add llm-cli
+yarn add @jsenvoy/llm-cli
 # or
-pnpm add llm-cli
+pnpm add @jsenvoy/llm-cli
 ```
 
 ## Support
