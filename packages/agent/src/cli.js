@@ -11,6 +11,33 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
+ * Silent console logger that captures output during initialization
+ */
+class SilentConsole {
+  constructor() {
+    this.logs = [];
+    this.errors = [];
+    this.originalConsole = {
+      log: console.log,
+      error: console.error,
+      warn: console.warn,
+      info: console.info
+    };
+  }
+
+  silence() {
+    console.log = (...args) => this.logs.push(args);
+    console.error = (...args) => this.errors.push(args);
+    console.warn = (...args) => this.errors.push(args);
+    console.info = (...args) => this.logs.push(args);
+  }
+
+  restore() {
+    Object.assign(console, this.originalConsole);
+  }
+}
+
+/**
  * Convert jsEnvoy tool to agent format
  */
 function convertToolToAgentFormat(tool, moduleName) {
@@ -40,11 +67,7 @@ function convertToolToAgentFormat(tool, moduleName) {
     // Keep reference to original tool for execution
     invoke: tool.invoke?.bind(tool),
     safeInvoke: tool.safeInvoke?.bind(tool),
-    setExecutingAgent: (agent) => {
-      if (typeof tool.setExecutingAgent === 'function') {
-        tool.setExecutingAgent(agent);
-      }
-    }
+    setExecutingAgent: () => {} // Required by Agent
   };
 }
 
@@ -78,84 +101,111 @@ async function loadTools(resourceManager, moduleFactory) {
             }
           }
         } catch (error) {
-          // Skip modules that fail to load
-          console.error(`Failed to load module ${entry.name}:`, error.message);
+          // Skip modules that fail to load silently
         }
       }
     }
   } catch (error) {
-    console.error('Error loading tools:', error);
+    // Silently handle error
   }
   
   return tools;
 }
 
 /**
+ * Initialize the agent and all dependencies
+ */
+async function initializeAgent() {
+  // Silence console during initialization
+  const silentConsole = new SilentConsole();
+  silentConsole.silence();
+  
+  try {
+    // Initialize ResourceManager
+    const resourceManager = new ResourceManager();
+    await resourceManager.initialize(); // This loads .env file
+    
+    // Create module factory
+    const moduleFactory = new ModuleFactory(resourceManager);
+    
+    // Register default resources
+    resourceManager.register('basePath', process.cwd());
+    resourceManager.register('encoding', 'utf8');
+    resourceManager.register('createDirectories', true);
+    
+    // Load tools
+    const tools = await loadTools(resourceManager, moduleFactory);
+    
+    // Get API key from environment (ResourceManager loads .env)
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      silentConsole.restore();
+      console.error('Error: OPENAI_API_KEY not found in environment.');
+      console.error('Please create a .env file in the project root with:');
+      console.error('OPENAI_API_KEY=your-api-key-here');
+      process.exit(1);
+    }
+    
+    // Create agent configuration
+    const config = {
+      name: 'jsEnvoy Assistant',
+      bio: 'A conversational AI assistant with access to various tools. I maintain context across messages and help with file operations, calculations, web tasks, and more. I respond naturally and wait for your next message.',
+      tools,
+      modelConfig: {
+        provider: process.env.MODEL_PROVIDER || 'OPEN_AI',
+        model: process.env.MODEL_NAME || 'gpt-4',
+        apiKey: apiKey
+      },
+      showToolUsage: true,
+      steps: [
+        'Respond naturally to the user message',
+        'Remember context from previous messages in our conversation',
+        'Use tools when they would be helpful',
+        'Keep responses conversational and friendly',
+        'Always mark task_completed as true to continue the conversation'
+      ],
+      _debugMode: false
+    };
+    
+    // Create agent
+    const agent = new Agent(config);
+    
+    // Restore console
+    silentConsole.restore();
+    
+    return { agent, toolCount: tools.length };
+  } catch (error) {
+    silentConsole.restore();
+    throw error;
+  }
+}
+
+/**
  * Main CLI function
  */
 async function main() {
-  process.stdout.write('Initializing jsEnvoy Agent...\n\n');
+  // Initialize everything before creating readline
+  console.log('Initializing jsEnvoy Agent...');
   
-  // Initialize ResourceManager
-  const resourceManager = new ResourceManager();
-  await resourceManager.initialize(); // This loads .env file
-  
-  // Create module factory
-  const moduleFactory = new ModuleFactory(resourceManager);
-  
-  // Register default resources
-  resourceManager.register('basePath', process.cwd());
-  resourceManager.register('encoding', 'utf8');
-  resourceManager.register('createDirectories', true);
-  
-  // Load tools
-  const tools = await loadTools(resourceManager, moduleFactory);
-  process.stdout.write(`Loaded ${tools.length} tools\n\n`);
-  
-  // Get API key from environment (ResourceManager loads .env)
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    console.error('Error: OPENAI_API_KEY not found in environment.');
-    console.error('Please create a .env file in the project root with:');
-    console.error('OPENAI_API_KEY=your-api-key-here');
+  let agent, toolCount;
+  try {
+    const result = await initializeAgent();
+    agent = result.agent;
+    toolCount = result.toolCount;
+  } catch (error) {
+    console.error('Failed to initialize agent:', error.message);
     process.exit(1);
   }
   
-  // Create agent configuration
-  const config = {
-    name: 'jsEnvoy Assistant',
-    bio: 'A conversational AI assistant with access to various tools. I maintain context across messages and help with file operations, calculations, web tasks, and more. I respond naturally and wait for your next message.',
-    tools,
-    modelConfig: {
-      provider: process.env.MODEL_PROVIDER || 'OPEN_AI',
-      model: process.env.MODEL_NAME || 'gpt-4',
-      apiKey: apiKey
-    },
-    showToolUsage: true,
-    steps: [
-      'Respond naturally to the user message',
-      'Remember context from previous messages in our conversation',
-      'Use tools when they would be helpful',
-      'Keep responses conversational and friendly',
-      'Always mark task_completed as true to continue the conversation'
-    ],
-    // Don't include responseStructure to keep responses conversational
-    _debugMode: false
-  };
+  console.log(`\nLoaded ${toolCount} tools`);
+  console.log('Agent ready! Type your message (or "exit" to quit)\n');
   
-  // Create agent
-  const agent = new Agent(config);
-  
-  // Create readline interface with proper terminal settings
+  // Only create readline after all initialization is complete
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-    prompt: '\n> ',
-    terminal: true,
-    historySize: 100
+    prompt: '> '
   });
-  
-  process.stdout.write('Agent ready! Type your message (or "exit" to quit)\n');
   
   // Show initial prompt
   rl.prompt();
@@ -171,18 +221,11 @@ async function main() {
     }
     
     if (trimmed) {
-      // Pause readline while processing
-      rl.pause();
-      
-      // Show a simple processing indicator without spinner
-      process.stdout.write('\nThinking...\r');
+      console.log(); // Empty line for spacing
       
       try {
-        // Get response from agent but don't let it complete the conversation
+        // Get response from agent
         const response = await agent.run(trimmed);
-        
-        // Clear the "Thinking..." message
-        process.stdout.write('\x1b[2K\r');
         
         // Print the response
         if (response && response.message) {
@@ -192,23 +235,14 @@ async function main() {
         } else {
           console.log(JSON.stringify(response));
         }
-        
-        // Keep the conversation going by not marking the overall session as complete
-        // The agent maintains conversation history internally
       } catch (error) {
-        // Clear the "Thinking..." message
-        process.stdout.write('\x1b[2K\r');
         console.error('Error:', error.message);
-        if (agent._debugMode) {
-          console.error(error.stack);
-        }
       }
       
-      // Resume readline
-      rl.resume();
+      console.log(); // Empty line before next prompt
     }
     
-    // Always prompt for the next input
+    // Show next prompt
     rl.prompt();
   });
   
