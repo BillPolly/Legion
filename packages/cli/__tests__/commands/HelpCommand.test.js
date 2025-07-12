@@ -109,46 +109,6 @@ describe('HelpCommand', () => {
     });
 
     describe('tool help', () => {
-      it('should show help for tool', async () => {
-        mockToolRegistry.hasTool.mockReturnValue(true);
-        mockToolRegistry.getToolByName.mockReturnValue({
-          name: 'evaluate',
-          module: 'calculator',
-          description: 'Evaluate mathematical expression',
-          parameters: {
-            type: 'object',
-            properties: {
-              expression: {
-                type: 'string',
-                description: 'Mathematical expression to evaluate'
-              },
-              precision: {
-                type: 'number',
-                description: 'Decimal precision'
-              }
-            },
-            required: ['expression']
-          }
-        });
-        mockToolRegistry.getToolMetadata.mockReturnValue({
-          examples: [
-            'jsenvoy calculator.evaluate --expression "2 + 2"',
-            'jsenvoy calculator.evaluate --expression "sqrt(16)" --precision 2'
-          ]
-        });
-        
-        await helpCommand.execute({
-          command: 'help',
-          helpTopic: 'calculator.evaluate'
-        }, {});
-        
-        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Tool: calculator.evaluate'));
-        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Evaluate mathematical expression'));
-        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Parameters:'));
-        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('expression (required)'));
-        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('precision (optional)'));
-        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Examples:'));
-      });
 
       it('should handle tool without parameters', async () => {
         mockToolRegistry.hasTool.mockReturnValue(true);

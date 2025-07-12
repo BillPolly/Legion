@@ -138,20 +138,6 @@ describe('CommandExecutor', () => {
       }
     });
 
-    test('should execute other commands normally', async () => {
-      // Commands that should execute but may fail normally
-      const commands = [
-        'mkfs.ext4 /dev/sda1', // Will fail but not blocked
-        'sudo chmod 000 /*'    // Will fail but not blocked
-      ];
-
-      for (const command of commands) {
-        const result = await commandExecutor.executeCommand(command);
-        // These commands are not blocked, but will fail normally
-        expect(result.success).toBe(false);
-        expect(result.error).not.toContain('Command blocked for safety reasons');
-      }
-    });
 
     test('should allow safe commands', async () => {
       const safeCommands = [

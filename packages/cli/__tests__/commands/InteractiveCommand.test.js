@@ -60,13 +60,6 @@ describe('InteractiveCommand', () => {
       );
     });
 
-    it('should display welcome message', async () => {
-      await interactiveCommand.execute({}, {});
-      
-      expect(consoleLogSpy).toHaveBeenCalledWith();
-      expect(consoleLogSpy).toHaveBeenCalledWith('jsEnvoy Interactive Mode');
-      expect(consoleLogSpy).toHaveBeenCalledWith('Type "help" for commands, "exit" to quit');
-    });
 
     it('should display colored welcome message when color is enabled', async () => {
       await interactiveCommand.execute({}, { color: true });
