@@ -219,6 +219,31 @@ class PolyRepoManager extends Tool {
             required: ['orgName', 'repoName']
           }
         }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'polyrepo_rename_repo',
+          description: 'Rename a repository in GitHub organization',
+          parameters: {
+            type: 'object',
+            properties: {
+              orgName: {
+                type: 'string',
+                description: 'GitHub organization name'
+              },
+              oldRepoName: {
+                type: 'string',
+                description: 'Current repository name'
+              },
+              newRepoName: {
+                type: 'string',
+                description: 'New repository name'
+              }
+            },
+            required: ['orgName', 'oldRepoName', 'newRepoName']
+          }
+        }
       }
     ];
   }
@@ -283,6 +308,14 @@ class PolyRepoManager extends Tool {
           result = await this.deleteRepo(
             args.orgName,
             args.repoName
+          );
+          break;
+        case 'polyrepo_rename_repo':
+          this.validateRequiredParameters(args, ['orgName', 'oldRepoName', 'newRepoName']);
+          result = await this.renameRepo(
+            args.orgName,
+            args.oldRepoName,
+            args.newRepoName
           );
           break;
         default:
@@ -623,6 +656,60 @@ class PolyRepoManager extends Tool {
       });
 
       req.on('error', reject);
+      req.end();
+    });
+  }
+
+  /**
+   * Rename a repository in GitHub organization
+   */
+  async renameRepo(orgName, oldRepoName, newRepoName) {
+    console.log(`Renaming repository ${oldRepoName} to ${newRepoName} in organization ${orgName}`);
+    
+    const { token } = this.getCredentials();
+    
+    return new Promise((resolve, reject) => {
+      const data = JSON.stringify({
+        name: newRepoName
+      });
+
+      const options = {
+        hostname: this.githubApiBase,
+        path: `/repos/${orgName}/${oldRepoName}`,
+        method: 'PATCH',
+        headers: {
+          'Authorization': `token ${token}`,
+          'User-Agent': 'jsEnvoy-PolyRepo-Tool',
+          'Content-Type': 'application/json',
+          'Content-Length': data.length,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      };
+
+      const req = https.request(options, (res) => {
+        let responseData = '';
+        res.on('data', (chunk) => { responseData += chunk; });
+        res.on('end', () => {
+          const parsed = JSON.parse(responseData);
+          
+          if (res.statusCode === 200) {
+            console.log(`Repository renamed: ${orgName}/${oldRepoName} -> ${orgName}/${newRepoName}`);
+            resolve({
+              success: true,
+              name: parsed.name,
+              url: parsed.html_url,
+              oldName: oldRepoName,
+              newName: newRepoName,
+              message: `Repository renamed successfully from ${oldRepoName} to ${newRepoName}`
+            });
+          } else {
+            reject(new Error(`Failed to rename repository: ${parsed.message || responseData}`));
+          }
+        });
+      });
+
+      req.on('error', reject);
+      req.write(data);
       req.end();
     });
   }
