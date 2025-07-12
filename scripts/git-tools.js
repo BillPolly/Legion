@@ -257,8 +257,8 @@ export async function getRepoStatus(dirPath) {
 /**
  * Prepare a package directory for standalone repository
  */
-export async function preparePackageRepo(packagePath, packageName) {
-  console.log(`  Preparing ${packageName} for standalone repository...`);
+export async function preparePackageRepo(packagePath, repoName, orgName = 'BillPolly') {
+  console.log(`  Preparing ${repoName} for standalone repository...`);
   
   // Ensure .gitignore exists
   await ensureGitignore(packagePath);
@@ -274,7 +274,7 @@ export async function preparePackageRepo(packagePath, packageName) {
     // Update repository field
     packageJson.repository = {
       type: 'git',
-      url: `https://github.com/BillPolly/${packageName}.git`
+      url: `https://github.com/${orgName}/${repoName}.git`
     };
     
     await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');

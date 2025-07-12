@@ -71,13 +71,15 @@ async function main() {
   // Parse command line arguments
   const args = process.argv.slice(2);
   if (args.length === 0) {
-    console.error('Usage: node scripts/add-package-to-polyrepo.js <package-name>');
+    console.error('Usage: node scripts/add-package-to-polyrepo.js <package-name> [--keep-name]');
     console.error('Example: node scripts/add-package-to-polyrepo.js llm');
+    console.error('Example: node scripts/add-package-to-polyrepo.js llm-cli --keep-name');
     process.exit(1);
   }
 
   const packageName = args[0];
-  const repoName = `jsenvoy-${packageName}`;
+  const keepOriginalName = args.includes('--keep-name');
+  const repoName = keepOriginalName ? packageName : `jsenvoy-${packageName}`;
   const packagePath = path.join(rootDir, 'packages', packageName);
 
   console.log(`\n🚀 Adding ${packageName} to polyrepo structure\n`);
@@ -156,7 +158,7 @@ async function main() {
     console.log('\n📦 Step 2: Creating GitHub repository\n');
     
     // Prepare package for standalone repo
-    await gitTools.preparePackageRepo(packagePath, repoName);
+    await gitTools.preparePackageRepo(packagePath, repoName, orgName);
 
     // Initialize local repo with force to ensure clean state
     const initResult = await gitTools.initRepo(packagePath, 'Initial commit', true);

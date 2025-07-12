@@ -69,11 +69,15 @@ You can either modify the existing `split-monorepo.js` script or use the dedicat
 
 1. **Run the add package script**:
    ```bash
-   npm run polyrepo:add <package-name>
-   # Or directly: node scripts/add-package-to-polyrepo.js <package-name>
+   npm run polyrepo:add <package-name> [-- --keep-name]
+   # Or directly: node scripts/add-package-to-polyrepo.js <package-name> [--keep-name]
    
-   # Example: npm run polyrepo:add llm
+   # Examples:
+   npm run polyrepo:add llm                    # Creates repo as jsenvoy-llm
+   npm run polyrepo:add llm-cli -- --keep-name # Creates repo as llm-cli
    ```
+   
+   Use `--keep-name` flag to keep the original package name as the repository name instead of prefixing with `jsenvoy-`.
 
    The script will automatically:
    - Validate the package exists
@@ -221,8 +225,8 @@ npm run subtree:discover
 ### Important Lessons
 
 1. **Always remove .git directories** from packages before committing to avoid submodule issues
-2. **Package naming** must follow the `@jsenvoy/` convention
-3. **Repository naming** follows the pattern `jsenvoy-<package-name>`
+2. **Package naming** must follow the `@jsenvoy/` convention in package.json
+3. **Repository naming** follows the pattern `jsenvoy-<package-name>` by default, but use `--keep-name` to preserve original names
 4. **Initial push conflicts** are common - the content is usually already synchronized
 5. **Use dedicated scripts** for single package additions rather than modifying the bulk script
 
