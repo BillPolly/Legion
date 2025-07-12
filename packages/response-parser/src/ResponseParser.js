@@ -23,11 +23,29 @@ class ResponseParser {
    * @returns {{success: boolean, data: any, error: string|null}}
    */
   parse(input) {
-    if (!input || typeof input !== 'string') {
+    if (!input) {
       return {
         success: false,
         data: null,
-        error: 'Empty input or invalid type'
+        error: 'Empty input'
+      };
+    }
+    
+    // If input is already an object, return it directly
+    if (typeof input === 'object' && input !== null) {
+      return {
+        success: true,
+        data: input,
+        error: null
+      };
+    }
+    
+    // Check if input is a string
+    if (typeof input !== 'string') {
+      return {
+        success: false,
+        data: null,
+        error: 'Invalid input type: expected string or object'
       };
     }
 

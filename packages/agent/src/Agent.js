@@ -1,4 +1,3 @@
-import { Tool } from "@jsenvoy/tools";
 import { ToolResult } from "@jsenvoy/modules";
 import { Model } from "@jsenvoy/model-providers";
 import { getMasterPrompt } from "./lib/master-prompt.js";
@@ -115,6 +114,7 @@ class Agent {
 
     if (this._debugMode) {
       await appendFile("agentOut.txt", ` llm responded (retries: ${result.retries})\n`);
+      await appendFile("agentOut.txt", ` result: ${JSON.stringify(result)}\n`);
     }
 
     if (!result.success) {
@@ -132,6 +132,14 @@ class Agent {
   }
 
   async newProcess(response) {
+    // Handle null or undefined response
+    if (!response) {
+      return {
+        taskCompleted: false,
+        nextPrompt: "No response received. Please try again."
+      };
+    }
+    
     if (
       response.use_tool &&
       (response.use_tool != undefined ||

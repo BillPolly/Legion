@@ -30,7 +30,8 @@
     "subtree:setup": "node scripts/setup-subtree-remotes.js",
     "cli": "node packages/cli/src/index.js interactive",
     "cli:help": "node packages/cli/src/index.js help",
-    "cli:list": "node packages/cli/src/index.js list"
+    "cli:list": "node packages/cli/src/index.js list",
+    "agent": "node packages/agent/src/cli.js"
   },
   "devDependencies": {
     "eslint": "^8.56.0",
