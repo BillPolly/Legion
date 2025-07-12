@@ -204,7 +204,8 @@ async function main() {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-    prompt: '> '
+    prompt: '> ',
+    terminal: false  // Prevents double character echo issue
   });
   
   // Show initial prompt

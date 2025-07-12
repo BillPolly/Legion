@@ -29,7 +29,8 @@ export class InteractiveCommand {
       input: process.stdin,
       output: process.stdout,
       prompt: 'jsenvoy> ',
-      completer: this.interactiveMode.getCompleter()
+      completer: this.interactiveMode.getCompleter(),
+      terminal: false  // Prevents double character echo issue
     });
     
     // Start interactive mode
