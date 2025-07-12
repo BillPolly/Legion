@@ -27,6 +27,7 @@
     "subtree:discover": "node scripts/discover-subtrees.js",
     "subtree:push": "node scripts/push-all-subtrees.js",
     "subtree:pull": "node scripts/pull-all-subtrees.js",
+    "subtree:setup": "node scripts/setup-subtree-remotes.js",
     "cli": "node packages/cli/src/index.js interactive",
     "cli:help": "node packages/cli/src/index.js help",
     "cli:list": "node packages/cli/src/index.js list"

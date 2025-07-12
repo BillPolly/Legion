@@ -1,0 +1,17 @@
+# Git subtree merge strategy for packages
+packages/agent/ merge=subtree
+packages/cli/ merge=subtree
+packages/modules/ merge=subtree
+packages/general-tools/ merge=subtree
+packages/model-providers/ merge=subtree
+packages/response-parser/ merge=subtree
+
+# Language statistics
+*.js linguist-detectable=true
+*.json linguist-detectable=true
+*.md linguist-documentation=true
+
+# Line endings
+* text=auto eol=lf
+*.{cmd,[cC][mM][dD]} text eol=crlf
+*.{bat,[bB][aA][tT]} text eol=crlf
