@@ -4,43 +4,8 @@
  */
 
 import { jest } from '@jest/globals';
-import { config } from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
-// Load environment variables from root .env file
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const envPath = path.resolve(__dirname, '../../../.env');
-config({ path: envPath });
-
-// Verify API key is loaded for integration tests
-if (process.env.NODE_ENV !== 'test' || process.env.TEST_INTEGRATION) {
-  console.log('Loaded .env from:', envPath);
-  console.log('API Key available:', !!process.env.OPENAI_API_KEY);
-}
-
-// Mock console methods to reduce noise during tests unless specifically needed
-const originalConsole = { ...console };
-
-beforeEach(() => {
-  // Suppress console.log, console.error etc. by default
-  // Individual tests can restore these if needed
-  console.log = jest.fn();
-  console.error = jest.fn();
-  console.warn = jest.fn();
-  console.info = jest.fn();
-});
-
-afterEach(() => {
-  // Restore console methods after each test
-  Object.assign(console, originalConsole);
-  
-  // Clear all mocks
-  jest.clearAllMocks();
-});
-
-// Global test utilities
+// Create mock functions lazily to avoid creating them until actually used
 global.mockTool = (overrides = {}) => ({
   identifier: 'test_tool',
   name: 'Test Tool',
@@ -55,15 +20,15 @@ global.mockTool = (overrides = {}) => ({
     }
   ],
   functionMap: {
-    testFunction: jest.fn().mockResolvedValue('test result')
+    testFunction: () => Promise.resolve('test result')
   },
-  setExecutingAgent: jest.fn(),
+  setExecutingAgent: () => {},
   ...overrides
 });
 
 global.mockModel = (overrides = {}) => ({
-  sendAndReceiveResponse: jest.fn().mockResolvedValue('{"task_completed": true, "response": {"type": "string", "message": "Test response"}}'),
-  initializeModel: jest.fn(),
+  sendAndReceiveResponse: () => Promise.resolve('{"task_completed": true, "response": {"type": "string", "message": "Test response"}}'),
+  initializeModel: () => {},
   ...overrides
 });
 
@@ -84,6 +49,3 @@ global.createMockMessages = (count = 1) => {
   }
   return messages;
 };
-
-// Helper to wait for async operations
-global.waitFor = (ms = 0) => new Promise(resolve => setTimeout(resolve, ms));

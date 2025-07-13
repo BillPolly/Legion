@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { ModuleFactory } from '../src/ModuleFactory.js';
-import { ResourceManager } from '../src/ResourceManager.js';
+import ResourceManager from '../src/ResourceManager.js';
 import { Module } from '../src/Module.js';
 
 // Test modules

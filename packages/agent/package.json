@@ -9,7 +9,7 @@
   },
   "scripts": {
     "agent": "node src/cli.js",
-    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests --detectOpenHandles",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
   },

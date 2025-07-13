@@ -6,11 +6,6 @@ import { writeFile, appendFile } from "fs/promises";
 import readline from "readline";
 import { RetryManager } from "./RetryManager.js";
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
-
 /**
  * Agent class with robust response parsing and retry logic
  */
