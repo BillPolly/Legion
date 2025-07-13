@@ -1,4 +1,4 @@
-import { ToolResult } from "@jsenvoy/modules";
+import { ToolResult } from "@jsenvoy/module-loader";
 import { LLMClient } from "@jsenvoy/llm";
 import { getMasterPrompt } from "./lib/master-prompt.js";
 import ora from "ora";

@@ -44,7 +44,7 @@
     "CHANGELOG.md"
   ],
   "dependencies": {
-    "@jsenvoy/modules": "*",
+    "@jsenvoy/module-loader": "*",
     "chalk": "^4.1.2",
     "ora": "^5.4.1"
   },

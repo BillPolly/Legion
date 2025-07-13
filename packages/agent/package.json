@@ -42,7 +42,7 @@
   "dependencies": {
     "@jsenvoy/llm": "*",
     "@jsenvoy/tools": "*",
-    "@jsenvoy/modules": "*",
+    "@jsenvoy/module-loader": "*",
     "ora": "^5.4.0"
   },
   "devDependencies": {

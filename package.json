@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "test": "npm run test --workspaces",
-    "test:modules": "npm run test --workspace=@jsenvoy/modules",
+    "test:module-loader": "npm run test --workspace=@jsenvoy/module-loader",
     "test:cli": "npm run test --workspace=@jsenvoy/cli",
     "test:tools": "npm run test --workspace=@jsenvoy/tools",
     "test:llm": "npm run test --workspace=@jsenvoy/llm",

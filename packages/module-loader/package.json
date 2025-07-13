@@ -1,5 +1,5 @@
 {
-  "name": "@jsenvoy/modules",
+  "name": "@jsenvoy/module-loader",
   "version": "0.0.1",
   "description": "Core infrastructure for building modular tool systems - base classes, dependency injection, and module management",
   "type": "module",
@@ -38,6 +38,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/BillPolly/modules.git"
+    "url": "https://github.com/BillPolly/module-loader.git"
   }
 }

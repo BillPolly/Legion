@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@jsenvoy/modules';
+import { Tool, ToolResult } from '@jsenvoy/module-loader';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import https from 'https';

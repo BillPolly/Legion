@@ -1,4 +1,4 @@
-import { Tool, ToolResult, Module } from '@jsenvoy/modules';
+import { Tool, ToolResult, Module } from '@jsenvoy/module-loader';
 
 /**
  * Calculator tool that evaluates mathematical expressions

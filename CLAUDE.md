@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 jsEnvoy is a modular framework for building AI agent tools with consistent interfaces. It's organized as a monorepo using npm workspaces with six main packages:
 
-1. **@jsenvoy/modules** - Core infrastructure with base classes, dependency injection, and module management
+1. **@jsenvoy/module-loader** - Core infrastructure with base classes, dependency injection, and module management
 2. **@jsenvoy/cli** - Command-line interface for executing tools with REPL and autocomplete
 3. **@jsenvoy/tools** - Collection of AI agent tools (file operations, web tools, GitHub integration, etc.)
 4. **@jsenvoy/llm** - LLM client with multiple providers (OpenAI, Anthropic, DeepSeek, OpenRouter) and response parsing/validation
@@ -21,7 +21,7 @@ jsEnvoy is a modular framework for building AI agent tools with consistent inter
 npm test
 
 # Run tests for specific packages
-npm run test:modules
+npm run test:module-loader
 npm run test:cli
 npm run test:tools
 npm run test:llm
@@ -85,7 +85,7 @@ node packages/cli/src/index.js -i
 
 ```
 packages/
-├── modules/src/
+├── module-loader/src/
 │   ├── base/           # Base classes (BaseModule, BaseTool)
 │   ├── core/           # ResourceManager, ModuleFactory
 │   └── __tests__/      # Comprehensive test suite

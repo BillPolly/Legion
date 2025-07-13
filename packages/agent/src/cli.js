@@ -2,7 +2,7 @@
 
 import readline from 'readline';
 import { Agent } from './Agent.js';
-import { ResourceManager, ModuleFactory } from '@jsenvoy/modules';
+import { ResourceManager, ModuleFactory } from '@jsenvoy/module-loader';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';

@@ -2,7 +2,7 @@
  * Test helpers for agent tests
  */
 
-import { ToolResult } from '@jsenvoy/modules';
+import { ToolResult } from '@jsenvoy/module-loader';
 
 /**
  * Create a mock tool for testing

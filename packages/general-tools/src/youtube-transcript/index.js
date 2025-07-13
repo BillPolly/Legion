@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@jsenvoy/modules';
+import { Tool, ToolResult } from '@jsenvoy/module-loader';
 import { YoutubeTranscript as YTTranscript } from 'youtube-transcript';
 
 class YoutubeTranscript extends Tool {

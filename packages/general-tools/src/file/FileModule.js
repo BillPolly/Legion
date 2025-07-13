@@ -1,4 +1,4 @@
-import { Tool, ToolResult, Module } from '@jsenvoy/modules';
+import { Tool, ToolResult, Module } from '@jsenvoy/module-loader';
 import { promises as fs } from 'fs';
 import path from 'path';
 

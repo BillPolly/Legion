@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@jsenvoy/modules';
+import { Tool, ToolResult } from '@jsenvoy/module-loader';
 import https from 'https';
 
 class Serper extends Tool {

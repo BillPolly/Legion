@@ -4,7 +4,7 @@
  * Test script to verify ToolResult implementation
  */
 
-const { ToolResult } = require('@jsenvoy/modules');
+const { ToolResult } = require('@jsenvoy/module-loader');
 const CalculatorModule = require('@jsenvoy/tools/src/calculator');
 const FileModule = require('@jsenvoy/tools/src/file');
 

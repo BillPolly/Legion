@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@jsenvoy/modules';
+import { Tool, ToolResult } from '@jsenvoy/module-loader';
 import { spawn } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';

@@ -1,4 +1,4 @@
-# @jsenvoy/modules
+# @jsenvoy/module-loader
 
 Core infrastructure for building modular tool systems. This package provides the essential base classes, dependency injection, and module management capabilities that enable the creation of extensible tool libraries.
 
@@ -20,7 +20,7 @@ Core infrastructure for building modular tool systems. This package provides the
 ## Usage
 
 ```javascript
-const { Tool, ModularTool, Module, ResourceManager, ModuleFactory } = require('@jsenvoy/modules');
+const { Tool, ModularTool, Module, ResourceManager, ModuleFactory } = require('@jsenvoy/module-loader');
 
 // Create a tool
 class MyTool extends ModularTool {
