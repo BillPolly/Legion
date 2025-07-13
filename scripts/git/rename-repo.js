@@ -7,7 +7,7 @@
  */
 
 import { ResourceManager, ModuleFactory } from '@jsenvoy/module-loader';
-import GitHubModule from '../packages/general-tools/src/github/GitHubModule.js';
+import GitHubModule from '../../packages/general-tools/src/github/GitHubModule.js';
 import path from 'path';
 import { promises as fs } from 'fs';
 import { fileURLToPath } from 'url';

@@ -48,12 +48,12 @@ npm run split:history
 
 #### 4. Add Single Package (Hierarchical Support)
 ```bash
-node scripts/add-hierarchical-package-to-polyrepo.js <package-path> <repo-name> [--keep-name]
+node scripts/split/add-hierarchical-package-to-polyrepo.js <package-path> <repo-name> [--keep-name]
 ```
 **Examples:**
-- `node scripts/add-hierarchical-package-to-polyrepo.js apps/web-frontend web-frontend`
-- `node scripts/add-hierarchical-package-to-polyrepo.js apps/web-backend web-backend`
-- `node scripts/add-hierarchical-package-to-polyrepo.js llm llm --keep-name`
+- `node scripts/split/add-hierarchical-package-to-polyrepo.js apps/web-frontend web-frontend`
+- `node scripts/split/add-hierarchical-package-to-polyrepo.js apps/web-backend web-backend`
+- `node scripts/split/add-hierarchical-package-to-polyrepo.js llm llm --keep-name`
 
 **Parameters:**
 - `package-path`: Relative path from packages/ (supports hierarchical structure)
@@ -81,7 +81,7 @@ The scripts automatically:
 
 ### Git Tools API
 
-The `git-tools.js` module provides reusable functions:
+The `utils/git-tools.js` module provides reusable functions:
 - `isGitRepo(dirPath)` - Check if directory is a git repository
 - `initRepo(dirPath, commitMessage)` - Initialize a git repository
 - `addRemote(dirPath, remoteName, remoteUrl)` - Add a git remote

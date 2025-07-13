@@ -4,16 +4,16 @@
  */
 
 import { ResourceManager } from '@jsenvoy/module-loader';
-import GitHubModule from '../packages/general-tools/src/github/GitHubModule.js';
+import GitHubModule from '../../packages/general-tools/src/github/GitHubModule.js';
 import path from 'path';
 import { promises as fs } from 'fs';
 import { fileURLToPath } from 'url';
-import * as gitTools from './git-tools.js';
+import * as gitTools from '../utils/git-tools.js';
 import readline from 'readline';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const rootDir = path.join(__dirname, '..');
+const rootDir = path.join(__dirname, '../..');
 
 // Create readline interface for user input
 const rl = readline.createInterface({

@@ -1,26 +1,13 @@
-/**
- * Script to delete a GitHub repository
- */
-
 import { ResourceManager, ModuleFactory } from '@jsenvoy/module-loader';
-import GitHubModule from '../packages/general-tools/src/github/GitHubModule.js';
+import GitHubModule from '../../packages/general-tools/src/github/GitHubModule.js';
 
 async function main() {
-  const args = process.argv.slice(2);
-  
-  if (args.length !== 2) {
-    console.log('Usage: node scripts/delete-repo.js <orgName> <repoName>');
-    process.exit(1);
-  }
-  
-  const [orgName, repoName] = args;
-  
   try {
-    // Initialize ResourceManager (it will automatically load .env)
+    // Initialize ResourceManager
     const resourceManager = new ResourceManager();
     await resourceManager.initialize();
 
-    // Register GitHub resources from environment
+    // Register GitHub resources
     resourceManager.register('GITHUB_PAT', resourceManager.get('env.GITHUB_PAT'));
     resourceManager.register('GITHUB_ORG', resourceManager.get('env.GITHUB_ORG'));
     resourceManager.register('GITHUB_USER', resourceManager.get('env.GITHUB_USER'));
@@ -33,22 +20,28 @@ async function main() {
     const tools = githubModule.getTools();
     const polyRepo = tools.find(tool => tool.name === 'polyrepo');
     
-    console.log(`Deleting repository ${orgName}/${repoName}...`);
+    const orgName = resourceManager.get('GITHUB_ORG');
     
+    console.log(`Creating repository "Envoy" in organization ${orgName}...`);
+    
+    // Create the repository
     const result = await polyRepo.invoke({
       function: {
-        name: 'polyrepo_delete_repo',
+        name: 'polyrepo_create_org_repo',
         arguments: JSON.stringify({
           orgName: orgName,
-          repoName: repoName
+          repoName: 'Envoy',
+          description: 'jsEnvoy - A modular framework for building AI agent tools',
+          isPrivate: true
         })
       }
     });
 
     if (result.success) {
-      console.log('✓ Repository deleted successfully');
+      console.log('✓ Repository created successfully!');
+      console.log(`Repository URL: https://github.com/${orgName}/Envoy`);
     } else {
-      console.error('✗ Failed to delete repository:', result.error);
+      console.error('✗ Failed to create repository:', result.error);
     }
     
   } catch (error) {

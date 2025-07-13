@@ -3,7 +3,7 @@
  */
 
 import { ResourceManager, ModuleFactory } from '@jsenvoy/module-loader';
-import GitHubModule from '../packages/general-tools/src/github/GitHubModule.js';
+import GitHubModule from '../../packages/general-tools/src/github/GitHubModule.js';
 import https from 'https';
 
 async function listOrgRepos(orgName, token) {
