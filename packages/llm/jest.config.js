@@ -1,15 +1,14 @@
-module.exports = {
-  preset: 'ts-jest',
+export default {
   testEnvironment: 'node',
   roots: ['<rootDir>'],
-  testMatch: ['<rootDir>/__tests__/**/*.test.ts', '<rootDir>/src/**/*.test.ts'],
-  transform: {
-    '^.+\\.ts$': 'ts-jest',
+  testMatch: ['<rootDir>/__tests__/**/*.test.js', '<rootDir>/src/**/*.test.js'],
+  transform: {},
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1'
   },
   collectCoverageFrom: [
-    'src/**/*.ts',
-    '!src/**/*.d.ts',
+    'src/**/*.js',
   ],
-  moduleFileExtensions: ['ts', 'js', 'json'],
+  moduleFileExtensions: ['js', 'json'],
   verbose: true,
 };

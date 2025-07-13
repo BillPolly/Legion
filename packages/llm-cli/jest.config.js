@@ -1,13 +1,17 @@
-module.exports = {
-  preset: 'ts-jest',
+export default {
   testEnvironment: 'node',
   roots: ['<rootDir>'],
-  testMatch: ['<rootDir>/src/**/*.test.ts', '<rootDir>/examples/**/*.test.ts'],
+  testMatch: ['<rootDir>/src/**/*.test.js', '<rootDir>/examples/**/*.test.js'],
+  transform: {},
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^@/(.*)$': '<rootDir>/src/$1'
+  },
   collectCoverageFrom: [
-    'src/**/*.ts',
-    '!src/**/*.d.ts',
+    'src/**/*.js',
     '!src/**/__tests__/**',
-    '!src/index.ts'
+    '!src/**/*.test.js',
+    '!src/index.js'
   ],
   coverageThreshold: {
     global: {
@@ -17,16 +21,7 @@ module.exports = {
       statements: 90
     }
   },
-  moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1'
-  },
+  moduleFileExtensions: ['js', 'json'],
   testTimeout: 10000,
-  transform: {
-    '^.+\\.ts$': ['ts-jest', {
-      tsconfig: {
-        target: 'ES2020',
-        lib: ['ES2020']
-      }
-    }]
-  }
+  verbose: true,
 };

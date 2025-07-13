@@ -1,50 +1,30 @@
 {
   "name": "@jsenvoy/llm-cli",
   "version": "1.0.0",
-  "description": "A powerful TypeScript framework for building command-line interfaces with natural language understanding",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "require": "./dist/index.js"
-    },
-    "./providers": {
-      "types": "./dist/providers/index.d.ts",
-      "require": "./dist/providers/index.js"
-    }
-  },
+  "description": "A powerful JavaScript framework for building command-line interfaces with natural language understanding",
+  "type": "module",
+  "main": "./src/index.js",
   "scripts": {
-    "build": "npm run clean && npm run build:cjs && npm run build:types",
-    "build:cjs": "tsc -p tsconfig.build.json",
-    "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly --outDir dist",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:ci": "jest --ci --coverage --watchAll=false",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
+    "test:ci": "NODE_OPTIONS='--experimental-vm-modules' jest --ci --coverage --watchAll=false",
     "clean": "rm -rf dist coverage .nyc_output",
-    "dev": "tsc --watch",
-    "typecheck": "tsc --noEmit",
-    "example:chat": "ts-node examples/chat/index.ts",
-    "example:chat-default": "ts-node examples/chat/default-chat.ts",
-    "example:chat-openai": "ts-node examples/chat/default-chat-openai.ts",
-    "example:calculator": "ts-node examples/calculator/index.ts",
-    "example:project": "ts-node examples/project-manager/index.ts"
+    "example:chat": "node examples/chat/index.js",
+    "example:chat-default": "node examples/chat/default-chat.js",
+    "example:chat-openai": "node examples/chat/default-chat-openai.js",
+    "example:calculator": "node examples/calculator/index.js",
+    "example:project": "node examples/project-manager/index.js"
   },
   "license": "MIT",
   "engines": {
     "node": ">=16.0.0",
     "npm": ">=7.0.0"
   },
-  "dependencies": {
-    "@types/node": "^20.0.0"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "@types/jest": "^29.5.0",
-    "dotenv": "^17.1.0",
     "jest": "^29.5.0",
-    "ts-jest": "^29.1.0",
-    "typescript": "^5.0.0"
+    "dotenv": "^17.1.0"
   },
   "peerDependencies": {
     "anthropic": ">=0.20.0",
