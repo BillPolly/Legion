@@ -16,7 +16,7 @@ describe('AgentWebSocketServer', () => {
   beforeEach(() => {
     mockAgent.run.mockClear();
     server = new AgentWebSocketServer(mockAgent, {
-      port: 0, // Use random port for testing
+      port: 3005, // Fixed test port to avoid conflicts with integration tests
       host: 'localhost'
     });
   });

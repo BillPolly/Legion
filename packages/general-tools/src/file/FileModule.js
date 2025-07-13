@@ -184,6 +184,168 @@ class FileOperationsTool extends Tool {
             }
           }
         }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'directory_current',
+          description: 'Get the current working directory path',
+          parameters: {
+            type: 'object',
+            properties: {},
+            required: []
+          },
+          output: {
+            success: {
+              type: 'object',
+              properties: {
+                currentDirectory: {
+                  type: 'string',
+                  description: 'The absolute path of the current working directory'
+                }
+              },
+              required: ['currentDirectory']
+            },
+            failure: {
+              type: 'object',
+              properties: {
+                errorCode: {
+                  type: 'string',
+                  enum: ['UNKNOWN'],
+                  description: 'System error code if applicable'
+                },
+                details: {
+                  type: 'string',
+                  description: 'Additional error details'
+                }
+              },
+              required: ['errorCode']
+            }
+          }
+        }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'directory_list',
+          description: 'List contents of a directory',
+          parameters: {
+            type: 'object',
+            properties: {
+              dirpath: {
+                type: 'string',
+                description: 'The directory path to list (optional, defaults to current directory)'
+              }
+            },
+            required: []
+          },
+          output: {
+            success: {
+              type: 'object',
+              properties: {
+                dirpath: {
+                  type: 'string',
+                  description: 'The directory path that was listed'
+                },
+                contents: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      name: {
+                        type: 'string',
+                        description: 'Name of the file or directory'
+                      },
+                      type: {
+                        type: 'string',
+                        enum: ['file', 'directory'],
+                        description: 'Whether this is a file or directory'
+                      },
+                      size: {
+                        type: 'number',
+                        description: 'Size in bytes (for files)'
+                      }
+                    },
+                    required: ['name', 'type']
+                  },
+                  description: 'Array of files and directories in the specified path'
+                }
+              },
+              required: ['dirpath', 'contents']
+            },
+            failure: {
+              type: 'object',
+              properties: {
+                dirpath: {
+                  type: 'string',
+                  description: 'The directory path where listing was attempted'
+                },
+                errorCode: {
+                  type: 'string',
+                  enum: ['ENOENT', 'EACCES', 'ENOTDIR', 'UNKNOWN'],
+                  description: 'System error code if applicable'
+                },
+                details: {
+                  type: 'string',
+                  description: 'Additional error details'
+                }
+              },
+              required: ['dirpath', 'errorCode']
+            }
+          }
+        }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'directory_change',
+          description: 'Change the current working directory',
+          parameters: {
+            type: 'object',
+            properties: {
+              dirpath: {
+                type: 'string',
+                description: 'The directory path to change to (can be absolute or relative)'
+              }
+            },
+            required: ['dirpath']
+          },
+          output: {
+            success: {
+              type: 'object',
+              properties: {
+                previousDirectory: {
+                  type: 'string',
+                  description: 'The previous working directory path'
+                },
+                currentDirectory: {
+                  type: 'string',
+                  description: 'The new current working directory path'
+                }
+              },
+              required: ['previousDirectory', 'currentDirectory']
+            },
+            failure: {
+              type: 'object',
+              properties: {
+                dirpath: {
+                  type: 'string',
+                  description: 'The directory path where change was attempted'
+                },
+                errorCode: {
+                  type: 'string',
+                  enum: ['ENOENT', 'EACCES', 'ENOTDIR', 'UNKNOWN'],
+                  description: 'System error code if applicable'
+                },
+                details: {
+                  type: 'string',
+                  description: 'Additional error details'
+                }
+              },
+              required: ['dirpath', 'errorCode']
+            }
+          }
+        }
       }
     ];
   }
@@ -214,6 +376,17 @@ class FileOperationsTool extends Tool {
         case 'directory_create':
           this.validateRequiredParameters(args, ['dirpath']);
           return await this.createDirectory(args.dirpath);
+          
+        case 'directory_current':
+          return await this.getCurrentDirectory();
+          
+        case 'directory_list':
+          const dirToList = args.dirpath || process.cwd();
+          return await this.listDirectory(dirToList);
+          
+        case 'directory_change':
+          this.validateRequiredParameters(args, ['dirpath']);
+          return await this.changeDirectory(args.dirpath);
           
         default:
           return ToolResult.failure(
@@ -408,6 +581,165 @@ class FileOperationsTool extends Tool {
       } else if (error.code === 'ENOTDIR') {
         errorCode = 'ENOTDIR';
         errorMessage = `Parent path is not a directory: ${dirpath}`;
+      }
+      
+      return ToolResult.failure(
+        errorMessage,
+        {
+          dirpath: dirpath,
+          errorCode: errorCode,
+          details: error.stack
+        }
+      );
+    }
+  }
+
+  /**
+   * Get the current working directory
+   */
+  async getCurrentDirectory() {
+    try {
+      const currentDir = process.cwd();
+      console.log(`Current directory: ${currentDir}`);
+      
+      return ToolResult.success({
+        currentDirectory: currentDir
+      });
+    } catch (error) {
+      return ToolResult.failure(
+        `Failed to get current directory: ${error.message}`,
+        {
+          errorCode: 'UNKNOWN',
+          details: error.stack
+        }
+      );
+    }
+  }
+
+  /**
+   * List contents of a directory
+   */
+  async listDirectory(dirpath) {
+    try {
+      console.log(`Listing directory: ${dirpath}`);
+      
+      const resolvedPath = path.resolve(dirpath);
+      
+      // Check if directory exists and is accessible
+      const stats = await fs.stat(resolvedPath);
+      if (!stats.isDirectory()) {
+        return ToolResult.failure(
+          `Path is not a directory: ${dirpath}`,
+          { 
+            dirpath: dirpath,
+            errorCode: 'ENOTDIR',
+            details: 'The specified path is not a directory'
+          }
+        );
+      }
+      
+      // Read directory contents
+      const entries = await fs.readdir(resolvedPath, { withFileTypes: true });
+      const contents = [];
+      
+      for (const entry of entries) {
+        const itemPath = path.join(resolvedPath, entry.name);
+        const item = {
+          name: entry.name,
+          type: entry.isDirectory() ? 'directory' : 'file'
+        };
+        
+        // Add size for files
+        if (entry.isFile()) {
+          try {
+            const fileStats = await fs.stat(itemPath);
+            item.size = fileStats.size;
+          } catch (error) {
+            // If we can't get size, just omit it
+          }
+        }
+        
+        contents.push(item);
+      }
+      
+      console.log(`Successfully listed ${contents.length} items in ${dirpath}`);
+      
+      return ToolResult.success({
+        dirpath: dirpath,
+        contents: contents
+      });
+    } catch (error) {
+      let errorCode = 'UNKNOWN';
+      let errorMessage = `Failed to list directory: ${error.message}`;
+      
+      if (error.code === 'ENOENT') {
+        errorCode = 'ENOENT';
+        errorMessage = `Directory not found: ${dirpath}`;
+      } else if (error.code === 'EACCES') {
+        errorCode = 'EACCES';
+        errorMessage = `Permission denied: ${dirpath}`;
+      } else if (error.code === 'ENOTDIR') {
+        errorCode = 'ENOTDIR';
+        errorMessage = `Path is not a directory: ${dirpath}`;
+      }
+      
+      return ToolResult.failure(
+        errorMessage,
+        {
+          dirpath: dirpath,
+          errorCode: errorCode,
+          details: error.stack
+        }
+      );
+    }
+  }
+
+  /**
+   * Change the current working directory
+   */
+  async changeDirectory(dirpath) {
+    try {
+      console.log(`Changing directory to: ${dirpath}`);
+      
+      const previousDir = process.cwd();
+      const resolvedPath = path.resolve(dirpath);
+      
+      // Check if directory exists and is accessible
+      const stats = await fs.stat(resolvedPath);
+      if (!stats.isDirectory()) {
+        return ToolResult.failure(
+          `Path is not a directory: ${dirpath}`,
+          { 
+            dirpath: dirpath,
+            errorCode: 'ENOTDIR',
+            details: 'The specified path is not a directory'
+          }
+        );
+      }
+      
+      // Change directory
+      process.chdir(resolvedPath);
+      const currentDir = process.cwd();
+      
+      console.log(`Successfully changed directory from ${previousDir} to ${currentDir}`);
+      
+      return ToolResult.success({
+        previousDirectory: previousDir,
+        currentDirectory: currentDir
+      });
+    } catch (error) {
+      let errorCode = 'UNKNOWN';
+      let errorMessage = `Failed to change directory: ${error.message}`;
+      
+      if (error.code === 'ENOENT') {
+        errorCode = 'ENOENT';
+        errorMessage = `Directory not found: ${dirpath}`;
+      } else if (error.code === 'EACCES') {
+        errorCode = 'EACCES';
+        errorMessage = `Permission denied: ${dirpath}`;
+      } else if (error.code === 'ENOTDIR') {
+        errorCode = 'ENOTDIR';
+        errorMessage = `Path is not a directory: ${dirpath}`;
       }
       
       return ToolResult.failure(

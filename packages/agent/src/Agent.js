@@ -191,16 +191,27 @@ class Agent {
               // Single object argument: use it directly
               argsObject = args[0];
             } else if (args.length === 1 && typeof args[0] === 'string') {
-              // Single string argument: assume it's the first parameter
-              // Get the first parameter name from tool function
+              // Single string argument: map to first parameter of the specific function
               const toolFunctions = tool.functions || [];
               const matchingFunction = toolFunctions.find(f => f.name === fn);
               if (matchingFunction && matchingFunction.arguments.length > 0) {
                 argsObject[matchingFunction.arguments[0]] = args[0];
               } else {
-                // Fallback: assume 'expression' for calculator
-                argsObject.expression = args[0];
+                // Fallback: try common parameter names based on function name
+                if (fn.includes('read') || fn.includes('file')) {
+                  argsObject.filepath = args[0];
+                } else if (fn.includes('write') || fn.includes('create')) {
+                  argsObject.filepath = args[0];
+                } else if (fn.includes('directory')) {
+                  argsObject.dirpath = args[0];
+                } else {
+                  // Default fallback
+                  argsObject.expression = args[0];
+                }
               }
+            } else if (args.length === 0) {
+              // No arguments - keep argsObject empty
+              // This is fine for functions like directory_current
             } else {
               // Multiple arguments: map to parameter names
               const toolFunctions = tool.functions || [];

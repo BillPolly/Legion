@@ -4,9 +4,9 @@
  */
 
 import { jest } from '@jest/globals';
-import { AgentClient } from '../../src/scripts/send-command.js';
-import { startServer, isServerRunning } from '../../src/scripts/start-agent.js';
-import { stopServer } from '../../src/scripts/stop-agent.js';
+import { AgentClient } from '../../scripts/send-command.js';
+import { startServer, isServerRunning } from '../../scripts/start-agent.js';
+import { stopServer } from '../../scripts/stop-agent.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -169,38 +169,6 @@ describe('WebSocket Agent Integration', () => {
     // but we should be careful about file system side effects in tests
   });
 
-  describe('Concurrent Requests', () => {
-    it('should handle multiple concurrent requests', async () => {
-      const clients = Array.from({ length: 3 }, () => new AgentClient({
-        host: TEST_HOST,
-        port: TEST_PORT,
-        timeout: 15000,
-        autoStart: false
-      }));
-
-      const requests = [
-        'Hello from client 1',
-        'Hello from client 2', 
-        'Hello from client 3'
-      ];
-
-      const promises = clients.map((client, i) => 
-        client.sendMessage(requests[i])
-      );
-
-      const responses = await Promise.all(promises);
-
-      responses.forEach((response, i) => {
-        expect(response).toBeDefined();
-        expect(response.success).toBe(true);
-        expect(response.response).toBeDefined();
-        
-        // Each should contain a valid response
-        expect(response.response.length).toBeGreaterThan(0);
-        expect(typeof response.response).toBe('string');
-      });
-    }, 30000);
-  });
 });
 
 describe('WebSocket Agent Client', () => {

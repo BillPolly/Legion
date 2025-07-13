@@ -25,13 +25,16 @@ describe('FileOperationsTool', () => {
   });
 
   describe('getAllToolDescriptions', () => {
-    test('should return all three file operation functions', () => {
+    test('should return all six file operation functions', () => {
       const descriptions = fileTool.getAllToolDescriptions();
       
-      expect(descriptions).toHaveLength(3);
+      expect(descriptions).toHaveLength(6);
       expect(descriptions[0].function.name).toBe('file_read');
       expect(descriptions[1].function.name).toBe('file_write');
       expect(descriptions[2].function.name).toBe('directory_create');
+      expect(descriptions[3].function.name).toBe('directory_current');
+      expect(descriptions[4].function.name).toBe('directory_list');
+      expect(descriptions[5].function.name).toBe('directory_change');
     });
   });
 

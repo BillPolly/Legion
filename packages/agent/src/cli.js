@@ -81,45 +81,45 @@ function convertToolToAgentFormat(tool, moduleName) {
 }
 
 /**
- * Load all tools from @jsenvoy/tools package
+ * Load all tools generically using ModuleFactory
  */
 async function loadTools(resourceManager, moduleFactory) {
   const tools = [];
   
   try {
-    // Import the tools package
-    const { CalculatorModule, FileModule } = await import('@jsenvoy/tools');
+    // Import all module classes from @jsenvoy/tools package
+    const toolsPackage = await import('@jsenvoy/tools');
     
-    // Create calculator module instance
-    if (CalculatorModule) {
+    // Get all module classes (they end with 'Module')
+    const moduleClasses = Object.values(toolsPackage).filter(
+      exportedItem => typeof exportedItem === 'function' && 
+                      exportedItem.name && 
+                      exportedItem.name.endsWith('Module')
+    );
+    
+    console.log(`Found ${moduleClasses.length} module classes to load`);
+    
+    // Use ModuleFactory to create all modules generically
+    for (const ModuleClass of moduleClasses) {
       try {
-        const calculatorModule = new CalculatorModule({ resourceManager, moduleFactory });
-        const calculatorTools = calculatorModule.getTools ? calculatorModule.getTools() : [];
+        console.log(`Loading module: ${ModuleClass.name}`);
         
-        for (const tool of calculatorTools) {
-          tools.push(convertToolToAgentFormat(tool, 'calculator'));
+        // Use ModuleFactory to create module with dependency injection
+        const moduleInstance = moduleFactory.createModule(ModuleClass);
+        
+        // Get tools from the module
+        const moduleTools = moduleInstance.getTools ? moduleInstance.getTools() : [];
+        
+        // Convert tools to agent format
+        for (const tool of moduleTools) {
+          const moduleName = ModuleClass.name.replace('Module', '').toLowerCase();
+          tools.push(convertToolToAgentFormat(tool, moduleName));
         }
         
-        console.log(`Loaded ${calculatorTools.length} calculator tools`);
-      } catch (error) {
-        console.warn('Failed to load calculator module:', error.message);
-      }
-    }
-    
-    // Create file module instance - temporarily disabled for testing
-    if (false && FileModule) {
-      try {
-        const fileModule = new FileModule({ resourceManager, moduleFactory });
-        const fileTools = fileModule.getTools ? fileModule.getTools() : [];
+        console.log(`Loaded ${moduleTools.length} tools from ${ModuleClass.name}`);
         
-        for (const tool of fileTools) {
-          tools.push(convertToolToAgentFormat(tool, 'file'));
-        }
-        
-        console.log(`Loaded ${fileTools.length} file tools`);
       } catch (error) {
-        console.warn('Failed to load file module:', error.message);
-        console.warn('Error details:', error.stack);
+        console.warn(`Failed to load module ${ModuleClass.name}:`, error.message);
       }
     }
     
@@ -128,6 +128,7 @@ async function loadTools(resourceManager, moduleFactory) {
     console.error('Make sure @jsenvoy/tools is properly installed');
   }
   
+  console.log(`Total tools loaded: ${tools.length}`);
   return tools;
 }
 
@@ -147,10 +148,16 @@ async function initializeAgent() {
     // Create module factory
     const moduleFactory = new ModuleFactory(resourceManager);
     
-    // Register default resources
+    // Register default resources for file operations
     resourceManager.register('basePath', process.cwd());
     resourceManager.register('encoding', 'utf8');
     resourceManager.register('createDirectories', true);
+    resourceManager.register('permissions', 0o755);
+    
+    // Register GitHub resources (optional - will be ignored if not available)
+    resourceManager.register('GITHUB_PAT', process.env.GITHUB_PAT || '');
+    resourceManager.register('GITHUB_ORG', process.env.GITHUB_ORG || '');
+    resourceManager.register('GITHUB_USER', process.env.GITHUB_USER || '');
     
     // Load tools
     const tools = await loadTools(resourceManager, moduleFactory);
