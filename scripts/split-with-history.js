@@ -3,7 +3,7 @@
  * Uses git subtree to maintain commit history for each package
  */
 
-import { ResourceManager } from '@jsenvoy/modules';
+import { ResourceManager } from '@jsenvoy/module-loader';
 import GitHubModule from '../packages/general-tools/src/github/GitHubModule.js';
 import path from 'path';
 import { promises as fs } from 'fs';

@@ -1,4 +1,4 @@
-import { ResourceManager, ModuleFactory } from '@jsenvoy/modules';
+import { ResourceManager, ModuleFactory } from '@jsenvoy/module-loader';
 import FileModule from './packages/general-tools/src/file/FileModule.js';
 import fs from 'fs/promises';
 

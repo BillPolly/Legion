@@ -2,7 +2,7 @@
  * Script to delete all repositories prefixed with "toolrunner-" from BillPolly org
  */
 
-import { ResourceManager, ModuleFactory } from '@jsenvoy/modules';
+import { ResourceManager, ModuleFactory } from '@jsenvoy/module-loader';
 import GitHubModule from '../packages/general-tools/src/github/GitHubModule.js';
 import https from 'https';
 

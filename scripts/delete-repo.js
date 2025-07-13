@@ -2,7 +2,7 @@
  * Script to delete a GitHub repository
  */
 
-import { ResourceManager, ModuleFactory } from '@jsenvoy/modules';
+import { ResourceManager, ModuleFactory } from '@jsenvoy/module-loader';
 import GitHubModule from '../packages/general-tools/src/github/GitHubModule.js';
 
 async function main() {

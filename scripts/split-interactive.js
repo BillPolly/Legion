@@ -3,7 +3,7 @@
  * Allows processing individual packages with manual verification at each stage
  */
 
-import { ResourceManager } from '@jsenvoy/modules';
+import { ResourceManager } from '@jsenvoy/module-loader';
 import GitHubModule from '../packages/general-tools/src/github/GitHubModule.js';
 import path from 'path';
 import { promises as fs } from 'fs';
