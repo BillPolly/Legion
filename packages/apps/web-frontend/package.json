@@ -4,7 +4,14 @@
   "description": "Modern web chat interface for jsEnvoy agents",
   "type": "module",
   "scripts": {
-    "start": "echo 'Frontend is served by web-backend. Run: npm start --workspace=@jsenvoy/web-backend'"
+    "start": "echo 'Frontend is served by web-backend. Run: npm start --workspace=@jsenvoy/web-backend'",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
   },
   "keywords": [
     "jsenvoy",
