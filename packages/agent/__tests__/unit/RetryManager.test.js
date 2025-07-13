@@ -5,11 +5,11 @@
 import { jest } from '@jest/globals';
 
 // Mock dependencies before importing
-jest.mock('@jsenvoy/response-parser');
+jest.mock('@jsenvoy/llm');
 
 // Import after mocking
 import { RetryManager } from '../../src/RetryManager.js';
-import { ResponseParser } from '@jsenvoy/response-parser';
+import { RobustJsonParser } from '@jsenvoy/llm';
 
 describe('RetryManager', () => {
   let mockParser;
@@ -19,11 +19,7 @@ describe('RetryManager', () => {
     jest.clearAllMocks();
     
     // Setup mock parser
-    mockParser = {
-      parse: jest.fn(),
-      validate: jest.fn()
-    };
-    ResponseParser.mockImplementation(() => mockParser);
+    RobustJsonParser.parseFromText = jest.fn();
     
     // Setup mock model
     mockModel = {

@@ -7,10 +7,10 @@ import { jest } from '@jest/globals';
 describe('RetryManager Simple Tests', () => {
   it('should be able to import RetryManager', async () => {
     // Mock dependencies first
-    jest.doMock('@jsenvoy/response-parser', () => ({
-      ResponseParser: jest.fn(() => ({
-        parse: jest.fn()
-      })),
+    jest.doMock('@jsenvoy/llm', () => ({
+      RobustJsonParser: {
+        parseFromText: jest.fn()
+      },
       ResponseValidator: jest.fn(() => ({
         validateResponse: jest.fn(),
         validateToolUse: jest.fn()
@@ -27,10 +27,10 @@ describe('RetryManager Simple Tests', () => {
   });
 
   it('should handle configuration options', async () => {
-    jest.doMock('@jsenvoy/response-parser', () => ({
-      ResponseParser: jest.fn(() => ({
-        parse: jest.fn()
-      })),
+    jest.doMock('@jsenvoy/llm', () => ({
+      RobustJsonParser: {
+        parseFromText: jest.fn()
+      },
       ResponseValidator: jest.fn(() => ({
         validateResponse: jest.fn(),
         validateToolUse: jest.fn()

@@ -9,9 +9,8 @@ jsEnvoy is a modular framework for building AI agent tools with consistent inter
 1. **@jsenvoy/modules** - Core infrastructure with base classes, dependency injection, and module management
 2. **@jsenvoy/cli** - Command-line interface for executing tools with REPL and autocomplete
 3. **@jsenvoy/tools** - Collection of AI agent tools (file operations, web tools, GitHub integration, etc.)
-4. **@jsenvoy/model-providers** - LLM provider integrations (OpenAI, DeepSeek, OpenRouter)
-5. **@jsenvoy/response-parser** - Response parsing and validation utilities
-6. **@jsenvoy/agent** - AI agent implementation with retry logic and tool execution
+4. **@jsenvoy/llm** - LLM client with multiple providers (OpenAI, Anthropic, DeepSeek, OpenRouter) and response parsing/validation
+5. **@jsenvoy/agent** - AI agent implementation with retry logic and tool execution
 
 ## Essential Commands
 
@@ -25,8 +24,7 @@ npm test
 npm run test:modules
 npm run test:cli
 npm run test:tools
-npm run test:model-providers
-npm run test:response-parser
+npm run test:llm
 npm run test:agent
 
 # Run tests in watch mode
@@ -101,12 +99,10 @@ packages/
 │   ├── github/        # GitHub API integration
 │   ├── json/          # JSON manipulation
 │   └── web/           # Web scraping and search
-├── model-providers/src/
-│   ├── openai/        # OpenAI integration
-│   ├── deepseek/      # DeepSeek integration
-│   └── openrouter/    # OpenRouter integration
-├── response-parser/src/
-│   └── parser/        # Response parsing logic
+├── llm/src/
+│   ├── providers/     # LLM provider implementations
+│   ├── validators/    # Response validation
+│   └── LLMClient.js   # Main client with retry logic
 └── agent/src/
     └── Agent.js       # Main agent implementation
 ```

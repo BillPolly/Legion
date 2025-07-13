@@ -2,7 +2,7 @@
  * Script to split a specific package with a specific step
  * Usage: node scripts/split-package.js <package> <step>
  * 
- * Packages: agent, modules, cli, tools, model-providers, response-parser
+ * Packages: agent, modules, cli, tools, response-parser
  * Steps: init, create, push, all
  */
 
@@ -38,11 +38,6 @@ const PACKAGES = {
     path: path.join(rootDir, 'packages/general-tools'),
     repoName: 'general-tools',
     description: 'Collection of AI agent tools (file operations, web tools, GitHub integration, etc.) for jsEnvoy'
-  },
-  'model-providers': {
-    path: path.join(rootDir, 'packages/model-providers'),
-    repoName: 'model-providers',
-    description: 'LLM provider integrations (OpenAI, DeepSeek, OpenRouter) for jsEnvoy'
   },
   'response-parser': {
     path: path.join(rootDir, 'packages/response-parser'),

@@ -52,7 +52,6 @@ Each package will be pushed to its own repository:
 - `BillPolly/jsenvoy-modules`
 - `BillPolly/jsenvoy-cli`
 - `BillPolly/jsenvoy-tools`
-- `BillPolly/jsenvoy-model-providers`
 - `BillPolly/jsenvoy-response-parser`
 - `BillPolly/jsenvoy-agent`
 

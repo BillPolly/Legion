@@ -27,17 +27,13 @@ Comprehensive tool collection:
 - 💻 **Development**: Code analysis, GitHub integration
 - 🎥 **Content**: YouTube transcripts, format conversion
 
-### [@jsenvoy/model-providers](packages/model-providers) - LLM Providers
-Multi-provider LLM support:
-- 🤖 **OpenAI**: GPT-4, GPT-3.5, function calling
-- 🧠 **DeepSeek**: DeepSeek Chat and Coder models
-- 🌐 **OpenRouter**: Access to multiple providers
+### [@jsenvoy/llm](packages/llm) - LLM Client with Retry Logic
+Robust LLM client with multiple providers:
+- 🤖 **Multiple Providers**: OpenAI, Anthropic, DeepSeek, OpenRouter
+- 🔄 **Retry Logic**: Automatic retry with exponential backoff
+- 📊 **Event Emission**: Track all interactions
+- 🔧 **Dual API**: Both prompt-based and message-based interfaces
 
-### [@jsenvoy/response-parser](packages/response-parser) - Response Processing
-Response handling utilities:
-- 📝 **Parsing**: Extract structured data from AI responses
-- ✅ **Validation**: Schema-based validation with Zod
-- 🔄 **Retry Management**: Smart retry with exponential backoff
 
 ### [@jsenvoy/agent](packages/agent) - AI Agent Implementation
 Complete agent system:
@@ -118,8 +114,6 @@ jsEnvoy/
 │   ├── core/              # Core infrastructure
 │   ├── cli/               # Command-line interface
 │   ├── tools/             # AI agent tools
-│   ├── model-providers/   # LLM providers
-│   ├── response-parser/   # Response processing
 │   └── agent/             # Agent implementation
 ├── docs/                  # Project documentation
 └── package.json           # Monorepo root
@@ -140,8 +134,7 @@ npm test
 npm run test:core
 npm run test:cli
 npm run test:tools
-npm run test:model-providers
-npm run test:response-parser
+npm run test:llm
 npm run test:agent
 
 # Run tests with coverage
@@ -170,7 +163,7 @@ const { Agent, Model, calculatorTool } = require('@jsenvoy/core');
 
 // New imports
 const { Agent } = require('@jsenvoy/agent');
-const { Model } = require('@jsenvoy/model-providers');
+const { LLMClient } = require('@jsenvoy/llm');
 const { calculatorTool } = require('@jsenvoy/tools');
 ```
 

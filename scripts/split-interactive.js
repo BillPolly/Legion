@@ -46,11 +46,6 @@ const PACKAGES = {
     repoName: 'general-tools',
     description: 'Collection of AI agent tools (file operations, web tools, GitHub integration, etc.) for jsEnvoy'
   },
-  'model-providers': {
-    path: path.join(rootDir, 'packages/model-providers'),
-    repoName: 'jsenvoy-model-providers',
-    description: 'LLM provider integrations (OpenAI, DeepSeek, OpenRouter) for jsEnvoy'
-  },
   'response-parser': {
     path: path.join(rootDir, 'packages/response-parser'),
     repoName: 'jsenvoy-response-parser',

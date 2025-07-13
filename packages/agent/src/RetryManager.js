@@ -1,4 +1,4 @@
-import { ResponseParser, ResponseValidator } from '@jsenvoy/response-parser';
+import { RobustJsonParser, ResponseValidator } from '@jsenvoy/llm';
 
 /**
  * Manages retry logic for LLM responses with error feedback
@@ -9,7 +9,6 @@ class RetryManager {
     this.backoffMultiplier = config.backoffMultiplier || 1000; // milliseconds
     this.tools = config.tools || [];
     
-    this.parser = new ResponseParser();
     this.validator = new ResponseValidator(this.tools);
   }
 
@@ -30,7 +29,21 @@ class RetryManager {
         const rawResponse = await model.sendAndReceiveResponse(currentMessages);
         
         // Parse the response
-        const parseResult = this.parser.parse(rawResponse);
+        let parseResult;
+        try {
+          const parsedData = RobustJsonParser.parseFromText(rawResponse);
+          parseResult = {
+            success: true,
+            data: parsedData,
+            error: null
+          };
+        } catch (parseError) {
+          parseResult = {
+            success: false,
+            data: null,
+            error: parseError.message
+          };
+        }
         
         if (!parseResult.success) {
           lastError = {

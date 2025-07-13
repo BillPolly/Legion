@@ -1,5 +1,5 @@
 import { ToolResult } from "@jsenvoy/modules";
-import { Model } from "@jsenvoy/model-providers";
+import { LLMClient } from "@jsenvoy/llm";
 import { getMasterPrompt } from "./lib/master-prompt.js";
 import ora from "ora";
 import { writeFile, appendFile } from "fs/promises";
@@ -39,9 +39,21 @@ class Agent {
       }
     }
 
-    // Initialize the model
-    this.model = new Model({ modelConfig: this.modelConfig });
-    this.model.initializeModel();
+    // Initialize the LLM client
+    // Convert modelConfig format to LLMClient format
+    const providerMap = {
+      'OPEN_AI': 'openai',
+      'DEEP_SEEK': 'deepseek',
+      'OPEN_ROUTER': 'openrouter'
+    };
+    
+    this.llmClient = new LLMClient({
+      provider: providerMap[this.modelConfig.provider] || this.modelConfig.provider.toLowerCase(),
+      apiKey: this.modelConfig.apiKey,
+      model: this.modelConfig.model,
+      maxRetries: this.maxRetries,
+      baseDelay: this.retryBackoff
+    });
 
     // Initialize retry manager with tools
     this.retryManager = new RetryManager({
@@ -110,7 +122,7 @@ class Agent {
     }
 
     // Use retry manager to get response
-    const result = await this.retryManager.processResponse(this.model, this.messages);
+    const result = await this.retryManager.processResponse(this.llmClient, this.messages);
 
     if (this._debugMode) {
       await appendFile("agentOut.txt", ` llm responded (retries: ${result.retries})\n`);

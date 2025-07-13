@@ -70,11 +70,6 @@ async function main() {
       description: 'Collection of AI agent tools (file operations, web tools, GitHub integration, etc.) for jsEnvoy'
     },
     {
-      path: path.join(rootDir, 'packages/model-providers'),
-      repoName: 'jsenvoy-model-providers',
-      description: 'LLM provider integrations (OpenAI, DeepSeek, OpenRouter) for jsEnvoy'
-    },
-    {
       path: path.join(rootDir, 'packages/response-parser'),
       repoName: 'jsenvoy-response-parser',
       description: 'Response parsing and validation utilities for jsEnvoy'

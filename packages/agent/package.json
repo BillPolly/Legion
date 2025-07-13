@@ -40,9 +40,8 @@
     "CHANGELOG.md"
   ],
   "dependencies": {
-    "@jsenvoy/model-providers": "*",
+    "@jsenvoy/llm": "*",
     "@jsenvoy/tools": "*",
-    "@jsenvoy/response-parser": "*",
     "@jsenvoy/modules": "*",
     "ora": "^5.4.0"
   },

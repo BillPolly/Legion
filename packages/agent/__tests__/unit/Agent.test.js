@@ -5,7 +5,7 @@
 import { jest } from '@jest/globals';
 
 // Mock dependencies before importing
-jest.mock('@jsenvoy/model-providers');
+jest.mock('@jsenvoy/llm');
 jest.mock('../../src/RetryManager.js');
 jest.mock('fs/promises', () => ({
   writeFile: jest.fn(),
@@ -22,20 +22,20 @@ jest.mock('ora', () => {
 import { Agent } from '../../src/Agent.js';
 import { RetryManager } from '../../src/RetryManager.js';
 import { ToolResult } from '@jsenvoy/modules';
-import { Model } from '@jsenvoy/model-providers';
+import { LLMClient } from '@jsenvoy/llm';
 
 describe('Agent', () => {
-  let mockModel;
+  let mockLLMClient;
   let mockRetryManager;
   
   beforeEach(() => {
     jest.clearAllMocks();
     
-    // Setup mock model
-    mockModel = {
-      initializeModel: jest.fn()
+    // Setup mock LLM client
+    mockLLMClient = {
+      sendAndReceiveResponse: jest.fn()
     };
-    Model.mockImplementation(() => mockModel);
+    LLMClient.mockImplementation(() => mockLLMClient);
     
     // Setup mock retry manager
     mockRetryManager = {

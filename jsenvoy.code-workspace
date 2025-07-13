@@ -19,14 +19,6 @@
     {
       "name": "📦 general-tools",
       "path": "packages/general-tools"
-    },
-    {
-      "name": "📦 model-providers",
-      "path": "packages/model-providers"
-    },
-    {
-      "name": "📦 response-parser",
-      "path": "packages/response-parser"
     }
   ],
   "settings": {
