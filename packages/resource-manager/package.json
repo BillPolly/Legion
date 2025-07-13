@@ -1,0 +1,55 @@
+{
+  "name": "@jsenvoy/resource-manager",
+  "version": "0.0.1",
+  "description": "Resource management system for jsEnvoy - handles process lifecycle, agent orchestration, and dependency management",
+  "type": "module",
+  "main": "./src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests --detectOpenHandles",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+  },
+  "keywords": [
+    "jsenvoy",
+    "resource",
+    "process",
+    "agent",
+    "orchestration",
+    "lifecycle"
+  ],
+  "author": "Anand Sukumaran",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BillPolly/jsenvoy-resource-manager.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "dependencies": {
+    "@jsenvoy/module-loader": "*"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/**/*.test.js"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.test.js",
+      "**/?(*.)+(spec|test).js"
+    ],
+    "testTimeout": 30000
+  }
+}
