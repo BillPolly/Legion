@@ -1,21 +1,138 @@
 /**
- * Simple agent interaction manager for WebSocket connections
- * Each connection gets its own agent instance
+ * Agent connection manager for WebSocket connections
+ * Each connection gets its own @jsenvoy/agent instance
  */
+import { Agent } from '@jsenvoy/agent';
+
 export class AgentConnection {
-    constructor(connectionId) {
+    constructor(connectionId, resourceManager, moduleFactory) {
         this.connectionId = connectionId;
+        this.resourceManager = resourceManager;
+        this.moduleFactory = moduleFactory;
         this.conversationHistory = [];
         this.createdAt = new Date();
+        this.agent = null;
         
         console.log(`🤖 Agent connection created: ${connectionId}`);
     }
     
     /**
-     * Process user message and generate response
+     * Initialize the agent with tools
+     */
+    async initializeAgent() {
+        if (this.agent) return; // Already initialized
+        
+        try {
+            // Load tools from @jsenvoy/tools package
+            const tools = [];
+            try {
+                const toolsPackage = await import('@jsenvoy/tools');
+                
+                // Get all module classes (they end with 'Module')
+                const moduleClasses = Object.values(toolsPackage).filter(
+                    exportedItem => typeof exportedItem === 'function' && 
+                                  exportedItem.name && 
+                                  exportedItem.name.endsWith('Module')
+                );
+                
+                console.log(`Loading ${moduleClasses.length} modules for connection ${this.connectionId}`);
+                
+                // Instantiate each module
+                for (const ModuleClass of moduleClasses) {
+                    const moduleName = ModuleClass.name.replace('Module', '').toLowerCase();
+                    const moduleInstance = this.moduleFactory.createModule(ModuleClass);
+                    
+                    // Get tools from module
+                    if (moduleInstance.tools && Array.isArray(moduleInstance.tools)) {
+                        moduleInstance.tools.forEach(tool => {
+                            // Convert tool to agent format
+                            const agentTool = this.convertToolToAgentFormat(tool, moduleName);
+                            tools.push(agentTool);
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading tools:', error);
+                // Continue without tools if loading fails
+            }
+            
+            // Create agent configuration
+            const agentConfig = {
+                name: `chat_agent_${this.connectionId}`,
+                bio: "I am a helpful AI assistant powered by jsEnvoy. I can help with various tasks including calculations, file operations, and web searches.",
+                steps: ["Understand the user's request", "Use available tools if needed", "Provide a helpful response"],
+                modelConfig: {
+                    provider: this.resourceManager.has('env.MODEL_PROVIDER') ? this.resourceManager.get('env.MODEL_PROVIDER') : 'OPEN_AI',
+                    apiKey: this.resourceManager.get('env.OPENAI_API_KEY'),
+                    model: this.resourceManager.has('env.MODEL_NAME') ? this.resourceManager.get('env.MODEL_NAME') : 'gpt-4'
+                },
+                tools: tools,
+                showToolUsage: true,
+                responseStructure: null // Use default string response
+            };
+            
+            // Create the agent
+            this.agent = new Agent(agentConfig);
+            console.log(`✅ Agent initialized for connection ${this.connectionId} with ${tools.length} tools`);
+            
+        } catch (error) {
+            console.error(`Error initializing agent for ${this.connectionId}:`, error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Convert jsEnvoy tool to agent format
+     */
+    convertToolToAgentFormat(tool, moduleName) {
+        const identifier = `${moduleName}_${tool.name}`;
+        const abilities = [tool.description];
+        const instructions = [`Use this tool to ${tool.description}`];
+        
+        // Get functions from tool
+        let functions = [];
+        if (typeof tool.getAllToolDescriptions === 'function') {
+            const toolDescs = tool.getAllToolDescriptions();
+            functions = toolDescs.map(desc => ({
+                name: desc.function.name,
+                purpose: desc.function.description,
+                arguments: Object.keys(desc.function.parameters.properties || {}),
+                response: 'object'
+            }));
+        } else if (typeof tool.getToolDescription === 'function') {
+            const toolDesc = tool.getToolDescription();
+            functions = [{
+                name: toolDesc.function.name,
+                purpose: toolDesc.function.description,
+                arguments: Object.keys(toolDesc.function.parameters.properties || {}),
+                response: 'object'
+            }];
+        }
+        
+        // Create agent-compatible tool
+        return {
+            name: tool.name,
+            identifier,
+            abilities,
+            instructions,
+            functions,
+            // Keep reference to original tool for execution
+            invoke: tool.invoke?.bind(tool),
+            safeInvoke: tool.safeInvoke?.bind(tool),
+            setExecutingAgent: () => {} // Required by Agent
+        };
+    }
+    
+    /**
+     * Process user message and generate response using the real agent
      */
     async processMessage(content) {
         console.log(`📝 Processing message for ${this.connectionId}: "${content}"`);
+        
+        // Initialize agent on first message
+        if (!this.agent) {
+            await this.initializeAgent();
+        }
         
         // Add user message to history
         this.conversationHistory.push({
@@ -24,147 +141,44 @@ export class AgentConnection {
             timestamp: new Date().toISOString()
         });
         
-        // Simulate thinking time
-        await this.simulateThinking();
-        
-        // Generate response based on content
-        const response = this.generateResponse(content);
-        
-        // Add agent response to history
-        this.conversationHistory.push({
-            role: 'agent',
-            content: response,
-            timestamp: new Date().toISOString()
-        });
-        
-        console.log(`✅ Generated response for ${this.connectionId}: "${response}"`);
-        return response;
-    }
-    
-    /**
-     * Generate contextual response
-     */
-    generateResponse(userMessage) {
-        const lowerMessage = userMessage.toLowerCase();
-        
-        // Greeting responses
-        if (lowerMessage.match(/^(hi|hello|hey|greetings)/)) {
-            return this.getRandomResponse([
-                "Hello! I'm jsEnvoy Assistant. How can I help you today?",
-                "Hi there! What would you like to chat about?",
-                "Hey! I'm here and ready to assist you.",
-                "Greetings! How may I be of service?"
-            ]);
-        }
-        
-        // Name/identity questions
-        if (lowerMessage.includes('your name') || lowerMessage.includes('who are you')) {
-            return "I'm jsEnvoy Assistant, an AI agent designed to help with various tasks. I can chat, answer questions, and assist with different topics.";
-        }
-        
-        // Capability questions
-        if (lowerMessage.includes('what can you do') || lowerMessage.includes('help me with')) {
-            return "I can assist you with various tasks such as answering questions, having conversations, providing explanations, helping with problem-solving, and much more. What would you like to explore?";
-        }
-        
-        // Math operations
-        if (lowerMessage.match(/(\d+\s*[\+\-\*\/]\s*\d+)/)) {
-            return this.handleMathOperation(userMessage);
-        }
-        
-        // Time/date questions
-        if (lowerMessage.includes('time') || lowerMessage.includes('date')) {
-            const now = new Date();
-            return `The current time is ${now.toLocaleTimeString()} and today's date is ${now.toLocaleDateString()}.`;
-        }
-        
-        // Weather (simulated)
-        if (lowerMessage.includes('weather')) {
-            return this.getRandomResponse([
-                "I don't have access to real-time weather data, but I hope it's nice where you are!",
-                "Weather looks great for a chat! ☀️ (I don't actually have weather data, but I'm optimistic!)",
-                "I wish I could check the weather for you, but I'm not connected to weather services right now."
-            ]);
-        }
-        
-        // Jokes
-        if (lowerMessage.includes('joke') || lowerMessage.includes('funny')) {
-            return this.getRandomResponse([
-                "Why don't scientists trust atoms? Because they make up everything! 😄",
-                "I told my computer a joke about UDP... I'm not sure if it got it. 🤓",
-                "Why do programmers prefer dark mode? Because light attracts bugs! 🐛",
-                "What's the best thing about Switzerland? I don't know, but the flag is a big plus! ➕"
-            ]);
-        }
-        
-        // Goodbyes
-        if (lowerMessage.match(/^(bye|goodbye|see you|farewell)/)) {
-            return this.getRandomResponse([
-                "Goodbye! It was great chatting with you. Come back anytime!",
-                "See you later! Have a wonderful day!",
-                "Farewell! Thanks for the conversation!",
-                "Bye! Feel free to return whenever you'd like to chat."
-            ]);
-        }
-        
-        // Context-aware responses based on conversation history
-        if (this.conversationHistory.length > 2) {
-            const recentUserMessages = this.conversationHistory
-                .filter(msg => msg.role === 'user')
-                .slice(-3)
-                .map(msg => msg.content);
-            
-            if (recentUserMessages.some(msg => msg.toLowerCase().includes('thank'))) {
-                return "You're very welcome! Is there anything else I can help you with?";
-            }
-        }
-        
-        // Default responses for general conversation
-        return this.getRandomResponse([
-            "That's interesting! Can you tell me more about that?",
-            "I see what you mean. What are your thoughts on this?",
-            "That's a great point. How did you come to that conclusion?",
-            "Thanks for sharing that with me. What would you like to explore next?",
-            "I appreciate you bringing that up. How can I help you with this topic?",
-            "That's worth considering. What aspects interest you most?",
-            "I understand. What other questions do you have?",
-            "That makes sense. Is there a particular angle you'd like to discuss?"
-        ]);
-    }
-    
-    /**
-     * Handle basic math operations
-     */
-    handleMathOperation(message) {
         try {
-            // Extract math expression (simple approach for demo)
-            const match = message.match(/(\d+\s*[\+\-\*\/]\s*\d+)/);
-            if (match) {
-                const expression = match[1];
-                // Simple evaluation (in real app, use a proper math parser)
-                const result = eval(expression.replace(/[^0-9+\-*/\s]/g, ''));
-                return `The answer to ${expression} is ${result}.`;
+            // Use the agent to process the message
+            const response = await this.agent.run(content);
+            
+            // Extract the message from the response
+            let responseMessage;
+            if (typeof response === 'string') {
+                responseMessage = response;
+            } else if (response && response.message) {
+                responseMessage = response.message;
+            } else {
+                responseMessage = JSON.stringify(response);
             }
+            
+            // Add agent response to history
+            this.conversationHistory.push({
+                role: 'agent',
+                content: responseMessage,
+                timestamp: new Date().toISOString()
+            });
+            
+            console.log(`✅ Generated response for ${this.connectionId}: "${responseMessage}"`);
+            return responseMessage;
+            
         } catch (error) {
-            return "I noticed you mentioned some numbers, but I couldn't calculate that. Could you try asking again?";
+            console.error(`Error processing message for ${this.connectionId}:`, error);
+            
+            // Fallback to a simple response if agent fails
+            const errorMessage = `I apologize, but I encountered an error while processing your request: ${error.message}. Please try again.`;
+            
+            this.conversationHistory.push({
+                role: 'agent',
+                content: errorMessage,
+                timestamp: new Date().toISOString()
+            });
+            
+            return errorMessage;
         }
-        
-        return "I see some math in your message, but I'm not sure how to calculate it. Can you rephrase?";
-    }
-    
-    /**
-     * Get random response from array
-     */
-    getRandomResponse(responses) {
-        return responses[Math.floor(Math.random() * responses.length)];
-    }
-    
-    /**
-     * Simulate thinking/processing time
-     */
-    async simulateThinking() {
-        const delay = 500 + Math.random() * 1500; // 0.5-2 seconds
-        await new Promise(resolve => setTimeout(resolve, delay));
     }
     
     /**

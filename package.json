@@ -36,7 +36,12 @@
     "chat": "npm start --workspace=@jsenvoy/web-backend",
     "dev:frontend": "echo 'Frontend served by backend at http://localhost:3000'",
     "dev:backend": "npm start --workspace=@jsenvoy/web-backend",
-    "dev:chat": "npm start --workspace=@jsenvoy/web-backend"
+    "dev:chat": "npm start --workspace=@jsenvoy/web-backend",
+    "server": "node scripts/start-webserver.js",
+    "server:start": "node scripts/start-webserver.js",
+    "server:kill": "node scripts/kill-port.js 3000",
+    "server:force-kill": "node scripts/kill-port.js 3000 --force",
+    "kill-port": "node scripts/kill-port.js"
   },
   "devDependencies": {
     "eslint": "^8.56.0",

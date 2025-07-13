@@ -7,6 +7,7 @@ import { createServer } from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { WebSocketHandler } from './websocket-handler.js';
+import { ResourceManager, ModuleFactory } from '@jsenvoy/module-loader';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,13 +16,10 @@ class ChatServer {
     constructor() {
         this.app = express();
         this.server = createServer(this.app);
-        this.wsHandler = new WebSocketHandler(this.server);
+        this.resourceManager = null;
+        this.moduleFactory = null;
+        this.wsHandler = null;
         this.port = process.env.PORT || 3000;
-        
-        this.setupMiddleware();
-        this.setupRoutes();
-        this.setupWebSocket();
-        this.setupErrorHandling();
     }
     
     /**
@@ -130,9 +128,38 @@ class ChatServer {
     }
     
     /**
+     * Initialize resources and module factory
+     */
+    async initializeResources() {
+        // Initialize ResourceManager
+        this.resourceManager = new ResourceManager();
+        await this.resourceManager.initialize(); // This loads .env file
+        
+        // Create module factory
+        this.moduleFactory = new ModuleFactory(this.resourceManager);
+        
+        // Register default resources
+        this.resourceManager.register('basePath', process.cwd());
+        this.resourceManager.register('encoding', 'utf8');
+        this.resourceManager.register('createDirectories', true);
+        this.resourceManager.register('permissions', 0o755);
+        
+        // Register GitHub resources (get from env if available)
+        this.resourceManager.register('GITHUB_PAT', this.resourceManager.has('env.GITHUB_PAT') ? this.resourceManager.get('env.GITHUB_PAT') : '');
+        this.resourceManager.register('GITHUB_ORG', this.resourceManager.has('env.GITHUB_ORG') ? this.resourceManager.get('env.GITHUB_ORG') : '');
+        this.resourceManager.register('GITHUB_USER', this.resourceManager.has('env.GITHUB_USER') ? this.resourceManager.get('env.GITHUB_USER') : '');
+        
+        // Now create WebSocketHandler with resources
+        this.wsHandler = new WebSocketHandler(this.server, this.resourceManager, this.moduleFactory);
+        
+        // Update port from env if available
+        this.port = this.resourceManager.has('env.PORT') ? this.resourceManager.get('env.PORT') : 3000;
+    }
+    
+    /**
      * Start the server
      */
-    start() {
+    async start() {
         return new Promise((resolve, reject) => {
             this.server.listen(this.port, (error) => {
                 if (error) {
@@ -188,10 +215,19 @@ class ChatServer {
 if (import.meta.url === `file://${process.argv[1]}`) {
     const server = new ChatServer();
     
-    server.start().catch((error) => {
-        console.error('❌ Failed to start server:', error);
-        process.exit(1);
-    });
+    (async () => {
+        try {
+            await server.initializeResources();
+            server.setupMiddleware();
+            server.setupRoutes();
+            server.setupWebSocket();
+            server.setupErrorHandling();
+            await server.start();
+        } catch (error) {
+            console.error('❌ Failed to start server:', error);
+            process.exit(1);
+        }
+    })();
 }
 
 export { ChatServer };

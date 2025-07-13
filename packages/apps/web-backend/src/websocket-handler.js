@@ -6,8 +6,10 @@ import { WebSocketServer } from 'ws';
 import { AgentConnection } from './agent-connection.js';
 
 export class WebSocketHandler {
-    constructor(server) {
+    constructor(server, resourceManager, moduleFactory) {
         this.server = server;
+        this.resourceManager = resourceManager;
+        this.moduleFactory = moduleFactory;
         this.wss = null;
         this.connections = new Map(); // connectionId -> { ws, agent }
         this.connectionCounter = 0;
@@ -38,8 +40,8 @@ export class WebSocketHandler {
         
         console.log(`📡 New WebSocket connection: ${connectionId} from ${clientIP}`);
         
-        // Create agent instance for this connection
-        const agent = new AgentConnection(connectionId);
+        // Create agent instance for this connection with shared resources
+        const agent = new AgentConnection(connectionId, this.resourceManager, this.moduleFactory);
         
         // Store connection
         this.connections.set(connectionId, { ws, agent });

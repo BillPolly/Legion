@@ -186,3 +186,4 @@ packages/
 - Model providers require respective API keys
 - File operations are sandboxed by default
 - Web tools use Puppeteer for browser automation
+- Keep all directories clean, never leave files around, always use nice directory structure

@@ -46,6 +46,22 @@ npm run split:history
 - Creates GitHub repositories and pushes with preserved history
 - Cleans up temporary files after completion
 
+#### 4. Add Single Package (Hierarchical Support)
+```bash
+node scripts/add-hierarchical-package-to-polyrepo.js <package-path> <repo-name> [--keep-name]
+```
+**Examples:**
+- `node scripts/add-hierarchical-package-to-polyrepo.js apps/web-frontend web-frontend`
+- `node scripts/add-hierarchical-package-to-polyrepo.js apps/web-backend web-backend`
+- `node scripts/add-hierarchical-package-to-polyrepo.js llm llm --keep-name`
+
+**Parameters:**
+- `package-path`: Relative path from packages/ (supports hierarchical structure)
+- `repo-name`: Name of the GitHub repository to create
+- `--keep-name`: Use repo-name as-is instead of adding jsenvoy- prefix
+
+This script supports any hierarchical package structure (e.g., `packages/apps/*`, `packages/tools/*`, etc.)
+
 ### What Gets Created
 
 Each package will be pushed to its own repository:
