@@ -1,4 +1,4 @@
-import ResourceManager from './ResourceManager.js';
+import ResourceManager from '../resources/ResourceManager.js';
 
 /**
  * Factory for creating modules with dependency injection

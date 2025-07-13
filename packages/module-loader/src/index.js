@@ -6,10 +6,10 @@
  */
 
 // Export core infrastructure
-export { default as ResourceManager } from "./ResourceManager.js";
-export { ModuleFactory } from "./ModuleFactory.js";
+export { default as ResourceManager } from "./resources/ResourceManager.js";
+export { ModuleFactory } from "./module/ModuleFactory.js";
 
 // Export base classes
-export { default as Tool } from "./Tool.js";
-export { default as ToolResult } from "./ToolResult.js";
-export { Module } from "./Module.js";
+export { default as Tool } from "./tool/Tool.js";
+export { default as ToolResult } from "./tool/ToolResult.js";
+export { Module } from "./module/Module.js";

@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
-import { ModuleFactory } from '../src/ModuleFactory.js';
-import ResourceManager from '../src/ResourceManager.js';
-import { Module } from '../src/Module.js';
+import { ModuleFactory } from '../src/module/ModuleFactory.js';
+import ResourceManager from '../src/resources/ResourceManager.js';
+import { Module } from '../src/module/Module.js';
 
 // Test modules
 class SimpleModule extends Module {

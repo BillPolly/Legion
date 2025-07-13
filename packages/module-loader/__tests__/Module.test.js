@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
-import { Module } from '../src/Module.js';
-import Tool from '../src/Tool.js';
+import { Module } from '../src/module/Module.js';
+import Tool from '../src/tool/Tool.js';
 
 // Mock tools for testing
 class MockTool1 extends Tool {
