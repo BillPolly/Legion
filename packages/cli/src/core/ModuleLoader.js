@@ -5,6 +5,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { ModuleFactory } from '@jsenvoy/module-loader';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,7 +15,13 @@ export class ModuleLoader {
     this.modules = new Map();
     this.moduleClasses = new Map();
     this.moduleInstances = new Map();
+    this.jsonModules = new Map(); // Track which modules are JSON-based
     this.resourceManager = resourceManager;
+    this.moduleFactory = null;
+    
+    if (resourceManager) {
+      this.moduleFactory = new ModuleFactory(resourceManager);
+    }
   }
 
   /**
@@ -52,6 +59,11 @@ export class ModuleLoader {
    */
   async loadModule(moduleFile, options = {}) {
     try {
+      // Check if it's a JSON module
+      if (moduleFile.endsWith('module.json')) {
+        return await this.loadJsonModule(moduleFile, options);
+      }
+      
       // Import the module class (ES modules)
       const moduleExports = await import(`file://${moduleFile}`);
       const ModuleClass = moduleExports.default;
@@ -90,7 +102,8 @@ export class ModuleLoader {
         className: ModuleClass.name,
         dependencies: ModuleClass.dependencies || [],
         tools: tools,
-        functionCount: functionCount
+        functionCount: functionCount,
+        isJsonModule: false
       };
       
       this.modules.set(moduleName, moduleInfo);
@@ -98,6 +111,61 @@ export class ModuleLoader {
     } catch (error) {
       if (options.verbose) {
         console.error(`Failed to load module from ${moduleFile}:`, error.message);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Load a JSON module
+   * @param {string} jsonFile - Path to module.json file
+   * @param {object} options - Loading options
+   */
+  async loadJsonModule(jsonFile, options = {}) {
+    if (!this.moduleFactory) {
+      throw new Error('ModuleFactory not initialized. ResourceManager required for JSON modules.');
+    }
+
+    try {
+      // Use ModuleFactory to create the module
+      const moduleDir = path.dirname(jsonFile);
+      const moduleInstance = await this.moduleFactory.createModuleAuto(moduleDir);
+      
+      // Get module name
+      const moduleName = moduleInstance.name || path.basename(moduleDir);
+      
+      // Store the instance for later use
+      this.moduleInstances.set(moduleName, moduleInstance);
+      this.jsonModules.set(moduleName, true);
+      
+      // Get tools
+      const tools = moduleInstance.getTools ? moduleInstance.getTools() : [];
+      
+      // Count functions
+      let functionCount = 0;
+      for (const tool of tools) {
+        if (typeof tool.getAllToolDescriptions === 'function') {
+          functionCount += tool.getAllToolDescriptions().length;
+        } else {
+          functionCount += 1;
+        }
+      }
+      
+      // Store module metadata
+      const moduleInfo = {
+        name: moduleName,
+        className: moduleInstance.constructor.name,
+        dependencies: moduleInstance.dependencies ? Object.keys(moduleInstance.dependencies) : [],
+        tools: tools,
+        functionCount: functionCount,
+        isJsonModule: true
+      };
+      
+      this.modules.set(moduleName, moduleInfo);
+      
+    } catch (error) {
+      if (options.verbose) {
+        console.error(`Failed to load JSON module from ${jsonFile}:`, error.message);
       }
       throw error;
     }
@@ -155,15 +223,27 @@ export class ModuleLoader {
       
       for (const entry of entries) {
         if (entry.isDirectory()) {
-          // Look for Module.js files in subdirectories
+          // Look for Module.js and module.json files in subdirectories
           const subPath = path.join(modulesPath, entry.name);
           const subFiles = await fs.readdir(subPath);
+          
+          let hasModuleJs = false;
+          let hasModuleJson = false;
           
           for (const file of subFiles) {
             if (file.endsWith('Module.js')) {
               const fullPath = path.join(subPath, file);
               moduleFiles.push(fullPath);
+              hasModuleJs = true;
+            } else if (file === 'module.json') {
+              hasModuleJson = true;
             }
+          }
+          
+          // Only add module.json if there's no Module.js (Module.js takes precedence)
+          if (!hasModuleJs && hasModuleJson) {
+            const jsonPath = path.join(subPath, 'module.json');
+            moduleFiles.push(jsonPath);
           }
         }
       }
@@ -183,6 +263,15 @@ export class ModuleLoader {
     // Check cache first
     if (this.moduleInstances.has(moduleName)) {
       return this.moduleInstances.get(moduleName);
+    }
+    
+    // Check if it's a JSON module (already instantiated during load)
+    if (this.jsonModules.has(moduleName)) {
+      const instance = this.moduleInstances.get(moduleName);
+      if (!instance) {
+        throw new Error(`JSON module '${moduleName}' not properly loaded`);
+      }
+      return instance;
     }
     
     // Get module class
@@ -284,6 +373,9 @@ export class ModuleLoader {
    */
   setResourceManager(resourceManager) {
     this.resourceManager = resourceManager;
+    if (resourceManager) {
+      this.moduleFactory = new ModuleFactory(resourceManager);
+    }
   }
 }
 

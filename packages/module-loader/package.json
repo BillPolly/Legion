@@ -19,7 +19,9 @@
   ],
   "author": "Anand Sukumaran",
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "moment": "^2.30.1"
+  },
   "devDependencies": {
     "jest": "^29.7.0"
   },

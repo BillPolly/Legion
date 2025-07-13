@@ -1,0 +1,179 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://jsenvoy.dev/schemas/module.json",
+  "title": "jsEnvoy Module Configuration",
+  "description": "Schema for jsEnvoy JSON module configuration files",
+  "type": "object",
+  "required": ["name", "version", "description", "package", "type", "tools"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON schema reference"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Module identifier (lowercase, hyphens)"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+.*$",
+      "description": "Module version (semver)"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable module description"
+    },
+    "package": {
+      "type": "string",
+      "minLength": 1,
+      "description": "npm package name or path to local module"
+    },
+    "packageVersion": {
+      "type": "string",
+      "description": "npm package version constraint"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["constructor", "factory", "singleton", "static"],
+      "description": "Library initialization type"
+    },
+    "dependencies": {
+      "type": "object",
+      "description": "Resource dependencies required by the module",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["type", "description"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["string", "number", "boolean", "object", "array"],
+            "description": "Dependency type"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the dependency"
+          },
+          "required": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether this dependency is required"
+          },
+          "default": {
+            "description": "Default value if not provided"
+          }
+        }
+      }
+    },
+    "initialization": {
+      "type": "object",
+      "description": "Library initialization configuration",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["constructor", "factory", "singleton", "static"],
+          "description": "Initialization method type"
+        },
+        "method": {
+          "type": "string",
+          "description": "Factory method name (for factory type)"
+        },
+        "config": {
+          "type": "object",
+          "description": "Configuration object passed to initializer"
+        },
+        "treatAsConstructor": {
+          "type": "boolean",
+          "description": "Treat factory function as constructor"
+        }
+      }
+    },
+    "tools": {
+      "type": "array",
+      "description": "Tool definitions",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": ["name", "description", "function"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "description": "Tool identifier"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Tool description"
+          },
+          "function": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Library function name or path"
+          },
+          "async": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether the function is async"
+          },
+          "instanceMethod": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether it's an instance method vs static"
+          },
+          "parameters": {
+            "type": "object",
+            "description": "OpenAI function calling parameter schema",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["object"],
+                "description": "Parameter type (always object for function calling)"
+              },
+              "properties": {
+                "type": "object",
+                "description": "Parameter properties"
+              },
+              "required": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Required parameter names"
+              }
+            }
+          },
+          "output": {
+            "type": "object",
+            "description": "Output schemas",
+            "properties": {
+              "success": {
+                "type": "object",
+                "description": "Success output schema"
+              },
+              "failure": {
+                "type": "object",
+                "description": "Failure output schema"
+              }
+            }
+          },
+          "resultMapping": {
+            "type": "object",
+            "description": "Result transformation configuration",
+            "properties": {
+              "success": {
+                "type": "object",
+                "description": "JSONPath mappings for success results"
+              },
+              "transform": {
+                "type": "string",
+                "description": "Special transform type"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

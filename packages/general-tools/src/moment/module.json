@@ -1,0 +1,93 @@
+{
+  "name": "moment",
+  "version": "1.0.0",
+  "description": "Date and time manipulation library",
+  "package": "moment",
+  "type": "factory",
+  "dependencies": [],
+  "initialization": {
+    "treatAsConstructor": true
+  },
+  "tools": [
+    {
+      "name": "format_date",
+      "description": "Format a date using moment.js",
+      "function": "format",
+      "instanceMethod": true,
+      "async": false,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Date string to format"
+          },
+          "format": {
+            "type": "string",
+            "description": "Format string (e.g., 'YYYY-MM-DD')",
+            "default": "YYYY-MM-DD"
+          }
+        },
+        "required": ["date"]
+      },
+      "resultMapping": {
+        "success": {
+          "formatted": "$"
+        }
+      }
+    },
+    {
+      "name": "add_time",
+      "description": "Add time to a date",
+      "function": "add",
+      "instanceMethod": true,
+      "async": false,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Date string"
+          },
+          "amount": {
+            "type": "number",
+            "description": "Amount to add"
+          },
+          "unit": {
+            "type": "string",
+            "description": "Unit (days, hours, minutes, etc.)",
+            "default": "days"
+          }
+        },
+        "required": ["date", "amount"]
+      },
+      "resultMapping": {
+        "success": {
+          "result": "$"
+        }
+      }
+    },
+    {
+      "name": "is_valid_date",
+      "description": "Check if a date string is valid",
+      "function": "isValid",
+      "instanceMethod": true,
+      "async": false,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Date string to validate"
+          }
+        },
+        "required": ["date"]
+      },
+      "resultMapping": {
+        "success": {
+          "isValid": "$"
+        }
+      }
+    }
+  ]
+}

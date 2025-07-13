@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { ModuleLoader } from '../../src/core/ModuleLoader.js';
+import ResourceManager from '../../../module-loader/src/resources/ResourceManager.js';
 
 describe('ModuleLoader', () => {
   let moduleLoader;
@@ -108,11 +109,12 @@ describe('ModuleLoader', () => {
 
   describe('setResourceManager', () => {
     it('should set resource manager', () => {
-      const mockResourceManager = { register: jest.fn() };
+      const resourceManager = new ResourceManager();
       
-      moduleLoader.setResourceManager(mockResourceManager);
+      moduleLoader.setResourceManager(resourceManager);
       
-      expect(moduleLoader.resourceManager).toBe(mockResourceManager);
+      expect(moduleLoader.resourceManager).toBe(resourceManager);
+      expect(moduleLoader.moduleFactory).toBeDefined();
     });
   });
 
