@@ -12,18 +12,18 @@ Core infrastructure for building modular tool systems. This package provides the
 ## Key Components
 
 - `Tool` - Base class for tools that follow standard function calling format
-- `ModularTool` - Base class for tools with dependency injection support
 - `Module` - Container for related tools  
 - `ResourceManager` - Dependency injection container
 - `ModuleFactory` - Creates modules with dependency resolution
+- `ToolResult` - Standard result type for tool execution
 
 ## Usage
 
 ```javascript
-const { Tool, ModularTool, Module, ResourceManager, ModuleFactory } = require('@jsenvoy/module-loader');
+const { Tool, Module, ResourceManager, ModuleFactory, ToolResult } = require('@jsenvoy/module-loader');
 
 // Create a tool
-class MyTool extends ModularTool {
+class MyTool extends Tool {
   constructor() {
     super();
     this.name = 'my_tool';

@@ -18,7 +18,7 @@ class Module {
 
   /**
    * Get all tools provided by this module
-   * @returns {Array<ModularTool>} Array of tools
+   * @returns {Array<Tool>} Array of tools
    */
   getTools() {
     return this.tools;

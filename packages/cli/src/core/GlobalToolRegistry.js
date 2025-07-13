@@ -110,7 +110,7 @@ export class GlobalToolRegistry {
         this.shortNameMap.set(toolName, functionName);
       }
     }
-    // Handle ModularTool instances
+    // Handle Tool instances
     else if (tool.name) {
       const toolName = tool.name;
       

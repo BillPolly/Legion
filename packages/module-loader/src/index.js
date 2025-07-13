@@ -13,4 +13,3 @@ export { ModuleFactory } from "./ModuleFactory.js";
 export { default as Tool } from "./Tool.js";
 export { default as ToolResult } from "./ToolResult.js";
 export { Module } from "./Module.js";
-export { ModularTool } from "./ModularTool.js";

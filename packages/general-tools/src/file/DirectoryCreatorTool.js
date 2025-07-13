@@ -1,31 +1,16 @@
-import { ModularTool } from '@jsenvoy/module-loader';
+import { Tool, ToolResult } from '@jsenvoy/module-loader';
 import { promises as fs } from 'fs';
 import path from 'path';
 
 /**
  * Tool for creating directories in the file system
  */
-class DirectoryCreatorTool extends ModularTool {
+class DirectoryCreatorTool extends Tool {
   constructor({ basePath, permissions = 0o755 }) {
     super();
     this.name = 'directory_creator';
     this.shortName = 'mkdir';
     this.description = 'Creates directories in the file system';
-    this.parameters = {
-      type: 'object',
-      properties: {
-        directoryPath: {
-          type: 'string',
-          description: 'The path of the directory to create'
-        },
-        recursive: {
-          type: 'boolean',
-          description: 'Whether to create parent directories if they don\'t exist (default: true)',
-          default: true
-        }
-      },
-      required: ['directoryPath']
-    };
 
     // Store dependencies
     this.basePath = basePath;
@@ -33,30 +18,104 @@ class DirectoryCreatorTool extends ModularTool {
   }
 
   /**
-   * Execute the directory creator tool
-   * @param {Object} args - The arguments
-   * @param {string} args.directoryPath - The path of the directory to create
-   * @param {boolean} args.recursive - Whether to create parent directories (default: true)
-   * @returns {Promise<Object>} The creation result
+   * Returns the tool description in standard function calling format
    */
-  async execute({ directoryPath, recursive = true } = {}) {
-    try {
-      // Validate input
-      if (directoryPath === undefined) {
-        throw new Error('Directory path is required');
+  getToolDescription() {
+    return {
+      type: 'function',
+      function: {
+        name: 'directory_creator',
+        description: 'Creates directories in the file system',
+        parameters: {
+          type: 'object',
+          properties: {
+            directoryPath: {
+              type: 'string',
+              description: 'The path of the directory to create'
+            },
+            recursive: {
+              type: 'boolean',
+              description: 'Whether to create parent directories if they don\'t exist (default: true)',
+              default: true
+            }
+          },
+          required: ['directoryPath']
+        },
+        output: {
+          success: {
+            type: 'object',
+            properties: {
+              path: {
+                type: 'string',
+                description: 'The resolved path of the created directory'
+              },
+              created: {
+                type: 'boolean',
+                description: 'Whether a new directory was created (false if it already existed)'
+              }
+            },
+            required: ['path', 'created']
+          },
+          failure: {
+            type: 'object',
+            properties: {
+              directoryPath: {
+                type: 'string',
+                description: 'The path that was attempted'
+              },
+              errorType: {
+                type: 'string',
+                enum: ['invalid_path', 'access_denied', 'path_exists_not_dir', 'parent_not_found', 'permission_denied', 'create_error'],
+                description: 'The type of error that occurred'
+              },
+              details: {
+                type: 'string',
+                description: 'Additional error details'
+              }
+            },
+            required: ['directoryPath', 'errorType']
+          }
+        }
       }
+    };
+  }
 
+  /**
+   * Invoke the directory creator tool
+   * @param {Object} toolCall - The tool call from the LLM
+   * @returns {Promise<ToolResult>} The result of creating the directory
+   */
+  async invoke(toolCall) {
+    try {
+      // Parse the arguments
+      const args = this.parseArguments(toolCall.function.arguments);
+      
+      // Validate required parameters
+      this.validateRequiredParameters(args, ['directoryPath']);
+
+      const { directoryPath, recursive = true } = args;
+
+      // Validate input
       if (typeof directoryPath !== 'string') {
-        throw new Error('Directory path must be a string');
+        return ToolResult.failure('Directory path must be a string', {
+          directoryPath: String(directoryPath),
+          errorType: 'invalid_path'
+        });
       }
 
       if (directoryPath.trim() === '') {
-        throw new Error('Directory path cannot be empty');
+        return ToolResult.failure('Directory path cannot be empty', {
+          directoryPath: directoryPath,
+          errorType: 'invalid_path'
+        });
       }
 
       // Check for null bytes (security)
       if (directoryPath.includes('\0')) {
-        throw new Error('Invalid directory path');
+        return ToolResult.failure('Invalid directory path', {
+          directoryPath: directoryPath,
+          errorType: 'invalid_path'
+        });
       }
 
       // Resolve the directory path
@@ -64,7 +123,10 @@ class DirectoryCreatorTool extends ModularTool {
 
       // Check if path is within allowed basePath
       if (!this.isPathAllowed(resolvedPath)) {
-        throw new Error('Access denied: Path is outside allowed directory');
+        return ToolResult.failure('Access denied: Path is outside allowed directory', {
+          directoryPath: directoryPath,
+          errorType: 'access_denied'
+        });
       }
 
       // Try to create the directory
@@ -74,11 +136,10 @@ class DirectoryCreatorTool extends ModularTool {
           mode: this.permissions 
         });
 
-        return {
-          success: true,
+        return ToolResult.success({
           path: resolvedPath,
           created: true
-        };
+        });
       } catch (error) {
         // Handle specific error codes
         if (error.code === 'EEXIST') {
@@ -87,36 +148,44 @@ class DirectoryCreatorTool extends ModularTool {
             await fs.access(resolvedPath);
             const stats = await fs.stat(resolvedPath);
             if (stats.isDirectory()) {
-              return {
-                success: true,
+              return ToolResult.success({
                 path: resolvedPath,
                 created: false
-              };
+              });
             } else {
-              throw new Error('Path exists but is not a directory');
+              return ToolResult.failure('Path exists but is not a directory', {
+                directoryPath: directoryPath,
+                errorType: 'path_exists_not_dir'
+              });
             }
           } catch (accessError) {
-            // If we can't access the path to verify, re-throw the original error
-            throw new Error('Path exists but is not a directory');
+            // If we can't access the path to verify, return the error
+            return ToolResult.failure('Path exists but is not a directory', {
+              directoryPath: directoryPath,
+              errorType: 'path_exists_not_dir'
+            });
           }
         } else if (error.code === 'ENOENT' && !recursive) {
-          throw new Error('Parent directory does not exist');
+          return ToolResult.failure('Parent directory does not exist', {
+            directoryPath: directoryPath,
+            errorType: 'parent_not_found'
+          });
         } else if (error.code === 'EACCES') {
-          throw new Error('Permission denied');
+          return ToolResult.failure('Permission denied', {
+            directoryPath: directoryPath,
+            errorType: 'permission_denied'
+          });
         } else {
           throw error;
         }
       }
     } catch (error) {
-      if (error.message.startsWith('Directory path') || 
-          error.message.startsWith('Access denied') ||
-          error.message.startsWith('Invalid directory path') ||
-          error.message.startsWith('Path exists') ||
-          error.message.startsWith('Parent directory') ||
-          error.message.startsWith('Permission denied')) {
-        throw error;
-      }
-      throw new Error(`Failed to create directory: ${error.message}`);
+      // Handle any unexpected errors
+      return ToolResult.failure(error.message || 'Failed to create directory', {
+        directoryPath: args?.directoryPath || 'unknown',
+        errorType: 'create_error',
+        details: error.stack
+      });
     }
   }
 

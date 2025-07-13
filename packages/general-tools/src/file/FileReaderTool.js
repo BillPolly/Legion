@@ -1,26 +1,16 @@
-import { ModularTool } from '@jsenvoy/module-loader';
+import { Tool, ToolResult } from '@jsenvoy/module-loader';
 import { promises as fs } from 'fs';
 import path from 'path';
 
 /**
  * Tool for reading files from the file system
  */
-class FileReaderTool extends ModularTool {
+class FileReaderTool extends Tool {
   constructor({ basePath, encoding = 'utf-8', maxFileSize = 10 * 1024 * 1024 }) {
     super();
     this.name = 'file_reader';
     this.shortName = 'read';
     this.description = 'Reads the contents of a file from the file system';
-    this.parameters = {
-      type: 'object',
-      properties: {
-        filePath: {
-          type: 'string',
-          description: 'The path to the file to read'
-        }
-      },
-      required: ['filePath']
-    };
 
     // Store dependencies
     this.basePath = basePath;
@@ -29,29 +19,99 @@ class FileReaderTool extends ModularTool {
   }
 
   /**
-   * Execute the file reader tool
-   * @param {Object} args - The arguments
-   * @param {string} args.filePath - The path to the file to read
-   * @returns {Promise<Object>} The file contents
+   * Returns the tool description in standard function calling format
    */
-  async execute({ filePath } = {}) {
-    try {
-      // Validate input
-      if (filePath === undefined) {
-        throw new Error('File path is required');
+  getToolDescription() {
+    return {
+      type: 'function',
+      function: {
+        name: 'file_reader',
+        description: 'Reads the contents of a file from the file system',
+        parameters: {
+          type: 'object',
+          properties: {
+            filePath: {
+              type: 'string',
+              description: 'The path to the file to read'
+            }
+          },
+          required: ['filePath']
+        },
+        output: {
+          success: {
+            type: 'object',
+            properties: {
+              content: {
+                type: 'string',
+                description: 'The contents of the file'
+              },
+              path: {
+                type: 'string',
+                description: 'The resolved path of the file'
+              }
+            },
+            required: ['content', 'path']
+          },
+          failure: {
+            type: 'object',
+            properties: {
+              filePath: {
+                type: 'string',
+                description: 'The path that was attempted'
+              },
+              errorType: {
+                type: 'string',
+                enum: ['file_not_found', 'access_denied', 'invalid_path', 'read_error'],
+                description: 'The type of error that occurred'
+              },
+              details: {
+                type: 'string',
+                description: 'Additional error details'
+              }
+            },
+            required: ['filePath', 'errorType']
+          }
+        }
       }
+    };
+  }
 
+  /**
+   * Invoke the file reader tool
+   * @param {Object} toolCall - The tool call from the LLM
+   * @returns {Promise<ToolResult>} The result of reading the file
+   */
+  async invoke(toolCall) {
+    try {
+      // Parse the arguments
+      const args = this.parseArguments(toolCall.function.arguments);
+      
+      // Validate required parameters
+      this.validateRequiredParameters(args, ['filePath']);
+
+      const { filePath } = args;
+
+      // Validate input
       if (typeof filePath !== 'string') {
-        throw new Error('File path must be a string');
+        return ToolResult.failure('File path must be a string', {
+          filePath: String(filePath),
+          errorType: 'invalid_path'
+        });
       }
 
       if (filePath.trim() === '') {
-        throw new Error('File path cannot be empty');
+        return ToolResult.failure('File path cannot be empty', {
+          filePath: filePath,
+          errorType: 'invalid_path'
+        });
       }
 
       // Check for null bytes (security)
       if (filePath.includes('\0')) {
-        throw new Error('Invalid file path');
+        return ToolResult.failure('Invalid file path', {
+          filePath: filePath,
+          errorType: 'invalid_path'
+        });
       }
 
       // Resolve the file path
@@ -59,31 +119,36 @@ class FileReaderTool extends ModularTool {
 
       // Check if path is within allowed basePath
       if (!this.isPathAllowed(resolvedPath)) {
-        throw new Error('Access denied: Path is outside allowed directory');
+        return ToolResult.failure('Access denied: Path is outside allowed directory', {
+          filePath: filePath,
+          errorType: 'access_denied'
+        });
       }
 
       // Check file permissions
       try {
         await fs.access(resolvedPath);
       } catch (error) {
-        throw new Error('File not found or not accessible');
+        return ToolResult.failure('File not found or not accessible', {
+          filePath: filePath,
+          errorType: 'file_not_found'
+        });
       }
 
       // Read the file
       const content = await fs.readFile(resolvedPath, this.encoding);
 
-      return {
+      return ToolResult.success({
         content,
         path: resolvedPath
-      };
+      });
     } catch (error) {
-      if (error.message.startsWith('File not found') || 
-          error.message.startsWith('Access denied') ||
-          error.message.startsWith('File path') ||
-          error.message.startsWith('Invalid file path')) {
-        throw error;
-      }
-      throw new Error(`Failed to read file: ${error.message}`);
+      // Handle any unexpected errors
+      return ToolResult.failure(error.message || 'Failed to read file', {
+        filePath: args?.filePath || 'unknown',
+        errorType: 'read_error',
+        details: error.stack
+      });
     }
   }
 

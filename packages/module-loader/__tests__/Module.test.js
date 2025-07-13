@@ -1,9 +1,9 @@
 import { jest } from '@jest/globals';
 import { Module } from '../src/Module.js';
-import { ModularTool } from '../src/ModularTool.js';
+import Tool from '../src/Tool.js';
 
 // Mock tools for testing
-class MockTool1 extends ModularTool {
+class MockTool1 extends Tool {
   constructor() {
     super();
     this.name = 'mock_tool_1';
@@ -11,7 +11,7 @@ class MockTool1 extends ModularTool {
   }
 }
 
-class MockTool2 extends ModularTool {
+class MockTool2 extends Tool {
   constructor() {
     super();
     this.name = 'mock_tool_2';

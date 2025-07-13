@@ -112,7 +112,7 @@ The CLI integrates with @jsenvoy/core infrastructure:
 1. **ResourceManager** (from @jsenvoy/core): Manages dependencies required by modules
 2. **ModuleFactory** (from @jsenvoy/core): Creates module instances with resolved dependencies
 3. **Module** (from @jsenvoy/module-loader): Base class for all modules containing tools
-4. **ModularTool** (from @jsenvoy/module-loader): Base class for individual tools with execute() method
+4. **Tool** (from @jsenvoy/module-loader): Base class for individual tools with execute() method
 
 The CLI package imports these components:
 ```javascript

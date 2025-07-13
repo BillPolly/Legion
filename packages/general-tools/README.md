@@ -34,9 +34,8 @@ src/
 
 ## Tool Types
 
-1. **Tool** (from @jsenvoy/module-loader) - Base class for tools that work with LLMs using standard function calling
-2. **ModularTool** (from @jsenvoy/module-loader) - Base class for tools that can be used in Modules with dependency injection
-3. **Module** (from @jsenvoy/module-loader) - Base class for collections of related tools
+1. **Tool** (from @jsenvoy/module-loader) - Base class for tools that work with LLMs using standard function calling format
+2. **Module** (from @jsenvoy/module-loader) - Base class for collections of related tools
 
 ## Usage
 
@@ -75,7 +74,7 @@ const fileModule = new FileModule({ basePath: '/tmp', encoding: 'utf8' });
 const calcTools = calcModule.getTools();
 ```
 
-### Using ModularTool Implementations
+### Using Tool Implementations
 
 ```javascript
 const { CalculatorEvaluateTool, FileReaderTool } = require('@jsenvoy/tools');

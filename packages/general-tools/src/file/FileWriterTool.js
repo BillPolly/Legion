@@ -1,35 +1,16 @@
-import { ModularTool } from '@jsenvoy/module-loader';
+import { Tool, ToolResult } from '@jsenvoy/module-loader';
 import { promises as fs } from 'fs';
 import path from 'path';
 
 /**
  * Tool for writing files to the file system
  */
-class FileWriterTool extends ModularTool {
+class FileWriterTool extends Tool {
   constructor({ basePath, encoding = 'utf-8', createDirectories = false }) {
     super();
     this.name = 'file_writer';
     this.shortName = 'write';
     this.description = 'Writes content to a file in the file system';
-    this.parameters = {
-      type: 'object',
-      properties: {
-        filePath: {
-          type: 'string',
-          description: 'The path where the file should be written'
-        },
-        content: {
-          type: 'string',
-          description: 'The content to write to the file'
-        },
-        append: {
-          type: 'boolean',
-          description: 'Whether to append to existing file (default: false)',
-          default: false
-        }
-      },
-      required: ['filePath', 'content']
-    };
 
     // Store dependencies
     this.basePath = basePath;
@@ -38,39 +19,115 @@ class FileWriterTool extends ModularTool {
   }
 
   /**
-   * Execute the file writer tool
-   * @param {Object} args - The arguments
-   * @param {string} args.filePath - The path where the file should be written
-   * @param {string} args.content - The content to write
-   * @param {boolean} args.append - Whether to append (default: false)
-   * @returns {Promise<Object>} The write result
+   * Returns the tool description in standard function calling format
    */
-  async execute({ filePath, content, append = false } = {}) {
+  getToolDescription() {
+    return {
+      type: 'function',
+      function: {
+        name: 'file_writer',
+        description: 'Writes content to a file in the file system',
+        parameters: {
+          type: 'object',
+          properties: {
+            filePath: {
+              type: 'string',
+              description: 'The path where the file should be written'
+            },
+            content: {
+              type: 'string',
+              description: 'The content to write to the file'
+            },
+            append: {
+              type: 'boolean',
+              description: 'Whether to append to existing file (default: false)',
+              default: false
+            }
+          },
+          required: ['filePath', 'content']
+        },
+        output: {
+          success: {
+            type: 'object',
+            properties: {
+              path: {
+                type: 'string',
+                description: 'The resolved path where the file was written'
+              },
+              bytesWritten: {
+                type: 'number',
+                description: 'Number of bytes written to the file'
+              }
+            },
+            required: ['path', 'bytesWritten']
+          },
+          failure: {
+            type: 'object',
+            properties: {
+              filePath: {
+                type: 'string',
+                description: 'The path that was attempted'
+              },
+              errorType: {
+                type: 'string',
+                enum: ['invalid_path', 'access_denied', 'directory_not_found', 'write_error'],
+                description: 'The type of error that occurred'
+              },
+              details: {
+                type: 'string',
+                description: 'Additional error details'
+              }
+            },
+            required: ['filePath', 'errorType']
+          }
+        }
+      }
+    };
+  }
+
+  /**
+   * Invoke the file writer tool
+   * @param {Object} toolCall - The tool call from the LLM
+   * @returns {Promise<ToolResult>} The result of writing the file
+   */
+  async invoke(toolCall) {
     try {
+      // Parse the arguments
+      const args = this.parseArguments(toolCall.function.arguments);
+      
+      // Validate required parameters
+      this.validateRequiredParameters(args, ['filePath', 'content']);
+
+      const { filePath, content, append = false } = args;
+
       // Validate input
-      if (filePath === undefined) {
-        throw new Error('File path is required');
-      }
-
-      if (content === undefined) {
-        throw new Error('Content is required');
-      }
-
       if (typeof filePath !== 'string') {
-        throw new Error('File path must be a string');
+        return ToolResult.failure('File path must be a string', {
+          filePath: String(filePath),
+          errorType: 'invalid_path'
+        });
       }
 
       if (typeof content !== 'string') {
-        throw new Error('Content must be a string');
+        return ToolResult.failure('Content must be a string', {
+          filePath: filePath,
+          errorType: 'invalid_path'
+        });
       }
 
       if (filePath.trim() === '') {
-        throw new Error('File path cannot be empty');
+        return ToolResult.failure('File path cannot be empty', {
+          filePath: filePath,
+          errorType: 'invalid_path'
+        });
       }
 
       // Check for null bytes (security)
       if (filePath.includes('\0')) {
-        throw new Error('Invalid file path');
+        return ToolResult.failure('Invalid file path', {
+          filePath: filePath,
+          errorType: 'invalid_path'
+        });
       }
 
       // Resolve the file path
@@ -78,7 +135,10 @@ class FileWriterTool extends ModularTool {
 
       // Check if path is within allowed basePath
       if (!this.isPathAllowed(resolvedPath)) {
-        throw new Error('Access denied: Path is outside allowed directory');
+        return ToolResult.failure('Access denied: Path is outside allowed directory', {
+          filePath: filePath,
+          errorType: 'access_denied'
+        });
       }
 
       // Create directory if needed
@@ -96,7 +156,10 @@ class FileWriterTool extends ModularTool {
         try {
           await fs.access(dir);
         } catch (error) {
-          throw new Error('Directory does not exist');
+          return ToolResult.failure('Directory does not exist', {
+            filePath: filePath,
+            errorType: 'directory_not_found'
+          });
         }
       }
 
@@ -104,20 +167,17 @@ class FileWriterTool extends ModularTool {
       const flag = append ? 'a' : 'w';
       await fs.writeFile(resolvedPath, content, { encoding: this.encoding, flag });
 
-      return {
-        success: true,
+      return ToolResult.success({
         path: resolvedPath,
         bytesWritten: content.length
-      };
+      });
     } catch (error) {
-      if (error.message.startsWith('File path') || 
-          error.message.startsWith('Content') ||
-          error.message.startsWith('Access denied') ||
-          error.message.startsWith('Invalid file path') ||
-          error.message.startsWith('Directory does not exist')) {
-        throw error;
-      }
-      throw new Error(`Failed to write file: ${error.message}`);
+      // Handle any unexpected errors
+      return ToolResult.failure(error.message || 'Failed to write file', {
+        filePath: args?.filePath || 'unknown',
+        errorType: 'write_error',
+        details: error.stack
+      });
     }
   }
 

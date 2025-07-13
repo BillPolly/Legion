@@ -55,7 +55,7 @@ export class ExecuteCommand {
           }
         });
       } else if (typeof tool.execute === 'function') {
-        // ModularTool with execute method
+        // Tool with execute method
         result = await tool.execute(args);
       } else {
         throw new Error(`Tool ${toolName} does not have a valid execution method`);
