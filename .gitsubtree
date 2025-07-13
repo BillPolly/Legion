@@ -8,3 +8,6 @@ packages/cli https://github.com/BillPolly/cli.git main
 packages/general-tools https://github.com/BillPolly/general-tools.git main
 packages/model-providers https://github.com/BillPolly/model-providers.git main
 packages/llm https://github.com/BillPolly/llm.git main
+
+packages/apps/web-frontend https://github.com/BillPolly/jsenvoy-web-frontend.git main
+packages/apps/web-backend https://github.com/BillPolly/jsenvoy-web-backend.git main

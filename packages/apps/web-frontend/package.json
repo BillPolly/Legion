@@ -1,0 +1,21 @@
+{
+  "name": "@jsenvoy/apps-web-frontend",
+  "version": "1.0.0",
+  "description": "Modern web chat interface for jsEnvoy agents",
+  "type": "module",
+  "scripts": {
+    "start": "echo 'Frontend is served by web-backend. Run: npm start --workspace=@jsenvoy/web-backend'"
+  },
+  "keywords": [
+    "jsenvoy",
+    "chat",
+    "frontend",
+    "vanilla-js"
+  ],
+  "author": "jsEnvoy Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BillPolly/jsenvoy-web-frontend.git"
+  }
+}
