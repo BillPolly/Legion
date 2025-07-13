@@ -11,4 +11,4 @@ packages/llm https://github.com/BillPolly/llm.git main
 
 packages/apps/web-frontend https://github.com/BillPolly/jsenvoy-web-frontend.git main
 packages/apps/web-backend https://github.com/BillPolly/jsenvoy-web-backend.git main
-packages/resource-manager https://github.com/BillPolly/jsenvoy-resource-manager.git main
+packages/resource-manager https://github.com/BillPolly/resource-manager.git main
