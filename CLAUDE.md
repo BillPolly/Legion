@@ -63,6 +63,47 @@ node packages/cli/src/index.js -t <toolName> -p '{"param": "value"}'
 node packages/cli/src/index.js -i
 ```
 
+### Git Subtree and Repository Management
+
+**IMPORTANT: This project uses git subtrees for managing individual package repositories. Use these scripts instead of manual git commands:**
+
+```bash
+# Discover all configured subtrees
+npm run subtree:discover
+
+# Push all subtrees to their remote repositories
+npm run subtree:push
+
+# Pull changes from all subtree remotes
+npm run subtree:pull
+
+# Setup subtree remotes (run after cloning)
+npm run subtree:setup
+
+# Add a new package to polyrepo structure
+npm run polyrepo:add
+
+# Rename a GitHub repository (requires gh CLI)
+npm run polyrepo:rename
+
+# Other subtree operations
+npm run split:check      # Check split configuration
+npm run split:simple     # Simple split operation
+npm run split:history    # Split with history preservation
+npm run split           # Run package splitting
+```
+
+**Scripts are located in `/scripts` directory:**
+- `push-all-subtrees.js` - Pushes all subtrees to their remotes
+- `pull-all-subtrees.js` - Pulls all subtree changes
+- `discover-subtrees.js` - Lists all configured subtrees
+- `setup-subtree-remotes.js` - Sets up git remotes for subtrees
+- `add-package-to-polyrepo.js` - Adds new package to polyrepo
+- `rename-github-repo.js` - Renames GitHub repositories
+- `split-*.js` - Various splitting operations
+
+**Configuration file:** `.gitsubtree` contains the mapping of local directories to remote repositories
+
 ## Architecture Overview
 
 ### Core Concepts
