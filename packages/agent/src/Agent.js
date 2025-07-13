@@ -176,33 +176,80 @@ class Agent {
 
       let functionResponse;
       try {
+        if (this._debugMode) {
+          await appendFile("agentOut.txt", `Attempting to call function '${fn}' on tool '${response.use_tool.identifier}'\n`);
+          await appendFile("agentOut.txt", `Tool has invoke: ${typeof tool.invoke === 'function'}\n`);
+          await appendFile("agentOut.txt", `Args: ${JSON.stringify(args)}\n`);
+        }
+
         // Check if this is a new-style tool with invoke method
         if (typeof tool.invoke === 'function' || typeof tool.safeInvoke === 'function') {
+          // Convert args array to proper object format
+          let argsObject = {};
+          if (Array.isArray(args)) {
+            if (args.length === 1 && typeof args[0] === 'object') {
+              // Single object argument: use it directly
+              argsObject = args[0];
+            } else if (args.length === 1 && typeof args[0] === 'string') {
+              // Single string argument: assume it's the first parameter
+              // Get the first parameter name from tool function
+              const toolFunctions = tool.functions || [];
+              const matchingFunction = toolFunctions.find(f => f.name === fn);
+              if (matchingFunction && matchingFunction.arguments.length > 0) {
+                argsObject[matchingFunction.arguments[0]] = args[0];
+              } else {
+                // Fallback: assume 'expression' for calculator
+                argsObject.expression = args[0];
+              }
+            } else {
+              // Multiple arguments: map to parameter names
+              const toolFunctions = tool.functions || [];
+              const matchingFunction = toolFunctions.find(f => f.name === fn);
+              if (matchingFunction) {
+                matchingFunction.arguments.forEach((paramName, index) => {
+                  if (index < args.length) {
+                    argsObject[paramName] = args[index];
+                  }
+                });
+              }
+            }
+          } else if (typeof args === 'object') {
+            argsObject = args;
+          }
+
           // Create a tool call in OpenAI format
           const toolCall = {
             id: `agent-${Date.now()}`,
             type: 'function',
             function: {
               name: fn,
-              arguments: JSON.stringify(args)
+              arguments: JSON.stringify(argsObject)
             }
           };
+
+          if (this._debugMode) {
+            await appendFile("agentOut.txt", `Created tool call: ${JSON.stringify(toolCall)}\n`);
+          }
 
           // Use safeInvoke if available, otherwise invoke
           const invokeMethod = tool.safeInvoke ? 'safeInvoke' : 'invoke';
           const toolResult = await tool[invokeMethod](toolCall);
 
+          if (this._debugMode) {
+            await appendFile("agentOut.txt", `Tool result: ${JSON.stringify(toolResult)}\n`);
+          }
+
           // Handle ToolResult format
-          if (toolResult instanceof ToolResult) {
+          if (toolResult && typeof toolResult === 'object' && 'success' in toolResult) {
             if (!toolResult.success) {
               return {
                 taskCompleted: false,
-                nextPrompt: `<tool_error>${toolResult.error}</tool_error>\n<tool_data>${JSON.stringify(toolResult.data)}</tool_data>`,
+                nextPrompt: `<tool_error>${toolResult.error}</tool_error>\n<tool_data>${JSON.stringify(toolResult.data || {})}</tool_data>`,
               };
             }
 
             // Check if result contains an image
-            if (toolResult.data.isImage || toolResult.data.image) {
+            if (toolResult.data && (toolResult.data.isImage || toolResult.data.image)) {
               return {
                 taskCompleted: response.task_completed,
                 nextPrompt: "Here is the image",
@@ -210,17 +257,17 @@ class Agent {
               };
             }
 
-            functionResponse = JSON.stringify(toolResult.data);
+            functionResponse = JSON.stringify(toolResult.data || toolResult);
           } else {
-            // Handle legacy response format
-            functionResponse = toolResult;
+            // Handle legacy response format or plain response
+            functionResponse = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
           }
         } 
         // Legacy tool with functionMap
         else if (tool.functionMap && tool.functionMap[fn]) {
           functionResponse = await tool.functionMap[fn](...args);
 
-          if (functionResponse.isImage) {
+          if (functionResponse && functionResponse.isImage) {
             return {
               taskCompleted: response.task_completed,
               nextPrompt: "Here is the image",
@@ -230,7 +277,7 @@ class Agent {
         } else {
           return {
             taskCompleted: false,
-            nextPrompt: `Error: Function '${fn}' not found in tool '${response.use_tool.identifier}'. Tool does not have invoke method or functionMap.`,
+            nextPrompt: `Error: Function '${fn}' not found in tool '${response.use_tool.identifier}'. Available functions: ${tool.functions ? tool.functions.map(f => f.name).join(', ') : 'none'}. Tool does not have invoke method or functionMap.`,
           };
         }
 

@@ -9,9 +9,16 @@
   },
   "scripts": {
     "agent": "node src/cli.js",
+    "agent:server": "node src/cli.js --server",
+    "agent:start": "node scripts/start-agent.js",
+    "agent:stop": "node scripts/stop-agent.js",
+    "agent:status": "node scripts/status-agent.js",
+    "agent:send": "node scripts/send-command.js",
+    "send": "node scripts/send-command.js",
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests --detectOpenHandles",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
-    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
+    "test:websocket": "npm run agent:start && sleep 2 && npm run test && npm run agent:stop"
   },
   "keywords": [
     "jsenvoy",
@@ -41,13 +48,14 @@
   ],
   "dependencies": {
     "@jsenvoy/llm": "*",
-    "@jsenvoy/tools": "*",
     "@jsenvoy/module-loader": "*",
-    "ora": "^5.4.0"
+    "@jsenvoy/tools": "*",
+    "ora": "^5.4.0",
+    "ws": "^8.16.0"
   },
   "devDependencies": {
-    "jest": "^29.7.0",
-    "dotenv": "^16.0.3"
+    "dotenv": "^16.0.3",
+    "jest": "^29.7.0"
   },
   "jest": {
     "testEnvironment": "node",

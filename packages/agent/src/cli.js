@@ -3,6 +3,7 @@
 import readline from 'readline';
 import { Agent } from './Agent.js';
 import { ResourceManager, ModuleFactory } from '@jsenvoy/module-loader';
+import { AgentWebSocketServer } from './websocket-server.js';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -45,7 +46,7 @@ function convertToolToAgentFormat(tool, moduleName) {
   const abilities = [tool.description];
   const instructions = [`Use this tool to ${tool.description}`];
   
-  // Get functions from tool
+  // Get functions from tool - handle both singular and plural methods
   let functions = [];
   if (typeof tool.getAllToolDescriptions === 'function') {
     const toolDescs = tool.getAllToolDescriptions();
@@ -55,6 +56,14 @@ function convertToolToAgentFormat(tool, moduleName) {
       arguments: Object.keys(desc.function.parameters.properties || {}),
       response: 'object'
     }));
+  } else if (typeof tool.getToolDescription === 'function') {
+    const toolDesc = tool.getToolDescription();
+    functions = [{
+      name: toolDesc.function.name,
+      purpose: toolDesc.function.description,
+      arguments: Object.keys(toolDesc.function.parameters.properties || {}),
+      response: 'object'
+    }];
   }
   
   // Create agent-compatible tool
@@ -72,41 +81,51 @@ function convertToolToAgentFormat(tool, moduleName) {
 }
 
 /**
- * Load all tools from general-tools package
+ * Load all tools from @jsenvoy/tools package
  */
 async function loadTools(resourceManager, moduleFactory) {
   const tools = [];
   
   try {
-    // Find tools package (in general-tools directory)
-    const toolsPath = path.resolve(__dirname, '../../general-tools/src');
-    const entries = await fs.readdir(toolsPath, { withFileTypes: true });
+    // Import the tools package
+    const { CalculatorModule, FileModule } = await import('@jsenvoy/tools');
     
-    for (const entry of entries) {
-      if (entry.isDirectory()) {
-        try {
-          // Try to import the module
-          const modulePath = path.join(toolsPath, entry.name, 'index.js');
-          const moduleExports = await import(`file://${modulePath}`);
-          const ModuleClass = moduleExports.default;
-          
-          if (ModuleClass) {
-            // Create instance with proper dependencies
-            const instance = new ModuleClass({ resourceManager, moduleFactory });
-            const moduleTools = instance.getTools ? instance.getTools() : [];
-            
-            // Convert each tool to agent format
-            for (const tool of moduleTools) {
-              tools.push(convertToolToAgentFormat(tool, entry.name));
-            }
-          }
-        } catch (error) {
-          // Skip modules that fail to load silently
+    // Create calculator module instance
+    if (CalculatorModule) {
+      try {
+        const calculatorModule = new CalculatorModule({ resourceManager, moduleFactory });
+        const calculatorTools = calculatorModule.getTools ? calculatorModule.getTools() : [];
+        
+        for (const tool of calculatorTools) {
+          tools.push(convertToolToAgentFormat(tool, 'calculator'));
         }
+        
+        console.log(`Loaded ${calculatorTools.length} calculator tools`);
+      } catch (error) {
+        console.warn('Failed to load calculator module:', error.message);
       }
     }
+    
+    // Create file module instance - temporarily disabled for testing
+    if (false && FileModule) {
+      try {
+        const fileModule = new FileModule({ resourceManager, moduleFactory });
+        const fileTools = fileModule.getTools ? fileModule.getTools() : [];
+        
+        for (const tool of fileTools) {
+          tools.push(convertToolToAgentFormat(tool, 'file'));
+        }
+        
+        console.log(`Loaded ${fileTools.length} file tools`);
+      } catch (error) {
+        console.warn('Failed to load file module:', error.message);
+        console.warn('Error details:', error.stack);
+      }
+    }
+    
   } catch (error) {
-    // Silently handle error
+    console.error('Failed to load tools package:', error.message);
+    console.error('Make sure @jsenvoy/tools is properly installed');
   }
   
   return tools;
@@ -181,9 +200,112 @@ async function initializeAgent() {
 }
 
 /**
- * Main CLI function
+ * Parse command line arguments
  */
-async function main() {
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const options = {
+    server: false,
+    port: 3001,
+    host: 'localhost'
+  };
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    switch (arg) {
+      case '--server':
+      case '-s':
+        options.server = true;
+        break;
+      case '--port':
+      case '-p':
+        options.port = parseInt(args[++i]) || 3001;
+        break;
+      case '--host':
+      case '-h':
+        options.host = args[++i] || 'localhost';
+        break;
+      case '--help':
+        console.log(`
+jsEnvoy Agent CLI
+
+Usage:
+  node cli.js [options]
+
+Options:
+  --server, -s       Start in WebSocket server mode
+  --port, -p <port>  WebSocket server port (default: 3001)
+  --host, -h <host>  WebSocket server host (default: localhost)
+  --help             Show this help message
+
+Examples:
+  node cli.js                    # Interactive CLI mode
+  node cli.js --server           # WebSocket server mode
+  node cli.js --server -p 8080   # WebSocket server on port 8080
+        `);
+        process.exit(0);
+        break;
+    }
+  }
+
+  return options;
+}
+
+/**
+ * Start WebSocket server mode
+ */
+async function startServerMode(options) {
+  console.log('Initializing jsEnvoy Agent for WebSocket server...');
+  
+  let agent, toolCount;
+  try {
+    const result = await initializeAgent();
+    agent = result.agent;
+    toolCount = result.toolCount;
+  } catch (error) {
+    console.error('Failed to initialize agent:', error.message);
+    process.exit(1);
+  }
+  
+  console.log(`Loaded ${toolCount} tools`);
+  
+  // Create and start WebSocket server
+  const server = new AgentWebSocketServer(agent, {
+    port: options.port,
+    host: options.host
+  });
+
+  try {
+    await server.start();
+    console.log(`WebSocket server started on ${options.host}:${options.port}`);
+    console.log('Agent ready to receive WebSocket connections');
+    
+    // Handle graceful shutdown
+    process.on('SIGINT', async () => {
+      console.log('\nShutting down WebSocket server...');
+      await server.stop();
+      process.exit(0);
+    });
+
+    process.on('SIGTERM', async () => {
+      console.log('\nShutting down WebSocket server...');
+      await server.stop();
+      process.exit(0);
+    });
+
+    // Keep the process alive by waiting indefinitely
+    await new Promise(() => {}); // Never resolves, keeps process running
+
+  } catch (error) {
+    console.error('Failed to start WebSocket server:', error.message);
+    process.exit(1);
+  }
+}
+
+/**
+ * Start interactive CLI mode
+ */
+async function startInteractiveMode() {
   // Initialize everything before creating readline
   console.log('Initializing jsEnvoy Agent...');
   
@@ -252,6 +374,19 @@ async function main() {
     console.log('\n\nGoodbye!');
     process.exit(0);
   });
+}
+
+/**
+ * Main CLI function
+ */
+async function main() {
+  const options = parseArgs();
+  
+  if (options.server) {
+    await startServerMode(options);
+  } else {
+    await startInteractiveMode();
+  }
 }
 
 // Run the CLI
