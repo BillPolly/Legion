@@ -5,7 +5,7 @@
   "type": "module",
   "main": "./src/index.js",
   "scripts": {
-    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests --detectOpenHandles",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
   },
@@ -41,15 +41,12 @@
   "jest": {
     "testEnvironment": "node",
     "transform": {},
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
     "coverageDirectory": "coverage",
     "collectCoverageFrom": [
-      "src/**/*.js",
-      "!src/**/*.test.js"
-    ],
-    "testMatch": [
-      "**/__tests__/**/*.test.js",
-      "**/?(*.)+(spec|test).js"
-    ],
-    "testTimeout": 30000
+      "src/**/*.js"
+    ]
   }
 }
