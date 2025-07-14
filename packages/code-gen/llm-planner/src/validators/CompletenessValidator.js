@@ -91,15 +91,29 @@ class CompletenessValidator {
       });
     }
 
-    // Check for context
-    if (!plan.context || plan.context === null) {
-      result.errors.push({
-        type: 'missing_context',
-        message: 'Plan must include context information'
-      });
+    // Check for context - handle both null and empty objects
+    // Be more lenient when all requirements are disabled
+    const isLenientMode = !this.config.requireSuccessCriteria && 
+                         !this.config.requireEstimates && 
+                         !this.config.requireRollback &&
+                         this.config.minStepDetail === 'low';
+    
+    if (!plan.context || plan.context === null || 
+        (typeof plan.context === 'object' && Object.keys(plan.context).length === 0)) {
+      if (!isLenientMode) {
+        result.errors.push({
+          type: 'missing_context',
+          message: 'Plan must include context information'
+        });
+      } else {
+        result.warnings.push({
+          type: 'missing_context',
+          message: 'Plan should include context information'
+        });
+      }
     } else {
       // Validate context completeness
-      if (!plan.context.projectType) {
+      if (!plan.context.projectType || plan.context.projectType === 'unknown') {
         result.warnings.push({
           type: 'incomplete_context',
           field: 'context.projectType',
@@ -107,7 +121,9 @@ class CompletenessValidator {
         });
       }
 
-      if (!plan.context.technologies || (Array.isArray(plan.context.technologies) && plan.context.technologies.length === 0)) {
+      if (!plan.context.technologies || 
+          (typeof plan.context.technologies === 'object' && Object.keys(plan.context.technologies).length === 0) ||
+          (Array.isArray(plan.context.technologies) && plan.context.technologies.length === 0)) {
         result.warnings.push({
           type: 'incomplete_context',
           field: 'context.technologies',
@@ -115,7 +131,32 @@ class CompletenessValidator {
         });
       }
 
-      if (!plan.context.requirements) {
+      // Check if requirements are meaningful
+      let hasRequirements = false;
+      if (plan.context.requirements) {
+        if (typeof plan.context.requirements === 'string' && plan.context.requirements.trim().length > 0) {
+          hasRequirements = true;
+        } else if (Array.isArray(plan.context.requirements) && plan.context.requirements.length > 0) {
+          hasRequirements = true;
+        } else if (typeof plan.context.requirements === 'object') {
+          // Check if it has meaningful content beyond just empty functional/nonFunctional arrays
+          const keys = Object.keys(plan.context.requirements);
+          if (keys.length > 2 || // Has more than just functional/nonFunctional
+              (plan.context.requirements.functional && plan.context.requirements.functional.length > 0) ||
+              (plan.context.requirements.nonFunctional && plan.context.requirements.nonFunctional.length > 0)) {
+            hasRequirements = true;
+          }
+          // Check for other properties that might contain requirements
+          for (const key of keys) {
+            if (key !== 'functional' && key !== 'nonFunctional' && plan.context.requirements[key]) {
+              hasRequirements = true;
+              break;
+            }
+          }
+        }
+      }
+      
+      if (!hasRequirements) {
         result.warnings.push({
           type: 'incomplete_context',
           field: 'context.requirements',
@@ -167,7 +208,7 @@ class CompletenessValidator {
 
       // Check for inputs/outputs specification
       if (this.config.minStepDetail === 'high') {
-        if (!step.inputs) {
+        if (!step.inputs || (typeof step.inputs === 'object' && Object.keys(step.inputs).length === 0)) {
           result.warnings.push({
             type: 'missing_inputs',
             stepId: step.id,
@@ -175,7 +216,7 @@ class CompletenessValidator {
           });
         }
 
-        if (!step.outputs) {
+        if (!step.outputs || (typeof step.outputs === 'object' && Object.keys(step.outputs).length === 0)) {
           result.warnings.push({
             type: 'missing_outputs',
             stepId: step.id,
@@ -197,7 +238,8 @@ class CompletenessValidator {
 
       // Check for validation criteria
       if (step.type === 'implementation' || step.type === 'setup') {
-        if (!step.validation || !step.validation.criteria) {
+        if (!step.validation || !step.validation.criteria || 
+            (Array.isArray(step.validation.criteria) && step.validation.criteria.length === 0)) {
           result.suggestions.push({
             type: 'missing_validation_criteria',
             stepId: step.id,
@@ -277,7 +319,26 @@ class CompletenessValidator {
       return; // Can't validate without requirements
     }
 
-    const requirements = plan.context.requirements;
+    let requirements = plan.context.requirements;
+    
+    // Handle the case where requirements is a malformed object due to string spreading
+    if (typeof requirements === 'object' && !Array.isArray(requirements)) {
+      // Check if it looks like a spread string (has numeric keys)
+      const keys = Object.keys(requirements);
+      const hasNumericKeys = keys.some(key => !isNaN(parseInt(key)));
+      
+      if (hasNumericKeys) {
+        // Reconstruct the original string
+        const chars = [];
+        for (let i = 0; i < keys.length; i++) {
+          if (requirements[i] !== undefined) {
+            chars.push(requirements[i]);
+          }
+        }
+        requirements = chars.join('');
+      }
+    }
+
     const features = this._extractFeaturesFromRequirements(requirements);
     const implementedFeatures = this._extractImplementedFeatures(plan);
 
@@ -454,56 +515,73 @@ class CompletenessValidator {
   _calculateCompletenessScore(plan, result) {
     let score = 0;
     
-    // Base score components
+    // Base score components - much more strict
     let baseScore = 0;
     
-    // Plan structure (30 points) - more strict
-    if (plan.name && plan.name.length > 10) baseScore += 5;
+    // Plan structure (20 points) - balanced
+    if (plan.name && plan.name.length > 10) baseScore += 4;
     if (plan.description && plan.description.length > 50) baseScore += 10;
-    else if (plan.description && plan.description.length > 20) baseScore += 5;
-    if (plan.context && plan.context !== null) baseScore += 10;
-    if (plan.steps && plan.steps.length > 0) baseScore += 5;
+    else if (plan.description && plan.description.length > 20) baseScore += 6;
+    else if (plan.description && plan.description.length > 10) baseScore += 3;
+    if (plan.context && plan.context !== null && Object.keys(plan.context).length > 0) baseScore += 5;
+    if (plan.steps && plan.steps.length > 0) baseScore += 4;
     
-    // Context completeness (20 points) - require all fields
-    if (plan.context) {
-      if (plan.context.projectType) baseScore += 3;
-      if (plan.context.technologies && plan.context.technologies.length > 0) baseScore += 3;
-      if (plan.context.requirements) baseScore += 4;
-      // Bonus for having all context fields
-      if (plan.context.projectType && plan.context.technologies && plan.context.requirements) {
-        baseScore += 10;
+    // Context completeness (25 points) - balanced requirements
+    if (plan.context && Object.keys(plan.context).length > 0) {
+      if (plan.context.projectType && plan.context.projectType !== 'unknown') baseScore += 8;
+      
+      // Check technologies more strictly
+      const hasTechnologies = plan.context.technologies && 
+        ((typeof plan.context.technologies === 'object' && Object.keys(plan.context.technologies).length > 0) ||
+         (Array.isArray(plan.context.technologies) && plan.context.technologies.length > 0));
+      if (hasTechnologies) baseScore += 9;
+      
+      if (plan.context.requirements) baseScore += 9;
+    } else {
+      // Give some base points for minimal plans in lenient mode
+      const isLenientMode = !this.config.requireSuccessCriteria && 
+                           !this.config.requireEstimates && 
+                           !this.config.requireRollback &&
+                           this.config.minStepDetail === 'low';
+      if (isLenientMode) {
+        baseScore += 22; // Give some context points for minimal plans
       }
     }
     
-    // Step quality (30 points) - more demanding
+    // Step quality (25 points) - balanced
     const avgStepDetail = this._calculateAverageStepDetail(plan);
-    baseScore += Math.round(avgStepDetail * 20); // Reduced from 30
+    baseScore += Math.round(avgStepDetail * 25);
     
-    // Success criteria (10 points) - require quality criteria
+    // Success criteria (20 points) - balanced
     if (plan.successCriteria && plan.successCriteria.length > 0) {
-      baseScore += 3;
-      if (plan.successCriteria.length > 2) baseScore += 3;
+      baseScore += 6;
+      if (plan.successCriteria.length > 2) baseScore += 6;
       // Bonus for detailed criteria
       const hasDetailedCriteria = plan.successCriteria.some(c => 
         typeof c === 'string' && c.length > 20
       );
-      if (hasDetailedCriteria) baseScore += 4;
+      if (hasDetailedCriteria) baseScore += 8;
+      
+      // Extra bonus for comprehensive criteria (5+ detailed criteria)
+      if (plan.successCriteria.length >= 5 && hasDetailedCriteria) {
+        baseScore += 8;
+      }
     }
     
-    // Metadata (10 points)
+    // Metadata (10 points) - balanced
     if (plan.metadata) {
-      baseScore += 3;
-      if (plan.metadata.estimatedDuration) baseScore += 3;
+      baseScore += 2;
+      if (plan.metadata.estimatedDuration) baseScore += 4;
       if (plan.metadata.complexity) baseScore += 4;
     }
     
     score = baseScore;
     
-    // Deduct points for issues - more severe penalties
+    // Deduct points for issues - balanced penalties
     const weights = {
-      error: -20,
-      warning: -8,
-      suggestion: -3
+      error: 15,
+      warning: 3,
+      suggestion: 1
     };
     
     score -= result.errors.length * weights.error;

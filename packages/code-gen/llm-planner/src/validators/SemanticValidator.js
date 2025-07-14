@@ -444,15 +444,53 @@ class SemanticValidator {
   _analyzeAchievedGoals(plan) {
     const achieved = new Set();
     
-    // Simple heuristic - check if plan creates expected artifacts
+    // Check step outputs for achieved goals (exact matches only)
     for (const step of plan.steps) {
       if (step.outputs) {
         for (const output of Object.values(step.outputs)) {
           if (Array.isArray(output)) {
-            output.forEach(item => achieved.add(item));
-          } else {
+            output.forEach(item => {
+              if (typeof item === 'string') {
+                achieved.add(item);
+              }
+            });
+          } else if (typeof output === 'string') {
             achieved.add(output);
           }
+        }
+      }
+    }
+
+    // Check if goals are mentioned in step descriptions or action descriptions
+    if (plan.context && plan.context.goals) {
+      for (const goal of plan.context.goals) {
+        // First check if goal is directly in outputs
+        if (achieved.has(goal)) {
+          continue;
+        }
+        
+        // Only check for exact phrase matches in descriptions to be conservative
+        const goalLower = goal.toLowerCase();
+        
+        // Check if goal is mentioned in step descriptions or actions
+        const isGoalMentioned = plan.steps.some(step => {
+          // Check step description for exact phrase
+          if (step.description && step.description.toLowerCase().includes(goalLower)) {
+            return true;
+          }
+          
+          // Check action descriptions for exact phrase
+          if (step.actions) {
+            return step.actions.some(action => 
+              action.description && action.description.toLowerCase().includes(goalLower)
+            );
+          }
+          
+          return false;
+        });
+        
+        if (isGoalMentioned) {
+          achieved.add(goal);
         }
       }
     }

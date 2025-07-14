@@ -113,11 +113,12 @@ describe('StructuralValidator', () => {
     });
 
     test('should detect missing required plan fields', async () => {
-      const invalidPlan = new Plan({
+      const invalidPlan = {
         // Missing name
+        id: 'test-plan',
         description: 'Some description',
         steps: validPlan.steps
-      });
+      };
 
       const result = await validator.validate(invalidPlan);
       
@@ -138,11 +139,12 @@ describe('StructuralValidator', () => {
     });
 
     test('should detect missing steps', async () => {
-      const planWithoutSteps = new Plan({
+      const planWithoutSteps = {
+        id: 'test-plan',
         name: 'Plan without steps',
         description: 'Test plan'
         // Missing steps
-      });
+      };
 
       const result = await validator.validate(planWithoutSteps);
       
@@ -233,12 +235,12 @@ describe('StructuralValidator', () => {
     });
 
     test('should validate step types', async () => {
-      const stepWithInvalidType = new PlanStep({
+      const stepWithInvalidType = {
         id: 'step-1',
         name: 'Step with invalid type',
         type: 'invalid-type',
         actions: []
-      });
+      };
 
       const planWithInvalidStepType = new Plan({
         ...validPlan.toJSON(),
@@ -672,10 +674,10 @@ describe('StructuralValidator', () => {
     test('should validate project type', async () => {
       const planWithBadProjectType = new Plan({
         ...validPlan.toJSON(),
-        context: new PlanContext({
+        context: {
           projectType: 'invalid-project-type',
           requirements: 'Some requirements'
-        })
+        }
       });
 
       const result = await validator.validate(planWithBadProjectType);
@@ -708,14 +710,14 @@ describe('StructuralValidator', () => {
     test('should validate technologies format - object', async () => {
       const planWithObjectTechnologies = new Plan({
         ...validPlan.toJSON(),
-        context: new PlanContext({
+        context: {
           technologies: {
             frontend: ['react', 'css'],
             backend: ['node', 'express'],
             database: 'not-an-array' // Should be array
           },
           requirements: 'Some requirements'
-        })
+        }
       });
 
       const result = await validator.validate(planWithObjectTechnologies);
@@ -728,10 +730,10 @@ describe('StructuralValidator', () => {
     test('should validate technologies format - array', async () => {
       const planWithArrayTechnologies = new Plan({
         ...validPlan.toJSON(),
-        context: new PlanContext({
+        context: {
           technologies: ['react', 'node', 123], // 123 should be string
           requirements: 'Some requirements'
-        })
+        }
       });
 
       const result = await validator.validate(planWithArrayTechnologies);

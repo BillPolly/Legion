@@ -144,7 +144,7 @@ describe('SemanticValidator', () => {
       const result = await validator.validate(validPlan);
       
       expect(result.errors).toHaveLength(0);
-      expect(result.warnings.length).toBeLessThanOrEqual(2); // May have minor warnings
+      expect(result.warnings.length).toBeLessThanOrEqual(3); // May have minor warnings including unachieved goals
     });
 
     test('should handle plans with no steps', async () => {
@@ -863,7 +863,7 @@ describe('SemanticValidator', () => {
     });
 
     test('should handle unknown step types gracefully', async () => {
-      const stepWithUnknownType = new PlanStep({
+      const stepWithUnknownType = {
         id: 'unknown-1',
         name: 'Unknown step type',
         type: 'unknown-type',
@@ -874,7 +874,7 @@ describe('SemanticValidator', () => {
             content: 'content'
           })
         ]
-      });
+      };
 
       const planWithUnknownType = new Plan({
         ...validPlan.toJSON(),

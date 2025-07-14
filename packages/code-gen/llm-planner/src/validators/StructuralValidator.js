@@ -71,7 +71,7 @@ class StructuralValidator {
     // Check required fields
     const requiredFields = ['id', 'name', 'steps'];
     for (const field of requiredFields) {
-      if (!plan[field]) {
+      if (plan[field] === undefined || plan[field] === null) {
         result.errors.push({
           type: 'missing_required_field',
           field,
@@ -87,7 +87,7 @@ class StructuralValidator {
         field: 'steps',
         message: 'Plan steps must be an array'
       });
-    } else if (plan.steps && !Array.isArray(plan.steps)) {
+    } else if (plan.steps !== undefined && !Array.isArray(plan.steps)) {
       result.errors.push({
         type: 'invalid_type',
         field: 'steps',

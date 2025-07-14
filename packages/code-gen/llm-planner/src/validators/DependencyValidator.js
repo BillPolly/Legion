@@ -293,15 +293,9 @@ class DependencyValidator {
     // Find parallelization opportunities at each level
     for (const [level, stepIds] of levelGroups) {
       if (stepIds.length > 1) {
-        // Check if these steps can actually run in parallel
-        const parallelizable = [];
-        
-        for (const stepId of stepIds) {
-          const step = steps.find(s => s.id === stepId);
-          if (step && !this._hasSharedDependencies(step, stepIds, steps)) {
-            parallelizable.push(stepId);
-          }
-        }
+        // Steps at the same depth level can potentially run in parallel
+        // if they don't depend on each other
+        const parallelizable = this._findParallelizableSteps(stepIds, steps);
 
         if (parallelizable.length > 1) {
           suggestions.push({
@@ -318,26 +312,72 @@ class DependencyValidator {
   }
 
   /**
-   * Check if a step shares dependencies with other steps at the same level
+   * Find steps that can run in parallel (don't depend on each other)
    * @private
    */
-  _hasSharedDependencies(step, levelSteps, allSteps) {
-    if (!step.dependencies) return false;
+  _findParallelizableSteps(stepIds, allSteps) {
+    const parallelizable = [];
+    
+    for (const stepId of stepIds) {
+      const step = allSteps.find(s => s.id === stepId);
+      if (!step) continue;
+      
+      // Check if this step depends on any other step in the same group
+      const dependsOnGroupMember = step.dependencies && 
+        step.dependencies.some(dep => stepIds.includes(dep));
+      
+      // Check if any other step in the group depends on this step
+      const isDependendByGroupMember = stepIds.some(otherId => {
+        if (otherId === stepId) return false;
+        const otherStep = allSteps.find(s => s.id === otherId);
+        return otherStep && otherStep.dependencies && 
+               otherStep.dependencies.includes(stepId);
+      });
+      
+      // Check if this step has complex shared dependencies with other steps
+      const hasComplexSharedDeps = this._hasComplexSharedDependencies(step, stepIds, allSteps);
+      
+      // If this step doesn't depend on group members, isn't depended on by them,
+      // and doesn't have complex shared dependencies, it can run in parallel
+      if (!dependsOnGroupMember && !isDependendByGroupMember && !hasComplexSharedDeps) {
+        parallelizable.push(stepId);
+      }
+    }
 
+    return parallelizable;
+  }
+
+  /**
+   * Check if a step has complex shared dependencies that might prevent parallelization
+   * @private
+   */
+  _hasComplexSharedDependencies(step, levelSteps, allSteps) {
+    if (!step.dependencies || step.dependencies.length === 0) {
+      return false;
+    }
+
+    // Count how many other steps in the same level have identical dependency sets
+    let identicalDepCount = 0;
+    
     for (const otherId of levelSteps) {
       if (otherId === step.id) continue;
       
       const otherStep = allSteps.find(s => s.id === otherId);
       if (otherStep && otherStep.dependencies) {
-        // Check for shared dependencies
-        const shared = step.dependencies.some(dep => 
-          otherStep.dependencies.includes(dep)
-        );
-        if (shared) return true;
+        // Check if dependency sets are identical
+        const stepDeps = new Set(step.dependencies);
+        const otherDeps = new Set(otherStep.dependencies);
+        
+        if (stepDeps.size === otherDeps.size && 
+            [...stepDeps].every(dep => otherDeps.has(dep))) {
+          identicalDepCount++;
+        }
       }
     }
 
-    return false;
+    // If multiple steps have identical complex dependency sets (more than 1 dependency),
+    // be conservative and don't suggest parallelization
+    return step.dependencies.length > 1 && identicalDepCount > 0;
   }
 
   /**

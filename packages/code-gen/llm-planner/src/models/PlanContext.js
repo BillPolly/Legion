@@ -14,6 +14,9 @@ class PlanContext {
     // Technologies - normalize to arrays
     this.technologies = this._normalizeTechnologies(data.technologies || {});
     
+    // Goals
+    this.goals = Array.isArray(data.goals) ? [...data.goals] : [];
+    
     // Constraints and requirements
     this.constraints = data.constraints || {};
     this.requirements = {
@@ -250,6 +253,7 @@ class PlanContext {
     return new PlanContext(JSON.parse(JSON.stringify({
       projectType: this.projectType,
       technologies: this.technologies,
+      goals: this.goals,
       constraints: this.constraints,
       requirements: this.requirements,
       environment: this.environment,
@@ -265,6 +269,7 @@ class PlanContext {
     return {
       projectType: this.projectType,
       technologies: this.technologies,
+      goals: this.goals,
       constraints: this.constraints,
       requirements: this.requirements,
       environment: this.environment,
