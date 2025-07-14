@@ -1,317 +1,335 @@
 /**
- * Tests for Plan model
+ * @jest-environment node
  */
 
-import { describe, test, expect, beforeEach } from '@jest/globals';
+import { describe, test, expect } from '@jest/globals';
 import { Plan } from '../../src/models/Plan.js';
+import { PlanStep } from '../../src/models/PlanStep.js';
 
 describe('Plan', () => {
-  let planData;
+  const allowableActions = [
+    { type: 'create-file', inputs: ['file-content'], outputs: ['file-created'] },
+    { type: 'run-command', inputs: ['command'], outputs: ['command-result'] }
+  ];
 
-  beforeEach(() => {
-    planData = {
-      id: 'plan-123',
-      name: 'Create Todo Application',
-      version: '1.0.0',
-      metadata: {
-        createdAt: new Date().toISOString(),
-        createdBy: 'CodePlanner',
-        estimatedDuration: '2 hours',
-        complexity: 'medium'
-      },
-      context: {
-        projectType: 'fullstack',
-        technologies: ['react', 'nodejs', 'postgresql'],
-        constraints: ['accessibility', 'responsive']
-      },
-      steps: [
-        {
-          id: 'step-1',
-          name: 'Initialize project',
-          description: 'Set up project structure',
-          type: 'setup',
-          dependencies: [],
-          inputs: { projectName: 'todo-app' },
-          outputs: { directories: ['src'], files: ['package.json'] },
-          actions: [
-            { type: 'create-directory', path: 'todo-app' }
-          ]
-        }
-      ],
-      executionOrder: ['step-1'],
-      successCriteria: ['All tests pass', 'Application runs']
-    };
-  });
-
-  describe('Constructor', () => {
-    test('should create a Plan instance with all properties', () => {
-      const plan = new Plan(planData);
-
-      expect(plan.id).toBe('plan-123');
-      expect(plan.name).toBe('Create Todo Application');
+  describe('constructor', () => {
+    test('should create a Plan with basic properties', () => {
+      const plan = new Plan({
+        name: 'Test Plan',
+        description: 'Test description'
+      }, allowableActions);
+      
+      expect(plan.name).toBe('Test Plan');
+      expect(plan.description).toBe('Test description');
       expect(plan.version).toBe('1.0.0');
-      expect(plan.metadata).toEqual(planData.metadata);
-      expect(plan.context).toEqual(planData.context);
-      expect(plan.steps).toHaveLength(1);
-      expect(plan.executionOrder).toEqual(['step-1']);
-      expect(plan.successCriteria).toHaveLength(2);
-    });
-
-    test('should generate ID if not provided', () => {
-      const dataWithoutId = { ...planData };
-      delete dataWithoutId.id;
-      
-      const plan = new Plan(dataWithoutId);
-      
       expect(plan.id).toBeDefined();
-      expect(plan.id).toMatch(/^plan-[a-z0-9-]+$/);
-    });
-
-    test('should set default version if not provided', () => {
-      const dataWithoutVersion = { ...planData };
-      delete dataWithoutVersion.version;
-      
-      const plan = new Plan(dataWithoutVersion);
-      
-      expect(plan.version).toBe('1.0.0');
-    });
-
-    test('should initialize empty arrays if not provided', () => {
-      const minimalData = {
-        name: 'Test Plan'
-      };
-      
-      const plan = new Plan(minimalData);
-      
       expect(plan.steps).toEqual([]);
-      expect(plan.executionOrder).toEqual([]);
-      expect(plan.successCriteria).toEqual([]);
+      expect(plan.allowableActions).toBe(allowableActions);
     });
 
-    test('should set metadata defaults', () => {
-      const dataWithoutMetadata = {
-        name: 'Test Plan'
+    test('should initialize with steps', () => {
+      const planData = {
+        name: 'Test Plan',
+        steps: [
+          { name: 'Step 1', type: 'setup' },
+          { name: 'Step 2', type: 'implementation' }
+        ]
       };
       
-      const plan = new Plan(dataWithoutMetadata);
+      const plan = new Plan(planData, allowableActions);
       
-      expect(plan.metadata.createdAt).toBeDefined();
-      expect(plan.metadata.createdBy).toBe('LLMPlanner');
-      expect(plan.metadata.estimatedDuration).toBeUndefined();
+      expect(plan.steps.length).toBe(2);
+      expect(plan.steps[0].name).toBe('Step 1');
+      expect(plan.steps[1].name).toBe('Step 2');
+    });
+
+    test('should set default metadata', () => {
+      const plan = new Plan({}, allowableActions);
+      
+      expect(plan.metadata.createdBy).toBe('GenericPlanner');
       expect(plan.metadata.complexity).toBe('unknown');
+      expect(plan.metadata.createdAt).toBeDefined();
     });
   });
 
-  describe('Methods', () => {
+  describe('addStep', () => {
     test('should add a step to the plan', () => {
-      const plan = new Plan(planData);
-      const newStep = {
-        id: 'step-2',
-        name: 'Install dependencies',
-        type: 'setup',
-        dependencies: ['step-1']
-      };
-
-      plan.addStep(newStep);
-
-      expect(plan.steps).toHaveLength(2);
-      expect(plan.steps[1]).toEqual(newStep);
-    });
-
-    test('should remove a step from the plan', () => {
-      const plan = new Plan(planData);
+      const plan = new Plan({}, allowableActions);
+      const step = new PlanStep({ name: 'Test Step' }, allowableActions);
       
-      plan.removeStep('step-1');
-
-      expect(plan.steps).toHaveLength(0);
-      expect(plan.executionOrder).not.toContain('step-1');
-    });
-
-    test('should get step by ID', () => {
-      const plan = new Plan(planData);
+      plan.addStep(step);
       
-      const step = plan.getStep('step-1');
-
-      expect(step).toBeDefined();
-      expect(step.name).toBe('Initialize project');
+      expect(plan.steps.length).toBe(1);
+      expect(plan.steps[0]).toBe(step);
     });
 
-    test('should return undefined for non-existent step', () => {
-      const plan = new Plan(planData);
+    test('should throw error if not a PlanStep instance', () => {
+      const plan = new Plan({}, allowableActions);
       
-      const step = plan.getStep('non-existent');
-
-      expect(step).toBeUndefined();
+      expect(() => plan.addStep({})).toThrow('Must be a PlanStep instance');
     });
+  });
 
-    test('should update execution order', () => {
-      const plan = new Plan(planData);
-      const newOrder = ['step-1', 'step-2'];
-
-      plan.updateExecutionOrder(newOrder);
-
-      expect(plan.executionOrder).toEqual(newOrder);
-    });
-
+  describe('validate', () => {
     test('should validate plan structure', () => {
-      const plan = new Plan(planData);
+      const plan = new Plan({ name: 'Test Plan' }, allowableActions);
+      const step = new PlanStep({ name: 'Test Step', id: 'step-1' }, allowableActions);
+      
+      plan.addStep(step);
       
       const validation = plan.validate();
-
+      
       expect(validation.isValid).toBe(true);
-      expect(validation.errors).toHaveLength(0);
+      expect(validation.errors).toEqual([]);
     });
 
-    test('should detect missing required fields', () => {
-      const invalidPlan = new Plan({ steps: [] });
+    test('should detect missing plan name', () => {
+      const plan = new Plan({}, allowableActions);
       
-      const validation = invalidPlan.validate();
-
+      const validation = plan.validate();
+      
       expect(validation.isValid).toBe(false);
       expect(validation.errors).toContain('Plan name is required');
     });
 
     test('should detect invalid dependencies', () => {
-      const plan = new Plan({
-        name: 'Test Plan',
-        steps: [
-          {
-            id: 'step-1',
-            name: 'Step 1',
-            dependencies: ['step-2'] // step-2 doesn't exist
-          }
-        ]
-      });
+      const plan = new Plan({ name: 'Test Plan' }, allowableActions);
+      const step = new PlanStep({ 
+        name: 'Test Step', 
+        id: 'step-1',
+        dependencies: ['nonexistent-step']
+      }, allowableActions);
+      
+      plan.addStep(step);
       
       const validation = plan.validate();
-
+      
       expect(validation.isValid).toBe(false);
-      expect(validation.errors).toContain('Step step-1 depends on non-existent step: step-2');
-    });
-
-    test('should calculate total estimated duration', () => {
-      const plan = new Plan({
-        name: 'Test Plan',
-        steps: [
-          { id: '1', name: 'Step 1', estimatedDuration: 30 },
-          { id: '2', name: 'Step 2', estimatedDuration: 45 },
-          { id: '3', name: 'Step 3', estimatedDuration: 15 }
-        ]
-      });
-
-      const duration = plan.getTotalDuration();
-
-      expect(duration).toBe(90);
-    });
-
-    test('should get steps by type', () => {
-      const plan = new Plan({
-        name: 'Test Plan',
-        steps: [
-          { id: '1', name: 'Setup 1', type: 'setup' },
-          { id: '2', name: 'Code 1', type: 'implementation' },
-          { id: '3', name: 'Setup 2', type: 'setup' }
-        ]
-      });
-
-      const setupSteps = plan.getStepsByType('setup');
-
-      expect(setupSteps).toHaveLength(2);
-      expect(setupSteps[0].id).toBe('1');
-      expect(setupSteps[1].id).toBe('3');
-    });
-
-    test('should clone the plan', () => {
-      const plan = new Plan(planData);
-      
-      const cloned = plan.clone();
-
-      expect(cloned).not.toBe(plan);
-      expect(cloned.id).not.toBe(plan.id);
-      expect(cloned.name).toBe(plan.name);
-      expect(cloned.steps).toEqual(plan.steps);
-    });
-
-    test('should export to JSON', () => {
-      const plan = new Plan(planData);
-      
-      const json = plan.toJSON();
-
-      expect(json).toEqual({
-        id: plan.id,
-        name: plan.name,
-        version: plan.version,
-        metadata: plan.metadata,
-        context: plan.context,
-        steps: plan.steps,
-        executionOrder: plan.executionOrder,
-        successCriteria: plan.successCriteria
-      });
-    });
-
-    test('should import from JSON', () => {
-      const json = {
-        id: 'imported-plan',
-        name: 'Imported Plan',
-        version: '2.0.0',
-        steps: [{ id: 'step-1', name: 'Step 1' }]
-      };
-
-      const plan = Plan.fromJSON(json);
-
-      expect(plan).toBeInstanceOf(Plan);
-      expect(plan.id).toBe('imported-plan');
-      expect(plan.name).toBe('Imported Plan');
-      expect(plan.version).toBe('2.0.0');
+      expect(validation.errors).toContain('Step step-1 depends on non-existent step: nonexistent-step');
     });
   });
 
-  describe('Dependency Management', () => {
+  describe('validateInputOutputFlow', () => {
+    test('should validate simple input/output flow', () => {
+      const plan = new Plan({ 
+        name: 'Test Plan',
+        inputs: ['initial-input'],
+        requiredOutputs: ['final-output']
+      }, allowableActions);
+      
+      const step = new PlanStep({ 
+        name: 'Test Step',
+        id: 'step-1',
+        inputs: ['initial-input'],
+        outputs: ['final-output']
+      }, allowableActions);
+      
+      plan.addStep(step);
+      
+      const validation = plan.validateInputOutputFlow();
+      
+      expect(validation.isValid).toBe(true);
+      expect(validation.availableOutputs).toContain('final-output');
+      expect(validation.missingOutputs).toEqual([]);
+    });
+
+    test('should detect missing required outputs', () => {
+      const plan = new Plan({ 
+        name: 'Test Plan',
+        inputs: ['initial-input'],
+        requiredOutputs: ['missing-output']
+      }, allowableActions);
+      
+      const step = new PlanStep({ 
+        name: 'Test Step',
+        id: 'step-1',
+        inputs: ['initial-input'],
+        outputs: ['different-output']
+      }, allowableActions);
+      
+      plan.addStep(step);
+      
+      const validation = plan.validateInputOutputFlow();
+      
+      expect(validation.isValid).toBe(false);
+      expect(validation.errors).toContain('Plan does not produce required outputs: missing-output');
+    });
+
+    test('should detect missing step inputs', () => {
+      const plan = new Plan({ 
+        name: 'Test Plan',
+        inputs: ['initial-input']
+      }, allowableActions);
+      
+      const step = new PlanStep({ 
+        name: 'Test Step',
+        id: 'step-1',
+        inputs: ['missing-input'],
+        outputs: ['step-output']
+      }, allowableActions);
+      
+      plan.addStep(step);
+      
+      const validation = plan.validateInputOutputFlow();
+      
+      expect(validation.isValid).toBe(false);
+      expect(validation.errors).toContain("Step 'Test Step' (step-1) missing required inputs: missing-input");
+    });
+  });
+
+  describe('hasCircularDependencies', () => {
     test('should detect circular dependencies', () => {
-      const plan = new Plan({
-        name: 'Test Plan',
-        steps: [
-          { id: 'step-1', name: 'Step 1', dependencies: ['step-2'] },
-          { id: 'step-2', name: 'Step 2', dependencies: ['step-3'] },
-          { id: 'step-3', name: 'Step 3', dependencies: ['step-1'] }
-        ]
-      });
-
-      const hasCycles = plan.hasCircularDependencies();
-
-      expect(hasCycles).toBe(true);
+      const plan = new Plan({ name: 'Test Plan' }, allowableActions);
+      
+      const step1 = new PlanStep({ 
+        name: 'Step 1', 
+        id: 'step-1',
+        dependencies: ['step-2']
+      }, allowableActions);
+      
+      const step2 = new PlanStep({ 
+        name: 'Step 2', 
+        id: 'step-2',
+        dependencies: ['step-1']
+      }, allowableActions);
+      
+      plan.addStep(step1);
+      plan.addStep(step2);
+      
+      expect(plan.hasCircularDependencies()).toBe(true);
     });
 
-    test('should generate correct execution order with dependencies', () => {
-      const plan = new Plan({
-        name: 'Test Plan',
-        steps: [
-          { id: 'step-1', name: 'Step 1', dependencies: [] },
-          { id: 'step-2', name: 'Step 2', dependencies: ['step-1'] },
-          { id: 'step-3', name: 'Step 3', dependencies: ['step-1', 'step-2'] }
-        ]
-      });
-
-      const order = plan.generateExecutionOrder();
-
-      expect(order).toEqual(['step-1', 'step-2', 'step-3']);
+    test('should return false for valid dependencies', () => {
+      const plan = new Plan({ name: 'Test Plan' }, allowableActions);
+      
+      const step1 = new PlanStep({ 
+        name: 'Step 1', 
+        id: 'step-1'
+      }, allowableActions);
+      
+      const step2 = new PlanStep({ 
+        name: 'Step 2', 
+        id: 'step-2',
+        dependencies: ['step-1']
+      }, allowableActions);
+      
+      plan.addStep(step1);
+      plan.addStep(step2);
+      
+      expect(plan.hasCircularDependencies()).toBe(false);
     });
+  });
 
-    test('should identify independent steps for parallel execution', () => {
+  describe('generateExecutionOrder', () => {
+    test('should generate correct execution order', () => {
+      const plan = new Plan({ name: 'Test Plan' }, allowableActions);
+      
+      const step1 = new PlanStep({ 
+        name: 'Step 1', 
+        id: 'step-1'
+      }, allowableActions);
+      
+      const step2 = new PlanStep({ 
+        name: 'Step 2', 
+        id: 'step-2',
+        dependencies: ['step-1']
+      }, allowableActions);
+      
+      const step3 = new PlanStep({ 
+        name: 'Step 3', 
+        id: 'step-3',
+        dependencies: ['step-2']
+      }, allowableActions);
+      
+      plan.addStep(step1);
+      plan.addStep(step2);
+      plan.addStep(step3);
+      
+      const executionOrder = plan.generateExecutionOrder();
+      
+      expect(executionOrder).toEqual(['step-1', 'step-2', 'step-3']);
+    });
+  });
+
+  describe('getParallelExecutionGroups', () => {
+    test('should group independent steps for parallel execution', () => {
+      const plan = new Plan({ name: 'Test Plan' }, allowableActions);
+      
+      const step1 = new PlanStep({ name: 'Step 1', id: 'step-1' }, allowableActions);
+      const step2 = new PlanStep({ name: 'Step 2', id: 'step-2' }, allowableActions);
+      const step3 = new PlanStep({ 
+        name: 'Step 3', 
+        id: 'step-3',
+        dependencies: ['step-1', 'step-2']
+      }, allowableActions);
+      
+      plan.addStep(step1);
+      plan.addStep(step2);
+      plan.addStep(step3);
+      
+      const groups = plan.getParallelExecutionGroups();
+      
+      expect(groups.length).toBe(2);
+      expect(groups[0]).toEqual(expect.arrayContaining(['step-1', 'step-2']));
+      expect(groups[1]).toEqual(['step-3']);
+    });
+  });
+
+  describe('toJSON', () => {
+    test('should export to JSON', () => {
       const plan = new Plan({
         name: 'Test Plan',
+        description: 'Test description',
+        inputs: ['input1'],
+        requiredOutputs: ['output1']
+      }, allowableActions);
+      
+      const step = new PlanStep({ name: 'Test Step' }, allowableActions);
+      plan.addStep(step);
+      
+      const json = plan.toJSON();
+      
+      expect(json.name).toBe('Test Plan');
+      expect(json.description).toBe('Test description');
+      expect(json.inputs).toEqual(['input1']);
+      expect(json.requiredOutputs).toEqual(['output1']);
+      expect(json.steps).toHaveLength(1);
+      expect(json.steps[0].name).toBe('Test Step');
+    });
+  });
+
+  describe('fromJSON', () => {
+    test('should create from JSON', () => {
+      const json = {
+        name: 'Test Plan',
+        description: 'Test description',
         steps: [
-          { id: 'step-1', name: 'Step 1', dependencies: [] },
-          { id: 'step-2', name: 'Step 2', dependencies: [] },
-          { id: 'step-3', name: 'Step 3', dependencies: ['step-1', 'step-2'] }
+          { name: 'Test Step', type: 'implementation' }
         ]
-      });
+      };
+      
+      const plan = Plan.fromJSON(json, allowableActions);
+      
+      expect(plan.name).toBe('Test Plan');
+      expect(plan.description).toBe('Test description');
+      expect(plan.steps).toHaveLength(1);
+      expect(plan.steps[0].name).toBe('Test Step');
+    });
+  });
 
-      const parallelGroups = plan.getParallelExecutionGroups();
+  describe('getInputs', () => {
+    test('should return plan inputs', () => {
+      const plan = new Plan({ inputs: ['input1', 'input2'] }, allowableActions);
+      
+      expect(plan.getInputs()).toEqual(['input1', 'input2']);
+    });
+  });
 
-      expect(parallelGroups).toHaveLength(2);
-      expect(parallelGroups[0]).toEqual(['step-1', 'step-2']);
-      expect(parallelGroups[1]).toEqual(['step-3']);
+  describe('getRequiredOutputs', () => {
+    test('should return plan required outputs', () => {
+      const plan = new Plan({ requiredOutputs: ['output1', 'output2'] }, allowableActions);
+      
+      expect(plan.getRequiredOutputs()).toEqual(['output1', 'output2']);
     });
   });
 });

@@ -15,6 +15,9 @@ import { StateManager } from './config/StateManager.js';
 import { ValidationUtils } from './utils/ValidationUtils.js';
 import { ErrorHandler } from './utils/ErrorHandler.js';
 
+// Import LLM planner
+import { LLMPlanner } from '@jsenvoy/llm-planner';
+
 /**
  * Main CodeAgent class - entry point for all coding operations
  * 
@@ -79,6 +82,7 @@ class CodeAgent {
     this.fileOps = null;
     this.llmClient = null;
     this.moduleLoader = null;
+    this.llmPlanner = null;
     this.initialized = false;
   }
 
@@ -125,6 +129,9 @@ class CodeAgent {
       
       // Initialize state manager
       await this.stateManager.initialize();
+      
+      // Initialize LLM planner
+      this.llmPlanner = new LLMPlanner();
       
       // Create working directory if it doesn't exist
       await this.fileOps.createDirectory(workingDirectory);
@@ -244,17 +251,19 @@ class CodeAgent {
    * @private
    */
   async planProject(requirements) {
-    // TODO: Implement project planning logic
-    // - Analyze requirements
-    // - Determine project structure
-    // - Plan file organization
-    // - Design API interfaces (if fullstack)
+    console.log('🔍 Analyzing requirements...');
+    
+    // Use LLM planner to analyze requirements
+    const analysis = await this.llmPlanner.analyzeRequirements(requirements);
+    
+    console.log(`📊 Analysis complete: ${analysis.projectType} project with ${analysis.complexity} complexity`);
     
     this.projectPlan = {
-      structure: {},
+      analysis,
+      structure: analysis.suggestedArchitecture?.structure || {},
       files: [],
       dependencies: [],
-      architecture: this.config.projectType
+      architecture: analysis.projectType
     };
     
     console.log('Project planning completed');

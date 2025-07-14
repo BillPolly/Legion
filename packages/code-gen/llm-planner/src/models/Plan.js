@@ -1,9 +1,15 @@
 /**
  * Plan model - Represents a structured execution plan
+ * 
+ * Plans contain hierarchical steps that can have sub-steps or actions.
+ * Actions are atomic operations from the user-provided allowableActions.
  */
 
+import { PlanStep } from './PlanStep.js';
+import { PlanAction } from './PlanAction.js';
+
 class Plan {
-  constructor(data = {}) {
+  constructor(data = {}, allowableActions = []) {
     // Generate ID if not provided
     this.id = data.id || this._generateId();
     
@@ -17,7 +23,7 @@ class Plan {
     // Metadata with defaults
     this.metadata = {
       createdAt: data.metadata?.createdAt || new Date().toISOString(),
-      createdBy: data.metadata?.createdBy || 'LLMPlanner',
+      createdBy: data.metadata?.createdBy || 'GenericPlanner',
       estimatedDuration: data.metadata?.estimatedDuration,
       complexity: data.metadata?.complexity || 'unknown',
       ...data.metadata
@@ -27,9 +33,23 @@ class Plan {
     this.context = data.context || {};
     
     // Plan components
-    this.steps = data.steps || [];
+    this.steps = [];
     this.executionOrder = data.executionOrder || [];
     this.successCriteria = data.successCriteria || [];
+    
+    // Input/Output tracking
+    this.inputs = Array.isArray(data.inputs) ? [...data.inputs] : [];
+    this.requiredOutputs = Array.isArray(data.requiredOutputs) ? [...data.requiredOutputs] : [];
+    
+    // Store allowable actions for validation
+    this.allowableActions = allowableActions;
+    
+    // Initialize steps if provided
+    if (data.steps && Array.isArray(data.steps)) {
+      for (const stepData of data.steps) {
+        this.addStep(new PlanStep(stepData, allowableActions));
+      }
+    }
   }
 
   /**
@@ -44,9 +64,12 @@ class Plan {
 
   /**
    * Add a step to the plan
-   * @param {Object} step - Step to add
+   * @param {PlanStep} step - Step to add
    */
   addStep(step) {
+    if (!(step instanceof PlanStep)) {
+      throw new Error('Must be a PlanStep instance');
+    }
     this.steps.push(step);
   }
 
@@ -161,10 +184,13 @@ class Plan {
     return {
       id: this.id,
       name: this.name,
+      description: this.description,
       version: this.version,
       metadata: this.metadata,
       context: this.context,
-      steps: this.steps,
+      inputs: this.inputs,
+      requiredOutputs: this.requiredOutputs,
+      steps: this.steps.map(step => step.toJSON()),
       executionOrder: this.executionOrder,
       successCriteria: this.successCriteria
     };
@@ -173,10 +199,12 @@ class Plan {
   /**
    * Create from JSON
    * @param {Object} json - JSON data
+   * @param {Array} allowableActions - Available action definitions
    * @returns {Plan} Plan instance
    */
-  static fromJSON(json) {
-    return new Plan(json);
+  static fromJSON(json, allowableActions = []) {
+    const plan = new Plan(json, allowableActions);
+    return plan;
   }
 
   /**
@@ -249,6 +277,81 @@ class Plan {
     }
     
     return order;
+  }
+
+  /**
+   * Validate input/output flow of the plan
+   * @returns {Object} Validation result
+   */
+  validateInputOutputFlow() {
+    const errors = [];
+    const warnings = [];
+    
+    // Track all available outputs (starting with plan inputs)
+    const availableOutputs = [...this.inputs];
+    
+    // Check each step in execution order
+    const executionOrder = this.executionOrder.length > 0 ? this.executionOrder : this.generateExecutionOrder();
+    
+    for (const stepId of executionOrder) {
+      const step = this.getStep(stepId);
+      if (!step) continue;
+      
+      // Validate step inputs
+      const stepInputValidation = step.validateInputs(availableOutputs);
+      if (!stepInputValidation.isValid) {
+        errors.push(`Step '${step.name}' (${stepId}) missing required inputs: ${stepInputValidation.missingInputs.join(', ')}`);
+      }
+      
+      // Add step outputs to available outputs
+      const stepOutputs = step.getOutputs();
+      for (const output of stepOutputs) {
+        if (!availableOutputs.includes(output)) {
+          availableOutputs.push(output);
+        }
+      }
+    }
+    
+    // Check if all required outputs are produced
+    const missingOutputs = this.requiredOutputs.filter(output => !availableOutputs.includes(output));
+    if (missingOutputs.length > 0) {
+      errors.push(`Plan does not produce required outputs: ${missingOutputs.join(', ')}`);
+    }
+    
+    // Check for unused outputs
+    const producedOutputs = this.steps.flatMap(step => step.getOutputs());
+    const usedOutputs = this.steps.flatMap(step => step.getInputs());
+    const unusedOutputs = producedOutputs.filter(output => 
+      !usedOutputs.includes(output) && !this.requiredOutputs.includes(output)
+    );
+    if (unusedOutputs.length > 0) {
+      warnings.push(`Unused outputs: ${unusedOutputs.join(', ')}`);
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+      availableOutputs,
+      missingOutputs,
+      unusedOutputs
+    };
+  }
+
+  /**
+   * Get all inputs required by the plan
+   * @returns {Array<string>} Array of input names
+   */
+  getInputs() {
+    return [...this.inputs];
+  }
+
+  /**
+   * Get all required outputs of the plan
+   * @returns {Array<string>} Array of output names
+   */
+  getRequiredOutputs() {
+    return [...this.requiredOutputs];
   }
 
   /**

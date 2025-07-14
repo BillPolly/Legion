@@ -8,6 +8,10 @@
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathPattern=integration",
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathIgnorePatterns=integration",
+    "test:llm": "RUN_REAL_LLM_TESTS=true NODE_OPTIONS='--experimental-vm-modules' jest --testPathPattern=integration --testTimeout=60000",
+    "test:llm-demo": "node scripts/test-with-real-llm.js",
     "lint": "eslint src __tests__",
     "lint:fix": "eslint src __tests__ --fix"
   },
@@ -21,7 +25,10 @@
   ],
   "author": "jsEnvoy Team",
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "@jsenvoy/llm": "workspace:*",
+    "@jsenvoy/module-loader": "workspace:*"
+  },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
     "eslint": "^8.57.0",

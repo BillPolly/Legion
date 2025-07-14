@@ -5,30 +5,30 @@
 2. [Architecture](#architecture)
 3. [Core Components](#core-components)
 4. [Plan Structure](#plan-structure)
-5. [Implementation Strategy](#implementation-strategy)
+5. [Flow Validation](#flow-validation)
 6. [Integration Points](#integration-points)
-7. [Extensibility](#extensibility)
+7. [Usage Patterns](#usage-patterns)
 8. [Example Workflows](#example-workflows)
 
 ## Overview
 
-The LLM Planner is a sophisticated planning system that leverages Large Language Models to transform natural language requirements into structured, executable plans. While initially focused on code generation tasks, the architecture is designed to be domain-agnostic and extensible.
+The LLM Planner is a general-purpose planning framework that leverages Large Language Models to decompose complex tasks into structured, executable plans. It provides a flexible system for defining allowable actions and their input/output contracts, enabling automated planning for any domain.
 
 ### Key Objectives
 
-1. **Intelligent Understanding**: Use LLMs to understand complex, ambiguous requirements
-2. **Structured Output**: Generate consistent, actionable plans with clear steps
-3. **Domain Flexibility**: Support multiple planning domains through specialized planners
-4. **Quality Assurance**: Validate and refine plans before execution
-5. **Integration Ready**: Seamless integration with jsEnvoy ecosystem
+1. **General-Purpose Planning**: Transform any task description into actionable plans
+2. **Action-Based Architecture**: Define custom actions with input/output specifications
+3. **Flow Validation**: Ensure data flow integrity throughout plan execution
+4. **Structured Output**: Generate consistent JSON plans with clear dependencies
+5. **LLM Integration**: Support multiple LLM providers through @jsenvoy/llm
 
 ### Design Principles
 
-- **Separation of Concerns**: Clear boundaries between planning, validation, and execution
-- **Extensibility First**: Easy to add new planner types and domains
-- **Prompt Engineering**: Carefully crafted prompts for consistent LLM responses
-- **Fail-Safe Design**: Comprehensive error handling and plan validation
-- **Event-Driven**: Observable plan generation and execution process
+- **Domain Agnostic**: No hardcoded assumptions about specific use cases
+- **Action Flexibility**: Users define their own action types and contracts
+- **Input/Output Flow**: Track data flow through plan steps for validation
+- **Retry Resilience**: Handle LLM failures with automatic retries
+- **Modular Integration**: Works standalone or as jsEnvoy module
 
 ## Architecture
 
@@ -37,727 +37,879 @@ The LLM Planner is a sophisticated planning system that leverages Large Language
 │                        LLM Planner                          │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  ┌─────────────┐  ┌──────────────┐  ┌─────────────────┐  │
-│  │   Planners  │  │     Core     │  │     Models      │  │
-│  │             │  │              │  │                 │  │
-│  │ CodePlanner │  │ BasePlanner  │  │      Plan       │  │
-│  │ TestPlanner │  │ PlanExecutor │  │    PlanStep     │  │
-│  │ ArchPlanner │  │ PlanValidator│  │  PlanContext    │  │
-│  └─────────────┘  │ PlanRefiner  │  └─────────────────┘  │
-│                   └──────────────┘                         │
-│                                                             │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │                    Utilities                         │  │
-│  │                                                      │  │
-│  │  PromptBuilder   PlanFormatter   ResponseParser     │  │
-│  └─────────────────────────────────────────────────────┘  │
+│  ┌──────────────────┐  ┌─────────────┐  ┌──────────────┐  │
+│  │  GenericPlanner  │  │    Models   │  │  Validation  │  │
+│  │                  │  │             │  │              │  │
+│  │ • createPlan()   │  │ • Plan      │  │ FlowValidator│  │
+│  │ • buildPrompt()  │  │ • PlanStep  │  │              │  │
+│  │ • parseResponse()│  │ • PlanAction│  │ • validate() │  │
+│  └──────────────────┘  └─────────────┘  └──────────────┘  │
 │                                                             │
 │  ┌─────────────────────────────────────────────────────┐  │
 │  │                 LLM Integration                      │  │
 │  │                                                      │  │
 │  │              @jsenvoy/llm Client                    │  │
+│  │         (Multiple Provider Support)                 │  │
+│  └─────────────────────────────────────────────────────┘  │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐  │
+│  │              jsEnvoy Module Integration              │  │
+│  │                                                      │  │
+│  │                 LLMPlannerModule                    │  │
 │  └─────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Layer Descriptions
+### Component Overview
 
-1. **Planners Layer**: Domain-specific planning implementations
-2. **Core Layer**: Base classes and core functionality
-3. **Models Layer**: Data structures for plans and execution
-4. **Utilities Layer**: Helper functions for prompt building and parsing
-5. **Integration Layer**: Connection to jsEnvoy LLM client
+1. **GenericPlanner**: Main orchestrator that accepts task descriptions and action definitions
+2. **Models**: Data structures representing plans, steps, and actions
+3. **FlowValidator**: Validates input/output flow and dependency chains
+4. **LLM Integration**: Flexible client supporting multiple providers
+5. **Module Integration**: jsEnvoy module wrapper for tool ecosystem
 
 ## Core Components
 
-### 1. BasePlanner
+### 1. GenericPlanner
 
-Abstract base class that provides the foundation for all planners.
-
-```javascript
-class BasePlanner {
-  constructor(config) {
-    this.llmClient = new LLMClientManager(config.llmConfig);
-    this.validator = new PlanValidator();
-    this.refiner = new PlanRefiner();
-  }
-
-  async createPlan(requirements) {
-    // Template method pattern
-    const context = await this.analyzeRequirements(requirements);
-    const rawPlan = await this.generatePlan(context);
-    const validatedPlan = await this.validator.validate(rawPlan);
-    const refinedPlan = await this.refiner.refine(validatedPlan, context);
-    return new Plan(refinedPlan);
-  }
-
-  // Abstract methods to be implemented by subclasses
-  async analyzeRequirements(requirements) { }
-  async generatePlan(context) { }
-}
-```
-
-### 2. CodePlanner
-
-Specialized planner for software development tasks.
+The main planning orchestrator that transforms task descriptions into structured plans.
 
 ```javascript
-class CodePlanner extends BasePlanner {
-  async analyzeRequirements(requirements) {
-    // Use LLM to understand project requirements
-    // Extract: project type, technologies, features, constraints
-    return {
-      projectType: 'fullstack',
-      frontend: { framework: 'react', language: 'typescript' },
-      backend: { framework: 'express', database: 'postgresql' },
-      features: ['authentication', 'CRUD operations'],
-      constraints: ['must be accessible', 'responsive design']
-    };
-  }
-
-  async generatePlan(context) {
-    // Generate detailed implementation plan
-    // Including: file structure, dependencies, implementation order
-    return {
-      steps: [
-        {
-          id: 'setup-project',
-          name: 'Initialize project structure',
-          dependencies: [],
-          tasks: [
-            'Create directory structure',
-            'Initialize package.json',
-            'Set up Git repository'
-          ]
-        },
-        // ... more steps
-      ]
-    };
-  }
-}
-```
-
-### 3. PlanValidator
-
-Ensures plans meet quality, completeness, and correctness criteria before execution.
-
-```javascript
-class PlanValidator {
+class GenericPlanner {
   constructor(config = {}) {
-    this.validationPipeline = [
-      new StructuralValidator(),
-      new DependencyValidator(),
-      new SemanticValidator(),
-      new CompletenessValidator()
-    ];
-    this.domainValidators = new Map();
-    this.config = config;
+    this.llmClient = config.llmClient;
+    this.maxRetries = config.maxRetries || 3;
+    this.maxSteps = config.maxSteps || 20;
   }
 
-  async validate(plan) {
-    const validationResult = {
-      isValid: true,
-      errors: [],
-      warnings: [],
-      suggestions: [],
-      score: 100
-    };
+  async createPlan({ description, inputs, requiredOutputs, allowableActions }) {
+    // Build structured prompt with task details and action specifications
+    const prompt = this.buildPrompt({
+      description,
+      inputs,
+      requiredOutputs,
+      allowableActions
+    });
 
-    // Run through validation pipeline
-    for (const validator of this.validationPipeline) {
-      const result = await validator.validate(plan);
-      this.mergeResults(validationResult, result);
+    // Request plan from LLM with retry logic
+    let attempts = 0;
+    while (attempts < this.maxRetries) {
+      const response = await this.llmClient.generateStructuredResponse(
+        prompt,
+        this.getPlanSchema(),
+        { temperature: 0.7 }
+      );
+
+      const plan = new Plan(response.data);
+      const validation = plan.validate();
+      
+      if (validation.isValid) {
+        return plan;
+      }
+      
+      attempts++;
     }
-
-    // Apply domain-specific validation
-    const domainValidator = this.domainValidators.get(plan.domain);
-    if (domainValidator) {
-      const result = await domainValidator.validate(plan);
-      this.mergeResults(validationResult, result);
-    }
-
-    // Calculate quality score
-    validationResult.score = this.calculateQualityScore(validationResult);
-
-    if (validationResult.errors.length > 0) {
-      validationResult.isValid = false;
-    }
-
-    return validationResult;
+    
+    throw new Error('Failed to generate valid plan after retries');
   }
 
-  registerDomainValidator(domain, validator) {
-    this.domainValidators.set(domain, validator);
+  buildPrompt({ description, inputs, requiredOutputs, allowableActions }) {
+    // Constructs detailed prompt explaining the task and available actions
+    // Includes JSON schema requirements and examples
+    return `Create a plan for: ${description}...`;
   }
 }
 ```
 
-### 4. Validation Architecture
+### 2. Plan Model
 
-The validation system consists of multiple layers ensuring plan correctness:
-
-#### 4.1 Structural Validator
+Central data structure representing a complete plan.
 
 ```javascript
-class StructuralValidator {
-  validate(plan) {
-    const result = { errors: [], warnings: [] };
+class Plan {
+  constructor(data) {
+    this.id = data.id || uuidv4();
+    this.name = data.name;
+    this.description = data.description;
+    this.version = data.version || '1.0.0';
+    this.metadata = {
+      createdAt: new Date().toISOString(),
+      complexity: data.complexity || 'medium',
+      estimatedDuration: data.estimatedDuration,
+      ...data.metadata
+    };
+    this.inputs = data.inputs || [];
+    this.requiredOutputs = data.requiredOutputs || [];
+    this.steps = (data.steps || []).map(s => new PlanStep(s));
+    this.executionOrder = data.executionOrder || [];
+  }
+
+  validate() {
+    const errors = [];
     
     // Validate required fields
-    if (!plan.id || !plan.name || !plan.steps) {
-      result.errors.push('Missing required plan fields');
+    if (!this.name) errors.push('Plan name is required');
+    if (!this.steps || this.steps.length === 0) {
+      errors.push('Plan must have at least one step');
     }
     
-    // Validate step structure
-    for (const step of plan.steps) {
-      if (!step.id || !step.name || !step.actions) {
-        result.errors.push(`Invalid step structure: ${step.id}`);
+    // Validate each step
+    this.steps.forEach((step, index) => {
+      const stepValidation = step.validate();
+      if (!stepValidation.isValid) {
+        errors.push(`Step ${index}: ${stepValidation.errors.join(', ')}`);
       }
-      
-      // Validate action types
-      for (const action of step.actions) {
-        if (!this.isValidActionType(action.type)) {
-          result.errors.push(`Unknown action type: ${action.type}`);
-        }
-      }
-    }
-    
-    return result;
-  }
-}
-```
-
-#### 4.2 Dependency Validator
-
-```javascript
-class DependencyValidator {
-  validate(plan) {
-    const result = { errors: [], warnings: [] };
-    const stepIds = new Set(plan.steps.map(s => s.id));
-    
-    // Check all dependencies exist
-    for (const step of plan.steps) {
-      for (const dep of step.dependencies || []) {
-        if (!stepIds.has(dep)) {
-          result.errors.push(`Step ${step.id} depends on non-existent step ${dep}`);
-        }
-      }
-    }
+    });
     
     // Check for circular dependencies
-    const cycles = this.detectCycles(plan.steps);
-    if (cycles.length > 0) {
-      result.errors.push(`Circular dependencies detected: ${cycles.join(', ')}`);
+    if (this.hasCircularDependencies()) {
+      errors.push('Plan contains circular dependencies');
     }
     
-    return result;
-  }
-}
-```
-
-#### 4.3 Semantic Validator
-
-```javascript
-class SemanticValidator {
-  validate(plan) {
-    const result = { errors: [], warnings: [] };
-    
-    // Validate logical flow
-    if (!this.validateLogicalSequence(plan.steps)) {
-      result.errors.push('Plan steps do not form a logical sequence');
-    }
-    
-    // Check for conflicting actions
-    const conflicts = this.detectActionConflicts(plan.steps);
-    if (conflicts.length > 0) {
-      result.errors.push(`Conflicting actions detected: ${conflicts.join(', ')}`);
-    }
-    
-    // Validate resource requirements
-    if (!this.validateResourceAvailability(plan)) {
-      result.warnings.push('Some required resources may not be available');
-    }
-    
-    return result;
-  }
-}
-```
-
-### 5. PlanRefiner
-
-Iteratively improves plans based on validation feedback.
-
-```javascript
-class PlanRefiner {
-  constructor(config = {}) {
-    this.maxRefinements = config.maxRefinements || 3;
-    this.llmClient = config.llmClient;
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
   }
 
-  async refine(plan, context) {
-    let refinedPlan = plan;
-    let refinementCount = 0;
-
-    while (refinementCount < this.maxRefinements) {
-      const issues = await this.identifyIssues(refinedPlan);
+  generateExecutionOrder() {
+    // Topological sort to determine execution order
+    const visited = new Set();
+    const order = [];
+    
+    const visit = (stepId) => {
+      if (visited.has(stepId)) return;
+      visited.add(stepId);
       
-      if (issues.length === 0) {
-        break;
+      const step = this.getStepById(stepId);
+      if (step && step.dependencies) {
+        step.dependencies.forEach(dep => visit(dep));
       }
+      
+      order.push(stepId);
+    };
+    
+    this.steps.forEach(step => visit(step.id));
+    this.executionOrder = order;
+    return order;
+  }
 
-      refinedPlan = await this.applyRefinements(refinedPlan, issues, context);
-      refinementCount++;
+  getParallelExecutionGroups() {
+    // Groups steps that can be executed in parallel
+    const groups = [];
+    const completed = new Set();
+    
+    while (completed.size < this.steps.length) {
+      const group = this.steps.filter(step => {
+        if (completed.has(step.id)) return false;
+        
+        // Check if all dependencies are completed
+        return !step.dependencies || 
+          step.dependencies.every(dep => completed.has(dep));
+      });
+      
+      if (group.length === 0) break;
+      
+      groups.push(group.map(s => s.id));
+      group.forEach(s => completed.add(s.id));
     }
+    
+    return groups;
+  }
+}
+```
 
-    return refinedPlan;
+### 3. FlowValidator
+
+Validates the input/output flow through plan steps.
+
+```javascript
+class FlowValidator {
+  validate(plan) {
+    const errors = [];
+    const warnings = [];
+    
+    // Track available outputs through execution
+    const availableOutputs = new Set(plan.inputs || []);
+    
+    // Validate each step in execution order
+    const executionOrder = plan.executionOrder || plan.generateExecutionOrder();
+    
+    for (const stepId of executionOrder) {
+      const step = plan.getStepById(stepId);
+      if (!step) {
+        errors.push(`Step ${stepId} not found in plan`);
+        continue;
+      }
+      
+      // Check if all required inputs are available
+      if (step.inputs) {
+        for (const input of step.inputs) {
+          if (!availableOutputs.has(input)) {
+            errors.push(
+              `Step '${step.name}' requires input '${input}' ` +
+              `which is not available`
+            );
+          }
+        }
+      }
+      
+      // Add step outputs to available outputs
+      if (step.outputs) {
+        step.outputs.forEach(output => availableOutputs.add(output));
+      }
+    }
+    
+    // Check if all required outputs are produced
+    if (plan.requiredOutputs) {
+      for (const output of plan.requiredOutputs) {
+        if (!availableOutputs.has(output)) {
+          errors.push(
+            `Required output '${output}' is not produced by any step`
+          );
+        }
+      }
+    }
+    
+    // Identify unused outputs
+    const usedInputs = new Set();
+    plan.steps.forEach(step => {
+      if (step.inputs) {
+        step.inputs.forEach(input => usedInputs.add(input));
+      }
+    });
+    
+    availableOutputs.forEach(output => {
+      if (!usedInputs.has(output) && 
+          !plan.requiredOutputs?.includes(output) &&
+          !plan.inputs?.includes(output)) {
+        warnings.push(`Output '${output}' is produced but never used`);
+      }
+    });
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings
+    };
+  }
+}
+```
+
+### 4. PlanStep Model
+
+Represents an individual step in the plan.
+
+```javascript
+class PlanStep {
+  constructor(data) {
+    this.id = data.id;
+    this.name = data.name;
+    this.description = data.description;
+    this.type = data.type; // setup|implementation|integration|testing|validation|deployment
+    this.dependencies = data.dependencies || [];
+    this.inputs = data.inputs || [];
+    this.outputs = data.outputs || [];
+    this.actions = (data.actions || []).map(a => new PlanAction(a));
+    this.estimatedTime = data.estimatedTime;
+  }
+
+  validate() {
+    const errors = [];
+    
+    if (!this.id) errors.push('Step id is required');
+    if (!this.name) errors.push('Step name is required');
+    if (!this.type) errors.push('Step type is required');
+    
+    const validTypes = ['setup', 'implementation', 'integration', 
+                       'testing', 'validation', 'deployment'];
+    if (!validTypes.includes(this.type)) {
+      errors.push(`Invalid step type: ${this.type}`);
+    }
+    
+    // Validate actions
+    this.actions.forEach((action, index) => {
+      const actionValidation = action.validate();
+      if (!actionValidation.isValid) {
+        errors.push(`Action ${index}: ${actionValidation.errors.join(', ')}`);
+      }
+    });
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
+}
+```
+
+### 5. PlanAction Model
+
+Represents an atomic action within a step.
+
+```javascript
+class PlanAction {
+  constructor(data) {
+    this.type = data.type;
+    this.description = data.description;
+    this.inputs = data.inputs || {};
+    this.outputs = data.outputs || {};
+    
+    // Store all additional properties
+    Object.keys(data).forEach(key => {
+      if (!['type', 'description', 'inputs', 'outputs'].includes(key)) {
+        this[key] = data[key];
+      }
+    });
+  }
+
+  validate() {
+    const errors = [];
+    
+    if (!this.type) {
+      errors.push('Action type is required');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
   }
 }
 ```
 
 ## Plan Structure
 
-Plans are hierarchical structures with the following components:
+Plans follow a consistent JSON structure that can be adapted to any domain:
 
 ```javascript
 {
   id: "plan-unique-id",
-  name: "Create Todo Application",
+  name: "React Todo Application",
+  description: "A simple React-based todo application with localStorage persistence",
   version: "1.0.0",
   metadata: {
     createdAt: "2024-01-15T10:00:00Z",
-    createdBy: "CodePlanner",
-    estimatedDuration: "2 hours",
-    complexity: "medium"
+    complexity: "medium",
+    estimatedDuration: "3 hours"
   },
-  context: {
-    projectType: "fullstack",
-    technologies: ["react", "nodejs", "postgresql"],
-    constraints: ["accessibility", "responsive"]
-  },
+  inputs: ["project-requirements"],
+  requiredOutputs: ["deployed-app", "test-results"],
   steps: [
     {
       id: "step-1",
-      name: "Set up project structure",
-      description: "Initialize the project with proper directory structure",
+      name: "Project Setup",
+      description: "Set up the React development environment",
       type: "setup",
       dependencies: [],
-      inputs: {
-        projectName: "todo-app",
-        projectType: "fullstack"
-      },
-      outputs: {
-        directories: ["src", "public", "server"],
-        files: ["package.json", "README.md"]
-      },
+      inputs: ["project-requirements"],
+      outputs: ["project-structure", "config-files"],
+      estimatedTime: "30 minutes",
       actions: [
         {
-          type: "create-directory",
-          path: "todo-app",
-          recursive: true
+          type: "create-file",
+          path: "package.json",
+          description: "Create package.json with dependencies",
+          inputs: { template: "react-app" },
+          outputs: { file: "package.json" }
         },
         {
           type: "create-file",
-          path: "todo-app/package.json",
-          content: "{ ... }"
+          path: "src/App.js",
+          description: "Create main App component",
+          inputs: { content: "component-template" },
+          outputs: { file: "src/App.js" }
         }
-      ],
-      validation: {
-        criteria: [
-          "Directory structure exists",
-          "Package.json is valid"
-        ]
-      },
-      rollback: {
-        actions: [
-          {
-            type: "delete-directory",
-            path: "todo-app"
-          }
-        ]
-      }
+      ]
     },
+    {
+      id: "step-2",
+      name: "Implement Todo Functionality",
+      description: "Develop core todo features",
+      type: "implementation",
+      dependencies: ["step-1"],
+      inputs: ["project-structure"],
+      outputs: ["todo-components", "todo-logic"],
+      estimatedTime: "1 hour",
+      actions: [
+        {
+          type: "update-file",
+          path: "src/components/TodoApp.js",
+          description: "Implement state management and CRUD operations"
+        },
+        {
+          type: "create-file",
+          path: "src/styles/TodoApp.css",
+          description: "Add styling for the application"
+        }
+      ]
+    }
     // ... more steps
   ],
-  executionOrder: ["step-1", "step-2", "step-3"],
-  successCriteria: [
-    "All tests pass",
-    "Application runs without errors",
-    "Features implemented as specified"
-  ]
+  executionOrder: ["step-1", "step-2", "step-3", "step-4", "step-5"]
 }
 ```
 
-### Step Types
+### Key Structural Elements
 
-1. **Setup Steps**: Project initialization, environment configuration
-2. **Implementation Steps**: Code generation, file creation
-3. **Integration Steps**: Connecting components, API integration
-4. **Testing Steps**: Test generation and execution
-5. **Validation Steps**: Quality checks, linting, type checking
-6. **Deployment Steps**: Build processes, deployment configuration
+1. **Plan Metadata**
+   - `id`: Unique identifier for the plan
+   - `name`: Human-readable plan name
+   - `description`: What the plan accomplishes
+   - `version`: Version tracking for plan iterations
+   - `metadata`: Additional information (creation time, complexity, duration)
 
-## Implementation Strategy
+2. **Input/Output Specification**
+   - `inputs`: Initial available inputs for the plan
+   - `requiredOutputs`: Expected final outputs after execution
 
-### Phase 1: Core Infrastructure
-- Implement BasePlanner abstract class
-- Create basic Plan and PlanStep models
-- Set up LLM integration with prompt templates
-- Implement basic validation rules
+3. **Steps Array**
+   - Each step contains its own inputs/outputs
+   - Dependencies define execution constraints
+   - Actions are atomic operations within steps
 
-### Phase 2: Code Planning
-- Implement CodePlanner for software projects
-- Create prompt templates for code generation planning
-- Add project type detection (frontend, backend, fullstack)
-- Implement file structure planning
+4. **Step Types**
+   - `setup`: Initial configuration and environment setup
+   - `implementation`: Core functionality development
+   - `integration`: Connecting components and services
+   - `testing`: Test creation and execution
+   - `validation`: Quality checks and verification
+   - `deployment`: Build and deployment processes
 
-### Phase 3: Advanced Plan Validation
-- Implement comprehensive validation pipeline
-- Create domain-specific validators
-- Add plan quality scoring system
-- Implement validation feedback mechanisms
+5. **Action Properties**
+   - `type`: The action identifier (user-defined)
+   - `description`: Human-readable explanation
+   - `inputs`: Required inputs for the action
+   - `outputs`: Outputs produced by the action
+   - Additional custom properties as needed
 
-### Phase 4: Refinement and Validation
-- Implement comprehensive validation rules
-- Create PlanRefiner with iterative improvement
-- Add plan quality metrics
-- Implement feedback loop for plan improvement
+## Flow Validation
 
-### Phase 5: Extended Planners
-- Add TestPlanner for test generation
-- Add ArchitecturePlanner for system design
-- Create planner for API design
-- Implement planner composition for complex tasks
+The FlowValidator ensures data integrity throughout plan execution:
+
+### Validation Process
+
+1. **Input Availability Check**
+   - Tracks available outputs as steps are processed
+   - Ensures each step's inputs are satisfied by previous outputs
+   - Reports missing inputs as errors
+
+2. **Output Production Verification**
+   - Confirms all required outputs are eventually produced
+   - Identifies which steps produce which outputs
+
+3. **Dependency Validation**
+   - Checks all referenced dependencies exist
+   - Detects circular dependencies
+   - Generates valid execution order
+
+4. **Unused Output Detection**
+   - Identifies outputs that are produced but never consumed
+   - Reports as warnings for optimization opportunities
+
+### Example Validation Flow
+
+```javascript
+// Given a plan with steps A → B → C
+const plan = {
+  inputs: ["initial-data"],
+  requiredOutputs: ["final-result"],
+  steps: [
+    {
+      id: "A",
+      inputs: ["initial-data"],
+      outputs: ["processed-data"]
+    },
+    {
+      id: "B",
+      dependencies: ["A"],
+      inputs: ["processed-data"],
+      outputs: ["intermediate-result"]
+    },
+    {
+      id: "C",
+      dependencies: ["B"],
+      inputs: ["intermediate-result"],
+      outputs: ["final-result"]
+    }
+  ]
+};
+
+// FlowValidator tracks:
+// After A: available = ["initial-data", "processed-data"]
+// After B: available = [..., "intermediate-result"]
+// After C: available = [..., "final-result"]
+// ✓ All inputs satisfied
+// ✓ Required output "final-result" produced
+```
+
 
 ## Integration Points
 
 ### 1. LLM Client Integration
 
+The planner integrates with @jsenvoy/llm for flexible provider support:
+
 ```javascript
-import { LLMClientManager } from '@jsenvoy/llm';
+import { LLMClient } from '@jsenvoy/llm';
 
-class BasePlanner {
-  constructor(config) {
-    this.llmClient = new LLMClientManager({
-      provider: config.llmProvider || 'openai',
-      apiKey: config.apiKey,
-      model: config.model || 'gpt-4',
-      maxRetries: 3
-    });
-  }
+// Create LLM client with any supported provider
+const llmClient = new LLMClient({
+  provider: 'anthropic',  // or 'openai', 'deepseek', 'openrouter'
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  model: 'claude-3-sonnet-20240229',
+  maxRetries: 3
+});
 
-  async generateWithLLM(prompt, options = {}) {
-    const response = await this.llmClient.generateStructuredResponse(
-      prompt,
-      options.schema,
-      options
-    );
-    return response.data;
-  }
-}
+// Use with GenericPlanner
+const planner = new GenericPlanner({ 
+  llmClient,
+  maxRetries: 2,
+  maxSteps: 20
+});
 ```
 
-### 2. Code Agent Integration
+### 2. jsEnvoy Module Integration
+
+The planner can be used as a jsEnvoy module:
 
 ```javascript
-import { CodePlanner, PlanValidator } from '@jsenvoy/llm-planner';
+import { LLMPlannerModule } from '@jsenvoy/llm-planner';
+import { ResourceManager } from '@jsenvoy/module-loader';
+
+// Initialize with ResourceManager
+const resourceManager = new ResourceManager();
+await resourceManager.initialize();
+
+// Register LLM client
+const llmClient = new LLMClient({ /* config */ });
+resourceManager.register('llmClient', llmClient);
+
+// Create module
+const plannerModule = new LLMPlannerModule({ llmClient });
+
+// Available tools
+const tools = plannerModule.getTools();
+// Returns: ['create-plan', 'validate-plan', 'get-execution-order']
+```
+
+### 3. Code Agent Integration
+
+Example integration with a code generation agent:
+
+```javascript
+import { GenericPlanner, FlowValidator } from '@jsenvoy/llm-planner';
 
 class CodeAgent {
-  constructor(config) {
-    this.planner = new CodePlanner(config.plannerConfig);
-    this.validator = new PlanValidator(config.validatorConfig);
+  constructor({ llmClient }) {
+    this.planner = new GenericPlanner({ llmClient });
+    this.validator = new FlowValidator();
   }
 
-  async develop(requirements) {
-    // Generate plan using LLM planner
-    const plan = await this.planner.createPlan(requirements);
-    
-    // Validate plan before execution
-    const validationResult = await this.validator.validate(plan);
-    
-    if (!validationResult.isValid) {
-      throw new Error(`Invalid plan: ${validationResult.errors.join(', ')}`);
+  async generateProject(requirements) {
+    // Define allowable actions for code generation
+    const codeActions = [
+      {
+        type: 'create-file',
+        inputs: ['content', 'path'],
+        outputs: ['file-created']
+      },
+      {
+        type: 'install-dependencies',
+        inputs: ['packages'],
+        outputs: ['dependencies-installed']
+      },
+      {
+        type: 'run-tests',
+        inputs: ['test-suite'],
+        outputs: ['test-results']
+      }
+    ];
+
+    // Generate plan
+    const plan = await this.planner.createPlan({
+      description: requirements.description,
+      inputs: ['project-spec'],
+      requiredOutputs: ['working-app', 'test-results'],
+      allowableActions: codeActions
+    });
+
+    // Validate flow
+    const validation = this.validator.validate(plan);
+    if (!validation.isValid) {
+      throw new Error(`Invalid plan: ${validation.errors.join(', ')}`);
     }
-    
-    // Log warnings if any
-    if (validationResult.warnings.length > 0) {
-      console.warn('Plan warnings:', validationResult.warnings);
-    }
-    
-    // Execute validated plan steps
-    for (const step of plan.steps) {
-      await this.executeStep(step);
-    }
-  }
-  
-  async executeStep(step) {
-    // Code agent handles actual execution
-    // Implementation depends on step type and actions
+
+    // Execute plan
+    return await this.executePlan(plan);
   }
 }
 ```
 
-### 3. Event System
+## Usage Patterns
+
+### 1. Basic Planning
 
 ```javascript
-// Planner events
-planner.on('plan:created', (plan) => {
-  console.log('Plan created:', plan.id);
-});
+const planner = new GenericPlanner({ llmClient });
 
-planner.on('plan:refined', (plan, refinementCount) => {
-  console.log(`Plan refined (iteration ${refinementCount}):`, plan.id);
-});
-
-// Validator events
-validator.on('validation:start', (plan) => {
-  console.log('Starting validation for plan:', plan.id);
-});
-
-validator.on('validation:complete', (result) => {
-  console.log('Validation result:', {
-    isValid: result.isValid,
-    score: result.score,
-    errorCount: result.errors.length,
-    warningCount: result.warnings.length
-  });
-});
-
-validator.on('validation:error', (error, validator) => {
-  console.error(`Validation error in ${validator}:`, error);
+const plan = await planner.createPlan({
+  description: "Create a REST API for user management",
+  inputs: ["api-spec"],
+  requiredOutputs: ["api-server", "api-docs"],
+  allowableActions: [
+    {
+      type: "create-endpoint",
+      inputs: ["route", "handler"],
+      outputs: ["endpoint"]
+    },
+    {
+      type: "setup-database",
+      inputs: ["schema"],
+      outputs: ["database"]
+    },
+    {
+      type: "add-middleware",
+      inputs: ["middleware-config"],
+      outputs: ["configured-middleware"]
+    }
+  ]
 });
 ```
 
-## Extensibility
+### 2. Custom Action Definitions
 
-### 1. Custom Planners
+Actions can be tailored to any domain:
 
 ```javascript
-class CustomPlanner extends BasePlanner {
-  async analyzeRequirements(requirements) {
-    // Custom requirement analysis
+// DevOps actions
+const devOpsActions = [
+  {
+    type: "create-dockerfile",
+    inputs: ["base-image", "dependencies"],
+    outputs: ["dockerfile"]
+  },
+  {
+    type: "setup-ci-pipeline",
+    inputs: ["pipeline-config"],
+    outputs: ["ci-pipeline"]
+  },
+  {
+    type: "configure-monitoring",
+    inputs: ["metrics-config"],
+    outputs: ["monitoring-setup"]
   }
+];
 
-  async generatePlan(context) {
-    // Custom plan generation
+// Data pipeline actions
+const dataPipelineActions = [
+  {
+    type: "create-etl-job",
+    inputs: ["source-config", "transform-rules"],
+    outputs: ["etl-job"]
+  },
+  {
+    type: "setup-data-warehouse",
+    inputs: ["schema-definition"],
+    outputs: ["data-warehouse"]
+  },
+  {
+    type: "configure-scheduling",
+    inputs: ["schedule-config"],
+    outputs: ["scheduled-jobs"]
   }
-}
-
-// Register custom planner
-PlannerRegistry.register('custom', CustomPlanner);
+];
 ```
 
-### 2. Validation Rules
+### 3. Plan Execution Pattern
 
 ```javascript
-class CustomValidator extends BaseValidator {
-  async validate(plan) {
-    // Custom validation logic
-    return {
-      errors: [],
-      warnings: []
-    };
+class PlanExecutor {
+  constructor(actionHandlers) {
+    this.handlers = actionHandlers;
   }
-}
 
-// Add to validation pipeline
-planValidator.addRule(new CustomValidator());
-```
+  async execute(plan) {
+    const results = {};
+    const outputs = new Map(plan.inputs.map(i => [i, true]));
 
-### 3. Domain Validators
-
-```javascript
-class CodePlanValidator {
-  async validate(plan) {
-    const result = { errors: [], warnings: [], suggestions: [] };
-    
-    // Validate file paths
-    for (const step of plan.steps) {
-      for (const action of step.actions) {
-        if (action.type === 'create-file') {
-          if (!this.isValidFilePath(action.path)) {
-            result.errors.push(`Invalid file path: ${action.path}`);
-          }
+    for (const stepId of plan.executionOrder) {
+      const step = plan.getStepById(stepId);
+      
+      // Verify inputs are available
+      for (const input of step.inputs) {
+        if (!outputs.has(input)) {
+          throw new Error(`Missing input: ${input}`);
         }
       }
+
+      // Execute actions
+      for (const action of step.actions) {
+        const handler = this.handlers[action.type];
+        if (!handler) {
+          throw new Error(`No handler for action: ${action.type}`);
+        }
+        
+        await handler(action);
+      }
+
+      // Mark outputs as available
+      step.outputs.forEach(output => outputs.set(output, true));
+      results[stepId] = { success: true };
     }
-    
-    // Validate imports and dependencies
-    const importErrors = this.validateImports(plan);
-    result.errors.push(...importErrors);
-    
-    // Suggest optimizations
-    const suggestions = this.suggestOptimizations(plan);
-    result.suggestions.push(...suggestions);
-    
-    return result;
+
+    return results;
   }
 }
-
-// Register domain validator
-validator.registerDomainValidator('code', new CodePlanValidator());
 ```
 
 ## Example Workflows
 
-### 1. Simple Frontend Application
-
-```javascript
-const planner = new CodePlanner({ llmConfig });
-
-const plan = await planner.createPlan({
-  task: 'Create a weather dashboard',
-  requirements: {
-    type: 'frontend',
-    features: ['current weather', 'forecast', 'location search'],
-    style: 'modern, responsive',
-    api: 'OpenWeatherMap'
-  }
-});
-
-// Generated plan includes:
-// - HTML structure setup
-// - CSS styling implementation
-// - JavaScript for API integration
-// - Error handling
-// - Responsive design implementation
-```
-
-### 2. Full-Stack Application
+### 1. Web Application Development
 
 ```javascript
 const plan = await planner.createPlan({
-  task: 'Create a blog platform',
-  requirements: {
-    frontend: 'React with TypeScript',
-    backend: 'Node.js with Express',
-    database: 'PostgreSQL',
-    features: [
-      'User authentication',
-      'Create/edit/delete posts',
-      'Comments system',
-      'Categories and tags',
-      'Search functionality'
-    ]
-  }
+  description: "Create a React todo application with TypeScript",
+  inputs: ["project-requirements"],
+  requiredOutputs: ["deployed-app", "test-results"],
+  allowableActions: [
+    { type: "create-file", inputs: ["content"], outputs: ["file-path"] },
+    { type: "install-dependencies", inputs: ["packages"], outputs: ["installed"] },
+    { type: "run-tests", inputs: ["test-command"], outputs: ["test-results"] },
+    { type: "build-project", inputs: ["build-config"], outputs: ["build-output"] },
+    { type: "deploy", inputs: ["deploy-config"], outputs: ["deployed-app"] }
+  ]
 });
 
-// Generated plan includes:
-// - Database schema design
-// - API endpoint planning
-// - Frontend component structure
-// - Authentication flow
-// - Data validation rules
-// - Test scenarios
+// Resulting plan structure:
+// Step 1: Setup (create project structure, config files)
+// Step 2: Implementation (create components, add logic)
+// Step 3: Testing (write and run tests)
+// Step 4: Deployment (build and deploy)
 ```
 
-### 3. Microservices Architecture
+### 2. Microservices Architecture
 
 ```javascript
-const archPlanner = new ArchitecturePlanner({ llmConfig });
-
-const plan = await archPlanner.createPlan({
-  task: 'Design microservices for e-commerce',
-  requirements: {
-    services: ['user', 'product', 'order', 'payment', 'notification'],
-    communication: 'REST with message queue',
-    deployment: 'Kubernetes',
-    scalability: 'High traffic expected'
-  }
+const plan = await planner.createPlan({
+  description: "Design microservices for an e-commerce platform",
+  inputs: ["system-requirements", "architecture-specs"],
+  requiredOutputs: ["microservices-system", "api-gateway", "monitoring"],
+  allowableActions: [
+    { type: "create-service", inputs: ["service-spec"], outputs: ["service"] },
+    { type: "setup-database", inputs: ["db-config"], outputs: ["database"] },
+    { type: "configure-api-gateway", inputs: ["gateway-config"], outputs: ["api-gateway"] },
+    { type: "setup-messaging", inputs: ["queue-config"], outputs: ["message-queue"] },
+    { type: "configure-monitoring", inputs: ["metrics"], outputs: ["monitoring"] }
+  ]
 });
-
-// Generated plan includes:
-// - Service boundaries and responsibilities
-// - API contracts between services
-// - Database per service design
-// - Message queue integration points
-// - Deployment configurations
-// - Monitoring and logging strategy
 ```
 
-## Error Handling
+### 3. Data Pipeline
 
-### 1. Plan Generation Errors
+```javascript
+const plan = await planner.createPlan({
+  description: "Build ETL pipeline for customer analytics",
+  inputs: ["data-sources", "transformation-rules"],
+  requiredOutputs: ["data-warehouse", "analytics-dashboard"],
+  allowableActions: [
+    { type: "connect-source", inputs: ["connection-config"], outputs: ["data-stream"] },
+    { type: "transform-data", inputs: ["transform-rules"], outputs: ["cleaned-data"] },
+    { type: "load-warehouse", inputs: ["warehouse-schema"], outputs: ["data-warehouse"] },
+    { type: "create-dashboard", inputs: ["metrics-config"], outputs: ["analytics-dashboard"] }
+  ]
+});
+```
+
+## Advanced Features
+
+### 1. Parallel Execution Groups
+
+Plans automatically identify steps that can run in parallel:
+
+```javascript
+const parallelGroups = plan.getParallelExecutionGroups();
+// Returns: [["step-1", "step-2"], ["step-3"], ["step-4", "step-5"]]
+// Meaning step-1 and step-2 can run in parallel, then step-3, etc.
+```
+
+### 2. Dependency Management
+
+```javascript
+// Check for circular dependencies
+if (plan.hasCircularDependencies()) {
+  const cycles = plan.findCircularDependencies();
+  console.error("Circular dependencies found:", cycles);
+}
+
+// Generate topological order
+const executionOrder = plan.generateExecutionOrder();
+```
+
+### 3. Plan Optimization
+
+```javascript
+// Analyze plan efficiency
+const analysis = {
+  totalSteps: plan.steps.length,
+  parallelizableSteps: plan.getParallelExecutionGroups().flat().length,
+  criticalPath: plan.getCriticalPath(),
+  estimatedDuration: plan.getEstimatedDuration()
+};
+```
+
+## Best Practices
+
+### 1. Action Design
+
+- **Clear Input/Output Contracts**: Define specific, meaningful input and output names
+- **Atomic Actions**: Each action should do one thing well
+- **Idempotent Operations**: Actions should be safe to retry
+
+### 2. Plan Validation
+
+- **Always Validate**: Run both structural and flow validation
+- **Handle Warnings**: Review warnings for optimization opportunities
+- **Test Edge Cases**: Verify plans handle missing inputs gracefully
+
+### 3. Error Handling
 
 ```javascript
 try {
-  const plan = await planner.createPlan(requirements);
+  const plan = await planner.createPlan(config);
+  const validation = validator.validate(plan);
+  
+  if (!validation.isValid) {
+    // Log errors and optionally retry with refined input
+    console.error("Validation errors:", validation.errors);
+    
+    // Could retry with more specific constraints
+    config.maxSteps = 10;
+    plan = await planner.createPlan(config);
+  }
 } catch (error) {
-  if (error instanceof PlanGenerationError) {
-    // Handle LLM failures, invalid requirements
-  } else if (error instanceof ValidationError) {
-    // Handle plan validation failures
+  if (error.message.includes("Failed to generate valid plan")) {
+    // LLM couldn't create a valid plan after retries
+    // Consider simplifying the task or providing more guidance
   }
 }
 ```
 
-### 2. Execution Errors
+## Performance Optimization
 
-```javascript
-executor.on('step:error', (step, error) => {
-  console.error(`Step ${step.name} failed:`, error);
-  // Decide whether to continue, retry, or rollback
-});
-```
-
-## Performance Considerations
-
-1. **LLM Call Optimization**
-   - Cache similar planning requests
-   - Batch related planning operations
-   - Use streaming for large plans
-
-2. **Plan Size Management**
-   - Break large plans into phases
-   - Implement lazy loading for plan details
-   - Compress plan storage
-
-3. **Execution Efficiency**
-   - Parallel execution of independent steps
-   - Resource pooling for common operations
-   - Progress persistence for resumability
-
-## Security Considerations
-
-1. **Input Validation**
-   - Sanitize all user inputs
-   - Validate against injection attacks
-   - Limit plan complexity to prevent DoS
-
-2. **LLM Security**
-   - Filter sensitive information from prompts
-   - Validate LLM responses for malicious content
-   - Implement rate limiting
-
-3. **Execution Security**
-   - Sandbox plan execution environment
-   - Validate all file system operations
-   - Implement permission checks
-
-## Future Enhancements
-
-1. **Machine Learning Integration**
-   - Learn from successful plans
-   - Improve prompt templates based on outcomes
-   - Predict plan complexity and duration
-
-2. **Collaborative Planning**
-   - Multi-user plan creation
-   - Plan review and approval workflows
-   - Version control for plans
-
-3. **Visual Planning Tools**
-   - Graphical plan editor
-   - Drag-and-drop plan modification
-   - Real-time plan visualization
-
-4. **Domain Expansion**
-   - DevOps planning (CI/CD, infrastructure)
-   - Data pipeline planning
-   - Business process planning
-   - Educational curriculum planning
+1. **Plan Caching**: Cache generated plans for similar inputs
+2. **Streaming Generation**: For large plans, use streaming LLM responses
+3. **Parallel Validation**: Run independent validators concurrently
+4. **Incremental Planning**: Break large tasks into smaller sub-plans
 
 ## Conclusion
 
-The LLM Planner represents a significant advancement in automated planning systems. By leveraging the power of Large Language Models while maintaining structured, validated outputs, it bridges the gap between natural language requirements and executable plans. The extensible architecture ensures that new domains and use cases can be easily added, making it a versatile tool for various planning needs.
+The LLM Planner provides a powerful, general-purpose framework for decomposing complex tasks into structured, executable plans. By allowing users to define their own action types and input/output contracts, it can be adapted to virtually any domain while maintaining consistency and validation guarantees.
 
-The focus on code generation as the initial domain provides immediate value while establishing patterns that can be applied to other domains. With careful prompt engineering, comprehensive validation, and a robust execution framework, the LLM Planner aims to be a reliable and intelligent planning solution for the jsEnvoy ecosystem and beyond.
+Key advantages:
+- **Domain Agnostic**: Works for any task that can be broken into steps
+- **Flow Validation**: Ensures data dependencies are satisfied
+- **LLM Flexibility**: Supports multiple providers through @jsenvoy/llm
+- **Modular Design**: Integrates seamlessly with jsEnvoy ecosystem
+
+The framework bridges the gap between natural language task descriptions and structured execution plans, making it an essential tool for AI-driven automation.

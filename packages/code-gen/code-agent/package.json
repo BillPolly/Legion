@@ -39,6 +39,7 @@
     "@jsenvoy/module-loader": "*",
     "@jsenvoy/general-tools": "*",
     "@jsenvoy/llm": "*",
+    "@jsenvoy/llm-planner": "*",
     "@jsenvoy/agent": "*",
     "@jsenvoy/resource-manager": "*",
     "eslint": "^8.56.0",

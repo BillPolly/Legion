@@ -1,50 +1,58 @@
 /**
- * PlanStep model - Represents an individual step in a plan
+ * PlanStep model - Represents a hierarchical step in a plan
+ * 
+ * Steps can contain either:
+ * - Actions (leaf nodes) - atomic operations from allowableActions
+ * - Sub-steps (branches) - further hierarchical decomposition
  */
 
+import { PlanAction } from './PlanAction.js';
+
 class PlanStep {
-  // Static valid types
-  static VALID_TYPES = ['setup', 'implementation', 'integration', 'testing', 'validation', 'deployment'];
-  
-  constructor(data = {}) {
-    // Generate ID if not provided
+  /**
+   * Create a PlanStep
+   * @param {Object} data - Step data
+   * @param {Array} allowableActions - Available action definitions
+   */
+  constructor(data = {}, allowableActions = []) {
+    // Core properties
     this.id = data.id || this._generateId();
-    
-    // Required fields
     this.name = data.name || '';
     this.description = data.description || '';
-    
-    // Step type validation
-    this.type = data.type || 'implementation';
-    if (!PlanStep.VALID_TYPES.includes(this.type)) {
-      throw new Error(`Invalid step type: ${this.type}`);
-    }
-    
-    // Status validation
-    const validStatuses = ['pending', 'in-progress', 'completed', 'failed', 'skipped'];
+    this.type = data.type || 'unknown';
     this.status = data.status || 'pending';
-    if (!validStatuses.includes(this.status)) {
-      throw new Error(`Invalid status: ${this.status}`);
-    }
     
-    // Dependencies and workflow
-    this.dependencies = data.dependencies || [];
-    this.inputs = data.inputs || {};
-    this.outputs = data.outputs || {};
-    this.actions = data.actions || [];
+    // Hierarchical structure
+    this.steps = []; // Sub-steps
+    this.actions = []; // Actions (leaf nodes)
     
-    // Validation and rollback
-    this.validation = data.validation || { criteria: [], validators: [] };
-    this.rollback = data.rollback || { actions: [] };
+    // Dependencies
+    this.dependencies = Array.isArray(data.dependencies) ? [...data.dependencies] : [];
+    
+    // Input/Output tracking
+    this.inputs = Array.isArray(data.inputs) ? [...data.inputs] : [];
+    this.outputs = Array.isArray(data.outputs) ? [...data.outputs] : [];
     
     // Execution properties
     this.estimatedDuration = data.estimatedDuration || 0;
-    this.retryable = data.retryable !== undefined ? data.retryable : true;
-    this.maxRetries = data.maxRetries || 3;
+    this.result = data.result || null;
     
-    // Internal tracking
-    this._statusHistory = [{ status: this.status, timestamp: new Date().toISOString() }];
-    this._executionAttempts = [];
+    // Store allowable actions for validation
+    this.allowableActions = allowableActions;
+    
+    // Initialize sub-steps if provided
+    if (data.steps && Array.isArray(data.steps)) {
+      for (const stepData of data.steps) {
+        this.addStep(new PlanStep(stepData, allowableActions));
+      }
+    }
+    
+    // Initialize actions if provided
+    if (data.actions && Array.isArray(data.actions)) {
+      for (const actionData of data.actions) {
+        this.addAction(actionData);
+      }
+    }
   }
 
   /**
@@ -58,6 +66,124 @@ class PlanStep {
   }
 
   /**
+   * Add a sub-step
+   * @param {PlanStep} step - Step to add
+   */
+  addStep(step) {
+    if (!(step instanceof PlanStep)) {
+      throw new Error('Must be a PlanStep instance');
+    }
+    this.steps.push(step);
+  }
+
+  /**
+   * Add an action (leaf node)
+   * @param {Object} actionData - Action data or PlanAction instance
+   */
+  addAction(actionData) {
+    let action;
+    
+    if (actionData instanceof PlanAction) {
+      action = actionData;
+    } else {
+      // Find the action definition
+      const actionDef = this.allowableActions.find(a => a.type === actionData.type);
+      if (!actionDef) {
+        throw new Error(`Unknown action type: ${actionData.type}`);
+      }
+      action = new PlanAction(actionDef, actionData.parameters || {});
+    }
+    
+    this.actions.push(action);
+  }
+
+  /**
+   * Check if this is a leaf step (has actions but no sub-steps)
+   * @returns {boolean} True if leaf step
+   */
+  isLeaf() {
+    return this.actions.length > 0 && this.steps.length === 0;
+  }
+
+  /**
+   * Check if this is a branch step (has sub-steps)
+   * @returns {boolean} True if branch step
+   */
+  isBranch() {
+    return this.steps.length > 0;
+  }
+
+  /**
+   * Get all leaf actions recursively
+   * @returns {Array<PlanAction>} All actions in this step and sub-steps
+   */
+  getAllActions() {
+    const allActions = [...this.actions];
+    
+    for (const step of this.steps) {
+      allActions.push(...step.getAllActions());
+    }
+    
+    return allActions;
+  }
+
+  /**
+   * Get all inputs required by this step and its sub-steps
+   * @returns {Array<string>} Array of input names
+   */
+  getInputs() {
+    const inputs = new Set([...this.inputs]);
+    
+    // Add inputs from actions
+    for (const action of this.actions) {
+      action.getInputs().forEach(input => inputs.add(input));
+    }
+    
+    // Add inputs from sub-steps
+    for (const step of this.steps) {
+      step.getInputs().forEach(input => inputs.add(input));
+    }
+    
+    return Array.from(inputs);
+  }
+
+  /**
+   * Get all outputs produced by this step and its sub-steps
+   * @returns {Array<string>} Array of output names
+   */
+  getOutputs() {
+    const outputs = new Set([...this.outputs]);
+    
+    // Add outputs from actions
+    for (const action of this.actions) {
+      action.getOutputs().forEach(output => outputs.add(output));
+    }
+    
+    // Add outputs from sub-steps
+    for (const step of this.steps) {
+      step.getOutputs().forEach(output => outputs.add(output));
+    }
+    
+    return Array.from(outputs);
+  }
+
+  /**
+   * Validate this step's inputs against available outputs
+   * @param {Array<string>} availableOutputs - Outputs available from previous steps
+   * @returns {Object} Validation result
+   */
+  validateInputs(availableOutputs = []) {
+    const requiredInputs = this.getInputs();
+    const missingInputs = requiredInputs.filter(input => !availableOutputs.includes(input));
+    
+    return {
+      isValid: missingInputs.length === 0,
+      missingInputs,
+      satisfiedInputs: requiredInputs.filter(input => availableOutputs.includes(input))
+    };
+  }
+
+  /**
    * Update step status
    * @param {string} newStatus - New status
    */
@@ -66,137 +192,55 @@ class PlanStep {
     if (!validStatuses.includes(newStatus)) {
       throw new Error(`Invalid status: ${newStatus}`);
     }
-    
     this.status = newStatus;
-    this._statusHistory.push({
-      status: newStatus,
-      timestamp: new Date().toISOString()
-    });
   }
 
   /**
-   * Get status history
-   * @returns {Array} Status history
+   * Get step depth in hierarchy
+   * @returns {number} Depth (0 for root level)
    */
-  getStatusHistory() {
-    return [...this._statusHistory];
-  }
-
-  /**
-   * Add a dependency
-   * @param {string} stepId - Step ID to depend on
-   */
-  addDependency(stepId) {
-    if (!this.dependencies.includes(stepId)) {
-      this.dependencies.push(stepId);
+  getDepth() {
+    if (this.steps.length === 0) {
+      return 0;
     }
+    return 1 + Math.max(...this.steps.map(step => step.getDepth()));
   }
 
   /**
-   * Remove a dependency
-   * @param {string} stepId - Step ID to remove
+   * Find a step by ID (recursive)
+   * @param {string} stepId - Step ID to find
+   * @returns {PlanStep|null} Found step or null
    */
-  removeDependency(stepId) {
-    this.dependencies = this.dependencies.filter(id => id !== stepId);
-  }
-
-  /**
-   * Add an action
-   * @param {Object} action - Action to add
-   */
-  addAction(action) {
-    this.actions.push(action);
-  }
-
-  /**
-   * Validate step structure
-   * @returns {Object} Validation result
-   */
-  validate() {
-    const errors = [];
-    
-    // Check required fields
-    if (!this.name) {
-      errors.push('Step name is required');
+  findStep(stepId) {
+    if (this.id === stepId) {
+      return this;
     }
     
-    // Validate actions
-    for (const action of this.actions) {
-      if (!action.type) {
-        errors.push('Action type is required');
-        continue;
-      }
-      
-      // Validate based on action type
-      switch (action.type) {
-        case 'create-directory':
-          if (!action.path) {
-            errors.push(`Action of type ${action.type} is missing required field: path`);
-          }
-          break;
-        case 'create-file':
-          if (!action.path) {
-            errors.push(`Action of type ${action.type} is missing required field: path`);
-          }
-          break;
-        case 'run-command':
-          if (!action.command) {
-            errors.push(`Action of type ${action.type} is missing required field: command`);
-          }
-          break;
+    for (const step of this.steps) {
+      const found = step.findStep(stepId);
+      if (found) {
+        return found;
       }
     }
     
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
+    return null;
   }
 
   /**
-   * Check if step can be executed
-   * @param {Array<string>} completedSteps - List of completed step IDs
-   * @returns {boolean} Can execute
+   * Get flat list of all steps (breadth-first)
+   * @returns {Array<PlanStep>} All steps
    */
-  canExecute(completedSteps) {
-    return this.dependencies.every(dep => completedSteps.includes(dep));
-  }
-
-  /**
-   * Get completion percentage based on completed actions
-   * @returns {number} Percentage (0-100)
-   */
-  getCompletionPercentage() {
-    if (this.actions.length === 0) {
-      return this.status === 'completed' ? 100 : 0;
+  getFlatSteps() {
+    const steps = [this];
+    const queue = [...this.steps];
+    
+    while (queue.length > 0) {
+      const step = queue.shift();
+      steps.push(step);
+      queue.push(...step.steps);
     }
     
-    const completedActions = this.actions.filter(action => action.completed === true).length;
-    return Math.round((completedActions / this.actions.length) * 100);
-  }
-
-  /**
-   * Clone the step with a new ID
-   * @returns {PlanStep} Cloned step
-   */
-  clone() {
-    const clonedData = JSON.parse(JSON.stringify({
-      name: this.name,
-      description: this.description,
-      type: this.type,
-      status: 'pending', // Reset status
-      dependencies: this.dependencies,
-      inputs: this.inputs,
-      outputs: this.outputs,
-      actions: this.actions,
-      validation: this.validation,
-      rollback: this.rollback,
-      estimatedDuration: this.estimatedDuration,
-      retryable: this.retryable,
-      maxRetries: this.maxRetries
-    }));
-    
-    return new PlanStep(clonedData);
+    return steps;
   }
 
   /**
@@ -213,96 +257,22 @@ class PlanStep {
       dependencies: this.dependencies,
       inputs: this.inputs,
       outputs: this.outputs,
-      actions: this.actions,
-      validation: this.validation,
-      rollback: this.rollback,
       estimatedDuration: this.estimatedDuration,
-      retryable: this.retryable,
-      maxRetries: this.maxRetries,
-      statusHistory: this._statusHistory,
-      executionAttempts: this._executionAttempts
+      result: this.result,
+      steps: this.steps.map(step => step.toJSON()),
+      actions: this.actions.map(action => action.toJSON())
     };
   }
 
   /**
    * Create from JSON
    * @param {Object} json - JSON data
+   * @param {Array} allowableActions - Available action definitions
    * @returns {PlanStep} PlanStep instance
    */
-  static fromJSON(json) {
-    const step = new PlanStep(json);
-    
-    // Restore history if available
-    if (json.statusHistory) {
-      step._statusHistory = json.statusHistory;
-    }
-    if (json.executionAttempts) {
-      step._executionAttempts = json.executionAttempts;
-    }
-    
+  static fromJSON(json, allowableActions = []) {
+    const step = new PlanStep(json, allowableActions);
     return step;
-  }
-
-  /**
-   * Record an execution attempt
-   * @param {Object} attempt - Attempt details
-   */
-  recordExecutionAttempt(attempt) {
-    this._executionAttempts.push({
-      ...attempt,
-      timestamp: new Date().toISOString(),
-      attemptNumber: this._executionAttempts.length + 1
-    });
-  }
-
-  /**
-   * Get execution attempts
-   * @returns {Array} Execution attempts
-   */
-  getExecutionAttempts() {
-    return [...this._executionAttempts];
-  }
-
-  /**
-   * Check if max retries exceeded
-   * @returns {boolean} Exceeded
-   */
-  hasExceededMaxRetries() {
-    if (!this.retryable) {
-      return this._executionAttempts.length > 0 && 
-             this._executionAttempts.some(a => !a.success);
-    }
-    
-    const failedAttempts = this._executionAttempts.filter(a => !a.success).length;
-    return failedAttempts >= this.maxRetries;
-  }
-
-  /**
-   * Merge outputs with existing outputs
-   * @param {Object} newOutputs - Outputs to merge
-   */
-  mergeOutputs(newOutputs) {
-    for (const [key, value] of Object.entries(newOutputs)) {
-      if (Array.isArray(this.outputs[key]) && Array.isArray(value)) {
-        // Merge arrays
-        this.outputs[key] = [...this.outputs[key], ...value];
-      } else if (typeof this.outputs[key] === 'object' && typeof value === 'object') {
-        // Merge objects
-        this.outputs[key] = { ...this.outputs[key], ...value };
-      } else {
-        // Replace value
-        this.outputs[key] = value;
-      }
-    }
-  }
-
-  /**
-   * Check if a step type is valid
-   * @param {string} type - Type to check
-   * @returns {boolean} Is valid
-   */
-  static isValidType(type) {
-    return PlanStep.VALID_TYPES.includes(type);
   }
 }
 

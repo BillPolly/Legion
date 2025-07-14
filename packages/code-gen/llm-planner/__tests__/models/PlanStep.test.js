@@ -1,380 +1,329 @@
 /**
- * Tests for PlanStep model
+ * @jest-environment node
  */
 
-import { describe, test, expect, beforeEach } from '@jest/globals';
+import { describe, test, expect } from '@jest/globals';
 import { PlanStep } from '../../src/models/PlanStep.js';
+import { PlanAction } from '../../src/models/PlanAction.js';
 
 describe('PlanStep', () => {
-  let stepData;
+  const allowableActions = [
+    { type: 'create-file', inputs: ['file-content'], outputs: ['file-created'] },
+    { type: 'run-command', inputs: ['command'], outputs: ['command-result'] }
+  ];
 
-  beforeEach(() => {
-    stepData = {
-      id: 'step-123',
-      name: 'Initialize project structure',
-      description: 'Create the initial project directory structure and configuration files',
-      type: 'setup',
-      status: 'pending',
-      dependencies: [],
-      inputs: {
-        projectName: 'todo-app',
-        projectType: 'fullstack'
-      },
-      outputs: {
-        directories: ['src', 'public', 'server'],
-        files: ['package.json', 'README.md', '.gitignore']
-      },
-      actions: [
-        {
-          type: 'create-directory',
-          path: 'todo-app',
-          recursive: true
-        },
-        {
-          type: 'create-file',
-          path: 'todo-app/package.json',
-          content: '{\n  "name": "todo-app",\n  "version": "1.0.0"\n}'
-        }
-      ],
-      validation: {
-        criteria: [
-          'Directory structure exists',
-          'Package.json is valid JSON',
-          'All required files created'
-        ],
-        validators: [
-          { type: 'path-exists', path: 'todo-app' },
-          { type: 'file-valid-json', path: 'todo-app/package.json' }
-        ]
-      },
-      rollback: {
-        actions: [
-          {
-            type: 'delete-directory',
-            path: 'todo-app',
-            recursive: true
-          }
-        ]
-      },
-      estimatedDuration: 5,
-      retryable: true,
-      maxRetries: 3
-    };
-  });
-
-  describe('Constructor', () => {
-    test('should create a PlanStep instance with all properties', () => {
-      const step = new PlanStep(stepData);
-
-      expect(step.id).toBe('step-123');
-      expect(step.name).toBe('Initialize project structure');
-      expect(step.description).toBe(stepData.description);
-      expect(step.type).toBe('setup');
-      expect(step.status).toBe('pending');
-      expect(step.dependencies).toEqual([]);
-      expect(step.inputs).toEqual(stepData.inputs);
-      expect(step.outputs).toEqual(stepData.outputs);
-      expect(step.actions).toHaveLength(2);
-      expect(step.validation).toEqual(stepData.validation);
-      expect(step.rollback).toEqual(stepData.rollback);
-      expect(step.estimatedDuration).toBe(5);
-      expect(step.retryable).toBe(true);
-      expect(step.maxRetries).toBe(3);
-    });
-
-    test('should generate ID if not provided', () => {
-      const dataWithoutId = { ...stepData };
-      delete dataWithoutId.id;
-      
-      const step = new PlanStep(dataWithoutId);
-      
-      expect(step.id).toBeDefined();
-      expect(step.id).toMatch(/^step-[a-z0-9-]+$/);
-    });
-
-    test('should set default values', () => {
-      const minimalData = {
-        name: 'Test Step'
-      };
-      
-      const step = new PlanStep(minimalData);
-      
-      expect(step.type).toBe('implementation');
-      expect(step.status).toBe('pending');
-      expect(step.dependencies).toEqual([]);
-      expect(step.inputs).toEqual({});
-      expect(step.outputs).toEqual({});
-      expect(step.actions).toEqual([]);
-      expect(step.retryable).toBe(true);
-      expect(step.maxRetries).toBe(3);
-    });
-
-    test('should validate step type', () => {
-      const validTypes = ['setup', 'implementation', 'integration', 'testing', 'validation', 'deployment'];
-      
-      validTypes.forEach(type => {
-        const step = new PlanStep({ name: 'Test', type });
-        expect(step.type).toBe(type);
-      });
-    });
-
-    test('should throw error for invalid step type', () => {
-      expect(() => {
-        new PlanStep({ name: 'Test', type: 'invalid-type' });
-      }).toThrow('Invalid step type: invalid-type');
-    });
-
-    test('should validate status', () => {
-      const validStatuses = ['pending', 'in-progress', 'completed', 'failed', 'skipped'];
-      
-      validStatuses.forEach(status => {
-        const step = new PlanStep({ name: 'Test', status });
-        expect(step.status).toBe(status);
-      });
-    });
-  });
-
-  describe('Methods', () => {
-    test('should update status', () => {
-      const step = new PlanStep(stepData);
-      
-      step.updateStatus('in-progress');
-      expect(step.status).toBe('in-progress');
-      
-      step.updateStatus('completed');
-      expect(step.status).toBe('completed');
-    });
-
-    test('should track status history', () => {
-      const step = new PlanStep(stepData);
-      
-      step.updateStatus('in-progress');
-      step.updateStatus('completed');
-      
-      const history = step.getStatusHistory();
-      expect(history).toHaveLength(3); // pending, in-progress, completed
-      expect(history[0].status).toBe('pending');
-      expect(history[1].status).toBe('in-progress');
-      expect(history[2].status).toBe('completed');
-    });
-
-    test('should add dependencies', () => {
-      const step = new PlanStep(stepData);
-      
-      step.addDependency('step-456');
-      
-      expect(step.dependencies).toContain('step-456');
-    });
-
-    test('should not add duplicate dependencies', () => {
-      const step = new PlanStep({ ...stepData, dependencies: ['step-456'] });
-      
-      step.addDependency('step-456');
-      
-      expect(step.dependencies).toHaveLength(1);
-    });
-
-    test('should remove dependencies', () => {
-      const step = new PlanStep({ ...stepData, dependencies: ['step-456', 'step-789'] });
-      
-      step.removeDependency('step-456');
-      
-      expect(step.dependencies).toEqual(['step-789']);
-    });
-
-    test('should add actions', () => {
-      const step = new PlanStep(stepData);
-      const newAction = {
-        type: 'run-command',
-        command: 'npm install'
-      };
-      
-      step.addAction(newAction);
-      
-      expect(step.actions).toHaveLength(3);
-      expect(step.actions[2]).toEqual(newAction);
-    });
-
-    test('should validate step completeness', () => {
-      const step = new PlanStep(stepData);
-      
-      const validation = step.validate();
-      
-      expect(validation.isValid).toBe(true);
-      expect(validation.errors).toHaveLength(0);
-    });
-
-    test('should detect missing required fields', () => {
-      const step = new PlanStep({});
-      
-      const validation = step.validate();
-      
-      expect(validation.isValid).toBe(false);
-      expect(validation.errors).toContain('Step name is required');
-    });
-
-    test('should detect invalid actions', () => {
+  describe('constructor', () => {
+    test('should create a PlanStep with basic properties', () => {
       const step = new PlanStep({
         name: 'Test Step',
-        actions: [
-          { type: 'create-file' } // Missing required 'path' field
-        ]
-      });
+        description: 'Test description',
+        type: 'implementation'
+      }, allowableActions);
       
-      const validation = step.validate();
+      expect(step.name).toBe('Test Step');
+      expect(step.description).toBe('Test description');
+      expect(step.type).toBe('implementation');
+      expect(step.status).toBe('pending');
+      expect(step.id).toBeDefined();
+      expect(step.steps).toEqual([]);
+      expect(step.actions).toEqual([]);
+    });
+
+    test('should initialize with sub-steps', () => {
+      const stepData = {
+        name: 'Parent Step',
+        steps: [
+          { name: 'Child Step 1', type: 'setup' },
+          { name: 'Child Step 2', type: 'implementation' }
+        ]
+      };
+      
+      const step = new PlanStep(stepData, allowableActions);
+      
+      expect(step.steps.length).toBe(2);
+      expect(step.steps[0].name).toBe('Child Step 1');
+      expect(step.steps[1].name).toBe('Child Step 2');
+    });
+
+    test('should initialize with actions', () => {
+      const stepData = {
+        name: 'Action Step',
+        actions: [
+          { type: 'create-file', parameters: { filePath: '/test.txt' } },
+          { type: 'run-command', parameters: { command: 'test' } }
+        ]
+      };
+      
+      const step = new PlanStep(stepData, allowableActions);
+      
+      expect(step.actions.length).toBe(2);
+      expect(step.actions[0].type).toBe('create-file');
+      expect(step.actions[1].type).toBe('run-command');
+    });
+  });
+
+  describe('addStep', () => {
+    test('should add a sub-step', () => {
+      const parentStep = new PlanStep({ name: 'Parent' }, allowableActions);
+      const childStep = new PlanStep({ name: 'Child' }, allowableActions);
+      
+      parentStep.addStep(childStep);
+      
+      expect(parentStep.steps.length).toBe(1);
+      expect(parentStep.steps[0]).toBe(childStep);
+    });
+
+    test('should throw error if not a PlanStep instance', () => {
+      const step = new PlanStep({ name: 'Test' }, allowableActions);
+      
+      expect(() => step.addStep({})).toThrow('Must be a PlanStep instance');
+    });
+  });
+
+  describe('addAction', () => {
+    test('should add action from data', () => {
+      const step = new PlanStep({ name: 'Test' }, allowableActions);
+      
+      step.addAction({ type: 'create-file', parameters: { filePath: '/test.txt' } });
+      
+      expect(step.actions.length).toBe(1);
+      expect(step.actions[0].type).toBe('create-file');
+    });
+
+    test('should add PlanAction instance', () => {
+      const step = new PlanStep({ name: 'Test' }, allowableActions);
+      const action = new PlanAction(allowableActions[0]);
+      
+      step.addAction(action);
+      
+      expect(step.actions.length).toBe(1);
+      expect(step.actions[0]).toBe(action);
+    });
+
+    test('should throw error for unknown action type', () => {
+      const step = new PlanStep({ name: 'Test' }, allowableActions);
+      
+      expect(() => step.addAction({ type: 'unknown-action' })).toThrow('Unknown action type: unknown-action');
+    });
+  });
+
+  describe('isLeaf', () => {
+    test('should return true for leaf step (has actions, no sub-steps)', () => {
+      const step = new PlanStep({ name: 'Test' }, allowableActions);
+      step.addAction({ type: 'create-file' });
+      
+      expect(step.isLeaf()).toBe(true);
+    });
+
+    test('should return false for branch step (has sub-steps)', () => {
+      const step = new PlanStep({ name: 'Test' }, allowableActions);
+      step.addStep(new PlanStep({ name: 'Child' }, allowableActions));
+      
+      expect(step.isLeaf()).toBe(false);
+    });
+
+    test('should return false for empty step', () => {
+      const step = new PlanStep({ name: 'Test' }, allowableActions);
+      
+      expect(step.isLeaf()).toBe(false);
+    });
+  });
+
+  describe('isBranch', () => {
+    test('should return true for branch step (has sub-steps)', () => {
+      const step = new PlanStep({ name: 'Test' }, allowableActions);
+      step.addStep(new PlanStep({ name: 'Child' }, allowableActions));
+      
+      expect(step.isBranch()).toBe(true);
+    });
+
+    test('should return false for leaf step', () => {
+      const step = new PlanStep({ name: 'Test' }, allowableActions);
+      step.addAction({ type: 'create-file' });
+      
+      expect(step.isBranch()).toBe(false);
+    });
+  });
+
+  describe('getAllActions', () => {
+    test('should return all actions from step and sub-steps', () => {
+      const parentStep = new PlanStep({ name: 'Parent' }, allowableActions);
+      const childStep = new PlanStep({ name: 'Child' }, allowableActions);
+      
+      parentStep.addAction({ type: 'create-file' });
+      childStep.addAction({ type: 'run-command' });
+      parentStep.addStep(childStep);
+      
+      const allActions = parentStep.getAllActions();
+      
+      expect(allActions.length).toBe(2);
+      expect(allActions[0].type).toBe('create-file');
+      expect(allActions[1].type).toBe('run-command');
+    });
+
+    test('should return empty array for step with no actions', () => {
+      const step = new PlanStep({ name: 'Test' }, allowableActions);
+      
+      expect(step.getAllActions()).toEqual([]);
+    });
+  });
+
+  describe('getInputs', () => {
+    test('should return inputs from step, actions, and sub-steps', () => {
+      const parentStep = new PlanStep({ 
+        name: 'Parent',
+        inputs: ['step-input']
+      }, allowableActions);
+      
+      const childStep = new PlanStep({ name: 'Child' }, allowableActions);
+      
+      parentStep.addAction({ type: 'create-file' }); // inputs: ['file-content']
+      childStep.addAction({ type: 'run-command' }); // inputs: ['command']
+      parentStep.addStep(childStep);
+      
+      const inputs = parentStep.getInputs();
+      
+      expect(inputs).toContain('step-input');
+      expect(inputs).toContain('file-content');
+      expect(inputs).toContain('command');
+    });
+  });
+
+  describe('getOutputs', () => {
+    test('should return outputs from step, actions, and sub-steps', () => {
+      const parentStep = new PlanStep({ 
+        name: 'Parent',
+        outputs: ['step-output']
+      }, allowableActions);
+      
+      const childStep = new PlanStep({ name: 'Child' }, allowableActions);
+      
+      parentStep.addAction({ type: 'create-file' }); // outputs: ['file-created']
+      childStep.addAction({ type: 'run-command' }); // outputs: ['command-result']
+      parentStep.addStep(childStep);
+      
+      const outputs = parentStep.getOutputs();
+      
+      expect(outputs).toContain('step-output');
+      expect(outputs).toContain('file-created');
+      expect(outputs).toContain('command-result');
+    });
+  });
+
+  describe('validateInputs', () => {
+    test('should validate inputs are satisfied', () => {
+      const step = new PlanStep({ name: 'Test' }, allowableActions);
+      step.addAction({ type: 'create-file' }); // needs 'file-content'
+      
+      const validation = step.validateInputs(['file-content']);
+      
+      expect(validation.isValid).toBe(true);
+      expect(validation.missingInputs).toEqual([]);
+      expect(validation.satisfiedInputs).toEqual(['file-content']);
+    });
+
+    test('should detect missing inputs', () => {
+      const step = new PlanStep({ name: 'Test' }, allowableActions);
+      step.addAction({ type: 'create-file' }); // needs 'file-content'
+      
+      const validation = step.validateInputs(['other-input']);
       
       expect(validation.isValid).toBe(false);
-      expect(validation.errors).toContain('Action of type create-file is missing required field: path');
+      expect(validation.missingInputs).toEqual(['file-content']);
+    });
+  });
+
+  describe('getDepth', () => {
+    test('should return 0 for leaf step', () => {
+      const step = new PlanStep({ name: 'Test' }, allowableActions);
+      step.addAction({ type: 'create-file' });
+      
+      expect(step.getDepth()).toBe(0);
     });
 
-    test('should check if step can be executed', () => {
-      const step = new PlanStep(stepData);
-      const completedSteps = ['step-1', 'step-2'];
+    test('should return correct depth for nested steps', () => {
+      const parentStep = new PlanStep({ name: 'Parent' }, allowableActions);
+      const childStep = new PlanStep({ name: 'Child' }, allowableActions);
+      const grandChildStep = new PlanStep({ name: 'GrandChild' }, allowableActions);
       
-      expect(step.canExecute(completedSteps)).toBe(true);
+      childStep.addStep(grandChildStep);
+      parentStep.addStep(childStep);
+      
+      expect(parentStep.getDepth()).toBe(2);
+    });
+  });
+
+  describe('findStep', () => {
+    test('should find step by ID', () => {
+      const parentStep = new PlanStep({ name: 'Parent' }, allowableActions);
+      const childStep = new PlanStep({ name: 'Child', id: 'child-id' }, allowableActions);
+      
+      parentStep.addStep(childStep);
+      
+      const found = parentStep.findStep('child-id');
+      expect(found).toBe(childStep);
     });
 
-    test('should check if step cannot be executed due to dependencies', () => {
-      const step = new PlanStep({
-        ...stepData,
-        dependencies: ['step-999']
-      });
-      const completedSteps = ['step-1', 'step-2'];
+    test('should return null if step not found', () => {
+      const step = new PlanStep({ name: 'Test' }, allowableActions);
       
-      expect(step.canExecute(completedSteps)).toBe(false);
+      expect(step.findStep('nonexistent')).toBeNull();
     });
+  });
 
-    test('should estimate completion percentage', () => {
-      const step = new PlanStep({
-        ...stepData,
-        actions: [
-          { type: 'action1', completed: true },
-          { type: 'action2', completed: true },
-          { type: 'action3', completed: false },
-          { type: 'action4', completed: false }
-        ]
-      });
+  describe('getFlatSteps', () => {
+    test('should return flat list of all steps', () => {
+      const parentStep = new PlanStep({ name: 'Parent' }, allowableActions);
+      const childStep1 = new PlanStep({ name: 'Child1' }, allowableActions);
+      const childStep2 = new PlanStep({ name: 'Child2' }, allowableActions);
       
-      expect(step.getCompletionPercentage()).toBe(50);
+      parentStep.addStep(childStep1);
+      parentStep.addStep(childStep2);
+      
+      const flatSteps = parentStep.getFlatSteps();
+      
+      expect(flatSteps.length).toBe(3);
+      expect(flatSteps[0]).toBe(parentStep);
+      expect(flatSteps[1]).toBe(childStep1);
+      expect(flatSteps[2]).toBe(childStep2);
     });
+  });
 
-    test('should clone the step', () => {
-      const step = new PlanStep(stepData);
-      
-      const cloned = step.clone();
-      
-      expect(cloned).not.toBe(step);
-      expect(cloned.id).not.toBe(step.id);
-      expect(cloned.name).toBe(step.name);
-      expect(cloned.actions).toEqual(step.actions);
-    });
-
+  describe('toJSON', () => {
     test('should export to JSON', () => {
-      const step = new PlanStep(stepData);
+      const step = new PlanStep({
+        name: 'Test Step',
+        description: 'Test description',
+        type: 'implementation'
+      }, allowableActions);
+      
+      step.addAction({ type: 'create-file' });
       
       const json = step.toJSON();
       
-      expect(json).toMatchObject({
-        id: step.id,
-        name: step.name,
-        type: step.type,
-        status: step.status,
-        dependencies: step.dependencies,
-        actions: step.actions
-      });
-    });
-
-    test('should create from JSON', () => {
-      const json = {
-        id: 'imported-step',
-        name: 'Imported Step',
-        type: 'setup',
-        actions: [{ type: 'test-action' }]
-      };
-      
-      const step = PlanStep.fromJSON(json);
-      
-      expect(step).toBeInstanceOf(PlanStep);
-      expect(step.id).toBe('imported-step');
-      expect(step.name).toBe('Imported Step');
-    });
-
-    test('should track execution attempts', () => {
-      const step = new PlanStep(stepData);
-      
-      step.recordExecutionAttempt({ success: false, error: 'Network error' });
-      step.recordExecutionAttempt({ success: true });
-      
-      const attempts = step.getExecutionAttempts();
-      expect(attempts).toHaveLength(2);
-      expect(attempts[0].success).toBe(false);
-      expect(attempts[1].success).toBe(true);
-    });
-
-    test('should check if max retries exceeded', () => {
-      const step = new PlanStep({ ...stepData, maxRetries: 2 });
-      
-      step.recordExecutionAttempt({ success: false });
-      expect(step.hasExceededMaxRetries()).toBe(false);
-      
-      step.recordExecutionAttempt({ success: false });
-      expect(step.hasExceededMaxRetries()).toBe(true);
-    });
-
-    test('should merge outputs', () => {
-      const step = new PlanStep(stepData);
-      
-      step.mergeOutputs({
-        files: ['new-file.js'],
-        data: { key: 'value' }
-      });
-      
-      expect(step.outputs.files).toContain('new-file.js');
-      expect(step.outputs.data).toEqual({ key: 'value' });
+      expect(json.name).toBe('Test Step');
+      expect(json.description).toBe('Test description');
+      expect(json.type).toBe('implementation');
+      expect(json.actions).toHaveLength(1);
+      expect(json.actions[0].type).toBe('create-file');
     });
   });
 
-  describe('Action Types', () => {
-    test('should validate create-directory action', () => {
-      const step = new PlanStep({
-        name: 'Test',
-        actions: [{
-          type: 'create-directory',
-          path: '/test/path',
-          recursive: true
-        }]
-      });
+  describe('fromJSON', () => {
+    test('should create from JSON', () => {
+      const json = {
+        name: 'Test Step',
+        type: 'implementation',
+        actions: [
+          { type: 'create-file', parameters: {} }
+        ]
+      };
       
-      const validation = step.validate();
-      expect(validation.isValid).toBe(true);
-    });
-
-    test('should validate create-file action', () => {
-      const step = new PlanStep({
-        name: 'Test',
-        actions: [{
-          type: 'create-file',
-          path: '/test/file.js',
-          content: 'console.log("test");'
-        }]
-      });
+      const step = PlanStep.fromJSON(json, allowableActions);
       
-      const validation = step.validate();
-      expect(validation.isValid).toBe(true);
-    });
-
-    test('should validate run-command action', () => {
-      const step = new PlanStep({
-        name: 'Test',
-        actions: [{
-          type: 'run-command',
-          command: 'npm install',
-          cwd: '/project'
-        }]
-      });
-      
-      const validation = step.validate();
-      expect(validation.isValid).toBe(true);
+      expect(step.name).toBe('Test Step');
+      expect(step.type).toBe('implementation');
+      expect(step.actions).toHaveLength(1);
     });
   });
 });

@@ -82,6 +82,7 @@ export default {
   
   // Module name mapping for local development
   moduleNameMapper: {
+    '^@jsenvoy/llm-planner$': '<rootDir>/../llm-planner/src',
     '^@jsenvoy/(.*)$': '<rootDir>/../../$1/src'
   }
 };
