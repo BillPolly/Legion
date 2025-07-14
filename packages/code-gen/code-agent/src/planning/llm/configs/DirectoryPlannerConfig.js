@@ -1,297 +1,371 @@
 /**
- * DirectoryPlannerConfig - Configuration for LLM-based directory planning
+ * DirectoryPlannerConfig - Configuration for directory structure planning
  * 
- * This configuration defines the prompt template, response schema, and examples
- * for creating optimal directory structures based on project analysis.
+ * Defines the allowable actions and constraints for creating optimal directory
+ * structures based on project requirements and complexity.
  */
 
 export const DirectoryPlannerConfig = {
   name: 'DirectoryPlanner',
-  description: 'Plans project directory structures based on analysis and complexity',
+  description: 'Plans project directory structures based on requirements and complexity',
   
-  // Template for generating prompts
-  promptTemplate: `You are an expert software architect specializing in project structure design. Your task is to create optimal directory structures based on project analysis.
-
-## Project Analysis
-{analysis}
-
-## Directory Planning Instructions
-1. Analyze the project type, complexity, and features
-2. Select appropriate architectural pattern (simple, modular, layered)
-3. Create directories and files based on best practices
-4. Include technology-specific structures
-5. Add feature-specific directories
-6. Include common project files (.gitignore, README.md, package.json)
-7. Generate descriptions for each directory
-
-## Architectural Patterns
-
-**Simple Pattern (Low Complexity):**
-- Minimal structure with essential files in root
-- Frontend: index.html, style.css, script.js
-- Backend: server.js, package.json
-- Fullstack: frontend/, backend/, package.json
-
-**Modular Pattern (Medium Complexity):**
-- Organized directories by function
-- Frontend: css/, js/, components/, services/
-- Backend: routes/, models/, utils/
-- Fullstack: frontend/, backend/, shared/
-
-**Layered Pattern (High Complexity):**
-- Full separation of concerns
-- Frontend: assets/, components/, views/, services/, utils/, config/
-- Backend: controllers/, services/, models/, repositories/, middleware/, utils/, config/
-- Fullstack: frontend/, backend/, shared/, docs/, scripts/
-
-## Technology-Specific Additions
-
-**Frontend Technologies:**
-- CSS: Add css/ or styles/ directory
-- JavaScript: Add js/ or scripts/ directory
-- Components: Add components/ directory
-
-**Backend Technologies:**
-- Node.js: Add package.json, server.js
-- Express: Add routes/, middleware/ directories
-- Database: Add models/, repositories/ directories
-
-**Testing:**
-- Add tests/, __tests__/, or test/ directories
-- Add test configuration files
-
-## Feature-Specific Directories
-
-**Authentication:** Add auth/ directory
-**API:** Add api/ directory  
-**Documentation:** Add docs/ directory
-**Configuration:** Add config/ directory
-**Utilities:** Add utils/ or helpers/ directory
-
-## Common Files
-- .gitignore (version control)
-- README.md (documentation)
-- package.json (Node.js projects)
-- LICENSE (open source projects)
-
-## Response Format
-Respond with a JSON object that exactly matches this structure:
-
-{
-  "directories": ["array of directory names"],
-  "files": ["array of file names"],
-  "descriptions": {
-    "directoryName": "description of purpose"
-  },
-  "warnings": ["array of warning messages if any"],
-  "isValid": true,
-  "metadata": {
-    "planner": "DirectoryPlanner",
-    "plannedAt": 1234567890,
-    "projectType": "frontend|backend|fullstack",
-    "complexity": "low|medium|high",
-    "pattern": "simple|modular|layered"
-  }
-}
-
-## Example Structures
-
-**Simple Frontend:**
-```json
-{
-  "directories": ["."],
-  "files": ["index.html", "style.css", "script.js", ".gitignore", "README.md"],
-  "descriptions": {
-    ".": "Main project directory containing all files"
-  }
-}
-```
-
-**Modular Backend:**
-```json
-{
-  "directories": ["routes", "models", "utils"],
-  "files": ["server.js", "package.json", ".gitignore", "README.md"],
-  "descriptions": {
-    "routes": "API route definitions and handlers",
-    "models": "Data models and database schemas",
-    "utils": "Utility functions and helpers"
-  }
-}
-```
-
-**Layered Fullstack:**
-```json
-{
-  "directories": ["frontend", "backend", "shared", "docs", "scripts"],
-  "files": ["package.json", ".gitignore", "README.md"],
-  "descriptions": {
-    "frontend": "Client-side application code",
-    "backend": "Server-side application code", 
-    "shared": "Code shared between frontend and backend",
-    "docs": "Project documentation",
-    "scripts": "Build and deployment scripts"
-  }
-}
-```
-
-Please analyze the provided project analysis and create an optimal directory structure following these guidelines.`,
-
-  // Schema for response validation
-  responseSchema: {
-    type: 'object',
-    required: ['directories', 'files', 'isValid', 'metadata'],
-    properties: {
-      directories: { type: 'array', items: { type: 'string' } },
-      files: { type: 'array', items: { type: 'string' } },
-      descriptions: {
-        type: 'object',
-        additionalProperties: { type: 'string' }
-      },
-      warnings: { type: 'array', items: { type: 'string' } },
-      isValid: { type: 'boolean' },
-      metadata: {
-        type: 'object',
-        required: ['planner', 'plannedAt', 'projectType', 'complexity'],
-        properties: {
-          planner: { type: 'string' },
-          plannedAt: { type: 'number' },
-          projectType: { type: 'string', enum: ['frontend', 'backend', 'fullstack'] },
-          complexity: { type: 'string', enum: ['low', 'medium', 'high'] },
-          pattern: { type: 'string', enum: ['simple', 'modular', 'layered'] }
-        }
-      }
-    }
-  },
-
-  // Example inputs and expected outputs for testing
-  examples: [
+  allowableActions: [
     {
-      input: {
-        analysis: {
-          projectType: 'frontend',
-          complexity: 'low',
-          components: {
-            frontend: {
-              features: ['form', 'list'],
-              technologies: ['html', 'css', 'javascript']
-            }
-          }
-        }
-      },
-      expectedOutput: {
-        directories: ['.'],
-        files: ['index.html', 'style.css', 'script.js', '.gitignore', 'README.md'],
-        descriptions: {
-          '.': 'Main project directory containing all files'
+      type: 'create_directory',
+      description: 'Create a directory in the project structure',
+      inputs: ['project_structure', 'directory_requirements'],
+      outputs: ['updated_structure'],
+      parameters: {
+        name: {
+          type: 'string',
+          description: 'Name of the directory to create'
         },
-        warnings: [],
-        isValid: true,
-        metadata: {
-          planner: 'DirectoryPlanner',
-          plannedAt: 1234567890,
-          projectType: 'frontend',
-          complexity: 'low',
-          pattern: 'simple'
+        path: {
+          type: 'string',
+          description: 'Path where the directory should be created'
+        },
+        description: {
+          type: 'string',
+          description: 'Description of the directory purpose'
+        },
+        required: {
+          type: 'boolean',
+          description: 'Whether this directory is required'
         }
       }
     },
     {
-      input: {
-        analysis: {
-          projectType: 'backend',
-          complexity: 'medium',
-          components: {
-            backend: {
-              features: ['api', 'database', 'auth'],
-              technologies: ['nodejs', 'express']
+      type: 'create_file',
+      description: 'Create a file in the project structure',
+      inputs: ['project_structure', 'file_requirements'],
+      outputs: ['updated_structure'],
+      parameters: {
+        name: {
+          type: 'string',
+          description: 'Name of the file to create'
+        },
+        path: {
+          type: 'string',
+          description: 'Path where the file should be created'
+        },
+        type: {
+          type: 'string',
+          enum: ['configuration', 'source', 'test', 'documentation'],
+          description: 'Type of file being created'
+        },
+        required: {
+          type: 'boolean',
+          description: 'Whether this file is required'
+        }
+      }
+    },
+    {
+      type: 'apply_template',
+      description: 'Apply a predefined template structure',
+      inputs: ['project_type', 'complexity_level'],
+      outputs: ['template_structure'],
+      parameters: {
+        template: {
+          type: 'object',
+          description: 'Template structure to apply',
+          properties: {
+            directories: {
+              type: 'array',
+              description: 'List of directories in the template'
+            },
+            files: {
+              type: 'array',
+              description: 'List of files in the template'
             }
           }
-        }
-      },
-      expectedOutput: {
-        directories: ['routes', 'models', 'utils'],
-        files: ['server.js', 'package.json', '.gitignore', 'README.md'],
-        descriptions: {
-          routes: 'API route definitions and handlers',
-          models: 'Data models and database schemas',
-          utils: 'Utility functions and helpers'
         },
-        warnings: [],
-        isValid: true,
-        metadata: {
-          planner: 'DirectoryPlanner',
-          plannedAt: 1234567890,
-          projectType: 'backend',
-          complexity: 'medium',
-          pattern: 'modular'
+        templateType: {
+          type: 'string',
+          enum: ['simple', 'modular', 'layered'],
+          description: 'Type of template being applied'
+        }
+      }
+    },
+    {
+      type: 'add_feature_directories',
+      description: 'Add directories specific to detected features',
+      inputs: ['features_list', 'project_type'],
+      outputs: ['feature_directories'],
+      parameters: {
+        feature: {
+          type: 'string',
+          description: 'Feature requiring directories'
+        },
+        directories: {
+          type: 'array',
+          description: 'List of directories to add for this feature'
+        }
+      }
+    },
+    {
+      type: 'add_technology_structure',
+      description: 'Add structure specific to technologies used',
+      inputs: ['technologies_list', 'project_type'],
+      outputs: ['technology_structure'],
+      parameters: {
+        technology: {
+          type: 'string',
+          description: 'Technology requiring specific structure'
+        },
+        directories: {
+          type: 'array',
+          description: 'Directories needed for this technology'
+        },
+        files: {
+          type: 'array',
+          description: 'Files needed for this technology'
+        }
+      }
+    },
+    {
+      type: 'add_configuration_files',
+      description: 'Add configuration files based on project needs',
+      inputs: ['project_type', 'technologies_list', 'features_list'],
+      outputs: ['configuration_files'],
+      parameters: {
+        configType: {
+          type: 'string',
+          enum: ['package', 'environment', 'eslint', 'jest', 'docker'],
+          description: 'Type of configuration file'
+        },
+        fileName: {
+          type: 'string',
+          description: 'Name of the configuration file'
+        },
+        required: {
+          type: 'boolean',
+          description: 'Whether this configuration is required'
+        }
+      }
+    },
+    {
+      type: 'add_common_files',
+      description: 'Add common files like README, gitignore, etc.',
+      inputs: ['project_type', 'complexity_level'],
+      outputs: ['common_files'],
+      parameters: {
+        fileType: {
+          type: 'string',
+          enum: ['readme', 'gitignore', 'license', 'changelog'],
+          description: 'Type of common file'
+        },
+        fileName: {
+          type: 'string',
+          description: 'Name of the common file'
+        }
+      }
+    },
+    {
+      type: 'validate_structure',
+      description: 'Validate the directory structure for completeness and consistency',
+      inputs: ['directory_structure', 'project_requirements'],
+      outputs: ['validation_result'],
+      parameters: {
+        isValid: {
+          type: 'boolean',
+          description: 'Whether the structure is valid'
+        },
+        errors: {
+          type: 'array',
+          description: 'List of validation errors'
+        },
+        warnings: {
+          type: 'array',
+          description: 'List of warnings'
+        },
+        suggestions: {
+          type: 'array',
+          description: 'List of suggestions for improvement'
+        }
+      }
+    },
+    {
+      type: 'optimize_structure',
+      description: 'Optimize the directory structure for maintainability',
+      inputs: ['directory_structure', 'project_type'],
+      outputs: ['optimized_structure'],
+      parameters: {
+        optimization: {
+          type: 'string',
+          enum: ['reduce_depth', 'group_related', 'separate_concerns'],
+          description: 'Type of optimization applied'
+        },
+        changes: {
+          type: 'array',
+          description: 'List of changes made during optimization'
+        }
+      }
+    },
+    {
+      type: 'generate_descriptions',
+      description: 'Generate descriptions for directories and their purposes',
+      inputs: ['directory_structure', 'project_type'],
+      outputs: ['directory_descriptions'],
+      parameters: {
+        directoryName: {
+          type: 'string',
+          description: 'Name of the directory'
+        },
+        description: {
+          type: 'string',
+          description: 'Description of the directory purpose'
         }
       }
     }
   ],
-
-  // Mock responses for testing
-  mockResponses: {
-    'simple-frontend': {
-      directories: ['.'],
-      files: ['index.html', 'style.css', 'script.js', '.gitignore', 'README.md'],
-      descriptions: {
-        '.': 'Main project directory containing all files'
-      },
-      warnings: [],
-      isValid: true,
-      metadata: {
-        planner: 'DirectoryPlanner',
-        plannedAt: Date.now(),
+  
+  constraints: [
+    'Directory names must be valid filesystem names',
+    'Structure must be appropriate for the project type (frontend, backend, fullstack)',
+    'Required files must be present (index.html for frontend, package.json for Node.js)',
+    'No duplicate directories or files',
+    'Directory depth should be reasonable (max 5 levels)',
+    'Configuration files must match the technologies used',
+    'Test directories should be included for medium and high complexity projects'
+  ],
+  
+  examples: [
+    {
+      input: {
         projectType: 'frontend',
         complexity: 'low',
-        pattern: 'simple'
+        features: ['form', 'list'],
+        technologies: ['html', 'javascript', 'css']
+      },
+      expectedOutput: {
+        directories: ['.'],
+        files: ['index.html', 'style.css', 'script.js', 'README.md', '.gitignore'],
+        descriptions: {
+          '.': 'Root directory for simple frontend project'
+        }
       }
     },
-    'modular-backend': {
-      directories: ['routes', 'models', 'utils'],
-      files: ['server.js', 'package.json', '.gitignore', 'README.md'],
-      descriptions: {
-        routes: 'API route definitions and handlers',
-        models: 'Data models and database schemas',
-        utils: 'Utility functions and helpers'
-      },
-      warnings: [],
-      isValid: true,
-      metadata: {
-        planner: 'DirectoryPlanner',
-        plannedAt: Date.now(),
+    {
+      input: {
         projectType: 'backend',
         complexity: 'medium',
-        pattern: 'modular'
+        features: ['api', 'crud', 'authentication'],
+        technologies: ['nodejs', 'express']
+      },
+      expectedOutput: {
+        directories: ['routes', 'models', 'utils', 'middleware'],
+        files: ['server.js', 'package.json', '.env.example', 'README.md', '.gitignore'],
+        descriptions: {
+          'routes': 'API route definitions',
+          'models': 'Data models and schemas',
+          'utils': 'Utility functions and helpers',
+          'middleware': 'Express middleware functions'
+        }
+      }
+    }
+  ],
+  
+  templates: {
+    frontend: {
+      simple: {
+        directories: ['.'],
+        files: ['index.html', 'style.css', 'script.js']
+      },
+      modular: {
+        directories: ['css', 'js', 'components', 'services'],
+        files: ['index.html']
+      },
+      layered: {
+        directories: ['assets', 'components', 'views', 'services', 'utils', 'config'],
+        files: ['index.html']
       }
     },
-    'layered-fullstack': {
-      directories: ['frontend', 'backend', 'shared', 'docs', 'scripts'],
-      files: ['package.json', '.gitignore', 'README.md'],
-      descriptions: {
-        frontend: 'Client-side application code',
-        backend: 'Server-side application code',
-        shared: 'Code shared between frontend and backend',
-        docs: 'Project documentation',
-        scripts: 'Build and deployment scripts'
+    backend: {
+      simple: {
+        directories: ['.'],
+        files: ['server.js', 'package.json']
       },
-      warnings: [],
-      isValid: true,
-      metadata: {
-        planner: 'DirectoryPlanner',
-        plannedAt: Date.now(),
-        projectType: 'fullstack',
-        complexity: 'high',
-        pattern: 'layered'
+      modular: {
+        directories: ['routes', 'models', 'utils'],
+        files: ['server.js', 'package.json']
+      },
+      layered: {
+        directories: ['controllers', 'services', 'models', 'repositories', 'middleware', 'utils', 'config'],
+        files: ['server.js', 'package.json']
+      }
+    },
+    fullstack: {
+      simple: {
+        directories: ['frontend', 'backend'],
+        files: ['package.json']
+      },
+      modular: {
+        directories: ['frontend', 'backend', 'shared'],
+        files: ['package.json']
+      },
+      layered: {
+        directories: ['frontend', 'backend', 'shared', 'docs', 'scripts'],
+        files: ['package.json']
       }
     }
   },
-
-  // Settings for LLM generation
-  settings: {
-    temperature: 0.1, // Low temperature for consistent outputs
-    maxTokens: 2000,
-    systemPrompt: 'You are a precise software architect. Always respond with valid JSON matching the exact schema provided.'
+  
+  mockResponses: {
+    'simple-frontend': {
+      directories: ['.'],
+      files: ['index.html', 'style.css', 'script.js', 'README.md', '.gitignore'],
+      descriptions: {
+        '.': 'Root directory for simple frontend project'
+      },
+      warnings: [],
+      isValid: true,
+      metadata: {
+        planner: 'DirectoryPlanner',
+        plannedAt: 1234567890,
+        projectType: 'frontend',
+        complexity: 'low',
+        mockScenario: 'simple-frontend'
+      }
+    },
+    'modular-backend': {
+      directories: ['routes', 'models', 'utils', 'middleware'],
+      files: ['server.js', 'package.json', '.env.example', '.eslintrc.js', 'README.md', '.gitignore'],
+      descriptions: {
+        'routes': 'API route definitions',
+        'models': 'Data models and schemas',
+        'utils': 'Utility functions and helpers',
+        'middleware': 'Express middleware functions'
+      },
+      warnings: [],
+      isValid: true,
+      metadata: {
+        planner: 'DirectoryPlanner',
+        plannedAt: 1234567890,
+        projectType: 'backend',
+        complexity: 'medium',
+        mockScenario: 'modular-backend'
+      }
+    },
+    'layered-fullstack': {
+      directories: ['frontend', 'backend', 'shared', 'docs', 'scripts', 'tests'],
+      files: ['package.json', 'README.md', '.gitignore', 'docker-compose.yml'],
+      descriptions: {
+        'frontend': 'Frontend application code',
+        'backend': 'Backend server code',
+        'shared': 'Shared utilities and types',
+        'docs': 'Project documentation',
+        'scripts': 'Build and deployment scripts',
+        'tests': 'Test files and test utilities'
+      },
+      warnings: [],
+      isValid: true,
+      metadata: {
+        planner: 'DirectoryPlanner',
+        plannedAt: 1234567890,
+        projectType: 'fullstack',
+        complexity: 'high',
+        mockScenario: 'layered-fullstack'
+      }
+    }
   }
 };

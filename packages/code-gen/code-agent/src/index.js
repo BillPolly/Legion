@@ -15,8 +15,8 @@ import { StateManager } from './config/StateManager.js';
 import { ValidationUtils } from './utils/ValidationUtils.js';
 import { ErrorHandler } from './utils/ErrorHandler.js';
 
-// Import LLM planner
-import { LLMPlanner } from '@jsenvoy/llm-planner';
+// Import unified planner
+import { UnifiedPlanner } from './planning/llm/UnifiedPlanner.js';
 
 /**
  * Main CodeAgent class - entry point for all coding operations
@@ -82,7 +82,7 @@ class CodeAgent {
     this.fileOps = null;
     this.llmClient = null;
     this.moduleLoader = null;
-    this.llmPlanner = null;
+    this.unifiedPlanner = null;
     this.initialized = false;
   }
 
@@ -130,8 +130,11 @@ class CodeAgent {
       // Initialize state manager
       await this.stateManager.initialize();
       
-      // Initialize LLM planner
-      this.llmPlanner = new LLMPlanner();
+      // Initialize unified planner
+      this.unifiedPlanner = new UnifiedPlanner({
+        provider: llmConfig.provider || 'mock'
+      });
+      await this.unifiedPlanner.initialize();
       
       // Create working directory if it doesn't exist
       await this.fileOps.createDirectory(workingDirectory);
@@ -253,20 +256,50 @@ class CodeAgent {
   async planProject(requirements) {
     console.log('🔍 Analyzing requirements...');
     
-    // Use LLM planner to analyze requirements
-    const analysis = await this.llmPlanner.analyzeRequirements(requirements);
+    // Use unified planner to analyze requirements
+    const analysis = await this.unifiedPlanner.analyzeRequirements(requirements);
     
     console.log(`📊 Analysis complete: ${analysis.projectType} project with ${analysis.complexity} complexity`);
     
+    // Plan directory structure
+    console.log('📁 Planning directory structure...');
+    const directoryStructure = await this.unifiedPlanner.planDirectoryStructure(analysis);
+    
+    // Plan file dependencies
+    console.log('🔗 Planning file dependencies...');
+    const dependencies = await this.unifiedPlanner.planDependencies(directoryStructure, analysis);
+    
+    // Plan architecture based on project type
+    let frontendArchitecture = null;
+    let backendArchitecture = null;
+    let apiInterface = null;
+    
+    if (analysis.projectType === 'frontend' || analysis.projectType === 'fullstack') {
+      console.log('🎨 Planning frontend architecture...');
+      frontendArchitecture = await this.unifiedPlanner.planFrontendArchitecture(analysis);
+    }
+    
+    if (analysis.projectType === 'backend' || analysis.projectType === 'fullstack') {
+      console.log('⚙️ Planning backend architecture...');
+      backendArchitecture = await this.unifiedPlanner.planBackendArchitecture(analysis);
+    }
+    
+    if (frontendArchitecture && backendArchitecture) {
+      console.log('🌐 Planning API interfaces...');
+      apiInterface = await this.unifiedPlanner.planAPIInterface(frontendArchitecture, backendArchitecture);
+    }
+    
     this.projectPlan = {
       analysis,
-      structure: analysis.suggestedArchitecture?.structure || {},
-      files: [],
-      dependencies: [],
+      directoryStructure,
+      dependencies,
+      frontendArchitecture,
+      backendArchitecture,
+      apiInterface,
       architecture: analysis.projectType
     };
     
-    console.log('Project planning completed');
+    console.log('✅ Project planning completed');
   }
 
   /**

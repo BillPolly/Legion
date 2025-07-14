@@ -1,470 +1,489 @@
 /**
- * FrontendArchitecturePlannerConfig - Configuration for LLM-based frontend architecture planning
+ * FrontendArchitecturePlannerConfig - Configuration for frontend architecture planning
  * 
- * This configuration defines the prompt template, response schema, and examples
- * for planning frontend component hierarchies, state management, and data flow.
+ * Defines the allowable actions and constraints for creating comprehensive frontend
+ * architectures including component hierarchy, state management, and styling.
  */
 
 export const FrontendArchitecturePlannerConfig = {
   name: 'FrontendArchitecturePlanner',
-  description: 'Plans frontend architecture including components, state management, and data flow',
+  description: 'Plans frontend architecture and component design for optimal user experience',
   
-  // Template for generating prompts
-  promptTemplate: `You are an expert frontend architect specializing in component design, state management, and user interface patterns. Your task is to create comprehensive frontend architectures based on project analysis.
-
-## Project Analysis
-{analysis}
-
-## Frontend Architecture Planning Instructions
-
-1. **Component Design**
-   - Analyze features to identify needed components
-   - Design component hierarchy and relationships
-   - Specify component types (container, display, form, navigation, interactive, layout)
-   - Define component responsibilities and interfaces
-
-2. **State Management**
-   - Choose appropriate state pattern based on complexity
-   - Local: Simple component state for low complexity
-   - Centralized: Application-wide state for medium complexity  
-   - Modular: Feature-based state management for high complexity
-
-3. **Data Flow**
-   - Define how data flows between components
-   - Specify parent-child relationships
-   - Identify shared data and communication patterns
-   - Plan event handling and user interactions
-
-4. **Styling Architecture**
-   - Choose CSS approach (inline, modular, utility-based)
-   - Plan styling organization and structure
-   - Define theme and design system if needed
-
-5. **Routing (if applicable)**
-   - Plan navigation structure
-   - Define routes and page components
-   - Specify routing patterns
-
-## Component Type Classification
-
-**Container Components:**
-- App: Main application wrapper
-- Page: Top-level page components
-- Layout: Page layout containers
-- Wrapper: Generic container components
-
-**Display Components:**
-- List: Display collections of items
-- Table: Tabular data display
-- Grid: Grid-based layouts
-- Card: Individual item display
-- Item: Single data item
-
-**Form Components:**
-- Form: Complete form containers
-- Input: Input field components
-- Field: Form field wrappers
-- Submit: Form submission
-- Search: Search functionality
-
-**Navigation Components:**
-- Nav: Main navigation
-- Menu: Menu components
-- Header: Page headers
-- Footer: Page footers
-- Sidebar: Side navigation
-
-**Interactive Components:**
-- Button: Action buttons
-- Modal: Modal dialogs
-- Dialog: Dialog boxes
-- Dropdown: Dropdown menus
-- Toggle: Toggle switches
-
-**Layout Components:**
-- Header: Page header sections
-- Footer: Page footer sections
-- Main: Main content areas
-- Aside: Sidebar content
-- Section: Content sections
-
-## State Management Patterns
-
-**Local State (Low Complexity):**
-- Component-level state only
-- Direct prop passing
-- Simple event handling
-
-**Centralized State (Medium Complexity):**
-- Application-wide state store
-- Centralized state updates
-- Global state access
-
-**Modular State (High Complexity):**
-- Feature-based state modules
-- Selective state sharing
-- Complex state orchestration
-
-## Response Format
-Respond with a JSON object that exactly matches this structure:
-
-{
-  "components": [
+  allowableActions: [
     {
-      "name": "ComponentName",
-      "type": "container|display|form|navigation|interactive|layout",
-      "description": "What this component does",
-      "props": ["array of expected props"],
-      "children": ["array of child component names"],
-      "responsibilities": ["array of responsibilities"],
-      "stateNeeds": "local|shared|none"
+      type: 'analyze_components',
+      description: 'Analyze required components based on features',
+      inputs: ['features_list', 'project_requirements'],
+      outputs: ['component_analysis'],
+      parameters: {
+        componentNames: {
+          type: 'array',
+          description: 'List of component names to create'
+        },
+        componentTypes: {
+          type: 'array',
+          description: 'Types of components (container, display, form, etc.)'
+        }
+      }
+    },
+    {
+      type: 'create_component',
+      description: 'Create a component specification',
+      inputs: ['component_requirements', 'component_hierarchy'],
+      outputs: ['component_specification'],
+      parameters: {
+        name: {
+          type: 'string',
+          description: 'Name of the component'
+        },
+        type: {
+          type: 'string',
+          enum: ['container', 'display', 'form', 'navigation', 'interactive', 'layout'],
+          description: 'Type of component'
+        },
+        props: {
+          type: 'array',
+          description: 'List of component properties'
+        },
+        state: {
+          type: 'object',
+          description: 'Component state requirements'
+        },
+        children: {
+          type: 'array',
+          description: 'Child components'
+        },
+        description: {
+          type: 'string',
+          description: 'Description of component purpose'
+        }
+      }
+    },
+    {
+      type: 'analyze_component_hierarchy',
+      description: 'Analyze the hierarchical relationships between components',
+      inputs: ['component_list', 'feature_requirements'],
+      outputs: ['component_hierarchy'],
+      parameters: {
+        hierarchy: {
+          type: 'object',
+          description: 'Hierarchical structure of components'
+        },
+        relationships: {
+          type: 'array',
+          description: 'Parent-child relationships'
+        },
+        depth: {
+          type: 'number',
+          description: 'Maximum depth of component hierarchy'
+        }
+      }
+    },
+    {
+      type: 'define_state_management',
+      description: 'Define state management strategy and structure',
+      inputs: ['component_hierarchy', 'complexity_level'],
+      outputs: ['state_management_plan'],
+      parameters: {
+        strategy: {
+          type: 'string',
+          enum: ['local', 'centralized', 'modular'],
+          description: 'State management strategy'
+        },
+        globalState: {
+          type: 'object',
+          description: 'Global state structure'
+        },
+        stateFlow: {
+          type: 'array',
+          description: 'State flow patterns'
+        }
+      }
+    },
+    {
+      type: 'plan_data_flow',
+      description: 'Plan data flow patterns between components',
+      inputs: ['component_hierarchy', 'api_requirements'],
+      outputs: ['data_flow_plan'],
+      parameters: {
+        dataFlow: {
+          type: 'object',
+          description: 'Data flow patterns'
+        },
+        apiCalls: {
+          type: 'array',
+          description: 'API call patterns'
+        },
+        eventHandling: {
+          type: 'object',
+          description: 'Event handling patterns'
+        }
+      }
+    },
+    {
+      type: 'configure_styling',
+      description: 'Configure styling architecture and organization',
+      inputs: ['component_list', 'design_requirements'],
+      outputs: ['styling_architecture'],
+      parameters: {
+        approach: {
+          type: 'string',
+          enum: ['global', 'modular', 'component-scoped', 'utility-first'],
+          description: 'CSS organization approach'
+        },
+        structure: {
+          type: 'object',
+          description: 'CSS file structure'
+        },
+        conventions: {
+          type: 'array',
+          description: 'Naming conventions and standards'
+        }
+      }
+    },
+    {
+      type: 'setup_routing',
+      description: 'Setup routing configuration for multi-page applications',
+      inputs: ['component_hierarchy', 'navigation_requirements'],
+      outputs: ['routing_configuration'],
+      parameters: {
+        routes: {
+          type: 'array',
+          description: 'List of application routes'
+        },
+        routeComponents: {
+          type: 'object',
+          description: 'Mapping of routes to components'
+        },
+        navigationPattern: {
+          type: 'string',
+          enum: ['hash', 'history', 'memory'],
+          description: 'Navigation pattern to use'
+        }
+      }
+    },
+    {
+      type: 'optimize_performance',
+      description: 'Plan performance optimization strategies',
+      inputs: ['component_hierarchy', 'performance_requirements'],
+      outputs: ['performance_plan'],
+      parameters: {
+        optimizations: {
+          type: 'array',
+          description: 'List of performance optimizations'
+        },
+        lazyLoading: {
+          type: 'boolean',
+          description: 'Whether to implement lazy loading'
+        },
+        caching: {
+          type: 'object',
+          description: 'Caching strategies'
+        }
+      }
+    },
+    {
+      type: 'plan_accessibility',
+      description: 'Plan accessibility features and compliance',
+      inputs: ['component_specifications', 'accessibility_requirements'],
+      outputs: ['accessibility_plan'],
+      parameters: {
+        features: {
+          type: 'array',
+          description: 'Accessibility features to implement'
+        },
+        compliance: {
+          type: 'string',
+          enum: ['WCAG-A', 'WCAG-AA', 'WCAG-AAA'],
+          description: 'WCAG compliance level'
+        },
+        testing: {
+          type: 'array',
+          description: 'Accessibility testing strategies'
+        }
+      }
+    },
+    {
+      type: 'validate_architecture',
+      description: 'Validate the frontend architecture for consistency and best practices',
+      inputs: ['architecture_specification'],
+      outputs: ['validation_result'],
+      parameters: {
+        isValid: {
+          type: 'boolean',
+          description: 'Whether the architecture is valid'
+        },
+        errors: {
+          type: 'array',
+          description: 'List of validation errors'
+        },
+        warnings: {
+          type: 'array',
+          description: 'List of warnings'
+        },
+        suggestions: {
+          type: 'array',
+          description: 'List of improvement suggestions'
+        }
+      }
     }
   ],
-  "componentHierarchy": {
-    "App": {
-      "children": ["Header", "Main", "Footer"],
-      "level": 0
-    },
-    "Header": {
-      "children": ["Navigation"],
-      "level": 1,
-      "parent": "App"
-    }
-  },
-  "stateManagement": {
-    "pattern": "local|centralized|modular",
-    "complexity": "low|medium|high",
-    "stateStructure": {
-      "user": "object describing user state",
-      "ui": "object describing UI state"
-    },
-    "actions": ["array of state actions needed"]
-  },
-  "dataFlow": {
-    "patterns": ["prop-drilling", "state-lifting", "event-bubbling"],
-    "communications": [
-      {
-        "from": "ParentComponent",
-        "to": "ChildComponent", 
-        "type": "props|events|state",
-        "data": "description of data passed"
-      }
-    ]
-  },
-  "styling": {
-    "approach": "modular|utility|inline|external",
-    "organization": "description of CSS organization",
-    "themes": true|false,
-    "responsive": true|false
-  },
-  "routing": {
-    "enabled": true|false,
-    "routes": [
-      {
-        "path": "/path",
-        "component": "ComponentName",
-        "description": "Route description"
-      }
-    ]
-  },
-  "metadata": {
-    "planner": "FrontendArchitecturePlanner",
-    "plannedAt": 1234567890,
-    "complexity": "low|medium|high"
-  }
-}
-
-## Example Architectures
-
-**Simple Todo App:**
-```json
-{
-  "components": [
-    {
-      "name": "App",
-      "type": "container",
-      "description": "Main application container",
-      "props": [],
-      "children": ["Header", "TodoList", "TodoForm"],
-      "responsibilities": ["application state", "component coordination"],
-      "stateNeeds": "local"
-    },
-    {
-      "name": "TodoForm",
-      "type": "form",
-      "description": "Form for adding new todos",
-      "props": ["onSubmit"],
-      "children": [],
-      "responsibilities": ["input validation", "form submission"],
-      "stateNeeds": "local"
-    },
-    {
-      "name": "TodoList",
-      "type": "display",
-      "description": "List of todo items",
-      "props": ["todos", "onToggle", "onDelete"],
-      "children": ["TodoItem"],
-      "responsibilities": ["todo display", "list management"],
-      "stateNeeds": "none"
-    },
-    {
-      "name": "TodoItem",
-      "type": "display",
-      "description": "Individual todo item",
-      "props": ["todo", "onToggle", "onDelete"],
-      "children": [],
-      "responsibilities": ["todo rendering", "user interactions"],
-      "stateNeeds": "none"
-    }
+  
+  constraints: [
+    'Components must have clear responsibilities and single purpose',
+    'Component hierarchy should not exceed 6 levels deep',
+    'State management strategy must match project complexity',
+    'Data flow must be unidirectional for predictability',
+    'Styling approach must be consistent across components',
+    'Routing must be configured for multi-page applications',
+    'Performance optimizations must not compromise maintainability',
+    'Accessibility features must be planned from the start',
+    'Component names must follow consistent naming conventions',
+    'Each component should have clear props and state definitions'
   ],
-  "stateManagement": {
-    "pattern": "local",
-    "complexity": "low",
-    "stateStructure": {
-      "todos": "array of todo objects",
-      "inputValue": "current input field value"
+  
+  componentTypes: {
+    container: {
+      description: 'High-level components that manage state and coordinate child components',
+      patterns: ['app', 'page', 'layout', 'wrapper'],
+      responsibilities: ['state management', 'data fetching', 'event coordination']
     },
-    "actions": ["addTodo", "toggleTodo", "deleteTodo", "updateInput"]
-  },
-  "styling": {
-    "approach": "modular",
-    "organization": "CSS modules per component",
-    "themes": false,
-    "responsive": true
-  }
-}
-```
-
-Please analyze the provided project analysis and create a comprehensive frontend architecture plan.`,
-
-  // Schema for response validation
-  responseSchema: {
-    type: 'object',
-    required: ['components', 'componentHierarchy', 'stateManagement', 'dataFlow', 'styling', 'metadata'],
-    properties: {
-      components: {
-        type: 'array',
-        items: {
-          type: 'object',
-          required: ['name', 'type', 'description'],
-          properties: {
-            name: { type: 'string' },
-            type: { type: 'string', enum: ['container', 'display', 'form', 'navigation', 'interactive', 'layout'] },
-            description: { type: 'string' },
-            props: { type: 'array', items: { type: 'string' } },
-            children: { type: 'array', items: { type: 'string' } },
-            responsibilities: { type: 'array', items: { type: 'string' } },
-            stateNeeds: { type: 'string', enum: ['local', 'shared', 'none'] }
-          }
-        }
-      },
-      componentHierarchy: {
-        type: 'object',
-        additionalProperties: {
-          type: 'object',
-          properties: {
-            children: { type: 'array', items: { type: 'string' } },
-            level: { type: 'number' },
-            parent: { type: 'string' }
-          }
-        }
-      },
-      stateManagement: {
-        type: 'object',
-        required: ['pattern', 'complexity'],
-        properties: {
-          pattern: { type: 'string', enum: ['local', 'centralized', 'modular'] },
-          complexity: { type: 'string', enum: ['low', 'medium', 'high'] },
-          stateStructure: { type: 'object' },
-          actions: { type: 'array', items: { type: 'string' } }
-        }
-      },
-      dataFlow: {
-        type: 'object',
-        properties: {
-          patterns: { type: 'array', items: { type: 'string' } },
-          communications: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                from: { type: 'string' },
-                to: { type: 'string' },
-                type: { type: 'string' },
-                data: { type: 'string' }
-              }
-            }
-          }
-        }
-      },
-      styling: {
-        type: 'object',
-        required: ['approach'],
-        properties: {
-          approach: { type: 'string', enum: ['modular', 'utility', 'inline', 'external'] },
-          organization: { type: 'string' },
-          themes: { type: 'boolean' },
-          responsive: { type: 'boolean' }
-        }
-      },
-      routing: {
-        type: 'object',
-        properties: {
-          enabled: { type: 'boolean' },
-          routes: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                path: { type: 'string' },
-                component: { type: 'string' },
-                description: { type: 'string' }
-              }
-            }
-          }
-        }
-      },
-      metadata: {
-        type: 'object',
-        required: ['planner', 'plannedAt', 'complexity'],
-        properties: {
-          planner: { type: 'string' },
-          plannedAt: { type: 'number' },
-          complexity: { type: 'string', enum: ['low', 'medium', 'high'] }
-        }
-      }
+    display: {
+      description: 'Components that display data without managing state',
+      patterns: ['list', 'table', 'grid', 'card', 'item'],
+      responsibilities: ['data presentation', 'formatting', 'rendering']
+    },
+    form: {
+      description: 'Components for user input and form handling',
+      patterns: ['form', 'input', 'field', 'submit', 'search'],
+      responsibilities: ['input validation', 'form submission', 'user interaction']
+    },
+    navigation: {
+      description: 'Components for navigation and routing',
+      patterns: ['nav', 'menu', 'header', 'footer', 'sidebar'],
+      responsibilities: ['navigation', 'routing', 'menu management']
+    },
+    interactive: {
+      description: 'Components for user interaction and feedback',
+      patterns: ['button', 'modal', 'dialog', 'dropdown', 'toggle'],
+      responsibilities: ['user interaction', 'feedback', 'state changes']
+    },
+    layout: {
+      description: 'Components for layout and structure',
+      patterns: ['header', 'footer', 'main', 'aside', 'section'],
+      responsibilities: ['layout management', 'responsive design', 'content organization']
     }
   },
-
-  // Example inputs and expected outputs for testing
+  
   examples: [
     {
       input: {
-        analysis: {
-          projectType: 'frontend',
-          complexity: 'low',
-          components: {
-            frontend: {
-              features: ['form', 'list'],
-              technologies: ['html', 'css', 'javascript']
-            }
-          }
-        }
+        projectType: 'frontend',
+        complexity: 'low',
+        features: ['form', 'list'],
+        technologies: ['html', 'javascript', 'css']
       },
       expectedOutput: {
         components: [
           {
-            name: 'App',
-            type: 'container',
-            description: 'Main application container',
-            props: [],
-            children: ['TodoForm', 'TodoList'],
-            responsibilities: ['application state', 'component coordination'],
-            stateNeeds: 'local'
+            name: 'TodoForm',
+            type: 'form',
+            props: ['onSubmit'],
+            state: { inputValue: 'string' },
+            description: 'Form for adding new todos'
+          },
+          {
+            name: 'TodoList',
+            type: 'display',
+            props: ['todos', 'onDelete'],
+            state: {},
+            description: 'Display list of todos'
           }
         ],
         stateManagement: {
-          pattern: 'local',
-          complexity: 'low'
+          strategy: 'local',
+          globalState: {}
         },
-        metadata: {
-          planner: 'FrontendArchitecturePlanner',
-          plannedAt: 1234567890,
-          complexity: 'low'
+        dataFlow: {
+          pattern: 'parent-to-child',
+          eventHandling: 'callback-props'
         }
       }
     }
   ],
-
-  // Mock responses for testing
+  
   mockResponses: {
-    'simple-todo': {
+    'simple-frontend': {
       components: [
         {
           name: 'App',
           type: 'container',
-          description: 'Main application container',
           props: [],
+          state: { todos: 'array' },
           children: ['TodoForm', 'TodoList'],
-          responsibilities: ['application state', 'component coordination'],
-          stateNeeds: 'local'
+          description: 'Main application container'
         },
         {
           name: 'TodoForm',
           type: 'form',
-          description: 'Form for adding new todos',
           props: ['onSubmit'],
+          state: { inputValue: 'string' },
           children: [],
-          responsibilities: ['input validation', 'form submission'],
-          stateNeeds: 'local'
+          description: 'Form for adding new todos'
         },
         {
           name: 'TodoList',
           type: 'display',
-          description: 'List of todo items',
-          props: ['todos', 'onToggle', 'onDelete'],
+          props: ['todos', 'onDelete'],
+          state: {},
           children: ['TodoItem'],
-          responsibilities: ['todo display', 'list management'],
-          stateNeeds: 'none'
+          description: 'Display list of todos'
+        },
+        {
+          name: 'TodoItem',
+          type: 'interactive',
+          props: ['todo', 'onDelete'],
+          state: {},
+          children: [],
+          description: 'Individual todo item'
         }
       ],
       componentHierarchy: {
-        App: {
-          children: ['TodoForm', 'TodoList'],
-          level: 0
-        },
-        TodoForm: {
-          children: [],
-          level: 1,
-          parent: 'App'
-        },
-        TodoList: {
-          children: ['TodoItem'],
-          level: 1,
-          parent: 'App'
-        }
+        'App': ['TodoForm', 'TodoList'],
+        'TodoList': ['TodoItem'],
+        'TodoForm': [],
+        'TodoItem': []
       },
       stateManagement: {
-        pattern: 'local',
-        complexity: 'low',
-        stateStructure: {
-          todos: 'array of todo objects',
-          inputValue: 'current input field value'
-        },
-        actions: ['addTodo', 'toggleTodo', 'deleteTodo', 'updateInput']
+        strategy: 'local',
+        globalState: {},
+        stateFlow: ['top-down']
       },
       dataFlow: {
-        patterns: ['prop-drilling', 'event-bubbling'],
-        communications: [
-          {
-            from: 'App',
-            to: 'TodoList',
-            type: 'props',
-            data: 'todos array and event handlers'
-          }
-        ]
+        pattern: 'unidirectional',
+        apiCalls: [],
+        eventHandling: {
+          pattern: 'callback-props',
+          events: ['onSubmit', 'onDelete']
+        }
       },
       styling: {
-        approach: 'modular',
-        organization: 'CSS modules per component',
-        themes: false,
-        responsive: true
+        approach: 'global',
+        structure: {
+          main: 'style.css',
+          components: []
+        },
+        conventions: ['kebab-case', 'BEM methodology']
       },
       routing: {
-        enabled: false
+        enabled: false,
+        routes: [],
+        routeComponents: {}
       },
       metadata: {
         planner: 'FrontendArchitecturePlanner',
-        plannedAt: Date.now(),
-        complexity: 'low'
+        plannedAt: 1234567890,
+        complexity: 'low',
+        mockScenario: 'simple-frontend'
+      }
+    },
+    'modular-frontend': {
+      components: [
+        {
+          name: 'App',
+          type: 'container',
+          props: [],
+          state: { user: 'object', loading: 'boolean' },
+          children: ['Header', 'Main', 'Footer'],
+          description: 'Main application container'
+        },
+        {
+          name: 'Header',
+          type: 'navigation',
+          props: ['user', 'onLogout'],
+          state: {},
+          children: ['NavMenu'],
+          description: 'Application header with navigation'
+        },
+        {
+          name: 'Main',
+          type: 'layout',
+          props: ['currentPage'],
+          state: {},
+          children: ['ProductList', 'ProductForm'],
+          description: 'Main content area'
+        },
+        {
+          name: 'ProductList',
+          type: 'display',
+          props: ['products', 'onEdit', 'onDelete'],
+          state: { selectedProduct: 'object' },
+          children: ['ProductCard'],
+          description: 'List of products'
+        },
+        {
+          name: 'ProductCard',
+          type: 'interactive',
+          props: ['product', 'onEdit', 'onDelete'],
+          state: {},
+          children: [],
+          description: 'Individual product card'
+        }
+      ],
+      componentHierarchy: {
+        'App': ['Header', 'Main', 'Footer'],
+        'Header': ['NavMenu'],
+        'Main': ['ProductList', 'ProductForm'],
+        'ProductList': ['ProductCard'],
+        'ProductCard': [],
+        'ProductForm': []
+      },
+      stateManagement: {
+        strategy: 'centralized',
+        globalState: {
+          user: 'object',
+          products: 'array',
+          ui: 'object'
+        },
+        stateFlow: ['unidirectional', 'state-actions']
+      },
+      dataFlow: {
+        pattern: 'flux-like',
+        apiCalls: ['getProducts', 'createProduct', 'updateProduct', 'deleteProduct'],
+        eventHandling: {
+          pattern: 'action-dispatching',
+          events: ['USER_LOGIN', 'PRODUCT_CREATED', 'PRODUCT_UPDATED', 'PRODUCT_DELETED']
+        }
+      },
+      styling: {
+        approach: 'modular',
+        structure: {
+          main: 'css/main.css',
+          components: ['css/components/', 'css/layout/'],
+          utilities: 'css/utilities.css'
+        },
+        conventions: ['component-scoped', 'CSS modules']
+      },
+      routing: {
+        enabled: true,
+        routes: [
+          { path: '/', component: 'ProductList' },
+          { path: '/products/new', component: 'ProductForm' },
+          { path: '/products/:id', component: 'ProductDetail' }
+        ],
+        routeComponents: {
+          'ProductList': 'components/ProductList',
+          'ProductForm': 'components/ProductForm',
+          'ProductDetail': 'components/ProductDetail'
+        },
+        navigationPattern: 'history'
+      },
+      metadata: {
+        planner: 'FrontendArchitecturePlanner',
+        plannedAt: 1234567890,
+        complexity: 'medium',
+        mockScenario: 'modular-frontend'
       }
     }
-  },
-
-  // Settings for LLM generation
-  settings: {
-    temperature: 0.2, // Slightly higher for creative component design
-    maxTokens: 3000,
-    systemPrompt: 'You are a frontend architecture expert. Always respond with valid JSON matching the exact schema provided.'
   }
 };

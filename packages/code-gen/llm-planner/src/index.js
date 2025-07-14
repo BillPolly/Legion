@@ -15,6 +15,5 @@ export { GenericPlanner } from './GenericPlanner.js';
 // Flow validator
 export { FlowValidator } from './FlowValidator.js';
 
-// Module for jsEnvoy integration
-export { LLMPlannerModule } from './LLMPlannerModule.js';
-export default LLMPlannerModule;
+// Default export the main planner
+export default GenericPlanner;

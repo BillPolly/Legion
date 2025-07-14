@@ -72,8 +72,8 @@ export default {
   // Error on deprecated features
   errorOnDeprecated: true,
   
-  // Test timeout (30 seconds for potential LLM calls)
-  testTimeout: 30000,
+  // Test timeout (2 minutes for real LLM calls)
+  testTimeout: 120000,
   
   // Global test variables
   globals: {
@@ -82,7 +82,9 @@ export default {
   
   // Module name mapping for local development
   moduleNameMapper: {
+    '^@jsenvoy/llm-planner/(.*)$': '<rootDir>/../llm-planner/$1',
     '^@jsenvoy/llm-planner$': '<rootDir>/../llm-planner/src',
-    '^@jsenvoy/(.*)$': '<rootDir>/../../$1/src'
+    '^@jsenvoy/module-loader$': '/Users/maxximus/Documents/max/pocs/jsEnvoy/packages/module-loader/src',
+    '^@jsenvoy/llm$': '/Users/maxximus/Documents/max/pocs/jsEnvoy/packages/llm/src'
   }
 };

@@ -83,12 +83,26 @@ class Plan {
   }
 
   /**
-   * Get a step by ID
+   * Get a step by ID (supports hierarchical lookup)
    * @param {string} stepId - Step ID
    * @returns {Object|undefined} The step or undefined
    */
   getStep(stepId) {
-    return this.steps.find(step => step.id === stepId);
+    // Recursive function to search for step ID
+    const findStep = (steps) => {
+      for (const step of steps) {
+        if (step.id === stepId) {
+          return step;
+        }
+        if (step.steps && step.steps.length > 0) {
+          const found = findStep(step.steps);
+          if (found) return found;
+        }
+      }
+      return undefined;
+    };
+    
+    return findStep(this.steps);
   }
 
   /**
@@ -120,18 +134,41 @@ class Plan {
       errors.push('Plan name is required');
     }
     
-    // Validate step dependencies
-    const stepIds = new Set(this.steps.map(step => step.id));
+    // Validate step dependencies - collect ALL step IDs including hierarchical ones
+    const stepIds = new Set();
     
-    for (const step of this.steps) {
-      if (step.dependencies) {
-        for (const dep of step.dependencies) {
-          if (!stepIds.has(dep)) {
-            errors.push(`Step ${step.id} depends on non-existent step: ${dep}`);
-          }
+    // Recursive function to collect all step IDs
+    const collectStepIds = (steps) => {
+      for (const step of steps) {
+        stepIds.add(step.id);
+        if (step.steps && step.steps.length > 0) {
+          collectStepIds(step.steps);
         }
       }
-    }
+    };
+    
+    // Collect all step IDs from the plan
+    collectStepIds(this.steps);
+    
+    // Recursive function to validate dependencies
+    const validateDependencies = (steps) => {
+      for (const step of steps) {
+        if (step.dependencies) {
+          for (const dep of step.dependencies) {
+            if (!stepIds.has(dep)) {
+              errors.push(`Step ${step.id} depends on non-existent step: ${dep}`);
+            }
+          }
+        }
+        // Validate sub-steps
+        if (step.steps && step.steps.length > 0) {
+          validateDependencies(step.steps);
+        }
+      }
+    };
+    
+    // Validate all dependencies
+    validateDependencies(this.steps);
     
     return {
       isValid: errors.length === 0,

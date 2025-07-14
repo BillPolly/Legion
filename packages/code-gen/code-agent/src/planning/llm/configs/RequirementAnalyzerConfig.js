@@ -1,198 +1,214 @@
 /**
- * RequirementAnalyzerConfig - Configuration for LLM-based requirement analysis
+ * RequirementAnalyzerConfig - Configuration for requirement analysis planning
  * 
- * This configuration defines the prompt template, response schema, and examples
- * for converting natural language requirements into structured analysis objects.
+ * Defines the allowable actions and constraints for analyzing project requirements
+ * and converting them into structured analysis.
  */
 
 export const RequirementAnalyzerConfig = {
   name: 'RequirementAnalyzer',
-  description: 'Analyzes natural language requirements and converts them to structured analysis',
+  description: 'Analyzes project requirements to create actionable development plans',
   
-  // Template for generating prompts
-  promptTemplate: `You are an expert software requirements analyst. Your task is to analyze project requirements and convert them into structured analysis suitable for code generation.
-
-## Task Description
-{task}
-
-## Requirements
-{requirements}
-
-## Analysis Instructions
-1. Determine project type (frontend, backend, fullstack)
-2. Extract features from requirements text
-3. Identify technology stack needs
-4. Analyze security requirements
-5. Detect special features (real-time, file handling, etc.)
-6. Determine complexity level (low, medium, high)
-7. Suggest appropriate architecture pattern
-
-## Feature Keywords Reference
-**Frontend Features:**
-- form: form, input, submit, field, validation
-- list: list, display, show, table, grid
-- auth: login, logout, authentication, signin, signup
-- navigation: navbar, menu, navigation, sidebar, header
-- ui: button, modal, dropdown, accordion, tabs, carousel
-- data: chart, graph, visualization, dashboard
-- media: gallery, image, video, zoom, slider
-
-**Backend Features:**
-- api: api, rest, restful, endpoint, route
-- database: database, mongodb, mysql, postgres, storage
-- auth: authentication, jwt, token, session, oauth
-- crud: crud, create, read, update, delete
-- realtime: websocket, realtime, real-time, socket, live
-- file: file, upload, download, storage, filesystem
-
-**UI Components:**
-- navbar, dropdown, accordion, carousel, tabs, modal, sidebar, table, chart
-
-## Response Format
-Respond with a JSON object that exactly matches this structure:
-
-{
-  "task": "original task description",
-  "projectType": "frontend|backend|fullstack",
-  "components": {
-    "frontend": {
-      "features": ["array of features"],
-      "technologies": ["html", "javascript", "css"],
-      "uiComponents": ["array of UI components if any"]
+  allowableActions: [
+    {
+      type: 'determine_project_type',
+      description: 'Determine the project type based on requirements',
+      inputs: ['requirements_text', 'frontend_requirements', 'backend_requirements'],
+      outputs: ['project_type'],
+      parameters: {
+        projectType: {
+          type: 'string',
+          enum: ['frontend', 'backend', 'fullstack'],
+          description: 'The determined project type'
+        }
+      }
     },
-    "backend": {
-      "features": ["array of features"],
-      "technologies": ["nodejs", "express"],
-      "storage": "mongodb|mysql|postgresql|file-based",
-      "operations": ["create", "read", "update", "delete"]
+    {
+      type: 'analyze_complexity',
+      description: 'Analyze project complexity based on features and requirements',
+      inputs: ['features_list', 'requirements_scope'],
+      outputs: ['complexity_level'],
+      parameters: {
+        complexity: {
+          type: 'string',
+          enum: ['low', 'medium', 'high'],
+          description: 'The determined complexity level'
+        },
+        score: {
+          type: 'number',
+          description: 'Complexity score used for determination'
+        },
+        factors: {
+          type: 'array',
+          description: 'Factors that influenced complexity determination'
+        }
+      }
+    },
+    {
+      type: 'extract_frontend_features',
+      description: 'Extract frontend features from requirements',
+      inputs: ['requirements_text', 'frontend_requirements'],
+      outputs: ['frontend_features'],
+      parameters: {
+        features: {
+          type: 'array',
+          description: 'List of identified frontend features'
+        },
+        technologies: {
+          type: 'array',
+          description: 'Required frontend technologies'
+        },
+        uiComponents: {
+          type: 'array',
+          description: 'UI components to be created'
+        }
+      }
+    },
+    {
+      type: 'extract_backend_features',
+      description: 'Extract backend features from requirements',
+      inputs: ['requirements_text', 'backend_requirements'],
+      outputs: ['backend_features'],
+      parameters: {
+        features: {
+          type: 'array',
+          description: 'List of identified backend features'
+        },
+        technologies: {
+          type: 'array',
+          description: 'Required backend technologies'
+        },
+        storage: {
+          type: 'string',
+          description: 'Storage/database type if specified'
+        },
+        operations: {
+          type: 'array',
+          description: 'CRUD operations if required'
+        }
+      }
+    },
+    {
+      type: 'analyze_security_requirements',
+      description: 'Analyze security requirements from the project description',
+      inputs: ['requirements_text', 'features_list'],
+      outputs: ['security_analysis'],
+      parameters: {
+        authentication: {
+          type: 'boolean',
+          description: 'Whether authentication is required'
+        },
+        method: {
+          type: 'string',
+          enum: ['jwt', 'session', 'oauth'],
+          description: 'Authentication method if required'
+        },
+        apiKey: {
+          type: 'boolean',
+          description: 'Whether API key authentication is needed'
+        }
+      }
+    },
+    {
+      type: 'analyze_special_features',
+      description: 'Analyze special features like real-time, file handling, etc.',
+      inputs: ['requirements_text', 'features_list'],
+      outputs: ['special_features'],
+      parameters: {
+        realtime: {
+          type: 'boolean',
+          description: 'Whether real-time features are needed'
+        },
+        fileHandling: {
+          type: 'boolean',
+          description: 'Whether file upload/download is needed'
+        },
+        notifications: {
+          type: 'boolean',
+          description: 'Whether notifications are required'
+        }
+      }
+    },
+    {
+      type: 'analyze_api_interface',
+      description: 'Analyze API interface requirements',
+      inputs: ['backend_features', 'frontend_features'],
+      outputs: ['api_interface'],
+      parameters: {
+        endpoints: {
+          type: 'array',
+          description: 'List of required API endpoints'
+        },
+        versioning: {
+          type: 'boolean',
+          description: 'Whether API versioning is needed'
+        },
+        rateLimiting: {
+          type: 'boolean',
+          description: 'Whether rate limiting is required'
+        }
+      }
+    },
+    {
+      type: 'suggest_architecture',
+      description: 'Suggest optimal architecture based on analysis',
+      inputs: ['project_type', 'complexity_level', 'features_list'],
+      outputs: ['architecture_suggestion'],
+      parameters: {
+        pattern: {
+          type: 'string',
+          enum: ['simple', 'modular', 'layered'],
+          description: 'Recommended architecture pattern'
+        },
+        structure: {
+          type: 'object',
+          description: 'Suggested file/directory structure'
+        }
+      }
+    },
+    {
+      type: 'generate_analysis_summary',
+      description: 'Generate a summary of the analysis results',
+      inputs: ['project_type', 'complexity_level', 'features_list', 'security_analysis'],
+      outputs: ['summary_text'],
+      parameters: {
+        summary: {
+          type: 'string',
+          description: 'Human-readable summary of the analysis'
+        }
+      }
+    },
+    {
+      type: 'validate_analysis',
+      description: 'Validate the completeness and consistency of analysis',
+      inputs: ['analysis_result'],
+      outputs: ['validation_result'],
+      parameters: {
+        isValid: {
+          type: 'boolean',
+          description: 'Whether the analysis is valid'
+        },
+        errors: {
+          type: 'array',
+          description: 'List of validation errors if any'
+        },
+        warnings: {
+          type: 'array',
+          description: 'List of warnings'
+        }
+      }
     }
-  },
-  "apiInterface": {
-    "endpoints": ["array of endpoints"],
-    "versioning": true|false,
-    "rateLimiting": true|false
-  },
-  "security": {
-    "authentication": true|false,
-    "method": "jwt|session|oauth",
-    "apiKey": true|false
-  },
-  "features": {
-    "realtime": true|false,
-    "fileHandling": true|false,
-    "notifications": true|false
-  },
-  "complexity": "low|medium|high",
-  "suggestedArchitecture": {
-    "pattern": "simple|modular|layered",
-    "structure": {
-      "frontend": ["array of files/directories"],
-      "backend": ["array of files/directories"]
-    }
-  },
-  "summary": "brief summary of the analysis",
-  "timestamp": 1234567890
-}
-
-## Complexity Scoring Rules
-- Low (0-4 points): Simple projects with basic features
-- Medium (5-10 points): Moderate complexity with multiple features
-- High (11+ points): Complex projects with advanced features
-
-**Scoring:**
-- Each frontend feature: +1 point
-- Each backend feature: +1.5 points
-- Authentication: +3 points
-- Real-time features: +4 points
-- More than 3 UI components: +2 points
-
-## Architecture Patterns
-- **Simple**: Single files (index.html, style.css, script.js, server.js)
-- **Modular**: Organized directories (components/, services/, routes/, models/)
-- **Layered**: Full separation (controllers/, services/, repositories/, views/)
-
-## Example Analysis
-For a "todo list application with user authentication":
-- Project Type: fullstack
-- Features: form, list, auth, crud, database
-- Complexity: medium (form=1, list=1, auth=3, crud=1.5, database=1.5 = 8 points)
-- Architecture: modular
-
-Please analyze the provided requirements and respond with the structured JSON object.`,
-
-  // Schema for response validation
-  responseSchema: {
-    type: 'object',
-    required: ['task', 'projectType', 'components', 'complexity', 'timestamp'],
-    properties: {
-      task: { type: 'string' },
-      projectType: { type: 'string', enum: ['frontend', 'backend', 'fullstack'] },
-      components: {
-        type: 'object',
-        properties: {
-          frontend: {
-            type: 'object',
-            properties: {
-              features: { type: 'array', items: { type: 'string' } },
-              technologies: { type: 'array', items: { type: 'string' } },
-              uiComponents: { type: 'array', items: { type: 'string' } }
-            }
-          },
-          backend: {
-            type: 'object',
-            properties: {
-              features: { type: 'array', items: { type: 'string' } },
-              technologies: { type: 'array', items: { type: 'string' } },
-              storage: { type: 'string' },
-              operations: { type: 'array', items: { type: 'string' } }
-            }
-          }
-        }
-      },
-      apiInterface: {
-        type: 'object',
-        properties: {
-          endpoints: { type: 'array', items: { type: 'string' } },
-          versioning: { type: 'boolean' },
-          rateLimiting: { type: 'boolean' }
-        }
-      },
-      security: {
-        type: 'object',
-        properties: {
-          authentication: { type: 'boolean' },
-          method: { type: 'string' },
-          apiKey: { type: 'boolean' }
-        }
-      },
-      features: {
-        type: 'object',
-        properties: {
-          realtime: { type: 'boolean' },
-          fileHandling: { type: 'boolean' },
-          notifications: { type: 'boolean' }
-        }
-      },
-      complexity: { type: 'string', enum: ['low', 'medium', 'high'] },
-      suggestedArchitecture: {
-        type: 'object',
-        properties: {
-          pattern: { type: 'string', enum: ['simple', 'modular', 'layered'] },
-          structure: {
-            type: 'object',
-            properties: {
-              frontend: { type: 'array', items: { type: 'string' } },
-              backend: { type: 'array', items: { type: 'string' } }
-            }
-          }
-        }
-      },
-      summary: { type: 'string' },
-      timestamp: { type: 'number' }
-    }
-  },
-
-  // Example inputs and expected outputs for testing
+  ],
+  
+  constraints: [
+    'Project type must be one of: frontend, backend, fullstack',
+    'Complexity must be one of: low, medium, high',
+    'Features must be specific and actionable',
+    'Analysis must include at least one component (frontend or backend)',
+    'Security requirements should be explicitly stated if authentication is needed',
+    'Architecture suggestion must match the project type and complexity'
+  ],
+  
   examples: [
     {
       input: {
@@ -216,53 +232,38 @@ Please analyze the provided requirements and respond with the structured JSON ob
           structure: {
             frontend: ['index.html', 'style.css', 'script.js']
           }
-        },
-        summary: 'Project Type: frontend\nComplexity: low complexity\nFrontend: form, list',
-        timestamp: 1234567890
+        }
       }
     },
     {
       input: {
-        task: 'Create a blog application',
+        task: 'Build a REST API for user management',
         requirements: {
-          frontend: 'Article listing, article view, comment form',
-          backend: 'REST API for articles and comments, authentication'
+          backend: 'User registration, login, CRUD operations with JWT authentication'
         }
       },
       expectedOutput: {
-        task: 'Create a blog application',
-        projectType: 'fullstack',
+        task: 'Build a REST API for user management',
+        projectType: 'backend',
         components: {
-          frontend: {
-            features: ['listing', 'view', 'form'],
-            technologies: ['html', 'javascript', 'css']
-          },
           backend: {
-            features: ['rest-api', 'authentication'],
-            technologies: ['nodejs', 'express']
+            features: ['api', 'crud', 'authentication'],
+            technologies: ['nodejs', 'express'],
+            storage: 'mongodb'
           }
-        },
-        apiInterface: {
-          endpoints: ['/articles', '/comments']
-        },
-        security: {
-          authentication: true
         },
         complexity: 'medium',
-        suggestedArchitecture: {
-          pattern: 'modular',
-          structure: {
-            frontend: ['index.html', 'css/', 'js/', 'components/', 'services/'],
-            backend: ['server.js', 'routes/', 'models/', 'utils/', 'package.json']
-          }
+        security: {
+          authentication: true,
+          method: 'jwt'
         },
-        summary: 'Project Type: fullstack\nComplexity: medium complexity\nFrontend: listing, view, form\nBackend: rest-api, authentication\nSecurity: authentication required',
-        timestamp: 1234567890
+        apiInterface: {
+          endpoints: ['/auth', '/users']
+        }
       }
     }
   ],
-
-  // Mock responses for testing
+  
   mockResponses: {
     'simple-frontend': {
       task: 'Create a todo list application',
@@ -280,45 +281,70 @@ Please analyze the provided requirements and respond with the structured JSON ob
           frontend: ['index.html', 'style.css', 'script.js']
         }
       },
-      summary: 'Project Type: frontend\nComplexity: low complexity\nFrontend: form, list',
-      timestamp: Date.now()
+      summary: 'Project Type: frontend\\nComplexity: low complexity\\nFrontend: form, list',
+      timestamp: 1234567890,
+      metadata: {
+        planner: 'RequirementAnalyzer',
+        plannedAt: 1234567890,
+        mockScenario: 'simple-frontend'
+      }
     },
-    'fullstack-blog': {
-      task: 'Create a blog application',
+    'backend-api': {
+      task: 'Build a REST API for user management',
+      projectType: 'backend',
+      components: {
+        backend: {
+          features: ['api', 'crud', 'authentication'],
+          technologies: ['nodejs', 'express'],
+          storage: 'mongodb'
+        }
+      },
+      complexity: 'medium',
+      security: {
+        authentication: true,
+        method: 'jwt'
+      },
+      apiInterface: {
+        endpoints: ['/auth', '/users']
+      },
+      summary: 'Project Type: backend\\nComplexity: medium complexity\\nBackend: api, crud, authentication',
+      timestamp: 1234567890,
+      metadata: {
+        planner: 'RequirementAnalyzer',
+        plannedAt: 1234567890,
+        mockScenario: 'backend-api'
+      }
+    },
+    'fullstack-complex': {
+      task: 'Create a full-stack e-commerce application',
       projectType: 'fullstack',
       components: {
         frontend: {
-          features: ['listing', 'view', 'form'],
-          technologies: ['html', 'javascript', 'css']
+          features: ['product-catalog', 'shopping-cart', 'user-authentication'],
+          technologies: ['html', 'javascript', 'css'],
+          uiComponents: ['navbar', 'product-card', 'cart-modal']
         },
         backend: {
-          features: ['rest-api', 'authentication'],
-          technologies: ['nodejs', 'express']
+          features: ['api', 'crud', 'authentication', 'payments'],
+          technologies: ['nodejs', 'express'],
+          storage: 'mongodb'
         }
+      },
+      complexity: 'high',
+      security: {
+        authentication: true,
+        method: 'jwt'
       },
       apiInterface: {
-        endpoints: ['/articles', '/comments']
+        endpoints: ['/auth', '/products', '/cart', '/orders', '/payments']
       },
-      security: {
-        authentication: true
-      },
-      complexity: 'medium',
-      suggestedArchitecture: {
-        pattern: 'modular',
-        structure: {
-          frontend: ['index.html', 'css/', 'js/', 'components/', 'services/'],
-          backend: ['server.js', 'routes/', 'models/', 'utils/', 'package.json']
-        }
-      },
-      summary: 'Project Type: fullstack\nComplexity: medium complexity\nFrontend: listing, view, form\nBackend: rest-api, authentication\nSecurity: authentication required',
-      timestamp: Date.now()
+      summary: 'Project Type: fullstack\\nComplexity: high complexity\\nFrontend: product-catalog, shopping-cart, user-authentication\\nBackend: api, crud, authentication, payments',
+      timestamp: 1234567890,
+      metadata: {
+        planner: 'RequirementAnalyzer',
+        plannedAt: 1234567890,
+        mockScenario: 'fullstack-complex'
+      }
     }
-  },
-
-  // Settings for LLM generation
-  settings: {
-    temperature: 0.1, // Low temperature for consistent outputs
-    maxTokens: 2000,
-    systemPrompt: 'You are a precise software requirements analyst. Always respond with valid JSON matching the exact schema provided.'
   }
 };

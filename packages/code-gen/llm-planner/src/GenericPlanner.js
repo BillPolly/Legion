@@ -53,7 +53,7 @@ class GenericPlanner {
         console.log('\n🤖 LLM Response:');
         console.log(JSON.stringify(response, null, 2));
 
-        const plan = this._parsePlanResponse(response, allowableActions);
+        const plan = this._parsePlanResponse(response, allowableActions, inputs, requiredOutputs);
         
         console.log('\n📋 Generated Plan JSON:');
         console.log(JSON.stringify(plan.toJSON(), null, 2));
@@ -190,7 +190,7 @@ Generate a complete, executable plan.`;
    * Parse the LLM response into a Plan object
    * @private
    */
-  _parsePlanResponse(response, allowableActions) {
+  _parsePlanResponse(response, allowableActions, inputs = [], requiredOutputs = []) {
     let planData;
     
     try {
@@ -214,11 +214,13 @@ Generate a complete, executable plan.`;
       throw new Error(`Failed to parse JSON response: ${error.message}`);
     }
 
-    // Create the plan with allowable actions context
+    // Create the plan with allowable actions context and proper inputs/outputs
     const plan = new Plan({
       name: planData.name,
       description: planData.description,
-      steps: planData.steps || []
+      steps: planData.steps || [],
+      inputs: inputs,
+      requiredOutputs: requiredOutputs
     }, allowableActions);
 
     return plan;
