@@ -1,0 +1,59 @@
+{
+  "phases": [
+    [
+      "planning",
+      {
+        "name": "planning",
+        "progress": 80,
+        "completed": false,
+        "startedAt": 1752488161315,
+        "completedAt": null,
+        "order": 1,
+        "weight": 1,
+        "updatedAt": 1752488161315
+      }
+    ],
+    [
+      "generation",
+      {
+        "name": "generation",
+        "progress": 0,
+        "completed": false,
+        "startedAt": null,
+        "completedAt": null,
+        "order": 2,
+        "weight": 1
+      }
+    ],
+    [
+      "testing",
+      {
+        "name": "testing",
+        "progress": 0,
+        "completed": false,
+        "startedAt": null,
+        "completedAt": null,
+        "order": 3,
+        "weight": 1
+      }
+    ],
+    [
+      "validation",
+      {
+        "name": "validation",
+        "progress": 0,
+        "completed": false,
+        "startedAt": null,
+        "completedAt": null,
+        "order": 4,
+        "weight": 1
+      }
+    ]
+  ],
+  "tasks": [],
+  "sessions": [],
+  "milestones": [],
+  "checkpoints": [],
+  "currentSession": null,
+  "lastSaveTime": 1752488161315
+}

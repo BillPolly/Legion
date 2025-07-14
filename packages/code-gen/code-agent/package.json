@@ -1,0 +1,51 @@
+{
+  "name": "@jsenvoy/code-agent",
+  "version": "0.0.1",
+  "description": "Intelligent code agent for generating, testing, and validating vanilla JavaScript projects",
+  "type": "module",
+  "main": "./src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
+    "lint": "echo 'Linting handled programmatically by code agent'",
+    "dev": "node src/index.js"
+  },
+  "keywords": [
+    "jsenvoy",
+    "code-agent",
+    "ai",
+    "code-generation",
+    "testing",
+    "linting",
+    "vanilla-javascript"
+  ],
+  "author": "Anand Sukumaran",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/maxximus-dev/jsenvoy-code-agent.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "src",
+    "docs",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "@jsenvoy/module-loader": "*",
+    "@jsenvoy/general-tools": "*",
+    "@jsenvoy/llm": "*",
+    "@jsenvoy/agent": "*",
+    "@jsenvoy/resource-manager": "*",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

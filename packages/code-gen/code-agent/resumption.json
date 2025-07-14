@@ -1,0 +1,48 @@
+{
+  "snapshots": [
+    [
+      "03d0d090-3a0c-4a77-816d-98519df78319",
+      {
+        "id": "03d0d090-3a0c-4a77-816d-98519df78319",
+        "name": "snap-1",
+        "state": {
+          "order": 1
+        },
+        "compressed": false,
+        "createdAt": 1752488763791,
+        "version": "1.0.0"
+      }
+    ],
+    [
+      "941d13a2-78e5-4ac5-be78-9d00410e6d6b",
+      {
+        "id": "941d13a2-78e5-4ac5-be78-9d00410e6d6b",
+        "name": "snap-2",
+        "state": {
+          "order": 2
+        },
+        "compressed": false,
+        "createdAt": 1752488763791,
+        "version": "1.0.0"
+      }
+    ],
+    [
+      "d38d6dd8-fdfa-483a-a604-c4b3be0585cb",
+      {
+        "id": "d38d6dd8-fdfa-483a-a604-c4b3be0585cb",
+        "name": "snap-3",
+        "state": {
+          "order": 3
+        },
+        "compressed": false,
+        "createdAt": 1752488763791,
+        "version": "1.0.0"
+      }
+    ]
+  ],
+  "sessions": [],
+  "resumptionPoints": [],
+  "interruptions": [],
+  "lastSaveTime": 1752488823793,
+  "version": "1.0.0"
+}

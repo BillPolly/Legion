@@ -1,0 +1,22 @@
+{
+  "snapshots": [
+    [
+      "70cabd0a-71cb-4e56-8d14-d4e2dcefd7fa",
+      {
+        "id": "70cabd0a-71cb-4e56-8d14-d4e2dcefd7fa",
+        "name": "test-snapshot",
+        "state": {
+          "data": "test"
+        },
+        "compressed": false,
+        "createdAt": 1752488936415,
+        "version": "1.0.0"
+      }
+    ]
+  ],
+  "sessions": [],
+  "resumptionPoints": [],
+  "interruptions": [],
+  "lastSaveTime": 1752488936415,
+  "version": "1.0.0"
+}

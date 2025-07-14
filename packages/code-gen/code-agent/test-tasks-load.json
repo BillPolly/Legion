@@ -1,0 +1,44 @@
+{
+  "tasks": [
+    [
+      "3be626d5-677f-4c94-b4e6-66ff85895e17",
+      {
+        "id": "3be626d5-677f-4c94-b4e6-66ff85895e17",
+        "title": "Task to Load",
+        "description": "",
+        "status": "pending",
+        "priority": "medium",
+        "category": "general",
+        "progress": 0,
+        "estimatedTime": null,
+        "actualTime": 0,
+        "assignee": null,
+        "parentId": null,
+        "level": 0,
+        "notes": [],
+        "tags": [],
+        "createdAt": 1752487676104,
+        "updatedAt": 1752487676104,
+        "startedAt": null,
+        "pausedAt": null,
+        "resumedAt": null,
+        "completedAt": null,
+        "failedAt": null,
+        "failureReason": null
+      }
+    ]
+  ],
+  "dependencies": [
+    [
+      "3be626d5-677f-4c94-b4e6-66ff85895e17",
+      []
+    ]
+  ],
+  "dependents": [
+    [
+      "3be626d5-677f-4c94-b4e6-66ff85895e17",
+      []
+    ]
+  ],
+  "lastSaveTime": 1752487676105
+}
