@@ -5,12 +5,15 @@ import ora from "ora";
 import { writeFile, appendFile } from "fs/promises";
 import readline from "readline";
 import { RetryManager } from "./RetryManager.js";
+import { EventEmitter } from "events";
 
 /**
  * Agent class with robust response parsing and retry logic
+ * Extends EventEmitter to relay module events
  */
-class Agent {
+class Agent extends EventEmitter {
   constructor(config) {
+    super(); // Initialize EventEmitter
     this.name = config.name || "default_agent";
     this.bio = config.bio;
     this.steps = config.steps || [];
@@ -25,6 +28,7 @@ class Agent {
     
     this.responseMessages = [];
     this.messages = [];
+    this.modules = []; // Store module instances for event handling
 
     if (config.tools) {
       this.tools = config.tools;
@@ -398,6 +402,69 @@ class Agent {
       console.log("Agent raw message stack written to agentRawMessageStack.txt");
       await writeFile("agentRawMessageStack.txt", JSON.stringify(this.messages.slice(1)));
     }
+  }
+
+  /**
+   * Register a module for event handling
+   * @param {Module} module - Module instance to register
+   */
+  registerModule(module) {
+    if (module && typeof module.on === 'function') {
+      this.modules.push(module);
+      
+      // Listen to all module events and relay them with agent context
+      module.on('event', (event) => {
+        this.emit('module-event', {
+          ...event,
+          agentId: this.name,
+          agentName: this.name
+        });
+      });
+      
+      // Also listen to specific event types for backwards compatibility
+      const eventTypes = ['progress', 'warning', 'error', 'info'];
+      eventTypes.forEach(eventType => {
+        module.on(eventType, (event) => {
+          this.emit(`module-${eventType}`, {
+            ...event,
+            agentId: this.name,
+            agentName: this.name
+          });
+        });
+      });
+    }
+  }
+
+  /**
+   * Register multiple modules for event handling
+   * @param {Array<Module>} modules - Array of module instances to register
+   */
+  registerModules(modules) {
+    modules.forEach(module => this.registerModule(module));
+  }
+
+  /**
+   * Unregister a module from event handling
+   * @param {Module} module - Module instance to unregister
+   */
+  unregisterModule(module) {
+    const index = this.modules.indexOf(module);
+    if (index > -1) {
+      this.modules.splice(index, 1);
+      
+      // Remove event listeners
+      if (module && typeof module.removeAllListeners === 'function') {
+        module.removeAllListeners();
+      }
+    }
+  }
+
+  /**
+   * Get all registered modules
+   * @returns {Array<Module>} Array of registered module instances
+   */
+  getModules() {
+    return [...this.modules];
   }
 }
 

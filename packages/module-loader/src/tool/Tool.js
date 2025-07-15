@@ -8,6 +8,7 @@ class Tool {
   constructor() {
     this.name = '';
     this.description = '';
+    this.module = null; // Reference to parent module for event emission
   }
 
   /**
@@ -211,6 +212,63 @@ class Tool {
     
     // Return the data directly for CLI use
     return toolResult.data;
+  }
+
+  /**
+   * Set the parent module for event emission
+   * @param {Module} module - The parent module instance
+   */
+  setModule(module) {
+    this.module = module;
+  }
+
+  /**
+   * Emit an event through the parent module
+   * @param {string} type - Event type: 'progress', 'warning', 'error', 'info'
+   * @param {string} message - Human readable message
+   * @param {Object} data - Optional structured data
+   * @param {string} level - Optional priority level: 'low', 'medium', 'high'
+   */
+  emitEvent(type, message, data = {}, level = 'medium') {
+    if (this.module && typeof this.module.emitEvent === 'function') {
+      this.module.emitEvent(type, message, data, this.name, level);
+    }
+  }
+
+  /**
+   * Emit a progress event
+   * @param {string} message - Progress message
+   * @param {Object} data - Optional progress data (percentage, step, etc.)
+   */
+  emitProgress(message, data = {}) {
+    this.emitEvent('progress', message, data, 'low');
+  }
+
+  /**
+   * Emit a warning event
+   * @param {string} message - Warning message
+   * @param {Object} data - Optional warning data
+   */
+  emitWarning(message, data = {}) {
+    this.emitEvent('warning', message, data, 'medium');
+  }
+
+  /**
+   * Emit an error event
+   * @param {string} message - Error message
+   * @param {Object} data - Optional error data
+   */
+  emitError(message, data = {}) {
+    this.emitEvent('error', message, data, 'high');
+  }
+
+  /**
+   * Emit an info event
+   * @param {string} message - Info message
+   * @param {Object} data - Optional info data
+   */
+  emitInfo(message, data = {}) {
+    this.emitEvent('info', message, data, 'low');
   }
 }
 

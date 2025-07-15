@@ -22,6 +22,7 @@ class ModuleFactory {
     
     this.resourceManager = resourceManager;
     this.jsonLoader = new JsonModuleLoader();
+    this.eventListeners = new Map(); // Store event listeners for modules
   }
 
   /**
@@ -40,7 +41,12 @@ class ModuleFactory {
     });
     
     // Construct module with resolved dependencies
-    return new ModuleClass(resolvedDependencies);
+    const module = new ModuleClass(resolvedDependencies);
+    
+    // Attach any registered event listeners
+    this._attachEventListeners(module);
+    
+    return module;
   }
 
   /**
@@ -85,7 +91,12 @@ class ModuleFactory {
       }
       
       // Create and return the GenericModule
-      return new GenericModule(config, resolvedDependencies);
+      const module = new GenericModule(config, resolvedDependencies);
+      
+      // Attach any registered event listeners
+      this._attachEventListeners(module);
+      
+      return module;
       
     } catch (error) {
       // Enhance error message
@@ -128,6 +139,61 @@ class ModuleFactory {
       }
       // Re-throw other errors
       throw error;
+    }
+  }
+
+  /**
+   * Register an event listener for all modules created by this factory
+   * @param {string} eventType - Event type to listen for ('progress', 'warning', 'error', 'info', 'event')
+   * @param {Function} listener - Event listener function
+   */
+  addEventListener(eventType, listener) {
+    if (!this.eventListeners.has(eventType)) {
+      this.eventListeners.set(eventType, []);
+    }
+    this.eventListeners.get(eventType).push(listener);
+  }
+
+  /**
+   * Remove an event listener
+   * @param {string} eventType - Event type
+   * @param {Function} listener - Event listener function to remove
+   */
+  removeEventListener(eventType, listener) {
+    if (this.eventListeners.has(eventType)) {
+      const listeners = this.eventListeners.get(eventType);
+      const index = listeners.indexOf(listener);
+      if (index > -1) {
+        listeners.splice(index, 1);
+      }
+    }
+  }
+
+  /**
+   * Remove all event listeners for a specific event type
+   * @param {string} eventType - Event type to clear
+   */
+  removeAllEventListeners(eventType) {
+    if (eventType) {
+      this.eventListeners.delete(eventType);
+    } else {
+      this.eventListeners.clear();
+    }
+  }
+
+  /**
+   * Attach registered event listeners to a module instance
+   * @private
+   * @param {Module} module - Module instance to attach listeners to
+   */
+  _attachEventListeners(module) {
+    // Check if module extends EventEmitter (has 'on' method)
+    if (typeof module.on === 'function') {
+      for (const [eventType, listeners] of this.eventListeners) {
+        listeners.forEach(listener => {
+          module.on(eventType, listener);
+        });
+      }
     }
   }
 }

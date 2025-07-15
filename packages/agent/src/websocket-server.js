@@ -22,6 +22,12 @@ export class AgentWebSocketServer {
     // Track active conversations
     this.conversations = new Map();
     this.messageId = 0;
+    
+    // Track clients for event streaming
+    this.eventClients = new Set();
+    
+    // Set up agent event listeners for streaming
+    this.setupAgentEventListeners();
   }
 
   /**
@@ -50,10 +56,12 @@ export class AgentWebSocketServer {
 
           ws.on('close', () => {
             console.log(`[${new Date().toISOString()}] Client disconnected`);
+            this.eventClients.delete(ws);
           });
 
           ws.on('error', (error) => {
             console.error('WebSocket error:', error);
+            this.eventClients.delete(ws);
           });
         });
 
@@ -103,6 +111,28 @@ export class AgentWebSocketServer {
     
     if (!id) {
       return this.sendError(ws, 'Missing message ID');
+    }
+
+    // Handle event subscription
+    if (type === 'subscribe-events') {
+      this.eventClients.add(ws);
+      return this.sendResponse(ws, {
+        id,
+        success: true,
+        message: 'Successfully subscribed to events',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Handle event unsubscription
+    if (type === 'unsubscribe-events') {
+      this.eventClients.delete(ws);
+      return this.sendResponse(ws, {
+        id,
+        success: true,
+        message: 'Successfully unsubscribed from events',
+        timestamp: new Date().toISOString()
+      });
     }
 
     if (type !== 'message') {
@@ -226,8 +256,83 @@ export class AgentWebSocketServer {
       port: this.port,
       host: this.host,
       connections: this.wss ? this.wss.clients.size : 0,
-      conversations: this.conversations.size
+      conversations: this.conversations.size,
+      eventClients: this.eventClients.size
     };
+  }
+
+  /**
+   * Set up agent event listeners for streaming
+   */
+  setupAgentEventListeners() {
+    if (!this.agent || typeof this.agent.on !== 'function') {
+      return;
+    }
+
+    // Listen to module events from the agent
+    this.agent.on('module-event', (event) => {
+      this.broadcastEvent({
+        type: 'module-event',
+        ...event
+      });
+    });
+
+    // Listen to specific module event types
+    const eventTypes = ['progress', 'warning', 'error', 'info'];
+    eventTypes.forEach(eventType => {
+      this.agent.on(`module-${eventType}`, (event) => {
+        this.broadcastEvent({
+          type: `module-${eventType}`,
+          ...event
+        });
+      });
+    });
+  }
+
+  /**
+   * Broadcast an event to all subscribed clients
+   * @param {Object} event - Event object to broadcast
+   */
+  broadcastEvent(event) {
+    if (this.eventClients.size === 0) {
+      return;
+    }
+
+    const eventMessage = {
+      type: 'event',
+      event: event,
+      timestamp: new Date().toISOString()
+    };
+
+    const eventString = JSON.stringify(eventMessage);
+    
+    // Send to all subscribed clients
+    this.eventClients.forEach(ws => {
+      if (ws.readyState === ws.OPEN) {
+        try {
+          ws.send(eventString);
+        } catch (error) {
+          console.error('Error sending event to client:', error);
+          this.eventClients.delete(ws);
+        }
+      } else {
+        // Remove closed connections
+        this.eventClients.delete(ws);
+      }
+    });
+  }
+
+  /**
+   * Send a custom event to all subscribed clients
+   * @param {string} type - Event type
+   * @param {Object} data - Event data
+   */
+  sendEvent(type, data) {
+    this.broadcastEvent({
+      type: type,
+      data: data,
+      source: 'websocket-server'
+    });
   }
 }
 
