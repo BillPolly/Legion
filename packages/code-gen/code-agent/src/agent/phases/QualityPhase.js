@@ -20,7 +20,11 @@ class QualityPhase {
    * @returns {Promise<Object>} Quality check results
    */
   async runQualityChecks() {
-    console.log('🔍 Running quality checks...');
+    this.codeAgent.emit('progress', {
+      phase: 'quality',
+      step: 'starting',
+      message: '🔍 Running quality checks...'
+    });
     
     // Initialize quality check results
     this.codeAgent.qualityCheckResults = {
@@ -63,10 +67,20 @@ class QualityPhase {
     this.codeAgent.currentTask.status = 'fixing';
     await this.codeAgent.saveState();
     
-    console.log(`📊 Quality check results:`);
-    console.log(`  ESLint: ${eslintPassed ? '✅' : '❌'} (${eslint.errors} errors, ${eslint.warnings} warnings)`);
-    console.log(`  Jest: ${jestPassed ? '✅' : '❌'} (${jest.passedTests}/${jest.totalTests} passed, ${jest.coverage}% coverage)`);
-    console.log(`  Overall: ${this.codeAgent.qualityCheckResults.overall ? '✅ PASSED' : '❌ FAILED'}`);
+    this.codeAgent.emit('info', {
+      message: '📊 Quality check results:',
+      results: {
+        eslint: { passed: eslintPassed, errors: eslint.errors, warnings: eslint.warnings },
+        jest: { passed: jestPassed, passedTests: jest.passedTests, totalTests: jest.totalTests, coverage: jest.coverage },
+        overall: this.codeAgent.qualityCheckResults.overall
+      }
+    });
+    
+    this.codeAgent.emit('phase-complete', {
+      phase: 'quality',
+      message: `Quality checks ${this.codeAgent.qualityCheckResults.overall ? 'PASSED' : 'FAILED'}`,
+      results: this.codeAgent.qualityCheckResults
+    });
     
     return this.codeAgent.qualityCheckResults;
   }
@@ -76,7 +90,11 @@ class QualityPhase {
    * @private
    */
   async _runESLintChecks() {
-    console.log('📋 Running ESLint checks...');
+    this.codeAgent.emit('progress', {
+      phase: 'quality',
+      step: 'eslint',
+      message: '📋 Running ESLint checks...'
+    });
     
     try {
       // Get ESLint configuration
@@ -105,7 +123,13 @@ class QualityPhase {
             });
           }
         } catch (error) {
-          console.error(`Failed to lint ${file}: ${error.message}`);
+          this.codeAgent.emit('warning', {
+            phase: 'quality',
+            step: 'eslint',
+            message: `Failed to lint ${file}: ${error.message}`,
+            file,
+            error: error.message
+          });
         }
       }
       
@@ -114,10 +138,21 @@ class QualityPhase {
         (this.codeAgent.config.qualityGates.eslintWarnings === null || 
          this.codeAgent.qualityCheckResults.eslint.warnings <= this.codeAgent.config.qualityGates.eslintWarnings);
       
-      console.log(`ESLint: ${this.codeAgent.qualityCheckResults.eslint.errors} errors, ${this.codeAgent.qualityCheckResults.eslint.warnings} warnings`);
+      this.codeAgent.emit('test-result', {
+        phase: 'quality',
+        type: 'eslint',
+        message: `ESLint: ${this.codeAgent.qualityCheckResults.eslint.errors} errors, ${this.codeAgent.qualityCheckResults.eslint.warnings} warnings`,
+        errors: this.codeAgent.qualityCheckResults.eslint.errors,
+        warnings: this.codeAgent.qualityCheckResults.eslint.warnings
+      });
       
     } catch (error) {
-      console.error(`ESLint check failed: ${error.message}`);
+      this.codeAgent.emit('error', {
+        phase: 'quality',
+        step: 'eslint',
+        message: `ESLint check failed: ${error.message}`,
+        error: error.message
+      });
       this.codeAgent.qualityCheckResults.eslint.passed = false;
     }
   }
@@ -127,7 +162,11 @@ class QualityPhase {
    * @private
    */
   async _runJestTests() {
-    console.log('🧪 Running Jest tests...');
+    this.codeAgent.emit('progress', {
+      phase: 'quality',
+      step: 'jest',
+      message: '🧪 Running Jest tests...'
+    });
     
     try {
       // Mock test execution for now
@@ -152,10 +191,22 @@ class QualityPhase {
         failures: failedTests > 0 ? this._generateMockFailures(failedTests) : []
       };
       
-      console.log(`Jest: ${passedTests}/${totalTests} tests passed, ${coverage}% coverage`);
+      this.codeAgent.emit('test-result', {
+        phase: 'quality',
+        type: 'jest',
+        message: `Jest: ${passedTests}/${totalTests} tests passed, ${coverage}% coverage`,
+        passedTests,
+        totalTests,
+        coverage
+      });
       
     } catch (error) {
-      console.error(`Jest test execution failed: ${error.message}`);
+      this.codeAgent.emit('error', {
+        phase: 'quality',
+        step: 'jest',
+        message: `Jest test execution failed: ${error.message}`,
+        error: error.message
+      });
       this.codeAgent.qualityCheckResults.jest.passed = false;
     }
   }

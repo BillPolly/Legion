@@ -5,6 +5,8 @@
  * including planning, generation, testing, quality checks, and fixing.
  */
 
+import { EventEmitter } from 'events';
+
 // Import integration components
 import { FileOperationsManager } from '../integration/FileOperationsManager.js';
 import { LLMClientManager } from '../integration/LLMClientManager.js';
@@ -34,8 +36,24 @@ import { FixingPhase } from './phases/FixingPhase.js';
 /**
  * Main CodeAgent class - orchestrates the complete development workflow
  */
-class CodeAgent {
+class CodeAgent extends EventEmitter {
   constructor(config = {}) {
+    super();
+    
+    // Add unique ID for multiple instances
+    this.id = `agent-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    // For CLI usage, add default console logger
+    if (config.enableConsoleOutput !== false) {
+      this.on('progress', (e) => console.log(e.message));
+      this.on('error', (e) => console.error(`❌ ${e.message}`));
+      this.on('warning', (e) => console.warn(`⚠️ ${e.message}`));
+      this.on('info', (e) => console.log(e.message));
+      this.on('file-created', (e) => console.log(`📝 Generated: ${e.filename}`));
+      this.on('phase-start', (e) => console.log(`\n${e.emoji} ${e.message}`));
+      this.on('phase-complete', (e) => console.log(`✅ ${e.message}`));
+    }
+    
     // Initialize managers with tested components
     this.eslintManager = new EslintConfigManager(config.eslintConfig);
     this.jestManager = new JestConfigManager(config.jestConfig);
@@ -100,10 +118,24 @@ class CodeAgent {
   }
 
   /**
+   * Override emit to add timestamp and agentId to all events
+   */
+  emit(event, data) {
+    return super.emit(event, {
+      timestamp: new Date().toISOString(),
+      agentId: this.id,
+      ...data
+    });
+  }
+
+  /**
    * Initialize the CodeAgent in a specified working directory
    */
   async initialize(workingDirectory, options = {}) {
-    console.log(`Initializing CodeAgent in: ${workingDirectory}`);
+    this.emit('info', {
+      message: `Initializing CodeAgent in: ${workingDirectory}`,
+      workingDirectory
+    });
     
     this.config.workingDirectory = workingDirectory;
     
@@ -152,9 +184,17 @@ class CodeAgent {
       await this.loadState();
       
       this.initialized = true;
-      console.log('CodeAgent initialized successfully');
+      this.emit('info', {
+        message: 'CodeAgent initialized successfully',
+        agentId: this.id
+      });
     } catch (error) {
       this.errorHandler.recordError(error, { phase: 'initialization' });
+      this.emit('error', {
+        message: `Failed to initialize CodeAgent: ${error.message}`,
+        phase: 'initialization',
+        error: error.message
+      });
       throw new Error(`Failed to initialize CodeAgent: ${error.message}`);
     }
   }
@@ -167,7 +207,10 @@ class CodeAgent {
       throw new Error('CodeAgent must be initialized before use');
     }
     
-    console.log('Starting development process...');
+    this.emit('info', {
+      message: 'Starting development process...',
+      requirements
+    });
     this.currentTask = {
       type: 'initial_development',
       requirements,
@@ -177,23 +220,43 @@ class CodeAgent {
     
     try {
       // 1. Planning Phase
-      console.log('📋 Planning project architecture...');
+      this.emit('phase-start', {
+        phase: 'planning',
+        emoji: '📋',
+        message: 'Planning project architecture...'
+      });
       await this.planProject(requirements);
       
       // 2. Code Generation Phase
-      console.log('⚡ Generating code...');
+      this.emit('phase-start', {
+        phase: 'generation',
+        emoji: '⚡',
+        message: 'Generating code...'
+      });
       await this.generateCode();
       
       // 3. Test Generation Phase
-      console.log('🧪 Creating tests...');
+      this.emit('phase-start', {
+        phase: 'testing',
+        emoji: '🧪',
+        message: 'Creating tests...'
+      });
       await this.generateTests();
       
       // 4. Quality Assurance Phase
-      console.log('✅ Running quality checks...');
+      this.emit('phase-start', {
+        phase: 'quality',
+        emoji: '✅',
+        message: 'Running quality checks...'
+      });
       await this.runQualityChecks();
       
       // 5. Iterative Fixing Phase
-      console.log('🔄 Applying fixes...');
+      this.emit('phase-start', {
+        phase: 'fixing',
+        emoji: '🔄',
+        message: 'Applying fixes...'
+      });
       await this.iterativelyFix();
       
       // 6. Completion
@@ -201,7 +264,10 @@ class CodeAgent {
       this.currentTask.endTime = new Date();
       await this.saveState();
       
-      console.log('🎉 Development completed successfully!');
+      this.emit('info', {
+        message: '🎉 Development completed successfully!',
+        summary: this.getProjectSummary()
+      });
       return this.getProjectSummary();
       
     } catch (error) {
@@ -220,7 +286,10 @@ class CodeAgent {
       throw new Error('CodeAgent must be initialized before use');
     }
     
-    console.log('Starting fix process...');
+    this.emit('info', {
+      message: 'Starting fix process...',
+      fixRequirements
+    });
     this.currentTask = {
       type: 'iterative_fixing',
       fixRequirements,
@@ -245,7 +314,10 @@ class CodeAgent {
       this.currentTask.endTime = new Date();
       await this.saveState();
       
-      console.log('🎉 Fixes applied successfully!');
+      this.emit('info', {
+        message: '🎉 Fixes applied successfully!',
+        summary: this.getFixSummary()
+      });
       return this.getFixSummary();
       
     } catch (error) {
@@ -295,10 +367,16 @@ class CodeAgent {
         this.testFiles = new Set(savedState.testFiles || []);
         this.qualityCheckResults = savedState.qualityCheckResults;
         
-        console.log('Previous state loaded');
+        this.emit('info', {
+          message: 'Previous state loaded',
+          state: savedState
+        });
       }
     } catch (error) {
-      console.warn('Could not load previous state:', error.message);
+      this.emit('warning', {
+        message: `Could not load previous state: ${error.message}`,
+        error: error.message
+      });
     }
   }
 
@@ -318,7 +396,10 @@ class CodeAgent {
     };
     
     await this.stateManager.saveCurrentState(state);
-    console.log('State saved');
+    this.emit('info', {
+      message: 'State saved',
+      timestamp: state.timestamp
+    });
   }
 
   /**

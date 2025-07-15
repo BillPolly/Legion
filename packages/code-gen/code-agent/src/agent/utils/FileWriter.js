@@ -45,7 +45,11 @@ class FileWriter {
     // Track generated file
     this.codeAgent.generatedFiles.add(filePath);
     
-    console.log(`📝 Generated: ${filename}`);
+    this.codeAgent.emit('file-created', {
+      filename,
+      filePath,
+      size: content.length
+    });
     return filePath;
   }
 

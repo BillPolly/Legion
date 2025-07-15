@@ -21,14 +21,24 @@ class FixingPhase {
    * @returns {Promise<void>}
    */
   async iterativelyFix() {
-    console.log('🔄 Starting iterative fixing process...');
+    this.codeAgent.emit('progress', {
+      phase: 'fixing',
+      step: 'starting',
+      message: '🔄 Starting iterative fixing process...'
+    });
     
     let iteration = 0;
     let qualityPassed = this.codeAgent.qualityCheckResults?.overall || false;
     
     while (!qualityPassed && iteration < this.maxIterations) {
       iteration++;
-      console.log(`\n🔧 Iteration ${iteration}/${this.maxIterations}`);
+      this.codeAgent.emit('progress', {
+        phase: 'fixing',
+        step: 'iteration',
+        message: `🔧 Iteration ${iteration}/${this.maxIterations}`,
+        iteration,
+        maxIterations: this.maxIterations
+      });
       
       // Fix ESLint issues
       if (!this.codeAgent.qualityCheckResults.eslint.passed) {
@@ -41,19 +51,31 @@ class FixingPhase {
       }
       
       // Re-run quality checks
-      console.log('🔍 Re-running quality checks...');
+      this.codeAgent.emit('progress', {
+        phase: 'fixing',
+        step: 're-checking',
+        message: '🔍 Re-running quality checks...'
+      });
       await this.codeAgent.runQualityChecks();
       
       qualityPassed = this.codeAgent.qualityCheckResults.overall;
       
       if (qualityPassed) {
-        console.log('✅ All quality gates passed!');
+        this.codeAgent.emit('phase-complete', {
+          phase: 'fixing',
+          message: 'All quality gates passed!',
+          iterations: iteration
+        });
         break;
       }
     }
     
     if (!qualityPassed) {
-      console.warn(`⚠️ Quality gates still failing after ${this.maxIterations} iterations`);
+      this.codeAgent.emit('warning', {
+        phase: 'fixing',
+        message: `Quality gates still failing after ${this.maxIterations} iterations`,
+        maxIterations: this.maxIterations
+      });
     }
   }
 
@@ -63,7 +85,11 @@ class FixingPhase {
    * @returns {Promise<void>}
    */
   async analyzeIssues(fixRequirements) {
-    console.log('🔍 Analyzing issues...');
+    this.codeAgent.emit('progress', {
+      phase: 'fixing',
+      step: 'analyzing',
+      message: '🔍 Analyzing issues...'
+    });
     
     // Categorize issues
     const eslintIssues = [];
@@ -82,7 +108,16 @@ class FixingPhase {
       otherIssues.push(...fixRequirements.other);
     }
     
-    console.log(`Found ${eslintIssues.length} ESLint issues, ${testIssues.length} test issues, ${otherIssues.length} other issues`);
+    this.codeAgent.emit('info', {
+      phase: 'fixing',
+      step: 'analysis-complete',
+      message: `Found ${eslintIssues.length} ESLint issues, ${testIssues.length} test issues, ${otherIssues.length} other issues`,
+      counts: {
+        eslint: eslintIssues.length,
+        tests: testIssues.length,
+        other: otherIssues.length
+      }
+    });
   }
 
   /**
@@ -91,7 +126,11 @@ class FixingPhase {
    * @returns {Promise<void>}
    */
   async applyFixes(fixRequirements) {
-    console.log('🔧 Applying fixes...');
+    this.codeAgent.emit('progress', {
+      phase: 'fixing',
+      step: 'applying-fixes',
+      message: '🔧 Applying fixes...'
+    });
     
     // Apply ESLint fixes
     if (fixRequirements.eslint) {
@@ -120,7 +159,11 @@ class FixingPhase {
    * @private
    */
   async _fixESLintIssues() {
-    console.log('🔧 Fixing ESLint issues...');
+    this.codeAgent.emit('progress', {
+      phase: 'fixing',
+      step: 'fixing-eslint',
+      message: '🔧 Fixing ESLint issues...'
+    });
     
     const { issues } = this.codeAgent.qualityCheckResults.eslint;
     
@@ -138,10 +181,21 @@ class FixingPhase {
         
         // Write fixed content back
         await this.codeAgent.fileOps.writeFile(file, content);
-        console.log(`✅ Fixed ESLint issues in ${file}`);
+        this.codeAgent.emit('info', {
+          phase: 'fixing',
+          step: 'eslint-fixed',
+          message: `✅ Fixed ESLint issues in ${file}`,
+          file
+        });
         
       } catch (error) {
-        console.error(`Failed to fix ESLint issues in ${file}: ${error.message}`);
+        this.codeAgent.emit('error', {
+          phase: 'fixing',
+          step: 'eslint-fix-failed',
+          message: `Failed to fix ESLint issues in ${file}: ${error.message}`,
+          file,
+          error: error.message
+        });
       }
     }
   }
@@ -151,7 +205,11 @@ class FixingPhase {
    * @private
    */
   async _fixTestFailures() {
-    console.log('🔧 Fixing test failures...');
+    this.codeAgent.emit('progress', {
+      phase: 'fixing',
+      step: 'fixing-tests',
+      message: '🔧 Fixing test failures...'
+    });
     
     const { failures } = this.codeAgent.qualityCheckResults.jest;
     
@@ -168,10 +226,21 @@ class FixingPhase {
         
         // Write fixed test back
         await this.codeAgent.fileOps.writeFile(failure.testFile, testContent);
-        console.log(`✅ Fixed test failure in ${failure.testFile}`);
+        this.codeAgent.emit('info', {
+          phase: 'fixing',
+          step: 'test-fixed',
+          message: `✅ Fixed test failure in ${failure.testFile}`,
+          testFile: failure.testFile
+        });
         
       } catch (error) {
-        console.error(`Failed to fix test in ${failure.testFile}: ${error.message}`);
+        this.codeAgent.emit('error', {
+          phase: 'fixing',
+          step: 'test-fix-failed',
+          message: `Failed to fix test in ${failure.testFile}: ${error.message}`,
+          testFile: failure.testFile,
+          error: error.message
+        });
       }
     }
   }
@@ -243,7 +312,12 @@ jest.mock('${suggestedFix.module}', () => ({
   async _applyGenericFix(fix) {
     if (fix.file && fix.content) {
       await this.codeAgent.fileOps.writeFile(fix.file, fix.content);
-      console.log(`✅ Applied fix to ${fix.file}`);
+      this.codeAgent.emit('info', {
+        phase: 'fixing',
+        step: 'generic-fix-applied',
+        message: `✅ Applied fix to ${fix.file}`,
+        file: fix.file
+      });
     }
   }
 

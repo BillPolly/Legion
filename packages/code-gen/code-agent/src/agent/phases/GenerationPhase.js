@@ -44,7 +44,11 @@ class GenerationPhase {
     this.codeAgent.currentTask.status = 'testing';
     await this.codeAgent.saveState();
     
-    console.log(`✅ Code generation complete: ${this.codeAgent.generatedFiles.size} files created`);
+    this.codeAgent.emit('phase-complete', {
+      phase: 'generation',
+      message: `Code generation complete: ${this.codeAgent.generatedFiles.size} files created`,
+      filesGenerated: this.codeAgent.generatedFiles.size
+    });
   }
 
   /**
@@ -52,7 +56,11 @@ class GenerationPhase {
    * @private
    */
   async _generateFrontendFiles(frontendArchitecture, analysis) {
-    console.log('🎨 Generating frontend files...');
+    this.codeAgent.emit('progress', {
+      phase: 'generation',
+      step: 'frontend-files',
+      message: '🎨 Generating frontend files...'
+    });
     
     // Generate main HTML file
     if (frontendArchitecture.htmlStructure) {
@@ -93,7 +101,11 @@ class GenerationPhase {
       await this.fileWriter.writeFile('app.js', appContent);
     }
     
-    console.log('✅ Frontend files generated');
+    this.codeAgent.emit('progress', {
+      phase: 'generation',
+      step: 'frontend-complete',
+      message: '✅ Frontend files generated'
+    });
   }
 
   /**
@@ -101,7 +113,11 @@ class GenerationPhase {
    * @private
    */
   async _generateBackendFiles(backendArchitecture, analysis) {
-    console.log('⚙️ Generating backend files...');
+    this.codeAgent.emit('progress', {
+      phase: 'generation',
+      step: 'backend-files',
+      message: '⚙️ Generating backend files...'
+    });
     
     // Generate server entry point
     if (backendArchitecture.server) {
@@ -154,7 +170,11 @@ class GenerationPhase {
       }
     }
     
-    console.log('✅ Backend files generated');
+    this.codeAgent.emit('progress', {
+      phase: 'generation',
+      step: 'backend-complete',
+      message: '✅ Backend files generated'
+    });
   }
 
   /**
@@ -162,7 +182,11 @@ class GenerationPhase {
    * @private
    */
   async _generateConfigFiles(analysis) {
-    console.log('⚙️ Generating configuration files...');
+    this.codeAgent.emit('progress', {
+      phase: 'generation',
+      step: 'config-files',
+      message: '⚙️ Generating configuration files...'
+    });
     
     // Generate package.json
     const packageJson = {
@@ -242,7 +266,11 @@ npm run dev
     // Generate Jest config
     await this._generateJestConfig(analysis);
     
-    console.log('✅ Configuration files generated');
+    this.codeAgent.emit('progress', {
+      phase: 'generation',
+      step: 'config-complete',
+      message: '✅ Configuration files generated'
+    });
   }
 
   /**
@@ -280,7 +308,11 @@ npm run dev
    * @private
    */
   async _generateTestUtils() {
-    console.log('🔧 Generating test utilities...');
+    this.codeAgent.emit('progress', {
+      phase: 'generation',
+      step: 'test-utilities',
+      message: '🔧 Generating test utilities...'
+    });
     
     // Mock data generator
     const mockDataContent = `/**
@@ -371,7 +403,11 @@ global.console = {
     
     await this.fileWriter.writeFile('__tests__/setup.js', setupContent);
     
-    console.log('✅ Test utilities generated');
+    this.codeAgent.emit('progress', {
+      phase: 'generation',
+      step: 'test-utilities-complete',
+      message: '✅ Test utilities generated'
+    });
   }
 }
 

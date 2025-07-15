@@ -52,7 +52,11 @@ class TestingPhase {
     this.codeAgent.currentTask.status = 'quality_checking';
     await this.codeAgent.saveState();
     
-    console.log(`✅ Test generation complete: ${this.codeAgent.testFiles.size} test files created`);
+    this.codeAgent.emit('phase-complete', {
+      phase: 'testing',
+      message: `Test generation complete: ${this.codeAgent.testFiles.size} test files created`,
+      testsCreated: this.codeAgent.testFiles.size
+    });
   }
 
   /**
@@ -60,7 +64,11 @@ class TestingPhase {
    * @private
    */
   async _generateFrontendTests(frontendArchitecture, analysis) {
-    console.log('🧪 Generating frontend tests...');
+    this.codeAgent.emit('progress', {
+      phase: 'testing',
+      step: 'frontend-tests',
+      message: '🧪 Generating frontend tests...'
+    });
 
     // Generate component tests
     if (frontendArchitecture.jsComponents) {
@@ -107,7 +115,11 @@ class TestingPhase {
       await this.fileWriter.writeTestFile('__tests__/dom.test.js', domTestContent);
     }
 
-    console.log('✅ Frontend tests generated');
+    this.codeAgent.emit('progress', {
+      phase: 'testing',
+      step: 'frontend-tests-complete',
+      message: '✅ Frontend tests generated'
+    });
   }
 
   /**
@@ -115,7 +127,11 @@ class TestingPhase {
    * @private
    */
   async _generateBackendTests(backendArchitecture, analysis) {
-    console.log('🧪 Generating backend tests...');
+    this.codeAgent.emit('progress', {
+      phase: 'testing',
+      step: 'backend-tests',
+      message: '🧪 Generating backend tests...'
+    });
 
     // Generate route tests
     if (backendArchitecture.routes) {
@@ -179,7 +195,11 @@ class TestingPhase {
       }
     }
 
-    console.log('✅ Backend tests generated');
+    this.codeAgent.emit('progress', {
+      phase: 'testing',
+      step: 'backend-tests-complete',
+      message: '✅ Backend tests generated'
+    });
   }
 
   /**
@@ -187,7 +207,11 @@ class TestingPhase {
    * @private
    */
   async _generateIntegrationTests(analysis) {
-    console.log('🔗 Generating integration tests...');
+    this.codeAgent.emit('progress', {
+      phase: 'testing',
+      step: 'integration-tests',
+      message: '🔗 Generating integration tests...'
+    });
 
     const integrationTestSpec = {
       name: 'End-to-end workflow',
@@ -213,7 +237,11 @@ class TestingPhase {
     const integrationTestContent = await this.testGenerator.generateIntegrationTest(integrationTestSpec);
     await this.fileWriter.writeTestFile('__tests__/integration/workflow.test.js', integrationTestContent);
 
-    console.log('✅ Integration tests generated');
+    this.codeAgent.emit('progress', {
+      phase: 'testing',
+      step: 'integration-tests-complete',
+      message: '✅ Integration tests generated'
+    });
   }
 
   /**

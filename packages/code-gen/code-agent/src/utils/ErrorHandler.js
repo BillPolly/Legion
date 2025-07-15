@@ -894,7 +894,7 @@ class ErrorHandler {
   _logError(errorRecord) {
     const { error, classification, timestamp } = errorRecord;
     const timeStr = new Date(timestamp).toISOString();
-    console.error(`[${timeStr}] ${classification.category.toUpperCase()}: ${error.message}`);
+    // Error already recorded in errorLog, no need for console output
   }
 
   _parseStackFrame(line) {

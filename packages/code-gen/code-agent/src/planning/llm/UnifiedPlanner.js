@@ -47,7 +47,7 @@ class UnifiedPlanner {
     try {
       // If LLM client provided directly, use it
       if (this.llmClient) {
-        console.log('Using provided LLM client');
+        // Using provided LLM client
       } else {
         // Initialize ResourceManager and get LLM client
         await this.resourceManager.initialize();
@@ -63,7 +63,6 @@ class UnifiedPlanner {
       this.genericPlanner = new GenericPlanner({ llmClient: this.llmClient });
       
       this.initialized = true;
-      console.log('UnifiedPlanner initialized successfully');
     } catch (error) {
       throw new Error(`Failed to initialize UnifiedPlanner: ${error.message}`);
     }
