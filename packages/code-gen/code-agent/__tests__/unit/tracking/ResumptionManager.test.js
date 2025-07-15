@@ -7,6 +7,9 @@
 
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
 import { ResumptionManager } from '../../../src/tracking/ResumptionManager.js';
+import os from 'os';
+import path from 'path';
+import fs from 'fs/promises';
 
 describe('ResumptionManager', () => {
   let resumptionManager;
@@ -424,9 +427,10 @@ describe('ResumptionManager', () => {
 
   describe('Data Persistence', () => {
     test('should save resumption data to file', async () => {
+      const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'resumption-test-'));
       const manager = new ResumptionManager({
         persistToFile: true,
-        saveFilePath: './test-resumption.json'
+        saveFilePath: path.join(tempDir, 'test-resumption.json')
       });
 
       await manager.createSnapshot('test-snapshot', { data: 'test' });
@@ -438,8 +442,11 @@ describe('ResumptionManager', () => {
     });
 
     test('should load resumption data from file', async () => {
+      const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'resumption-test-'));
+      const saveFilePath = path.join(tempDir, 'test-resumption-load.json');
+      
       const manager1 = new ResumptionManager({
-        saveFilePath: './test-resumption-load.json'
+        saveFilePath: saveFilePath
       });
 
       await manager1.createSnapshot('persistent-snapshot', { value: 42 });
@@ -447,7 +454,7 @@ describe('ResumptionManager', () => {
       manager1.destroy();
 
       const manager2 = new ResumptionManager({
-        saveFilePath: './test-resumption-load.json'
+        saveFilePath: saveFilePath
       });
 
       await manager2.load();

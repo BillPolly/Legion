@@ -84,33 +84,36 @@ class LLMClientManager {
       
       const systemPrompt = this._buildCodeGenerationPrompt(language, style, options);
       
-      const response = await this.llmClient.sendAndReceiveResponse({
-        messages: [
+      const response = await this.llmClient.sendAndReceiveResponse(
+        [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }
         ],
-        temperature: options.temperature || this.config.temperature,
-        maxTokens: options.maxTokens || this.config.maxTokens,
-        simulateFailure: options.simulateFailure,
-        succeedOnRetry: options.succeedOnRetry
-      });
+        {
+          temperature: options.temperature || this.config.temperature,
+          maxTokens: options.maxTokens || this.config.maxTokens,
+          simulateFailure: options.simulateFailure,
+          succeedOnRetry: options.succeedOnRetry
+        }
+      );
 
-      if (response.success) {
-        const generatedCode = this._extractCodeFromResponse(response.data.content);
+      // Response is a string directly from the LLM
+      if (response && typeof response === 'string') {
+        const generatedCode = this._extractCodeFromResponse(response);
         
         return {
           success: true,
           code: generatedCode,
           language: language,
           style: style,
-          tokens: response.data.usage?.total_tokens || 0,
-          raw: response.data.content,
-          retries: response.retries
+          tokens: 0, // Token count not available in direct response
+          raw: response,
+          retries: 0
         };
       } else {
         return {
           success: false,
-          error: response.error || 'Code generation failed',
+          error: 'No response from LLM',
           code: null
         };
       }
@@ -817,6 +820,51 @@ class LLMClientManager {
             error: 'Mock response not configured for this prompt'
           };
         }
+      },
+      
+      completeWithStructuredResponse: async (prompt, options = {}) => {
+        // Mock structured response for planning
+        if (prompt.includes('Create a structured plan')) {
+          const mockPlan = {
+            name: 'Mock Plan',
+            description: 'A mock plan for testing',
+            steps: [
+              {
+                id: 'step-1',
+                name: 'Mock Step',
+                description: 'A mock planning step',
+                type: 'setup',
+                // Empty actions array - no specific actions for mock
+                actions: []
+              }
+            ]
+          };
+          
+          return {
+            success: true,
+            data: mockPlan
+          };
+        }
+        
+        // Default structured response
+        return {
+          success: true,
+          data: {
+            result: 'Mock structured response',
+            metadata: { tokens: 50 }
+          }
+        };
+      },
+      
+      // Add mock for sendAndReceiveResponse used by UnifiedPlanner
+      complete: async (params) => {
+        return {
+          success: true,
+          data: {
+            content: 'Mock completion',
+            usage: { total_tokens: 50 }
+          }
+        };
       }
     };
   }

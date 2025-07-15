@@ -7,6 +7,9 @@
 
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
 import { TaskTracker } from '../../../src/tracking/TaskTracker.js';
+import os from 'os';
+import path from 'path';
+import fs from 'fs/promises';
 
 describe('TaskTracker', () => {
   let tracker;
@@ -380,10 +383,11 @@ describe('TaskTracker', () => {
 
   describe('Persistence', () => {
     test('should save tasks to file when autoSave is enabled', async () => {
+      const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tasks-test-'));
       const persistentTracker = new TaskTracker({
         autoSave: true,
         persistToFile: true,
-        saveFilePath: './test-tasks.json'
+        saveFilePath: path.join(tempDir, 'test-tasks.json')
       });
 
       await persistentTracker.createTask({ title: 'Persistent Task' });
@@ -393,15 +397,18 @@ describe('TaskTracker', () => {
     });
 
     test('should load tasks from file', async () => {
+      const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tasks-test-'));
+      const saveFilePath = path.join(tempDir, 'test-tasks-load.json');
+      
       const tracker1 = new TaskTracker({
-        saveFilePath: './test-tasks-load.json'
+        saveFilePath: saveFilePath
       });
       
       await tracker1.createTask({ title: 'Task to Load' });
       await tracker1.save();
 
       const tracker2 = new TaskTracker({
-        saveFilePath: './test-tasks-load.json'
+        saveFilePath: saveFilePath
       });
       
       await tracker2.load();

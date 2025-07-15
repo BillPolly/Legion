@@ -21,11 +21,16 @@ The **@jsenvoy/code-agent** is an intelligent coding agent that can generate, te
 ┌─────────────────────────────────────────────────────────────┐
 │                    Code Agent                               │
 ├─────────────────────────────────────────────────────────────┤
-│  Planning Layer                                             │
-│  ├── ProjectPlanner     (Multi-file directory layouts)     │
+│  Planning Layer (LLM-Powered)                              │
+│  ├── UnifiedPlanner    (Single LLM-based planner)         │
+│  │   ├── RequirementAnalyzer   (via LLM)                  │
+│  │   ├── DirectoryPlanner      (via LLM)                  │ 
+│  │   ├── DependencyPlanner     (via LLM)                  │
+│  │   ├── FrontendArchitecture  (via LLM)                  │
+│  │   ├── BackendArchitecture   (via LLM)                  │
+│  │   └── APIInterfacePlanner   (via LLM)                  │
 │  ├── TaskTracker       (State management and persistence)  │
-│  ├── CodeAnalyzer      (Existing code pattern detection)   │
-│  └── ArchitecturalPlanner (Frontend/backend coordination) │
+│  └── GenericPlanner    (@jsenvoy/llm-planner)             │
 ├─────────────────────────────────────────────────────────────┤
 │  Operations Layer                                           │
 │  ├── CodeGenerator     (Vanilla JS code generation)        │
@@ -66,16 +71,36 @@ The central orchestrator that manages the entire coding workflow.
 - `runQualityChecks()` - Execute ESLint and Jest validation
 - `iterativelyFix(errors)` - Fix issues until all quality gates pass
 
-### 2. Planning Layer
+### 2. Planning Layer (LLM-Powered)
 
-#### ProjectPlanner
-Plans multi-file directory structures and project architecture.
+#### UnifiedPlanner
+A single, intelligent planner that uses LLM to handle all planning domains through configuration-driven prompts.
 
-**Features:**
-- Analyzes requirements to determine project structure
-- Creates directory layouts for frontend/backend projects
-- Plans file dependencies and import structures
-- Generates project scaffolding templates
+**Key Features:**
+- **Single Entry Point**: One planner class handles all planning scenarios
+- **LLM-Powered**: Uses @jsenvoy/llm-planner GenericPlanner for intelligent plan generation
+- **Configuration-Driven**: Different planning domains defined through config objects
+- **Real-Time Planning**: Makes actual LLM API calls for intelligent planning decisions
+- **Hierarchical Plans**: Generates complex, nested plan structures with proper validation
+
+**Planning Domains:**
+- **RequirementAnalyzer**: Analyzes project requirements and determines structure
+- **DirectoryPlanner**: Plans multi-file directory layouts and organization  
+- **DependencyPlanner**: Plans file dependencies and import structures
+- **FrontendArchitecture**: Plans frontend component structure and data flow
+- **BackendArchitecture**: Plans backend services, APIs, and data layer
+- **APIInterfacePlanner**: Plans API contracts and communication patterns
+
+**Implementation:**
+```javascript
+const unifiedPlanner = new UnifiedPlanner({ provider: 'anthropic' });
+await unifiedPlanner.initialize();
+
+// Each planning domain uses the same interface
+const analysis = await unifiedPlanner.analyzeRequirements(requirements);
+const structure = await unifiedPlanner.planDirectoryStructure(analysis);
+const dependencies = await unifiedPlanner.planDependencies(structure, analysis);
+```
 
 #### TaskTracker
 Manages state and tracks what the agent is currently working on.
@@ -86,23 +111,15 @@ Manages state and tracks what the agent is currently working on.
 - Maintains history of changes and iterations
 - Provides resumption capabilities after interruptions
 
-#### CodeAnalyzer
-Analyzes existing code to understand patterns and conventions.
+#### GenericPlanner (@jsenvoy/llm-planner)
+The underlying hierarchical planning engine that powers the UnifiedPlanner.
 
 **Features:**
-- Detects existing coding patterns and styles
-- Identifies project structure conventions
-- Analyzes import/export patterns
-- Determines appropriate coding standards to follow
-
-#### ArchitecturalPlanner
-Plans coordination between frontend and backend components.
-
-**Features:**
-- Designs API interfaces between frontend and backend
-- Plans data flow and communication patterns
-- Coordinates file organization across project layers
-- Ensures consistent coding patterns across components
+- LLM-based plan generation with structured responses
+- Hierarchical step validation and dependency resolution
+- Input/output flow tracking across plan steps
+- Retry logic and error handling for LLM interactions
+- Plan execution order optimization
 
 ### 3. Operations Layer
 

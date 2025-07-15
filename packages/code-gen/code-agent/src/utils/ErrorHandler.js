@@ -835,9 +835,19 @@ class ErrorHandler {
    * Start automatic cleanup timer
    */
   startAutoCleanup() {
-    setInterval(() => {
+    this.cleanupTimer = setInterval(() => {
       this.cleanupOldErrors();
     }, this.config.cleanupInterval);
+  }
+  
+  /**
+   * Stop automatic cleanup timer
+   */
+  stopAutoCleanup() {
+    if (this.cleanupTimer) {
+      clearInterval(this.cleanupTimer);
+      this.cleanupTimer = null;
+    }
   }
 
   // Private helper methods
@@ -956,6 +966,17 @@ class ErrorHandler {
       start: Math.min(...timestamps),
       end: Math.max(...timestamps)
     };
+  }
+  
+  /**
+   * Clean up resources and stop timers
+   */
+  destroy() {
+    this.stopAutoCleanup();
+    this.errorHistory = [];
+    this.customHandlers.clear();
+    this.transformers.clear();
+    this.circuitBreakers.clear();
   }
 }
 

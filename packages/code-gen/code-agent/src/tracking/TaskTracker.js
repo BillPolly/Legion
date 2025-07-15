@@ -15,7 +15,7 @@ class TaskTracker {
       autoSave: true,
       persistToFile: true,
       maxTasks: 10000,
-      saveFilePath: './tasks.json',
+      saveFilePath: null, // Must be explicitly set to enable file persistence
       enableTimeTracking: true,
       enableFuzzySearch: true,
       ...config
@@ -614,7 +614,7 @@ class TaskTracker {
    * @returns {Promise<void>}
    */
   async save() {
-    if (!this.config.persistToFile) return;
+    if (!this.config.persistToFile || !this.config.saveFilePath) return;
     
     try {
       const data = {
@@ -644,7 +644,7 @@ class TaskTracker {
    * @returns {Promise<void>}
    */
   async load() {
-    if (!this.config.persistToFile) return;
+    if (!this.config.persistToFile || !this.config.saveFilePath) return;
     
     try {
       const filePath = path.resolve(this.config.saveFilePath);

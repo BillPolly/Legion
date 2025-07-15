@@ -7,6 +7,9 @@
 
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
 import { ProgressManager } from '../../../src/tracking/ProgressManager.js';
+import os from 'os';
+import path from 'path';
+import fs from 'fs/promises';
 
 describe('ProgressManager', () => {
   let progressManager;
@@ -299,9 +302,10 @@ describe('ProgressManager', () => {
 
   describe('Data Persistence', () => {
     test('should save progress to file', async () => {
+      const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'progress-test-'));
       const manager = new ProgressManager({
         persistToFile: true,
-        saveFilePath: './test-progress.json'
+        saveFilePath: path.join(tempDir, 'test-progress.json')
       });
       
       await manager.setPhaseProgress('planning', 75);
@@ -314,8 +318,11 @@ describe('ProgressManager', () => {
     });
 
     test('should load progress from file', async () => {
+      const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'progress-test-'));
+      const saveFilePath = path.join(tempDir, 'test-progress-load.json');
+      
       const manager1 = new ProgressManager({
-        saveFilePath: './test-progress-load.json'
+        saveFilePath: saveFilePath
       });
       
       await manager1.setPhaseProgress('planning', 80);
@@ -323,7 +330,7 @@ describe('ProgressManager', () => {
       manager1.destroy();
       
       const manager2 = new ProgressManager({
-        saveFilePath: './test-progress-load.json'
+        saveFilePath: saveFilePath
       });
       
       await manager2.load();
@@ -334,9 +341,11 @@ describe('ProgressManager', () => {
     });
 
     test('should handle auto-save', async () => {
+      const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'progress-test-'));
       const manager = new ProgressManager({
         autoSave: true,
-        saveInterval: 100 // 100ms for testing
+        saveInterval: 100, // 100ms for testing
+        saveFilePath: path.join(tempDir, 'test-autosave.json')
       });
       
       await manager.setPhaseProgress('planning', 60);

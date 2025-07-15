@@ -17,7 +17,7 @@ class ProgressManager extends EventEmitter {
     this.config = {
       autoSave: true,
       persistToFile: true,
-      saveFilePath: './progress.json',
+      saveFilePath: null, // Must be explicitly set to enable file persistence
       saveInterval: 30000, // 30 seconds
       enableEvents: true,
       ...config
@@ -690,7 +690,7 @@ class ProgressManager extends EventEmitter {
    * @returns {Promise<void>}
    */
   async save() {
-    if (!this.config.persistToFile) return;
+    if (!this.config.persistToFile || !this.config.saveFilePath) return;
 
     try {
       const data = {
@@ -723,7 +723,7 @@ class ProgressManager extends EventEmitter {
    * @returns {Promise<void>}
    */
   async load() {
-    if (!this.config.persistToFile) return;
+    if (!this.config.persistToFile || !this.config.saveFilePath) return;
 
     try {
       const filePath = path.resolve(this.config.saveFilePath);

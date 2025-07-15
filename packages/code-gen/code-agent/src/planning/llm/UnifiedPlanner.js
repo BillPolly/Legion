@@ -23,9 +23,9 @@ class UnifiedPlanner {
       ...config
     };
     
-    // Initialize ResourceManager for LLM client
-    this.resourceManager = new ResourceManager();
-    this.llmClient = null;
+    // Accept LLM client directly or use ResourceManager
+    this.llmClient = config.llmClient || null;
+    this.resourceManager = config.llmClient ? null : new ResourceManager();
     this.genericPlanner = null;
     this.initialized = false;
     
@@ -45,13 +45,18 @@ class UnifiedPlanner {
    */
   async initialize() {
     try {
-      // Initialize ResourceManager
-      await this.resourceManager.initialize();
-      
-      // Get LLM client from ResourceManager
-      this.llmClient = this.resourceManager.get('llm-client');
-      if (!this.llmClient) {
-        throw new Error('LLM client not available from ResourceManager');
+      // If LLM client provided directly, use it
+      if (this.llmClient) {
+        console.log('Using provided LLM client');
+      } else {
+        // Initialize ResourceManager and get LLM client
+        await this.resourceManager.initialize();
+        
+        // Get LLM client from ResourceManager
+        this.llmClient = this.resourceManager.get('llm-client');
+        if (!this.llmClient) {
+          throw new Error('LLM client not available from ResourceManager');
+        }
       }
       
       // Initialize generic planner with LLM client

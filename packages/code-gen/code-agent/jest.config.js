@@ -72,8 +72,8 @@ export default {
   // Error on deprecated features
   errorOnDeprecated: true,
   
-  // Test timeout (2 minutes for real LLM calls)
-  testTimeout: 120000,
+  // Test timeout (10 seconds for normal tests)
+  testTimeout: 10000,
   
   // Global test variables
   globals: {
