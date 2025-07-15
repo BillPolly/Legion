@@ -40,6 +40,15 @@ Complete agent system:
 - 🤖 **Agent**: Base agent with tool execution
 - 🔄 **Built-in Retry Logic**: Robust retry capabilities with exponential backoff
 - 📊 **StructuredResponse**: Consistent response format
+- 🚀 **CodeAgent Integration**: Full-stack code generation capabilities
+
+### CodeAgent Integration
+The agent now includes powerful code generation capabilities:
+- 🏗️ **Complete Applications**: Generate full-stack web applications
+- 🔧 **Code Fixing**: Debug and improve existing code
+- 📝 **Documentation**: Automatic documentation generation
+- 🧪 **Testing**: Test suites for generated code
+- 🚀 **Deployment**: Production-ready deployment configurations
 
 ## Quick Start
 
@@ -75,6 +84,21 @@ const agent = new Agent({
 });
 
 const result = await agent.execute("Calculate the sum of numbers in data.txt");
+```
+
+### Code Generation with Agent
+
+```javascript
+// The CLI automatically loads CodeAgent for code generation
+node packages/agent/src/cli.js
+
+// Example interactions:
+// "Create a React calculator app with modern styling"
+// "Fix this JavaScript function: function factorial(n) { ... }"
+// "Generate a complete blog application with authentication"
+
+// Run the example script
+node packages/agent/examples/chat-with-codeagent.js
 ```
 
 ### Creating Custom Modules

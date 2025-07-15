@@ -38,7 +38,7 @@ export class GenericModule extends Module {
       return;
     }
     
-    this.library = this.loadLibrary();
+    this.library = await this.loadLibrary();
     this.instance = this.initializeLibrary(this.dependencies);
     this.tools = await this.createTools();
     this._initialized = true;
@@ -48,43 +48,13 @@ export class GenericModule extends Module {
    * Load the library package
    * @returns {*} The loaded library
    */
-  loadLibrary() {
+  async loadLibrary() {
     const { package: packageName } = this.config;
     
     try {
-      // In test environment, always try CommonJS first to respect Jest mocks
-      if (process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID) {
-        if (packageName.startsWith('.') || packageName.startsWith('/')) {
-          // Local module - resolve relative to module.json location
-          const modulePath = path.resolve(
-            this.config._metadata?.directory || __dirname,
-            packageName
-          );
-          return require(modulePath);
-        } else {
-          // npm package - use require to respect Jest mocks
-          return require(packageName);
-        }
-      }
-      
-      // Production: Try to load as CommonJS first
-      if (packageName.startsWith('.') || packageName.startsWith('/')) {
-        // Local module - resolve relative to module.json location
-        const modulePath = path.resolve(
-          this.config._metadata?.directory || __dirname,
-          packageName
-        );
-        return require(modulePath);
-      } else {
-        // npm package
-        return require(packageName);
-      }
+      // Always use ES modules
+      return await this.loadESModule(packageName);
     } catch (error) {
-      // If CommonJS fails, try ES modules
-      if (error.code === 'ERR_REQUIRE_ESM' || error.message.includes('ES Module')) {
-        return this.loadESModule(packageName);
-      }
-      
       // Re-throw with more context
       const enhancedError = new Error(
         `Failed to load library '${packageName}' for module '${this.name}': ${error.message}`
@@ -108,19 +78,8 @@ export class GenericModule extends Module {
         const module = await import(modulePath);
         return module.default || module;
       } else {
-        // In test environment, try CommonJS first to respect mocks
-        if (process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID) {
-          try {
-            return require(packageName);
-          } catch (requireError) {
-            // Fall back to ES import if require fails
-            const module = await import(packageName);
-            return module.default || module;
-          }
-        } else {
-          const module = await import(packageName);
-          return module.default || module;
-        }
+        const module = await import(packageName);
+        return module.default || module;
       }
     } catch (error) {
       throw new Error(`Failed to load ES module '${packageName}': ${error.message}`);

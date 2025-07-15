@@ -1,0 +1,876 @@
+
+> @jsenvoy/code-agent@0.0.1 test
+> NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests
+
+  console.log
+    [LLMClient llm-client-1752579018296-w7sk5u4kq] CHAT REQUEST 2025-07-15T11:30:18.297Z: 1 messages
+
+      at LLMClient.sendAndReceiveResponse (../../llm/src/LLMClient.js:288:17)
+
+(node:52971) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+  console.log
+    [LLMClient llm-client-1752579018296-w7sk5u4kq] CHAT RESPONSE 2025-07-15T11:30:19.844Z: "Hi there! How can I assist you today?..."
+
+      at LLMClient.sendAndReceiveResponse (../../llm/src/LLMClient.js:329:25)
+
+  console.log
+    Full response: "Hi there! How can I assist you today?"
+
+      at Object.<anonymous> (__tests__/integration/LLMClient.real.test.js:56:15)
+
+  console.log
+    [LLMClient llm-client-1752579019848-7ypx1hn4x] CHAT REQUEST 2025-07-15T11:30:19.848Z: 2 messages
+
+      at LLMClient.sendAndReceiveResponse (../../llm/src/LLMClient.js:288:17)
+
+  console.log
+    [LLMClient llm-client-1752579019848-7ypx1hn4x] CHAT RESPONSE 2025-07-15T11:30:20.522Z: "function addNumbers(a, b) {
+      return a + b;
+    }..."
+
+      at LLMClient.sendAndReceiveResponse (../../llm/src/LLMClient.js:329:25)
+
+  console.log
+    Generate code result: {
+      "success": true,
+      "code": "function addNumbers(a, b) {\n  return a + b;\n}",
+      "language": "javascript",
+      "style": "modern",
+      "tokens": 0,
+      "raw": "function addNumbers(a, b) {\n  return a + b;\n}",
+      "retries": 0
+    }
+
+      at Object.<anonymous> (__tests__/integration/LLMClient.real.test.js:80:15)
+
+  console.log
+    Generated code: function addNumbers(a, b) {
+      return a + b;
+    }
+
+      at Object.<anonymous> (__tests__/integration/LLMClient.real.test.js:86:15)
+
+FAIL __tests__/integration/LLMClient.real.test.js
+  LLMClient Real Integration Tests
+    Step 1: Basic LLM Client
+      ✓ should create and initialize LLM client manager (74 ms)
+      ✕ should get basic response from LLM (1551 ms)
+      ✓ should generate simple code (676 ms)
+
+  ● LLMClient Real Integration Tests › Step 1: Basic LLM Client › should get basic response from LLM
+
+    expect(received).toContain(expected) // indexOf
+
+    Expected substring: "hello"
+    Received string:    "hi there! how can i assist you today?"
+
+      59 |       expect(typeof response).toBe('string');
+      60 |       expect(response.length).toBeGreaterThan(0);
+    > 61 |       expect(response.toLowerCase()).toContain('hello');
+         |                                      ^
+      62 |       
+      63 |       console.log('LLM Response to "hi":', response);
+      64 |     }, 30000);
+
+      at Object.<anonymous> (__tests__/integration/LLMClient.real.test.js:61:38)
+
+PASS __tests__/unit/tracking/ProgressManager.test.js
+  ProgressManager
+    Constructor
+      ✓ should create ProgressManager with default configuration (1 ms)
+      ✓ should accept custom configuration (1 ms)
+    Progress Tracking
+      ✓ should track phase progress (1 ms)
+      ✓ should track overall project progress (1 ms)
+      ✓ should track task completion within phases
+      ✓ should get progress for all phases (1 ms)
+    Phase Management
+      ✓ should register new phases (1 ms)
+      ✓ should get current active phase
+      ✓ should mark phase as complete (1 ms)
+      ✓ should get next phase (1 ms)
+    Task Management
+      ✓ should track individual task progress
+      ✓ should list tasks for a phase (1 ms)
+      ✓ should mark task as complete
+      ✓ should get incomplete tasks
+    Session Management
+      ✓ should start new session (1 ms)
+      ✓ should end current session (1 ms)
+      ✓ should resume previous session (2 ms)
+      ✓ should get session history (11 ms)
+    Progress Analytics
+      ✓ should calculate completion statistics
+      ✓ should calculate estimated time remaining (102 ms)
+      ✓ should track velocity metrics (12 ms)
+    Milestone Tracking
+      ✓ should create milestones (1 ms)
+      ✓ should check milestone completion (1 ms)
+      ✓ should get upcoming milestones (1 ms)
+    Data Persistence
+      ✓ should save progress to file (3 ms)
+      ✓ should load progress from file (2 ms)
+      ✓ should handle auto-save (154 ms)
+    Progress Validation
+      ✓ should validate progress values (5 ms)
+      ✓ should validate phase names (2 ms)
+      ✓ should validate task names (2 ms)
+    Progress Events
+      ✓ should emit events on progress changes (2 ms)
+      ✓ should emit milestone events (1 ms)
+    Progress Rollback
+      ✓ should create progress checkpoints (10 ms)
+      ✓ should rollback to checkpoint (1 ms)
+    Error Handling
+      ✓ should handle invalid phase names gracefully (1 ms)
+      ✓ should handle save errors gracefully (2 ms)
+      ✓ should handle concurrent updates
+
+PASS __tests__/unit/tracking/TaskTracker.test.js
+  TaskTracker
+    Constructor
+      ✓ should create TaskTracker with default configuration (1 ms)
+      ✓ should accept custom configuration (1 ms)
+    Task Creation
+      ✓ should create a new task with default values (1 ms)
+      ✓ should create task with custom properties
+      ✓ should generate unique task IDs
+      ✓ should validate required task properties (1 ms)
+      ✓ should create subtasks
+    Task Management
+      ✓ should update task status (1 ms)
+      ✓ should update task progress
+      ✓ should update task properties
+      ✓ should add task notes
+      ✓ should delete task
+    Task Querying
+      ✓ should get all tasks
+      ✓ should filter tasks by status (1 ms)
+      ✓ should filter tasks by category
+      ✓ should filter tasks by priority
+      ✓ should get pending tasks (1 ms)
+      ✓ should get active tasks
+      ✓ should get completed tasks (1 ms)
+    Task Dependencies
+      ✓ should add task dependency
+      ✓ should remove task dependency
+      ✓ should get tasks that can be started (1 ms)
+      ✓ should detect circular dependencies
+      ✓ should update ready tasks when dependency completes (1 ms)
+    Task Statistics
+      ✓ should get task statistics
+      ✓ should get category statistics (1 ms)
+      ✓ should get time tracking statistics (102 ms)
+    Task Workflow
+      ✓ should start a task (1 ms)
+      ✓ should pause a task (1 ms)
+      ✓ should resume a paused task (1 ms)
+      ✓ should complete a task
+      ✓ should fail a task (1 ms)
+    Persistence
+      ✓ should save tasks to file when autoSave is enabled (2 ms)
+      ✓ should load tasks from file (9 ms)
+      ✓ should handle save/load errors gracefully (2 ms)
+    Task Search and Filtering
+      ✓ should search tasks by title (1 ms)
+      ✓ should search tasks by description
+      ✓ should filter tasks by multiple criteria
+      ✓ should support fuzzy search (2 ms)
+    Error Handling
+      ✓ should handle invalid task ID gracefully (1 ms)
+      ✓ should handle duplicate task titles with warning
+      ✓ should validate task updates (1 ms)
+      ✓ should handle concurrent task updates (1 ms)
+
+PASS __tests__/unit/tracking/ResumptionManager.test.js
+  ResumptionManager
+    Constructor
+      ✓ should create ResumptionManager with default configuration (1 ms)
+      ✓ should accept custom configuration
+    State Snapshots
+      ✓ should create state snapshot (1 ms)
+      ✓ should list all snapshots (22 ms)
+      ✓ should delete snapshot (1 ms)
+      ✓ should limit number of snapshots (34 ms)
+    Session Management
+      ✓ should create resumable session
+      ✓ should pause and resume session (1 ms)
+      ✓ should complete session (1 ms)
+      ✓ should get active sessions
+    State Restoration
+      ✓ should restore state from snapshot
+      ✓ should validate state integrity during restoration (1 ms)
+      ✓ should handle partial state restoration
+    Resumption Points
+      ✓ should create resumption point (1 ms)
+      ✓ should find resumption points by criteria (1 ms)
+      ✓ should get latest resumption point (23 ms)
+    Workflow Continuity
+      ✓ should detect interrupted workflows (1 ms)
+      ✓ should suggest resumption strategy
+      ✓ should validate resumption feasibility
+    Recovery Mechanisms
+      ✓ should perform automatic recovery (1 ms)
+      ✓ should handle recovery conflicts
+      ✓ should create recovery report (1 ms)
+    Data Persistence
+      ✓ should save resumption data to file (3 ms)
+      ✓ should load resumption data from file (1 ms)
+      ✓ should handle compression (1 ms)
+    Integration Points
+      ✓ should integrate with TaskTracker (1 ms)
+      ✓ should integrate with ProgressManager (1 ms)
+    Error Handling
+      ✓ should handle invalid snapshot data (1 ms)
+      ✓ should handle missing snapshots gracefully
+      ✓ should handle corrupted resumption data (1 ms)
+      ✓ should validate resumption compatibility (1 ms)
+
+  console.log
+    Reading file: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021256/test.txt
+
+      at FileOperationsTool.readFile (../../general-tools/src/file/FileModule.js:414:15)
+
+  console.log
+    Successfully read 13 characters from /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021256/test.txt
+
+      at FileOperationsTool.readFile (../../general-tools/src/file/FileModule.js:434:15)
+
+  console.log
+    Writing file: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021258/test.txt
+
+      at FileOperationsTool.writeFile (../../general-tools/src/file/FileModule.js:478:15)
+
+  console.log
+    Content length: 13 chars
+
+      at FileOperationsTool.writeFile (../../general-tools/src/file/FileModule.js:480:15)
+
+  console.log
+    Content type: string
+
+      at FileOperationsTool.writeFile (../../general-tools/src/file/FileModule.js:481:15)
+
+  console.log
+    Resolved path: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021258/test.txt
+
+      at FileOperationsTool.writeFile (../../general-tools/src/file/FileModule.js:490:15)
+
+  console.log
+    Calling fs.writeFile with path: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021258/test.txt, content: "Hello, World!"
+
+      at FileOperationsTool.writeFile (../../general-tools/src/file/FileModule.js:505:15)
+
+  console.log
+    fs.writeFile completed without error
+
+      at FileOperationsTool.writeFile (../../general-tools/src/file/FileModule.js:507:15)
+
+  console.log
+    File verified: 13 bytes
+
+      at FileOperationsTool.writeFile (../../general-tools/src/file/FileModule.js:512:17)
+
+  console.log
+    Successfully wrote 13 characters to /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021258/test.txt
+
+      at FileOperationsTool.writeFile (../../general-tools/src/file/FileModule.js:517:15)
+
+  console.log
+    Creating directory: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021262/new-directory
+
+      at FileOperationsTool.createDirectory (../../general-tools/src/file/FileModule.js:565:15)
+
+  console.log
+    Successfully created directory: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021262/new-directory
+
+      at FileOperationsTool.createDirectory (../../general-tools/src/file/FileModule.js:580:15)
+
+  console.log
+    Listing directory: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021264
+
+      at FileOperationsTool.listDirectory (../../general-tools/src/file/FileModule.js:643:15)
+
+  console.log
+    Successfully listed 3 items in /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021264
+
+      at FileOperationsTool.listDirectory (../../general-tools/src/file/FileModule.js:684:15)
+
+  console.log
+    Current directory: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent
+
+      at FileOperationsTool.getCurrentDirectory (../../general-tools/src/file/FileModule.js:622:15)
+
+  console.log
+    Changing directory to: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021267/subdir
+
+      at FileOperationsTool.changeDirectory (../../general-tools/src/file/FileModule.js:721:15)
+
+  console.log
+    Successfully changed directory from /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent to /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021267/subdir
+
+      at FileOperationsTool.changeDirectory (../../general-tools/src/file/FileModule.js:743:15)
+
+  console.log
+    Reading file: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021269/nonexistent.txt
+
+      at FileOperationsTool.readFile (../../general-tools/src/file/FileModule.js:414:15)
+
+  console.log
+    Reading file: /root/restricted
+
+      at FileOperationsTool.readFile (../../general-tools/src/file/FileModule.js:414:15)
+
+  console.log
+    Listing directory: /path/that/definitely/does/not/exist
+
+      at FileOperationsTool.listDirectory (../../general-tools/src/file/FileModule.js:643:15)
+
+  console.log
+    Writing file: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021274/test.txt
+
+      at FileOperationsTool.writeFile (../../general-tools/src/file/FileModule.js:478:15)
+
+  console.log
+    Content length: 12 chars
+
+      at FileOperationsTool.writeFile (../../general-tools/src/file/FileModule.js:480:15)
+
+  console.log
+    Content type: string
+
+      at FileOperationsTool.writeFile (../../general-tools/src/file/FileModule.js:481:15)
+
+  console.log
+    Resolved path: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021274/test.txt
+
+      at FileOperationsTool.writeFile (../../general-tools/src/file/FileModule.js:490:15)
+
+  console.log
+    Calling fs.writeFile with path: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021274/test.txt, content: "test content"
+
+      at FileOperationsTool.writeFile (../../general-tools/src/file/FileModule.js:505:15)
+
+  console.log
+    fs.writeFile completed without error
+
+      at FileOperationsTool.writeFile (../../general-tools/src/file/FileModule.js:507:15)
+
+  console.log
+    File verified: 12 bytes
+
+      at FileOperationsTool.writeFile (../../general-tools/src/file/FileModule.js:512:17)
+
+  console.log
+    Successfully wrote 12 characters to /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021274/test.txt
+
+      at FileOperationsTool.writeFile (../../general-tools/src/file/FileModule.js:517:15)
+
+  console.log
+    Reading file: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021276/test.txt
+
+      at FileOperationsTool.readFile (../../general-tools/src/file/FileModule.js:414:15)
+
+  console.log
+    Reading file: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021276/test.txt
+
+      at FileOperationsTool.readFile (../../general-tools/src/file/FileModule.js:414:15)
+
+  console.log
+    Successfully read 7 characters from /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021276/test.txt
+
+      at FileOperationsTool.readFile (../../general-tools/src/file/FileModule.js:434:15)
+
+  console.log
+    Listing directory: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021279/new-dir
+
+      at FileOperationsTool.listDirectory (../../general-tools/src/file/FileModule.js:643:15)
+
+  console.log
+    Listing directory: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021279/new-dir
+
+      at FileOperationsTool.listDirectory (../../general-tools/src/file/FileModule.js:643:15)
+
+  console.log
+    Successfully listed 0 items in /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp/test-1752579021279/new-dir
+
+      at FileOperationsTool.listDirectory (../../general-tools/src/file/FileModule.js:684:15)
+
+PASS __tests__/integration/FileOperationsManager.test.js
+  FileOperationsManager
+    Constructor
+      ✓ should create FileOperationsManager instance (6 ms)
+    Initialization
+      ✓ should initialize with file module (3 ms)
+      ✓ should throw error if initialization fails (1 ms)
+    File Operations
+      ✓ should read file content (2 ms)
+      ✓ should write file content (4 ms)
+      ✓ should create directory (1 ms)
+      ✓ should list directory contents (2 ms)
+      ✓ should get current directory (1 ms)
+      ✓ should change directory (2 ms)
+    Error Handling
+      ✓ should handle file not found error (1 ms)
+      ✓ should handle permission denied error gracefully (1 ms)
+      ✓ should handle invalid directory path (1 ms)
+    Integration with jsEnvoy Tools
+      ✓ should use FileModule from @jsenvoy/general-tools
+      ✓ should handle ToolResult format correctly (3 ms)
+    Utility Methods
+      ✓ should check if file exists (2 ms)
+      ✓ should check if directory exists (7 ms)
+      ✓ should resolve absolute paths (1 ms)
+
+FAIL __tests__/integration/event-system.test.js (20.044 s)
+  CodeAgent Event System
+    ✕ should emit events during initialization (9999 ms)
+    ✕ should emit file-created events (10000 ms)
+    ✓ should have unique agent IDs for multiple instances (1 ms)
+    ✓ console output can be enabled/disabled (2 ms)
+
+  ● CodeAgent Event System › should emit events during initialization
+
+    thrown: "Exceeded timeout of 10000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      45 |   });
+      46 |   
+    > 47 |   test('should emit events during initialization', async () => {
+         |   ^
+      48 |     await agent.initialize(testDir);
+      49 |     
+      50 |     // Check that initialization events were emitted
+
+      at __tests__/integration/event-system.test.js:47:3
+      at __tests__/integration/event-system.test.js:15:1
+
+  ● CodeAgent Event System › should emit file-created events
+
+    thrown: "Exceeded timeout of 10000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      64 |   });
+      65 |   
+    > 66 |   test('should emit file-created events', async () => {
+         |   ^
+      67 |     await agent.initialize(testDir);
+      68 |     
+      69 |     // Write a file directly using the fileOps
+
+      at __tests__/integration/event-system.test.js:66:3
+      at __tests__/integration/event-system.test.js:15:1
+
+PASS __tests__/config/StateManager.test.js
+  StateManager
+    Constructor
+      ✓ should create StateManager with default configuration (2 ms)
+    Initialization
+      ✓ should initialize state manager (1 ms)
+    State Persistence
+      ✓ should save and load state (6 ms)
+      ✓ should handle non-existent state (1 ms)
+      ✓ should save current working state (2 ms)
+    State Management
+      ✓ should track task progress (1 ms)
+      ✓ should complete tasks (1 ms)
+      ✓ should handle task failures (1 ms)
+    File Tracking
+      ✓ should track generated files (3 ms)
+      ✓ should track test files
+      ✓ should remove files from tracking (1 ms)
+    Session Management
+      ✓ should create and manage sessions (1 ms)
+      ✓ should list active sessions (1 ms)
+      ✓ should end sessions (1 ms)
+    Quality Gate Tracking
+      ✓ should track quality check results (1 ms)
+      ✓ should track quality gate status (1 ms)
+    Recovery and Resumption
+      ✓ should support recovery checkpoints (2 ms)
+      ✓ should restore from checkpoint (1 ms)
+    State Validation
+      ✓ should validate state structure
+      ✓ should clean invalid state (2 ms)
+    State Export and Import
+      ✓ should export complete state (1 ms)
+      ✓ should import state (1 ms)
+
+PASS src/planning/llm/__tests__/configurations.test.js
+  Planning Configurations
+    RequirementAnalyzerConfig
+      ✓ should have required top-level properties (2 ms)
+      ✓ should have valid allowable actions (4 ms)
+      ✓ should have valid constraints (1 ms)
+      ✓ should have valid examples
+      ✓ should have valid mock responses
+      ✓ should have valid parameter schemas in actions (3 ms)
+    DirectoryPlannerConfig
+      ✓ should have required top-level properties
+      ✓ should have valid allowable actions (3 ms)
+      ✓ should have valid constraints
+      ✓ should have valid examples (1 ms)
+      ✓ should have valid mock responses (1 ms)
+      ✓ should have valid parameter schemas in actions (2 ms)
+    DependencyPlannerConfig
+      ✓ should have required top-level properties (1 ms)
+      ✓ should have valid allowable actions (2 ms)
+      ✓ should have valid constraints (1 ms)
+      ✓ should have valid examples
+      ✓ should have valid mock responses (1 ms)
+      ✓ should have valid parameter schemas in actions (3 ms)
+    FrontendArchitecturePlannerConfig
+      ✓ should have required top-level properties (1 ms)
+      ✓ should have valid allowable actions (2 ms)
+      ✓ should have valid constraints
+      ✓ should have valid examples
+      ✓ should have valid mock responses (1 ms)
+      ✓ should have valid parameter schemas in actions (3 ms)
+    BackendArchitecturePlannerConfig
+      ✓ should have required top-level properties
+      ✓ should have valid allowable actions (2 ms)
+      ✓ should have valid constraints (1 ms)
+      ✓ should have valid examples
+      ✓ should have valid mock responses (1 ms)
+      ✓ should have valid parameter schemas in actions (2 ms)
+    APIInterfacePlannerConfig
+      ✓ should have required top-level properties (1 ms)
+      ✓ should have valid allowable actions (2 ms)
+      ✓ should have valid constraints (1 ms)
+      ✓ should have valid examples
+      ✓ should have valid mock responses
+      ✓ should have valid parameter schemas in actions (4 ms)
+    Configuration Consistency
+      ✓ should have consistent naming conventions (3 ms)
+      ✓ should have consistent metadata structure (1 ms)
+      ✓ should have valid action parameter types (8 ms)
+      ✓ should have unique action types across all configurations
+    Domain-Specific Validation
+      ✓ RequirementAnalyzerConfig should have project type actions (1 ms)
+      ✓ DirectoryPlannerConfig should have directory management actions
+      ✓ DependencyPlannerConfig should have dependency analysis actions
+      ✓ FrontendArchitecturePlannerConfig should have component actions
+      ✓ BackendArchitecturePlannerConfig should have service actions (1 ms)
+      ✓ APIInterfacePlannerConfig should have interface actions
+    Mock Response Validation
+      ✓ should have appropriate mock scenarios for each config
+      ✓ should have valid structure in mock responses (1 ms)
+
+  console.log
+    Initializing CodeAgent in: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp-test-1752579041521
+
+      at CodeAgent.<anonymous> (src/agent/CodeAgent.js:51:38)
+
+FAIL __tests__/integration/complete-server-generation.test.js (10.042 s)
+  Complete Server Generation
+    ✕ should generate a complete Node.js Express server that adds two numbers (10002 ms)
+
+  ● Complete Server Generation › should generate a complete Node.js Express server that adds two numbers
+
+    thrown: "Exceeded timeout of 10000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      44 |   });
+      45 |
+    > 46 |   test('should generate a complete Node.js Express server that adds two numbers', async () => {
+         |   ^
+      47 |     // Initialize the agent
+      48 |     await agent.initialize(testDir, {
+      49 |       llmConfig: {
+
+      at __tests__/integration/complete-server-generation.test.js:46:3
+      at __tests__/integration/complete-server-generation.test.js:16:1
+
+PASS __tests__/config/JestConfigManager.test.js
+  JestConfigManager
+    Constructor
+      ✓ should create JestConfigManager with default configuration (1 ms)
+      ✓ should create with custom base configuration (1 ms)
+    Initialization
+      ✓ should initialize with default configuration (1 ms)
+      ✓ should initialize with custom project type (1 ms)
+      ✓ should handle reinitialization gracefully
+    Configuration Building
+      ✓ should build frontend configuration (1 ms)
+      ✓ should build backend configuration
+      ✓ should build fullstack configuration
+      ✓ should include proper test patterns (1 ms)
+      ✓ should configure coverage settings
+    Test Environment Management
+      ✓ should set test environment (1 ms)
+      ✓ should configure setup files (1 ms)
+      ✓ should configure setup files after env (1 ms)
+      ✓ should handle custom test environments (1 ms)
+    Module and Transform Configuration
+      ✓ should configure module name mapping (1 ms)
+      ✓ should configure transforms (2 ms)
+      ✓ should handle ES modules configuration (1 ms)
+      ✓ should configure module file extensions (2 ms)
+    Coverage Configuration
+      ✓ should set coverage threshold
+      ✓ should configure coverage collection patterns (1 ms)
+      ✓ should set coverage reporters (1 ms)
+      ✓ should configure coverage directory (1 ms)
+      ✓ should add coverage path ignore patterns
+    Test Execution Configuration
+      ✓ should set test timeout (1 ms)
+      ✓ should configure test patterns (1 ms)
+      ✓ should set test ignore patterns
+      ✓ should configure watch mode settings
+      ✓ should enable verbose output (1 ms)
+    Mock Configuration
+      ✓ should clear mocks between tests (1 ms)
+      ✓ should restore mocks after tests
+      ✓ should configure automatic mocking (1 ms)
+      ✓ should set mock directories (1 ms)
+    Multi-Project Configuration
+      ✓ should create multi-project configuration (1 ms)
+      ✓ should add project to multi-project setup
+    Performance and Optimization
+      ✓ should configure parallel execution (1 ms)
+      ✓ should set cache directory (1 ms)
+      ✓ should configure error handling
+      ✓ should detect open handles (1 ms)
+      ✓ should force exit after tests (1 ms)
+    Validation and Analysis
+      ✓ should validate configuration structure
+      ✓ should detect invalid configuration (1 ms)
+      ✓ should get validation errors (1 ms)
+      ✓ should analyze configuration performance impact (1 ms)
+    Export and Import
+      ✓ should export configuration as JSON (1 ms)
+      ✓ should export as Jest config file
+      ✓ should import configuration from JSON (1 ms)
+      ✓ should handle import errors gracefully (7 ms)
+    Dynamic Updates
+      ✓ should update configuration at runtime
+      ✓ should merge configuration updates
+      ✓ should reset to default configuration (1 ms)
+
+  console.log
+    Initializing CodeAgent in: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp-test-1752579051647
+
+      at CodeAgent.<anonymous> (src/agent/CodeAgent.js:51:38)
+
+  console.log
+    Initializing CodeAgent in: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp-test-1752579061650
+
+      at CodeAgent.<anonymous> (src/agent/CodeAgent.js:51:38)
+
+  console.log
+    Initializing CodeAgent in: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp-test-1752579071651
+
+      at CodeAgent.<anonymous> (src/agent/CodeAgent.js:51:38)
+
+  console.log
+    Initializing CodeAgent in: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp-test-1752579081651
+
+      at CodeAgent.<anonymous> (src/agent/CodeAgent.js:51:38)
+
+  console.log
+    Initializing CodeAgent in: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/integration/temp-test-1752579091652
+
+      at CodeAgent.<anonymous> (src/agent/CodeAgent.js:51:38)
+
+FAIL __tests__/integration/CodeAgent.step-by-step.test.js (50.047 s)
+  CodeAgent Step-by-Step Integration Tests
+    Step 1: Basic File Operations
+      ✕ should initialize and create directories (10003 ms)
+      ✕ should write a simple file (10000 ms)
+    Step 2: Backend Code Generation
+      ✕ should generate Express server setup code (10001 ms)
+      ✕ should generate API endpoint for adding numbers (10001 ms)
+    Step 3: Complete Workflow
+      ✕ should generate complete Node.js server (10001 ms)
+
+  ● CodeAgent Step-by-Step Integration Tests › Step 1: Basic File Operations › should initialize and create directories
+
+    thrown: "Exceeded timeout of 10000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      45 |
+      46 |   describe('Step 1: Basic File Operations', () => {
+    > 47 |     test('should initialize and create directories', async () => {
+         |     ^
+      48 |       await agent.initialize(testDir, {
+      49 |         llmConfig: {
+      50 |           provider: 'anthropic',
+
+      at __tests__/integration/CodeAgent.step-by-step.test.js:47:5
+      at __tests__/integration/CodeAgent.step-by-step.test.js:46:3
+      at __tests__/integration/CodeAgent.step-by-step.test.js:16:1
+
+  ● CodeAgent Step-by-Step Integration Tests › Step 1: Basic File Operations › should write a simple file
+
+    thrown: "Exceeded timeout of 10000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      65 |     });
+      66 |
+    > 67 |     test('should write a simple file', async () => {
+         |     ^
+      68 |       await agent.initialize(testDir, {
+      69 |         llmConfig: {
+      70 |           provider: 'anthropic',
+
+      at __tests__/integration/CodeAgent.step-by-step.test.js:67:5
+      at __tests__/integration/CodeAgent.step-by-step.test.js:46:3
+      at __tests__/integration/CodeAgent.step-by-step.test.js:16:1
+
+  ● CodeAgent Step-by-Step Integration Tests › Step 2: Backend Code Generation › should generate Express server setup code
+
+    thrown: "Exceeded timeout of 10000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      86 |
+      87 |   describe('Step 2: Backend Code Generation', () => {
+    > 88 |     test('should generate Express server setup code', async () => {
+         |     ^
+      89 |       await agent.initialize(testDir, {
+      90 |         llmConfig: {
+      91 |           provider: 'anthropic',
+
+      at __tests__/integration/CodeAgent.step-by-step.test.js:88:5
+      at __tests__/integration/CodeAgent.step-by-step.test.js:87:3
+      at __tests__/integration/CodeAgent.step-by-step.test.js:16:1
+
+  ● CodeAgent Step-by-Step Integration Tests › Step 2: Backend Code Generation › should generate API endpoint for adding numbers
+
+    thrown: "Exceeded timeout of 10000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      144 |     });
+      145 |
+    > 146 |     test('should generate API endpoint for adding numbers', async () => {
+          |     ^
+      147 |       await agent.initialize(testDir, {
+      148 |         llmConfig: {
+      149 |           provider: 'anthropic',
+
+      at __tests__/integration/CodeAgent.step-by-step.test.js:146:5
+      at __tests__/integration/CodeAgent.step-by-step.test.js:87:3
+      at __tests__/integration/CodeAgent.step-by-step.test.js:16:1
+
+  ● CodeAgent Step-by-Step Integration Tests › Step 3: Complete Workflow › should generate complete Node.js server
+
+    thrown: "Exceeded timeout of 10000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      184 |
+      185 |   describe('Step 3: Complete Workflow', () => {
+    > 186 |     test('should generate complete Node.js server', async () => {
+          |     ^
+      187 |       await agent.initialize(testDir, {
+      188 |         llmConfig: {
+      189 |           provider: 'anthropic',
+
+      at __tests__/integration/CodeAgent.step-by-step.test.js:186:5
+      at __tests__/integration/CodeAgent.step-by-step.test.js:185:3
+      at __tests__/integration/CodeAgent.step-by-step.test.js:16:1
+
+PASS src/planning/llm/__tests__/UnifiedPlanner.test.js
+  UnifiedPlanner
+    Constructor
+      ✓ should create UnifiedPlanner with default config (2 ms)
+      ✓ should create UnifiedPlanner with custom config (1 ms)
+    initialize
+      ✓ should initialize successfully (1 ms)
+      ✓ should throw error if LLM client not available
+      ✓ should throw error if ResourceManager initialization fails (1 ms)
+    analyzeRequirements
+      ✓ should analyze requirements successfully (1 ms)
+      ✓ should throw error if not initialized
+    planDirectoryStructure
+      ✓ should plan directory structure successfully (1 ms)
+    planDependencies
+      ✓ should plan dependencies successfully (2 ms)
+    planFrontendArchitecture
+      ✓ should plan frontend architecture successfully
+    planBackendArchitecture
+      ✓ should plan backend architecture successfully (1 ms)
+    planAPIInterface
+      ✓ should plan API interface successfully
+    Error Handling and Edge Cases
+      ✓ should handle unknown planning type
+      ✓ should handle GenericPlanner errors (1 ms)
+      ✓ should handle empty plan response
+      ✓ should handle malformed plan response (1 ms)
+      ✓ should handle null input gracefully
+      ✓ should handle undefined input gracefully (1 ms)
+      ✓ should handle network timeouts
+      ✓ should handle LLM rate limiting errors
+      ✓ should handle very large input (1 ms)
+      ✓ should handle special characters in input
+      ✓ should handle concurrent planning requests (1 ms)
+    Utility Methods
+      ✓ should get status correctly
+      ✓ should get available planning types
+      ✓ should check if planning type is supported
+    Plan Transformation
+      ✓ should extract actions from hierarchical plan (2 ms)
+      ✓ should handle plan with no actions
+      ✓ should handle deeply nested plan structure
+      ✓ should handle plan with missing properties (1 ms)
+      ✓ should generate appropriate objectives for different planning types
+      ✓ should generate objectives with missing input properties (1 ms)
+      ✓ should build appropriate context for different planning types
+      ✓ should build context for all planning types (1 ms)
+      ✓ should transform requirement analysis with various action combinations
+      ✓ should transform directory structure with edge cases (1 ms)
+      ✓ should transform complex backend architecture
+
+  console.log
+    Creating directory: /test/dir
+
+      at FileOperationsTool.createDirectory (../../general-tools/src/file/FileModule.js:565:15)
+
+  console.log
+    Reading file: /test/dir/.code-agent-state.json
+
+      at FileOperationsTool.readFile (../../general-tools/src/file/FileModule.js:414:15)
+
+PASS __tests__/unit/agent/CodeAgent.events.test.js
+  CodeAgent Event System
+    Constructor and EventEmitter
+      ✓ should extend EventEmitter (2 ms)
+      ✓ should have unique agent ID
+      ✓ should create unique IDs for multiple instances (1 ms)
+      ✓ should add console listeners when enableConsoleOutput is true (1 ms)
+      ✓ should not add console listeners when enableConsoleOutput is false (1 ms)
+      ✓ should add console listeners by default (1 ms)
+    Console output formatting
+      ✓ should format console output correctly (2 ms)
+    Event emission during lifecycle
+      ✓ should emit info event on initialization (12 ms)
+      ✓ should emit error event on initialization failure (1 ms)
+      ✓ should emit phase events during develop (1 ms)
+      ✓ should emit warning when state cannot be loaded
+      ✓ should emit info when state is saved (1 ms)
+    Event data structure
+      ✓ progress events should have correct structure
+      ✓ file-created events should have correct structure
+      ✓ all events should include timestamp and agentId
+    Multiple instance isolation
+      ✓ events should not cross between instances (1 ms)
+
+  console.log
+    Initializing CodeAgent in: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/temp/test-1752579101825
+
+      at CodeAgent.<anonymous> (src/agent/CodeAgent.js:51:38)
+
+  console.log
+    Initializing CodeAgent in: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/temp/test-1752579111830
+
+      at CodeAgent.<anonymous> (src/agent/CodeAgent.js:51:38)
+
+  console.log
+    Initializing CodeAgent in: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/temp/test-1752579121836
+
+      at CodeAgent.<anonymous> (src/agent/CodeAgent.js:51:38)
+
+  console.log
+    Initializing CodeAgent in: /Users/maxximus/Documents/max/pocs/jsEnvoy/packages/code-gen/code-agent/__tests__/temp/test-1752579131837
+
+      at CodeAgent.<anonymous> (src/agent/CodeAgent.js:51:38)
+

@@ -128,6 +128,26 @@ async function loadTools(resourceManager, moduleFactory) {
     console.error('Make sure @jsenvoy/tools is properly installed');
   }
   
+  // Try to load CodeAgent JSON module
+  try {
+    const codeAgentModulePath = path.join(__dirname, '../../../code-gen/code-agent/module.json');
+    console.log(`Loading CodeAgent module from: ${codeAgentModulePath}`);
+    
+    const codeAgentModule = await moduleFactory.createJsonModule(codeAgentModulePath);
+    const codeAgentTools = await codeAgentModule.getTools();
+    
+    // Convert CodeAgent tools to agent format
+    for (const tool of codeAgentTools) {
+      tools.push(convertToolToAgentFormat(tool, 'codeagent'));
+    }
+    
+    console.log(`Loaded ${codeAgentTools.length} tools from CodeAgent module`);
+    
+  } catch (error) {
+    console.warn('Failed to load CodeAgent module:', error.message);
+    console.warn('Code generation tools will not be available');
+  }
+  
   console.log(`Total tools loaded: ${tools.length}`);
   return tools;
 }
@@ -175,7 +195,7 @@ async function initializeAgent() {
     // Create agent configuration
     const config = {
       name: 'jsEnvoy Assistant',
-      bio: 'A conversational AI assistant with access to various tools. I maintain context across messages and help with file operations, calculations, web tasks, and more. I respond naturally and wait for your next message.',
+      bio: 'A conversational AI assistant with access to various tools including code generation capabilities. I can help with file operations, calculations, web tasks, and most importantly, I can generate complete applications with frontend, backend, tests, and documentation. I can also fix code errors and improve existing code. I maintain context across messages and respond naturally.',
       tools,
       modelConfig: {
         provider: process.env.MODEL_PROVIDER || 'OPEN_AI',

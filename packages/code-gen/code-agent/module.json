@@ -1,0 +1,213 @@
+{
+  "name": "code-agent",
+  "version": "1.0.0",
+  "description": "AI-powered code generation agent for developing complete applications",
+  "package": "./src/CodeAgentWrapper.js",
+  "type": "constructor",
+  "dependencies": {},
+  "initialization": {
+    "type": "constructor",
+    "config": {}
+  },
+  "tools": [
+    {
+      "name": "develop_code",
+      "description": "Generate a complete application from requirements including frontend, backend, tests, and documentation",
+      "function": "develop",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workingDirectory": {
+            "type": "string",
+            "description": "Directory where the code should be generated"
+          },
+          "task": {
+            "type": "string",
+            "description": "High-level description of what to build"
+          },
+          "requirements": {
+            "type": "object",
+            "description": "Detailed requirements for the application",
+            "properties": {
+              "frontend": {
+                "type": "string",
+                "description": "Frontend requirements (UI, interactions, etc.)"
+              },
+              "backend": {
+                "type": "string",
+                "description": "Backend requirements (API, data handling, etc.)"
+              },
+              "features": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "List of specific features to implement"
+              }
+            }
+          },
+          "projectType": {
+            "type": "string",
+            "enum": ["frontend", "backend", "fullstack"],
+            "default": "fullstack",
+            "description": "Type of project to generate"
+          },
+          "config": {
+            "type": "object",
+            "description": "Additional CodeAgent configuration",
+            "properties": {
+              "eslintRules": {
+                "type": "object",
+                "description": "Custom ESLint rules"
+              },
+              "testCoverage": {
+                "type": "object",
+                "properties": {
+                  "threshold": {
+                    "type": "number",
+                    "default": 80
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": ["workingDirectory", "task"]
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "projectType": {
+              "type": "string",
+              "description": "Type of project generated"
+            },
+            "filesGenerated": {
+              "type": "number",
+              "description": "Number of files created"
+            },
+            "testsCreated": {
+              "type": "number",
+              "description": "Number of test files created"
+            },
+            "qualityGatesPassed": {
+              "type": "boolean",
+              "description": "Whether all quality checks passed"
+            },
+            "duration": {
+              "type": "number",
+              "description": "Time taken in milliseconds"
+            },
+            "workingDirectory": {
+              "type": "string",
+              "description": "Directory where code was generated"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "string",
+              "description": "Phase where the error occurred"
+            },
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            },
+            "details": {
+              "type": "object",
+              "description": "Additional error details"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "fix_code",
+      "description": "Fix specific errors or apply required changes to existing code",
+      "function": "fix",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workingDirectory": {
+            "type": "string",
+            "description": "Directory containing the code to fix"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of errors or issues to fix"
+          },
+          "requirements": {
+            "type": "object",
+            "description": "Additional requirements for the fixes",
+            "properties": {
+              "description": {
+                "type": "string",
+                "description": "Description of what needs to be fixed"
+              },
+              "files": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Specific files to focus on"
+              }
+            }
+          }
+        },
+        "required": ["workingDirectory", "errors"]
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "issuesFixed": {
+              "type": "number",
+              "description": "Number of issues resolved"
+            },
+            "qualityGatesPassed": {
+              "type": "boolean",
+              "description": "Whether all quality checks passed after fixes"
+            },
+            "duration": {
+              "type": "number",
+              "description": "Time taken in milliseconds"
+            },
+            "filesModified": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "List of files that were modified"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "phase": {
+              "type": "string",
+              "description": "Phase where the error occurred"
+            },
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            },
+            "details": {
+              "type": "object",
+              "description": "Additional error details"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # @jsenvoy/agent
 
-AI agent implementation with built-in retry logic, tool execution, and structured responses for jsEnvoy.
+AI agent implementation with built-in retry logic, tool execution, and structured responses for jsEnvoy. Now includes integrated code generation capabilities through CodeAgent.
 
 ## Installation
 
@@ -38,6 +38,13 @@ console.log(result);
 - Automatically selects appropriate tools based on the task
 - Chains multiple tools for complex operations
 - Handles tool failures gracefully
+
+### Code Generation Integration
+- **NEW**: Full-stack application development with CodeAgent
+- Generates complete web applications with frontend, backend, and tests
+- Fixes code errors and improves existing code
+- Supports multiple frameworks and technologies
+- Includes documentation and deployment configurations
 
 ### Robust Retry Logic
 - Built-in retry mechanism with exponential backoff
@@ -108,6 +115,25 @@ const result = await agent.execute("What is 15% of 200?");
 console.log(result.data); // 30
 ```
 
+### Code Generation with CodeAgent
+
+```javascript
+const agent = new Agent({
+  modelConfig: { /* ... */ },
+  tools: [/* tools loaded automatically including CodeAgent */]
+});
+
+// Generate a complete web application
+const result = await agent.run(
+  "Create a simple calculator web app with HTML, CSS, and JavaScript. Make it responsive and modern-looking."
+);
+
+// Fix existing code
+const fixResult = await agent.run(
+  "I have a JavaScript function that's not working. Fix this: function factorial(n) { if (n <= 1) return 1; return n * factorial(n - 1) }"
+);
+```
+
 ### Multi-Tool Task
 
 ```javascript
@@ -154,6 +180,48 @@ for await (const chunk of stream) {
   process.stdout.write(chunk);
 }
 ```
+
+## CLI Usage
+
+The agent package includes a CLI for interactive use:
+
+```bash
+# Interactive mode
+node src/cli.js
+
+# WebSocket server mode
+node src/cli.js --server
+
+# Custom port
+node src/cli.js --server --port 8080
+```
+
+### Example Script
+
+Run the included example script to see CodeAgent integration in action:
+
+```bash
+# Run predefined examples
+node examples/chat-with-codeagent.js
+
+# Interactive mode
+node examples/chat-with-codeagent.js interactive
+```
+
+## Real LLM Integration Testing
+
+To test with real LLM providers, set the environment variable:
+
+```bash
+export RUN_REAL_LLM_TESTS=true
+export OPENAI_API_KEY=your-key-here
+# or
+export ANTHROPIC_API_KEY=your-key-here
+
+npm test
+```
+
+The tests will verify that the LLM can intelligently recognize when to use code generation tools.
 
 ## Advanced Usage
 

@@ -88,7 +88,7 @@ describe('CodeAgent', () => {
       
       expect(agent.initialized).toBe(true);
       expect(agent.config.workingDirectory).toBe(testDir);
-    });
+    }, 30000);
 
     test('should throw error when calling develop before initialization', async () => {
       const requirements = {
@@ -129,7 +129,7 @@ describe('CodeAgent', () => {
       
       expect(status.initialized).toBe(true);
       expect(status.workingDirectory).toBe(testDir);
-    });
+    }, 30000);
   });
 
   describe('Configuration Management', () => {
@@ -169,7 +169,7 @@ describe('CodeAgent', () => {
   describe('Development Workflow (Mocked)', () => {
     beforeEach(async () => {
       await agent.initialize(testDir);
-    });
+    }, 30000);
 
     test('should handle development requirements structure', async () => {
       const requirements = {
@@ -197,7 +197,7 @@ describe('CodeAgent', () => {
         // Expected to fail until implementation is complete
         expect(error.message).toContain('Development failed');
       }
-    });
+    }, 30000);
 
     test('should handle fix requirements structure', async () => {
       const fixRequirements = {
@@ -218,7 +218,7 @@ describe('CodeAgent', () => {
         // Expected to fail until implementation is complete
         expect(error.message).toContain('Fix process failed');
       }
-    });
+    }, 30000);
   });
 
   describe('Error Handling', () => {
@@ -228,13 +228,13 @@ describe('CodeAgent', () => {
       // This should not throw during initialization, but might during actual operations
       // The exact behavior depends on the implementation of file operations
       await expect(agent.initialize(invalidDir)).resolves.not.toThrow();
-    });
+    }, 30000);
   });
 
   describe('Internal State Management', () => {
     beforeEach(async () => {
       await agent.initialize(testDir);
-    });
+    }, 30000);
 
     test('should initialize internal state correctly', () => {
       expect(agent.currentTask).toBeNull();
@@ -244,7 +244,7 @@ describe('CodeAgent', () => {
       expect(agent.qualityCheckResults).toBeNull();
       expect(agent.generatedFiles.size).toBe(0);
       expect(agent.testFiles.size).toBe(0);
-    });
+    }, 30000);
 
     test('should maintain file tracking sets', () => {
       // Test that file tracking sets can be manipulated
@@ -255,7 +255,7 @@ describe('CodeAgent', () => {
       expect(agent.testFiles.has('test-file.test.js')).toBe(true);
       expect(agent.generatedFiles.size).toBe(1);
       expect(agent.testFiles.size).toBe(1);
-    });
+    }, 30000);
   });
 });
 

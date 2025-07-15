@@ -35,6 +35,10 @@ export {
   FixingPhase
 } from './agent/index.js';
 
+// Export wrapper for JSON module system
+import CodeAgentWrapper from './CodeAgentWrapper.js';
+export { CodeAgentWrapper };
+
 // Default export
 import { CodeAgent } from './agent/index.js';
 export default CodeAgent;
