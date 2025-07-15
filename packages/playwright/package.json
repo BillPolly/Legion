@@ -1,0 +1,53 @@
+{
+  "name": "@jsenvoy/playwright",
+  "version": "1.0.0",
+  "description": "Browser automation and web testing using Playwright for jsEnvoy",
+  "type": "module",
+  "main": "./src/PlaywrightWrapper.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+  },
+  "keywords": [
+    "jsenvoy",
+    "playwright",
+    "browser",
+    "automation",
+    "testing",
+    "web",
+    "scraping"
+  ],
+  "author": "jsEnvoy Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "src",
+    "module.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "@jsenvoy/module-loader": "*",
+    "playwright": "^1.44.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/**/*.test.js"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.test.js",
+      "**/?(*.)+(spec|test).js"
+    ]
+  }
+}

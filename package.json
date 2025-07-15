@@ -16,6 +16,7 @@
     "test:llm": "npm run test --workspace=@jsenvoy/llm",
     "test:agent": "npm run test --workspace=@jsenvoy/agent",
     "test:resource-manager": "npm run test --workspace=@jsenvoy/resource-manager",
+    "test:playwright": "npm run test --workspace=@jsenvoy/playwright",
     "test:watch": "npm run test:watch --workspaces",
     "test:coverage": "npm run test:coverage --workspaces",
     "lint": "eslint packages/*/src/**/*.js",
