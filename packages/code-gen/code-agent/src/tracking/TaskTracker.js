@@ -63,7 +63,7 @@ class TaskTracker {
     // Check for duplicate titles (warning only)
     const existingTasks = Array.from(this.tasks.values());
     if (existingTasks.some(t => t.title === taskData.title)) {
-      console.warn(`Warning: Task with title '${taskData.title}' already exists`);
+      // Task with title already exists - could emit warning if codeAgent reference available
     }
 
     // Create task with defaults
@@ -634,7 +634,7 @@ class TaskTracker {
       this.lastSaveTime = Date.now();
       this.isDirtyFlag = false;
     } catch (error) {
-      console.warn('Failed to save tasks:', error.message);
+      // Failed to save tasks - could emit warning if codeAgent reference available
     }
   }
 

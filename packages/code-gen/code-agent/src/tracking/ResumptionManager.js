@@ -712,7 +712,7 @@ class ResumptionManager extends EventEmitter {
       this.lastSaveTime = Date.now();
       this.isDirtyFlag = false;
     } catch (error) {
-      console.warn('Failed to save resumption data:', error.message);
+      // Failed to save resumption data - could emit warning if codeAgent reference available
     }
   }
 

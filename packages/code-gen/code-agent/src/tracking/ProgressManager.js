@@ -713,7 +713,7 @@ class ProgressManager extends EventEmitter {
       this.lastSaveTime = Date.now();
       this.isDirtyFlag = false;
     } catch (error) {
-      console.warn('Failed to save progress:', error.message);
+      // Failed to save progress - could emit warning if codeAgent reference available
     }
   }
 
