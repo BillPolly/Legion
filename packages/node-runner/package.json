@@ -1,0 +1,42 @@
+{
+  "name": "@jsenvoy/node-runner",
+  "version": "1.0.0",
+  "description": "Node.js process execution and lifecycle management for jsEnvoy AI agents",
+  "type": "module",
+  "main": "src/NodeRunner.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+  },
+  "keywords": [
+    "jsenvoy",
+    "node",
+    "process",
+    "runner",
+    "server",
+    "ai",
+    "agents"
+  ],
+  "author": "jsEnvoy Team",
+  "license": "MIT",
+  "dependencies": {
+    "@jsenvoy/module-loader": "*",
+    "@jsenvoy/log-manager": "*",
+    "cross-spawn": "^7.0.3",
+    "detect-port": "^1.5.1",
+    "execa": "^8.0.1",
+    "tree-kill": "^1.2.2",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "transform": {}
+  }
+}

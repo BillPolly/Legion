@@ -1,0 +1,39 @@
+{
+  "name": "@jsenvoy/log-manager",
+  "version": "1.0.0",
+  "description": "Comprehensive log capture, aggregation, and analysis for jsEnvoy AI agents",
+  "type": "module",
+  "main": "src/LogManager.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+  },
+  "keywords": [
+    "jsenvoy",
+    "logs",
+    "logging",
+    "analysis",
+    "streaming",
+    "ai",
+    "agents"
+  ],
+  "author": "jsEnvoy Team",
+  "license": "MIT",
+  "dependencies": {
+    "@jsenvoy/module-loader": "*",
+    "tail": "^2.2.6",
+    "winston": "^3.11.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "transform": {}
+  }
+}

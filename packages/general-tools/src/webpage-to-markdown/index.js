@@ -59,6 +59,13 @@ class WebPageToMarkdown extends Tool {
       // Validate required parameters
       this.validateRequiredParameters(args, ['url']);
       
+      // Emit progress event
+      this.emitProgress(`Starting webpage conversion: ${args.url}`, {
+        url: args.url,
+        includeImages: args.includeImages !== false,
+        includeLinks: args.includeLinks !== false
+      });
+      
       // Convert the webpage
       const result = await this.convertToMarkdown(
         args.url,
@@ -68,9 +75,22 @@ class WebPageToMarkdown extends Tool {
         args.waitForSelector
       );
       
+      // Emit success event
+      this.emitInfo(`Successfully converted webpage to markdown`, {
+        url: args.url,
+        markdownLength: result.length,
+        truncated: result.truncated
+      });
+      
       // Return success response
       return ToolResult.success(result);
     } catch (error) {
+      // Emit error event
+      this.emitError(`Failed to convert webpage: ${error.message}`, {
+        url: args?.url || 'unknown',
+        error: error.message
+      });
+      
       // Return error response
       return ToolResult.failure(
         error.message || 'Failed to convert webpage to markdown',
@@ -89,7 +109,10 @@ class WebPageToMarkdown extends Tool {
     let browser = null;
     
     try {
-      console.log(`Converting webpage to markdown: ${url}`);
+      // Emit progress for browser launch
+      this.emitProgress('Launching browser', {
+        stage: 'browser_launch'
+      });
       
       // Launch browser
       browser = await puppeteer.launch({
@@ -102,6 +125,12 @@ class WebPageToMarkdown extends Tool {
       // Set user agent
       await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
       
+      // Emit progress for navigation
+      this.emitProgress(`Navigating to ${url}`, {
+        stage: 'navigation',
+        url: url
+      });
+      
       // Navigate to the page
       const response = await page.goto(url, { 
         waitUntil: 'domcontentloaded',
@@ -109,13 +138,26 @@ class WebPageToMarkdown extends Tool {
       });
       
       if (!response.ok()) {
+        this.emitWarning(`Page returned status ${response.status()}`, {
+          status: response.status(),
+          statusText: response.statusText()
+        });
         throw new Error(`Failed to load page: ${response.status()} ${response.statusText()}`);
       }
       
       // Wait for specific selector if provided
       if (waitForSelector) {
+        this.emitProgress(`Waiting for selector: ${waitForSelector}`, {
+          stage: 'wait_selector',
+          selector: waitForSelector
+        });
         await page.waitForSelector(waitForSelector, { timeout: 10000 });
       }
+      
+      // Emit progress for content extraction
+      this.emitProgress('Extracting and converting content', {
+        stage: 'content_extraction'
+      });
       
       // Extract content and convert to markdown
       const markdown = await page.evaluate((includeImgs, includeAnchors) => {
@@ -230,16 +272,24 @@ class WebPageToMarkdown extends Tool {
       let finalMarkdown = markdown;
       if (markdown.length > maxLength) {
         finalMarkdown = markdown.substring(0, maxLength) + '\n\n... (truncated)';
+        this.emitWarning(`Markdown truncated to ${maxLength} characters`, {
+          originalLength: markdown.length,
+          maxLength: maxLength
+        });
       }
       
-      console.log(`Successfully converted ${url} to markdown (${finalMarkdown.length} characters)`);
+      this.emitInfo(`Conversion complete`, {
+        url: url,
+        markdownLength: finalMarkdown.length,
+        truncated: markdown.length > maxLength
+      });
       
       return {
         success: true,
         url: url,
         markdown: finalMarkdown,
         length: finalMarkdown.length,
-        truncated: finalMarkdown.length > maxLength
+        truncated: markdown.length > maxLength
       };
       
     } catch (error) {

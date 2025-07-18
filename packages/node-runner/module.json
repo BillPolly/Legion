@@ -1,0 +1,592 @@
+{
+  "name": "node-runner",
+  "version": "1.0.0",
+  "description": "Node.js process execution and lifecycle management",
+  "package": "./src/NodeRunner.js",
+  "type": "constructor",
+  "dependencies": {},
+  "initialization": {
+    "type": "constructor",
+    "config": {
+      "autoCleanup": true,
+      "logBufferSize": 1000
+    }
+  },
+  "tools": [
+    {
+      "name": "start_node_process",
+      "description": "Start a Node.js process with full configuration options",
+      "function": "startNodeProcess",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "The command to execute (e.g., 'node server.js' or 'npm start')"
+          },
+          "cwd": {
+            "type": "string",
+            "description": "Working directory for the process"
+          },
+          "env": {
+            "type": "object",
+            "description": "Environment variables to set",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "id": {
+            "type": "string",
+            "description": "Custom process ID (auto-generated if not provided)"
+          }
+        },
+        "required": ["command"]
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Process ID for management"
+            },
+            "pid": {
+              "type": "number",
+              "description": "System process ID"
+            },
+            "status": {
+              "type": "string",
+              "description": "Process status"
+            },
+            "startTime": {
+              "type": "string",
+              "description": "When the process started"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "stop_process",
+      "description": "Stop a running process gracefully or forcefully",
+      "function": "stopProcess",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "processId": {
+            "type": "string",
+            "description": "The process ID to stop"
+          },
+          "force": {
+            "type": "boolean",
+            "description": "Force kill the process",
+            "default": false
+          },
+          "timeout": {
+            "type": "number",
+            "description": "Timeout for graceful shutdown in milliseconds",
+            "default": 5000
+          }
+        },
+        "required": ["processId"]
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Process ID"
+            },
+            "status": {
+              "type": "string",
+              "description": "Final status"
+            },
+            "message": {
+              "type": "string",
+              "description": "Status message"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "restart_process",
+      "description": "Restart a process with new configuration",
+      "function": "restartProcess",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "processId": {
+            "type": "string",
+            "description": "The process ID to restart"
+          },
+          "env": {
+            "type": "object",
+            "description": "New environment variables",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "cwd": {
+            "type": "string",
+            "description": "New working directory"
+          }
+        },
+        "required": ["processId"]
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Process ID"
+            },
+            "pid": {
+              "type": "number",
+              "description": "New system process ID"
+            },
+            "status": {
+              "type": "string",
+              "description": "Process status"
+            },
+            "startTime": {
+              "type": "string",
+              "description": "When the process restarted"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "list_processes",
+      "description": "List all managed processes and their status",
+      "function": "listProcesses",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "processes": {
+              "type": "array",
+              "description": "List of all processes",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Process ID"
+                  },
+                  "command": {
+                    "type": "string",
+                    "description": "Command that was executed"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "Current status"
+                  },
+                  "pid": {
+                    "type": "number",
+                    "description": "System process ID"
+                  },
+                  "uptime": {
+                    "type": "number",
+                    "description": "Uptime in milliseconds"
+                  }
+                }
+              }
+            },
+            "count": {
+              "type": "number",
+              "description": "Total number of processes"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "start_web_server",
+      "description": "Start a web server with port management and health checks",
+      "function": "startWebServer",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "Server command to execute"
+          },
+          "port": {
+            "type": "number",
+            "description": "Preferred port number",
+            "default": 3000
+          },
+          "host": {
+            "type": "string",
+            "description": "Host to bind to",
+            "default": "localhost"
+          },
+          "healthCheck": {
+            "type": "boolean",
+            "description": "Enable health checking",
+            "default": true
+          },
+          "healthCheckPath": {
+            "type": "string",
+            "description": "Path for health check endpoint",
+            "default": "/health"
+          },
+          "env": {
+            "type": "object",
+            "description": "Environment variables",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["command"]
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Server process ID"
+            },
+            "port": {
+              "type": "number",
+              "description": "Actual port being used"
+            },
+            "url": {
+              "type": "string",
+              "description": "Server URL"
+            },
+            "status": {
+              "type": "string",
+              "description": "Server status"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "start_dev_server",
+      "description": "Start a development server with hot reload support",
+      "function": "startDevServer",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "Development server command (e.g., 'npm run dev')"
+          },
+          "port": {
+            "type": "number",
+            "description": "Preferred port number",
+            "default": 3000
+          },
+          "framework": {
+            "type": "string",
+            "description": "Framework type (auto-detected if not specified)",
+            "enum": ["auto", "react", "vue", "angular", "next", "nuxt", "svelte", "vite"],
+            "default": "auto"
+          },
+          "env": {
+            "type": "object",
+            "description": "Environment variables",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["command"]
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Server process ID"
+            },
+            "port": {
+              "type": "number",
+              "description": "Development server port"
+            },
+            "url": {
+              "type": "string",
+              "description": "Development server URL"
+            },
+            "framework": {
+              "type": "string",
+              "description": "Detected or specified framework"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "check_server_health",
+      "description": "Check the health status of a running server",
+      "function": "checkServerHealth",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "serverId": {
+            "type": "string",
+            "description": "The server process ID to check"
+          }
+        },
+        "required": ["serverId"]
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Server ID"
+            },
+            "url": {
+              "type": "string",
+              "description": "Server URL"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["healthy", "unhealthy"],
+              "description": "Health status"
+            },
+            "statusCode": {
+              "type": "number",
+              "description": "HTTP status code from health check"
+            },
+            "responseTime": {
+              "type": "number",
+              "description": "Response time in milliseconds"
+            },
+            "lastCheck": {
+              "type": "string",
+              "description": "When the health check was performed"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "install_dependencies",
+      "description": "Install NPM packages and dependencies",
+      "function": "installDependencies",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "cwd": {
+            "type": "string",
+            "description": "Directory containing package.json"
+          },
+          "packageManager": {
+            "type": "string",
+            "description": "Package manager to use",
+            "enum": ["auto", "npm", "yarn", "pnpm", "bun"],
+            "default": "auto"
+          },
+          "production": {
+            "type": "boolean",
+            "description": "Install production dependencies only",
+            "default": false
+          },
+          "force": {
+            "type": "boolean",
+            "description": "Force installation",
+            "default": false
+          }
+        }
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "manager": {
+              "type": "string",
+              "description": "Package manager used"
+            },
+            "cwd": {
+              "type": "string",
+              "description": "Directory where installation occurred"
+            },
+            "duration": {
+              "type": "number",
+              "description": "Installation time in milliseconds"
+            },
+            "output": {
+              "type": "string",
+              "description": "Installation output"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "run_npm_script",
+      "description": "Execute a script defined in package.json",
+      "function": "runNpmScript",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "scriptName": {
+            "type": "string",
+            "description": "Name of the script to run"
+          },
+          "cwd": {
+            "type": "string",
+            "description": "Working directory"
+          },
+          "args": {
+            "type": "array",
+            "description": "Additional arguments to pass to the script",
+            "items": {
+              "type": "string"
+            }
+          },
+          "env": {
+            "type": "object",
+            "description": "Environment variables",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["scriptName"]
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "script": {
+              "type": "string",
+              "description": "Script name that was run"
+            },
+            "command": {
+              "type": "string",
+              "description": "Actual command from package.json"
+            },
+            "exitCode": {
+              "type": "number",
+              "description": "Exit code from script"
+            },
+            "output": {
+              "type": "string",
+              "description": "Script output"
+            },
+            "duration": {
+              "type": "number",
+              "description": "Execution time in milliseconds"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

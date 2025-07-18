@@ -41,6 +41,7 @@ Complete agent system:
 - 🔄 **Built-in Retry Logic**: Robust retry capabilities with exponential backoff
 - 📊 **StructuredResponse**: Consistent response format
 - 🚀 **CodeAgent Integration**: Full-stack code generation capabilities
+- 📡 **Event System**: Real-time event streaming and monitoring
 
 ### CodeAgent Integration
 The agent now includes powerful code generation capabilities:
@@ -202,6 +203,63 @@ The framework uses a modular architecture with dependency injection:
 5. **Agent** orchestrates tool execution with LLM integration
 
 See [Architecture Documentation](docs/ARCHITECTURE.md) for details.
+
+## Event System
+
+jsEnvoy includes a comprehensive event system for real-time monitoring and feedback:
+
+### Event Types
+- **progress** - Track operation progress with percentage and status
+- **info** - General information and status updates
+- **warning** - Non-critical issues and important notices
+- **error** - Critical errors that may affect execution
+
+### Event Flow
+1. **Tools emit events** during execution (progress, errors, warnings)
+2. **Modules relay events** from their tools with module context
+3. **Agents aggregate events** from all registered modules
+4. **WebSocket server broadcasts** events to connected clients
+
+### Example: Monitoring Agent Execution
+
+```javascript
+const { Agent } = require('@jsenvoy/agent');
+const { FileModule } = require('@jsenvoy/tools');
+
+const agent = new Agent({
+  name: 'DataProcessor',
+  modelConfig: { /* ... */ }
+});
+
+// Listen to all events
+agent.on('module-event', (event) => {
+  console.log(`[${event.type}] ${event.module}: ${event.message}`);
+});
+
+// Register modules
+agent.registerModule(new FileModule());
+
+// Execute with real-time monitoring
+await agent.execute("Process all CSV files and generate report");
+```
+
+### WebSocket Event Streaming
+
+```javascript
+import { AgentWebSocketServer } from '@jsenvoy/agent/src/websocket-server.js';
+
+// Start WebSocket server
+const wsServer = new AgentWebSocketServer(agent, { port: 3001 });
+await wsServer.start();
+
+// Client subscribes to events
+ws.send(JSON.stringify({
+  id: 'sub-1',
+  type: 'subscribe-events'
+}));
+```
+
+See package-specific READMEs for detailed event system documentation.
 
 ## Contributing
 

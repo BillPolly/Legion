@@ -181,6 +181,213 @@ for await (const chunk of stream) {
 }
 ```
 
+## Event System
+
+The Agent package includes comprehensive event support for real-time monitoring of agent operations, module activities, and tool execution.
+
+### Event Relay Architecture
+
+The Agent acts as an event aggregator, collecting and relaying events from all registered modules and their tools:
+
+```javascript
+const agent = new Agent({
+  name: 'MyAgent',
+  modelConfig: { /* ... */ }
+});
+
+// Listen to all module events
+agent.on('module-event', (event) => {
+  console.log(`[${event.type}] ${event.module}: ${event.message}`);
+});
+
+// Register modules - their events will be automatically relayed
+agent.registerModule(fileModule);
+agent.registerModule(calculatorModule);
+```
+
+### Event Enrichment
+
+Events from modules are automatically enriched with agent context:
+
+```javascript
+// Original module event
+{
+  type: 'progress',
+  module: 'FileModule',
+  message: 'Processing file',
+  data: { file: 'data.txt' }
+}
+
+// Enriched agent event
+{
+  type: 'progress',
+  module: 'FileModule',
+  message: 'Processing file',
+  data: { file: 'data.txt' },
+  agentId: 'agent-123',
+  agentName: 'MyAgent',
+  timestamp: '2024-01-01T12:00:00.000Z'
+}
+```
+
+### WebSocket Event Streaming
+
+The Agent package includes a WebSocket server for real-time event streaming to clients:
+
+```javascript
+import { AgentWebSocketServer } from '@jsenvoy/agent/src/websocket-server.js';
+
+// Create WebSocket server
+const wsServer = new AgentWebSocketServer(agent, { port: 3001 });
+await wsServer.start();
+
+// Events are automatically broadcast to subscribed clients
+```
+
+### Client Subscription
+
+Clients can subscribe to receive real-time events:
+
+```javascript
+// Client-side code
+const ws = new WebSocket('ws://localhost:3001');
+
+// Subscribe to events
+ws.send(JSON.stringify({
+  id: 'sub-1',
+  type: 'subscribe-events'
+}));
+
+// Receive events
+ws.on('message', (data) => {
+  const message = JSON.parse(data);
+  if (message.type === 'event') {
+    const event = message.event;
+    console.log(`[${event.type}] ${event.message}`);
+  }
+});
+```
+
+### Event Types and Examples
+
+#### Progress Events
+```javascript
+// Module emits progress
+module.emitProgress('Processing batch', { 
+  current: 50, 
+  total: 100,
+  percentage: 50
+});
+
+// Client receives enriched event
+{
+  type: 'progress',
+  module: 'DataProcessor',
+  message: 'Processing batch',
+  data: { current: 50, total: 100, percentage: 50 },
+  agentId: 'agent-123',
+  agentName: 'MyAgent',
+  level: 'low'
+}
+```
+
+#### Error Events
+```javascript
+// Tool emits error
+tool.emitError('Failed to connect', { 
+  code: 'ECONNREFUSED',
+  host: 'api.example.com'
+});
+
+// Client receives enriched event
+{
+  type: 'error',
+  module: 'APIModule',
+  tool: 'HTTPClient',
+  message: 'Failed to connect',
+  data: { code: 'ECONNREFUSED', host: 'api.example.com' },
+  agentId: 'agent-123',
+  agentName: 'MyAgent',
+  level: 'high'
+}
+```
+
+### Complete Example with Events
+
+```javascript
+import { Agent } from '@jsenvoy/agent';
+import { AgentWebSocketServer } from '@jsenvoy/agent/src/websocket-server.js';
+import { FileModule } from '@jsenvoy/tools';
+
+// Create agent
+const agent = new Agent({
+  name: 'FileProcessorAgent',
+  modelConfig: {
+    provider: 'openai',
+    model: 'gpt-4',
+    apiKey: process.env.OPENAI_API_KEY
+  }
+});
+
+// Register event listeners
+agent.on('module-event', (event) => {
+  if (event.type === 'error') {
+    console.error(`Error in ${event.module}: ${event.message}`);
+  } else if (event.type === 'progress') {
+    console.log(`Progress: ${event.message}`);
+  }
+});
+
+// Register modules
+agent.registerModule(new FileModule());
+
+// Start WebSocket server for real-time streaming
+const wsServer = new AgentWebSocketServer(agent, { port: 3001 });
+await wsServer.start();
+
+// Execute task - events will stream to console and WebSocket clients
+const result = await agent.execute(
+  "Process all CSV files in the data directory and generate a summary report"
+);
+```
+
+### Event Filtering
+
+You can filter events by type or module:
+
+```javascript
+// Listen to errors only
+agent.on('module-event', (event) => {
+  if (event.type === 'error') {
+    alertAdmin(event);
+  }
+});
+
+// Listen to specific module
+agent.on('module-event', (event) => {
+  if (event.module === 'DatabaseModule') {
+    logDatabaseActivity(event);
+  }
+});
+
+// WebSocket client filtering
+ws.send(JSON.stringify({
+  id: 'sub-2',
+  type: 'subscribe-events',
+  filter: {
+    types: ['error', 'warning'],
+    modules: ['DatabaseModule', 'APIModule']
+  }
+}));
+```
+
+### Performance Considerations
+
+- Events are emitted asynchronously to avoid blocking execution
+- WebSocket broadcasting is throttled for high-frequency events
+- Client connections are managed with automatic cleanup
+- Memory-efficient event buffering for disconnected clients
+
 ## CLI Usage
 
 The agent package includes a CLI for interactive use:

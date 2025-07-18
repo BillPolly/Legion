@@ -124,6 +124,12 @@ class GitHub extends Tool {
       const args = this.parseArguments(toolCall.function.arguments);
       let result;
 
+      // Emit progress event for operation start
+      this.emitProgress(`Starting GitHub operation: ${toolCall.function.name}`, {
+        operation: toolCall.function.name,
+        args: args
+      });
+
       switch (toolCall.function.name) {
         case 'github_create_repo':
           this.validateRequiredParameters(args, ['repoName']);
@@ -155,8 +161,20 @@ class GitHub extends Tool {
           throw new Error(`Unknown function: ${toolCall.function.name}`);
       }
 
+      // Emit success event
+      this.emitInfo(`GitHub operation completed successfully`, {
+        operation: toolCall.function.name,
+        result: result
+      });
+
       return ToolResult.success(result);
     } catch (error) {
+      // Emit error event
+      this.emitError(`GitHub operation failed: ${error.message}`, {
+        operation: toolCall.function.name,
+        error: error.message
+      });
+
       return ToolResult.failure(
         error.message || 'GitHub operation failed',
         {
@@ -215,7 +233,11 @@ class GitHub extends Tool {
    * Create a new GitHub repository
    */
   async createRepo(repoName, description = '', isPrivate = false, autoInit = false) {
-    console.log(`Creating GitHub repository: ${repoName}`);
+    this.emitProgress(`Creating GitHub repository: ${repoName}`, {
+      repoName,
+      isPrivate,
+      stage: 'create_repo'
+    });
     
     const { token } = this.getCredentials();
     
@@ -247,7 +269,11 @@ class GitHub extends Tool {
           const parsed = JSON.parse(responseData);
           
           if (res.statusCode === 201) {
-            console.log(`Repository created successfully: ${parsed.html_url}`);
+            this.emitInfo(`Repository created successfully: ${parsed.html_url}`, {
+              repoName: parsed.name,
+              url: parsed.html_url,
+              private: parsed.private
+            });
             resolve({
               success: true,
               name: parsed.name,
@@ -257,7 +283,12 @@ class GitHub extends Tool {
               private: parsed.private
             });
           } else {
-            reject(new Error(`Failed to create repository: ${parsed.message || responseData}`));
+            const errorMsg = `Failed to create repository: ${parsed.message || responseData}`;
+            this.emitError(errorMsg, {
+              statusCode: res.statusCode,
+              response: parsed
+            });
+            reject(new Error(errorMsg));
           }
         });
       });
@@ -272,7 +303,12 @@ class GitHub extends Tool {
    * Push current repository to GitHub
    */
   async pushToRepo(repoUrl, branch = 'main', force = false) {
-    console.log(`Pushing to repository: ${repoUrl}`);
+    this.emitProgress(`Pushing to repository: ${repoUrl}`, {
+      repoUrl,
+      branch,
+      force,
+      stage: 'push_repo'
+    });
     
     try {
       // Check if we're in a git repository
@@ -293,6 +329,12 @@ class GitHub extends Tool {
       await execAsync(`git remote add ${remoteName} ${repoUrl}`);
       
       // Push to the repository
+      this.emitProgress(`Pushing ${sourceBranch} to ${branch}`, {
+        sourceBranch,
+        targetBranch: branch,
+        force
+      });
+      
       const forceFlag = force ? '--force' : '';
       const { stdout, stderr } = await execAsync(
         `git push ${remoteName} ${sourceBranch}:${branch} ${forceFlag}`
@@ -301,7 +343,11 @@ class GitHub extends Tool {
       // Remove the temporary remote
       await execAsync(`git remote remove ${remoteName}`);
       
-      console.log('Push completed successfully');
+      this.emitInfo('Push completed successfully', {
+        sourceBranch,
+        targetBranch: branch,
+        repoUrl
+      });
       
       return {
         success: true,
@@ -312,7 +358,13 @@ class GitHub extends Tool {
         output: stdout + stderr
       };
     } catch (error) {
-      throw new Error(`Failed to push to repository: ${error.message}`);
+      const errorMsg = `Failed to push to repository: ${error.message}`;
+      this.emitError(errorMsg, {
+        error: error.message,
+        repoUrl,
+        branch
+      });
+      throw new Error(errorMsg);
     }
   }
 
@@ -320,7 +372,13 @@ class GitHub extends Tool {
    * Create a new repository and push current code to it
    */
   async createAndPush(repoName, description = '', isPrivate = false, branch = 'main') {
-    console.log(`Creating repository and pushing code: ${repoName}`);
+    this.emitProgress(`Creating repository and pushing code: ${repoName}`, {
+      repoName,
+      description,
+      isPrivate,
+      branch,
+      stage: 'create_and_push'
+    });
     
     try {
       // First, ensure we're in a git repository
@@ -328,7 +386,9 @@ class GitHub extends Tool {
         await execAsync('git rev-parse --git-dir');
       } catch (error) {
         // Not a git repo, initialize it
-        console.log('Initializing git repository...');
+        this.emitProgress('Initializing git repository', {
+          stage: 'git_init'
+        });
         await execAsync('git init');
         
         // Add all files and create initial commit

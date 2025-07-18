@@ -72,7 +72,7 @@ await browser.close();
 
 ## Available Tools
 
-When loaded as a JSON module, the following tools are available:
+When loaded as a JSON module, the following 11 tools are available:
 
 ### navigate_to_page
 Navigate to a web page and wait for it to load.
@@ -153,6 +153,25 @@ Execute JavaScript code in the browser context.
 {
   "script": "return document.title;",
   "args": []
+}
+```
+
+### handle_file_upload
+Upload a file to a file input element.
+
+```javascript
+{
+  "selector": "input[type='file']",
+  "filePath": "/path/to/file.pdf"
+}
+```
+
+### emulate_device
+Emulate a mobile device or change viewport settings.
+
+```javascript
+{
+  "deviceName": "iPhone 12"
 }
 ```
 
@@ -299,6 +318,39 @@ await browser.waitForElement('.dashboard', {
 // Check page title
 const pageInfo = await browser.getPageInfo();
 expect(pageInfo.title).toContain('Dashboard');
+```
+
+### File Upload Example
+
+```javascript
+// Navigate to a form with file upload
+await browser.navigateToPage('https://example.com/upload');
+
+// Upload a file
+await browser.handleFileUpload('input[type="file"]', '/path/to/document.pdf');
+
+// Wait for upload confirmation
+await browser.waitForElement('.upload-success', {
+  state: 'visible',
+  timeout: 10000
+});
+```
+
+### Mobile Device Testing Example
+
+```javascript
+// Emulate iPhone 12
+await browser.emulateDevice('iPhone 12');
+
+// Navigate to mobile-optimized page
+await browser.navigateToPage('https://mobile.example.com');
+
+// Test mobile-specific functionality
+await browser.clickElement('.mobile-menu-toggle');
+await browser.waitForElement('.mobile-nav', { state: 'visible' });
+
+// Take screenshot for mobile testing
+const screenshot = await browser.takeScreenshot({ fullPage: true });
 ```
 
 ## Browser Configuration

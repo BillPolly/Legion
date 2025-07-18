@@ -1,0 +1,625 @@
+{
+  "name": "log-manager",
+  "version": "1.0.0",
+  "description": "Comprehensive log capture, aggregation, and analysis",
+  "package": "./src/LogManager.js",
+  "type": "constructor",
+  "dependencies": {},
+  "initialization": {
+    "type": "constructor",
+    "config": {
+      "defaultBufferSize": 1000,
+      "realtimeStreaming": true
+    }
+  },
+  "tools": [
+    {
+      "name": "capture_logs",
+      "description": "Capture logs from various sources (streams, files, processes)",
+      "function": "captureLogs",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "object",
+            "description": "Log source configuration",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["stream", "file", "process"],
+                "description": "Type of log source"
+              },
+              "id": {
+                "type": "string",
+                "description": "Unique identifier for this source"
+              },
+              "path": {
+                "type": "string",
+                "description": "File path (for file sources)"
+              },
+              "pid": {
+                "type": "number",
+                "description": "Process ID (for process sources)"
+              },
+              "stream": {
+                "description": "Stream object (for stream sources)"
+              },
+              "fromBeginning": {
+                "type": "boolean",
+                "description": "Read file from beginning",
+                "default": false
+              }
+            },
+            "required": ["type", "id"]
+          },
+          "bufferSize": {
+            "type": "number",
+            "description": "Size of the log buffer",
+            "default": 1000
+          },
+          "follow": {
+            "type": "boolean",
+            "description": "Follow file for new logs",
+            "default": true
+          }
+        },
+        "required": ["source"]
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "sourceId": {
+              "type": "string",
+              "description": "ID of the captured source"
+            },
+            "status": {
+              "type": "string",
+              "description": "Capture status"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "stream_logs",
+      "description": "Create a real-time log stream with filtering",
+      "function": "streamLogs",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "streamId": {
+            "type": "string",
+            "description": "Unique stream identifier"
+          },
+          "sources": {
+            "type": "array",
+            "description": "Source IDs to include in stream",
+            "items": {
+              "type": "string"
+            }
+          },
+          "levels": {
+            "type": "array",
+            "description": "Log levels to include",
+            "items": {
+              "type": "string",
+              "enum": ["error", "warn", "info", "debug", "trace"]
+            },
+            "default": ["error", "warn", "info"]
+          },
+          "filter": {
+            "description": "Additional filter criteria"
+          },
+          "realtime": {
+            "type": "boolean",
+            "description": "Enable real-time streaming",
+            "default": true
+          }
+        }
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "streamId": {
+              "type": "string",
+              "description": "Stream identifier"
+            },
+            "stream": {
+              "description": "Readable stream object"
+            },
+            "status": {
+              "type": "string",
+              "description": "Stream status"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "search_logs",
+      "description": "Search logs using patterns or regular expressions",
+      "function": "searchLogs",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "pattern": {
+            "type": "string",
+            "description": "Search pattern or regex"
+          },
+          "sources": {
+            "type": "array",
+            "description": "Limit search to specific sources",
+            "items": {
+              "type": "string"
+            }
+          },
+          "timeRange": {
+            "type": "object",
+            "description": "Time range for search",
+            "properties": {
+              "start": {
+                "type": "string",
+                "description": "Start time (ISO string)"
+              },
+              "end": {
+                "type": "string",
+                "description": "End time (ISO string)"
+              }
+            }
+          },
+          "limit": {
+            "type": "number",
+            "description": "Maximum results to return",
+            "default": 100
+          }
+        },
+        "required": ["pattern"]
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "pattern": {
+              "type": "string",
+              "description": "Search pattern used"
+            },
+            "matches": {
+              "type": "array",
+              "description": "Matching log entries"
+            },
+            "count": {
+              "type": "number",
+              "description": "Number of matches found"
+            },
+            "truncated": {
+              "type": "boolean",
+              "description": "Whether results were truncated"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "filter_logs",
+      "description": "Filter logs by level, time, content, or other criteria",
+      "function": "filterLogs",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "criteria": {
+            "type": "object",
+            "description": "Filter criteria",
+            "properties": {
+              "level": {
+                "type": "string",
+                "enum": ["error", "warn", "info", "debug", "trace"],
+                "description": "Log level to filter by"
+              },
+              "startTime": {
+                "type": "string",
+                "description": "Start time (ISO string)"
+              },
+              "endTime": {
+                "type": "string",
+                "description": "End time (ISO string)"
+              },
+              "contains": {
+                "type": "string",
+                "description": "Text that must be contained in message"
+              }
+            }
+          },
+          "sources": {
+            "type": "array",
+            "description": "Source IDs to filter",
+            "items": {
+              "type": "string"
+            }
+          },
+          "limit": {
+            "type": "number",
+            "description": "Maximum results",
+            "default": 100
+          },
+          "offset": {
+            "type": "number",
+            "description": "Pagination offset",
+            "default": 0
+          }
+        },
+        "required": ["criteria"]
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "logs": {
+              "type": "array",
+              "description": "Filtered log entries"
+            },
+            "total": {
+              "type": "number",
+              "description": "Total matching logs"
+            },
+            "offset": {
+              "type": "number",
+              "description": "Current offset"
+            },
+            "limit": {
+              "type": "number",
+              "description": "Results per page"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "analyze_logs",
+      "description": "Analyze logs for patterns, errors, and performance insights",
+      "function": "analyzeLogs",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "sources": {
+            "type": "array",
+            "description": "Source IDs to analyze",
+            "items": {
+              "type": "string"
+            }
+          },
+          "aggregationId": {
+            "type": "string",
+            "description": "Analyze specific aggregation"
+          },
+          "includePatterns": {
+            "type": "boolean",
+            "description": "Include pattern analysis",
+            "default": true
+          },
+          "includeErrors": {
+            "type": "boolean",
+            "description": "Include error analysis",
+            "default": true
+          },
+          "includePerformance": {
+            "type": "boolean",
+            "description": "Include performance metrics",
+            "default": true
+          }
+        }
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "totalLogs": {
+              "type": "number",
+              "description": "Total logs analyzed"
+            },
+            "timeRange": {
+              "type": "object",
+              "description": "Time range of logs"
+            },
+            "logLevels": {
+              "type": "object",
+              "description": "Distribution of log levels"
+            },
+            "patterns": {
+              "type": "array",
+              "description": "Common patterns found"
+            },
+            "errors": {
+              "type": "object",
+              "description": "Error analysis results"
+            },
+            "performance": {
+              "type": "object",
+              "description": "Performance metrics"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "export_logs",
+      "description": "Export logs to various file formats",
+      "function": "exportLogs",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "outputPath": {
+            "type": "string",
+            "description": "Output file path"
+          },
+          "format": {
+            "type": "string",
+            "enum": ["json", "csv", "txt", "html", "jsonl"],
+            "description": "Export format",
+            "default": "json"
+          },
+          "sources": {
+            "type": "array",
+            "description": "Source IDs to export",
+            "items": {
+              "type": "string"
+            }
+          },
+          "filters": {
+            "type": "object",
+            "description": "Filters to apply before export",
+            "properties": {
+              "level": {
+                "type": "string",
+                "description": "Filter by log level"
+              },
+              "startTime": {
+                "type": "string",
+                "description": "Start time filter"
+              },
+              "endTime": {
+                "type": "string",
+                "description": "End time filter"
+              }
+            }
+          },
+          "includeMetadata": {
+            "type": "boolean",
+            "description": "Include export metadata",
+            "default": true
+          },
+          "pretty": {
+            "type": "boolean",
+            "description": "Pretty format (for JSON)",
+            "default": true
+          }
+        },
+        "required": ["outputPath"]
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "format": {
+              "type": "string",
+              "description": "Format used"
+            },
+            "outputPath": {
+              "type": "string",
+              "description": "Path to exported file"
+            },
+            "logCount": {
+              "type": "number",
+              "description": "Number of logs exported"
+            },
+            "fileSize": {
+              "type": "number",
+              "description": "Size of exported file in bytes"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "aggregate_logs",
+      "description": "Combine logs from multiple sources with correlation",
+      "function": "aggregateLogs",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "aggregationId": {
+            "type": "string",
+            "description": "Unique aggregation identifier"
+          },
+          "sources": {
+            "type": "array",
+            "description": "Source IDs to aggregate",
+            "items": {
+              "type": "string"
+            }
+          },
+          "name": {
+            "type": "string",
+            "description": "Aggregation name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Aggregation description"
+          },
+          "correlationKey": {
+            "type": "string",
+            "description": "Key to correlate logs by"
+          },
+          "bufferSize": {
+            "type": "number",
+            "description": "Buffer size for aggregation",
+            "default": 5000
+          }
+        },
+        "required": ["aggregationId", "sources"]
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Aggregation ID"
+            },
+            "name": {
+              "type": "string",
+              "description": "Aggregation name"
+            },
+            "sources": {
+              "type": "array",
+              "description": "Aggregated sources"
+            },
+            "status": {
+              "type": "string",
+              "description": "Aggregation status"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "monitor_errors",
+      "description": "Monitor error logs in real-time with threshold alerts",
+      "function": "monitorErrors",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "sources": {
+            "type": "array",
+            "description": "Source IDs to monitor",
+            "items": {
+              "type": "string"
+            }
+          },
+          "threshold": {
+            "type": "number",
+            "description": "Error count threshold for alerts",
+            "default": 5
+          },
+          "windowMs": {
+            "type": "number",
+            "description": "Time window in milliseconds",
+            "default": 60000
+          }
+        }
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "streamId": {
+              "type": "string",
+              "description": "Error monitoring stream ID"
+            },
+            "monitorId": {
+              "type": "string",
+              "description": "Monitor subscription ID"
+            },
+            "threshold": {
+              "type": "number",
+              "description": "Alert threshold"
+            },
+            "window": {
+              "type": "number",
+              "description": "Time window in ms"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

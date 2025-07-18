@@ -4,6 +4,7 @@
   "description": "Core infrastructure for building modular tool systems - base classes, dependency injection, and module management",
   "type": "module",
   "main": "./src/index.js",
+  "types": "./types/index.d.ts",
   "scripts": {
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",

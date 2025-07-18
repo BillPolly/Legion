@@ -523,6 +523,104 @@
       }
     },
     {
+      "name": "handle_file_upload",
+      "description": "Upload a file to a file input element",
+      "function": "handleFileUpload",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "selector": {
+            "type": "string",
+            "description": "CSS selector for the file input element"
+          },
+          "filePath": {
+            "type": "string",
+            "description": "Path to the file to upload"
+          }
+        },
+        "required": ["selector", "filePath"]
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "selector": {
+              "type": "string",
+              "description": "The selector that was used"
+            },
+            "filePath": {
+              "type": "string",
+              "description": "The file path that was uploaded"
+            },
+            "uploadedAt": {
+              "type": "string",
+              "description": "When the file was uploaded"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            },
+            "selector": {
+              "type": "string",
+              "description": "The selector that failed"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "emulate_device",
+      "description": "Emulate a mobile device or change viewport settings",
+      "function": "emulateDevice",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "deviceName": {
+            "type": "string",
+            "description": "Name of the device to emulate (e.g., 'iPhone 12', 'iPad Pro', 'Pixel 5')"
+          }
+        },
+        "required": ["deviceName"]
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "deviceName": {
+              "type": "string",
+              "description": "The device that was emulated"
+            },
+            "emulatedAt": {
+              "type": "string",
+              "description": "When the device was emulated"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            },
+            "deviceName": {
+              "type": "string",
+              "description": "The device name that failed"
+            }
+          }
+        }
+      }
+    },
+    {
       "name": "close_browser",
       "description": "Close the browser and clean up resources",
       "function": "close",

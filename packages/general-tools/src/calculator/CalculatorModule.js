@@ -80,8 +80,19 @@ class CalculatorTool extends Tool {
       // Validate required parameters
       this.validateRequiredParameters(args, ['expression']);
       
+      // Emit progress event
+      this.emitProgress(`Evaluating expression: ${args.expression}`, {
+        expression: args.expression
+      });
+      
       // Execute the calculation
       const result = await this.evaluate(args.expression);
+      
+      // Emit info event on success
+      this.emitInfo(`Calculation completed: ${args.expression} = ${result}`, {
+        expression: args.expression,
+        result: result
+      });
       
       // Return success ToolResult
       return ToolResult.success({
@@ -107,6 +118,13 @@ class CalculatorTool extends Tool {
         expression = 'invalid_json';
       }
       
+      // Emit error event
+      this.emitError(`Calculation failed: ${error.message}`, {
+        expression: expression,
+        errorType: errorType,
+        error: error.message
+      });
+      
       return ToolResult.failure(
         error.message,
         {
@@ -123,19 +141,20 @@ class CalculatorTool extends Tool {
    */
   async evaluate(expression) {
     try {
-      console.log('Evaluating expression:', expression);
-      
       // Check for potentially dangerous code
       const dangerous = ['import', 'require', 'process', 'fs', 'child_process', 'exec', 'spawn'];
       for (const keyword of dangerous) {
         if (expression.includes(keyword)) {
+          this.emitWarning(`Expression contains forbidden keyword: ${keyword}`, {
+            expression: expression,
+            keyword: keyword
+          });
           throw new Error(`Expression contains forbidden keyword: ${keyword}`);
         }
       }
       
       // Use Function constructor for safer evaluation
       const result = Function('"use strict"; return (' + expression + ')')();
-      console.log('Result:', result);
       return result;
     } catch (error) {
       throw new Error(`Failed to evaluate expression: ${error.message}`);

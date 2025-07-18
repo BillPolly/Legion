@@ -59,6 +59,13 @@ class PageScreenshot extends Tool {
       // Validate required parameters
       this.validateRequiredParameters(args, ['url']);
       
+      // Emit progress event
+      this.emitProgress(`Starting screenshot capture: ${args.url}`, {
+        url: args.url,
+        fullPage: args.fullPage || false,
+        viewport: { width: args.width || 1280, height: args.height || 720 }
+      });
+      
       // Take the screenshot
       const result = await this.screenshot(
         args.url,
@@ -68,9 +75,22 @@ class PageScreenshot extends Tool {
         args.waitForSelector
       );
       
+      // Emit success event
+      this.emitInfo(`Screenshot captured successfully`, {
+        url: args.url,
+        fullPage: result.fullPage,
+        dimensions: result.dimensions
+      });
+      
       // Return success response
       return ToolResult.success(result);
     } catch (error) {
+      // Emit error event
+      this.emitError(`Failed to capture screenshot: ${error.message}`, {
+        url: args?.url || 'unknown',
+        error: error.message
+      });
+      
       // Return error response
       return ToolResult.failure(
         error.message || 'Failed to capture screenshot',
@@ -89,7 +109,10 @@ class PageScreenshot extends Tool {
     let browser = null;
     
     try {
-      console.log(`Taking screenshot of: ${url}`);
+      // Emit progress for browser launch
+      this.emitProgress('Launching browser for screenshot', {
+        stage: 'browser_launch'
+      });
       
       // Launch browser
       browser = await puppeteer.launch({
@@ -105,6 +128,12 @@ class PageScreenshot extends Tool {
       // Set user agent
       await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
       
+      // Emit progress for navigation
+      this.emitProgress(`Navigating to ${url}`, {
+        stage: 'navigation',
+        url: url
+      });
+      
       // Navigate to the page
       const response = await page.goto(url, { 
         waitUntil: 'networkidle2',
@@ -112,16 +141,33 @@ class PageScreenshot extends Tool {
       });
       
       if (!response.ok()) {
+        this.emitWarning(`Page returned status ${response.status()}`, {
+          status: response.status(),
+          statusText: response.statusText()
+        });
         throw new Error(`Failed to load page: ${response.status()} ${response.statusText()}`);
       }
       
       // Wait for specific selector if provided
       if (waitForSelector) {
+        this.emitProgress(`Waiting for selector: ${waitForSelector}`, {
+          stage: 'wait_selector',
+          selector: waitForSelector
+        });
         await page.waitForSelector(waitForSelector, { timeout: 10000 });
       }
       
       // Wait a bit for any animations to complete
+      this.emitProgress('Waiting for animations to complete', {
+        stage: 'wait_animations'
+      });
       await page.waitForTimeout(1000);
+      
+      // Emit progress for screenshot capture
+      this.emitProgress('Capturing screenshot', {
+        stage: 'screenshot_capture',
+        fullPage: fullPage
+      });
       
       // Take screenshot
       const screenshotBuffer = await page.screenshot({
@@ -130,7 +176,11 @@ class PageScreenshot extends Tool {
         encoding: 'base64'
       });
       
-      console.log(`Successfully captured screenshot of ${url}`);
+      this.emitInfo('Screenshot captured', {
+        url: url,
+        fullPage: fullPage,
+        encoding: 'base64'
+      });
       
       return {
         success: true,

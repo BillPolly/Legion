@@ -221,6 +221,29 @@ describe('JSON Module Integration', () => {
       expect(firstTool.description).toBeDefined();
       expect(typeof firstTool.invoke).toBe('function');
       
+      // Check that all 11 tools are loaded
+      expect(tools.length).toBe(11);
+      
+      // Check that all expected tools are present
+      const expectedTools = [
+        'navigate_to_page',
+        'click_element', 
+        'fill_form',
+        'take_screenshot',
+        'extract_data',
+        'wait_for_element',
+        'execute_script',
+        'handle_file_upload',
+        'emulate_device',
+        'get_page_info',
+        'close_browser'
+      ];
+      
+      const toolNames = tools.map(tool => tool.name);
+      expectedTools.forEach(expectedName => {
+        expect(toolNames).toContain(expectedName);
+      });
+      
     } catch (error) {
       console.warn('JSON module test failed:', error.message);
       // Skip this test if module loading fails
