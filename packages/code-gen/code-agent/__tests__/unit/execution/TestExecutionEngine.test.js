@@ -442,6 +442,185 @@ describe('TestExecutionEngine', () => {
     });
   });
 
+  describe('Advanced Jest Configuration', () => {
+    beforeEach(async () => {
+      await testEngine.initialize();
+    });
+
+    test('should support Jest config files', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        testPattern: '**/*.test.js',
+        configFile: 'jest.config.js',
+        collectCoverage: false
+      };
+
+      const result = await testEngine.runJestTests(testConfig);
+      
+      expect(result.status).toBe('completed');
+      expect(result.results.numTotalTests).toBeGreaterThan(0);
+    });
+
+    test('should support environment variables', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        testPattern: '**/*.test.js',
+        collectCoverage: false,
+        env: {
+          NODE_ENV: 'test',
+          JEST_WORKER_ID: '1'
+        }
+      };
+
+      const result = await testEngine.runJestTests(testConfig);
+      
+      expect(result.status).toBe('completed');
+      expect(result.results.numTotalTests).toBeGreaterThan(0);
+    });
+
+    test('should support custom Jest options', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        testPattern: '**/*.test.js',
+        collectCoverage: false,
+        jestOptions: {
+          bail: true,
+          detectOpenHandles: true,
+          forceExit: true
+        }
+      };
+
+      const result = await testEngine.runJestTests(testConfig);
+      
+      expect(result.status).toBe('completed');
+      expect(result.results.numTotalTests).toBeGreaterThan(0);
+    });
+
+    test('should support custom reporters', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        testPattern: '**/*.test.js',
+        collectCoverage: false,
+        reporters: ['default', 'jest-junit']
+      };
+
+      const result = await testEngine.runJestTests(testConfig);
+      
+      expect(result.status).toBe('completed');
+      expect(result.results.numTotalTests).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Test Filtering and Selection', () => {
+    beforeEach(async () => {
+      await testEngine.initialize();
+    });
+
+    test('should filter tests by name pattern', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        testNamePattern: 'add should',
+        collectCoverage: false
+      };
+
+      const result = await testEngine.runJestTests(testConfig);
+      
+      expect(result.status).toBe('completed');
+      expect(result.results.numTotalTests).toBeGreaterThan(0);
+    });
+
+    test('should run only changed tests', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        onlyChanged: true,
+        collectCoverage: false
+      };
+
+      const result = await testEngine.runJestTests(testConfig);
+      
+      expect(result.status).toBe('completed');
+      // Should handle case where no changed tests are found
+    });
+
+    test('should run tests related to specific files', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        findRelatedTests: ['src/math.js'],
+        collectCoverage: false
+      };
+
+      const result = await testEngine.runJestTests(testConfig);
+      
+      expect(result.status).toBe('completed');
+      expect(result.results.numTotalTests).toBeGreaterThan(0);
+    });
+
+    test('should support test suites selection', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        testSuites: ['math.test.js', 'string.test.js'],
+        collectCoverage: false
+      };
+
+      const result = await testEngine.runJestTests(testConfig);
+      
+      expect(result.status).toBe('completed');
+      expect(result.results.numTotalTests).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Performance Optimization', () => {
+    beforeEach(async () => {
+      await testEngine.initialize();
+    });
+
+    test('should optimize test execution order', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        testPattern: '**/*.test.js',
+        collectCoverage: false,
+        optimizeTestOrder: true
+      };
+
+      const result = await testEngine.runJestTests(testConfig);
+      
+      expect(result.status).toBe('completed');
+      expect(result.performance.optimized).toBe(true);
+    });
+
+    test('should support test sharding', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        testPattern: '**/*.test.js',
+        collectCoverage: false,
+        shard: '1/2' // Run first shard of 2
+      };
+
+      const result = await testEngine.runJestTests(testConfig);
+      
+      expect(result.status).toBe('completed');
+      expect(result.results.numTotalTests).toBeGreaterThan(0);
+    });
+
+    test('should cache test results', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        testPattern: '**/*.test.js',
+        collectCoverage: false,
+        cache: true
+      };
+
+      // First run
+      const result1 = await testEngine.runJestTests(testConfig);
+      expect(result1.status).toBe('completed');
+      
+      // Second run should be faster due to caching
+      const result2 = await testEngine.runJestTests(testConfig);
+      expect(result2.status).toBe('completed');
+      expect(result2.performance.cached).toBe(true);
+    });
+  });
+
   describe('Error Handling', () => {
     beforeEach(async () => {
       await testEngine.initialize();
