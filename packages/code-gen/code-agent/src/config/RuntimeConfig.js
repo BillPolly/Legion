@@ -268,8 +268,20 @@ class RuntimeConfig {
    * Get configuration for playwright
    */
   getPlaywrightConfig() {
+    // Return all playwright config properties, including any custom ones
+    const playwrightConfig = { ...this.config.playwright };
+    
+    // Ensure any additional properties are preserved
+    if (this.config.playwright) {
+      Object.keys(this.config.playwright).forEach(key => {
+        if (!(key in playwrightConfig)) {
+          playwrightConfig[key] = this.config.playwright[key];
+        }
+      });
+    }
+    
     return {
-      ...this.config.playwright,
+      ...playwrightConfig,
       environment: this.environment
     };
   }

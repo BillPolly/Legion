@@ -335,6 +335,101 @@ describe('TestExecutionEngine', () => {
         expect(Array.isArray(suggestion.actions)).toBe(true);
       }
     });
+
+    test('should provide detailed failure analysis', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        testPattern: '**/failing.test.js',
+        collectCoverage: false
+      };
+
+      const result = await testEngine.runJestTests(testConfig);
+      const analysis = await testEngine.analyzeTestFailures(result);
+      
+      expect(analysis.summary).toBeDefined();
+      expect(analysis.summary.totalFailures).toBeGreaterThan(0);
+      expect(analysis.summary.categories).toBeDefined();
+      expect(analysis.summary.commonPatterns).toBeDefined();
+      expect(Array.isArray(analysis.summary.commonPatterns)).toBe(true);
+    });
+
+    test('should generate failure root cause analysis', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        testPattern: '**/failing.test.js',
+        collectCoverage: false
+      };
+
+      const result = await testEngine.runJestTests(testConfig);
+      const rootCauseAnalysis = await testEngine.generateRootCauseAnalysis(result);
+      
+      expect(rootCauseAnalysis).toBeDefined();
+      expect(rootCauseAnalysis.rootCauses).toBeDefined();
+      expect(Array.isArray(rootCauseAnalysis.rootCauses)).toBe(true);
+      expect(rootCauseAnalysis.impactAnalysis).toBeDefined();
+      expect(rootCauseAnalysis.recommendedActions).toBeDefined();
+    });
+
+    test('should generate failure impact assessment', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        testPattern: '**/failing.test.js',
+        collectCoverage: false
+      };
+
+      const result = await testEngine.runJestTests(testConfig);
+      const impactAssessment = await testEngine.generateFailureImpactAssessment(result);
+      
+      expect(impactAssessment).toBeDefined();
+      expect(impactAssessment.severityScore).toBeDefined();
+      expect(impactAssessment.affectedAreas).toBeDefined();
+      expect(impactAssessment.businessImpact).toBeDefined();
+      expect(impactAssessment.technicalImpact).toBeDefined();
+    });
+
+    test('should generate automated fix suggestions', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        testPattern: '**/failing.test.js',
+        collectCoverage: false
+      };
+
+      const result = await testEngine.runJestTests(testConfig);
+      const fixSuggestions = await testEngine.generateAutomatedFixSuggestions(result);
+      
+      expect(fixSuggestions).toBeDefined();
+      expect(Array.isArray(fixSuggestions)).toBe(true);
+      
+      for (const suggestion of fixSuggestions) {
+        expect(suggestion.type).toBeDefined();
+        expect(suggestion.description).toBeDefined();
+        expect(suggestion.code).toBeDefined();
+        expect(suggestion.confidence).toBeDefined();
+        expect(suggestion.filePath).toBeDefined();
+      }
+    });
+
+    test('should analyze test failure trends', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        testPattern: '**/failing.test.js',
+        collectCoverage: false
+      };
+
+      // Run tests multiple times to generate trend data
+      const results = [];
+      for (let i = 0; i < 3; i++) {
+        const result = await testEngine.runJestTests(testConfig);
+        results.push(result);
+      }
+
+      const trendAnalysis = await testEngine.analyzeFailureTrends(results);
+      
+      expect(trendAnalysis).toBeDefined();
+      expect(trendAnalysis.trends).toBeDefined();
+      expect(trendAnalysis.recurringFailures).toBeDefined();
+      expect(trendAnalysis.improvementSuggestions).toBeDefined();
+    });
   });
 
   describe('Performance Monitoring', () => {
@@ -665,6 +760,150 @@ describe('TestExecutionEngine', () => {
       expect(['timeout', 'error']).toContain(result.status);
       expect(result.error).toBeDefined();
     }, 2000);
+  });
+
+  describe('Enhanced Reporting', () => {
+    beforeEach(async () => {
+      await testEngine.initialize();
+    });
+
+    test('should generate detailed HTML report', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        testPattern: '**/*.test.js',
+        collectCoverage: true,
+        reportFormats: ['html']
+      };
+
+      const result = await testEngine.runJestTests(testConfig);
+      const htmlReport = await testEngine.generateDetailedReport(result, 'html');
+      
+      expect(htmlReport).toBeDefined();
+      expect(htmlReport.format).toBe('html');
+      expect(htmlReport.content).toContain('<html>');
+      expect(htmlReport.content).toContain('Test Results');
+      expect(htmlReport.filePath).toBeDefined();
+    });
+
+    test('should generate JSON report', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        testPattern: '**/*.test.js',
+        collectCoverage: true,
+        reportFormats: ['json']
+      };
+
+      const result = await testEngine.runJestTests(testConfig);
+      const jsonReport = await testEngine.generateDetailedReport(result, 'json');
+      
+      expect(jsonReport).toBeDefined();
+      expect(jsonReport.format).toBe('json');
+      expect(jsonReport.content).toBeDefined();
+      
+      const reportData = JSON.parse(jsonReport.content);
+      expect(reportData.summary).toBeDefined();
+      expect(reportData.testSuites).toBeDefined();
+      expect(reportData.performance).toBeDefined();
+    });
+
+    test('should generate XML report', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        testPattern: '**/*.test.js',
+        collectCoverage: false,
+        reportFormats: ['xml']
+      };
+
+      const result = await testEngine.runJestTests(testConfig);
+      const xmlReport = await testEngine.generateDetailedReport(result, 'xml');
+      
+      expect(xmlReport).toBeDefined();
+      expect(xmlReport.format).toBe('xml');
+      expect(xmlReport.content).toContain('<?xml version="1.0"');
+      expect(xmlReport.content).toContain('<testsuites');
+    });
+
+    test('should generate test trend analysis', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        testPattern: '**/*.test.js',
+        collectCoverage: false
+      };
+
+      // Run tests multiple times to generate trend data
+      const results = [];
+      for (let i = 0; i < 3; i++) {
+        const result = await testEngine.runJestTests(testConfig);
+        results.push(result);
+      }
+
+      const trendAnalysis = await testEngine.generateTrendAnalysis(results);
+      
+      expect(trendAnalysis).toBeDefined();
+      expect(trendAnalysis.trends).toBeDefined();
+      expect(trendAnalysis.trends.performance).toBeDefined();
+      expect(trendAnalysis.trends.testCounts).toBeDefined();
+      expect(trendAnalysis.summary).toBeDefined();
+    });
+
+    test('should generate performance bottleneck report', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        testPattern: '**/*.test.js',
+        collectCoverage: false,
+        analyzePerformance: true
+      };
+
+      const result = await testEngine.runJestTests(testConfig);
+      const bottleneckReport = await testEngine.generatePerformanceReport(result);
+      
+      expect(bottleneckReport).toBeDefined();
+      expect(bottleneckReport.bottlenecks).toBeDefined();
+      expect(bottleneckReport.recommendations).toBeDefined();
+      expect(bottleneckReport.metrics).toBeDefined();
+      expect(bottleneckReport.visualization).toBeDefined();
+    });
+
+    test('should generate coverage summary report', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        testPattern: '**/*.test.js',
+        collectCoverage: true,
+        coverageReporters: ['json', 'html']
+      };
+
+      const result = await testEngine.runJestTests(testConfig);
+      const coverageReport = await testEngine.generateCoverageReport(result);
+      
+      expect(coverageReport).toBeDefined();
+      expect(coverageReport.summary).toBeDefined();
+      expect(coverageReport.fileDetails).toBeDefined();
+      expect(coverageReport.uncoveredLines).toBeDefined();
+      expect(coverageReport.recommendations).toBeDefined();
+    });
+
+    test('should generate consolidated test report', async () => {
+      const testConfig = {
+        projectPath: testProjectPath,
+        testPattern: '**/*.test.js',
+        collectCoverage: true,
+        reportFormats: ['html', 'json', 'xml']
+      };
+
+      const result = await testEngine.runJestTests(testConfig);
+      const consolidatedReport = await testEngine.generateConsolidatedReport(result);
+      
+      expect(consolidatedReport).toBeDefined();
+      expect(consolidatedReport.summary).toBeDefined();
+      expect(consolidatedReport.testResults).toBeDefined();
+      expect(consolidatedReport.performance).toBeDefined();
+      expect(consolidatedReport.coverage).toBeDefined();
+      expect(consolidatedReport.recommendations).toBeDefined();
+      expect(consolidatedReport.exports).toBeDefined();
+      expect(consolidatedReport.exports.html).toBeDefined();
+      expect(consolidatedReport.exports.json).toBeDefined();
+      expect(consolidatedReport.exports.xml).toBeDefined();
+    });
   });
 
   describe('Cleanup', () => {
