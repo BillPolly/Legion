@@ -309,18 +309,27 @@ class LocalProvider extends BaseProvider {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 5000);
 
-        const response = await fetch(healthUrl, {
-          signal: controller.signal
-        });
+        try {
+          const response = await fetch(healthUrl, {
+            signal: controller.signal
+          });
 
-        clearTimeout(timeout);
-
-        checks.push({
-          name: 'http',
-          status: response.ok ? 'healthy' : 'unhealthy',
-          responseTime: Date.now() - startTime
-        });
+          checks.push({
+            name: 'http',
+            status: response.ok ? 'healthy' : 'unhealthy',
+            responseTime: Date.now() - startTime
+          });
+        } catch (error) {
+          checks.push({
+            name: 'http',
+            status: 'unhealthy',
+            error: error.message
+          });
+        } finally {
+          clearTimeout(timeout);
+        }
       } catch (error) {
+        // Handle other setup errors
         checks.push({
           name: 'http',
           status: 'unhealthy',

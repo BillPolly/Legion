@@ -114,6 +114,9 @@ class ProcessManager extends EventEmitter {
         childProcess.kill('SIGKILL');
       }, timeout);
       
+      // Use unref() so the timer doesn't keep the process alive
+      killTimer.unref();
+      
       // Clear timer if process exits before timeout
       childProcess.once('exit', () => clearTimeout(killTimer));
     });

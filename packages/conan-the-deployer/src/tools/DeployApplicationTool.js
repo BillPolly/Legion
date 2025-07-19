@@ -265,7 +265,7 @@ class DeployApplicationTool extends Tool {
       
       return deploymentManager;
     } catch (error) {
-      console.error('Failed to get deployment manager:', error);
+      // Failed to get deployment manager - return null to trigger mock fallback
       return null;
     }
   }

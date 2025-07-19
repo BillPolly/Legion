@@ -241,16 +241,19 @@ class MetricsCollector extends EventEmitter {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-      const response = await fetch(url, {
-        signal: controller.signal,
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'conan-the-deployer-metrics-collector'
-        }
-      });
-
-      clearTimeout(timeoutId);
+      let response;
+      try {
+        response = await fetch(url, {
+          signal: controller.signal,
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'conan-the-deployer-metrics-collector'
+          }
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
       const responseTime = Date.now() - startTime;
 
       if (!response.ok) {

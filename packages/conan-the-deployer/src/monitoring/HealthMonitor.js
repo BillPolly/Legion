@@ -102,15 +102,18 @@ class HealthMonitor extends EventEmitter {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-      const response = await fetch(url, {
-        signal: controller.signal,
-        method: 'GET',
-        headers: {
-          'User-Agent': 'conan-the-deployer-health-monitor'
-        }
-      });
-
-      clearTimeout(timeoutId);
+      let response;
+      try {
+        response = await fetch(url, {
+          signal: controller.signal,
+          method: 'GET',
+          headers: {
+            'User-Agent': 'conan-the-deployer-health-monitor'
+          }
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
       const responseTime = Date.now() - startTime;
 
       return {

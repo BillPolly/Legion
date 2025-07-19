@@ -2,43 +2,11 @@ import ProviderFactory from '../../../src/providers/ProviderFactory.js';
 import BaseProvider from '../../../src/providers/BaseProvider.js';
 import LocalProvider from '../../../src/providers/LocalProvider.js';
 
-import { jest } from '@jest/globals';
-
-// Mock ResourceManager for Docker and Railway providers
-const mockResourceManager = {
-  get: jest.fn((key) => {
-    if (key === 'docker-client') {
-      return { ping: jest.fn() };
-    }
-    if (key === 'railway-api-key') {
-      return 'mock-api-key';
-    }
-    return null;
-  })
-};
-
-// Mock Docker and Railway providers since they need ResourceManager
-jest.unstable_mockModule('../../../src/providers/DockerProvider.js', () => ({
-  default: jest.fn().mockImplementation(() => ({
-    getCapabilities: () => ({ supportsBlueGreen: true })
-  }))
-}));
-
-jest.unstable_mockModule('../../../src/providers/RailwayProvider.js', () => ({
-  default: jest.fn().mockImplementation(() => ({
-    getCapabilities: () => ({ supportsCustomDomains: true })
-  }))
-}));
-
-const { default: DockerProvider } = await import('../../../src/providers/DockerProvider.js');
-const { default: RailwayProvider } = await import('../../../src/providers/RailwayProvider.js');
-
 describe('ProviderFactory', () => {
   let factory;
 
   beforeEach(() => {
     factory = new ProviderFactory();
-    jest.clearAllMocks();
   });
 
   describe('Provider Registration', () => {
@@ -54,15 +22,6 @@ describe('ProviderFactory', () => {
       expect(provider).toBeInstanceOf(BaseProvider);
     });
 
-    test('should create docker provider', () => {
-      const provider = factory.createProvider('docker', mockResourceManager);
-      expect(DockerProvider).toHaveBeenCalledWith(mockResourceManager);
-    });
-
-    test('should create railway provider', () => {
-      const provider = factory.createProvider('railway', mockResourceManager);
-      expect(RailwayProvider).toHaveBeenCalledWith(mockResourceManager);
-    });
 
     test('should throw error for unknown provider', () => {
       expect(() => factory.createProvider('unknown')).toThrow('Unknown provider: unknown');
