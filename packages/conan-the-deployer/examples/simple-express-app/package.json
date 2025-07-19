@@ -1,0 +1,17 @@
+{
+  "name": "simple-express-app",
+  "version": "1.0.0",
+  "description": "A simple Express.js application for demonstrating Conan-the-Deployer",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["express", "node", "conan-the-deployer", "example"],
+  "author": "Conan-the-Deployer",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

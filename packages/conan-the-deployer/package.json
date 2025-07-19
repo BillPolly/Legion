@@ -1,0 +1,80 @@
+{
+  "name": "@jsenvoy/conan-the-deployer",
+  "version": "0.1.0",
+  "description": "Comprehensive deployment and monitoring framework for Node.js applications across multiple providers with real-time monitoring and AI agent integration",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./providers": "./src/providers/index.js",
+    "./monitor": "./src/monitor/index.js"
+  },
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/unit",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/integration"
+  },
+  "keywords": [
+    "deployment",
+    "docker", 
+    "railway",
+    "monitoring",
+    "nodejs",
+    "provider",
+    "orchestration",
+    "ai-agent",
+    "openai",
+    "function-calling",
+    "microservices",
+    "devops",
+    "automation",
+    "health-checks",
+    "metrics",
+    "logging",
+    "scaling",
+    "blue-green",
+    "rolling-update"
+  ],
+  "author": {
+    "name": "jsEnvoy",
+    "url": "https://github.com/jsenvoy"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/jsenvoy/conan-the-deployer#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jsenvoy/conan-the-deployer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jsenvoy/conan-the-deployer/issues"
+  },
+  "dependencies": {
+    "@jsenvoy/module-loader": "workspace:*",
+    "@jsenvoy/node-runner": "workspace:*",
+    "dockerode": "^4.0.2",
+    "node-fetch": "^3.3.2",
+    "portfinder": "^1.0.32",
+    "tar": "^6.2.0",
+    "uuid": "^9.0.1",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-node": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "roots": [
+      "<rootDir>/__tests__"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "transform": {}
+  }
+}
