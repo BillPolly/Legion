@@ -6,13 +6,11 @@
   "main": "./src/index.js",
   "scripts": {
     "test": "NODE_OPTIONS='--experimental-vm-modules --max-old-space-size=8192' jest --passWithNoTests --runInBand",
-    "test:core": "NODE_OPTIONS='--experimental-vm-modules --max-old-space-size=8192' jest --passWithNoTests --runInBand --testPathPattern=\"integration/BackwardCompatibility|integration/DocumentationValidation|integration/ReleasePackageValidation|integration/CodeAgent|integration/json-module|integration/event-system\"",
-    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
-    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
-    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathPattern=unit --passWithNoTests --runInBand",
-    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathPattern=integration --passWithNoTests --runInBand",
-    "test:system": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathPattern=system --passWithNoTests --runInBand",
-    "test:all": "npm run test:unit && npm run test:integration && npm run test:system",
+    "test:simple": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathPattern=\"simple\" --passWithNoTests",
+    "test:git": "NODE_OPTIONS='--experimental-vm-modules --max-old-space-size=8192' jest --testPathPattern=\"integration/BackwardCompatibility|integration/DocumentationValidation|integration/ReleasePackageValidation\" --passWithNoTests --runInBand",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathPattern=\"simple\" --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathPattern=\"simple\" --coverage",
+    "test:all-dangerous": "NODE_OPTIONS='--experimental-vm-modules --max-old-space-size=8192' jest --testMatch=\"**/__tests__/**/*.test.js\" --passWithNoTests --runInBand",
     "lint": "echo 'Linting handled programmatically by code agent'",
     "dev": "node src/index.js",
     "dev:enhanced": "node src/index.js --enhanced-mode"
