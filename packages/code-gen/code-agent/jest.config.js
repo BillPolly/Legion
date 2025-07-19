@@ -32,9 +32,10 @@ export default {
     }
   },
   
-  // Test file patterns - only run simple tests
+  // Test file patterns - run simple unit tests and integration tests
   testMatch: [
-    '**/__tests__/unit/simple/*.test.js'
+    '**/__tests__/unit/simple/*.test.js',
+    '**/__tests__/integration/RealGitHubIntegration.test.js'
   ],
   
   // Ignore patterns - exclude all problematic tests
@@ -42,7 +43,6 @@ export default {
     '/node_modules/',
     '/coverage/',
     '__tests__/fixtures/',
-    '__tests__/integration/',
     '__tests__/unit/browser/',
     '__tests__/unit/phases/',
     '__tests__/unit/execution/Real.*',
@@ -80,8 +80,8 @@ export default {
   // Error on deprecated features
   errorOnDeprecated: true,
   
-  // Test timeout (5 seconds for fast unit tests only)
-  testTimeout: 5000,
+  // Test timeout (5 seconds for unit tests, longer for integration)
+  testTimeout: 600000, // 10 minutes for integration tests
   
   // Run tests serially to prevent memory issues
   maxWorkers: 1,

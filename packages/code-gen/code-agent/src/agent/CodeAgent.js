@@ -161,6 +161,7 @@ class CodeAgent extends EventEmitter {
       
       const llmConfig = {
         provider: 'mock',
+        ...this.config.llmConfig,
         ...options.llmConfig
       };
       this.llmClient = new LLMClientManager(llmConfig);
