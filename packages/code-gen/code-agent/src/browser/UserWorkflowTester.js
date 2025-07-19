@@ -35,9 +35,9 @@ class UserWorkflowTester extends EventEmitter {
     super();
     
     this.config = config;
-    this.nodeRunnerConfig = config.nodeRunner || config.getNodeRunnerConfig();
-    this.logManagerConfig = config.logManager || config.getLogManagerConfig();
-    this.playwrightConfig = config.playwright || config.getPlaywrightConfig();
+    this.nodeRunnerConfig = config.nodeRunner || (config.getNodeRunnerConfig ? config.getNodeRunnerConfig() : {});
+    this.logManagerConfig = config.logManager || (config.getLogManagerConfig ? config.getLogManagerConfig() : {});
+    this.playwrightConfig = config.playwright || (config.getPlaywrightConfig ? config.getPlaywrightConfig() : {});
     
     this.isInitialized = false;
     this.workflows = new Map();

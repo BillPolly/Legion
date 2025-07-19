@@ -115,10 +115,17 @@ class ParallelTestExecutor extends EventEmitter {
     const workerId = randomUUID();
     
     return new Promise((resolve, reject) => {
+      // Extract only serializable config data
+      const serializableConfig = {
+        workingDirectory: this.config.workingDirectory,
+        parallelConfig: this.parallelConfig,
+        // Add other serializable config properties as needed
+      };
+      
       const worker = new Worker(this.workerScript, {
         workerData: {
           workerId,
-          config: this.config
+          config: serializableConfig
         }
       });
       

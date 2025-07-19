@@ -73,12 +73,17 @@ class EnhancedCodeAgent extends CodeAgent {
     await super.initialize(workingDirectory, options);
     
     try {
-      // Initialize runtime integration manager
-      this.runtimeManager = new RuntimeIntegrationManager({
-        workingDirectory,
-        ...this.enhancedConfig,
-        ...options.runtimeConfig
-      });
+      // Initialize runtime integration manager with proper config structure
+      const runtimeConfig = {
+        logManager: options.runtimeConfig?.logManager || {},
+        nodeRunner: options.runtimeConfig?.nodeRunner || { workingDirectory },
+        playwright: options.runtimeConfig?.playwright || {},
+        integration: options.runtimeConfig?.integration || {},
+        quality: options.runtimeConfig?.quality || {},
+        debugging: options.runtimeConfig?.debugging || {}
+      };
+      
+      this.runtimeManager = new RuntimeIntegrationManager(runtimeConfig);
       await this.runtimeManager.initialize();
       
       // Initialize system health monitor

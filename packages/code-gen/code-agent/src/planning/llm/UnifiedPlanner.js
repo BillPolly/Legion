@@ -15,6 +15,7 @@ import { DependencyPlannerConfig } from './configs/DependencyPlannerConfig.js';
 import { FrontendArchitecturePlannerConfig } from './configs/FrontendArchitecturePlannerConfig.js';
 import { BackendArchitecturePlannerConfig } from './configs/BackendArchitecturePlannerConfig.js';
 import { APIInterfacePlannerConfig } from './configs/APIInterfacePlannerConfig.js';
+import { TestStrategyPlannerConfig } from './configs/TestStrategyPlannerConfig.js';
 
 class UnifiedPlanner {
   constructor(config = {}) {
@@ -36,7 +37,8 @@ class UnifiedPlanner {
       'dependency': DependencyPlannerConfig,
       'frontend': FrontendArchitecturePlannerConfig,
       'backend': BackendArchitecturePlannerConfig,
-      'api': APIInterfacePlannerConfig
+      'api': APIInterfacePlannerConfig,
+      'test': TestStrategyPlannerConfig
     };
   }
 
@@ -131,6 +133,17 @@ class UnifiedPlanner {
   }
 
   /**
+   * Plan test strategy
+   * @param {Object} analysis - Project analysis
+   * @param {Object} projectPlan - Complete project plan (optional)
+   * @returns {Promise<Object>} Test strategy plan
+   */
+  async planTestStrategy(analysis, projectPlan = null) {
+    this._ensureInitialized();
+    return this._executePlanning('test', { analysis, projectPlan });
+  }
+
+  /**
    * Execute planning for a specific domain
    * @private
    */
@@ -203,6 +216,10 @@ class UnifiedPlanner {
         // For API interface, we need architectures
         return ['frontend_architecture', 'backend_architecture'];
       
+      case 'test':
+        // For test strategy, we need project analysis
+        return ['project_analysis'];
+      
       default:
         return ['input_data'];
     }
@@ -234,6 +251,10 @@ class UnifiedPlanner {
       
       case 'api':
         return `Design complete API interfaces and contracts between frontend and backend, including DTOs, communication patterns, and error handling.`;
+      
+      case 'test':
+        const analysisInfo = safeInput.analysis || safeInput;
+        return `Design a comprehensive test strategy for a ${analysisInfo.projectType || 'general'} project with ${analysisInfo.complexity || 'medium'} complexity, including unit tests, integration tests, e2e tests, coverage targets, and test data management.`;
       
       default:
         return `Plan and organize the architecture for ${planningType} domain.`;
@@ -282,6 +303,12 @@ class UnifiedPlanner {
         context.communicationProtocols = ['HTTP', 'WebSocket', 'Server-Sent Events'];
         context.authStrategies = ['JWT', 'OAuth', 'API Key'];
         break;
+      
+      case 'test':
+        context.testTypes = ['unit', 'integration', 'e2e', 'performance', 'security'];
+        context.coverageTargets = { unit: 80, integration: 70, e2e: 60 };
+        context.testFrameworks = ['jest', 'mocha', 'cypress', 'playwright'];
+        break;
     }
 
     return context;
@@ -316,6 +343,9 @@ class UnifiedPlanner {
       
       case 'api':
         return this._transformAPIInterface(actions, input);
+      
+      case 'test':
+        return this._transformTestStrategy(actions, input);
       
       default:
         return {
@@ -666,6 +696,103 @@ class UnifiedPlanner {
     });
 
     return interfaces;
+  }
+
+  /**
+   * Transform actions to test strategy format
+   * @private
+   */
+  _transformTestStrategy(actions, input) {
+    const strategy = {
+      testTypes: {
+        unit: { enabled: true, coverage: 80 },
+        integration: { enabled: true, coverage: 70 },
+        e2e: { enabled: true, coverage: 60 }
+      },
+      coverageTargets: {
+        overall: 80,
+        unit: 80,
+        integration: 70,
+        e2e: 60
+      },
+      testEnvironment: {
+        framework: 'jest',
+        runner: 'jest',
+        browsers: ['chrome']
+      },
+      testData: {
+        approach: 'fixtures',
+        locations: ['__tests__/fixtures'],
+        mocking: true
+      },
+      unitTestStrategy: {
+        pattern: 'isolated',
+        mockExternal: true,
+        testDoubles: true
+      },
+      integrationTestStrategy: {
+        pattern: 'module-boundaries',
+        testAPIs: true,
+        testDatabase: true
+      },
+      e2eTestStrategy: {
+        pattern: 'user-journeys',
+        browsers: ['chrome'],
+        viewport: { width: 1280, height: 720 }
+      },
+      metadata: {
+        planner: 'UnifiedPlanner',
+        plannedAt: Date.now(),
+        projectType: input?.analysis?.projectType || 'general'
+      }
+    };
+
+    // Process actions to build test strategy
+    actions.forEach(action => {
+      switch (action.type) {
+        case 'analyze_test_requirements':
+          strategy.requirements = action.parameters || {};
+          break;
+        case 'determine_test_types':
+          const testTypes = action.parameters?.types || [];
+          testTypes.forEach(type => {
+            if (strategy.testTypes[type]) {
+              strategy.testTypes[type].enabled = true;
+            }
+          });
+          break;
+        case 'plan_unit_tests':
+          Object.assign(strategy.unitTestStrategy, action.parameters || {});
+          break;
+        case 'plan_integration_tests':
+          Object.assign(strategy.integrationTestStrategy, action.parameters || {});
+          break;
+        case 'plan_e2e_tests':
+          Object.assign(strategy.e2eTestStrategy, action.parameters || {});
+          break;
+        case 'define_test_coverage':
+          Object.assign(strategy.coverageTargets, action.parameters || {});
+          break;
+        case 'plan_test_data':
+          Object.assign(strategy.testData, action.parameters || {});
+          break;
+        case 'plan_test_environment':
+          Object.assign(strategy.testEnvironment, action.parameters || {});
+          break;
+        case 'create_test_strategy':
+          // Final strategy consolidation
+          if (action.parameters) {
+            Object.keys(action.parameters).forEach(key => {
+              if (!strategy[key]) {
+                strategy[key] = action.parameters[key];
+              }
+            });
+          }
+          break;
+      }
+    });
+
+    return strategy;
   }
 
   /**

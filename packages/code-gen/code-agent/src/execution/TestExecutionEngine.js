@@ -25,8 +25,8 @@ class TestExecutionEngine extends EventEmitter {
     super();
     
     this.config = config;
-    this.nodeRunnerConfig = config.nodeRunner || config.getNodeRunnerConfig();
-    this.logManagerConfig = config.logManager || config.getLogManagerConfig();
+    this.nodeRunnerConfig = config.nodeRunner || (config.getNodeRunnerConfig ? config.getNodeRunnerConfig() : {});
+    this.logManagerConfig = config.logManager || (config.getLogManagerConfig ? config.getLogManagerConfig() : {});
     this.isInitialized = false;
     this.activeTests = new Map();
     this.logManager = null;
