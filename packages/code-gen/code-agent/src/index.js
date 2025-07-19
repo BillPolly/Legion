@@ -35,10 +35,38 @@ export {
   FixingPhase
 } from './agent/index.js';
 
+// Export enhanced components
+export { EnhancedCodeAgent } from './agent/EnhancedCodeAgent.js';
+export { EnhancedQualityPhase } from './phases/EnhancedQualityPhase.js';
+export { ComprehensiveTestingPhase } from './phases/ComprehensiveTestingPhase.js';
+export { EnhancedFixingPhase } from './phases/EnhancedFixingPhase.js';
+
+// Export runtime integration
+export { RuntimeIntegrationManager } from './integration/RuntimeIntegrationManager.js';
+
+// Export monitoring and optimization
+export { SystemHealthMonitor } from './monitoring/SystemHealthMonitor.js';
+export { PerformanceOptimizer } from './optimization/PerformanceOptimizer.js';
+
+// Export test execution components
+export { TestExecutionEngine } from './execution/TestExecutionEngine.js';
+export { ParallelTestExecutor } from './execution/ParallelTestExecutor.js';
+export { RealESLintExecutor } from './execution/RealESLintExecutor.js';
+export { RealJestExecutor } from './execution/RealJestExecutor.js';
+
+// Export browser testing components
+export { BrowserTestGenerator } from './browser/BrowserTestGenerator.js';
+export { E2ETestRunner } from './browser/E2ETestRunner.js';
+export { FrontendValidationEngine } from './browser/FrontendValidationEngine.js';
+
+// Export logging and analysis
+export { TestLogManager } from './logging/TestLogManager.js';
+export { LogAnalysisEngine } from './logging/LogAnalysisEngine.js';
+
 // Export wrapper for JSON module system
 import CodeAgentWrapper from './CodeAgentWrapper.js';
 export { CodeAgentWrapper };
 
-// Default export
-import { CodeAgent } from './agent/index.js';
-export default CodeAgent;
+// Default export - Enhanced version
+import { EnhancedCodeAgent } from './agent/EnhancedCodeAgent.js';
+export default EnhancedCodeAgent;

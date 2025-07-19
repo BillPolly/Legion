@@ -1,17 +1,30 @@
 # @jsenvoy/code-agent
 
-An intelligent coding agent that generates, tests, and validates vanilla JavaScript projects with automated quality assurance.
+An intelligent coding agent that generates, tests, and validates vanilla JavaScript projects with automated quality assurance. Now with **real runtime testing** capabilities!
 
 ## Overview
 
 The Code Agent is a specialized AI-powered tool that can:
 
-- 🎯 **Plan** multi-file project structures
+- 🎯 **Plan** multi-file project structures with AI-driven architecture
 - 📝 **Generate** vanilla JavaScript code (frontend and backend)
-- 🧪 **Test** code with automatically generated Jest tests
-- ✅ **Validate** code with programmatic ESLint rules
-- 🔄 **Iterate** until all quality gates pass
-- 📊 **Track** progress and maintain state across sessions
+- 🧪 **Test** code with real Jest execution (not mocked!)
+- ✅ **Validate** code with real ESLint execution
+- 🌐 **Browser Test** with Playwright automation
+- 📊 **Analyze Logs** for intelligent debugging
+- 🔄 **Auto-Fix** issues using AI with log insights
+- ⚡ **Optimize** performance with parallel execution
+- 💾 **Track** progress and maintain state across sessions
+
+## 🚀 New: Enhanced Runtime Testing
+
+The enhanced version provides real-world validation:
+- **Real Test Execution**: Actually runs Jest tests, not simulated
+- **Browser Automation**: Full E2E testing with Playwright
+- **Server Testing**: Starts and validates real servers
+- **Log Analysis**: Captures and analyzes all logs for insights
+- **Performance Monitoring**: Tracks CPU, memory, and execution time
+- **AI-Powered Fixes**: Uses log data to generate targeted fixes
 
 ## Key Features
 
@@ -47,7 +60,7 @@ npm install @jsenvoy/code-agent
 
 ## Quick Start
 
-### Basic Usage
+### Basic Usage (Mocked Testing)
 
 ```javascript
 import { CodeAgent } from '@jsenvoy/code-agent';
@@ -59,22 +72,57 @@ await agent.initialize('./my-project');
 
 // Generate a complete project
 await agent.develop({
-  task: "Create a todo list application",
-  requirements: {
-    frontend: "HTML form for adding todos, display list with delete functionality",
-    backend: "REST API with CRUD operations, file-based storage"
+  projectName: 'Todo App',
+  description: 'A todo list application',
+  features: [
+    'Add and remove tasks',
+    'Mark tasks as complete',
+    'Filter by status'
+  ]
+});
+```
+
+### Enhanced Usage (Real Testing) 🆕
+
+```javascript
+import { EnhancedCodeAgent } from '@jsenvoy/code-agent';
+
+const agent = new EnhancedCodeAgent({
+  enhancedConfig: {
+    enableRuntimeTesting: true,
+    enableBrowserTesting: true,
+    enableLogAnalysis: true
   }
 });
+
+// Initialize with runtime options
+await agent.initialize('./my-project', {
+  runtimeConfig: {
+    logLevel: 'info',
+    captureConsole: true
+  }
+});
+
+// Generate and test with real execution
+const result = await agent.develop({
+  projectName: 'Todo App',
+  description: 'A todo list application with real testing',
+  features: ['CRUD operations', 'User authentication']
+});
+
+// Access detailed metrics
+console.log(`Tests executed: ${result.enhanced.runtimeTesting.testsExecuted}`);
+console.log(`Coverage: ${result.enhanced.runtimeTesting.coverage}%`);
 ```
 
 ### Fixing Mode
 
 ```javascript
-// Fix specific issues
+// Fix specific issues with AI-powered analysis
 await agent.fix({
-  errors: [
-    "Test failed: Expected 3 todos, received 2",
-    "ESLint error: Unused variable 'todoId' in todo.js:15"
+  issues: [
+    'Tests are failing for user authentication',
+    'ESLint errors in api.js'
   ]
 });
 ```
@@ -156,7 +204,7 @@ The Code Agent seamlessly integrates with the jsEnvoy ecosystem:
 
 ## Configuration
 
-The agent can be configured for different project types:
+### Basic Configuration
 
 ```javascript
 const agent = new CodeAgent({
@@ -169,6 +217,33 @@ const agent = new CodeAgent({
     threshold: 85 // Minimum coverage percentage
   },
   projectType: 'fullstack' // 'frontend', 'backend', or 'fullstack'
+});
+```
+
+### Enhanced Configuration 🆕
+
+```javascript
+const agent = new EnhancedCodeAgent({
+  projectType: 'fullstack',
+  qualityGates: {
+    eslintErrors: 0,
+    eslintWarnings: 5,
+    testCoverage: 90,
+    allTestsPass: true
+  },
+  enhancedConfig: {
+    enableRuntimeTesting: true,
+    enableBrowserTesting: true,
+    enableLogAnalysis: true,
+    enablePerformanceMonitoring: true,
+    runtimeTimeout: 300000, // 5 minutes
+    browserHeadless: true,
+    parallelExecution: true,
+    browserConfig: {
+      browsers: ['chromium', 'firefox'],
+      viewport: { width: 1920, height: 1080 }
+    }
+  }
 });
 ```
 
@@ -207,16 +282,55 @@ await agent.develop({
 
 ## Documentation
 
-- [Design Document](./docs/DESIGN.md) - Comprehensive technical design
-- [API Reference](./docs/API.md) - Detailed API documentation
-- [Workflows](./docs/WORKFLOWS.md) - Development workflow documentation
-- [Examples](./docs/EXAMPLES.md) - Usage examples and patterns
+- [Design Document](./docs/DESIGN.md) - Original technical design
+- [Enhanced Design](./docs/ENHANCED_DESIGN.md) - Enhanced runtime testing design
+- [API Reference](./docs/API.md) - Complete API documentation
+- [Migration Guide](./docs/MIGRATION.md) - Migrate from mocked to real testing
+- [Development Plan](./docs/DEVELOPMENT_PLAN.md) - Implementation roadmap
+- [Examples](./examples/) - Working code examples
+
+## Enhanced Features 🚀
+
+### Real Test Execution
+- Executes actual Jest tests with coverage reporting
+- Captures test output and analyzes failures
+- Provides detailed test metrics and insights
+
+### Browser Testing
+- Automated browser testing with Playwright
+- Visual regression testing
+- Cross-browser compatibility checks
+- Performance benchmarking
+
+### Log Analysis
+- Captures all logs from tests, servers, and browsers
+- AI-powered log correlation and pattern detection
+- Root cause analysis for failures
+- Actionable fix suggestions
+
+### Performance Monitoring
+- Real-time CPU and memory tracking
+- Execution time optimization
+- Resource usage alerts
+- Performance trend analysis
+
+### AI-Powered Fixing
+- Analyzes logs to understand failures
+- Generates targeted fixes based on root causes
+- Validates fixes through iterative testing
+- Learns from fix patterns
 
 ## Requirements
 
 - Node.js >= 18.0.0
 - ES6 modules support
 - Internet connection for LLM integration
+
+### Additional Requirements for Enhanced Features
+- `@jsenvoy/log-manager` - Log capture and analysis
+- `@jsenvoy/node-runner` - Process execution
+- `@jsenvoy/playwright` - Browser automation
+- Jest, ESLint, and Puppeteer as peer dependencies
 
 ## License
 
