@@ -16,6 +16,8 @@ import { JestConfigManager } from '../config/JestConfigManager.js';
 import { StateManager } from '../config/StateManager.js';
 import { ValidationUtils } from '../utils/ValidationUtils.js';
 import { ErrorHandler } from '../utils/ErrorHandler.js';
+import GitIntegrationManager from '../integration/GitIntegrationManager.js';
+import GitConfigValidator from '../config/GitConfigValidator.js';
 
 // Import unified planner
 import { UnifiedPlanner } from '../planning/llm/UnifiedPlanner.js';
@@ -101,6 +103,20 @@ class CodeAgent extends EventEmitter {
     this.moduleLoader = null;
     this.unifiedPlanner = null;
     
+    // Git integration
+    this.gitIntegration = null;
+    this.gitConfig = config.gitConfig || null;
+    this.enableGitIntegration = config.enableGitIntegration === true;
+    this.gitHooks = config.gitHooks || {};
+    this.trackGitMetrics = config.trackGitMetrics === true;
+    this.trackedFiles = new Set();
+    this.gitMetrics = {
+      totalCommits: 0,
+      commitsByPhase: {},
+      filesByPhase: {},
+      commitSizes: []
+    };
+    
     // Code generators
     this.htmlGenerator = new HTMLGenerator(config.htmlConfig);
     this.jsGenerator = new JSGenerator(config.jsConfig);
@@ -183,10 +199,16 @@ class CodeAgent extends EventEmitter {
       // Load existing state if available
       await this.loadState();
       
+      // Initialize Git integration if enabled
+      if (this.enableGitIntegration) {
+        await this.initializeGit(workingDirectory);
+      }
+      
       this.initialized = true;
       this.emit('info', {
         message: 'CodeAgent initialized successfully',
-        agentId: this.id
+        agentId: this.id,
+        gitEnabled: this.enableGitIntegration
       });
     } catch (error) {
       this.errorHandler.recordError(error, { phase: 'initialization' });
@@ -439,6 +461,360 @@ class CodeAgent extends EventEmitter {
       projectPlan: this.projectPlan,
       qualityCheckResults: this.qualityCheckResults
     };
+  }
+
+  /**
+   * Initialize Git integration
+   */
+  async initializeGit(workingDirectory) {
+    try {
+      // Validate Git configuration
+      const { config: validatedConfig } = GitConfigValidator.validateAndMerge(this.gitConfig || {});
+      this.gitConfig = validatedConfig;
+      
+      // Create GitIntegrationManager with resource manager
+      const resourceManager = {
+        get: (key) => {
+          if (key === 'GITHUB_USER') return process.env.GITHUB_USER;
+          if (key === 'GITHUB_PAT') return process.env.GITHUB_PAT;
+          if (key === 'GITHUB_AGENT_ORG') return process.env.GITHUB_AGENT_ORG || 'AgentResults';
+          if (key === 'llmClient') return this.llmClient?.llmClient || null;
+          return null;
+        }
+      };
+      
+      this.gitIntegration = new GitIntegrationManager(resourceManager, validatedConfig);
+      await this.gitIntegration.initialize(workingDirectory);
+      
+      // Set up Git event forwarding
+      this.gitIntegration.on('initialized', (data) => {
+        this.emit('git-initialized', data);
+      });
+      
+      this.gitIntegration.on('commit', (data) => {
+        this.emit('git-commit', data);
+        if (this.trackGitMetrics) {
+          this.updateGitMetrics('commit', data);
+        }
+      });
+      
+      this.gitIntegration.on('branch', (data) => {
+        this.emit('git-branch', data);
+      });
+      
+      this.gitIntegration.on('error', (data) => {
+        this.emit('git-error', data);
+      });
+      
+      this.emit('info', {
+        message: 'Git integration initialized',
+        repository: workingDirectory,
+        remote: validatedConfig.remote?.url
+      });
+      
+    } catch (error) {
+      this.emit('warning', {
+        message: `Git integration initialization failed: ${error.message}`,
+        error: error.message
+      });
+      // Don't throw - Git integration is optional
+      this.gitIntegration = null;
+      this.enableGitIntegration = false;
+    }
+  }
+
+  /**
+   * Initialize Git repository (can be called manually)
+   */
+  async initializeGitRepository() {
+    if (!this.gitIntegration) {
+      await this.enableGitIntegrationMethod();
+    }
+    
+    if (!this.gitIntegration) {
+      throw new Error('Git integration not initialized');
+    }
+    
+    // Repository is already initialized in GitIntegrationManager
+    this.emit('info', {
+      message: 'Git repository ready',
+      initialized: this.gitIntegration.isInitialized()
+    });
+  }
+
+  /**
+   * Enable Git integration after initialization
+   */
+  async enableGitIntegrationMethod() {
+    if (!this.initialized) {
+      throw new Error('CodeAgent must be initialized first');
+    }
+    
+    if (!this.gitIntegration) {
+      this.enableGitIntegration = true;
+      await this.initializeGit(this.config.workingDirectory);
+    }
+    
+    this.emit('info', {
+      message: 'Git integration enabled'
+    });
+  }
+
+  /**
+   * Disable Git integration
+   */
+  async disableGitIntegration() {
+    this.enableGitIntegration = false;
+    if (this.gitIntegration) {
+      // Clean up Git integration
+      this.gitIntegration.removeAllListeners();
+      this.gitIntegration = null;
+    }
+    
+    this.emit('info', {
+      message: 'Git integration disabled'
+    });
+  }
+
+  /**
+   * Start a new phase with Git branch
+   */
+  async startPhase(phaseName) {
+    if (this.gitIntegration && this.gitConfig?.branchStrategy === 'phase') {
+      const branchName = await this.gitIntegration.createPhaseBranch(phaseName);
+      this.emit('git-branch-created', {
+        phase: phaseName,
+        branch: branchName
+      });
+    }
+    
+    this.currentPhase = phaseName;
+    this.emit('phase-start', {
+      phase: phaseName,
+      gitEnabled: !!this.gitIntegration
+    });
+  }
+
+  /**
+   * Complete a phase with automatic commit
+   */
+  async completePhase(phaseName) {
+    if (this.gitIntegration && this.gitConfig?.autoCommit) {
+      // Get tracked files for this phase
+      const phaseFiles = Array.from(this.trackedFiles);
+      
+      if (phaseFiles.length > 0) {
+        const commitResult = await this.commitPhase(phaseName, phaseFiles, `Complete ${phaseName} phase`);
+        
+        this.emit('git-phase-commit', {
+          phase: phaseName,
+          commit: commitResult,
+          files: phaseFiles
+        });
+      }
+    }
+    
+    this.emit('phase-complete', {
+      phase: phaseName,
+      gitEnabled: !!this.gitIntegration
+    });
+  }
+
+  /**
+   * Commit files for a specific phase
+   */
+  async commitPhase(phase, files, message) {
+    if (!this.gitIntegration) {
+      return { success: false, error: 'Git integration not enabled' };
+    }
+    
+    try {
+      // Apply custom hooks if defined
+      let finalMessage = message;
+      if (this.gitHooks.beforeCommit) {
+        const hookResult = await this.gitHooks.beforeCommit(files, message);
+        if (!hookResult.allow) {
+          return { success: false, error: 'Commit blocked by hook' };
+        }
+        finalMessage = hookResult.message || message;
+      }
+      
+      // Use CommitOrchestrator through GitIntegrationManager
+      const result = await this.gitIntegration.commitChanges(files, finalMessage, {
+        phase,
+        type: 'phase'
+      });
+      
+      // After commit hook
+      if (this.gitHooks.afterCommit && result.success) {
+        await this.gitHooks.afterCommit(result);
+      }
+      
+      // Update metrics
+      if (this.trackGitMetrics) {
+        this.updateGitMetrics('phase-commit', { phase, files, result });
+      }
+      
+      return result;
+      
+    } catch (error) {
+      this.emit('error', {
+        message: `Git commit failed: ${error.message}`,
+        phase,
+        error: error.message
+      });
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Track a file for the current phase
+   */
+  async trackFile(filename) {
+    this.trackedFiles.add(filename);
+    
+    if (this.gitIntegration) {
+      // File will be staged during commit
+      this.emit('git-track', {
+        file: filename,
+        phase: this.currentPhase
+      });
+    }
+  }
+
+  /**
+   * Get Git configuration
+   */
+  async getGitConfig() {
+    if (!this.gitIntegration) {
+      return this.gitConfig || GitConfigValidator.getDefaultConfig();
+    }
+    
+    return this.gitConfig;
+  }
+
+  /**
+   * Update Git configuration
+   */
+  async updateGitConfig(updates) {
+    if (!this.gitIntegration) {
+      throw new Error('Git integration not enabled');
+    }
+    
+    // Merge with existing config
+    this.gitConfig = {
+      ...this.gitConfig,
+      ...updates,
+      user: {
+        ...this.gitConfig.user,
+        ...updates.user
+      },
+      commit: {
+        ...this.gitConfig.commit,
+        ...updates.commit
+      },
+      branch: {
+        ...this.gitConfig.branch,
+        ...updates.branch
+      }
+    };
+    
+    // Validate updated config
+    this.gitConfig = GitConfigValidator.validate(this.gitConfig);
+    
+    // Update GitIntegrationManager config
+    this.gitIntegration.updateConfig(this.gitConfig);
+    
+    this.emit('git-config-updated', {
+      config: this.gitConfig
+    });
+  }
+
+  /**
+   * Get Git status information
+   */
+  async getGitStatus() {
+    if (!this.gitIntegration) {
+      return {
+        initialized: false,
+        currentBranch: null,
+        trackedFiles: [],
+        untrackedFiles: [],
+        commits: 0
+      };
+    }
+    
+    const status = await this.gitIntegration.getStatus();
+    const metrics = await this.gitIntegration.getMetrics();
+    
+    return {
+      initialized: this.gitIntegration.isInitialized(),
+      currentBranch: status.branch,
+      trackedFiles: Array.from(this.trackedFiles),
+      untrackedFiles: status.untracked || [],
+      commits: metrics.totalCommits || 0,
+      changes: status.changes || []
+    };
+  }
+
+  /**
+   * Get Git metrics
+   */
+  async getGitMetrics() {
+    if (!this.gitIntegration || !this.trackGitMetrics) {
+      return this.gitMetrics;
+    }
+    
+    const metrics = await this.gitIntegration.getMetrics();
+    
+    return {
+      ...this.gitMetrics,
+      ...metrics,
+      averageCommitSize: this.gitMetrics.commitSizes.length > 0
+        ? this.gitMetrics.commitSizes.reduce((a, b) => a + b, 0) / this.gitMetrics.commitSizes.length
+        : 0
+    };
+  }
+
+  /**
+   * Update Git metrics
+   */
+  updateGitMetrics(event, data) {
+    if (event === 'commit' || event === 'phase-commit') {
+      this.gitMetrics.totalCommits++;
+      
+      const phase = data.phase || 'general';
+      this.gitMetrics.commitsByPhase[phase] = (this.gitMetrics.commitsByPhase[phase] || 0) + 1;
+      
+      if (data.files) {
+        this.gitMetrics.filesByPhase[phase] = (this.gitMetrics.filesByPhase[phase] || 0) + data.files.length;
+        this.gitMetrics.commitSizes.push(data.files.length);
+      }
+    }
+  }
+
+  /**
+   * Cleanup CodeAgent resources
+   */
+  async cleanup() {
+    try {
+      // Save final state
+      await this.saveState();
+      
+      // Cleanup Git integration if enabled
+      if (this.gitIntegration) {
+        this.gitIntegration.removeAllListeners();
+      }
+      
+      // Cleanup other managers
+      // (Add more cleanup as needed)
+      
+    } catch (error) {
+      this.emit('warning', {
+        message: `Cleanup error: ${error.message}`,
+        error: error.message
+      });
+    }
   }
 }
 

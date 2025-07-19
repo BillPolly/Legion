@@ -63,6 +63,18 @@ class EnhancedCodeAgent extends CodeAgent {
         disk: []
       }
     };
+    
+    // Enhanced Git integration configuration
+    this.gitEnhancedConfig = {
+      includeTestResults: config.gitConfig?.includeTestResults !== false,
+      includeBrowserTests: config.gitConfig?.includeBrowserTests !== false,
+      includeLogAnalysis: config.gitConfig?.includeLogAnalysis !== false,
+      includePerformanceData: config.gitConfig?.includePerformanceData !== false,
+      includeHealthMetrics: config.gitConfig?.includeHealthMetrics !== false,
+      trackEnhancedMetrics: config.gitConfig?.trackEnhancedMetrics !== false,
+      enableAIInsights: config.gitConfig?.enableAIInsights !== false,
+      qualityGates: config.gitConfig?.qualityGates || {}
+    };
   }
 
   /**
@@ -744,6 +756,544 @@ class EnhancedCodeAgent extends CodeAgent {
         error: error.message
       });
     }
+  }
+
+  /**
+   * Commit with test results metadata
+   */
+  async commitWithTestResults(phase, files, message, testResults) {
+    if (!this.gitIntegration) {
+      return { success: false, error: 'Git integration not enabled' };
+    }
+    
+    try {
+      const metadata = {
+        phase,
+        type: 'test-results',
+        testResults: {
+          passed: testResults.passed,
+          failed: testResults.failed,
+          coverage: testResults.coverage,
+          timestamp: new Date().toISOString()
+        }
+      };
+      
+      // Create enhanced commit message
+      const enhancedMessage = `${message}\n\nTest Results:\n- Passed: ${testResults.passed}\n- Failed: ${testResults.failed}\n- Coverage: ${testResults.coverage}%`;
+      
+      const result = await this.gitIntegration.commitChanges(files, enhancedMessage, metadata);
+      
+      if (result.success) {
+        result.metadata = metadata;
+      }
+      
+      this.emit('git-test-commit', {
+        phase,
+        testResults,
+        commit: result
+      });
+      
+      return result;
+      
+    } catch (error) {
+      this.emit('error', {
+        message: `Git commit with test results failed: ${error.message}`,
+        error: error.message
+      });
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Commit browser test results
+   */
+  async commitBrowserTests(files, message, browserTestResults) {
+    if (!this.gitIntegration) {
+      return { success: false, error: 'Git integration not enabled' };
+    }
+    
+    try {
+      const metadata = {
+        type: 'browser-tests',
+        browserTests: {
+          browser: browserTestResults.browser,
+          passed: browserTestResults.passed,
+          failed: browserTestResults.failed,
+          screenshots: browserTestResults.screenshots || [],
+          timestamp: new Date().toISOString()
+        }
+      };
+      
+      const result = await this.gitIntegration.commitChanges(files, message, metadata);
+      
+      if (result.success) {
+        result.metadata = metadata;
+      }
+      
+      this.emit('git-browser-test-commit', {
+        browserTestResults,
+        commit: result
+      });
+      
+      return result;
+      
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Commit with log analysis metadata
+   */
+  async commitWithLogAnalysis(phase, files, message, logAnalysis) {
+    if (!this.gitIntegration) {
+      return { success: false, error: 'Git integration not enabled' };
+    }
+    
+    try {
+      const metadata = {
+        phase,
+        type: 'log-analysis',
+        logAnalysis: {
+          errors: logAnalysis.errors,
+          warnings: logAnalysis.warnings,
+          info: logAnalysis.info,
+          patterns: logAnalysis.patterns,
+          recommendations: logAnalysis.recommendations,
+          timestamp: new Date().toISOString()
+        }
+      };
+      
+      const result = await this.gitIntegration.commitChanges(files, message, metadata);
+      
+      if (result.success) {
+        result.metadata = metadata;
+      }
+      
+      return result;
+      
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Commit with quality gates enforcement
+   */
+  async commitWithQualityGates(phase, files, message, qualityResults) {
+    if (!this.gitIntegration) {
+      return { success: false, error: 'Git integration not enabled' };
+    }
+    
+    try {
+      // Check quality gates
+      const failedGates = [];
+      const gates = this.gitEnhancedConfig.qualityGates;
+      
+      if (gates.minCoverage && qualityResults.coverage < gates.minCoverage) {
+        failedGates.push('minCoverage');
+      }
+      
+      if (gates.maxComplexity && qualityResults.complexity > gates.maxComplexity) {
+        failedGates.push('maxComplexity');
+      }
+      
+      if (gates.noConsoleLog && qualityResults.issues?.includes('console.log found')) {
+        failedGates.push('noConsoleLog');
+      }
+      
+      if (failedGates.length > 0) {
+        return {
+          success: false,
+          reason: 'Failed quality gates',
+          failedGates,
+          qualityResults
+        };
+      }
+      
+      // Quality gates passed, proceed with commit
+      const metadata = {
+        phase,
+        type: 'quality-gated',
+        qualityResults,
+        gatesPassed: true
+      };
+      
+      const result = await this.gitIntegration.commitChanges(files, message, metadata);
+      
+      if (result.success) {
+        result.metadata = metadata;
+      }
+      
+      return result;
+      
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Commit with performance data
+   */
+  async commitWithPerformanceData(phase, files, message, performanceMetrics) {
+    if (!this.gitIntegration) {
+      return { success: false, error: 'Git integration not enabled' };
+    }
+    
+    try {
+      const metadata = {
+        phase,
+        type: 'performance',
+        performance: {
+          executionTime: performanceMetrics.executionTime,
+          memoryUsage: performanceMetrics.memoryUsage,
+          cpuUsage: performanceMetrics.cpuUsage,
+          optimizations: performanceMetrics.optimizations || [],
+          timestamp: new Date().toISOString()
+        }
+      };
+      
+      const result = await this.gitIntegration.commitChanges(files, message, metadata);
+      
+      if (result.success) {
+        result.metadata = metadata;
+      }
+      
+      return result;
+      
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Commit with health metrics
+   */
+  async commitWithHealthMetrics(phase, files, message, healthMetrics) {
+    if (!this.gitIntegration) {
+      return { success: false, error: 'Git integration not enabled' };
+    }
+    
+    try {
+      const metadata = {
+        phase,
+        type: 'health-check',
+        health: healthMetrics
+      };
+      
+      const result = await this.gitIntegration.commitChanges(files, message, metadata);
+      
+      if (result.success) {
+        result.metadata = metadata;
+      }
+      
+      return result;
+      
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Get health metrics from monitor
+   */
+  async getHealthMetrics() {
+    if (!this.healthMonitor) {
+      return {
+        cpu: 0,
+        memory: 0,
+        disk: 0,
+        timestamp: new Date().toISOString()
+      };
+    }
+    
+    return await this.healthMonitor.getCurrentMetrics();
+  }
+
+  /**
+   * Commit parallel test execution results
+   */
+  async commitParallelTests(files, message, parallelResults) {
+    if (!this.gitIntegration) {
+      return { success: false, error: 'Git integration not enabled' };
+    }
+    
+    try {
+      const metadata = {
+        type: 'parallel-tests',
+        parallelExecution: {
+          totalTests: parallelResults.totalTests,
+          parallelWorkers: parallelResults.parallelWorkers,
+          executionTime: parallelResults.executionTime,
+          speedup: parallelResults.speedup,
+          workerStats: parallelResults.workerStats,
+          timestamp: new Date().toISOString()
+        }
+      };
+      
+      const result = await this.gitIntegration.commitChanges(files, message, metadata);
+      
+      if (result.success) {
+        result.metadata = metadata;
+      }
+      
+      return result;
+      
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Commit error recovery information
+   */
+  async commitErrorRecovery(files, message, errorInfo) {
+    if (!this.gitIntegration) {
+      return { success: false, error: 'Git integration not enabled' };
+    }
+    
+    try {
+      const metadata = {
+        type: 'error-recovery',
+        errorRecovery: {
+          error: errorInfo.error,
+          stack: errorInfo.stack,
+          recovered: errorInfo.recovered,
+          fix: errorInfo.fix,
+          preventionStrategy: errorInfo.preventionStrategy,
+          timestamp: new Date().toISOString()
+        }
+      };
+      
+      const result = await this.gitIntegration.commitChanges(files, message, metadata);
+      
+      if (result.success) {
+        result.metadata = metadata;
+      }
+      
+      return result;
+      
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Commit phase with enhanced metadata
+   */
+  async commitPhase(phase, files, message, additionalMetadata = {}) {
+    if (!this.gitIntegration) {
+      return { success: false, error: 'Git integration not enabled' };
+    }
+    
+    try {
+      const metadata = {
+        phase,
+        type: 'enhanced-phase',
+        ...additionalMetadata,
+        timestamp: new Date().toISOString()
+      };
+      
+      const result = await this.gitIntegration.commitChanges(files, message, metadata);
+      
+      if (result.success) {
+        result.metadata = metadata;
+        
+        // Track enhanced metrics
+        if (this.gitEnhancedConfig.trackEnhancedMetrics) {
+          this.updateEnhancedGitMetrics(phase, metadata);
+        }
+      }
+      
+      return result;
+      
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Get enhanced Git metrics
+   */
+  async getEnhancedGitMetrics() {
+    const baseMetrics = await this.getGitMetrics();
+    
+    // Calculate phase-specific metrics
+    const phaseMetrics = {};
+    for (const [phase, data] of this.metrics.phaseMetrics) {
+      phaseMetrics[phase] = {
+        duration: data.duration,
+        commits: this.gitMetrics?.commitsByPhase[phase] || 0,
+        files: this.gitMetrics?.filesByPhase[phase] || 0,
+        resourceUsage: data.resourceUsage
+      };
+    }
+    
+    // Generate trends and insights
+    const performanceTrends = this.analyzePerformanceTrends();
+    const qualityTrends = this.analyzeQualityTrends();
+    const recommendations = this.generateGitRecommendations();
+    
+    return {
+      ...baseMetrics,
+      phaseMetrics,
+      performanceTrends,
+      qualityTrends,
+      recommendations
+    };
+  }
+
+  /**
+   * Commit with AI-powered fix insights
+   */
+  async commitAIFix(files, message, aiFixInsights) {
+    if (!this.gitIntegration) {
+      return { success: false, error: 'Git integration not enabled' };
+    }
+    
+    try {
+      const metadata = {
+        type: 'ai-fix',
+        aiFix: {
+          issue: aiFixInsights.issue,
+          suggestion: aiFixInsights.suggestion,
+          confidence: aiFixInsights.confidence,
+          appliedFix: aiFixInsights.appliedFix,
+          reasoning: aiFixInsights.reasoning,
+          timestamp: new Date().toISOString()
+        }
+      };
+      
+      const result = await this.gitIntegration.commitChanges(files, message, metadata);
+      
+      if (result.success) {
+        result.metadata = metadata;
+      }
+      
+      return result;
+      
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Update enhanced Git metrics
+   */
+  updateEnhancedGitMetrics(phase, metadata) {
+    if (!this.enhancedGitMetrics) {
+      this.enhancedGitMetrics = {
+        phaseData: {},
+        qualityHistory: [],
+        performanceHistory: []
+      };
+    }
+    
+    // Store phase-specific data
+    if (!this.enhancedGitMetrics.phaseData[phase]) {
+      this.enhancedGitMetrics.phaseData[phase] = [];
+    }
+    this.enhancedGitMetrics.phaseData[phase].push(metadata);
+    
+    // Track quality metrics
+    if (metadata.qualityResults) {
+      this.enhancedGitMetrics.qualityHistory.push({
+        timestamp: metadata.timestamp,
+        coverage: metadata.qualityResults.coverage,
+        complexity: metadata.qualityResults.complexity
+      });
+    }
+    
+    // Track performance metrics
+    if (metadata.performance) {
+      this.enhancedGitMetrics.performanceHistory.push({
+        timestamp: metadata.timestamp,
+        executionTime: metadata.performance.executionTime,
+        memoryUsage: metadata.performance.memoryUsage
+      });
+    }
+  }
+
+  /**
+   * Analyze performance trends
+   */
+  analyzePerformanceTrends() {
+    if (!this.enhancedGitMetrics?.performanceHistory?.length) {
+      return { trend: 'insufficient-data' };
+    }
+    
+    const history = this.enhancedGitMetrics.performanceHistory;
+    const recent = history.slice(-5);
+    
+    // Calculate trend
+    const executionTimes = recent.map(h => h.executionTime);
+    const avgTime = executionTimes.reduce((a, b) => a + b, 0) / executionTimes.length;
+    const trend = executionTimes[executionTimes.length - 1] > avgTime ? 'increasing' : 'decreasing';
+    
+    return {
+      trend,
+      averageExecutionTime: avgTime,
+      latestExecutionTime: executionTimes[executionTimes.length - 1]
+    };
+  }
+
+  /**
+   * Analyze quality trends
+   */
+  analyzeQualityTrends() {
+    if (!this.enhancedGitMetrics?.qualityHistory?.length) {
+      return { trend: 'insufficient-data' };
+    }
+    
+    const history = this.enhancedGitMetrics.qualityHistory;
+    const recent = history.slice(-5);
+    
+    // Calculate coverage trend
+    const coverages = recent.map(h => h.coverage).filter(c => c != null);
+    if (coverages.length >= 2) {
+      const trend = coverages[coverages.length - 1] > coverages[0] ? 'improving' : 'declining';
+      return {
+        trend,
+        latestCoverage: coverages[coverages.length - 1],
+        averageCoverage: coverages.reduce((a, b) => a + b, 0) / coverages.length
+      };
+    }
+    
+    return { trend: 'stable' };
+  }
+
+  /**
+   * Generate Git-related recommendations
+   */
+  generateGitRecommendations() {
+    const recommendations = [];
+    
+    // Check commit frequency
+    if (this.gitMetrics?.totalCommits < 5) {
+      recommendations.push({
+        type: 'commit-frequency',
+        message: 'Consider committing more frequently to track progress',
+        priority: 'medium'
+      });
+    }
+    
+    // Check phase balance
+    const phaseCommits = this.gitMetrics?.commitsByPhase || {};
+    const phases = Object.keys(phaseCommits);
+    if (phases.length > 0) {
+      const avgCommits = Object.values(phaseCommits).reduce((a, b) => a + b, 0) / phases.length;
+      for (const [phase, count] of Object.entries(phaseCommits)) {
+        if (count < avgCommits * 0.5) {
+          recommendations.push({
+            type: 'phase-coverage',
+            message: `${phase} phase has fewer commits than average`,
+            priority: 'low'
+          });
+        }
+      }
+    }
+    
+    return recommendations;
   }
 }
 

@@ -1,412 +1,828 @@
-# Code Agent Design Document
+# @jsenvoy/code-agent - Comprehensive Documentation
 
 ## Overview
 
-The **@jsenvoy/code-agent** is an intelligent coding agent that can generate, test, and validate vanilla JavaScript projects. It operates within specified directories, plans multi-file project layouts, writes frontend and backend code, and ensures all code passes ESLint validation and Jest tests before completion.
+The **@jsenvoy/code-agent** is an AI-powered code generation platform that creates, tests, and validates complete JavaScript projects using real-world testing capabilities. Unlike traditional code generators, it provides end-to-end validation through actual test execution, browser automation, and comprehensive log analysis.
+
+## Table of Contents
+
+1. [Quick Start](#quick-start)
+2. [Architecture](#architecture)
+3. [Core Features](#core-features)
+4. [API Reference](#api-reference)
+5. [Configuration](#configuration)
+6. [Enhanced Runtime Testing](#enhanced-runtime-testing)
+7. [Browser Testing & Automation](#browser-testing--automation)
+8. [Examples](#examples)
+9. [Testing Framework](#testing-framework)
+10. [Migration Guide](#migration-guide)
+11. [Development & Contributing](#development--contributing)
+
+## Quick Start
+
+### Installation
+
+```bash
+npm install @jsenvoy/code-agent
+```
+
+### Basic Usage (Mock Testing)
+
+```javascript
+import { CodeAgent } from '@jsenvoy/code-agent';
+
+const agent = new CodeAgent({
+  projectType: 'fullstack',
+  enableConsoleOutput: true
+});
+
+await agent.initialize('./my-project');
+
+const result = await agent.develop({
+  projectName: 'Todo App',
+  description: 'A todo list application',
+  features: [
+    'Add and remove tasks',
+    'Mark tasks as complete',
+    'Filter by status'
+  ]
+});
+```
+
+### Enhanced Usage (Real Testing + Browser Automation)
+
+```javascript
+import { EnhancedCodeAgent } from '@jsenvoy/code-agent';
+
+const agent = new EnhancedCodeAgent({
+  projectType: 'fullstack',
+  enhancedConfig: {
+    enableRuntimeTesting: true,
+    enableBrowserTesting: true,
+    enableLogAnalysis: true,
+    enablePerformanceMonitoring: true
+  }
+});
+
+await agent.initialize('./my-project', {
+  llmConfig: {
+    provider: 'openai', // or 'anthropic'
+    apiKey: process.env.OPENAI_API_KEY,
+    model: 'gpt-4'
+  }
+});
+
+const result = await agent.develop({
+  projectName: 'Interactive Dashboard',
+  description: 'Real-time dashboard with API integration',
+  features: [
+    'Real-time data visualization',
+    'User authentication',
+    'REST API with Express.js',
+    'Responsive design with animations'
+  ]
+});
+
+console.log(`✅ Project completed successfully!`);
+console.log(`📊 Tests executed: ${result.enhanced.runtimeTesting.testsExecuted}`);
+console.log(`📈 Coverage: ${result.enhanced.runtimeTesting.coverage}%`);
+console.log(`🌐 Browser tests: ${result.enhanced.browserTesting.testsRun}`);
+```
 
 ## Architecture
-
-### Core Principles
-
-1. **No Frameworks Required**: Focuses on vanilla JavaScript (HTML/CSS/JS for frontend, Node.js for backend)
-2. **No Build Systems**: Generated code runs directly without compilation or bundling
-3. **Programmatic Quality Control**: ESLint rules and Jest tests are managed entirely in code
-4. **State Persistence**: Always knows what it's working on and never finishes until quality gates pass
-5. **Directory-Scoped Operations**: Works within specified directories with proper isolation
-6. **Integration with jsEnvoy Ecosystem**: Leverages existing tools and patterns
 
 ### System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Code Agent                               │
+│                    Enhanced Code Agent                      │
 ├─────────────────────────────────────────────────────────────┤
-│  Planning Layer (LLM-Powered)                              │
-│  ├── UnifiedPlanner    (Single LLM-based planner)         │
-│  │   ├── RequirementAnalyzer   (via LLM)                  │
-│  │   ├── DirectoryPlanner      (via LLM)                  │ 
-│  │   ├── DependencyPlanner     (via LLM)                  │
-│  │   ├── FrontendArchitecture  (via LLM)                  │
-│  │   ├── BackendArchitecture   (via LLM)                  │
-│  │   └── APIInterfacePlanner   (via LLM)                  │
-│  ├── TaskTracker       (State management and persistence)  │
-│  └── GenericPlanner    (@jsenvoy/llm-planner)             │
+│  Planning Layer (AI-Powered)                              │
+│  ├── UnifiedPlanner      (LLM-based architecture planning) │
+│  ├── TaskTracker         (Progress & state management)     │
+│  └── Requirements Analysis (Feature extraction & validation)│
 ├─────────────────────────────────────────────────────────────┤
-│  Operations Layer                                           │
-│  ├── CodeGenerator     (Vanilla JS code generation)        │
-│  ├── TestGenerator     (Jest test creation)                │
-│  ├── LintRunner        (Programmatic ESLint control)       │
-│  └── QualityChecker    (Quality gate enforcement)          │
+│  Code Generation Layer                                     │
+│  ├── HTMLGenerator       (Semantic HTML5 generation)       │
+│  ├── CSSGenerator        (Modern CSS with Flexbox/Grid)    │
+│  ├── JSGenerator         (ES6+ vanilla JavaScript)         │
+│  └── TestGenerator       (Jest test suite generation)      │
 ├─────────────────────────────────────────────────────────────┤
-│  Workflow Layer                                             │
-│  ├── WorkflowManager   (Orchestrates coding workflows)     │
-│  ├── StepValidator     (Validates step completion)         │
-│  ├── IterativeProcessor (Handles fixing cycles)            │
-│  └── StateManager      (Persistent state tracking)         │
+│  Runtime Testing Layer (REAL EXECUTION)                   │
+│  ├── TestExecutionEngine (Real Jest execution)             │
+│  ├── RealESLintExecutor  (Actual ESLint validation)        │
+│  ├── ParallelTestExecutor (Multi-threaded test execution)  │
+│  └── ServerExecutionManager (Real server startup/testing)  │
 ├─────────────────────────────────────────────────────────────┤
-│  Integration Layer                                          │
-│  ├── File Operations   (@jsenvoy/general-tools)           │
-│  ├── LLM Client        (@jsenvoy/llm)                     │
-│  ├── Module Loading    (@jsenvoy/module-loader)           │
-│  └── Resource Management (@jsenvoy/resource-manager)       │
+│  Browser Testing Layer (PLAYWRIGHT INTEGRATION)           │
+│  ├── BrowserTestGenerator (E2E test generation)            │
+│  ├── E2ETestRunner       (Cross-browser test execution)    │
+│  ├── VisualRegressionTester (Screenshot comparison)        │
+│  ├── PerformanceBenchmark (Page speed & metrics)           │
+│  ├── AccessibilityTester  (WCAG compliance testing)        │
+│  └── ResponsiveDesignTester (Multi-device testing)         │
+├─────────────────────────────────────────────────────────────┤
+│  Log Analysis & Intelligence Layer                        │
+│  ├── TestLogManager      (Comprehensive log capture)       │
+│  ├── LogAnalysisEngine   (Pattern recognition & insights)  │
+│  ├── EnhancedSuggestionGenerator (AI-powered fixes)        │
+│  └── EnhancedCorrelationEngine (Cross-system log analysis) │
+├─────────────────────────────────────────────────────────────┤
+│  Quality & Monitoring Layer                               │
+│  ├── EnhancedQualityPhase (Real quality validation)        │
+│  ├── SecurityScanner     (Vulnerability detection)         │
+│  ├── PerformanceMonitor  (Real-time resource tracking)     │
+│  └── SystemHealthMonitor (System resource management)      │
+├─────────────────────────────────────────────────────────────┤
+│  Orchestration & Management Layer                         │
+│  ├── ComprehensiveTestingPhase (Test orchestration)        │
+│  ├── EnhancedFixingPhase (AI-powered issue resolution)     │
+│  ├── TestOrchestrator    (Parallel test coordination)      │
+│  └── E2EValidator        (End-to-end workflow validation)  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Core Components
+### Component Interaction Flow
 
-### 1. CodeAgent (Main Class)
-
-The central orchestrator that manages the entire coding workflow.
-
-**Responsibilities:**
-- Initialize working directory context
-- Coordinate between planning, operations, and workflow layers
-- Maintain persistent state across sessions
-- Handle both initial development and iterative fixing modes
-
-**Key Methods:**
-- `initialize(workingDirectory)` - Set up agent in target directory
-- `planProject(requirements)` - Create comprehensive project plan
-- `generateCode(plan)` - Generate code following the plan
-- `runQualityChecks()` - Execute ESLint and Jest validation
-- `iterativelyFix(errors)` - Fix issues until all quality gates pass
-
-### 2. Planning Layer (LLM-Powered)
-
-#### UnifiedPlanner
-A single, intelligent planner that uses LLM to handle all planning domains through configuration-driven prompts.
-
-**Key Features:**
-- **Single Entry Point**: One planner class handles all planning scenarios
-- **LLM-Powered**: Uses @jsenvoy/llm-planner GenericPlanner for intelligent plan generation
-- **Configuration-Driven**: Different planning domains defined through config objects
-- **Real-Time Planning**: Makes actual LLM API calls for intelligent planning decisions
-- **Hierarchical Plans**: Generates complex, nested plan structures with proper validation
-
-**Planning Domains:**
-- **RequirementAnalyzer**: Analyzes project requirements and determines structure
-- **DirectoryPlanner**: Plans multi-file directory layouts and organization  
-- **DependencyPlanner**: Plans file dependencies and import structures
-- **FrontendArchitecture**: Plans frontend component structure and data flow
-- **BackendArchitecture**: Plans backend services, APIs, and data layer
-- **APIInterfacePlanner**: Plans API contracts and communication patterns
-
-**Implementation:**
-```javascript
-const unifiedPlanner = new UnifiedPlanner({ provider: 'anthropic' });
-await unifiedPlanner.initialize();
-
-// Each planning domain uses the same interface
-const analysis = await unifiedPlanner.analyzeRequirements(requirements);
-const structure = await unifiedPlanner.planDirectoryStructure(analysis);
-const dependencies = await unifiedPlanner.planDependencies(structure, analysis);
+```
+Requirements → Planning → Code Generation → Real Testing → Browser Testing → Analysis → Fixes → Validation
+     ↓             ↓            ↓              ↓              ↓              ↓          ↓         ↓
+   AI Analysis → Architecture → HTML/CSS/JS → Jest+ESLint → Playwright E2E → Log AI → Auto-Fix → Quality Gates
 ```
 
-#### TaskTracker
-Manages state and tracks what the agent is currently working on.
+## Core Features
 
-**Features:**
-- Persists current task state to disk
-- Tracks completion status of individual files/components
-- Maintains history of changes and iterations
-- Provides resumption capabilities after interruptions
+### 🎯 AI-Powered Planning
+- **Intelligent Architecture Design**: Analyzes requirements to create optimal project structures
+- **Feature Extraction**: Automatically identifies frontend/backend requirements
+- **Dependency Planning**: Determines optimal file creation order and dependencies
+- **Test Strategy Planning**: Creates comprehensive testing strategies
 
-#### GenericPlanner (@jsenvoy/llm-planner)
-The underlying hierarchical planning engine that powers the UnifiedPlanner.
+### 📝 Code Generation
+- **Vanilla JavaScript**: No frameworks required - generates clean, modern ES6+
+- **Semantic HTML5**: Accessible, standards-compliant markup
+- **Modern CSS**: Flexbox/Grid layouts, responsive design, animations
+- **Modular Architecture**: Clean separation of concerns
 
-**Features:**
-- LLM-based plan generation with structured responses
-- Hierarchical step validation and dependency resolution
-- Input/output flow tracking across plan steps
-- Retry logic and error handling for LLM interactions
-- Plan execution order optimization
+### 🧪 Real Testing (Not Mocked!)
+- **Actual Jest Execution**: Runs real Jest tests with coverage reporting
+- **Real ESLint Validation**: Executes actual ESLint with custom rules
+- **Server Testing**: Starts and validates real Express.js servers
+- **Parallel Test Execution**: Multi-threaded testing for performance
 
-### 3. Operations Layer
+### 🌐 Browser Automation
+- **Playwright Integration**: Cross-browser testing (Chromium, Firefox, WebKit)
+- **Visual Regression**: Screenshot comparison and change detection
+- **Performance Testing**: Page speed, Core Web Vitals, resource analysis
+- **Accessibility Testing**: WCAG compliance validation
+- **Responsive Testing**: Multi-device and viewport testing
 
-#### CodeGenerator
-Generates vanilla JavaScript code for both frontend and backend.
+### 📊 Log Analysis & Intelligence
+- **Comprehensive Log Capture**: All test output, server logs, browser console
+- **AI-Powered Analysis**: Pattern recognition and root cause analysis
+- **Cross-System Correlation**: Connects errors across frontend/backend/tests
+- **Intelligent Suggestions**: Actionable fix recommendations
 
-**Frontend Generation:**
-- HTML files with semantic structure
-- CSS with modern layout techniques (Flexbox, Grid)
-- Vanilla JavaScript with ES6+ features
-- DOM manipulation and event handling
-- Fetch API for backend communication
+### 🔧 AI-Powered Fixing
+- **Log-Based Insights**: Uses captured logs to understand failures
+- **Iterative Improvement**: Applies fixes and re-validates automatically
+- **Root Cause Analysis**: Identifies underlying issues, not just symptoms
+- **Learning System**: Improves fix suggestions over time
 
-**Backend Generation:**
-- Node.js modules using ES6 imports/exports
-- Express.js servers with RESTful APIs
-- File system operations and data persistence
-- Error handling and validation
-- Middleware and routing
+## API Reference
 
-#### TestGenerator
-Creates comprehensive Jest tests for all generated code.
+### Core Classes
 
-**Features:**
-- Unit tests for individual functions/modules
-- Integration tests for component interactions
-- Mock implementations for external dependencies
-- Test data generation and fixtures
-- Coverage analysis and reporting
+#### CodeAgent (Base Class)
+```javascript
+class CodeAgent extends EventEmitter {
+  constructor(config: CodeAgentConfig);
+  
+  // Initialize the agent
+  async initialize(workingDirectory: string, options?: InitOptions): Promise<void>;
+  
+  // Generate a complete project
+  async develop(requirements: Requirements): Promise<ProjectSummary>;
+  
+  // Fix specific issues
+  async fix(fixRequirements: FixRequirements): Promise<FixSummary>;
+  
+  // Get current project summary
+  getProjectSummary(): ProjectSummary;
+  
+  // State management
+  async saveState(): Promise<void>;
+  async loadState(): Promise<void>;
+}
+```
 
-#### LintRunner
-Manages ESLint validation entirely through code (no config files).
+#### EnhancedCodeAgent (Enhanced with Real Testing)
+```javascript
+class EnhancedCodeAgent extends CodeAgent {
+  constructor(config: EnhancedCodeAgentConfig);
+  
+  // Enhanced development with real testing
+  async develop(requirements: Requirements): Promise<EnhancedProjectSummary>;
+  
+  // Run real quality checks
+  async runEnhancedQualityChecks(): Promise<QualityResults>;
+  
+  // Execute comprehensive testing
+  async runComprehensiveTesting(): Promise<TestResults>;
+  
+  // Apply AI-powered fixes
+  async runEnhancedFixing(): Promise<FixResults>;
+  
+  // Generate enhanced summary with metrics
+  async generateEnhancedSummary(): Promise<EnhancedSummary>;
+}
+```
 
-**Features:**
-- Dynamic rule configuration based on project type
-- Programmatic rule definitions in JavaScript
-- Automatic fixing of common issues
-- Custom rule sets for frontend vs backend code
-- Integration with iterative fixing workflow
+### Configuration Types
 
-#### QualityChecker
-Enforces quality gates before allowing completion.
+#### CodeAgentConfig
+```typescript
+interface CodeAgentConfig {
+  projectType: 'frontend' | 'backend' | 'fullstack';
+  enableConsoleOutput?: boolean;
+  eslintRules?: Record<string, any>;
+  testCoverage?: {
+    threshold: number;
+  };
+  qualityGates?: {
+    eslintErrors: number;
+    eslintWarnings: number;
+    testCoverage: number;
+    allTestsPass: boolean;
+  };
+}
+```
 
-**Features:**
-- Validates that all ESLint rules pass
-- Ensures all Jest tests pass with adequate coverage
-- Checks for code consistency across files
-- Validates import/export correctness
-- Enforces coding standards compliance
+#### EnhancedCodeAgentConfig
+```typescript
+interface EnhancedCodeAgentConfig extends CodeAgentConfig {
+  enhancedConfig: {
+    enableRuntimeTesting: boolean;
+    enableBrowserTesting: boolean;
+    enableLogAnalysis: boolean;
+    enablePerformanceMonitoring?: boolean;
+    runtimeTimeout?: number;
+    browserHeadless?: boolean;
+    parallelExecution?: boolean;
+    browserConfig?: {
+      browsers: string[];
+      viewport: { width: number; height: number; };
+    };
+  };
+}
+```
 
-### 4. Workflow Layer
+#### Requirements
+```typescript
+interface Requirements {
+  projectName: string;
+  description: string;
+  features: string[];
+  projectType?: 'frontend' | 'backend' | 'fullstack';
+  requirements?: {
+    frontend?: string;
+    backend?: string;
+  };
+}
+```
 
-#### WorkflowManager
-Orchestrates the complete coding workflow from start to finish.
+### Events
 
-**Workflow Steps:**
-1. **Analysis**: Understand requirements and existing code
-2. **Planning**: Create project structure and file organization
-3. **Generation**: Write code following established patterns
-4. **Testing**: Create and run comprehensive tests
-5. **Linting**: Apply and fix ESLint issues
-6. **Validation**: Ensure all quality gates pass
-7. **Iteration**: Fix any remaining issues
-8. **Completion**: Finalize only when everything works
-
-#### StepValidator
-Validates that each workflow step completes successfully.
-
-**Features:**
-- Checks that generated files are syntactically correct
-- Validates that tests execute successfully
-- Ensures ESLint passes with zero errors/warnings
-- Verifies import/export consistency
-- Confirms quality gate compliance
-
-#### IterativeProcessor
-Handles the iterative fixing process until success.
-
-**Features:**
-- Analyzes error messages from tests and linting
-- Generates targeted fixes for specific issues
-- Applies fixes incrementally to avoid introducing new errors
-- Tracks fix attempts to prevent infinite loops
-- Escalates to human intervention when needed
-
-#### StateManager
-Manages persistent state across agent sessions.
-
-**Features:**
-- Saves current progress to `.code-agent-state.json`
-- Tracks which files have been completed
-- Maintains history of iterations and fixes
-- Enables resumption after interruptions
-- Provides progress reporting and status updates
-
-## Technical Implementation
-
-### ESLint Integration (Programmatic)
-
-Instead of using `.eslintrc` files, all ESLint configuration is managed in code:
+The code agent emits detailed events for monitoring and integration:
 
 ```javascript
-// Example: Dynamic ESLint configuration
-const createEslintConfig = (projectType) => {
-  const baseRules = {
-    'no-unused-vars': 'error',
-    'no-console': 'warn',
-    'semi': ['error', 'always'],
-    'quotes': ['error', 'single']
-  };
+agent.on('phase-start', (data) => {
+  console.log(`Starting ${data.phase}: ${data.message}`);
+});
 
-  const frontendRules = {
-    ...baseRules,
-    'no-undef': 'error',
-    'no-global-assign': 'error'
-  };
+agent.on('progress', (data) => {
+  console.log(`Progress: ${data.message}`);
+});
 
-  const backendRules = {
-    ...baseRules,
-    'no-process-exit': 'warn',
-    'handle-callback-err': 'error'
-  };
+agent.on('phase-complete', (data) => {
+  console.log(`Completed ${data.phase}: ${data.message}`);
+});
 
-  return projectType === 'frontend' ? frontendRules : backendRules;
+agent.on('error', (data) => {
+  console.error(`Error in ${data.phase}: ${data.message}`);
+});
+
+// Enhanced events
+agent.on('test-executed', (data) => {
+  console.log(`Test executed: ${data.testName} - ${data.status}`);
+});
+
+agent.on('browser-test-complete', (data) => {
+  console.log(`Browser test completed: ${data.browser} - ${data.results}`);
+});
+
+agent.on('performance-alert', (data) => {
+  console.warn(`Performance alert: ${data.metric} exceeded threshold`);
+});
+```
+
+## Configuration
+
+### Environment Setup
+
+The enhanced code agent integrates with the jsEnvoy ecosystem and requires environment variables for LLM providers:
+
+```bash
+# .env file
+OPENAI_API_KEY=your-openai-key
+ANTHROPIC_API_KEY=your-anthropic-key
+
+# Optional: Browser testing configuration
+PLAYWRIGHT_BROWSERS=chromium,firefox
+HEADLESS_MODE=true
+```
+
+### Basic Configuration
+
+```javascript
+const basicConfig = {
+  projectType: 'fullstack',
+  enableConsoleOutput: true,
+  eslintRules: {
+    'prefer-const': 'error',
+    'no-var': 'error',
+    'no-unused-vars': 'warn'
+  },
+  testCoverage: {
+    threshold: 80
+  },
+  qualityGates: {
+    eslintErrors: 0,
+    eslintWarnings: 5,
+    testCoverage: 80,
+    allTestsPass: true
+  }
 };
 ```
 
-### Jest Configuration (Programmatic)
-
-Jest tests are generated and configured entirely through code:
+### Enhanced Configuration
 
 ```javascript
-// Example: Dynamic Jest test generation
-const generateTest = (moduleFile, functionName) => {
-  return `
-import { ${functionName} } from './${moduleFile}';
-
-describe('${functionName}', () => {
-  test('should handle valid input', () => {
-    // Generated test based on function analysis
-  });
-
-  test('should handle edge cases', () => {
-    // Generated edge case tests
-  });
-});
-`;
+const enhancedConfig = {
+  ...basicConfig,
+  enhancedConfig: {
+    enableRuntimeTesting: true,
+    enableBrowserTesting: true,
+    enableLogAnalysis: true,
+    enablePerformanceMonitoring: true,
+    runtimeTimeout: 300000, // 5 minutes
+    browserHeadless: true,
+    parallelExecution: true,
+    browserConfig: {
+      browsers: ['chromium', 'firefox', 'webkit'],
+      viewport: { width: 1920, height: 1080 }
+    }
+  }
 };
 ```
 
-### File Operations Integration
-
-Uses existing jsEnvoy file tools for all file system operations:
+### Runtime Configuration
 
 ```javascript
-// Example: File operations through jsEnvoy tools
-const fileOps = new FileOperationsTool();
+const runtimeOptions = {
+  llmConfig: {
+    provider: 'openai',
+    apiKey: process.env.OPENAI_API_KEY,
+    model: 'gpt-4',
+    temperature: 0.3,
+    maxTokens: 4000
+  },
+  runtimeConfig: {
+    logLevel: 'info',
+    captureConsole: true,
+    enableVerboseLogging: false
+  }
+};
+```
 
-// Create directory structure
-await fileOps.invoke({
-  function: { name: 'directory_create', arguments: '{"dirpath": "./src"}' }
+## Enhanced Runtime Testing
+
+### Real Test Execution
+
+Unlike traditional code generators that simulate tests, the enhanced code agent executes actual Jest tests:
+
+```javascript
+// Real Jest execution with coverage
+const testResults = await agent.runEnhancedQualityChecks();
+
+console.log(`Tests executed: ${testResults.jest.totalTests}`);
+console.log(`Passed: ${testResults.jest.passed}`);
+console.log(`Failed: ${testResults.jest.failed}`);
+console.log(`Coverage: ${testResults.jest.coverage}%`);
+```
+
+### Real ESLint Validation
+
+Executes actual ESLint with custom rules:
+
+```javascript
+// Real ESLint execution
+const lintResults = await agent.runEnhancedQualityChecks();
+
+console.log(`ESLint errors: ${lintResults.eslint.errorCount}`);
+console.log(`ESLint warnings: ${lintResults.eslint.warningCount}`);
+console.log(`Files checked: ${lintResults.eslint.filesChecked}`);
+```
+
+### Server Testing
+
+Starts and validates real Express.js servers:
+
+```javascript
+// Real server startup and testing
+const serverResults = await agent.runComprehensiveTesting();
+
+console.log(`Server started on port: ${serverResults.server.port}`);
+console.log(`Health check: ${serverResults.server.healthStatus}`);
+console.log(`API endpoints tested: ${serverResults.server.endpointsTested}`);
+```
+
+## Browser Testing & Automation
+
+### Playwright Integration
+
+The enhanced code agent includes comprehensive browser testing:
+
+```javascript
+// Browser testing with Playwright
+const browserResults = await agent.runComprehensiveTesting();
+
+console.log(`Browsers tested: ${browserResults.browser.browsers.join(', ')}`);
+console.log(`Screenshots captured: ${browserResults.browser.screenshots}`);
+console.log(`Performance score: ${browserResults.browser.performanceScore}`);
+```
+
+### Visual Regression Testing
+
+Automatically captures and compares screenshots:
+
+```javascript
+// Visual regression testing
+const visualResults = await agent.runVisualRegressionTests();
+
+console.log(`Screenshots compared: ${visualResults.comparisons}`);
+console.log(`Visual differences found: ${visualResults.differences}`);
+console.log(`Regression threshold: ${visualResults.threshold}%`);
+```
+
+### Accessibility Testing
+
+WCAG compliance validation:
+
+```javascript
+// Accessibility testing
+const a11yResults = await agent.runAccessibilityTests();
+
+console.log(`Accessibility violations: ${a11yResults.violations}`);
+console.log(`WCAG level: ${a11yResults.wcagLevel}`);
+console.log(`Score: ${a11yResults.score}/100`);
+```
+
+## Examples
+
+### Complete Web Application
+
+```javascript
+import { EnhancedCodeAgent } from '@jsenvoy/code-agent';
+
+const agent = new EnhancedCodeAgent({
+  projectType: 'fullstack',
+  enhancedConfig: {
+    enableRuntimeTesting: true,
+    enableBrowserTesting: true,
+    enableLogAnalysis: true
+  }
 });
 
-// Write generated code
-await fileOps.invoke({
-  function: { name: 'file_write', arguments: JSON.stringify({
-    filepath: './src/main.js',
-    content: generatedCode
-  })}
+await agent.initialize('./todo-app');
+
+const result = await agent.develop({
+  projectName: 'Advanced Todo Application',
+  description: 'A feature-rich todo list with real-time updates',
+  features: [
+    'User authentication with JWT',
+    'Real-time todo updates via WebSocket',
+    'Drag and drop task reordering',
+    'Due date reminders',
+    'Category-based filtering',
+    'Export to CSV functionality',
+    'Dark/light theme toggle',
+    'Responsive design for mobile'
+  ]
+});
+
+// Generated project structure:
+// todo-app/
+// ├── frontend/
+// │   ├── index.html
+// │   ├── styles/
+// │   │   ├── main.css
+// │   │   └── themes.css
+// │   └── scripts/
+// │       ├── app.js
+// │       ├── auth.js
+// │       └── websocket.js
+// ├── backend/
+// │   ├── server.js
+// │   ├── routes/
+// │   │   ├── auth.js
+// │   │   └── todos.js
+// │   ├── middleware/
+// │   │   └── auth.js
+// │   └── models/
+// │       └── todo.js
+// ├── tests/
+// │   ├── frontend/
+// │   │   ├── app.test.js
+// │   │   └── auth.test.js
+// │   ├── backend/
+// │   │   ├── server.test.js
+// │   │   └── routes.test.js
+// │   └── e2e/
+// │       └── todo-workflow.test.js
+// └── package.json
+```
+
+### API Server with Database
+
+```javascript
+const result = await agent.develop({
+  projectName: 'User Management API',
+  description: 'RESTful API for user management with authentication',
+  features: [
+    'User registration and login',
+    'JWT token authentication',
+    'Password hashing with bcrypt',
+    'Input validation and sanitization',
+    'Rate limiting',
+    'API documentation',
+    'Error handling middleware',
+    'Database integration with MongoDB'
+  ]
+});
+
+// Automatically generates:
+// - Express.js server with proper middleware
+// - Authentication routes with JWT
+// - Input validation schemas
+// - Error handling middleware
+// - Rate limiting configuration
+// - API documentation
+// - Comprehensive test suite
+// - Security best practices
+```
+
+### Interactive Frontend
+
+```javascript
+const result = await agent.develop({
+  projectName: 'Interactive Dashboard',
+  description: 'Data visualization dashboard with real-time updates',
+  features: [
+    'Real-time data charts',
+    'Interactive filters and controls',
+    'Responsive grid layout',
+    'Dark/light theme support',
+    'Smooth animations',
+    'WebSocket integration',
+    'Export functionality',
+    'Touch-friendly mobile interface'
+  ]
+});
+
+// Automatically generates:
+// - Semantic HTML5 structure
+// - Modern CSS with Grid/Flexbox
+// - Vanilla JavaScript with ES6+ features
+// - Chart.js integration
+// - WebSocket client
+// - Responsive design
+// - Accessibility features
+// - Performance optimizations
+```
+
+## Testing Framework
+
+### Comprehensive Test Suite
+
+The code agent generates and executes comprehensive test suites:
+
+#### Unit Tests
+```javascript
+// Generated Jest unit tests
+describe('TodoService', () => {
+  test('should add new todo', () => {
+    const service = new TodoService();
+    const todo = service.addTodo('Test task');
+    expect(todo.text).toBe('Test task');
+    expect(todo.completed).toBe(false);
+  });
+  
+  test('should mark todo as complete', () => {
+    const service = new TodoService();
+    const todo = service.addTodo('Test task');
+    service.completeTodo(todo.id);
+    expect(todo.completed).toBe(true);
+  });
 });
 ```
 
-## Operating Modes
-
-### 1. Initial Development Mode
-
-**Input**: Task description and working directory
-**Process**:
-1. Analyze requirements and create project plan
-2. Set up directory structure
-3. Generate code files following the plan
-4. Create comprehensive tests
-5. Apply linting and fix issues
-6. Iterate until all quality gates pass
-
-**Example**:
+#### Integration Tests
 ```javascript
-const agent = new CodeAgent();
-await agent.initialize('./my-project');
-await agent.develop({
-  task: "Create a todo list application with frontend and backend",
-  requirements: {
-    frontend: "HTML form for adding todos, display list with delete functionality",
-    backend: "REST API with endpoints for CRUD operations, file-based storage"
+// Generated integration tests
+describe('API Integration', () => {
+  test('should handle todo CRUD operations', async () => {
+    const response = await request(app)
+      .post('/api/todos')
+      .send({ text: 'Integration test todo' });
+    
+    expect(response.status).toBe(201);
+    expect(response.body.text).toBe('Integration test todo');
+  });
+});
+```
+
+#### E2E Tests
+```javascript
+// Generated Playwright E2E tests
+test('complete todo workflow', async ({ page }) => {
+  await page.goto('http://localhost:3000');
+  
+  // Add new todo
+  await page.fill('[data-testid="todo-input"]', 'E2E test todo');
+  await page.click('[data-testid="add-todo"]');
+  
+  // Verify todo appears
+  await expect(page.locator('[data-testid="todo-item"]')).toContainText('E2E test todo');
+  
+  // Mark as complete
+  await page.click('[data-testid="todo-checkbox"]');
+  await expect(page.locator('[data-testid="todo-item"]')).toHaveClass(/completed/);
+});
+```
+
+### Real Test Execution Results
+
+```javascript
+// Example test execution results
+const testResults = {
+  jest: {
+    totalTests: 45,
+    passed: 43,
+    failed: 2,
+    skipped: 0,
+    coverage: 87.5,
+    duration: 2341
+  },
+  eslint: {
+    errorCount: 0,
+    warningCount: 3,
+    filesChecked: 12,
+    rulesApplied: 150
+  },
+  browser: {
+    browsers: ['chromium', 'firefox'],
+    testsRun: 15,
+    screenshots: 8,
+    performanceScore: 94,
+    accessibilityScore: 98
+  }
+};
+```
+
+## Migration Guide
+
+### From CodeAgent to EnhancedCodeAgent
+
+#### Step 1: Update Import
+```javascript
+// Before
+import { CodeAgent } from '@jsenvoy/code-agent';
+
+// After
+import { EnhancedCodeAgent } from '@jsenvoy/code-agent';
+```
+
+#### Step 2: Update Configuration
+```javascript
+// Before
+const agent = new CodeAgent({
+  projectType: 'fullstack'
+});
+
+// After
+const agent = new EnhancedCodeAgent({
+  projectType: 'fullstack',
+  enhancedConfig: {
+    enableRuntimeTesting: true,
+    enableBrowserTesting: true,
+    enableLogAnalysis: true
   }
 });
 ```
 
-### 2. Iterative Fixing Mode
-
-**Input**: Error reports or required changes
-**Process**:
-1. Analyze specific errors or requirements
-2. Plan targeted fixes
-3. Apply fixes incrementally
-4. Re-run tests and linting
-5. Continue iterating until success
-
-**Example**:
+#### Step 3: Handle Enhanced Results
 ```javascript
-const agent = new CodeAgent();
-await agent.initialize('./my-project');
-await agent.fix({
-  errors: [
-    "Test failed: Expected 3 todos, received 2",
-    "ESLint error: Unused variable 'todoId' in todo.js:15"
-  ]
-});
+// Before
+const result = await agent.develop(requirements);
+console.log(`Files generated: ${result.filesGenerated}`);
+
+// After
+const result = await agent.develop(requirements);
+console.log(`Files generated: ${result.filesGenerated}`);
+console.log(`Tests executed: ${result.enhanced.runtimeTesting.testsExecuted}`);
+console.log(`Browser tests: ${result.enhanced.browserTesting.testsRun}`);
 ```
 
-## Quality Gates
+### Performance Considerations
 
-The agent enforces strict quality gates before considering any step complete:
+- **Memory Usage**: Enhanced testing requires more memory (2-4GB recommended)
+- **Execution Time**: Real testing takes longer but provides actual validation
+- **Browser Resources**: Playwright requires additional system resources
+- **Parallel Execution**: Can run multiple tests in parallel for better performance
 
-### 1. ESLint Validation
-- Zero errors allowed
-- Zero warnings allowed (configurable)
-- All rules pass programmatically
-- Code style consistency enforced
+## Development & Contributing
 
-### 2. Jest Test Requirements
-- All tests must pass
-- Minimum coverage threshold (default 80%)
-- No skipped or pending tests
-- All async operations properly tested
+### Project Structure
 
-### 3. Code Consistency
-- Import/export statements validate correctly
-- No broken dependencies
-- Consistent naming conventions
-- Proper error handling patterns
+```
+@jsenvoy/code-agent/
+├── src/
+│   ├── agent/                    # Core agent classes
+│   │   ├── CodeAgent.js         # Base agent implementation
+│   │   ├── EnhancedCodeAgent.js # Enhanced agent with real testing
+│   │   └── phases/              # Development phases
+│   ├── browser/                 # Browser testing components
+│   ├── execution/               # Real test execution
+│   ├── generation/              # Code generation
+│   ├── integration/             # External integrations
+│   ├── logging/                 # Log analysis
+│   ├── monitoring/              # Performance monitoring
+│   ├── planning/                # AI-powered planning
+│   └── validation/              # Quality validation
+├── __tests__/                   # Test suites (57 test files)
+│   ├── unit/                    # Unit tests
+│   ├── integration/             # Integration tests
+│   └── system/                  # System tests
+├── docs/                        # Documentation
+└── examples/                    # Working examples
+```
 
-### 4. Project Structure
-- Files organized according to plan
-- No orphaned or unused files
-- Proper separation of concerns
-- Clear module boundaries
+### Running Tests
 
-## Integration with jsEnvoy Ecosystem
+```bash
+# All tests
+npm test
 
-### File Operations
-- Uses `@jsenvoy/general-tools` for all file system operations
-- Leverages existing file reading, writing, and directory management
-- Maintains security and sandboxing provided by existing tools
+# Unit tests only
+npm run test:unit
 
-### LLM Integration
-- Uses `@jsenvoy/llm` for intelligent code generation
-- Leverages existing provider abstraction (OpenAI, Anthropic, etc.)
-- Utilizes structured response parsing and validation
+# Integration tests only
+npm run test:integration
 
-### Module Loading
-- Follows `@jsenvoy/module-loader` patterns for tool organization
-- Implements proper dependency injection
-- Maintains compatibility with existing module system
+# With coverage
+npm run test:coverage
 
-### Resource Management
-- Can be managed by `@jsenvoy/resource-manager` for lifecycle control
-- Supports health checks and status monitoring
-- Integrates with existing orchestration capabilities
+# Watch mode
+npm run test:watch
+```
 
-## Future Enhancements
+### Key Dependencies
 
-### Planned Features
-1. **Framework Support**: Optional React, Vue, Angular support
-2. **Build System Integration**: Webpack, Vite integration when needed
-3. **Database Integration**: Support for various database backends
-4. **Deployment Planning**: Automated deployment configuration
-5. **Documentation Generation**: Automatic README and API docs
-6. **Performance Optimization**: Code optimization suggestions
-7. **Security Analysis**: Automated security vulnerability scanning
+- **Core**: `eslint`, `jest`, `zod`, `@babel/parser`
+- **jsEnvoy Integration**: Uses file operations, LLM client, module loader
+- **Browser Testing**: Playwright integration
+- **Enhanced Features**: Log manager, node runner integration
 
-### Extension Points
-- **Custom Templates**: User-defined project templates
-- **Custom Rules**: Project-specific ESLint rules
-- **Custom Workflows**: Specialized development workflows
-- **Integration Hooks**: Pre/post-generation hooks for customization
+### Version Information
 
-## Conclusion
+- **Current Version**: 0.0.1
+- **Node.js Requirement**: >= 18.0.0
+- **ES Module**: Full ES6+ module support
+- **Test Files**: 57 comprehensive test files
 
-The Code Agent provides a comprehensive solution for automated code generation, testing, and validation in vanilla JavaScript projects. By integrating deeply with the jsEnvoy ecosystem while maintaining independence in code quality enforcement, it delivers a robust platform for AI-assisted development that ensures code reliability and maintainability.
+## License
+
+MIT License - See [LICENSE](../LICENSE) for details.
+
+## Support
+
+For issues, questions, or feature requests:
+- **GitHub Issues**: [Report issues](https://github.com/maxximus-dev/jsenvoy-code-agent/issues)
+- **Documentation**: This comprehensive guide
+- **Examples**: See [examples/](../examples/) directory
+- **Tests**: See [__tests__/](../__tests__/) for usage patterns
+
+---
+
+*This documentation reflects the current state of the enhanced @jsenvoy/code-agent with real runtime testing, browser automation, and AI-powered analysis capabilities.*
