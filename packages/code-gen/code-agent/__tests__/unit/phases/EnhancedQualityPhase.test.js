@@ -64,7 +64,17 @@ describe('EnhancedQualityPhase', () => {
 
   afterEach(async () => {
     if (qualityPhase) {
-      await qualityPhase.cleanup();
+      try {
+        await qualityPhase.cleanup();
+      } catch (error) {
+        console.warn('Cleanup error (ignored):', error.message);
+      }
+      qualityPhase = null;
+    }
+    
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
     }
   });
 

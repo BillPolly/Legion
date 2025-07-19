@@ -51,9 +51,19 @@ describe('ResponsiveDesignTester', () => {
     responsiveTester = new ResponsiveDesignTester(mockConfig);
   });
 
-  afterEach(async () => {
+    afterEach(async () => {
     if (responsiveTester) {
-      await responsiveTester.cleanup();
+      try {
+        await responsiveTester.cleanup();
+      } catch (error) {
+        console.warn('Cleanup error (ignored):', error.message);
+      }
+      responsiveTester = null;
+    }
+    
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
     }
   });
 

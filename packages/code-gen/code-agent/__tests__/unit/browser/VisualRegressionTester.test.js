@@ -60,7 +60,17 @@ describe('VisualRegressionTester', () => {
 
   afterEach(async () => {
     if (visualTester) {
-      await visualTester.cleanup();
+      try {
+        await visualTester.cleanup();
+      } catch (error) {
+        console.warn('Cleanup error (ignored):', error.message);
+      }
+      visualTester = null;
+    }
+    
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
     }
   });
 

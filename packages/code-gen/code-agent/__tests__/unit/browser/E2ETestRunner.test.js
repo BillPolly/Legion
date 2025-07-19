@@ -59,7 +59,17 @@ describe('E2ETestRunner', () => {
 
   afterEach(async () => {
     if (e2eRunner) {
-      await e2eRunner.cleanup();
+      try {
+        await e2eRunner.cleanup();
+      } catch (error) {
+        console.warn('Cleanup error (ignored):', error.message);
+      }
+      e2eRunner = null;
+    }
+    
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
     }
   });
 

@@ -64,7 +64,17 @@ describe('ComprehensiveTestingPhase', () => {
 
   afterEach(async () => {
     if (comprehensiveTestingPhase && comprehensiveTestingPhase.isInitialized) {
-      await comprehensiveTestingPhase.cleanup();
+      try {
+        await comprehensiveTestingPhase.cleanup();
+      } catch (error) {
+        console.warn('Cleanup error (ignored):', error.message);
+      }
+    }
+    comprehensiveTestingPhase = null;
+    
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
     }
   });
 

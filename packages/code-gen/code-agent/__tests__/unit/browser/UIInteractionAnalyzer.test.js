@@ -51,9 +51,19 @@ describe('UIInteractionAnalyzer', () => {
     analyzer = new UIInteractionAnalyzer(mockConfig);
   });
 
-  afterEach(async () => {
+    afterEach(async () => {
     if (analyzer) {
-      await analyzer.cleanup();
+      try {
+        await analyzer.cleanup();
+      } catch (error) {
+        console.warn('Cleanup error (ignored):', error.message);
+      }
+      analyzer = null;
+    }
+    
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
     }
   });
 

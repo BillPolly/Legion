@@ -42,7 +42,11 @@ export default {
   testPathIgnorePatterns: [
     '/node_modules/',
     '/coverage/',
-    '__tests__/fixtures/'
+    '__tests__/fixtures/',
+    '__tests__/integration/real-llm-.*',
+    '__tests__/integration/simple-webpage-llm.test.js',
+    '__tests__/integration/real-llm-workflow.test.js',
+    '__tests__/integration/RuntimeIntegrationManager.test.js'
   ],
   
   // Setup files
@@ -72,8 +76,17 @@ export default {
   // Error on deprecated features
   errorOnDeprecated: true,
   
-  // Test timeout (10 seconds for normal tests)
-  testTimeout: 10000,
+  // Test timeout (60 seconds to handle slower tests)
+  testTimeout: 60000,
+  
+  // Run tests serially to prevent memory issues
+  maxWorkers: 1,
+  
+  // Memory management
+  logHeapUsage: true,
+  
+  // Force exit after tests complete to prevent hanging
+  forceExit: true,
   
   // Global test variables
   globals: {

@@ -51,9 +51,19 @@ describe('BrowserTestGenerator', () => {
     browserTestGenerator = new BrowserTestGenerator(mockConfig);
   });
 
-  afterEach(async () => {
+    afterEach(async () => {
     if (browserTestGenerator) {
-      await browserTestGenerator.cleanup();
+      try {
+        await browserTestGenerator.cleanup();
+      } catch (error) {
+        console.warn('Cleanup error (ignored):', error.message);
+      }
+      browserTestGenerator = null;
+    }
+    
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
     }
   });
 

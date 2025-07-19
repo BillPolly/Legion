@@ -38,19 +38,38 @@ describeIfLLM('Real LLM Web Page Workflow - Step by Step', () => {
   afterEach(async () => {
     // Cleanup server if running
     if (serverProcess) {
-      serverProcess.kill();
+      try {
+        serverProcess.kill('SIGTERM');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (!serverProcess.killed) {
+          serverProcess.kill('SIGKILL');
+        }
+      } catch (error) {
+        console.warn('Server cleanup error (ignored):', error.message);
+      }
+      serverProcess = null;
     }
     
     // Cleanup agent
     if (agent) {
-      await agent.cleanup();
+      try {
+        await agent.cleanup();
+      } catch (error) {
+        console.warn('Agent cleanup error (ignored):', error.message);
+      }
+      agent = null;
     }
     
     // Remove test directory
     try {
       await fs.rm(testDir, { recursive: true, force: true });
     } catch (error) {
-      console.error('Cleanup error:', error);
+      console.warn('Directory cleanup error (ignored):', error.message);
+    }
+    
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
     }
   });
 

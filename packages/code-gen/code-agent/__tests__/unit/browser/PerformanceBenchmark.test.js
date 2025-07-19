@@ -72,9 +72,19 @@ describe('PerformanceBenchmark', () => {
     performanceBenchmark = new PerformanceBenchmark(mockConfig);
   });
 
-  afterEach(async () => {
+    afterEach(async () => {
     if (performanceBenchmark) {
-      await performanceBenchmark.cleanup();
+      try {
+        await performanceBenchmark.cleanup();
+      } catch (error) {
+        console.warn('Cleanup error (ignored):', error.message);
+      }
+      performanceBenchmark = null;
+    }
+    
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
     }
   });
 

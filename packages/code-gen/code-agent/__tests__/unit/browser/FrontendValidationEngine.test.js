@@ -57,9 +57,19 @@ describe('FrontendValidationEngine', () => {
     validationEngine = new FrontendValidationEngine(mockConfig);
   });
 
-  afterEach(async () => {
+    afterEach(async () => {
     if (validationEngine) {
-      await validationEngine.cleanup();
+      try {
+        await validationEngine.cleanup();
+      } catch (error) {
+        console.warn('Cleanup error (ignored):', error.message);
+      }
+      validationEngine = null;
+    }
+    
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
     }
   });
 

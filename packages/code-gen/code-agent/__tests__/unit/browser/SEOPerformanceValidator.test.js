@@ -57,9 +57,19 @@ describe('SEOPerformanceValidator', () => {
     validator = new SEOPerformanceValidator(mockConfig);
   });
 
-  afterEach(async () => {
+    afterEach(async () => {
     if (validator) {
-      await validator.cleanup();
+      try {
+        await validator.cleanup();
+      } catch (error) {
+        console.warn('Cleanup error (ignored):', error.message);
+      }
+      validator = null;
+    }
+    
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
     }
   });
 

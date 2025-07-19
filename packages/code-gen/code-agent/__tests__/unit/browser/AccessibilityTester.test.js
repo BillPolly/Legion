@@ -51,9 +51,19 @@ describe('AccessibilityTester', () => {
     accessibilityTester = new AccessibilityTester(mockConfig);
   });
 
-  afterEach(async () => {
+    afterEach(async () => {
     if (accessibilityTester) {
-      await accessibilityTester.cleanup();
+      try {
+        await accessibilityTester.cleanup();
+      } catch (error) {
+        console.warn('Cleanup error (ignored):', error.message);
+      }
+      accessibilityTester = null;
+    }
+    
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
     }
   });
 

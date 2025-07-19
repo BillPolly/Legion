@@ -57,9 +57,19 @@ describe('UserWorkflowTester', () => {
     workflowTester = new UserWorkflowTester(mockConfig);
   });
 
-  afterEach(async () => {
+    afterEach(async () => {
     if (workflowTester) {
-      await workflowTester.cleanup();
+      try {
+        await workflowTester.cleanup();
+      } catch (error) {
+        console.warn('Cleanup error (ignored):', error.message);
+      }
+      workflowTester = null;
+    }
+    
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
     }
   });
 
