@@ -63,6 +63,13 @@ export { FrontendValidationEngine } from './browser/FrontendValidationEngine.js'
 export { TestLogManager } from './logging/TestLogManager.js';
 export { LogAnalysisEngine } from './logging/LogAnalysisEngine.js';
 
+// Export security and monitoring
+export { SecurityScanner } from './security/SecurityScanner.js';
+export { PerformanceMonitor } from './monitoring/PerformanceMonitor.js';
+
+// Export validation
+export { E2EValidator } from './validation/E2EValidator.js';
+
 // Export wrapper for JSON module system
 import CodeAgentWrapper from './CodeAgentWrapper.js';
 export { CodeAgentWrapper };
