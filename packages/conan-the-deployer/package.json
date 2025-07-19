@@ -10,7 +10,7 @@
     "./monitor": "./src/monitor/index.js"
   },
   "scripts": {
-    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --forceExit",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --detectOpenHandles",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
     "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/unit",
