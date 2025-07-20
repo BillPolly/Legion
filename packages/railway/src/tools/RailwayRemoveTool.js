@@ -1,11 +1,11 @@
-import { BaseTool } from '@jsenvoy/module-loader';
+import { Tool } from '@jsenvoy/module-loader';
 import { z } from 'zod';
 
 const inputSchema = z.object({
   projectId: z.string().describe('Railway project ID to remove')
 });
 
-class RailwayRemoveTool extends BaseTool {
+class RailwayRemoveTool extends Tool {
   constructor(resourceManager) {
     super();
     this.name = 'railway_remove';

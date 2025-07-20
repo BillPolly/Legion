@@ -1,11 +1,11 @@
-import { BaseTool } from '@jsenvoy/module-loader';
+import { Tool } from '@jsenvoy/module-loader';
 import { z } from 'zod';
 
 const inputSchema = z.object({
   deploymentId: z.string().describe('Railway deployment ID')
 });
 
-class RailwayStatusTool extends BaseTool {
+class RailwayStatusTool extends Tool {
   constructor(resourceManager) {
     super();
     this.name = 'railway_status';

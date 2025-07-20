@@ -1,4 +1,4 @@
-import { BaseTool } from '@jsenvoy/module-loader';
+import { Tool } from '@jsenvoy/module-loader';
 import { z } from 'zod';
 
 const inputSchema = z.object({
@@ -7,7 +7,7 @@ const inputSchema = z.object({
   variables: z.record(z.string()).describe('Environment variables to set or update')
 });
 
-class RailwayUpdateEnvTool extends BaseTool {
+class RailwayUpdateEnvTool extends Tool {
   constructor(resourceManager) {
     super();
     this.name = 'railway_update_env';

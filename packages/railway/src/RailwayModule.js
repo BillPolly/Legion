@@ -1,4 +1,4 @@
-import { BaseModule } from '@jsenvoy/module-loader';
+import { Module } from '@jsenvoy/module-loader';
 import RailwayDeployTool from './tools/RailwayDeployTool.js';
 import RailwayStatusTool from './tools/RailwayStatusTool.js';
 import RailwayLogsTool from './tools/RailwayLogsTool.js';
@@ -7,7 +7,7 @@ import RailwayRemoveTool from './tools/RailwayRemoveTool.js';
 import RailwayListProjectsTool from './tools/RailwayListProjectsTool.js';
 import RailwayProvider from './providers/RailwayProvider.js';
 
-class RailwayModule extends BaseModule {
+class RailwayModule extends Module {
   constructor(resourceManager) {
     super('railway', resourceManager);
     this.displayName = 'Railway Deployment Module';

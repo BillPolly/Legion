@@ -1,9 +1,9 @@
-import { BaseTool } from '@jsenvoy/module-loader';
+import { Tool } from '@jsenvoy/module-loader';
 import { z } from 'zod';
 
 const inputSchema = z.object({});
 
-class RailwayListProjectsTool extends BaseTool {
+class RailwayListProjectsTool extends Tool {
   constructor(resourceManager) {
     super();
     this.name = 'railway_list_projects';

@@ -1,4 +1,4 @@
-import { BaseTool } from '@jsenvoy/module-loader';
+import { Tool } from '@jsenvoy/module-loader';
 import { z } from 'zod';
 
 const inputSchema = z.object({
@@ -12,7 +12,7 @@ const inputSchema = z.object({
   serviceName: z.string().default('app').describe('Name for the Railway service')
 });
 
-class RailwayDeployTool extends BaseTool {
+class RailwayDeployTool extends Tool {
   constructor(resourceManager) {
     super();
     this.name = 'railway_deploy';

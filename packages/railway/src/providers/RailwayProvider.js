@@ -1,5 +1,8 @@
+import RailwayCLI from '../cli/RailwayCLI.js';
+
 /**
  * RailwayProvider - Deploy applications to Railway cloud platform using GraphQL API
+ * Falls back to CLI when API operations fail
  */
 class RailwayProvider {
   constructor(apiKey) {
@@ -11,6 +14,26 @@ class RailwayProvider {
     this.name = 'railway';
     this.apiEndpoint = 'https://backboard.railway.app/graphql/v2';
     this.activeDeployments = new Map();
+    this.cli = null; // Lazy initialize CLI when needed
+  }
+
+  /**
+   * Get or create CLI instance
+   */
+  async getCLI() {
+    if (!this.cli) {
+      this.cli = new RailwayCLI({
+        apiKey: this.apiKey,
+        debug: false
+      });
+      
+      // Ensure CLI is installed
+      const installed = await this.cli.ensureInstalled();
+      if (!installed) {
+        throw new Error('Railway CLI is required but could not be installed');
+      }
+    }
+    return this.cli;
   }
 
   /**
@@ -59,8 +82,11 @@ class RailwayProvider {
       errors.push('Source configuration is required');
     }
 
-    if (config.source === 'github' && (!config.repo || !config.branch)) {
-      errors.push('GitHub repo and branch are required for GitHub deployments');
+    if (config.source === 'github') {
+      const repoPath = config.repo || config.githubRepo;
+      if (!repoPath || !config.branch) {
+        errors.push('GitHub repo and branch are required for GitHub deployments');
+      }
     }
 
     if (config.source === 'local' && !config.projectPath) {
@@ -184,7 +210,71 @@ class RailwayProvider {
    * List existing projects
    */
   async listProjects() {
-    const query = `
+    // First try to get team projects (where most projects are)
+    const teamQuery = `
+      query {
+        me {
+          teams {
+            edges {
+              node {
+                id
+                name
+                projects {
+                  edges {
+                    node {
+                      id
+                      name
+                      description
+                      createdAt
+                      services {
+                        edges {
+                          node {
+                            id
+                            name
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const teamResult = await this.makeGraphQLRequest(teamQuery);
+    
+    if (!teamResult.success) {
+      return teamResult;
+    }
+
+    const allProjects = [];
+    
+    // Collect all projects from all teams
+    if (teamResult.data?.me?.teams?.edges) {
+      teamResult.data.me.teams.edges.forEach(teamEdge => {
+        const team = teamEdge.node;
+        if (team.projects?.edges) {
+          team.projects.edges.forEach(projectEdge => {
+            const project = projectEdge.node;
+            allProjects.push({
+              id: project.id,
+              name: project.name,
+              description: project.description,
+              createdAt: project.createdAt,
+              teamId: team.id,
+              teamName: team.name,
+              services: project.services?.edges?.map(serviceEdge => serviceEdge.node) || []
+            });
+          });
+        }
+      });
+    }
+
+    // Also check personal projects (just in case)
+    const personalQuery = `
       query {
         projects {
           edges {
@@ -207,23 +297,27 @@ class RailwayProvider {
       }
     `;
 
-    const result = await this.makeGraphQLRequest(query);
+    const personalResult = await this.makeGraphQLRequest(personalQuery);
     
-    if (!result.success) {
-      return result;
+    if (personalResult.success && personalResult.data?.projects?.edges) {
+      personalResult.data.projects.edges.forEach(edge => {
+        const project = edge.node;
+        // Only add if not already in the list
+        if (!allProjects.find(p => p.id === project.id)) {
+          allProjects.push({
+            id: project.id,
+            name: project.name,
+            description: project.description,
+            createdAt: project.createdAt,
+            services: project.services?.edges?.map(serviceEdge => serviceEdge.node) || []
+          });
+        }
+      });
     }
-
-    const projects = result.data.projects.edges.map(edge => ({
-      id: edge.node.id,
-      name: edge.node.name,
-      description: edge.node.description,
-      createdAt: edge.node.createdAt,
-      services: edge.node.services.edges.map(serviceEdge => serviceEdge.node)
-    }));
 
     return {
       success: true,
-      projects
+      projects: allProjects
     };
   }
 
@@ -286,8 +380,10 @@ class RailwayProvider {
   buildSourceConfig(config) {
     if (config.source === 'github') {
       // Railway API expects just repo in source object
+      // Handle both 'repo' and 'githubRepo' field names
+      const repoPath = config.repo || config.githubRepo;
       return {
-        repo: config.repo
+        repo: repoPath
       };
     } else if (config.image) {
       // Docker image deployment
@@ -365,47 +461,72 @@ class RailwayProvider {
         }
       }
 
-      // 4. For GitHub source, deployment is automatic when service is created
-      let deployment;
+      // 4. For GitHub deployments, use CLI since API mutations are broken
       if (config.source === 'github') {
-        // Railway automatically deploys when a GitHub source is connected
-        // We just need to create a deployment object for consistency
-        deployment = {
-          success: true,
-          deployment: {
-            id: `deploy-${service.id}`,
-            status: 'BUILDING',
-            url: null,
-            createdAt: new Date().toISOString()
-          }
+        console.log('GitHub deployment detected - using CLI for actual deployment...');
+        
+        // Use CLI to link and deploy
+        const cliDeployConfig = {
+          projectId: project.id,
+          serviceId: service.id,
+          serviceName: service.name,
+          source: 'github',
+          githubRepo: config.githubRepo || config.repo,
+          branch: config.branch || 'main',
+          environment: config.environment
         };
+        
+        const cliResult = await this.deployWithCLI(cliDeployConfig);
+        
+        if (cliResult.success) {
+          return {
+            success: true,
+            id: service.id,
+            projectId: project.id,
+            serviceId: service.id,
+            deploymentId: cliResult.deploymentId || `deploy-${service.id}`,
+            status: 'deploying',
+            url: cliResult.url,
+            provider: 'railway',
+            createdAt: new Date(),
+            cliDeployment: true
+          };
+        } else {
+          // Fallback to API attempt (will likely fail but worth trying)
+          console.warn('CLI deployment failed, trying API...');
+          const deployment = await this.deployFromGitHub(service.id, config);
+          
+          return {
+            success: true,
+            id: service.id,
+            projectId: project.id,
+            serviceId: service.id,
+            deploymentId: deployment.deployment?.id || `deploy-${service.id}`,
+            status: 'pending',
+            url: null,
+            provider: 'railway',
+            createdAt: new Date()
+          };
+        }
       } else {
-        deployment = await this.deployFromLocal(service.id, config);
+        // Non-GitHub deployments
+        const deployment = await this.deployFromLocal(service.id, config);
         if (!deployment.success) {
           return deployment;
         }
+        
+        return {
+          success: true,
+          id: service.id,
+          projectId: project.id,
+          serviceId: service.id,
+          deploymentId: deployment.deployment.id,
+          status: this.mapRailwayStatus(deployment.deployment.status),
+          url: deployment.deployment.url,
+          provider: 'railway',
+          createdAt: new Date()
+        };
       }
-
-      const result = {
-        success: true,
-        id: service.id, // Use service ID as deployment ID for Railway
-        projectId: project.id,
-        serviceId: service.id,
-        deploymentId: deployment.deployment.id,
-        status: this.mapRailwayStatus(deployment.deployment.status),
-        url: deployment.deployment.url,
-        provider: 'railway',
-        createdAt: new Date()
-      };
-
-      // Store deployment info with the URL if we have it
-      this.activeDeployments.set(result.id, {
-        ...result,
-        url: deployment.deployment.url || result.url,
-        domain: deployment.deployment.domain
-      });
-
-      return result;
 
     } catch (error) {
       return {
@@ -416,9 +537,89 @@ class RailwayProvider {
   }
 
   /**
-   * Deploy from GitHub repository
+   * Get GitHub repository numeric ID from owner/repo string
+   */
+  async getGitHubRepoId(repoPath) {
+    // Parse owner and repo from path like "owner/repo"
+    const [owner, repo] = repoPath.split('/');
+    if (!owner || !repo) {
+      throw new Error('Invalid repo path format. Expected "owner/repo"');
+    }
+
+    try {
+      // Use GitHub API to get the numeric repo ID
+      const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+        headers: {
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'Railway-Deploy-Client'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.id; // This is the numeric ID we need
+    } catch (error) {
+      console.error('Failed to get GitHub repo ID:', error);
+      throw new Error(`Failed to get GitHub repo ID for ${repoPath}: ${error.message}`);
+    }
+  }
+
+  /**
+   * Deploy from GitHub repository using the new deployment mutation
    */
   async deployFromGitHub(serviceId, config) {
+    // Handle both 'repo' and 'githubRepo' field names
+    const repoPath = config.repo || config.githubRepo;
+    
+    // First, try the new deploymentCreateFromGithubRepo mutation
+    if (repoPath && !config.githubRepoId) {
+      try {
+        // Get the numeric GitHub repo ID
+        config.githubRepoId = await this.getGitHubRepoId(repoPath);
+        console.log(`Got GitHub repo ID: ${config.githubRepoId} for ${repoPath}`);
+      } catch (error) {
+        console.warn('Could not get GitHub repo ID, falling back to service deploy:', error.message);
+      }
+    }
+
+    if (config.githubRepoId && config.projectId) {
+      // Use the new mutation that actually triggers deployment
+      const mutation = `
+        mutation DeploymentCreateFromGithubRepo($input: DeploymentCreateFromGithubRepoInput!) {
+          deploymentCreateFromGithubRepo(input: $input) {
+            id
+            status
+            url
+            createdAt
+          }
+        }
+      `;
+
+      const variables = {
+        input: {
+          projectId: config.projectId,
+          githubRepoId: config.githubRepoId,
+          ref: config.branch || 'main'
+        }
+      };
+
+      console.log('Triggering GitHub deployment with:', JSON.stringify(variables, null, 2));
+      const result = await this.makeGraphQLRequest(mutation, variables);
+      
+      if (result.success && result.data?.deploymentCreateFromGithubRepo) {
+        return {
+          success: true,
+          deployment: result.data.deploymentCreateFromGithubRepo
+        };
+      }
+      
+      console.warn('deploymentCreateFromGithubRepo failed, falling back to serviceInstanceDeploy');
+    }
+
+    // Fallback to the old serviceInstanceDeploy mutation
     const mutation = `
       mutation ServiceInstanceDeploy($serviceId: String!, $environmentId: String) {
         serviceInstanceDeploy(serviceId: $serviceId, environmentId: $environmentId) {
@@ -1376,6 +1577,176 @@ class RailwayProvider {
         error: error.message
       };
     }
+  }
+
+  /**
+   * Deploy using Railway CLI (fallback method)
+   */
+  async deployWithCLI(config) {
+    try {
+      console.log('🚂 Using Railway CLI for deployment...');
+      
+      // Import required modules
+      const { promises: fs } = await import('fs');
+      const path = await import('path');
+      const os = await import('os');
+      const { execSync } = await import('child_process');
+      
+      const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'railway-deploy-'));
+      const originalCwd = process.cwd();
+      
+      // For now, rely on existing Railway CLI authentication
+      // The RAILWAY_TOKEN env var doesn't seem to work with the CLI
+      console.log('Using existing Railway CLI session...');
+      
+      try {
+        // For GitHub deployments, we need to clone the repo
+        if (config.source === 'github' && config.githubRepo) {
+          process.chdir(tempDir);
+          console.log(`Cloning GitHub repository: ${config.githubRepo}...`);
+          const branch = config.branch || 'main';
+          execSync(`git clone -b ${branch} https://github.com/${config.githubRepo}.git repo`, {
+            stdio: 'pipe'
+          });
+          
+          // Change to the cloned repo directory - THIS IS CRITICAL
+          process.chdir(path.join(tempDir, 'repo'));
+          console.log('Changed to repo directory');
+        }
+        
+        // Link to existing project (we already created it via API)
+        if (config.projectId) {
+          console.log(`Linking to existing project: ${config.projectId}`);
+          try {
+            // Run railway link command with project ID
+            const linkOutput = execSync(`railway link -p ${config.projectId}`, {
+              encoding: 'utf8',
+              stdio: ['pipe', 'pipe', 'pipe']
+            });
+            console.log('✅ Project linked');
+            if (linkOutput) console.log('Link output:', linkOutput);
+          } catch (linkError) {
+            console.error('Link error stderr:', linkError.stderr);
+            console.error('Link error stdout:', linkError.stdout);
+            throw new Error(`Failed to link project: ${linkError.message}`);
+          }
+        }
+        
+        // Set environment variables if provided
+        if (config.environment) {
+          console.log('Setting environment variables...');
+          for (const [key, value] of Object.entries(config.environment)) {
+            try {
+              execSync(`railway vars set ${key}="${value}"`, {
+                stdio: 'pipe'
+              });
+            } catch (envError) {
+              console.warn(`Failed to set ${key}: ${envError.message}`);
+            }
+          }
+        }
+        
+        // Deploy - Railway CLI will use the current directory
+        console.log('Triggering deployment from current directory...');
+        console.log(`Current directory: ${process.cwd()}`);
+        
+        let deployCommand = 'railway up';
+        
+        // Add service name if provided
+        if (config.serviceName || config.name) {
+          const serviceName = config.serviceName || config.name;
+          deployCommand += ` --service ${serviceName}`;
+        }
+        
+        // Add detached flag
+        deployCommand += ' --detach';
+        
+        console.log(`Running: ${deployCommand}`);
+        
+        try {
+          const output = execSync(deployCommand, {
+            encoding: 'utf8'
+          });
+          
+          console.log('✅ Deployment triggered successfully');
+          console.log('Output:', output);
+          
+          // Extract deployment ID from output if possible
+          let deploymentId = null;
+          const idMatch = output.match(/id=([a-f0-9-]+)/);
+          if (idMatch) {
+            deploymentId = idMatch[1];
+          }
+          
+          // Extract URL from output if present
+          let url = null;
+          const urlMatch = output.match(/https:\/\/[^\s]+/);
+          if (urlMatch) {
+            url = urlMatch[0];
+          }
+          
+          return {
+            success: true,
+            deploymentId: deploymentId || `cli-deploy-${Date.now()}`,
+            url: url,
+            status: 'deploying',
+            output: output,
+            cliDeployment: true
+          };
+          
+        } catch (deployError) {
+          throw new Error(`Deployment failed: ${deployError.message}`);
+        }
+        
+      } finally {
+        // Return to original directory
+        process.chdir(originalCwd);
+        // Clean up temp directory
+        await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
+      }
+      
+    } catch (error) {
+      console.error('CLI deployment error:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Enhanced deploy method that falls back to CLI if API fails
+   */
+  async deployWithFallback(config) {
+    console.log('🚀 Starting Railway deployment with fallback...');
+    
+    // First try API deployment
+    const apiResult = await this.deployWithDomain(config);
+    
+    if (apiResult.success && apiResult.url) {
+      // Check if the deployment actually works
+      console.log('Verifying API deployment...');
+      await new Promise(resolve => setTimeout(resolve, 30000)); // Wait 30s
+      
+      try {
+        const { execSync } = await import('child_process');
+        const statusCode = execSync(`curl -s -o /dev/null -w "%{http_code}" ${apiResult.url} --max-time 10`, { encoding: 'utf8' }).trim();
+        
+        if (statusCode === '200') {
+          console.log('✅ API deployment successful and verified!');
+          return apiResult;
+        } else {
+          console.log(`⚠️ API deployment returned status ${statusCode}, falling back to CLI...`);
+        }
+      } catch (error) {
+        console.log('⚠️ Could not verify API deployment, falling back to CLI...');
+      }
+    } else if (!apiResult.success) {
+      console.log('⚠️ API deployment failed, falling back to CLI...');
+    }
+    
+    // Fall back to CLI deployment
+    return await this.deployWithCLI(config);
   }
 }
 

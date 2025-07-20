@@ -1,79 +1,44 @@
 # Railway Scripts
 
-This directory contains utility scripts for managing Railway deployments using the RailwayProvider.
+This directory contains utility scripts for working with the Railway provider.
 
 ## Available Scripts
 
-### list-projects.js
-Lists all Railway projects (personal and team projects) with their services and deployment status.
+### deploy-from-github.js
+Deploy a GitHub repository to Railway.
 
 ```bash
-node scripts/railway/list-projects.js
+node scripts/deploy-from-github.js <github-repo> [project-name]
+
+# Example:
+node scripts/deploy-from-github.js AgentResults/test-express-railway my-app
 ```
 
-### deploy-app.js
-Deploys an application to Railway with automatic domain generation.
+### manage-projects.js
+Manage Railway projects - list, delete, or get details.
 
 ```bash
-node scripts/railway/deploy-app.js
-```
-
-### delete-all-projects.js
-Deletes all Railway projects. Use with caution!
-
-```bash
-node scripts/railway/delete-all-projects.js
-```
-
-### check-deployment-status.js
-Checks the status of a specific deployment or lists all deployments.
-
-```bash
-# List all deployments
-node scripts/railway/check-deployment-status.js
-
-# Check specific deployment
-node scripts/railway/check-deployment-status.js <deployment-id>
-```
-
-### manage-project.js
-General purpose project management tool with multiple commands.
-
-```bash
-# Show help
-node scripts/railway/manage-project.js help
-
-# List projects
-node scripts/railway/manage-project.js list
+# List all projects
+node scripts/manage-projects.js list
 
 # Get project details
-node scripts/railway/manage-project.js details <project-id>
+node scripts/manage-projects.js details <project-id>
 
-# Delete a project
-node scripts/railway/manage-project.js delete <project-id>
+# Delete a specific project
+node scripts/manage-projects.js delete <project-id>
 
-# Redeploy a service
-node scripts/railway/manage-project.js redeploy <service-id>
-
-# List domains for a service
-node scripts/railway/manage-project.js domains <service-id> <environment-id>
-
-# Generate domain for a service
-node scripts/railway/manage-project.js generate-domain <service-id> <environment-id>
+# Delete all projects
+node scripts/manage-projects.js delete-all
 ```
 
-## Configuration
+## Prerequisites
 
-All scripts use the RailwayProvider which requires a Railway API key to be set in the environment:
-
-```bash
-# In .env file
-RAILWAY=your-api-key-here
-```
+- Railway API key configured in environment (RAILWAY or RAILWAY_API_KEY)
+- Railway CLI installed and authenticated (for GitHub deployments)
+- Node.js 18+ installed
 
 ## Notes
 
-- All scripts use the RailwayProvider class for consistent API interaction
-- The scripts automatically handle ResourceManager initialization
-- Error handling is built into each script
-- Scripts are designed to be run from the package root directory
+- GitHub deployments use the Railway CLI behind the scenes
+- The Railway provider handles all the complexity internally
+- Domains are automatically generated for deployed services
