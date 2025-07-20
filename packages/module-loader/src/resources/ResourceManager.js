@@ -7,12 +7,17 @@ const __dirname = path.dirname(__filename);
 
 /**
  * Central registry for all resources needed by modules
+ * Provides dependency injection capabilities with factories, scopes, and lazy initialization
  * Automatically loads environment variables from .env file
  */
 class ResourceManager {
   constructor(options = {}) {
     this.resources = new Map();
+    this.factories = new Map();
+    this.modules = new Map();
     this.options = options;
+    this.parent = options.parent || null; // For scoped resource managers
+    this.initialized = false;
     
     // Note: .env loading will be done in initialize() method
     // since it needs to be async with ES6 modules
@@ -23,9 +28,15 @@ class ResourceManager {
    * Must be called after construction if loadEnv is needed
    */
   async initialize() {
-    if (this.options.loadEnv !== false) {
+    if (this.initialized) {
+      return;
+    }
+    
+    if (this.options.loadEnv !== false && !this.parent) {
       await this.loadEnvFile(this.options.envPath);
     }
+    
+    this.initialized = true;
   }
   
   /**
@@ -86,10 +97,16 @@ class ResourceManager {
    * @throws {Error} If the resource is not found
    */
   get(name) {
-    if (!this.resources.has(name)) {
-      throw new Error(`Resource '${name}' not found`);
+    if (this.resources.has(name)) {
+      return this.resources.get(name);
     }
-    return this.resources.get(name);
+    
+    // Check parent scope if exists
+    if (this.parent && this.parent.has(name)) {
+      return this.parent.get(name);
+    }
+    
+    throw new Error(`Resource '${name}' not found`);
   }
 
   /**
@@ -98,8 +115,107 @@ class ResourceManager {
    * @returns {boolean} True if the resource exists
    */
   has(name) {
-    return this.resources.has(name);
+    return this.resources.has(name) || (this.parent && this.parent.has(name));
+  }
+
+  /**
+   * Register a factory function for lazy resource creation
+   * @param {string} name - The name of the resource
+   * @param {Function} factory - Factory function that creates the resource
+   */
+  registerFactory(name, factory) {
+    if (typeof factory !== 'function') {
+      throw new Error(`Factory for '${name}' must be a function`);
+    }
+    this.factories.set(name, factory);
+  }
+
+  /**
+   * Register a module class for dependency injection
+   * @param {string} name - The name of the module
+   * @param {Class} moduleClass - The module class constructor
+   */
+  registerModule(name, moduleClass) {
+    this.modules.set(name, moduleClass);
+    // Also register as a factory
+    this.registerFactory(name, (config, rm) => new moduleClass(config, rm));
+  }
+
+  /**
+   * Get or create a resource using registered factory
+   * @param {string} name - The name of the resource
+   * @param {Object} config - Configuration to pass to factory
+   * @returns {*} The resource instance
+   */
+  async getOrCreate(name, config = {}) {
+    // Check if already exists
+    if (this.has(name)) {
+      return this.get(name);
+    }
+    
+    // Check for factory in current scope
+    if (this.factories.has(name)) {
+      const factory = this.factories.get(name);
+      const instance = await factory(config, this);
+      this.register(name, instance);
+      return instance;
+    }
+    
+    // Check for factory in parent scope
+    if (this.parent && this.parent.factories && this.parent.factories.has(name)) {
+      const factory = this.parent.factories.get(name);
+      const instance = await factory(config, this);
+      this.register(name, instance);
+      return instance;
+    }
+    
+    throw new Error(`Resource '${name}' not found and no factory registered`);
+  }
+
+  /**
+   * Create a scoped ResourceManager for isolated testing
+   * @returns {ResourceManager} A new ResourceManager with this as parent
+   */
+  createScope() {
+    const scope = new ResourceManager({ parent: this });
+    scope.initialized = true; // Inherit initialized state
+    return scope;
+  }
+
+  /**
+   * Clear all resources (useful for testing)
+   */
+  clear() {
+    this.resources.clear();
+    // Don't clear factories or modules - they can be reused
+  }
+
+  /**
+   * Get all registered resource names
+   * @returns {Array<string>} List of resource names
+   */
+  getResourceNames() {
+    const names = Array.from(this.resources.keys());
+    if (this.parent) {
+      const parentNames = this.parent.getResourceNames();
+      return [...new Set([...names, ...parentNames])];
+    }
+    return names;
+  }
+
+  /**
+   * Get all registered factory names
+   * @returns {Array<string>} List of factory names
+   */
+  getFactoryNames() {
+    const names = Array.from(this.factories.keys());
+    if (this.parent && this.parent.factories) {
+      const parentNames = Array.from(this.parent.factories.keys());
+      return [...new Set([...names, ...parentNames])];
+    }
+    return names;
   }
 }
 
 export default ResourceManager;
+export { ResourceManager };

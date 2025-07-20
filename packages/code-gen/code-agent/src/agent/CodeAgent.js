@@ -121,6 +121,9 @@ class CodeAgent extends EventEmitter {
       commitSizes: []
     };
     
+    // Resource Manager for dependency injection
+    this.resourceManager = null;
+    
     // Code generators
     this.htmlGenerator = new HTMLGenerator(config.htmlConfig);
     this.jsGenerator = new JSGenerator(config.jsConfig);
@@ -161,16 +164,26 @@ class CodeAgent extends EventEmitter {
     this.config.workingDirectory = workingDirectory;
     
     try {
-      // Initialize integration managers
-      this.fileOps = new FileOperationsManager(options.fileOpsConfig);
+      // Get or create ResourceManager for dependency injection
+      this.resourceManager = options.resourceManager;
+      if (!this.resourceManager) {
+        // Create new ResourceManager if not provided
+        const { ResourceManager } = await import('@jsenvoy/module-loader');
+        this.resourceManager = new ResourceManager();
+        await this.resourceManager.initialize();
+      }
       
-      const llmConfig = {
-        provider: 'mock',
+      // Register all factories for dependency injection
+      await this._registerDependencyFactories(options);
+      
+      // Get dependencies from ResourceManager
+      this.fileOps = await this.resourceManager.getOrCreate('fileOps', options.fileOpsConfig || {});
+      this.llmClient = await this.resourceManager.getOrCreate('llmClient', {
         ...this.config.llmConfig,
         ...options.llmConfig
-      };
-      this.llmClient = new LLMClientManager(llmConfig);
+      });
       
+      // Module loader still created directly but uses ResourceManager
       this.moduleLoader = new ModuleLoaderIntegration(options.moduleConfig);
       await this.moduleLoader.initialize();
       
@@ -191,9 +204,8 @@ class CodeAgent extends EventEmitter {
       });
       await this.stateManager.initialize();
       
-      // Initialize unified planner with LLM client
-      this.unifiedPlanner = new UnifiedPlanner({
-        provider: llmConfig.provider || 'mock',
+      // Initialize unified planner from ResourceManager
+      this.unifiedPlanner = await this.resourceManager.getOrCreate('unifiedPlanner', {
         llmClient: this.llmClient.llmClient
       });
       await this.unifiedPlanner.initialize();
@@ -503,18 +515,25 @@ class CodeAgent extends EventEmitter {
       const { config: validatedConfig } = GitConfigValidator.validateAndMerge(this.gitConfig || {});
       this.gitConfig = validatedConfig;
       
-      // Create GitIntegrationManager with resource manager
-      const resourceManager = {
-        get: (key) => {
-          if (key === 'GITHUB_USER') return process.env.GITHUB_USER;
-          if (key === 'GITHUB_PAT') return process.env.GITHUB_PAT;
-          if (key === 'GITHUB_AGENT_ORG') return process.env.GITHUB_AGENT_ORG || 'AgentResults';
-          if (key === 'llmClient') return this.llmClient?.llmClient || null;
-          return null;
-        }
-      };
+      // Register GitHub resources if not already present
+      if (this.resourceManager.has('env.GITHUB_USER')) {
+        this.resourceManager.register('GITHUB_USER', this.resourceManager.get('env.GITHUB_USER'));
+      }
+      if (this.resourceManager.has('env.GITHUB_PAT')) {
+        this.resourceManager.register('GITHUB_PAT', this.resourceManager.get('env.GITHUB_PAT'));
+      }
+      if (this.resourceManager.has('env.GITHUB_AGENT_ORG')) {
+        this.resourceManager.register('GITHUB_AGENT_ORG', this.resourceManager.get('env.GITHUB_AGENT_ORG'));
+      } else {
+        this.resourceManager.register('GITHUB_AGENT_ORG', 'AgentResults');
+      }
       
-      this.gitIntegration = new GitIntegrationManager(resourceManager, validatedConfig);
+      // Register LLM client for Git
+      if (this.llmClient?.llmClient) {
+        this.resourceManager.register('llmClient', this.llmClient.llmClient);
+      }
+      
+      this.gitIntegration = new GitIntegrationManager(this.resourceManager, validatedConfig);
       await this.gitIntegration.initialize(workingDirectory);
       
       // Set up Git event forwarding
@@ -789,6 +808,14 @@ class CodeAgent extends EventEmitter {
   }
 
   /**
+   * Get GitIntegrationManager instance
+   * @returns {GitIntegrationManager|null} The Git integration manager
+   */
+  get gitIntegrationManager() {
+    return this.gitIntegration;
+  }
+
+  /**
    * Get Git metrics
    */
   async getGitMetrics() {
@@ -822,6 +849,81 @@ class CodeAgent extends EventEmitter {
         this.gitMetrics.commitSizes.push(data.files.length);
       }
     }
+  }
+
+  /**
+   * Register dependency factories with ResourceManager
+   * @private
+   */
+  async _registerDependencyFactories(options) {
+    const rm = this.resourceManager;
+    
+    // Register FileOperationsManager factory
+    if (!rm.has('fileOps')) {
+      rm.registerFactory('fileOps', (config, resourceManager) => {
+        return new FileOperationsManager(config);
+      });
+    }
+    
+    // Register LLMClientManager factory
+    if (!rm.has('llmClient')) {
+      rm.registerFactory('llmClient', async (config, resourceManager) => {
+        // Determine provider from config or environment
+        let provider = config.provider;
+        let apiKey = config.apiKey;
+        
+        if (!provider && resourceManager.has('env.LLM_PROVIDER')) {
+          provider = resourceManager.get('env.LLM_PROVIDER');
+        }
+        
+        if (!provider) {
+          throw new Error('LLM provider not configured. Set llmConfig.provider or LLM_PROVIDER environment variable');
+        }
+        
+        // Get API key from config or environment
+        if (!apiKey) {
+          const envKey = `env.${provider.toUpperCase()}_API_KEY`;
+          if (resourceManager.has(envKey)) {
+            apiKey = resourceManager.get(envKey);
+          }
+        }
+        
+        if (!apiKey && provider !== 'mock') {
+          throw new Error(`API key not found for provider '${provider}'. Set ${provider.toUpperCase()}_API_KEY in .env file`);
+        }
+        
+        const llmConfig = {
+          provider,
+          apiKey,
+          model: config.model || (provider === 'anthropic' ? 'claude-3-sonnet-20240229' : 'gpt-3.5-turbo'),
+          ...config
+        };
+        
+        const client = new LLMClientManager(llmConfig);
+        await client.initialize();
+        return client;
+      });
+    }
+    
+    // Register UnifiedPlanner factory
+    if (!rm.has('unifiedPlanner')) {
+      rm.registerFactory('unifiedPlanner', (config, resourceManager) => {
+        return new UnifiedPlanner({
+          llmClient: config.llmClient
+        });
+      });
+    }
+    
+    // Register other common dependencies
+    rm.registerFactory('eslintManager', (config) => new EslintConfigManager(config));
+    rm.registerFactory('jestManager', (config) => new JestConfigManager(config));
+    rm.registerFactory('stateManager', (config) => new StateManager(config));
+    rm.registerFactory('validator', (config) => new ValidationUtils(config));
+    rm.registerFactory('errorHandler', (config) => new ErrorHandler({
+      enableLogging: false,
+      autoCleanup: false,
+      ...config
+    }));
   }
 
   /**
@@ -963,6 +1065,54 @@ class CodeAgent extends EventEmitter {
     }
 
     return await this.deploymentPhase.removeDeployment(deploymentId);
+  }
+
+  /**
+   * Run tests for the generated application
+   * @returns {Promise<Object>} Test results
+   */
+  async testApplication() {
+    if (!this.qualityPhase) {
+      throw new Error('Quality phase not initialized');
+    }
+
+    this.emit('progress', {
+      phase: 'testing',
+      step: 'starting',
+      message: '🧪 Running application tests...'
+    });
+
+    try {
+      // Run Jest tests using the quality phase
+      const testResults = await this.qualityPhase.runJestTests();
+      
+      this.emit('phase-complete', {
+        phase: 'testing',
+        message: `Tests ${testResults.passed ? 'PASSED' : 'FAILED'}: ${testResults.passedTests}/${testResults.totalTests} passed`,
+        results: testResults
+      });
+
+      return {
+        success: testResults.passed,
+        totalTests: testResults.totalTests,
+        passedTests: testResults.passedTests,
+        failedTests: testResults.failedTests,
+        coverage: testResults.coverage,
+        failures: testResults.failures,
+        testSuites: testResults.testSuites
+      };
+    } catch (error) {
+      this.emit('error', {
+        phase: 'testing',
+        message: `Test execution failed: ${error.message}`,
+        error: error.message
+      });
+
+      return {
+        success: false,
+        error: error.message
+      };
+    }
   }
 
   /**

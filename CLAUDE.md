@@ -270,3 +270,11 @@ const result = await githubTool.invoke({
 - File operations are sandboxed by default
 - Web tools use Puppeteer for browser automation
 - Keep all directories clean, never leave files around, always use nice directory structure
+
+## CRITICAL: Always Use Railway Tools
+
+**NEVER use raw Railway API calls or GraphQL queries directly!** Always use the Railway tools and modules we've built:
+- Use `RailwayProvider` from `@jsenvoy/railway` for API operations
+- Use `RailwayCLI` for CLI operations
+- Use the Railway module tools when working with jsEnvoy framework
+- This ensures consistency and proper error handling

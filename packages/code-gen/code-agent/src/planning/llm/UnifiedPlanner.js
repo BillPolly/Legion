@@ -5,7 +5,7 @@
  * tasks by configuring different objectives and allowable actions for each domain.
  */
 
-import { GenericPlanner } from '@jsenvoy/llm-planner/src/GenericPlanner.js';
+import { GenericPlanner } from '../../../../llm-planner/src/GenericPlanner.js';
 import { ResourceManager } from '@jsenvoy/module-loader';
 
 // Planning domain configurations
@@ -20,13 +20,12 @@ import { TestStrategyPlannerConfig } from './configs/TestStrategyPlannerConfig.j
 class UnifiedPlanner {
   constructor(config = {}) {
     this.config = {
-      provider: 'mock', // Default to mock for testing
       ...config
     };
     
     // Accept LLM client directly or use ResourceManager
     this.llmClient = config.llmClient || null;
-    this.resourceManager = config.llmClient ? null : new ResourceManager();
+    this.resourceManager = config.resourceManager || (config.llmClient ? null : new ResourceManager());
     this.genericPlanner = null;
     this.initialized = false;
     
