@@ -97,6 +97,8 @@ class RailwayProvider {
       });
 
       if (!response.ok) {
+        const errorBody = await response.text();
+        console.error('Railway API error response:', errorBody);
         if (response.status === 401) {
           return {
             success: false,
@@ -109,12 +111,24 @@ class RailwayProvider {
         };
       }
 
-      const result = await response.json();
-
-      if (result.errors && result.errors.length > 0) {
+      const responseText = await response.text();
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (e) {
+        console.error('Failed to parse Railway response:', responseText);
         return {
           success: false,
-          error: result.errors[0].message
+          error: 'Invalid JSON response from Railway API'
+        };
+      }
+
+      if (result.errors && result.errors.length > 0) {
+        console.error('Railway GraphQL errors:', JSON.stringify(result.errors, null, 2));
+        return {
+          success: false,
+          error: result.errors[0].message,
+          errors: result.errors
         };
       }
 
@@ -235,7 +249,25 @@ class RailwayProvider {
     };
 
     console.log('Creating service with variables:', JSON.stringify(variables, null, 2));
-    const result = await this.makeGraphQLRequest(mutation, variables);
+    
+    // First attempt with the built config
+    let result = await this.makeGraphQLRequest(mutation, variables);
+    
+    if (!result.success && config.source === 'github') {
+      // If it fails, try with just the repo without buildSourceConfig
+      console.log('First attempt failed, trying simplified source...');
+      const simplifiedVariables = {
+        input: {
+          projectId,
+          name: config.name || 'web-service',
+          source: {
+            repo: config.repo
+          }
+        }
+      };
+      console.log('Simplified variables:', JSON.stringify(simplifiedVariables, null, 2));
+      result = await this.makeGraphQLRequest(mutation, simplifiedVariables);
+    }
     
     if (!result.success) {
       console.error('Service creation failed:', result.error);
@@ -253,7 +285,7 @@ class RailwayProvider {
    */
   buildSourceConfig(config) {
     if (config.source === 'github') {
-      // Railway API expects just repo, not nested under github
+      // Railway API expects just repo in source object
       return {
         repo: config.repo
       };
@@ -311,10 +343,15 @@ class RailwayProvider {
         project = projectResult.project;
       }
 
+      // Wait a bit after project creation
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       // 2. Create service
       const serviceResult = await this.createService(project.id, config);
       
       if (!serviceResult.success) {
+        console.error('Service creation failed for project:', project.id);
+        console.error('Config:', JSON.stringify(config, null, 2));
         return serviceResult;
       }
 
@@ -328,21 +365,30 @@ class RailwayProvider {
         }
       }
 
-      // 4. Trigger deployment
+      // 4. For GitHub source, deployment is automatic when service is created
       let deployment;
       if (config.source === 'github') {
-        deployment = await this.deployFromGitHub(service.id, config);
+        // Railway automatically deploys when a GitHub source is connected
+        // We just need to create a deployment object for consistency
+        deployment = {
+          success: true,
+          deployment: {
+            id: `deploy-${service.id}`,
+            status: 'BUILDING',
+            url: null,
+            createdAt: new Date().toISOString()
+          }
+        };
       } else {
         deployment = await this.deployFromLocal(service.id, config);
-      }
-
-      if (!deployment.success) {
-        return deployment;
+        if (!deployment.success) {
+          return deployment;
+        }
       }
 
       const result = {
         success: true,
-        id: deployment.deployment.id,
+        id: service.id, // Use service ID as deployment ID for Railway
         projectId: project.id,
         serviceId: service.id,
         deploymentId: deployment.deployment.id,
@@ -352,8 +398,12 @@ class RailwayProvider {
         createdAt: new Date()
       };
 
-      // Store deployment info
-      this.activeDeployments.set(result.id, result);
+      // Store deployment info with the URL if we have it
+      this.activeDeployments.set(result.id, {
+        ...result,
+        url: deployment.deployment.url || result.url,
+        domain: deployment.deployment.domain
+      });
 
       return result;
 
@@ -439,6 +489,19 @@ class RailwayProvider {
    * Get deployment status
    */
   async getStatus(deploymentId) {
+    // First check if we have the deployment in our active deployments with URL
+    const activeDeployment = this.activeDeployments.get(deploymentId);
+    if (activeDeployment && activeDeployment.url) {
+      // We already have the URL from deployWithDomain
+      return {
+        id: deploymentId,
+        status: activeDeployment.status,
+        url: activeDeployment.url,
+        domain: activeDeployment.domain,
+        createdAt: activeDeployment.createdAt
+      };
+    }
+
     const query = `
       query Deployment($id: String!) {
         deployment(id: $id) {
@@ -468,7 +531,8 @@ class RailwayProvider {
     return {
       id: deploymentId,
       status: this.mapRailwayStatus(deployment.status),
-      url: deployment.url || deployment.staticUrl,
+      url: deployment.url || deployment.staticUrl || activeDeployment?.url,
+      domain: activeDeployment?.domain,
       createdAt: deployment.createdAt,
       completedAt: deployment.completedAt
     };

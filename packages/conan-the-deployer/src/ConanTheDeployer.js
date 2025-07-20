@@ -3,17 +3,30 @@ import DeploymentManager from './DeploymentManager.js';
 import MonitoringSystem from './MonitoringSystem.js';
 import LocalProvider from './providers/LocalProvider.js';
 import DockerProvider from './providers/DockerProvider.js';
-import RailwayProvider from './providers/RailwayProvider.js';
+import RailwayProviderAdapter from './providers/RailwayProviderAdapter.js';
+import CheckDeploymentTool from './tools/CheckDeploymentTool.js';
 
 /**
  * ConanTheDeployer - Main module for deploying and monitoring Node.js applications
  */
 class ConanTheDeployer extends Module {
-  constructor(config = {}, resourceManager = null) {
+  static dependencies = ['resourceManager'];
+  constructor(dependencies = {}) {
     super();
     
     this.name = 'conan-the-deployer';
     this.description = 'Deploy and monitor Node.js applications across multiple providers';
+    
+    // Extract resourceManager and config from dependencies
+    this.resourceManager = dependencies.resourceManager || dependencies;
+    
+    // If dependencies is actually a ResourceManager instance (backward compatibility)
+    if (this.resourceManager && typeof this.resourceManager.get === 'function') {
+      // We have a ResourceManager
+    } else {
+      // No ResourceManager provided
+      this.resourceManager = null;
+    }
     
     // Merge with default configuration
     this.config = {
@@ -22,10 +35,8 @@ class ConanTheDeployer extends Module {
       healthCheckInterval: 30000,
       metricsInterval: 60000,
       logBufferSize: 1000,
-      ...config
+      ...(dependencies.config || {})
     };
-    
-    this.resourceManager = resourceManager;
     
     // Initialize providers first
     this.providers = this.initializeProviders();
@@ -33,6 +44,17 @@ class ConanTheDeployer extends Module {
     // Initialize core components with providers
     this.deploymentManager = new DeploymentManager(this.config, this.providers);
     this.monitoringSystem = new MonitoringSystem(this.config);
+    
+    // Register providers with monitoring system
+    for (const [name, provider] of Object.entries(this.providers)) {
+      this.monitoringSystem.registerProvider(name, provider);
+    }
+    
+    // Give monitoring system access to deployment manager
+    this.monitoringSystem.deploymentManager = this.deploymentManager;
+    
+    // Register tools
+    this.registerTool('check_deployment', new CheckDeploymentTool(this.config));
   }
   
   initializeProviders() {
@@ -42,18 +64,19 @@ class ConanTheDeployer extends Module {
     providers.local = new LocalProvider(this.config);
     
     // Initialize Docker Provider
-    const dockerHost = this.resourceManager?.get('DOCKER_HOST') || process.env.DOCKER_HOST;
-    providers.docker = new DockerProvider({
+    let dockerHost;
+    try {
+      dockerHost = this.resourceManager?.get('env.DOCKER_HOST');
+    } catch (error) {
+      // DOCKER_HOST not available
+    }
+    providers.docker = new DockerProvider(this.resourceManager, {
       ...this.config,
       dockerHost
     });
     
     // Initialize Railway Provider
-    const railwayToken = this.resourceManager?.get('RAILWAY_API_TOKEN') || process.env.RAILWAY_API_TOKEN;
-    providers.railway = new RailwayProvider({
-      ...this.config,
-      apiToken: railwayToken
-    });
+    providers.railway = new RailwayProviderAdapter(this.resourceManager);
     
     return providers;
   }

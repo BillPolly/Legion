@@ -7,7 +7,10 @@ export { default as ConanTheDeployer } from './ConanTheDeployer.js';
 export { default as BaseProvider } from './providers/BaseProvider.js';
 export { default as LocalProvider } from './providers/LocalProvider.js';
 export { default as DockerProvider } from './providers/DockerProvider.js';
-export { default as RailwayProvider } from './providers/RailwayProvider.js';
+export { default as RailwayProviderAdapter } from './providers/RailwayProviderAdapter.js';
+
+// Export tools
+export { default as CheckDeploymentTool } from './tools/CheckDeploymentTool.js';
 
 // Export models
 export { default as Deployment } from './models/Deployment.js';

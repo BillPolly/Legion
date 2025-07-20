@@ -11,9 +11,11 @@ class DockerProvider extends BaseProvider {
     this.config = config;
     
     // Get Docker client from ResourceManager
-    this.docker = this.resourceManager.get('docker-client');
-    if (!this.docker) {
-      throw new Error('Docker client not available in ResourceManager. Ensure Docker is installed and running.');
+    try {
+      this.docker = this.resourceManager?.get('docker-client');
+    } catch (error) {
+      // Docker client not available
+      this.docker = null;
     }
     
     this.name = 'docker';

@@ -90,6 +90,12 @@ class RailwayProviderAdapter extends BaseProvider {
    */
   async deploy(config) {
     await this.ensureInitialized();
+    
+    // If source is github and we need a domain, use deployWithDomain
+    if (config.source === 'github' && config.generateDomain !== false) {
+      return await this.railwayProvider.deployWithDomain(config);
+    }
+    
     return await this.railwayProvider.deploy(config);
   }
 

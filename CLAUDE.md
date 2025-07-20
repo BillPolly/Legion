@@ -177,6 +177,89 @@ packages/
    - Use `.env` files for API keys and configuration
    - Environment variables accessed via `process.env`
 
+## CRITICAL: Environment Variables and Configuration
+
+**ALWAYS use ResourceManager to access environment variables!** The project has a `.env` file in the root directory that contains all necessary API keys and configuration. 
+
+### Correct Way to Access Environment Variables:
+
+```javascript
+import { ResourceManager } from '@jsenvoy/module-loader';
+
+// Initialize ResourceManager
+const resourceManager = new ResourceManager();
+await resourceManager.initialize();
+
+// Access environment variables
+const githubToken = resourceManager.get('env.GITHUB_PAT');
+const railwayToken = resourceManager.get('env.RAILWAY_API_TOKEN');
+const anthropicKey = resourceManager.get('env.ANTHROPIC_API_KEY');
+```
+
+### NEVER DO THIS:
+```javascript
+// DON'T access process.env directly
+const token = process.env.GITHUB_PAT; // WRONG!
+
+// DON'T check for environment variables like this
+if (!process.env.RAILWAY_API_TOKEN) { // WRONG!
+  console.error('Missing token');
+}
+```
+
+### Examples in the Codebase:
+- See `packages/code-gen/code-agent/__tests__/integration/CodeAgent.step-by-step.test.js` for correct usage
+- See `packages/code-gen/code-agent/__tests__/integration/LiveGitHubIntegration.test.js` for GitHub integration examples
+- All integration tests use ResourceManager to access credentials
+
+The ResourceManager automatically loads the `.env` file from the project root and makes all variables available via the `env.` prefix.
+
+## Using GitHub Tools
+
+To use GitHub tools in scripts, follow this pattern:
+
+```javascript
+import { ResourceManager, ModuleFactory } from '@jsenvoy/module-loader';
+import GitHubModule from '../../packages/general-tools/src/github/GitHubModule.js';
+
+// Initialize ResourceManager
+const resourceManager = new ResourceManager();
+await resourceManager.initialize();
+
+// Register GitHub resources from environment
+resourceManager.register('GITHUB_PAT', resourceManager.get('env.GITHUB_PAT'));
+resourceManager.register('GITHUB_ORG', resourceManager.get('env.GITHUB_ORG'));
+resourceManager.register('GITHUB_USER', resourceManager.get('env.GITHUB_USER'));
+
+// Create module using ModuleFactory
+const moduleFactory = new ModuleFactory(resourceManager);
+const githubModule = moduleFactory.createModule(GitHubModule);
+
+// Get tools from the module
+const tools = githubModule.getTools();
+const githubTool = tools.find(tool => tool.name === 'github');
+const polyRepoTool = tools.find(tool => tool.name === 'polyrepo');
+
+// Use the tool with invoke method
+const result = await githubTool.invoke({
+  function: {
+    name: 'github_get_repo',
+    arguments: JSON.stringify({
+      owner: 'Bill234',
+      repo: 'test-app'
+    })
+  }
+});
+```
+
+### Available GitHub Functions:
+- `github_get_repo` - Get repository information
+- `github_list_user_repos` - List user repositories
+- `github_list_branches` - List repository branches
+- `github_create_repo` - Create a new repository
+- `github_delete_repo` - Delete a repository
+- `polyrepo_*` - Various polyrepo management functions
+
 ## Important Notes
 
 - All packages use ES modules (`"type": "module"`)

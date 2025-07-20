@@ -434,9 +434,18 @@ CMD ["node", "${mainFile}"]
         break;
       
       case 'railway':
+        // Railway requires source and repo/githubRepo fields
+        config.source = this.deploymentConfig.source || 'github';
+        config.repo = this.deploymentConfig.githubRepo || this.deploymentConfig.repo;
+        config.branch = this.deploymentConfig.branch || 'main';
         config.projectId = this.deploymentConfig.railwayProjectId;
         config.environmentName = this.deploymentConfig.environmentName || 'production';
         config.region = this.deploymentConfig.region;
+        config.environment = this.deploymentConfig.environment || {};
+        config.generateDomain = this.deploymentConfig.generateDomain !== false; // Default to true
+        
+        // Pass through all deployment config to ensure Railway gets what it needs
+        Object.assign(config, this.deploymentConfig);
         break;
       
       case 'local':
@@ -481,6 +490,30 @@ CMD ["node", "${mainFile}"]
         error: error.message
       });
     }
+  }
+
+  /**
+   * Monitor deployment status
+   * @param {Object} options - Monitor options
+   * @param {string} options.deploymentId - Deployment ID to monitor
+   * @param {number} options.duration - How long to monitor (ms)
+   * @param {number} options.interval - Check interval (ms)
+   */
+  async monitor(options = {}) {
+    if (!this.deploymentIntegration) {
+      throw new Error('Deployment integration not initialized');
+    }
+
+    const deploymentId = options.deploymentId || this.deploymentResult?.id;
+    if (!deploymentId) {
+      throw new Error('No deployment ID available to monitor');
+    }
+
+    return await this.deploymentIntegration.monitor({
+      deploymentId: deploymentId,
+      duration: options.duration || 30000,
+      interval: options.interval || 5000
+    });
   }
 
   /**
