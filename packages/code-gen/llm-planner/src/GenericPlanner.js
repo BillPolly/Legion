@@ -28,7 +28,8 @@ class GenericPlanner {
       inputs = [],
       requiredOutputs = [],
       allowableActions = [],
-      maxSteps = this.maxSteps
+      maxSteps = this.maxSteps,
+      initialInputData = {}
     } = request;
 
     if (!description) {
@@ -53,13 +54,13 @@ class GenericPlanner {
         console.log('\n🤖 LLM Response:');
         console.log(JSON.stringify(response, null, 2));
 
-        const plan = this._parsePlanResponse(response, allowableActions, inputs, requiredOutputs);
+        const plan = this._parsePlanResponse(response, allowableActions, inputs, requiredOutputs, initialInputData);
         
         console.log('\n📋 Generated Plan JSON:');
         console.log(JSON.stringify(plan.toJSON(), null, 2));
         
         // Validate the plan
-        const validation = this._validatePlan(plan, inputs, requiredOutputs, allowableActions);
+        const validation = this._validatePlan(plan, inputs, requiredOutputs, allowableActions, initialInputData);
         if (!validation.isValid) {
           throw new Error(`Plan validation failed: ${validation.errors.join(', ')}`);
         }
@@ -190,7 +191,7 @@ Generate a complete, executable plan.`;
    * Parse the LLM response into a Plan object
    * @private
    */
-  _parsePlanResponse(response, allowableActions, inputs = [], requiredOutputs = []) {
+  _parsePlanResponse(response, allowableActions, inputs = [], requiredOutputs = [], initialInputData = {}) {
     let planData;
     
     try {
@@ -230,7 +231,7 @@ Generate a complete, executable plan.`;
    * Validate the generated plan
    * @private
    */
-  _validatePlan(plan, inputs, requiredOutputs, allowableActions) {
+  _validatePlan(plan, inputs, requiredOutputs, allowableActions, initialInputData = {}) {
     const errors = [];
 
     // Validate plan structure
@@ -249,8 +250,8 @@ Generate a complete, executable plan.`;
       }
     }
 
-    // Validate input/output flow
-    const flowValidation = plan.validateInputOutputFlow();
+    // Validate input/output flow with initial input data
+    const flowValidation = this._validatePlanInputOutputFlow(plan, initialInputData);
     if (!flowValidation.isValid) {
       errors.push(...flowValidation.errors);
     }
@@ -265,6 +266,47 @@ Generate a complete, executable plan.`;
     return {
       isValid: errors.length === 0,
       errors
+    };
+  }
+
+  /**
+   * Validate plan input/output flow with initial input data
+   * @private
+   */
+  _validatePlanInputOutputFlow(plan, initialInputData = {}) {
+    const errors = [];
+    const warnings = [];
+    
+    // Track all available outputs (starting with plan inputs + initial input data)
+    const availableOutputs = [...plan.inputs, ...Object.keys(initialInputData)];
+    
+    // Check each step in execution order
+    const executionOrder = plan.executionOrder.length > 0 ? plan.executionOrder : plan.generateExecutionOrder();
+    
+    for (const stepId of executionOrder) {
+      const step = plan.getStep(stepId);
+      if (!step) continue;
+      
+      // Validate step inputs
+      const stepInputValidation = step.validateInputs(availableOutputs);
+      if (!stepInputValidation.isValid) {
+        errors.push(`Step '${step.name}' (${stepId}) missing required inputs: ${stepInputValidation.missingInputs.join(', ')}`);
+      }
+      
+      // Add step outputs to available outputs
+      const stepOutputs = step.getOutputs();
+      for (const output of stepOutputs) {
+        if (!availableOutputs.includes(output)) {
+          availableOutputs.push(output);
+        }
+      }
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+      availableOutputs
     };
   }
 

@@ -26,32 +26,24 @@ class DeploymentIntegration {
       // Register deployment-related resources if needed
       await this._registerResources();
 
-      // Load Conan-the-Deployer module
-      const moduleConfig = {
-        name: '@jsenvoy/conan-the-deployer',
-        defaultProvider: 'local',
-        monitoringEnabled: true,
-        healthCheckInterval: 30000
-      };
-
-      const loadResult = await this.moduleLoader.loadModule('@jsenvoy/conan-the-deployer', moduleConfig);
+      // For now, always use direct import since module loader is using mocks
+      // TODO: Update when module loader properly loads real modules
+      const { default: ConanTheDeployer } = await import('../../../../conan-the-deployer/src/ConanTheDeployer.js');
       
-      if (!loadResult.success) {
-        throw new Error(`Failed to load deployment module: ${loadResult.error}`);
-      }
-
-      this.deployerModule = loadResult.module;
+      const dependencies = {
+        resourceManager: this.resourceManager,
+        config: {
+          defaultProvider: 'local',
+          monitoringEnabled: true,
+          healthCheckInterval: 30000
+        }
+      };
+      
+      this.deployerModule = new ConanTheDeployer(dependencies);
       this.initialized = true;
 
     } catch (error) {
-      // Fallback to direct import if module loader fails
-      try {
-        const { default: ConanTheDeployer } = await import('@jsenvoy/conan-the-deployer');
-        this.deployerModule = new ConanTheDeployer({}, this.resourceManager);
-        this.initialized = true;
-      } catch (importError) {
-        throw new Error(`Failed to initialize deployment integration: ${error.message}`);
-      }
+      throw new Error(`Failed to initialize deployment integration: ${error.message}`);
     }
   }
 

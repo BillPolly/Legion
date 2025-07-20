@@ -9,57 +9,100 @@ export const TestStrategyPlannerConfig = {
   // Actions that can be used in test strategy planning
   allowableActions: [
     {
-      name: 'analyze_test_requirements',
+      type: 'analyze_test_requirements',
       description: 'Analyze testing requirements based on project type and complexity',
-      parameters: ['project_analysis'],
-      output: 'test_requirements'
+      inputs: ['project_analysis'],
+      outputs: ['test_requirements'],
+      parameters: {
+        projectType: { type: 'string', description: 'Type of project' },
+        complexity: { type: 'string', description: 'Project complexity' },
+        features: { type: 'array', description: 'List of features to test' }
+      }
     },
     {
-      name: 'determine_test_types',
+      type: 'determine_test_types',
       description: 'Determine which types of tests are needed (unit, integration, e2e)',
-      parameters: ['project_analysis', 'test_requirements'],
-      output: 'test_types'
+      inputs: ['project_analysis', 'test_requirements'],
+      outputs: ['test_types'],
+      parameters: {
+        types: { type: 'array', description: 'List of test types needed' },
+        rationale: { type: 'string', description: 'Reasoning for test type selection' }
+      }
     },
     {
-      name: 'plan_unit_tests',
+      type: 'plan_unit_tests',
       description: 'Plan unit test strategy and coverage targets',
-      parameters: ['project_analysis', 'test_requirements'],
-      output: 'unit_test_strategy'
+      inputs: ['project_analysis', 'test_requirements'],
+      outputs: ['unit_test_strategy'],
+      parameters: {
+        pattern: { type: 'string', description: 'Unit test pattern to follow' },
+        mockExternal: { type: 'boolean', description: 'Whether to mock external dependencies' },
+        testDoubles: { type: 'boolean', description: 'Whether to use test doubles' },
+        coverage: { type: 'number', description: 'Target coverage percentage' }
+      }
     },
     {
-      name: 'plan_integration_tests',
+      type: 'plan_integration_tests',
       description: 'Plan integration test strategy for component interactions',
-      parameters: ['project_analysis', 'test_requirements'],
-      output: 'integration_test_strategy'
+      inputs: ['project_analysis', 'test_requirements'],
+      outputs: ['integration_test_strategy'],
+      parameters: {
+        pattern: { type: 'string', description: 'Integration test pattern' },
+        testAPIs: { type: 'boolean', description: 'Whether to test APIs' },
+        testDatabase: { type: 'boolean', description: 'Whether to test database' },
+        coverage: { type: 'number', description: 'Target coverage percentage' }
+      }
     },
     {
-      name: 'plan_e2e_tests',
+      type: 'plan_e2e_tests',
       description: 'Plan end-to-end test scenarios for user workflows',
-      parameters: ['project_analysis', 'test_requirements'],
-      output: 'e2e_test_strategy'
+      inputs: ['project_analysis', 'test_requirements'],
+      outputs: ['e2e_test_strategy'],
+      parameters: {
+        pattern: { type: 'string', description: 'E2E test pattern' },
+        browsers: { type: 'array', description: 'List of browsers to test' },
+        viewport: { type: 'object', description: 'Viewport dimensions' },
+        coverage: { type: 'number', description: 'Target coverage percentage' }
+      }
     },
     {
-      name: 'define_test_coverage',
+      type: 'define_test_coverage',
       description: 'Define test coverage targets and metrics',
-      parameters: ['test_types', 'project_analysis'],
-      output: 'coverage_targets'
+      inputs: ['test_types', 'project_analysis'],
+      outputs: ['coverage_targets'],
+      parameters: {
+        overall: { type: 'number', description: 'Overall coverage target' },
+        unit: { type: 'number', description: 'Unit test coverage target' },
+        integration: { type: 'number', description: 'Integration test coverage target' },
+        e2e: { type: 'number', description: 'E2E test coverage target' }
+      }
     },
     {
-      name: 'plan_test_data',
+      type: 'plan_test_data',
       description: 'Plan test data requirements and mock strategies',
-      parameters: ['test_types', 'project_analysis'],
-      output: 'test_data_strategy'
+      inputs: ['test_types', 'project_analysis'],
+      outputs: ['test_data_strategy'],
+      parameters: {
+        approach: { type: 'string', description: 'Test data approach' },
+        locations: { type: 'array', description: 'Test data locations' },
+        mocking: { type: 'boolean', description: 'Whether to use mocking' }
+      }
     },
     {
-      name: 'plan_test_environment',
+      type: 'plan_test_environment',
       description: 'Plan test environment setup and configuration',
-      parameters: ['test_types', 'project_analysis'],
-      output: 'test_environment'
+      inputs: ['test_types', 'project_analysis'],
+      outputs: ['test_environment'],
+      parameters: {
+        framework: { type: 'string', description: 'Test framework to use' },
+        runner: { type: 'string', description: 'Test runner to use' },
+        browsers: { type: 'array', description: 'Browsers for testing' }
+      }
     },
     {
-      name: 'create_test_strategy',
+      type: 'create_test_strategy',
       description: 'Create comprehensive test strategy document',
-      parameters: [
+      inputs: [
         'test_types',
         'unit_test_strategy',
         'integration_test_strategy',
@@ -68,7 +111,13 @@ export const TestStrategyPlannerConfig = {
         'test_data_strategy',
         'test_environment'
       ],
-      output: 'test_strategy'
+      outputs: ['test_strategy'],
+      parameters: {
+        testTypes: { type: 'object', description: 'Enabled test types and coverage' },
+        coverageTargets: { type: 'object', description: 'Coverage targets' },
+        testEnvironment: { type: 'object', description: 'Test environment configuration' },
+        testData: { type: 'object', description: 'Test data configuration' }
+      }
     }
   ],
   

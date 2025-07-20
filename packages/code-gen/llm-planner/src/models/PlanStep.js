@@ -173,6 +173,12 @@ class PlanStep {
    * @returns {Object} Validation result
    */
   validateInputs(availableOutputs = []) {
+    // For steps with actions, validate each action in sequence
+    if (this.actions.length > 0) {
+      return this._validateActionSequence(availableOutputs);
+    }
+    
+    // For steps with sub-steps, validate recursively  
     const requiredInputs = this.getInputs();
     const missingInputs = requiredInputs.filter(input => !availableOutputs.includes(input));
     
@@ -180,6 +186,40 @@ class PlanStep {
       isValid: missingInputs.length === 0,
       missingInputs,
       satisfiedInputs: requiredInputs.filter(input => availableOutputs.includes(input))
+    };
+  }
+
+  /**
+   * Validate a sequence of actions within this step
+   * @private
+   */
+  _validateActionSequence(availableOutputs = []) {
+    const currentlyAvailable = [...availableOutputs];
+    const missingInputs = [];
+    const satisfiedInputs = [];
+    
+    // Validate each action in sequence
+    for (const action of this.actions) {
+      const actionInputs = action.getInputs();
+      const actionMissing = actionInputs.filter(input => !currentlyAvailable.includes(input));
+      const actionSatisfied = actionInputs.filter(input => currentlyAvailable.includes(input));
+      
+      missingInputs.push(...actionMissing);
+      satisfiedInputs.push(...actionSatisfied);
+      
+      // Add this action's outputs to available outputs for next action
+      const actionOutputs = action.getOutputs();
+      for (const output of actionOutputs) {
+        if (!currentlyAvailable.includes(output)) {
+          currentlyAvailable.push(output);
+        }
+      }
+    }
+    
+    return {
+      isValid: missingInputs.length === 0,
+      missingInputs: [...new Set(missingInputs)], // Remove duplicates
+      satisfiedInputs: [...new Set(satisfiedInputs)] // Remove duplicates
     };
   }
 

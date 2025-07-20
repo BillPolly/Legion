@@ -162,13 +162,17 @@ class UnifiedPlanner {
       // Extract input names based on planning type
       const inputNames = this._getInputNamesForPlanningType(planningType, input);
       
+      // Prepare initial input data based on planning type
+      const initialInputData = this._prepareInitialInputData(planningType, input);
+      
       // Create planning request for GenericPlanner
       const planningRequest = {
         description: objective,
         allowableActions,
         inputs: inputNames,
         requiredOutputs: config.requiredOutputs || [],
-        maxSteps: config.maxSteps || 10
+        maxSteps: config.maxSteps || 10,
+        initialInputData
       };
 
       // Execute planning using GenericPlanner
@@ -181,6 +185,133 @@ class UnifiedPlanner {
     } catch (error) {
       throw new Error(`Planning failed for ${planningType}: ${error.message}`);
     }
+  }
+
+  /**
+   * Prepare initial input data for GenericPlanner based on planning type
+   * @private
+   */
+  _prepareInitialInputData(planningType, input) {
+    const safeInput = input || {};
+    
+    switch (planningType) {
+      case 'directory':
+        // Extract required values from analysis for directory planning
+        const analysis = safeInput;
+        return {
+          project_analysis: analysis,
+          project_type: analysis.projectType || 'unknown',
+          complexity_level: analysis.complexity || 'medium',
+          features_list: this._extractFeaturesList(analysis),
+          technologies_list: this._extractTechnologiesList(analysis),
+          frontend_features: analysis.components?.frontend?.features || [],
+          backend_features: analysis.components?.backend?.features || [],
+          // Provide initial empty project structure
+          project_structure: { directories: [], files: [] },
+          // Provide directory_structure as alias for project_structure
+          directory_structure: { directories: [], files: [] },
+          // Provide empty requirements that can be populated by actions
+          directory_requirements: [],
+          file_requirements: [],
+          // Provide project_requirements as alias for project_analysis
+          project_requirements: analysis
+        };
+      
+      case 'dependency':
+        // Extract required values for dependency planning
+        const structure = safeInput.structure || {};
+        const projectAnalysis = safeInput.analysis || {};
+        const fileList = structure.files || [];
+        
+        return {
+          directory_structure: structure,
+          project_analysis: projectAnalysis,
+          // Provide file-related inputs for dependency actions
+          file_list: fileList,
+          file_name: fileList.length > 0 ? fileList[0] : '',
+          file_path: fileList.length > 0 ? fileList[0] : '',
+          source_file: '',
+          target_file: '',
+          dependency_analysis: {},
+          dependency_relationships: [],
+          file_constraints: [],
+          dependency_conflict: null,
+          resolution_strategy: 'automatic',
+          project_constraints: [],
+          dependency_order: [],
+          parallelization_requirements: {},
+          dependency_structure: { files: fileList, dependencies: [] },
+          project_requirements: projectAnalysis
+        };
+      
+      case 'frontend':
+        // Extract required values for frontend architecture planning
+        const frontendAnalysis = safeInput || {};
+        return {
+          project_analysis: frontendAnalysis,
+          features_list: frontendAnalysis.components?.frontend?.features || [],
+          project_requirements: frontendAnalysis,
+          component_list: [],
+          feature_requirements: frontendAnalysis.components?.frontend || {},
+          component_requirements: frontendAnalysis.components?.frontend || {},
+          complexity_level: frontendAnalysis.complexity || 'medium',
+          api_requirements: frontendAnalysis.apiInterface || {},
+          design_requirements: { theme: 'modern', colors: ['blue', 'white'] },
+          navigation_requirements: { type: 'single-page' },
+          performance_requirements: { loadTime: 3000, bundleSize: 500 },
+          component_specifications: [],
+          accessibility_requirements: { wcag: '2.1', level: 'AA' },
+          architecture_specification: {}
+        };
+      
+      case 'backend':
+        // Extract required values for backend architecture planning  
+        const backendAnalysis = safeInput || {};
+        return {
+          project_analysis: backendAnalysis,
+          features_list: backendAnalysis.components?.backend?.features || [],
+          project_requirements: backendAnalysis,
+          complexity_level: backendAnalysis.complexity || 'medium',
+          api_requirements: backendAnalysis.apiInterface || {},
+          security_requirements: backendAnalysis.security || {},
+          performance_requirements: { responseTime: 200, throughput: 1000 },
+          data_requirements: backendAnalysis.components?.backend?.storage || {},
+          architecture_specification: {}
+        };
+      
+      default:
+        return {};
+    }
+  }
+
+  /**
+   * Extract features list from analysis
+   * @private
+   */
+  _extractFeaturesList(analysis) {
+    const features = [];
+    if (analysis.components?.frontend?.features) {
+      features.push(...analysis.components.frontend.features);
+    }
+    if (analysis.components?.backend?.features) {
+      features.push(...analysis.components.backend.features);
+    }
+    return [...new Set(features)]; // Remove duplicates
+  }
+
+  /**
+   * Extract technologies list from analysis
+   * @private
+   */
+  _extractTechnologiesList(analysis) {
+    const technologies = [];
+    if (analysis.components?.frontend?.technologies) {
+      technologies.push(...analysis.components.frontend.technologies);
+    }
+    if (analysis.components?.backend?.technologies) {
+      technologies.push(...analysis.components.backend.technologies);
+    }
+    return [...new Set(technologies)]; // Remove duplicates
   }
 
   /**
@@ -204,20 +335,68 @@ class UnifiedPlanner {
           'features_list',
           'technologies_list',
           'frontend_features',
-          'backend_features'
+          'backend_features',
+          'project_structure',
+          'directory_structure',
+          'directory_requirements',
+          'file_requirements',
+          'project_requirements'
         ];
       
       case 'dependency':
-        // For dependency planning, we need structure and analysis
-        return ['directory_structure', 'project_analysis'];
+        // For dependency planning, we need structure and analysis plus file-specific inputs
+        return [
+          'directory_structure', 
+          'project_analysis',
+          'file_list',
+          'file_name',
+          'file_path',
+          'source_file',
+          'target_file',
+          'dependency_analysis',
+          'dependency_relationships',
+          'file_constraints',
+          'dependency_conflict',
+          'resolution_strategy',
+          'project_constraints',
+          'dependency_order',
+          'parallelization_requirements',
+          'dependency_structure',
+          'project_requirements'
+        ];
       
       case 'frontend':
-        // For frontend architecture, we need analysis
-        return ['project_analysis'];
+        // For frontend architecture, we need analysis and all frontend-specific inputs
+        return [
+          'project_analysis',
+          'features_list',
+          'project_requirements',
+          'component_list',
+          'feature_requirements',
+          'component_requirements',
+          'complexity_level',
+          'api_requirements',
+          'design_requirements',
+          'navigation_requirements',
+          'performance_requirements',
+          'component_specifications',
+          'accessibility_requirements',
+          'architecture_specification'
+        ];
       
       case 'backend':
-        // For backend architecture, we need analysis
-        return ['project_analysis'];
+        // For backend architecture, we need analysis and all backend-specific inputs
+        return [
+          'project_analysis',
+          'features_list',
+          'project_requirements',
+          'complexity_level',
+          'api_requirements',
+          'security_requirements',
+          'performance_requirements',
+          'data_requirements',
+          'architecture_specification'
+        ];
       
       case 'api':
         // For API interface, we need architectures

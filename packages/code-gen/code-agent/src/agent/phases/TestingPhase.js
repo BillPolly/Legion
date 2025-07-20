@@ -27,12 +27,13 @@ class TestingPhase {
     const { analysis, frontendArchitecture, backendArchitecture, testStrategy } = projectPlan;
     
     // Apply test strategy settings
-    if (testStrategy) {
-      this.testGenerator.updateConfig({
-        coverage: testStrategy.coverage,
-        testTypes: testStrategy.types
-      });
-    }
+    // TODO: Implement updateConfig method in TestGenerator or use constructor config
+    // if (testStrategy) {
+    //   this.testGenerator.updateConfig({
+    //     coverage: testStrategy.coverage,
+    //     testTypes: testStrategy.types
+    //   });
+    // }
     
     // Generate tests based on project type
     if (frontendArchitecture) {

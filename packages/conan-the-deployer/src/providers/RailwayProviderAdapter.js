@@ -14,6 +14,11 @@ class RailwayProviderAdapter extends BaseProvider {
   async initialize() {
     if (this.railwayProvider) return;
     
+    // Check if resourceManager is available
+    if (!this.resourceManager) {
+      throw new Error('ResourceManager not provided to RailwayProviderAdapter');
+    }
+    
     // First try to get the Railway provider from resource manager (registered by Railway module)
     try {
       this.railwayProvider = this.resourceManager.get('railwayProvider');
@@ -24,15 +29,21 @@ class RailwayProviderAdapter extends BaseProvider {
     if (!this.railwayProvider) {
       // If not available through module, try to create directly
       try {
-        const apiKey = this.resourceManager.get('env.RAILWAY') || 
-                       this.resourceManager.get('env.RAILWAY_API_KEY');
+        let apiKey;
+        try {
+          apiKey = this.resourceManager.get('env.RAILWAY') || 
+                   this.resourceManager.get('env.RAILWAY_API_KEY');
+        } catch (error) {
+          // Try alternative method
+          apiKey = process.env.RAILWAY || process.env.RAILWAY_API_KEY;
+        }
         
         if (!apiKey) {
           throw new Error('Railway API key not available. Set RAILWAY or RAILWAY_API_KEY environment variable.');
         }
         
-        // Dynamically import and create provider
-        const { RailwayProvider } = await import('@jsenvoy/railway');
+        // Use direct import path
+        const { RailwayProvider } = await import('../../../railway/src/providers/RailwayProvider.js');
         this.railwayProvider = new RailwayProvider(apiKey);
       } catch (error) {
         throw new Error(`Failed to initialize Railway provider: ${error.message}`);

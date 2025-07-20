@@ -189,7 +189,7 @@ class CodeAgent extends EventEmitter {
       
       // Initialize deployment integration if deployment is enabled
       if (this.config.deployment?.enabled !== false) {
-        this.deploymentIntegration = new DeploymentIntegration(this.moduleLoader, this.moduleLoader.resourceManager);
+        this.deploymentIntegration = new DeploymentIntegration(this.moduleLoader, this.resourceManager);
       }
       
       // Initialize all managers

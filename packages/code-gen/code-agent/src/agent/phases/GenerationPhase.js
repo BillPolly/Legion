@@ -278,9 +278,9 @@ npm run dev
    * @private
    */
   async _generateESLintConfig() {
-    const eslintConfig = this.codeAgent.eslintManager.generateProjectConfig({
-      projectType: this.codeAgent.config.projectType
-    });
+    const eslintConfig = this.codeAgent.eslintManager.buildConfiguration(
+      this.codeAgent.config.projectType
+    );
     
     await this.fileWriter.writeFile('.eslintrc.json', JSON.stringify(eslintConfig, null, 2));
   }
@@ -290,10 +290,22 @@ npm run dev
    * @private
    */
   async _generateJestConfig(analysis) {
-    const jestConfig = this.codeAgent.jestManager.generateProjectConfig({
-      projectType: this.codeAgent.config.projectType,
-      coverageThreshold: this.codeAgent.config.testCoverage.threshold
-    });
+    const jestConfig = this.codeAgent.jestManager.buildConfiguration(
+      this.codeAgent.config.projectType
+    );
+    
+    // Update coverage threshold if specified
+    if (this.codeAgent.config.testCoverage?.threshold) {
+      const threshold = this.codeAgent.config.testCoverage.threshold;
+      jestConfig.coverageThreshold = {
+        global: {
+          branches: threshold,
+          functions: threshold,
+          lines: threshold,
+          statements: threshold
+        }
+      };
+    }
     
     await this.fileWriter.writeFile('jest.config.js', `export default ${JSON.stringify(jestConfig, null, 2)};`);
     
