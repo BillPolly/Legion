@@ -9,8 +9,9 @@ class RailwayProvider extends BaseProvider {
     this.resourceManager = resourceManager;
     
     // Get Railway API key from ResourceManager
-    this.apiKey = this.resourceManager.get('railway-api-key');
-    if (!this.apiKey) {
+    try {
+      this.apiKey = this.resourceManager.get('env.RAILWAY');
+    } catch (error) {
       throw new Error('Railway API key not available in ResourceManager. Set RAILWAY environment variable.');
     }
     
@@ -240,9 +241,11 @@ class RailwayProvider extends BaseProvider {
       }
     };
 
+    console.log('Creating service with variables:', JSON.stringify(variables, null, 2));
     const result = await this.makeGraphQLRequest(mutation, variables);
     
     if (!result.success) {
+      console.error('Service creation failed:', result.error);
       return result;
     }
 
@@ -258,19 +261,31 @@ class RailwayProvider extends BaseProvider {
   buildSourceConfig(config) {
     if (config.source === 'github') {
       return {
-        repo: config.repo,
-        branch: config.branch,
-        rootDirectory: config.rootDirectory || '/'
+        github: {
+          repo: config.repo,
+          branch: config.branch || 'main'
+        }
+      };
+    } else if (config.image) {
+      // Docker image deployment
+      return {
+        image: config.image
       };
     } else if (config.source === 'local') {
-      // For local deployment, Railway requires a git repo
-      // This would typically involve creating a temporary git repo and pushing
+      // For local deployment, use a default Node.js image
+      // This would ideally build from local source
       return {
-        type: 'LOCAL'
+        image: 'node:18-alpine'
       };
     }
     
-    return {};
+    // Default to Railway's Node.js template
+    return {
+      github: {
+        repo: 'railwayapp-templates/express-starter',
+        branch: 'main'
+      }
+    };
   }
 
   /**
@@ -926,6 +941,411 @@ class RailwayProvider extends BaseProvider {
       success: true,
       message: 'Railway services are automatically managed. Use remove() to delete the service.'
     };
+  }
+
+  /**
+   * Delete a service
+   */
+  async deleteService(serviceId) {
+    const mutation = `
+      mutation ServiceDelete($id: String!) {
+        serviceDelete(id: $id)
+      }
+    `;
+
+    const variables = { id: serviceId };
+    const result = await this.makeGraphQLRequest(mutation, variables);
+    
+    if (!result.success) {
+      return result;
+    }
+
+    return {
+      success: true,
+      message: `Service ${serviceId} deleted successfully`
+    };
+  }
+
+  /**
+   * Delete a project
+   */
+  async deleteProject(projectId) {
+    const mutation = `
+      mutation ProjectDelete($id: String!) {
+        projectDelete(id: $id)
+      }
+    `;
+
+    const variables = { id: projectId };
+    const result = await this.makeGraphQLRequest(mutation, variables);
+    
+    if (!result.success) {
+      return result;
+    }
+
+    return {
+      success: true,
+      message: `Project ${projectId} deleted successfully`
+    };
+  }
+
+  /**
+   * Get detailed project information including services and deployments
+   */
+  async getProjectDetails(projectId) {
+    const query = `
+      query Project($projectId: String!) {
+        project(id: $projectId) {
+          id
+          name
+          description
+          createdAt
+          updatedAt
+          services {
+            edges {
+              node {
+                id
+                name
+                createdAt
+                deployments(first: 5) {
+                  edges {
+                    node {
+                      id
+                      status
+                      url
+                      staticUrl
+                      createdAt
+                    }
+                  }
+                }
+              }
+            }
+          }
+          environments {
+            edges {
+              node {
+                id
+                name
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const variables = { projectId };
+    const result = await this.makeGraphQLRequest(query, variables);
+    
+    if (!result.success) {
+      return result;
+    }
+
+    return {
+      success: true,
+      project: result.data.project
+    };
+  }
+
+  /**
+   * Get comprehensive account overview
+   */
+  async getAccountOverview() {
+    const query = `
+      query AccountOverview {
+        me {
+          id
+          name
+          email
+          projects {
+            edges {
+              node {
+                id
+                name
+                description
+                createdAt
+                updatedAt
+                services {
+                  edges {
+                    node {
+                      id
+                      name
+                      createdAt
+                      deployments(first: 1) {
+                        edges {
+                          node {
+                            id
+                            status
+                            url
+                            staticUrl
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+                environments {
+                  edges {
+                    node {
+                      id
+                      name
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const result = await this.makeGraphQLRequest(query);
+    
+    if (!result.success) {
+      return result;
+    }
+
+    const me = result.data.me;
+    const projects = me.projects.edges.map(edge => edge.node);
+
+    // Calculate statistics
+    let totalServices = 0;
+    let totalDeployments = 0;
+    let activeDeployments = 0;
+    const liveUrls = [];
+
+    projects.forEach(project => {
+      const services = project.services.edges;
+      totalServices += services.length;
+      
+      services.forEach(serviceEdge => {
+        const service = serviceEdge.node;
+        const deployments = service.deployments.edges;
+        totalDeployments += deployments.length;
+        
+        deployments.forEach(deploymentEdge => {
+          const deployment = deploymentEdge.node;
+          if (deployment.status === 'SUCCESS') {
+            activeDeployments++;
+            if (deployment.url) {
+              liveUrls.push({
+                projectName: project.name,
+                serviceName: service.name,
+                url: deployment.url
+              });
+            }
+          }
+        });
+      });
+    });
+
+    return {
+      success: true,
+      account: {
+        id: me.id,
+        name: me.name,
+        email: me.email
+      },
+      stats: {
+        totalProjects: projects.length,
+        totalServices,
+        totalDeployments,
+        activeDeployments
+      },
+      projects,
+      liveUrls
+    };
+  }
+
+  /**
+   * Delete all projects (use with caution!)
+   */
+  async deleteAllProjects() {
+    // First, list all projects
+    const projectsResult = await this.listProjects();
+    
+    if (!projectsResult.success) {
+      return {
+        success: false,
+        error: 'Failed to list projects: ' + projectsResult.error
+      };
+    }
+
+    const projects = projectsResult.projects;
+    const results = [];
+
+    console.log(`Found ${projects.length} projects to delete`);
+
+    // Delete each project
+    for (const project of projects) {
+      console.log(`Deleting project: ${project.name} (${project.id})`);
+      const deleteResult = await this.deleteProject(project.id);
+      
+      results.push({
+        projectId: project.id,
+        projectName: project.name,
+        success: deleteResult.success,
+        error: deleteResult.error
+      });
+
+      if (deleteResult.success) {
+        console.log(`✅ Deleted project: ${project.name}`);
+      } else {
+        console.log(`❌ Failed to delete project ${project.name}: ${deleteResult.error}`);
+      }
+    }
+
+    const successCount = results.filter(r => r.success).length;
+    const failCount = results.filter(r => !r.success).length;
+
+    return {
+      success: failCount === 0,
+      totalProjects: projects.length,
+      deletedProjects: successCount,
+      failedDeletions: failCount,
+      results
+    };
+  }
+
+  /**
+   * Remove a deployment (clean up)
+   */
+  async remove(deploymentId) {
+    const deployment = this.activeDeployments.get(deploymentId);
+    
+    if (!deployment) {
+      return {
+        success: false,
+        error: 'Deployment not found'
+      };
+    }
+
+    // In Railway, removing a deployment means deleting the service
+    if (deployment.serviceId) {
+      const result = await this.deleteService(deployment.serviceId);
+      
+      if (result.success) {
+        this.activeDeployments.delete(deploymentId);
+      }
+      
+      return result;
+    }
+
+    return {
+      success: false,
+      error: 'No service ID found for deployment'
+    };
+  }
+
+  /**
+   * Generate a Railway domain for a service
+   */
+  async generateDomain(serviceId, environmentId) {
+    const mutation = `
+      mutation ServiceDomainCreate($input: ServiceDomainCreateInput!) {
+        serviceDomainCreate(input: $input) {
+          domain
+        }
+      }
+    `;
+
+    const variables = {
+      input: {
+        serviceId,
+        environmentId
+      }
+    };
+
+    const result = await this.makeGraphQLRequest(mutation, variables);
+    
+    if (!result.success) {
+      return result;
+    }
+
+    return {
+      success: true,
+      domain: result.data.serviceDomainCreate.domain
+    };
+  }
+
+  /**
+   * Get service domains
+   */
+  async getServiceDomains(serviceId, environmentId) {
+    const query = `
+      query ServiceDomains($serviceId: String!, $environmentId: String!) {
+        domains(serviceId: $serviceId, environmentId: $environmentId) {
+          serviceDomains {
+            domain
+          }
+        }
+      }
+    `;
+
+    const variables = { serviceId, environmentId };
+    const result = await this.makeGraphQLRequest(query, variables);
+    
+    if (!result.success) {
+      return result;
+    }
+
+    const domains = result.data.domains.serviceDomains.map(d => d.domain);
+
+    return {
+      success: true,
+      domains
+    };
+  }
+
+  /**
+   * Deploy and generate domain automatically
+   */
+  async deployWithDomain(config) {
+    try {
+      // First deploy the application
+      const deployResult = await this.deploy(config);
+      
+      if (!deployResult.success) {
+        return deployResult;
+      }
+
+      // Get the environment ID for the project
+      const projectDetails = await this.getProjectDetails(deployResult.projectId);
+      
+      if (!projectDetails.success) {
+        console.warn('Could not get project details for domain generation');
+        return deployResult;
+      }
+
+      const environmentId = projectDetails.project.environments.edges[0]?.node.id;
+      
+      if (!environmentId) {
+        console.warn('No environment found for domain generation');
+        return deployResult;
+      }
+
+      // Wait a moment for the service to be ready
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      // Generate the domain
+      console.log('\n🌐 Generating Railway domain...');
+      const domainResult = await this.generateDomain(deployResult.serviceId, environmentId);
+      
+      if (domainResult.success) {
+        deployResult.domain = domainResult.domain;
+        deployResult.url = `https://${domainResult.domain}`;
+        console.log(`✅ Domain generated: ${deployResult.url}`);
+      } else {
+        console.warn('Domain generation failed:', domainResult.error);
+      }
+
+      return deployResult;
+
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message
+      };
+    }
   }
 }
 

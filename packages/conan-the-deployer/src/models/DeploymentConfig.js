@@ -18,7 +18,7 @@ const RailwayConfigSchema = z.object({
 }).optional();
 
 const DeploymentConfigSchema = z.object({
-  projectPath: z.string(),
+  projectPath: z.string().optional(),
   provider: z.enum(['local', 'docker', 'railway']),
   name: z.string(),
   env: EnvSchema.optional(),
@@ -26,6 +26,8 @@ const DeploymentConfigSchema = z.object({
   startCommand: z.string().optional(),
   buildCommand: z.string().optional(),
   healthCheckPath: z.string().optional(),
+  source: z.string().optional(), // For Railway GitHub deployments
+  branch: z.string().optional(), // For Railway GitHub deployments
   docker: DockerConfigSchema,
   railway: RailwayConfigSchema
 });
@@ -164,6 +166,18 @@ class DeploymentConfig {
    */
   clone() {
     return new DeploymentConfig(JSON.parse(JSON.stringify(this.toObject())));
+  }
+  
+  /**
+   * Static validation method
+   */
+  static validate(data) {
+    try {
+      const instance = new DeploymentConfig(data);
+      return { success: true, data: instance };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
   }
 }
 

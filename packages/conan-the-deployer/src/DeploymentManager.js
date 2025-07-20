@@ -9,7 +9,8 @@ class DeploymentManager extends EventEmitter {
   constructor(config = {}) {
     super();
     this.config = config;
-    this.providerFactory = new ProviderFactory();
+    this.resourceManager = config.resourceManager;
+    this.providerFactory = new ProviderFactory(this.resourceManager);
     this.providers = new Map();
     this.deployments = new Map();
     

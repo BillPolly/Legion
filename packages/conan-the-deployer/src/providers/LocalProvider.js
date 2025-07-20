@@ -8,8 +8,10 @@ import path from 'path';
  * LocalProvider - Manages deployments on the local machine
  */
 class LocalProvider extends BaseProvider {
-  constructor() {
+  constructor(resourceManager, config = {}) {
     super();
+    this.resourceManager = resourceManager;
+    this.config = config;
     this.processManager = new ProcessManager();
     this.portManager = new PortManager();
     this.deployments = new Map();

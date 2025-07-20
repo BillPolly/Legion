@@ -5,9 +5,10 @@ import { Readable } from 'stream';
  * DockerProvider - Deploys and manages Docker containers using Docker Engine API
  */
 class DockerProvider extends BaseProvider {
-  constructor(resourceManager) {
+  constructor(resourceManager, config = {}) {
     super();
     this.resourceManager = resourceManager;
+    this.config = config;
     
     // Get Docker client from ResourceManager
     this.docker = this.resourceManager.get('docker-client');

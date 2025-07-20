@@ -1,6 +1,5 @@
-import { Tool, ToolResult } from '@jsenvoy/module-loader';
+import { Tool, ToolResult, ResourceManager } from '@jsenvoy/module-loader';
 import DeploymentManager from '../DeploymentManager.js';
-import ResourceManager from '../core/ResourceManager.js';
 
 /**
  * DeployApplicationTool - Deploy applications to various providers (local, Docker, Railway)
@@ -195,8 +194,22 @@ class DeployApplicationTool extends Tool {
         appName: args.config.name 
       });
       
+      // Transform config to match DeploymentConfig schema
+      const deploymentConfig = {
+        provider: args.provider,
+        name: args.config.name,
+        env: args.config.environment,
+        source: args.config.source,
+        branch: args.config.branch,
+        projectPath: args.config.projectPath,
+        port: args.config.port,
+        startCommand: args.config.command,
+        railway: args.config.railway,
+        docker: args.config.docker
+      };
+      
       // Execute deployment
-      const result = await deploymentManager.deploy(args.provider, args.config);
+      const result = await deploymentManager.deploy(deploymentConfig);
       
       if (result.success) {
         this.emitInfo(`Successfully deployed ${args.config.name} to ${args.provider}`, {
@@ -252,11 +265,13 @@ class DeployApplicationTool extends Tool {
       const resourceManager = new ResourceManager();
       await resourceManager.initialize();
       
-      let deploymentManager = resourceManager.get('deployment-manager');
+      let deploymentManager;
       
-      if (!deploymentManager) {
+      if (resourceManager.has('deployment-manager')) {
+        deploymentManager = resourceManager.get('deployment-manager');
+      } else {
         // Create new deployment manager if not available
-        deploymentManager = new DeploymentManager(resourceManager);
+        deploymentManager = new DeploymentManager({ resourceManager });
         if (typeof deploymentManager.initialize === 'function') {
           await deploymentManager.initialize();
         }
@@ -265,6 +280,7 @@ class DeployApplicationTool extends Tool {
       
       return deploymentManager;
     } catch (error) {
+      console.error('Failed to get deployment manager:', error);
       // Failed to get deployment manager - return null to trigger mock fallback
       return null;
     }

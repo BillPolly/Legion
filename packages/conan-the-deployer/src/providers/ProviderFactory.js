@@ -7,7 +7,8 @@ import RailwayProvider from './RailwayProvider.js';
  * ProviderFactory - Factory for creating and managing deployment providers
  */
 class ProviderFactory {
-  constructor() {
+  constructor(resourceManager) {
+    this.resourceManager = resourceManager;
     this.providers = new Map();
     this.registerDefaultProviders();
   }
@@ -51,7 +52,14 @@ class ProviderFactory {
     }
     
     const ProviderClass = this.providers.get(name);
-    return new ProviderClass(config);
+    return new ProviderClass(this.resourceManager, config);
+  }
+  
+  /**
+   * Get available providers
+   */
+  getAvailableProviders() {
+    return Array.from(this.providers.keys());
   }
   
   /**
