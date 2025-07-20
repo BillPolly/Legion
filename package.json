@@ -19,6 +19,7 @@
     "test:playwright": "npm run test --workspace=@jsenvoy/playwright",
     "test:node-runner": "npm run test --workspace=@jsenvoy/node-runner",
     "test:log-manager": "npm run test --workspace=@jsenvoy/log-manager",
+    "test:railway": "npm run test --workspace=@jsenvoy/railway",
     "test:watch": "npm run test:watch --workspaces",
     "test:coverage": "npm run test:coverage --workspaces",
     "lint": "eslint packages/*/src/**/*.js",

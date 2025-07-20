@@ -1,7 +1,7 @@
 import BaseProvider from './BaseProvider.js';
 import LocalProvider from './LocalProvider.js';
 import DockerProvider from './DockerProvider.js';
-import RailwayProvider from './RailwayProvider.js';
+import RailwayProviderAdapter from './RailwayProviderAdapter.js';
 
 /**
  * ProviderFactory - Factory for creating and managing deployment providers
@@ -16,7 +16,7 @@ class ProviderFactory {
   registerDefaultProviders() {
     this.providers.set('local', LocalProvider);
     this.providers.set('docker', DockerProvider);
-    this.providers.set('railway', RailwayProvider);
+    this.providers.set('railway', RailwayProviderAdapter);
   }
   
   /**

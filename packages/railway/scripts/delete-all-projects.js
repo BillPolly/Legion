@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 
-import { ResourceManager } from '@jsenvoy/module-loader';
-import RailwayProvider from '../../src/providers/RailwayProvider.js';
+import { RailwayProvider } from '../src/index.js';
 
 console.log('🗑️  Delete All Railway Projects\n');
 
 async function deleteAllProjects() {
   try {
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
-    
-    const railwayProvider = new RailwayProvider(resourceManager);
+    const apiKey = process.env.RAILWAY_API_KEY || process.env.RAILWAY;
+    if (!apiKey) {
+      throw new Error('RAILWAY_API_KEY or RAILWAY environment variable is required');
+    }
+    const railwayProvider = new RailwayProvider(apiKey);
     
     const result = await railwayProvider.deleteAllProjects();
     

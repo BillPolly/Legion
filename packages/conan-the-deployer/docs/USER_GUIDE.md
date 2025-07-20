@@ -17,7 +17,7 @@
 - Node.js 18+ installed
 - npm or yarn package manager
 - For Docker deployments: Docker installed and running
-- For Railway deployments: Railway account and API key
+- For Railway deployments: Install @jsenvoy/railway package and Railway API key
 
 ### Installation
 
@@ -35,7 +35,8 @@ cp .env.example .env
 Create a `.env` file with your provider credentials:
 
 ```bash
-# Railway API Key (for Railway deployments)
+# Railway API Key (for Railway deployments via @jsenvoy/railway)
+# First install: npm install @jsenvoy/railway
 RAILWAY=your-railway-api-key-here
 
 # Docker configuration (optional)
@@ -202,7 +203,9 @@ const dockerConfig = {
 - Multi-environment consistency
 - Resource isolation
 
-### Railway Provider
+### Railway Provider (via @jsenvoy/railway)
+
+**Note:** Railway support requires installing the separate @jsenvoy/railway package.
 
 The Railway provider deploys directly to the Railway cloud platform.
 
@@ -463,7 +466,8 @@ const stagingDeploy = await deployer.tools.deploy_application.invoke({
   }
 });
 
-// Deploy to production (Railway)
+// Deploy to production (Railway - requires @jsenvoy/railway)
+// First install: npm install @jsenvoy/railway
 const prodDeploy = await deployer.tools.deploy_application.invoke({
   function: {
     name: 'deploy_application',
@@ -510,6 +514,9 @@ docker ps
 
 #### Railway Authentication Issues
 ```javascript
+// First ensure @jsenvoy/railway is installed
+// npm install @jsenvoy/railway
+
 // Verify your Railway API key is set
 console.log('Railway API Key:', process.env.RAILWAY ? 'Set' : 'Missing');
 
@@ -633,7 +640,7 @@ const configs = {
     }
   },
   production: {
-    provider: 'railway',
+    provider: 'railway', // requires @jsenvoy/railway
     environment: {
       NODE_ENV: 'production',
       LOG_LEVEL: 'warn'

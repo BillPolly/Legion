@@ -1,0 +1,162 @@
+{
+  "name": "railway",
+  "displayName": "Railway Deployment Module",
+  "version": "1.0.0",
+  "description": "Deploy and manage applications on Railway cloud platform",
+  "author": "jsEnvoy",
+  "dependencies": {
+    "module-loader": "^1.0.0"
+  },
+  "tools": [
+    {
+      "name": "railway_deploy",
+      "displayName": "Deploy to Railway",
+      "description": "Deploy an application to Railway from GitHub repository or Docker image",
+      "parameters": {
+        "projectName": {
+          "type": "string",
+          "description": "Name for the Railway project",
+          "required": true
+        },
+        "source": {
+          "type": "object",
+          "description": "Deployment source configuration",
+          "required": true,
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["github", "docker"],
+              "description": "Source type for deployment"
+            },
+            "repository": {
+              "type": "string",
+              "description": "GitHub repository (owner/repo) or Docker image"
+            },
+            "branch": {
+              "type": "string",
+              "description": "Git branch (for GitHub deployments)",
+              "default": "main"
+            }
+          }
+        },
+        "environmentVariables": {
+          "type": "object",
+          "description": "Environment variables for the deployment",
+          "default": {}
+        },
+        "serviceName": {
+          "type": "string",
+          "description": "Name for the Railway service",
+          "default": "app"
+        }
+      },
+      "output": {
+        "deploymentId": "string",
+        "projectId": "string",
+        "serviceId": "string",
+        "deploymentUrl": "string"
+      }
+    },
+    {
+      "name": "railway_status",
+      "displayName": "Get Railway Deployment Status",
+      "description": "Get the status and details of a Railway deployment",
+      "parameters": {
+        "deploymentId": {
+          "type": "string",
+          "description": "Railway deployment ID",
+          "required": true
+        }
+      },
+      "output": {
+        "status": "string",
+        "url": "string",
+        "createdAt": "string",
+        "domains": "array"
+      }
+    },
+    {
+      "name": "railway_logs",
+      "displayName": "Get Railway Logs",
+      "description": "Retrieve logs from a Railway deployment",
+      "parameters": {
+        "deploymentId": {
+          "type": "string",
+          "description": "Railway deployment ID",
+          "required": true
+        },
+        "limit": {
+          "type": "number",
+          "description": "Number of log lines to retrieve",
+          "default": 100
+        }
+      },
+      "output": {
+        "logs": "array"
+      }
+    },
+    {
+      "name": "railway_update_env",
+      "displayName": "Update Railway Environment Variables",
+      "description": "Update environment variables for a Railway service",
+      "parameters": {
+        "serviceId": {
+          "type": "string",
+          "description": "Railway service ID",
+          "required": true
+        },
+        "environmentId": {
+          "type": "string",
+          "description": "Railway environment ID",
+          "required": true
+        },
+        "variables": {
+          "type": "object",
+          "description": "Environment variables to set or update",
+          "required": true
+        }
+      },
+      "output": {
+        "success": "boolean",
+        "updatedVariables": "object"
+      }
+    },
+    {
+      "name": "railway_remove",
+      "displayName": "Remove Railway Deployment",
+      "description": "Remove a deployment or entire project from Railway",
+      "parameters": {
+        "projectId": {
+          "type": "string",
+          "description": "Railway project ID to remove",
+          "required": true
+        }
+      },
+      "output": {
+        "success": "boolean"
+      }
+    },
+    {
+      "name": "railway_list_projects",
+      "displayName": "List Railway Projects",
+      "description": "List all Railway projects in the account",
+      "parameters": {},
+      "output": {
+        "projects": "array"
+      }
+    }
+  ],
+  "configuration": {
+    "apiKey": {
+      "type": "string",
+      "description": "Railway API key",
+      "required": true,
+      "env": "RAILWAY_API_KEY"
+    },
+    "defaultRegion": {
+      "type": "string",
+      "description": "Default deployment region",
+      "default": "us-west1"
+    }
+  }
+}

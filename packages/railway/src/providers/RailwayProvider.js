@@ -1,20 +1,13 @@
-import BaseProvider from './BaseProvider.js';
-
 /**
  * RailwayProvider - Deploy applications to Railway cloud platform using GraphQL API
  */
-class RailwayProvider extends BaseProvider {
-  constructor(resourceManager) {
-    super();
-    this.resourceManager = resourceManager;
-    
-    // Get Railway API key from ResourceManager
-    try {
-      this.apiKey = this.resourceManager.get('env.RAILWAY');
-    } catch (error) {
-      throw new Error('Railway API key not available in ResourceManager. Set RAILWAY environment variable.');
+class RailwayProvider {
+  constructor(apiKey) {
+    if (!apiKey) {
+      throw new Error('Railway API key is required');
     }
     
+    this.apiKey = apiKey;
     this.name = 'railway';
     this.apiEndpoint = 'https://backboard.railway.app/graphql/v2';
     this.activeDeployments = new Map();
@@ -260,11 +253,9 @@ class RailwayProvider extends BaseProvider {
    */
   buildSourceConfig(config) {
     if (config.source === 'github') {
+      // Railway API expects just repo, not nested under github
       return {
-        github: {
-          repo: config.repo,
-          branch: config.branch || 'main'
-        }
+        repo: config.repo
       };
     } else if (config.image) {
       // Docker image deployment
@@ -572,7 +563,7 @@ class RailwayProvider extends BaseProvider {
   /**
    * Set environment variables for a service
    */
-  async setEnvironmentVariables(serviceId, variables) {
+  async setEnvironmentVariables(serviceId, variables, environmentId = null) {
     const mutation = `
       mutation VariableCollectionUpsert($input: VariableCollectionUpsertInput!) {
         variableCollectionUpsert(input: $input) {
@@ -589,6 +580,7 @@ class RailwayProvider extends BaseProvider {
     const variablesInput = {
       input: {
         serviceId,
+        environmentId,
         variables: variableInputs
       }
     };
@@ -709,7 +701,11 @@ class RailwayProvider extends BaseProvider {
     try {
       // Update environment variables if provided
       if (updateConfig.environment) {
-        const envResult = await this.setEnvironmentVariables(serviceId, updateConfig.environment);
+        const envResult = await this.setEnvironmentVariables(
+          serviceId, 
+          updateConfig.environment,
+          updateConfig.environmentId
+        );
         if (!envResult.success) {
           return envResult;
         }
@@ -1203,36 +1199,6 @@ class RailwayProvider extends BaseProvider {
       deletedProjects: successCount,
       failedDeletions: failCount,
       results
-    };
-  }
-
-  /**
-   * Remove a deployment (clean up)
-   */
-  async remove(deploymentId) {
-    const deployment = this.activeDeployments.get(deploymentId);
-    
-    if (!deployment) {
-      return {
-        success: false,
-        error: 'Deployment not found'
-      };
-    }
-
-    // In Railway, removing a deployment means deleting the service
-    if (deployment.serviceId) {
-      const result = await this.deleteService(deployment.serviceId);
-      
-      if (result.success) {
-        this.activeDeployments.delete(deploymentId);
-      }
-      
-      return result;
-    }
-
-    return {
-      success: false,
-      error: 'No service ID found for deployment'
     };
   }
 

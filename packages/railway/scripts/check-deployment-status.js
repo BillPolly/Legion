@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 
-import { ResourceManager } from '@jsenvoy/module-loader';
-import RailwayProvider from '../../src/providers/RailwayProvider.js';
+import { RailwayProvider } from '../src/index.js';
 
 console.log('📊 Check Deployment Status\n');
 
 async function checkDeploymentStatus(deploymentId) {
   try {
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
-    
-    const railwayProvider = new RailwayProvider(resourceManager);
+    const apiKey = process.env.RAILWAY_API_KEY || process.env.RAILWAY;
+    if (!apiKey) {
+      throw new Error('RAILWAY_API_KEY or RAILWAY environment variable is required');
+    }
+    const railwayProvider = new RailwayProvider(apiKey);
     
     if (!deploymentId) {
       console.log('Usage: node check-deployment-status.js <deployment-id>');

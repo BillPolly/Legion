@@ -8,7 +8,7 @@
 
 ## Features
 
-- 🚀 **Multi-Provider Deployment** - Deploy to local, Docker, and Railway with unified API
+- 🚀 **Multi-Provider Deployment** - Deploy to local and Docker with unified API (Railway available via @jsenvoy/railway)
 - 📊 **Real-time Monitoring** - Health checks, metrics collection, and log aggregation
 - 🔄 **Update Strategies** - Rolling, blue-green, recreate, and scaling deployments
 - 🛡️ **Production Ready** - Comprehensive error handling, rollback capabilities, and cleanup
@@ -70,7 +70,7 @@ console.log('Deployment ID:', result.data.deployment.id);
 
 - **Local Provider** - Direct Node.js process management
 - **Docker Provider** - Containerized deployments with full lifecycle
-- **Railway Provider** - Cloud deployments with GraphQL API integration
+- **Railway Provider** - Available via separate @jsenvoy/railway package
 
 ## Architecture
 
@@ -89,8 +89,8 @@ console.log('Deployment ID:', result.data.deployment.id);
             ┌───────────────────┼───────────────────┐
             │                   │                   │
     ┌───────▼───────┐  ┌───────▼────────┐  ┌──────▼──────┐
-    │ Local Provider │  │ Docker Provider │  │Railway Provider│
-    │   (Process)    │  │  (Container)    │  │   (Cloud)    │
+    │ Local Provider │  │ Docker Provider │  │  Railway*      │
+    │   (Process)    │  │  (Container)    │  │ (@jsenvoy/railway)│
     └───────────────┘  └────────────────┘  └─────────────┘
 ```
 
@@ -161,7 +161,8 @@ const localDeploy = await deployTool.invoke({
   }
 });
 
-// Deploy to production on Railway
+// Deploy to production on Railway (requires @jsenvoy/railway)
+// npm install @jsenvoy/railway
 const prodDeploy = await deployTool.invoke({
   function: {
     name: 'deploy_application',
@@ -220,10 +221,11 @@ Set up your environment:
 
 ```bash
 # .env file
-RAILWAY=your-railway-api-key
 DOCKER_HOST=unix:///var/run/docker.sock
 DEFAULT_PROVIDER=local
 MONITORING_ENABLED=true
+# For Railway support, install @jsenvoy/railway and add:
+# RAILWAY=your-railway-api-key
 ```
 
 ## Provider Setup
@@ -241,8 +243,11 @@ docker --version
 docker ps
 ```
 
-### Railway Provider
+### Railway Provider (via @jsenvoy/railway)
 ```bash
+# Install the Railway provider package
+npm install @jsenvoy/railway
+
 # Get API key from Railway dashboard
 export RAILWAY=your-api-key-here
 ```
@@ -270,7 +275,7 @@ Use environment-specific settings:
 const config = {
   development: { provider: 'local', environment: { NODE_ENV: 'development' } },
   staging: { provider: 'docker', environment: { NODE_ENV: 'staging' } },
-  production: { provider: 'railway', environment: { NODE_ENV: 'production' } }
+  production: { provider: 'railway', environment: { NODE_ENV: 'production' } } // requires @jsenvoy/railway
 };
 ```
 

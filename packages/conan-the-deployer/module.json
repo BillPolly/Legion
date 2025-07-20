@@ -6,7 +6,8 @@
   "type": "constructor",
   "dependencies": {
     "RAILWAY_API_TOKEN": "optional",
-    "DOCKER_HOST": "optional"
+    "DOCKER_HOST": "optional",
+    "railway": "optional"
   },
   "initialization": {
     "type": "constructor",

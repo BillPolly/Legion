@@ -2,7 +2,7 @@
 
 ## Overview
 
-Conan-the-Deployer provides six primary tools for deploying and managing Node.js applications across multiple providers (local, Docker, Railway). All tools are OpenAI function-calling compatible and integrate seamlessly with AI agents.
+Conan-the-Deployer provides six primary tools for deploying and managing Node.js applications across multiple providers (local, Docker, and Railway via @jsenvoy/railway). All tools are OpenAI function-calling compatible and integrate seamlessly with AI agents.
 
 ## Tools
 
@@ -21,7 +21,7 @@ Deploy Node.js applications to various providers.
       "provider": {
         "type": "string",
         "enum": ["local", "docker", "railway"],
-        "description": "Deployment provider"
+        "description": "Deployment provider (railway requires @jsenvoy/railway)"
       },
       "config": {
         "type": "object",
@@ -258,7 +258,7 @@ List and filter deployments across all providers.
       "provider": {
         "type": "string",
         "enum": ["local", "docker", "railway"],
-        "description": "Filter by deployment provider"
+        "description": "Filter by deployment provider (railway requires @jsenvoy/railway)"
       },
       "status": {
         "type": "string",
@@ -360,7 +360,7 @@ Stop running deployments with graceful shutdown options.
       "provider": {
         "type": "string",
         "enum": ["local", "docker", "railway"],
-        "description": "Provider filter when stopping all deployments"
+        "description": "Provider filter when stopping all deployments (railway requires @jsenvoy/railway)"
       },
       "graceful": {
         "type": "boolean",
@@ -576,7 +576,12 @@ Retrieve logs from deployments with filtering and search capabilities.
 }
 ```
 
-### Railway Provider
+### Railway Provider (via @jsenvoy/railway)
+
+**Note:** Railway support requires installing the separate @jsenvoy/railway package:
+```bash
+npm install @jsenvoy/railway
+```
 
 - **GraphQL API**: Full Railway platform integration
 - **GitHub Integration**: Direct deployment from repositories
@@ -684,7 +689,8 @@ const localDeploy = await deployTool.invoke({
 
 // Test and validate
 
-// Deploy to production (Railway)
+// Deploy to production (Railway - requires @jsenvoy/railway)
+// First install: npm install @jsenvoy/railway
 const prodDeploy = await deployTool.invoke({
   function: {
     name: 'deploy_application',
