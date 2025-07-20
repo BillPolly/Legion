@@ -11,6 +11,22 @@ export const RequirementAnalyzerConfig = {
   
   allowableActions: [
     {
+      type: 'parse_requirements',
+      description: 'Parse and structure the raw requirements',
+      inputs: ['requirements_text', 'frontend_requirements', 'backend_requirements'],
+      outputs: ['parsed_requirements'],
+      parameters: {
+        hasBackend: {
+          type: 'boolean',
+          description: 'Whether backend requirements exist'
+        },
+        hasFrontend: {
+          type: 'boolean',
+          description: 'Whether frontend requirements exist'
+        }
+      }
+    },
+    {
       type: 'determine_project_type',
       description: 'Determine the project type based on requirements',
       inputs: ['requirements_text', 'frontend_requirements', 'backend_requirements'],
@@ -26,7 +42,7 @@ export const RequirementAnalyzerConfig = {
     {
       type: 'analyze_complexity',
       description: 'Analyze project complexity based on features and requirements',
-      inputs: ['features_list', 'requirements_scope'],
+      inputs: ['frontend_features', 'backend_features'],
       outputs: ['complexity_level'],
       parameters: {
         complexity: {
@@ -91,7 +107,7 @@ export const RequirementAnalyzerConfig = {
     {
       type: 'analyze_security_requirements',
       description: 'Analyze security requirements from the project description',
-      inputs: ['requirements_text', 'features_list'],
+      inputs: ['requirements_text', 'frontend_features', 'backend_features'],
       outputs: ['security_analysis'],
       parameters: {
         authentication: {
@@ -112,7 +128,7 @@ export const RequirementAnalyzerConfig = {
     {
       type: 'analyze_special_features',
       description: 'Analyze special features like real-time, file handling, etc.',
-      inputs: ['requirements_text', 'features_list'],
+      inputs: ['requirements_text', 'frontend_features', 'backend_features'],
       outputs: ['special_features'],
       parameters: {
         realtime: {
@@ -152,7 +168,7 @@ export const RequirementAnalyzerConfig = {
     {
       type: 'suggest_architecture',
       description: 'Suggest optimal architecture based on analysis',
-      inputs: ['project_type', 'complexity_level', 'features_list'],
+      inputs: ['project_type', 'complexity_level', 'frontend_features', 'backend_features'],
       outputs: ['architecture_suggestion'],
       parameters: {
         pattern: {
@@ -169,7 +185,7 @@ export const RequirementAnalyzerConfig = {
     {
       type: 'generate_analysis_summary',
       description: 'Generate a summary of the analysis results',
-      inputs: ['project_type', 'complexity_level', 'features_list', 'security_analysis'],
+      inputs: ['project_type', 'complexity_level', 'frontend_features', 'backend_features', 'security_analysis'],
       outputs: ['summary_text'],
       parameters: {
         summary: {
@@ -181,7 +197,7 @@ export const RequirementAnalyzerConfig = {
     {
       type: 'validate_analysis',
       description: 'Validate the completeness and consistency of analysis',
-      inputs: ['analysis_result'],
+      inputs: ['project_type', 'complexity_level', 'architecture_suggestion', 'summary_text'],
       outputs: ['validation_result'],
       parameters: {
         isValid: {

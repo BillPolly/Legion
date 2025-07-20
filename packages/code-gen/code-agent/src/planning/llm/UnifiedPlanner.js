@@ -196,8 +196,16 @@ class UnifiedPlanner {
         return ['requirements_text', 'frontend_requirements', 'backend_requirements'];
       
       case 'directory':
-        // For directory planning, we need project analysis
-        return ['project_analysis'];
+        // For directory planning, we need project analysis and derived values
+        return [
+          'project_analysis',
+          'project_type',
+          'complexity_level',
+          'features_list',
+          'technologies_list',
+          'frontend_features',
+          'backend_features'
+        ];
       
       case 'dependency':
         // For dependency planning, we need structure and analysis
