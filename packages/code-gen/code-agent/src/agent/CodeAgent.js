@@ -11,6 +11,7 @@ import { EventEmitter } from 'events';
 import { FileOperationsManager } from '../integration/FileOperationsManager.js';
 import { LLMClientManager } from '../integration/LLMClientManager.js';
 import { ModuleLoaderIntegration } from '../integration/ModuleLoaderIntegration.js';
+import { DeploymentIntegration } from '../integration/DeploymentIntegration.js';
 import { EslintConfigManager } from '../config/EslintConfigManager.js';
 import { JestConfigManager } from '../config/JestConfigManager.js';
 import { StateManager } from '../config/StateManager.js';
@@ -34,6 +35,7 @@ import { GenerationPhase } from './phases/GenerationPhase.js';
 import { TestingPhase } from './phases/TestingPhase.js';
 import { QualityPhase } from './phases/QualityPhase.js';
 import { FixingPhase } from './phases/FixingPhase.js';
+import { DeploymentPhase } from './phases/DeploymentPhase.js';
 
 /**
  * Main CodeAgent class - orchestrates the complete development workflow
@@ -96,12 +98,14 @@ class CodeAgent extends EventEmitter {
     this.generatedFiles = new Set();
     this.testFiles = new Set();
     this.qualityCheckResults = null;
+    this.deploymentResult = null;
     
     // Integration managers (to be initialized)
     this.fileOps = null;
     this.llmClient = null;
     this.moduleLoader = null;
     this.unifiedPlanner = null;
+    this.deploymentIntegration = null;
     
     // Git integration
     this.gitIntegration = null;
@@ -129,6 +133,7 @@ class CodeAgent extends EventEmitter {
     this.testingPhase = null;
     this.qualityPhase = null;
     this.fixingPhase = null;
+    this.deploymentPhase = null;
     
     this.initialized = false;
   }
@@ -167,6 +172,12 @@ class CodeAgent extends EventEmitter {
       this.llmClient = new LLMClientManager(llmConfig);
       
       this.moduleLoader = new ModuleLoaderIntegration(options.moduleConfig);
+      await this.moduleLoader.initialize();
+      
+      // Initialize deployment integration if deployment is enabled
+      if (this.config.deployment?.enabled !== false) {
+        this.deploymentIntegration = new DeploymentIntegration(this.moduleLoader, this.moduleLoader.resourceManager);
+      }
       
       // Initialize all managers
       await this.fileOps.initialize();
@@ -193,6 +204,12 @@ class CodeAgent extends EventEmitter {
       this.testingPhase = new TestingPhase(this);
       this.qualityPhase = new QualityPhase(this);
       this.fixingPhase = new FixingPhase(this);
+      this.deploymentPhase = new DeploymentPhase(this);
+      
+      // Initialize deployment phase if enabled
+      if (this.deploymentIntegration) {
+        await this.deploymentPhase.initialize(this.deploymentIntegration);
+      }
       
       // Create working directory if it doesn't exist
       await this.fileOps.createDirectory(workingDirectory);
@@ -282,7 +299,20 @@ class CodeAgent extends EventEmitter {
       });
       await this.iterativelyFix();
       
-      // 6. Completion
+      // 6. Deployment Phase (optional)
+      if (this.config.deployment?.enabled && this.deploymentPhase && requirements.deploy !== false) {
+        this.emit('phase-start', {
+          phase: 'deployment',
+          emoji: '🚀',
+          message: 'Deploying application...'
+        });
+        const deploymentResult = await this.deployApplication();
+        if (deploymentResult.success) {
+          this.deploymentResult = deploymentResult;
+        }
+      }
+      
+      // 7. Completion
       this.currentTask.status = 'completed';
       this.currentTask.endTime = new Date();
       await this.saveState();
@@ -795,12 +825,158 @@ class CodeAgent extends EventEmitter {
   }
 
   /**
+   * Get project summary including all phases
+   * @returns {Object} Project summary
+   */
+  getProjectSummary() {
+    const summary = {
+      projectName: this.projectPlan?.projectName || 'Generated Project',
+      projectType: this.config.projectType,
+      startTime: this.currentTask?.startTime,
+      endTime: this.currentTask?.endTime,
+      duration: this.currentTask?.endTime - this.currentTask?.startTime,
+      phases: {
+        planning: {
+          completed: !!this.projectPlan,
+          fileCount: this.projectPlan?.files?.length || 0
+        },
+        generation: {
+          completed: this.generatedFiles.size > 0,
+          filesGenerated: this.generatedFiles.size
+        },
+        testing: {
+          completed: this.testFiles.size > 0,
+          testsGenerated: this.testFiles.size
+        },
+        quality: {
+          completed: !!this.qualityCheckResults,
+          eslintPassed: this.qualityCheckResults?.eslint?.passed || false,
+          jestPassed: this.qualityCheckResults?.jest?.passed || false,
+          coverage: this.qualityCheckResults?.jest?.coverage || 0
+        },
+        fixing: {
+          completed: this.qualityCheckResults?.overall || false,
+          iterations: this.fixingPhase?.iterations || 0
+        }
+      },
+      files: {
+        generated: Array.from(this.generatedFiles),
+        tests: Array.from(this.testFiles)
+      },
+      workingDirectory: this.config.workingDirectory
+    };
+
+    // Add deployment info if available
+    if (this.deploymentResult) {
+      summary.deployment = {
+        completed: true,
+        provider: this.deploymentResult.provider,
+        deploymentId: this.deploymentResult.deploymentId,
+        url: this.deploymentResult.url,
+        status: this.deploymentResult.status
+      };
+    } else if (this.config.deployment?.enabled) {
+      summary.deployment = {
+        completed: false,
+        enabled: true,
+        provider: this.config.deployment.provider
+      };
+    }
+
+    // Add Git info if available
+    if (this.gitIntegration && this.trackGitMetrics) {
+      summary.git = this.getGitSummary();
+    }
+
+    return summary;
+  }
+
+  /**
+   * Deploy the generated application
+   * @param {Object} deploymentConfig - Optional deployment configuration
+   * @returns {Promise<Object>} Deployment result
+   */
+  async deployApplication(deploymentConfig = {}) {
+    if (!this.deploymentPhase) {
+      throw new Error('Deployment phase not initialized');
+    }
+
+    // Merge with default deployment config
+    const config = {
+      ...this.config.deployment,
+      ...deploymentConfig
+    };
+
+    return await this.deploymentPhase.deployApplication(config);
+  }
+
+  /**
+   * Get deployment status
+   * @param {string} deploymentId - Optional deployment ID
+   * @returns {Promise<Object>} Deployment status
+   */
+  async getDeploymentStatus(deploymentId) {
+    if (!this.deploymentIntegration) {
+      throw new Error('Deployment integration not initialized');
+    }
+
+    return await this.deploymentIntegration.getStatus(
+      deploymentId || this.deploymentResult?.deploymentId
+    );
+  }
+
+  /**
+   * Get deployment logs
+   * @param {string} deploymentId - Optional deployment ID
+   * @param {Object} options - Log options
+   * @returns {Promise<Object>} Deployment logs
+   */
+  async getDeploymentLogs(deploymentId, options = {}) {
+    if (!this.deploymentPhase) {
+      throw new Error('Deployment phase not initialized');
+    }
+
+    return await this.deploymentPhase.getDeploymentLogs(deploymentId, options);
+  }
+
+  /**
+   * Stop deployment
+   * @param {string} deploymentId - Optional deployment ID
+   * @returns {Promise<Object>} Stop result
+   */
+  async stopDeployment(deploymentId) {
+    if (!this.deploymentPhase) {
+      throw new Error('Deployment phase not initialized');
+    }
+
+    return await this.deploymentPhase.stopDeployment(deploymentId);
+  }
+
+  /**
+   * Remove deployment
+   * @param {string} deploymentId - Optional deployment ID
+   * @returns {Promise<Object>} Remove result
+   */
+  async removeDeployment(deploymentId) {
+    if (!this.deploymentPhase) {
+      throw new Error('Deployment phase not initialized');
+    }
+
+    return await this.deploymentPhase.removeDeployment(deploymentId);
+  }
+
+  /**
    * Cleanup CodeAgent resources
    */
   async cleanup() {
     try {
       // Save final state
       await this.saveState();
+      
+      // Cleanup deployment if active
+      if (this.deploymentResult && this.config.deployment?.autoCleanup) {
+        await this.removeDeployment(this.deploymentResult.deploymentId);
+      }
       
       // Cleanup Git integration if enabled
       if (this.gitIntegration) {

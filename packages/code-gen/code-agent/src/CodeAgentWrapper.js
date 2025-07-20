@@ -156,10 +156,72 @@ class CodeAgentWrapper {
   }
 
   /**
+   * Deploy generated code to a specified provider
+   * This method is called by the JSON module system
+   */
+  async deployGeneratedCode(params) {
+    // Handle case where params might be undefined
+    if (!params) {
+      throw new Error('Parameters are required for deployGeneratedCode');
+    }
+    
+    const { 
+      workingDirectory, 
+      provider = 'local',
+      name,
+      config = {} 
+    } = params;
+
+    try {
+      // Get or create agent for this directory
+      const agent = await this._getAgentForDirectory(workingDirectory);
+
+      // Ensure deployment is enabled for this agent
+      if (!agent.config.deployment) {
+        agent.config.deployment = { enabled: true };
+      }
+
+      // Prepare deployment configuration
+      const deploymentConfig = {
+        provider,
+        name: name || agent.projectPlan?.projectName || 'generated-app',
+        projectPath: workingDirectory,
+        ...config
+      };
+
+      // Call deploy method
+      const result = await agent.deployApplication(deploymentConfig);
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Deployment failed');
+      }
+
+      // Return deployment information
+      return {
+        deploymentId: result.deploymentId,
+        provider: result.provider,
+        url: result.url,
+        status: result.status,
+        projectPath: workingDirectory
+      };
+    } catch (error) {
+      // GenericTool expects the error to be thrown
+      throw new Error(error.message);
+    }
+  }
+
+  /**
    * Clean up resources
    */
   async cleanup() {
     // Clean up all agent instances
+    for (const [dir, agent] of this._agentInstances) {
+      try {
+        await agent.cleanup();
+      } catch (error) {
+        console.error(`Error cleaning up agent for ${dir}:`, error);
+      }
+    }
     this._agentInstances.clear();
   }
 }

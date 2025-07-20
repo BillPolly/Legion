@@ -15,6 +15,7 @@ The Code Agent is a specialized AI-powered tool that can:
 - 🔄 **Auto-Fix** issues using AI with log insights
 - ⚡ **Optimize** performance with parallel execution
 - 💾 **Track** progress and maintain state across sessions
+- 🚀 **Deploy** generated applications to multiple providers
 
 ## 🚀 New: Enhanced Runtime Testing
 
@@ -124,6 +125,39 @@ await agent.fix({
     'Tests are failing for user authentication',
     'ESLint errors in api.js'
   ]
+});
+```
+
+### Deployment Mode
+
+```javascript
+// Deploy the generated application
+const agent = new CodeAgent({
+  deployment: {
+    enabled: true,
+    provider: 'docker',
+    autoCleanup: false
+  }
+});
+
+await agent.initialize('./my-project');
+
+// Generate and automatically deploy
+const result = await agent.develop({
+  projectName: 'My API',
+  description: 'REST API with database',
+  deploy: true
+});
+
+console.log(`Deployed to: ${result.deployment.url}`);
+
+// Or deploy separately
+const deployResult = await agent.deployApplication({
+  provider: 'railway',
+  environment: {
+    NODE_ENV: 'production',
+    API_KEY: 'your-api-key'
+  }
 });
 ```
 
