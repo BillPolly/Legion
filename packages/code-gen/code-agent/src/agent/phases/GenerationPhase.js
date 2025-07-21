@@ -62,36 +62,55 @@ class GenerationPhase {
       message: '🎨 Generating frontend files...'
     });
     
+    console.log('🔍 [DEBUG] frontendArchitecture:', JSON.stringify(frontendArchitecture, null, 2));
+    
     // Generate main HTML file
     if (frontendArchitecture.htmlStructure) {
+      console.log('🔍 [DEBUG] Generating HTML with structure:', JSON.stringify(frontendArchitecture.htmlStructure, null, 2));
       const htmlContent = await this.htmlGenerator.generateHTML(frontendArchitecture.htmlStructure);
       await this.fileWriter.writeFile('public/index.html', htmlContent);
     }
     
     // Generate CSS styles
-    if (frontendArchitecture.cssStyles && Array.isArray(frontendArchitecture.cssStyles)) {
-      for (const styleSpec of frontendArchitecture.cssStyles) {
-        const cssContent = await this.cssGenerator.generateStylesheet(styleSpec);
-        const filename = styleSpec.filename || 'styles.css';
-        await this.fileWriter.writeFile(filename, cssContent);
+    if (frontendArchitecture.cssStyles) {
+      console.log('🔍 [DEBUG] cssStyles type:', typeof frontendArchitecture.cssStyles);
+      console.log('🔍 [DEBUG] cssStyles value:', JSON.stringify(frontendArchitecture.cssStyles, null, 2));
+      
+      if (Array.isArray(frontendArchitecture.cssStyles)) {
+        for (const styleSpec of frontendArchitecture.cssStyles) {
+          console.log('🔍 [DEBUG] Generating CSS with spec:', JSON.stringify(styleSpec, null, 2));
+          const cssContent = await this.cssGenerator.generateStylesheet(styleSpec);
+          const filename = styleSpec.filename || 'styles.css';
+          await this.fileWriter.writeFile(filename, cssContent);
+        }
+      } else {
+        console.warn('⚠️ [WARNING] cssStyles is not an array:', frontendArchitecture.cssStyles);
       }
     }
     
     // Generate JavaScript components
-    if (frontendArchitecture.jsComponents && Array.isArray(frontendArchitecture.jsComponents)) {
-      for (const component of frontendArchitecture.jsComponents) {
-        let jsContent;
-        
-        if (component.type === 'class') {
-          jsContent = await this.jsGenerator.generateClass(component);
-        } else if (component.type === 'function') {
-          jsContent = await this.jsGenerator.generateFunction(component);
-        } else {
-          jsContent = await this.jsGenerator.generateModule(component);
+    if (frontendArchitecture.jsComponents) {
+      console.log('🔍 [DEBUG] jsComponents type:', typeof frontendArchitecture.jsComponents);
+      console.log('🔍 [DEBUG] jsComponents value:', JSON.stringify(frontendArchitecture.jsComponents, null, 2));
+      
+      if (Array.isArray(frontendArchitecture.jsComponents)) {
+        for (const component of frontendArchitecture.jsComponents) {
+          console.log('🔍 [DEBUG] Generating JS component:', JSON.stringify(component, null, 2));
+          let jsContent;
+          
+          if (component.type === 'class') {
+            jsContent = await this.jsGenerator.generateClass(component);
+          } else if (component.type === 'function') {
+            jsContent = await this.jsGenerator.generateFunction(component);
+          } else {
+            jsContent = await this.jsGenerator.generateModule(component);
+          }
+          
+          const filename = component.filename || `${component.name.toLowerCase()}.js`;
+          await this.fileWriter.writeFile(filename, jsContent);
         }
-        
-        const filename = component.filename || `${component.name.toLowerCase()}.js`;
-        await this.fileWriter.writeFile(filename, jsContent);
+      } else {
+        console.warn('⚠️ [WARNING] jsComponents is not an array:', frontendArchitecture.jsComponents);
       }
     }
     

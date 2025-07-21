@@ -201,7 +201,26 @@ class HTMLGenerator {
 
     // Custom head content
     if (spec.head) {
-      elements.push(...spec.head);
+      // Handle head as object with links and scripts
+      if (typeof spec.head === 'object' && !Array.isArray(spec.head)) {
+        // Add link tags
+        if (spec.head.links && Array.isArray(spec.head.links)) {
+          spec.head.links.forEach(link => {
+            const attrs = Object.entries(link).map(([k, v]) => `${k}="${v}"`).join(' ');
+            elements.push(`<link ${attrs}>`);
+          });
+        }
+        // Add script tags
+        if (spec.head.scripts && Array.isArray(spec.head.scripts)) {
+          spec.head.scripts.forEach(script => {
+            const attrs = Object.entries(script).map(([k, v]) => `${k}="${v}"`).join(' ');
+            elements.push(`<script ${attrs}></script>`);
+          });
+        }
+      } else if (Array.isArray(spec.head)) {
+        // Original behavior for array
+        elements.push(...spec.head);
+      }
     }
 
     // Framework-specific head content
@@ -223,8 +242,15 @@ class HTMLGenerator {
       bodyContent += this._getFrameworkBodyStart(framework);
       bodyContent += this._getFrameworkBodyEnd(framework);
     } else {
+      // Handle sections (new structure from planner)
+      if (spec.sections && Array.isArray(spec.sections)) {
+        const sections = await Promise.all(
+          spec.sections.map(section => this._generateSection(section))
+        );
+        bodyContent += sections.join(this.config.minify ? '' : '\n');
+      }
       // Generate regular components only if not a framework app
-      if (spec.components) {
+      else if (spec.components) {
         const components = await Promise.all(
           spec.components.map(component => this._generateComponent(component))
         );
@@ -234,6 +260,33 @@ class HTMLGenerator {
 
     const bodyAttrs = spec.bodyClass ? { class: spec.bodyClass } : {};
     return this._generateElement('body', bodyAttrs, bodyContent);
+  }
+
+  async _generateSection(section) {
+    if (!section || typeof section !== 'object') {
+      return '';
+    }
+
+    const { tag, content, ...attrs } = section;
+    
+    // Generate content based on its type
+    let innerContent = '';
+    
+    if (Array.isArray(content)) {
+      // Array of child elements
+      const childElements = await Promise.all(
+        content.map(child => this._generateSection(child))
+      );
+      innerContent = childElements.join(this.config.minify ? '' : '\n');
+    } else if (typeof content === 'object' && content !== null) {
+      // Single child element
+      innerContent = await this._generateSection(content);
+    } else if (typeof content === 'string') {
+      // Text content
+      innerContent = this.config.escapeContent ? this._escapeHtml(content) : content;
+    }
+    
+    return this._generateElement(tag || 'div', attrs, innerContent);
   }
 
   async _generateComponent(component) {

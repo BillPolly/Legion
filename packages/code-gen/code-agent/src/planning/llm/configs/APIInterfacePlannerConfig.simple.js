@@ -2,10 +2,9 @@
  * APIInterfacePlannerConfig - SIMPLIFIED Configuration for API interface planning
  * 
  * This is a simplified version with only essential actions to prevent LLM overload.
- * Original complex version backed up as APIInterfacePlannerConfig.js.backup
  */
 
-export const APIInterfacePlannerConfig = {
+export const APIInterfacePlannerConfigSimple = {
   name: 'APIInterfacePlanner',
   description: 'Plans API interfaces between frontend and backend - SIMPLIFIED VERSION',
   
@@ -48,30 +47,6 @@ export const APIInterfacePlannerConfig = {
         statusCodes: {
           type: 'array',
           description: 'HTTP status codes to handle'
-        }
-      }
-    },
-    {
-      type: 'update_api_contract',
-      description: 'Update the API contract with additional information',
-      inputs: ['api_contract'],
-      outputs: ['api_contract'],
-      parameters: {
-        updates: {
-          type: 'object',
-          description: 'Updates to apply to the contract'
-        }
-      }
-    },
-    {
-      type: 'review_and_finalize_api_contract',
-      description: 'Review and finalize the API contract',
-      inputs: ['api_contract', 'data_format', 'error_handling'],
-      outputs: ['api_contract', 'data_format', 'error_handling'],
-      parameters: {
-        final: {
-          type: 'boolean',
-          description: 'Whether this is the final version'
         }
       }
     }

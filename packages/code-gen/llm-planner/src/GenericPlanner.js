@@ -42,9 +42,15 @@ class GenericPlanner {
 
     const prompt = this._buildPrompt(description, inputs, requiredOutputs, allowableActions, maxSteps);
     
+    console.log(`🔍 [DEBUG] GenericPlanner.createPlan - About to call LLM with prompt:`);
+    console.log(`🔍 [DEBUG] Prompt length: ${prompt.length} characters`);
+    console.log(`🔍 [DEBUG] First 500 chars:`, prompt.substring(0, 500));
+    console.log(`🔍 [DEBUG] Last 500 chars:`, prompt.substring(Math.max(0, prompt.length - 500)));
+    
     let lastError;
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
       try {
+        console.log(`🔍 [DEBUG] GenericPlanner - Attempt ${attempt} calling completeWithStructuredResponse`);
         const response = await this.llmClient.completeWithStructuredResponse(prompt, {
           schema: this._getPlanSchema(),
           expectedFields: ['name', 'description', 'steps'],

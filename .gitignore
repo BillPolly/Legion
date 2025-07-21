@@ -40,3 +40,6 @@ packages/*/coverage
 packages/*/dist
 packages/*/.env
 lerna-debug.log
+
+# Generated directory
+generated/

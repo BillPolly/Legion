@@ -153,6 +153,8 @@ class UnifiedPlanner {
    * @private
    */
   async _executePlanning(planningType, input) {
+    console.log(`🔍 [DEBUG] _executePlanning called with planningType: ${planningType}`);
+    
     const config = this.plannerConfigs[planningType];
     if (!config) {
       throw new Error(`Unknown planning type: ${planningType}`);
@@ -182,10 +184,18 @@ class UnifiedPlanner {
       };
 
       // Execute planning using GenericPlanner
+      console.log(`🔍 [DEBUG] About to call genericPlanner.createPlan for ${planningType}`);
+      console.log(`🔍 [DEBUG] Planning request:`, JSON.stringify(planningRequest, null, 2));
+      
       const plan = await this.genericPlanner.createPlan(planningRequest);
       
+      console.log(`🔍 [DEBUG] genericPlanner.createPlan completed for ${planningType}`);
+      
       // Transform plan to match expected output format
+      console.log(`🔍 [DEBUG] About to transform plan to output for ${planningType}`);
       const result = this._transformPlanToOutput(planningType, plan, input);
+      
+      console.log(`🔍 [DEBUG] _executePlanning completed successfully for ${planningType}`);
       
       return result;
     } catch (error) {
@@ -1077,6 +1087,13 @@ document.addEventListener('DOMContentLoaded', () => {
    * @private
    */
   _transformBackendArchitecture(actions, input) {
+    // DEBUG: Log LLM response data at method entry
+    console.log('🔍 [DEBUG] _transformBackendArchitecture called');
+    console.log('🔍 [DEBUG] LLM actions received:', JSON.stringify(actions, null, 2));
+    console.log('🔍 [DEBUG] Actions type:', typeof actions);
+    console.log('🔍 [DEBUG] Actions is array:', Array.isArray(actions));
+    console.log('🔍 [DEBUG] Actions length:', actions?.length);
+    
     // Initialize architecture in the format expected by GenerationPhase
     const architecture = {
       // Expected by GenerationPhase
@@ -1161,6 +1178,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    // DEBUG: Log architecture state before .map() calls
+    console.log('🔍 [DEBUG] Architecture state after processing actions:');
+    console.log('🔍 [DEBUG] - middleware:', architecture.middleware, 'isArray:', Array.isArray(architecture.middleware));
+    console.log('🔍 [DEBUG] - routes:', architecture.routes, 'isArray:', Array.isArray(architecture.routes));
+
     // Create default server configuration if none exists
     if (!architecture.server) {
       architecture.server = {
@@ -1168,8 +1190,8 @@ document.addEventListener('DOMContentLoaded', () => {
         filename: 'server.js',
         type: 'module',
         port: 3000,
-        middleware: architecture.middleware.map(m => m.name),
-        routes: architecture.routes.map(r => r.name),
+        middleware: Array.isArray(architecture.middleware) ? architecture.middleware.map(m => m.name) : [],
+        routes: Array.isArray(architecture.routes) ? architecture.routes.map(r => r.name) : [],
         description: 'Express server entry point',
         content: `import express from 'express';
 import cors from 'cors';

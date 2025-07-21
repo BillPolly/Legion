@@ -2,12 +2,11 @@
  * RequirementAnalyzerConfig - SIMPLIFIED Configuration for requirement analysis planning
  * 
  * This is a simplified version with only essential actions to prevent LLM overload.
- * Original complex version backed up as RequirementAnalyzerConfig.js.backup
  */
 
-export const RequirementAnalyzerConfig = {
+export const RequirementAnalyzerConfigSimple = {
   name: 'RequirementAnalyzer',
-  description: 'Analyzes project requirements to create actionable development plans - SIMPLIFIED VERSION',
+  description: 'Analyzes project requirements to create actionable development plans',
   
   allowableActions: [
     {
