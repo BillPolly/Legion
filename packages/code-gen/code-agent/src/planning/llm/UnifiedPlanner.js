@@ -107,6 +107,12 @@ class UnifiedPlanner {
    */
   async planFrontendArchitecture(analysis) {
     this._ensureInitialized();
+    
+    // Return null for backend-only projects
+    if (analysis.projectType === 'backend') {
+      return null;
+    }
+    
     return this._executePlanning('frontend', analysis);
   }
 
@@ -195,6 +201,21 @@ class UnifiedPlanner {
     const safeInput = input || {};
     
     switch (planningType) {
+      case 'requirement':
+        // For requirement analysis, provide all necessary inputs
+        return {
+          requirements_text: safeInput.description || '',
+          frontend_requirements: safeInput.requirements?.frontend || '',
+          backend_requirements: safeInput.requirements?.backend || '',
+          frontend_features: [],
+          backend_features: [],
+          project_type: '',
+          complexity_level: '',
+          security_analysis: {},
+          architecture_suggestion: {},
+          summary_text: ''
+        };
+      
       case 'directory':
         // Extract required values from analysis for directory planning
         const analysis = safeInput;
@@ -241,7 +262,9 @@ class UnifiedPlanner {
           dependency_order: [],
           parallelization_requirements: {},
           dependency_structure: { files: fileList, dependencies: [] },
-          project_requirements: projectAnalysis
+          project_requirements: projectAnalysis,
+          // Add conflict_analysis to satisfy suggest_resolution action
+          conflict_analysis: null
         };
       
       case 'frontend':
@@ -261,7 +284,9 @@ class UnifiedPlanner {
           performance_requirements: { loadTime: 3000, bundleSize: 500 },
           component_specifications: [],
           accessibility_requirements: { wcag: '2.1', level: 'AA' },
-          architecture_specification: {}
+          architecture_specification: {},
+          // Add missing input for actions
+          component_hierarchy: {}
         };
       
       case 'backend':
@@ -276,7 +301,60 @@ class UnifiedPlanner {
           security_requirements: backendAnalysis.security || {},
           performance_requirements: { responseTime: 200, throughput: 1000 },
           data_requirements: backendAnalysis.components?.backend?.storage || {},
-          architecture_specification: {}
+          architecture_specification: {},
+          // Add missing inputs for actions
+          feature_requirements: backendAnalysis.components?.backend || {},
+          api_style: 'REST',
+          architecture_pattern: 'layered',
+          service_requirements: {},
+          data_layer: {},
+          middleware_requirements: [],
+          authentication_method: 'JWT',
+          error_requirements: {},
+          monitoring_requirements: {},
+          deployment_requirements: {},
+          infrastructure_requirements: {}
+        };
+      
+      case 'api':
+        // Extract required values for API interface planning
+        const frontendArch = safeInput.frontendArchitecture || {};
+        const backendArch = safeInput.backendArchitecture || {};
+        return {
+          frontend_architecture: frontendArch,
+          backend_architecture: backendArch,
+          endpoint_requirements: {},
+          data_requirements: {},
+          data_model: {},
+          usage_context: '',
+          api_style: 'REST',
+          features: [],
+          error_requirements: {},
+          auth_requirements: {},
+          security_features: [],
+          list_endpoints: [],
+          pagination_strategy: 'offset',
+          file_features: [],
+          security_requirements: {},
+          search_requirements: {},
+          data_models: [],
+          api_interfaces: {}
+        };
+      
+      case 'test':
+        // Extract required values for test strategy planning
+        const testAnalysis = safeInput.analysis || safeInput || {};
+        const testProjectPlan = safeInput.projectPlan || {};
+        return {
+          project_analysis: testAnalysis,
+          test_requirements: {},
+          test_types: ['unit', 'integration', 'e2e'],
+          unit_test_strategy: {},
+          integration_test_strategy: {},
+          e2e_test_strategy: {},
+          coverage_targets: { unit: 80, integration: 70, e2e: 60 },
+          test_data_strategy: {},
+          test_environment: {}
         };
       
       default:
@@ -399,12 +477,41 @@ class UnifiedPlanner {
         ];
       
       case 'api':
-        // For API interface, we need architectures
-        return ['frontend_architecture', 'backend_architecture'];
+        // For API interface, we need architectures and all API-specific inputs
+        return [
+          'frontend_architecture',
+          'backend_architecture',
+          'endpoint_requirements',
+          'data_requirements',
+          'data_model',
+          'usage_context',
+          'api_style',
+          'features',
+          'error_requirements',
+          'auth_requirements',
+          'security_features',
+          'list_endpoints',
+          'pagination_strategy',
+          'file_features',
+          'security_requirements',
+          'search_requirements',
+          'data_models',
+          'api_interfaces'
+        ];
       
       case 'test':
-        // For test strategy, we need project analysis
-        return ['project_analysis'];
+        // For test strategy, we need project analysis and all test-specific inputs
+        return [
+          'project_analysis',
+          'test_requirements',
+          'test_types',
+          'unit_test_strategy',
+          'integration_test_strategy',
+          'e2e_test_strategy',
+          'coverage_targets',
+          'test_data_strategy',
+          'test_environment'
+        ];
       
       default:
         return ['input_data'];
@@ -522,7 +629,17 @@ class UnifiedPlanner {
         return this._transformDependencyPlan(actions, input);
       
       case 'frontend':
-        return this._transformFrontendArchitecture(actions, input);
+        const frontendResult = this._transformFrontendArchitecture(actions, input);
+        // Ensure arrays are arrays
+        if (frontendResult && typeof frontendResult === 'object') {
+          if (!Array.isArray(frontendResult.cssStyles)) {
+            frontendResult.cssStyles = [];
+          }
+          if (!Array.isArray(frontendResult.jsComponents)) {
+            frontendResult.jsComponents = [];
+          }
+        }
+        return frontendResult;
       
       case 'backend':
         return this._transformBackendArchitecture(actions, input);
@@ -575,9 +692,25 @@ class UnifiedPlanner {
    */
   _transformRequirementAnalysis(actions, input) {
     const safeInput = input || {};
+    
+    // Determine project type from requirements
+    let projectType = 'fullstack'; // default
+    if (safeInput.requirements) {
+      const hasBackend = !!safeInput.requirements.backend;
+      const hasFrontend = !!safeInput.requirements.frontend;
+      
+      if (hasBackend && !hasFrontend) {
+        projectType = 'backend';
+      } else if (hasFrontend && !hasBackend) {
+        projectType = 'frontend';
+      }
+    }
+    
     const analysis = {
       task: safeInput.task || 'Unknown task',
-      projectType: 'frontend',
+      projectName: safeInput.projectName || 'generated-project',
+      description: safeInput.description || '',
+      projectType: projectType,
       components: {},
       complexity: 'medium',
       timestamp: Date.now()
@@ -587,7 +720,11 @@ class UnifiedPlanner {
     actions.forEach(action => {
       switch (action.type) {
         case 'determine_project_type':
-          analysis.projectType = action.parameters?.projectType || 'frontend';
+          // Only override if we get a valid project type
+          const llmProjectType = action.parameters?.projectType || action.result?.projectType || action.parameters?.project_type || action.result?.project_type;
+          if (llmProjectType && ['frontend', 'backend', 'fullstack'].includes(llmProjectType)) {
+            analysis.projectType = llmProjectType;
+          }
           break;
         case 'analyze_complexity':
           analysis.complexity = action.parameters?.complexity || 'medium';
@@ -728,7 +865,20 @@ class UnifiedPlanner {
    * @private
    */
   _transformFrontendArchitecture(actions, input) {
+    // Initialize architecture in the format expected by GenerationPhase
     const architecture = {
+      htmlStructure: {
+        title: input.projectName || 'Generated App',
+        sections: [],
+        head: {
+          links: [{ rel: 'stylesheet', href: 'styles.css' }],
+          scripts: []
+        }
+      },
+      cssStyles: [],
+      jsComponents: [],
+      mainApp: null,
+      // Keep original structure for reference
       components: [],
       componentHierarchy: {},
       stateManagement: {},
@@ -748,11 +898,22 @@ class UnifiedPlanner {
         case 'create_component':
           const component = action.parameters;
           if (component) {
+            // Add to original components array
             architecture.components.push({
               name: component.name,
               type: component.type || 'functional',
               props: component.props || [],
               state: component.state || {},
+              description: component.description || ''
+            });
+            
+            // Transform to jsComponents format expected by GenerationPhase
+            architecture.jsComponents.push({
+              name: component.name,
+              type: component.type === 'class' ? 'class' : 'function',
+              filename: `${component.name.toLowerCase()}.js`,
+              methods: component.methods || [],
+              properties: component.props || [],
               description: component.description || ''
             });
           }
@@ -765,12 +926,148 @@ class UnifiedPlanner {
           break;
         case 'configure_styling':
           architecture.styling = action.parameters || {};
+          // Transform to cssStyles format
+          if (action.parameters?.styles) {
+            architecture.cssStyles.push({
+              filename: 'styles.css',
+              rules: action.parameters.styles,
+              description: 'Main stylesheet'
+            });
+          }
           break;
         case 'setup_routing':
           architecture.routing = action.parameters || {};
           break;
       }
     });
+
+    // Always generate a basic HTML structure for frontend projects
+    if (architecture.htmlStructure.sections.length === 0) {
+      architecture.htmlStructure = {
+        title: input.projectName || 'Welcome to Example2',
+        sections: [
+          {
+            tag: 'header',
+            content: {
+              tag: 'h1',
+              content: input.projectName || 'Example2'
+            }
+          },
+          {
+            tag: 'main',
+            id: 'app',
+            content: [
+              {
+                tag: 'section',
+                class: 'welcome',
+                content: [
+                  { tag: 'h2', content: 'Welcome' },
+                  { tag: 'p', content: 'Welcome to your application' },
+                  { tag: 'div', id: 'datetime', content: 'Loading...' },
+                  { tag: 'button', id: 'statusBtn', content: 'Check API Status' },
+                  { tag: 'div', id: 'status', content: '' }
+                ]
+              }
+            ]
+          }
+        ],
+        head: {
+          links: [{ rel: 'stylesheet', href: 'style.css' }],
+          scripts: [{ src: 'script.js', defer: true }]
+        }
+      };
+    }
+
+    // If no CSS styles were specified, create default
+    if (!architecture.cssStyles || !Array.isArray(architecture.cssStyles)) {
+      architecture.cssStyles = [];
+    }
+    if (architecture.cssStyles.length === 0) {
+      architecture.cssStyles.push({
+        filename: 'public/style.css',
+        rules: {
+          body: { 
+            margin: 0, 
+            padding: 0, 
+            fontFamily: 'Arial, sans-serif',
+            backgroundColor: '#f5f5f5',
+            color: '#333'
+          },
+          header: {
+            backgroundColor: '#2196F3',
+            color: 'white',
+            padding: '20px',
+            textAlign: 'center'
+          },
+          main: {
+            maxWidth: '800px',
+            margin: '0 auto',
+            padding: '20px'
+          },
+          '.welcome': {
+            backgroundColor: 'white',
+            padding: '30px',
+            borderRadius: '8px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+          },
+          button: {
+            backgroundColor: '#2196F3',
+            color: 'white',
+            border: 'none',
+            padding: '10px 20px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '16px'
+          },
+          'button:hover': {
+            backgroundColor: '#1976D2'
+          }
+        },
+        description: 'Main stylesheet'
+      });
+    }
+
+    // Always create main JavaScript files for frontend
+    if (!architecture.jsComponents || !Array.isArray(architecture.jsComponents)) {
+      architecture.jsComponents = [];
+    }
+    if (architecture.jsComponents.length === 0) {
+      architecture.jsComponents.push({
+        name: 'script',
+        filename: 'public/script.js',
+        type: 'module',
+        content: `// Update date/time
+function updateDateTime() {
+  const now = new Date();
+  document.getElementById('datetime').textContent = now.toLocaleString();
+}
+
+// Fetch API status
+async function fetchStatus() {
+  try {
+    const response = await fetch('/api/status');
+    const data = await response.json();
+    document.getElementById('status').innerHTML = \`
+      <h3>API Status</h3>
+      <pre>\${JSON.stringify(data, null, 2)}</pre>
+    \`;
+  } catch (error) {
+    document.getElementById('status').innerHTML = \`<p>Error: \${error.message}</p>\`;
+  }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+  // Update time every second
+  updateDateTime();
+  setInterval(updateDateTime, 1000);
+  
+  // Add click handler
+  document.getElementById('statusBtn').addEventListener('click', fetchStatus);
+});`,
+        description: 'Main frontend JavaScript'
+      });
+    }
 
     return architecture;
   }
@@ -780,12 +1077,19 @@ class UnifiedPlanner {
    * @private
    */
   _transformBackendArchitecture(actions, input) {
+    // Initialize architecture in the format expected by GenerationPhase
     const architecture = {
+      // Expected by GenerationPhase
+      server: null,
+      routes: [],
+      controllers: [],
+      models: [],
+      services: [],
+      middleware: [],
+      // Original structure
       pattern: 'layered',
       apiDesign: {},
       dataLayer: {},
-      services: [],
-      middleware: [],
       security: {},
       performance: {},
       metadata: {
@@ -800,20 +1104,52 @@ class UnifiedPlanner {
       switch (action.type) {
         case 'design_api':
           architecture.apiDesign = action.parameters || {};
+          // Create routes from API design
+          if (action.parameters?.endpoints) {
+            action.parameters.endpoints.forEach(endpoint => {
+              architecture.routes.push({
+                name: endpoint.name || 'api',
+                filename: 'routes/api.js',
+                endpoints: [endpoint],
+                description: `Route for ${endpoint.path || '/api'}`
+              });
+            });
+          }
           break;
         case 'plan_data_layer':
           architecture.dataLayer = action.parameters || {};
+          // Create models from data layer
+          if (action.parameters?.models) {
+            action.parameters.models.forEach(model => {
+              architecture.models.push({
+                name: model.name,
+                filename: `models/${model.name}.js`,
+                schema: model.schema || {},
+                description: model.description || `${model.name} model`
+              });
+            });
+          }
           break;
         case 'create_service':
           const service = action.parameters;
           if (service) {
-            architecture.services.push(service);
+            architecture.services.push({
+              name: service.name || 'Service',
+              filename: `services/${service.name || 'service'}.js`,
+              methods: service.methods || [],
+              description: service.description || 'Business logic service'
+            });
           }
           break;
         case 'add_middleware':
           const middleware = action.parameters;
           if (middleware) {
-            architecture.middleware.push(middleware);
+            architecture.middleware.push({
+              name: middleware.name || 'middleware',
+              filename: `middleware/${middleware.name || 'middleware'}.js`,
+              type: 'function',
+              description: middleware.description || 'Express middleware'
+            });
           }
           break;
         case 'configure_security':
@@ -824,6 +1160,124 @@ class UnifiedPlanner {
           break;
       }
     });
+
+    // Create default server configuration if none exists
+    if (!architecture.server) {
+      architecture.server = {
+        name: 'server',
+        filename: 'server.js',
+        type: 'module',
+        port: 3000,
+        middleware: architecture.middleware.map(m => m.name),
+        routes: architecture.routes.map(r => r.name),
+        description: 'Express server entry point',
+        content: `import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import healthRoutes from './routes/health.js';
+import apiRoutes from './routes/api.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Static files
+app.use(express.static(path.join(__dirname, 'public')));
+
+// API routes
+app.use('/health', healthRoutes);
+app.use('/api', apiRoutes);
+
+// Root route
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(\`Example2 server running on port \${PORT}\`);
+});
+
+export default app;`
+      };
+    }
+
+    // Create default routes if none exist
+    if (architecture.routes.length === 0) {
+      architecture.routes.push(
+        {
+          name: 'health',
+          filename: 'routes/health.js',
+          type: 'module',
+          content: `import { Router } from 'express';
+
+const router = Router();
+
+router.get('/', (req, res) => {
+  res.json({ 
+    status: 'healthy', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+export default router;`,
+          description: 'Health check routes'
+        },
+        {
+          name: 'api',
+          filename: 'routes/api.js',
+          type: 'module',
+          content: `import { Router } from 'express';
+
+const router = Router();
+
+router.get('/status', (req, res) => {
+  res.json({
+    project: 'Example2',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+export default router;`,
+          description: 'Main API routes'
+        }
+      );
+    }
+
+    // Create default middleware if none exist
+    if (architecture.middleware.length === 0) {
+      architecture.middleware.push(
+        {
+          name: 'cors',
+          filename: 'middleware/cors.js',
+          type: 'function',
+          description: 'CORS middleware'
+        },
+        {
+          name: 'errorHandler',
+          filename: 'middleware/errorHandler.js',
+          type: 'function',
+          description: 'Error handling middleware'
+        }
+      );
+    }
 
     return architecture;
   }

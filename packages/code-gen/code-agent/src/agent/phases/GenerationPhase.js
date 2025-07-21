@@ -32,7 +32,7 @@ class GenerationPhase {
     await this._generateConfigFiles(analysis);
     
     // Generate based on project type
-    if (frontendArchitecture) {
+    if (frontendArchitecture && frontendArchitecture !== null && Object.keys(frontendArchitecture).length > 0) {
       await this._generateFrontendFiles(frontendArchitecture, analysis);
     }
     
@@ -65,20 +65,20 @@ class GenerationPhase {
     // Generate main HTML file
     if (frontendArchitecture.htmlStructure) {
       const htmlContent = await this.htmlGenerator.generateHTML(frontendArchitecture.htmlStructure);
-      await this.fileWriter.writeFile('index.html', htmlContent);
+      await this.fileWriter.writeFile('public/index.html', htmlContent);
     }
     
     // Generate CSS styles
-    if (frontendArchitecture.cssStyles) {
+    if (frontendArchitecture.cssStyles && Array.isArray(frontendArchitecture.cssStyles)) {
       for (const styleSpec of frontendArchitecture.cssStyles) {
-        const cssContent = await this.cssGenerator.generateCSS(styleSpec);
+        const cssContent = await this.cssGenerator.generateStylesheet(styleSpec);
         const filename = styleSpec.filename || 'styles.css';
         await this.fileWriter.writeFile(filename, cssContent);
       }
     }
     
     // Generate JavaScript components
-    if (frontendArchitecture.jsComponents) {
+    if (frontendArchitecture.jsComponents && Array.isArray(frontendArchitecture.jsComponents)) {
       for (const component of frontendArchitecture.jsComponents) {
         let jsContent;
         
@@ -203,12 +203,21 @@ class GenerationPhase {
         lint: 'eslint .',
         'lint:fix': 'eslint . --fix'
       },
-      dependencies: analysis.dependencies || {},
+      dependencies: {
+        ...(analysis.projectType === 'backend' || analysis.projectType === 'fullstack' ? {
+          'express': '^4.18.0',
+          'cors': '^2.8.5'
+        } : {}),
+        ...(typeof analysis.dependencies === 'object' && analysis.dependencies && !Array.isArray(analysis.dependencies) ? analysis.dependencies : {})
+      },
       devDependencies: {
         'jest': '^29.0.0',
         'eslint': '^8.0.0',
         '@jest/globals': '^29.0.0',
-        ...analysis.devDependencies
+        ...(analysis.projectType === 'backend' || analysis.projectType === 'fullstack' ? {
+          'nodemon': '^3.0.0'
+        } : {}),
+        ...(typeof analysis.devDependencies === 'object' && analysis.devDependencies && !Array.isArray(analysis.devDependencies) ? analysis.devDependencies : {})
       },
       type: 'module'
     };

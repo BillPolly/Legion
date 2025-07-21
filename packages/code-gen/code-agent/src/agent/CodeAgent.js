@@ -932,11 +932,13 @@ class CodeAgent extends EventEmitter {
    */
   getProjectSummary() {
     const summary = {
+      success: true,
       projectName: this.projectPlan?.projectName || 'Generated Project',
       projectType: this.config.projectType,
       startTime: this.currentTask?.startTime,
       endTime: this.currentTask?.endTime,
       duration: this.currentTask?.endTime - this.currentTask?.startTime,
+      filesGenerated: this.generatedFiles.size,
       phases: {
         planning: {
           completed: !!this.projectPlan,

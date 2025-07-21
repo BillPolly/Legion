@@ -61,7 +61,7 @@ class ConanTheDeployer extends Module {
     const providers = {};
     
     // Initialize Local Provider
-    providers.local = new LocalProvider(this.config);
+    providers.local = new LocalProvider(this.resourceManager, this.config);
     
     // Initialize Docker Provider
     let dockerHost;

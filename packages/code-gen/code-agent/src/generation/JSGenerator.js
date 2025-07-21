@@ -47,6 +47,19 @@ class JSGenerator {
    * @returns {Promise<string>} Generated JavaScript code
    */
   async generateModule(spec) {
+    // If spec has a content field, return it directly with a header
+    if (spec.content) {
+      const parts = [];
+      
+      // Add file header comment
+      if (spec.header || this.config.includeJSDoc) {
+        parts.push(this._generateHeader(spec));
+      }
+      
+      parts.push(spec.content);
+      return parts.join('\n\n');
+    }
+    
     const validation = await this.validateSpec(spec);
     if (!validation.isValid) {
       throw new Error(`Invalid JS spec: ${validation.errors.join(', ')}`);

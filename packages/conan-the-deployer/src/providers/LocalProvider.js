@@ -77,6 +77,7 @@ class LocalProvider extends BaseProvider {
 
       // Create deployment record
       const deployment = {
+        success: true,
         id: `local-${Date.now()}`,
         name,
         projectPath,

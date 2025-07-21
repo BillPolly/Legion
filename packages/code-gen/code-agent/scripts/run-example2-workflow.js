@@ -51,6 +51,11 @@ async function runExample2Workflow() {
     // Create temp directory
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'example2-'));
     
+    // Initialize git repository in the temp directory
+    execSync('git init', { cwd: tempDir });
+    execSync('git config user.name "Example2 Bot"', { cwd: tempDir });
+    execSync('git config user.email "bot@example2.dev"', { cwd: tempDir });
+    
     console.log(`✅ Environment configured`);
     console.log(`📁 Working directory: ${tempDir}`);
     console.log(`🏷️ Project name: ${PROJECT_NAME}`);
@@ -89,7 +94,7 @@ async function runExample2Workflow() {
         enabled: true,
         provider: 'railway'
       },
-      enableGitIntegration: false,  // Disable for now to focus on code generation
+      enableGitIntegration: true,  // Enable GitHub integration
       gitConfig: {
         enabled: true,
         repositoryStrategy: 'new',
