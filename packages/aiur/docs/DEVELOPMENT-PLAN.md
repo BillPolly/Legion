@@ -76,24 +76,24 @@ This document outlines the comprehensive Test-Driven Development plan for implem
   - Add handle management resources
 
 ### 2.2 Tool Response Handling
-- [ ] **Write tests for saveAs functionality**
+- [x] **Write tests for saveAs functionality**
   - Test handle creation from `saveAs` parameter
   - Test handle naming validation
   - Test handle overwrite protection
   - Test response metadata inclusion
-- [ ] **Implement saveAs response handling**
+- [x] **Implement saveAs response handling**
   - Parse `saveAs` from tool responses
   - Create handles automatically
   - Include handle metadata in responses
   - Validate handle names
 
 ### 2.3 Parameter Resolution
-- [ ] **Write tests for parameter preprocessing**
+- [x] **Write tests for parameter preprocessing**
   - Test `@handle` replacement in simple objects
   - Test deep object traversal
   - Test array handling
   - Test mixed parameter types
-- [ ] **Implement parameter preprocessing**
+- [x] **Implement parameter preprocessing**
   - Pre-process all tool call parameters
   - Replace handle references with objects
   - Maintain parameter structure
@@ -104,36 +104,36 @@ This document outlines the comprehensive Test-Driven Development plan for implem
 ## Phase 3: Legion Tool Integration 🛠️
 
 ### 3.1 Tool Wrapper Foundation
-- [ ] **Write tests for MCPToolAdapter**
+- [x] **Write tests for MCPToolAdapter**
   - Test Legion tool wrapping
   - Test parameter resolution
   - Test response formatting
   - Test error propagation
-- [ ] **Implement MCPToolAdapter class**
+- [x] **Implement MCPToolAdapter class**
   - Wrap Legion tools for MCP
   - Handle parameter resolution
   - Format responses properly
   - Propagate errors correctly
 
 ### 3.2 Dynamic Tool Loading
-- [ ] **Write tests for tool loading**
+- [x] **Write tests for tool loading**
   - Test tool discovery from Legion modules
   - Test tool registration in MCP
   - Test tool metadata extraction
   - Test loading error handling
-- [ ] **Implement dynamic tool loading**
+- [x] **Implement dynamic tool loading**
   - Scan Legion packages for tools
   - Register tools with MCP server
   - Extract tool metadata
   - Handle loading failures gracefully
 
 ### 3.3 Basic File Operations
-- [ ] **Write tests for file tool integration**
+- [x] **Write tests for file tool integration**
   - Test FileReader tool via MCP
   - Test FileWriter tool via MCP
   - Test DirectoryCreator tool via MCP
   - Test handle creation for file operations
-- [ ] **Integrate basic file tools**
+- [x] **Integrate basic file tools**
   - FileReader, FileWriter, DirectoryCreator
   - Handle creation for file objects
   - Proper error handling
