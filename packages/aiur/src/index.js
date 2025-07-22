@@ -42,7 +42,7 @@ async function handleToolCall(name, args) {
       return {
         content: [{
           type: "text",
-          text: "This is a template MCP server (version 1.0.0).\n\nIt serves as a template for building Claude integrations."
+          text: "Aiur MCP Server (version 1.0.0)\n\nAn MCP server for AI agent coordination in the jsEnvoy/Legion framework."
         }],
         isError: false,
       };
@@ -52,7 +52,7 @@ async function handleToolCall(name, args) {
       return {
         content: [{
           type: "text",
-          text: `Hello, ${userName}! This is a response from the template MCP server.`
+          text: `Hello, ${userName}! This is Aiur, ready to coordinate your AI agents.`
         }],
         isError: false,
       };
@@ -70,7 +70,7 @@ async function handleToolCall(name, args) {
 
 const server = new Server(
   {
-    name: "template-mcp-server",
+    name: "aiur",
     version: "1.0.0",
   },
   {
@@ -148,6 +148,6 @@ async function runServer() {
 runServer().catch(console.error);
 
 process.stdin.on("close", () => {
-  console.error("Template MCP Server closed");
+  console.error("Aiur MCP Server closed");
   server.close();
 });
