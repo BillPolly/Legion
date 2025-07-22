@@ -8,8 +8,21 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
-// Simple tools
-const TOOLS = [
+// Import our Aiur systems
+import { HandleRegistry } from './handles/HandleRegistry.js';
+import { ToolRegistry } from './tools/ToolRegistry.js';
+import { PlanningTools } from './planning/PlanningTools.js';
+import { PlanExecutor } from './planning/PlanExecutor.js';
+
+// Initialize Aiur systems
+const handleRegistry = new HandleRegistry();
+const toolRegistry = new ToolRegistry(handleRegistry);
+const planExecutor = new PlanExecutor(toolRegistry, handleRegistry);
+const planningTools = new PlanningTools(toolRegistry, handleRegistry, planExecutor);
+
+// Get comprehensive tools from our systems
+const comprehensiveTools = [
+  // Keep original about and hello tools for compatibility
   {
     name: "about",
     description: "Returns information about this MCP server",
@@ -32,12 +45,17 @@ const TOOLS = [
       },
       required: []
     }
-  }
+  },
+  // Add our comprehensive tools
+  ...Object.values(planningTools.getTools())
 ];
 
+const TOOLS = comprehensiveTools;
+
 async function handleToolCall(name, args) {
-  switch (name) {
-    case "about":
+  try {
+    // Handle original tools for compatibility
+    if (name === "about") {
       return {
         content: [{
           type: "text",
@@ -45,8 +63,9 @@ async function handleToolCall(name, args) {
         }],
         isError: false,
       };
-      
-    case "hello":
+    }
+    
+    if (name === "hello") {
       const userName = args.name || "World";
       return {
         content: [{
@@ -55,15 +74,40 @@ async function handleToolCall(name, args) {
         }],
         isError: false,
       };
+    }
+    
+    // Route to our comprehensive tools
+    const planningToolsMap = planningTools.getTools();
+    if (planningToolsMap[name]) {
+      const result = await planningToolsMap[name].execute(args);
       
-    default:
+      // Convert our tool result format to MCP format
       return {
         content: [{
           type: "text",
-          text: `Unknown tool: ${name}`
+          text: JSON.stringify(result, null, 2)
         }],
-        isError: true,
+        isError: !result.success,
       };
+    }
+    
+    // If no tool found
+    return {
+      content: [{
+        type: "text",
+        text: `Unknown tool: ${name}`
+      }],
+      isError: true,
+    };
+    
+  } catch (error) {
+    return {
+      content: [{
+        type: "text",
+        text: `Error executing tool ${name}: ${error.message}`
+      }],
+      isError: true,
+    };
   }
 }
 
