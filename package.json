@@ -6,7 +6,8 @@
   "description": "jsEnvoy - A modular framework for building AI agent tools",
   "workspaces": [
     "packages/*",
-    "packages/apps/*"
+    "packages/apps/*",
+    "packages/code-gen/*"
   ],
   "scripts": {
     "test": "npm run test --workspaces",
@@ -20,6 +21,7 @@
     "test:node-runner": "npm run test --workspace=@jsenvoy/node-runner",
     "test:log-manager": "npm run test --workspace=@jsenvoy/log-manager",
     "test:railway": "npm run test --workspace=@jsenvoy/railway",
+    "test:aiur": "npm run test --workspace=@jsenvoy/aiur",
     "test:watch": "npm run test:watch --workspaces",
     "test:coverage": "npm run test:coverage --workspaces",
     "lint": "eslint packages/*/src/**/*.js",
@@ -46,7 +48,9 @@
     "server:start": "node scripts/server/start-webserver.js",
     "server:kill": "node scripts/server/kill-port.js 3000",
     "server:force-kill": "node scripts/server/kill-port.js 3000 --force",
-    "kill-port": "node scripts/server/kill-port.js"
+    "kill-port": "node scripts/server/kill-port.js",
+    "aiur": "npm start --workspace=@jsenvoy/aiur",
+    "aiur:start": "npm start --workspace=@jsenvoy/aiur"
   },
   "devDependencies": {
     "eslint": "^8.56.0",
