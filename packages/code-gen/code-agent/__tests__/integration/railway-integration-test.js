@@ -14,7 +14,7 @@
  */
 
 import { CodeAgent } from '../../src/index.js';
-import { ModuleLoader, ResourceManager } from '@jsenvoy/module-loader';
+import { ModuleLoader, ResourceManager } from '@legion/module-loader';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -330,7 +330,7 @@ async function main() {
         
         // Load conan-the-deployer
         console.log('  Loading deployment module...');
-        const conanResult = await loader.loadModule('@jsenvoy/conan-the-deployer');
+        const conanResult = await loader.loadModule('@legion/conan-the-deployer');
         
         if (!conanResult.success) {
           throw new Error(`Failed to load conan-the-deployer: ${conanResult.error}`);

@@ -1,5 +1,5 @@
 {
-  "name": "@jsenvoy/conan-the-deployer",
+  "name": "@legion/conan-the-deployer",
   "version": "0.1.0",
   "description": "Comprehensive deployment and monitoring framework for Node.js applications across multiple providers with real-time monitoring and AI agent integration",
   "type": "module",
@@ -51,9 +51,9 @@
     "url": "https://github.com/jsenvoy/conan-the-deployer/issues"
   },
   "dependencies": {
-    "@jsenvoy/module-loader": "workspace:*",
-    "@jsenvoy/node-runner": "workspace:*",
-    "@jsenvoy/railway": "workspace:*",
+    "@legion/module-loader": "*",
+    "@legion/node-runner": "*",
+    "@legion/railway": "*",
     "dockerode": "^4.0.2",
     "node-fetch": "^3.3.2",
     "portfinder": "^1.0.32",

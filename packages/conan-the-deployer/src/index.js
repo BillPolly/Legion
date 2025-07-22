@@ -1,5 +1,5 @@
 /**
- * @module @jsenvoy/conan-the-deployer
+ * @module @legion/conan-the-deployer
  * @description Deploy and monitor Node.js applications across multiple providers
  */
 

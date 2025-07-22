@@ -1,5 +1,5 @@
 /**
- * @jsenvoy/llm-planner - Main exports
+ * @legion/llm-planner - Main exports
  * 
  * Generic LLM-based planning component with input/output flow validation
  */

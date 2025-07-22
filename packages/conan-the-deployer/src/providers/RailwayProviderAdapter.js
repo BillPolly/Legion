@@ -1,7 +1,7 @@
 import BaseProvider from './BaseProvider.js';
 
 /**
- * RailwayProviderAdapter - Adapter that wraps @jsenvoy/railway provider to match BaseProvider interface
+ * RailwayProviderAdapter - Adapter that wraps @legion/railway provider to match BaseProvider interface
  */
 class RailwayProviderAdapter extends BaseProvider {
   constructor(resourceManager) {

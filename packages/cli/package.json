@@ -1,5 +1,5 @@
 {
-  "name": "@jsenvoy/cli",
+  "name": "@legion/cli",
   "version": "0.0.1",
   "description": "jsEnvoy CLI - A generic command-line interface for executing modular AI agent tools",
   "type": "module",
@@ -44,7 +44,7 @@
     "CHANGELOG.md"
   ],
   "dependencies": {
-    "@jsenvoy/module-loader": "*",
+    "@legion/module-loader": "*",
     "chalk": "^4.1.2",
     "ora": "^5.4.1"
   },

@@ -3,7 +3,7 @@ import { ServerManager } from './ServerManager.js';
 import { PackageManager } from './PackageManager.js';
 import { findAvailablePort, waitForPortInUse } from './utils/ports.js';
 import { registerCleanupHandler, CleanupContext } from './utils/cleanup.js';
-import LogManager from '@jsenvoy/log-manager';
+import LogManager from '@legion/log-manager';
 
 /**
  * Main NodeRunner class that provides all Node.js process management capabilities

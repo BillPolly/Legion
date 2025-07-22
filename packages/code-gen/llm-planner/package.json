@@ -1,5 +1,5 @@
 {
-  "name": "@jsenvoy/llm-planner",
+  "name": "@legion/llm-planner",
   "version": "0.0.1",
   "description": "LLM-based planning component for intelligent task decomposition and structured plan generation",
   "type": "module",
@@ -26,8 +26,8 @@
   "author": "jsEnvoy Team",
   "license": "MIT",
   "dependencies": {
-    "@jsenvoy/llm": "workspace:*",
-    "@jsenvoy/module-loader": "workspace:*"
+    "@legion/llm": "*",
+    "@legion/module-loader": "*"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

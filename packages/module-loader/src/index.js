@@ -1,5 +1,5 @@
 /**
- * @jsenvoy/module-loader - Core infrastructure for building modular tool systems
+ * @legion/module-loader - Core infrastructure for building modular tool systems
  * 
  * This package provides the essential infrastructure for creating extensible
  * tool libraries with dependency injection and modular architecture.

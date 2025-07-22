@@ -6,7 +6,7 @@ import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globa
 import { EventEmitter } from 'events';
 import { Readable } from 'stream';
 import NodeRunner from '../../src/NodeRunner.js';
-import LogManager from '@jsenvoy/log-manager';
+import LogManager from '@legion/log-manager';
 
 // Create manual mock for spawn
 const mockSpawn = jest.fn();

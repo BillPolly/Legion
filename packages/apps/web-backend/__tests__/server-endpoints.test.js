@@ -16,7 +16,7 @@ jest.mock('../src/websocket-handler.js', () => ({
 }));
 
 // Mock module loader
-jest.mock('@jsenvoy/module-loader', () => ({
+jest.mock('@legion/module-loader', () => ({
   ResourceManager: jest.fn().mockImplementation(() => ({
     initialize: jest.fn().mockResolvedValue(undefined),
     register: jest.fn(),

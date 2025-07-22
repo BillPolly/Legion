@@ -1,5 +1,5 @@
 {
-  "name": "@jsenvoy/agent",
+  "name": "@legion/agent",
   "version": "0.0.1",
   "description": "AI agent implementation with retry logic and tool execution for jsEnvoy",
   "type": "module",
@@ -47,9 +47,9 @@
     "CHANGELOG.md"
   ],
   "dependencies": {
-    "@jsenvoy/llm": "*",
-    "@jsenvoy/module-loader": "*",
-    "@jsenvoy/tools": "*",
+    "@legion/llm": "*",
+    "@legion/module-loader": "*",
+    "@legion/tools": "*",
     "ora": "^5.4.0",
     "ws": "^8.16.0"
   },

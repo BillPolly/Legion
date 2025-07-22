@@ -7,7 +7,7 @@
  */
 
 import { Agent } from '../src/Agent.js';
-import { ResourceManager, ModuleFactory } from '@jsenvoy/module-loader';
+import { ResourceManager, ModuleFactory } from '@legion/module-loader';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -63,8 +63,8 @@ async function loadTools(resourceManager, moduleFactory) {
   const tools = [];
   
   try {
-    // Import all module classes from @jsenvoy/tools package
-    const toolsPackage = await import('@jsenvoy/tools');
+    // Import all module classes from @legion/tools package
+    const toolsPackage = await import('@legion/tools');
     
     // Get all module classes (they end with 'Module')
     const moduleClasses = Object.values(toolsPackage).filter(
@@ -101,7 +101,7 @@ async function loadTools(resourceManager, moduleFactory) {
     
   } catch (error) {
     console.error('Failed to load tools package:', error.message);
-    console.error('Make sure @jsenvoy/tools is properly installed');
+    console.error('Make sure @legion/tools is properly installed');
   }
   
   // Try to load CodeAgent JSON module

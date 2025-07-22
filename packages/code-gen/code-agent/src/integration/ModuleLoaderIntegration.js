@@ -1,5 +1,5 @@
 /**
- * ModuleLoaderIntegration - Integration layer for @jsenvoy/module-loader
+ * ModuleLoaderIntegration - Integration layer for @legion/module-loader
  * 
  * This class provides a standardized interface for module loading, resource management,
  * and tool creation using the jsEnvoy module loader infrastructure.
@@ -23,7 +23,7 @@ class ModuleLoaderIntegration {
     }
 
     try {
-      // Import required classes from @jsenvoy/module-loader
+      // Import required classes from @legion/module-loader
       const moduleLoaderPath = '../../../../module-loader/src/index.js';
       const { ModuleFactory, ResourceManager } = await import(moduleLoaderPath);
       

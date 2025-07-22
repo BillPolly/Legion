@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@jsenvoy/module-loader';
+import { Tool, ToolResult } from '@legion/module-loader';
 import DeploymentManager from '../DeploymentManager.js';
 import ResourceManager from '../core/ResourceManager.js';
 

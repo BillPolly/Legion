@@ -4,7 +4,7 @@
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import { LLMClientManager } from '../../src/integration/LLMClientManager.js';
-import { ResourceManager } from '@jsenvoy/module-loader';
+import { ResourceManager } from '@legion/module-loader';
 
 describe('LLMClient Real Integration Tests', () => {
   let resourceManager;

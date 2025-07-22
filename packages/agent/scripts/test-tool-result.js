@@ -4,9 +4,9 @@
  * Test script to verify ToolResult implementation
  */
 
-const { ToolResult } = require('@jsenvoy/module-loader');
-const CalculatorModule = require('@jsenvoy/tools/src/calculator');
-const FileModule = require('@jsenvoy/tools/src/file');
+const { ToolResult } = require('@legion/module-loader');
+const CalculatorModule = require('@legion/tools/src/calculator');
+const FileModule = require('@legion/tools/src/file');
 
 async function testToolResult() {
   console.log('Testing ToolResult implementation...\n');

@@ -5,9 +5,9 @@
  * with a jsEnvoy chat agent to enable code generation capabilities.
  */
 
-import { Agent } from '@jsenvoy/agent';
-import { ModuleFactory } from '@jsenvoy/module-loader';
-import ResourceManager from '@jsenvoy/module-loader/src/resources/ResourceManager.js';
+import { Agent } from '@legion/agent';
+import { ModuleFactory } from '@legion/module-loader';
+import ResourceManager from '@legion/module-loader/src/resources/ResourceManager.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 

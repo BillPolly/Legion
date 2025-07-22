@@ -1,4 +1,4 @@
-import { Tool } from '@jsenvoy/module-loader';
+import { Tool } from '@legion/module-loader';
 import { z } from 'zod';
 
 const inputSchema = z.object({});

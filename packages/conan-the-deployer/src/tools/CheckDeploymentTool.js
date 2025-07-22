@@ -1,4 +1,4 @@
-import { Tool } from '@jsenvoy/module-loader';
+import { Tool } from '@legion/module-loader';
 
 /**
  * CheckDeploymentTool - Verifies deployment status and tests endpoints

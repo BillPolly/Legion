@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
-import { ResourceManager } from '@jsenvoy/module-loader';
+import { ResourceManager } from '@legion/module-loader';
 import GitHubRateLimiter from '../../src/integration/GitHubRateLimiter.js';
 import GitHubAuthentication from '../../src/integration/GitHubAuthentication.js';
 

@@ -3,7 +3,7 @@
  */
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
-import { ResourceManager, ModuleFactory } from '@jsenvoy/module-loader';
+import { ResourceManager, ModuleFactory } from '@legion/module-loader';
 import { Agent } from '../../src/Agent.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -102,8 +102,8 @@ describe('Chat Agent with CodeAgent Integration Tests', () => {
     const tools = [];
     
     try {
-      // Import all module classes from @jsenvoy/tools package
-      const toolsPackage = await import('@jsenvoy/tools');
+      // Import all module classes from @legion/tools package
+      const toolsPackage = await import('@legion/tools');
       
       // Get all module classes (they end with 'Module')
       const moduleClasses = Object.values(toolsPackage).filter(

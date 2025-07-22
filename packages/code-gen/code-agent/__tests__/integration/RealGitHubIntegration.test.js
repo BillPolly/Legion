@@ -16,7 +16,7 @@
 
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
 import { EnhancedCodeAgent } from '../../src/agent/EnhancedCodeAgent.js';
-import { ResourceManager } from '@jsenvoy/module-loader';
+import { ResourceManager } from '@legion/module-loader';
 import { promises as fs } from 'fs';
 import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';

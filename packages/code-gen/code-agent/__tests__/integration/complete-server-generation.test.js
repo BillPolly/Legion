@@ -5,7 +5,7 @@
 
 import { describe, test, expect, beforeAll, beforeEach, afterEach } from '@jest/globals';
 import { CodeAgent } from '../../src/index.js';
-import { ResourceManager } from '@jsenvoy/module-loader';
+import { ResourceManager } from '@legion/module-loader';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';

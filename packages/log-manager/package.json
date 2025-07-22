@@ -1,5 +1,5 @@
 {
-  "name": "@jsenvoy/log-manager",
+  "name": "@legion/log-manager",
   "version": "1.0.0",
   "description": "Comprehensive log capture, aggregation, and analysis for jsEnvoy AI agents",
   "type": "module",
@@ -21,7 +21,7 @@
   "author": "jsEnvoy Team",
   "license": "MIT",
   "dependencies": {
-    "@jsenvoy/module-loader": "*",
+    "@legion/module-loader": "*",
     "tail": "^2.2.6",
     "winston": "^3.11.0",
     "zod": "^3.22.4"

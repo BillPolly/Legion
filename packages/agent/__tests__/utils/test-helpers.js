@@ -2,7 +2,7 @@
  * Test helpers for agent tests
  */
 
-import { ToolResult } from '@jsenvoy/module-loader';
+import { ToolResult } from '@legion/module-loader';
 
 /**
  * Create a mock tool for testing

@@ -4,9 +4,9 @@
  * Test CodeAgent planning with real LLM
  */
 
-import { ResourceManager } from '@jsenvoy/module-loader';
+import { ResourceManager } from '@legion/module-loader';
 import { CodeAgent } from '../src/agent/CodeAgent.js';
-import { LLMClient } from '@jsenvoy/llm';
+import { LLMClient } from '@legion/llm';
 
 async function test() {
   const resourceManager = new ResourceManager();

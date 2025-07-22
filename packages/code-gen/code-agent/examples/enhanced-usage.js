@@ -4,7 +4,7 @@
  * This file demonstrates how to use the EnhancedCodeAgent with real runtime testing
  */
 
-import { EnhancedCodeAgent } from '@jsenvoy/code-agent';
+import { EnhancedCodeAgent } from '@legion/code-agent';
 import os from 'os';
 
 // Example 1: Basic Enhanced Usage

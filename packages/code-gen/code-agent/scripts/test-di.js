@@ -7,7 +7,7 @@
  * before running the full Example2 workflow.
  */
 
-import { ResourceManager } from '@jsenvoy/module-loader';
+import { ResourceManager } from '@legion/module-loader';
 import { CodeAgent } from '../src/agent/CodeAgent.js';
 import { promises as fs } from 'fs';
 import path from 'path';

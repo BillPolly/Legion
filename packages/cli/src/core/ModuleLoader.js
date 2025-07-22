@@ -1,11 +1,11 @@
 /**
- * ModuleLoader - Handles module discovery and loading from @jsenvoy/tools
+ * ModuleLoader - Handles module discovery and loading from @legion/tools
  */
 
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { ModuleFactory } from '@jsenvoy/module-loader';
+import { ModuleFactory } from '@legion/module-loader';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -204,7 +204,7 @@ export class ModuleLoader {
    * @returns {string} Path to modules directory
    */
   getModulePath() {
-    // Resolve path to @jsenvoy/general-tools src directory where modules are located
+    // Resolve path to @legion/general-tools src directory where modules are located
     // From /packages/cli/src/core/ to /packages/general-tools/src/
     const toolsPath = path.resolve(__dirname, '../../../general-tools/src');
     return toolsPath;

@@ -1,5 +1,5 @@
-import { ToolResult } from "@jsenvoy/module-loader";
-import { LLMClient } from "@jsenvoy/llm";
+import { ToolResult } from "@legion/module-loader";
+import { LLMClient } from "@legion/llm";
 import { getMasterPrompt } from "./lib/master-prompt.js";
 import ora from "ora";
 import { writeFile, appendFile } from "fs/promises";

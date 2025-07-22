@@ -1,5 +1,5 @@
 /**
- * Jest setup file for @jsenvoy/tools tests
+ * Jest setup file for @legion/tools tests
  */
 
 import { jest } from '@jest/globals';

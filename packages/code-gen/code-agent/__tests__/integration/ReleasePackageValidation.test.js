@@ -39,7 +39,7 @@ describe('Release Package Preparation Validation', () => {
       } else {
         // Package.json doesn't exist, create expected structure
         const expectedPackage = {
-          name: '@jsenvoy/code-agent',
+          name: '@legion/code-agent',
           version: '1.0.0',
           description: 'AI Code Agent with comprehensive Git integration',
           main: 'src/index.js',
@@ -177,7 +177,7 @@ describe('Release Package Preparation Validation', () => {
 
     test('should validate peer dependencies', () => {
       const expectedPeerDeps = {
-        '@jsenvoy/module-loader': '>=1.0.0',
+        '@legion/module-loader': '>=1.0.0',
         'jest': '>=29.0.0'
       };
 

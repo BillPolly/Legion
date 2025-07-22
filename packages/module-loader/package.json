@@ -1,5 +1,5 @@
 {
-  "name": "@jsenvoy/module-loader",
+  "name": "@legion/module-loader",
   "version": "0.0.1",
   "description": "Core infrastructure for building modular tool systems - base classes, dependency injection, and module management",
   "type": "module",

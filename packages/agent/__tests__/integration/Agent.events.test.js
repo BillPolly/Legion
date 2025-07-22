@@ -4,8 +4,8 @@
 
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
 import { Agent } from '../../src/Agent.js';
-import { Module } from '@jsenvoy/module-loader';
-import Tool from '@jsenvoy/module-loader/src/tool/Tool.js';
+import { Module } from '@legion/module-loader';
+import Tool from '@legion/module-loader/src/tool/Tool.js';
 import { EventEmitter } from 'events';
 
 // Mock Tool class for testing

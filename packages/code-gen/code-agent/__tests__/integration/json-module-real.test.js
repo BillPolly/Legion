@@ -5,8 +5,8 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
-import { ModuleFactory } from '@jsenvoy/module-loader';
-import ResourceManager from '@jsenvoy/module-loader/src/resources/ResourceManager.js';
+import { ModuleFactory } from '@legion/module-loader';
+import ResourceManager from '@legion/module-loader/src/resources/ResourceManager.js';
 import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';

@@ -7,8 +7,8 @@
  * by creating actual plans using real LLM APIs using the ResourceManager pattern.
  */
 
-import { ResourceManager } from '@jsenvoy/module-loader';
-import { LLMClient } from '@jsenvoy/llm';
+import { ResourceManager } from '@legion/module-loader';
+import { LLMClient } from '@legion/llm';
 import { GenericPlanner } from '../src/GenericPlanner.js';
 import { FlowValidator } from '../src/FlowValidator.js';
 import { LLMPlannerModule } from '../src/LLMPlannerModule.js';

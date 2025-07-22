@@ -2,14 +2,14 @@ import { jest } from '@jest/globals';
 import { AgentConnection } from '../src/agent-connection.js';
 
 // Mock the Agent class
-jest.mock('@jsenvoy/agent', () => ({
+jest.mock('@legion/agent', () => ({
   Agent: jest.fn().mockImplementation(() => ({
     run: jest.fn().mockResolvedValue('Mock agent response')
   }))
 }));
 
 // Mock the tools
-jest.mock('@jsenvoy/tools', () => ({
+jest.mock('@legion/tools', () => ({
   FileModule: jest.fn().mockImplementation(() => ({
     tools: [{ name: 'read_file', description: 'Read a file' }]
   })),

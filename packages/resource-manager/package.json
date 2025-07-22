@@ -1,5 +1,5 @@
 {
-  "name": "@jsenvoy/resource-manager",
+  "name": "@legion/resource-manager",
   "version": "0.0.1",
   "description": "Resource management system for jsEnvoy - handles process lifecycle, agent orchestration, and dependency management",
   "type": "module",
@@ -33,7 +33,7 @@
     "CHANGELOG.md"
   ],
   "dependencies": {
-    "@jsenvoy/module-loader": "*"
+    "@legion/module-loader": "*"
   },
   "devDependencies": {
     "jest": "^29.7.0"

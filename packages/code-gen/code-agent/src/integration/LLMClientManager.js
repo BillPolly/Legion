@@ -1,5 +1,5 @@
 /**
- * LLMClientManager - Integration layer for @jsenvoy/llm
+ * LLMClientManager - Integration layer for @legion/llm
  * 
  * This class provides a standardized interface for LLM operations using the jsEnvoy
  * LLM client, handling different providers and providing specialized methods for
@@ -32,7 +32,7 @@ class LLMClientManager {
         // Use mock client for testing
         this.llmClient = this._createMockClient();
       } else {
-        // Import the LLMClient from @jsenvoy/llm (using relative path for development)
+        // Import the LLMClient from @legion/llm (using relative path for development)
         const { LLMClient } = await import('../../../../llm/src/index.js');
         
         // Create LLM client instance

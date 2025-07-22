@@ -6,8 +6,8 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import { ModuleFactory } from '@jsenvoy/module-loader';
-import ResourceManager from '@jsenvoy/module-loader/src/resources/ResourceManager.js';
+import { ModuleFactory } from '@legion/module-loader';
+import ResourceManager from '@legion/module-loader/src/resources/ResourceManager.js';
 import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
@@ -16,7 +16,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Mock LLM responses for predictable testing
-jest.mock('@jsenvoy/llm', () => ({
+jest.mock('@legion/llm', () => ({
   LLMClient: jest.fn().mockImplementation(() => ({
     generateResponse: jest.fn().mockResolvedValue({
       choices: [{

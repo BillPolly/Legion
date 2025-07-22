@@ -1,5 +1,5 @@
 /**
- * Jest configuration for @jsenvoy/code-agent
+ * Jest configuration for @legion/code-agent
  * 
  * This configuration supports ES6 modules and provides comprehensive testing
  * capabilities for the code agent package.
@@ -99,9 +99,9 @@ export default {
   
   // Module name mapping for local development
   moduleNameMapper: {
-    '^@jsenvoy/llm-planner/(.*)$': '<rootDir>/../llm-planner/$1',
-    '^@jsenvoy/llm-planner$': '<rootDir>/../llm-planner/src',
-    '^@jsenvoy/module-loader$': '/Users/maxximus/Documents/max/pocs/jsEnvoy/packages/module-loader/src',
-    '^@jsenvoy/llm$': '/Users/maxximus/Documents/max/pocs/jsEnvoy/packages/llm/src'
+    '^@legion/llm-planner/(.*)$': '<rootDir>/../llm-planner/$1',
+    '^@legion/llm-planner$': '<rootDir>/../llm-planner/src',
+    '^@legion/module-loader$': '/Users/maxximus/Documents/max/pocs/jsEnvoy/packages/module-loader/src',
+    '^@legion/llm$': '/Users/maxximus/Documents/max/pocs/jsEnvoy/packages/llm/src'
   }
 };

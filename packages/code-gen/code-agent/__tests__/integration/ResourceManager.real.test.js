@@ -3,7 +3,7 @@
  */
 
 import { describe, test, expect } from '@jest/globals';
-import { ResourceManager } from '@jsenvoy/module-loader';
+import { ResourceManager } from '@legion/module-loader';
 
 describe('ResourceManager Environment Loading', () => {
   test('should load ANTHROPIC_API_KEY from .env file', async () => {

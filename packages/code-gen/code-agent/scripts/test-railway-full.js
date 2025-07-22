@@ -4,7 +4,7 @@
  * Full Railway deployment test with verification
  */
 
-import { ResourceManager } from '@jsenvoy/module-loader';
+import { ResourceManager } from '@legion/module-loader';
 import { CodeAgent } from '../src/index.js';
 import { promises as fs } from 'fs';
 import path from 'path';

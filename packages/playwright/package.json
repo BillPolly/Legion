@@ -1,5 +1,5 @@
 {
-  "name": "@jsenvoy/playwright",
+  "name": "@legion/playwright",
   "version": "1.0.0",
   "description": "Browser automation and web testing using Playwright for jsEnvoy",
   "type": "module",
@@ -30,7 +30,7 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@jsenvoy/module-loader": "*",
+    "@legion/module-loader": "*",
     "playwright": "^1.44.0",
     "zod": "^3.22.4"
   },

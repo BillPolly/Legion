@@ -70,9 +70,9 @@ describe('DeploymentIntegration', () => {
 
       expect(deploymentIntegration.initialized).toBe(true);
       expect(mockModuleLoader.loadModule).toHaveBeenCalledWith(
-        '@jsenvoy/conan-the-deployer',
+        '@legion/conan-the-deployer',
         expect.objectContaining({
-          name: '@jsenvoy/conan-the-deployer',
+          name: '@legion/conan-the-deployer',
           defaultProvider: 'local'
         })
       );

@@ -7,7 +7,7 @@
  * in the AgentResults organization.
  */
 
-import { ResourceManager } from '@jsenvoy/module-loader';
+import { ResourceManager } from '@legion/module-loader';
 import GitHub from '../../general-tools/src/github/index.js';
 import readline from 'readline';
 import https from 'https';

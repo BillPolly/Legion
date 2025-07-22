@@ -1,5 +1,5 @@
 /**
- * Tests for ModuleLoaderIntegration with @jsenvoy/module-loader
+ * Tests for ModuleLoaderIntegration with @legion/module-loader
  */
 
 import { describe, test, expect, beforeEach } from '@jest/globals';
@@ -382,14 +382,14 @@ describe('ModuleLoaderIntegration', () => {
   });
 
   describe('Integration with jsEnvoy Module Loader', () => {
-    test('should use ModuleFactory from @jsenvoy/module-loader', async () => {
+    test('should use ModuleFactory from @legion/module-loader', async () => {
       await integration.initialize();
       
       expect(integration.moduleFactory).toBeDefined();
       expect(typeof integration.moduleFactory.createModule).toBe('function');
     });
 
-    test('should use ResourceManager from @jsenvoy/module-loader', async () => {
+    test('should use ResourceManager from @legion/module-loader', async () => {
       await integration.initialize();
       
       expect(integration.resourceManager).toBeDefined();

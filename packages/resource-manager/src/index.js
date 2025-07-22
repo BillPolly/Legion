@@ -1,5 +1,5 @@
 /**
- * @jsenvoy/resource-manager - Process lifecycle and agent orchestration for jsEnvoy
+ * @legion/resource-manager - Process lifecycle and agent orchestration for jsEnvoy
  * 
  * This package provides resource management capabilities for jsEnvoy applications,
  * including process lifecycle management, agent orchestration, and dependency management.

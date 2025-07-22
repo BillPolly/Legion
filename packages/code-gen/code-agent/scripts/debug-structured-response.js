@@ -4,7 +4,7 @@
  * Debug script to test completeWithStructuredResponse method
  */
 
-import { ResourceManager } from '@jsenvoy/module-loader';
+import { ResourceManager } from '@legion/module-loader';
 import { LLMClientManager } from '../src/integration/LLMClientManager.js';
 
 async function debugStructuredResponse() {

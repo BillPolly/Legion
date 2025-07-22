@@ -1,5 +1,5 @@
 /**
- * FileOperationsManager - Integration layer for @jsenvoy/general-tools file operations
+ * FileOperationsManager - Integration layer for @legion/general-tools file operations
  * 
  * This class provides a standardized interface for file operations using the jsEnvoy
  * file tools, handling error cases and providing consistent result formats.

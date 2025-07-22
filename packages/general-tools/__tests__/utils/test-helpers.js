@@ -1,5 +1,5 @@
 /**
- * Test helper utilities for @jsenvoy/tools
+ * Test helper utilities for @legion/tools
  */
 
 import { jest } from '@jest/globals';

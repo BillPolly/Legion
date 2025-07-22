@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { ResourceManager } from '@jsenvoy/module-loader';
+import { ResourceManager } from '@legion/module-loader';
 
 console.log('🚂 COMPLETE RAILWAY INFRASTRUCTURE CHECK\n');
 

@@ -20,7 +20,7 @@ const mockModuleFactory = {
   createModuleAuto: jest.fn()
 };
 
-jest.unstable_mockModule('@jsenvoy/module-loader', () => ({
+jest.unstable_mockModule('@legion/module-loader', () => ({
   ModuleFactory: jest.fn(() => mockModuleFactory),
   ResourceManager: jest.fn(() => ({
     get: jest.fn(),

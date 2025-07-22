@@ -1,5 +1,5 @@
 {
-  "name": "@jsenvoy/llm",
+  "name": "@legion/llm",
   "version": "1.0.0",
   "description": "LLM client package with retry logic and error handling",
   "type": "module",

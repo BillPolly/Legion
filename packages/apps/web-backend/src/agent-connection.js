@@ -1,8 +1,8 @@
 /**
  * Agent connection manager for WebSocket connections
- * Each connection gets its own @jsenvoy/agent instance
+ * Each connection gets its own @legion/agent instance
  */
-import { Agent } from '@jsenvoy/agent';
+import { Agent } from '@legion/agent';
 
 export class AgentConnection {
     constructor(connectionId, resourceManager, moduleFactory) {
@@ -23,10 +23,10 @@ export class AgentConnection {
         if (this.agent) return; // Already initialized
         
         try {
-            // Load tools from @jsenvoy/tools package
+            // Load tools from @legion/tools package
             const tools = [];
             try {
-                const toolsPackage = await import('@jsenvoy/tools');
+                const toolsPackage = await import('@legion/tools');
                 
                 // Get all module classes (they end with 'Module')
                 const moduleClasses = Object.values(toolsPackage).filter(

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { ResourceManager } from '@jsenvoy/module-loader';
+import { ResourceManager } from '@legion/module-loader';
 
 async function main() {
   console.log('Checking environment variables...\n');

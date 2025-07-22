@@ -1,4 +1,4 @@
-import { ModuleFactory } from '@jsenvoy/module-loader';
+import { ModuleFactory } from '@legion/module-loader';
 import ProcessResource from '../process/ProcessResource.js';
 import AgentResource from '../agent/AgentResource.js';
 import ProcessOrchestrator from '../process/ProcessOrchestrator.js';
@@ -164,7 +164,7 @@ class ResourceModuleFactory extends ModuleFactory {
   async createInlineServiceModule(config, dependencies) {
     // This is a simplified implementation
     // In a real system, you'd use the existing GenericModule
-    const { GenericModule } = await import('@jsenvoy/module-loader');
+    const { GenericModule } = await import('@legion/module-loader');
     return new GenericModule(config, dependencies);
   }
 

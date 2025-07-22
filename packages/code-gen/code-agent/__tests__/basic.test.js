@@ -1,5 +1,5 @@
 /**
- * Basic tests for @jsenvoy/code-agent
+ * Basic tests for @legion/code-agent
  * 
  * These tests verify the core functionality of the CodeAgent class
  * and ensure proper integration with the jsEnvoy ecosystem.

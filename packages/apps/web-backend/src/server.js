@@ -7,7 +7,7 @@ import { createServer } from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { WebSocketHandler } from './websocket-handler.js';
-import { ResourceManager, ModuleFactory } from '@jsenvoy/module-loader';
+import { ResourceManager, ModuleFactory } from '@legion/module-loader';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

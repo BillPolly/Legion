@@ -5,7 +5,7 @@
  * dependency injection and proper resource management for the LLM planner.
  */
 
-import { Module, Tool, ToolResult } from '@jsenvoy/module-loader';
+import { Module, Tool, ToolResult } from '@legion/module-loader';
 import { GenericPlanner } from './GenericPlanner.js';
 import { FlowValidator } from './FlowValidator.js';
 import { Plan } from './models/Plan.js';

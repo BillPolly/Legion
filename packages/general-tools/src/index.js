@@ -1,5 +1,5 @@
 /**
- * @jsenvoy/tools - Collection of AI agent tools
+ * @legion/tools - Collection of AI agent tools
  * 
  * This package provides ready-to-use tool implementations for various tasks
  * All tools follow the standard function calling format and are loaded generically

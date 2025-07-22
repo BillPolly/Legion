@@ -1,5 +1,5 @@
 {
-  "name": "@jsenvoy/railway",
+  "name": "@legion/railway",
   "version": "1.0.0",
   "description": "Railway deployment provider for jsEnvoy AI agent framework",
   "type": "module",
@@ -21,7 +21,7 @@
   "author": "jsEnvoy",
   "license": "MIT",
   "dependencies": {
-    "@jsenvoy/module-loader": "^1.0.0",
+    "@legion/module-loader": "^1.0.0",
     "node-fetch": "^3.3.2",
     "node-pty": "^1.0.0",
     "zod": "^3.22.4"

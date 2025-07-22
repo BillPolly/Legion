@@ -4,7 +4,7 @@
  * Debug script to test GenericPlanner with simple actions
  */
 
-import { ResourceManager } from '@jsenvoy/module-loader';
+import { ResourceManager } from '@legion/module-loader';
 import { LLMClientManager } from '../src/integration/LLMClientManager.js';
 import { GenericPlanner } from '../../llm-planner/src/GenericPlanner.js';
 

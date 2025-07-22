@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterEach, beforeEach } from '@jest/globals';
-import { ResourceManager } from '@jsenvoy/module-loader';
+import { ResourceManager } from '@legion/module-loader';
 import GitIntegrationManager from '../../../src/integration/GitIntegrationManager.js';
 import GitConfigValidator from '../../../src/config/GitConfigValidator.js';
 import { promises as fs } from 'fs';

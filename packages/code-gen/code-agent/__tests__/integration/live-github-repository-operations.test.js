@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
-import { ResourceManager } from '@jsenvoy/module-loader';
+import { ResourceManager } from '@legion/module-loader';
 import GitHubOperations from '../../src/integration/GitHubOperations.js';
 import GitHubAuthentication from '../../src/integration/GitHubAuthentication.js';
 import GitConfigValidator from '../../src/config/GitConfigValidator.js';
@@ -59,7 +59,7 @@ describe('Live GitHub Repository Operations', () => {
 
   test('should create repository in AgentResults organization', async () => {
     const repoName = `test-code-agent-${Date.now()}`;
-    const description = 'Test repository created by @jsenvoy/code-agent integration tests';
+    const description = 'Test repository created by @legion/code-agent integration tests';
     
     const result = await githubOps.createRepository(repoName, description, {
       private: false,

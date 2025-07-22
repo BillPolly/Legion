@@ -11,7 +11,7 @@
  *   details <id>      - Get project details
  */
 
-import { ResourceManager } from '@jsenvoy/module-loader';
+import { ResourceManager } from '@legion/module-loader';
 import { RailwayProvider } from '../src/index.js';
 
 const args = process.argv.slice(2);

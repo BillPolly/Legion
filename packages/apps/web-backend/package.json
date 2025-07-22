@@ -1,5 +1,5 @@
 {
-  "name": "@jsenvoy/apps-web-backend",
+  "name": "@legion/apps-web-backend",
   "version": "1.0.0",
   "description": "Express server with WebSocket support for jsEnvoy chat",
   "type": "module",
@@ -12,9 +12,9 @@
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
   },
   "dependencies": {
-    "@jsenvoy/agent": "^0.0.1",
-    "@jsenvoy/module-loader": "^0.0.1",
-    "@jsenvoy/tools": "^0.0.1",
+    "@legion/agent": "^0.0.1",
+    "@legion/module-loader": "^0.0.1",
+    "@legion/tools": "^0.0.1",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "ws": "^8.16.0"

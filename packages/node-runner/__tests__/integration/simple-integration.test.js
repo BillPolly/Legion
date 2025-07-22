@@ -29,7 +29,7 @@ jest.unstable_mockModule('execa', () => ({
 
 // Import modules AFTER mock setup
 const NodeRunner = (await import('../../src/NodeRunner.js')).default;
-const LogManager = (await import('@jsenvoy/log-manager')).default;
+const LogManager = (await import('@legion/log-manager')).default;
 
 /**
  * Create a mock child process with controllable streams

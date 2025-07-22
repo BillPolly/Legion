@@ -1,5 +1,5 @@
 /**
- * @jsenvoy/code-agent - Intelligent coding agent for vanilla JavaScript projects
+ * @legion/code-agent - Intelligent coding agent for vanilla JavaScript projects
  * 
  * This package provides an AI-powered coding agent that can generate, test, and validate
  * complete JavaScript projects with automated quality assurance.

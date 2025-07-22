@@ -6,7 +6,7 @@
  */
 
 import { Agent } from '../src/Agent.js';
-import { ResourceManager, ModuleFactory } from '@jsenvoy/module-loader';
+import { ResourceManager, ModuleFactory } from '@legion/module-loader';
 
 const providers = [
   {

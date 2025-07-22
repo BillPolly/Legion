@@ -1,5 +1,5 @@
 {
-  "name": "@jsenvoy/tools",
+  "name": "@legion/tools",
   "version": "0.0.1",
   "description": "Collection of tools for jsEnvoy - AI agent tools for various tasks",
   "type": "module",
@@ -36,7 +36,7 @@
     "CHANGELOG.md"
   ],
   "dependencies": {
-    "@jsenvoy/module-loader": "*",
+    "@legion/module-loader": "*",
     "axios": "^1.6.2",
     "cheerio": "^1.0.0-rc.12",
     "puppeteer": "^21.5.2",

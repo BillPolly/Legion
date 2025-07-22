@@ -4,7 +4,7 @@
 
 import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach } from '@jest/globals';
 import PlaywrightWrapper from '../../src/PlaywrightWrapper.js';
-import { ModuleFactory, ResourceManager } from '@jsenvoy/module-loader';
+import { ModuleFactory, ResourceManager } from '@legion/module-loader';
 import path from 'path';
 import { fileURLToPath } from 'url';
 

@@ -4,7 +4,7 @@
  * Debug script to isolate GenericPlanner hanging issue
  */
 
-import { ResourceManager } from '@jsenvoy/module-loader';
+import { ResourceManager } from '@legion/module-loader';
 import { GenericPlanner } from '../../llm-planner/src/GenericPlanner.js';
 
 async function debugGenericPlanner() {

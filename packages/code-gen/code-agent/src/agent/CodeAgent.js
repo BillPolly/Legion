@@ -178,7 +178,7 @@ class CodeAgent extends EventEmitter {
       this.resourceManager = options.resourceManager;
       if (!this.resourceManager) {
         // Create new ResourceManager if not provided
-        const { ResourceManager } = await import('@jsenvoy/module-loader');
+        const { ResourceManager } = await import('@legion/module-loader');
         this.resourceManager = new ResourceManager();
         await this.resourceManager.initialize();
       }

@@ -1,4 +1,4 @@
-import { RobustJsonParser, ResponseValidator } from '@jsenvoy/llm';
+import { RobustJsonParser, ResponseValidator } from '@legion/llm';
 
 /**
  * Manages retry logic for LLM responses with error feedback

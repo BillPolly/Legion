@@ -5,7 +5,7 @@
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
 import { Agent } from '../../src/Agent.js';
 import { AgentWebSocketServer } from '../../src/websocket-server.js';
-import { Module } from '@jsenvoy/module-loader';
+import { Module } from '@legion/module-loader';
 import WebSocket from 'ws';
 
 // Simple test module

@@ -1,4 +1,4 @@
-import { Module } from '@jsenvoy/module-loader';
+import { Module } from '@legion/module-loader';
 import GitHub from './index.js';
 import PolyRepoManager from './PolyRepoManager.js';
 

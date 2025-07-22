@@ -6,7 +6,7 @@
  */
 
 import { GenericPlanner } from '../../../../llm-planner/src/GenericPlanner.js';
-import { ResourceManager } from '@jsenvoy/module-loader';
+import { ResourceManager } from '@legion/module-loader';
 
 // Planning domain configurations
 import { RequirementAnalyzerConfig } from './configs/RequirementAnalyzerConfig.js';

@@ -1,5 +1,5 @@
 {
-  "name": "@jsenvoy/node-runner",
+  "name": "@legion/node-runner",
   "version": "1.0.0",
   "description": "Node.js process execution and lifecycle management for jsEnvoy AI agents",
   "type": "module",
@@ -21,8 +21,8 @@
   "author": "jsEnvoy Team",
   "license": "MIT",
   "dependencies": {
-    "@jsenvoy/module-loader": "*",
-    "@jsenvoy/log-manager": "*",
+    "@legion/module-loader": "*",
+    "@legion/log-manager": "*",
     "cross-spawn": "^7.0.3",
     "detect-port": "^1.5.1",
     "execa": "^8.0.1",

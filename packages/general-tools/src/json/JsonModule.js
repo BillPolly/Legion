@@ -1,4 +1,4 @@
-import { Tool, ToolResult, Module } from '@jsenvoy/module-loader';
+import { Tool, ToolResult, Module } from '@legion/module-loader';
 
 /**
  * JSON parsing tool with event support

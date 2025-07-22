@@ -4,8 +4,8 @@
  * Simple example demonstrating llm-planner with ResourceManager
  */
 
-import { ResourceManager } from '@jsenvoy/module-loader';
-import { LLMClient } from '@jsenvoy/llm';
+import { ResourceManager } from '@legion/module-loader';
+import { LLMClient } from '@legion/llm';
 import { GenericPlanner } from '../src/GenericPlanner.js';
 
 async function main() {

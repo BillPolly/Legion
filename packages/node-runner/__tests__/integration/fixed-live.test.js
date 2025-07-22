@@ -4,7 +4,7 @@
 
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
 import NodeRunner from '../../src/NodeRunner.js';
-import LogManager from '@jsenvoy/log-manager';
+import LogManager from '@legion/log-manager';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';

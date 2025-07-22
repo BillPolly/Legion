@@ -1,5 +1,5 @@
 /**
- * Tests for FileOperationsManager integration with @jsenvoy/general-tools
+ * Tests for FileOperationsManager integration with @legion/general-tools
  */
 
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
@@ -170,7 +170,7 @@ describe('FileOperationsManager', () => {
   });
 
   describe('Integration with jsEnvoy Tools', () => {
-    test('should use FileModule from @jsenvoy/general-tools', async () => {
+    test('should use FileModule from @legion/general-tools', async () => {
       await manager.initialize();
       
       // Verify that it's using the actual jsEnvoy file module

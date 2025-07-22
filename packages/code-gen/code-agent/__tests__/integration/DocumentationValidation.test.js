@@ -207,7 +207,7 @@ describe('Documentation and Deployment Guide Validation', () => {
         {
           step: 1,
           description: 'Install dependencies',
-          command: 'npm install @jsenvoy/code-agent'
+          command: 'npm install @legion/code-agent'
         },
         {
           step: 2,

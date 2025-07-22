@@ -4,8 +4,8 @@
  * This demonstrates how to load and use the CodeAgent tools directly
  */
 
-import { ModuleFactory } from '@jsenvoy/module-loader';
-import ResourceManager from '@jsenvoy/module-loader/src/resources/ResourceManager.js';
+import { ModuleFactory } from '@legion/module-loader';
+import ResourceManager from '@legion/module-loader/src/resources/ResourceManager.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 

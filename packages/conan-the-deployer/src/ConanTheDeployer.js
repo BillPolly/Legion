@@ -1,4 +1,4 @@
-import { Module } from '@jsenvoy/module-loader';
+import { Module } from '@legion/module-loader';
 import DeploymentManager from './DeploymentManager.js';
 import MonitoringSystem from './MonitoringSystem.js';
 import LocalProvider from './providers/LocalProvider.js';

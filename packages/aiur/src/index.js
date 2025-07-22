@@ -7,7 +7,6 @@ import {
   ListResourcesRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { WebSocketServer } from 'ws';
 
 // Simple tools
 const TOOLS = [
@@ -94,53 +93,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) =>
   handleToolCall(request.params.name, request.params.arguments ?? {})
 );
 
-// WebSocket server for direct testing
-function startWebSocketServer() {
-  const wss = new WebSocketServer({ port: 8080 });
-  
-  wss.on('connection', (ws) => {
-    console.error('WebSocket client connected');
-    
-    ws.on('message', async (data) => {
-      try {
-        const message = JSON.parse(data.toString());
-        
-        if (message.type === 'call_tool') {
-          const result = await handleToolCall(message.name, message.args || {});
-          ws.send(JSON.stringify({
-            type: 'tool_result',
-            id: message.id,
-            result: result.content[0].text,
-            error: result.isError
-          }));
-        } else if (message.type === 'list_tools') {
-          ws.send(JSON.stringify({
-            type: 'tools_list',
-            id: message.id,
-            tools: TOOLS
-          }));
-        }
-      } catch (error) {
-        ws.send(JSON.stringify({
-          type: 'error',
-          message: error.message
-        }));
-      }
-    });
-    
-    ws.on('close', () => {
-      console.error('WebSocket client disconnected');
-    });
-  });
-  
-  console.error('WebSocket server started on port 8080');
-}
-
 async function runServer() {
-  // Start WebSocket server for direct testing
-  startWebSocketServer();
-  
-  // Start stdio transport for Claude Code integration
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }

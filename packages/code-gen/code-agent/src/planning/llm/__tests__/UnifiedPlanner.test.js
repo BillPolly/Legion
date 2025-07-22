@@ -7,7 +7,7 @@
 
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
 import { UnifiedPlanner } from '../UnifiedPlanner.js';
-import { ResourceManager } from '@jsenvoy/module-loader';
+import { ResourceManager } from '@legion/module-loader';
 
 describe('UnifiedPlanner', () => {
   let mockResourceManager;
@@ -35,11 +35,11 @@ describe('UnifiedPlanner', () => {
     };
 
     // Mock the imports
-    jest.unstable_mockModule('@jsenvoy/module-loader', () => ({
+    jest.unstable_mockModule('@legion/module-loader', () => ({
       ResourceManager: jest.fn(() => mockResourceManager)
     }));
 
-    jest.unstable_mockModule('@jsenvoy/llm-planner', () => ({
+    jest.unstable_mockModule('@legion/llm-planner', () => ({
       GenericPlanner: jest.fn(() => mockGenericPlanner)
     }));
 
