@@ -5,7 +5,7 @@
  * tasks by configuring different objectives and allowable actions for each domain.
  */
 
-import { GenericPlanner } from '../../../../llm-planner/src/GenericPlanner.js';
+import { GenericPlanner } from '@legion/llm-planner';
 import { ResourceManager } from '@legion/module-loader';
 
 // Planning domain configurations

@@ -16,4 +16,5 @@ export { GenericPlanner } from './GenericPlanner.js';
 export { FlowValidator } from './FlowValidator.js';
 
 // Default export the main planner
-export default GenericPlanner;
+import { GenericPlanner as DefaultGenericPlanner } from './GenericPlanner.js';
+export default DefaultGenericPlanner;

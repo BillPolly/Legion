@@ -16,74 +16,39 @@ Rather than treating each tool call as an isolated operation, Aiur maintains a l
 
 ### 1. Handle System
 
-**Handles** are persistent, typed references to objects that live in the server's memory between tool calls. They represent anything from files and repositories to test suites and deployments.
+**Handles** are persistent references to objects that live in the server's memory between tool calls. They represent anything from files and repositories to test suites and deployments.
 
 #### Key Features
 
 - **Named References**: Each handle has a user-defined name for easy reference
-- **Type System**: Strongly typed with a comprehensive ontology
-- **Hierarchical**: Handles can contain or reference other handles
+- **Flexible Storage**: Any JavaScript object can be stored as a handle
+- **Simple Resolution**: Use `@handleName` in parameters to reference handles
 - **Lifecycle Management**: LRU eviction with configurable TTL
 
 #### Architecture
 
 ```javascript
-class Handle {
-  id: string;           // Unique identifier
-  name: string;         // User-defined name
-  type: string;         // Type from ontology
-  data: any;           // The actual object/data
-  metadata: {
-    created: Date;
-    lastAccessed: Date;
-    accessCount: number;
-    parent?: string;   // Parent handle ID
-    children: string[]; // Child handle IDs
-  };
-  capabilities: string[]; // What operations are available
-}
+// Simple handle storage - just a Map
+const handles = new Map();
+
+// Store any object
+handles.set("myRepo", { owner: "facebook", name: "react", /* any data */ });
+
+// Retrieve by name
+const repo = handles.get("myRepo");
 ```
 
-#### Type Ontology
+#### Handle Convention
 
-Types are defined in a hierarchical ontology that describes:
-- Properties each type must have
-- Relationships to other types
-- Available operations/capabilities
-- Validation rules
-
-Example type definition:
-```json
-{
-  "GitHubRepository": {
-    "extends": "Repository",
-    "properties": {
-      "owner": { "type": "string", "required": true },
-      "name": { "type": "string", "required": true },
-      "defaultBranch": { "type": "string", "required": true },
-      "private": { "type": "boolean", "required": true }
-    },
-    "relationships": {
-      "branches": { "type": "GitHubBranch", "cardinality": "many" },
-      "pullRequests": { "type": "GitHubPullRequest", "cardinality": "many" }
-    },
-    "capabilities": [
-      "list_branches",
-      "create_branch",
-      "create_pull_request",
-      "get_file",
-      "update_file"
-    ]
-  }
-}
-```
+- Tools can request handle creation by returning: `{ result: data, saveAs: "handleName" }`
+- Tools reference handles using: `{ repo: "@myRepo" }` (@ prefix indicates handle lookup)
+- The system resolves `@handleName` to the actual object before calling the tool
 
 #### Memory Management
 
 - **LRU Cache**: Least Recently Used eviction when memory limit reached
 - **TTL**: Optional time-to-live for temporary handles
-- **Reference Counting**: Handles with active references are protected
-- **Explicit Cleanup**: Tools can mark handles for disposal
+- **Manual Cleanup**: Tools can delete handles when no longer needed
 
 ### 2. Tool Management System
 
@@ -144,41 +109,44 @@ Each tool is indexed with:
 
 ### 3. Planning and Orchestration System
 
-Complex tasks require structured planning with validation checkpoints and rollback capabilities.
+Complex tasks require structured planning with validation checkpoints and rollback capabilities. Aiur uses the `@legion/llm-planner` package as its foundation, extending it with checkpoint and handle integration.
 
-#### Plan Structure
+#### Planning Foundation
 
-Plans are hierarchical with clear dependencies:
+The planning system is built on top of `@legion/llm-planner`, which provides:
+- Hierarchical plan structure (Plan → Steps → Actions)
+- Input/output flow validation
+- Dependency management and execution ordering
+- Parallel execution detection
+
+#### Extended Plan Structure
 
 ```javascript
-class Plan {
-  id: string;
-  goal: string;
-  phases: Phase[];
-  currentPhase: number;
-  status: 'planning' | 'executing' | 'completed' | 'failed';
-  checkpoints: Checkpoint[];
+// Base structure from llm-planner
+import { Plan, PlanStep, PlanAction } from '@legion/llm-planner';
+
+// Aiur extends with checkpoints
+class AiurPlan extends Plan {
+  checkpoints: Map<string, CheckpointDefinition>;
+  currentCheckpoint: string;
+  
+  // Checkpoint after each major phase
+  addCheckpoint(stepId, definition) {
+    this.checkpoints.set(stepId, {
+      validate: definition.validate,
+      captureState: definition.captureState,
+      rollbackTo: definition.rollbackTo
+    });
+  }
 }
 
-class Phase {
-  name: string;
-  tasks: Task[];
-  checkpoint: CheckpointDefinition;
-  dependencies: string[]; // Other phase IDs
-  rollbackStrategy: RollbackStrategy;
-}
-
-class Task {
-  id: string;
-  description: string;
-  tool: string;
-  parameters: any;
-  requiredHandles: string[];
-  producesHandles: HandleDefinition[];
-  validation: ValidationRule[];
-  status: 'pending' | 'running' | 'completed' | 'failed';
-  result?: any;
-}
+// Steps already track inputs/outputs as object names
+const step = new PlanStep({
+  name: "Build frontend",
+  inputs: ["sourceCode", "dependencies"],  // Handle names
+  outputs: ["buildArtifact", "buildLog"],  // Creates these handles
+  actions: [...]
+});
 ```
 
 #### Planning Tools
@@ -250,23 +218,33 @@ Checkpoints capture:
 
 ### Module System Extensions
 
-Legion modules will be extended to support:
+Legion modules will be extended to support planning and handle integration:
 
 ```javascript
 // module.json additions
 {
-  "handles": {
-    "produces": ["GitHubRepository", "GitHubBranch"],
-    "consumes": ["GitHubRepository"],
-    "types": {
-      "GitHubRepository": {
-        // Type definition
-      }
+  "tools": {
+    "github_get_repo": {
+      "inputs": [],  // No required input handles
+      "outputs": ["repository"],  // Produces a repository handle
+      "description": "Get GitHub repository information"
+    },
+    "github_create_branch": {
+      "inputs": ["repository"],  // Requires repository handle
+      "outputs": ["branch"],  // Produces branch handle
+      "description": "Create a new branch in repository"
     }
   },
   "planning": {
-    "goals": ["deploy application", "setup CI/CD"],
-    "checkpoints": ["deployment_healthy", "tests_passing"]
+    "actions": [
+      {
+        "type": "fetch_repo",
+        "inputs": [],
+        "outputs": ["repository"],
+        "description": "Fetch repository data"
+      }
+    ],
+    "goals": ["deploy application", "setup CI/CD"]
   },
   "metadata": {
     "tags": ["vcs", "github", "deployment"],
@@ -381,25 +359,28 @@ await plan_rollback({
 
 ## Implementation Phases
 
-### Phase 1: Core Handle System
-- Basic handle registry
-- Type definitions for common objects
+### Phase 1: Foundation Setup
+- Move llm-planner to packages root
+- Update code-agent to use @legion/llm-planner
+- Basic handle registry (Map-based)
 - Handle resolution in tool calls
 
 ### Phase 2: Tool Management
 - Tool registry with search
 - Working set management
 - Basic meta-tools
+- Legion tool wrapper for MCP
 
-### Phase 3: Planning Foundation
-- Plan data structures
-- Simple linear execution
-- Basic checkpoints
+### Phase 3: Planning Integration
+- Extend llm-planner with checkpoints
+- Connect plan execution to handles
+- Plan execution orchestrator
+- Progress tracking
 
 ### Phase 4: Advanced Features
 - Semantic search for tools
-- Complex plan orchestration
-- Distributed handle storage
+- Complex checkpoint strategies
+- Handle persistence
 - Multi-agent coordination
 
 ## Benefits
@@ -409,8 +390,9 @@ await plan_rollback({
 3. **Better Error Recovery**: Checkpoints and rollbacks prevent cascading failures
 4. **Tool Discovery**: Find the right tool without knowing its exact name
 5. **Structured Execution**: Plans provide clear paths to achieve goals
-6. **Type Safety**: Ontology prevents invalid operations
+6. **Flexibility**: No rigid type system - handles can store any JavaScript object
 7. **Performance**: Handles eliminate redundant API calls
+8. **Proven Foundation**: Built on battle-tested llm-planner package
 
 ## Future Considerations
 
