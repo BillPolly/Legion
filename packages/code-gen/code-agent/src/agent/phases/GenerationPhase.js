@@ -71,6 +71,9 @@ class GenerationPhase {
       await this.fileWriter.writeFile('public/index.html', htmlContent);
     }
     
+    // Generate default favicon
+    await this._generateDefaultFavicon();
+    
     // Generate CSS styles
     if (frontendArchitecture.cssStyles) {
       console.log('🔍 [DEBUG] cssStyles type:', typeof frontendArchitecture.cssStyles);
@@ -448,6 +451,33 @@ global.console = {
       step: 'test-utilities-complete',
       message: '✅ Test utilities generated'
     });
+  }
+
+  /**
+   * Generate a default favicon.ico file
+   * @private
+   */
+  async _generateDefaultFavicon() {
+    try {
+      // Create a simple 16x16 favicon using base64 encoded data
+      // This is a simple blue square favicon
+      const faviconBase64 = 'AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA7u7u/+7u7v/u7u7/7u7u/+7u7v/u7u7/7u7u/+7u7v8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA7u7u/1VVVf9VVVX/VVVV/1VVVf9VVVX/VVVV/1VVVf/u7u7/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA7u7u/1VVVf8AAAD/AAAA/wAAAP8AAAD/AAAA/1VVVf/u7u7/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA7u7u/1VVVf8AAAD/AAAA/wAAAP8AAAD/AAAA/1VVVf/u7u7/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA7u7u/1VVVf8AAAD/AAAA/wAAAP8AAAD/AAAA/1VVVf/u7u7/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA7u7u/1VVVf8AAAD/AAAA/wAAAP8AAAD/AAAA/1VVVf/u7u7/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA7u7u/1VVVf8AAAD/AAAA/wAAAP8AAAD/AAAA/1VVVf/u7u7/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA7u7u/1VVVf8AAAD/AAAA/wAAAP8AAAD/AAAA/1VVVf/u7u7/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA7u7u/1VVVf9VVVX/VVVV/1VVVf9VVVX/VVVV/1VVVf/u7u7/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA7u7u/+7u7v/u7u7/7u7u/+7u7v/u7u7/7u7u/+7u7v8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP//AAD//wAAgAEAAIABAACAAQAAgAEAAIABAACAAQAAgAEAAIABAACAAQAAgAEAAP//AAD//wAA//8AAP//AAA=';
+      
+      // Convert base64 to buffer
+      const buffer = Buffer.from(faviconBase64, 'base64');
+      
+      // Write favicon to public directory
+      await this.fileWriter.writeFile('public/favicon.ico', buffer);
+      
+      this.codeAgent.emit('progress', {
+        phase: 'generation',
+        step: 'favicon-generated',
+        message: '🎨 Default favicon generated'
+      });
+    } catch (error) {
+      console.warn('⚠️ Failed to generate favicon:', error.message);
+      // Don't fail the entire generation if favicon fails
+    }
   }
 }
 

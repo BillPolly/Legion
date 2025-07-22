@@ -151,6 +151,12 @@ class FrontendValidationEngine extends EventEmitter {
           'twitter:title': 'Test Page',
           'twitter:description': 'Test description'
         },
+        favicon: {
+          present: true,
+          href: '/favicon.ico',
+          type: 'image/x-icon',
+          valid: true
+        },
         score: 95
       };
       

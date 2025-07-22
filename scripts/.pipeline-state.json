@@ -1,0 +1,113 @@
+{
+  "steps": {
+    "generate": {
+      "completed": true,
+      "timestamp": 1753165897605,
+      "result": {
+        "success": true,
+        "projectName": "Generated Project",
+        "projectType": "fullstack",
+        "startTime": "2025-07-22T06:29:57.867Z",
+        "endTime": "2025-07-22T06:31:37.605Z",
+        "duration": 99738,
+        "filesGenerated": 20,
+        "phases": {
+          "planning": {
+            "completed": true,
+            "fileCount": 0
+          },
+          "generation": {
+            "completed": true,
+            "filesGenerated": 20
+          },
+          "testing": {
+            "completed": true,
+            "testsGenerated": 6
+          },
+          "quality": {
+            "completed": true,
+            "eslintPassed": true,
+            "jestPassed": false,
+            "coverage": 85
+          },
+          "fixing": {
+            "completed": false,
+            "iterations": 0
+          }
+        },
+        "files": {
+          "generated": [
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/package.json",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/.gitignore",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/README.md",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/.eslintrc.json",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/jest.config.js",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/public/index.html",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/public/favicon.ico",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/public/style.css",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/public/script.js",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/server.js",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/routes/health.js",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/routes/api.js",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/services/service.js",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/middleware/middleware.js",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/__tests__/components/script.test.js",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/__tests__/dom.test.js",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/__tests__/routes/health.test.js",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/__tests__/routes/api.test.js",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/__tests__/services/service.test.js",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/__tests__/integration/workflow.test.js"
+          ],
+          "tests": [
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/__tests__/components/script.test.js",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/__tests__/dom.test.js",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/__tests__/routes/health.test.js",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/__tests__/routes/api.test.js",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/__tests__/services/service.test.js",
+            "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp/__tests__/integration/workflow.test.js"
+          ]
+        },
+        "workingDirectory": "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp"
+      },
+      "projectPath": "/Users/maxximus/Documents/max/pocs/jsEnvoy/generated/demo-webapp"
+    },
+    "test-local": {
+      "completed": true,
+      "timestamp": 1753165906264,
+      "port": 3998,
+      "testsRun": 4
+    },
+    "github": {
+      "completed": true,
+      "timestamp": 1753165908414,
+      "repoUrl": "https://github.com/AgentResults/demo-webapp-20250722063146",
+      "repoName": "demo-webapp-20250722063146",
+      "organization": "AgentResults"
+    },
+    "railway": {
+      "completed": true,
+      "timestamp": 1753165957310,
+      "projectId": "e26c1df1-2f85-4da6-9856-8b277b4d1b08",
+      "serviceId": "08c9b908-7374-4273-86b7-88f1679caa3b",
+      "deploymentId": "9c29537c-ea2e-46c0-a18c-d87a9e0c19f6",
+      "url": "https://demo-webapp-20250722063146-production.up.railway.app"
+    },
+    "test-live": {
+      "completed": true,
+      "timestamp": 1753165960104,
+      "url": "https://demo-webapp-20250722063146-production.up.railway.app",
+      "testsRun": 5,
+      "allTestsPassed": true
+    }
+  },
+  "resources": {
+    "projectName": "demo-webapp-20250722063146",
+    "githubUrl": "https://github.com/AgentResults/demo-webapp-20250722063146",
+    "githubRepo": "demo-webapp-20250722063146",
+    "githubOrg": "AgentResults",
+    "railwayProjectId": "e26c1df1-2f85-4da6-9856-8b277b4d1b08",
+    "railwayServiceId": "08c9b908-7374-4273-86b7-88f1679caa3b",
+    "railwayUrl": "https://demo-webapp-20250722063146-production.up.railway.app"
+  },
+  "timestamp": 1753136317825
+}

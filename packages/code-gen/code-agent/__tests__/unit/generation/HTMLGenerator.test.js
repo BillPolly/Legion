@@ -72,6 +72,17 @@ describe('HTMLGenerator', () => {
       expect(html).toContain('<meta name="author" content="Test Author">');
     });
 
+    test('should include favicon link in head', async () => {
+      const spec = {
+        title: 'Favicon Test',
+        components: []
+      };
+
+      const html = await htmlGenerator.generateHTML(spec);
+
+      expect(html).toContain('<link rel="icon" type="image/x-icon" href="/favicon.ico">');
+    });
+
     test('should generate HTML with custom head content', async () => {
       const spec = {
         title: 'Custom Head',

@@ -918,14 +918,16 @@ class UnifiedPlanner {
             });
             
             // Transform to jsComponents format expected by GenerationPhase
-            architecture.jsComponents.push({
-              name: component.name,
-              type: component.type === 'class' ? 'class' : 'function',
-              filename: `${component.name.toLowerCase()}.js`,
-              methods: component.methods || [],
-              properties: component.props || [],
-              description: component.description || ''
-            });
+            if (component.name) {
+              architecture.jsComponents.push({
+                name: component.name,
+                type: component.type === 'class' ? 'class' : 'function',
+                filename: `${component.name.toLowerCase()}.js`,
+                methods: component.methods || [],
+                properties: component.props || [],
+                description: component.description || ''
+              });
+            }
           }
           break;
         case 'define_state_management':

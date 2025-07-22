@@ -192,6 +192,9 @@ class HTMLGenerator {
     // Title
     elements.push(`<title>${this._escapeHtml(spec.title)}</title>`);
 
+    // Favicon
+    elements.push('<link rel="icon" type="image/x-icon" href="/favicon.ico">');
+
     // Meta tags
     if (this.config.includeMeta && spec.meta) {
       for (const [name, content] of Object.entries(spec.meta)) {

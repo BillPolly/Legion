@@ -895,7 +895,7 @@ class CodeAgent extends EventEmitter {
         const llmConfig = {
           provider,
           apiKey,
-          model: config.model || (provider === 'anthropic' ? 'claude-3-sonnet-20240229' : 'gpt-3.5-turbo'),
+          model: config.model || (provider === 'anthropic' ? 'claude-3-5-sonnet-20241022' : 'gpt-3.5-turbo'),
           ...config
         };
         

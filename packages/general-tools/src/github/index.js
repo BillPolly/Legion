@@ -105,6 +105,100 @@ class GitHub extends Tool {
             required: ['repoName']
           }
         }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'github_list_repos',
+          description: 'List repositories for the authenticated user',
+          parameters: {
+            type: 'object',
+            properties: {
+              type: {
+                type: 'string',
+                enum: ['all', 'owner', 'public', 'private', 'member'],
+                description: 'Type of repositories to list (default: "all")'
+              },
+              sort: {
+                type: 'string',
+                enum: ['created', 'updated', 'pushed', 'full_name'],
+                description: 'Sort repositories by (default: "created")'
+              },
+              per_page: {
+                type: 'number',
+                description: 'Number of repositories per page (default: 100)'
+              }
+            }
+          }
+        }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'github_delete_repo',
+          description: 'Delete a GitHub repository',
+          parameters: {
+            type: 'object',
+            properties: {
+              owner: {
+                type: 'string',
+                description: 'Repository owner (username or organization)'
+              },
+              repo: {
+                type: 'string',
+                description: 'Repository name to delete'
+              }
+            },
+            required: ['owner', 'repo']
+          }
+        }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'github_list_orgs',
+          description: 'List organizations for the authenticated user',
+          parameters: {
+            type: 'object',
+            properties: {
+              per_page: {
+                type: 'number',
+                description: 'Number of organizations per page (default: 100)'
+              }
+            }
+          }
+        }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'github_list_org_repos',
+          description: 'List repositories for a specific organization',
+          parameters: {
+            type: 'object',
+            properties: {
+              org: {
+                type: 'string',
+                description: 'Organization name'
+              },
+              type: {
+                type: 'string',
+                enum: ['all', 'public', 'private', 'forks', 'sources', 'member'],
+                description: 'Type of repositories to list (default: "all")'
+              },
+              sort: {
+                type: 'string',
+                enum: ['created', 'updated', 'pushed', 'full_name'],
+                description: 'Sort repositories by (default: "created")'
+              },
+              per_page: {
+                type: 'number',
+                description: 'Number of repositories per page (default: 100)'
+              }
+            },
+            required: ['org']
+          }
+        }
       }
     ];
   }
@@ -156,6 +250,20 @@ class GitHub extends Tool {
             args.private,
             args.branch || 'main'
           );
+          break;
+        case 'github_list_repos':
+          result = await this.listRepos(args.type || 'all', args.sort || 'created', args.per_page || 100);
+          break;
+        case 'github_delete_repo':
+          this.validateRequiredParameters(args, ['owner', 'repo']);
+          result = await this.deleteRepo(args.owner, args.repo);
+          break;
+        case 'github_list_orgs':
+          result = await this.listOrgs(args.per_page || 100);
+          break;
+        case 'github_list_org_repos':
+          this.validateRequiredParameters(args, ['org']);
+          result = await this.listOrgRepos(args.org, args.type || 'all', args.sort || 'created', args.per_page || 100);
           break;
         default:
           throw new Error(`Unknown function: ${toolCall.function.name}`);
@@ -421,6 +529,279 @@ class GitHub extends Tool {
     } catch (error) {
       throw new Error(`Failed to create and push: ${error.message}`);
     }
+  }
+
+  /**
+   * List repositories for the authenticated user
+   */
+  async listRepos(type = 'all', sort = 'created', perPage = 100) {
+    this.emitProgress('Listing GitHub repositories', {
+      type,
+      sort,
+      perPage,
+      stage: 'list_repos'
+    });
+    
+    const { token } = this.getCredentials();
+    const username = await this.getGitHubUsername(token);
+    
+    return new Promise((resolve, reject) => {
+      const options = {
+        hostname: this.githubApiBase,
+        path: `/user/repos?type=${type}&sort=${sort}&per_page=${perPage}`,
+        method: 'GET',
+        headers: {
+          'Authorization': `token ${token}`,
+          'User-Agent': 'jsEnvoy-GitHub-Tool',
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      };
+
+      const req = https.request(options, (res) => {
+        let responseData = '';
+        res.on('data', (chunk) => { responseData += chunk; });
+        res.on('end', () => {
+          if (res.statusCode === 200) {
+            const repos = JSON.parse(responseData);
+            const formattedRepos = repos.map(repo => ({
+              owner: repo.owner.login,
+              name: repo.name,
+              fullName: repo.full_name,
+              private: repo.private,
+              url: repo.html_url,
+              createdAt: repo.created_at,
+              updatedAt: repo.updated_at
+            }));
+            
+            this.emitInfo(`Found ${formattedRepos.length} repositories`, {
+              count: formattedRepos.length
+            });
+            
+            resolve({
+              success: true,
+              repositories: formattedRepos,
+              count: formattedRepos.length
+            });
+          } else {
+            const error = responseData ? JSON.parse(responseData) : {};
+            this.emitError(`Failed to list repositories: ${error.message || res.statusCode}`, {
+              statusCode: res.statusCode,
+              error: error
+            });
+            reject(new Error(error.message || `Failed with status ${res.statusCode}`));
+          }
+        });
+      });
+
+      req.on('error', (error) => {
+        this.emitError(`Request failed: ${error.message}`, { error });
+        reject(error);
+      });
+
+      req.end();
+    });
+  }
+
+  /**
+   * Delete a GitHub repository
+   */
+  async deleteRepo(owner, repo) {
+    this.emitProgress(`Deleting GitHub repository: ${owner}/${repo}`, {
+      owner,
+      repo,
+      stage: 'delete_repo'
+    });
+    
+    const { token } = this.getCredentials();
+    
+    return new Promise((resolve, reject) => {
+      const options = {
+        hostname: this.githubApiBase,
+        path: `/repos/${owner}/${repo}`,
+        method: 'DELETE',
+        headers: {
+          'Authorization': `token ${token}`,
+          'User-Agent': 'jsEnvoy-GitHub-Tool',
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      };
+
+      const req = https.request(options, (res) => {
+        let responseData = '';
+        res.on('data', (chunk) => { responseData += chunk; });
+        res.on('end', () => {
+          if (res.statusCode === 204) {
+            this.emitInfo(`Repository deleted successfully: ${owner}/${repo}`, {
+              owner,
+              repo
+            });
+            resolve({
+              success: true,
+              message: `Repository ${owner}/${repo} deleted successfully`
+            });
+          } else {
+            const error = responseData ? JSON.parse(responseData) : {};
+            this.emitError(`Failed to delete repository: ${error.message || res.statusCode}`, {
+              statusCode: res.statusCode,
+              error: error
+            });
+            reject(new Error(error.message || `Failed with status ${res.statusCode}`));
+          }
+        });
+      });
+
+      req.on('error', (error) => {
+        this.emitError(`Request failed: ${error.message}`, { error });
+        reject(error);
+      });
+
+      req.end();
+    });
+  }
+
+  /**
+   * List organizations for the authenticated user
+   */
+  async listOrgs(perPage = 100) {
+    this.emitProgress(`Listing organizations for authenticated user`, {
+      perPage,
+      stage: 'list_orgs'
+    });
+    
+    const { token } = this.getCredentials();
+    
+    return new Promise((resolve, reject) => {
+      const options = {
+        hostname: this.githubApiBase,
+        path: `/user/orgs?per_page=${perPage}`,
+        method: 'GET',
+        headers: {
+          'Authorization': `token ${token}`,
+          'User-Agent': 'jsEnvoy-GitHub-Tool',
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      };
+
+      const req = https.request(options, (res) => {
+        let responseData = '';
+        res.on('data', (chunk) => { responseData += chunk; });
+        res.on('end', () => {
+          if (res.statusCode === 200) {
+            const orgs = JSON.parse(responseData);
+            const formattedOrgs = orgs.map(org => ({
+              login: org.login,
+              id: org.id,
+              url: org.url,
+              reposUrl: org.repos_url,
+              description: org.description,
+              avatarUrl: org.avatar_url
+            }));
+            
+            this.emitInfo(`Found ${formattedOrgs.length} organizations`, {
+              count: formattedOrgs.length
+            });
+            
+            resolve({
+              success: true,
+              organizations: formattedOrgs,
+              count: formattedOrgs.length
+            });
+          } else {
+            const error = responseData ? JSON.parse(responseData) : {};
+            this.emitError(`Failed to list organizations: ${error.message || res.statusCode}`, {
+              statusCode: res.statusCode,
+              error: error
+            });
+            reject(new Error(error.message || `Failed with status ${res.statusCode}`));
+          }
+        });
+      });
+
+      req.on('error', (error) => {
+        this.emitError(`Request failed: ${error.message}`, { error });
+        reject(error);
+      });
+
+      req.end();
+    });
+  }
+
+  /**
+   * List repositories for a specific organization
+   */
+  async listOrgRepos(org, type = 'all', sort = 'created', perPage = 100) {
+    this.emitProgress(`Listing repositories for organization: ${org}`, {
+      org,
+      type,
+      sort,
+      perPage,
+      stage: 'list_org_repos'
+    });
+    
+    const { token } = this.getCredentials();
+    
+    return new Promise((resolve, reject) => {
+      const options = {
+        hostname: this.githubApiBase,
+        path: `/orgs/${org}/repos?type=${type}&sort=${sort}&per_page=${perPage}`,
+        method: 'GET',
+        headers: {
+          'Authorization': `token ${token}`,
+          'User-Agent': 'jsEnvoy-GitHub-Tool',
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      };
+
+      const req = https.request(options, (res) => {
+        let responseData = '';
+        res.on('data', (chunk) => { responseData += chunk; });
+        res.on('end', () => {
+          if (res.statusCode === 200) {
+            const repos = JSON.parse(responseData);
+            const formattedRepos = repos.map(repo => ({
+              owner: repo.owner.login,
+              name: repo.name,
+              fullName: repo.full_name,
+              description: repo.description,
+              private: repo.private,
+              url: repo.html_url,
+              createdAt: repo.created_at,
+              updatedAt: repo.updated_at,
+              language: repo.language,
+              stargazersCount: repo.stargazers_count,
+              forksCount: repo.forks_count
+            }));
+            
+            this.emitInfo(`Found ${formattedRepos.length} repositories in ${org}`, {
+              count: formattedRepos.length,
+              org: org
+            });
+            
+            resolve({
+              success: true,
+              repositories: formattedRepos,
+              count: formattedRepos.length,
+              organization: org
+            });
+          } else {
+            const error = responseData ? JSON.parse(responseData) : {};
+            this.emitError(`Failed to list organization repositories: ${error.message || res.statusCode}`, {
+              statusCode: res.statusCode,
+              error: error,
+              org: org
+            });
+            reject(new Error(error.message || `Failed with status ${res.statusCode}`));
+          }
+        });
+      });
+
+      req.on('error', (error) => {
+        this.emitError(`Request failed: ${error.message}`, { error });
+        reject(error);
+      });
+
+      req.end();
+    });
   }
 }
 

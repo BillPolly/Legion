@@ -29,7 +29,7 @@ class FileWriter {
   /**
    * Write a file and track it as generated
    * @param {string} filename - Relative path of file
-   * @param {string} content - File content
+   * @param {string|Buffer} content - File content
    * @private
    */
   async writeFile(filename, content) {
@@ -39,8 +39,14 @@ class FileWriter {
     const dir = path.dirname(filePath);
     await this.fileOps.createDirectory(dir);
     
-    // Write file
-    await this.fileOps.writeFile(filePath, content);
+    // Write file - handle both string and Buffer content
+    if (Buffer.isBuffer(content)) {
+      // For binary content, use fs directly
+      const fs = await import('fs/promises');
+      await fs.writeFile(filePath, content);
+    } else {
+      await this.fileOps.writeFile(filePath, content);
+    }
     
     // Track generated file
     this.codeAgent.generatedFiles.add(filePath);
@@ -48,7 +54,7 @@ class FileWriter {
     this.codeAgent.emit('file-created', {
       filename,
       filePath,
-      size: content.length
+      size: Buffer.isBuffer(content) ? content.length : content.length
     });
     return filePath;
   }
