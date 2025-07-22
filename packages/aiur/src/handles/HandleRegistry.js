@@ -132,12 +132,17 @@ export class HandleRegistry {
   }
 
   /**
-   * List all handles
+   * List all handles with their data
    * @returns {Object[]} Array of handle objects
    */
-  listAll() {
-    return Array.from(this.handles.values());
+  listHandles() {
+    const handles = [];
+    for (const [handleId, handle] of this.handles) {
+      handles.push(handle);
+    }
+    return handles;
   }
+
 
   /**
    * Get the number of handles

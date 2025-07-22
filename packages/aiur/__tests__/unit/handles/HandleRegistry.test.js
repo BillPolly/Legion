@@ -164,7 +164,7 @@ describe('HandleRegistry', () => {
       registry.create('handle1', { data: 1 });
       registry.create('handle2', { data: 2 });
 
-      const handles = registry.listAll();
+      const handles = registry.listHandles();
       expect(handles.length).toBe(2);
       expect(handles[0]).toHaveProperty('name');
       expect(handles[0]).toHaveProperty('data');
@@ -173,7 +173,7 @@ describe('HandleRegistry', () => {
 
     test('should return empty arrays when no handles exist', () => {
       expect(registry.listNames()).toEqual([]);
-      expect(registry.listAll()).toEqual([]);
+      expect(registry.listHandles()).toEqual([]);
     });
   });
 
