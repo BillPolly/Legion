@@ -339,3 +339,365 @@ Legion/
 - Use `RailwayCLI` for CLI operations
 - Use the Railway module tools when working with jsEnvoy framework
 - This ensures consistency and proper error handling
+
+## Aiur MCP Server Context Management
+
+### Overview
+
+Aiur is an advanced MCP (Model Context Protocol) server that provides AI agent coordination with persistent memory and context management. It's located in `/packages/aiur/` and offers sophisticated tools for:
+
+- **Persistent Context Management** - Store and retrieve data across multiple tool calls
+- **Automatic Parameter Resolution** - Reference saved context using `@contextName` syntax
+- **Plan Creation and Execution** - Create multi-step execution plans with dependencies
+- **Auto-Save Functionality** - Automatically save tool results to context for later reference
+
+The Aiur server runs as an MCP server that can be connected to Claude or other AI agents, providing them with persistent memory and advanced orchestration capabilities.
+
+### Context Management System
+
+Aiur provides a persistent memory system that allows AI agents to save data and reference it across multiple tool calls. This creates continuity and allows for complex multi-step workflows.
+
+**Key Features:**
+- **Persistent Storage** - Context survives across tool calls within a session
+- **Automatic Resolution** - `@contextName` references are automatically resolved to actual data
+- **Rich Metadata** - Each context item includes timestamps, source tools, and descriptions
+- **Discovery** - List and inspect all available context data
+
+### Available Tools
+
+#### Context Management Tools
+
+**`context_add`** - Add data to the context for AI agents to reference
+```json
+{
+  "name": "user_preferences",
+  "data": {"theme": "dark", "language": "en", "timezone": "PST"},
+  "description": "User interface preferences"
+}
+```
+
+**`context_get`** - Retrieve context data by name
+```json
+{
+  "name": "user_preferences"
+}
+```
+
+**`context_list`** - List all available context data
+```json
+{
+  "filter": "deploy*"  // Optional: filter by pattern
+}
+```
+
+#### Planning Tools
+
+**`plan_create`** - Create a new execution plan with steps and dependencies
+```json
+{
+  "title": "Deploy Application",
+  "description": "Complete deployment workflow",
+  "steps": [
+    {
+      "id": "build",
+      "action": "build_app",
+      "parameters": {"config": "@build_config"}
+    },
+    {
+      "id": "deploy", 
+      "action": "deploy_app",
+      "dependsOn": ["build"],
+      "parameters": {"target": "production"}
+    }
+  ],
+  "saveAs": "deployment_plan"  // Auto-save result to context
+}
+```
+
+**`plan_execute`** - Execute a plan and return the results
+```json
+{
+  "planHandle": "@deployment_plan",  // Reference saved plan
+  "options": {"parallel": false, "stopOnError": true}
+}
+```
+
+**`plan_status`** - Get the current status and progress of a plan
+```json
+{
+  "planHandle": "my_plan",
+  "includeSteps": true,
+  "includeHandles": true
+}
+```
+
+**`plan_validate`** - Validate a plan structure and dependencies
+```json
+{
+  "planHandle": "my_plan",
+  "checkDependencies": true,
+  "checkToolAvailability": true
+}
+```
+
+### Parameter Resolution (@contextName)
+
+**Automatic Reference Resolution:**
+When you use `@contextName` in tool parameters, Aiur automatically resolves these references to the actual stored data before executing the tool.
+
+**Syntax:** `@contextName` or `@context_specific_name`
+
+**Examples:**
+```json
+// Reference single context
+{
+  "tool": "deploy_app",
+  "args": {
+    "config": "@deployment_config",  // → Resolves to stored config object
+    "target": "production"
+  }
+}
+
+// Reference multiple contexts in one call
+{
+  "tool": "plan_create", 
+  "args": {
+    "title": "Full Stack Deploy",
+    "steps": [{
+      "action": "deploy",
+      "parameters": {
+        "frontend": "@frontend_config",    // → Resolved automatically
+        "backend": "@backend_config",      // → Resolved automatically  
+        "database": "@db_config"           // → Resolved automatically
+      }
+    }]
+  }
+}
+
+// Works in nested objects and arrays
+{
+  "servers": ["@server1", "@server2", {"host": "server3.com"}],
+  "config": {
+    "nested": {
+      "setting": "@app_settings"
+    }
+  }
+}
+```
+
+**What Happens:**
+1. You call a tool with `@contextName` references
+2. Aiur's HandleResolver automatically runs before tool execution
+3. All `@contextName` strings are replaced with actual stored data
+4. The tool receives fully resolved parameters (never sees `@` references)
+
+### Auto-Save Feature (saveAs)
+
+**Automatic Result Storage:**
+Add `saveAs: "name"` to any tool call to automatically save the result to context.
+
+**Benefits:**
+- Save and reference tool results in one step
+- No need for separate `context_add` calls
+- Rich metadata tracking (source tool, timestamp, original args)
+
+**Examples:**
+```json
+// Save plan creation result
+{
+  "tool": "plan_create",
+  "args": {
+    "title": "My Deployment",
+    "steps": [...],
+    "saveAs": "my_deployment"  // ✅ Auto-saves result as context_my_deployment
+  }
+}
+
+// Later reference the saved plan
+{
+  "tool": "plan_execute", 
+  "args": {
+    "planHandle": "@my_deployment"  // ✅ References the auto-saved plan
+  }
+}
+```
+
+**Response includes confirmation:**
+```json
+{
+  "success": true,
+  "plan": {...},
+  "savedToContext": {
+    "contextName": "my_deployment",
+    "handleId": "context_my_deployment",
+    "message": "Result saved to context as 'my_deployment'"
+  }
+}
+```
+
+### Usage Patterns
+
+#### Pattern 1: Explicit Context Management
+```json
+// Step 1: Save data explicitly
+{"tool": "context_add", "args": {"name": "api_config", "data": {...}}}
+
+// Step 2: Reference in other tools
+{"tool": "api_call", "args": {"config": "@api_config"}}
+```
+
+#### Pattern 2: Auto-Save Workflow  
+```json
+// Step 1: Create and auto-save
+{"tool": "plan_create", "args": {..., "saveAs": "my_plan"}}
+
+// Step 2: Reference auto-saved result
+{"tool": "plan_execute", "args": {"planHandle": "@my_plan"}}
+```
+
+#### Pattern 3: Chain Multiple References
+```json
+// Reference multiple contexts in single call
+{
+  "tool": "complex_operation",
+  "args": {
+    "config": "@app_config",
+    "secrets": "@api_secrets", 
+    "targets": ["@server1", "@server2"],
+    "options": {"timeout": 300}
+  }
+}
+```
+
+#### Pattern 4: Context Discovery
+```json
+// List available context to see what's already saved
+{"tool": "context_list", "args": {"filter": "deploy*"}}
+
+// Get specific context details
+{"tool": "context_get", "args": {"name": "deployment_config"}}
+```
+
+### Complete Examples
+
+#### Example 1: Deployment Workflow
+```json
+// 1. Save configuration
+{
+  "tool": "context_add",
+  "args": {
+    "name": "prod_config",
+    "data": {"env": "production", "replicas": 3, "port": 443},
+    "description": "Production deployment configuration"
+  }
+}
+
+// 2. Create deployment plan using saved config
+{
+  "tool": "plan_create", 
+  "args": {
+    "title": "Production Deployment",
+    "steps": [
+      {
+        "id": "deploy",
+        "action": "kubernetes_deploy",
+        "parameters": {
+          "config": "@prod_config",  // ← References saved config
+          "target": "production"
+        }
+      }
+    ],
+    "saveAs": "prod_deployment"  // ← Auto-save the plan
+  }
+}
+
+// 3. Execute the deployment plan
+{
+  "tool": "plan_execute",
+  "args": {
+    "planHandle": "@prod_deployment",  // ← References saved plan
+    "options": {"stopOnError": true}
+  }
+}
+
+// 4. Check deployment status
+{
+  "tool": "plan_status",
+  "args": {
+    "planHandle": "@prod_deployment",  // ← Same plan reference
+    "includeSteps": true
+  }
+}
+```
+
+#### Example 2: Multi-Environment Setup
+```json
+// Save multiple environment configs
+{"tool": "context_add", "args": {"name": "dev_config", "data": {...}}}
+{"tool": "context_add", "args": {"name": "staging_config", "data": {...}}} 
+{"tool": "context_add", "args": {"name": "prod_config", "data": {...}}}
+
+// Create plan that deploys to all environments
+{
+  "tool": "plan_create",
+  "args": {
+    "title": "Multi-Environment Deployment",
+    "steps": [
+      {
+        "id": "deploy_dev",
+        "action": "deploy",
+        "parameters": {"config": "@dev_config", "env": "dev"}
+      },
+      {
+        "id": "deploy_staging", 
+        "action": "deploy",
+        "parameters": {"config": "@staging_config", "env": "staging"},
+        "dependsOn": ["deploy_dev"]
+      },
+      {
+        "id": "deploy_prod",
+        "action": "deploy", 
+        "parameters": {"config": "@prod_config", "env": "production"},
+        "dependsOn": ["deploy_staging"]
+      }
+    ],
+    "saveAs": "multi_env_deployment"
+  }
+}
+```
+
+### Best Practices
+
+#### Context Naming Conventions
+- Use **descriptive names**: `deployment_config` not `config1`
+- Use **prefixes for grouping**: `user_preferences`, `user_settings`, `user_profile`
+- Use **environment indicators**: `prod_config`, `staging_secrets`
+
+#### When to Use Context Management
+- **Multi-step workflows** that need to reference previous results
+- **Configuration data** that multiple tools will use
+- **User preferences** or settings that persist across operations
+- **Complex objects** that would be tedious to re-enter
+
+#### Parameter Resolution Guidelines
+- **Always use `@contextName`** to reference saved context in tool parameters
+- **Check available context** with `context_list` when unsure what's available
+- **Use `saveAs`** liberally to build up a library of reusable context
+- **Combine references** - you can use multiple `@contextName` references in a single tool call
+
+#### Error Handling
+- **Missing references** will cause clear error messages
+- **Use `context_list`** to verify context names exist before referencing
+- **Use `plan_validate`** to check plan dependencies before execution
+
+### Integration with AI Agents
+
+When working with Aiur MCP server:
+
+1. **Persistent Memory** - Use context management to maintain state across conversations
+2. **Complex Workflows** - Break large tasks into plans with multiple steps
+3. **Data Reuse** - Save configurations, credentials, and results for reuse
+4. **Reference Management** - Use `@contextName` syntax consistently
+5. **Auto-Save Results** - Use `saveAs` parameter to build context automatically
+
+The Aiur MCP server transforms AI agents from stateless tools into persistent, memory-enabled coordinators capable of managing complex, multi-step workflows with full context awareness.
