@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Test coverage
+coverage/
+
+# Test databases
+*.db
+*.sqlite
+*.sqlite3
+test-results/
+.test-results/
+.jester/
+
+# Environment files
+.env
+
+# OS files
+.DS_Store
+
+# IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
