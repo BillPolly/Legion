@@ -14,7 +14,7 @@ class JesterReporter extends JestAgentReporter {
   constructor(globalConfig, options = {}) {
     // Pass options to parent JestAgentReporter
     super(globalConfig, {
-      dbPath: options.dbPath || './test-results.db',
+      dbPath: options.dbPath || './.jester/test-results.db',
       collectConsole: options.collectConsole !== false,
       collectCoverage: options.collectCoverage !== false,
       realTimeEvents: options.realTimeEvents !== false,

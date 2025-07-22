@@ -13,7 +13,7 @@ export class JestAgentWrapper extends EventEmitter {
     
     this.config = {
       storage: 'sqlite',
-      dbPath: './test-results.db',
+      dbPath: './.jester/test-results.db',
       collectConsole: true,
       collectCoverage: true,
       collectPerformance: true,

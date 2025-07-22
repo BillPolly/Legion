@@ -4,9 +4,11 @@
 
 import Database from 'better-sqlite3';
 import { generateId } from '../utils/index.js';
+import fs from 'fs';
+import path from 'path';
 
 export class StorageEngine {
-  constructor(dbPath = './test-results.db') {
+  constructor(dbPath = './.jester/test-results.db') {
     this.dbPath = dbPath;
     this.db = null;
     this.initialized = false;
@@ -17,6 +19,12 @@ export class StorageEngine {
    */
   async initialize() {
     if (this.initialized) return;
+
+    // Create directory if it doesn't exist
+    const dir = path.dirname(this.dbPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
 
     this.db = new Database(this.dbPath);
     

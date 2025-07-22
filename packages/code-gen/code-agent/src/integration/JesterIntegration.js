@@ -20,7 +20,7 @@ class JesterIntegration extends EventEmitter {
     
     this.config = {
       enabled: true,
-      dbPath: './test-results.db',
+      dbPath: './.jester/test-results.db',
       collectConsole: true,
       collectCoverage: true,
       collectPerformance: true,

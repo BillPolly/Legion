@@ -35,7 +35,10 @@ export default {
   // Test file patterns - run simple unit tests and integration tests
   testMatch: [
     '**/__tests__/unit/simple/*.test.js',
-    '**/__tests__/integration/RealGitHubIntegration.test.js'
+    '**/__tests__/unit/integration/JesterIntegration.test.js',
+    '**/__tests__/unit/reporter/JesterReporter.test.js',
+    '**/__tests__/integration/RealGitHubIntegration.test.js',
+    '**/__tests__/integration/jester-e2e.test.js'
   ],
   
   // Ignore patterns - exclude all problematic tests

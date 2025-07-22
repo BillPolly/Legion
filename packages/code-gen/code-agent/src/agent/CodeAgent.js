@@ -91,7 +91,7 @@ class CodeAgent extends EventEmitter {
       },
       jester: {
         enabled: true,
-        dbPath: './test-results.db',
+        dbPath: './.jester/test-results.db',
         collectConsole: true,
         collectCoverage: true,
         collectPerformance: true,

@@ -62,3 +62,13 @@ example.js
 # Random script files that shouldn't be committed
 /scripts/*.js
 !/scripts/*/*.js
+
+# Test databases and results
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+test-results/
+.test-results/
+.jester/
