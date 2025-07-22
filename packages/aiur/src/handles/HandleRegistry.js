@@ -18,7 +18,7 @@ export class HandleRegistry {
    * @param {any} data - The data to store in the handle
    * @returns {string} The handle ID
    */
-  create(name, data) {
+  create(name, data, customMetadata = {}) {
     const handleId = this._generateId();
     const now = new Date();
     
@@ -29,7 +29,8 @@ export class HandleRegistry {
       metadata: {
         created: now,
         lastAccessed: now,
-        accessCount: 0
+        accessCount: 0,
+        ...customMetadata
       }
     };
 
@@ -92,6 +93,24 @@ export class HandleRegistry {
    */
   existsByName(name) {
     return this.nameIndex.has(name);
+  }
+
+  /**
+   * Update handle data
+   * @param {string} name - The handle name
+   * @param {*} newData - The new data
+   * @returns {boolean} True if updated, false if not found
+   */
+  update(name, newData) {
+    const handleId = this.nameIndex.get(name);
+    if (!handleId) return false;
+
+    const handle = this.handles.get(handleId);
+    if (!handle) return false;
+
+    handle.data = newData;
+    handle.metadata.lastAccessed = new Date();
+    return true;
   }
 
   /**
