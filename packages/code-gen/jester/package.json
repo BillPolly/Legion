@@ -1,8 +1,8 @@
 {
-  "name": "@asmodeus/jester",
+  "name": "@legion/jester",
   "version": "1.0.0",
   "type": "module",
-  "description": "Jester package for Asmodeus",
+  "description": "Jest Agent Wrapper - Enhanced test reporting and analytics for Legion",
   "main": "src/index.js",
   "scripts": {
     "test": "cross-env NODE_OPTIONS=\"--experimental-vm-modules\" jest"

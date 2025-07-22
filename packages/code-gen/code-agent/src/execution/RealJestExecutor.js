@@ -16,6 +16,7 @@ import { randomUUID } from 'crypto';
 import { spawn } from 'child_process';
 import fs from 'fs/promises';
 import path from 'path';
+import { JesterIntegration } from '../integration/JesterIntegration.js';
 
 /**
  * RealJestExecutor class for real Jest execution
@@ -27,10 +28,12 @@ class RealJestExecutor extends EventEmitter {
     this.config = config;
     this.logManager = logManager;
     this.logAnalyzer = logAnalyzer;
+    this.jesterConfig = config.jester || {};
     
     // State management
     this.isInitialized = false;
     this.jestEngine = null;
+    this.jesterIntegration = null;
     this.executionId = null;
     this.currentExecution = null;
     
@@ -80,6 +83,18 @@ class RealJestExecutor extends EventEmitter {
       // Verify Jest availability
       await this.verifyJestAvailability();
       
+      // Initialize Jester integration if enabled
+      if (this.jesterConfig.enabled !== false) {
+        this.jesterIntegration = new JesterIntegration({
+          ...this.jesterConfig,
+          dbPath: this.jesterConfig.dbPath || path.join(this.config.workingDirectory, 'test-results.db')
+        });
+        await this.jesterIntegration.initialize();
+        
+        // Setup event forwarding
+        this.setupJesterEventForwarding();
+      }
+      
       this.isInitialized = true;
       this.emit('initialized', { executionId: this.executionId, timestamp: Date.now() });
       
@@ -87,6 +102,27 @@ class RealJestExecutor extends EventEmitter {
       this.emit('initialization-error', { error: error.message, timestamp: Date.now() });
       throw error;
     }
+  }
+
+  /**
+   * Setup Jester event forwarding
+   */
+  setupJesterEventForwarding() {
+    if (!this.jesterIntegration) return;
+    
+    // Forward Jester events
+    const events = [
+      'jester:sessionStart', 'jester:sessionEnd',
+      'jester:suiteStart', 'jester:suiteEnd',
+      'jester:testStart', 'jester:testEnd',
+      'jester:log', 'jester:assertion'
+    ];
+    
+    events.forEach(eventName => {
+      this.jesterIntegration.on(eventName, (data) => {
+        this.emit(eventName, { ...data, executionId: this.executionId });
+      });
+    });
   }
 
   /**
@@ -190,6 +226,19 @@ class RealJestExecutor extends EventEmitter {
       this.updatePerformanceMetrics(performance);
       this.updateCoverageTrends(processedResult);
 
+      // Get Jester analysis if available
+      let jesterAnalysis = null;
+      let jesterReport = null;
+      if (this.jesterIntegration && this.jesterIntegration.isEnabled() && jesterSessionId) {
+        try {
+          await this.jesterIntegration.endSession();
+          jesterAnalysis = await this.jesterIntegration.analyzeTestResults(jesterSessionId);
+          jesterReport = await this.jesterIntegration.generateTestReport(jesterSessionId);
+        } catch (error) {
+          this.emit('jester-analysis-error', { error: error.message, executionId });
+        }
+      }
+      
       const result = {
         executionId,
         correlationId,
@@ -202,6 +251,8 @@ class RealJestExecutor extends EventEmitter {
         coverage: processedResult.coverage,
         executionTime,
         performance,
+        jesterAnalysis,
+        jesterReport,
         logs: {
           stdout: jestResult.stdout,
           stderr: jestResult.stderr

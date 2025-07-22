@@ -543,4 +543,108 @@ describe('JestConfigManager', () => {
       expect(config.testTimeout).toBe(5000); // Default timeout
     });
   });
+
+  describe('Reporter Management', () => {
+    beforeEach(async () => {
+      await manager.initialize();
+    });
+
+    test('should add custom reporters', () => {
+      const reporters = ['jest-junit', ['./custom-reporter.js', { option: true }]];
+      manager.addReporters(reporters);
+      const config = manager.getCurrentConfiguration();
+      
+      expect(config.reporters).toBeDefined();
+      expect(config.reporters).toContain('jest-junit');
+      expect(config.reporters).toContainEqual(['./custom-reporter.js', { option: true }]);
+    });
+
+    test('should handle invalid reporter format', () => {
+      expect(() => {
+        manager.addReporters([123]); // Invalid - not string or array
+      }).toThrow('Reporter must be a string or array [path, options]');
+    });
+
+    test('should set reporters (replace all)', () => {
+      // First add some reporters
+      manager.addReporters(['default', 'jest-junit']);
+      
+      // Then set new reporters (should replace)
+      manager.setReporters(['html', 'json']);
+      const config = manager.getCurrentConfiguration();
+      
+      expect(config.reporters).toEqual(['html', 'json']);
+      expect(config.reporters).not.toContain('default');
+      expect(config.reporters).not.toContain('jest-junit');
+    });
+
+    test('should add Jester reporter with default configuration', () => {
+      manager.addJesterReporter();
+      const config = manager.getCurrentConfiguration();
+      
+      expect(config.reporters).toBeDefined();
+      expect(config.reporters).toHaveLength(1);
+      
+      const jesterReporter = config.reporters[0];
+      expect(jesterReporter).toBeInstanceOf(Array);
+      expect(jesterReporter[0]).toBe('@legion/jester/reporter');
+      expect(jesterReporter[1]).toEqual({
+        dbPath: './test-results.db',
+        collectConsole: true,
+        collectCoverage: true,
+        realTimeEvents: true
+      });
+    });
+
+    test('should add Jester reporter with custom configuration', () => {
+      const jesterConfig = {
+        dbPath: '/custom/path/test-results.db',
+        collectConsole: false,
+        collectCoverage: true,
+        realTimeEvents: false,
+        customOption: 'value'
+      };
+      
+      manager.addJesterReporter(jesterConfig);
+      const config = manager.getCurrentConfiguration();
+      
+      const jesterReporter = config.reporters[0];
+      expect(jesterReporter[1]).toEqual({
+        dbPath: '/custom/path/test-results.db',
+        collectConsole: false,
+        collectCoverage: true,
+        realTimeEvents: false,
+        customOption: 'value'
+      });
+    });
+
+    test('should add Jester reporter alongside other reporters', () => {
+      // Add other reporters first
+      manager.addReporters(['default', 'jest-junit']);
+      
+      // Add Jester reporter
+      manager.addJesterReporter({ dbPath: './jester.db' });
+      
+      const config = manager.getCurrentConfiguration();
+      
+      expect(config.reporters).toHaveLength(3);
+      expect(config.reporters[0]).toBe('default');
+      expect(config.reporters[1]).toBe('jest-junit');
+      expect(config.reporters[2][0]).toBe('@legion/jester/reporter');
+    });
+
+    test('should preserve Jester reporter when adding more reporters', () => {
+      // Add Jester reporter first
+      manager.addJesterReporter();
+      
+      // Add more reporters
+      manager.addReporters(['jest-html-reporter']);
+      
+      const config = manager.getCurrentConfiguration();
+      
+      expect(config.reporters).toHaveLength(2);
+      expect(config.reporters[0][0]).toBe('@legion/jester/reporter');
+      expect(config.reporters[1]).toBe('jest-html-reporter');
+    });
+  });
 });

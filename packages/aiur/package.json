@@ -14,7 +14,7 @@
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^0.6.2",
+    "@modelcontextprotocol/sdk": "^1.16.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {

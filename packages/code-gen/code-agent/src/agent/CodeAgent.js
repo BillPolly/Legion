@@ -89,6 +89,16 @@ class CodeAgent extends EventEmitter {
         allTestsPass: true,
         ...config.qualityGates
       },
+      jester: {
+        enabled: true,
+        dbPath: './test-results.db',
+        collectConsole: true,
+        collectCoverage: true,
+        collectPerformance: true,
+        realTimeEvents: true,
+        cleanupAfterDays: 7,
+        ...config.jester
+      },
       ...config
     };
     

@@ -24,7 +24,8 @@ class QualityPhase {
       {
         workingDirectory: codeAgent.config.workingDirectory,
         coverage: true,
-        coverageThreshold: codeAgent.config.qualityGates.testCoverage
+        coverageThreshold: codeAgent.config.qualityGates.testCoverage,
+        jester: codeAgent.config.jester
       },
       this.logManager,
       this.logAnalyzer

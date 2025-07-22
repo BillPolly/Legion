@@ -16,6 +16,7 @@ import { randomUUID } from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
 import { TestLogManager } from '../logging/TestLogManager.js';
+import { JesterIntegration } from '../integration/JesterIntegration.js';
 
 /**
  * TestExecutionEngine class for managing Jest test execution
@@ -27,9 +28,11 @@ class TestExecutionEngine extends EventEmitter {
     this.config = config;
     this.nodeRunnerConfig = config.nodeRunner || (config.getNodeRunnerConfig ? config.getNodeRunnerConfig() : {});
     this.logManagerConfig = config.logManager || (config.getLogManagerConfig ? config.getLogManagerConfig() : {});
+    this.jesterConfig = config.jester || {};
     this.isInitialized = false;
     this.activeTests = new Map();
     this.logManager = null;
+    this.jesterIntegration = null;
     
     // Performance tracking
     this.metrics = {
@@ -74,6 +77,15 @@ class TestExecutionEngine extends EventEmitter {
       // Initialize log manager
       this.logManager = new TestLogManager(this.logManagerConfig);
       await this.logManager.initialize();
+      
+      // Initialize Jester integration if enabled
+      if (this.jesterConfig.enabled !== false) {
+        this.jesterIntegration = new JesterIntegration(this.jesterConfig);
+        await this.jesterIntegration.initialize();
+        
+        // Setup event forwarding from Jester
+        this.setupJesterEventForwarding();
+      }
       
       this.isInitialized = true;
       this.emit('initialized', { timestamp: Date.now() });
@@ -133,6 +145,17 @@ class TestExecutionEngine extends EventEmitter {
       testRunInfo.coverage = coverage;
       testRunInfo.performance = performance;
       
+      // Enhance with Jester analysis if available
+      if (this.jesterIntegration && this.jesterIntegration.isEnabled() && testConfig.useJester !== false) {
+        try {
+          const jesterAnalysis = await this.jesterIntegration.analyzeTestResults();
+          testRunInfo.jesterAnalysis = jesterAnalysis;
+          testRunInfo.jesterSuggestions = await this.jesterIntegration.generateTestSuggestions();
+        } catch (error) {
+          this.emit('jester-analysis-error', { error: error.message, testRunId });
+        }
+      }
+      
       // Cache results if caching is enabled
       if (testConfig.cache) {
         this.cacheTestResults(testConfig, parsedResults);
@@ -150,7 +173,7 @@ class TestExecutionEngine extends EventEmitter {
         timestamp: Date.now() 
       });
       
-      return {
+      const result = {
         testRunId,
         status: testRunInfo.status,
         results: parsedResults,
@@ -158,6 +181,14 @@ class TestExecutionEngine extends EventEmitter {
         performance,
         executionTime: testRunInfo.endTime - testRunInfo.startTime
       };
+      
+      // Include Jester analysis if available
+      if (testRunInfo.jesterAnalysis) {
+        result.jesterAnalysis = testRunInfo.jesterAnalysis;
+        result.jesterSuggestions = testRunInfo.jesterSuggestions;
+      }
+      
+      return result;
       
     } catch (error) {
       // Update test run status
@@ -769,6 +800,13 @@ ${jsonString}
       });
     }
     
+    // Add Jester reporter if enabled
+    if (this.jesterIntegration && this.jesterIntegration.isEnabled() && testConfig.useJester !== false) {
+      const jesterReporterPath = path.join(path.dirname(import.meta.url.replace('file://', '')), '../reporter/JesterReporter.js');
+      args.push('--reporters', 'default');
+      args.push('--reporters', jesterReporterPath);
+    }
+    
     // Performance options
     if (testConfig.shard) {
       args.push('--shard', testConfig.shard);
@@ -808,6 +846,27 @@ ${jsonString}
     }
     
     return args;
+  }
+
+  /**
+   * Setup Jester event forwarding
+   */
+  setupJesterEventForwarding() {
+    if (!this.jesterIntegration) return;
+    
+    // Forward Jester events to TestExecutionEngine
+    const events = [
+      'jester:sessionStart', 'jester:sessionEnd',
+      'jester:suiteStart', 'jester:suiteEnd',
+      'jester:testStart', 'jester:testEnd',
+      'jester:log', 'jester:assertion'
+    ];
+    
+    events.forEach(eventName => {
+      this.jesterIntegration.on(eventName, (data) => {
+        this.emit(eventName, data);
+      });
+    });
   }
 
   /**
@@ -1154,12 +1213,14 @@ ${jsonString}
     if (!testResult.results || testResult.results.success) {
       return {
         failures: [],
-        suggestions: []
+        suggestions: [],
+        jesterInsights: null
       };
     }
 
     const failures = [];
     const suggestions = [];
+    let jesterInsights = null;
 
     // Analyze test results
     if (testResult.results.testResults) {
@@ -1178,10 +1239,34 @@ ${jsonString}
     // Generate suggestions based on failures
     const suggestionMap = this.generateFailureSuggestions(failures);
     suggestions.push(...suggestionMap.values());
+    
+    // Enhance with Jester insights if available
+    if (testResult.jesterAnalysis) {
+      jesterInsights = {
+        failedTests: testResult.jesterAnalysis.failedTests,
+        commonErrors: testResult.jesterAnalysis.commonErrors,
+        errorsByType: testResult.jesterAnalysis.errorsByType,
+        tddSuggestions: testResult.jesterAnalysis.tddSuggestions
+      };
+      
+      // Add Jester-specific suggestions
+      if (testResult.jesterSuggestions) {
+        testResult.jesterSuggestions.forEach(suggestion => {
+          suggestions.push({
+            source: 'jester',
+            type: suggestion.type,
+            priority: suggestion.priority,
+            message: suggestion.message,
+            details: suggestion.details
+          });
+        });
+      }
+    }
 
     return {
       failures,
       suggestions,
+      jesterInsights,
       summary: {
         totalFailures: failures.length,
         categories: this.categorizeFailures(failures),
@@ -2751,6 +2836,12 @@ ${testSuites.map(suite => `
       // Cleanup log manager
       if (this.logManager) {
         await this.logManager.cleanup();
+      }
+      
+      // Cleanup Jester integration
+      if (this.jesterIntegration) {
+        await this.jesterIntegration.cleanup();
+        this.jesterIntegration = null;
       }
       
       // Clear state

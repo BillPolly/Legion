@@ -278,6 +278,55 @@ class JestConfigManager {
   }
 
   /**
+   * Add custom Jest reporters
+   * @param {Array} reporters - Array of reporter configurations
+   */
+  addReporters(reporters) {
+    if (!this.customConfig.reporters) {
+      this.customConfig.reporters = [];
+    }
+    
+    reporters.forEach(reporter => {
+      if (typeof reporter === 'string') {
+        this.customConfig.reporters.push(reporter);
+      } else if (Array.isArray(reporter)) {
+        // Reporter with options [path, options]
+        this.customConfig.reporters.push(reporter);
+      } else {
+        throw new Error('Reporter must be a string or array [path, options]');
+      }
+    });
+    
+    this._updateCurrentConfig();
+  }
+
+  /**
+   * Set Jest reporters (replaces all)
+   * @param {Array} reporters - Array of reporter configurations
+   */
+  setReporters(reporters) {
+    this.customConfig.reporters = reporters;
+    this._updateCurrentConfig();
+  }
+
+  /**
+   * Add Jester reporter integration
+   * @param {Object} jesterConfig - Jester configuration options
+   */
+  addJesterReporter(jesterConfig = {}) {
+    const jesterReporterPath = '@legion/jester/reporter';
+    const reporter = [jesterReporterPath, {
+      dbPath: jesterConfig.dbPath || './test-results.db',
+      collectConsole: jesterConfig.collectConsole !== false,
+      collectCoverage: jesterConfig.collectCoverage !== false,
+      realTimeEvents: jesterConfig.realTimeEvents !== false,
+      ...jesterConfig
+    }];
+    
+    this.addReporters([reporter]);
+  }
+
+  /**
    * Set coverage directory
    * @param {string} directory - Coverage output directory
    */
@@ -524,6 +573,11 @@ class JestConfigManager {
     if (config.verbose) {
       score -= 10;
       recommendations.push('Consider disabling verbose mode for faster test execution');
+    }
+    
+    if (config.reporters && config.reporters.length > 3) {
+      score -= 5;
+      recommendations.push('Multiple reporters can slow down test execution');
     }
 
     if (config.collectCoverage && !config.collectCoverageFrom) {

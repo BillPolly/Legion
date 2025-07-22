@@ -1,5 +1,5 @@
 {
-  "name": "@jsenvoy/code-agent",
+  "name": "@legion/code-agent",
   "version": "0.0.1",
   "description": "Intelligent code agent for generating, testing, and validating vanilla JavaScript projects",
   "type": "module",
@@ -43,7 +43,8 @@
   "dependencies": {
     "@babel/parser": "^7.23.6",
     "@babel/traverse": "^7.23.6",
-    "@jsenvoy/conan-the-deployer": "workspace:*",
+    "@legion/conan-the-deployer": "file:../../conan-the-deployer",
+    "@legion/jester": "file:../jester",
     "dotenv": "^17.2.0",
     "eslint": "^8.56.0",
     "jest": "^29.7.0",
