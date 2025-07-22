@@ -1,15 +1,35 @@
 /**
- * @jsenvoy/jester - Jest execution management utility
+ * Jest Agent Wrapper (JAW) - Main Entry Point
  * 
- * Main entry point exposing the public API
+ * A comprehensive Jest wrapper that transforms console output into structured,
+ * queryable data for AI coding agents to excel at Test-Driven Development.
+ * 
+ * @author AI Assistant
+ * @version 1.0.0
  */
 
-import { JesterRunner } from './JesterRunner.js';
-import { DatabaseManager } from './DatabaseManager.js';
-import { QueryAPI } from './QueryAPI.js';
+// Core Components
+export { JestAgentWrapper } from './core/JestAgentWrapper.js';
+export { EventCollector } from './core/EventCollector.js';
 
-// Re-export main classes
-export { JesterRunner, DatabaseManager, QueryAPI };
+// Storage Components
+export { StorageEngine } from './storage/StorageEngine.js';
+export { QueryEngine } from './storage/QueryEngine.js';
 
-// Default export for convenience
-export default JesterRunner;
+// Reporter
+export { JestAgentReporter } from './reporter/JestAgentReporter.js';
+
+// CLI
+export { JestAgentCLI } from './cli/JestAgentCLI.js';
+
+// Agent Utilities
+export { AgentTDDHelper } from './agents/AgentTDDHelper.js';
+
+// Utilities
+export * from './utils/index.js';
+
+// Types and Constants
+export * from './types/index.js';
+
+// Default export is the main wrapper class
+export { JestAgentWrapper as default } from './core/JestAgentWrapper.js';

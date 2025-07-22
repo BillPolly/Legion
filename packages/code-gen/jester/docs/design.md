@@ -1,573 +1,483 @@
-# Jester Design Document
+# Jest Agent Wrapper - Comprehensive Design
 
-## Table of Contents
-1. [Executive Summary](#executive-summary)
-2. [Problem Statement](#problem-statement)
-3. [Solution Overview](#solution-overview)
-4. [Architecture](#architecture)
-5. [Core Components](#core-components)
-6. [Database Schema](#database-schema)
-7. [API Design](#api-design)
-8. [Event Flow](#event-flow)
-9. [Console Correlation Strategy](#console-correlation-strategy)
-10. [Performance Considerations](#performance-considerations)
-11. [Error Handling](#error-handling)
-12. [Future Enhancements](#future-enhancements)
+## Overview
 
-## Executive Summary
+The Jest Agent Wrapper (JAW) is a sophisticated testing framework wrapper designed to make Jest output agent-friendly by transforming raw console output into structured, timestamped, queryable data. This system enables AI coding agents to effectively practice Test-Driven Development (TDD) with clear visibility into test states, failures, and execution history.
 
-Jester is a Jest execution management utility that provides complete visibility into test execution, including temporal correlation of console logs, structured error reporting, and a powerful query interface for analysis. It solves the fundamental problem of understanding what happens during test execution by capturing all events, console output, and test results in a queryable format.
+## Core Problems Solved
 
-## Problem Statement
+- **Unstructured Output**: Jest's console output is human-readable but difficult for agents to parse
+- **Poor Failure Analysis**: Error messages and stack traces are scattered across console logs
+- **No Historical Context**: Previous test runs are lost, making it hard to track progress
+- **Limited Queryability**: No way to search or filter test results programmatically
+- **Timestamp Confusion**: Events aren't properly ordered or timestamped for analysis
 
-Current Jest test execution has several critical limitations:
-
-1. **Console Output Ambiguity**: Console logs appear in a jumbled stream, making it impossible to determine which test generated which output
-2. **Temporal Blindness**: No clear timeline of when events occurred during test execution
-3. **Limited Queryability**: Cannot easily query test results, find patterns, or analyze failures
-4. **Resource Leak Detection**: Difficult to identify which tests leave open handles
-5. **Performance Analysis**: No easy way to identify slow tests or performance bottlenecks
-6. **Error Context Loss**: Stack traces and error contexts are difficult to correlate with specific test failures
-
-## Solution Overview
-
-Jester provides a comprehensive solution through:
-
-1. **Custom Jest Reporter**: Captures all Jest events with precise timestamps
-2. **Console Interception**: Correlates console output with specific tests using AsyncLocalStorage
-3. **SQLite Storage**: Structured storage for all execution data
-4. **Query API**: Powerful interface for analyzing test results
-5. **Execution Management**: Programmatic Jest execution with full configuration control
-
-## Architecture
-
-### High-Level Architecture
+## Architecture Overview
 
 ```
-┌─────────────────────┐
-│   Client Code       │
-│  (Test Runner)      │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│   JesterRunner      │ ◄─── Main API Interface
-├─────────────────────┤
-│ - runTests()        │
-│ - query.*           │
-│ - getRunSummary()   │
-└──────────┬──────────┘
-           │
-           ├────────────────────┬────────────────────┐
-           ▼                    ▼                    ▼
-┌─────────────────────┐ ┌─────────────────┐ ┌─────────────────┐
-│  JestExecutor       │ │ ConsoleCapture   │ │ DatabaseManager  │
-├─────────────────────┤ ├─────────────────┤ ├─────────────────┤
-│ - spawn Jest        │ │ - intercept()    │ │ - SQLite ops     │
-│ - config mgmt       │ │ - correlate()    │ │ - migrations     │
-│ - process control   │ │ - restore()      │ │ - queries        │
-└─────────────────────┘ └─────────────────┘ └─────────────────┘
-           │                    │                    │
-           └────────────────────┴────────────────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │  JesterReporter     │
-                    ├─────────────────────┤
-                    │ - onRunStart        │
-                    │ - onTestStart       │
-                    │ - onTestResult      │
-                    │ - onRunComplete     │
-                    └─────────────────────┘
-```
-
-### Component Interactions
-
-```
-Test Execution Flow:
-1. Client → JesterRunner.runTests()
-2. JesterRunner → DatabaseManager.createRun()
-3. JesterRunner → ConsoleCapture.setup()
-4. JesterRunner → JestExecutor.execute()
-5. Jest Process → JesterReporter (via IPC)
-6. JesterReporter → DatabaseManager.recordEvent()
-7. Console Output → ConsoleCapture → DatabaseManager
-8. Jest Process Complete → JesterRunner.finalize()
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Agent Code    │───▶│  JAW Wrapper    │───▶│  Storage Layer  │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                              │                        │
+                              ▼                        ▼
+                       ┌─────────────────┐    ┌─────────────────┐
+                       │  Jest Runtime   │    │  Query Engine   │
+                       └─────────────────┘    └─────────────────┘
 ```
 
 ## Core Components
 
-### 1. JesterRunner (src/JesterRunner.js)
+### 1. Test Session Manager
+**Responsibility**: Orchestrates test execution and maintains session state
 
-The main entry point providing the public API:
+**Key Features**:
+- Creates unique session IDs for each test run
+- Manages test lifecycle (setup, execution, teardown)
+- Coordinates between Jest and storage systems
+- Handles parallel test execution tracking
 
-```javascript
-class JesterRunner {
-  constructor(options) {
-    this.projectPath = options.projectPath;
-    this.databasePath = options.databasePath;
-    this.db = new DatabaseManager(this.databasePath);
-    this.executor = new JestExecutor();
-    this.consoleCapture = new ConsoleCapture();
-    this.query = new QueryAPI(this.db);
-  }
+### 2. Event Collector
+**Responsibility**: Captures all Jest events and transforms them into structured data
 
-  async runTests(options) {
-    // Create run record
-    const runId = await this.db.createRun(options);
-    
-    // Setup console capture
-    await this.consoleCapture.setup(runId);
-    
-    // Execute Jest with custom reporter
-    const result = await this.executor.execute({
-      ...options,
-      reporters: [[path.join(__dirname, 'JesterReporter.js'), { runId, db: this.databasePath }]]
-    });
-    
-    // Finalize and return
-    await this.consoleCapture.teardown();
-    return runId;
-  }
+**Event Types Captured**:
+- Test suite discovery
+- Individual test starts/completions
+- Assertion results (pass/fail)
+- Console outputs (logs, warnings, errors)
+- Coverage data
+- Performance metrics
+- Setup/teardown events
+
+### 3. Data Transformer
+**Responsibility**: Converts Jest's raw output into agent-friendly objects
+
+**Transformations**:
+- Stack traces → structured error objects with file/line references
+- Console logs → categorized and timestamped log entries
+- Test results → normalized result objects
+- Coverage reports → queryable coverage data
+
+### 4. Storage Engine
+**Responsibility**: Persists all test data with efficient querying capabilities
+
+**Storage Options**:
+- **SQLite Database**: For complex queries and relational data
+- **JSON Log Files**: For simple implementations and portability
+- **Time-series Database**: For performance-focused implementations
+
+### 5. Query Interface
+**Responsibility**: Provides agent-friendly APIs to access test data
+
+**Query Capabilities**:
+- Find failing tests by error type
+- Get test history for specific files
+- Search console logs by content/level
+- Filter tests by duration, status, or tags
+- Generate test reports and summaries
+
+## Data Models
+
+### TestSession
+```typescript
+interface TestSession {
+  id: string;
+  startTime: Date;
+  endTime?: Date;
+  status: 'running' | 'completed' | 'failed' | 'cancelled';
+  jestConfig: JestConfig;
+  environment: EnvironmentInfo;
+  summary: TestSummary;
 }
 ```
 
-### 2. JesterReporter (src/JesterReporter.js)
-
-Custom Jest reporter that captures all test events:
-
-```javascript
-class JesterReporter {
-  constructor(globalConfig, options) {
-    this.runId = options.runId;
-    this.db = new DatabaseManager(options.db);
-  }
-
-  onRunStart(results, options) {
-    this.db.recordEvent({
-      runId: this.runId,
-      type: 'run_start',
-      timestamp: Date.now(),
-      data: { numTotalTestSuites: results.numTotalTestSuites }
-    });
-  }
-
-  onTestStart(test) {
-    // Set AsyncLocalStorage context for console correlation
-    testContext.run({ testPath: test.path }, () => {
-      this.db.recordEvent({
-        runId: this.runId,
-        type: 'test_start',
-        timestamp: Date.now(),
-        testPath: test.path
-      });
-    });
-  }
-
-  onTestResult(test, testResult, aggregatedResult) {
-    this.db.recordTestResult({
-      runId: this.runId,
-      testPath: test.path,
-      duration: testResult.perfStats.runtime,
-      status: testResult.numFailingTests > 0 ? 'failed' : 'passed',
-      failures: testResult.testResults.filter(t => t.status === 'failed'),
-      console: testResult.console
-    });
-  }
+### TestSuite
+```typescript
+interface TestSuite {
+  sessionId: string;
+  path: string;
+  name: string;
+  startTime: Date;
+  endTime?: Date;
+  status: 'pending' | 'running' | 'passed' | 'failed' | 'skipped';
+  tests: TestCase[];
+  setupDuration: number;
+  teardownDuration: number;
 }
 ```
 
-### 3. ConsoleCapture (src/ConsoleCapture.js)
-
-Intercepts and correlates console output:
-
-```javascript
-class ConsoleCapture {
-  constructor() {
-    this.originalConsole = {};
-    this.asyncLocalStorage = new AsyncLocalStorage();
-  }
-
-  setup(runId) {
-    const methods = ['log', 'error', 'warn', 'info', 'debug'];
-    
-    methods.forEach(method => {
-      this.originalConsole[method] = console[method];
-      
-      console[method] = (...args) => {
-        const timestamp = Date.now();
-        const context = this.asyncLocalStorage.getStore();
-        
-        // Record to database with context
-        this.db.recordConsole({
-          runId,
-          method,
-          timestamp,
-          message: util.format(...args),
-          testPath: context?.testPath,
-          testName: context?.testName,
-          stackTrace: new Error().stack
-        });
-        
-        // Call original
-        this.originalConsole[method](...args);
-      };
-    });
-  }
+### TestCase
+```typescript
+interface TestCase {
+  sessionId: string;
+  suiteId: string;
+  name: string;
+  fullName: string;
+  startTime: Date;
+  endTime?: Date;
+  status: 'passed' | 'failed' | 'skipped' | 'todo';
+  duration: number;
+  assertions: Assertion[];
+  errors: TestError[];
+  logs: LogEntry[];
 }
 ```
 
-### 4. DatabaseManager (src/DatabaseManager.js)
-
-Manages SQLite database operations:
-
-```javascript
-class DatabaseManager {
-  constructor(dbPath) {
-    this.db = new Database(dbPath);
-    this.initializeSchema();
-  }
-
-  async createRun(options) {
-    const runId = uuidv4();
-    await this.db.run(`
-      INSERT INTO runs (id, created_at, options)
-      VALUES (?, ?, ?)
-    `, [runId, Date.now(), JSON.stringify(options)]);
-    return runId;
-  }
-
-  async recordEvent(event) {
-    await this.db.run(`
-      INSERT INTO events (run_id, type, timestamp, data)
-      VALUES (?, ?, ?, ?)
-    `, [event.runId, event.type, event.timestamp, JSON.stringify(event.data)]);
-  }
+### Assertion
+```typescript
+interface Assertion {
+  testId: string;
+  timestamp: Date;
+  type: 'expect' | 'custom';
+  matcher: string;
+  passed: boolean;
+  actual?: any;
+  expected?: any;
+  message?: string;
+  stackTrace?: StackFrame[];
 }
 ```
 
-### 5. QueryAPI (src/QueryAPI.js)
-
-Provides high-level query interface:
-
-```javascript
-class QueryAPI {
-  constructor(db) {
-    this.db = db;
-  }
-
-  async getRunSummary(runId) {
-    const summary = await this.db.get(`
-      SELECT 
-        r.*,
-        COUNT(DISTINCT t.test_path) as total_test_files,
-        COUNT(t.id) as total_tests,
-        SUM(CASE WHEN t.status = 'passed' THEN 1 ELSE 0 END) as passed,
-        SUM(CASE WHEN t.status = 'failed' THEN 1 ELSE 0 END) as failed,
-        AVG(t.duration) as avg_duration
-      FROM runs r
-      LEFT JOIN tests t ON r.id = t.run_id
-      WHERE r.id = ?
-      GROUP BY r.id
-    `, [runId]);
-    
-    return summary;
-  }
-
-  async getFailingTests(runId) {
-    return this.db.all(`
-      SELECT t.*, f.error_message, f.stack_trace
-      FROM tests t
-      JOIN failures f ON t.id = f.test_id
-      WHERE t.run_id = ? AND t.status = 'failed'
-      ORDER BY t.test_path, t.test_name
-    `, [runId]);
-  }
-
-  async getTestConsoleOutput(runId, testPath) {
-    return this.db.all(`
-      SELECT * FROM console_logs
-      WHERE run_id = ? AND test_path = ?
-      ORDER BY timestamp
-    `, [runId, testPath]);
-  }
+### LogEntry
+```typescript
+interface LogEntry {
+  sessionId: string;
+  testId?: string;
+  timestamp: Date;
+  level: 'log' | 'warn' | 'error' | 'debug' | 'info';
+  message: string;
+  source: 'test' | 'system' | 'jest';
+  metadata?: Record<string, any>;
 }
 ```
 
-## Database Schema
-
-### Tables
-
-#### runs
-- `id` (TEXT PRIMARY KEY) - UUID
-- `created_at` (INTEGER) - Unix timestamp
-- `completed_at` (INTEGER) - Unix timestamp
-- `options` (TEXT) - JSON configuration
-- `status` (TEXT) - 'running', 'completed', 'failed'
-- `summary` (TEXT) - JSON summary stats
-
-#### events
-- `id` (INTEGER PRIMARY KEY)
-- `run_id` (TEXT FOREIGN KEY)
-- `type` (TEXT) - Event type
-- `timestamp` (INTEGER) - Unix timestamp
-- `data` (TEXT) - JSON event data
-
-#### tests
-- `id` (INTEGER PRIMARY KEY)
-- `run_id` (TEXT FOREIGN KEY)
-- `test_path` (TEXT) - File path
-- `test_name` (TEXT) - Test description
-- `suite_name` (TEXT) - Describe block
-- `started_at` (INTEGER) - Unix timestamp
-- `completed_at` (INTEGER) - Unix timestamp
-- `duration` (INTEGER) - Milliseconds
-- `status` (TEXT) - 'passed', 'failed', 'skipped'
-- `retry_count` (INTEGER)
-
-#### failures
-- `id` (INTEGER PRIMARY KEY)
-- `test_id` (INTEGER FOREIGN KEY)
-- `error_message` (TEXT)
-- `stack_trace` (TEXT)
-- `diff` (TEXT) - Expected vs actual
-
-#### console_logs
-- `id` (INTEGER PRIMARY KEY)
-- `run_id` (TEXT FOREIGN KEY)
-- `test_path` (TEXT)
-- `test_name` (TEXT)
-- `timestamp` (INTEGER)
-- `level` (TEXT) - 'log', 'error', 'warn', etc.
-- `message` (TEXT)
-- `stack_trace` (TEXT)
-
-#### open_handles
-- `id` (INTEGER PRIMARY KEY)
-- `run_id` (TEXT FOREIGN KEY)
-- `test_path` (TEXT)
-- `type` (TEXT) - Handle type
-- `stack_trace` (TEXT)
-- `details` (TEXT) - JSON details
-
-### Indexes
-- `idx_runs_created` ON runs(created_at)
-- `idx_events_run_timestamp` ON events(run_id, timestamp)
-- `idx_tests_run_status` ON tests(run_id, status)
-- `idx_console_run_test` ON console_logs(run_id, test_path)
+### TestError
+```typescript
+interface TestError {
+  testId: string;
+  timestamp: Date;
+  type: 'assertion' | 'runtime' | 'timeout' | 'setup' | 'teardown';
+  message: string;
+  stackTrace: StackFrame[];
+  location: FileLocation;
+  suggestion?: string;
+}
+```
 
 ## API Design
 
-### Primary API
+### Core Wrapper API
 
-```javascript
-// Create runner
-const runner = new JesterRunner({
-  projectPath: './my-project',
-  databasePath: './test-results.db'
+```typescript
+class JestAgentWrapper {
+  // Session Management
+  async startSession(config?: JestConfig): Promise<TestSession>;
+  async runTests(pattern?: string): Promise<TestSession>;
+  async stopSession(): Promise<void>;
+  
+  // Real-time Monitoring
+  onTestStart(callback: (test: TestCase) => void): void;
+  onTestComplete(callback: (test: TestCase) => void): void;
+  onAssertion(callback: (assertion: Assertion) => void): void;
+  onLog(callback: (log: LogEntry) => void): void;
+  
+  // Query Interface
+  async getSession(id: string): Promise<TestSession>;
+  async getFailedTests(sessionId?: string): Promise<TestCase[]>;
+  async searchLogs(query: LogQuery): Promise<LogEntry[]>;
+  async getTestHistory(testName: string): Promise<TestCase[]>;
+}
+```
+
+### Query API
+
+```typescript
+interface QueryEngine {
+  // Test Queries
+  findTests(criteria: TestCriteria): Promise<TestCase[]>;
+  getTestsByFile(filePath: string): Promise<TestCase[]>;
+  getTestsByStatus(status: TestStatus): Promise<TestCase[]>;
+  
+  // Error Analysis
+  getErrorsByType(errorType: string): Promise<TestError[]>;
+  getMostCommonErrors(): Promise<ErrorSummary[]>;
+  getErrorTrends(timeRange: TimeRange): Promise<ErrorTrend[]>;
+  
+  // Performance Analysis
+  getSlowestTests(limit: number): Promise<TestCase[]>;
+  getTestDurationTrends(testName: string): Promise<DurationTrend[]>;
+  
+  // Coverage Analysis
+  getCoverageByFile(filePath: string): Promise<CoverageData>;
+  getUncoveredLines(): Promise<UncoveredLine[]>;
+}
+```
+
+## Storage Schema
+
+### SQLite Implementation
+
+```sql
+-- Sessions
+CREATE TABLE sessions (
+  id TEXT PRIMARY KEY,
+  start_time DATETIME,
+  end_time DATETIME,
+  status TEXT,
+  config JSON,
+  summary JSON
+);
+
+-- Test Suites
+CREATE TABLE test_suites (
+  id TEXT PRIMARY KEY,
+  session_id TEXT,
+  path TEXT,
+  name TEXT,
+  start_time DATETIME,
+  end_time DATETIME,
+  status TEXT,
+  FOREIGN KEY (session_id) REFERENCES sessions(id)
+);
+
+-- Test Cases
+CREATE TABLE test_cases (
+  id TEXT PRIMARY KEY,
+  session_id TEXT,
+  suite_id TEXT,
+  name TEXT,
+  full_name TEXT,
+  start_time DATETIME,
+  end_time DATETIME,
+  status TEXT,
+  duration INTEGER,
+  FOREIGN KEY (session_id) REFERENCES sessions(id),
+  FOREIGN KEY (suite_id) REFERENCES test_suites(id)
+);
+
+-- Assertions
+CREATE TABLE assertions (
+  id TEXT PRIMARY KEY,
+  test_id TEXT,
+  timestamp DATETIME,
+  type TEXT,
+  matcher TEXT,
+  passed BOOLEAN,
+  actual TEXT,
+  expected TEXT,
+  message TEXT,
+  FOREIGN KEY (test_id) REFERENCES test_cases(id)
+);
+
+-- Logs
+CREATE TABLE logs (
+  id TEXT PRIMARY KEY,
+  session_id TEXT,
+  test_id TEXT,
+  timestamp DATETIME,
+  level TEXT,
+  message TEXT,
+  source TEXT,
+  metadata JSON,
+  FOREIGN KEY (session_id) REFERENCES sessions(id),
+  FOREIGN KEY (test_id) REFERENCES test_cases(id)
+);
+
+-- Errors
+CREATE TABLE errors (
+  id TEXT PRIMARY KEY,
+  test_id TEXT,
+  timestamp DATETIME,
+  type TEXT,
+  message TEXT,
+  stack_trace JSON,
+  location JSON,
+  suggestion TEXT,
+  FOREIGN KEY (test_id) REFERENCES test_cases(id)
+);
+```
+
+## Integration Patterns
+
+### 1. Jest Plugin Integration
+```typescript
+// jest.config.js
+module.exports = {
+  reporters: [
+    'default',
+    ['jest-agent-wrapper', {
+      storage: 'sqlite',
+      dbPath: './test-results.db',
+      realTimeEvents: true
+    }]
+  ]
+};
+```
+
+### 2. Programmatic Integration
+```typescript
+import { JestAgentWrapper } from 'jest-agent-wrapper';
+
+const jaw = new JestAgentWrapper({
+  storage: 'sqlite',
+  dbPath: './test-results.db'
 });
 
-// Run tests
-const runId = await runner.runTests({
-  testPattern: '**/*.test.js',
-  coverage: true,
-  maxWorkers: 4,
-  timeout: 30000
-});
+// Run tests with structured output
+const session = await jaw.runTests('src/**/*.test.js');
 
 // Query results
-const summary = await runner.query.getRunSummary(runId);
-const failures = await runner.query.getFailingTests(runId);
-const slowTests = await runner.query.getSlowTests(runId, { threshold: 1000 });
-const console = await runner.query.getTestConsoleOutput(runId, 'src/foo.test.js');
+const failedTests = await jaw.getFailedTests(session.id);
+const errors = await jaw.getErrorsByType('assertion');
 ```
 
-### Query Methods
+### 3. CLI Wrapper
+```bash
+# Replace jest with jaw
+jaw run src/**/*.test.js --storage sqlite --output test-results.db
 
-```javascript
-// Run queries
-query.getRunSummary(runId)
-query.getRuns({ limit: 10, status: 'completed' })
-query.getRunComparison(runId1, runId2)
-
-// Test queries
-query.getTests(runId, { status: 'failed' })
-query.getTestHistory(testPath, { limit: 10 })
-query.getFlakeyTests({ threshold: 0.8, minRuns: 5 })
-
-// Console queries
-query.getConsoleOutput(runId, { level: 'error' })
-query.getTestConsoleOutput(runId, testPath)
-query.searchConsole(runId, 'search term')
-
-// Performance queries
-query.getSlowTests(runId, { threshold: 1000 })
-query.getTestDurations(runId)
-query.getPerformanceTrends(testPath)
-
-// Error queries
-query.getFailures(runId)
-query.getErrorPatterns(runId)
-query.getStackTraces(runId, errorMessage)
+# Query previous results
+jaw query --failed --since "1 hour ago"
+jaw query --errors --type assertion
+jaw query --slow --limit 10
 ```
 
-## Event Flow
+## Agent Integration Examples
 
-### Test Execution Timeline
+### TDD Workflow Enhancement
 
+```typescript
+class AgentTDDHelper {
+  constructor(private jaw: JestAgentWrapper) {}
+  
+  async runTDDCycle(testFile: string) {
+    // 1. Run tests and analyze failures
+    const session = await this.jaw.runTests(testFile);
+    const failures = await this.jaw.getFailedTests(session.id);
+    
+    if (failures.length === 0) {
+      return { status: 'green', message: 'All tests passing' };
+    }
+    
+    // 2. Analyze failure patterns
+    const errorSummary = await this.analyzeFailures(failures);
+    
+    // 3. Generate implementation suggestions
+    const suggestions = await this.generateImplementationHints(errorSummary);
+    
+    return {
+      status: 'red',
+      failures: failures.length,
+      suggestions,
+      nextActions: this.prioritizeActions(failures)
+    };
+  }
+  
+  async analyzeTestHistory(testName: string) {
+    const history = await this.jaw.getTestHistory(testName);
+    return {
+      totalRuns: history.length,
+      successRate: history.filter(t => t.status === 'passed').length / history.length,
+      averageDuration: history.reduce((sum, t) => sum + t.duration, 0) / history.length,
+      commonErrors: await this.findCommonErrorPatterns(history)
+    };
+  }
+}
 ```
-Timeline                    Event                          Context
---------                    -----                          -------
-T+0ms      ──────►  runTests() called                    Client
-T+10ms     ──────►  Run record created                   Database
-T+20ms     ──────►  Console capture setup                ConsoleCapture
-T+30ms     ──────►  Jest process spawned                 JestExecutor
-T+40ms     ──────►  onRunStart                          JesterReporter
-T+50ms     ──────►  Test file 1 loaded                  Jest
-T+60ms     ──────►  onTestStart(test1)                  JesterReporter
-T+61ms     ──────►  AsyncLocal context set              ConsoleCapture
-T+70ms     ──────►  console.log('test')                 Test Code
-T+71ms     ──────►  Console captured w/ context         Database
-T+100ms    ──────►  onTestResult(test1, passed)         JesterReporter
-T+110ms    ──────►  onTestStart(test2)                  JesterReporter
-T+150ms    ──────►  onTestResult(test2, failed)         JesterReporter
-T+200ms    ──────►  onRunComplete                       JesterReporter
-T+210ms    ──────►  Console capture teardown            ConsoleCapture
-T+220ms    ──────►  Run marked complete                 Database
-T+230ms    ──────►  runId returned                      Client
+
+### Intelligent Test Debugging
+
+```typescript
+class TestDebugger {
+  async diagnoseFailure(testId: string) {
+    const test = await this.jaw.getTestCase(testId);
+    const errors = test.errors;
+    const logs = test.logs;
+    
+    const diagnosis = {
+      primaryError: errors[0],
+      errorCategory: this.categorizeError(errors[0]),
+      relevantLogs: logs.filter(log => this.isRelevantToError(log, errors[0])),
+      suggestedFixes: await this.generateFixes(errors[0]),
+      relatedFailures: await this.findSimilarFailures(errors[0])
+    };
+    
+    return diagnosis;
+  }
+}
 ```
 
-## Console Correlation Strategy
+## Implementation Phases
 
-### The Challenge
+### Phase 1: Core Infrastructure
+- Basic event collection from Jest
+- SQLite storage implementation
+- Simple query interface
+- CLI wrapper for basic usage
 
-Jest runs tests in parallel workers, making console correlation complex:
-- Multiple tests run simultaneously
-- Console output from different tests interleaves
-- Worker processes complicate context tracking
+### Phase 2: Advanced Analytics
+- Error pattern recognition
+- Performance trend analysis
+- Test history tracking
+- Coverage integration
 
-### The Solution
+### Phase 3: Agent Intelligence
+- Failure diagnosis system
+- Automated suggestion engine
+- TDD workflow optimization
+- Integration with popular AI coding tools
 
-1. **AsyncLocalStorage Context**
-   ```javascript
-   // In JesterReporter.onTestStart
-   testContext.run({ 
-     testPath: test.path,
-     testName: currentTest.name,
-     workerId: process.env.JEST_WORKER_ID
-   }, () => {
-     // Test execution happens in this context
-   });
-   ```
+### Phase 4: Ecosystem Integration
+- IDE plugins
+- CI/CD integration
+- Dashboard and reporting UI
+- Team collaboration features
 
-2. **Console Interception**
-   ```javascript
-   console.log = (...args) => {
-     const context = asyncLocalStorage.getStore();
-     db.recordConsole({
-       testPath: context?.testPath,
-       testName: context?.testName,
-       workerId: context?.workerId,
-       message: util.format(...args),
-       timestamp: Date.now()
-     });
-   };
-   ```
+## Configuration Options
 
-3. **Worker Communication**
-   - Each worker maintains its own AsyncLocalStorage
-   - Context passed via Jest's worker communication
-   - Correlation happens at storage layer
+```typescript
+interface JestAgentWrapperConfig {
+  // Storage Configuration
+  storage: 'sqlite' | 'json' | 'memory';
+  dbPath?: string;
+  jsonPath?: string;
+  
+  // Event Collection
+  collectConsole: boolean;
+  collectCoverage: boolean;
+  collectPerformance: boolean;
+  collectStackTraces: boolean;
+  
+  // Real-time Features
+  realTimeEvents: boolean;
+  eventBufferSize: number;
+  
+  // Query Optimization
+  indexFields: string[];
+  retentionDays?: number;
+  
+  // Agent Features
+  enableSuggestions: boolean;
+  enablePatternRecognition: boolean;
+  enableTrendAnalysis: boolean;
+}
+```
 
-## Performance Considerations
+## Benefits for AI Agents
 
-### 1. Database Performance
-- Use WAL mode for better concurrency
-- Batch inserts where possible
-- Prepared statements for frequent queries
-- Indexes on commonly queried fields
+1. **Structured Data**: All test information in queryable, typed objects
+2. **Historical Context**: Complete test history for pattern recognition
+3. **Real-time Feedback**: Immediate structured feedback during test runs
+4. **Error Intelligence**: Categorized errors with suggested fixes
+5. **Performance Insights**: Test duration trends and performance bottlenecks
+6. **Coverage Awareness**: Detailed coverage data for informed development
+7. **Debugging Support**: Rich context for failure analysis
 
-### 2. Console Capture Overhead
-- Minimal overhead (< 1ms per console call)
-- Async writes to not block test execution
-- Configurable capture levels
+## Success Metrics
 
-### 3. Memory Management
-- Stream large result sets
-- Configurable retention policies
-- Automatic cleanup of old runs
+- **Reduced Debug Time**: Faster identification of test failures
+- **Improved TDD Adoption**: Better agent understanding of test-first development
+- **Higher Test Quality**: More comprehensive test coverage and better test design
+- **Faster Development Cycles**: Quicker iteration between red-green-refactor cycles
+- **Better Error Resolution**: More accurate diagnosis and fixing of test failures
 
-### 4. Process Management
-- Proper cleanup of Jest processes
-- Handle SIGINT/SIGTERM gracefully
-- Timeout handling for hung tests
-
-## Error Handling
-
-### 1. Database Errors
-- Automatic retry with exponential backoff
-- Graceful degradation (tests still run)
-- Error logging to separate file
-
-### 2. Jest Process Errors
-- Capture stderr output
-- Handle process crashes
-- Timeout management
-
-### 3. Console Capture Errors
-- Fallback to original console
-- Error boundary around interception
-- Restore on any failure
-
-## Future Enhancements
-
-### Phase 1 (Current)
-- ✓ Basic test execution and recording
-- ✓ Console correlation
-- ✓ SQLite storage
-- ✓ Core query API
-
-### Phase 2
-- [ ] Web UI for result visualization
-- [ ] Real-time test monitoring
-- [ ] Diff visualization for failures
-- [ ] Coverage integration
-
-### Phase 3
-- [ ] Distributed test execution
-- [ ] Cloud storage backends
-- [ ] AI-powered failure analysis
-- [ ] Flake detection algorithms
-
-### Phase 4
-- [ ] IDE integrations
-- [ ] CI/CD platform plugins
-- [ ] Performance regression detection
-- [ ] Test impact analysis
-
-## Security Considerations
-
-1. **Database Security**
-   - File permissions on SQLite database
-   - No sensitive data in console capture
-   - Configurable log sanitization
-
-2. **Process Security**
-   - Run Jest in sandboxed environment
-   - Limit resource consumption
-   - Validate all inputs
-
-3. **API Security**
-   - Input validation on all queries
-   - SQL injection prevention
-   - Rate limiting for API calls
-
-## Conclusion
-
-Jester provides a comprehensive solution for Jest test execution management by:
-1. Capturing complete test execution timeline
-2. Correlating console output with specific tests
-3. Storing all data in queryable format
-4. Providing powerful analysis capabilities
-
-This design enables developers to gain deep insights into test execution, debug failures more effectively, and maintain high-quality test suites.
+This design provides a comprehensive foundation for building an agent-friendly Jest wrapper that transforms the testing experience from console-based to data-driven, enabling AI agents to excel at test-driven development.
