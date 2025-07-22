@@ -102,7 +102,7 @@ npm run split           # Run package splitting
 - `rename-github-repo.js` - Renames GitHub repositories
 - `split-*.js` - Various splitting operations
 
-**Configuration file:** `.gitsubtree` contains the mapping of local directories to remote repositories
+**Configuration file:** `scripts/config/gitsubtree.config` contains the mapping of local directories to remote repositories
 
 ## Architecture Overview
 
@@ -259,6 +259,67 @@ const result = await githubTool.invoke({
 - `github_create_repo` - Create a new repository
 - `github_delete_repo` - Delete a repository
 - `polyrepo_*` - Various polyrepo management functions
+
+## Project Structure Guidelines
+
+### Directory Organization
+
+**IMPORTANT: Follow these directory organization rules to maintain a clean codebase:**
+
+```
+Legion/
+├── packages/                    # All packages in monorepo
+│   ├── module-loader/          # Core infrastructure
+│   ├── cli/                    # CLI package
+│   ├── general-tools/          # Tool collection
+│   ├── llm/                    # LLM client
+│   ├── agent/                  # AI agent
+│   └── code-gen/               # Code generation packages
+│       └── jester/             # Jest test generator
+├── scripts/                    # All scripts organized by purpose
+│   ├── build/                  # Build scripts
+│   ├── test/                   # Test runners
+│   ├── git/                    # Git operations
+│   ├── split/                  # Polyrepo management
+│   ├── utils/                  # Shared utilities
+│   └── config/                 # Configuration files
+│       └── gitsubtree.config   # Polyrepo mappings
+├── docs/                       # Documentation
+├── scratch/                    # Temporary files (gitignored)
+├── .env                        # Environment variables
+└── [config files]              # Standard root configs only
+```
+
+### CRITICAL: File Creation Discipline
+
+**BEFORE creating ANY file, you MUST:**
+
+1. **Check if an existing file serves this purpose** - ALWAYS prefer editing over creating
+2. **If creating temporary/test files:**
+   - Create in `scratch/` directory (create it if needed)
+   - IMMEDIATELY add to .gitignore BEFORE creating the file
+   - Delete when done or explain why it needs to stay
+3. **If creating permanent files:**
+   - Justify why it can't go in an existing file
+   - Place in the correct directory from the start
+   - Never use generic names like `test.js`, `temp.js`, `utils.js`
+4. **For scripts:** 
+   - MUST go in `scripts/[purpose]/` - NEVER in root
+   - Use descriptive names like `build-all-packages.js`
+
+**Proactive .gitignore Management:**
+- Before creating `scratch/` → Add `scratch/` to .gitignore
+- Before generating files → Add pattern to .gitignore
+- Before running commands that create artifacts → Check .gitignore first
+
+### Common Mistakes to Avoid
+
+- ❌ Creating `test.js`, `temp.js`, `foo.js` files anywhere
+- ❌ Leaving scripts in the root directory  
+- ❌ Creating new files when you should edit existing ones
+- ❌ Not organizing imports properly
+- ❌ Creating README files without being asked
+- ❌ Using `console.log` instead of proper logging
 
 ## Important Notes
 

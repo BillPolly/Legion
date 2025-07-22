@@ -23,15 +23,15 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.join(__dirname, '../..');
 
 async function updateGitsubtree(packagePath, repoName, orgName) {
-  const gitsubtreePath = path.join(rootDir, '.gitsubtree');
+  const gitsubtreePath = path.join(rootDir, 'scripts', 'config', 'gitsubtree.config');
   const content = await fs.readFile(gitsubtreePath, 'utf8');
   const newEntry = `packages/${packagePath} https://github.com/${orgName}/${repoName}.git main`;
   
   if (!content.includes(newEntry)) {
     await fs.appendFile(gitsubtreePath, `\n${newEntry}`);
-    console.log('  ✓ Updated .gitsubtree configuration');
+    console.log('  ✓ Updated gitsubtree.config');
   } else {
-    console.log('  ℹ .gitsubtree already contains entry');
+    console.log('  ℹ gitsubtree.config already contains entry');
   }
 }
 

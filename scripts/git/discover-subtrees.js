@@ -76,7 +76,7 @@ async function discoverSubtrees() {
     
     // Also check for .gitsubtree file if it exists
     try {
-      const subtreeConfig = await fs.readFile('.gitsubtree', 'utf8');
+      const subtreeConfig = await fs.readFile(path.join('scripts', 'config', 'gitsubtree.config'), 'utf8');
       const lines = subtreeConfig.split('\n').filter(line => line.trim() && !line.startsWith('#'));
       
       for (const line of lines) {

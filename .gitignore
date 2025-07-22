@@ -43,3 +43,22 @@ lerna-debug.log
 
 # Generated directory
 generated/
+
+# Scratch/temporary directory for Claude Code
+scratch/
+/scratch/
+
+# Common Claude Code mess patterns
+test.js
+temp.js
+foo.js
+*.temp
+*.tmp
+test-*.js
+temp-*.js
+demo.js
+example.js
+
+# Random script files that shouldn't be committed
+/scripts/*.js
+!/scripts/*/*.js

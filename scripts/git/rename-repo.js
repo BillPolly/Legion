@@ -17,10 +17,10 @@ import { promisify } from 'util';
 const execAsync = promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const rootDir = path.join(__dirname, '..');
+const rootDir = path.join(__dirname, '../..');
 
 async function updateGitsubtree(packageName, oldRepoName, newRepoName, orgName) {
-  const gitsubtreePath = path.join(rootDir, '.gitsubtree');
+  const gitsubtreePath = path.join(rootDir, 'scripts', 'config', 'gitsubtree.config');
   let content = await fs.readFile(gitsubtreePath, 'utf8');
   
   const oldEntry = `packages/${packageName} https://github.com/${orgName}/${oldRepoName}.git main`;
@@ -29,10 +29,10 @@ async function updateGitsubtree(packageName, oldRepoName, newRepoName, orgName) 
   if (content.includes(oldEntry)) {
     content = content.replace(oldEntry, newEntry);
     await fs.writeFile(gitsubtreePath, content);
-    console.log('  ✓ Updated .gitsubtree configuration');
+    console.log('  ✓ Updated gitsubtree.config');
     return true;
   } else {
-    console.log('  ⚠ Could not find old entry in .gitsubtree');
+    console.log('  ⚠ Could not find old entry in gitsubtree.config');
     return false;
   }
 }
