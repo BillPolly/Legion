@@ -101,7 +101,8 @@ export default {
   moduleNameMapper: {
     '^@legion/llm-planner/(.*)$': '<rootDir>/../llm-planner/$1',
     '^@legion/llm-planner$': '<rootDir>/../llm-planner/src',
-    '^@legion/module-loader$': '/Users/maxximus/Documents/max/pocs/jsEnvoy/packages/module-loader/src',
-    '^@legion/llm$': '/Users/maxximus/Documents/max/pocs/jsEnvoy/packages/llm/src'
+    '^@legion/module-loader$': '<rootDir>/../../module-loader/src',
+    '^@legion/llm$': '<rootDir>/../../llm/src',
+    '^@legion/jester$': '<rootDir>/../jester/src'
   }
 };
