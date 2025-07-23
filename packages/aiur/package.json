@@ -17,7 +17,8 @@
     "@modelcontextprotocol/sdk": "^1.16.0",
     "@legion/llm-planner": "*",
     "@legion/llm": "*",
-    "@legion/module-loader": "*"
+    "@legion/module-loader": "*",
+    "@legion/plan-executor": "*"
   },
   "devDependencies": {
     "jest": "^29.7.0"

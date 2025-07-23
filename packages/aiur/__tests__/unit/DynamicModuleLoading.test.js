@@ -10,8 +10,6 @@ import { ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { HandleRegistry } from '../../src/handles/HandleRegistry.js';
 import { ToolRegistry } from '../../src/tools/ToolRegistry.js';
 import { LegionModuleAdapter } from '../../src/tools/LegionModuleAdapter.js';
-import { PlanningTools } from '../../src/planning/PlanningTools.js';
-import { PlanExecutor } from '../../src/planning/PlanExecutor.js';
 
 // Mock Legion modules
 class MockSimpleModule {
@@ -118,7 +116,6 @@ class MockMultiFunctionModule {
 describe('Dynamic Module Loading', () => {
   let handleRegistry;
   let toolRegistry;
-  let planExecutor;
   let planningTools;
   let adapter;
   let server;
@@ -128,8 +125,7 @@ describe('Dynamic Module Loading', () => {
     // Initialize registries
     handleRegistry = new HandleRegistry();
     toolRegistry = new ToolRegistry(handleRegistry);
-    planExecutor = new PlanExecutor(toolRegistry, handleRegistry);
-    planningTools = new PlanningTools(toolRegistry, handleRegistry, planExecutor);
+    planningTools = new PlanningTools(toolRegistry, handleRegistry, null);
     
     // Initialize adapter
     adapter = new LegionModuleAdapter(toolRegistry, handleRegistry);

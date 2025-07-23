@@ -144,22 +144,47 @@ class ValidatePlanTool extends Tool {
  * LLMPlannerModule - Module for LLM-based planning
  */
 class LLMPlannerModule extends Module {
-  // Declare dependencies required by this module
-  static dependencies = ['llmClient'];
-  
-  constructor(dependencies = {}) {
+  constructor(llmClient) {
     super();
     this.name = 'llm-planner';
     this.description = 'LLM-based planning component for intelligent task decomposition';
-    
-    // Get the LLM client from dependencies
-    const llmClient = dependencies.llmClient;
+    this.llmClient = llmClient;
     
     // Create and register tools
     this.tools = [
       new CreatePlanTool(llmClient),
       new ValidatePlanTool()
     ];
+  }
+
+  /**
+   * Static async factory method to create module with proper dependencies
+   * @param {ResourceManager} resourceManager - Optional resource manager, uses global if not provided
+   * @returns {Promise<LLMPlannerModule>} Initialized module instance
+   */
+  static async create(resourceManager = null) {
+    // Use provided resource manager or get the global one
+    if (!resourceManager) {
+      const { ResourceManager } = await import('@legion/module-loader');
+      resourceManager = new ResourceManager();
+      await resourceManager.initialize();
+    }
+
+    // Check if llmClient already exists in ResourceManager
+    let llmClient;
+    try {
+      llmClient = resourceManager.get('llmClient');
+    } catch (e) {
+      // Create LLM client using environment variables
+      const { LLMClient } = await import('@legion/llm');
+      llmClient = new LLMClient({
+        provider: 'anthropic',
+        apiKey: resourceManager.get('env.ANTHROPIC_API_KEY')
+      });
+      resourceManager.register('llmClient', llmClient);
+    }
+
+    return new LLMPlannerModule(llmClient);
   }
 }
 

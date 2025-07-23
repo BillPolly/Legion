@@ -50,5 +50,15 @@ export default {
   restoreMocks: true,
   
   // Test timeout
-  testTimeout: 10000
+  testTimeout: 10000,
+  
+  // Module name mapping for workspace packages
+  moduleNameMapper: {
+    '^@legion/(.*)$': '<rootDir>/../$1/src/index.js'
+  },
+  
+  // Transform ignore patterns - don't transform node_modules except @legion packages
+  transformIgnorePatterns: [
+    'node_modules/(?!(@legion)/)'
+  ]
 };

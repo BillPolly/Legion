@@ -15,6 +15,9 @@ export { GenericPlanner } from './GenericPlanner.js';
 // Flow validator
 export { FlowValidator } from './FlowValidator.js';
 
+// Legion module
+export { LLMPlannerModule } from './LLMPlannerModule.js';
+
 // Default export the main planner
 import { GenericPlanner as DefaultGenericPlanner } from './GenericPlanner.js';
 export default DefaultGenericPlanner;

@@ -27,6 +27,10 @@ export class LegionModuleAdapter {
     
     // Create ModuleFactory with the ResourceManager
     this.moduleFactory = new ModuleFactory(this.resourceManager);
+    
+    // Register self-referential dependencies for modules that need them
+    this.resourceManager.register('resourceManager', this.resourceManager);
+    this.resourceManager.register('moduleFactory', this.moduleFactory);
   }
 
   /**
@@ -62,7 +66,7 @@ export class LegionModuleAdapter {
     
     // Convert and register each tool
     for (const tool of tools) {
-      const mcpTools = this._convertToMCPTools(tool);
+      const mcpTools = this._convertToMCPTools(tool, module);
       // mcpTools can be an array (for multi-function tools) or a single tool
       const toolsToRegister = Array.isArray(mcpTools) ? mcpTools : [mcpTools];
       for (const mcpTool of toolsToRegister) {
@@ -83,9 +87,11 @@ export class LegionModuleAdapter {
   /**
    * Convert a Legion tool to MCP-compatible format
    * @private
+   * @param {Object} legionTool - The Legion tool to convert
+   * @param {Object} module - The module that contains this tool
    * @returns {Object|Array} Single tool or array of tools for multi-function
    */
-  _convertToMCPTools(legionTool) {
+  _convertToMCPTools(legionTool, module) {
     // Handle tools that expose multiple functions
     if (legionTool.getAllToolDescriptions) {
       const allDescs = legionTool.getAllToolDescriptions();
@@ -97,6 +103,8 @@ export class LegionModuleAdapter {
         inputSchema: desc.function.parameters,
         category: 'legion',
         tags: ['imported', 'legion-module', legionTool.name],
+        _module: module, // Store module reference
+        _legionTool: legionTool, // Store original tool reference
         execute: async (args) => {
           // Create a mock tool call for Legion format
           const toolCall = {
@@ -135,6 +143,8 @@ export class LegionModuleAdapter {
       inputSchema: functionDef.parameters,
       category: 'legion',
       tags: ['imported', 'legion-module'],
+      _module: module, // Store module reference
+      _legionTool: legionTool, // Store original tool reference
       execute: async (args) => {
         // Create a mock tool call for Legion format
         const toolCall = {

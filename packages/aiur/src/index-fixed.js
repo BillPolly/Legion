@@ -13,15 +13,15 @@ import { HandleRegistry } from './handles/HandleRegistry.js';
 import { HandleResolver } from './handles/HandleResolver.js';
 import { ToolRegistry } from './tools/ToolRegistry.js';
 import { PlanningTools } from './planning/PlanningTools.js';
-import { PlanExecutor } from './planning/PlanExecutor.js';
+// PlanExecutor now comes from @legion/plan-executor module
 import { LegionModuleAdapter } from './tools/LegionModuleAdapter.js';
 
 // Initialize Aiur systems
 const handleRegistry = new HandleRegistry();
 const handleResolver = new HandleResolver(handleRegistry);
 const toolRegistry = new ToolRegistry(handleRegistry);
-const planExecutor = new PlanExecutor(toolRegistry, handleRegistry);
-const planningTools = new PlanningTools(toolRegistry, handleRegistry, planExecutor);
+// PlanExecutor is now handled internally by PlanningTools
+const planningTools = new PlanningTools(toolRegistry, handleRegistry, null);
 
 // Get comprehensive tools from our systems  
 const TOOLS = [
@@ -300,6 +300,16 @@ async function loadLegionModules() {
   // Easy to add new modules here without changing any other code
   const moduleConfigs = [
     {
+      // Load PlanExecutorModule dynamically
+      getModule: async () => {
+        const { PlanExecutorModule } = await import('@legion/plan-executor');
+        return PlanExecutorModule;
+      },
+      dependencies: {
+        // PlanExecutorModule uses resourceManager and moduleFactory from adapter
+      }
+    },
+    {
       // Load FileModule dynamically
       getModule: async () => {
         const { default: FileModule } = await import('../../general-tools/src/file/FileModule.js');
@@ -348,7 +358,8 @@ async function loadLegionModules() {
       console.error(`Loaded module: ${result.moduleName} with ${newTools.length} tools`);
       console.error('Added tools:', newTools.map(t => t.name));
     } catch (error) {
-      console.error(`Failed to load module:`, error);
+      console.error(`Failed to load module:`, error.message);
+      // Continue loading other modules
     }
   }
   

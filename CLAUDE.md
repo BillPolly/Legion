@@ -340,6 +340,44 @@ Legion/
 - Use the Railway module tools when working with Legion framework
 - This ensures consistency and proper error handling
 
+## CRITICAL: Async Resource Manager Pattern
+
+**ALL root-level objects and services MUST follow the [Async Resource Manager Pattern](docs/async-resource-manager-pattern.md):**
+
+### Required Pattern:
+```typescript
+class MyService {
+  private constructor(dependencies) {
+    // Private constructor - no async operations here
+  }
+
+  static async create(rm: ResourceManager): Promise<MyService> {
+    // Get all dependencies from ResourceManager
+    const config = rm.get<Config>('Config');
+    const database = rm.get<Database>('Database');
+    
+    // Perform any async initialization here
+    await someAsyncSetup();
+    
+    return new MyService({ config, database });
+  }
+}
+```
+
+### Rules:
+- **NEVER use `new` directly** - always use `static async create(rm)` 
+- **NEVER use async constructors** - constructors must be synchronous
+- **ALL dependencies come from ResourceManager** - no direct imports or hardcoded values
+- **ALL services are testable** by mocking the ResourceManager
+- **Follow the pattern exactly** as documented in `/docs/async-resource-manager-pattern.md`
+
+### Examples in Codebase:
+- `LLMPlannerModule.create(resourceManager)` - Correct async factory pattern
+- `PlanExecutorModule` should be updated to follow this pattern
+- `FileModule` should be updated to follow this pattern
+
+This pattern ensures proper dependency injection, testability, and eliminates async constructor issues.
+
 ## Aiur MCP Server Context Management
 
 ### Overview

@@ -12,19 +12,17 @@ import {
 import { HandleRegistry } from './handles/HandleRegistry.js';
 import { HandleResolver } from './handles/HandleResolver.js';
 import { ToolRegistry } from './tools/ToolRegistry.js';
-import { PlanningTools } from './planning/PlanningTools.js';
-import { PlanExecutor } from './planning/PlanExecutor.js';
 
-// Import Legion module system for FileModule
+// Import Legion module system for modules
 import FileModule from '../../general-tools/src/file/FileModule.js';
+import { PlanExecutorModule } from '@legion/plan-executor';
+import { LLMPlannerModule } from '@legion/llm-planner';
 import { LegionModuleAdapter } from './tools/LegionModuleAdapter.js';
 
 // Initialize Aiur systems
 const handleRegistry = new HandleRegistry();
 const handleResolver = new HandleResolver(handleRegistry);
 const toolRegistry = new ToolRegistry(handleRegistry);
-const planExecutor = new PlanExecutor(toolRegistry, handleRegistry);
-const planningTools = new PlanningTools(toolRegistry, handleRegistry, planExecutor);
 
 // Initialize tools array with base tools
 const TOOLS = [
@@ -76,10 +74,8 @@ const TOOLS = [
         }
       }
     }
-  },
-  
-  // Add our comprehensive planning tools
-  ...Object.values(planningTools.getTools())
+  }
+  // Planning tools will be added dynamically from modules
 ];
 
 async function handleToolCall(name, args) {
@@ -193,45 +189,6 @@ async function handleToolCall(name, args) {
       };
     }
     
-    // Route to our comprehensive planning tools
-    const planningToolsMap = planningTools.getTools();
-    if (planningToolsMap[name]) {
-      const result = await planningToolsMap[name].execute(resolvedArgs);
-      
-      // Auto-save to context if saveAs is provided
-      if (resolvedArgs.saveAs && result.success) {
-        const contextName = `context_${resolvedArgs.saveAs}`;
-        const contextData = {
-          data: result,
-          description: `Result from ${name} tool`,
-          addedAt: new Date().toISOString(),
-          type: 'context',
-          sourceTool: name,
-          sourceArgs: resolvedArgs
-        };
-        
-        try {
-          const contextHandle = handleRegistry.create(contextName, contextData);
-          result.savedToContext = {
-            contextName: resolvedArgs.saveAs,
-            handleId: contextHandle,
-            message: `Result saved to context as '${resolvedArgs.saveAs}'`
-          };
-        } catch (contextError) {
-          result.contextWarning = `Failed to save to context: ${contextError.message}`;
-        }
-      }
-      
-      // Convert our tool result format to MCP format
-      return {
-        content: [{
-          type: "text",
-          text: JSON.stringify(result, null, 2)
-        }],
-        isError: !result.success,
-      };
-    }
-    
     // Check if it's a dynamically loaded tool in the toolRegistry
     const registeredTool = toolRegistry.getTool(name);
     if (registeredTool) {
@@ -338,8 +295,35 @@ async function loadLegionModules() {
     const legionAdapter = new LegionModuleAdapter(toolRegistry, handleRegistry);
     await legionAdapter.initialize();
     
-    // Module configuration - easy to add new modules here
+    // Load modules using async factory pattern where available
+    try {
+      // Load LLMPlannerModule using async factory
+      const llmPlannerModule = await LLMPlannerModule.create(legionAdapter.resourceManager);
+      
+      // Register the tools from the created module manually
+      const tools = llmPlannerModule.getTools();
+      for (const tool of tools) {
+        const mcpTools = legionAdapter._convertToMCPTools(tool, llmPlannerModule);
+        const toolsToRegister = Array.isArray(mcpTools) ? mcpTools : [mcpTools];
+        for (const mcpTool of toolsToRegister) {
+          toolRegistry.registerTool(mcpTool);
+        }
+      }
+      
+      legionAdapter.loadedModules.set(llmPlannerModule.name, llmPlannerModule);
+      console.error(`Loaded module: ${llmPlannerModule.name}`);
+    } catch (error) {
+      console.error('Failed to load LLMPlannerModule:', error.message);
+    }
+
+    // Module configuration for other modules
     const moduleConfigs = [
+      {
+        module: PlanExecutorModule,
+        dependencies: {
+          // PlanExecutorModule uses resourceManager and moduleFactory from adapter
+        }
+      },
       {
         module: FileModule,
         dependencies: {
@@ -354,8 +338,9 @@ async function loadLegionModules() {
     
     // Load each module
     for (const config of moduleConfigs) {
-      const result = await legionAdapter.loadModule(config.module, config.dependencies);
-      console.error(`Loaded module: ${result.moduleName}`);
+      try {
+        const result = await legionAdapter.loadModule(config.module, config.dependencies);
+        console.error(`Loaded module: ${result.moduleName}`);
       
       // Get all newly registered tools
       const registeredTools = toolRegistry.getAllTools();
@@ -375,6 +360,10 @@ async function loadLegionModules() {
       });
       
       console.error(`Added ${newTools.length} tools from ${result.moduleName}:`, newTools.map(t => t.name));
+      } catch (error) {
+        console.error(`Failed to load module ${config.module.name}:`, error.message);
+        // Continue loading other modules
+      }
     }
     
     console.error(`Total tools available: ${TOOLS.length}`);

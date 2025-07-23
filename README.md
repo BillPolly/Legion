@@ -202,6 +202,15 @@ The framework uses a modular architecture with dependency injection:
 4. **ModuleFactory** creates module instances with resolved dependencies
 5. **Agent** orchestrates tool execution with LLM integration
 
+### Async Resource Manager Pattern
+
+**CRITICAL**: All root-level objects and services in Legion follow the [Async Resource Manager Pattern](docs/async-resource-manager-pattern.md). This pattern ensures:
+
+- All services use `static async create(rm: ResourceManager)` methods
+- No async code in constructors
+- Full testability through dependency injection
+- Centralized configuration and lifecycle management
+
 See [Architecture Documentation](docs/ARCHITECTURE.md) for details.
 
 ## Event System
