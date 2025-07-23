@@ -2,9 +2,14 @@
  * PlanningTools - Tools for plan creation, execution, and status management
  * 
  * Provides MCP-compatible tools for managing plans with handle integration
+ * Now with LLM-based plan generation support
  */
 
 import { AiurPlan } from './AiurPlan.js';
+import { LLMPlanAdapter } from './LLMPlanAdapter.js';
+import { GenericPlanner } from '@legion/llm-planner';
+import { LLMClient } from '@legion/llm';
+import { ResourceManager } from '@legion/module-loader';
 
 export class PlanningTools {
   constructor(toolRegistry, handleRegistry, planExecutor) {
@@ -15,7 +20,55 @@ export class PlanningTools {
     // Initialize plan registry for quick access
     this.planRegistry = new Map();
     
+    // LLM planner will be initialized on first use
+    this.llmPlanner = null;
+    this.llmClient = null;
+    this.resourceManager = null;
+    
     this._initializeTools();
+  }
+
+  /**
+   * Initialize LLM planner with ResourceManager (lazy initialization)
+   * @private
+   */
+  async _initializeLLMPlanner() {
+    if (this.llmPlanner) {
+      return; // Already initialized
+    }
+    
+    try {
+      // Initialize ResourceManager to access environment variables
+      this.resourceManager = new ResourceManager();
+      await this.resourceManager.initialize();
+      
+      // Get API key from environment
+      const apiKey = this.resourceManager.get('env.ANTHROPIC_API_KEY') || 
+                     this.resourceManager.get('env.OPENAI_API_KEY');
+      
+      if (apiKey) {
+        // Initialize LLM client
+        this.llmClient = new LLMClient({
+          provider: this.resourceManager.get('env.ANTHROPIC_API_KEY') ? 'anthropic' : 'openai',
+          apiKey: apiKey,
+          model: this.resourceManager.get('env.ANTHROPIC_API_KEY') ? 'claude-3-opus-20240229' : 'gpt-4'
+        });
+        
+        // Initialize Generic Planner
+        this.llmPlanner = new GenericPlanner({
+          llmClient: this.llmClient,
+          maxRetries: 3,
+          maxSteps: 20
+        });
+        
+        console.error('LLM Planner initialized successfully');
+      } else {
+        console.error('No LLM API key found - AI planning features disabled');
+      }
+    } catch (error) {
+      console.error('Failed to initialize LLM planner:', error);
+      this.llmPlanner = null;
+    }
   }
 
   /**
@@ -67,10 +120,32 @@ export class PlanningTools {
   _createPlanCreateTool() {
     return {
       name: 'plan_create',
-      description: 'Create a new execution plan with steps and dependencies',
+      description: 'Create a new execution plan with steps and dependencies. Can either accept manual steps or generate a plan from a goal using AI.',
       inputSchema: {
         type: 'object',
         properties: {
+          // For AI-generated plans
+          goal: {
+            type: 'string',
+            description: 'High-level goal description for AI plan generation (alternative to providing steps)'
+          },
+          inputs: {
+            type: 'array',
+            description: 'Available inputs/handles for AI plan generation',
+            items: { type: 'string' }
+          },
+          requiredOutputs: {
+            type: 'array',
+            description: 'Required outputs the AI plan should produce',
+            items: { type: 'string' }
+          },
+          constraints: {
+            type: 'array',
+            description: 'Constraints or requirements for AI plan generation',
+            items: { type: 'string' }
+          },
+          
+          // For manual plans or both
           title: {
             type: 'string',
             description: 'Title of the plan'
@@ -81,7 +156,7 @@ export class PlanningTools {
           },
           steps: {
             type: 'array',
-            description: 'Array of steps to execute',
+            description: 'Array of steps to execute (for manual plan creation)',
             items: {
               type: 'object',
               properties: {
@@ -124,30 +199,100 @@ export class PlanningTools {
             description: 'Handle name to save the plan as'
           }
         },
-        required: ['title', 'steps']
+        required: [] // Made flexible - either goal or (title + steps)
       },
       execute: async (params) => {
         try {
-          // Generate plan ID if not provided
-          const planId = params.id || `plan-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          let planData;
+          let llmGeneratedPlan = null;
           
-          // Build plan data
-          const planData = {
-            id: planId,
-            title: params.title,
-            description: params.description || '',
-            steps: params.steps,
-            options: params.options || {},
-            metadata: {
-              createdAt: new Date(),
-              createdBy: 'planning-tools'
+          // Check if this is an AI plan generation request
+          if (params.goal && !params.steps) {
+            // Ensure LLM planner is initialized
+            if (!this.llmPlanner) {
+              // Try to initialize it if not already done
+              await this._initializeLLMPlanner();
+              if (!this.llmPlanner) {
+                return {
+                  success: false,
+                  error: 'LLM planner not available. Please ensure ANTHROPIC_API_KEY or OPENAI_API_KEY is set in environment.'
+                };
+              }
             }
-          };
+            
+            // Build allowable actions from available tools
+            const allowableActions = this._buildAllowableActions();
+            
+            // Prepare inputs from handles if specified
+            const inputs = params.inputs || [];
+            const resolvedInputs = [];
+            for (const input of inputs) {
+              if (input.startsWith('@')) {
+                // It's a handle reference
+                const handleName = input.substring(1);
+                if (this.handleRegistry.existsByName(handleName)) {
+                  resolvedInputs.push(handleName);
+                }
+              } else {
+                resolvedInputs.push(input);
+              }
+            }
+            
+            // Generate plan using LLM
+            try {
+              llmGeneratedPlan = await this.llmPlanner.createPlan({
+                description: params.goal,
+                inputs: resolvedInputs,
+                requiredOutputs: params.requiredOutputs || [],
+                allowableActions: allowableActions,
+                maxSteps: 20
+              });
+            } catch (llmError) {
+              return {
+                success: false,
+                error: `LLM plan generation failed: ${llmError.message}`
+              };
+            }
+          } else {
+            // Manual plan creation
+            if (!params.steps || !params.title) {
+              return {
+                success: false,
+                error: 'Either provide a goal for AI planning or both title and steps for manual planning'
+              };
+            }
+            
+            // Generate plan ID if not provided
+            const planId = params.id || `plan-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            
+            // Build plan data
+            planData = {
+              id: planId,
+              title: params.title,
+              description: params.description || '',
+              steps: params.steps,
+              options: params.options || {},
+              metadata: {
+                createdAt: new Date(),
+                createdBy: 'planning-tools'
+              }
+            };
+          }
 
-          // Create plan
-          const plan = new AiurPlan(planData, this.handleRegistry, {
-            validateOnCreate: params.validateOnCreate !== false
-          });
+          // Create plan - use adapter for LLM-generated plans
+          let plan;
+          if (llmGeneratedPlan) {
+            // Use LLMPlanAdapter for llm-generated plans
+            plan = new LLMPlanAdapter(llmGeneratedPlan, this.handleRegistry, {
+              validateOnCreate: params.validateOnCreate !== false,
+              ...params.options
+            });
+          } else {
+            // Use regular AiurPlan for manual plans
+            plan = new AiurPlan(planData, this.handleRegistry, {
+              validateOnCreate: params.validateOnCreate !== false
+            });
+          }
 
           // Validate if requested
           if (params.validateOnCreate !== false) {
@@ -173,12 +318,12 @@ export class PlanningTools {
           this.planRegistry.set(plan.id, plan);
 
           // Generate plan handle name
-          const planHandle = params.saveAs || `plan_${planId}`;
+          const planHandle = params.saveAs || `plan_${plan.id}`;
           
           // Save plan as handle
           this.handleRegistry.create(planHandle, plan);
 
-          return {
+          const result = {
             success: true,
             plan: {
               id: plan.id,
@@ -188,8 +333,17 @@ export class PlanningTools {
               options: plan.options
             },
             planHandle,
-            message: `Plan '${params.title}' created successfully`
+            message: llmGeneratedPlan 
+              ? `AI-generated plan '${plan.title}' created successfully from goal: "${params.goal}"`
+              : `Plan '${plan.title}' created successfully`
           };
+          
+          // Include LLM plan structure if it was generated
+          if (llmGeneratedPlan) {
+            result.llmPlan = llmGeneratedPlan.toJSON();
+          }
+          
+          return result;
 
         } catch (error) {
           return {
@@ -509,5 +663,44 @@ export class PlanningTools {
       }
     }
     return refs;
+  }
+
+  /**
+   * Build allowable actions from registered tools
+   * @private
+   */
+  _buildAllowableActions() {
+    const allowableActions = [];
+    
+    // Get all registered tools
+    const tools = this.toolRegistry.getAllTools();
+    
+    for (const tool of tools) {
+      // Skip planning tools themselves to avoid recursion
+      if (tool.name.startsWith('plan_')) {
+        continue;
+      }
+      
+      // Extract inputs and outputs from tool schema
+      const inputs = [];
+      const outputs = [];
+      
+      if (tool.inputSchema && tool.inputSchema.properties) {
+        inputs.push(...Object.keys(tool.inputSchema.properties));
+      }
+      
+      // For outputs, we'll use a convention or tool metadata
+      // Most tools return a 'result' or specific named outputs
+      outputs.push('result'); // Default output
+      
+      allowableActions.push({
+        type: tool.name,
+        inputs: inputs,
+        outputs: outputs,
+        description: tool.description
+      });
+    }
+    
+    return allowableActions;
   }
 }

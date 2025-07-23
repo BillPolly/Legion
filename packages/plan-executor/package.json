@@ -1,27 +1,30 @@
 {
-  "name": "@legion/aiur",
+  "name": "@legion/plan-executor",
   "version": "1.0.0",
-  "description": "MCP server for AI agent coordination",
+  "description": "Flexible plan execution engine for Legion with support for llm-planner and other plan formats",
   "type": "module",
   "main": "src/index.js",
-  "bin": {
-    "aiur": "./src/index.js"
-  },
   "scripts": {
-    "start": "node src/index.js",
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.16.0",
-    "@legion/llm-planner": "*",
-    "@legion/llm": "*",
-    "@legion/module-loader": "*"
+    "@legion/module-loader": "*",
+    "@legion/llm-planner": "*"
   },
   "devDependencies": {
     "jest": "^29.7.0"
   },
+  "keywords": [
+    "legion",
+    "plan",
+    "executor",
+    "workflow",
+    "orchestration",
+    "ai",
+    "llm"
+  ],
   "engines": {
     "node": ">=18.0.0"
   }
