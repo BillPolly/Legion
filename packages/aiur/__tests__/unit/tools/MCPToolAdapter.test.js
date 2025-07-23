@@ -470,4 +470,167 @@ describe('MCPToolAdapter', () => {
       expect(result.value).toBe('test');
     });
   });
+
+  describe('Legion Tool Format Support', () => {
+    test('should handle Legion tools with getToolDescription method', () => {
+      const legionTool = {
+        name: 'legion-tool',
+        description: 'Tool using Legion format',
+        getToolDescription: () => ({
+          type: 'function',
+          function: {
+            name: 'legion_function',
+            description: 'A Legion function',
+            parameters: {
+              type: 'object',
+              properties: {
+                message: { type: 'string' }
+              },
+              required: ['message']
+            }
+          }
+        }),
+        execute: async (params) => ({ echo: params.message })
+      };
+
+      // The adapter should detect this is a Legion tool format
+      const mcpTool = adapter.wrapTool(legionTool);
+      
+      // Should use the tool's name property, not the function name
+      expect(mcpTool.name).toBe('legion-tool');
+      expect(mcpTool.description).toBe('Tool using Legion format');
+    });
+
+    test('should detect multi-function Legion tools with getAllToolDescriptions', () => {
+      const multiTool = {
+        name: 'multi_operations',
+        description: 'Multi-function tool',
+        getAllToolDescriptions: () => [
+          {
+            type: 'function',
+            function: {
+              name: 'operation_one',
+              description: 'First operation',
+              parameters: { type: 'object' }
+            }
+          },
+          {
+            type: 'function', 
+            function: {
+              name: 'operation_two',
+              description: 'Second operation',
+              parameters: { type: 'object' }
+            }
+          }
+        ],
+        execute: async (params) => ({ result: 'executed' })
+      };
+
+      const mcpTool = adapter.wrapTool(multiTool);
+      
+      // Multi-function tools need special handling
+      expect(mcpTool.name).toBe('multi_operations');
+      expect(typeof mcpTool.execute).toBe('function');
+    });
+
+    test('should validate tool has required structure', () => {
+      // Tool without name
+      expect(() => adapter.wrapTool({ execute: async () => {} }))
+        .toThrow('Tool must have name and execute function');
+      
+      // Tool without execute
+      expect(() => adapter.wrapTool({ name: 'test' }))
+        .toThrow('Tool must have name and execute function');
+    });
+
+    test('should handle OpenAI function calling format in Legion tools', async () => {
+      const openAITool = {
+        name: 'openai_tool',
+        description: 'OpenAI format tool',
+        // This mimics Legion Tool base class behavior
+        invoke: async function(toolCall) {
+          const args = JSON.parse(toolCall.function.arguments);
+          return { success: true, data: { received: args } };
+        },
+        safeInvoke: async function(toolCall) {
+          try {
+            return await this.invoke(toolCall);
+          } catch (error) {
+            return { success: false, error: error.message };
+          }
+        },
+        execute: async function(params) {
+          // Adapter for simple params to toolCall format
+          const toolCall = {
+            id: `test-${Date.now()}`,
+            type: 'function',
+            function: {
+              name: this.name,
+              arguments: JSON.stringify(params)
+            }
+          };
+          const result = await this.safeInvoke(toolCall);
+          if (!result.success) throw new Error(result.error);
+          return result.data;
+        }
+      };
+
+      const mcpTool = adapter.wrapTool(openAITool);
+      const result = await mcpTool.execute({ test: 'value' });
+
+      expect(result.success).toBe(true);
+      expect(result.received).toEqual({ test: 'value' });
+    });
+
+    test('should handle ToolResult format from Legion tools', async () => {
+      const toolResultTool = {
+        name: 'tool_result_tool',
+        execute: async (params) => {
+          // Simulating ToolResult.success() format
+          return {
+            success: true,
+            data: {
+              processed: params.input,
+              timestamp: new Date().toISOString()
+            }
+          };
+        }
+      };
+
+      const mcpTool = adapter.wrapTool(toolResultTool);
+      const result = await mcpTool.execute({ input: 'test data' });
+
+      expect(result.success).toBe(true);
+      expect(result.data.processed).toBe('test data');
+      expect(result.data.timestamp).toBeDefined();
+    });
+
+    test('should handle Legion tool with both getToolDescription and execute', async () => {
+      const hybridTool = {
+        name: 'hybrid_tool',
+        getToolDescription: () => ({
+          type: 'function',
+          function: {
+            name: 'hybrid_function',
+            description: 'Hybrid Legion tool',
+            parameters: {
+              type: 'object',
+              properties: {
+                value: { type: 'number' }
+              }
+            }
+          }
+        }),
+        execute: async (params) => ({
+          doubled: params.value * 2
+        })
+      };
+
+      const mcpTool = adapter.wrapTool(hybridTool);
+      const result = await mcpTool.execute({ value: 5 });
+
+      expect(result.success).toBe(true);
+      expect(result.doubled).toBe(10);
+    });
+  });
 });
