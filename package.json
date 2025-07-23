@@ -57,7 +57,7 @@
     "lerna": "^8.0.2"
   },
   "keywords": [
-    "jsenvoy",
+    "legion",
     "ai",
     "agents",
     "tools",
@@ -68,6 +68,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/maxximus-dev/jsEnvoy.git"
+    "url": "https://github.com/maxximus-dev/Legion.git"
   }
 }

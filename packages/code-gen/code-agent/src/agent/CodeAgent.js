@@ -33,6 +33,7 @@ import { TestGenerator } from '../generation/TestGenerator.js';
 import { PlanningPhase } from './phases/PlanningPhase.js';
 import { GenerationPhase } from './phases/GenerationPhase.js';
 import { TestingPhase } from './phases/TestingPhase.js';
+import { BrowserTestingPhase } from './phases/BrowserTestingPhase.js';
 import { QualityPhase } from './phases/QualityPhase.js';
 import { FixingPhase } from './phases/FixingPhase.js';
 import { DeploymentPhase } from './phases/DeploymentPhase.js';
@@ -144,6 +145,7 @@ class CodeAgent extends EventEmitter {
     this.planningPhase = null;
     this.generationPhase = null;
     this.testingPhase = null;
+    this.browserTestingPhase = null;
     this.qualityPhase = null;
     this.fixingPhase = null;
     this.deploymentPhase = null;
@@ -224,6 +226,7 @@ class CodeAgent extends EventEmitter {
       this.planningPhase = new PlanningPhase(this);
       this.generationPhase = new GenerationPhase(this);
       this.testingPhase = new TestingPhase(this);
+      this.browserTestingPhase = new BrowserTestingPhase(this);
       this.qualityPhase = new QualityPhase(this);
       this.fixingPhase = new FixingPhase(this);
       this.deploymentPhase = new DeploymentPhase(this);

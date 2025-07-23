@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-jsEnvoy is a modular framework for building AI agent tools with consistent interfaces. It's organized as a monorepo using npm workspaces with six main packages:
+Legion is a modular framework for building AI agent tools with consistent interfaces. It's organized as a monorepo using npm workspaces with six main packages:
 
-1. **@jsenvoy/module-loader** - Core infrastructure with base classes, dependency injection, and module management
-2. **@jsenvoy/cli** - Command-line interface for executing tools with REPL and autocomplete
-3. **@jsenvoy/tools** - Collection of AI agent tools (file operations, web tools, GitHub integration, etc.)
-4. **@jsenvoy/llm** - LLM client with multiple providers (OpenAI, Anthropic, DeepSeek, OpenRouter) and response parsing/validation
-5. **@jsenvoy/agent** - AI agent implementation with retry logic and tool execution
+1. **@legion/module-loader** - Core infrastructure with base classes, dependency injection, and module management
+2. **@legion/cli** - Command-line interface for executing tools with REPL and autocomplete
+3. **@legion/tools** - Collection of AI agent tools (file operations, web tools, GitHub integration, etc.)
+4. **@legion/llm** - LLM client with multiple providers (OpenAI, Anthropic, DeepSeek, OpenRouter) and response parsing/validation
+5. **@legion/agent** - AI agent implementation with retry logic and tool execution
 
 ## Essential Commands
 
@@ -184,7 +184,7 @@ packages/
 ### Correct Way to Access Environment Variables:
 
 ```javascript
-import { ResourceManager } from '@jsenvoy/module-loader';
+import { ResourceManager } from '@legion/module-loader';
 
 // Initialize ResourceManager
 const resourceManager = new ResourceManager();
@@ -219,7 +219,7 @@ The ResourceManager automatically loads the `.env` file from the project root an
 To use GitHub tools in scripts, follow this pattern:
 
 ```javascript
-import { ResourceManager, ModuleFactory } from '@jsenvoy/module-loader';
+import { ResourceManager, ModuleFactory } from '@legion/module-loader';
 import GitHubModule from '../../packages/general-tools/src/github/GitHubModule.js';
 
 // Initialize ResourceManager
@@ -335,9 +335,9 @@ Legion/
 ## CRITICAL: Always Use Railway Tools
 
 **NEVER use raw Railway API calls or GraphQL queries directly!** Always use the Railway tools and modules we've built:
-- Use `RailwayProvider` from `@jsenvoy/railway` for API operations
+- Use `RailwayProvider` from `@legion/railway` for API operations
 - Use `RailwayCLI` for CLI operations
-- Use the Railway module tools when working with jsEnvoy framework
+- Use the Railway module tools when working with Legion framework
 - This ensures consistency and proper error handling
 
 ## Aiur MCP Server Context Management

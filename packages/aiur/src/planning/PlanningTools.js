@@ -316,8 +316,7 @@ export class PlanningTools {
         properties: {
           planHandle: {
             type: 'string',
-            description: 'Handle name of the plan to check',
-            required: true
+            description: 'Handle name of the plan to check'
           },
           includeSteps: {
             type: 'boolean',
@@ -416,8 +415,7 @@ export class PlanningTools {
         properties: {
           planHandle: {
             type: 'string',
-            description: 'Handle name of the plan to validate',
-            required: true
+            description: 'Handle name of the plan to validate'
           },
           checkDependencies: {
             type: 'boolean',

@@ -73,11 +73,65 @@ const comprehensiveTools = [
       }
     }
   },
+  
   // Add our comprehensive planning tools
   ...Object.values(planningTools.getTools())
 ];
 
-const TOOLS = comprehensiveTools;
+// Simple tools
+const simpleTools = [
+{
+    name: "context_add",
+    description: "Add data to the context for AI agents to reference",
+    inputSchema: {
+      type: "object",
+      properties: {
+         name: {
+          type: "string",
+          description: "Name/key for the context data"
+        },
+         data: {
+          description: "Context data to store (any type)"
+        },
+        description: {
+          type: "string",
+          description: "Optional description of what this context contains"
+        }
+      },
+      required: ["name", "data"]
+    }
+  }, {
+    name: "context_get",
+    description: "Retrieve context data by name",
+    inputSchema: {
+      type: "object",
+      properties: {
+        name: {
+          type: "string",
+          description: "Name of the context data to retrieve"
+        }
+      },
+      required: ["name"]
+    }
+  },
+  {
+    name: "context_list",
+    description: "List all available context data",
+    inputSchema: {
+      type: "object",
+      properties: {
+        filter: {
+          type: "string",
+          description: "Optional filter pattern for context names"
+        }
+      }
+    }
+  },
+  
+  // Add our comprehensive planning tools
+  ...Object.values(planningTools.getTools())
+];
+const TOOLS = simpleTools;
 
 async function handleToolCall(name, args) {
   try {

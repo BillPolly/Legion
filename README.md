@@ -1,17 +1,17 @@
-# jsEnvoy - Modular AI Agent Tools Framework
+# Legion - Modular AI Agent Tools Framework
 
 A modular framework for building AI agent tools with consistent interfaces. This monorepo has been restructured into focused packages for better modularity and maintainability.
 
 ## Packages
 
-### [@jsenvoy/core](packages/core) - Lightweight Infrastructure
+### [@legion/core](packages/core) - Lightweight Infrastructure
 Core framework providing:
 - 🏗️ **ResourceManager**: Dependency injection system
 - 🏭 **ModuleFactory**: Module instantiation with automatic dependency resolution
 - 🧩 **Base Classes**: OpenAIModule and OpenAITool for creating new modules
 - 📦 **Built-in Modules**: Calculator and File modules
 
-### [@jsenvoy/cli](packages/cli) - Command Line Interface
+### [@legion/cli](packages/cli) - Command Line Interface
 Feature-complete CLI providing:
 - 🔍 **Dynamic Discovery**: Auto-discovers all modules and tools
 - 💬 **Interactive Mode**: REPL with autocomplete and multi-line input
@@ -19,7 +19,7 @@ Feature-complete CLI providing:
 - 📊 **Multiple Formats**: Text, JSON, and colored output
 - ⚡ **Optimized**: Caching and lazy loading for performance
 
-### [@jsenvoy/tools](packages/tools) - AI Agent Tools
+### [@legion/tools](packages/tools) - AI Agent Tools
 Comprehensive tool collection:
 - 🧮 **Calculator**: Mathematical expression evaluation
 - 📁 **File Operations**: Read, write, and manage files
@@ -27,7 +27,7 @@ Comprehensive tool collection:
 - 💻 **Development**: Code analysis, GitHub integration
 - 🎥 **Content**: YouTube transcripts, format conversion
 
-### [@jsenvoy/llm](packages/llm) - LLM Client with Retry Logic
+### [@legion/llm](packages/llm) - LLM Client with Retry Logic
 Robust LLM client with multiple providers:
 - 🤖 **Multiple Providers**: OpenAI, Anthropic, DeepSeek, OpenRouter
 - 🔄 **Retry Logic**: Automatic retry with exponential backoff
@@ -35,7 +35,7 @@ Robust LLM client with multiple providers:
 - 🔧 **Dual API**: Both prompt-based and message-based interfaces
 
 
-### [@jsenvoy/agent](packages/agent) - AI Agent Implementation
+### [@legion/agent](packages/agent) - AI Agent Implementation
 Complete agent system:
 - 🤖 **Agent**: Base agent with tool execution
 - 🔄 **Built-in Retry Logic**: Robust retry capabilities with exponential backoff
