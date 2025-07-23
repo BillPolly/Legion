@@ -104,7 +104,8 @@ export class ToolDefinitionProvider {
       switch (toolType) {
         case 'context':
           try {
-            return await this.contextManager.executeContextTool(toolName, resolvedArgs);
+            const result = await this.contextManager.executeContextTool(toolName, resolvedArgs);
+            return this._formatToolResponse(result);
           } catch (contextError) {
             if (errorBroadcastService) {
               errorBroadcastService.captureContextError(contextError, 'execute-tool', { toolName, args: resolvedArgs });
@@ -114,9 +115,8 @@ export class ToolDefinitionProvider {
         
         case 'module':
           try {
-            // Module tools return raw results, need to format for MCP
             const result = await this.moduleLoader.executeModuleTool(toolName, resolvedArgs);
-            return this._formatModuleToolResponse(result);
+            return this._formatToolResponse(result);
           } catch (moduleError) {
             if (errorBroadcastService) {
               errorBroadcastService.captureToolError(moduleError, toolName, resolvedArgs);
@@ -126,8 +126,8 @@ export class ToolDefinitionProvider {
         
         case 'debug':
           try {
-            // Debug tools return already formatted MCP responses
-            return await this._debugTool.executeDebugTool(toolName, resolvedArgs);
+            const result = await this._debugTool.executeDebugTool(toolName, resolvedArgs);
+            return this._formatToolResponse(result);
           } catch (debugError) {
             if (errorBroadcastService) {
               errorBroadcastService.captureToolError(debugError, toolName, resolvedArgs);
@@ -165,14 +165,66 @@ export class ToolDefinitionProvider {
    * @returns {Object} MCP-formatted response
    * @private
    */
-  _formatModuleToolResponse(result) {
-    return {
+  /**
+   * CENTRALIZED formatter - converts ALL Legion tool responses to MCP format
+   * This is the ONLY place where Legion format gets converted to MCP format
+   * 
+   * Legion format: {success: true, message: "...", data: {...}}
+   * MCP format: {content: [{type: "text", text: "JSON string"}], isError: false}
+   */
+  _formatToolResponse(result) {
+    // Get logManager from resource manager if available
+    const logManager = this._resourceManager?.get('logManager');
+    
+    if (logManager) {
+      logManager.logInfo('Formatting tool response from Legion to MCP format', {
+        source: 'ToolDefinitionProvider',
+        operation: 'format-response',
+        resultType: typeof result,
+        hasSuccess: result && typeof result === 'object' && 'success' in result
+      });
+    }
+    
+    // If already in MCP format, return as-is (should not happen now)
+    if (result && typeof result === 'object' && Array.isArray(result.content)) {
+      if (logManager) {
+        logManager.logInfo('Response already in MCP format, returning as-is', {
+          source: 'ToolDefinitionProvider',
+          operation: 'format-response-bypass'
+        });
+      }
+      return result;
+    }
+    
+    // Convert Legion format to proper MCP format
+    // For Legion responses, always JSON stringify the entire result
+    // This ensures consistent format that MCP clients can parse
+    let textContent;
+    if (typeof result === 'string') {
+      textContent = result;
+    } else {
+      // Use compact JSON to avoid escaping issues
+      textContent = JSON.stringify(result);
+    }
+    
+    const mcpResponse = {
       content: [{
         type: "text",
-        text: JSON.stringify(result, null, 2)
+        text: textContent
       }],
-      isError: !result.success,
+      isError: Boolean(result && typeof result === 'object' && result.success === false)
     };
+    
+    if (logManager) {
+      logManager.logInfo('Successfully converted Legion format to MCP format', {
+        source: 'ToolDefinitionProvider',
+        operation: 'format-response-complete',
+        isError: mcpResponse.isError,
+        textLength: mcpResponse.content[0].text.length
+      });
+    }
+    
+    return mcpResponse;
   }
 
   /**

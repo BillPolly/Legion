@@ -30,7 +30,16 @@ export class DebugTool {
         logReaderTool = await LogReaderTool.create(resourceManager);
       }
     } catch (error) {
-      console.warn('LogReaderTool not available:', error.message);
+      // LogReaderTool not available - this is not critical, continue without it
+      // Log to file if logManager is available
+      const logManager = resourceManager.get('logManager');
+      if (logManager) {
+        logManager.logWarning('LogReaderTool not available', {
+          source: 'DebugTool',
+          operation: 'create-log-reader',
+          error: error.message
+        });
+      }
     }
     
     return new DebugTool(webDebugServer, contextManager, logReaderTool);
@@ -163,23 +172,18 @@ export class DebugTool {
         openBrowser: args.openBrowser
       });
 
+      // Return Legion format
       return {
-        content: [{
-          type: "text",
-          text: JSON.stringify({
-            success: true,
-            message: "Web debug interface started successfully",
-            serverInfo,
-            url: serverInfo.url,
-            port: serverInfo.port,
-            instructions: [
-              `Debug interface is running at ${serverInfo.url}`,
-              "Use the web interface to execute tools, view context, and monitor events",
-              "Server information has been saved to context as 'debug_server'"
-            ]
-          }, null, 2)
-        }],
-        isError: false,
+        success: true,
+        message: "Web debug interface started successfully",
+        serverInfo,
+        url: serverInfo.url,
+        port: serverInfo.port,
+        instructions: [
+          `Debug interface is running at ${serverInfo.url}`,
+          "Use the web interface to execute tools, view context, and monitor events",
+          "Server information has been saved to context as 'debug_server'"
+        ]
       };
     } catch (error) {
       throw new Error(`Failed to start web debug interface: ${error.message}`);
@@ -208,7 +212,7 @@ export class DebugTool {
         });
       } catch (contextError) {
         // Context update is not critical for stop operation
-        console.warn('Failed to update debug server context:', contextError.message);
+        // Failed to update debug server context - not critical, no logging needed
       }
 
       return {

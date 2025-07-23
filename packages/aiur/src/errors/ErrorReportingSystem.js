@@ -420,7 +420,7 @@ export class ErrorReportingSystem extends EventEmitter {
           handler(metric);
         } catch (error) {
           // Don't let metric handler errors crash the system
-          console.warn('Metric handler error:', error);
+          // Metric handler error - continue without console output
         }
       }
     }
@@ -456,7 +456,7 @@ export class ErrorReportingSystem extends EventEmitter {
       try {
         await handler(alert);
       } catch (error) {
-        console.warn('Alert handler error:', error);
+        // Alert handler error - continue without console output
       }
     }
   }
@@ -468,7 +468,7 @@ export class ErrorReportingSystem extends EventEmitter {
     try {
       await reporter(data);
     } catch (error) {
-      console.warn('External reporter error:', error);
+      // External reporter error - continue without console output
     }
   }
 
@@ -506,7 +506,7 @@ export class ErrorReportingSystem extends EventEmitter {
           timestamp: this.lastHealthCheck
         });
       } catch (error) {
-        console.warn('Health check error:', error);
+        // Health check error - continue without console output
       }
     }, this.options.healthCheckInterval);
   }

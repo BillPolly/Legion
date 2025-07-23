@@ -136,17 +136,12 @@ export class ContextManager {
     
     const handleId = this.handleRegistry.create(contextName, contextData);
     
+    // Return Legion format - let centralized formatter handle MCP conversion
     return {
-      content: [{
-        type: "text",
-        text: JSON.stringify({
-          success: true,
-          message: `Context '${args.name}' added successfully`,
-          handleId,
-          contextName: args.name
-        }, null, 2)
-      }],
-      isError: false,
+      success: true,
+      message: `Context '${args.name}' added successfully`,
+      handleId,
+      contextName: args.name
     };
   }
 
@@ -159,30 +154,20 @@ export class ContextManager {
     const handle = this.handleRegistry.getByName(contextName);
     
     if (!handle) {
+      // Return Legion format
       return {
-        content: [{
-          type: "text",
-          text: JSON.stringify({
-            success: false,
-            error: `Context '${args.name}' not found`
-          }, null, 2)
-        }],
-        isError: true,
+        success: false,
+        error: `Context '${args.name}' not found`
       };
     }
     
+    // Return Legion format
     return {
-      content: [{
-        type: "text",
-        text: JSON.stringify({
-          success: true,
-          name: args.name,
-          data: handle.data.data,
-          description: handle.data.description,
-          addedAt: handle.data.addedAt
-        }, null, 2)
-      }],
-      isError: false,
+      success: true,
+      name: args.name,
+      data: handle.data.data,
+      description: handle.data.description,
+      addedAt: handle.data.addedAt
     };
   }
 
@@ -209,16 +194,11 @@ export class ContextManager {
       dataType: typeof h.data.data
     }));
     
+    // Return Legion format
     return {
-      content: [{
-        type: "text",
-        text: JSON.stringify({
-          success: true,
-          contexts,
-          total: contexts.length
-        }, null, 2)
-      }],
-      isError: false,
+      success: true,
+      contexts,
+      total: contexts.length
     };
   }
 }

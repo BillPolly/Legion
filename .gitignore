@@ -27,7 +27,9 @@ agentRawMessageStack.txt
 # Logs
 *.log
 npm-debug.log*
-packages/aiur/logs/
+logs/
+*/logs/
+**/logs/
 
 # Runtime data
 pids

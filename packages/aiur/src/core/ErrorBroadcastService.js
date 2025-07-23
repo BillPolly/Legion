@@ -77,8 +77,7 @@ export class ErrorBroadcastService extends EventEmitter {
         }
       });
       
-      // Log to console as well for visibility
-      console.error('Uncaught Exception:', error);
+      // Critical exception handled by error capture system
     });
 
     // Handle warnings
@@ -261,28 +260,14 @@ export class ErrorBroadcastService extends EventEmitter {
     const { severity, error, source } = errorEvent.data;
     const prefix = `[${severity.toUpperCase()}] [${source}]`;
     
-    // Console logging
-    switch (severity) {
-      case 'critical':
-        console.error(`${prefix} CRITICAL ERROR:`, error.message);
-        if (error.stack) console.error(error.stack);
-        break;
-      case 'error':
-        console.error(`${prefix}`, error.message);
-        break;
-      case 'warning':
-        console.warn(`${prefix}`, error.message);
-        break;
-      default:
-        console.log(`${prefix}`, error.message);
-    }
+    // Error logging handled by LogManager to avoid MCP interference
     
     // File logging
     if (this.logManager) {
       try {
         await this.logManager.logErrorEvent(errorEvent);
       } catch (logError) {
-        console.error('Failed to write to log file:', logError);
+        // Log write failed - continue without console output
       }
     }
   }
@@ -323,7 +308,7 @@ export class ErrorBroadcastService extends EventEmitter {
       };
       
     } catch (recoveryError) {
-      console.error('Recovery strategy failed:', recoveryError);
+      // Recovery strategy failed - error logged to file only
       errorEvent.data.recovery = {
         attempted: true,
         strategy: 'failed',
@@ -421,6 +406,7 @@ export class ErrorBroadcastService extends EventEmitter {
    */
   setLogManager(logManager) {
     this.logManager = logManager;
-    console.log('ErrorBroadcastService: Connected to LogManager for file logging');
+    // Log to stderr to avoid MCP interference
+    process.stderr.write('ErrorBroadcastService: Connected to LogManager for file logging\n');
   }
 }

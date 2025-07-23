@@ -223,7 +223,7 @@ export class TTLHandleRegistry extends LRUHandleRegistry {
           expiredCount++;
         }
       } catch (error) {
-        console.warn('Error during TTL cleanup:', error);
+        // Error during TTL cleanup - continue
       }
     }
     

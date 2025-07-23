@@ -63,10 +63,12 @@ export class WebDebugServer {
         server._broadcastError(errorEvent);
       });
       
-      console.log('WebDebugServer: Connected to ErrorBroadcastService');
+      // Log to stderr to avoid MCP interference
+      process.stderr.write('WebDebugServer: Connected to ErrorBroadcastService\n');
     } catch (e) {
       // ErrorBroadcastService not available yet, will be connected later
-      console.log('WebDebugServer: ErrorBroadcastService not available at creation');
+      // Log to stderr to avoid MCP interference
+      process.stderr.write('WebDebugServer: ErrorBroadcastService not available at creation\n');
     }
     
     return server;
@@ -129,7 +131,8 @@ export class WebDebugServer {
         await this._openBrowser(serverInfo.url);
       }
 
-      console.log(`🐛 Web Debug Interface started at ${serverInfo.url}`);
+      // Log to stderr instead of console to avoid MCP interference
+      process.stderr.write(`🐛 Web Debug Interface started at ${serverInfo.url}\n`);
       return serverInfo;
 
     } catch (error) {
@@ -169,7 +172,8 @@ export class WebDebugServer {
     this.isRunning = false;
     this.port = null;
 
-    console.log('🐛 Web Debug Interface stopped');
+    // Log to stderr to avoid MCP interference
+    process.stderr.write('🐛 Web Debug Interface stopped\n');
   }
 
   /**
@@ -293,7 +297,8 @@ export class WebDebugServer {
   _handleWebSocketConnection(ws) {
     this.clients.add(ws);
     if (process.env.NODE_ENV !== 'test') {
-      console.log(`🐛 Debug client connected (${this.clients.size} total)`);
+      // Log to stderr to avoid MCP interference
+      process.stderr.write(`🐛 Debug client connected (${this.clients.size} total)\n`);
     }
 
     // Send welcome message
@@ -324,11 +329,13 @@ export class WebDebugServer {
     // Handle disconnect
     ws.on('close', () => {
       this.clients.delete(ws);
-      console.log(`🐛 Debug client disconnected (${this.clients.size} total)`);
+      // Log to stderr to avoid MCP interference
+      process.stderr.write(`🐛 Debug client disconnected (${this.clients.size} total)\n`);
     });
 
     ws.on('error', (error) => {
-      console.error('🐛 WebSocket error:', error);
+      // Log WebSocket error to stderr to avoid MCP interference
+      process.stderr.write(`🐛 WebSocket error: ${error.message}\n`);
       this.clients.delete(ws);
     });
   }
@@ -603,7 +610,7 @@ export class WebDebugServer {
         description: 'Web debug interface server information'
       });
     } catch (error) {
-      console.warn('Failed to store debug server info in context:', error.message);
+      // Failed to store debug server info - not critical, no logging needed
     }
   }
 
@@ -630,8 +637,9 @@ export class WebDebugServer {
 
       await execAsync(command);
     } catch (error) {
-      console.warn('Failed to open browser:', error.message);
-      console.log(`Please open your browser to: ${url}`);
+      // Failed to open browser - not critical, no logging needed
+      // Log to stderr to avoid MCP interference
+      process.stderr.write(`Please open your browser to: ${url}\n`);
     }
   }
 
@@ -656,7 +664,7 @@ export class WebDebugServer {
         try {
           client.send(errorMessage);
         } catch (e) {
-          console.error('Failed to send error to client:', e);
+          // Failed to send error to client - not critical, no logging needed
         }
       }
     }
@@ -687,7 +695,8 @@ export class WebDebugServer {
       }
     }
     
-    console.log('WebDebugServer: Connected to ErrorBroadcastService (post-creation)');
+    // Log to stderr to avoid MCP interference
+    process.stderr.write('WebDebugServer: Connected to ErrorBroadcastService (post-creation)\n');
   }
 
   /**

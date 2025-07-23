@@ -67,9 +67,27 @@ export class ModuleLoader {
           const moduleInstance = await moduleConfig.factory();
           const result = await this._loadModuleInstance(moduleInstance);
           loadedModules.push(result);
-          console.error(`Loaded module: ${result.moduleName}`);
+          // Log to file via ResourceManager if available
+          const logManager = this.legionAdapter.resourceManager.has('logManager') ? 
+            this.legionAdapter.resourceManager.get('logManager') : null;
+          if (logManager) {
+            logManager.logInfo(`Loaded module: ${result.moduleName}`, {
+              source: 'ModuleLoader',
+              operation: 'load-module',
+              moduleName: result.moduleName
+            });
+          }
         } catch (error) {
-          console.error(`Failed to load ${moduleConfig.name}:`, error.message);
+          // Log error to file
+          const logManager = this.legionAdapter.resourceManager.has('logManager') ? 
+            this.legionAdapter.resourceManager.get('logManager') : null;
+          if (logManager) {
+            logManager.logError(error, {
+              source: 'ModuleLoader',
+              operation: 'load-async-module-failed',
+              moduleName: moduleConfig.name
+            });
+          }
           if (errorBroadcastService) {
             errorBroadcastService.captureModuleError(error, moduleConfig.name);
           }
@@ -101,9 +119,27 @@ export class ModuleLoader {
         try {
           const result = await this.legionAdapter.loadModule(config.module, config.dependencies);
           loadedModules.push(result);
-          console.error(`Loaded module: ${result.moduleName}`);
+          // Log to file via ResourceManager if available
+          const logManager = this.legionAdapter.resourceManager.has('logManager') ? 
+            this.legionAdapter.resourceManager.get('logManager') : null;
+          if (logManager) {
+            logManager.logInfo(`Loaded module: ${result.moduleName}`, {
+              source: 'ModuleLoader',
+              operation: 'load-module',
+              moduleName: result.moduleName
+            });
+          }
         } catch (error) {
-          console.error(`Failed to load module ${config.module.name}:`, error.message);
+          // Log error to file
+          const logManager = this.legionAdapter.resourceManager.has('logManager') ? 
+            this.legionAdapter.resourceManager.get('logManager') : null;
+          if (logManager) {
+            logManager.logError(error, {
+              source: 'ModuleLoader',
+              operation: 'load-legacy-module-failed',
+              moduleName: config.module.name
+            });
+          }
           if (errorBroadcastService) {
             errorBroadcastService.captureModuleError(error, config.module.name);
           }
@@ -111,11 +147,32 @@ export class ModuleLoader {
         }
       }
 
-      console.error(`Total modules loaded: ${loadedModules.length}`);
+      // Log total to file
+      const logManager = this.legionAdapter.resourceManager.has('logManager') ? 
+        this.legionAdapter.resourceManager.get('logManager') : null;
+      if (logManager) {
+        logManager.logInfo(`Total modules loaded: ${loadedModules.length}`, {
+          source: 'ModuleLoader',
+          operation: 'load-all-modules-complete',
+          totalModules: loadedModules.length
+        });
+      }
       return loadedModules;
 
     } catch (error) {
-      console.error('Failed to load modules:', error);
+      // Log critical error to file - safely access logManager
+      try {
+        const logManager = this.legionAdapter.resourceManager.get('logManager');
+        if (logManager) {
+          logManager.logError(error, {
+            source: 'ModuleLoader',
+            operation: 'load-all-modules-critical-error',
+            severity: 'critical'
+          });
+        }
+      } catch (logError) {
+        // Ignore logging errors during critical failure
+      }
       if (errorBroadcastService) {
         errorBroadcastService.captureError({
           error,

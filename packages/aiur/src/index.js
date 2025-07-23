@@ -8,6 +8,9 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
+// Import Legion's ResourceManager
+import { ResourceManager } from '@legion/module-loader';
+
 // Import our Aiur systems
 import { HandleRegistry } from './handles/HandleRegistry.js';
 import { HandleResolver } from './handles/HandleResolver.js';
@@ -24,28 +27,76 @@ import { LogManager } from './core/LogManager.js';
 let toolDefinitionProvider = null;
 let handleResolver = null;
 let globalErrorBroadcastService = null;
+let logManager = null;
 
 /**
- * Initialize all Aiur systems using ResourceManager pattern
+ * Centralized MCP response formatter
+ * Ensures all tool responses follow proper MCP format
+ */
+function formatMCPResponse(data, isError = false) {
+  // If data is already properly formatted, return as-is
+  if (data && typeof data === 'object' && Array.isArray(data.content)) {
+    return data;
+  }
+  
+  // Convert data to proper JSON string (single encoding only)
+  let textContent;
+  if (typeof data === 'string') {
+    textContent = data;
+  } else if (typeof data === 'object') {
+    textContent = JSON.stringify(data, null, 2);
+  } else {
+    textContent = String(data);
+  }
+  
+  return {
+    content: [{
+      type: "text",
+      text: textContent
+    }],
+    isError: Boolean(isError)
+  };
+}
+
+// FIRST THING: Set up logging to file
+async function setupLogging() {
+  try {
+    // Create LogManager directly with config
+    const config = {
+      enableFileLogging: process.env.AIUR_ENABLE_FILE_LOGGING !== 'false',
+      logDirectory: process.env.AIUR_LOG_DIRECTORY || './logs',
+      logRetentionDays: parseInt(process.env.AIUR_LOG_RETENTION_DAYS) || 7,
+      maxLogFileSize: parseInt(process.env.AIUR_MAX_LOG_FILE_SIZE) || 10 * 1024 * 1024
+    };
+    
+    logManager = new LogManager(config);
+    await logManager.initialize();
+    
+    // Log startup
+    await logManager.logInfo('Aiur MCP Server starting', {
+      config,
+      pid: process.pid,
+      nodeVersion: process.version
+    });
+    
+    return logManager;
+  } catch (error) {
+    // Use stderr for critical startup error - logManager not available yet
+    process.stderr.write(`Failed to setup logging: ${error.message}\n`);
+    throw error;
+  }
+}
+
+/**
+ * Initialize all Aiur systems
  */
 async function initializeAiurSystems() {
   let errorBroadcastService = null;
   
   try {
-    // Create basic ResourceManager-like object for dependency injection
-    const resourceManager = {
-      resources: new Map(),
-      
-      get(key) {
-        const value = this.resources.get(key);
-        if (!value) throw new Error(`Resource '${key}' not found`);
-        return value;
-      },
-      
-      register(key, value) {
-        this.resources.set(key, value);
-      }
-    };
+    // Create proper ResourceManager from Legion
+    const resourceManager = new ResourceManager();
+    await resourceManager.initialize();
 
     // Add config to resource manager
     const config = {
@@ -55,27 +106,26 @@ async function initializeAiurSystems() {
       maxLogFileSize: parseInt(process.env.AIUR_MAX_LOG_FILE_SIZE) || 10 * 1024 * 1024
     };
     resourceManager.register('config', config);
+    
+    // Register the already-created LogManager - ensure it's available
+    if (logManager) {
+      resourceManager.register('logManager', logManager);
+    } else {
+      // Create a minimal logManager if none exists
+      const minimalLogManager = {
+        logInfo: () => Promise.resolve(),
+        logError: () => Promise.resolve(),
+        logWarning: () => Promise.resolve()
+      };
+      resourceManager.register('logManager', minimalLogManager);
+    }
 
     // CRITICAL: Create ErrorBroadcastService first so it can catch all errors
     errorBroadcastService = await ErrorBroadcastService.create(resourceManager);
     
-    // Create LogManager for file-based logging
-    try {
-      const logManager = await LogManager.create(resourceManager);
+    // Connect already-created LogManager to ErrorBroadcastService
+    if (logManager) {
       errorBroadcastService.setLogManager(logManager);
-      
-      // Register LogManager for other components to use
-      resourceManager.register('logManager', logManager);
-      
-      // Log startup
-      await logManager.logInfo('Aiur MCP Server starting', {
-        config,
-        pid: process.pid,
-        nodeVersion: process.version
-      });
-    } catch (logError) {
-      console.error('Failed to initialize LogManager:', logError);
-      // Continue without file logging
     }
 
     // Initialize core Aiur systems
@@ -126,13 +176,79 @@ async function initializeAiurSystems() {
     handleResolver = resolver;
     globalErrorBroadcastService = errorBroadcastService;
 
-    console.error('Aiur systems initialized successfully');
-    
-    const stats = provider.getToolStatistics();
-    console.error(`Loaded ${stats.total} tools (${stats.context} context, ${stats.modules} module) from ${stats.loadedModules} modules`);
+    // Log to file only - stdout must remain clean for MCP protocol
+    if (logManager) {
+      await logManager.logInfo('Aiur systems initialized successfully', {
+        source: 'initializeAiurSystems',
+        operation: 'startup-complete'
+      });
+      
+      const stats = provider.getToolStatistics();
+      await logManager.logInfo(`Loaded ${stats.total} tools (${stats.context} context, ${stats.modules} module) from ${stats.loadedModules} modules`, {
+        source: 'initializeAiurSystems',
+        operation: 'tool-stats',
+        totalTools: stats.total,
+        contextTools: stats.context,
+        moduleTools: stats.modules,
+        loadedModules: stats.loadedModules
+      });
+    }
+
+    // Auto-add current directory to context after all tools are loaded
+    try {
+      const currentDirectory = process.cwd();
+      const result = await provider.executeTool('context_add', {
+        name: 'current_directory',
+        data: {
+          path: currentDirectory,
+          addedAt: new Date().toISOString(),
+          source: 'aiur_startup'
+        },
+        description: 'Current working directory where Aiur MCP server was started'
+      });
+      
+      if (!result.isError) {
+        if (logManager) {
+          await logManager.logInfo(`Added current directory to context: ${currentDirectory}`, {
+            source: 'initializeAiurSystems',
+            operation: 'add-directory-context',
+            directory: currentDirectory
+          });
+        }
+      } else {
+        if (logManager) {
+          await logManager.logError(new Error('Failed to add current directory to context'), {
+            source: 'initializeAiurSystems',
+            operation: 'add-directory-context-failed',
+            directory: currentDirectory,
+            errorDetails: result.content[0].text
+          });
+        }
+      }
+    } catch (contextError) {
+      // Log but don't fail startup
+      if (logManager) {
+        await logManager.logError(contextError, {
+          source: 'initializeAiurSystems',
+          operation: 'add-current-directory-context',
+          severity: 'warning'
+        });
+      }
+    }
 
   } catch (error) {
-    console.error('Failed to initialize Aiur systems:', error);
+    // Use stderr for critical initialization error
+    process.stderr.write(`Failed to initialize Aiur systems: ${error.message}\n`);
+    
+    // Log to file if possible
+    if (logManager) {
+      await logManager.logError(error, {
+        source: 'initializeAiurSystems',
+        operation: 'system-initialization',
+        phase: 'startup',
+        severity: 'critical'
+      });
+    }
     
     // Try to broadcast the error if service is available
     if (errorBroadcastService) {
@@ -161,7 +277,14 @@ async function initializeAiurSystems() {
  * Handle tool execution with parameter resolution and auto-save
  */
 async function handleToolCall(name, args) {
-  console.error(`handleToolCall called for: ${name}`);
+  // Log to file only - no console output to preserve MCP stdio protocol
+  if (logManager) {
+    await logManager.logInfo(`handleToolCall called for: ${name}`, {
+      source: 'handleToolCall',
+      operation: 'tool-call-start',
+      tool: name
+    });
+  }
   
   try {
     // Check if tool exists
@@ -215,7 +338,63 @@ async function handleToolCall(name, args) {
     }
 
     // Execute the tool through the provider
-    const result = await toolDefinitionProvider.executeTool(name, resolvedArgs);
+    let result;
+    try {
+      // Log tool execution start to file only
+      if (logManager) {
+        await logManager.logInfo(`Executing tool: ${name}`, {
+          source: 'handleToolCall',
+          operation: 'tool-execution-start',
+          tool: name,
+          argsProvided: Object.keys(resolvedArgs).length > 0
+        });
+      }
+      
+      result = await toolDefinitionProvider.executeTool(name, resolvedArgs);
+      
+      // Log successful completion to file only
+      if (logManager) {
+        await logManager.logInfo(`Tool ${name} execution completed successfully`, {
+          source: 'handleToolCall',
+          operation: 'tool-execution-success',
+          tool: name
+        });
+      }
+    } catch (toolExecutionError) {
+      // Log to file only, no console output
+      if (logManager) {
+        await logManager.logError(toolExecutionError, {
+          source: 'handleToolCall',
+          operation: 'tool-execution',
+          tool: name,
+          args: resolvedArgs,
+          severity: 'error'
+        });
+      }
+      
+      // Broadcast error if service is available
+      if (globalErrorBroadcastService) {
+        globalErrorBroadcastService.captureError({
+          error: toolExecutionError,
+          errorType: 'tool-execution',
+          severity: 'error',
+          source: 'handleToolCall',
+          context: {
+            tool: name,
+            operation: 'tool-execution',
+            args: resolvedArgs
+          }
+        });
+      }
+      
+      return {
+        content: [{
+          type: "text",
+          text: `Error executing tool ${name}: ${toolExecutionError.message}`
+        }],
+        isError: true,
+      };
+    }
 
     // Auto-save to context if saveAs is provided and execution was successful
     if (resolvedArgs.saveAs && !result.isError) {
@@ -256,15 +435,128 @@ async function handleToolCall(name, args) {
           }
         }
       } catch (contextError) {
-        console.error('Auto-save to context failed:', contextError);
+        // Log auto-save failure to file only
+        if (logManager) {
+          await logManager.logError(contextError, {
+            source: 'handleToolCall',
+            operation: 'auto-save-context-failed',
+            tool: name
+          });
+        }
         // Don't fail the original request, just log the warning
       }
     }
 
+    // Validate MCP response format before returning
+    try {
+      if (!result || typeof result !== 'object') {
+        throw new Error('Result is not an object');
+      }
+      
+      if (!Array.isArray(result.content)) {
+        throw new Error('Result.content is not an array');
+      }
+      
+      if (result.content.length === 0) {
+        throw new Error('Result.content is empty');
+      }
+      
+      for (let i = 0; i < result.content.length; i++) {
+        const content = result.content[i];
+        if (!content || typeof content !== 'object') {
+          throw new Error(`Content[${i}] is not an object`);
+        }
+        if (!content.type || typeof content.type !== 'string') {
+          throw new Error(`Content[${i}].type is missing or not a string`);
+        }
+        if (content.type === 'text' && (!content.text || typeof content.text !== 'string')) {
+          throw new Error(`Content[${i}].text is missing or not a string for text type`);
+        }
+        
+        // Check for double-encoded JSON (escaped quotes/newlines)
+        if (content.type === 'text' && content.text.includes('\\n') && content.text.includes('\\"')) {
+          throw new Error(`Content[${i}].text appears to be double-encoded JSON with escaped quotes/newlines`);
+        }
+      }
+      
+      // Log validation success to file only
+      if (logManager) {
+        await logManager.logInfo(`Valid MCP response for tool ${name}`, {
+          source: 'handleToolCall',
+          operation: 'response-validation',
+          tool: name,
+          isError: result.isError,
+          contentCount: result.content.length,
+          contentTypes: result.content.map(c => c.type),
+          contentSizes: result.content.map(c => c.text?.length || 0)
+        });
+      }
+      
+    } catch (validationError) {
+      // Log validation error to file only
+      if (logManager) {
+        await logManager.logError(validationError, {
+          source: 'handleToolCall',
+          operation: 'response-validation-failed',
+          tool: name,
+          rawResult: result
+        });
+      }
+      
+      // Try to auto-fix double-encoded JSON
+      if (validationError.message.includes('double-encoded JSON')) {
+        if (logManager) {
+          await logManager.logInfo(`Attempting to fix double-encoded JSON for tool ${name}`, {
+            source: 'handleToolCall',
+            operation: 'auto-fix-encoding'
+          });
+        }
+        try {
+          const originalText = result.content[0].text;
+          // Parse the double-encoded string to get the actual object
+          const parsedText = JSON.parse(originalText);
+          
+          // Create properly formatted response
+          const fixedResponse = formatMCPResponse(parsedText, result.isError);
+          
+          if (logManager) {
+            await logManager.logInfo(`Successfully fixed double-encoded JSON for tool ${name}`, {
+              source: 'handleToolCall',
+              operation: 'auto-fix-success'
+            });
+          }
+          return fixedResponse;
+        } catch (fixError) {
+          if (logManager) {
+            await logManager.logError(fixError, {
+              source: 'handleToolCall',
+              operation: 'auto-fix-failed',
+              tool: name
+            });
+          }
+        }
+      }
+      
+      // Return a properly formatted error response using centralized formatter
+      return formatMCPResponse({
+        success: false,
+        error: `Invalid response format: ${validationError.message}`,
+        originalError: result
+      }, true);
+    }
+    
     return result;
 
   } catch (error) {
-    console.error(`Error executing tool ${name}:`, error);
+    // Log to file only - preserve MCP stdio protocol
+    if (logManager) {
+      await logManager.logError(error, {
+        source: 'handleToolCall',
+        operation: 'tool-execution-error',
+        tool: name,
+        severity: 'error'
+      });
+    }
     
     // Broadcast error if service is available
     if (globalErrorBroadcastService) {
@@ -303,7 +595,10 @@ const server = new Server(
  */
 async function runServer() {
   try {
-    // CRITICAL: Initialize all systems BEFORE setting up request handlers
+    // FIRST: Setup logging before anything else
+    await setupLogging();
+    
+    // THEN: Initialize all systems
     await initializeAiurSystems();
     
     // NOW set up request handlers - they will use the initialized systems
@@ -315,18 +610,38 @@ async function runServer() {
       tools: toolDefinitionProvider.getAllToolDefinitions(),
     }));
 
-    server.setRequestHandler(CallToolRequestSchema, async (request) =>
-      handleToolCall(request.params.name, request.params.arguments ?? {})
+    server.setRequestHandler(CallToolRequestSchema, async (request) => {
+      // Temporary debug to stderr to diagnose issue
+      process.stderr.write(`MCP CallTool request received for: ${request.params.name}\n`);
+      
+      try {
+        const result = await handleToolCall(request.params.name, request.params.arguments ?? {});
+        process.stderr.write(`MCP CallTool request completed for: ${request.params.name}\n`);
+        return result;
+      } catch (error) {
+        process.stderr.write(`MCP CallTool request failed for: ${request.params.name}: ${error.message}\n`);
+        throw error;
+      }
+    }
     );
     
     // CRITICAL: Connect transport last
     const transport = new StdioServerTransport();
     await server.connect(transport);
     
-    console.error("Aiur MCP Server started successfully");
+    // Server is ready - this message to stderr is safe for MCP
+    process.stderr.write("Aiur MCP Server started successfully\n");
 
   } catch (error) {
-    console.error("Failed to start Aiur MCP Server:", error);
+    // Log to file if possible
+    if (logManager) {
+      await logManager.logError(error, {
+        source: 'runServer',
+        operation: 'server-startup',
+        phase: 'main',
+        severity: 'critical'
+      });
+    }
     
     // Try to broadcast the error before exiting
     if (globalErrorBroadcastService) {
@@ -353,8 +668,15 @@ async function runServer() {
 // We only need to handle errors that occur before ErrorBroadcastService is initialized
 
 // Start the server
-runServer().catch((error) => {
-  console.error('Failed to start server:', error);
+runServer().catch(async (error) => {
+  // Log to file if possible
+  if (logManager) {
+    await logManager.logError(error, {
+      source: 'main',
+      operation: 'server-start-catch',
+      severity: 'critical'
+    });
+  }
   
   // If we have the error broadcast service, use it
   if (globalErrorBroadcastService) {
@@ -372,9 +694,51 @@ runServer().catch((error) => {
   process.exit(1);
 });
 
+// Add comprehensive process monitoring
+process.on('uncaughtException', (error) => {
+  // Use stderr for critical process errors - this is acceptable for MCP
+  process.stderr.write(`UNCAUGHT EXCEPTION - Process will exit: ${error.message}\n`);
+  if (logManager) {
+    logManager.logError(error, {
+      source: 'process',
+      operation: 'uncaughtException',
+      severity: 'critical'
+    }).then(() => process.exit(1)).catch(() => process.exit(1));
+  } else {
+    process.exit(1);
+  }
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  // Use stderr for critical process errors
+  process.stderr.write(`UNHANDLED REJECTION - Process may exit: ${reason}\n`);
+  if (logManager) {
+    logManager.logError(new Error(`Unhandled rejection: ${reason}`), {
+      source: 'process',
+      operation: 'unhandledRejection',
+      severity: 'critical',
+      promise: promise
+    }).catch(() => {});
+  }
+});
+
+process.on('SIGTERM', (signal) => {
+  process.stderr.write('SIGTERM received, shutting down gracefully\n');
+  process.exit(0);
+});
+
+process.on('SIGINT', (signal) => {
+  process.stderr.write('SIGINT received, shutting down gracefully\n');
+  process.exit(0);
+});
+
+process.on('exit', (code) => {
+  process.stderr.write(`Process exiting with code: ${code}\n`);
+});
+
 // Handle graceful shutdown
 process.stdin.on("close", async () => {
-  console.error("Aiur MCP Server closed");
+  process.stderr.write("Aiur MCP Server closed\n");
   server.close();
   
   // Close log manager if available
@@ -384,7 +748,7 @@ process.stdin.on("close", async () => {
       await logManager.shutdown();
     }
   } catch (error) {
-    console.error('Error shutting down LogManager:', error);
+    process.stderr.write(`Error shutting down LogManager: ${error.message}\n`);
   }
   
   if (globalErrorBroadcastService) {

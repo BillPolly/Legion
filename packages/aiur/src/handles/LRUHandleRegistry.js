@@ -289,7 +289,7 @@ export class LRUHandleRegistry extends HandleRegistry {
               this.onEviction(handle);
             } catch (error) {
               // Log error but don't fail the eviction
-              console.warn('Eviction callback error:', error);
+              // Eviction callback error - continue with eviction
             }
           }
           

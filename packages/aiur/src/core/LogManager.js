@@ -1,8 +1,7 @@
 /**
- * LogManager - File-based logging service with rotation and cleanup
+ * LogManager - Simple file-based logging service
  * 
  * Provides structured logging to files with automatic rotation and cleanup.
- * Integrates with ErrorBroadcastService to persist all errors to disk.
  */
 
 import fs from 'fs/promises';
@@ -63,7 +62,6 @@ export class LogManager extends EventEmitter {
    */
   async initialize() {
     if (!this.enableFileLogging) {
-      console.log('File logging is disabled');
       return;
     }
     
@@ -71,27 +69,29 @@ export class LogManager extends EventEmitter {
       // Create log directory if it doesn't exist
       await this.ensureLogDirectory();
       
-      // Open initial log file
+      // Rotate existing log file on startup (moves old file to archived)
+      await this.rotateLogOnStartup();
+      
+      // Open the log file for writing
       await this.openLogFile();
       
       // Schedule rotation check every hour
       this.logRotationTimer = setInterval(() => {
-        this.checkRotation().catch(console.error);
+        this.checkRotation().catch(() => {});
       }, 60 * 60 * 1000); // 1 hour
       
       // Schedule cleanup every 24 hours
       this.cleanupTimer = setInterval(() => {
-        this.cleanupOldLogs().catch(console.error);
+        this.cleanupOldLogs().catch(() => {});
       }, 24 * 60 * 60 * 1000); // 24 hours
       
       // Run initial cleanup
       await this.cleanupOldLogs();
       
       this.isInitialized = true;
-      console.log(`LogManager initialized: ${this.logDirectory}`);
       
     } catch (error) {
-      console.error('Failed to initialize LogManager:', error);
+      // Failed to initialize LogManager - continue without logging
       this.enableFileLogging = false;
     }
   }
@@ -113,7 +113,48 @@ export class LogManager extends EventEmitter {
   getCurrentLogFilename() {
     const date = new Date();
     const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
-    return `aiur-errors-${dateStr}.log`;
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `aiur-${dateStr}-${hours}-${minutes}.log`;
+  }
+
+  /**
+   * Rotate existing log file on startup
+   */
+  async rotateLogOnStartup() {
+    try {
+      // Create archived subdirectory if it doesn't exist
+      const archivedDir = path.join(this.logDirectory, 'archived');
+      try {
+        await fs.access(archivedDir);
+      } catch {
+        await fs.mkdir(archivedDir, { recursive: true });
+      }
+      
+      // Move all existing log files to archived directory
+      const files = await fs.readdir(this.logDirectory);
+      let movedCount = 0;
+      
+      for (const file of files) {
+        if (file.startsWith('aiur-') && file.endsWith('.log')) {
+          const oldPath = path.join(this.logDirectory, file);
+          const newPath = path.join(archivedDir, file);
+          
+          try {
+            await fs.rename(oldPath, newPath);
+            movedCount++;
+          } catch (error) {
+            // Failed to archive log file - continue
+          }
+        }
+      }
+      
+      if (movedCount > 0) {
+        this.stats.rotations++;
+      }
+    } catch (error) {
+      // Error rotating logs on startup - continue
+    }
   }
 
   /**
@@ -138,7 +179,6 @@ export class LogManager extends EventEmitter {
     
     // Handle stream errors
     this.currentLogStream.on('error', (error) => {
-      console.error('Log stream error:', error);
       this.enableFileLogging = false;
     });
   }
@@ -172,7 +212,7 @@ export class LogManager extends EventEmitter {
       else if (logEntry.level === 'info') this.stats.infoCount++;
       
     } catch (error) {
-      console.error('Failed to write log:', error);
+      // Failed to write log - continue
     }
   }
 
@@ -275,7 +315,7 @@ export class LogManager extends EventEmitter {
       }
       
     } catch (error) {
-      console.error('Error checking log rotation:', error);
+      // Error checking log rotation - continue
     }
   }
 
@@ -304,7 +344,7 @@ export class LogManager extends EventEmitter {
       });
       
     } catch (error) {
-      console.error('Error rotating log:', error);
+      // Error rotating log - continue
     }
   }
 
@@ -320,7 +360,7 @@ export class LogManager extends EventEmitter {
       let deletedCount = 0;
       
       for (const file of files) {
-        if (!file.startsWith('aiur-errors-')) continue;
+        if (!file.startsWith('aiur-')) continue;
         
         const filepath = path.join(this.logDirectory, file);
         const stats = await fs.stat(filepath);
@@ -334,11 +374,10 @@ export class LogManager extends EventEmitter {
       
       if (deletedCount > 0) {
         this.stats.cleanups++;
-        await this.logInfo(`Cleaned up ${deletedCount} old log files`);
       }
       
     } catch (error) {
-      console.error('Error cleaning up logs:', error);
+      // Error cleaning up logs - continue
     }
   }
 
@@ -357,16 +396,23 @@ export class LogManager extends EventEmitter {
       const filename = this.getCurrentLogFilename();
       const filepath = path.join(this.logDirectory, filename);
       
-      const content = await fs.readFile(filepath, 'utf8');
-      const lines = content.trim().split('\n').filter(line => line);
-      
-      let logs = lines.map(line => {
-        try {
-          return JSON.parse(line);
-        } catch {
-          return null;
-        }
-      }).filter(log => log);
+      // Read current log file only
+      let logs = [];
+      try {
+        const content = await fs.readFile(filepath, 'utf8');
+        const lines = content.trim().split('\n').filter(line => line);
+        
+        logs = lines.map(line => {
+          try {
+            return JSON.parse(line);
+          } catch {
+            return null;
+          }
+        }).filter(log => log);
+      } catch (error) {
+        // File doesn't exist yet or can't be read
+        return [];
+      }
       
       // Apply filters
       if (level) {
@@ -385,7 +431,7 @@ export class LogManager extends EventEmitter {
       return logs.slice(-limit);
       
     } catch (error) {
-      console.error('Error reading logs:', error);
+      // Error reading logs - return empty array
       return [];
     }
   }
