@@ -250,6 +250,106 @@ const result = await executeTool.execute({ plan: llmPlan });
 - Sample plans for different scenarios
 - Event capture for verification
 
+## Debugging and Inspection Tools
+
+The Plan Executor provides comprehensive debugging capabilities through multiple specialized tools that leverage the core execution engine's hierarchical context tracking and observable execution features.
+
+### Tool Overview
+
+The Plan Executor module exposes five distinct tools:
+
+1. **`plan_execute`** - Standard execution tool for running complete plans
+2. **`plan_execute_step`** - Step-by-step execution tool for debugging and manual progression  
+3. **`plan_debug`** - Interactive debugging tool with breakpoint and inspection capabilities
+4. **`plan_inspect`** - Plan analysis tool for structure validation and dependency visualization
+5. **`plan_status`** - Execution state inspection tool for monitoring active executions
+
+### plan_execute (Standard Execution)
+
+The primary execution tool that runs plans from start to completion:
+
+**Parameters:**
+- `plan` (required) - The llm-planner Plan object to execute
+- `options` (optional) - Execution options (emitProgress, stopOnError, timeout, retries)
+
+**Behavior:**
+- Executes the entire plan hierarchically according to dependencies
+- Emits progress events during execution
+- Returns complete execution results including statistics and any errors
+
+### plan_execute_step (Step-by-Step Execution)
+
+Enables manual progression through plan execution for debugging:
+
+**Parameters:**
+- `plan` (required) - The plan to execute step-by-step
+- `sessionId` (optional) - Session identifier for resuming existing executions
+- `action` (required) - Action to take: 'start', 'next', 'pause', 'resume', 'abort'
+- `options` (optional) - Standard execution options
+
+**Behavior:**
+- Maintains execution sessions that can be paused and resumed
+- Executes one step at a time, waiting for manual progression
+- Provides detailed step information and context at each pause point
+- Allows inspection of variables and state between steps
+
+### plan_debug (Interactive Debugging)
+
+Advanced debugging tool with breakpoint and inspection capabilities:
+
+**Parameters:**
+- `plan` (required) - The plan to debug
+- `breakpoints` (optional) - Array of step IDs where execution should pause
+- `inspectVariables` (optional) - Boolean flag to include variable state in responses
+- `traceExecution` (optional) - Boolean flag to include detailed execution traces
+
+**Behavior:**
+- Automatically pauses at specified breakpoints
+- Provides comprehensive context inspection at pause points
+- Includes variable scoping information and execution stack traces
+- Allows conditional breakpoints based on step outcomes or variable values
+
+### plan_inspect (Plan Analysis)
+
+Static analysis tool for plan structure and dependency validation:
+
+**Parameters:**
+- `plan` (required) - The plan to inspect
+- `analyzeDepth` (optional) - Depth of hierarchical analysis ('shallow', 'deep', 'complete')
+- `validateTools` (optional) - Boolean flag to validate tool availability
+- `showDependencies` (optional) - Boolean flag to include dependency graph
+
+**Behavior:**
+- Validates plan structure and identifies potential issues
+- Analyzes dependency chains and detects circular dependencies
+- Reports on required tools and their availability
+- Provides execution time estimates and complexity metrics
+- Visualizes hierarchical structure and control flow
+
+### plan_status (Execution State Inspection)
+
+Real-time inspection tool for active plan executions:
+
+**Parameters:**
+- `sessionId` (optional) - Specific session to inspect, or 'all' for all active sessions
+- `includeContext` (optional) - Boolean flag to include execution context details
+- `includeResults` (optional) - Boolean flag to include step results in response
+
+**Behavior:**
+- Reports on active execution sessions and their current state
+- Provides real-time progress information and step completion status  
+- Includes execution context and variable state for debugging
+- Shows execution stack and hierarchical position information
+
+### Integration with Core Execution Engine
+
+All debugging tools leverage the same PlanExecutor core engine, ensuring consistency:
+
+- **Hierarchical Context Tracking** - All tools have access to execution position and context stack
+- **Variable Scoping** - Step-by-step and debug tools can inspect hierarchical variable scopes
+- **Event Emission** - All executions emit the same progress events for monitoring
+- **Error Handling** - Consistent error handling and retry logic across all execution modes
+
 ## Success Criteria
 
 The MVP is successful if it can:
@@ -260,6 +360,8 @@ The MVP is successful if it can:
 4. Handle basic errors with retry logic
 5. Integrate cleanly as a Legion module
 6. Replace Aiur's current execution logic
+7. Provide comprehensive debugging capabilities through specialized tools
+8. Enable step-by-step execution and inspection for development workflows
 
 ## Conclusion
 

@@ -255,7 +255,7 @@ describe('Error Handling and Retry Logic', () => {
       const totalTime = Date.now() - startTime;
 
       // Should take at least 1s + 2s = 3s due to exponential backoff
-      expect(totalTime).toBeGreaterThan(3000);
+      expect(totalTime).toBeGreaterThanOrEqual(3000);
       expect(timestamps).toHaveLength(3);
 
       // Check that delays increase exponentially (approximately)

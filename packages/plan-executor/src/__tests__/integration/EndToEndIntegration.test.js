@@ -20,7 +20,7 @@ describe('End-to-End Integration', () => {
       createModule: jest.fn()
     };
 
-    module = new PlanExecutorModule(mockResourceManager, mockModuleFactory);
+    module = new PlanExecutorModule({ resourceManager: mockResourceManager, moduleFactory: mockModuleFactory });
     tool = module.getTools()[0];
 
     // Mock the module loader to not do real loading
@@ -551,7 +551,7 @@ describe('End-to-End Integration', () => {
     it('should integrate properly with Legion ecosystem patterns', () => {
       // Test module interface
       expect(PlanExecutorModule.dependencies).toEqual(['resourceManager', 'moduleFactory']);
-      expect(module.getTools()).toHaveLength(1);
+      expect(module.getTools()).toHaveLength(5);
       
       const tool = module.getTools()[0];
       expect(tool.name).toBe('plan_execute');

@@ -22,6 +22,9 @@ export class ExecutionContext {
     // Initialize hierarchical navigation
     this.executionStack = []; // Stack of step contexts
     this.currentPath = []; // Path from root to current position
+    
+    // Initialize debugging state
+    this.sessions = new Map(); // Active debugging sessions
   }
   
   // Hierarchical navigation methods
@@ -200,5 +203,167 @@ export class ExecutionContext {
     }
     
     return value;
+  }
+
+  // Debugging Extensions
+
+  // Session Management
+  createSession() {
+    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const sessionState = {
+      id: sessionId,
+      createdAt: new Date(),
+      isPaused: false,
+      pausePoint: null,
+      breakpoints: [],
+      executionSnapshot: null,
+      variableSnapshot: null
+    };
+    
+    this.sessions.set(sessionId, sessionState);
+    return sessionId;
+  }
+
+  hasSession(sessionId) {
+    return this.sessions.has(sessionId);
+  }
+
+  getSessionState(sessionId) {
+    return this.sessions.get(sessionId) || null;
+  }
+
+  destroySession(sessionId) {
+    this.sessions.delete(sessionId);
+  }
+
+  getActiveSessions() {
+    return Array.from(this.sessions.keys());
+  }
+
+  // Pause/Resume Functionality
+  pauseExecution(sessionId, pausePoint = null) {
+    const session = this.sessions.get(sessionId);
+    if (session) {
+      session.isPaused = true;
+      session.pausePoint = pausePoint || {
+        timestamp: new Date(),
+        reason: 'manual'
+      };
+    }
+  }
+
+  resumeExecution(sessionId) {
+    const session = this.sessions.get(sessionId);
+    if (session) {
+      session.isPaused = false;
+      session.pausePoint = null;
+    }
+  }
+
+  isPaused(sessionId) {
+    const session = this.sessions.get(sessionId);
+    return session ? session.isPaused : false;
+  }
+
+  // Breakpoint Detection and Handling
+  setBreakpoints(sessionId, breakpoints) {
+    const session = this.sessions.get(sessionId);
+    if (session) {
+      session.breakpoints = [...breakpoints];
+    }
+  }
+
+  isAtBreakpoint(sessionId, stepId) {
+    const session = this.sessions.get(sessionId);
+    return session ? session.breakpoints.includes(stepId) : false;
+  }
+
+  addBreakpoint(sessionId, stepId) {
+    const session = this.sessions.get(sessionId);
+    if (session && !session.breakpoints.includes(stepId)) {
+      session.breakpoints.push(stepId);
+    }
+  }
+
+  removeBreakpoint(sessionId, stepId) {
+    const session = this.sessions.get(sessionId);
+    if (session) {
+      session.breakpoints = session.breakpoints.filter(bp => bp !== stepId);
+    }
+  }
+
+  // Variable State Capture and Inspection
+  captureVariableSnapshot() {
+    const snapshot = {
+      global: Object.fromEntries(this.state.variables),
+      stepScoped: this.executionStack.map(context => ({
+        stepId: context.stepId,
+        variables: Object.fromEntries(context.variables)
+      }))
+    };
+    return snapshot;
+  }
+
+  captureExecutionSnapshot() {
+    const snapshot = {
+      executionStack: this.executionStack.map(context => ({
+        stepId: context.stepId,
+        step: context.step,
+        startTime: context.startTime,
+        variables: Object.fromEntries(context.variables)
+      })),
+      currentPath: [...this.currentPath],
+      state: {
+        status: this.state.status,
+        completedSteps: [...this.state.completedSteps],
+        failedSteps: [...this.state.failedSteps],
+        skippedSteps: [...this.state.skippedSteps]
+      }
+    };
+    return snapshot;
+  }
+
+  inspectSessionVariables(sessionId) {
+    const session = this.sessions.get(sessionId);
+    if (!session) return null;
+    
+    return this.captureVariableSnapshot();
+  }
+
+  // Session State Persistence
+  persistSessionState(sessionId) {
+    const session = this.sessions.get(sessionId);
+    if (session) {
+      session.executionSnapshot = this.captureExecutionSnapshot();
+      session.variableSnapshot = this.captureVariableSnapshot();
+    }
+  }
+
+  restoreSessionState(sessionId) {
+    const session = this.sessions.get(sessionId);
+    if (!session || !session.executionSnapshot) return;
+
+    const execSnapshot = session.executionSnapshot;
+    const varSnapshot = session.variableSnapshot;
+
+    // Restore execution stack
+    this.executionStack = execSnapshot.executionStack.map(context => ({
+      step: context.step,
+      stepId: context.stepId,
+      startTime: context.startTime,
+      variables: new Map(Object.entries(context.variables))
+    }));
+
+    // Restore current path
+    this.currentPath = [...execSnapshot.currentPath];
+
+    // Restore state
+    this.state.status = execSnapshot.state.status;
+    this.state.completedSteps = [...execSnapshot.state.completedSteps];
+    this.state.failedSteps = [...execSnapshot.state.failedSteps];
+    this.state.skippedSteps = [...execSnapshot.state.skippedSteps];
+
+    // Restore global variables
+    this.state.variables = new Map(Object.entries(varSnapshot.global));
   }
 }
