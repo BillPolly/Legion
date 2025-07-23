@@ -51,6 +51,11 @@ export class ToolDefinitionProvider {
     const moduleTools = this.moduleLoader.getModuleToolDefinitions();
     allTools.push(...moduleTools);
 
+    // Add debug tools if they exist
+    if (this._debugTools) {
+      allTools.push(...this._debugTools);
+    }
+
     return allTools;
   }
 
@@ -61,13 +66,14 @@ export class ToolDefinitionProvider {
    */
   toolExists(toolName) {
     return this.contextManager.isContextTool(toolName) || 
-           this.moduleLoader.isModuleTool(toolName);
+           this.moduleLoader.isModuleTool(toolName) ||
+           this.isDebugTool(toolName);
   }
 
   /**
    * Get tool type for routing
    * @param {string} toolName - Name of the tool
-   * @returns {string} Tool type: 'context', 'module', or 'unknown'
+   * @returns {string} Tool type: 'context', 'module', 'debug', or 'unknown'
    */
   getToolType(toolName) {
     if (this.contextManager.isContextTool(toolName)) {
@@ -75,6 +81,9 @@ export class ToolDefinitionProvider {
     }
     if (this.moduleLoader.isModuleTool(toolName)) {
       return 'module';
+    }
+    if (this.isDebugTool(toolName)) {
+      return 'debug';
     }
     return 'unknown';
   }
@@ -96,6 +105,10 @@ export class ToolDefinitionProvider {
         // Module tools return raw results, need to format for MCP
         const result = await this.moduleLoader.executeModuleTool(toolName, resolvedArgs);
         return this._formatModuleToolResponse(result);
+      
+      case 'debug':
+        // Debug tools return already formatted MCP responses
+        return await this._debugTool.executeDebugTool(toolName, resolvedArgs);
       
       default:
         return {
@@ -131,12 +144,14 @@ export class ToolDefinitionProvider {
   getToolStatistics() {
     const contextTools = this.contextManager.getToolDefinitions();
     const moduleTools = this.moduleLoader.getModuleToolDefinitions();
+    const debugTools = this._debugTools || [];
     const modules = this.moduleLoader.getLoadedModulesInfo();
 
     return {
-      total: contextTools.length + moduleTools.length,
+      total: contextTools.length + moduleTools.length + debugTools.length,
       context: contextTools.length,
       modules: moduleTools.length,
+      debug: debugTools.length,
       loadedModules: modules.length,
       moduleDetails: modules
     };
@@ -159,10 +174,35 @@ export class ToolDefinitionProvider {
       source: 'ModuleLoader'
     }));
 
+    const debugTools = (this._debugTools || []).map(tool => ({
+      ...tool,
+      type: 'debug',
+      source: 'DebugTool'
+    }));
+
     return {
       contextTools,
       moduleTools,
-      allTools: [...contextTools, ...moduleTools]
+      debugTools,
+      allTools: [...contextTools, ...moduleTools, ...debugTools]
     };
+  }
+
+  /**
+   * Check if a tool is a debug tool
+   * @param {string} toolName - Name of the tool to check
+   * @returns {boolean} True if tool is a debug tool
+   */
+  isDebugTool(toolName) {
+    if (!this._debugTools) return false;
+    return this._debugTools.some(tool => tool.name === toolName);
+  }
+
+  /**
+   * Set the debug tool instance for execution
+   * @param {DebugTool} debugTool - The debug tool instance
+   */
+  setDebugTool(debugTool) {
+    this._debugTool = debugTool;
   }
 }

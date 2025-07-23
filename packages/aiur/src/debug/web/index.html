@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aiur MCP Debug Interface</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🐛 Aiur MCP Debug Interface</h1>
+            <div class="status-bar">
+                <div id="connectionStatus" class="status disconnected">Connecting...</div>
+                <div id="serverInfo" class="server-info"></div>
+            </div>
+        </header>
+
+        <div class="panels">
+            <!-- Command Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h3>Command Execution</h3>
+                    <button id="clearCommand" class="btn-secondary">Clear</button>
+                </div>
+                <div class="panel-content">
+                    <div class="form-group">
+                        <label for="toolName">Tool Name:</label>
+                        <input type="text" id="toolName" placeholder="e.g., context_list" autocomplete="off">
+                        <div id="toolSuggestions" class="suggestions"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="toolArgs">Arguments (JSON):</label>
+                        <textarea id="toolArgs" rows="4" placeholder='{"key": "value"}'></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button id="executeBtn" class="btn-primary">Execute Tool</button>
+                        <button id="formatArgs" class="btn-secondary">Format JSON</button>
+                    </div>
+                    <div class="form-group">
+                        <label>Result:</label>
+                        <div id="commandResult" class="result-display"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Context Browser -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h3>Context Browser</h3>
+                    <div class="panel-controls">
+                        <input type="text" id="contextFilter" placeholder="Filter contexts..." class="filter-input">
+                        <button id="refreshContext" class="btn-secondary">Refresh</button>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div id="contextList" class="context-list"></div>
+                </div>
+            </div>
+
+            <!-- Event Stream -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h3>Event Stream</h3>
+                    <div class="panel-controls">
+                        <select id="eventFilter" class="filter-select">
+                            <option value="">All Events</option>
+                            <option value="tool-executed">Tool Executed</option>
+                            <option value="context-updated">Context Updated</option>
+                            <option value="metric-recorded">Metrics</option>
+                            <option value="alert-triggered">Alerts</option>
+                        </select>
+                        <button id="clearEvents" class="btn-secondary">Clear</button>
+                        <button id="pauseEvents" class="btn-secondary">Pause</button>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div id="eventStream" class="event-stream"></div>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h3>System Status</h3>
+                    <button id="refreshStatus" class="btn-secondary">Refresh</button>
+                </div>
+                <div class="panel-content">
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <h4>Server Health</h4>
+                            <div id="serverHealth" class="metric-value">Unknown</div>
+                        </div>
+                        <div class="status-item">
+                            <h4>Connected Clients</h4>
+                            <div id="connectedClients" class="metric-value">0</div>
+                        </div>
+                        <div class="status-item">
+                            <h4>Available Tools</h4>
+                            <div id="toolCount" class="metric-value">0</div>
+                        </div>
+                        <div class="status-item">
+                            <h4>Context Items</h4>
+                            <div id="contextCount" class="metric-value">0</div>
+                        </div>
+                    </div>
+                    <div class="tool-list">
+                        <h4>Available Tools:</h4>
+                        <div id="availableTools" class="tool-tags"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Log Viewer -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h3>System Logs</h3>
+                    <div class="panel-controls">
+                        <select id="logLevel" class="filter-select">
+                            <option value="">All Levels</option>
+                            <option value="error">Error</option>
+                            <option value="warn">Warning</option>
+                            <option value="info">Info</option>
+                            <option value="debug">Debug</option>
+                        </select>
+                        <button id="clearLogs" class="btn-secondary">Clear</button>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div id="logViewer" class="log-viewer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

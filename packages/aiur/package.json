@@ -11,17 +11,22 @@
     "start": "node src/index.js",
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
-    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
+    "test:debug": "NODE_OPTIONS='--experimental-vm-modules' jest src/debug",
+    "test:browser": "NODE_OPTIONS='--experimental-vm-modules' jest src/debug/__tests__/browser"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.16.0",
-    "@legion/llm-planner": "*",
     "@legion/llm": "*",
+    "@legion/llm-planner": "*",
     "@legion/module-loader": "*",
-    "@legion/plan-executor": "*"
+    "@legion/plan-executor": "*",
+    "@modelcontextprotocol/sdk": "^1.16.0",
+    "ws": "^8.14.2"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
+    "jest": "^29.7.0",
+    "jsdom": "^20.0.3",
+    "puppeteer": "^21.5.2"
   },
   "engines": {
     "node": ">=18.0.0"

@@ -15,6 +15,8 @@ import { ToolRegistry } from './tools/ToolRegistry.js';
 
 // Import modular components
 import { ToolDefinitionProvider } from './core/ToolDefinitionProvider.js';
+import { DebugTool } from './debug/DebugTool.js';
+import { WebDebugServer } from './debug/WebDebugServer.js';
 
 // Global variables for MCP server
 let toolDefinitionProvider = null;
@@ -53,6 +55,30 @@ async function initializeAiurSystems() {
     // Create and initialize ToolDefinitionProvider
     const provider = await ToolDefinitionProvider.create(resourceManager);
     await provider.initialize();
+
+    // Register ToolDefinitionProvider and its contextManager for debug tools
+    resourceManager.register('toolDefinitionProvider', provider);
+    resourceManager.register('contextManager', provider.contextManager);
+    
+    // Create mock monitoring system if it doesn't exist
+    const monitoringSystem = {
+      on: () => {},
+      recordMetric: () => {},
+      getDashboardData: () => ({ systemHealth: { score: 95 } })
+    };
+    resourceManager.register('monitoringSystem', monitoringSystem);
+
+    // Create WebDebugServer with all dependencies available
+    const webDebugServer = await WebDebugServer.create(resourceManager);
+    resourceManager.register('webDebugServer', webDebugServer);
+
+    // Create and register DebugTool to extend the ToolDefinitionProvider
+    const debugTool = await DebugTool.create(resourceManager);
+    
+    // Add debug tools to the provider's tool list
+    const debugToolDefinitions = debugTool.getToolDefinitions();
+    provider._debugTools = debugToolDefinitions;
+    provider.setDebugTool(debugTool);
 
     // Store globally for use in request handlers
     toolDefinitionProvider = provider;
