@@ -37,6 +37,9 @@ export class WebDebugServer {
     this.eventBuffer = [];
     this.maxEventBuffer = 1000;
     
+    // Log management
+    this.logManager = null;
+    
     // Generate unique server ID
     this.serverId = `aiur-mcp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
@@ -52,6 +55,23 @@ export class WebDebugServer {
     const monitoringSystem = resourceManager.get('monitoringSystem');
     
     const server = new WebDebugServer(contextManager, toolDefinitionProvider, monitoringSystem);
+    
+    // Get LogManager if available and set up log streaming
+    try {
+      const logManager = resourceManager.get('logManager');
+      server.logManager = logManager;
+      
+      // Subscribe to log events for real-time streaming
+      logManager.on('log-entry', (logEntry) => {
+        server._broadcastLog(logEntry);
+      });
+      
+      // Log to stderr to avoid MCP interference
+      process.stderr.write('WebDebugServer: Connected to LogManager\n');
+    } catch (e) {
+      // LogManager not available yet
+      process.stderr.write('WebDebugServer: LogManager not available at creation\n');
+    }
     
     // Get error broadcast service if available and set up error forwarding
     try {
@@ -307,14 +327,23 @@ export class WebDebugServer {
       data: {
         serverId: this.serverId,
         version: '1.0.0',
-        capabilities: ['tool-execution', 'context-management', 'event-streaming', 'error-tracking'],
+        capabilities: ['tool-execution', 'context-management', 'event-streaming', 'error-tracking', 'log-streaming'],
         availableTools: this.toolDefinitionProvider.getAllToolDefinitions().map(t => t.name),
         errorTracking: {
           enabled: !!this.errorBroadcastService,
           bufferSize: this.errorBroadcastService?.getErrorBuffer().length || 0
+        },
+        logStreaming: {
+          enabled: !!this.logManager,
+          logDirectory: this.logManager?.logDirectory || null
         }
       }
     }));
+
+    // Send initial logs if LogManager is available
+    if (this.logManager) {
+      this._sendInitialLogs(ws);
+    }
 
     // Send buffered events
     for (const event of this.eventBuffer) {
@@ -394,6 +423,18 @@ export class WebDebugServer {
             ws.send(JSON.stringify({
               type: 'error',
               data: { message: 'Error tracking not enabled' }
+            }));
+          }
+          break;
+        
+        case 'get-log-history':
+          if (this.logManager) {
+            await this._handleLogHistoryRequest(ws, message);
+          } else {
+            ws.send(JSON.stringify({
+              type: 'error',
+              id: message.id,
+              data: { message: 'Log streaming not enabled' }
             }));
           }
           break;
@@ -700,6 +741,88 @@ export class WebDebugServer {
   }
 
   /**
+   * Send initial logs to a newly connected client
+   * @param {Object} ws - WebSocket connection
+   * @private
+   */
+  async _sendInitialLogs(ws) {
+    try {
+      const logs = await this.logManager.getAllLogsForWebUI(200);
+      
+      ws.send(JSON.stringify({
+        type: 'initial-logs',
+        data: {
+          logs: logs,
+          count: logs.length,
+          stats: this.logManager.getStats()
+        }
+      }));
+    } catch (error) {
+      // Failed to load initial logs - not critical
+      process.stderr.write(`🐛 Failed to send initial logs: ${error.message}\n`);
+    }
+  }
+
+  /**
+   * Broadcast new log entry to all connected clients
+   * @param {Object} logEntry - Log entry from LogManager
+   * @private
+   */
+  _broadcastLog(logEntry) {
+    const logMessage = JSON.stringify({
+      type: 'log-entry',
+      data: logEntry
+    });
+    
+    // Send to all connected clients
+    for (const client of this.clients) {
+      if (client.readyState === 1) { // OPEN
+        try {
+          client.send(logMessage);
+        } catch (e) {
+          // Failed to send log to client - remove client
+          this.clients.delete(client);
+        }
+      }
+    }
+  }
+
+  /**
+   * Handle request for log history
+   * @param {Object} ws - WebSocket connection
+   * @param {Object} message - Request message
+   * @private
+   */
+  async _handleLogHistoryRequest(ws, message) {
+    try {
+      const { limit = 100, level = null } = message.data || {};
+      
+      let logs;
+      if (level) {
+        logs = await this.logManager.getRecentLogs({ limit, level });
+      } else {
+        logs = await this.logManager.getAllLogsForWebUI(limit);
+      }
+      
+      ws.send(JSON.stringify({
+        type: 'log-history',
+        id: message.id,
+        data: {
+          logs: logs,
+          count: logs.length,
+          stats: this.logManager.getStats()
+        }
+      }));
+    } catch (error) {
+      ws.send(JSON.stringify({
+        type: 'error',
+        id: message.id,
+        data: { message: `Failed to get log history: ${error.message}` }
+      }));
+    }
+  }
+
+  /**
    * Get basic HTML interface for when web files don't exist
    * @returns {string} Basic HTML content
    * @private
@@ -766,6 +889,26 @@ export class WebDebugServer {
 
         <div class="panel">
             <div class="header">
+                <h3>📋 System Logs</h3>
+                <div style="float: right;">
+                    <select id="logLevel" onchange="filterLogs()">
+                        <option value="">All Levels</option>
+                        <option value="error">Errors</option>
+                        <option value="warning">Warnings</option>
+                        <option value="info">Info</option>
+                    </select>
+                    <button onclick="clearLogs()" style="margin-left: 10px;">Clear</button>
+                </div>
+            </div>
+            <div id="logs" class="log" style="height: 300px; overflow-y: auto;"></div>
+            <div style="margin-top: 10px; font-size: 12px; color: #aaa;">
+                <span id="logCount">0 logs</span> | 
+                <span id="logStats">0 errors, 0 warnings, 0 info</span>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="header">
                 <h3>Event Stream</h3>
             </div>
             <div id="events" class="log"></div>
@@ -782,6 +925,8 @@ export class WebDebugServer {
     <script>
         const ws = new WebSocket('ws://localhost:${this.port}/ws');
         let errorCount = 0;
+        let logs = [];
+        let logStats = { error: 0, warning: 0, info: 0 };
         
         ws.onopen = function() {
             log('Connected to debug server');
@@ -800,6 +945,12 @@ export class WebDebugServer {
             switch(message.type) {
                 case 'welcome':
                     document.getElementById('serverInfo').textContent = JSON.stringify(message.data, null, 2);
+                    break;
+                case 'initial-logs':
+                    loadInitialLogs(message.data);
+                    break;
+                case 'log-entry':
+                    addLogEntry(message.data);
                     break;
                 case 'tool-result':
                     document.getElementById('result').textContent = JSON.stringify(message.data, null, 2);
@@ -932,6 +1083,103 @@ export class WebDebugServer {
             if (errorPanel) {
                 errorPanel.style.display = 'none';
             }
+        }
+        
+        // Log management functions
+        function loadInitialLogs(data) {
+            logs = data.logs || [];
+            updateLogStats();
+            renderLogs();
+        }
+        
+        function addLogEntry(logEntry) {
+            logs.unshift(logEntry); // Add to beginning (newest first)
+            
+            // Keep only last 500 logs
+            if (logs.length > 500) {
+                logs = logs.slice(0, 500);
+            }
+            
+            updateLogStats();
+            renderLogs();
+        }
+        
+        function renderLogs() {
+            const logsDiv = document.getElementById('logs');
+            const selectedLevel = document.getElementById('logLevel').value;
+            
+            let filteredLogs = logs;
+            if (selectedLevel) {
+                filteredLogs = logs.filter(log => log.level === selectedLevel);
+            }
+            
+            logsDiv.innerHTML = '';
+            
+            filteredLogs.forEach(log => {
+                const logDiv = document.createElement('div');
+                logDiv.style.marginBottom = '8px';
+                logDiv.style.padding = '8px';
+                logDiv.style.borderRadius = '3px';
+                logDiv.style.fontSize = '12px';
+                logDiv.style.fontFamily = 'monospace';
+                
+                // Color based on log level
+                switch(log.level) {
+                    case 'error':
+                        logDiv.style.backgroundColor = '#4a2a2a';
+                        logDiv.style.borderLeft = '4px solid #ff6b6b';
+                        break;
+                    case 'warning':
+                        logDiv.style.backgroundColor = '#4a4a2a';
+                        logDiv.style.borderLeft = '4px solid #ffb347';
+                        break;
+                    case 'info':
+                        logDiv.style.backgroundColor = '#2a2a4a';
+                        logDiv.style.borderLeft = '4px solid #74b9ff';
+                        break;
+                    default:
+                        logDiv.style.backgroundColor = '#333';
+                        logDiv.style.borderLeft = '4px solid #666';
+                }
+                
+                const timestamp = new Date(log.timestamp).toLocaleTimeString();
+                const source = log.context?.source || log.source || 'unknown';
+                
+                logDiv.innerHTML = \`
+                    <div style="color: #888; font-size: 10px;">[\${timestamp}] [\${log.level.toUpperCase()}] [\${source}]</div>
+                    <div style="margin-top: 2px; color: #fff;">\${log.message}</div>
+                    \${log.context?.operation ? '<div style="color: #aaa; font-size: 10px;">Operation: ' + log.context.operation + '</div>' : ''}
+                \`;
+                
+                logsDiv.appendChild(logDiv);
+            });
+            
+            // Auto-scroll to bottom for new logs
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+        
+        function updateLogStats() {
+            logStats = { error: 0, warning: 0, info: 0 };
+            
+            logs.forEach(log => {
+                if (logStats.hasOwnProperty(log.level)) {
+                    logStats[log.level]++;
+                }
+            });
+            
+            document.getElementById('logCount').textContent = \`\${logs.length} logs\`;
+            document.getElementById('logStats').textContent = 
+                \`\${logStats.error} errors, \${logStats.warning} warnings, \${logStats.info} info\`;
+        }
+        
+        function filterLogs() {
+            renderLogs();
+        }
+        
+        function clearLogs() {
+            logs = [];
+            updateLogStats();
+            renderLogs();
         }
     </script>
 </body>

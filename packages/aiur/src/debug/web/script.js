@@ -17,6 +17,8 @@ class DebugInterface {
     this.pendingRequests = new Map();
     this.eventsPaused = false;
     this.availableTools = [];
+    this.logs = [];
+    this.logStats = { error: 0, warning: 0, info: 0 };
     
     // Initialize when DOM is ready
     if (document.readyState === 'loading') {
@@ -175,6 +177,14 @@ class DebugInterface {
         
         case 'error':
           this.handleError(message.data);
+          break;
+        
+        case 'initial-logs':
+          this.handleInitialLogs(message.data);
+          break;
+        
+        case 'log-entry':
+          this.handleLogEntry(message.data);
           break;
         
         default:
@@ -387,6 +397,32 @@ class DebugInterface {
   handleError(data) {
     this.showToast(`Server error: ${data.message}`, 'error');
     console.error('Server error:', data);
+  }
+
+  /**
+   * Handle initial logs data
+   */
+  handleInitialLogs(data) {
+    console.log('🐛 Received initial logs:', data.count, 'entries');
+    this.logs = data.logs || [];
+    this.updateLogDisplay();
+    this.updateLogStats(data.stats);
+  }
+
+  /**
+   * Handle new log entry
+   */
+  handleLogEntry(logEntry) {
+    console.log('🐛 New log entry:', logEntry.level, logEntry.message);
+    this.logs.unshift(logEntry); // Add to beginning (newest first)
+    
+    // Keep only last 500 logs
+    if (this.logs.length > 500) {
+      this.logs = this.logs.slice(0, 500);
+    }
+    
+    this.updateLogDisplay();
+    this.updateLogStatsFromLogs();
   }
 
   /**
@@ -669,6 +705,99 @@ class DebugInterface {
     
     // Also log to console
     console.log(`🐛 ${type.toUpperCase()}: ${message}`);
+  }
+
+  /**
+   * Update log display with current logs
+   */
+  updateLogDisplay() {
+    const logViewer = document.getElementById('logViewer');
+    if (!logViewer) return;
+
+    logViewer.innerHTML = '';
+
+    // Apply current filter
+    const currentFilter = document.getElementById('logLevel')?.value || '';
+    const filteredLogs = currentFilter ? 
+      this.logs.filter(log => log.level === currentFilter) : 
+      this.logs;
+
+    filteredLogs.forEach(log => {
+      const logElement = document.createElement('div');
+      logElement.className = `log-entry ${log.level}`;
+      
+      const timestamp = new Date(log.timestamp).toLocaleTimeString();
+      
+      // Create structured log entry
+      const timestampEl = document.createElement('div');
+      timestampEl.className = 'log-timestamp';
+      timestampEl.textContent = timestamp;
+      
+      const levelEl = document.createElement('span');
+      levelEl.className = 'log-level';
+      levelEl.textContent = log.level.toUpperCase();
+      
+      const messageEl = document.createElement('div');
+      messageEl.className = 'log-message';
+      messageEl.textContent = log.message;
+      
+      logElement.appendChild(timestampEl);
+      logElement.appendChild(levelEl);
+      logElement.appendChild(messageEl);
+      
+      // Add context if present
+      if (log.context && Object.keys(log.context).length > 0) {
+        const contextEl = document.createElement('div');
+        contextEl.className = 'log-context';
+        contextEl.textContent = JSON.stringify(log.context, null, 2);
+        messageEl.appendChild(contextEl);
+      }
+      
+      logViewer.appendChild(logElement);
+    });
+
+    // Auto-scroll to bottom
+    logViewer.scrollTop = logViewer.scrollHeight;
+  }
+
+  /**
+   * Update log statistics from server data
+   */
+  updateLogStats(stats) {
+    if (stats) {
+      this.logStats = { ...stats };
+    }
+    this.updateLogStatsDisplay();
+  }
+
+  /**
+   * Update log statistics from current logs array
+   */
+  updateLogStatsFromLogs() {
+    const stats = { error: 0, warning: 0, info: 0 };
+    
+    this.logs.forEach(log => {
+      if (stats.hasOwnProperty(log.level)) {
+        stats[log.level]++;
+      }
+    });
+    
+    this.logStats = stats;
+    this.updateLogStatsDisplay();
+  }
+
+  /**
+   * Update log statistics display in UI
+   */
+  updateLogStatsDisplay() {
+    // Update stats badges if they exist
+    const errorCount = document.getElementById('errorCount');
+    const warningCount = document.getElementById('warningCount'); 
+    const infoCount = document.getElementById('infoCount');
+    
+    if (errorCount) errorCount.textContent = this.logStats.error || 0;
+    if (warningCount) warningCount.textContent = this.logStats.warning || 0;
+    if (infoCount) infoCount.textContent = this.logStats.info || 0;
   }
 }
 

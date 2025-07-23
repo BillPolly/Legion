@@ -211,6 +211,9 @@ export class LogManager extends EventEmitter {
       else if (logEntry.level === 'warning') this.stats.warningCount++;
       else if (logEntry.level === 'info') this.stats.infoCount++;
       
+      // Emit event for real-time log streaming
+      this.emit('log-entry', logEntry);
+      
     } catch (error) {
       // Failed to write log - continue
     }
@@ -429,6 +432,72 @@ export class LogManager extends EventEmitter {
       
       // Return limited results
       return logs.slice(-limit);
+      
+    } catch (error) {
+      // Error reading logs - return empty array
+      return [];
+    }
+  }
+
+  /**
+   * Get all logs for web UI - reads current and recent archived logs
+   */
+  async getAllLogsForWebUI(limit = 500) {
+    try {
+      let allLogs = [];
+      
+      // Read current log file
+      const currentLogs = await this.getRecentLogs({ limit });
+      allLogs = [...currentLogs];
+      
+      // If we need more logs, read from archived directory
+      if (allLogs.length < limit) {
+        try {
+          const archivedDir = path.join(this.logDirectory, 'archived');
+          const archivedFiles = await fs.readdir(archivedDir);
+          
+          // Sort archived files by modification time (newest first)
+          const fileStats = await Promise.all(
+            archivedFiles
+              .filter(file => file.startsWith('aiur-') && file.endsWith('.log'))
+              .map(async file => {
+                const filepath = path.join(archivedDir, file);
+                const stats = await fs.stat(filepath);
+                return { file, mtime: stats.mtime, filepath };
+              })
+          );
+          
+          fileStats.sort((a, b) => b.mtime - a.mtime);
+          
+          // Read from most recent archived files until we have enough logs
+          for (const { filepath } of fileStats) {
+            if (allLogs.length >= limit) break;
+            
+            try {
+              const content = await fs.readFile(filepath, 'utf8');
+              const lines = content.trim().split('\n').filter(line => line);
+              
+              const archivedLogs = lines.map(line => {
+                try {
+                  return JSON.parse(line);
+                } catch {
+                  return null;
+                }
+              }).filter(log => log);
+              
+              allLogs = [...archivedLogs, ...allLogs];
+            } catch (error) {
+              // Skip this file if we can't read it
+            }
+          }
+        } catch (error) {
+          // No archived directory or can't read it - continue with current logs only
+        }
+      }
+      
+      // Sort by timestamp (newest first) and limit
+      allLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      return allLogs.slice(0, limit);
       
     } catch (error) {
       // Error reading logs - return empty array
