@@ -14,9 +14,6 @@ import { HandleResolver } from './handles/HandleResolver.js';
 import { ToolRegistry } from './tools/ToolRegistry.js';
 import { PlanningTools } from './planning/PlanningTools.js';
 import { PlanExecutor } from './planning/PlanExecutor.js';
-
-// Import Legion module system for FileModule
-import FileModule from '../../general-tools/src/file/FileModule.js';
 import { LegionModuleAdapter } from './tools/LegionModuleAdapter.js';
 
 // Initialize Aiur systems
@@ -26,7 +23,7 @@ const toolRegistry = new ToolRegistry(handleRegistry);
 const planExecutor = new PlanExecutor(toolRegistry, handleRegistry);
 const planningTools = new PlanningTools(toolRegistry, handleRegistry, planExecutor);
 
-// Initialize tools array with base tools
+// Get comprehensive tools from our systems  
 const TOOLS = [
   // Context management tools
   {
@@ -236,35 +233,7 @@ async function handleToolCall(name, args) {
     const registeredTool = toolRegistry.getTool(name);
     if (registeredTool) {
       console.error(`Found registered tool: ${name}`);
-      let result;
-      
-      // Check if it's a multi-function tool
-      if (registeredTool.functions) {
-        // Find the specific function
-        const func = registeredTool.functions.find(f => f.name === name);
-        if (func) {
-          result = await func.execute(resolvedArgs);
-        } else {
-          return {
-            content: [{
-              type: "text",
-              text: `Function ${name} not found in multi-function tool`
-            }],
-            isError: true,
-          };
-        }
-      } else if (registeredTool.execute) {
-        // Single function tool
-        result = await registeredTool.execute(resolvedArgs);
-      } else {
-        return {
-          content: [{
-            type: "text",
-            text: `Tool ${name} has no execute method`
-          }],
-          isError: true,
-        };
-      }
+      const result = await registeredTool.execute(resolvedArgs);
       
       // Auto-save to context if saveAs is provided
       if (resolvedArgs.saveAs && result.success) {
@@ -319,6 +288,74 @@ async function handleToolCall(name, args) {
   }
 }
 
+/**
+ * Generic function to load Legion modules dynamically
+ * This should be called BEFORE setting up server handlers
+ */
+async function loadLegionModules() {
+  const adapter = new LegionModuleAdapter(toolRegistry, handleRegistry);
+  await adapter.initialize();
+  
+  // Configuration for modules to load
+  // Easy to add new modules here without changing any other code
+  const moduleConfigs = [
+    {
+      // Load FileModule dynamically
+      getModule: async () => {
+        const { default: FileModule } = await import('../../general-tools/src/file/FileModule.js');
+        return FileModule;
+      },
+      dependencies: {
+        basePath: process.cwd(),
+        encoding: 'utf8',
+        createDirectories: true,
+        permissions: 0o755
+      }
+    }
+    // Add more modules here as needed:
+    // {
+    //   getModule: async () => {
+    //     const { default: WebModule } = await import('../../general-tools/src/web/WebModule.js');
+    //     return WebModule;
+    //   },
+    //   dependencies: { /* web module deps */ }
+    // }
+  ];
+  
+  // Load each module
+  for (const config of moduleConfigs) {
+    try {
+      const ModuleClass = await config.getModule();
+      const result = await adapter.loadModule(ModuleClass, config.dependencies);
+      
+      // Get newly registered tools and add to TOOLS array
+      const allTools = toolRegistry.getAllTools();
+      const newTools = allTools.filter(tool =>
+        tool.tags && 
+        tool.tags.includes('legion-module') &&
+        !TOOLS.some(t => t.name === tool.name)
+      );
+      
+      // Add each new tool to the TOOLS array for MCP listing
+      newTools.forEach(tool => {
+        TOOLS.push({
+          name: tool.name,
+          description: tool.description,
+          inputSchema: tool.inputSchema
+        });
+      });
+      
+      console.error(`Loaded module: ${result.moduleName} with ${newTools.length} tools`);
+      console.error('Added tools:', newTools.map(t => t.name));
+    } catch (error) {
+      console.error(`Failed to load module:`, error);
+    }
+  }
+  
+  console.error(`Total tools available: ${TOOLS.length}`);
+}
+
+// Create the server
 const server = new Server(
   {
     name: "aiur",
@@ -332,57 +369,7 @@ const server = new Server(
   },
 );
 
-async function loadLegionModules() {
-  try {
-    // Create LegionModuleAdapter to bridge Legion tools to MCP
-    const legionAdapter = new LegionModuleAdapter(toolRegistry, handleRegistry);
-    await legionAdapter.initialize();
-    
-    // Module configuration - easy to add new modules here
-    const moduleConfigs = [
-      {
-        module: FileModule,
-        dependencies: {
-          basePath: process.cwd(),
-          encoding: 'utf8',
-          createDirectories: true,
-          permissions: 0o755
-        }
-      }
-      // Add more modules here as needed
-    ];
-    
-    // Load each module
-    for (const config of moduleConfigs) {
-      const result = await legionAdapter.loadModule(config.module, config.dependencies);
-      console.error(`Loaded module: ${result.moduleName}`);
-      
-      // Get all newly registered tools
-      const registeredTools = toolRegistry.getAllTools();
-      const newTools = registeredTools.filter(tool => 
-        tool.tags && 
-        tool.tags.includes('legion-module') &&
-        !TOOLS.some(t => t.name === tool.name)
-      );
-      
-      // Add each tool to TOOLS array for MCP listing
-      newTools.forEach(tool => {
-        TOOLS.push({
-          name: tool.name,
-          description: tool.description,
-          inputSchema: tool.inputSchema
-        });
-      });
-      
-      console.error(`Added ${newTools.length} tools from ${result.moduleName}:`, newTools.map(t => t.name));
-    }
-    
-    console.error(`Total tools available: ${TOOLS.length}`);
-  } catch (error) {
-    console.error('Failed to load modules:', error);
-  }
-}
-
+// Main server initialization
 async function runServer() {
   // CRITICAL: Load modules BEFORE setting up handlers
   await loadLegionModules();
@@ -400,10 +387,12 @@ async function runServer() {
     handleToolCall(request.params.name, request.params.arguments ?? {})
   );
   
+  // Connect transport
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }
 
+// Start the server
 runServer().catch(console.error);
 
 process.stdin.on("close", () => {

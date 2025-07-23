@@ -86,10 +86,6 @@ export class LegionModuleAdapter {
    * @returns {Object|Array} Single tool or array of tools for multi-function
    */
   _convertToMCPTools(legionTool) {
-    // Get the tool description from Legion format
-    const toolDesc = legionTool.getToolDescription();
-    const functionDef = toolDesc.function;
-    
     // Handle tools that expose multiple functions
     if (legionTool.getAllToolDescriptions) {
       const allDescs = legionTool.getAllToolDescriptions();
@@ -125,7 +121,14 @@ export class LegionModuleAdapter {
       }));
     }
     
-    // Single function tool
+    // Single function tool - must have getToolDescription
+    if (!legionTool.getToolDescription) {
+      throw new Error(`Tool ${legionTool.name} must have either getToolDescription or getAllToolDescriptions method`);
+    }
+    
+    const toolDesc = legionTool.getToolDescription();
+    const functionDef = toolDesc.function;
+    
     return {
       name: functionDef.name,
       description: functionDef.description,
