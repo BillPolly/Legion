@@ -24,7 +24,9 @@ export class ToolDefinitionProvider {
     const contextManager = await ContextManager.create(resourceManager);
     const moduleLoader = await ModuleLoader.create(resourceManager);
     
-    return new ToolDefinitionProvider(contextManager, moduleLoader);
+    const provider = new ToolDefinitionProvider(contextManager, moduleLoader);
+    provider._resourceManager = resourceManager; // Store for later use
+    return provider;
   }
 
   /**
@@ -96,28 +98,64 @@ export class ToolDefinitionProvider {
    */
   async executeTool(toolName, resolvedArgs) {
     const toolType = this.getToolType(toolName);
+    const errorBroadcastService = this._getErrorBroadcastService();
 
-    switch (toolType) {
-      case 'context':
-        return await this.contextManager.executeContextTool(toolName, resolvedArgs);
+    try {
+      switch (toolType) {
+        case 'context':
+          try {
+            return await this.contextManager.executeContextTool(toolName, resolvedArgs);
+          } catch (contextError) {
+            if (errorBroadcastService) {
+              errorBroadcastService.captureContextError(contextError, 'execute-tool', { toolName, args: resolvedArgs });
+            }
+            throw contextError;
+          }
+        
+        case 'module':
+          try {
+            // Module tools return raw results, need to format for MCP
+            const result = await this.moduleLoader.executeModuleTool(toolName, resolvedArgs);
+            return this._formatModuleToolResponse(result);
+          } catch (moduleError) {
+            if (errorBroadcastService) {
+              errorBroadcastService.captureToolError(moduleError, toolName, resolvedArgs);
+            }
+            throw moduleError;
+          }
+        
+        case 'debug':
+          try {
+            // Debug tools return already formatted MCP responses
+            return await this._debugTool.executeDebugTool(toolName, resolvedArgs);
+          } catch (debugError) {
+            if (errorBroadcastService) {
+              errorBroadcastService.captureToolError(debugError, toolName, resolvedArgs);
+            }
+            throw debugError;
+          }
+        
+        default:
+          const error = new Error(`Unknown tool: ${toolName}`);
+          if (errorBroadcastService) {
+            errorBroadcastService.captureToolError(error, toolName, resolvedArgs);
+          }
+          return {
+            content: [{
+              type: "text",
+              text: `Unknown tool: ${toolName}`
+            }],
+            isError: true,
+          };
+      }
+    } catch (error) {
+      // Capture and broadcast the error
+      if (errorBroadcastService) {
+        errorBroadcastService.captureToolError(error, toolName, resolvedArgs);
+      }
       
-      case 'module':
-        // Module tools return raw results, need to format for MCP
-        const result = await this.moduleLoader.executeModuleTool(toolName, resolvedArgs);
-        return this._formatModuleToolResponse(result);
-      
-      case 'debug':
-        // Debug tools return already formatted MCP responses
-        return await this._debugTool.executeDebugTool(toolName, resolvedArgs);
-      
-      default:
-        return {
-          content: [{
-            type: "text",
-            text: `Unknown tool: ${toolName}`
-          }],
-          isError: true,
-        };
+      // Re-throw to maintain original behavior
+      throw error;
     }
   }
 
@@ -204,5 +242,22 @@ export class ToolDefinitionProvider {
    */
   setDebugTool(debugTool) {
     this._debugTool = debugTool;
+  }
+
+  /**
+   * Get error broadcast service if available
+   * @private
+   * @returns {ErrorBroadcastService|null}
+   */
+  _getErrorBroadcastService() {
+    try {
+      // Try to get from resource manager if available
+      if (this._resourceManager) {
+        return this._resourceManager.get('errorBroadcastService');
+      }
+    } catch (error) {
+      // Service not available yet
+    }
+    return null;
   }
 }

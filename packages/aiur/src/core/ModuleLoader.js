@@ -51,6 +51,7 @@ export class ModuleLoader {
    */
   async loadAllModules() {
     const loadedModules = [];
+    const errorBroadcastService = this._getErrorBroadcastService();
 
     try {
       // Load modules using async factory pattern where available
@@ -69,6 +70,10 @@ export class ModuleLoader {
           console.error(`Loaded module: ${result.moduleName}`);
         } catch (error) {
           console.error(`Failed to load ${moduleConfig.name}:`, error.message);
+          if (errorBroadcastService) {
+            errorBroadcastService.captureModuleError(error, moduleConfig.name);
+          }
+          // Continue loading other modules
         }
       }
 
@@ -99,6 +104,10 @@ export class ModuleLoader {
           console.error(`Loaded module: ${result.moduleName}`);
         } catch (error) {
           console.error(`Failed to load module ${config.module.name}:`, error.message);
+          if (errorBroadcastService) {
+            errorBroadcastService.captureModuleError(error, config.module.name);
+          }
+          // Continue loading other modules
         }
       }
 
@@ -107,6 +116,18 @@ export class ModuleLoader {
 
     } catch (error) {
       console.error('Failed to load modules:', error);
+      if (errorBroadcastService) {
+        errorBroadcastService.captureError({
+          error,
+          errorType: 'module-load',
+          severity: 'critical',
+          source: 'ModuleLoader',
+          context: {
+            operation: 'loadAllModules',
+            phase: 'critical-failure'
+          }
+        });
+      }
       return [];
     }
   }
@@ -180,31 +201,43 @@ export class ModuleLoader {
    * @returns {Promise<Object>} Tool execution result
    */
   async executeModuleTool(toolName, resolvedArgs) {
-    const registeredTool = this.toolRegistry.getTool(toolName);
+    const errorBroadcastService = this._getErrorBroadcastService();
     
-    if (!registeredTool) {
-      throw new Error(`Tool ${toolName} not found in registry`);
-    }
-
-    let result;
-    
-    // Check if it's a multi-function tool
-    if (registeredTool.functions) {
-      // Find the specific function
-      const func = registeredTool.functions.find(f => f.name === toolName);
-      if (func) {
-        result = await func.execute(resolvedArgs);
-      } else {
-        throw new Error(`Function ${toolName} not found in multi-function tool`);
+    try {
+      const registeredTool = this.toolRegistry.getTool(toolName);
+      
+      if (!registeredTool) {
+        throw new Error(`Tool ${toolName} not found in registry`);
       }
-    } else if (registeredTool.execute) {
-      // Single function tool
-      result = await registeredTool.execute(resolvedArgs);
-    } else {
-      throw new Error(`Tool ${toolName} has no execute method`);
-    }
 
-    return result;
+      let result;
+      
+      // Check if it's a multi-function tool
+      if (registeredTool.functions) {
+        // Find the specific function
+        const func = registeredTool.functions.find(f => f.name === toolName);
+        if (func) {
+          result = await func.execute(resolvedArgs);
+        } else {
+          throw new Error(`Function ${toolName} not found in multi-function tool`);
+        }
+      } else if (registeredTool.execute) {
+        // Single function tool
+        result = await registeredTool.execute(resolvedArgs);
+      } else {
+        throw new Error(`Tool ${toolName} has no execute method`);
+      }
+
+      return result;
+    } catch (error) {
+      // Capture and broadcast the error
+      if (errorBroadcastService) {
+        errorBroadcastService.captureToolError(error, toolName, resolvedArgs);
+      }
+      
+      // Re-throw to maintain original behavior
+      throw error;
+    }
   }
 
   /**
@@ -217,5 +250,22 @@ export class ModuleLoader {
       description: module.description || 'No description',
       toolCount: module.getTools ? module.getTools().length : 0
     }));
+  }
+
+  /**
+   * Get error broadcast service if available
+   * @private
+   * @returns {ErrorBroadcastService|null}
+   */
+  _getErrorBroadcastService() {
+    try {
+      // Try to get from resource manager if available
+      if (this.resourceManager) {
+        return this.resourceManager.get('errorBroadcastService');
+      }
+    } catch (error) {
+      // Service not available yet
+    }
+    return null;
   }
 }

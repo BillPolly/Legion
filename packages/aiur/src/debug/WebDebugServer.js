@@ -51,7 +51,25 @@ export class WebDebugServer {
     const toolDefinitionProvider = resourceManager.get('toolDefinitionProvider');
     const monitoringSystem = resourceManager.get('monitoringSystem');
     
-    return new WebDebugServer(contextManager, toolDefinitionProvider, monitoringSystem);
+    const server = new WebDebugServer(contextManager, toolDefinitionProvider, monitoringSystem);
+    
+    // Get error broadcast service if available and set up error forwarding
+    try {
+      const errorBroadcastService = resourceManager.get('errorBroadcastService');
+      server.errorBroadcastService = errorBroadcastService;
+      
+      // Subscribe to error events
+      errorBroadcastService.on('error-captured', (errorEvent) => {
+        server._broadcastError(errorEvent);
+      });
+      
+      console.log('WebDebugServer: Connected to ErrorBroadcastService');
+    } catch (e) {
+      // ErrorBroadcastService not available yet, will be connected later
+      console.log('WebDebugServer: ErrorBroadcastService not available at creation');
+    }
+    
+    return server;
   }
 
   /**
@@ -284,8 +302,12 @@ export class WebDebugServer {
       data: {
         serverId: this.serverId,
         version: '1.0.0',
-        capabilities: ['tool-execution', 'context-management', 'event-streaming'],
-        availableTools: this.toolDefinitionProvider.getAllToolDefinitions().map(t => t.name)
+        capabilities: ['tool-execution', 'context-management', 'event-streaming', 'error-tracking'],
+        availableTools: this.toolDefinitionProvider.getAllToolDefinitions().map(t => t.name),
+        errorTracking: {
+          enabled: !!this.errorBroadcastService,
+          bufferSize: this.errorBroadcastService?.getErrorBuffer().length || 0
+        }
       }
     }));
 
@@ -342,6 +364,31 @@ export class WebDebugServer {
             type: 'tool-stats',
             data: this.toolDefinitionProvider.getToolStatistics()
           }));
+          break;
+        
+        case 'get-error-buffer':
+          ws.send(JSON.stringify({
+            type: 'error-buffer',
+            data: {
+              errors: this.errorBroadcastService?.getErrorBuffer() || [],
+              stats: this.errorBroadcastService?.getErrorStats() || null
+            }
+          }));
+          break;
+        
+        case 'clear-error-buffer':
+          if (this.errorBroadcastService) {
+            this.errorBroadcastService.clearErrorBuffer();
+            ws.send(JSON.stringify({
+              type: 'error-buffer-cleared',
+              data: { success: true }
+            }));
+          } else {
+            ws.send(JSON.stringify({
+              type: 'error',
+              data: { message: 'Error tracking not enabled' }
+            }));
+          }
           break;
         
         default:
@@ -452,6 +499,14 @@ export class WebDebugServer {
         this._broadcastEvent(eventType, data);
       });
     }
+
+    // If we have error broadcast service, send buffered errors to new clients
+    if (this.errorBroadcastService) {
+      const errorBuffer = this.errorBroadcastService.getErrorBuffer();
+      for (const error of errorBuffer) {
+        this.eventBuffer.push(error);
+      }
+    }
   }
 
   /**
@@ -461,19 +516,34 @@ export class WebDebugServer {
    * @private
    */
   _broadcastEvent(eventType, data) {
-    const event = {
-      type: 'event',
-      data: {
-        eventType,
-        timestamp: new Date().toISOString(),
-        source: 'debug-server',
-        payload: data
-      },
-      metadata: {
-        serverId: this.serverId,
-        version: '1.0.0'
-      }
-    };
+    // Special handling for error events
+    let event;
+    if (eventType === 'error') {
+      // Error events already have their own format
+      event = {
+        type: 'error',
+        data: data,
+        metadata: {
+          serverId: this.serverId,
+          version: '1.0.0'
+        }
+      };
+    } else {
+      // Regular events
+      event = {
+        type: 'event',
+        data: {
+          eventType,
+          timestamp: new Date().toISOString(),
+          source: 'debug-server',
+          payload: data
+        },
+        metadata: {
+          serverId: this.serverId,
+          version: '1.0.0'
+        }
+      };
+    }
 
     // Add to buffer
     this.eventBuffer.push(event);
@@ -566,6 +636,61 @@ export class WebDebugServer {
   }
 
   /**
+   * Broadcast error event to all connected clients
+   * @param {Object} errorEvent - Error event from ErrorBroadcastService
+   * @private
+   */
+  _broadcastError(errorEvent) {
+    // Error events are special - they bypass normal event filtering
+    const errorMessage = JSON.stringify(errorEvent);
+    
+    // Add to event buffer for new clients
+    this.eventBuffer.push(errorEvent);
+    if (this.eventBuffer.length > this.maxEventBuffer) {
+      this.eventBuffer.shift();
+    }
+    
+    // Send to all connected clients immediately
+    for (const client of this.clients) {
+      if (client.readyState === 1) { // OPEN
+        try {
+          client.send(errorMessage);
+        } catch (e) {
+          console.error('Failed to send error to client:', e);
+        }
+      }
+    }
+  }
+
+  /**
+   * Connect ErrorBroadcastService after server creation
+   * @param {ErrorBroadcastService} errorBroadcastService - Error broadcast service instance
+   */
+  connectErrorBroadcastService(errorBroadcastService) {
+    if (this.errorBroadcastService) {
+      return; // Already connected
+    }
+    
+    this.errorBroadcastService = errorBroadcastService;
+    
+    // Subscribe to error events
+    errorBroadcastService.on('error-captured', (errorEvent) => {
+      this._broadcastError(errorEvent);
+    });
+    
+    // Add existing error buffer to event buffer
+    const errorBuffer = errorBroadcastService.getErrorBuffer();
+    for (const error of errorBuffer) {
+      this.eventBuffer.push(error);
+      if (this.eventBuffer.length > this.maxEventBuffer) {
+        this.eventBuffer.shift();
+      }
+    }
+    
+    console.log('WebDebugServer: Connected to ErrorBroadcastService (post-creation)');
+  }
+
+  /**
    * Get basic HTML interface for when web files don't exist
    * @returns {string} Basic HTML content
    * @private
@@ -589,12 +714,24 @@ export class WebDebugServer {
         .status.error { background: #7c4a4a; }
         #events { max-height: 300px; overflow-y: auto; }
         .event { margin: 5px 0; padding: 5px; background: #333; border-radius: 3px; font-size: 12px; }
+        .error-event { background: #7c4a4a; border: 1px solid #a04040; }
+        .error-panel { background: #4a2a2a; border: 2px solid #7c4a4a; margin-bottom: 20px; }
+        #errorCount { color: #ff6b6b; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🐛 Aiur MCP Debug Interface</h1>
         <div class="status running">Server Running on Port ${this.port}</div>
+        <span id="errorCount" style="margin-left: 10px;"></span>
+        
+        <div id="errorPanel" class="panel error-panel" style="display: none;">
+            <div class="header">
+                <h3>⚠️ Recent Errors</h3>
+            </div>
+            <div id="errors" class="log"></div>
+            <button onclick="clearErrors()">Clear Errors</button>
+        </div>
         
         <div class="panel">
             <div class="header">
@@ -635,6 +772,7 @@ export class WebDebugServer {
 
     <script>
         const ws = new WebSocket('ws://localhost:${this.port}/ws');
+        let errorCount = 0;
         
         ws.onopen = function() {
             log('Connected to debug server');
@@ -659,6 +797,9 @@ export class WebDebugServer {
                     break;
                 case 'event':
                     addEvent(message.data);
+                    break;
+                case 'error':
+                    addError(message.data);
                     break;
             }
         }
@@ -699,9 +840,60 @@ export class WebDebugServer {
         function addEvent(eventData) {
             const eventsDiv = document.getElementById('events');
             const eventDiv = document.createElement('div');
+            
+            // Check if this is an error event
+            if (eventData.errorType || eventData.severity) {
+                // Handle as error
+                addError(eventData);
+                return;
+            }
+            
             eventDiv.className = 'event';
             eventDiv.textContent = \`[\${eventData.timestamp}] \${eventData.eventType}: \${JSON.stringify(eventData.payload)}\`;
             eventsDiv.appendChild(eventDiv);
+            eventsDiv.scrollTop = eventsDiv.scrollHeight;
+        }
+        
+        function addError(errorData) {
+            errorCount++;
+            updateErrorCount();
+            
+            // Show error panel
+            const errorPanel = document.getElementById('errorPanel');
+            if (errorPanel) {
+                errorPanel.style.display = 'block';
+                
+                const errorsDiv = document.getElementById('errors');
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-event';
+                errorDiv.innerHTML = \`
+                    <strong>[\${errorData.severity?.toUpperCase() || 'ERROR'}]</strong> 
+                    \${errorData.error?.message || 'Unknown error'}<br>
+                    <small>Source: \${errorData.source || 'unknown'} | Type: \${errorData.errorType || 'unknown'}</small>
+                \`;
+                errorsDiv.appendChild(errorDiv);
+                errorsDiv.scrollTop = errorsDiv.scrollHeight;
+            }
+            
+            // Also add to event stream
+            const eventsDiv = document.getElementById('events');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'event';
+            errorDiv.style.backgroundColor = '#7c4a4a';
+            errorDiv.style.color = '#fff';
+            errorDiv.innerHTML = \`
+                <strong>[\${errorData.timestamp}] ERROR [\${errorData.severity}]</strong><br>
+                <strong>Component:</strong> \${errorData.source}<br>
+                <strong>Type:</strong> \${errorData.errorType}<br>
+                <strong>Message:</strong> \${errorData.error?.message}<br>
+                \${errorData.context?.tool ? '<strong>Tool:</strong> ' + errorData.context.tool + '<br>' : ''}
+                \${errorData.context.operation ? '<strong>Operation:</strong> ' + errorData.context.operation + '<br>' : ''}
+                <details>
+                    <summary>Stack Trace</summary>
+                    <pre style="font-size: 10px; margin: 5px 0;">\${errorData.error.stack}</pre>
+                </details>
+            \`;
+            eventsDiv.appendChild(errorDiv);
             eventsDiv.scrollTop = eventsDiv.scrollHeight;
         }
         
@@ -711,6 +903,26 @@ export class WebDebugServer {
                 eventType: 'debug-log',
                 payload: { message }
             });
+        }
+        
+        function updateErrorCount() {
+            const countEl = document.getElementById('errorCount');
+            if (countEl) {
+                countEl.textContent = errorCount > 0 ? \`(\${errorCount} errors)\` : '';
+            }
+        }
+        
+        function clearErrors() {
+            errorCount = 0;
+            updateErrorCount();
+            const errorsDiv = document.getElementById('errors');
+            if (errorsDiv) {
+                errorsDiv.innerHTML = '';
+            }
+            const errorPanel = document.getElementById('errorPanel');
+            if (errorPanel) {
+                errorPanel.style.display = 'none';
+            }
         }
     </script>
 </body>

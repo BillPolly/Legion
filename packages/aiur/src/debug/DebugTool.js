@@ -1,14 +1,17 @@
 /**
  * DebugTool - MCP tool interface for web debug functionality
  * 
- * Provides MCP tools for starting/stopping the web debugging interface
- * and managing debug server lifecycle.
+ * Provides MCP tools for starting/stopping the web debugging interface,
+ * managing debug server lifecycle, and reading log files.
  */
 
+import { LogReaderTool } from './LogReaderTool.js';
+
 export class DebugTool {
-  constructor(webDebugServer, contextManager) {
+  constructor(webDebugServer, contextManager, logReaderTool = null) {
     this.webDebugServer = webDebugServer;
     this.contextManager = contextManager;
+    this.logReaderTool = logReaderTool;
   }
 
   /**
@@ -20,7 +23,17 @@ export class DebugTool {
     const webDebugServer = resourceManager.get('webDebugServer');
     const contextManager = resourceManager.get('contextManager');
     
-    return new DebugTool(webDebugServer, contextManager);
+    // Try to create LogReaderTool if LogManager is available
+    let logReaderTool = null;
+    try {
+      if (resourceManager.get('logManager')) {
+        logReaderTool = await LogReaderTool.create(resourceManager);
+      }
+    } catch (error) {
+      console.warn('LogReaderTool not available:', error.message);
+    }
+    
+    return new DebugTool(webDebugServer, contextManager, logReaderTool);
   }
 
   /**
@@ -28,7 +41,7 @@ export class DebugTool {
    * @returns {Array} Array of MCP tool definitions
    */
   getToolDefinitions() {
-    return [
+    const debugTools = [
       {
         name: "web_debug_start",
         description: "Start web debugging interface and open browser",
@@ -71,6 +84,13 @@ export class DebugTool {
         }
       }
     ];
+    
+    // Add log reader tools if available
+    if (this.logReaderTool) {
+      debugTools.push(...this.logReaderTool.getToolDefinitions());
+    }
+    
+    return debugTools;
   }
 
   /**
@@ -79,7 +99,18 @@ export class DebugTool {
    * @returns {boolean} True if it's a debug tool
    */
   isDebugTool(toolName) {
-    return ['web_debug_start', 'web_debug_stop', 'web_debug_status'].includes(toolName);
+    const baseDebugTools = ['web_debug_start', 'web_debug_stop', 'web_debug_status'];
+    
+    if (baseDebugTools.includes(toolName)) {
+      return true;
+    }
+    
+    // Check if it's a log reader tool
+    if (this.logReaderTool && this.logReaderTool.isLogTool(toolName)) {
+      return true;
+    }
+    
+    return false;
   }
 
   /**
@@ -98,6 +129,10 @@ export class DebugTool {
         case 'web_debug_status':
           return await this._executeWebDebugStatus(args);
         default:
+          // Check if it's a log reader tool
+          if (this.logReaderTool && this.logReaderTool.isLogTool(name)) {
+            return await this.logReaderTool.executeLogTool(name, args);
+          }
           throw new Error(`Unknown debug tool: ${name}`);
       }
     } catch (error) {

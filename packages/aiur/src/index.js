@@ -17,15 +17,20 @@ import { ToolRegistry } from './tools/ToolRegistry.js';
 import { ToolDefinitionProvider } from './core/ToolDefinitionProvider.js';
 import { DebugTool } from './debug/DebugTool.js';
 import { WebDebugServer } from './debug/WebDebugServer.js';
+import { ErrorBroadcastService } from './core/ErrorBroadcastService.js';
+import { LogManager } from './core/LogManager.js';
 
 // Global variables for MCP server
 let toolDefinitionProvider = null;
 let handleResolver = null;
+let globalErrorBroadcastService = null;
 
 /**
  * Initialize all Aiur systems using ResourceManager pattern
  */
 async function initializeAiurSystems() {
+  let errorBroadcastService = null;
+  
   try {
     // Create basic ResourceManager-like object for dependency injection
     const resourceManager = {
@@ -41,6 +46,37 @@ async function initializeAiurSystems() {
         this.resources.set(key, value);
       }
     };
+
+    // Add config to resource manager
+    const config = {
+      enableFileLogging: process.env.AIUR_ENABLE_FILE_LOGGING !== 'false',
+      logDirectory: process.env.AIUR_LOG_DIRECTORY || './logs',
+      logRetentionDays: parseInt(process.env.AIUR_LOG_RETENTION_DAYS) || 7,
+      maxLogFileSize: parseInt(process.env.AIUR_MAX_LOG_FILE_SIZE) || 10 * 1024 * 1024
+    };
+    resourceManager.register('config', config);
+
+    // CRITICAL: Create ErrorBroadcastService first so it can catch all errors
+    errorBroadcastService = await ErrorBroadcastService.create(resourceManager);
+    
+    // Create LogManager for file-based logging
+    try {
+      const logManager = await LogManager.create(resourceManager);
+      errorBroadcastService.setLogManager(logManager);
+      
+      // Register LogManager for other components to use
+      resourceManager.register('logManager', logManager);
+      
+      // Log startup
+      await logManager.logInfo('Aiur MCP Server starting', {
+        config,
+        pid: process.pid,
+        nodeVersion: process.version
+      });
+    } catch (logError) {
+      console.error('Failed to initialize LogManager:', logError);
+      // Continue without file logging
+    }
 
     // Initialize core Aiur systems
     const handleRegistry = new HandleRegistry();
@@ -71,6 +107,11 @@ async function initializeAiurSystems() {
     // Create WebDebugServer with all dependencies available
     const webDebugServer = await WebDebugServer.create(resourceManager);
     resourceManager.register('webDebugServer', webDebugServer);
+    
+    // Connect ErrorBroadcastService to WebDebugServer if it wasn't connected during creation
+    if (!webDebugServer.errorBroadcastService && errorBroadcastService) {
+      webDebugServer.connectErrorBroadcastService(errorBroadcastService);
+    }
 
     // Create and register DebugTool to extend the ToolDefinitionProvider
     const debugTool = await DebugTool.create(resourceManager);
@@ -83,6 +124,7 @@ async function initializeAiurSystems() {
     // Store globally for use in request handlers
     toolDefinitionProvider = provider;
     handleResolver = resolver;
+    globalErrorBroadcastService = errorBroadcastService;
 
     console.error('Aiur systems initialized successfully');
     
@@ -91,6 +133,26 @@ async function initializeAiurSystems() {
 
   } catch (error) {
     console.error('Failed to initialize Aiur systems:', error);
+    
+    // Try to broadcast the error if service is available
+    if (errorBroadcastService) {
+      errorBroadcastService.captureError({
+        error,
+        errorType: 'system',
+        severity: 'critical',
+        source: 'initializeAiurSystems',
+        context: {
+          operation: 'system-initialization',
+          phase: 'startup'
+        }
+      });
+    }
+    
+    // Store the error service globally even if initialization failed
+    if (errorBroadcastService) {
+      globalErrorBroadcastService = errorBroadcastService;
+    }
+    
     throw error;
   }
 }
@@ -104,6 +166,13 @@ async function handleToolCall(name, args) {
   try {
     // Check if tool exists
     if (!toolDefinitionProvider.toolExists(name)) {
+      const error = new Error(`Unknown tool: ${name}`);
+      
+      // Broadcast error if service is available
+      if (globalErrorBroadcastService) {
+        globalErrorBroadcastService.captureToolError(error, name, args);
+      }
+      
       return {
         content: [{
           type: "text",
@@ -118,6 +187,21 @@ async function handleToolCall(name, args) {
     try {
       resolvedArgs = handleResolver.resolveParameters(args);
     } catch (resolutionError) {
+      // Broadcast error if service is available
+      if (globalErrorBroadcastService) {
+        globalErrorBroadcastService.captureError({
+          error: resolutionError,
+          errorType: 'tool-execution',
+          severity: 'error',
+          source: 'handleToolCall',
+          context: {
+            tool: name,
+            operation: 'parameter-resolution',
+            args
+          }
+        });
+      }
+      
       return {
         content: [{
           type: "text",
@@ -181,6 +265,12 @@ async function handleToolCall(name, args) {
 
   } catch (error) {
     console.error(`Error executing tool ${name}:`, error);
+    
+    // Broadcast error if service is available
+    if (globalErrorBroadcastService) {
+      globalErrorBroadcastService.captureToolError(error, name, args);
+    }
+    
     return {
       content: [{
         type: "text",
@@ -237,15 +327,67 @@ async function runServer() {
 
   } catch (error) {
     console.error("Failed to start Aiur MCP Server:", error);
+    
+    // Try to broadcast the error before exiting
+    if (globalErrorBroadcastService) {
+      globalErrorBroadcastService.captureError({
+        error,
+        errorType: 'system',
+        severity: 'critical',
+        source: 'runServer',
+        context: {
+          operation: 'server-startup',
+          phase: 'main'
+        }
+      });
+      
+      // Give some time for error to be broadcast
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
     process.exit(1);
   }
 }
 
+// Note: Global error handlers are set up by ErrorBroadcastService in initializeAiurSystems()
+// We only need to handle errors that occur before ErrorBroadcastService is initialized
+
 // Start the server
-runServer().catch(console.error);
+runServer().catch((error) => {
+  console.error('Failed to start server:', error);
+  
+  // If we have the error broadcast service, use it
+  if (globalErrorBroadcastService) {
+    globalErrorBroadcastService.captureError({
+      error,
+      errorType: 'system',
+      severity: 'critical',
+      source: 'main',
+      context: {
+        operation: 'server-start-catch'
+      }
+    });
+  }
+  
+  process.exit(1);
+});
 
 // Handle graceful shutdown
-process.stdin.on("close", () => {
+process.stdin.on("close", async () => {
   console.error("Aiur MCP Server closed");
   server.close();
+  
+  // Close log manager if available
+  try {
+    const logManager = globalErrorBroadcastService?.logManager;
+    if (logManager) {
+      await logManager.shutdown();
+    }
+  } catch (error) {
+    console.error('Error shutting down LogManager:', error);
+  }
+  
+  if (globalErrorBroadcastService) {
+    globalErrorBroadcastService.destroy();
+  }
 });
