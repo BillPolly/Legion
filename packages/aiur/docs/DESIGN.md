@@ -12,393 +12,520 @@ Rather than treating each tool call as an isolated operation, Aiur maintains a l
 - Complex tasks are planned and executed with checkpoints
 - The AI agent works with a coherent mental model of the system
 
-## Core Concepts
+## Architecture
 
-### 1. Handle System
+### Client-Server Architecture
 
-**Handles** are persistent references to objects that live in the server's memory between tool calls. They represent anything from files and repositories to test suites and deployments.
+Aiur uses a clean client-server architecture that separates concerns:
 
-#### Key Features
-
-- **Named References**: Each handle has a user-defined name for easy reference
-- **Flexible Storage**: Any JavaScript object can be stored as a handle
-- **Simple Resolution**: Use `@handleName` in parameters to reference handles
-- **Lifecycle Management**: LRU eviction with configurable TTL
-
-#### Architecture
-
-```javascript
-// Simple handle storage - just a Map
-const handles = new Map();
-
-// Store any object
-handles.set("myRepo", { owner: "facebook", name: "react", /* any data */ });
-
-// Retrieve by name
-const repo = handles.get("myRepo");
+```
+MCP Client ↔ [MCP Format] ↔ Stdio Server ↔ [WebSocket] ↔ Backend Server
+                              (index.js)                    (server/index.js)
 ```
 
-#### Handle Convention
+#### Components
 
-- Tools can request handle creation by returning: `{ result: data, saveAs: "handleName" }`
-- Tools reference handles using: `{ repo: "@myRepo" }` (@ prefix indicates handle lookup)
-- The system resolves `@handleName` to the actual object before calling the tool
+1. **MCP Stdio Server** (`src/index.js`)
+   - Thin client that implements MCP stdio protocol
+   - Auto-detects and launches backend server if needed
+   - Converts between MCP format and Legion format
+   - Maintains WebSocket connection to backend
+   - Auto-reconnection with exponential backoff
 
-#### Memory Management
+2. **Backend Server** (`src/server/index.js`)
+   - Runs as independent process
+   - Handles all business logic and tool execution
+   - Manages sessions, handles, and tool registry
+   - Communicates in native Legion format
+   - HTTP endpoints for health monitoring
 
-- **LRU Cache**: Least Recently Used eviction when memory limit reached
-- **TTL**: Optional time-to-live for temporary handles
-- **Manual Cleanup**: Tools can delete handles when no longer needed
+3. **Auto-Launch System**
+   - `ServerDetector` - Checks if backend is running via health endpoint
+   - `ServerLauncher` - Spawns backend process if needed
+   - `ServerManager` - Orchestrates detection and launching
+   - `WebSocketClient` - Manages persistent connection with auto-reconnect
 
-### 2. Tool Management System
+#### Running Modes
 
-With potentially hundreds of tools in the Legion ecosystem, Aiur implements intelligent tool management to keep the working set manageable.
+1. **Auto-Launch Mode** (default)
+   ```bash
+   npm start  # Detects and launches backend automatically
+   ```
 
-#### Dynamic Tool Loading
+2. **Standalone Backend**
+   ```bash
+   npm run start:server  # Start backend separately
+   npm start            # Connect stdio client
+   ```
 
-- **Working Set**: Maximum of ~20 active tools at any time
-- **Automatic Loading**: Tools loaded when relevant handles are created
-- **Context Switching**: Different tool sets for different workflows
+3. **Quiet Mode**
+   ```bash
+   npm run start:quiet  # Less verbose output
+   ```
 
-#### Meta-Tools
+#### Benefits
 
-These special tools manage the tool ecosystem itself:
+- **Clean Separation**: MCP protocol handling separate from business logic
+- **Scalability**: Backend can serve multiple MCP clients
+- **Reliability**: Backend persists independently of client connections
+- **Flexibility**: Backend can be deployed separately or embedded
+- **Session Isolation**: Each client gets isolated session state
 
-##### `tool_search`
-Search for tools using natural language:
-```javascript
+## Core Features
+
+### 1. Context Management System
+
+Context provides persistent memory across tool calls within a session:
+
+#### Context Tools
+
+**`context_add`** - Store data for later reference
+```json
 {
-  "query": "tools for running tests",
-  "filters": {
-    "tags": ["testing"],
-    "handles": ["TestSuite"]  // Tools that work with these handle types
-  }
+  "name": "api_config",
+  "data": {"url": "https://api.example.com", "timeout": 5000},
+  "description": "API configuration settings"
 }
-// Returns ranked list of relevant tools with descriptions
 ```
 
-##### `tool_activate`
-Add tools to the working set:
-```javascript
+**`context_get`** - Retrieve stored data
+```json
 {
-  "tools": ["jester", "coverage_analyzer"],
-  "exclusive": false  // Whether to replace current set
+  "name": "api_config"
 }
-// Returns tool descriptions for confirmation
 ```
 
-##### `tool_suggest`
-Get intelligent suggestions based on current context:
-```javascript
+**`context_list`** - List all stored context
+```json
 {
-  "handles": ["myRepo"],  // Current handles in workspace
-  "recent_tools": ["github_get_repo"],  // Recently used tools
-  "goal": "deploy application"  // Optional goal description
+  "filter": "api*"  // Optional pattern matching
 }
-// Returns suggested tools with reasoning
 ```
 
-#### Tool Registry
+#### Parameter Resolution (@contextName)
 
-Each tool is indexed with:
-- Semantic embeddings of descriptions
-- Input/output handle types
-- Tags and categories
-- Dependency relationships
-- Performance characteristics
+Use `@contextName` to reference saved context in any tool parameter:
 
-### 3. Planning and Orchestration System
+```json
+// First save data
+{"tool": "context_add", "args": {"name": "server", "data": {"host": "prod.example.com"}}}
 
-Complex tasks require structured planning with validation checkpoints and rollback capabilities. Aiur uses the `@legion/llm-planner` package as its foundation, extending it with checkpoint and handle integration.
-
-#### Planning Foundation
-
-The planning system is built on top of `@legion/llm-planner`, which provides:
-- Hierarchical plan structure (Plan → Steps → Actions)
-- Input/output flow validation
-- Dependency management and execution ordering
-- Parallel execution detection
-
-#### Extended Plan Structure
-
-```javascript
-// Base structure from llm-planner
-import { Plan, PlanStep, PlanAction } from '@legion/llm-planner';
-
-// Aiur extends with checkpoints
-class AiurPlan extends Plan {
-  checkpoints: Map<string, CheckpointDefinition>;
-  currentCheckpoint: string;
-  
-  // Checkpoint after each major phase
-  addCheckpoint(stepId, definition) {
-    this.checkpoints.set(stepId, {
-      validate: definition.validate,
-      captureState: definition.captureState,
-      rollbackTo: definition.rollbackTo
-    });
-  }
-}
-
-// Steps already track inputs/outputs as object names
-const step = new PlanStep({
-  name: "Build frontend",
-  inputs: ["sourceCode", "dependencies"],  // Handle names
-  outputs: ["buildArtifact", "buildLog"],  // Creates these handles
-  actions: [...]
-});
+// Then reference it
+{"tool": "deploy", "args": {"target": "@server"}}  // Automatically resolved
 ```
+
+Resolution features:
+- Works in nested objects and arrays
+- Automatic resolution before tool execution
+- Clear error messages for missing references
+- No limit on nesting depth
+
+### 2. Planning System
+
+Built on `@legion/llm-planner` with extensions for Aiur:
 
 #### Planning Tools
 
-##### `plan_create`
-Generate a structured plan from a goal:
-```javascript
+**`plan_create`** - Generate structured execution plan
+```json
 {
-  "goal": "Add authentication to the API",
-  "context": {
-    "handles": ["apiProject"],
-    "constraints": ["must use JWT", "backwards compatible"]
-  }
+  "title": "Deploy Application",
+  "description": "Complete deployment workflow",
+  "allowableActions": [
+    {"type": "build", "inputs": ["source"], "outputs": ["artifact"]},
+    {"type": "test", "inputs": ["artifact"], "outputs": ["test_results"]},
+    {"type": "deploy", "inputs": ["artifact", "test_results"], "outputs": ["deployment"]}
+  ],
+  "inputs": ["source_code"],
+  "requiredOutputs": ["deployment"],
+  "saveAs": "deployment_plan"  // Auto-save to context
 }
-// Returns complete plan with phases and checkpoints
 ```
 
-##### `plan_execute`
-Execute the plan with automatic checkpoint validation:
-```javascript
+**`plan_execute`** - Execute plan with monitoring
+```json
 {
-  "planId": "plan_123",
-  "mode": "step" | "phase" | "full",
-  "dryRun": false
-}
-// Returns execution progress and any issues
-```
-
-##### `plan_checkpoint`
-Validate current state at a checkpoint:
-```javascript
-{
-  "planId": "plan_123",
-  "checkpointId": "tests_passing",
-  "additionalChecks": [...]
-}
-// Returns validation results and suggestions
-```
-
-##### `plan_rollback`
-Revert to a previous checkpoint:
-```javascript
-{
-  "planId": "plan_123",
-  "checkpointId": "before_auth_changes",
-  "preserveHandles": ["debugLog"]  // Handles to keep
-}
-// Returns rollback status and restored state
-```
-
-#### Checkpoint System
-
-Checkpoints capture:
-- Handle states (serialized references)
-- File system snapshots (for modified files)
-- Git commit references
-- Test results
-- Custom validation results
-
-#### Execution Features
-
-- **Dependency Resolution**: Automatic ordering of tasks
-- **Parallel Execution**: When tasks have no dependencies
-- **Progress Streaming**: Real-time updates via MCP resources
-- **Failure Recovery**: Automatic retry with exponential backoff
-- **Human-in-the-Loop**: Pause for approval at critical points
-
-## Integration with Legion
-
-### Module System Extensions
-
-Legion modules will be extended to support planning and handle integration:
-
-```javascript
-// module.json additions
-{
-  "tools": {
-    "github_get_repo": {
-      "inputs": [],  // No required input handles
-      "outputs": ["repository"],  // Produces a repository handle
-      "description": "Get GitHub repository information"
-    },
-    "github_create_branch": {
-      "inputs": ["repository"],  // Requires repository handle
-      "outputs": ["branch"],  // Produces branch handle
-      "description": "Create a new branch in repository"
-    }
-  },
-  "planning": {
-    "actions": [
-      {
-        "type": "fetch_repo",
-        "inputs": [],
-        "outputs": ["repository"],
-        "description": "Fetch repository data"
-      }
-    ],
-    "goals": ["deploy application", "setup CI/CD"]
-  },
-  "metadata": {
-    "tags": ["vcs", "github", "deployment"],
-    "embedding": "base64_encoded_vector"
+  "plan": "@deployment_plan",  // Reference saved plan
+  "options": {
+    "stopOnError": true,
+    "timeout": 300000,
+    "retries": 3
   }
 }
 ```
 
-### Tool Adaptation
-
-Legion tools will be wrapped to support:
-- Handle input/output
-- Progress reporting
-- Checkpoint participation
-- Validation rules
-
-Example adapter:
-```javascript
-class MCPToolAdapter {
-  constructor(legionTool, handleRegistry) {
-    this.tool = legionTool;
-    this.handles = handleRegistry;
-  }
-
-  async invoke(params) {
-    // Resolve handle references to actual objects
-    const resolved = await this.resolveHandles(params);
-    
-    // Call Legion tool
-    const result = await this.tool.invoke(resolved);
-    
-    // Create handles for outputs
-    const outputHandles = await this.createHandles(result);
-    
-    // Return MCP-formatted response
-    return {
-      result: result.data,
-      handles: outputHandles
-    };
-  }
+**`plan_status`** - Monitor execution progress
+```json
+{
+  "sessionId": "current",
+  "includeResults": true,
+  "includeContext": true
 }
 ```
 
-## API Examples
+**`plan_debug`** - Interactive debugging with breakpoints
+```json
+{
+  "plan": "@deployment_plan",
+  "breakpoints": ["step_3", "step_5"],
+  "action": "continue",
+  "inspectVariables": true
+}
+```
 
-### Creating and Using Handles
+### 3. Module Integration
+
+Aiur dynamically loads Legion modules to provide tools:
+
+#### Built-in Modules
+- **Context Module** - Context management tools
+- **Planning Module** - Plan creation and execution
+- **File Module** - File system operations
+- **Debug Module** - Web debugging interface
+
+#### Module Loading
+```javascript
+// Modules specified in environment
+AIUR_MODULES=@legion/tools/file,@legion/tools/github
+
+// Or dynamically loaded based on context
+```
+
+### 4. Handle System (Legacy)
+
+Handles provide an alternative to context for backward compatibility:
 
 ```javascript
-// Tool call: github_get_repo
+// Tools can return handles
 {
-  "owner": "facebook",
-  "repo": "react",
-  "saveAs": "reactRepo"  // Creates a handle
+  "result": data,
+  "saveAs": "myHandle"  // Creates handle reference
 }
 
-// Response includes handle reference
+// Reference handles with @ prefix
+{
+  "repo": "@myHandle"
+}
+```
+
+Note: Context system is preferred for new implementations.
+
+### 5. Debug Interface
+
+Web-based debugging interface for development:
+
+#### Debug Tools
+
+**`web_debug_start`** - Launch debug interface
+```json
+{
+  "port": 3000,
+  "openBrowser": true
+}
+```
+
+**`web_debug_status`** - Check debug server status
+
+**`read_logs`** - Read system logs with filtering
+```json
+{
+  "level": "error",
+  "limit": 100,
+  "search": "WebSocket"
+}
+```
+
+## Session Management
+
+Each MCP client connection gets an isolated session:
+
+### Session Features
+- **Isolated State**: Each session has its own context and handles
+- **Automatic Cleanup**: Sessions expire after timeout
+- **Persistent Backend**: Sessions survive client reconnections
+- **WebSocket Communication**: Real-time bidirectional updates
+
+### Session Lifecycle
+1. Client connects → New session created
+2. Session ID assigned and tracked
+3. All tool calls execute in session context
+4. Session expires after inactivity timeout
+5. Resources automatically cleaned up
+
+## Error Handling
+
+Comprehensive error handling throughout the system:
+
+### Error Broadcasting
+- **ErrorBroadcastService** captures all errors
+- Errors logged to file system
+- Critical errors broadcast via WebSocket
+- Graceful degradation on component failures
+
+### Error Recovery
+- Auto-reconnection for WebSocket disconnects
+- Backend process restart detection
+- Transaction rollback on failures
+- Clear error messages in MCP format
+
+## Logging System
+
+Multi-level logging with automatic rotation:
+
+### Log Features
+- **File Logging**: Persistent logs in `./logs` directory
+- **Log Rotation**: Automatic archival of old logs
+- **Structured Logging**: JSON format with metadata
+- **Log Filtering**: Search and filter capabilities
+- **Performance**: Minimal impact on operations
+
+### Log Configuration
+```bash
+AIUR_ENABLE_FILE_LOGGING=true
+AIUR_LOG_DIRECTORY=./logs
+AIUR_LOG_RETENTION_DAYS=7
+AIUR_MAX_LOG_FILE_SIZE=10485760  # 10MB
+```
+
+## Format Conversion
+
+Clean separation between MCP and Legion formats:
+
+### MCP Format
+```json
+{
+  "content": [{
+    "type": "text",
+    "text": "JSON string of result"
+  }],
+  "isError": false
+}
+```
+
+### Legion Format
+```json
 {
   "success": true,
-  "data": { ...repo details... },
-  "handle": {
-    "id": "handle_123",
-    "name": "reactRepo",
-    "type": "GitHubRepository"
-  }
-}
-
-// Subsequent calls use the handle
-// Tool call: github_create_branch
-{
-  "repo": "@reactRepo",  // @ prefix indicates handle reference
-  "branch": "my-feature"
+  "data": {...},
+  "message": "Operation completed",
+  "error": null,
+  "code": "SUCCESS"
 }
 ```
 
-### Tool Discovery Workflow
+Conversion happens automatically in the stdio server layer.
 
-```javascript
-// 1. Search for relevant tools
-tool_search({ "query": "deploy to kubernetes" })
+## Implementation Status
 
-// 2. Activate selected tools
-tool_activate({ "tools": ["k8s_deploy", "k8s_monitor"] })
+### ✅ Completed
+- Client-server architecture
+- Auto-launch system
+- Session management
+- Context system with @ resolution
+- Planning integration
+- Module loading
+- Error handling
+- Debug interface
+- Format conversion
+- Comprehensive logging
 
-// 3. Tools now available in working set
-k8s_deploy({ "manifest": "@myManifest", "cluster": "production" })
-```
+### 🚧 In Progress
+- Performance optimization
+- Additional Legion module adapters
+- Extended planning features
 
-### Planning Example
-
-```javascript
-// Create plan
-const plan = await plan_create({
-  "goal": "Refactor authentication system",
-  "context": {
-    "handles": ["authModule"],
-    "constraints": ["maintain backwards compatibility", "100% test coverage"]
-  }
-});
-
-// Execute with progress tracking
-await plan_execute({
-  "planId": plan.id,
-  "mode": "phase"  // Execute one phase at a time
-});
-
-// If something goes wrong
-await plan_rollback({
-  "planId": plan.id,
-  "checkpointId": "before_refactor"
-});
-```
-
-## Implementation Phases
-
-### Phase 1: Foundation Setup
-- Move llm-planner to packages root
-- Update code-agent to use @legion/llm-planner
-- Basic handle registry (Map-based)
-- Handle resolution in tool calls
-
-### Phase 2: Tool Management
-- Tool registry with search
-- Working set management
-- Basic meta-tools
-- Legion tool wrapper for MCP
-
-### Phase 3: Planning Integration
-- Extend llm-planner with checkpoints
-- Connect plan execution to handles
-- Plan execution orchestrator
-- Progress tracking
-
-### Phase 4: Advanced Features
-- Semantic search for tools
-- Complex checkpoint strategies
-- Handle persistence
+### 📋 Planned
+- Distributed session storage
 - Multi-agent coordination
+- Visual planning interface
+- Context versioning
+- Advanced caching strategies
 
-## Benefits
+## Configuration
 
-1. **Reduced Cognitive Load**: AI agents work with named objects instead of juggling parameters
-2. **Stateful Workflows**: Complex multi-step operations become natural
-3. **Better Error Recovery**: Checkpoints and rollbacks prevent cascading failures
-4. **Tool Discovery**: Find the right tool without knowing its exact name
-5. **Structured Execution**: Plans provide clear paths to achieve goals
-6. **Flexibility**: No rigid type system - handles can store any JavaScript object
-7. **Performance**: Handles eliminate redundant API calls
-8. **Proven Foundation**: Built on battle-tested llm-planner package
+### Environment Variables
 
-## Future Considerations
+```bash
+# Server Configuration
+AIUR_SERVER_HOST=localhost
+AIUR_SERVER_PORT=8080
+AIUR_SESSION_TIMEOUT=3600000  # 1 hour
 
-- **Multi-Agent Coordination**: Shared handle spaces for collaborative work
-- **Distributed Handles**: Store handles across multiple servers
-- **Handle Persistence**: Save/restore workspace state
-- **Visual Planning**: Generate diagrams of plans and dependencies
-- **Learning System**: Improve plans based on execution history
-- **Handle Versioning**: Track changes to handles over time
+# Auto-Launch Configuration  
+AIUR_AUTO_LAUNCH_SERVER=true
+AIUR_SERVER_INDEPENDENT=true
+AIUR_STOP_SERVER_ON_EXIT=false
+AIUR_SERVER_LAUNCH_TIMEOUT=30000
+
+# Logging Configuration
+AIUR_ENABLE_FILE_LOGGING=true
+AIUR_LOG_DIRECTORY=./logs
+AIUR_LOG_RETENTION_DAYS=7
+
+# Module Configuration
+AIUR_MODULES=@legion/tools/file,@legion/tools/github
+
+# Verbosity
+AIUR_VERBOSE=true
+```
+
+## Testing
+
+Comprehensive test suite covering all components:
+
+### Test Categories
+- **Unit Tests**: Individual component testing
+- **Integration Tests**: Component interaction testing
+- **E2E Tests**: Full MCP protocol testing
+- **Auto-Server Tests**: Server launch and detection
+- **Session Tests**: Isolation and cleanup
+
+### Running Tests
+```bash
+npm test              # All tests
+npm run test:unit     # Unit tests only
+npm run test:e2e      # End-to-end tests
+npm run test:auto-server  # Auto-launch tests
+```
+
+## MCP Protocol Compliance
+
+### Stdio Communication Rules
+
+Aiur strictly follows MCP stdio protocol requirements:
+
+1. **Only JSON-RPC on stdout**: No console.log or debug output
+2. **Use stderr for logs**: All debugging goes to stderr or files
+3. **JSON-RPC 2.0 format**: Strict compliance with protocol spec
+4. **Response ID matching**: Responses use same ID as requests
+
+### Implementation Details
+
+- **LogManager interception**: Redirects all console output to files
+- **Official MCP SDK**: Uses `@modelcontextprotocol/sdk` for protocol handling
+- **StdioServerTransport**: Manages stdin/stdout communication
+- **Validation layer**: Ensures all responses meet MCP format requirements
+
+## Web Debug Interface
+
+### Overview
+
+Browser-based debugging environment accessible via:
+
+```bash
+# Start debug interface
+{"tool": "web_debug_start", "args": {"port": 3001, "openBrowser": true}}
+```
+
+### Features
+
+1. **Real-time Monitoring**
+   - Live event streaming via WebSocket
+   - System metrics and performance data
+   - Connection status tracking
+
+2. **Interactive Command Execution**
+   - Execute any tool through web UI
+   - View results and timing
+   - Inspect request/response data
+
+3. **Context Browser**
+   - View all stored context
+   - Search and filter capabilities
+   - Real-time updates
+
+4. **Log Viewer**
+   - Structured log display
+   - Level filtering (error, warning, info)
+   - Search functionality
+   - Real-time streaming
+
+5. **Error Dashboard**
+   - All errors displayed with red highlighting
+   - Expandable stack traces
+   - Error statistics and patterns
+   - Historical error buffer (last 100)
+
+### Architecture
+
+```
+Web Browser ←→ WebDebugServer ←→ Aiur Server
+     ↓              ↓                ↓
+  Debug UI    WebSocket +      Event System
+              HTTP Server
+```
+
+### Error Broadcasting
+
+The ErrorBroadcastService captures and broadcasts all errors:
+
+- **Global handlers**: Uncaught exceptions and rejections
+- **Tool errors**: Execution failures with context
+- **Module errors**: Loading failures (non-fatal)
+- **Rich metadata**: Component, operation, severity, stack trace
+
+Error format:
+```json
+{
+  "type": "error",
+  "data": {
+    "id": "err_[timestamp]_[random]",
+    "errorType": "tool-execution",
+    "severity": "error",
+    "source": "component-name",
+    "error": {
+      "message": "Error description",
+      "stack": "Stack trace...",
+      "code": "ERROR_CODE"
+    },
+    "context": {
+      "tool": "tool-name",
+      "operation": "operation-name"
+    }
+  }
+}
+```
+
+## File Structure
+
+### Core Components
+
+```
+src/
+├── index.js                    # MCP stdio server (client)
+├── server/
+│   ├── index.js               # Backend server entry
+│   ├── AiurServer.js          # Main server class
+│   ├── SessionManager.js      # Session isolation
+│   ├── RequestHandler.js      # Request processing
+│   └── WebSocketHandler.js    # WebSocket management
+├── client/
+│   ├── ServerManager.js       # Auto-launch orchestration
+│   ├── ServerDetector.js      # Health checking
+│   ├── ServerLauncher.js      # Process spawning
+│   └── WebSocketClient.js     # Connection management
+├── core/
+│   ├── ContextManager.js      # Context storage
+│   ├── ToolDefinitionProvider.js # Tool management
+│   ├── ModuleLoader.js        # Dynamic loading
+│   ├── LogManager.js          # File-based logging
+│   └── ErrorBroadcastService.js # Error handling
+├── debug/
+│   ├── WebDebugServer.js      # Debug interface
+│   ├── DebugTool.js          # Debug tools
+│   └── web/                  # Web UI assets
+└── handles/
+    ├── HandleRegistry.js      # Handle storage
+    └── HandleResolver.js      # @ resolution
+```
+
+## Future Enhancements
+
+1. **Distributed Architecture**: Redis-backed session storage
+2. **Multi-Agent Support**: Shared context spaces
+3. **Visual Tools**: Web UI for plan creation
+4. **Performance**: Caching and optimization
+5. **Security**: Authentication and authorization
+6. **Monitoring**: Prometheus metrics export
+7. **Error Persistence**: Save errors to disk for analysis
+8. **Advanced Recovery**: Automatic error recovery strategies

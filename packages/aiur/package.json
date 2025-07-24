@@ -9,11 +9,24 @@
   },
   "scripts": {
     "start": "node src/index.js",
+    "start:server": "node src/server/index.js",
+    "start:quiet": "AIUR_VERBOSE=false node src/index.js",
+    "server:status": "node scripts/server-status.js",
+    "server:stop": "node scripts/server-stop.js", 
+    "server:restart": "node scripts/server-restart.js",
+    "server:launch": "node scripts/server-launch.js",
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
     "test:debug": "NODE_OPTIONS='--experimental-vm-modules' jest src/debug",
-    "test:browser": "NODE_OPTIONS='--experimental-vm-modules' jest src/debug/__tests__/browser"
+    "test:browser": "NODE_OPTIONS='--experimental-vm-modules' jest src/debug/__tests__/browser",
+    "test:auto-server": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/unit/client __tests__/integration/AutoServerLaunch.test.js",
+    "test:session-isolation": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/integration/SessionIsolation.test.js",
+    "test:format-conversion": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/unit/FormatConversion.test.js",
+    "test:e2e": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/integration/EndToEndMCP.test.js",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/integration",
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/unit",
+    "test:all": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__"
   },
   "dependencies": {
     "@legion/llm": "*",
@@ -21,6 +34,7 @@
     "@legion/module-loader": "*",
     "@legion/plan-executor": "*",
     "@modelcontextprotocol/sdk": "^1.16.0",
+    "express": "^4.18.2",
     "ws": "^8.14.2"
   },
   "devDependencies": {
