@@ -17,6 +17,7 @@ class DebugInterface {
     this.pendingRequests = new Map();
     this.eventsPaused = false;
     this.availableTools = [];
+    this.toolDefinitions = new Map(); // Store full tool definitions
     this.logs = [];
     this.logStats = { error: 0, warning: 0, info: 0 };
     
@@ -53,16 +54,10 @@ class DebugInterface {
       this.formatJSON();
     });
 
-    // Tool name autocomplete
-    const toolNameInput = document.getElementById('toolName');
-    toolNameInput.addEventListener('input', (e) => {
-      this.showToolSuggestions(e.target.value);
-    });
-
-    toolNameInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        this.executeCommand();
-      }
+    // Tool selection change
+    const toolNameSelect = document.getElementById('toolName');
+    toolNameSelect.addEventListener('change', (e) => {
+      this.onToolSelected(e.target.value);
     });
 
     // Context management
@@ -247,7 +242,7 @@ class DebugInterface {
    * Execute MCP tool via WebSocket
    */
   executeCommand() {
-    const toolName = document.getElementById('toolName').value.trim();
+    const toolName = document.getElementById('toolName').value;
     const toolArgsText = document.getElementById('toolArgs').value.trim();
     
     if (!toolName) {
@@ -294,14 +289,24 @@ class DebugInterface {
    * Handle welcome message from server
    */
   handleWelcome(data) {
-    this.availableTools = data.availableTools || [];
+    // Store full tool definitions
+    this.availableTools = [];
+    this.toolDefinitions.clear();
+    
+    if (data.availableTools && Array.isArray(data.availableTools)) {
+      data.availableTools.forEach(tool => {
+        this.availableTools.push(tool.name);
+        this.toolDefinitions.set(tool.name, tool);
+      });
+    }
     
     // Update server info display
     document.getElementById('serverInfo').textContent = 
       `Server: ${data.serverId}\nVersion: ${data.version}\nCapabilities: ${data.capabilities.join(', ')}`;
     
-    // Update available tools display
+    // Update available tools display and populate dropdown
     this.updateAvailableTools(this.availableTools);
+    this.populateToolDropdown();
     
     // Request initial status information
     this.refreshStatus();
@@ -426,41 +431,157 @@ class DebugInterface {
   }
 
   /**
-   * Show tool suggestions for autocomplete
+   * Populate the tool dropdown with available tools
    */
-  showToolSuggestions(input) {
-    const suggestionsDiv = document.getElementById('toolSuggestions');
+  populateToolDropdown() {
+    const toolSelect = document.getElementById('toolName');
     
-    if (!input || input.length < 2) {
-      suggestionsDiv.innerHTML = '';
-      return;
+    // Clear existing options except the first one
+    while (toolSelect.children.length > 1) {
+      toolSelect.removeChild(toolSelect.lastChild);
     }
-
-    const matches = this.availableTools.filter(tool => 
-      tool.toLowerCase().includes(input.toLowerCase())
+    
+    // Add tools grouped by category
+    const contextTools = this.availableTools.filter(name => name.startsWith('context_'));
+    const planTools = this.availableTools.filter(name => name.startsWith('plan_'));
+    const debugTools = this.availableTools.filter(name => name.startsWith('web_debug_'));
+    const logTools = this.availableTools.filter(name => name.startsWith('read_logs') || name.startsWith('get_log_') || name.startsWith('clear_old_'));
+    const otherTools = this.availableTools.filter(name => 
+      !name.startsWith('context_') && 
+      !name.startsWith('plan_') && 
+      !name.startsWith('web_debug_') &&
+      !name.startsWith('read_logs') && 
+      !name.startsWith('get_log_') && 
+      !name.startsWith('clear_old_')
     );
+    
+    const addToolGroup = (groupName, tools) => {
+      if (tools.length > 0) {
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = groupName;
+        
+        tools.forEach(toolName => {
+          const option = document.createElement('option');
+          option.value = toolName;
+          option.textContent = toolName;
+          optgroup.appendChild(option);
+        });
+        
+        toolSelect.appendChild(optgroup);
+      }
+    };
+    
+    addToolGroup('Context Management', contextTools);
+    addToolGroup('Plan Execution', planTools);
+    addToolGroup('Debug Tools', debugTools);
+    addToolGroup('Log Management', logTools);
+    addToolGroup('Other Tools', otherTools);
+  }
 
-    if (matches.length === 0) {
-      suggestionsDiv.innerHTML = '';
+  /**
+   * Handle tool selection change
+   */
+  onToolSelected(toolName) {
+    const argsTextarea = document.getElementById('toolArgs');
+    const argsHelp = document.getElementById('toolArgsHelp');
+    
+    if (!toolName) {
+      argsTextarea.placeholder = '{"key": "value"}';
+      argsHelp.classList.remove('visible');
       return;
     }
-
-    const suggestionsList = document.createElement('div');
-    suggestionsList.className = 'suggestion-list';
     
-    matches.slice(0, 10).forEach(tool => {
-      const item = document.createElement('div');
-      item.className = 'suggestion-item';
-      item.textContent = tool;
-      item.addEventListener('click', () => {
-        document.getElementById('toolName').value = tool;
-        suggestionsDiv.innerHTML = '';
-      });
-      suggestionsList.appendChild(item);
+    const toolDef = this.toolDefinitions.get(toolName);
+    if (!toolDef || !toolDef.inputSchema) {
+      argsTextarea.placeholder = '{}';
+      argsHelp.classList.remove('visible');
+      return;
+    }
+    
+    // Generate args help and placeholder
+    const { placeholder, helpHtml } = this.generateArgsHelp(toolDef);
+    argsTextarea.placeholder = placeholder;
+    
+    if (helpHtml) {
+      argsHelp.innerHTML = helpHtml;
+      argsHelp.classList.add('visible');
+    } else {
+      argsHelp.classList.remove('visible');
+    }
+  }
+
+  /**
+   * Generate arguments help and placeholder from tool schema
+   */
+  generateArgsHelp(toolDef) {
+    const schema = toolDef.inputSchema;
+    if (!schema || !schema.properties) {
+      return { placeholder: '{}', helpHtml: null };
+    }
+    
+    const required = schema.required || [];
+    const properties = schema.properties;
+    
+    // Generate placeholder with required args
+    const placeholderObj = {};
+    required.forEach(propName => {
+      const prop = properties[propName];
+      if (prop) {
+        if (prop.type === 'string') {
+          placeholderObj[propName] = prop.default || prop.example || 'string';
+        } else if (prop.type === 'number') {
+          placeholderObj[propName] = prop.default || prop.example || 0;
+        } else if (prop.type === 'boolean') {
+          placeholderObj[propName] = prop.default !== undefined ? prop.default : true;
+        } else if (prop.type === 'array') {
+          placeholderObj[propName] = [];
+        } else {
+          placeholderObj[propName] = {};
+        }
+      }
     });
     
-    suggestionsDiv.innerHTML = '';
-    suggestionsDiv.appendChild(suggestionsList);
+    const placeholder = Object.keys(placeholderObj).length > 0 ? 
+      JSON.stringify(placeholderObj, null, 2) : '{}';
+    
+    // Generate help HTML
+    let helpHtml = `<h4>${toolDef.name}</h4>`;
+    if (toolDef.description) {
+      helpHtml += `<p>${toolDef.description}</p>`;
+    }
+    
+    if (required.length > 0) {
+      helpHtml += `<div class="required-args"><strong>Required:</strong>`;
+      required.forEach(propName => {
+        const prop = properties[propName];
+        helpHtml += `<div class="arg-item">`;
+        helpHtml += `<span class="arg-name">${propName}</span>`;
+        helpHtml += `<span class="arg-type">(${prop.type || 'any'})</span>`;
+        if (prop.description) {
+          helpHtml += `<span class="arg-description">- ${prop.description}</span>`;
+        }
+        helpHtml += `</div>`;
+      });
+      helpHtml += `</div>`;
+    }
+    
+    const optional = Object.keys(properties).filter(name => !required.includes(name));
+    if (optional.length > 0) {
+      helpHtml += `<div class="optional-args"><strong>Optional:</strong>`;
+      optional.forEach(propName => {
+        const prop = properties[propName];
+        helpHtml += `<div class="arg-item">`;
+        helpHtml += `<span class="arg-name">${propName}</span>`;
+        helpHtml += `<span class="arg-type">(${prop.type || 'any'})</span>`;
+        if (prop.description) {
+          helpHtml += `<span class="arg-description">- ${prop.description}</span>`;
+        }
+        helpHtml += `</div>`;
+      });
+      helpHtml += `</div>`;
+    }
+    
+    return { placeholder, helpHtml };
   }
 
   /**
@@ -468,9 +589,14 @@ class DebugInterface {
    */
   updateAvailableTools(tools) {
     const toolsContainer = document.getElementById('availableTools');
+    if (!toolsContainer) return;
+    
     toolsContainer.innerHTML = '';
     
-    tools.forEach(tool => {
+    // Filter out any undefined/null values and ensure we have strings
+    const validTools = (tools || []).filter(tool => tool && typeof tool === 'string');
+    
+    validTools.forEach(tool => {
       const tag = document.createElement('span');
       tag.className = 'tool-tag';
       tag.textContent = tool;
@@ -483,7 +609,11 @@ class DebugInterface {
       }
       
       tag.addEventListener('click', () => {
-        document.getElementById('toolName').value = tool;
+        const toolSelect = document.getElementById('toolName');
+        if (toolSelect) {
+          toolSelect.value = tool;
+          this.onToolSelected(tool);
+        }
       });
       
       toolsContainer.appendChild(tag);
@@ -527,6 +657,8 @@ class DebugInterface {
   clearCommand() {
     document.getElementById('toolName').value = '';
     document.getElementById('toolArgs').value = '';
+    document.getElementById('toolArgs').placeholder = '{"key": "value"}';
+    document.getElementById('toolArgsHelp').classList.remove('visible');
     document.getElementById('commandResult').textContent = '';
     document.getElementById('commandResult').className = 'result-display';
     this.showToolExecutionStatus('');

@@ -328,7 +328,11 @@ export class WebDebugServer {
         serverId: this.serverId,
         version: '1.0.0',
         capabilities: ['tool-execution', 'context-management', 'event-streaming', 'error-tracking', 'log-streaming'],
-        availableTools: this.toolDefinitionProvider.getAllToolDefinitions().map(t => t.name),
+        availableTools: this.toolDefinitionProvider.getAllToolDefinitions().map(t => ({
+          name: t.name,
+          description: t.description,
+          inputSchema: t.inputSchema
+        })),
         errorTracking: {
           enabled: !!this.errorBroadcastService,
           bufferSize: this.errorBroadcastService?.getErrorBuffer().length || 0
