@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "node-mcp-server": {
+      "command": "node",
+      "args": ["/path/to/Legion/packages/mcp-node-server/index.js"],
+      "env": {
+        "PORT": "8355"
+      }
+    }
+  }
+}

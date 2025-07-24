@@ -1,0 +1,33 @@
+{
+  "name": "@legion/mcp-node-server",
+  "version": "1.0.0",
+  "description": "Simple Node.js MCP server with SSE transport",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "mcp-node-server": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "start:daemon": "node index.js > server.log 2>&1 &",
+    "dev": "node --watch index.js",
+    "test": "node test-client.js",
+    "stop": "pkill -f 'node index.js' || echo 'Server not running'"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "sse",
+    "server"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.16.0",
+    "express": "^4.21.2",
+    "zod": "^3.25.76"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
