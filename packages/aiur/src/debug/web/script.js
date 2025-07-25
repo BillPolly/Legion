@@ -332,6 +332,21 @@ class DebugInterface {
     // Check if we're in session mode
     this.sessionMode = data.sessionMode || false;
     
+    // Load tools from welcome message (tools are shared across sessions)
+    this.availableTools = [];
+    this.toolDefinitions.clear();
+    
+    if (data.availableTools && Array.isArray(data.availableTools)) {
+      data.availableTools.forEach(tool => {
+        this.availableTools.push(tool.name);
+        this.toolDefinitions.set(tool.name, tool);
+      });
+    }
+    
+    // Update available tools display and populate dropdown
+    this.updateAvailableTools(this.availableTools);
+    this.populateToolDropdown();
+    
     if (this.sessionMode) {
       // Show session selector
       const sessionSelector = document.getElementById('sessionSelector');
@@ -353,27 +368,8 @@ class DebugInterface {
           this.refreshSessions();
         }
       }, 2000); // Refresh every 2 seconds until a session is selected
-      
-      // Don't populate tools yet - wait for session selection
-      this.availableTools = [];
-      this.toolDefinitions.clear();
     } else {
-      // Non-session mode - load tools immediately
-      this.availableTools = [];
-      this.toolDefinitions.clear();
-      
-      if (data.availableTools && Array.isArray(data.availableTools)) {
-        data.availableTools.forEach(tool => {
-          this.availableTools.push(tool.name);
-          this.toolDefinitions.set(tool.name, tool);
-        });
-      }
-      
-      // Update available tools display and populate dropdown
-      this.updateAvailableTools(this.availableTools);
-      this.populateToolDropdown();
-      
-      // Request initial status information
+      // Non-session mode - request initial status information
       this.refreshStatus();
       this.refreshContext();
     }
@@ -526,25 +522,8 @@ class DebugInterface {
       this.sessionRefreshInterval = null;
     }
     
-    // Clear tools and update with session-specific tools
-    this.availableTools = [];
-    this.toolDefinitions.clear();
-    
-    console.log('🐛 Checking for tools in data:', data.tools ? `Found ${data.tools.length} tools` : 'No tools found');
-    
-    if (data.tools && Array.isArray(data.tools)) {
-      data.tools.forEach(tool => {
-        this.availableTools.push(tool.name);
-        this.toolDefinitions.set(tool.name, tool);
-      });
-    }
-    
-    console.log('🐛 Available tools after processing:', this.availableTools);
-    console.log('🐛 Tool definitions map size:', this.toolDefinitions.size);
-    
-    // Update UI
-    this.updateAvailableTools(this.availableTools);
-    this.populateToolDropdown();
+    // Tools are shared across sessions - no need to update them
+    console.log('🐛 Session selected, keeping shared tools:', this.availableTools.length, 'tools available');
     
     // Update context count
     document.getElementById('contextCount').textContent = data.contextCount || '0';

@@ -245,6 +245,9 @@ export class RequestHandler {
         
         webDebugServer = await WebDebugServer.create(this.resourceManager);
         this.resourceManager.register('webDebugServer', webDebugServer);
+        
+        // Connect RequestHandler to WebDebugServer
+        webDebugServer.connectRequestHandler(this);
       }
       
       // Register webDebugServer in session's resource manager

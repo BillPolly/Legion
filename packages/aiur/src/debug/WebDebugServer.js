@@ -381,22 +381,51 @@ export class WebDebugServer {
       }
     };
     
-    // Add session-specific or default data
+    // Get available tools
+    let availableTools = [];
+    
     if (this.sessionManager) {
-      // In session mode, list available sessions
+      // In session mode, get tools from shared module loader
       welcomeData.sessions = this._getSessionList();
       welcomeData.capabilities.push('session-management');
-      // Don't send tools yet - wait for session selection
-      welcomeData.availableTools = [];
+      
+      // Try to get tools from any existing session or shared module loader
+      if (this.sessionManager.sharedModuleLoader) {
+        // Get all module tools from the shared loader
+        const moduleTools = this.sessionManager.sharedModuleLoader.getModuleToolDefinitions();
+        
+        // Also include context tools which are always available
+        const contextTools = [
+          { name: 'context_add', description: 'Add data to context', inputSchema: {} },
+          { name: 'context_get', description: 'Get context data', inputSchema: {} },
+          { name: 'context_list', description: 'List context items', inputSchema: {} },
+          { name: 'context_remove', description: 'Remove context item', inputSchema: {} }
+        ];
+        
+        availableTools = [...contextTools, ...moduleTools];
+      } else {
+        // Fallback: try to get from first available session
+        const sessions = this.sessionManager.getActiveSessions();
+        if (sessions.length > 0) {
+          const firstSession = sessions[0];
+          availableTools = firstSession.toolProvider.getAllToolDefinitions().map(t => ({
+            name: t.name,
+            description: t.description,
+            inputSchema: t.inputSchema
+          }));
+        }
+      }
     } else {
       // In single context mode, send tools immediately
-      welcomeData.availableTools = this.toolDefinitionProvider ? 
+      availableTools = this.toolDefinitionProvider ? 
         this.toolDefinitionProvider.getAllToolDefinitions().map(t => ({
           name: t.name,
           description: t.description,
           inputSchema: t.inputSchema
         })) : [];
     }
+    
+    welcomeData.availableTools = availableTools;
     
     // Send welcome message
     ws.send(JSON.stringify({
@@ -823,6 +852,21 @@ export class WebDebugServer {
   }
 
   /**
+   * Connect RequestHandler after server creation
+   * @param {RequestHandler} requestHandler - Request handler instance
+   */
+  connectRequestHandler(requestHandler) {
+    if (this.requestHandler) {
+      return; // Already connected
+    }
+    
+    this.requestHandler = requestHandler;
+    
+    // Log to stderr to avoid MCP interference
+    process.stderr.write('WebDebugServer: Connected to RequestHandler (post-creation)\n');
+  }
+
+  /**
    * Connect ErrorBroadcastService after server creation
    * @param {ErrorBroadcastService} errorBroadcastService - Error broadcast service instance
    */
@@ -987,6 +1031,20 @@ export class WebDebugServer {
     
     // Ensure debug tools are initialized for this session
     console.log(`[WebDebugServer._handleSessionSelection] Starting for session ${sessionId}`);
+    
+    // Try to get RequestHandler from resourceManager if we don't have it yet
+    if (!this.requestHandler) {
+      try {
+        // SessionManager has the main resource manager with RequestHandler
+        if (this.sessionManager && this.sessionManager.resourceManager) {
+          this.requestHandler = this.sessionManager.resourceManager.get('requestHandler');
+          console.log(`[WebDebugServer._handleSessionSelection] Got RequestHandler from sessionManager.resourceManager`);
+        }
+      } catch (e) {
+        console.log('[WebDebugServer._handleSessionSelection] Could not get RequestHandler from resourceManager:', e.message);
+      }
+    }
+    
     console.log(`[WebDebugServer._handleSessionSelection] RequestHandler available: ${!!this.requestHandler}`);
     
     if (this.requestHandler) {
@@ -1001,25 +1059,16 @@ export class WebDebugServer {
       console.log('[WebDebugServer._handleSessionSelection] No RequestHandler available!');
     }
     
-    // Get session-specific tools
-    console.log(`[WebDebugServer._handleSessionSelection] Getting tools from toolProvider...`);
-    const allTools = session.toolProvider.getAllToolDefinitions();
-    console.log(`[WebDebugServer._handleSessionSelection] Got ${allTools.length} tools`);
-    
-    const tools = allTools.map(t => ({
-      name: t.name,
-      description: t.description,
-      inputSchema: t.inputSchema
-    }));
-    
-    console.log(`[WebDebugServer._handleSessionSelection] Sending response with ${tools.length} tools`);
+    // Tools are shared across sessions, not per-session
+    // We already sent all tools in the welcome message
+    console.log(`[WebDebugServer._handleSessionSelection] Session selected, using shared tools`);
     
     ws.send(JSON.stringify({
       type: 'session-selected',
       id: message.id,
       data: {
         sessionId,
-        tools,
+        tools: [], // Tools are shared and already sent in welcome message
         contextCount: await this._getContextCount(session),
         sessionInfo: {
           created: session.created,
