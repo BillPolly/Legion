@@ -4,13 +4,35 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Legion is a modular framework for building AI agent tools with consistent interfaces. It's organized as a monorepo using npm workspaces with six main packages:
+Legion is a modular framework for building AI agent tools with consistent interfaces. It's organized as a monorepo using npm workspaces with the following main packages:
 
+### Core Packages
 1. **@legion/module-loader** - Core infrastructure with base classes, dependency injection, and module management
 2. **@legion/cli** - Command-line interface for executing tools with REPL and autocomplete
-3. **@legion/tools** - Collection of AI agent tools (file operations, web tools, GitHub integration, etc.)
+3. **@legion/general-tools** - Collection of AI agent tools (file operations, web tools, GitHub integration, calculator, JSON manipulation)
 4. **@legion/llm** - LLM client with multiple providers (OpenAI, Anthropic, DeepSeek, OpenRouter) and response parsing/validation
-5. **@legion/agent** - AI agent implementation with retry logic and tool execution
+5. **@legion/agent** - AI agent implementation with retry logic, tool execution, and WebSocket server for event streaming
+
+### Specialized Packages
+6. **@legion/railway** - Railway deployment integration with CLI and API operations
+7. **@legion/aiur** - Advanced MCP server for AI agent coordination with persistent memory
+8. **@legion/llm-planner** - Generic planner for creating multi-step execution plans
+9. **@legion/plan-executor** - Executes plans created by the planner
+10. **@legion/playwright** - Browser automation wrapper for Playwright
+11. **@legion/node-runner** - Node.js process management and server orchestration
+12. **@legion/log-manager** - Centralized logging with capture, aggregation, and analysis
+13. **@legion/resource-manager** - Advanced resource management with dependency graphs
+14. **@legion/conan-the-deployer** - Deployment management system
+
+### Code Generation Packages
+15. **@legion/code-agent** - Full-stack code generation with planning and execution
+16. **@legion/jester** - Jest test generator
+17. **@legion/cerebrate** - Browser extension for DOM analysis and code generation
+
+### Application Packages
+18. **@legion/web-backend** - WebSocket backend for agent chat interface
+19. **@legion/web-frontend** - Frontend UI for agent interaction
+20. **@legion/aiur-debug-ui** - Debug interface for Aiur MCP server
 
 ## Essential Commands
 
@@ -23,9 +45,15 @@ npm test
 # Run tests for specific packages
 npm run test:module-loader
 npm run test:cli
-npm run test:tools
+npm run test:general-tools  # Note: renamed from test:tools
 npm run test:llm
 npm run test:agent
+npm run test:railway
+npm run test:aiur
+npm run test:playwright
+npm run test:node-runner
+npm run test:log-manager
+npm run test:resource-manager
 
 # Run tests in watch mode
 npm run test:watch
@@ -36,6 +64,9 @@ npm run test:coverage
 # Lint all code
 npm run lint
 
+# Build all packages
+npm run build
+
 # Clean all node_modules and coverage
 npm run clean
 ```
@@ -44,10 +75,16 @@ npm run clean
 
 ```bash
 # Navigate to a package and run its tests
-cd packages/tools
+cd packages/general-tools
 npm test
 npm run test:watch
 npm run test:coverage
+
+# Run a single test file
+npm test -- __tests__/unit/calculator.test.js
+
+# Run tests with specific pattern
+npm test -- --testNamePattern="should evaluate"
 ```
 
 ### CLI Usage
@@ -56,11 +93,31 @@ npm run test:coverage
 # Run the CLI (from root)
 node packages/cli/src/index.js
 
+# Quick alias for interactive mode
+npm run cli
+
 # Execute a specific tool
 node packages/cli/src/index.js -t <toolName> -p '{"param": "value"}'
 
 # Interactive REPL mode
 node packages/cli/src/index.js -i
+
+# List available tools
+npm run cli:list
+
+# Get help
+npm run cli:help
+
+# Run the agent CLI
+npm run agent
+
+# Start Aiur MCP server
+npm run aiur
+# or
+npm run aiur:start
+
+# Start the web chat interface
+npm run chat
 ```
 
 ### Git Subtree and Repository Management
@@ -85,6 +142,8 @@ npm run polyrepo:add
 
 # Rename a GitHub repository (requires gh CLI)
 npm run polyrepo:rename
+
+# Note: Do not use git subtree commands directly - always use the npm scripts
 
 # Other subtree operations
 npm run split:check      # Check split configuration
@@ -127,25 +186,35 @@ npm run split           # Run package splitting
 ```
 packages/
 ├── module-loader/src/
-│   ├── base/           # Base classes (BaseModule, BaseTool)
-│   ├── core/           # ResourceManager, ModuleFactory
-│   └── __tests__/      # Comprehensive test suite
+│   ├── module/         # Module, ModuleFactory, GenericModule
+│   ├── resources/      # ResourceManager
+│   ├── tool/           # Tool, GenericTool, ToolResult
+│   ├── schemas/        # JSON schema validation
+│   └── services/       # StaticServer, StaticServerFactory
 ├── cli/src/
 │   ├── commands/       # CLI command implementations
-│   ├── utils/          # Formatting and helper utilities
-│   └── index.js        # Main CLI entry point
-├── tools/src/
+│   ├── core/           # ArgumentParser, ModuleLoader, ToolRegistry
+│   ├── interactive/    # REPL mode with autocomplete
+│   └── output/         # Formatting and display utilities
+├── general-tools/src/
 │   ├── calculator/     # Math operations
-│   ├── file/          # File system operations
-│   ├── github/        # GitHub API integration
-│   ├── json/          # JSON manipulation
-│   └── web/           # Web scraping and search
+│   ├── file/           # File system operations
+│   ├── github/         # GitHub API integration with PolyRepoManager
+│   ├── json/           # JSON manipulation
+│   └── [other tools]   # Web, YouTube, command executor, etc.
 ├── llm/src/
-│   ├── providers/     # LLM provider implementations
-│   ├── validators/    # Response validation
-│   └── LLMClient.js   # Main client with retry logic
-└── agent/src/
-    └── Agent.js       # Main agent implementation
+│   ├── providers/      # LLM provider implementations
+│   ├── validators/     # Response validation
+│   └── LLMClient.js    # Main client with retry logic
+├── agent/src/
+│   ├── Agent.js        # Main agent implementation
+│   ├── RetryManager.js # Retry logic
+│   └── websocket-server.js # WebSocket event streaming
+└── aiur/src/
+    ├── mcp/            # MCP server implementation
+    ├── handles/        # Handle registry and resolver
+    ├── tools/          # Meta tools, context management
+    └── performance/    # Caching and optimization
 ```
 
 ### Testing Strategy
@@ -162,20 +231,24 @@ packages/
 ### Key Development Patterns
 
 1. **Creating New Tools**:
-   - Extend from appropriate base class
+   - Extend from `Tool` class in `@legion/module-loader`
    - Define Zod schema for input validation
    - Implement `execute` method
-   - Add to module's tool registry
-   - Write comprehensive tests
+   - Add to module's `getTools()` method
+   - Write comprehensive tests with mocks
+   - Follow OpenAI function-calling format
 
 2. **Working with Modules**:
+   - Extend from `Module` class
    - Each module is self-contained in its directory
-   - Use `moduleFactory.js` for registration
+   - Use `ModuleFactory` for instantiation
    - Dependencies injected via ResourceManager
+   - Emit events for progress tracking
 
 3. **Environment Configuration**:
    - Use `.env` files for API keys and configuration
-   - Environment variables accessed via `process.env`
+   - ALWAYS access via ResourceManager, never `process.env` directly
+   - See "Environment Variables and Configuration" section below
 
 ## CRITICAL: Environment Variables and Configuration
 
@@ -274,13 +347,20 @@ Legion/
 │   ├── general-tools/          # Tool collection
 │   ├── llm/                    # LLM client
 │   ├── agent/                  # AI agent
+│   ├── aiur/                   # MCP server
+│   ├── railway/                # Railway deployment
+│   ├── apps/                   # Application packages
+│   │   ├── web-backend/        # WebSocket backend
+│   │   ├── web-frontend/       # Chat UI
+│   │   └── aiur-debug-ui/      # Debug interface
 │   └── code-gen/               # Code generation packages
-│       └── jester/             # Jest test generator
+│       ├── code-agent/         # Full-stack code gen
+│       ├── jester/             # Jest test generator
+│       └── cerebrate/          # Browser extension
 ├── scripts/                    # All scripts organized by purpose
-│   ├── build/                  # Build scripts
-│   ├── test/                   # Test runners
 │   ├── git/                    # Git operations
 │   ├── split/                  # Polyrepo management
+│   ├── server/                 # Server management
 │   ├── utils/                  # Shared utilities
 │   └── config/                 # Configuration files
 │       └── gitsubtree.config   # Polyrepo mappings
@@ -330,7 +410,27 @@ Legion/
 - Model providers require respective API keys
 - File operations are sandboxed by default
 - Web tools use Puppeteer for browser automation
+- Jest tests require `NODE_OPTIONS='--experimental-vm-modules'`
+- Always use npm workspaces commands from root directory
 - Keep all directories clean, never leave files around, always use nice directory structure
+
+## Server Management Commands
+
+```bash
+# Start a static web server
+npm run server
+# or
+npm run server:start
+
+# Kill process on port 3000
+npm run server:kill
+
+# Force kill port (if regular kill fails)
+npm run server:force-kill
+
+# Kill any port
+npm run kill-port -- 8080
+```
 
 ## CRITICAL: Always Use Railway Tools
 
@@ -739,3 +839,80 @@ When working with Aiur MCP server:
 5. **Auto-Save Results** - Use `saveAs` parameter to build context automatically
 
 The Aiur MCP server transforms AI agents from stateless tools into persistent, memory-enabled coordinators capable of managing complex, multi-step workflows with full context awareness.
+
+## Creating New Modules and Tools
+
+### Module Template
+```javascript
+import { Module } from '@legion/module-loader';
+
+export default class MyModule extends Module {
+  constructor(dependencies = {}) {
+    super('MyModule', dependencies);
+  }
+
+  async initialize() {
+    // Optional: async initialization
+    await super.initialize();
+  }
+
+  getTools() {
+    return [
+      new MyTool(this.dependencies)
+    ];
+  }
+}
+```
+
+### Tool Template
+```javascript
+import { Tool } from '@legion/module-loader';
+import { z } from 'zod';
+
+class MyTool extends Tool {
+  constructor(dependencies = {}) {
+    super({
+      name: 'my_tool',
+      description: 'Description of what the tool does',
+      inputSchema: z.object({
+        param1: z.string().describe('Parameter description'),
+        param2: z.number().optional().describe('Optional parameter')
+      }),
+      outputSchema: z.object({
+        result: z.string()
+      })
+    });
+    this.dependencies = dependencies;
+  }
+
+  async execute(args) {
+    // Emit progress events
+    this.emit('progress', { percentage: 0, status: 'Starting...' });
+    
+    try {
+      // Tool implementation
+      const result = await doSomething(args);
+      
+      this.emit('progress', { percentage: 100, status: 'Complete' });
+      return { result };
+    } catch (error) {
+      this.emit('error', { message: error.message });
+      throw error;
+    }
+  }
+}
+```
+
+## Working with the Event System
+
+All tools and modules support event emission for real-time monitoring:
+
+```javascript
+// In your tool's execute method
+this.emit('progress', { percentage: 50, status: 'Processing...' });
+this.emit('info', { message: 'Found 10 items to process' });
+this.emit('warning', { message: 'API rate limit approaching' });
+this.emit('error', { message: 'Failed to connect', error });
+```
+
+Events propagate: Tool → Module → Agent → WebSocket Server → Clients
