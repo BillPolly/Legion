@@ -61,6 +61,46 @@ body {
   align-items: center;
   gap: 15px;
   flex-wrap: wrap;
+  flex: 1;
+}
+
+/* Session Selector */
+.session-selector {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.session-selector label {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.session-select {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 14px;
+  min-width: 200px;
+  cursor: pointer;
+}
+
+.session-select:hover {
+  background: var(--bg-hover);
+}
+
+.session-select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.btn-small {
+  padding: 4px 8px;
+  font-size: 14px;
+  min-width: auto;
 }
 
 .status {

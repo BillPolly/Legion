@@ -44,20 +44,27 @@ export class ToolDefinitionProvider {
    */
   getAllToolDefinitions() {
     const allTools = [];
+    console.log('[ToolDefinitionProvider.getAllToolDefinitions] Starting...');
 
     // Add context management tools
     const contextTools = this.contextManager.getToolDefinitions();
+    console.log(`[ToolDefinitionProvider.getAllToolDefinitions] Context tools: ${contextTools.length}`);
     allTools.push(...contextTools);
 
     // Add dynamically loaded module tools
     const moduleTools = this.moduleLoader.getModuleToolDefinitions();
+    console.log(`[ToolDefinitionProvider.getAllToolDefinitions] Module tools: ${moduleTools.length}`);
     allTools.push(...moduleTools);
 
     // Add debug tools if they exist
     if (this._debugTools) {
+      console.log(`[ToolDefinitionProvider.getAllToolDefinitions] Debug tools: ${this._debugTools.length}`);
       allTools.push(...this._debugTools);
+    } else {
+      console.log('[ToolDefinitionProvider.getAllToolDefinitions] No debug tools!');
     }
 
+    console.log(`[ToolDefinitionProvider.getAllToolDefinitions] Total tools: ${allTools.length}`);
     return allTools;
   }
 

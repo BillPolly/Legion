@@ -99,26 +99,34 @@ class FormatConverter {
    * Convert MCP tools/list response
    */
   static legionToolsListToMcp(legionResult) {
-    if (!legionResult.success) {
-      return { tools: [] };
+    // The response from the server is already in MCP format
+    if (legionResult && Array.isArray(legionResult.tools)) {
+      return { tools: legionResult.tools };
     }
     
-    return {
-      tools: legionResult.data.tools || []
-    };
+    // Handle legacy format if needed
+    if (legionResult && legionResult.success && legionResult.data && Array.isArray(legionResult.data.tools)) {
+      return { tools: legionResult.data.tools };
+    }
+    
+    return { tools: [] };
   }
   
   /**
    * Convert MCP resources/list response
    */
   static legionResourcesListToMcp(legionResult) {
-    if (!legionResult.success) {
-      return { resources: [] };
+    // The response from the server is already in MCP format
+    if (legionResult && Array.isArray(legionResult.resources)) {
+      return { resources: legionResult.resources };
     }
     
-    return {
-      resources: legionResult.data.resources || []
-    };
+    // Handle legacy format if needed
+    if (legionResult && legionResult.success && legionResult.data && Array.isArray(legionResult.data.resources)) {
+      return { resources: legionResult.data.resources };
+    }
+    
+    return { resources: [] };
   }
 }
 
@@ -295,17 +303,32 @@ async function runServer() {
           tool: request.params.name
         });
         
-        const legionResult = await wsClient.sendMcpRequest('tools/call', request.params);
-        const result = FormatConverter.legionToMcp(legionResult);
+        const result = await wsClient.sendMcpRequest('tools/call', request.params);
+        
+        // The response from the server is already in MCP format
+        // Check if it has the expected MCP structure
+        if (result && result.content && Array.isArray(result.content)) {
+          await logManager.logInfo(`Tool call completed: ${request.params.name}`, {
+            source: 'MCP',
+            operation: 'tool-call-complete',
+            tool: request.params.name,
+            isError: result.isError || false
+          });
+          
+          return result;
+        }
+        
+        // Fallback: try to convert from Legion format if needed
+        const convertedResult = FormatConverter.legionToMcp(result);
         
         await logManager.logInfo(`Tool call completed: ${request.params.name}`, {
           source: 'MCP',
           operation: 'tool-call-complete',
           tool: request.params.name,
-          isError: result.isError
+          isError: convertedResult.isError
         });
         
-        return result;
+        return convertedResult;
       } catch (error) {
         await logManager.logError(error, {
           source: 'MCP',

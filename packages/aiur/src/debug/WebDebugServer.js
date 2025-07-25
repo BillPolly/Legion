@@ -25,6 +25,7 @@ const __dirname = path.dirname(__filename);
 
 export class WebDebugServer {
   constructor(contextManager, toolDefinitionProvider, monitoringSystem) {
+    // These are now defaults for non-session mode
     this.contextManager = contextManager;
     this.toolDefinitionProvider = toolDefinitionProvider;
     this.monitoringSystem = monitoringSystem;
@@ -40,6 +41,11 @@ export class WebDebugServer {
     // Log management
     this.logManager = null;
     
+    // Session management
+    this.sessionManager = null;
+    this.sessions = new Map(); // sessionId -> session info
+    this.clientSessions = new Map(); // ws -> sessionId
+    
     // Generate unique server ID
     this.serverId = `aiur-mcp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
@@ -50,11 +56,46 @@ export class WebDebugServer {
    * @returns {Promise<WebDebugServer>} Initialized WebDebugServer instance
    */
   static async create(resourceManager) {
-    const contextManager = resourceManager.get('contextManager');
-    const toolDefinitionProvider = resourceManager.get('toolDefinitionProvider');
-    const monitoringSystem = resourceManager.get('monitoringSystem');
+    // Try to get session manager first (Aiur server mode)
+    let sessionManager = null;
+    try {
+      sessionManager = resourceManager.get('sessionManager');
+    } catch (e) {
+      // Not in Aiur server mode - fall back to single context mode
+    }
+    
+    // Get defaults for non-session mode
+    let contextManager = null;
+    let toolDefinitionProvider = null;
+    let monitoringSystem = null;
+    
+    try {
+      contextManager = resourceManager.get('contextManager');
+    } catch (e) {
+      // Not available in main resource manager
+    }
+    
+    try {
+      toolDefinitionProvider = resourceManager.get('toolDefinitionProvider');
+    } catch (e) {
+      // Not available in main resource manager
+    }
+    
+    try {
+      monitoringSystem = resourceManager.get('monitoringSystem');
+    } catch (e) {
+      // Not available in main resource manager
+    }
     
     const server = new WebDebugServer(contextManager, toolDefinitionProvider, monitoringSystem);
+    server.sessionManager = sessionManager;
+    
+    // Get RequestHandler if available for debug tools initialization
+    try {
+      server.requestHandler = resourceManager.get('requestHandler');
+    } catch (e) {
+      // RequestHandler not available yet
+    }
     
     // Get LogManager if available and set up log streaming
     try {
@@ -300,7 +341,9 @@ export class WebDebugServer {
         '.html': 'text/html',
         '.js': 'application/javascript',
         '.css': 'text/css',
-        '.json': 'application/json'
+        '.json': 'application/json',
+        '.svg': 'image/svg+xml',
+        '.ico': 'image/x-icon'
       };
 
       const contentType = contentTypes[ext] || 'text/plain';
@@ -321,27 +364,44 @@ export class WebDebugServer {
       process.stderr.write(`🐛 Debug client connected (${this.clients.size} total)\n`);
     }
 
-    // Send welcome message
-    ws.send(JSON.stringify({
-      type: 'welcome',
-      data: {
-        serverId: this.serverId,
-        version: '1.0.0',
-        capabilities: ['tool-execution', 'context-management', 'event-streaming', 'error-tracking', 'log-streaming'],
-        availableTools: this.toolDefinitionProvider.getAllToolDefinitions().map(t => ({
+    // Prepare welcome data based on session mode
+    let welcomeData = {
+      serverId: this.serverId,
+      version: '1.0.0',
+      capabilities: ['tool-execution', 'context-management', 'event-streaming', 'error-tracking', 'log-streaming'],
+      sessionMode: !!this.sessionManager,
+      sessions: [],
+      errorTracking: {
+        enabled: !!this.errorBroadcastService,
+        bufferSize: this.errorBroadcastService?.getErrorBuffer().length || 0
+      },
+      logStreaming: {
+        enabled: !!this.logManager,
+        logDirectory: this.logManager?.logDirectory || null
+      }
+    };
+    
+    // Add session-specific or default data
+    if (this.sessionManager) {
+      // In session mode, list available sessions
+      welcomeData.sessions = this._getSessionList();
+      welcomeData.capabilities.push('session-management');
+      // Don't send tools yet - wait for session selection
+      welcomeData.availableTools = [];
+    } else {
+      // In single context mode, send tools immediately
+      welcomeData.availableTools = this.toolDefinitionProvider ? 
+        this.toolDefinitionProvider.getAllToolDefinitions().map(t => ({
           name: t.name,
           description: t.description,
           inputSchema: t.inputSchema
-        })),
-        errorTracking: {
-          enabled: !!this.errorBroadcastService,
-          bufferSize: this.errorBroadcastService?.getErrorBuffer().length || 0
-        },
-        logStreaming: {
-          enabled: !!this.logManager,
-          logDirectory: this.logManager?.logDirectory || null
-        }
-      }
+        })) : [];
+    }
+    
+    // Send welcome message
+    ws.send(JSON.stringify({
+      type: 'welcome',
+      data: welcomeData
     }));
 
     // Send initial logs if LogManager is available
@@ -384,6 +444,14 @@ export class WebDebugServer {
       const message = JSON.parse(data.toString());
       
       switch (message.type) {
+        case 'select-session':
+          await this._handleSessionSelection(ws, message);
+          break;
+          
+        case 'list-sessions':
+          await this._handleListSessions(ws, message);
+          break;
+          
         case 'execute-tool':
           await this._handleToolExecution(ws, message);
           break;
@@ -402,7 +470,7 @@ export class WebDebugServer {
         case 'get-tool-stats':
           ws.send(JSON.stringify({
             type: 'tool-stats',
-            data: this.toolDefinitionProvider.getToolStatistics()
+            data: this._getToolStatsForClient(ws)
           }));
           break;
         
@@ -474,8 +542,44 @@ export class WebDebugServer {
       const { id, data } = message;
       const { name, arguments: args } = data;
       
+      // Get session-specific tool provider
+      let toolProvider = this.toolDefinitionProvider;
+      let sessionId = null;
+      
+      if (this.sessionManager) {
+        sessionId = this.clientSessions.get(ws);
+        if (!sessionId) {
+          ws.send(JSON.stringify({
+            type: 'tool-result',
+            id,
+            data: {
+              success: false,
+              error: 'No session selected. Please select a session first.',
+              executionTime: Date.now() - startTime
+            }
+          }));
+          return;
+        }
+        
+        const session = this.sessionManager.getSession(sessionId);
+        if (!session) {
+          ws.send(JSON.stringify({
+            type: 'tool-result',
+            id,
+            data: {
+              success: false,
+              error: 'Session no longer exists',
+              executionTime: Date.now() - startTime
+            }
+          }));
+          return;
+        }
+        
+        toolProvider = session.toolProvider;
+      }
+      
       // Route directly to MCP tool execution
-      const result = await this.toolDefinitionProvider.executeTool(name, args || {});
+      const result = await toolProvider.executeTool(name, args || {});
       
       const executionTime = Date.now() - startTime;
       
@@ -694,8 +798,11 @@ export class WebDebugServer {
    * @private
    */
   _broadcastError(errorEvent) {
-    // Error events are special - they bypass normal event filtering
-    const errorMessage = JSON.stringify(errorEvent);
+    // Wrap error event in proper message format
+    const errorMessage = JSON.stringify({
+      type: 'error',
+      data: errorEvent
+    });
     
     // Add to event buffer for new clients
     this.eventBuffer.push(errorEvent);
@@ -827,6 +934,186 @@ export class WebDebugServer {
   }
 
   /**
+   * Get list of available sessions
+   * @returns {Array} Session list
+   * @private
+   */
+  _getSessionList() {
+    if (!this.sessionManager) {
+      return [];
+    }
+    
+    const sessions = this.sessionManager.getActiveSessions();
+    
+    return sessions.map(session => ({
+      id: session.id,
+      created: session.created,
+      lastAccessed: session.lastAccessed,
+      handleCount: session.handles.size(),
+      metadata: session.metadata
+    }));
+  }
+  
+  /**
+   * Handle session selection
+   * @param {Object} ws - WebSocket connection
+   * @param {Object} message - Selection message
+   * @private
+   */
+  async _handleSessionSelection(ws, message) {
+    if (!this.sessionManager) {
+      ws.send(JSON.stringify({
+        type: 'error',
+        id: message.id,
+        data: { message: 'Session management not available' }
+      }));
+      return;
+    }
+    
+    const { sessionId } = message.data;
+    const session = this.sessionManager.getSession(sessionId);
+    
+    if (!session) {
+      ws.send(JSON.stringify({
+        type: 'error',
+        id: message.id,
+        data: { message: `Session not found: ${sessionId}` }
+      }));
+      return;
+    }
+    
+    // Store session association
+    this.clientSessions.set(ws, sessionId);
+    
+    // Ensure debug tools are initialized for this session
+    console.log(`[WebDebugServer._handleSessionSelection] Starting for session ${sessionId}`);
+    console.log(`[WebDebugServer._handleSessionSelection] RequestHandler available: ${!!this.requestHandler}`);
+    
+    if (this.requestHandler) {
+      try {
+        console.log(`[WebDebugServer._handleSessionSelection] Calling ensureDebugTools...`);
+        await this.requestHandler.ensureDebugTools(session);
+        console.log(`[WebDebugServer._handleSessionSelection] ensureDebugTools completed`);
+      } catch (error) {
+        console.error('[WebDebugServer._handleSessionSelection] Error initializing debug tools:', error);
+      }
+    } else {
+      console.log('[WebDebugServer._handleSessionSelection] No RequestHandler available!');
+    }
+    
+    // Get session-specific tools
+    console.log(`[WebDebugServer._handleSessionSelection] Getting tools from toolProvider...`);
+    const allTools = session.toolProvider.getAllToolDefinitions();
+    console.log(`[WebDebugServer._handleSessionSelection] Got ${allTools.length} tools`);
+    
+    const tools = allTools.map(t => ({
+      name: t.name,
+      description: t.description,
+      inputSchema: t.inputSchema
+    }));
+    
+    console.log(`[WebDebugServer._handleSessionSelection] Sending response with ${tools.length} tools`);
+    
+    ws.send(JSON.stringify({
+      type: 'session-selected',
+      id: message.id,
+      data: {
+        sessionId,
+        tools,
+        contextCount: await this._getContextCount(session),
+        sessionInfo: {
+          created: session.created,
+          lastAccessed: session.lastAccessed,
+          metadata: session.metadata
+        }
+      }
+    }));
+    
+    // Load context for this session
+    await this._sendSessionContext(ws, session);
+  }
+  
+  /**
+   * Handle list sessions request
+   * @param {Object} ws - WebSocket connection
+   * @param {Object} message - Request message
+   * @private
+   */
+  async _handleListSessions(ws, message) {
+    const sessions = this._getSessionList();
+    
+    ws.send(JSON.stringify({
+      type: 'sessions-list',
+      id: message.id,
+      data: {
+        sessions,
+        currentSession: this.clientSessions.get(ws) || null
+      }
+    }));
+  }
+  
+  /**
+   * Get tool stats for a specific client
+   * @param {Object} ws - WebSocket connection
+   * @returns {Object} Tool statistics
+   * @private
+   */
+  _getToolStatsForClient(ws) {
+    const sessionId = this.clientSessions.get(ws);
+    
+    if (!sessionId || !this.sessionManager) {
+      // Fall back to default tool provider if available
+      return this.toolDefinitionProvider ? 
+        this.toolDefinitionProvider.getToolStatistics() : 
+        { total: 0, context: 0, modules: 0, debug: 0 };
+    }
+    
+    const session = this.sessionManager.getSession(sessionId);
+    if (!session) {
+      return { total: 0, context: 0, modules: 0, debug: 0 };
+    }
+    
+    return session.toolProvider.getToolStatistics();
+  }
+  
+  /**
+   * Get context count for a session
+   * @param {Object} session - Session object
+   * @returns {Promise<number>} Context count
+   * @private
+   */
+  async _getContextCount(session) {
+    try {
+      const result = await session.context.executeContextTool('context_list', {});
+      return result.items ? result.items.length : 0;
+    } catch (error) {
+      return 0;
+    }
+  }
+  
+  /**
+   * Send session context to client
+   * @param {Object} ws - WebSocket connection
+   * @param {Object} session - Session object
+   * @private
+   */
+  async _sendSessionContext(ws, session) {
+    try {
+      const result = await session.context.executeContextTool('context_list', {});
+      
+      ws.send(JSON.stringify({
+        type: 'context-data',
+        data: {
+          sessionId: session.id,
+          contexts: result.items || []
+        }
+      }));
+    } catch (error) {
+      // Failed to get context - not critical
+    }
+  }
+
+  /**
    * Get basic HTML interface for when web files don't exist
    * @returns {string} Basic HTML content
    * @private
@@ -858,8 +1145,17 @@ export class WebDebugServer {
 <body>
     <div class="container">
         <h1>🐛 Aiur MCP Debug Interface</h1>
-        <div class="status running">Server Running on Port ${this.port}</div>
-        <span id="errorCount" style="margin-left: 10px;"></span>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="status running">Server Running on Port ${this.port}</div>
+            <span id="errorCount" style="color: #ff6b6b; font-weight: bold;"></span>
+            <div id="sessionSelector" style="margin-left: auto; display: none;">
+                <label style="margin-right: 5px;">Session:</label>
+                <select id="sessionSelect" style="background: #333; color: #fff; border: 1px solid #555; padding: 5px; border-radius: 3px;">
+                    <option value="">Select a session...</option>
+                </select>
+                <button onclick="refreshSessions()" style="margin-left: 5px;">Refresh</button>
+            </div>
+        </div>
         
         <div id="errorPanel" class="panel error-panel" style="display: none;">
             <div class="header">
@@ -931,6 +1227,9 @@ export class WebDebugServer {
         let errorCount = 0;
         let logs = [];
         let logStats = { error: 0, warning: 0, info: 0 };
+        let currentSession = null;
+        let sessionMode = false;
+        let availableTools = [];
         
         ws.onopen = function() {
             log('Connected to debug server');
@@ -948,7 +1247,27 @@ export class WebDebugServer {
         function handleMessage(message) {
             switch(message.type) {
                 case 'welcome':
+                    sessionMode = message.data.sessionMode || false;
+                    if (sessionMode) {
+                        document.getElementById('sessionSelector').style.display = 'block';
+                        loadSessions(message.data.sessions);
+                    } else {
+                        availableTools = message.data.availableTools || [];
+                        updateToolSelect();
+                    }
                     document.getElementById('serverInfo').textContent = JSON.stringify(message.data, null, 2);
+                    break;
+                case 'sessions-list':
+                    loadSessions(message.data.sessions);
+                    break;
+                case 'session-selected':
+                    currentSession = message.data.sessionId;
+                    availableTools = message.data.tools || [];
+                    updateToolSelect();
+                    log('Session selected: ' + currentSession);
+                    break;
+                case 'context-data':
+                    displayContexts(message.data.contexts);
                     break;
                 case 'initial-logs':
                     loadInitialLogs(message.data);
@@ -1184,6 +1503,61 @@ export class WebDebugServer {
             logs = [];
             updateLogStats();
             renderLogs();
+        }
+        
+        // Session management functions
+        function loadSessions(sessions) {
+            const select = document.getElementById('sessionSelect');
+            select.innerHTML = '<option value="">Select a session...</option>';
+            
+            sessions.forEach(session => {
+                const option = document.createElement('option');
+                option.value = session.id;
+                option.textContent = session.id + ' (Created: ' + new Date(session.created).toLocaleString() + ')';
+                if (session.id === currentSession) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+            
+            select.onchange = function() {
+                if (this.value) {
+                    selectSession(this.value);
+                }
+            };
+        }
+        
+        function selectSession(sessionId) {
+            ws.send(JSON.stringify({
+                type: 'select-session',
+                id: Date.now().toString(),
+                data: { sessionId }
+            }));
+        }
+        
+        function refreshSessions() {
+            ws.send(JSON.stringify({
+                type: 'list-sessions',
+                id: Date.now().toString()
+            }));
+        }
+        
+        function updateToolSelect() {
+            const select = document.getElementById('toolName');
+            select.innerHTML = '<option value="">Select a tool...</option>';
+            
+            availableTools.forEach(tool => {
+                const option = document.createElement('option');
+                option.value = tool.name;
+                option.textContent = tool.name + ' - ' + tool.description;
+                select.appendChild(option);
+            });
+        }
+        
+        function displayContexts(contexts) {
+            // This would update a context display panel if we had one
+            // For now, just log it
+            log('Session has ' + contexts.length + ' context items');
         }
     </script>
 </body>

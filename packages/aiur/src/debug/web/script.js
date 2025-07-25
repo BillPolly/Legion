@@ -21,6 +21,11 @@ class DebugInterface {
     this.logs = [];
     this.logStats = { error: 0, warning: 0, info: 0 };
     
+    // Session management
+    this.sessionMode = false;
+    this.currentSession = null;
+    this.sessions = [];
+    
     // Initialize when DOM is ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => this.init());
@@ -59,6 +64,23 @@ class DebugInterface {
     toolNameSelect.addEventListener('change', (e) => {
       this.onToolSelected(e.target.value);
     });
+
+    // Session management
+    const sessionSelect = document.getElementById('sessionSelect');
+    if (sessionSelect) {
+      sessionSelect.addEventListener('change', (e) => {
+        if (e.target.value) {
+          this.selectSession(e.target.value);
+        }
+      });
+    }
+
+    const refreshSessionsBtn = document.getElementById('refreshSessions');
+    if (refreshSessionsBtn) {
+      refreshSessionsBtn.addEventListener('click', () => {
+        this.refreshSessions();
+      });
+    }
 
     // Context management
     document.getElementById('refreshContext').addEventListener('click', () => {
@@ -154,6 +176,18 @@ class DebugInterface {
           this.handleWelcome(message.data);
           break;
         
+        case 'sessions-list':
+          this.handleSessionsList(message.data);
+          break;
+        
+        case 'session-selected':
+          this.handleSessionSelected(message.data);
+          break;
+        
+        case 'context-data':
+          this.handleContextData(message.data);
+          break;
+        
         case 'tool-result':
           this.handleToolResult(message);
           break;
@@ -197,6 +231,12 @@ class DebugInterface {
   onDisconnected() {
     this.isConnected = false;
     this.updateConnectionStatus('disconnected');
+    
+    // Clean up intervals
+    if (this.sessionRefreshInterval) {
+      clearInterval(this.sessionRefreshInterval);
+      this.sessionRefreshInterval = null;
+    }
     
     // Attempt to reconnect
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
@@ -289,28 +329,58 @@ class DebugInterface {
    * Handle welcome message from server
    */
   handleWelcome(data) {
-    // Store full tool definitions
-    this.availableTools = [];
-    this.toolDefinitions.clear();
+    // Check if we're in session mode
+    this.sessionMode = data.sessionMode || false;
     
-    if (data.availableTools && Array.isArray(data.availableTools)) {
-      data.availableTools.forEach(tool => {
-        this.availableTools.push(tool.name);
-        this.toolDefinitions.set(tool.name, tool);
-      });
+    if (this.sessionMode) {
+      // Show session selector
+      const sessionSelector = document.getElementById('sessionSelector');
+      if (sessionSelector) {
+        sessionSelector.style.display = 'flex';
+      }
+      
+      // Load initial sessions
+      if (data.sessions && data.sessions.length > 0) {
+        this.handleSessionsList({ sessions: data.sessions });
+      } else {
+        // Request session list
+        this.refreshSessions();
+      }
+      
+      // Set up periodic refresh for sessions
+      this.sessionRefreshInterval = setInterval(() => {
+        if (!this.currentSession) {
+          this.refreshSessions();
+        }
+      }, 2000); // Refresh every 2 seconds until a session is selected
+      
+      // Don't populate tools yet - wait for session selection
+      this.availableTools = [];
+      this.toolDefinitions.clear();
+    } else {
+      // Non-session mode - load tools immediately
+      this.availableTools = [];
+      this.toolDefinitions.clear();
+      
+      if (data.availableTools && Array.isArray(data.availableTools)) {
+        data.availableTools.forEach(tool => {
+          this.availableTools.push(tool.name);
+          this.toolDefinitions.set(tool.name, tool);
+        });
+      }
+      
+      // Update available tools display and populate dropdown
+      this.updateAvailableTools(this.availableTools);
+      this.populateToolDropdown();
+      
+      // Request initial status information
+      this.refreshStatus();
+      this.refreshContext();
     }
     
     // Update server info display
     document.getElementById('serverInfo').textContent = 
       `Server: ${data.serverId}\nVersion: ${data.version}\nCapabilities: ${data.capabilities.join(', ')}`;
-    
-    // Update available tools display and populate dropdown
-    this.updateAvailableTools(this.availableTools);
-    this.populateToolDropdown();
-    
-    // Request initial status information
-    this.refreshStatus();
-    this.refreshContext();
   }
 
   /**
@@ -400,8 +470,142 @@ class DebugInterface {
    * Handle error message
    */
   handleError(data) {
-    this.showToast(`Server error: ${data.message}`, 'error');
+    // Extract error message from various possible formats
+    const errorMessage = data.message || 
+                        data.error?.message || 
+                        data.error?.stack?.split('\n')[0] ||
+                        'Unknown error';
+    
+    this.showToast(`Server error: ${errorMessage}`, 'error');
     console.error('Server error:', data);
+  }
+
+  /**
+   * Handle sessions list
+   */
+  handleSessionsList(data) {
+    this.sessions = data.sessions || [];
+    const sessionSelect = document.getElementById('sessionSelect');
+    
+    if (!sessionSelect) return;
+    
+    // Clear existing options
+    sessionSelect.innerHTML = '<option value="">Select a session...</option>';
+    
+    // Add session options
+    this.sessions.forEach(session => {
+      const option = document.createElement('option');
+      option.value = session.id;
+      const created = new Date(session.created).toLocaleString();
+      option.textContent = `${session.id} (Created: ${created}, Requests: ${session.metadata?.requestCount || 0})`;
+      
+      if (session.id === this.currentSession) {
+        option.selected = true;
+      }
+      
+      sessionSelect.appendChild(option);
+    });
+    
+    // Update context count display
+    document.getElementById('contextCount').textContent = this.sessions.length > 0 ? 
+      this.sessions.map(s => s.handleCount || 0).reduce((a, b) => a + b, 0).toString() : '0';
+  }
+
+  /**
+   * Handle session selected
+   */
+  handleSessionSelected(data) {
+    console.log('🐛 handleSessionSelected called with data:', data);
+    this.currentSession = data.sessionId;
+    this.showToast(`Session selected: ${data.sessionId}`, 'success');
+    
+    
+    // Stop periodic refresh once a session is selected
+    if (this.sessionRefreshInterval) {
+      clearInterval(this.sessionRefreshInterval);
+      this.sessionRefreshInterval = null;
+    }
+    
+    // Clear tools and update with session-specific tools
+    this.availableTools = [];
+    this.toolDefinitions.clear();
+    
+    console.log('🐛 Checking for tools in data:', data.tools ? `Found ${data.tools.length} tools` : 'No tools found');
+    
+    if (data.tools && Array.isArray(data.tools)) {
+      data.tools.forEach(tool => {
+        this.availableTools.push(tool.name);
+        this.toolDefinitions.set(tool.name, tool);
+      });
+    }
+    
+    console.log('🐛 Available tools after processing:', this.availableTools);
+    console.log('🐛 Tool definitions map size:', this.toolDefinitions.size);
+    
+    // Update UI
+    this.updateAvailableTools(this.availableTools);
+    this.populateToolDropdown();
+    
+    // Update context count
+    document.getElementById('contextCount').textContent = data.contextCount || '0';
+    
+    // Refresh status for this session
+    this.refreshStatus();
+  }
+
+  /**
+   * Handle context data
+   */
+  handleContextData(data) {
+    // Update context list display
+    const contextList = document.getElementById('contextList');
+    if (!contextList) return;
+    
+    contextList.innerHTML = '';
+    
+    if (data.contexts && data.contexts.length > 0) {
+      data.contexts.forEach(context => {
+        const contextItem = document.createElement('div');
+        contextItem.className = 'context-item';
+        contextItem.innerHTML = `
+          <div class="context-name">${context.name}</div>
+          <div class="context-data">${JSON.stringify(context.data, null, 2)}</div>
+          ${context.description ? `<div class="context-description">${context.description}</div>` : ''}
+        `;
+        contextList.appendChild(contextItem);
+      });
+      
+      // Update count
+      document.getElementById('contextCount').textContent = data.contexts.length.toString();
+    } else {
+      contextList.innerHTML = '<div class="empty-state">No context data available</div>';
+      document.getElementById('contextCount').textContent = '0';
+    }
+  }
+
+  /**
+   * Select a session
+   */
+  selectSession(sessionId) {
+    const message = {
+      type: 'select-session',
+      id: `req_${++this.requestId}`,
+      data: { sessionId }
+    };
+    
+    this.sendMessage(message);
+  }
+
+  /**
+   * Refresh sessions list
+   */
+  refreshSessions() {
+    const message = {
+      type: 'list-sessions',
+      id: `req_${++this.requestId}`
+    };
+    
+    this.sendMessage(message);
   }
 
   /**
@@ -434,7 +638,16 @@ class DebugInterface {
    * Populate the tool dropdown with available tools
    */
   populateToolDropdown() {
+    console.log('🐛 populateToolDropdown called');
+    console.log('🐛 Available tools for dropdown:', this.availableTools);
+    
     const toolSelect = document.getElementById('toolName');
+    if (!toolSelect) {
+      console.error('🐛 ERROR: Could not find toolName select element!');
+      return;
+    }
+    
+    console.log('🐛 Current dropdown children count:', toolSelect.children.length);
     
     // Clear existing options except the first one
     while (toolSelect.children.length > 1) {

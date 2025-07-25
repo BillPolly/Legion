@@ -137,12 +137,48 @@ export class AiurServer {
     });
     await this.requestHandler.initialize();
     
+    // Register RequestHandler for WebDebugServer to access
+    this.resourceManager.register('requestHandler', this.requestHandler);
+    
     // Create WebSocketHandler
     this.wsHandler = new WebSocketHandler({
       sessionManager: this.sessionManager,
       requestHandler: this.requestHandler,
       logManager: this.logManager
     });
+    
+    // Register SessionManager for WebDebugServer
+    this.resourceManager.register('sessionManager', this.sessionManager);
+    
+    // Create and start WebDebugServer
+    try {
+      const { WebDebugServer } = await import('../debug/WebDebugServer.js');
+      this.webDebugServer = await WebDebugServer.create(this.resourceManager);
+      
+      // Start the debug server automatically
+      const debugServerInfo = await this.webDebugServer.start({
+        port: this.config.debugPort || 3001,
+        host: this.config.host || 'localhost',
+        openBrowser: false
+      });
+      
+      await this.logManager.logInfo('WebDebugServer started', {
+        source: 'AiurServer',
+        operation: 'debug-server-start',
+        url: debugServerInfo.url,
+        port: debugServerInfo.port
+      });
+      
+      // Register in resource manager for other components
+      this.resourceManager.register('webDebugServer', this.webDebugServer);
+    } catch (error) {
+      // Log but don't fail startup if debug server fails
+      await this.logManager.logError(error, {
+        source: 'AiurServer',
+        operation: 'debug-server-start-error',
+        severity: 'warning'
+      });
+    }
     
     await this.logManager.logInfo('Core systems initialized', {
       source: 'AiurServer',
@@ -314,12 +350,18 @@ export class AiurServer {
     // Stop accepting new connections
     this.server.close();
     
+    // Stop WebDebugServer
+    if (this.webDebugServer) {
+      await this.webDebugServer.stop();
+    }
+    
     // Clean up sessions
     await this.sessionManager.shutdown();
     
     // Clean up error broadcast service
     if (this.errorBroadcastService) {
-      this.errorBroadcastService.destroy();
+      // ErrorBroadcastService extends EventEmitter, so remove all listeners
+      this.errorBroadcastService.removeAllListeners();
     }
     
     // Shutdown logging

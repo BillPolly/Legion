@@ -87,7 +87,7 @@ export class RequestHandler {
   async _handleToolsList(session) {
     try {
       // Ensure debug tools are set up for this session
-      await this._ensureDebugTools(session);
+      await this.ensureDebugTools(session);
       
       // Get all tool definitions from the session's provider
       const tools = session.toolProvider.getAllToolDefinitions();
@@ -127,6 +127,9 @@ export class RequestHandler {
     });
     
     try {
+      // Ensure debug tools are set up for this session
+      await this.ensureDebugTools(session);
+      
       // Check if tool exists
       if (!session.toolProvider.toolExists(name)) {
         throw new Error(`Unknown tool: ${name}`);
@@ -210,12 +213,18 @@ export class RequestHandler {
 
   /**
    * Ensure debug tools are set up for the session
-   * @private
+   * Can be called externally by WebDebugServer
+   * @param {Object} session - The session object
    */
-  async _ensureDebugTools(session) {
+  async ensureDebugTools(session) {
+    console.log(`[RequestHandler.ensureDebugTools] Called for session ${session.id}`);
+    
     if (this.debugTools.has(session.id)) {
+      console.log(`[RequestHandler.ensureDebugTools] Debug tools already initialized for session ${session.id}`);
       return;
     }
+    
+    console.log(`[RequestHandler.ensureDebugTools] Initializing debug tools for session ${session.id}...`);
     
     try {
       // Check if webDebugServer exists in resource manager
@@ -230,6 +239,9 @@ export class RequestHandler {
           getDashboardData: () => ({ systemHealth: { score: 95 } })
         };
         this.resourceManager.register('monitoringSystem', monitoringSystem);
+        
+        // Register sessionManager in main resource manager for WebDebugServer
+        this.resourceManager.register('sessionManager', this.sessionManager);
         
         webDebugServer = await WebDebugServer.create(this.resourceManager);
         this.resourceManager.register('webDebugServer', webDebugServer);
