@@ -52,7 +52,12 @@ export function createWebSocketServer(httpServer, config, logger) {
         defaultMcpUrl: config.mcp.defaultUrl,
         config: {
           reconnectInterval: config.mcp.reconnectInterval,
-          maxReconnectAttempts: config.mcp.maxReconnectAttempts
+          maxReconnectAttempts: config.mcp.maxReconnectAttempts,
+          autoStarted: config.mcp.autoStarted || false
+        },
+        serverInfo: {
+          autoStartEnabled: config.mcp.autoStart !== false,
+          mcpServerRunning: config.mcp.autoStarted || false
         }
       }
     });
@@ -132,7 +137,11 @@ async function handleClientMessage(clientState, message, config, logger) {
 async function handleConnect(clientState, data, config, logger) {
   const url = data.url || config.mcp.defaultUrl;
   
-  logger.info('Connecting to MCP server:', url);
+  logger.info('Connecting to MCP server:', { 
+    url, 
+    userRequested: !!data.url,
+    autoStarted: config.mcp.autoStarted 
+  });
   
   // Close existing connection if any
   if (clientState.mcpConnection) {

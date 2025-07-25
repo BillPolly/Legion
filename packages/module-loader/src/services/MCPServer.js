@@ -124,6 +124,9 @@ export class MCPServer {
       // Initialize WebSocket handler
       await this.initializeWebSocketHandler();
 
+      // Setup WebSocket server
+      await this.setupWebSocketServer();
+
       this.logger.debug('MCPServer components initialized', {
         port: this.config.server.port,
         sessionMode: this.config.session.enableSessionMode,
@@ -204,7 +207,17 @@ export class MCPServer {
         }
       }
 
-      this.requestHandler = new RequestHandlerClass(this.config, this.resourceManager);
+      // Create request handler instance with proper parameters
+      if (RequestHandlerClass === SimpleRequestHandler) {
+        this.requestHandler = new RequestHandlerClass(this.config, this.resourceManager);
+      } else {
+        // For Aiur RequestHandler, provide expected parameters
+        this.requestHandler = new RequestHandlerClass({
+          sessionManager: this.sessionManager,
+          resourceManager: this.resourceManager,
+          logManager: this.resourceManager.has('logManager') ? this.resourceManager.get('logManager') : null
+        });
+      }
       
       if (typeof this.requestHandler.initialize === 'function') {
         await this.requestHandler.initialize();
@@ -238,13 +251,23 @@ export class MCPServer {
         }
       }
 
-      this.wsHandler = new WebSocketHandlerClass(
-        this.httpServer, 
-        this.sessionManager,
-        this.requestHandler,
-        this.config,
-        this.logger
-      );
+      // Create WebSocket handler instance with proper parameters
+      if (WebSocketHandlerClass === SimpleWebSocketHandler) {
+        this.wsHandler = new WebSocketHandlerClass(
+          this.httpServer, 
+          this.sessionManager,
+          this.requestHandler,
+          this.config,
+          this.logger
+        );
+      } else {
+        // For Aiur WebSocketHandler, provide expected parameters
+        this.wsHandler = new WebSocketHandlerClass({
+          sessionManager: this.sessionManager,
+          requestHandler: this.requestHandler,
+          logManager: this.resourceManager.has('logManager') ? this.resourceManager.get('logManager') : null
+        });
+      }
       
       if (typeof this.wsHandler.initialize === 'function') {
         await this.wsHandler.initialize();
@@ -309,6 +332,9 @@ export class MCPServer {
 
       // Close all WebSocket connections
       if (this.wss) {
+        this.wss.clients.forEach(ws => {
+          ws.close(1000, 'Server shutting down');
+        });
         this.wss.close();
       }
 
@@ -331,12 +357,25 @@ export class MCPServer {
    * @returns {Object} Server status
    */
   getStatus() {
+    let activeSessions = 0;
+    if (this.sessionManager) {
+      // Try different methods to get session count
+      if (typeof this.sessionManager.getActiveSessionCount === 'function') {
+        activeSessions = this.sessionManager.getActiveSessionCount();
+      } else if (typeof this.sessionManager.getActiveSessions === 'function') {
+        const sessions = this.sessionManager.getActiveSessions();
+        activeSessions = Array.isArray(sessions) ? sessions.length : 0;
+      } else if (this.sessionManager.sessions && this.sessionManager.sessions.size) {
+        activeSessions = this.sessionManager.sessions.size;
+      }
+    }
+    
     return {
       running: this.isRunning,
       port: this.config.server.port,
       host: this.config.server.host,
       sessionMode: this.config.session.enableSessionMode,
-      activeSessions: this.sessionManager ? this.sessionManager.getActiveSessionCount() : 0,
+      activeSessions,
       activeConnections: this.clients.size,
       address: this.httpServer?.address() || null
     };
@@ -388,6 +427,66 @@ export class MCPServer {
    */
   getHttpServer() {
     return this.httpServer;
+  }
+
+  /**
+   * Setup WebSocket server
+   */
+  async setupWebSocketServer() {
+    this.wss = new WebSocketServer({ 
+      server: this.httpServer,
+      path: this.config.websocket.path || '/ws'
+    });
+    
+    this.wss.on('connection', async (ws, req) => {
+      const clientId = this.generateClientId();
+      
+      this.logger.debug('New WebSocket connection', {
+        clientId,
+        remoteAddress: req.socket?.remoteAddress || 'unknown'
+      });
+      
+      // Use WebSocket handler to manage the connection
+      if (this.wsHandler && typeof this.wsHandler.handleConnection === 'function') {
+        this.wsHandler.handleConnection(ws, clientId);
+      } else {
+        // Fallback for simple WebSocket handler
+        this.handleSimpleWebSocketConnection(ws, clientId);
+      }
+    });
+    
+    this.wss.on('error', (error) => {
+      this.logger.error('WebSocket server error:', error);
+    });
+    
+    this.logger.debug(`WebSocket server listening on path: ${this.config.websocket.path || '/ws'}`);
+  }
+
+  /**
+   * Handle WebSocket connection for simple handler
+   * @param {WebSocket} ws - WebSocket connection
+   * @param {string} clientId - Client ID
+   */
+  handleSimpleWebSocketConnection(ws, clientId) {
+    // Track the connection
+    this.clients.set(ws, { clientId, created: Date.now() });
+    
+    ws.on('close', () => {
+      this.clients.delete(ws);
+      this.logger.debug('WebSocket connection closed', { clientId });
+    });
+    
+    ws.on('error', (error) => {
+      this.logger.error('WebSocket connection error:', { clientId, error: error.message });
+    });
+  }
+
+  /**
+   * Generate unique client ID
+   * @returns {string} Client ID
+   */
+  generateClientId() {
+    return `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 }
 
