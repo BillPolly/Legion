@@ -52,6 +52,10 @@ class ResourceManager {
       const { createStaticServer } = await import('../services/StaticServerFactory.js');
       this.registerFactory('StaticServer', createStaticServer);
       
+      // Register MCPServer factory
+      const { createMCPServer } = await import('../services/MCPServerFactory.js');
+      this.registerFactory('MCPServer', createMCPServer);
+      
       // Register additional built-in services here as needed
       // this.registerFactory('DatabaseService', createDatabaseService);
       // this.registerFactory('CacheService', createCacheService);
@@ -203,6 +207,15 @@ class ResourceManager {
     const scope = new ResourceManager({ parent: this });
     scope.initialized = true; // Inherit initialized state
     return scope;
+  }
+
+  /**
+   * Remove a resource by name
+   * @param {string} name - The name of the resource to remove
+   * @returns {boolean} True if the resource was removed, false if it didn't exist
+   */
+  unregister(name) {
+    return this.resources.delete(name);
   }
 
   /**
