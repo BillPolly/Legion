@@ -4,15 +4,11 @@
  * Handles tool listing, tool execution, and resource listing for each session
  */
 
-import { DebugTool } from '../debug/DebugTool.js';
-import { WebDebugServer } from '../debug/WebDebugServer.js';
-
 export class RequestHandler {
   constructor(config) {
     this.sessionManager = config.sessionManager;
     this.resourceManager = config.resourceManager;
     this.logManager = config.logManager;
-    this.debugTools = new Map(); // Cache debug tools per session
   }
 
   /**
@@ -213,72 +209,13 @@ export class RequestHandler {
 
   /**
    * Ensure debug tools are set up for the session
-   * Can be called externally by WebDebugServer
    * @param {Object} session - The session object
+   * @deprecated Debug tools have been moved to separate aiur-debug-ui package
    */
   async ensureDebugTools(session) {
-    console.log(`[RequestHandler.ensureDebugTools] Called for session ${session.id}`);
-    
-    if (this.debugTools.has(session.id)) {
-      console.log(`[RequestHandler.ensureDebugTools] Debug tools already initialized for session ${session.id}`);
-      return;
-    }
-    
-    console.log(`[RequestHandler.ensureDebugTools] Initializing debug tools for session ${session.id}...`);
-    
-    try {
-      // Check if webDebugServer exists in resource manager
-      let webDebugServer = null;
-      if (this.resourceManager.has('webDebugServer')) {
-        webDebugServer = this.resourceManager.get('webDebugServer');
-      } else {
-        // Create shared WebDebugServer if it doesn't exist
-        const monitoringSystem = {
-          on: () => {},
-          recordMetric: () => {},
-          getDashboardData: () => ({ systemHealth: { score: 95 } })
-        };
-        this.resourceManager.register('monitoringSystem', monitoringSystem);
-        
-        // Register sessionManager in main resource manager for WebDebugServer
-        this.resourceManager.register('sessionManager', this.sessionManager);
-        
-        webDebugServer = await WebDebugServer.create(this.resourceManager);
-        this.resourceManager.register('webDebugServer', webDebugServer);
-        
-        // Connect RequestHandler to WebDebugServer
-        webDebugServer.connectRequestHandler(this);
-      }
-      
-      // Register webDebugServer in session's resource manager
-      session.resourceManager.register('webDebugServer', webDebugServer);
-      
-      // Create debug tool for this session
-      const debugTool = await DebugTool.create(session.resourceManager);
-      
-      // Add debug tools to the session's tool provider
-      const debugToolDefinitions = debugTool.getToolDefinitions();
-      session.toolProvider._debugTools = debugToolDefinitions;
-      session.toolProvider.setDebugTool(debugTool);
-      
-      // Cache the debug tool
-      this.debugTools.set(session.id, debugTool);
-      
-      await this.logManager.logInfo('Debug tools initialized for session', {
-        source: 'RequestHandler',
-        operation: 'debug-tools-init',
-        sessionId: session.id
-      });
-      
-    } catch (error) {
-      await this.logManager.logError(error, {
-        source: 'RequestHandler',
-        operation: 'debug-tools-init-error',
-        sessionId: session.id,
-        severity: 'warning'
-      });
-      // Continue without debug tools
-    }
+    // Debug tools have been moved to a separate package
+    // This method is kept for compatibility but does nothing
+    return;
   }
 
   /**
@@ -347,9 +284,6 @@ export class RequestHandler {
    * Clean up resources
    */
   async cleanup() {
-    // Clean up any cached debug tools
-    this.debugTools.clear();
-    
     await this.logManager.logInfo('RequestHandler cleaned up', {
       source: 'RequestHandler',
       operation: 'cleanup'
