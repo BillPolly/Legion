@@ -1,20 +1,22 @@
 /**
  * Main entry point for the Aiur Debug UI server
+ * Now using ResourceManager pattern with StaticServer service
  */
 
-import { config as dotenvConfig } from 'dotenv';
+import { ResourceManager } from '@legion/module-loader';
+import { createWebSocketServer } from './server/websocket.js';
 import { loadConfig, validateConfig } from './utils/config.js';
 import { createLogger } from './utils/logger.js';
-import { createServer } from './server/index.js';
-
-// Load environment variables
-dotenvConfig();
 
 /**
- * Start the debug UI server
+ * Start the debug UI server using ResourceManager pattern
  */
 async function main() {
   try {
+    // Initialize ResourceManager
+    const resourceManager = new ResourceManager();
+    await resourceManager.initialize();
+    
     // Load configuration
     const config = loadConfig();
     
@@ -33,6 +35,9 @@ async function main() {
       file: config.logging.file
     });
     
+    // Register logger in ResourceManager
+    resourceManager.register('logger', logger);
+    
     logger.info('Starting Aiur Debug UI server...');
     logger.info('Configuration loaded', {
       port: config.server.port,
@@ -41,15 +46,61 @@ async function main() {
       theme: config.ui.theme
     });
     
-    // Create and start server
-    const server = await createServer(config, logger);
+    // Create StaticServer using ResourceManager
+    const server = await resourceManager.getOrCreate('StaticServer', {
+      server: {
+        port: config.server.port,
+        host: config.server.host
+      },
+      static: {
+        publicDir: './src/client',
+        caching: true
+      },
+      security: {
+        cors: config.cors,
+        csp: true,
+        headers: true
+      },
+      api: {
+        endpoints: {
+          '/api/config': (req, res) => {
+            const clientConfig = {
+              mcp: {
+                defaultUrl: config.mcp.defaultUrl,
+                reconnectInterval: config.mcp.reconnectInterval,
+                maxReconnectAttempts: config.mcp.maxReconnectAttempts
+              },
+              ui: {
+                theme: config.ui.theme,
+                autoConnect: config.ui.autoConnect
+              }
+            };
+            res.json(clientConfig);
+          }
+        }
+      },
+      websocket: {
+        enabled: true,
+        path: '/ws',
+        handler: (httpServer, wsConfig, wsLogger) => {
+          return createWebSocketServer(httpServer, config, wsLogger);
+        }
+      },
+      logging: {
+        level: config.logging.level,
+        requests: true
+      }
+    });
+    
+    // Start the server
+    await server.start();
     
     // Graceful shutdown handling
     const gracefulShutdown = async (signal) => {
       logger.info(`Received ${signal}, shutting down gracefully...`);
       
       try {
-        await server.close();
+        await server.stop();
         logger.info('Server shutdown complete');
         process.exit(0);
       } catch (error) {

@@ -1,9 +1,7 @@
 /**
- * Express server with WebSocket support for jsEnvoy chat
- * Serves static frontend files and handles WebSocket connections
+ * jsEnvoy Chat Server using ResourceManager StaticServer pattern
+ * Simplified server setup using centralized static server service
  */
-import express from 'express';
-import { createServer } from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { WebSocketHandler } from './websocket-handler.js';
@@ -14,8 +12,7 @@ const __dirname = path.dirname(__filename);
 
 class ChatServer {
     constructor() {
-        this.app = express();
-        this.server = createServer(this.app);
+        this.staticServer = null;
         this.resourceManager = null;
         this.moduleFactory = null;
         this.wsHandler = null;
@@ -23,71 +20,66 @@ class ChatServer {
     }
     
     /**
-     * Setup Express middleware
+     * Setup StaticServer with ResourceManager
      */
-    setupMiddleware() {
-        // Enable JSON parsing
-        this.app.use(express.json());
-        
-        // CORS for development
-        this.app.use((req, res, next) => {
-            res.header('Access-Control-Allow-Origin', '*');
-            res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-            next();
-        });
-        
-        // Request logging
-        this.app.use((req, res, next) => {
-            console.log(`${new Date().toISOString()} ${req.method} ${req.url}`);
-            next();
-        });
-        
-        // Serve static files from frontend package
+    async setupStaticServer() {
+        // Path to frontend files
         const frontendPath = path.join(__dirname, '..', '..', 'web-frontend');
-        this.app.use(express.static(frontendPath));
+        
+        // Create StaticServer using ResourceManager
+        this.staticServer = await this.resourceManager.getOrCreate('StaticServer', {
+            server: {
+                port: this.port,
+                host: 'localhost'
+            },
+            static: {
+                publicDir: frontendPath,
+                caching: process.env.NODE_ENV === 'production'
+            },
+            security: {
+                cors: {
+                    enabled: true,
+                    origin: '*',
+                    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+                    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept']
+                }
+            },
+            api: {
+                endpoints: {
+                    '/health': (req, res) => {
+                        const stats = this.wsHandler.getStats();
+                        res.json({
+                            status: 'healthy',
+                            timestamp: new Date().toISOString(),
+                            uptime: process.uptime(),
+                            websocket: stats
+                        });
+                    },
+                    '/api/stats': (req, res) => {
+                        const stats = this.wsHandler.getStats();
+                        res.json(stats);
+                    }
+                }
+            },
+            logging: {
+                level: 'info',
+                requests: true
+            }
+        });
         
         console.log(`📁 Serving static files from: ${frontendPath}`);
-    }
-    
-    /**
-     * Setup HTTP routes
-     */
-    setupRoutes() {
-        // Health check endpoint
-        this.app.get('/health', (req, res) => {
-            const stats = this.wsHandler.getStats();
-            res.json({
-                status: 'healthy',
-                timestamp: new Date().toISOString(),
-                uptime: process.uptime(),
-                websocket: stats
-            });
-        });
-        
-        // API endpoint for connection stats
-        this.app.get('/api/stats', (req, res) => {
-            const stats = this.wsHandler.getStats();
-            res.json(stats);
-        });
-        
-        // Catch-all route for SPA (serve index.html for any non-API route)
-        this.app.get('*', (req, res) => {
-            // Don't serve index.html for API routes or WebSocket
-            if (req.path.startsWith('/api') || req.path.startsWith('/ws')) {
-                res.status(404).json({ error: 'Not found' });
-                return;
-            }
-            
-            const frontendPath = path.join(__dirname, '..', '..', 'web-frontend', 'index.html');
-            res.sendFile(frontendPath);
-        });
     }
     
     /**
      * Setup WebSocket handling
      */
     setupWebSocket() {
+        // Create WebSocketHandler with StaticServer's HTTP server
+        this.wsHandler = new WebSocketHandler(
+            this.staticServer.getHttpServer(), 
+            this.resourceManager, 
+            this.moduleFactory
+        );
         this.wsHandler.initialize();
     }
     
@@ -95,15 +87,6 @@ class ChatServer {
      * Setup error handling
      */
     setupErrorHandling() {
-        // Express error handler
-        this.app.use((error, req, res, next) => {
-            console.error('Express error:', error);
-            res.status(500).json({
-                error: 'Internal server error',
-                message: process.env.NODE_ENV === 'development' ? error.message : undefined
-            });
-        });
-        
         // Process error handlers
         process.on('uncaughtException', (error) => {
             console.error('Uncaught Exception:', error);
@@ -149,9 +132,6 @@ class ChatServer {
         this.resourceManager.register('GITHUB_ORG', this.resourceManager.has('env.GITHUB_ORG') ? this.resourceManager.get('env.GITHUB_ORG') : '');
         this.resourceManager.register('GITHUB_USER', this.resourceManager.has('env.GITHUB_USER') ? this.resourceManager.get('env.GITHUB_USER') : '');
         
-        // Now create WebSocketHandler with resources
-        this.wsHandler = new WebSocketHandler(this.server, this.resourceManager, this.moduleFactory);
-        
         // Update port from env if available
         this.port = this.resourceManager.has('env.PORT') ? this.resourceManager.get('env.PORT') : 3000;
     }
@@ -160,48 +140,44 @@ class ChatServer {
      * Start the server
      */
     async start() {
-        return new Promise((resolve, reject) => {
-            this.server.listen(this.port, (error) => {
-                if (error) {
-                    reject(error);
-                    return;
-                }
-                
-                console.log('');
-                console.log('🚀 jsEnvoy Chat Server Started');
-                console.log('================================');
-                console.log(`📍 Server URL: http://localhost:${this.port}`);
-                console.log(`🔌 WebSocket: ws://localhost:${this.port}/ws`);
-                console.log(`📊 Health Check: http://localhost:${this.port}/health`);
-                console.log(`📈 Stats API: http://localhost:${this.port}/api/stats`);
-                console.log('================================');
-                console.log('💬 Ready for chat connections!');
-                console.log('');
-                
-                resolve();
-            });
-        });
+        // Start the StaticServer
+        await this.staticServer.start();
+        
+        console.log('');
+        console.log('🚀 jsEnvoy Chat Server Started');
+        console.log('================================');
+        console.log(`📍 Server URL: http://localhost:${this.port}`);
+        console.log(`🔌 WebSocket: ws://localhost:${this.port}/ws`);
+        console.log(`📊 Health Check: http://localhost:${this.port}/health`);
+        console.log(`📈 Stats API: http://localhost:${this.port}/api/stats`);
+        console.log('================================');
+        console.log('💬 Ready for chat connections!');
+        console.log('');
     }
     
     /**
      * Graceful shutdown
      */
-    gracefulShutdown(reason) {
+    async gracefulShutdown(reason) {
         console.log(`\\n🛑 Graceful shutdown initiated (${reason})`);
         
-        // Close WebSocket connections
-        this.wsHandler.destroy();
-        
-        // Close HTTP server
-        this.server.close((error) => {
-            if (error) {
-                console.error('Error during server shutdown:', error);
-                process.exit(1);
-            } else {
-                console.log('✅ Server shutdown complete');
-                process.exit(0);
+        try {
+            // Close WebSocket connections
+            if (this.wsHandler) {
+                this.wsHandler.destroy();
             }
-        });
+            
+            // Close StaticServer
+            if (this.staticServer) {
+                await this.staticServer.stop();
+            }
+            
+            console.log('✅ Server shutdown complete');
+            process.exit(0);
+        } catch (error) {
+            console.error('Error during server shutdown:', error);
+            process.exit(1);
+        }
         
         // Force exit after 10 seconds
         setTimeout(() => {
@@ -218,8 +194,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     (async () => {
         try {
             await server.initializeResources();
-            server.setupMiddleware();
-            server.setupRoutes();
+            await server.setupStaticServer();
             server.setupWebSocket();
             server.setupErrorHandling();
             await server.start();

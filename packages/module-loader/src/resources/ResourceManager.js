@@ -36,7 +36,30 @@ class ResourceManager {
       await this.loadEnvFile(this.options.envPath);
     }
     
+    // Register built-in service factories
+    await this.registerBuiltInFactories();
+    
     this.initialized = true;
+  }
+
+  /**
+   * Register built-in service factories
+   * @private
+   */
+  async registerBuiltInFactories() {
+    try {
+      // Register StaticServer factory
+      const { createStaticServer } = await import('../services/StaticServerFactory.js');
+      this.registerFactory('StaticServer', createStaticServer);
+      
+      // Register additional built-in services here as needed
+      // this.registerFactory('DatabaseService', createDatabaseService);
+      // this.registerFactory('CacheService', createCacheService);
+      
+    } catch (error) {
+      // Silently fail if service factories are not available
+      // This allows ResourceManager to work without optional services
+    }
   }
   
   /**
