@@ -1056,13 +1056,13 @@ class DebugUIApp {
     if (this.cliTerminal) return;
     
     try {
-      // Dynamically import the CLI Terminal module
-      const { CliTerminal } = await import('./cli-terminal/index.js');
+      // Dynamically import the new CLI Terminal v2 module
+      const { CliTerminalV2 } = await import('./cli-terminal-v2/index.js');
       
-      // Create CLI Terminal instance
-      this.cliTerminal = new CliTerminal('cliTerminalContainer', this);
+      // Create CLI Terminal v2 instance
+      this.cliTerminal = new CliTerminalV2('cliTerminalContainer', this);
       
-      console.log('CLI Terminal initialized');
+      console.log('CLI Terminal v2 initialized');
     } catch (error) {
       console.error('Failed to initialize CLI Terminal:', error);
       this.showToast('Failed to load CLI Terminal', 'error');
