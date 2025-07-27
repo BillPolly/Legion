@@ -43,7 +43,7 @@ export async function createServer(config, logger) {
         "default-src 'self'",
         "script-src 'self' 'unsafe-inline'",
         "style-src 'self' 'unsafe-inline'",
-        "connect-src 'self' ws: wss:",
+        "connect-src 'self' ws: wss: ws://localhost:* http://localhost:* ws://127.0.0.1:* http://127.0.0.1:*",
         "img-src 'self' data:",
         "font-src 'self'"
       ].join('; ')

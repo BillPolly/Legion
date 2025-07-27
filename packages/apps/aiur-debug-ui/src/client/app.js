@@ -52,6 +52,8 @@ class DebugUIApp {
       // Connect to debug UI server
       this.connectToProxy();
       
+      // CLI Terminal will be initialized after connection
+      
     } catch (error) {
       console.error('Failed to initialize:', error);
       this.showToast('Failed to initialize application', 'error');
@@ -89,14 +91,15 @@ class DebugUIApp {
    * Connect to debug UI WebSocket proxy
    */
   connectToProxy() {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    // Connect directly to MCP server using configured URL
+    const mcpUrl = this.config?.mcp?.defaultUrl || 'ws://localhost:8080/ws';
     
     this.updateConnectionStatus('proxy', 'connecting');
-    console.log('Connecting to debug UI proxy:', wsUrl);
+    this.updateConnectionStatus('mcp', 'connecting');
+    console.log('Connecting directly to MCP server:', mcpUrl);
     
     try {
-      this.ws = new WebSocket(wsUrl);
+      this.ws = new WebSocket(mcpUrl);
       
       this.ws.onopen = () => {
         this.onProxyConnected();
@@ -125,8 +128,16 @@ class DebugUIApp {
    */
   onProxyConnected() {
     this.isConnectedToProxy = true;
+    this.isConnectedToMcp = true;
     this.updateConnectionStatus('proxy', 'connected');
-    console.log('Connected to debug UI proxy');
+    this.updateConnectionStatus('mcp', 'connected');
+    console.log('Connected to Aiur WebSocket server');
+    
+    // Create a session immediately
+    this.sendMessage({
+      type: 'session_create',
+      requestId: `req_${this.getNextRequestId()}`
+    });
   }
 
   /**
@@ -134,8 +145,27 @@ class DebugUIApp {
    */
   onProxyMessage(event) {
     try {
+      console.log('Raw message from MCP server:', event.data);
       const message = JSON.parse(event.data);
+      console.log('Parsed message:', message);
       
+      // Handle Aiur custom protocol messages
+      if (message.type === 'welcome') {
+        this.handleAiurWelcome(message);
+        return;
+      }
+      
+      if (message.type === 'session_created') {
+        this.handleAiurSessionCreated(message);
+        return;
+      }
+      
+      if (message.type === 'mcp_response') {
+        this.handleAiurMcpResponse(message);
+        return;
+      }
+      
+      // Handle legacy messages if any
       switch (message.type) {
         case 'welcome':
           this.handleProxyWelcome(message.data);
@@ -158,7 +188,7 @@ class DebugUIApp {
           break;
           
         case 'error':
-          this.handleError(message.data);
+          this.handleError(message.data || message);
           break;
           
         case 'pong':
@@ -172,6 +202,152 @@ class DebugUIApp {
     } catch (error) {
       console.error('Failed to parse proxy message:', error);
     }
+  }
+
+  /**
+   * Handle Aiur welcome message
+   */
+  handleAiurWelcome(message) {
+    console.log('Received Aiur welcome:', message);
+    this.clientId = message.clientId;
+    
+    // Now create a session
+    this.sendMessage({
+      type: 'session_create',
+      requestId: `req_${this.getNextRequestId()}`
+    });
+  }
+  
+  /**
+   * Handle Aiur session created
+   */
+  handleAiurSessionCreated(message) {
+    console.log('Aiur session created:', message);
+    this.currentSession = message.sessionId;
+    
+    // Immediately request available tools
+    console.log('Requesting tools list...');
+    this.sendMessage({
+      type: 'mcp_request',
+      requestId: `req_${this.getNextRequestId()}`,
+      method: 'tools/list',
+      params: {}
+    });
+    
+    // Initialize CLI Terminal now that we're connected
+    this.initializeCLITerminal();
+  }
+  
+  /**
+   * Handle Aiur MCP response
+   */
+  handleAiurMcpResponse(message) {
+    console.log('Aiur MCP response:', message);
+    
+    if (message.error) {
+      this.showToast(`Error: ${message.error}`, 'error');
+      // Re-enable button on error
+      document.getElementById('executeBtn').disabled = false;
+      this.showToolExecutionStatus('Error');
+      return;
+    }
+    
+    // Handle tools/list response
+    if (message.result && message.result.tools) {
+      this.handleToolsList(message.result);
+    }
+    
+    // Handle pending requests
+    if (message.requestId && this.pendingRequests.has(message.requestId)) {
+      const request = this.pendingRequests.get(message.requestId);
+      this.pendingRequests.delete(message.requestId);
+      
+      // Check if this is a CLI request with promise resolvers
+      if (request.resolve) {
+        if (message.error) {
+          request.reject(new Error(message.error));
+        } else {
+          request.resolve(message.result);
+        }
+        return;
+      }
+      
+      // Update command result if this was a tool execution from the legacy interface
+      if (request.method === 'tools/call') {
+        this.displayCommandResult(message.result);
+        // Re-enable the execute button
+        document.getElementById('executeBtn').disabled = false;
+        this.showToolExecutionStatus('Ready');
+      }
+    }
+  }
+  
+  /**
+   * Handle MCP protocol messages (not used for Aiur)
+   */
+  handleMcpMessage(message) {
+    // Handle responses to our requests
+    if (message.id && this.pendingRequests.has(message.id)) {
+      const callback = this.pendingRequests.get(message.id);
+      this.pendingRequests.delete(message.id);
+      
+      if (message.error) {
+        console.error('MCP request error:', message.error);
+        this.showToast(`Error: ${message.error.message}`, 'error');
+      } else {
+        callback(message.result);
+      }
+      return;
+    }
+    
+    // Handle notifications
+    if (message.method && !message.id) {
+      switch (message.method) {
+        case 'session.created':
+          this.handleSessionCreated(message.params);
+          break;
+        case 'tools.list':
+          this.handleToolsList(message.params);
+          break;
+        case 'log.message':
+          this.handleLogMessage(message.params);
+          break;
+        default:
+          console.log('Unhandled MCP notification:', message);
+      }
+    }
+  }
+
+  /**
+   * Handle session created notification
+   */
+  handleSessionCreated(params) {
+    console.log('MCP session created:', params);
+    this.currentSession = params.sessionId;
+    
+    // Request available tools
+    this.sendRequest('tools.list', {}, (result) => {
+      this.handleToolsList(result);
+    });
+  }
+
+  /**
+   * Handle tools list
+   */
+  handleToolsList(result) {
+    const tools = result.tools || [];
+    this.availableTools = [];
+    this.toolDefinitions.clear();
+    
+    tools.forEach(tool => {
+      this.availableTools.push(tool.name);
+      this.toolDefinitions.set(tool.name, tool);
+    });
+    
+    console.log(`Loaded ${tools.length} tools`);
+    this.updateToolSelector();
+    this.updateToolCount(tools.length);
+    this.displayAvailableTools();
   }
 
   /**
@@ -321,41 +497,70 @@ class DebugUIApp {
     
     const requestId = `req_${++this.requestId}`;
     
-    // Track pending request
+    // Track the request
     this.pendingRequests.set(requestId, {
-      method,
-      params,
+      method: method,
+      params: params,
       timestamp: Date.now()
     });
     
-    // Send through proxy
-    this.sendToProxy({
-      type: 'mcp-request',
-      data: {
-        jsonrpc: '2.0',
-        method,
-        params,
-        id: requestId
-      }
+    // Send using Aiur protocol
+    this.sendMessage({
+      type: 'mcp_request',
+      requestId: requestId,
+      method: method,
+      params: params
     });
   }
 
   /**
-   * Send message to proxy
+   * Send message to MCP server
    */
-  sendToProxy(message) {
-    if (!this.isConnectedToProxy || !this.ws) {
-      console.error('Not connected to proxy');
+  sendMessage(message) {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      console.error('WebSocket not open, readyState:', this.ws?.readyState);
       return false;
     }
     
     try {
-      this.ws.send(JSON.stringify(message));
+      const messageStr = JSON.stringify(message);
+      console.log('Sending message:', messageStr);
+      this.ws.send(messageStr);
       return true;
     } catch (error) {
-      console.error('Failed to send to proxy:', error);
+      console.error('Failed to send message:', error);
       return false;
     }
+  }
+  
+  /**
+   * Send request to MCP server with callback
+   */
+  sendRequest(method, params, callback) {
+    const id = this.getNextRequestId();
+    this.pendingRequests.set(id, callback);
+    
+    this.sendMessage({
+      jsonrpc: '2.0',
+      method: method,
+      params: params,
+      id: id
+    });
+  }
+  
+  /**
+   * Get next request ID
+   */
+  getNextRequestId() {
+    return ++this.requestId;
+  }
+  
+  /**
+   * Legacy sendToProxy for compatibility
+   */
+  sendToProxy(message) {
+    // Convert legacy format to MCP format if needed
+    return this.sendMessage(message);
   }
 
   /**
@@ -391,6 +596,34 @@ class DebugUIApp {
   }
 
   /**
+   * Display command result
+   */
+  displayCommandResult(result) {
+    const resultDisplay = document.getElementById('commandResult');
+    if (resultDisplay) {
+      // Extract the actual tool result from the content wrapper
+      let displayResult = result;
+      
+      // If result has content array with text, extract it
+      if (result && result.content && Array.isArray(result.content)) {
+        const textContent = result.content.find(item => item.type === 'text');
+        if (textContent && textContent.text) {
+          try {
+            // Try to parse the text as JSON for better display
+            displayResult = JSON.parse(textContent.text);
+          } catch (e) {
+            // If not JSON, just use the text
+            displayResult = textContent.text;
+          }
+        }
+      }
+      
+      resultDisplay.textContent = JSON.stringify(displayResult, null, 2);
+      resultDisplay.className = 'result-display';
+    }
+  }
+
+  /**
    * Handle tool execution result
    */
   handleToolResult(response, request) {
@@ -422,8 +655,10 @@ class DebugUIApp {
    * Handle error messages
    */
   handleError(data) {
-    console.error('Proxy error:', data);
-    this.showToast(data.message || 'An error occurred', 'error');
+    console.error('MCP error:', data);
+    const errorMessage = typeof data === 'string' ? data : 
+                        data?.message || data?.error || 'An error occurred';
+    this.showToast(errorMessage, 'error');
   }
 
   /**
@@ -561,30 +796,59 @@ class DebugUIApp {
    * Update tool arguments help text
    */
   updateToolArguments(toolName) {
-    const helpElement = document.getElementById('toolArgsHelp');
-    if (!helpElement) return;
+    const argsTextarea = document.getElementById('toolArgs');
+    if (!argsTextarea) return;
+    
+    // Clear the textarea content when switching tools
+    argsTextarea.value = '';
     
     const toolDef = this.toolDefinitions.get(toolName);
-    if (!toolDef || !toolDef.inputSchema) {
-      helpElement.textContent = '';
+    if (!toolDef) {
+      argsTextarea.placeholder = '{"key": "value"}';
       return;
     }
     
-    // Generate help text from schema
-    const schema = toolDef.inputSchema;
-    let helpText = `Parameters for ${toolName}:\n`;
+    // Build placeholder text
+    let placeholder = {};
     
-    if (schema.properties) {
+    const schema = toolDef.inputSchema;
+    if (schema && schema.properties) {
       Object.entries(schema.properties).forEach(([prop, def]) => {
-        const required = schema.required?.includes(prop) ? ' (required)' : '';
-        helpText += `  ${prop}: ${def.type || 'any'}${required}\n`;
-        if (def.description) {
-          helpText += `    ${def.description}\n`;
+        const required = schema.required?.includes(prop);
+        let value = '';
+        
+        if (def.type === 'string') {
+          value = def.description || 'string';
+        } else if (def.type === 'number') {
+          value = def.default !== undefined ? def.default : 0;
+        } else if (def.type === 'boolean') {
+          value = def.default !== undefined ? def.default : false;
+        } else if (def.type === 'array') {
+          value = [];
+        } else if (def.type === 'object') {
+          value = {};
+        } else {
+          value = def.description || 'value';
+        }
+        
+        // Add comment for required fields
+        if (required) {
+          placeholder[prop] = value;
+        } else {
+          placeholder[`${prop} (optional)`] = value;
         }
       });
     }
     
-    helpElement.textContent = helpText;
+    // Set the placeholder
+    argsTextarea.placeholder = JSON.stringify(placeholder, null, 2);
+    
+    // Hide the help element
+    const helpElement = document.getElementById('toolArgsHelp');
+    if (helpElement) {
+      helpElement.textContent = '';
+      helpElement.style.display = 'none';
+    }
   }
 
   /**
@@ -781,6 +1045,27 @@ class DebugUIApp {
   refreshSystemStatus() {
     if (this.isConnectedToMcp) {
       this.sendMcpRequest('status', {});
+    }
+  }
+
+  /**
+   * Initialize CLI Terminal component
+   */
+  async initializeCLITerminal() {
+    // Only initialize once
+    if (this.cliTerminal) return;
+    
+    try {
+      // Dynamically import the CLI Terminal module
+      const { CliTerminal } = await import('./cli-terminal/index.js');
+      
+      // Create CLI Terminal instance
+      this.cliTerminal = new CliTerminal('cliTerminalContainer', this);
+      
+      console.log('CLI Terminal initialized');
+    } catch (error) {
+      console.error('Failed to initialize CLI Terminal:', error);
+      this.showToast('Failed to load CLI Terminal', 'error');
     }
   }
 }

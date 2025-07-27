@@ -230,14 +230,17 @@ textarea {
 
 .args-help {
   margin-top: 8px;
-  padding: 8px 12px;
+  padding: 12px;
   background: var(--bg-tertiary);
   border: 1px solid var(--border);
   border-radius: 4px;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
-  font-family: 'Monaco', 'Menlo', monospace;
   display: none;
+}
+
+.args-help.active {
+  display: block;
 }
 
 .args-help.visible {
@@ -273,6 +276,86 @@ textarea {
 .args-help .arg-description {
   color: var(--text-secondary);
   margin-left: 8px;
+}
+
+/* Tool help styles */
+.args-help .tool-description {
+  margin-bottom: 12px;
+  padding: 8px;
+  background: rgba(0, 122, 204, 0.1);
+  border-left: 3px solid var(--accent-primary);
+  border-radius: 2px;
+}
+
+.args-help .tool-parameters {
+  margin-bottom: 12px;
+}
+
+.args-help .tool-parameters ul {
+  list-style: none;
+  margin-top: 8px;
+  margin-left: 16px;
+}
+
+.args-help .tool-parameters li {
+  margin-bottom: 8px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.args-help code {
+  background: rgba(0, 122, 204, 0.2);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-weight: 600;
+}
+
+.args-help em {
+  color: var(--accent-primary);
+  font-style: normal;
+}
+
+.args-help .required {
+  color: var(--error);
+  font-weight: 600;
+}
+
+.args-help .optional {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.args-help .param-description {
+  display: block;
+  margin-top: 4px;
+  margin-left: 16px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.args-help .param-enum,
+.args-help .param-default {
+  display: block;
+  margin-top: 2px;
+  margin-left: 16px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.args-help .tool-example {
+  margin-top: 12px;
+}
+
+.args-help .tool-example pre {
+  margin-top: 4px;
+  padding: 8px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.8rem;
 }
 
 /* Buttons */

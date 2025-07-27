@@ -14,6 +14,12 @@ import { createWebSocketServer } from './server/websocket.js';
 import { loadConfig, validateConfig } from './utils/config.js';
 import { createLogger } from './utils/logger.js';
 import { WebSocket } from 'ws';
+import { execSync } from 'child_process';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Check if MCP server is running at given URL
@@ -149,6 +155,16 @@ async function main() {
       file: config.logging.file
     });
     
+    // Kill any process on the debug UI port before starting
+    const debugPort = config.server.port;
+    logger.info(`Clearing port ${debugPort} before starting...`);
+    try {
+      const killScriptPath = path.join(__dirname, '..', '..', '..', '..', 'apps', 'aiur-debug', 'scripts', 'kill-port.js');
+      execSync(`node ${killScriptPath} ${debugPort}`, { encoding: 'utf8' });
+    } catch (error) {
+      logger.warn(`Could not clear port ${debugPort}:`, error.message);
+    }
+    
     // Create LogManager for Aiur components
     const logManager = new LogManager({
       enableFileLogging: config.mcp.logging?.enableFile !== false,
@@ -173,6 +189,18 @@ async function main() {
     // Ensure MCP server is running (auto-start if needed)
     let mcpServerInfo = null;
     if (config.mcp.autoStart !== false) {
+      // Kill any process on the MCP port before starting
+      const mcpUrl = config.mcp.defaultUrl;
+      const portMatch = mcpUrl.match(/:(\d+)/);
+      const mcpPort = portMatch ? parseInt(portMatch[1]) : 8080;
+      logger.info(`Clearing MCP port ${mcpPort} before starting...`);
+      try {
+        const killScriptPath = path.join(__dirname, '..', '..', '..', '..', 'apps', 'aiur-debug', 'scripts', 'kill-port.js');
+        execSync(`node ${killScriptPath} ${mcpPort}`, { encoding: 'utf8' });
+      } catch (error) {
+        logger.warn(`Could not clear MCP port ${mcpPort}:`, error.message);
+      }
+      
       mcpServerInfo = await ensureMcpServerRunning(resourceManager, config, logger);
     } else {
       logger.info('MCP server auto-start disabled, will connect to external server');

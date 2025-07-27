@@ -122,15 +122,19 @@ class DebugInterface {
   /**
    * Connect to WebSocket server
    */
-  connect() {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
-    
-    this.updateConnectionStatus('connecting');
-    this.showToast('Connecting to debug server...', 'info');
-
+  async connect() {
+    // First get the MCP server URL from config
     try {
-      this.ws = new WebSocket(wsUrl);
+      const response = await fetch('/api/config');
+      const config = await response.json();
+      const mcpUrl = config.mcp?.defaultUrl || 'ws://localhost:8080/ws';
+      
+      console.log('Connecting to MCP server at:', mcpUrl);
+      
+      this.updateConnectionStatus('connecting');
+      this.showToast(`Connecting to MCP server at ${mcpUrl}...`, 'info');
+
+      this.ws = new WebSocket(mcpUrl);
       
       this.ws.onopen = () => {
         this.onConnected();
