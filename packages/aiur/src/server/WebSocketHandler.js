@@ -9,6 +9,7 @@ export class WebSocketHandler {
     this.sessionManager = config.sessionManager;
     this.requestHandler = config.requestHandler;
     this.logManager = config.logManager;
+    this.codec = config.codec; // Codec for message validation
     
     // Track client connections
     this.connections = new Map(); // ws -> connection info
@@ -61,14 +62,52 @@ export class WebSocketHandler {
     }
     
     try {
-      const message = JSON.parse(data.toString());
+      let message;
+      let validationResult = null;
+      
+      // First parse as JSON
+      const rawMessage = JSON.parse(data.toString());
+      
+      // Try to decode/validate with codec if available
+      if (this.codec && rawMessage.type) {
+        const decodeResult = this.codec.decode(data.toString());
+        if (decodeResult.success) {
+          message = decodeResult.decoded;
+          validationResult = { success: true, validated: true };
+          
+          await this.logManager.logInfo('Message validated with codec', {
+            source: 'WebSocketHandler',
+            operation: 'message-validated',
+            clientId: connection.clientId,
+            type: message.type,
+            method: message.method
+          });
+        } else {
+          // Codec validation failed, but still process the raw message
+          message = rawMessage;
+          validationResult = { success: false, error: decodeResult.error };
+          
+          await this.logManager.logWarning('Message failed codec validation, processing as raw JSON', {
+            source: 'WebSocketHandler',
+            operation: 'validation-fallback',
+            clientId: connection.clientId,
+            validationError: decodeResult.error,
+            type: rawMessage.type
+          });
+        }
+      } else {
+        // No codec or no message type, process as raw message
+        message = rawMessage;
+        validationResult = { success: true, validated: false };
+      }
       
       await this.logManager.logInfo('Received WebSocket message', {
         source: 'WebSocketHandler',
         operation: 'message-received',
         clientId: connection.clientId,
         type: message.type,
-        method: message.method
+        method: message.method,
+        codecValidated: validationResult.validated
       });
       
       switch (message.type) {
@@ -82,6 +121,10 @@ export class WebSocketHandler {
           
         case 'mcp_request':
           await this._handleMcpRequest(ws, message);
+          break;
+          
+        case 'schema_request':
+          await this._handleSchemaRequest(ws, message);
           break;
           
         case 'ping':
@@ -128,10 +171,12 @@ export class WebSocketHandler {
       this._sendMessage(ws, {
         type: 'session_created',
         requestId: message.requestId,
-        sessionId: sessionInfo.sessionId,
+        sessionId: sessionInfo.sessionId,  
+        success: true,
+        codecEnabled: this.codec ? true : false,
         created: sessionInfo.created,
         capabilities: sessionInfo.capabilities
-      });
+      }, 'session_create_response');
       
       await this.logManager.logInfo('Session created via WebSocket', {
         source: 'WebSocketHandler',
@@ -179,12 +224,14 @@ export class WebSocketHandler {
       
       // Send response
       this._sendMessage(ws, {
-        type: 'session_attached',
+        type: 'session_created', // Use consistent response type
         requestId: message.requestId,
         sessionId: sessionId,
+        success: true,
+        codecEnabled: this.codec ? true : false,
         created: session.created,
         lastAccessed: session.lastAccessed
-      });
+      }, 'session_create_response');
       
       await this.logManager.logInfo('Session attached via WebSocket', {
         source: 'WebSocketHandler',
@@ -237,7 +284,7 @@ export class WebSocketHandler {
         requestId: message.requestId,
         result: result.error ? undefined : result,
         error: result.error
-      });
+      }, 'mcp_response');
       
       // Clean up request tracking
       connection.requestQueue.delete(message.requestId);
@@ -264,6 +311,52 @@ export class WebSocketHandler {
       
       // Clean up request tracking
       connection.requestQueue.delete(message.requestId);
+    }
+  }
+
+  /**
+   * Handle schema request from client
+   * @private
+   */
+  async _handleSchemaRequest(ws, message) {
+    const connection = this.connections.get(ws);
+    
+    try {
+      if (!this.codec) {
+        this._sendError(ws, message.requestId, 'Codec system not available');
+        return;
+      }
+      
+      // Create schema definition message
+      const schemaDefinition = this.codec.createSchemaDefinitionMessage();
+      
+      // Send response using codec if possible
+      const response = {
+        type: 'schema_definition',
+        requestId: message.requestId,
+        schemas: schemaDefinition.schemas,
+        messageTypes: schemaDefinition.messageTypes
+      };
+      
+      this._sendMessage(ws, response, 'schema_definition');
+      
+      await this.logManager.logInfo('Schema definition sent to client', {
+        source: 'WebSocketHandler',
+        operation: 'schema-sent',
+        clientId: connection.clientId,
+        requestId: message.requestId,
+        schemaCount: Object.keys(schemaDefinition.schemas).length
+      });
+      
+    } catch (error) {
+      await this.logManager.logError(error, {
+        source: 'WebSocketHandler',
+        operation: 'schema-request-error',
+        clientId: connection.clientId,
+        requestId: message.requestId
+      });
+      
+      this._sendError(ws, message.requestId, `Schema request failed: ${error.message}`);
     }
   }
 
@@ -305,9 +398,65 @@ export class WebSocketHandler {
    * Send a message to a WebSocket client
    * @private
    */
-  _sendMessage(ws, message) {
-    if (ws.readyState === ws.OPEN) {
-      ws.send(JSON.stringify(message));
+  _sendMessage(ws, message, messageType = null) {
+    if (ws.readyState !== ws.OPEN) {
+      return;
+    }
+    
+    try {
+      let messageToSend;
+      
+      // Try to encode with codec if available and messageType is provided
+      if (this.codec && (messageType || message.type)) {
+        const type = messageType || message.type;
+        const encodeResult = this.codec.encode(type, message);
+        
+        if (encodeResult.success) {
+          messageToSend = encodeResult.encoded;
+          
+          // Log successful codec encoding
+          const connection = this.connections.get(ws);
+          if (connection) {
+            this.logManager.logInfo('Message encoded with codec', {
+              source: 'WebSocketHandler',
+              operation: 'message-encoded',
+              clientId: connection.clientId,
+              messageType: type,
+              codecEnabled: true
+            });
+          }
+        } else {
+          // Codec encoding failed, fall back to JSON
+          messageToSend = JSON.stringify(message);
+          
+          const connection = this.connections.get(ws);
+          if (connection) {
+            this.logManager.logWarning('Codec encoding failed, using JSON fallback', {
+              source: 'WebSocketHandler',
+              operation: 'encoding-fallback',
+              clientId: connection.clientId,
+              messageType: type,
+              codecError: encodeResult.error
+            });
+          }
+        }
+      } else {
+        // No codec or no message type, use JSON
+        messageToSend = JSON.stringify(message);
+      }
+      
+      ws.send(messageToSend);
+      
+    } catch (error) {
+      const connection = this.connections.get(ws);
+      if (connection) {
+        this.logManager.logError(error, {
+          source: 'WebSocketHandler',
+          operation: 'send-message-error',
+          clientId: connection.clientId,
+          messageType: messageType || message.type
+        });
+      }
     }
   }
 
@@ -323,7 +472,7 @@ export class WebSocketHandler {
         code: -32000,
         message: errorMessage
       }
-    });
+    }, 'error_message');
   }
 
   /**

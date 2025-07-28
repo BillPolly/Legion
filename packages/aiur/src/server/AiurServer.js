@@ -14,6 +14,8 @@ import { WebSocketHandler } from './WebSocketHandler.js';
 import { ResourceManager } from '@legion/module-loader';
 import { LogManager } from '../core/LogManager.js';
 import { ErrorBroadcastService } from '../core/ErrorBroadcastService.js';
+import { Codec } from '../../../shared/codec/src/index.js';
+import { createAiurSchemaRegistry, AIUR_SCHEMAS } from '../schemas/aiur-protocol.js';
 
 export class AiurServer {
   constructor(config = {}) {
@@ -37,6 +39,10 @@ export class AiurServer {
     this.resourceManager = null;
     this.logManager = null;
     this.errorBroadcastService = null;
+    
+    // Codec system
+    this.codec = null;
+    this.schemaRegistry = null;
     
     // Server state
     this.isRunning = false;
@@ -137,6 +143,9 @@ export class AiurServer {
     });
     await this.requestHandler.initialize();
     
+    // Initialize codec system
+    await this._initializeCodec();
+    
     // Register RequestHandler for WebDebugServer to access
     this.resourceManager.register('requestHandler', this.requestHandler);
     
@@ -144,7 +153,8 @@ export class AiurServer {
     this.wsHandler = new WebSocketHandler({
       sessionManager: this.sessionManager,
       requestHandler: this.requestHandler,
-      logManager: this.logManager
+      logManager: this.logManager,
+      codec: this.codec
     });
     
     // Register SessionManager for WebDebugServer
@@ -184,6 +194,45 @@ export class AiurServer {
       source: 'AiurServer',
       operation: 'systems-init'
     });
+  }
+
+  /**
+   * Initialize codec system for message validation
+   * @private
+   */
+  async _initializeCodec() {
+    try {
+      // Create schema registry and register Aiur schemas
+      this.schemaRegistry = await createAiurSchemaRegistry();
+      
+      // Create codec instance
+      this.codec = new Codec({
+        strictValidation: true,
+        injectMetadata: true
+      });
+      
+      // Register all Aiur protocol schemas
+      for (const schema of AIUR_SCHEMAS) {
+        this.codec.registerSchema(schema);
+      }
+      
+      // Register codec in resource manager
+      this.resourceManager.register('codec', this.codec);
+      this.resourceManager.register('schemaRegistry', this.schemaRegistry);
+      
+      await this.logManager.logInfo('Codec system initialized', {
+        source: 'AiurServer',
+        operation: 'codec-init',
+        registeredSchemas: this.codec.getMessageTypes()
+      });
+      
+    } catch (error) {
+      await this.logManager.logError(error, {
+        source: 'AiurServer',
+        operation: 'codec-init-error'
+      });
+      throw error;
+    }
   }
 
   /**
@@ -277,13 +326,90 @@ export class AiurServer {
       await this._handleDisconnection(ws, clientId);
     });
     
-    // Send welcome message
-    ws.send(JSON.stringify({
+    // Send welcome message with codec information
+    const welcomeData = {
       type: 'welcome',
       clientId,
       serverVersion: '1.0.0',
-      capabilities: ['sessions', 'tools', 'context', 'handles']
-    }));
+      capabilities: ['sessions', 'tools', 'context', 'handles'],
+      codecSupported: true,
+      schemaVersion: '1.0.0',
+      supportedSchemas: this.codec.getMessageTypes()
+    };
+    
+    // Use codec to encode welcome message if available
+    const welcomeResult = this.codec.encode('aiur_welcome', welcomeData);
+    if (welcomeResult.success) {
+      ws.send(welcomeResult.encoded);
+      
+      await this.logManager.logInfo('Welcome message sent with codec', {
+        source: 'AiurServer',
+        operation: 'welcome-sent',
+        clientId,
+        codecEnabled: true,
+        supportedSchemas: welcomeData.supportedSchemas.length
+      });
+    } else {
+      // Fallback to plain JSON if codec fails
+      ws.send(JSON.stringify(welcomeData));
+      
+      await this.logManager.logWarning('Welcome message sent without codec validation', {
+        source: 'AiurServer',
+        operation: 'welcome-sent-fallback',
+        clientId,
+        codecError: welcomeResult.error
+      });
+    }
+  }
+
+  /**
+   * Handle schema request from client
+   * @param {WebSocket} ws - WebSocket connection
+   * @param {object} message - Schema request message
+   * @private
+   */
+  async _handleSchemaRequest(ws, message) {
+    try {
+      // Create schema definition message
+      const schemaDefinition = this.codec.createSchemaDefinitionMessage();
+      
+      // Encode the response
+      const response = this.codec.encode('schema_definition', schemaDefinition);
+      
+      if (response.success) {
+        ws.send(response.encoded);
+        
+        await this.logManager.logInfo('Schema definition sent', {
+          source: 'AiurServer',
+          operation: 'schema-sent',
+          requestId: message.requestId,
+          schemaCount: Object.keys(schemaDefinition.schemas).length
+        });
+      } else {
+        // Send error response
+        const errorMessage = this.codec.createErrorMessage(
+          'SCHEMA_ERROR',
+          'Failed to create schema definition',
+          { originalError: response.error }
+        );
+        
+        const errorEncoded = JSON.stringify(errorMessage);
+        ws.send(errorEncoded);
+        
+        await this.logManager.logError('Failed to send schema definition', {
+          source: 'AiurServer',
+          operation: 'schema-send-error',
+          requestId: message.requestId,
+          error: response.error
+        });
+      }
+    } catch (error) {
+      await this.logManager.logError(error, {
+        source: 'AiurServer',
+        operation: 'schema-request-error',
+        requestId: message.requestId
+      });
+    }
   }
 
   /**

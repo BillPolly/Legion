@@ -30,6 +30,7 @@
     "test:ui-workflow": "NODE_OPTIONS='--experimental-vm-modules' mocha __tests__/integration/UIModuleWorkflow.test.js --timeout 60000"
   },
   "dependencies": {
+    "@legion/codec": "*",
     "@legion/llm": "*",
     "@legion/llm-planner": "*",
     "@legion/module-loader": "*",

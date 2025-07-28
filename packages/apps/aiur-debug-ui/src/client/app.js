@@ -5,6 +5,7 @@
  */
 
 import { ToolManager } from './ToolManager.js';
+import { ClientCodec } from './codec/ClientCodec.js';
 
 class DebugUIApp {
   constructor() {
@@ -27,6 +28,15 @@ class DebugUIApp {
     
     // Tool management
     this.toolManager = null; // Will be initialized after connection
+    
+    // Codec system
+    this.clientCodec = new ClientCodec();
+    this.codecSupported = false;
+    this.codecReady = false;
+    this.sessionCodecEnabled = false;
+    this.serverSchemas = [];
+    this.receivedSchemas = {};
+    this.messageTypes = [];
     
     // UI state
     this.eventsPaused = false;
@@ -51,6 +61,9 @@ class DebugUIApp {
       
       // Setup UI event listeners
       this.setupEventListeners();
+      
+      // Initialize codec status display
+      this.updateCodecStatus();
       
       // Connect to debug UI server
       this.connectToProxy();
@@ -149,8 +162,51 @@ class DebugUIApp {
   onProxyMessage(event) {
     try {
       console.log('Raw message from MCP server:', event.data);
-      const message = JSON.parse(event.data);
+      
+      let message;
+      let validationResult = null;
+      
+      // Try to decode with codec if available and ready
+      if (this.codecReady && this.clientCodec.isReady()) {
+        const decodeResult = this.clientCodec.decode(event.data);
+        
+        if (decodeResult.success) {
+          message = decodeResult.decoded;
+          validationResult = {
+            success: decodeResult.validated,
+            error: decodeResult.validationError,
+            validated: decodeResult.validated
+          };
+          
+          if (decodeResult.validated) {
+            console.log('[App] Message validated with codec:', message.type);
+          } else if (decodeResult.validationError) {
+            console.warn('[App] Message validation failed:', decodeResult.validationError);
+          }
+        } else {
+          // Decode failed, fall back to JSON
+          try {
+            message = JSON.parse(event.data);
+            validationResult = { success: false, error: decodeResult.error, validated: false };
+            console.warn('[App] Codec decode failed, using JSON fallback:', decodeResult.error);
+          } catch (jsonError) {
+            console.error('[App] Both codec decode and JSON parsing failed:', jsonError);
+            this.handleCodecError(jsonError, 'message parsing');
+            return;
+          }
+        }
+      } else {
+        // No codec available, use JSON parsing
+        message = JSON.parse(event.data);
+        validationResult = { success: true, validated: false };
+      }
+      
       console.log('Parsed message:', message);
+      if (validationResult.validated) {
+        console.log('✓ Message validated with codec');
+      } else if (validationResult.error) {
+        console.log('⚠ Message validation failed:', validationResult.error);
+      }
       
       // Handle Aiur custom protocol messages
       if (message.type === 'welcome') {
@@ -165,6 +221,11 @@ class DebugUIApp {
       
       if (message.type === 'mcp_response') {
         this.handleAiurMcpResponse(message);
+        return;
+      }
+      
+      if (message.type === 'schema_definition') {
+        this.handleSchemaDefinition(message);
         return;
       }
       
@@ -214,11 +275,62 @@ class DebugUIApp {
     console.log('Received Aiur welcome:', message);
     this.clientId = message.clientId;
     
-    // Now create a session
+    // Check for codec support
+    this.codecSupported = message.codecSupported || false;
+    this.serverSchemas = message.supportedSchemas || [];
+    
+    console.log('Server codec support:', this.codecSupported);
+    console.log('Server supported schemas:', this.serverSchemas);
+    
+    // Request schema definitions if codec is supported
+    if (this.codecSupported && this.serverSchemas.length > 0) {
+      console.log('Requesting schema definitions from server...');
+      this.sendMessage({
+        type: 'schema_request',
+        requestId: `req_${this.getNextRequestId()}`,
+        requestedSchemas: this.serverSchemas
+      });
+    }
+    
+    // Create a session
     this.sendMessage({
       type: 'session_create',
       requestId: `req_${this.getNextRequestId()}`
     });
+  }
+  
+  /**
+   * Handle schema definition response
+   */
+  handleSchemaDefinition(message) {
+    console.log('Received schema definition:', message);
+    
+    // Store schemas for codec initialization
+    this.receivedSchemas = message.schemas || {};
+    this.messageTypes = message.messageTypes || [];
+    
+    console.log('Received schemas:', Object.keys(this.receivedSchemas).length);
+    console.log('Message types:', this.messageTypes);
+    
+    // Initialize client-side codec with received schemas
+    try {
+      this.clientCodec.registerSchemas(this.receivedSchemas, this.messageTypes);
+      this.codecReady = this.clientCodec.isReady();
+      
+      console.log('[App] Client codec initialized successfully');
+      console.log('[App] Codec ready:', this.codecReady);
+      console.log('[App] Supported message types:', this.clientCodec.getMessageTypes());
+      
+      this.showToast(`Codec initialized with ${Object.keys(this.receivedSchemas).length} schemas`, 'success');
+      
+    } catch (error) {
+      console.error('[App] Failed to initialize client codec:', error);
+      this.codecReady = false;
+      this.handleCodecError(error, 'schema initialization');
+    }
+    
+    // Update codec status display
+    this.updateCodecStatus();
   }
   
   /**
@@ -228,11 +340,18 @@ class DebugUIApp {
     console.log('Aiur session created:', message);
     this.currentSession = message.sessionId;
     
+    // Check if session indicates codec is enabled
+    this.sessionCodecEnabled = message.codecEnabled || false;
+    console.log('Session codec enabled:', this.sessionCodecEnabled);
+    
     // Initialize ToolManager with clean MCP interface
     await this.initializeToolManager();
     
     // Initialize CLI Terminal after tools are ready
     await this.initializeCLITerminal();
+    
+    // Final codec status update
+    this.updateCodecStatus();
   }
   
   /**
@@ -584,10 +703,44 @@ class DebugUIApp {
     }
     
     try {
-      const messageStr = JSON.stringify(message);
-      console.log('Sending message:', messageStr);
-      this.ws.send(messageStr);
+      let messageToSend;
+      
+      // Try to encode with codec if available and ready
+      if (this.codecReady && this.clientCodec.isReady() && message.type) {
+        const encodeResult = this.clientCodec.encode(message.type, message);
+        
+        if (encodeResult.success) {
+          messageToSend = encodeResult.encoded;
+          console.log('[App] Message encoded with codec:', message.type);
+          
+          if (encodeResult.validated) {
+            console.log('✓ Message validated before sending');
+          }
+        } else {
+          // Codec encoding failed, fall back to JSON
+          try {
+            messageToSend = JSON.stringify(message);
+            console.warn('[App] Codec encoding failed, using JSON fallback:', encodeResult.error);
+            this.handleCodecError(new Error(encodeResult.error), 'message encoding');
+          } catch (jsonError) {
+            console.error('[App] Both codec encoding and JSON stringify failed:', jsonError);
+            this.handleCodecError(jsonError, 'message serialization');
+            return false;
+          }
+        }
+      } else {
+        // No codec available or no message type, use JSON
+        messageToSend = JSON.stringify(message);
+        
+        if (this.codecReady && message.type) {
+          console.log('[App] Codec ready but message type not supported, using JSON');
+        }
+      }
+      
+      console.log('Sending message:', messageToSend);
+      this.ws.send(messageToSend);
       return true;
+      
     } catch (error) {
       console.error('Failed to send message:', error);
       return false;
@@ -1107,6 +1260,68 @@ class DebugUIApp {
     if (this.isConnectedToMcp) {
       this.sendMcpRequest('status', {});
     }
+  }
+
+  /**
+   * Update codec status display
+   */
+  updateCodecStatus() {
+    const statusElement = document.getElementById('codecStatus');
+    if (!statusElement) return;
+    
+    let status = 'Not Connected';
+    let className = 'status disconnected';
+    
+    if (this.codecReady && this.sessionCodecEnabled) {
+      status = 'Active & Validated';
+      className = 'status connected';
+    } else if (this.codecSupported && this.codecReady) {
+      status = 'Ready (Session Pending)';
+      className = 'status connecting';
+    } else if (this.codecSupported) {
+      status = 'Supported (Loading...)';
+      className = 'status connecting';
+    } else {
+      status = 'Fallback Mode (JSON)';
+      className = 'status disconnected';
+    }
+    
+    statusElement.textContent = `CODEC: ${status}`;
+    statusElement.className = className;
+    
+    // Update tooltip with detailed information
+    const tooltip = `
+Codec Support: ${this.codecSupported ? 'Yes' : 'No'}
+Codec Ready: ${this.codecReady ? 'Yes' : 'No'}
+Session Codec: ${this.sessionCodecEnabled ? 'Enabled' : 'Disabled'}
+Schemas Loaded: ${Object.keys(this.receivedSchemas).length}
+Message Types: ${this.messageTypes.length}
+    `.trim();
+    
+    statusElement.title = tooltip;
+  }
+
+  /**
+   * Enhanced error handling with codec awareness
+   */
+  handleCodecError(error, context = '') {
+    console.error(`[App] Codec error in ${context}:`, error);
+    
+    // Provide user-friendly error messages
+    let userMessage = 'Communication error occurred';
+    
+    if (error.message.includes('validation')) {
+      userMessage = 'Message validation failed - using fallback mode';
+    } else if (error.message.includes('schema')) {
+      userMessage = 'Schema error - some features may not work properly';
+    } else if (error.message.includes('encoding')) {
+      userMessage = 'Message encoding failed - falling back to JSON';
+    }
+    
+    this.showToast(userMessage, 'warning');
+    
+    // Update codec status to reflect error state
+    this.updateCodecStatus();
   }
 
   /**
