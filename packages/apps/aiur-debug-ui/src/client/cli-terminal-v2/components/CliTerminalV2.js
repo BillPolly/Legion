@@ -849,6 +849,18 @@ export class CliTerminalV2 {
         }
       }
       
+      // Check if this was a successful module_load command
+      if (toolName === 'module_load' && result && !result.error) {
+        console.log('[CLI] module_load successful, refreshing tools...');
+        try {
+          await this.refreshTools();
+          this.addOutput('✓ Tools refreshed after module loading', 'info');
+        } catch (error) {
+          console.error('[CLI] Failed to refresh tools after module_load:', error);
+          this.addOutput('⚠ Warning: Failed to refresh tools list', 'error');
+        }
+      }
+      
       return result;
     } catch (error) {
       throw error;
