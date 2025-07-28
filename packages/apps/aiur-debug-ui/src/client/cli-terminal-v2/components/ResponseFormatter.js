@@ -181,21 +181,24 @@ export class ResponseFormatter {
 
     // Module tools formatter
     this.formatters.set('module_tools', (result) => {
+      // Handle wrapped response format (result.data.*)
+      const data = result.data || result;
+      
       const lines = [];
-      lines.push(`═══ Module: ${result.module} ═══`);
+      lines.push(`═══ Module: ${data.module} ═══`);
       lines.push('');
       
-      lines.push(`Status: ${result.status}`);
-      lines.push(`Tool Count: ${result.toolCount}`);
+      lines.push(`Status: ${data.status}`);
+      lines.push(`Tool Count: ${data.toolCount}`);
       lines.push('');
       
-      if (result.tools && result.tools.length > 0) {
+      if (data.tools && data.tools.length > 0) {
         lines.push('─── Available Tools ───');
         
         // Check if it's detailed format
-        if (Array.isArray(result.tools) && typeof result.tools[0] === 'object' && result.tools[0].description) {
+        if (Array.isArray(data.tools) && typeof data.tools[0] === 'object' && data.tools[0].description) {
           // Detailed format
-          result.tools.forEach(tool => {
+          data.tools.forEach(tool => {
             lines.push(`• ${tool.name}: ${tool.description}`);
             if (tool.type && tool.type !== 'function') {
               lines.push(`  Type: ${tool.type}`);
@@ -213,8 +216,8 @@ export class ResponseFormatter {
           const columns = 3;
           const columnWidth = 25;
           
-          for (let i = 0; i < result.tools.length; i += columns) {
-            const row = result.tools.slice(i, i + columns)
+          for (let i = 0; i < data.tools.length; i += columns) {
+            const row = data.tools.slice(i, i + columns)
               .map(name => (typeof name === 'string' ? name : name.name || 'unknown').padEnd(columnWidth))
               .join('');
             lines.push(`  ${row}`);
@@ -225,9 +228,9 @@ export class ResponseFormatter {
       }
       
       // Add note if present
-      if (result.note) {
+      if (data.note) {
         lines.push('');
-        lines.push(`Note: ${result.note}`);
+        lines.push(`Note: ${data.note}`);
       }
       
       return lines.join('\n');

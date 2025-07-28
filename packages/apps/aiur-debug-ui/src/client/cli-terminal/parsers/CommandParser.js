@@ -150,6 +150,22 @@ export class CommandParser {
       },
       'plan_execute': {
         positional: ['planHandle']
+      },
+      'module_tools': {
+        positional: ['module', 'format'],
+        aliases: { f: 'format' }
+      },
+      'module_load': {
+        positional: ['module']
+      },
+      'module_unload': {
+        positional: ['module']
+      },
+      'module_info': {
+        positional: ['module']
+      },
+      'module_list': {
+        positional: ['filter', 'format']
       }
     };
     

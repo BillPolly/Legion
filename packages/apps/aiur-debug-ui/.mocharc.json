@@ -1,0 +1,8 @@
+{
+  "require": "dotenv/config",
+  "timeout": 30000,
+  "slow": 5000,
+  "reporter": "spec",
+  "recursive": true,
+  "exit": true
+}

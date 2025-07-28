@@ -4,6 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
+<<<<<<< HEAD
 Legion is a modular framework for building AI agent tools with consistent interfaces. It's organized as a monorepo using npm workspaces with the following main packages:
 
 ### Core Packages
@@ -33,6 +34,37 @@ Legion is a modular framework for building AI agent tools with consistent interf
 18. **@legion/web-backend** - WebSocket backend for agent chat interface
 19. **@legion/web-frontend** - Frontend UI for agent interaction
 20. **@legion/aiur-debug-ui** - Debug interface for Aiur MCP server
+=======
+Legion is a modular framework for building AI agent tools with consistent interfaces. It's organized as a monorepo using npm workspaces with 15+ packages organized in three main categories:
+
+### Core Infrastructure
+1. **@legion/module-loader** - Core infrastructure with base classes, dependency injection, and module management
+2. **@legion/cli** - Command-line interface for executing tools with REPL and autocomplete
+3. **@legion/resource-manager** - Advanced dependency injection and resource lifecycle management
+
+### AI & LLM Packages
+4. **@legion/llm** - LLM client with multiple providers (OpenAI, Anthropic, DeepSeek, OpenRouter)
+5. **@legion/agent** - AI agent implementation with retry logic and tool execution
+6. **@legion/llm-planner** - AI-powered planning system for complex multi-step workflows
+
+### Tool Collections
+7. **@legion/general-tools** - Collection of AI agent tools (file operations, web tools, GitHub integration, etc.)
+8. **@legion/railway** - Railway deployment and management tools
+9. **@legion/playwright** - Browser automation and web testing tools
+10. **@legion/node-runner** - Node.js process management and execution tools
+11. **@legion/log-manager** - Advanced logging, monitoring, and log analysis tools
+12. **@legion/conan-the-deployer** - Comprehensive deployment management system
+
+### Specialized Systems
+13. **@legion/aiur** - Advanced MCP server with persistent context management and planning
+14. **@legion/plan-executor** - Execution engine for complex plans with dependency management
+15. **@legion/code-gen** - Code generation packages including Jester (test generator) and CodeAgent
+
+### Applications
+16. **@legion/web-frontend** - React-based web interface for Legion interactions
+17. **@legion/web-backend** - Express server providing API and WebSocket support
+18. **@legion/aiur-debug-ui** - Debug interface for Aiur MCP server
+>>>>>>> 53ac2d1 (modules)
 
 ## Essential Commands
 
@@ -45,6 +77,7 @@ npm test
 # Run tests for specific packages
 npm run test:module-loader
 npm run test:cli
+<<<<<<< HEAD
 npm run test:general-tools  # Note: renamed from test:tools
 npm run test:llm
 npm run test:agent
@@ -54,6 +87,17 @@ npm run test:playwright
 npm run test:node-runner
 npm run test:log-manager
 npm run test:resource-manager
+=======
+npm run test:tools              # @legion/general-tools
+npm run test:llm
+npm run test:agent
+npm run test:resource-manager
+npm run test:playwright
+npm run test:node-runner
+npm run test:log-manager
+npm run test:railway
+npm run test:aiur
+>>>>>>> 53ac2d1 (modules)
 
 # Run tests in watch mode
 npm run test:watch
@@ -92,6 +136,9 @@ npm test -- --testNamePattern="should evaluate"
 ```bash
 # Run the CLI (from root)
 node packages/cli/src/index.js
+npm run cli                     # Interactive mode
+npm run cli:help               # Show help
+npm run cli:list               # List available tools
 
 # Quick alias for interactive mode
 npm run cli
@@ -101,6 +148,7 @@ node packages/cli/src/index.js -t <toolName> -p '{"param": "value"}'
 
 # Interactive REPL mode
 node packages/cli/src/index.js -i
+<<<<<<< HEAD
 
 # List available tools
 npm run cli:list
@@ -118,6 +166,32 @@ npm run aiur:start
 
 # Start the web chat interface
 npm run chat
+=======
+npm run cli                     # Same as above
+```
+
+### Web Applications
+
+```bash
+# Start web backend with frontend served at http://localhost:3000
+npm run dev:backend
+npm run chat                    # Same as above
+
+# Aiur MCP Server
+npm run aiur                    # Start Aiur MCP server
+npm run aiur:start             # Same as above
+
+# Static web server
+npm run server                  # Start static web server
+npm run server:kill             # Kill server on port 3000
+```
+
+### Agent System
+
+```bash
+# Run AI agent
+npm run agent                   # Start Legion agent CLI
+>>>>>>> 53ac2d1 (modules)
 ```
 
 ### Git Subtree and Repository Management
@@ -193,6 +267,7 @@ packages/
 │   └── services/       # StaticServer, StaticServerFactory
 ├── cli/src/
 │   ├── commands/       # CLI command implementations
+<<<<<<< HEAD
 │   ├── core/           # ArgumentParser, ModuleLoader, ToolRegistry
 │   ├── interactive/    # REPL mode with autocomplete
 │   └── output/         # Formatting and display utilities
@@ -215,6 +290,46 @@ packages/
     ├── handles/        # Handle registry and resolver
     ├── tools/          # Meta tools, context management
     └── performance/    # Caching and optimization
+=======
+│   ├── utils/          # Formatting and helper utilities
+│   └── index.js        # Main CLI entry point
+├── general-tools/src/          # Main tool collection
+│   ├── calculator/            # Math operations
+│   ├── file/                  # File system operations
+│   ├── github/                # GitHub API integration
+│   ├── json/                  # JSON manipulation
+│   ├── crawler/               # Web crawling
+│   ├── webpage-to-markdown/   # Web content conversion
+│   └── youtube-transcript/    # YouTube transcript extraction
+├── railway/src/               # Railway deployment tools
+├── playwright/src/            # Browser automation
+├── node-runner/src/           # Node.js process management
+├── log-manager/src/           # Logging and monitoring
+├── conan-the-deployer/src/    # Deployment management
+├── llm/src/
+│   ├── providers/     # LLM provider implementations
+│   ├── validators/    # Response validation
+│   └── LLMClient.js   # Main client with retry logic
+├── agent/src/
+│   ├── Agent.js               # Main agent implementation
+│   ├── RetryManager.js        # Retry logic
+│   ├── websocket-server.js    # WebSocket server
+│   └── cli.js                 # Agent CLI interface
+├── aiur/src/                  # Advanced MCP server
+│   ├── server/                # Server components
+│   ├── tools/                 # Tool management
+│   ├── handles/               # Handle resolution system
+│   ├── monitoring/            # Health and performance monitoring
+│   └── checkpoint/            # State management
+├── apps/                      # Application packages
+│   ├── web-frontend/          # React web interface
+│   ├── web-backend/           # Express API server
+│   └── aiur-debug-ui/         # Aiur debug interface
+└── code-gen/                  # Code generation packages
+    ├── jester/                # Jest test generator
+    ├── code-agent/            # AI code generation agent
+    └── cerebrate/             # Advanced code generation system
+>>>>>>> 53ac2d1 (modules)
 ```
 
 ### Testing Strategy
@@ -333,6 +448,47 @@ const result = await githubTool.invoke({
 - `github_delete_repo` - Delete a repository
 - `polyrepo_*` - Various polyrepo management functions
 
+## Package-Specific Development
+
+### Working with Aiur MCP Server
+
+Aiur is the most advanced package, providing MCP server capabilities with persistent context:
+
+```bash
+# Start Aiur server
+npm run aiur
+
+# Run Aiur tests
+npm run test:aiur
+
+# Check Aiur logs
+tail -f packages/aiur/logs/aiur-*.log
+```
+
+### Code Generation (Jester & CodeAgent)
+
+```bash
+# Navigate to code generation packages
+cd packages/code-gen/jester         # Jest test generator
+cd packages/code-gen/code-agent     # AI code generation agent
+
+# Each has its own package.json and can be run independently
+npm test                            # Run package-specific tests
+npm start                           # Run package-specific commands
+```
+
+### Web Applications
+
+```bash
+# Web backend with integrated frontend
+cd packages/apps/web-backend
+npm start                           # Starts on port 3000
+
+# Aiur debug UI
+cd packages/apps/aiur-debug-ui  
+npm start                           # Debug interface for Aiur
+```
+
 ## Project Structure Guidelines
 
 ### Directory Organization
@@ -344,9 +500,11 @@ Legion/
 ├── packages/                    # All packages in monorepo
 │   ├── module-loader/          # Core infrastructure
 │   ├── cli/                    # CLI package
-│   ├── general-tools/          # Tool collection
+│   ├── resource-manager/       # Dependency injection
+│   ├── general-tools/          # Main tool collection
 │   ├── llm/                    # LLM client
 │   ├── agent/                  # AI agent
+<<<<<<< HEAD
 │   ├── aiur/                   # MCP server
 │   ├── railway/                # Railway deployment
 │   ├── apps/                   # Application packages
@@ -357,6 +515,24 @@ Legion/
 │       ├── code-agent/         # Full-stack code gen
 │       ├── jester/             # Jest test generator
 │       └── cerebrate/          # Browser extension
+=======
+│   ├── llm-planner/            # AI planning system
+│   ├── railway/                # Railway deployment tools
+│   ├── playwright/             # Browser automation
+│   ├── node-runner/            # Node.js process management
+│   ├── log-manager/            # Logging and monitoring
+│   ├── conan-the-deployer/     # Deployment management
+│   ├── aiur/                   # Advanced MCP server
+│   ├── plan-executor/          # Plan execution engine
+│   ├── apps/                   # Application packages
+│   │   ├── web-frontend/       # React web interface
+│   │   ├── web-backend/        # Express API server
+│   │   └── aiur-debug-ui/      # Aiur debug interface
+│   └── code-gen/               # Code generation packages
+│       ├── jester/             # Jest test generator
+│       ├── code-agent/         # AI code generation agent
+│       └── cerebrate/          # Advanced code generation
+>>>>>>> 53ac2d1 (modules)
 ├── scripts/                    # All scripts organized by purpose
 │   ├── git/                    # Git operations
 │   ├── split/                  # Polyrepo management
@@ -406,12 +582,22 @@ Legion/
 - All packages use ES modules (`"type": "module"`)
 - Requires Node.js >= 18.0.0
 - No build step needed - runs directly from source
+- Monorepo uses npm workspaces - always run commands from root unless working on specific package
 - GitHub tools require `GITHUB_PAT` environment variable
+<<<<<<< HEAD
 - Model providers require respective API keys
 - File operations are sandboxed by default
 - Web tools use Puppeteer for browser automation
 - Jest tests require `NODE_OPTIONS='--experimental-vm-modules'`
 - Always use npm workspaces commands from root directory
+=======
+- Model providers require respective API keys (OpenAI, Anthropic, DeepSeek, OpenRouter)
+- Railway tools require `RAILWAY_API_TOKEN` environment variable
+- File operations are sandboxed by default in general-tools
+- Playwright tools use Chromium for browser automation
+- Aiur provides persistent context across tool calls via MCP protocol
+- Generated code and logs are stored in package-specific directories
+>>>>>>> 53ac2d1 (modules)
 - Keep all directories clean, never leave files around, always use nice directory structure
 
 ## Server Management Commands

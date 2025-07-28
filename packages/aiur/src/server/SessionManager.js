@@ -12,7 +12,6 @@ import { HandleRegistry } from '../handles/HandleRegistry.js';
 import { HandleResolver } from '../handles/HandleResolver.js';
 import { ContextManager } from '../core/ContextManager.js';
 import { ToolDefinitionProvider } from '../core/ToolDefinitionProvider.js';
-import { ModuleLoader } from '../core/ModuleLoader.js';
 import { ToolRegistry } from '../tools/ToolRegistry.js';
 
 export class SessionManager {
@@ -23,17 +22,13 @@ export class SessionManager {
     this.resourceManager = config.resourceManager;
     this.logManager = config.logManager;
     
-    // Shared module loader - modules are loaded once for all sessions
-    this.sharedModuleLoader = null;
+    // We'll use Legion's ModuleManager directly - no shared loader needed
   }
 
   /**
    * Initialize the session manager
    */
   async initialize() {
-    // Create shared module loader that all sessions will use
-    await this._initializeSharedModuleLoader();
-    
     // Start session cleanup interval
     this.cleanupInterval = setInterval(() => {
       this.cleanupExpiredSessions();
@@ -46,39 +41,6 @@ export class SessionManager {
     });
   }
 
-  /**
-   * Initialize shared module loader
-   * @private
-   */
-  async _initializeSharedModuleLoader() {
-    // Create a temporary registry and handle setup for module loading
-    const tempHandleRegistry = new HandleRegistry();
-    const tempToolRegistry = new ToolRegistry(tempHandleRegistry);
-    
-    // Create temporary resource manager for module loader
-    const { ResourceManager } = await import('@legion/module-loader');
-    const tempResourceManager = new ResourceManager();
-    await tempResourceManager.initialize();
-    
-    // Copy essential resources
-    tempResourceManager.register('handleRegistry', tempHandleRegistry);
-    tempResourceManager.register('toolRegistry', tempToolRegistry);
-    tempResourceManager.register('handleResolver', new HandleResolver(tempHandleRegistry));
-    tempResourceManager.register('logManager', this.logManager);
-    
-    // Create and initialize module loader
-    this.sharedModuleLoader = await ModuleLoader.create(tempResourceManager);
-    
-    // Load all modules once
-    const modules = await this.sharedModuleLoader.loadAllModules();
-    
-    await this.logManager.logInfo('Shared modules loaded', {
-      source: 'SessionManager',
-      operation: 'load-shared-modules',
-      moduleCount: modules.length,
-      modules: modules.map(m => m.moduleName)
-    });
-  }
 
   /**
    * Create a new session
@@ -114,11 +76,11 @@ export class SessionManager {
     // Create session-specific managers
     const contextManager = await ContextManager.create(sessionResourceManager);
     
-    // Create tool definition provider but use the shared module loader
-    const toolDefinitionProvider = new ToolDefinitionProvider(contextManager, this.sharedModuleLoader);
-    toolDefinitionProvider._resourceManager = sessionResourceManager;
+    // Create tool definition provider with Legion ModuleManager
+    const toolDefinitionProvider = await ToolDefinitionProvider.create(sessionResourceManager);
     
-    // No need to initialize - modules are already loaded in shared loader
+    // Initialize to load essential modules
+    await toolDefinitionProvider.initialize();
     
     // Register the providers in resource manager for debug tools
     sessionResourceManager.register('contextManager', contextManager);

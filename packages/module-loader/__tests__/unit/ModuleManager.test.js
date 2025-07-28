@@ -89,7 +89,10 @@ describe('ModuleManager', () => {
       expect(info).toBeDefined();
       expect(info.name).toBe('test-module');
       expect(info.hasInstance).toBe(true);
-      expect(info.tools).toEqual(['test-tool']);
+      expect(info.tools).toHaveLength(1);
+      expect(info.tools[0]).toHaveProperty('name', 'test-tool');
+      expect(info.tools[0]).toHaveProperty('description', 'Test tool');
+      expect(info.tools[0]).toHaveProperty('type', 'loaded');
     });
 
     it('should return null for unknown module', () => {
@@ -114,7 +117,7 @@ describe('ModuleManager', () => {
 
       moduleManager.emit('loaded', {
         name: 'test-module',
-        type: 'class',
+        type: 'loaded',
         path: '/test/path'
       });
 

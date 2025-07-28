@@ -586,7 +586,7 @@ export class ModuleManager extends EventEmitter {
       let tools = [];
       if (registered.instance?.getTools) {
         try {
-          tools = registered.instance.getTools().map(tool => {
+          tools = registered.instance.getTools().flatMap(tool => {
             const info = {
               name: tool.name || tool.constructor.name,
               description: tool.description || 'No description',
@@ -598,7 +598,7 @@ export class ModuleManager extends EventEmitter {
               if (tool.getAllToolDescriptions) {
                 // Multi-function tool - create separate entries for each function
                 const allDescs = tool.getAllToolDescriptions();
-                // Return early with expanded function list
+                // Return expanded function list (flatMap will handle the array properly)
                 return allDescs.map(desc => ({
                   name: desc.function.name,
                   description: desc.function.description,

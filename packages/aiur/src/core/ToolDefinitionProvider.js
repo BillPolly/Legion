@@ -1,17 +1,19 @@
 /**
  * ToolDefinitionProvider - Centralized tool definition generation for MCP
  * 
- * Combines context tools and dynamically loaded module tools into a single
+ * Combines context tools and dynamically loaded Legion module tools into a single
  * unified tool definition list for the MCP server.
  */
 
 import { ContextManager } from './ContextManager.js';
-import { ModuleLoader } from './ModuleLoader.js';
+import { ModuleManager, ModuleFactory } from '@legion/module-loader';
+import ModuleManagerModule from '../../../general-tools/src/module-manager/ModuleManagerModule.js';
+import path from 'path';
 
 export class ToolDefinitionProvider {
-  constructor(contextManager, moduleLoader) {
+  constructor(contextManager, moduleManager) {
     this.contextManager = contextManager;
-    this.moduleLoader = moduleLoader;
+    this.moduleManager = moduleManager;
   }
 
   /**
@@ -20,11 +22,17 @@ export class ToolDefinitionProvider {
    * @returns {Promise<ToolDefinitionProvider>} Initialized ToolDefinitionProvider instance
    */
   static async create(resourceManager) {
-    // Create context manager and module loader
+    // Create context manager
     const contextManager = await ContextManager.create(resourceManager);
-    const moduleLoader = await ModuleLoader.create(resourceManager);
     
-    const provider = new ToolDefinitionProvider(contextManager, moduleLoader);
+    // Create Legion ModuleManager directly
+    const moduleFactory = new ModuleFactory(resourceManager);
+    const moduleManager = new ModuleManager(moduleFactory, {
+      searchDepth: 3,
+      autoDiscover: false
+    });
+    
+    const provider = new ToolDefinitionProvider(contextManager, moduleManager);
     provider._resourceManager = resourceManager; // Store for later use
     return provider;
   }
@@ -34,8 +42,45 @@ export class ToolDefinitionProvider {
    * @returns {Promise<void>}
    */
   async initialize() {
-    // Load all modules to populate tool definitions
-    await this.moduleLoader.loadAllModules();
+    // Discover and load essential modules
+    const currentPath = process.cwd();
+    const basePath = currentPath.includes('aiur-debug-ui') 
+      ? path.resolve(currentPath, '../../../')
+      : currentPath;
+      
+    const moduleDirectories = [
+      path.join(basePath, 'packages/general-tools/src'),
+      path.join(basePath, 'packages/apps'),
+      path.join(basePath, 'packages/code-gen')
+    ];
+
+    // Discover available modules
+    await this.moduleManager.discoverModules(moduleDirectories);
+    
+    // Load ModuleManagerModule directly with special dependencies
+    try {
+      // Pass the ModuleManager instance so the module management tools can see loaded modules
+      const moduleManagerModule = new ModuleManagerModule({ 
+        ResourceManager: this._resourceManager,
+        ModuleManager: this.moduleManager
+      });
+      
+      // Load the module instance directly
+      await this._loadModuleInstance(moduleManagerModule);
+      
+      // Register the ModuleManagerModule in the registry
+      const registry = this.moduleManager.getRegistry();
+      registry.register('module-manager', {
+        name: 'module-manager',
+        type: 'builtin',
+        path: null,
+        status: 'loaded'
+      }, moduleManagerModule);
+      
+      console.log('[ToolDefinitionProvider] Loaded ModuleManagerModule - module management tools now available');
+    } catch (error) {
+      console.error('[ToolDefinitionProvider] Failed to load ModuleManagerModule:', error);
+    }
   }
 
   /**
@@ -52,7 +97,7 @@ export class ToolDefinitionProvider {
     allTools.push(...contextTools);
 
     // Add dynamically loaded module tools
-    const moduleTools = this.moduleLoader.getModuleToolDefinitions();
+    const moduleTools = this._getModuleToolDefinitions();
     console.log(`[ToolDefinitionProvider.getAllToolDefinitions] Module tools: ${moduleTools.length}`);
     allTools.push(...moduleTools);
 
@@ -75,7 +120,7 @@ export class ToolDefinitionProvider {
    */
   toolExists(toolName) {
     return this.contextManager.isContextTool(toolName) || 
-           this.moduleLoader.isModuleTool(toolName) ||
+           this._isModuleTool(toolName) ||
            this.isDebugTool(toolName);
   }
 
@@ -88,7 +133,7 @@ export class ToolDefinitionProvider {
     if (this.contextManager.isContextTool(toolName)) {
       return 'context';
     }
-    if (this.moduleLoader.isModuleTool(toolName)) {
+    if (this._isModuleTool(toolName)) {
       return 'module';
     }
     if (this.isDebugTool(toolName)) {
@@ -122,7 +167,7 @@ export class ToolDefinitionProvider {
         
         case 'module':
           try {
-            const result = await this.moduleLoader.executeModuleTool(toolName, resolvedArgs);
+            const result = await this._executeModuleTool(toolName, resolvedArgs);
             return this._formatToolResponse(result);
           } catch (moduleError) {
             if (errorBroadcastService) {
@@ -240,9 +285,9 @@ export class ToolDefinitionProvider {
    */
   getToolStatistics() {
     const contextTools = this.contextManager.getToolDefinitions();
-    const moduleTools = this.moduleLoader.getModuleToolDefinitions();
+    const moduleTools = this._getModuleToolDefinitions();
     const debugTools = this._debugTools || [];
-    const modules = this.moduleLoader.getLoadedModulesInfo();
+    const modules = this._getLoadedModulesInfo();
 
     return {
       total: contextTools.length + moduleTools.length + debugTools.length,
@@ -265,10 +310,10 @@ export class ToolDefinitionProvider {
       source: 'ContextManager'
     }));
 
-    const moduleTools = this.moduleLoader.getModuleToolDefinitions().map(tool => ({
+    const moduleTools = this._getModuleToolDefinitions().map(tool => ({
       ...tool,
       type: 'module',
-      source: 'ModuleLoader'
+      source: 'Legion ModuleManager'
     }));
 
     const debugTools = (this._debugTools || []).map(tool => ({
@@ -301,6 +346,267 @@ export class ToolDefinitionProvider {
    */
   setDebugTool(debugTool) {
     this._debugTool = debugTool;
+  }
+
+  /**
+   * Get all tool definitions from loaded modules
+   * @returns {Array} Array of MCP tool definitions
+   * @private
+   */
+  _getModuleToolDefinitions() {
+    const definitions = [];
+    
+    // Get modules from both sources: Legion's ModuleManager and our custom storage
+    const loadedModules = this.moduleManager.getLoadedModules();
+    const customModules = this.moduleManager._loadedModules ? Array.from(this.moduleManager._loadedModules.values()) : [];
+    
+    console.log(`[ToolDefinitionProvider._getModuleToolDefinitions] Legion loaded modules: ${loadedModules.length}, Custom modules: ${customModules.length}`);
+    
+    // Process Legion's loaded modules
+    for (const entry of loadedModules) {
+      const moduleInstance = entry.instance;
+      if (moduleInstance && moduleInstance.getTools) {
+        const tools = moduleInstance.getTools();
+        console.log(`[ToolDefinitionProvider._getModuleToolDefinitions] Legion module ${entry.name} has ${tools.length} tools`);
+        
+        for (const tool of tools) {
+          this._addToolDefinitions(tool, definitions);
+        }
+      }
+    }
+    
+    // Process our custom loaded modules (like ModuleManagerModule)
+    for (const entry of customModules) {
+      const moduleInstance = entry.instance;
+      if (moduleInstance && moduleInstance.getTools) {
+        const tools = moduleInstance.getTools();
+        console.log(`[ToolDefinitionProvider._getModuleToolDefinitions] Custom module ${entry.name} has ${tools.length} tools`);
+        
+        for (const tool of tools) {
+          this._addToolDefinitions(tool, definitions);
+        }
+      }
+    }
+    
+    console.log(`[ToolDefinitionProvider._getModuleToolDefinitions] Returning ${definitions.length} tool definitions:`, definitions.map(d => d.name));
+    return definitions;
+  }
+  
+  /**
+   * Helper method to add tool definitions from a tool
+   * @param {Object} tool - The tool to extract definitions from
+   * @param {Array} definitions - Array to add definitions to
+   * @private
+   */
+  _addToolDefinitions(tool, definitions) {
+    // Handle multi-function tools
+    if (tool.getAllToolDescriptions) {
+      const allDescs = tool.getAllToolDescriptions();
+      for (const desc of allDescs) {
+        definitions.push({
+          name: desc.function.name,
+          description: desc.function.description,
+          inputSchema: desc.function.parameters
+        });
+      }
+    } else if (tool.getToolDescription) {
+      // Single function tool
+      const desc = tool.getToolDescription();
+      definitions.push({
+        name: desc.function.name,
+        description: desc.function.description,
+        inputSchema: desc.function.parameters
+      });
+    }
+  }
+
+  /**
+   * Check if a tool is from a loaded module
+   * @param {string} toolName - Name of the tool
+   * @returns {boolean} True if it's a module tool
+   * @private
+   */
+  _isModuleTool(toolName) {
+    // Check both Legion's loaded modules and our custom modules
+    const loadedModules = this.moduleManager.getLoadedModules();
+    const customModules = this.moduleManager._loadedModules ? Array.from(this.moduleManager._loadedModules.values()) : [];
+    
+    // Check Legion's loaded modules
+    for (const entry of loadedModules) {
+      const moduleInstance = entry.instance;
+      if (moduleInstance && moduleInstance.getTools) {
+        const tools = moduleInstance.getTools();
+        for (const tool of tools) {
+          if (this._toolProvidesFunction(tool, toolName)) {
+            return true;
+          }
+        }
+      }
+    }
+    
+    // Check our custom loaded modules
+    for (const entry of customModules) {
+      const moduleInstance = entry.instance;
+      if (moduleInstance && moduleInstance.getTools) {
+        const tools = moduleInstance.getTools();
+        for (const tool of tools) {
+          if (this._toolProvidesFunction(tool, toolName)) {
+            return true;
+          }
+        }
+      }
+    }
+    
+    return false;
+  }
+  
+  /**
+   * Helper method to check if a tool provides a specific function
+   * @param {Object} tool - The tool to check
+   * @param {string} toolName - The function name to look for
+   * @returns {boolean} True if the tool provides this function
+   * @private
+   */
+  _toolProvidesFunction(tool, toolName) {
+    // Check multi-function tools
+    if (tool.getAllToolDescriptions) {
+      const allDescs = tool.getAllToolDescriptions();
+      return allDescs.some(desc => desc.function.name === toolName);
+    } else if (tool.getToolDescription) {
+      // Single function tool
+      const desc = tool.getToolDescription();
+      return desc.function.name === toolName;
+    }
+    return false;
+  }
+
+  /**
+   * Execute a tool from a loaded module
+   * @param {string} toolName - Name of the tool
+   * @param {Object} resolvedArgs - Already resolved arguments
+   * @returns {Promise<Object>} Tool execution result
+   * @private
+   */
+  async _executeModuleTool(toolName, resolvedArgs) {
+    // Check both Legion's loaded modules and our custom modules
+    const loadedModules = this.moduleManager.getLoadedModules();
+    const customModules = this.moduleManager._loadedModules ? Array.from(this.moduleManager._loadedModules.values()) : [];
+    
+    // Find the tool in loaded modules
+    let targetTool = null;
+    
+    // Check Legion's loaded modules first
+    for (const entry of loadedModules) {
+      const moduleInstance = entry.instance;
+      if (moduleInstance && moduleInstance.getTools) {
+        const tools = moduleInstance.getTools();
+        for (const tool of tools) {
+          if (this._toolProvidesFunction(tool, toolName)) {
+            targetTool = tool;
+            break;
+          }
+        }
+        if (targetTool) break;
+      }
+    }
+    
+    // If not found, check our custom loaded modules
+    if (!targetTool) {
+      for (const entry of customModules) {
+        const moduleInstance = entry.instance;
+        if (moduleInstance && moduleInstance.getTools) {
+          const tools = moduleInstance.getTools();
+          for (const tool of tools) {
+            if (this._toolProvidesFunction(tool, toolName)) {
+              targetTool = tool;
+              break;
+            }
+          }
+          if (targetTool) break;
+        }
+      }
+    }
+    
+    if (!targetTool) {
+      throw new Error(`Tool ${toolName} not found in any loaded module`);
+    }
+
+    // Execute the tool directly using Legion format
+    const toolCall = {
+      id: `aiur-${Date.now()}`,
+      type: 'function',
+      function: {
+        name: toolName,
+        arguments: JSON.stringify(resolvedArgs)
+      }
+    };
+    
+    // Execute using Legion tool and return the raw result
+    return await targetTool.safeInvoke(toolCall);
+  }
+
+  /**
+   * Get loaded modules information
+   * @returns {Array} Array of loaded module info
+   * @private
+   */
+  _getLoadedModulesInfo() {
+    const loadedModules = this.moduleManager.getLoadedModules();
+    return loadedModules.map(entry => {
+      const module = entry.instance;
+      return {
+        name: entry.name,
+        description: module?.description || module?.getDescription?.() || 'No description',
+        toolCount: module?.getTools ? module.getTools().length : 0,
+        type: entry.metadata?.type || 'unknown',
+        status: entry.metadata?.status || 'loaded'
+      };
+    });
+  }
+
+  /**
+   * Load a module instance that was created using direct instantiation
+   * @param {Object} moduleInstance - Already instantiated module
+   * @returns {Promise<Object>} Module load result
+   * @private
+   */
+  async _loadModuleInstance(moduleInstance) {
+    // Initialize the module if it has an initialize method
+    if (typeof moduleInstance.initialize === 'function') {
+      try {
+        await moduleInstance.initialize();
+      } catch (error) {
+        console.warn(`[ToolDefinitionProvider] Failed to initialize module ${moduleInstance.name}:`, error);
+      }
+    }
+    
+    // Register the tools from the created module
+    const tools = moduleInstance.getTools();
+    console.log(`[ToolDefinitionProvider] Module ${moduleInstance.name} provides ${tools.length} tools`);
+    
+    // Store the loaded module in our ModuleManager
+    const entry = {
+      name: moduleInstance.name,
+      instance: moduleInstance,
+      metadata: {
+        type: 'direct',
+        status: 'loaded'
+      }
+    };
+    
+    // Add to loaded modules using the proper API
+    // Since ModuleManager doesn't have a direct way to add loaded modules,
+    // we'll store it in a way that our _getModuleToolDefinitions can find it
+    if (!this.moduleManager._loadedModules) {
+      this.moduleManager._loadedModules = new Map();
+    }
+    this.moduleManager._loadedModules.set(moduleInstance.name, entry);
+    
+    return {
+      moduleName: moduleInstance.name,
+      toolsRegistered: tools.length,
+      tools: tools.map(t => t.name || 'unknown')
+    };
   }
 
   /**
