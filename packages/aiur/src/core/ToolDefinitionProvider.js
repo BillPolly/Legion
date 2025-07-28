@@ -375,10 +375,14 @@ export class ToolDefinitionProvider {
       const moduleInstance = entry.instance;
       if (moduleInstance && moduleInstance.getTools) {
         const tools = moduleInstance.getTools();
-        console.log(`[ToolDefinitionProvider._getModuleToolDefinitions] Legion module ${entry.name} has ${tools.length} tools`);
-        
-        for (const tool of tools) {
-          this._addToolDefinitions(tool, definitions);
+        if (Array.isArray(tools)) {
+          console.log(`[ToolDefinitionProvider._getModuleToolDefinitions] Legion module ${entry.name} has ${tools.length} tools`);
+          
+          for (const tool of tools) {
+            this._addToolDefinitions(tool, definitions);
+          }
+        } else {
+          console.warn(`[ToolDefinitionProvider._getModuleToolDefinitions] Legion module ${entry.name} getTools() returned non-array:`, typeof tools);
         }
       }
     }
@@ -388,10 +392,14 @@ export class ToolDefinitionProvider {
       const moduleInstance = entry.instance;
       if (moduleInstance && moduleInstance.getTools) {
         const tools = moduleInstance.getTools();
-        console.log(`[ToolDefinitionProvider._getModuleToolDefinitions] Custom module ${entry.name} has ${tools.length} tools`);
-        
-        for (const tool of tools) {
-          this._addToolDefinitions(tool, definitions);
+        if (Array.isArray(tools)) {
+          console.log(`[ToolDefinitionProvider._getModuleToolDefinitions] Custom module ${entry.name} has ${tools.length} tools`);
+          
+          for (const tool of tools) {
+            this._addToolDefinitions(tool, definitions);
+          }
+        } else {
+          console.warn(`[ToolDefinitionProvider._getModuleToolDefinitions] Custom module ${entry.name} getTools() returned non-array:`, typeof tools);
         }
       }
     }
@@ -410,21 +418,30 @@ export class ToolDefinitionProvider {
     // Handle multi-function tools
     if (tool.getAllToolDescriptions) {
       const allDescs = tool.getAllToolDescriptions();
-      for (const desc of allDescs) {
+      // Fix: Ensure allDescs is iterable before using for...of
+      if (Array.isArray(allDescs)) {
+        for (const desc of allDescs) {
+          definitions.push({
+            name: desc.function.name,
+            description: desc.function.description,
+            inputSchema: desc.function.parameters
+          });
+        }
+      } else {
+        console.warn(`[ToolDefinitionProvider] Tool ${tool.name} getAllToolDescriptions() returned non-array:`, typeof allDescs);
+      }
+    } else if (tool.getToolDescription) {
+      // Single function tool
+      const desc = tool.getToolDescription();
+      if (desc && desc.function) {
         definitions.push({
           name: desc.function.name,
           description: desc.function.description,
           inputSchema: desc.function.parameters
         });
+      } else {
+        console.warn(`[ToolDefinitionProvider] Tool ${tool.name} getToolDescription() returned invalid data:`, desc);
       }
-    } else if (tool.getToolDescription) {
-      // Single function tool
-      const desc = tool.getToolDescription();
-      definitions.push({
-        name: desc.function.name,
-        description: desc.function.description,
-        inputSchema: desc.function.parameters
-      });
     }
   }
 

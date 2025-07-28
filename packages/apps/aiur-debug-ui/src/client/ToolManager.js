@@ -120,15 +120,28 @@ export class ToolManager extends EventTarget {
       console.log('[ToolManager] Loading tools from MCP interface...');
       const toolsArray = await this.mcpInterface.requestTools();
       
+      console.log('[ToolManager] Raw tools response:', toolsArray);
+      console.log('[ToolManager] Tools array type:', Array.isArray(toolsArray));
+      console.log('[ToolManager] Tools array length:', toolsArray?.length);
+      
       // Clear and rebuild tools map
       this.tools.clear();
       if (toolsArray && Array.isArray(toolsArray)) {
         toolsArray.forEach(tool => {
+          console.log(`[ToolManager] Adding tool: ${tool.name}`);
           this.tools.set(tool.name, tool);
         });
+      } else {
+        console.error('[ToolManager] ❌ Tools array is not valid:', toolsArray);
       }
       
-      console.log(`[ToolManager] Loaded ${this.tools.size} tools`);
+      const toolNames = Array.from(this.tools.keys());
+      console.log(`[ToolManager] Loaded ${this.tools.size} tools:`, toolNames);
+      
+      // Check for expected module tools
+      const moduleTools = toolNames.filter(name => !name.startsWith('context_') && !name.startsWith('module_'));
+      console.log('[ToolManager] Module tools found:', moduleTools);
+      
     } catch (error) {
       console.error('[ToolManager] Failed to load tools:', error);
       // Don't throw - allow app to continue with empty tools

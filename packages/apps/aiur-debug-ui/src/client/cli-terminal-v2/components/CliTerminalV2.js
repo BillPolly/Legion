@@ -141,17 +141,21 @@ export class CliTerminalV2 {
     if (this.toolManager) {
       // Use ToolManager as primary source
       toolDefinitions = this.toolManager.getTools();
-      console.log(`[CLI] Updating commands from ToolManager: ${toolDefinitions.size} tools`);
+      const toolCount = toolDefinitions instanceof Map ? toolDefinitions.size : toolDefinitions?.length || 0;
+      console.log(`[CLI] Updating commands from ToolManager: ${toolCount} tools`);
     } else if (this.interface && this.interface.getTools) {
       // Fallback to legacy interface
       toolDefinitions = this.interface.getTools();
-      console.log(`[CLI] Updating commands from legacy interface: ${toolDefinitions?.size || 0} tools`);
+      const toolCount = Array.isArray(toolDefinitions) ? toolDefinitions.length : toolDefinitions?.size || 0;
+      console.log(`[CLI] Updating commands from legacy interface: ${toolCount} tools`);
     } else {
       console.warn('[CLI] No tool source available');
       return;
     }
     
-    if (!toolDefinitions || toolDefinitions.size === 0) {
+    const toolCount = toolDefinitions instanceof Map ? toolDefinitions.size : 
+                     Array.isArray(toolDefinitions) ? toolDefinitions.length : 0;
+    if (!toolDefinitions || toolCount === 0) {
       console.warn('[CLI] No tools available to update');
       return;
     }
@@ -190,13 +194,30 @@ export class CliTerminalV2 {
       'module_tools': 'module_tools <module> [format]'
     };
     
-    for (const [name, def] of toolDefinitions) {
-      this.commands[name] = {
-        description: def.description || '',
-        structure: toolStructures[name] || name,
-        params: this.extractParams(def.inputSchema),
-        execute: (args) => this.executeTool(name, args)
-      };
+    // Handle both Map (from ToolManager) and Array (from legacy interface) formats
+    if (toolDefinitions instanceof Map) {
+      // ToolManager returns a Map
+      for (const [name, def] of toolDefinitions) {
+        this.commands[name] = {
+          description: def.description || '',
+          structure: toolStructures[name] || name,
+          params: this.extractParams(def.inputSchema),
+          execute: (args) => this.executeTool(name, args)
+        };
+      }
+    } else if (Array.isArray(toolDefinitions)) {
+      // Legacy interface returns an Array
+      for (const def of toolDefinitions) {
+        const name = def.name;
+        this.commands[name] = {
+          description: def.description || '',
+          structure: toolStructures[name] || name,
+          params: this.extractParams(def.inputSchema),
+          execute: (args) => this.executeTool(name, args)
+        };
+      }
+    } else {
+      console.error('[CLI] Unknown tool definitions format:', typeof toolDefinitions, toolDefinitions);
     }
   }
 
@@ -684,6 +705,10 @@ export class CliTerminalV2 {
     this.history.push(command);
     this.historyIndex = -1;
 
+    // Clear input immediately after capturing the command
+    this.input.value = '';
+    this.suggestion.textContent = '';
+
     const parts = command.split(' ');
     const cmd = parts[0];
     const args = parts.slice(1);
@@ -699,8 +724,6 @@ export class CliTerminalV2 {
       this.addOutput(`Type .commands to see available commands`, 'info');
     }
 
-    this.input.value = '';
-    this.suggestion.textContent = '';
     this.scrollToBottom();
   }
 
@@ -829,31 +852,78 @@ export class CliTerminalV2 {
     try {
       const response = await this.interface.executeTool(toolName, params);
       
-      // Format the response using the formatter
-      const formatted = this.responseFormatter.format(toolName, response);
+      // DEBUG: Log the raw response
+      console.log(`[CLI] ${toolName} raw response:`, response);
+      console.log(`[CLI] ${toolName} response type:`, typeof response);
+      
+      // Format the response using the formatter (now async)
+      const formatted = await this.responseFormatter.format(toolName, response);
       
       if (formatted) {
         this.addFormattedOutput(formatted, 'result');
       }
       
-      // Extract raw result for return value
-      let result = response;
-      if (response && response.content && Array.isArray(response.content)) {
-        const textContent = response.content.find(item => item.type === 'text');
-        if (textContent && textContent.text) {
-          try {
-            result = JSON.parse(textContent.text);
-          } catch {
-            result = textContent.text;
-          }
+      // Extract raw result using schema validation
+      let result = null;
+      
+      // Import schema validation (dynamic import for now)
+      const { validateServerResponse } = await import('../../schemas/ServerSchemas.js');
+      
+      // Determine expected schema based on tool name
+      let expectedSchema = 'generic';
+      if (toolName === 'module_load') expectedSchema = 'module_load';
+      else if (toolName === 'module_tools') expectedSchema = 'module_tools';
+      else if (toolName === 'module_list') expectedSchema = 'module_list';
+      
+      // Validate the response against the schema
+      const validation = validateServerResponse(response, expectedSchema);
+      
+      if (!validation.success) {
+        console.error(`[CLI] ${toolName} schema validation failed:`, validation.errors);
+        console.error(`[CLI] ${toolName} raw response:`, response);
+        
+        // Try to extract whatever data we can for debugging
+        if (validation.data) {
+          console.log(`[CLI] ${toolName} partial data extracted:`, validation.data);
+          result = validation.data;
+        } else {
+          throw new Error(`Tool ${toolName} returned invalid response: ${validation.errors.join(', ')}`);
         }
+      } else {
+        result = validation.data;
+        console.log(`[CLI] ${toolName} validated result:`, result);
+      }
+      
+      // Check for business logic errors
+      if (result && result.success === false) {
+        const errorMsg = result.error || result.message || 'Unknown error';
+        throw new Error(`Tool ${toolName} failed: ${errorMsg}`);
       }
       
       // Check if this was a successful module_load command
       if (toolName === 'module_load' && result && !result.error) {
         console.log('[CLI] module_load successful, refreshing tools...');
+        console.log('[CLI] Module loaded:', result.module);
+        console.log('[CLI] Tools that should now be available:', result.module.tools);
+        
         try {
           await this.refreshTools();
+          
+          // DEBUG: Check if the new tools are actually available
+          if (this.toolManager) {
+            const currentTools = Array.from(this.toolManager.tools.keys());
+            console.log('[CLI] Tools available after refresh:', currentTools);
+            
+            const expectedNewTools = result.module.tools || [];
+            const missingTools = expectedNewTools.filter(tool => !currentTools.includes(tool));
+            if (missingTools.length > 0) {
+              console.error('[CLI] ❌ Missing tools after refresh:', missingTools);
+              this.addOutput(`⚠ Warning: ${missingTools.length} tools not available: ${missingTools.join(', ')}`, 'error');
+            } else {
+              console.log('[CLI] ✅ All expected tools are now available');
+            }
+          }
+          
           this.addOutput('✓ Tools refreshed after module loading', 'info');
         } catch (error) {
           console.error('[CLI] Failed to refresh tools after module_load:', error);

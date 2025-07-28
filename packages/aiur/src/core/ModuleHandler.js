@@ -235,21 +235,28 @@ export class ModuleHandler {
    */
   async getModuleTools(moduleName) {
     try {
+      console.log(`[ModuleHandler.getModuleTools] Getting tools for module: ${moduleName}`);
       const info = await this.moduleManager.getModuleInfo(moduleName);
+      console.log(`[ModuleHandler.getModuleTools] Module info:`, info);
       
       if (!info) {
+        console.log(`[ModuleHandler.getModuleTools] Module '${moduleName}' not found`);
         return {
           success: false,
           error: `Module '${moduleName}' not found`
         };
       }
       
-      return {
+      const result = {
         success: true,
         module: moduleName,
         status: info.status,
+        toolCount: info.tools ? info.tools.length : 0,
         tools: info.tools || []
       };
+      
+      console.log(`[ModuleHandler.getModuleTools] Returning result:`, result);
+      return result;
     } catch (error) {
       await this.logManager.logError(error, {
         source: 'ModuleHandler',

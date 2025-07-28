@@ -186,15 +186,32 @@ export class ResponseFormatter {
 
     // Module tools formatter
     this.formatters.set('module_tools', (result) => {
-      // Handle wrapped response format (result.data.*)
-      const data = result.data || result;
+      console.log('[ResponseFormatter] module_tools formatting:', result);
+      
+      // With schema validation, we should have clean data structure
+      const data = result || {};
       
       const lines = [];
-      lines.push(`═══ Module: ${data.module} ═══`);
+      
+      // Handle error case first
+      if (data.success === false) {
+        lines.push(`═══ Module: ${data.module || 'unknown'} ═══`);
+        lines.push('');
+        lines.push(`❌ Error: ${data.error || 'Unknown error'}`);
+        return lines.join('\n');
+      }
+      
+      // Success case - use validated schema fields
+      const moduleName = data.module || 'unknown';
+      const status = data.status || 'unknown';
+      const toolCount = data.toolCount ?? 0;
+      const tools = data.tools || [];
+      
+      lines.push(`═══ Module: ${moduleName} ═══`);
       lines.push('');
       
-      lines.push(`Status: ${data.status}`);
-      lines.push(`Tool Count: ${data.toolCount}`);
+      lines.push(`Status: ${status}`);
+      lines.push(`Tool Count: ${toolCount}`);
       lines.push('');
       
       if (data.tools && data.tools.length > 0) {
@@ -205,7 +222,7 @@ export class ResponseFormatter {
           // Detailed format
           data.tools.forEach(tool => {
             lines.push(`• ${tool.name}: ${tool.description}`);
-            if (tool.type && tool.type !== 'function') {
+            if (tool.type && tool.type !== 'function' && tool.type !== 'loaded') {
               lines.push(`  Type: ${tool.type}`);
             }
             if (tool.toolName && tool.toolName !== tool.name) {
@@ -479,29 +496,67 @@ export class ResponseFormatter {
   /**
    * Format a response based on the tool name
    */
-  format(toolName, response) {
-    // Extract result from response wrapper if needed
+  async format(toolName, response) {
     let result = response;
-    if (response && response.content && Array.isArray(response.content)) {
-      const textContent = response.content.find(item => item.type === 'text');
-      if (textContent && textContent.text) {
-        try {
-          result = JSON.parse(textContent.text);
-        } catch {
-          result = textContent.text;
+    
+    // Try to extract result using our schema system
+    try {
+      const { validateServerResponse } = await import('../../schemas/ServerSchemas.js');
+      
+      // Determine expected schema
+      let expectedSchema = 'generic';
+      if (toolName === 'module_load') expectedSchema = 'module_load';
+      else if (toolName === 'module_tools') expectedSchema = 'module_tools';
+      else if (toolName === 'module_list') expectedSchema = 'module_list';
+      
+      const validation = validateServerResponse(response, expectedSchema);
+      
+      if (validation.success) {
+        result = validation.data;
+      } else {
+        console.warn(`[ResponseFormatter] Schema validation failed for ${toolName}:`, validation.errors);
+        // Try manual extraction as fallback
+        if (response && response.content && Array.isArray(response.content)) {
+          const textContent = response.content.find(item => item.type === 'text');
+          if (textContent && textContent.text) {
+            try {
+              result = JSON.parse(textContent.text);
+            } catch {
+              result = textContent.text;
+            }
+          }
+        }
+      }
+    } catch (importError) {
+      console.warn('[ResponseFormatter] Could not import schema validation:', importError.message);
+      // Fallback to old extraction method
+      if (response && response.content && Array.isArray(response.content)) {
+        const textContent = response.content.find(item => item.type === 'text');
+        if (textContent && textContent.text) {
+          try {
+            result = JSON.parse(textContent.text);
+          } catch {
+            result = textContent.text;
+          }
         }
       }
     }
 
-    // Get specific formatter or use generic
-    const formatter = this.formatters.get(toolName) || this.formatters.get('_generic');
+    // Check if we have a specific formatter for this tool
+    const formatter = this.formatters.get(toolName);
     
-    try {
-      return formatter(result);
-    } catch (error) {
-      console.error('Formatting error:', error);
-      return this.formatDefault(result);
+    if (formatter) {
+      try {
+        return formatter(result);
+      } catch (error) {
+        console.error(`[ResponseFormatter] Formatting error for ${toolName}:`, error);
+        console.error('[ResponseFormatter] Data that caused error:', result);
+        // Fall back to JSON display
+      }
     }
+    
+    // No formatter or formatter failed - just show the JSON
+    return this.formatDefault(result);
   }
 
   /**
