@@ -348,6 +348,11 @@ class DebugUIApp {
     this.updateToolSelector();
     this.updateToolCount(tools.length);
     this.displayAvailableTools();
+    
+    // Notify CLI if it has registered a callback
+    if (this.cliToolUpdateCallback) {
+      this.cliToolUpdateCallback();
+    }
   }
 
   /**
@@ -1059,8 +1064,60 @@ class DebugUIApp {
       // Dynamically import the new CLI Terminal v2 module
       const { CliTerminalV2 } = await import('./cli-terminal-v2/index.js');
       
-      // Create CLI Terminal v2 instance
-      this.cliTerminal = new CliTerminalV2('cliTerminalContainer', this);
+      // Create a clean interface for the CLI
+      const cliInterface = {
+        // Execute a tool and return the result
+        executeTool: async (toolName, args) => {
+          const requestId = `req_${++this.requestId}`;
+          
+          return new Promise((resolve, reject) => {
+            // Store the promise resolver
+            this.pendingRequests.set(requestId, {
+              method: 'tools/call',
+              params: { name: toolName, arguments: args },
+              timestamp: Date.now(),
+              resolve: resolve,
+              reject: reject
+            });
+            
+            // Send the request
+            const success = this.sendMessage({
+              type: 'mcp_request',
+              requestId: requestId,
+              method: 'tools/call',
+              params: {
+                name: toolName,
+                arguments: args
+              }
+            });
+            
+            if (!success) {
+              this.pendingRequests.delete(requestId);
+              reject(new Error('Failed to send request'));
+            }
+            
+            // Set a timeout
+            setTimeout(() => {
+              if (this.pendingRequests.has(requestId)) {
+                this.pendingRequests.delete(requestId);
+                reject(new Error('Request timeout'));
+              }
+            }, 30000); // 30 second timeout
+          });
+        },
+        
+        // Get available tools
+        getTools: () => this.toolDefinitions,
+        
+        // Subscribe to tool updates
+        onToolsUpdated: (callback) => {
+          // Store callback to be called when tools are updated
+          this.cliToolUpdateCallback = callback;
+        }
+      };
+      
+      // Create CLI Terminal v2 instance with clean interface
+      this.cliTerminal = new CliTerminalV2('cliTerminalContainer', cliInterface);
       
       console.log('CLI Terminal v2 initialized');
     } catch (error) {

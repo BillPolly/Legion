@@ -3,9 +3,20 @@
  */
 
 export class CliTerminalV2 {
-  constructor(containerId, aiurConnection) {
-    this.containerId = containerId;
-    this.aiur = aiurConnection;
+  constructor(containerOrId, apiInterface) {
+    // Accept either a DOM node or an ID string
+    if (typeof containerOrId === 'string') {
+      this.container = document.getElementById(containerOrId);
+      if (!this.container) {
+        throw new Error(`Container with ID '${containerOrId}' not found`);
+      }
+    } else if (containerOrId instanceof HTMLElement) {
+      this.container = containerOrId;
+    } else {
+      throw new Error('Container must be a DOM element or an ID string');
+    }
+    
+    this.interface = apiInterface;
     
     // Tool definitions with structure
     this.commands = {};
@@ -24,7 +35,7 @@ export class CliTerminalV2 {
     this.init();
   }
 
-  init() {
+  async init() {
     // Inject styles
     this.injectStyles();
     
@@ -44,6 +55,16 @@ export class CliTerminalV2 {
     this.addOutput('Welcome to Aiur CLI Terminal v2', 'info');
     this.addOutput('Type a command or press Tab for suggestions', 'info');
     this.addOutput('');
+    
+    // Subscribe to tool updates
+    if (this.interface.onToolsUpdated) {
+      this.interface.onToolsUpdated(() => {
+        this.updateToolCommands();
+      });
+    }
+    
+    // Load initial tools
+    await this.refreshTools();
   }
 
   setupCommands() {
@@ -88,7 +109,10 @@ export class CliTerminalV2 {
   }
 
   updateToolCommands() {
-    if (!this.aiur || !this.aiur.toolDefinitions) return;
+    if (!this.interface || !this.interface.getTools) return;
+    
+    const toolDefinitions = this.interface.getTools();
+    if (!toolDefinitions) return;
     
     // Define structures for known tools
     const toolStructures = {
@@ -118,7 +142,7 @@ export class CliTerminalV2 {
       'alert_list': 'alert_list [status]'
     };
     
-    for (const [name, def] of this.aiur.toolDefinitions) {
+    for (const [name, def] of toolDefinitions) {
       this.commands[name] = {
         description: def.description || '',
         structure: toolStructures[name] || name,
@@ -272,13 +296,7 @@ export class CliTerminalV2 {
   }
 
   render() {
-    const container = document.getElementById(this.containerId);
-    if (!container) {
-      console.error(`Container ${this.containerId} not found`);
-      return;
-    }
-    
-    container.innerHTML = `
+    this.container.innerHTML = `
       <div class="cli-terminal-v2">
         <div class="terminal-header">
           <div>Aiur CLI Terminal v2</div>
@@ -583,7 +601,6 @@ export class CliTerminalV2 {
 
     this.input.value = '';
     this.suggestion.textContent = '';
-    this.hideAutocomplete();
     this.scrollToBottom();
   }
 
@@ -680,8 +697,8 @@ export class CliTerminalV2 {
 
   // Tool execution
   async executeTool(toolName, args) {
-    if (!this.aiur) {
-      throw new Error('Not connected to Aiur server');
+    if (!this.interface || !this.interface.executeTool) {
+      throw new Error('No interface provided for tool execution');
     }
 
     // Parse arguments into proper format for the tool
@@ -690,7 +707,7 @@ export class CliTerminalV2 {
     this.addOutput(`Executing ${toolName}...`, 'info');
     
     try {
-      const response = await this.sendToolRequest(toolName, params);
+      const response = await this.interface.executeTool(toolName, params);
       
       // Extract and display result
       let result = response;
@@ -712,6 +729,13 @@ export class CliTerminalV2 {
       return result;
     } catch (error) {
       throw error;
+    }
+  }
+  
+  // Refresh tools from the interface
+  async refreshTools() {
+    if (this.interface && this.interface.getTools) {
+      this.updateToolCommands();
     }
   }
 
@@ -759,42 +783,4 @@ export class CliTerminalV2 {
     return {};
   }
 
-  async sendToolRequest(toolName, args) {
-    return new Promise((resolve, reject) => {
-      const requestId = `cli_v2_req_${++this.aiur.requestId}`;
-      
-      // Store the promise resolver
-      this.aiur.pendingRequests.set(requestId, {
-        method: 'tools/call',
-        params: { name: toolName, arguments: args },
-        timestamp: Date.now(),
-        resolve: resolve,
-        reject: reject
-      });
-      
-      // Send the request
-      const success = this.aiur.sendMessage({
-        type: 'mcp_request',
-        requestId: requestId,
-        method: 'tools/call',
-        params: {
-          name: toolName,
-          arguments: args
-        }
-      });
-      
-      if (!success) {
-        this.aiur.pendingRequests.delete(requestId);
-        reject(new Error('Failed to send request'));
-      }
-      
-      // Set a timeout
-      setTimeout(() => {
-        if (this.aiur.pendingRequests.has(requestId)) {
-          this.aiur.pendingRequests.delete(requestId);
-          reject(new Error('Request timeout'));
-        }
-      }, 30000); // 30 second timeout
-    });
-  }
 }
