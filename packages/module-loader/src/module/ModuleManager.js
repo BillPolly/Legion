@@ -158,6 +158,7 @@ export class ModuleManager extends EventEmitter {
           type: 'json',
           config: config,
           dependencies: config.dependencies || [],
+          description: config.description || 'No description',
           tools: []
         };
         
@@ -276,9 +277,16 @@ export class ModuleManager extends EventEmitter {
           };
           
           const tempInstance = new ModuleClass(mockRM);
-          if (tempInstance && typeof tempInstance.getTools === 'function') {
-            const tools = tempInstance.getTools();
-            toolsInfo = [];
+          if (tempInstance) {
+            // Extract module description if available
+            if (tempInstance.description) {
+              moduleInfo.description = tempInstance.description;
+            }
+            
+            // Extract tools if getTools method exists
+            if (typeof tempInstance.getTools === 'function') {
+              const tools = tempInstance.getTools();
+              toolsInfo = [];
             
             // Extract individual functions from each tool
             tools.forEach(tool => {
@@ -325,6 +333,7 @@ export class ModuleManager extends EventEmitter {
                 });
               }
             });
+            }
           }
           
           // Cleanup if possible

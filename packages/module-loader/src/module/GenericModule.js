@@ -21,6 +21,7 @@ export class GenericModule extends Module {
     this.config = config;
     this.dependencies = dependencies;
     this.name = config.name;
+    this.description = config.description || 'Generic module wrapper for JavaScript libraries';
     this.library = null;
     this.instance = null;
     this.tools = [];

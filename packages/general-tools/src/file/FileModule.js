@@ -784,6 +784,7 @@ class FileModule extends Module {
   constructor(resourceManager = {}) {
     super();
     this.name = 'file';
+    this.description = 'File system operations for reading, writing, and managing files and directories';
     
     // Handle both object destructuring and ResourceManager patterns
     let config = {};

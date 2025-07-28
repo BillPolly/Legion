@@ -371,6 +371,7 @@ class JsonModule extends Module {
   constructor({} = {}) {
     super();
     this.name = 'json';
+    this.description = 'JSON manipulation and validation tools for parsing, stringifying, and extracting data from JSON structures';
     
     // Register all JSON tools
     this.tools = [
