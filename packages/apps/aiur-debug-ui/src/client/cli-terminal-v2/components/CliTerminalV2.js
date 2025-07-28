@@ -15,7 +15,10 @@ export class CliTerminalV2 {
     this.history = [];
     this.historyIndex = -1;
     this.currentSuggestion = '';
-    this.selectedAutocomplete = -1;
+    this.tabCompletions = [];
+    this.tabIndex = -1;
+    this.tabPrefix = '';
+    this.originalTabInput = '';
     
     // Initialize
     this.init();
@@ -139,21 +142,29 @@ export class CliTerminalV2 {
     style.id = styleId;
     style.textContent = `
       .cli-terminal-v2 {
-        height: 100%;
-        padding: 20px;
-        overflow-y: auto;
+        height: 600px;
+        display: flex;
+        flex-direction: column;
         background: #1a1a1a;
         color: #00ff00;
         font-family: 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace;
         font-size: 13px;
         border-radius: 8px;
+        overflow: hidden;
       }
 
       .cli-terminal-v2 .terminal-header {
         color: #888;
-        margin-bottom: 20px;
+        padding: 20px 20px 10px 20px;
         border-bottom: 1px solid #333;
-        padding-bottom: 10px;
+        flex-shrink: 0;
+      }
+
+      .cli-terminal-v2 #cli-v2-output {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        min-height: 0;
       }
 
       .cli-terminal-v2 .output-line {
@@ -167,7 +178,9 @@ export class CliTerminalV2 {
         position: relative;
         display: flex;
         align-items: center;
-        margin-top: 10px;
+        padding: 10px 20px 20px 20px;
+        border-top: 1px solid #333;
+        flex-shrink: 0;
       }
 
       .cli-terminal-v2 .prompt {
@@ -211,46 +224,6 @@ export class CliTerminalV2 {
         margin: 0;
       }
 
-      .cli-terminal-v2 .autocomplete-dropdown {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: #2a2a2a;
-        border: 1px solid #444;
-        border-radius: 4px;
-        max-height: 200px;
-        overflow-y: auto;
-        z-index: 10;
-        display: none;
-        margin-top: 4px;
-      }
-
-      .cli-terminal-v2 .autocomplete-item {
-        padding: 8px 12px;
-        cursor: pointer;
-        border-bottom: 1px solid #333;
-      }
-
-      .cli-terminal-v2 .autocomplete-item:hover,
-      .cli-terminal-v2 .autocomplete-item.selected {
-        background: #3a3a3a;
-      }
-
-      .cli-terminal-v2 .autocomplete-item:last-child {
-        border-bottom: none;
-      }
-
-      .cli-terminal-v2 .command-name {
-        color: #00ffff;
-        font-weight: bold;
-      }
-
-      .cli-terminal-v2 .command-description {
-        color: #888;
-        font-size: 12px;
-        margin-left: 10px;
-      }
 
       .cli-terminal-v2 .error {
         color: #ff6b6b;
@@ -275,6 +248,24 @@ export class CliTerminalV2 {
         margin: 8px 0;
         border-radius: 4px;
         border-left: 3px solid #007acc;
+      }
+
+      /* Scrollbar styling */
+      .cli-terminal-v2 #cli-v2-output::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .cli-terminal-v2 #cli-v2-output::-webkit-scrollbar-track {
+        background: #1a1a1a;
+      }
+
+      .cli-terminal-v2 #cli-v2-output::-webkit-scrollbar-thumb {
+        background: #444;
+        border-radius: 4px;
+      }
+
+      .cli-terminal-v2 #cli-v2-output::-webkit-scrollbar-thumb:hover {
+        background: #555;
       }
     `;
     document.head.appendChild(style);
@@ -301,7 +292,6 @@ export class CliTerminalV2 {
           <div class="input-wrapper">
             <div class="suggestion-text" id="cli-v2-suggestion"></div>
             <input type="text" class="command-input" id="cli-v2-input" autocomplete="off" spellcheck="false">
-            <div class="autocomplete-dropdown" id="cli-v2-autocomplete"></div>
           </div>
         </div>
       </div>
@@ -312,21 +302,17 @@ export class CliTerminalV2 {
     this.output = document.getElementById('cli-v2-output');
     this.input = document.getElementById('cli-v2-input');
     this.suggestion = document.getElementById('cli-v2-suggestion');
-    this.autocomplete = document.getElementById('cli-v2-autocomplete');
   }
 
   bindEvents() {
     this.input.addEventListener('input', (e) => this.handleInput(e));
     this.input.addEventListener('keydown', (e) => this.handleKeyDown(e));
-    this.input.addEventListener('blur', () => {
-      setTimeout(() => this.hideAutocomplete(), 200);
-    });
     this.input.addEventListener('focus', () => this.updateSuggestions());
     
     // Keep focus on input when clicking in terminal
     const terminal = this.output.parentElement;
     terminal.addEventListener('click', (e) => {
-      if (e.target !== this.input && !e.target.closest('.autocomplete-dropdown')) {
+      if (e.target !== this.input) {
         this.focusInput();
       }
     });
@@ -337,6 +323,21 @@ export class CliTerminalV2 {
   }
 
   handleInput(e) {
+    console.log('[Input] handleInput:', {
+      value: this.input.value,
+      inputType: e.inputType,
+      data: e.data,
+      isComposing: e.isComposing
+    });
+    
+    // Only reset tab completion when user is actually typing
+    // inputType will be undefined for programmatic changes
+    if (e.inputType) {
+      this.tabCompletions = [];
+      this.tabIndex = -1;
+      this.tabPrefix = '';
+    }
+    
     this.updateSuggestions();
   }
 
@@ -352,22 +353,16 @@ export class CliTerminalV2 {
         break;
       case 'ArrowUp':
         e.preventDefault();
-        if (this.autocomplete.style.display === 'block') {
-          this.navigateAutocomplete(-1);
-        } else {
-          this.navigateHistory(-1);
-        }
+        this.navigateHistory(-1);
         break;
       case 'ArrowDown':
         e.preventDefault();
-        if (this.autocomplete.style.display === 'block') {
-          this.navigateAutocomplete(1);
-        } else {
-          this.navigateHistory(1);
-        }
+        this.navigateHistory(1);
         break;
       case 'Escape':
-        this.hideAutocomplete();
+        // Clear input
+        this.input.value = '';
+        this.updateSuggestions();
         break;
     }
   }
@@ -378,15 +373,13 @@ export class CliTerminalV2 {
     const command = parts[0];
     
     this.suggestion.textContent = '';
-    this.selectedAutocomplete = -1;
-    this.hideAutocomplete();
 
     // If we have a recognized command, show its argument structure
     if (this.commands[command]) {
       this.showCommandStructure(value, command);
     } else if (value && !value.includes(' ')) {
-      // Show command completions if typing a partial command
-      this.showCommandCompletions(value);
+      // Show single best match for partial command
+      this.showBestCommandMatch(value);
     }
   }
 
@@ -403,12 +396,13 @@ export class CliTerminalV2 {
     this.currentSuggestion = suggestion;
   }
 
-  showCommandCompletions(partial) {
+  showBestCommandMatch(partial) {
     const matches = Object.keys(this.commands).filter(cmd => 
       cmd.startsWith(partial) && cmd !== partial
     );
 
-    if (matches.length === 1) {
+    if (matches.length > 0) {
+      // Show the first match as ghost text
       const command = matches[0];
       const cmdDef = this.commands[command];
       
@@ -420,88 +414,43 @@ export class CliTerminalV2 {
         this.suggestion.textContent = command;
         this.currentSuggestion = command;
       }
-      
-      this.hideAutocomplete();
-    } else if (matches.length > 1) {
-      this.showAutocompleteDropdown(matches.map(cmd => ({
-        text: cmd,
-        description: this.commands[cmd].description
-      })));
-      this.suggestion.textContent = '';
-    } else {
-      this.hideAutocomplete();
     }
   }
 
-  showAutocompleteDropdown(items) {
-    this.autocomplete.innerHTML = '';
-    this.autocomplete.style.display = 'block';
-
-    items.forEach((item, index) => {
-      const div = document.createElement('div');
-      div.className = 'autocomplete-item';
-      div.innerHTML = `
-        <span class="command-name">${item.text}</span>
-        <span class="command-description">${item.description}</span>
-      `;
-      div.addEventListener('mousedown', (e) => {
-        e.preventDefault();
-        this.selectAutocompleteItem(item.text);
-      });
-      this.autocomplete.appendChild(div);
-    });
-  }
-
-  hideAutocomplete() {
-    this.autocomplete.style.display = 'none';
-    this.selectedAutocomplete = -1;
-  }
-
-  navigateAutocomplete(direction) {
-    const items = this.autocomplete.querySelectorAll('.autocomplete-item');
-    if (items.length === 0) return;
-
-    if (this.selectedAutocomplete >= 0) {
-      items[this.selectedAutocomplete].classList.remove('selected');
-    }
-
-    this.selectedAutocomplete += direction;
-    if (this.selectedAutocomplete < 0) this.selectedAutocomplete = items.length - 1;
-    if (this.selectedAutocomplete >= items.length) this.selectedAutocomplete = 0;
-
-    items[this.selectedAutocomplete].classList.add('selected');
-    items[this.selectedAutocomplete].scrollIntoView({ block: 'nearest' });
-  }
-
-  selectAutocompleteItem(text) {
-    const value = this.input.value;
-    const parts = value.split(' ');
-    
-    if (parts.length === 1) {
-      this.input.value = text + ' ';
-    } else {
-      parts[parts.length - 1] = text;
-      this.input.value = parts.join(' ') + ' ';
-    }
-    
-    this.hideAutocomplete();
-    this.suggestion.textContent = '';
-    this.focusInput();
-    this.updateSuggestions();
-  }
 
   acceptSuggestion() {
-    if (this.selectedAutocomplete >= 0) {
-      const selected = this.autocomplete.querySelector('.autocomplete-item.selected');
-      if (selected) {
-        const text = selected.querySelector('.command-name').textContent;
-        this.selectAutocompleteItem(text);
-        return;
+    const value = this.input.value.trim();
+    const parts = value.split(' ');
+    
+    console.log('[Tab] acceptSuggestion called:', {
+      value,
+      parts,
+      partsLength: parts.length,
+      endsWithSpace: value.endsWith(' '),
+      currentSuggestion: this.currentSuggestion,
+      suggestionText: this.suggestion.textContent,
+      tabState: {
+        tabPrefix: this.tabPrefix,
+        tabIndex: this.tabIndex,
+        tabCompletions: this.tabCompletions
       }
-    }
-
-    if (this.currentSuggestion && this.suggestion.textContent) {
-      // Only accept the next word/parameter, not the whole suggestion
+    });
+    
+    // Check if we're completing a command or arguments
+    if (parts.length === 1 && !value.endsWith(' ')) {
+      // For command completion, check if we're already in a tab cycle
+      if (this.tabCompletions.length > 0 && this.tabPrefix) {
+        // Continue cycling with the original prefix
+        console.log('[Tab] Continuing cycle with prefix:', this.tabPrefix);
+        this.cycleCommandCompletions(this.tabPrefix);
+      } else {
+        // Start new cycle
+        console.log('[Tab] Starting new cycle');
+        this.cycleCommandCompletions(value);
+      }
+    } else if (this.currentSuggestion && this.suggestion.textContent) {
+      // Accept next parameter from ghost text
+      console.log('[Tab] Accepting parameter from ghost text');
       const currentLen = this.input.value.length;
       const suggestion = this.suggestion.textContent;
       
@@ -523,9 +472,79 @@ export class CliTerminalV2 {
         nextWordEnd = nextSpace;
       }
       
+      console.log('[Tab] Setting input value to:', suggestion.substring(0, nextWordEnd));
       this.input.value = suggestion.substring(0, nextWordEnd);
       this.updateSuggestions();
+    } else {
+      console.log('[Tab] No action taken - no completion available');
     }
+  }
+  
+  cycleCommandCompletions(partial) {
+    console.log('[Tab Cycle] Start:', {
+      partial,
+      tabPrefix: this.tabPrefix,
+      tabIndex: this.tabIndex,
+      tabCompletions: this.tabCompletions
+    });
+    
+    // If this is a new partial (not continuing a cycle), reset
+    if (partial !== this.tabPrefix) {
+      this.tabPrefix = partial;
+      this.tabCompletions = Object.keys(this.commands).filter(cmd => 
+        cmd.startsWith(partial) && cmd !== partial
+      );
+      this.tabIndex = -1;
+      
+      // Store the original input
+      this.originalTabInput = partial;  // Store the prefix, not the full value
+      
+      console.log('[Tab Cycle] Reset completions:', {
+        tabCompletions: this.tabCompletions,
+        originalInput: this.originalTabInput
+      });
+    }
+    
+    if (this.tabCompletions.length === 0) {
+      console.log('[Tab Cycle] No completions found');
+      return;
+    }
+    
+    // If only one match, complete it
+    if (this.tabCompletions.length === 1) {
+      console.log('[Tab Cycle] Single match, completing:', this.tabCompletions[0]);
+      this.input.value = this.tabCompletions[0] + ' ';
+      this.updateSuggestions();
+      // Reset tab state
+      this.tabCompletions = [];
+      this.tabIndex = -1;
+      this.tabPrefix = '';
+      return;
+    }
+    
+    // Multiple matches - cycle through them
+    this.tabIndex = (this.tabIndex + 1) % (this.tabCompletions.length + 1);
+    
+    console.log('[Tab Cycle] New index:', this.tabIndex, 'of', this.tabCompletions.length);
+    
+    if (this.tabIndex === this.tabCompletions.length) {
+      // Restore original input and beep (visual feedback)
+      console.log('[Tab Cycle] End of cycle, restoring:', this.originalTabInput);
+      this.input.value = this.originalTabInput;
+      // Flash the input to indicate end of cycle
+      this.input.style.backgroundColor = '#333';
+      setTimeout(() => {
+        this.input.style.backgroundColor = 'transparent';
+      }, 100);
+    } else {
+      // Show current completion
+      const completion = this.tabCompletions[this.tabIndex];
+      console.log('[Tab Cycle] Showing completion:', completion);
+      this.input.value = completion;
+    }
+    
+    // Update suggestions to show the ghost text for current completion
+    this.updateSuggestions();
   }
 
   navigateHistory(direction) {
