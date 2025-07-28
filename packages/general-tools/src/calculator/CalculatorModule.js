@@ -173,6 +173,7 @@ class CalculatorModule extends Module {
   constructor({} = {}) {
     super();
     this.name = 'calculator';
+    this.description = 'Mathematical calculation tools for evaluating expressions and performing computations';
     
     // Create the calculator tool
     this.tools = [

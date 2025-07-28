@@ -7,7 +7,8 @@
 
 import { ContextManager } from './ContextManager.js';
 import { ModuleManager, ModuleFactory } from '@legion/module-loader';
-import ModuleManagerModule from '../../../general-tools/src/module-manager/ModuleManagerModule.js';
+import { ModuleHandler } from './ModuleHandler.js';
+import { ModuleOperationTools } from '../tools/ModuleOperationTools.js';
 import path from 'path';
 
 export class ToolDefinitionProvider {
@@ -42,11 +43,17 @@ export class ToolDefinitionProvider {
    * @returns {Promise<void>}
    */
   async initialize() {
+    // Store module manager in resource manager FIRST for module handler
+    this._resourceManager.register('moduleManager', this.moduleManager);
+    
     // Discover and load essential modules
     const currentPath = process.cwd();
-    const basePath = currentPath.includes('aiur-debug-ui') 
-      ? path.resolve(currentPath, '../../../')
-      : currentPath;
+    // Navigate to Legion root from wherever we are
+    let basePath = currentPath;
+    if (currentPath.includes('/packages/')) {
+      // We're inside a package, go up to Legion root
+      basePath = currentPath.substring(0, currentPath.lastIndexOf('/packages/'));
+    }
       
     const moduleDirectories = [
       path.join(basePath, 'packages/general-tools/src'),
@@ -57,30 +64,9 @@ export class ToolDefinitionProvider {
     // Discover available modules
     await this.moduleManager.discoverModules(moduleDirectories);
     
-    // Load ModuleManagerModule directly with special dependencies
-    try {
-      // Pass the ModuleManager instance so the module management tools can see loaded modules
-      const moduleManagerModule = new ModuleManagerModule({ 
-        ResourceManager: this._resourceManager,
-        ModuleManager: this.moduleManager
-      });
-      
-      // Load the module instance directly
-      await this._loadModuleInstance(moduleManagerModule);
-      
-      // Register the ModuleManagerModule in the registry
-      const registry = this.moduleManager.getRegistry();
-      registry.register('module-manager', {
-        name: 'module-manager',
-        type: 'builtin',
-        path: null,
-        status: 'loaded'
-      }, moduleManagerModule);
-      
-      console.log('[ToolDefinitionProvider] Loaded ModuleManagerModule - module management tools now available');
-    } catch (error) {
-      console.error('[ToolDefinitionProvider] Failed to load ModuleManagerModule:', error);
-    }
+    // Create module handler and operation tools
+    this.moduleHandler = await ModuleHandler.create(this._resourceManager);
+    this.moduleOperationTools = new ModuleOperationTools(this.moduleHandler);
   }
 
   /**
@@ -95,6 +81,13 @@ export class ToolDefinitionProvider {
     const contextTools = this.contextManager.getToolDefinitions();
     console.log(`[ToolDefinitionProvider.getAllToolDefinitions] Context tools: ${contextTools.length}`);
     allTools.push(...contextTools);
+
+    // Add module operation tools
+    if (this.moduleOperationTools) {
+      const moduleOpTools = this.moduleOperationTools.getToolDefinitions();
+      console.log(`[ToolDefinitionProvider.getAllToolDefinitions] Module operation tools: ${moduleOpTools.length}`);
+      allTools.push(...moduleOpTools);
+    }
 
     // Add dynamically loaded module tools
     const moduleTools = this._getModuleToolDefinitions();
@@ -120,6 +113,7 @@ export class ToolDefinitionProvider {
    */
   toolExists(toolName) {
     return this.contextManager.isContextTool(toolName) || 
+           (this.moduleOperationTools && this.moduleOperationTools.isModuleTool(toolName)) ||
            this._isModuleTool(toolName) ||
            this.isDebugTool(toolName);
   }
@@ -127,11 +121,14 @@ export class ToolDefinitionProvider {
   /**
    * Get tool type for routing
    * @param {string} toolName - Name of the tool
-   * @returns {string} Tool type: 'context', 'module', 'debug', or 'unknown'
+   * @returns {string} Tool type: 'context', 'module', 'moduleOp', 'debug', or 'unknown'
    */
   getToolType(toolName) {
     if (this.contextManager.isContextTool(toolName)) {
       return 'context';
+    }
+    if (this.moduleOperationTools && this.moduleOperationTools.isModuleTool(toolName)) {
+      return 'moduleOp';
     }
     if (this._isModuleTool(toolName)) {
       return 'module';
@@ -163,6 +160,17 @@ export class ToolDefinitionProvider {
               errorBroadcastService.captureContextError(contextError, 'execute-tool', { toolName, args: resolvedArgs });
             }
             throw contextError;
+          }
+        
+        case 'moduleOp':
+          try {
+            const result = await this.moduleOperationTools.executeModuleTool(toolName, resolvedArgs);
+            return this._formatToolResponse(result);
+          } catch (moduleOpError) {
+            if (errorBroadcastService) {
+              errorBroadcastService.captureToolError(moduleOpError, toolName, resolvedArgs);
+            }
+            throw moduleOpError;
           }
         
         case 'module':

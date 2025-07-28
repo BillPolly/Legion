@@ -10,51 +10,56 @@ export class ResponseFormatter {
   setupFormatters() {
     // Module list formatter
     this.formatters.set('module_list', (result) => {
-      if (!result.modules) return this.formatDefault(result);
+      // Handle the new format from ModuleHandler
+      if (!result.success) {
+        return `❌ Failed to list modules: ${result.error || 'Unknown error'}`;
+      }
       
       const lines = [];
-      lines.push('═══ Module Status ═══');
+      lines.push('═══ Module List ═══');
       lines.push('');
       
-      // Simple format - show modules by status
-      if (typeof result.modules === 'object' && !Array.isArray(result.modules)) {
-        for (const [status, moduleNames] of Object.entries(result.modules)) {
-          if (moduleNames.length === 0) continue;
-          
-          lines.push(`${status.toUpperCase()} (${moduleNames.length}):`);
-          
-          // Display modules in columns
-          const columns = 3;
-          const columnWidth = 25;
-          
-          for (let i = 0; i < moduleNames.length; i += columns) {
-            const row = moduleNames.slice(i, i + columns)
-              .map(name => name.padEnd(columnWidth))
-              .join('');
-            lines.push(`  ${row}`);
-          }
-          lines.push('');
-        }
-      } 
-      // Detailed format - show as table
-      else if (Array.isArray(result.modules)) {
-        const headers = ['Module', 'Status', 'Type', 'Tools'];
-        const rows = result.modules.map(m => [
-          m.name || '',
-          m.status || '',
-          m.type || '',
-          m.tools ? m.tools.length.toString() : '0'
+      // Show available modules
+      if (result.available && result.available.length > 0) {
+        lines.push(`AVAILABLE MODULES (${result.available.length}):`);
+        lines.push('');
+        
+        // Create a table format for better readability
+        const headers = ['Module', 'Type', 'Tools', 'Description'];
+        const rows = result.available.map(m => [
+          m.name || 'unknown',
+          m.type || 'unknown',
+          (m.toolCount || 0).toString(),
+          m.description || 'No description'
         ]);
         
         lines.push(this.formatTable(headers, rows));
+        lines.push('');
       }
       
-      // Add statistics
-      if (result.stats) {
-        lines.push('─── Statistics ───');
-        lines.push(`Total Discovered: ${result.stats.totalDiscovered || 0}`);
-        lines.push(`Total Loaded: ${result.stats.totalLoaded || 0}`);
-        lines.push(`Total Available: ${result.stats.totalAvailable || 0}`);
+      // Show loaded modules
+      if (result.loaded && result.loaded.length > 0) {
+        lines.push(`LOADED MODULES (${result.loaded.length}):`);
+        lines.push('');
+        
+        // Simple list for loaded modules
+        result.loaded.forEach(m => {
+          lines.push(`  • ${m.name} (${m.toolCount || 0} tools)`);
+          if (m.description && m.description !== 'No description') {
+            lines.push(`    ${m.description}`);
+          }
+        });
+        lines.push('');
+      } else {
+        lines.push('No modules currently loaded.');
+        lines.push('');
+      }
+      
+      // Add totals
+      if (result.total) {
+        lines.push('─── Summary ───');
+        lines.push(`Available: ${result.total.available || 0}`);
+        lines.push(`Loaded: ${result.total.loaded || 0}`);
       }
       
       return lines.join('\n');

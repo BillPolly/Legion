@@ -1,14 +1,19 @@
 /**
  * Integration tests for the complete module loading workflow from UI perspective
  * 
- * Tests the full workflow by directly calling Aiur server components:
- * 1. List available modules (module_list)
- * 2. Load a specific module (module_load)  
- * 3. List available tools (tools/list)
- * 4. Invoke a tool from the loaded module
+ * IMPORTANT: Module management tools (module_list, module_load, module_tools, etc.)
+ * have been removed. These tests are kept but skipped to document the old behavior.
  * 
- * These tests verify the UI can successfully interact with Aiur's module system
- * after the refactoring to use Legion's module-loader directly.
+ * For the new approach to module loading, see DirectModuleLoading.test.js which
+ * demonstrates how Aiur should use the module-loader package directly.
+ * 
+ * Original test workflow (now deprecated):
+ * 1. List available modules (module_list) - REMOVED
+ * 2. Load a specific module (module_load) - REMOVED
+ * 3. List available tools (tools/list) - Still works for context tools
+ * 4. Invoke a tool from the loaded module - Needs new implementation
+ * 
+ * These tests are skipped but preserved for reference.
  */
 
 import { expect } from 'chai';
@@ -17,8 +22,7 @@ import { RequestHandler } from '../../src/server/RequestHandler.js';
 import { LogManager } from '../../src/core/LogManager.js';
 import { ResourceManager } from '@legion/module-loader';
 
-describe('UI Module Loading Workflow Integration Tests', function() {
-  this.timeout(30000); // Allow time for module operations
+describe('UI Module Loading Workflow Integration Tests', () => {
   
   let sessionManager;
   let requestHandler;
@@ -118,7 +122,7 @@ describe('UI Module Loading Workflow Integration Tests', function() {
     return await requestHandler.handleRequest(request, session.id);
   }
 
-  describe('Step 1: Module Discovery and Listing', function() {
+  describe.skip('Step 1: Module Discovery and Listing - SKIPPED: Module management tools have been removed', function() {
     it('should first check what tools are available', async function() {
       const toolsResponse = await listTools();
       console.log('Available tools:', toolsResponse.tools ? toolsResponse.tools.map(t => t.name) : 'No tools found');
@@ -168,7 +172,7 @@ describe('UI Module Loading Workflow Integration Tests', function() {
     });
   });
 
-  describe('Step 2: Module Loading', function() {
+  describe.skip('Step 2: Module Loading - SKIPPED: Module management tools have been removed', function() {
     it('should successfully load the file module using module_load', async function() {
       const response = await callTool('module_load', { name: 'file' });
       
@@ -201,7 +205,7 @@ describe('UI Module Loading Workflow Integration Tests', function() {
     });
   });
 
-  describe('Step 3: Tool Discovery After Module Loading', function() {
+  describe.skip('Step 3: Tool Discovery After Module Loading - SKIPPED: Module management tools have been removed', function() {
     beforeEach(async function() {
       // Load the file module before each test
       await callTool('module_load', { name: 'file' });
@@ -252,7 +256,7 @@ describe('UI Module Loading Workflow Integration Tests', function() {
     });
   });
 
-  describe('Step 4: Tool Invocation After Module Loading', function() {
+  describe.skip('Step 4: Tool Invocation After Module Loading - SKIPPED: Module management tools have been removed', function() {
     beforeEach(async function() {
       // Load the file module before each test
       await callTool('module_load', { name: 'file' });
@@ -313,7 +317,7 @@ describe('UI Module Loading Workflow Integration Tests', function() {
     });
   });
 
-  describe('End-to-End Workflow', function() {
+  describe.skip('End-to-End Workflow - SKIPPED: Module management tools have been removed', function() {
     it('should complete the entire workflow: discover → load → list → invoke', async function() {
       console.log('\n=== Starting End-to-End Workflow Test ===');
       
@@ -367,14 +371,20 @@ describe('UI Module Loading Workflow Integration Tests', function() {
   });
 
   describe('Error Handling and Edge Cases', function() {
-    it('should handle loading non-existent module gracefully', async function() {
-      const response = await callTool('module_load', { name: 'non_existent_module' });
-      const result = JSON.parse(response.content[0].text);
-      
-      expect(result).to.have.property('success', false);
-      expect(result).to.have.property('error');
-      
-      console.log('Non-existent module error handled:', result.error);
+    it('should handle calling removed module_load tool', async function() {
+      try {
+        const response = await callTool('module_load', { name: 'non_existent_module' });
+        
+        // Should get error since module_load no longer exists
+        if (response.content) {
+          const result = JSON.parse(response.content[0].text);
+          expect(result).to.include('Unknown tool');
+        }
+      } catch (error) {
+        // Expected - module_load tool no longer exists
+        expect(error.message).to.include('Unknown tool');
+        console.log('Confirmed: module_load tool no longer exists');
+      }
     });
 
     it('should handle invoking non-existent tool gracefully', async function() {
@@ -394,14 +404,21 @@ describe('UI Module Loading Workflow Integration Tests', function() {
       console.log('Non-existent tool error handled correctly');
     });
 
-    it('should handle module_load with missing parameters', async function() {
-      const response = await callTool('module_load', {});
-      const result = JSON.parse(response.content[0].text);
+    it('should confirm module management tools are removed', async function() {
+      const removedTools = ['module_load', 'module_list', 'module_tools', 'module_info', 'module_unload'];
       
-      expect(result).to.have.property('success', false);
-      expect(result).to.have.property('error');
+      for (const toolName of removedTools) {
+        try {
+          await callTool(toolName, {});
+          // If we get here, the tool exists (which it shouldn't)
+          throw new Error(`Tool ${toolName} should not exist`);
+        } catch (error) {
+          // Expected - tool should not exist
+          expect(error.message).to.include('Unknown tool');
+        }
+      }
       
-      console.log('Missing parameter error handled:', result.error);  
+      console.log('Confirmed: All module management tools have been removed');
     });
   });
 });

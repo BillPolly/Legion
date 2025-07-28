@@ -577,16 +577,22 @@ export class ModuleManager extends EventEmitter {
   /**
    * Get module information
    * @param {string} moduleName - Module name
-   * @returns {Object|null} Module information
+   * @returns {Promise<Object|null>} Module information
    */
-  getModuleInfo(moduleName) {
+  async getModuleInfo(moduleName) {
     const registered = this.registry.get(moduleName);
     if (registered) {
       // For loaded modules, get fresh tool information from the instance
       let tools = [];
       if (registered.instance?.getTools) {
         try {
-          tools = registered.instance.getTools().flatMap(tool => {
+          const toolsResult = registered.instance.getTools();
+          // Handle both synchronous arrays and async promises
+          const toolsArray = toolsResult && typeof toolsResult.then === 'function' 
+            ? await toolsResult 
+            : toolsResult;
+          
+          tools = toolsArray.flatMap(tool => {
             const info = {
               name: tool.name || tool.constructor.name,
               description: tool.description || 'No description',
