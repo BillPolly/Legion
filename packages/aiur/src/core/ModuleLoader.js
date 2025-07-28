@@ -1,12 +1,12 @@
 /**
- * ModuleLoader - Standardized loading of Legion modules using async factory pattern
+ * ModuleLoader - Standardized loading of Legion modules using ModuleManager
  * 
- * Handles both async factory pattern modules and legacy modules consistently.
+ * Uses the centralized ModuleManager for dynamic module discovery and loading.
  */
 
-import { LLMPlannerModule } from '@legion/llm-planner';
-import { PlanExecutorModule } from '@legion/plan-executor';
-import FileModule from '../../../general-tools/src/file/FileModule.js';
+import { ModuleManager, ModuleFactory } from '@legion/module-loader';
+import path from 'path';
+import ModuleManagerModule from '../../../general-tools/src/module-manager/ModuleManagerModule.js';
 import { LegionModuleAdapter } from '../tools/LegionModuleAdapter.js';
 
 export class ModuleLoader {
@@ -15,6 +15,7 @@ export class ModuleLoader {
     this.handleRegistry = handleRegistry;
     this.legionAdapter = null;
     this.loadedModules = new Map();
+    this.moduleManager = null;
   }
 
   /**
@@ -43,6 +44,22 @@ export class ModuleLoader {
     
     // Store reference to resource manager for module creation
     this.resourceManager = resourceManager;
+    
+    // Create ModuleFactory and ModuleManager
+    const moduleFactory = new ModuleFactory(this.legionAdapter.resourceManager);
+    this.moduleManager = new ModuleManager(moduleFactory, {
+      searchDepth: 3,
+      autoDiscover: false // We'll discover manually
+    });
+    
+    // First, load the ModuleManagerModule to make module management tools available
+    try {
+      const moduleManagerModule = new ModuleManagerModule({ ResourceManager: this.legionAdapter.resourceManager });
+      await this._loadModuleInstance(moduleManagerModule);
+      console.log('[ModuleLoader] Loaded ModuleManagerModule - module management tools now available');
+    } catch (error) {
+      console.error('[ModuleLoader] Failed to load ModuleManagerModule:', error);
+    }
   }
 
   /**
@@ -52,24 +69,48 @@ export class ModuleLoader {
   async loadAllModules() {
     const loadedModules = [];
     const errorBroadcastService = this._getErrorBroadcastService();
+    const logManager = this.legionAdapter.resourceManager.has('logManager') ? 
+      this.legionAdapter.resourceManager.get('logManager') : null;
 
     try {
-      // Load modules using async factory pattern where available
-      const asyncFactoryModules = [
-        {
-          name: 'LLMPlannerModule',
-          factory: () => LLMPlannerModule.create(this.legionAdapter.resourceManager)
-        }
+      // Define directories to search for modules - navigate up to Legion root
+      const currentPath = process.cwd();
+      // If we're in aiur-debug-ui, go up to Legion root
+      const basePath = currentPath.includes('aiur-debug-ui') 
+        ? path.resolve(currentPath, '../../../')
+        : currentPath;
+        
+      const moduleDirectories = [
+        path.join(basePath, 'packages/general-tools/src'),
+        path.join(basePath, 'packages/apps'),
+        path.join(basePath, 'packages/code-gen')
       ];
 
-      for (const moduleConfig of asyncFactoryModules) {
+      // Discover available modules
+      console.log('[ModuleLoader] Discovering modules in:', moduleDirectories);
+      const discovered = await this.moduleManager.discoverModules(moduleDirectories);
+      console.log(`[ModuleLoader] Discovered ${discovered.size} modules`);
+
+      // Define modules to auto-load
+      const autoLoadModules = [
+        'llm-planner',     // LLMPlannerModule
+        'plan-executor',   // PlanExecutorModule
+        'file',           // FileModule
+        'context'         // Context management tools
+      ];
+
+      // Load specified modules
+      for (const moduleName of autoLoadModules) {
         try {
-          const moduleInstance = await moduleConfig.factory();
+          if (this.moduleManager.isModuleLoaded(moduleName)) {
+            console.log(`[ModuleLoader] Module '${moduleName}' already loaded`);
+            continue;
+          }
+
+          const moduleInstance = await this.moduleManager.loadModule(moduleName);
           const result = await this._loadModuleInstance(moduleInstance);
           loadedModules.push(result);
-          // Log to file via ResourceManager if available
-          const logManager = this.legionAdapter.resourceManager.has('logManager') ? 
-            this.legionAdapter.resourceManager.get('logManager') : null;
+          
           if (logManager) {
             logManager.logInfo(`Loaded module: ${result.moduleName}`, {
               source: 'ModuleLoader',
@@ -78,101 +119,52 @@ export class ModuleLoader {
             });
           }
         } catch (error) {
-          // Log error to file
-          const logManager = this.legionAdapter.resourceManager.has('logManager') ? 
-            this.legionAdapter.resourceManager.get('logManager') : null;
+          console.error(`[ModuleLoader] Failed to load module '${moduleName}':`, error.message);
+          
           if (logManager) {
             logManager.logError(error, {
               source: 'ModuleLoader',
-              operation: 'load-async-module-failed',
-              moduleName: moduleConfig.name
+              operation: 'load-module-failed',
+              moduleName: moduleName
             });
           }
+          
           if (errorBroadcastService) {
-            errorBroadcastService.captureModuleError(error, moduleConfig.name);
+            errorBroadcastService.captureModuleError(error, moduleName);
           }
           // Continue loading other modules
         }
       }
 
-      // Load legacy modules using old pattern
-      const legacyModules = [
-        {
-          module: PlanExecutorModule,
-          dependencies: {
-            resourceManager: this.legionAdapter.resourceManager,
-            moduleFactory: this.legionAdapter.moduleFactory
-          }
-        },
-        {
-          module: FileModule,
-          dependencies: {
-            basePath: process.cwd(),
-            encoding: 'utf8',
-            createDirectories: true,
-            permissions: 0o755
-          }
-        }
-      ];
+      // Log statistics
+      const stats = this.moduleManager.getStats();
+      console.log('[ModuleLoader] Module loading complete:', {
+        discovered: stats.totalDiscovered,
+        loaded: stats.totalLoaded,
+        available: stats.totalAvailable
+      });
 
-      for (const config of legacyModules) {
-        try {
-          const result = await this.legionAdapter.loadModule(config.module, config.dependencies);
-          loadedModules.push(result);
-          // Log to file via ResourceManager if available
-          const logManager = this.legionAdapter.resourceManager.has('logManager') ? 
-            this.legionAdapter.resourceManager.get('logManager') : null;
-          if (logManager) {
-            logManager.logInfo(`Loaded module: ${result.moduleName}`, {
-              source: 'ModuleLoader',
-              operation: 'load-module',
-              moduleName: result.moduleName
-            });
-          }
-        } catch (error) {
-          // Log error to file
-          const logManager = this.legionAdapter.resourceManager.has('logManager') ? 
-            this.legionAdapter.resourceManager.get('logManager') : null;
-          if (logManager) {
-            logManager.logError(error, {
-              source: 'ModuleLoader',
-              operation: 'load-legacy-module-failed',
-              moduleName: config.module.name
-            });
-          }
-          if (errorBroadcastService) {
-            errorBroadcastService.captureModuleError(error, config.module.name);
-          }
-          // Continue loading other modules
-        }
-      }
-
-      // Log total to file
-      const logManager = this.legionAdapter.resourceManager.has('logManager') ? 
-        this.legionAdapter.resourceManager.get('logManager') : null;
       if (logManager) {
-        logManager.logInfo(`Total modules loaded: ${loadedModules.length}`, {
+        logManager.logInfo(`Module loading complete`, {
           source: 'ModuleLoader',
           operation: 'load-all-modules-complete',
-          totalModules: loadedModules.length
+          stats: stats
         });
       }
+
       return loadedModules;
 
     } catch (error) {
-      // Log critical error to file - safely access logManager
-      try {
-        const logManager = this.legionAdapter.resourceManager.get('logManager');
-        if (logManager) {
-          logManager.logError(error, {
-            source: 'ModuleLoader',
-            operation: 'load-all-modules-critical-error',
-            severity: 'critical'
-          });
-        }
-      } catch (logError) {
-        // Ignore logging errors during critical failure
+      console.error('[ModuleLoader] Critical error during module loading:', error);
+      
+      if (logManager) {
+        logManager.logError(error, {
+          source: 'ModuleLoader',
+          operation: 'load-all-modules-critical-error',
+          severity: 'critical'
+        });
       }
+      
       if (errorBroadcastService) {
         errorBroadcastService.captureError({
           error,
@@ -185,7 +177,8 @@ export class ModuleLoader {
           }
         });
       }
-      return [];
+      
+      return loadedModules; // Return what we managed to load
     }
   }
 
@@ -196,6 +189,15 @@ export class ModuleLoader {
    * @private
    */
   async _loadModuleInstance(moduleInstance) {
+    // Initialize the module if it has an initialize method
+    if (typeof moduleInstance.initialize === 'function') {
+      try {
+        await moduleInstance.initialize();
+      } catch (error) {
+        console.warn(`[ModuleLoader] Failed to initialize module ${moduleInstance.name}:`, error);
+      }
+    }
+    
     // Register the tools from the created module
     const tools = moduleInstance.getTools();
     const registeredTools = [];
@@ -302,11 +304,17 @@ export class ModuleLoader {
    * @returns {Array} Array of loaded module info
    */
   getLoadedModulesInfo() {
-    return Array.from(this.loadedModules.entries()).map(([name, module]) => ({
-      name,
-      description: module.description || 'No description',
-      toolCount: module.getTools ? module.getTools().length : 0
-    }));
+    const loadedModules = this.moduleManager.getLoadedModules();
+    return loadedModules.map(entry => {
+      const module = entry.instance;
+      return {
+        name: entry.name,
+        description: module?.description || module?.getDescription?.() || 'No description',
+        toolCount: module?.getTools ? module.getTools().length : 0,
+        type: entry.metadata?.type || 'unknown',
+        status: entry.metadata?.status || 'loaded'
+      };
+    });
   }
 
   /**
