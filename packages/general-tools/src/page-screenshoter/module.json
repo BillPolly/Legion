@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Takes screenshots of web pages",
   "package": "./index.js",
-  "type": "class",
-  "dependencies": ["puppeteer"],
+  "type": "constructor",
+  "dependencies": {},
   "initialization": {
     "className": "PageScreenshot",
     "treatAsConstructor": true

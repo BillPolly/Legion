@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Google search using Serper API",
   "package": "./index.js",
-  "type": "class",
-  "dependencies": [],
+  "type": "constructor",
+  "dependencies": {},
   "initialization": {
     "className": "Serper",
     "treatAsConstructor": true

@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Execute bash commands in the terminal",
   "package": "./index.js",
-  "type": "class",
-  "dependencies": [],
+  "type": "constructor",
+  "dependencies": {},
   "initialization": {
     "className": "CommandExecutor",
     "treatAsConstructor": true

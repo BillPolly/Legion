@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Converts web pages to markdown format",
   "package": "./index.js",
-  "type": "class",
-  "dependencies": ["puppeteer"],
+  "type": "constructor",
+  "dependencies": {},
   "initialization": {
     "className": "WebPageToMarkdown",
     "treatAsConstructor": true

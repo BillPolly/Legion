@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Starts and manages npm servers",
   "package": "./index.js",
-  "type": "class",
-  "dependencies": [],
+  "type": "constructor",
+  "dependencies": {},
   "initialization": {
     "className": "ServerStarter",
     "treatAsConstructor": true
@@ -60,9 +60,9 @@
     {
       "name": "server_read_output",
       "description": "Read the output from the running server",
-      "function": "readOutput",
+      "function": "readServerOutput",
       "instanceMethod": true,
-      "async": false,
+      "async": true,
       "parameters": {
         "type": "object",
         "properties": {

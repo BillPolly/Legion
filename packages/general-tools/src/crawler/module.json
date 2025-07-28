@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Crawls web pages and extracts content",
   "package": "./index.js",
-  "type": "class",
-  "dependencies": ["puppeteer"],
+  "type": "constructor",
+  "dependencies": {},
   "initialization": {
     "className": "Crawler",
     "treatAsConstructor": true

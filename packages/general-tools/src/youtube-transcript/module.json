@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Fetches transcripts from YouTube videos",
   "package": "./index.js",
-  "type": "class",
-  "dependencies": ["youtube-transcript"],
+  "type": "constructor",
+  "dependencies": {},
   "initialization": {
     "className": "YoutubeTranscript",
     "treatAsConstructor": true
