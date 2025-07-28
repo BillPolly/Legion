@@ -907,11 +907,11 @@ export class CliTerminalV2 {
         if (args[1]) params.format = args[1];
         return params;
       },
-      'module_load': (args) => ({ module: args[0] }),
-      'module_unload': (args) => ({ module: args[0] }),
-      'module_info': (args) => ({ module: args[0] }),
+      'module_load': (args) => ({ name: args[0] }),
+      'module_unload': (args) => ({ name: args[0] }),
+      'module_info': (args) => ({ name: args[0] }),
       'module_tools': (args) => {
-        const params = { module: args[0] };
+        const params = { name: args[0] };
         if (args[1]) params.format = args[1];
         return params;
       },

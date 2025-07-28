@@ -4,38 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-<<<<<<< HEAD
-Legion is a modular framework for building AI agent tools with consistent interfaces. It's organized as a monorepo using npm workspaces with the following main packages:
-
-### Core Packages
-1. **@legion/module-loader** - Core infrastructure with base classes, dependency injection, and module management
-2. **@legion/cli** - Command-line interface for executing tools with REPL and autocomplete
-3. **@legion/general-tools** - Collection of AI agent tools (file operations, web tools, GitHub integration, calculator, JSON manipulation)
-4. **@legion/llm** - LLM client with multiple providers (OpenAI, Anthropic, DeepSeek, OpenRouter) and response parsing/validation
-5. **@legion/agent** - AI agent implementation with retry logic, tool execution, and WebSocket server for event streaming
-
-### Specialized Packages
-6. **@legion/railway** - Railway deployment integration with CLI and API operations
-7. **@legion/aiur** - Advanced MCP server for AI agent coordination with persistent memory
-8. **@legion/llm-planner** - Generic planner for creating multi-step execution plans
-9. **@legion/plan-executor** - Executes plans created by the planner
-10. **@legion/playwright** - Browser automation wrapper for Playwright
-11. **@legion/node-runner** - Node.js process management and server orchestration
-12. **@legion/log-manager** - Centralized logging with capture, aggregation, and analysis
-13. **@legion/resource-manager** - Advanced resource management with dependency graphs
-14. **@legion/conan-the-deployer** - Deployment management system
-
-### Code Generation Packages
-15. **@legion/code-agent** - Full-stack code generation with planning and execution
-16. **@legion/jester** - Jest test generator
-17. **@legion/cerebrate** - Browser extension for DOM analysis and code generation
-
-### Application Packages
-18. **@legion/web-backend** - WebSocket backend for agent chat interface
-19. **@legion/web-frontend** - Frontend UI for agent interaction
-20. **@legion/aiur-debug-ui** - Debug interface for Aiur MCP server
-=======
-Legion is a modular framework for building AI agent tools with consistent interfaces. It's organized as a monorepo using npm workspaces with 15+ packages organized in three main categories:
+Legion is a modular framework for building AI agent tools with consistent interfaces. It's organized as a monorepo using npm workspaces with 20+ packages organized in four main categories:
 
 ### Core Infrastructure
 1. **@legion/module-loader** - Core infrastructure with base classes, dependency injection, and module management
@@ -64,7 +33,6 @@ Legion is a modular framework for building AI agent tools with consistent interf
 16. **@legion/web-frontend** - React-based web interface for Legion interactions
 17. **@legion/web-backend** - Express server providing API and WebSocket support
 18. **@legion/aiur-debug-ui** - Debug interface for Aiur MCP server
->>>>>>> 53ac2d1 (modules)
 
 ## Essential Commands
 
@@ -77,17 +45,6 @@ npm test
 # Run tests for specific packages
 npm run test:module-loader
 npm run test:cli
-<<<<<<< HEAD
-npm run test:general-tools  # Note: renamed from test:tools
-npm run test:llm
-npm run test:agent
-npm run test:railway
-npm run test:aiur
-npm run test:playwright
-npm run test:node-runner
-npm run test:log-manager
-npm run test:resource-manager
-=======
 npm run test:tools              # @legion/general-tools
 npm run test:llm
 npm run test:agent
@@ -97,7 +54,6 @@ npm run test:node-runner
 npm run test:log-manager
 npm run test:railway
 npm run test:aiur
->>>>>>> 53ac2d1 (modules)
 
 # Run tests in watch mode
 npm run test:watch
@@ -148,25 +104,6 @@ node packages/cli/src/index.js -t <toolName> -p '{"param": "value"}'
 
 # Interactive REPL mode
 node packages/cli/src/index.js -i
-<<<<<<< HEAD
-
-# List available tools
-npm run cli:list
-
-# Get help
-npm run cli:help
-
-# Run the agent CLI
-npm run agent
-
-# Start Aiur MCP server
-npm run aiur
-# or
-npm run aiur:start
-
-# Start the web chat interface
-npm run chat
-=======
 npm run cli                     # Same as above
 ```
 
@@ -191,7 +128,6 @@ npm run server:kill             # Kill server on port 3000
 ```bash
 # Run AI agent
 npm run agent                   # Start Legion agent CLI
->>>>>>> 53ac2d1 (modules)
 ```
 
 ### Git Subtree and Repository Management
@@ -267,30 +203,6 @@ packages/
 │   └── services/       # StaticServer, StaticServerFactory
 ├── cli/src/
 │   ├── commands/       # CLI command implementations
-<<<<<<< HEAD
-│   ├── core/           # ArgumentParser, ModuleLoader, ToolRegistry
-│   ├── interactive/    # REPL mode with autocomplete
-│   └── output/         # Formatting and display utilities
-├── general-tools/src/
-│   ├── calculator/     # Math operations
-│   ├── file/           # File system operations
-│   ├── github/         # GitHub API integration with PolyRepoManager
-│   ├── json/           # JSON manipulation
-│   └── [other tools]   # Web, YouTube, command executor, etc.
-├── llm/src/
-│   ├── providers/      # LLM provider implementations
-│   ├── validators/     # Response validation
-│   └── LLMClient.js    # Main client with retry logic
-├── agent/src/
-│   ├── Agent.js        # Main agent implementation
-│   ├── RetryManager.js # Retry logic
-│   └── websocket-server.js # WebSocket event streaming
-└── aiur/src/
-    ├── mcp/            # MCP server implementation
-    ├── handles/        # Handle registry and resolver
-    ├── tools/          # Meta tools, context management
-    └── performance/    # Caching and optimization
-=======
 │   ├── utils/          # Formatting and helper utilities
 │   └── index.js        # Main CLI entry point
 ├── general-tools/src/          # Main tool collection
@@ -329,7 +241,6 @@ packages/
     ├── jester/                # Jest test generator
     ├── code-agent/            # AI code generation agent
     └── cerebrate/             # Advanced code generation system
->>>>>>> 53ac2d1 (modules)
 ```
 
 ### Testing Strategy
@@ -504,18 +415,6 @@ Legion/
 │   ├── general-tools/          # Main tool collection
 │   ├── llm/                    # LLM client
 │   ├── agent/                  # AI agent
-<<<<<<< HEAD
-│   ├── aiur/                   # MCP server
-│   ├── railway/                # Railway deployment
-│   ├── apps/                   # Application packages
-│   │   ├── web-backend/        # WebSocket backend
-│   │   ├── web-frontend/       # Chat UI
-│   │   └── aiur-debug-ui/      # Debug interface
-│   └── code-gen/               # Code generation packages
-│       ├── code-agent/         # Full-stack code gen
-│       ├── jester/             # Jest test generator
-│       └── cerebrate/          # Browser extension
-=======
 │   ├── llm-planner/            # AI planning system
 │   ├── railway/                # Railway deployment tools
 │   ├── playwright/             # Browser automation
@@ -532,7 +431,6 @@ Legion/
 │       ├── jester/             # Jest test generator
 │       ├── code-agent/         # AI code generation agent
 │       └── cerebrate/          # Advanced code generation
->>>>>>> 53ac2d1 (modules)
 ├── scripts/                    # All scripts organized by purpose
 │   ├── git/                    # Git operations
 │   ├── split/                  # Polyrepo management
@@ -584,20 +482,12 @@ Legion/
 - No build step needed - runs directly from source
 - Monorepo uses npm workspaces - always run commands from root unless working on specific package
 - GitHub tools require `GITHUB_PAT` environment variable
-<<<<<<< HEAD
-- Model providers require respective API keys
-- File operations are sandboxed by default
-- Web tools use Puppeteer for browser automation
-- Jest tests require `NODE_OPTIONS='--experimental-vm-modules'`
-- Always use npm workspaces commands from root directory
-=======
 - Model providers require respective API keys (OpenAI, Anthropic, DeepSeek, OpenRouter)
 - Railway tools require `RAILWAY_API_TOKEN` environment variable
 - File operations are sandboxed by default in general-tools
 - Playwright tools use Chromium for browser automation
 - Aiur provides persistent context across tool calls via MCP protocol
 - Generated code and logs are stored in package-specific directories
->>>>>>> 53ac2d1 (modules)
 - Keep all directories clean, never leave files around, always use nice directory structure
 
 ## Server Management Commands
