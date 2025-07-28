@@ -1,191 +1,244 @@
 /**
- * Codec - Main class for encoding/decoding typed messages
+ * Codec - Main class for encoding and decoding messages with schema validation
  */
 
-import { SchemaValidator } from './validators/SchemaValidator.js';
 import { SchemaRegistry } from './schemas/index.js';
+import { SchemaValidator } from './validators/SchemaValidator.js';
 
 export class Codec {
   constructor(options = {}) {
-    this.registry = new SchemaRegistry();
-    this.validator = new SchemaValidator(options.validatorOptions);
-    this.messageIdCounter = 0;
-    
-    // Initialize validator with registry schemas
-    this.syncSchemasToValidator();
-    
-    // Options
     this.options = {
-      strictValidation: options.strictValidation !== false,
-      includeMessageId: options.includeMessageId !== false,
-      includeTiming: options.includeTiming !== false,
+      strictValidation: true,
+      injectMetadata: true,
       ...options
     };
+
+    this.registry = new SchemaRegistry();
+    this.validator = new SchemaValidator();
+    
+    // Register all base schemas with validator
+    this.registerBaseSchemas();
   }
 
   /**
-   * Sync schemas from registry to validator
+   * Register base schemas with the validator
    * @private
    */
-  syncSchemasToValidator() {
-    const schemaIds = this.registry.getSchemaIds();
-    for (const schemaId of schemaIds) {
-      const schema = this.registry.get(schemaId);
-      this.validator.addSchema(schemaId, schema);
+  registerBaseSchemas() {
+    const allSchemas = this.registry.getAll();
+    for (const [id, schema] of Object.entries(allSchemas)) {
+      this.validator.addSchema(id, schema);
+      
+      // Also register by message type if it has a const type property
+      if (schema.properties && schema.properties.type && schema.properties.type.const) {
+        const messageType = schema.properties.type.const;
+        if (messageType !== id) {
+          this.validator.addSchema(messageType, schema);
+          // Also register in registry by message type
+          this.registry.register({ ...schema, $id: messageType });
+        }
+      }
     }
   }
 
   /**
-   * Register a new schema
+   * Register a custom message schema
    * @param {object} schema - JSON schema with $id property
    */
   registerSchema(schema) {
+    if (!schema.$id) {
+      throw new Error('Schema must have an $id property');
+    }
+
     this.registry.register(schema);
     this.validator.addSchema(schema.$id, schema);
   }
 
   /**
-   * Load schemas from schema definition message
-   * @param {object} schemaDefinition - Schema definition message
-   * @returns {{ success: boolean, errors: string[] }}
+   * Load schema definitions from another codec or schema definition message
+   * @param {object} schemaDefinition - Schema definition object with schemas property
+   * @param {boolean} replace - Whether to replace existing schemas
    */
-  loadSchemaDefinition(schemaDefinition) {
-    try {
-      // Validate the schema definition message itself
-      const validation = this.validator.validate('schema_definition', schemaDefinition);
-      if (!validation.valid) {
-        return {
-          success: false,
-          errors: [`Invalid schema definition: ${validation.errors.map(e => e.message).join(', ')}`]
-        };
-      }
+  loadSchemaDefinition(schemaDefinition, replace = false) {
+    if (!schemaDefinition.schemas || typeof schemaDefinition.schemas !== 'object') {
+      throw new Error('Invalid schema definition: missing schemas property');
+    }
 
-      // Load the schemas
-      this.registry.loadSchemas(schemaDefinition.schemas, true);
-      this.syncSchemasToValidator();
-
-      return { success: true, errors: [] };
-    } catch (error) {
-      return {
-        success: false,
-        errors: [`Failed to load schema definition: ${error.message}`]
-      };
+    this.registry.loadSchemas(schemaDefinition.schemas, replace);
+    
+    // Re-register all schemas with validator
+    if (replace) {
+      this.validator.clear();
+    }
+    
+    const allSchemas = this.registry.getAll();
+    for (const [id, schema] of Object.entries(allSchemas)) {
+      this.validator.addSchema(id, schema);
     }
   }
 
   /**
-   * Encode a message for transmission
-   * @param {string} messageType - Type of message (schema ID)
-   * @param {object} data - Message data
-   * @param {object} options - Encoding options
-   * @returns {{ success: boolean, message: string|null, errors: string[] }}
+   * Encode a message with the given type
+   * @param {string} messageType - Type/schema ID of the message
+   * @param {object} data - Message data to encode
+   * @returns {{ success: boolean, encoded?: string, error?: object }}
    */
-  encode(messageType, data, options = {}) {
+  encode(messageType, data) {
     try {
-      // Prepare the message object
-      const message = {
-        ...data,
-        type: messageType
-      };
-
-      // Add message ID if enabled
-      if (this.options.includeMessageId && !message.messageId) {
-        message.messageId = this.generateMessageId();
+      // Check if we have the schema
+      if (!this.registry.has(messageType)) {
+        return {
+          success: false,
+          error: {
+            code: 'UNKNOWN_MESSAGE_TYPE',
+            message: `Unknown message type: ${messageType}`,
+            details: { messageType }
+          }
+        };
       }
 
-      // Add timestamp if enabled and not present
-      if (this.options.includeTiming && !message.timestamp) {
-        message.timestamp = new Date().toISOString();
+      // Create message object with metadata injection
+      const messageData = { ...data };
+      
+      if (this.options.injectMetadata) {
+        messageData.type = messageType;
+        
+        if (!messageData.messageId) {
+          messageData.messageId = this.generateMessageId();
+        }
+        
+        if (!messageData.timestamp) {
+          messageData.timestamp = new Date().toISOString();
+        }
       }
 
       // Validate against schema if strict validation is enabled
       if (this.options.strictValidation) {
-        const validation = this.validator.validate(messageType, message);
-        if (!validation.valid) {
+        const validationResult = this.validator.validate(messageType, messageData);
+        
+        if (!validationResult.success) {
           return {
             success: false,
-            message: null,
-            errors: [`Validation failed: ${validation.errors.map(e => e.message).join(', ')}`]
+            error: {
+              code: 'VALIDATION_ERROR',
+              message: 'Message validation failed',
+              details: {
+                messageType,
+                errors: validationResult.errors
+              }
+            }
           };
         }
       }
 
-      // Serialize to JSON
-      const serialized = JSON.stringify(message, null, options.pretty ? 2 : 0);
+      // Encode to JSON
+      const encoded = JSON.stringify(messageData);
       
       return {
         success: true,
-        message: serialized,
-        errors: []
+        encoded
       };
 
     } catch (error) {
       return {
         success: false,
-        message: null,
-        errors: [`Encoding failed: ${error.message}`]
+        error: {
+          code: 'ENCODING_ERROR',
+          message: 'Failed to encode message',
+          details: {
+            messageType,
+            originalError: error.message
+          }
+        }
       };
     }
   }
 
   /**
-   * Decode a received message
-   * @param {string} rawMessage - Raw message string
-   * @param {object} options - Decoding options
-   * @returns {{ success: boolean, message: object|null, messageType: string|null, errors: string[] }}
+   * Decode a JSON message and validate it
+   * @param {string} encodedMessage - JSON string to decode
+   * @returns {{ success: boolean, decoded?: object, messageType?: string, error?: object }}
    */
-  decode(rawMessage, options = {}) {
+  decode(encodedMessage) {
     try {
       // Parse JSON
-      let message;
+      let messageData;
       try {
-        message = JSON.parse(rawMessage);
+        messageData = JSON.parse(encodedMessage);
       } catch (parseError) {
         return {
           success: false,
-          message: null,
-          messageType: null,
-          errors: [`JSON parsing failed: ${parseError.message}`]
+          error: {
+            code: 'DECODING_ERROR',
+            message: 'Invalid JSON format',
+            details: {
+              originalError: parseError.message
+            }
+          }
         };
       }
 
       // Extract message type
-      const messageType = message.type;
+      const messageType = messageData.type;
+      
       if (!messageType) {
         return {
           success: false,
-          message: null,
-          messageType: null,
-          errors: ['Message missing type property']
+          error: {
+            code: 'DECODING_ERROR',
+            message: 'Message missing type field',
+            details: { messageData }
+          }
+        };
+      }
+
+      // Check if we have the schema
+      if (!this.registry.has(messageType)) {
+        return {
+          success: false,
+          error: {
+            code: 'UNKNOWN_MESSAGE_TYPE',
+            message: `Unknown message type: ${messageType}`,
+            details: { messageType }
+          }
         };
       }
 
       // Validate against schema if strict validation is enabled
       if (this.options.strictValidation) {
-        const validation = this.validator.validate(messageType, message);
-        if (!validation.valid) {
+        const validationResult = this.validator.validate(messageType, messageData);
+        
+        if (!validationResult.success) {
           return {
             success: false,
-            message,
-            messageType,
-            errors: [`Validation failed: ${validation.errors.map(e => e.message).join(', ')}`]
+            error: {
+              code: 'VALIDATION_ERROR',
+              message: 'Message validation failed',
+              details: {
+                messageType,
+                errors: validationResult.errors
+              }
+            }
           };
         }
       }
 
       return {
         success: true,
-        message,
-        messageType,
-        errors: []
+        decoded: messageData,
+        messageType
       };
 
     } catch (error) {
       return {
         success: false,
-        message: null,
-        messageType: null,
-        errors: [`Decoding failed: ${error.message}`]
+        error: {
+          code: 'DECODING_ERROR',
+          message: 'Failed to decode message',
+          details: {
+            originalError: error.message
+          }
+        }
       };
     }
   }
@@ -211,20 +264,22 @@ export class Codec {
       code,
       message,
       details,
+      messageId: this.generateMessageId(),
       timestamp: new Date().toISOString()
     };
   }
 
   /**
    * Create an acknowledgment message
-   * @param {string} messageId - ID of message being acknowledged
+   * @param {string} originalMessageId - ID of message being acknowledged
    * @param {string} status - Ack status ('success' or 'error')
    * @returns {object} Acknowledgment message
    */
-  createAckMessage(messageId, status) {
+  createAckMessage(originalMessageId, status) {
     return {
       type: 'ack',
-      messageId,
+      messageId: this.generateMessageId(),
+      originalMessageId,
       status,
       timestamp: new Date().toISOString()
     };
@@ -232,11 +287,12 @@ export class Codec {
 
   /**
    * Generate a unique message ID
-   * @returns {string} Message ID
-   * @private
+   * @returns {string} Unique message identifier
    */
   generateMessageId() {
-    return `msg_${Date.now()}_${++this.messageIdCounter}`;
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substr(2, 9);
+    return `msg_${timestamp}_${random}`;
   }
 
   /**

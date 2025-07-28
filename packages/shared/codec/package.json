@@ -27,13 +27,21 @@
     "jest": "^29.7.0"
   },
   "jest": {
-    "preset": "default",
-    "extensionsToTreatAsEsm": [".js"],
     "transform": {},
     "testEnvironment": "node",
+    "testMatch": ["**/__tests__/**/*.test.js"],
+    "setupFilesAfterEnv": ["<rootDir>/__tests__/setup.js"],
     "collectCoverageFrom": [
       "src/**/*.js",
       "!src/**/*.test.js"
-    ]
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 95,
+        "functions": 95,
+        "lines": 95,
+        "statements": 95
+      }
+    }
   }
 }

@@ -30,12 +30,15 @@ export const SCHEMA_DEFINITION_MESSAGE = {
         }
       }
     },
+    messageId: {
+      type: 'string'
+    },
     timestamp: {
       type: 'string',
       format: 'date-time'
     }
   },
-  required: ['type', 'version', 'schemas', 'timestamp'],
+  required: ['type', 'version', 'schemas', 'messageId', 'timestamp'],
   additionalProperties: false
 };
 
@@ -60,12 +63,15 @@ export const ERROR_MESSAGE = {
     details: {
       type: 'object'
     },
+    messageId: {
+      type: 'string'
+    },
     timestamp: {
       type: 'string',
       format: 'date-time'
     }
   },
-  required: ['type', 'code', 'message', 'timestamp'],
+  required: ['type', 'code', 'message', 'messageId', 'timestamp'],
   additionalProperties: false
 };
 
@@ -83,6 +89,9 @@ export const ACK_MESSAGE = {
     messageId: {
       type: 'string'
     },
+    originalMessageId: {
+      type: 'string'
+    },
     status: {
       type: 'string',
       enum: ['success', 'error']
@@ -92,7 +101,7 @@ export const ACK_MESSAGE = {
       format: 'date-time'
     }
   },
-  required: ['type', 'messageId', 'status', 'timestamp'],
+  required: ['type', 'messageId', 'originalMessageId', 'status', 'timestamp'],
   additionalProperties: false
 };
 
@@ -107,12 +116,15 @@ export const PING_MESSAGE = {
       type: 'string', 
       const: 'ping' 
     },
+    messageId: {
+      type: 'string'
+    },
     timestamp: {
       type: 'string',
       format: 'date-time'
     }
   },
-  required: ['type', 'timestamp'],
+  required: ['type', 'messageId', 'timestamp'],
   additionalProperties: false
 };
 
@@ -124,11 +136,14 @@ export const PONG_MESSAGE = {
       type: 'string', 
       const: 'pong' 
     },
+    messageId: {
+      type: 'string'
+    },
     timestamp: {
       type: 'string',
       format: 'date-time'
     }
   },
-  required: ['type', 'timestamp'],
+  required: ['type', 'messageId', 'timestamp'],
   additionalProperties: false
 };

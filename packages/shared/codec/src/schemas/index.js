@@ -121,10 +121,13 @@ export class SchemaRegistry {
     }
 
     for (const [id, schema] of Object.entries(schemas)) {
-      if (!schema.$id) {
-        schema.$id = id;
-      }
-      this.register(schema);
+      // Create a copy of the schema to avoid modifying the original
+      const schemaCopy = { ...schema };
+      
+      // Set the $id to match the key in the schemas object
+      schemaCopy.$id = id;
+      
+      this.register(schemaCopy);
     }
   }
 

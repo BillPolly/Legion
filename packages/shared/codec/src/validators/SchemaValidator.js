@@ -28,6 +28,12 @@ export class SchemaValidator {
    */
   addSchema(schemaId, schema) {
     try {
+      // Remove existing schema from both AJV and our cache
+      if (this.compiledSchemas.has(schemaId)) {
+        this.ajv.removeSchema(schemaId);
+        this.compiledSchemas.delete(schemaId);
+      }
+      
       const compiledSchema = this.ajv.compile(schema);
       this.compiledSchemas.set(schemaId, {
         schema,
@@ -43,14 +49,14 @@ export class SchemaValidator {
    * Validate data against a schema
    * @param {string} schemaId - Schema identifier
    * @param {any} data - Data to validate
-   * @returns {{ valid: boolean, errors: array, data: any }}
+   * @returns {{ success: boolean, errors: array, data: any }}
    */
   validate(schemaId, data) {
     const schemaInfo = this.compiledSchemas.get(schemaId);
     
     if (!schemaInfo) {
       return {
-        valid: false,
+        success: false,
         errors: [`Schema '${schemaId}' not found`],
         data: null
       };
@@ -60,7 +66,7 @@ export class SchemaValidator {
     
     if (valid) {
       return {
-        valid: true,
+        success: true,
         errors: [],
         data
       };
@@ -73,7 +79,7 @@ export class SchemaValidator {
       }));
 
       return {
-        valid: false,
+        success: false,
         errors,
         data
       };
