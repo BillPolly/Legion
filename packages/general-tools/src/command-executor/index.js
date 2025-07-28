@@ -186,4 +186,9 @@ class CommandExecutor extends Tool {
   }
 }
 
-export default CommandExecutor;
+// Export the Tool class for direct use (backward compatibility)
+export { CommandExecutor };
+
+// Export the Module class as default
+import CommandExecutorModule from './CommandExecutorModule.js';
+export default CommandExecutorModule;

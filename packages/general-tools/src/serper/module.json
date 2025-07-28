@@ -1,0 +1,51 @@
+{
+  "name": "serper",
+  "version": "1.0.0",
+  "description": "Google search using Serper API",
+  "package": "./index.js",
+  "type": "class",
+  "dependencies": [],
+  "initialization": {
+    "className": "Serper",
+    "treatAsConstructor": true
+  },
+  "tools": [
+    {
+      "name": "google_search",
+      "description": "Search Google and get results using Serper API",
+      "function": "search",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "The search query to send to Google"
+          },
+          "num": {
+            "type": "number",
+            "description": "Number of results to return (default: 10, max: 100)",
+            "default": 10
+          },
+          "dateRange": {
+            "type": "string",
+            "description": "Filter results by date range",
+            "enum": ["day", "week", "month", "year"]
+          }
+        },
+        "required": ["query"]
+      },
+      "resultMapping": {
+        "success": {
+          "query": "$.query",
+          "searchInformation": "$.searchInformation",
+          "organic": "$.organic",
+          "answerBox": "$.answerBox",
+          "knowledgeGraph": "$.knowledgeGraph",
+          "relatedSearches": "$.relatedSearches"
+        }
+      }
+    }
+  ]
+}

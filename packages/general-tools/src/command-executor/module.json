@@ -1,0 +1,44 @@
+{
+  "name": "command-executor",
+  "version": "1.0.0",
+  "description": "Execute bash commands in the terminal",
+  "package": "./index.js",
+  "type": "class",
+  "dependencies": [],
+  "initialization": {
+    "className": "CommandExecutor",
+    "treatAsConstructor": true
+  },
+  "tools": [
+    {
+      "name": "command_execute",
+      "description": "Execute a bash command in the terminal and return the output",
+      "function": "execute",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "The bash command to execute (e.g., 'ls -la', 'pwd', 'echo hello')"
+          },
+          "timeout": {
+            "type": "number",
+            "description": "Optional timeout in milliseconds (default: 30000ms)",
+            "default": 30000
+          }
+        },
+        "required": ["command"]
+      },
+      "resultMapping": {
+        "success": {
+          "stdout": "$.stdout",
+          "stderr": "$.stderr",
+          "command": "$.command",
+          "exitCode": "$.exitCode"
+        }
+      }
+    }
+  ]
+}

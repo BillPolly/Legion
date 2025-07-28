@@ -10,10 +10,18 @@
 import CalculatorModule from './calculator/index.js';
 import FileModule from './file/index.js';
 import GitHubModule from './github/GitHubModule.js';
+import JsonModule from './json/JsonModule.js';
+import ModuleManagerModule from './module-manager/ModuleManagerModule.js';
+import SerperModule from './serper/index.js';
+import CommandExecutorModule from './command-executor/index.js';
 
 // Export module classes only - no hardcoded tool instantiation
 export {
   CalculatorModule,
   FileModule,
-  GitHubModule
+  GitHubModule,
+  JsonModule,
+  ModuleManagerModule,
+  SerperModule,
+  CommandExecutorModule
 };

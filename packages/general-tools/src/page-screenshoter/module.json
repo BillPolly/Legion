@@ -1,0 +1,59 @@
+{
+  "name": "page-screenshoter",
+  "version": "1.0.0",
+  "description": "Takes screenshots of web pages",
+  "package": "./index.js",
+  "type": "class",
+  "dependencies": ["puppeteer"],
+  "initialization": {
+    "className": "PageScreenshot",
+    "treatAsConstructor": true
+  },
+  "tools": [
+    {
+      "name": "page_screenshot",
+      "description": "Take a screenshot of a webpage and return it as a base64-encoded image",
+      "function": "screenshot",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The URL of the webpage to screenshot"
+          },
+          "fullPage": {
+            "type": "boolean",
+            "description": "Whether to capture the full page or just the viewport (default: false)",
+            "default": false
+          },
+          "width": {
+            "type": "number",
+            "description": "Viewport width in pixels (default: 1280)",
+            "default": 1280
+          },
+          "height": {
+            "type": "number",
+            "description": "Viewport height in pixels (default: 720)",
+            "default": 720
+          },
+          "waitForSelector": {
+            "type": "string",
+            "description": "Optional CSS selector to wait for before taking screenshot"
+          }
+        },
+        "required": ["url"]
+      },
+      "resultMapping": {
+        "success": {
+          "url": "$.url",
+          "fullPage": "$.fullPage",
+          "dimensions": "$.dimensions",
+          "screenshot": "$.screenshot",
+          "mimeType": "$.mimeType"
+        }
+      }
+    }
+  ]
+}
