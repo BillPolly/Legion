@@ -2,6 +2,8 @@
  * CliTerminalV2 - Clean implementation based on working example
  */
 
+import { ResponseFormatter } from './ResponseFormatter.js';
+
 export class CliTerminalV2 {
   constructor(containerOrId, apiInterface) {
     // Accept either a DOM node or an ID string
@@ -30,6 +32,9 @@ export class CliTerminalV2 {
     this.tabIndex = -1;
     this.tabPrefix = '';
     this.originalTabInput = '';
+    
+    // Response formatter
+    this.responseFormatter = new ResponseFormatter();
     
     // Initialize
     this.init();
@@ -139,7 +144,13 @@ export class CliTerminalV2 {
       'log_write': 'log_write <level> <message>',
       'log_query': 'log_query [options]',
       'alert_trigger': 'alert_trigger <alertType> <message>',
-      'alert_list': 'alert_list [status]'
+      'alert_list': 'alert_list [status]',
+      'module_list': 'module_list [filter] [format]',
+      'module_load': 'module_load <module>',
+      'module_unload': 'module_unload <module>',
+      'module_info': 'module_info <module>',
+      'module_discover': 'module_discover [directories]',
+      'module_tools': 'module_tools <module> [format]'
     };
     
     for (const [name, def] of toolDefinitions) {
@@ -213,6 +224,11 @@ export class CliTerminalV2 {
         user-select: none;
       }
 
+      .cli-terminal-v2 .output-line {
+        user-select: text;
+        cursor: text;
+      }
+
       .cli-terminal-v2 .input-wrapper {
         position: relative;
         flex: 1;
@@ -272,6 +288,16 @@ export class CliTerminalV2 {
         margin: 8px 0;
         border-radius: 4px;
         border-left: 3px solid #007acc;
+        user-select: text;
+        cursor: text;
+      }
+      
+      .cli-terminal-v2 .result pre {
+        color: #d4d4d4;
+        background: transparent;
+        line-height: 1.5;
+        user-select: text;
+        cursor: text;
       }
 
       /* Scrollbar styling */
@@ -623,6 +649,26 @@ export class CliTerminalV2 {
     this.output.appendChild(div);
   }
 
+  addFormattedOutput(text, className = '') {
+    const div = document.createElement('div');
+    div.className = `output-line ${className}`;
+    
+    // For formatted output, preserve whitespace and newlines
+    if (text.includes('\n')) {
+      // Create pre element to preserve formatting
+      const pre = document.createElement('pre');
+      pre.style.margin = '0';
+      pre.style.fontFamily = 'inherit';
+      pre.style.whiteSpace = 'pre-wrap';
+      pre.textContent = text;
+      div.appendChild(pre);
+    } else {
+      div.textContent = text;
+    }
+    
+    this.output.appendChild(div);
+  }
+
   scrollToBottom() {
     this.output.scrollTop = this.output.scrollHeight;
   }
@@ -672,8 +718,8 @@ export class CliTerminalV2 {
   async showVariables() {
     // This would show variables stored in context
     try {
-      const result = await this.executeTool('context_list', []);
-      // Result will be displayed by executeTool
+      await this.executeTool('context_list', []);
+      // Result will be displayed by executeTool with formatting
     } catch (error) {
       this.addOutput('No variables stored yet', 'info');
     }
@@ -709,7 +755,14 @@ export class CliTerminalV2 {
     try {
       const response = await this.interface.executeTool(toolName, params);
       
-      // Extract and display result
+      // Format the response using the formatter
+      const formatted = this.responseFormatter.format(toolName, response);
+      
+      if (formatted) {
+        this.addFormattedOutput(formatted, 'result');
+      }
+      
+      // Extract raw result for return value
       let result = response;
       if (response && response.content && Array.isArray(response.content)) {
         const textContent = response.content.find(item => item.type === 'text');
@@ -720,10 +773,6 @@ export class CliTerminalV2 {
             result = textContent.text;
           }
         }
-      }
-      
-      if (result !== undefined) {
-        this.addOutput(JSON.stringify(result, null, 2), 'result');
       }
       
       return result;
@@ -760,7 +809,26 @@ export class CliTerminalV2 {
       'file_read': (args) => ({ path: args[0] }),
       'file_write': (args) => ({ path: args[0], content: args.slice(1).join(' ') }),
       'plan_create': (args) => ({ title: args[0], description: args.slice(1).join(' ') }),
-      'plan_execute': (args) => ({ planHandle: args[0] })
+      'plan_execute': (args) => ({ planHandle: args[0] }),
+      'module_list': (args) => {
+        const params = {};
+        if (args[0]) params.filter = args[0];
+        if (args[1]) params.format = args[1];
+        return params;
+      },
+      'module_load': (args) => ({ module: args[0] }),
+      'module_unload': (args) => ({ module: args[0] }),
+      'module_info': (args) => ({ module: args[0] }),
+      'module_tools': (args) => {
+        const params = { module: args[0] };
+        if (args[1]) params.format = args[1];
+        return params;
+      },
+      'module_discover': (args) => {
+        const params = {};
+        if (args.length > 0) params.directories = args;
+        return params;
+      }
     };
     
     const parser = parsers[toolName];

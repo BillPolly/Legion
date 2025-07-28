@@ -5,6 +5,7 @@ import ModuleLoadTool from './tools/ModuleLoadTool.js';
 import ModuleUnloadTool from './tools/ModuleUnloadTool.js';
 import ModuleInfoTool from './tools/ModuleInfoTool.js';
 import ModuleDiscoverTool from './tools/ModuleDiscoverTool.js';
+import ModuleToolsTool from './tools/ModuleToolsTool.js';
 
 /**
  * ModuleManagerModule - Provides module management capabilities as Legion tools
@@ -18,16 +19,24 @@ export default class ModuleManagerModule extends Module {
     this.name = 'module-manager';
     this.description = 'Dynamic module discovery and management';
     
-    // Create ModuleFactory and ModuleManager
-    this.moduleFactory = new ModuleFactory(this.resourceManager);
-    this.moduleManager = new ModuleManager(this.moduleFactory, {
-      searchDepth: 3,
-      autoDiscover: true
-    });
-
-    // Store reference in ResourceManager for other modules to use
-    this.resourceManager.register('ModuleManager', this.moduleManager);
-    this.resourceManager.register('ModuleFactory', this.moduleFactory);
+    // Use existing ModuleManager if provided, otherwise create new one
+    if (dependencies.ModuleManager) {
+      console.log('[ModuleManagerModule] Using existing ModuleManager from dependencies');
+      this.moduleManager = dependencies.ModuleManager;
+      this.moduleLoader = dependencies.ModuleLoader; // Store reference to loader
+    } else {
+      console.log('[ModuleManagerModule] Creating new ModuleManager');
+      // Create ModuleFactory and ModuleManager
+      this.moduleFactory = new ModuleFactory(this.resourceManager);
+      this.moduleManager = new ModuleManager(this.moduleFactory, {
+        searchDepth: 3,
+        autoDiscover: true
+      });
+      
+      // Store reference in ResourceManager for other modules to use
+      this.resourceManager.register('ModuleManager', this.moduleManager);
+      this.resourceManager.register('ModuleFactory', this.moduleFactory);
+    }
 
     // Default directories to search - navigate up to Legion root
     const currentPath = process.cwd();
@@ -52,7 +61,8 @@ export default class ModuleManagerModule extends Module {
       new ModuleLoadTool(this.moduleManager),
       new ModuleUnloadTool(this.moduleManager),
       new ModuleInfoTool(this.moduleManager),
-      new ModuleDiscoverTool(this.moduleManager, this.defaultDirectories)
+      new ModuleDiscoverTool(this.moduleManager, this.defaultDirectories),
+      new ModuleToolsTool(this.moduleManager)
     ];
     console.log(`[ModuleManagerModule] Initialized ${this.tools.length} tools:`, this.tools.map(t => t.name));
   }

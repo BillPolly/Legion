@@ -236,6 +236,28 @@ class DebugUIApp {
     
     // Initialize CLI Terminal now that we're connected
     this.initializeCLITerminal();
+    
+    // Also refresh tools after delays to ensure they're loaded
+    setTimeout(() => {
+      console.log('Refreshing tools list after session creation (first attempt)...');
+      this.sendMessage({
+        type: 'mcp_request',
+        requestId: `req_${this.getNextRequestId()}`,
+        method: 'tools/list',
+        params: {}
+      });
+    }, 1000);
+    
+    // Second attempt with longer delay
+    setTimeout(() => {
+      console.log('Refreshing tools list after session creation (second attempt)...');
+      this.sendMessage({
+        type: 'mcp_request',
+        requestId: `req_${this.getNextRequestId()}`,
+        method: 'tools/list',
+        params: {}
+      });
+    }, 3000);
   }
   
   /**
@@ -1120,6 +1142,12 @@ class DebugUIApp {
       this.cliTerminal = new CliTerminalV2('cliTerminalContainer', cliInterface);
       
       console.log('CLI Terminal v2 initialized');
+      
+      // If we already have tools loaded, notify the CLI
+      if (this.toolDefinitions.size > 0 && this.cliToolUpdateCallback) {
+        console.log('Notifying CLI of existing tools:', this.toolDefinitions.size);
+        this.cliToolUpdateCallback();
+      }
     } catch (error) {
       console.error('Failed to initialize CLI Terminal:', error);
       this.showToast('Failed to load CLI Terminal', 'error');

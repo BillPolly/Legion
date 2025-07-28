@@ -72,6 +72,12 @@ export default class ModuleListTool extends Tool {
           modules = this.moduleManager.getAvailableModules();
       }
 
+      // Add built-in system modules that aren't tracked by ModuleManager
+      const builtinModules = this._getBuiltinModules();
+      if (filter === 'loaded' || filter === 'all') {
+        modules.push(...builtinModules);
+      }
+
       // Format the output
       let result;
       if (format === 'detailed') {
@@ -89,6 +95,8 @@ export default class ModuleListTool extends Tool {
               name: tool.name || tool.constructor.name,
               description: tool.description || 'No description'
             }));
+          } else if (includeTools && module.toolCount) {
+            info.toolCount = module.toolCount;
           }
 
           return info;
@@ -103,14 +111,42 @@ export default class ModuleListTool extends Tool {
         }, {});
       }
 
+      const stats = this.moduleManager.getStats();
+      stats.totalLoaded += builtinModules.length; // Add builtin modules to count
+
       return ToolResult.success({
         count: modules.length,
         modules: result,
-        stats: this.moduleManager.getStats()
+        stats: stats
       });
 
     } catch (error) {
-      return ToolResult.error(`Failed to list modules: ${error.message}`);
+      return ToolResult.failure(`Failed to list modules: ${error.message}`);
     }
+  }
+
+  /**
+   * Get built-in system modules that aren't tracked by ModuleManager
+   * @private
+   */
+  _getBuiltinModules() {
+    return [
+      {
+        name: 'context',
+        type: 'builtin',
+        status: 'loaded',
+        path: 'built-in',
+        toolCount: 5, // context_add, context_get, context_list, context_remove, context_clear
+        description: 'Context management and variable storage'
+      },
+      {
+        name: 'planning',
+        type: 'builtin', 
+        status: 'loaded',
+        path: 'built-in',
+        toolCount: 4, // plan_create, plan_execute, plan_status, plan_validate
+        description: 'Multi-step plan creation and execution'
+      }
+    ];
   }
 }

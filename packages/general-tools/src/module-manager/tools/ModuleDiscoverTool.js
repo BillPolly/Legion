@@ -74,7 +74,7 @@ export default class ModuleDiscoverTool extends Tool {
       } = params;
 
       if (!directories || directories.length === 0) {
-        return ToolResult.error('No directories specified and no defaults configured');
+        return ToolResult.failure('No directories specified and no defaults configured');
       }
 
       // Discover modules
@@ -150,7 +150,7 @@ export default class ModuleDiscoverTool extends Tool {
       return ToolResult.success(result);
 
     } catch (error) {
-      return ToolResult.error(`Failed to discover modules: ${error.message}`);
+      return ToolResult.failure(`Failed to discover modules: ${error.message}`);
     }
   }
 }

@@ -97,7 +97,7 @@ export default class ModuleLoadTool extends Tool {
       });
 
     } catch (error) {
-      return ToolResult.error(`Failed to load module: ${error.message}`);
+      return ToolResult.failure(`Failed to load module: ${error.message}`);
     }
   }
 }

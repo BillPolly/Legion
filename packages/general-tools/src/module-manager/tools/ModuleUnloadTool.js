@@ -77,7 +77,7 @@ export default class ModuleUnloadTool extends Tool {
             module: info
           });
         } else {
-          return ToolResult.error(`Failed to unload module '${moduleName}'`);
+          return ToolResult.failure(`Failed to unload module '${moduleName}'`);
         }
 
       } catch (error) {
@@ -100,7 +100,7 @@ export default class ModuleUnloadTool extends Tool {
       }
 
     } catch (error) {
-      return ToolResult.error(`Failed to unload module: ${error.message}`);
+      return ToolResult.failure(`Failed to unload module: ${error.message}`);
     }
   }
 }

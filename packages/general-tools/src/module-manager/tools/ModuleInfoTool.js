@@ -62,7 +62,7 @@ export default class ModuleInfoTool extends Tool {
       const info = this.moduleManager.getModuleInfo(moduleName);
       
       if (!info) {
-        return ToolResult.error(`Module '${moduleName}' not found`);
+        return ToolResult.failure(`Module '${moduleName}' not found`);
       }
 
       const result = {
@@ -117,7 +117,7 @@ export default class ModuleInfoTool extends Tool {
       return ToolResult.success(result);
 
     } catch (error) {
-      return ToolResult.error(`Failed to get module info: ${error.message}`);
+      return ToolResult.failure(`Failed to get module info: ${error.message}`);
     }
   }
 

@@ -54,8 +54,23 @@ export class ModuleLoader {
     
     // First, load the ModuleManagerModule to make module management tools available
     try {
-      const moduleManagerModule = new ModuleManagerModule({ ResourceManager: this.legionAdapter.resourceManager });
+      // Pass the ModuleManager instance so the module management tools can see loaded modules
+      const moduleManagerModule = new ModuleManagerModule({ 
+        ResourceManager: this.legionAdapter.resourceManager,
+        ModuleManager: this.moduleManager,
+        ModuleLoader: this // Pass the loader itself for consistency
+      });
       await this._loadModuleInstance(moduleManagerModule);
+      
+      // Register the ModuleManagerModule in the registry
+      const registry = this.moduleManager.getRegistry();
+      registry.register('module-manager', {
+        name: 'module-manager',
+        type: 'builtin',
+        path: null,
+        status: 'loaded'
+      }, moduleManagerModule);
+      
       console.log('[ModuleLoader] Loaded ModuleManagerModule - module management tools now available');
     } catch (error) {
       console.error('[ModuleLoader] Failed to load ModuleManagerModule:', error);
@@ -110,6 +125,15 @@ export class ModuleLoader {
           const moduleInstance = await this.moduleManager.loadModule(moduleName);
           const result = await this._loadModuleInstance(moduleInstance);
           loadedModules.push(result);
+          
+          // Ensure the module is registered with the ModuleManager's registry
+          const registry = this.moduleManager.getRegistry();
+          if (!registry.isRegistered(moduleName)) {
+            const moduleInfo = this.moduleManager.getAvailableModules().find(m => m.name === moduleName);
+            if (moduleInfo) {
+              registry.register(moduleName, moduleInfo, moduleInstance);
+            }
+          }
           
           if (logManager) {
             logManager.logInfo(`Loaded module: ${result.moduleName}`, {
@@ -209,6 +233,7 @@ export class ModuleLoader {
       for (const mcpTool of toolsToRegister) {
         this.toolRegistry.registerTool(mcpTool);
         registeredTools.push(mcpTool.name);
+        console.log(`[ModuleLoader] Registered tool: ${mcpTool.name} with tags:`, mcpTool.tags);
       }
     }
     
@@ -228,19 +253,34 @@ export class ModuleLoader {
    * @returns {Array} Array of MCP tool definitions
    */
   getModuleToolDefinitions() {
-    const allTools = this.toolRegistry.getAllTools();
+    // Instead of using the tool registry, get tools directly from loaded modules
+    const definitions = [];
     
-    // Filter for tools from loaded modules (have legion-module tag)
-    const moduleTools = allTools.filter(tool => 
-      tool.tags && tool.tags.includes('legion-module')
-    );
-
-    // Convert to MCP tool definitions
-    return moduleTools.map(tool => ({
-      name: tool.name,
-      description: tool.description,
-      inputSchema: tool.inputSchema
-    }));
+    console.log(`[ModuleLoader.getModuleToolDefinitions] Loaded modules: ${this.loadedModules.size}`);
+    
+    for (const [moduleName, moduleInstance] of this.loadedModules) {
+      if (moduleInstance.getTools) {
+        const tools = moduleInstance.getTools();
+        console.log(`[ModuleLoader.getModuleToolDefinitions] Module ${moduleName} has ${tools.length} tools`);
+        
+        for (const tool of tools) {
+          // Convert each tool to MCP format
+          const mcpTools = this.legionAdapter._convertToMCPTools(tool, moduleInstance);
+          const toolsToAdd = Array.isArray(mcpTools) ? mcpTools : [mcpTools];
+          
+          for (const mcpTool of toolsToAdd) {
+            definitions.push({
+              name: mcpTool.name,
+              description: mcpTool.description,
+              inputSchema: mcpTool.inputSchema
+            });
+          }
+        }
+      }
+    }
+    
+    console.log(`[ModuleLoader.getModuleToolDefinitions] Returning ${definitions.length} tool definitions:`, definitions.map(d => d.name));
+    return definitions;
   }
 
   /**
@@ -249,8 +289,27 @@ export class ModuleLoader {
    * @returns {boolean} True if it's a module tool
    */
   isModuleTool(toolName) {
-    const tool = this.toolRegistry.getTool(toolName);
-    return tool && tool.tags && tool.tags.includes('legion-module');
+    // Check if the tool exists in any loaded module
+    for (const [moduleName, moduleInstance] of this.loadedModules) {
+      if (moduleInstance.getTools) {
+        const tools = moduleInstance.getTools();
+        for (const tool of tools) {
+          // Check if this tool provides the requested tool name
+          if (tool.getToolDescription) {
+            const desc = tool.getToolDescription();
+            if (desc.function.name === toolName) {
+              return true;
+            }
+          } else if (tool.getAllToolDescriptions) {
+            const allDescs = tool.getAllToolDescriptions();
+            if (allDescs.some(desc => desc.function.name === toolName)) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
   }
 
   /**
@@ -263,31 +322,55 @@ export class ModuleLoader {
     const errorBroadcastService = this._getErrorBroadcastService();
     
     try {
-      const registeredTool = this.toolRegistry.getTool(toolName);
+      // Find the tool in loaded modules
+      let targetTool = null;
+      let targetModule = null;
       
-      if (!registeredTool) {
-        throw new Error(`Tool ${toolName} not found in registry`);
+      for (const [moduleName, moduleInstance] of this.loadedModules) {
+        if (moduleInstance.getTools) {
+          const tools = moduleInstance.getTools();
+          for (const tool of tools) {
+            // Check if this tool provides the requested tool name
+            if (tool.getToolDescription) {
+              const desc = tool.getToolDescription();
+              if (desc.function.name === toolName) {
+                targetTool = tool;
+                targetModule = moduleInstance;
+                break;
+              }
+            } else if (tool.getAllToolDescriptions) {
+              const allDescs = tool.getAllToolDescriptions();
+              if (allDescs.some(desc => desc.function.name === toolName)) {
+                targetTool = tool;
+                targetModule = moduleInstance;
+                break;
+              }
+            }
+          }
+          if (targetTool) break;
+        }
+      }
+      
+      if (!targetTool) {
+        throw new Error(`Tool ${toolName} not found in any loaded module`);
       }
 
-      let result;
+      // Execute the tool using the Legion adapter's conversion
+      const mcpTool = this.legionAdapter._convertToMCPTools(targetTool, targetModule);
       
-      // Check if it's a multi-function tool
-      if (registeredTool.functions) {
-        // Find the specific function
-        const func = registeredTool.functions.find(f => f.name === toolName);
-        if (func) {
-          result = await func.execute(resolvedArgs);
-        } else {
-          throw new Error(`Function ${toolName} not found in multi-function tool`);
+      if (Array.isArray(mcpTool)) {
+        // Multi-function tool - find the right one
+        const func = mcpTool.find(t => t.name === toolName);
+        if (func && func.execute) {
+          return await func.execute(resolvedArgs);
         }
-      } else if (registeredTool.execute) {
+        throw new Error(`Function ${toolName} not found in multi-function tool`);
+      } else if (mcpTool.execute) {
         // Single function tool
-        result = await registeredTool.execute(resolvedArgs);
+        return await mcpTool.execute(resolvedArgs);
       } else {
         throw new Error(`Tool ${toolName} has no execute method`);
       }
-
-      return result;
     } catch (error) {
       // Capture and broadcast the error
       if (errorBroadcastService) {
