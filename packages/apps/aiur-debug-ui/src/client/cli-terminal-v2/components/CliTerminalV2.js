@@ -5,7 +5,7 @@
 import { ResponseFormatter } from './ResponseFormatter.js';
 
 export class CliTerminalV2 {
-  constructor(containerOrId, apiInterface) {
+  constructor(containerOrId, apiInterface, toolManager = null) {
     // Accept either a DOM node or an ID string
     if (typeof containerOrId === 'string') {
       this.container = document.getElementById(containerOrId);
@@ -19,6 +19,7 @@ export class CliTerminalV2 {
     }
     
     this.interface = apiInterface;
+    this.toolManager = toolManager;
     
     // Tool definitions with structure
     this.commands = {};
@@ -61,15 +62,36 @@ export class CliTerminalV2 {
     this.addOutput('Type a command or press Tab for suggestions', 'info');
     this.addOutput('');
     
-    // Subscribe to tool updates
-    if (this.interface.onToolsUpdated) {
-      this.interface.onToolsUpdated(() => {
+    // Subscribe to tool updates from ToolManager
+    if (this.toolManager) {
+      // Listen for tool changes
+      this.toolManager.addEventListener('toolsChanged', (event) => {
+        console.log('[CLI] Tools changed, updating commands...');
         this.updateToolCommands();
       });
+      
+      // Listen for initial ready state
+      this.toolManager.addEventListener('ready', (event) => {
+        console.log('[CLI] Tools ready, updating commands...');
+        this.updateToolCommands();
+      });
+      
+      // If tools are already ready, update immediately
+      if (this.toolManager.isToolsReady()) {
+        console.log('[CLI] Tools already ready, updating commands immediately...');
+        this.updateToolCommands();
+      }
+    } else {
+      // Fallback to legacy interface
+      if (this.interface.onToolsUpdated) {
+        this.interface.onToolsUpdated(() => {
+          this.updateToolCommands();
+        });
+      }
+      
+      // Load initial tools
+      await this.refreshTools();
     }
-    
-    // Load initial tools
-    await this.refreshTools();
   }
 
   setupCommands() {
@@ -114,10 +136,25 @@ export class CliTerminalV2 {
   }
 
   updateToolCommands() {
-    if (!this.interface || !this.interface.getTools) return;
+    let toolDefinitions;
     
-    const toolDefinitions = this.interface.getTools();
-    if (!toolDefinitions) return;
+    if (this.toolManager) {
+      // Use ToolManager as primary source
+      toolDefinitions = this.toolManager.getTools();
+      console.log(`[CLI] Updating commands from ToolManager: ${toolDefinitions.size} tools`);
+    } else if (this.interface && this.interface.getTools) {
+      // Fallback to legacy interface
+      toolDefinitions = this.interface.getTools();
+      console.log(`[CLI] Updating commands from legacy interface: ${toolDefinitions?.size || 0} tools`);
+    } else {
+      console.warn('[CLI] No tool source available');
+      return;
+    }
+    
+    if (!toolDefinitions || toolDefinitions.size === 0) {
+      console.warn('[CLI] No tools available to update');
+      return;
+    }
     
     // Define structures for known tools
     const toolStructures = {
@@ -200,6 +237,11 @@ export class CliTerminalV2 {
         overflow-y: auto;
         padding: 20px;
         min-height: 0;
+        user-select: text;
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+        cursor: text;
       }
 
       .cli-terminal-v2 .output-line {
@@ -207,6 +249,18 @@ export class CliTerminalV2 {
         line-height: 1.4;
         white-space: pre-wrap;
         word-break: break-word;
+        user-select: text;
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+        cursor: text;
+      }
+      
+      .cli-terminal-v2 .output-line * {
+        user-select: text !important;
+        -webkit-user-select: text !important;
+        -moz-user-select: text !important;
+        -ms-user-select: text !important;
       }
 
       .cli-terminal-v2 .input-container {
@@ -289,6 +343,9 @@ export class CliTerminalV2 {
         border-radius: 4px;
         border-left: 3px solid #007acc;
         user-select: text;
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
         cursor: text;
       }
       
@@ -296,8 +353,13 @@ export class CliTerminalV2 {
         color: #d4d4d4;
         background: transparent;
         line-height: 1.5;
-        user-select: text;
+        user-select: text !important;
+        -webkit-user-select: text !important;
+        -moz-user-select: text !important;
+        -ms-user-select: text !important;
         cursor: text;
+        margin: 0;
+        font-family: inherit;
       }
 
       /* Scrollbar styling */
@@ -353,9 +415,21 @@ export class CliTerminalV2 {
     this.input.addEventListener('keydown', (e) => this.handleKeyDown(e));
     this.input.addEventListener('focus', () => this.updateSuggestions());
     
-    // Keep focus on input when clicking in terminal
+    // Keep focus on input when clicking in terminal, but allow text selection
     const terminal = this.output.parentElement;
     terminal.addEventListener('click', (e) => {
+      // Don't focus input if user is selecting text
+      const selection = window.getSelection();
+      if (selection && selection.toString().length > 0) {
+        return;
+      }
+      
+      // Don't focus if clicking on output area (allow selection)
+      if (this.output.contains(e.target)) {
+        return;
+      }
+      
+      // Only focus input for other clicks
       if (e.target !== this.input) {
         this.focusInput();
       }
@@ -783,7 +857,12 @@ export class CliTerminalV2 {
   
   // Refresh tools from the interface
   async refreshTools() {
-    if (this.interface && this.interface.getTools) {
+    if (this.toolManager) {
+      console.log('[CLI] Refreshing tools via ToolManager...');
+      await this.toolManager.refresh();
+      // updateToolCommands will be called automatically via event listener
+    } else if (this.interface && this.interface.getTools) {
+      console.log('[CLI] Refreshing tools via legacy interface...');
       this.updateToolCommands();
     }
   }

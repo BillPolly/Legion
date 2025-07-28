@@ -778,20 +778,43 @@ class FileOperationsTool extends Tool {
  * This is a complete module with built-in tools, no external dependencies needed
  */
 class FileModule extends Module {
-  // Declare required dependencies
-  static dependencies = ['basePath', 'encoding', 'createDirectories', 'permissions'];
+  // These are optional dependencies with defaults
+  static dependencies = [];
 
-  constructor({ basePath = process.cwd(), encoding = 'utf8', createDirectories = true, permissions = 0o755 } = {}) {
+  constructor(resourceManager = {}) {
     super();
     this.name = 'file';
     
+    // Handle both object destructuring and ResourceManager patterns
+    let config = {};
+    if (resourceManager && typeof resourceManager.get === 'function') {
+      // ResourceManager pattern
+      config = {
+        basePath: resourceManager.get('basePath') || process.cwd(),
+        encoding: resourceManager.get('encoding') || 'utf8',
+        createDirectories: resourceManager.get('createDirectories') !== false,
+        permissions: resourceManager.get('permissions') || 0o755
+      };
+    } else if (resourceManager && typeof resourceManager === 'object') {
+      // Direct config object
+      config = {
+        basePath: resourceManager.basePath || process.cwd(),
+        encoding: resourceManager.encoding || 'utf8',
+        createDirectories: resourceManager.createDirectories !== false,
+        permissions: resourceManager.permissions || 0o755
+      };
+    } else {
+      // No config provided, use all defaults
+      config = {
+        basePath: process.cwd(),
+        encoding: 'utf8',
+        createDirectories: true,
+        permissions: 0o755
+      };
+    }
+    
     // Store configuration
-    this.config = {
-      basePath,
-      encoding,
-      createDirectories,
-      permissions
-    };
+    this.config = config;
     
     // Create and register the file operations tool
     const fileOperationsTool = new FileOperationsTool();

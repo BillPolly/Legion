@@ -90,23 +90,57 @@ export default class ModuleListTool extends Tool {
             dependencies: module.dependencies || []
           };
 
-          if (includeTools && module.instance?.getTools) {
-            info.tools = module.instance.getTools().map(tool => ({
-              name: tool.name || tool.constructor.name,
-              description: tool.description || 'No description'
-            }));
-          } else if (includeTools && module.toolCount) {
-            info.toolCount = module.toolCount;
+          if (includeTools) {
+            if (module.instance?.getTools) {
+              // For loaded modules, get fresh tool information
+              info.tools = module.instance.getTools().map(tool => ({
+                name: tool.name || tool.constructor.name,
+                description: tool.description || 'No description'
+              }));
+              info.toolCount = info.tools.length;
+            } else if (module.toolCount !== undefined) {
+              // For unloaded modules, use cached tool count
+              info.toolCount = module.toolCount;
+            } else {
+              // Try to get cached tool information from ModuleManager
+              const tools = this.moduleManager.getModuleTools(module.name);
+              info.toolCount = tools.length;
+              if (tools.length > 0) {
+                info.tools = tools.map(tool => ({
+                  name: tool.name,
+                  description: tool.description,
+                  type: tool.type
+                }));
+              }
+            }
           }
 
           return info;
         });
       } else {
-        // Simple format
+        // Simple format with tool counts
         result = modules.reduce((acc, module) => {
           const status = module.status || (module.instance ? 'loaded' : 'available');
           if (!acc[status]) acc[status] = [];
-          acc[status].push(module.name);
+          
+          let displayName = module.name;
+          
+          // Add tool count to display name if available
+          let toolCount = 0;
+          if (module.instance?.getTools) {
+            toolCount = module.instance.getTools().length;
+          } else if (module.toolCount !== undefined) {
+            toolCount = module.toolCount;
+          } else {
+            const tools = this.moduleManager.getModuleTools(module.name);
+            toolCount = tools.length;
+          }
+          
+          if (toolCount > 0) {
+            displayName += ` (${toolCount} tools)`;
+          }
+          
+          acc[status].push(displayName);
           return acc;
         }, {});
       }

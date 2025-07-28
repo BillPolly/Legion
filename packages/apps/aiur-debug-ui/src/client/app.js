@@ -4,6 +4,8 @@
  * Connects to the debug UI server which proxies to MCP servers
  */
 
+import { ToolManager } from './ToolManager.js';
+
 class DebugUIApp {
   constructor() {
     // Connection state
@@ -19,11 +21,12 @@ class DebugUIApp {
     // MCP state
     this.requestId = 0;
     this.pendingRequests = new Map();
-    this.availableTools = [];
-    this.toolDefinitions = new Map();
     this.sessions = [];
     this.currentSession = null;
     this.sessionMode = false;
+    
+    // Tool management
+    this.toolManager = null; // Will be initialized after connection
     
     // UI state
     this.eventsPaused = false;
@@ -221,45 +224,65 @@ class DebugUIApp {
   /**
    * Handle Aiur session created
    */
-  handleAiurSessionCreated(message) {
+  async handleAiurSessionCreated(message) {
     console.log('Aiur session created:', message);
     this.currentSession = message.sessionId;
     
-    // Immediately request available tools
-    console.log('Requesting tools list...');
-    this.sendMessage({
-      type: 'mcp_request',
-      requestId: `req_${this.getNextRequestId()}`,
-      method: 'tools/list',
-      params: {}
-    });
+    // Initialize ToolManager with clean MCP interface
+    await this.initializeToolManager();
     
-    // Initialize CLI Terminal now that we're connected
-    this.initializeCLITerminal();
-    
-    // Also refresh tools after delays to ensure they're loaded
-    setTimeout(() => {
-      console.log('Refreshing tools list after session creation (first attempt)...');
-      this.sendMessage({
-        type: 'mcp_request',
-        requestId: `req_${this.getNextRequestId()}`,
-        method: 'tools/list',
-        params: {}
-      });
-    }, 1000);
-    
-    // Second attempt with longer delay
-    setTimeout(() => {
-      console.log('Refreshing tools list after session creation (second attempt)...');
-      this.sendMessage({
-        type: 'mcp_request',
-        requestId: `req_${this.getNextRequestId()}`,
-        method: 'tools/list',
-        params: {}
-      });
-    }, 3000);
+    // Initialize CLI Terminal after tools are ready
+    await this.initializeCLITerminal();
   }
   
+  /**
+   * Initialize ToolManager with clean MCP interface
+   */
+  async initializeToolManager() {
+    console.log('[App] Initializing ToolManager...');
+    
+    // Create clean MCP interface for ToolManager
+    const mcpInterface = {
+      requestTools: async () => {
+        return new Promise((resolve, reject) => {
+          const requestId = `req_${this.getNextRequestId()}`;
+          
+          // Store resolver for this request
+          this.pendingRequests.set(requestId, {
+            method: 'tools/list',
+            resolve: (result) => {
+              if (result && result.tools) {
+                resolve(result.tools);
+              } else {
+                resolve([]);
+              }
+            },
+            reject: reject
+          });
+          
+          // Send request
+          const success = this.sendMessage({
+            type: 'mcp_request',
+            requestId: requestId,
+            method: 'tools/list',
+            params: {}
+          });
+          
+          if (!success) {
+            this.pendingRequests.delete(requestId);
+            reject(new Error('Failed to send tools/list request'));
+          }
+        });
+      }
+    };
+    
+    // Create and initialize ToolManager
+    this.toolManager = new ToolManager(mcpInterface);
+    await this.toolManager.initialize();
+    
+    console.log(`[App] ToolManager initialized with ${this.toolManager.getTools().size} tools`);
+  }
+
   /**
    * Handle Aiur MCP response
    */
@@ -274,17 +297,12 @@ class DebugUIApp {
       return;
     }
     
-    // Handle tools/list response
-    if (message.result && message.result.tools) {
-      this.handleToolsList(message.result);
-    }
-    
     // Handle pending requests
     if (message.requestId && this.pendingRequests.has(message.requestId)) {
       const request = this.pendingRequests.get(message.requestId);
       this.pendingRequests.delete(message.requestId);
       
-      // Check if this is a CLI request with promise resolvers
+      // Handle promise-based requests (ToolManager, CLI, etc.)
       if (request.resolve) {
         if (message.error) {
           request.reject(new Error(message.error));
@@ -294,13 +312,18 @@ class DebugUIApp {
         return;
       }
       
-      // Update command result if this was a tool execution from the legacy interface
+      // Legacy handling for old interface
       if (request.method === 'tools/call') {
         this.displayCommandResult(message.result);
         // Re-enable the execute button
         document.getElementById('executeBtn').disabled = false;
         this.showToolExecutionStatus('Ready');
       }
+    }
+    
+    // Handle tools/list response for legacy components
+    if (message.result && message.result.tools) {
+      this.updateLegacyToolDisplay(message.result.tools);
     }
   }
   
@@ -354,26 +377,37 @@ class DebugUIApp {
   }
 
   /**
-   * Handle tools list
+   * Update legacy tool display components
    */
-  handleToolsList(result) {
-    const tools = result.tools || [];
-    this.availableTools = [];
-    this.toolDefinitions.clear();
+  updateLegacyToolDisplay(tools = []) {
+    // Update tool selector dropdown
+    const toolSelect = document.getElementById('toolName');
+    if (toolSelect) {
+      toolSelect.innerHTML = '<option value="">Select a tool...</option>';
+      tools.forEach(tool => {
+        const option = document.createElement('option');
+        option.value = tool.name;
+        option.textContent = tool.name;
+        toolSelect.appendChild(option);
+      });
+    }
     
-    tools.forEach(tool => {
-      this.availableTools.push(tool.name);
-      this.toolDefinitions.set(tool.name, tool);
-    });
+    // Update tool count
+    const toolCountElement = document.getElementById('toolCount');
+    if (toolCountElement) {
+      toolCountElement.textContent = tools.length;
+    }
     
-    console.log(`Loaded ${tools.length} tools`);
-    this.updateToolSelector();
-    this.updateToolCount(tools.length);
-    this.displayAvailableTools();
-    
-    // Notify CLI if it has registered a callback
-    if (this.cliToolUpdateCallback) {
-      this.cliToolUpdateCallback();
+    // Update available tools display
+    const availableToolsElement = document.getElementById('availableTools');
+    if (availableToolsElement) {
+      availableToolsElement.innerHTML = '';
+      tools.forEach(tool => {
+        const span = document.createElement('span');
+        span.className = 'tool-tag';
+        span.textContent = tool.name;
+        availableToolsElement.appendChild(span);
+      });
     }
   }
 
@@ -1082,11 +1116,18 @@ class DebugUIApp {
     // Only initialize once
     if (this.cliTerminal) return;
     
+    if (!this.toolManager) {
+      console.error('[App] Cannot initialize CLI Terminal: ToolManager not available');
+      return;
+    }
+    
     try {
+      console.log('[App] Initializing CLI Terminal with ToolManager...');
+      
       // Dynamically import the new CLI Terminal v2 module
       const { CliTerminalV2 } = await import('./cli-terminal-v2/index.js');
       
-      // Create a clean interface for the CLI
+      // Create a clean interface for the CLI using ToolManager
       const cliInterface = {
         // Execute a tool and return the result
         executeTool: async (toolName, args) => {
@@ -1126,30 +1167,15 @@ class DebugUIApp {
               }
             }, 30000); // 30 second timeout
           });
-        },
-        
-        // Get available tools
-        getTools: () => this.toolDefinitions,
-        
-        // Subscribe to tool updates
-        onToolsUpdated: (callback) => {
-          // Store callback to be called when tools are updated
-          this.cliToolUpdateCallback = callback;
         }
       };
       
-      // Create CLI Terminal v2 instance with clean interface
-      this.cliTerminal = new CliTerminalV2('cliTerminalContainer', cliInterface);
+      // Create CLI Terminal v2 instance with ToolManager
+      this.cliTerminal = new CliTerminalV2('cliTerminalContainer', cliInterface, this.toolManager);
       
-      console.log('CLI Terminal v2 initialized');
-      
-      // If we already have tools loaded, notify the CLI
-      if (this.toolDefinitions.size > 0 && this.cliToolUpdateCallback) {
-        console.log('Notifying CLI of existing tools:', this.toolDefinitions.size);
-        this.cliToolUpdateCallback();
-      }
+      console.log(`[App] CLI Terminal v2 initialized with ${this.toolManager.getTools().size} tools`);
     } catch (error) {
-      console.error('Failed to initialize CLI Terminal:', error);
+      console.error('[App] Failed to initialize CLI Terminal:', error);
       this.showToast('Failed to load CLI Terminal', 'error');
     }
   }

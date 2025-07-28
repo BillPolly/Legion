@@ -61,98 +61,61 @@ export default class ModuleToolsTool extends Tool {
     try {
       const { module: moduleName, format, includeSchema } = params;
 
-      // First check if module is loaded
-      let moduleInstance = null;
-      let moduleInfo = null;
-      let isLoaded = false;
-
-      if (this.moduleManager.isModuleLoaded(moduleName)) {
-        moduleInfo = this.moduleManager.getModuleInfo(moduleName);
-        const registry = this.moduleManager.getRegistry();
-        moduleInstance = registry.getInstance(moduleName);
-        isLoaded = true;
-      } else {
-        // Try to find in available modules
-        const availableModules = this.moduleManager.getAvailableModules();
-        moduleInfo = availableModules.find(m => m.name === moduleName);
-        
-        if (!moduleInfo) {
-          return ToolResult.failure(`Module '${moduleName}' not found. Use module_discover to find available modules.`);
-        }
-
-        // Try to load the module temporarily to get its tools
-        try {
-          moduleInstance = await this.moduleManager.loadModule(moduleName);
-          isLoaded = false; // We just loaded it for inspection
-        } catch (error) {
-          return ToolResult.failure(`Failed to load module '${moduleName}' to inspect tools: ${error.message}`);
-        }
+      // Get module information (loaded or cached from discovery)
+      const moduleInfo = this.moduleManager.getModuleInfo(moduleName);
+      if (!moduleInfo) {
+        return ToolResult.failure(`Module '${moduleName}' not found. Use module_discover to find available modules.`);
       }
 
-      if (!moduleInstance || !moduleInstance.getTools) {
-        return ToolResult.failure(`Module '${moduleName}' does not expose any tools`);
-      }
-
-      const tools = moduleInstance.getTools();
+      // Get cached tool information (works for both loaded and unloaded modules)
+      const tools = this.moduleManager.getModuleTools(moduleName);
+      
       const result = {
         module: moduleName,
-        status: isLoaded ? 'loaded' : 'available',
+        status: moduleInfo.status,
         toolCount: tools.length,
         tools: []
       };
 
+      if (tools.length === 0) {
+        result.message = 'No tools found for this module';
+        return ToolResult.success(result);
+      }
+
       if (format === 'detailed') {
         result.tools = tools.map(tool => {
           const toolInfo = {
-            name: tool.name || tool.constructor.name,
-            description: tool.description || 'No description'
+            name: tool.name,
+            description: tool.description,
+            type: tool.type
           };
 
-          // Get tool description in MCP format
-          if (tool.getToolDescription) {
-            const desc = tool.getToolDescription();
-            toolInfo.name = desc.function.name;
-            toolInfo.description = desc.function.description;
-            
-            if (includeSchema && desc.function.parameters) {
-              toolInfo.inputSchema = desc.function.parameters;
-            }
-          } else if (tool.getAllToolDescriptions) {
-            // Multi-function tool
-            const allDescs = tool.getAllToolDescriptions();
-            toolInfo.functions = allDescs.map(desc => ({
-              name: desc.function.name,
-              description: desc.function.description,
-              ...(includeSchema && desc.function.parameters ? { inputSchema: desc.function.parameters } : {})
-            }));
+          // Include schema if requested and available
+          if (includeSchema && tool.parameters) {
+            toolInfo.inputSchema = tool.parameters;
+          }
+
+          // Include tool name for context
+          if (tool.toolName && tool.toolName !== tool.name) {
+            toolInfo.toolName = tool.toolName;
+          }
+
+          // Include error information if tool inspection failed
+          if (tool.error) {
+            toolInfo.error = tool.error;
           }
 
           return toolInfo;
         });
       } else {
-        // Simple format - just tool names
-        result.tools = [];
-        tools.forEach(tool => {
-          if (tool.getToolDescription) {
-            const desc = tool.getToolDescription();
-            result.tools.push(desc.function.name);
-          } else if (tool.getAllToolDescriptions) {
-            const allDescs = tool.getAllToolDescriptions();
-            result.tools.push(...allDescs.map(desc => desc.function.name));
-          } else {
-            result.tools.push(tool.name || tool.constructor.name);
-          }
-        });
+        // Simple format - just function names
+        result.tools = tools.map(tool => tool.name);
       }
 
-      // If we loaded the module just for inspection and it wasn't already loaded, unload it
-      if (!isLoaded && !this.moduleManager.isModuleLoaded(moduleName)) {
-        try {
-          await this.moduleManager.unloadModule(moduleName);
-        } catch (error) {
-          // Ignore unload errors - this was just for inspection
-          console.warn(`Failed to unload temporary module ${moduleName}:`, error.message);
-        }
+      // Add helpful messages based on tool types
+      const toolTypes = [...new Set(tools.map(t => t.type))];
+      if (toolTypes.includes('requires-loading') || toolTypes.includes('async-factory') || toolTypes.includes('inspection-failed')) {
+        result.note = 'Some tools require module loading for full inspection. Use module_load to load the module first.';
       }
 
       return ToolResult.success(result);

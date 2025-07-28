@@ -151,14 +151,33 @@ export class ModuleManager extends EventEmitter {
       if (filePath.endsWith('module.json')) {
         // JSON module
         const config = await this.jsonLoader.loadModuleConfig(filePath);
-        return {
+        const moduleInfo = {
           name: config.name || path.basename(dir),
           path: filePath,
           directory: dir,
           type: 'json',
           config: config,
-          dependencies: config.dependencies || []
+          dependencies: config.dependencies || [],
+          tools: []
         };
+        
+        // Extract tool information from JSON module config
+        if (config.tools && Array.isArray(config.tools)) {
+          moduleInfo.tools = config.tools.map(tool => ({
+            name: tool.name,
+            description: tool.description || 'No description',
+            parameters: tool.parameters,
+            type: 'json-defined',
+            function: tool.function,
+            instanceMethod: tool.instanceMethod,
+            async: tool.async
+          }));
+          moduleInfo.toolCount = config.tools.length;
+        } else {
+          moduleInfo.toolCount = 0;
+        }
+        
+        return moduleInfo;
       } else if (filePath.endsWith('.js')) {
         // JavaScript module
         // Try to import and check if it's a valid module
@@ -170,15 +189,30 @@ export class ModuleManager extends EventEmitter {
           const name = ModuleClass.name?.replace(/Module$/, '').toLowerCase() || 
                       baseName.replace(/Module$/, '').toLowerCase();
           
-          return {
+          const moduleInfo = {
             name,
             path: filePath,
             directory: dir,
             type: 'class',
             className: ModuleClass.name,
             dependencies: ModuleClass.dependencies || [],
-            isAsyncFactory: typeof ModuleClass.create === 'function'
+            isAsyncFactory: typeof ModuleClass.create === 'function',
+            tools: []
           };
+
+          // Try to extract tool information without fully instantiating the module
+          try {
+            await this._cacheModuleTools(moduleInfo, ModuleClass);
+          } catch (error) {
+            // Log warning but don't fail discovery
+            this.emit('warning', {
+              type: 'tool-analysis',
+              module: name,
+              error: error.message
+            });
+          }
+          
+          return moduleInfo;
         }
       }
     } catch (error) {
@@ -191,6 +225,148 @@ export class ModuleManager extends EventEmitter {
     }
 
     return null;
+  }
+
+  /**
+   * Cache tool information for a module without fully loading it
+   * @private
+   */
+  async _cacheModuleTools(moduleInfo, ModuleClass) {
+    try {
+      let toolsInfo = [];
+
+      // Strategy 1: Check for module-info.json file with cached tool definitions
+      const moduleInfoPath = path.join(moduleInfo.directory, 'module-info.json');
+      try {
+        const moduleInfoContent = await fs.readFile(moduleInfoPath, 'utf8');
+        const moduleInfoData = JSON.parse(moduleInfoContent);
+        if (moduleInfoData.tools && Array.isArray(moduleInfoData.tools)) {
+          toolsInfo = moduleInfoData.tools.map(tool => ({
+            name: tool.name,
+            description: tool.description || 'No description',
+            parameters: tool.parameters,
+            type: 'cached',
+            toolName: tool.toolName || 'unknown'
+          }));
+          moduleInfo.tools = toolsInfo;
+          moduleInfo.toolCount = toolsInfo.length;
+          return; // Successfully cached from module-info.json
+        }
+      } catch (error) {
+        // module-info.json doesn't exist or is invalid - continue with other strategies
+      }
+
+      // Strategy 2: Check if module has static tool definitions
+      if (ModuleClass.tools && Array.isArray(ModuleClass.tools)) {
+        toolsInfo = ModuleClass.tools.map(tool => ({
+          name: tool.name || 'unknown',
+          description: tool.description || 'No description',
+          type: 'static'
+        }));
+      }
+      
+      // Strategy 3: Try to temporarily instantiate if it's a simple constructor
+      else if (!moduleInfo.isAsyncFactory) {
+        try {
+          // Create a minimal mock resource manager for instantiation
+          const mockRM = {
+            get: () => ({}),
+            register: () => {},
+            has: () => false
+          };
+          
+          const tempInstance = new ModuleClass(mockRM);
+          if (tempInstance && typeof tempInstance.getTools === 'function') {
+            const tools = tempInstance.getTools();
+            toolsInfo = [];
+            
+            // Extract individual functions from each tool
+            tools.forEach(tool => {
+              try {
+                if (tool.getAllToolDescriptions) {
+                  // Multi-function tool - extract all functions as separate entries
+                  const allDescs = tool.getAllToolDescriptions();
+                  allDescs.forEach(desc => {
+                    toolsInfo.push({
+                      name: desc.function.name,
+                      description: desc.function.description,
+                      parameters: desc.function.parameters,
+                      type: 'function',
+                      toolName: tool.name || tool.constructor.name
+                    });
+                  });
+                } else if (tool.getToolDescription) {
+                  // Single function tool
+                  const desc = tool.getToolDescription();
+                  toolsInfo.push({
+                    name: desc.function.name,
+                    description: desc.function.description,
+                    parameters: desc.function.parameters,
+                    type: 'function',
+                    toolName: tool.name || tool.constructor.name
+                  });
+                } else {
+                  // Fallback for tools without proper descriptions
+                  toolsInfo.push({
+                    name: tool.name || tool.constructor.name,
+                    description: tool.description || 'No description',
+                    type: 'tool-fallback',
+                    toolName: tool.name || tool.constructor.name
+                  });
+                }
+              } catch (err) {
+                // If tool description fails, add basic info
+                toolsInfo.push({
+                  name: tool.name || tool.constructor.name,
+                  description: `Tool inspection failed: ${err.message}`,
+                  type: 'tool-error',
+                  toolName: tool.name || tool.constructor.name,
+                  error: err.message
+                });
+              }
+            });
+          }
+          
+          // Cleanup if possible
+          if (tempInstance && typeof tempInstance.cleanup === 'function') {
+            try {
+              await tempInstance.cleanup();
+            } catch (err) {
+              // Ignore cleanup errors
+            }
+          }
+        } catch (instantiationError) {
+          // Instantiation failed - that's okay, we'll mark as unknown tools
+          toolsInfo = [{
+            name: 'unknown',
+            description: 'Tools available but require module loading to inspect',
+            type: 'requires-loading'
+          }];
+        }
+      }
+      
+      // Strategy 4: For async factory modules, we can't easily inspect without full loading
+      else {
+        toolsInfo = [{
+          name: 'unknown',
+          description: 'Async factory module - tools available but require loading to inspect',
+          type: 'async-factory'
+        }];
+      }
+      
+      moduleInfo.tools = toolsInfo;
+      moduleInfo.toolCount = toolsInfo.length;
+      
+    } catch (error) {
+      // If all strategies fail, mark as unknown
+      moduleInfo.tools = [{
+        name: 'unknown',
+        description: 'Tool inspection failed - use module_load to access tools',
+        type: 'inspection-failed',
+        error: error.message
+      }];
+      moduleInfo.toolCount = 0;
+    }
   }
 
   /**
@@ -406,11 +582,53 @@ export class ModuleManager extends EventEmitter {
   getModuleInfo(moduleName) {
     const registered = this.registry.get(moduleName);
     if (registered) {
+      // For loaded modules, get fresh tool information from the instance
+      let tools = [];
+      if (registered.instance?.getTools) {
+        try {
+          tools = registered.instance.getTools().map(tool => {
+            const info = {
+              name: tool.name || tool.constructor.name,
+              description: tool.description || 'No description',
+              type: 'loaded'
+            };
+            
+            // Try to get MCP description
+            try {
+              if (tool.getAllToolDescriptions) {
+                // Multi-function tool - create separate entries for each function
+                const allDescs = tool.getAllToolDescriptions();
+                // Return early with expanded function list
+                return allDescs.map(desc => ({
+                  name: desc.function.name,
+                  description: desc.function.description,
+                  parameters: desc.function.parameters,
+                  type: 'loaded',
+                  toolName: tool.name || tool.constructor.name
+                }));
+              } else if (tool.getToolDescription) {
+                const desc = tool.getToolDescription();
+                info.name = desc.function.name;
+                info.description = desc.function.description;
+                info.parameters = desc.function.parameters;
+              }
+            } catch (err) {
+              // Use basic info if MCP description fails
+            }
+            
+            return info;
+          });
+        } catch (error) {
+          tools = [];
+        }
+      }
+      
       return {
         ...registered.metadata,
+        status: 'loaded',
         hasInstance: !!registered.instance,
-        tools: registered.instance?.getTools ? 
-               registered.instance.getTools().map(t => t.name || t.constructor.name) : []
+        tools: tools,
+        toolCount: tools.length
       };
     }
 
@@ -418,11 +636,85 @@ export class ModuleManager extends EventEmitter {
     if (discovered) {
       return {
         ...discovered,
-        status: 'available'
+        status: 'available',
+        hasInstance: false
       };
     }
 
     return null;
+  }
+
+  /**
+   * Get cached tool information for a module (loaded or not)
+   * @param {string} moduleName - Module name
+   * @returns {Array} Array of tool information
+   */
+  getModuleTools(moduleName) {
+    // First check if module is loaded and get fresh tools
+    const registered = this.registry.get(moduleName);
+    if (registered && registered.instance?.getTools) {
+      try {
+        const tools = registered.instance.getTools();
+        const expandedTools = [];
+        
+        tools.forEach(tool => {
+          try {
+            if (tool.getAllToolDescriptions) {
+              // Multi-function tool - create separate entries for each function
+              const allDescs = tool.getAllToolDescriptions();
+              allDescs.forEach(desc => {
+                expandedTools.push({
+                  name: desc.function.name,
+                  description: desc.function.description,
+                  parameters: desc.function.parameters,
+                  type: 'loaded',
+                  toolName: tool.name || tool.constructor.name
+                });
+              });
+            } else if (tool.getToolDescription) {
+              // Single function tool
+              const desc = tool.getToolDescription();
+              expandedTools.push({
+                name: desc.function.name,
+                description: desc.function.description,
+                parameters: desc.function.parameters,
+                type: 'loaded',
+                toolName: tool.name || tool.constructor.name
+              });
+            } else {
+              // Fallback for tools without proper descriptions
+              expandedTools.push({
+                name: tool.name || tool.constructor.name,
+                description: tool.description || 'No description',
+                type: 'loaded',
+                toolName: tool.name || tool.constructor.name
+              });
+            }
+          } catch (err) {
+            // If tool description fails, add basic info
+            expandedTools.push({
+              name: tool.name || tool.constructor.name,
+              description: `Tool inspection failed: ${err.message}`,
+              type: 'loaded-error',
+              toolName: tool.name || tool.constructor.name,
+              error: err.message
+            });
+          }
+        });
+        
+        return expandedTools;
+      } catch (error) {
+        // Fall through to cached tools
+      }
+    }
+
+    // Use cached tool information from discovery
+    const discovered = this.discoveredModules.get(moduleName);
+    if (discovered && discovered.tools) {
+      return discovered.tools;
+    }
+
+    return [];
   }
 
   /**

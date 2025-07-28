@@ -193,31 +193,29 @@ export class ResponseFormatter {
         lines.push('─── Available Tools ───');
         
         // Check if it's detailed format
-        if (Array.isArray(result.tools) && typeof result.tools[0] === 'object') {
+        if (Array.isArray(result.tools) && typeof result.tools[0] === 'object' && result.tools[0].description) {
           // Detailed format
           result.tools.forEach(tool => {
-            if (tool.functions) {
-              // Multi-function tool
-              lines.push(`${tool.name}:`);
-              lines.push(`  Description: ${tool.description}`);
-              lines.push('  Functions:');
-              tool.functions.forEach(func => {
-                lines.push(`    • ${func.name}: ${func.description}`);
-              });
-            } else {
-              // Single function tool
-              lines.push(`• ${tool.name}: ${tool.description}`);
+            lines.push(`• ${tool.name}: ${tool.description}`);
+            if (tool.type && tool.type !== 'function') {
+              lines.push(`  Type: ${tool.type}`);
+            }
+            if (tool.toolName && tool.toolName !== tool.name) {
+              lines.push(`  Tool: ${tool.toolName}`);
+            }
+            if (tool.error) {
+              lines.push(`  Error: ${tool.error}`);
             }
             lines.push('');
           });
         } else {
-          // Simple format - just names
+          // Simple format - just names in columns
           const columns = 3;
           const columnWidth = 25;
           
           for (let i = 0; i < result.tools.length; i += columns) {
             const row = result.tools.slice(i, i + columns)
-              .map(name => name.padEnd(columnWidth))
+              .map(name => (typeof name === 'string' ? name : name.name || 'unknown').padEnd(columnWidth))
               .join('');
             lines.push(`  ${row}`);
           }
@@ -226,7 +224,13 @@ export class ResponseFormatter {
         lines.push('No tools available in this module.');
       }
       
-      return lines.join('\\n');
+      // Add note if present
+      if (result.note) {
+        lines.push('');
+        lines.push(`Note: ${result.note}`);
+      }
+      
+      return lines.join('\n');
     });
 
     // Generic success/error formatter
