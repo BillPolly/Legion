@@ -13,6 +13,8 @@ import { ProfileManager } from '../ProfileManager.js';
 export class ProfilePlannerTool extends Tool {
   constructor(dependencies = {}) {
     super();
+    this.name = 'profile_planner';
+    this.description = 'Profile-based planning for simplified domain-specific task planning';
     this.resourceManager = dependencies.resourceManager;
     this.profileManager = null;
     this.initialized = false;
@@ -237,7 +239,7 @@ export class ProfilePlannerTool extends Tool {
           actionCount: profile.allowableActions?.length || 0,
           hasTemplates: !!(profile.templates && Object.keys(profile.templates).length > 0)
         },
-        usage: `Use: plan_with_profile ${profileName} "<your_task_description>"`
+        usage: `Use: plan_with_profile ${profile.name} "<your_task_description>"`
       });
     } catch (error) {
       return ToolResult.failure(`Failed to get profile info: ${error.message}`);
