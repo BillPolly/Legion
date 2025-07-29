@@ -270,7 +270,8 @@ export class ProfilePlannerTool extends Tool {
 
     const llmClient = new LLMClient({
       provider: 'anthropic',
-      apiKey: anthropicKey
+      apiKey: anthropicKey,
+      model: 'claude-3-5-sonnet-20241022' // Use current Claude 3.5 Sonnet model
     });
 
     // Register for reuse

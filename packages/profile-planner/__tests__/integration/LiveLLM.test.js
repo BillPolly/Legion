@@ -1,37 +1,42 @@
 /**
  * Live LLM integration tests for ProfilePlannerModule
- * These tests make actual API calls to test real LLM integration
+ * These tests make actual API calls to test real LLM integration via the module task interface
+ * 
+ * Follows the patterns from LiveGitHubIntegration.test.js and CLAUDE.md guidelines
  */
 
-import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import { ResourceManager, ModuleFactory } from '@legion/module-loader';
+import { describe, test, expect, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
+import { ResourceManager } from '@legion/module-loader';
 import { ProfilePlannerModule } from '../../src/ProfilePlannerModule.js';
 
-// Skip these tests if no API key is available
-const hasApiKey = process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY !== 'test-key';
-const describeSkipCondition = hasApiKey ? describe : describe.skip;
-
-describeSkipCondition('ProfilePlannerModule Live LLM Tests', () => {
+describe('ProfilePlannerModule Live LLM Tests', () => {
   let resourceManager;
-  let moduleFactory;
   let module;
-  let tool;
 
-  beforeEach(async () => {
-    // Create real ResourceManager
+  beforeAll(async () => {
+    // Create real ResourceManager - this automatically loads .env file
     resourceManager = new ResourceManager();
     await resourceManager.initialize();
 
-    // Use real API key from environment
-    resourceManager.register('env.ANTHROPIC_API_KEY', process.env.ANTHROPIC_API_KEY);
+    // Verify API key is available - FAIL if not (don't skip!)
+    try {
+      const apiKey = resourceManager.get('env.ANTHROPIC_API_KEY');
+      
+      if (!apiKey || apiKey === 'test-key') {
+        throw new Error('ANTHROPIC_API_KEY is missing or set to test value. Live tests require real API key in .env file!');
+      }
+      console.log('✅ Live LLM testing enabled - found ANTHROPIC_API_KEY');
+    } catch (error) {
+      if (error.message.includes('not found')) {
+        throw new Error('ANTHROPIC_API_KEY not found in .env file. Live tests require real API key to be configured!');
+      }
+      throw error;
+    }
+  });
 
-    // Create and initialize module
-    moduleFactory = new ModuleFactory(resourceManager);
-    module = moduleFactory.createModule(ProfilePlannerModule);
-    await module.initialize();
-
-    const tools = module.getTools();
-    tool = tools[0];
+  beforeEach(async () => {
+    // Use the async factory pattern as documented in CLAUDE.md
+    module = await ProfilePlannerModule.create(resourceManager);
   });
 
   afterEach(async () => {
@@ -40,8 +45,15 @@ describeSkipCondition('ProfilePlannerModule Live LLM Tests', () => {
     }
   });
 
-  describe('Real LLM Plan Generation', () => {
+  describe('Real LLM Plan Generation via Module Interface', () => {
     test('should generate plan for simple JavaScript task', async () => {
+      // Get the profile planner tool from the module
+      const tools = module.getTools();
+      expect(tools).toHaveLength(1);
+      const tool = tools[0];
+      expect(tool.name).toBe('profile_planner');
+
+      // Test via the module task interface
       const result = await tool.invoke({
         function: {
           name: 'plan_with_profile',
@@ -62,7 +74,7 @@ describeSkipCondition('ProfilePlannerModule Live LLM Tests', () => {
       expect(result.planId).toBeDefined();
       expect(result.createdAt).toBeDefined();
 
-      // Verify plan structure
+      // Verify plan structure matches Legion planning format
       const firstStep = result.plan.steps[0];
       expect(firstStep).toHaveProperty('id');
       expect(firstStep).toHaveProperty('name');
@@ -70,15 +82,21 @@ describeSkipCondition('ProfilePlannerModule Live LLM Tests', () => {
       expect(firstStep).toHaveProperty('actions');
       expect(firstStep.actions).toBeInstanceOf(Array);
 
-      // Verify actions have proper structure
+      // Verify actions have proper structure for Legion tools
       if (firstStep.actions.length > 0) {
         const firstAction = firstStep.actions[0];
         expect(firstAction).toHaveProperty('type');
         expect(firstAction).toHaveProperty('parameters');
       }
+
+      console.log(`✅ Generated plan: ${result.plan.name} with ${result.plan.steps.length} steps`);
     }, 30000); // 30 second timeout for LLM calls
 
     test('should generate plan for file creation task', async () => {
+      // Get the profile planner tool from the module
+      const tools = module.getTools();
+      const tool = tools[0];
+
       const result = await tool.invoke({
         function: {
           name: 'plan_with_profile',
@@ -106,6 +124,10 @@ describeSkipCondition('ProfilePlannerModule Live LLM Tests', () => {
     }, 30000);
 
     test('should generate plan with saveAs parameter', async () => {
+      // Get the profile planner tool from the module
+      const tools = module.getTools();
+      const tool = tools[0];
+
       const result = await tool.invoke({
         function: {
           name: 'plan_with_profile',
@@ -123,6 +145,10 @@ describeSkipCondition('ProfilePlannerModule Live LLM Tests', () => {
     }, 30000);
 
     test('should handle complex multi-step task', async () => {
+      // Get the profile planner tool from the module
+      const tools = module.getTools();
+      const tool = tools[0];
+
       const result = await tool.invoke({
         function: {
           name: 'plan_with_profile',
@@ -150,6 +176,10 @@ describeSkipCondition('ProfilePlannerModule Live LLM Tests', () => {
 
   describe('LLM Error Handling', () => {
     test('should handle vague task descriptions gracefully', async () => {
+      // Get the profile planner tool from the module
+      const tools = module.getTools();
+      const tool = tools[0];
+
       const result = await tool.invoke({
         function: {
           name: 'plan_with_profile',
@@ -166,6 +196,10 @@ describeSkipCondition('ProfilePlannerModule Live LLM Tests', () => {
     }, 30000);
 
     test('should handle task requiring unavailable tools', async () => {
+      // Get the profile planner tool from the module
+      const tools = module.getTools();
+      const tool = tools[0];
+
       const result = await tool.invoke({
         function: {
           name: 'plan_with_profile',
@@ -184,6 +218,10 @@ describeSkipCondition('ProfilePlannerModule Live LLM Tests', () => {
 
   describe('Profile Integration with LLM', () => {
     test('should respect profile context in plan generation', async () => {
+      // Get the profile planner tool from the module
+      const tools = module.getTools();
+      const tool = tools[0];
+
       const result = await tool.invoke({
         function: {
           name: 'plan_with_profile',
@@ -212,6 +250,10 @@ describeSkipCondition('ProfilePlannerModule Live LLM Tests', () => {
     }, 30000);
 
     test('should include profile notes in response', async () => {
+      // Get the profile planner tool from the module
+      const tools = module.getTools();
+      const tool = tools[0];
+
       const result = await tool.invoke({
         function: {
           name: 'plan_with_profile',
@@ -230,6 +272,10 @@ describeSkipCondition('ProfilePlannerModule Live LLM Tests', () => {
 
   describe('LLM Response Validation', () => {
     test('should validate LLM response against expected schema', async () => {
+      // Get the profile planner tool from the module
+      const tools = module.getTools();
+      const tool = tools[0];
+
       const result = await tool.invoke({
         function: {
           name: 'plan_with_profile',
@@ -306,6 +352,10 @@ describeSkipCondition('ProfilePlannerModule Live LLM Tests', () => {
 
   describe('Performance and Reliability', () => {
     test('should complete within reasonable time', async () => {
+      // Get the profile planner tool from the module
+      const tools = module.getTools();
+      const tool = tools[0];
+
       const startTime = Date.now();
       
       const result = await tool.invoke({
@@ -325,6 +375,10 @@ describeSkipCondition('ProfilePlannerModule Live LLM Tests', () => {
     }, 30000);
 
     test('should be consistent across multiple calls', async () => {
+      // Get the profile planner tool from the module
+      const tools = module.getTools();
+      const tool = tools[0];
+
       const task = 'Create a basic email validator function';
       const results = [];
 

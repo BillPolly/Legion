@@ -34,6 +34,45 @@ Legion is a modular framework for building AI agent tools with consistent interf
 17. **@legion/web-backend** - Express server providing API and WebSocket support
 18. **@legion/aiur-debug-ui** - Debug interface for Aiur MCP server
 
+## 🚨 CRITICAL: ResourceManager Automatically Contains ALL API Keys 🚨
+
+**THE RESOURCE MANAGER LOADS THE ENTIRE .env FILE ON INITIALIZATION**
+
+When ResourceManager initializes, it automatically:
+
+1. **Finds .env file** - Searches project root and parent directories for .env file
+2. **Loads ALL environment variables** - Uses `dotenv.config()` to load the entire .env file  
+3. **Registers every variable** - Makes ALL env vars available as `resourceManager.get('env.VARIABLE_NAME')`
+4. **Provides automatic injection** - ModuleFactory uses these for dependency injection to modules
+
+### This Means:
+
+✅ **All API keys are automatically available to modules**
+- `ANTHROPIC_API_KEY` becomes `resourceManager.get('env.ANTHROPIC_API_KEY')`
+- `GITHUB_PAT` becomes `resourceManager.get('env.GITHUB_PAT')`
+- `RAILWAY_API_TOKEN` becomes `resourceManager.get('env.RAILWAY_API_TOKEN')`
+- **Every .env variable is available without any manual setup**
+
+✅ **Live tests get real API keys via ResourceManager**
+- Integration tests use `resourceManager.get('env.API_KEY')` for real API calls
+- No need to manually load .env or access process.env
+- Follow existing patterns in `LiveGitHubIntegration.test.js`
+
+✅ **Module loading provides automatic API key injection**
+- When Aiur loads modules, ModuleFactory automatically injects required API keys
+- Modules receive API keys through constructor dependency injection
+- No manual key management required by module developers
+
+❌ **NEVER access process.env directly** - Always use ResourceManager
+❌ **NEVER manually register API keys** - ResourceManager does this automatically
+❌ **NEVER load .env manually** - ResourceManager handles this during initialization
+
+### The Complete Flow:
+```
+.env File → ResourceManager.initialize() → Load ALL vars as env.* → 
+ModuleFactory dependency injection → Modules receive API keys automatically
+```
+
 ## Essential Commands
 
 ### Development and Testing
@@ -248,11 +287,53 @@ packages/
 - All packages use Jest with ES modules support
 - Tests are organized in `__tests__/` directories:
   - `unit/` - Unit tests for individual components
-  - `integration/` - Integration tests
+  - `integration/` - Integration tests **with real ResourceManager and API calls**
   - `utils/` - Test utilities and helpers
   - `testdata/` - Test fixtures and mock data
 - Run with `NODE_OPTIONS='--experimental-vm-modules'` for ESM support
 - Mock external dependencies using Jest mocks
+
+### Live Testing Guidelines
+
+**CRITICAL: For live integration tests that make real API calls:**
+
+1. **Use Real ResourceManager**: 
+   ```javascript
+   const resourceManager = new ResourceManager();
+   await resourceManager.initialize(); // Loads real .env file
+   ```
+
+2. **Access Real API Keys**:
+   ```javascript
+   const apiKey = resourceManager.get('env.ANTHROPIC_API_KEY'); // Real key from .env
+   ```
+
+3. **Follow Existing Patterns**: 
+   - **ALWAYS look at existing live test examples first**
+   - See `packages/code-gen/code-agent/__tests__/integration/LiveGitHubIntegration.test.js`
+   - See `packages/code-gen/code-agent/__tests__/integration/CodeAgent.step-by-step.test.js`
+   - **Copy their structure and approach - don't create new patterns**
+
+4. **Module Testing with Real Dependencies**:
+   ```javascript
+   // Create real ResourceManager (not mocked)
+   const resourceManager = new ResourceManager();
+   await resourceManager.initialize();
+   
+   // Use ModuleFactory to create module with real API keys
+   const moduleFactory = new ModuleFactory(resourceManager);
+   const module = moduleFactory.createModule(MyModule);
+   
+   // Module automatically has real API keys injected
+   ```
+
+5. **Test Organization**:
+   - **LIVE TESTS MUST FAIL IF API KEYS ARE MISSING** - Never skip live tests due to missing keys
+   - Missing API keys indicate environment setup problems that must be fixed
+   - Real API calls have longer timeouts (30s+)
+   - If you need conditional testing, create separate test files (e.g., `LiveAPI.test.js` vs `MockedAPI.test.js`)
+
+**Remember: ResourceManager gives you ALL .env variables automatically - no manual setup needed!**
 
 ### Key Development Patterns
 
@@ -278,7 +359,9 @@ packages/
 
 ## CRITICAL: Environment Variables and Configuration
 
-**ALWAYS use ResourceManager to access environment variables!** The project has a `.env` file in the root directory that contains all necessary API keys and configuration. 
+**🚨 THE RESOURCEMANAGER AUTOMATICALLY HAS ALL API KEYS FROM .env! 🚨**
+
+**NEVER manually handle API keys - ResourceManager loads the entire .env file automatically during initialization!** Every environment variable becomes instantly available as `resourceManager.get('env.VARIABLE_NAME')` without any manual setup. 
 
 ### Correct Way to Access Environment Variables:
 
@@ -309,9 +392,15 @@ if (!process.env.RAILWAY_API_TOKEN) { // WRONG!
 ### Examples in the Codebase:
 - See `packages/code-gen/code-agent/__tests__/integration/CodeAgent.step-by-step.test.js` for correct usage
 - See `packages/code-gen/code-agent/__tests__/integration/LiveGitHubIntegration.test.js` for GitHub integration examples
-- All integration tests use ResourceManager to access credentials
+- **ALL integration tests use ResourceManager to access credentials - follow these patterns!**
 
-The ResourceManager automatically loads the `.env` file from the project root and makes all variables available via the `env.` prefix.
+### How ResourceManager Works:
+1. **Automatic .env Loading**: `resourceManager.initialize()` finds and loads the .env file
+2. **Complete Registration**: Every env var is registered as `env.VARIABLE_NAME`
+3. **Module Injection**: ModuleFactory automatically injects API keys into modules
+4. **Live Testing**: Integration tests get real API keys via `resourceManager.get('env.API_KEY')`
+
+**The ResourceManager is the ONLY way to access environment variables in Legion - it handles everything automatically!**
 
 ## Using GitHub Tools
 

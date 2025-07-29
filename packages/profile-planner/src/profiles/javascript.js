@@ -101,6 +101,13 @@ export const JavascriptProfile = {
   defaultInputs: ['user_request', 'project_context'],
   defaultOutputs: ['completed_task', 'created_files', 'test_results'],
   
+  // Output mapping - how individual action outputs map to plan outputs
+  outputMapping: {
+    'completed_task': ['project_created', 'file_created', 'test_results'], // Any file/project creation indicates task completion
+    'created_files': ['file_created', 'project_created'], // File creation actions
+    'test_results': ['test_results'] // Direct mapping
+  },
+  
   // Maximum number of steps for plans in this profile
   maxSteps: 25,
   

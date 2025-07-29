@@ -141,6 +141,7 @@ class ProfileManager {
       requiredOutputs: profile.defaultOutputs || ['completed_task'],
       allowableActions: profile.allowableActions || [],
       maxSteps: profile.maxSteps || 20,
+      outputMapping: profile.outputMapping || {}, // Include output mapping from profile
       initialInputData: {
         user_request: description,
         profile_context: profile.contextPrompts?.join('\n') || ''

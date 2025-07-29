@@ -10,7 +10,9 @@ import { ProfilePlannerTool } from './tools/ProfilePlannerTool.js';
 
 export class ProfilePlannerModule extends Module {
   constructor(dependencies = {}) {
-    super('ProfilePlannerModule', dependencies);
+    super(); // Base Module constructor doesn't take dependencies
+    this.name = 'ProfilePlannerModule';
+    this.dependencies = dependencies; // Store dependencies ourselves
     this.description = 'Profile-based planning for simplified domain-specific task planning';
     this.initialized = false;
   }
@@ -36,14 +38,11 @@ export class ProfilePlannerModule extends Module {
   async initialize() {
     if (this.initialized) return;
     
-    console.log('ProfilePlannerModule initializing...');
-    
     // Initialize tools
     this.profilePlannerTool = new ProfilePlannerTool(this.dependencies);
     await this.profilePlannerTool.initialize();
     
     this.initialized = true;
-    console.log('ProfilePlannerModule initialized');
   }
 
   /**

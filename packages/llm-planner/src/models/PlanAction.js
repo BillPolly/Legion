@@ -64,12 +64,18 @@ class PlanAction {
    * @returns {Object} Validation result
    */
   validateInputs(availableOutputs = []) {
-    const missingInputs = this.definedInputs.filter(input => !availableOutputs.includes(input));
+    // Check which inputs are satisfied by either:
+    // 1. Available outputs from previous steps
+    // 2. Parameters provided to this action
+    const providedParameters = Object.keys(this.parameters || {});
+    const allAvailableInputs = [...availableOutputs, ...providedParameters];
+    
+    const missingInputs = this.definedInputs.filter(input => !allAvailableInputs.includes(input));
     
     return {
       isValid: missingInputs.length === 0,
       missingInputs,
-      satisfiedInputs: this.definedInputs.filter(input => availableOutputs.includes(input))
+      satisfiedInputs: this.definedInputs.filter(input => allAvailableInputs.includes(input))
     };
   }
 

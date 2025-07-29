@@ -14,5 +14,5 @@ global.console = {
 };
 
 // Set environment variables for tests
-process.env.ANTHROPIC_API_KEY = 'test-key';
+// Note: Don't override ANTHROPIC_API_KEY - let ResourceManager load it from .env
 process.env.NODE_ENV = 'test';

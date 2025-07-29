@@ -65,6 +65,45 @@ class ResourceManager {
       // This allows ResourceManager to work without optional services
     }
   }
+
+  /**
+   * Find the project root directory by searching for "legion" directory
+   * @returns {string|null} Path to project root or null if not found
+   */
+  findProjectRoot() {
+    let currentDir = process.cwd();
+    const maxLevels = 10; // Prevent infinite loops
+    let level = 0;
+
+    while (level < maxLevels) {
+      try {
+        // Check if current directory is named "legion" (case-insensitive)
+        const dirName = path.basename(currentDir).toLowerCase();
+        if (dirName === 'legion') {
+          return currentDir;
+        }
+
+        // Move up one directory
+        const parentDir = path.dirname(currentDir);
+        if (parentDir === currentDir) {
+          // Reached filesystem root
+          break;
+        }
+        currentDir = parentDir;
+        level++;
+      } catch (error) {
+        // Continue searching if we hit an error reading a directory
+        const parentDir = path.dirname(currentDir);
+        if (parentDir === currentDir) {
+          break;
+        }
+        currentDir = parentDir;
+        level++;
+      }
+    }
+
+    return null;
+  }
   
   /**
    * Load environment variables from .env file
@@ -74,20 +113,31 @@ class ResourceManager {
     try {
       // If no path provided, search for .env file
       if (!envPath) {
-        // Look for .env in common locations
-        const possiblePaths = [
-          path.join(process.cwd(), '.env'),
-          path.join(process.cwd(), '..', '.env'),
-          path.join(process.cwd(), '..', '..', '.env'),
-          path.join(process.cwd(), '..', '..', '..', '.env'),
-          path.join(__dirname, '..', '..', '..', '.env'),
-          path.join(__dirname, '..', '..', '..', '..', '.env')
-        ];
+        // First try to find the monorepo root by looking for package.json with workspaces
+        const projectRoot = this.findProjectRoot();
+        if (projectRoot) {
+          const rootEnvPath = path.join(projectRoot, '.env');
+          if (fs.existsSync(rootEnvPath)) {
+            envPath = rootEnvPath;
+          }
+        }
         
-        for (const tryPath of possiblePaths) {
-          if (fs.existsSync(tryPath)) {
-            envPath = tryPath;
-            break;
+        // Fallback to searching common relative locations if root detection failed
+        if (!envPath) {
+          const possiblePaths = [
+            path.join(process.cwd(), '.env'),
+            path.join(process.cwd(), '..', '.env'),
+            path.join(process.cwd(), '..', '..', '.env'),
+            path.join(process.cwd(), '..', '..', '..', '.env'),
+            path.join(__dirname, '..', '..', '..', '.env'),
+            path.join(__dirname, '..', '..', '..', '..', '.env')
+          ];
+          
+          for (const tryPath of possiblePaths) {
+            if (fs.existsSync(tryPath)) {
+              envPath = tryPath;
+              break;
+            }
           }
         }
       }
