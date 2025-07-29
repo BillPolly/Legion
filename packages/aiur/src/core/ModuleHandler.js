@@ -89,6 +89,19 @@ export class ModuleHandler extends EventEmitter {
   }
 
   /**
+   * Check if a module is already loaded
+   */
+  async isModuleLoaded(moduleName) {
+    try {
+      const loadedModules = this.moduleManager.getLoadedModules();
+      return loadedModules.some(module => module.name === moduleName);
+    } catch (error) {
+      console.error(`Error checking if module ${moduleName} is loaded:`, error);
+      return false;
+    }
+  }
+
+  /**
    * Load a module
    */
   async loadModule(moduleName) {

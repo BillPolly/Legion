@@ -1,0 +1,45 @@
+{
+  "name": "profile-planner",
+  "version": "0.0.1",
+  "description": "Profile-based planning module for simplified domain-specific task planning",
+  "main": "src/ProfilePlannerModule.js",
+  "type": "module",
+  "author": "Legion Team",
+  "license": "MIT",
+  "dependencies": {
+    "ANTHROPIC_API_KEY": {
+      "type": "string",
+      "description": "Anthropic API key for LLM-based planning",
+      "required": true
+    }
+  },
+  "initialization": {
+    "factoryMethod": "create",
+    "config": {
+      "anthropicApiKey": "${ANTHROPIC_API_KEY}"
+    }
+  },
+  "capabilities": [
+    "profile-based-planning",
+    "llm-planning",
+    "domain-specific-context",
+    "javascript-development"
+  ],
+  "tools": [
+    {
+      "name": "plan_with_profile",
+      "description": "Create a plan using a pre-configured development profile",
+      "category": "planning"
+    },
+    {
+      "name": "profile_list",
+      "description": "List all available development profiles",
+      "category": "planning"
+    },
+    {
+      "name": "profile_info",
+      "description": "Get detailed information about a specific profile",
+      "category": "planning"
+    }
+  ]
+}

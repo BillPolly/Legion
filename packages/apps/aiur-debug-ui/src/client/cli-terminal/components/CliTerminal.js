@@ -549,7 +549,10 @@ export class CliTerminal {
       'directory_list': ['[dirpath]'],
       'directory_change': ['<dirpath>'],
       'plan_create': ['<description>', '[options]'],
-      'plan_execute': ['<plan>', '[options]']
+      'plan_execute': ['<plan>', '[options]'],
+      'plan_with_profile': ['<profile>', '<task>', '[saveAs]'],
+      'profile_list': [],
+      'profile_info': ['<profile>']
     };
     
     return customHints[toolName];
