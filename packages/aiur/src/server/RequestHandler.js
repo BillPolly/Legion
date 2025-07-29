@@ -130,6 +130,45 @@ export class RequestHandler {
         throw new Error(`Unknown tool: ${name}`);
       }
       
+      // Get tool definition to validate parameters
+      const toolDefinitions = await session.toolProvider.getAllToolDefinitions();
+      const toolDef = toolDefinitions.find(t => t.name === name);
+      
+      if (toolDef && toolDef.inputSchema) {
+        const schema = toolDef.inputSchema;
+        
+        // Check required parameters
+        if (schema.required && Array.isArray(schema.required)) {
+          for (const required of schema.required) {
+            if (!(required in args)) {
+              throw new Error(`Missing required parameter: ${required}`);
+            }
+          }
+        }
+        
+        // Check for unknown parameters and provide helpful suggestions
+        if (schema.properties) {
+          const allowedParams = Object.keys(schema.properties);
+          const providedParams = Object.keys(args);
+          
+          for (const param of providedParams) {
+            if (!allowedParams.includes(param)) {
+              // Suggest correct parameter if possible
+              const suggestions = allowedParams.filter(p => 
+                p.toLowerCase().includes(param.toLowerCase()) || 
+                param.toLowerCase().includes(p.toLowerCase())
+              );
+              
+              if (suggestions.length > 0) {
+                throw new Error(`Unknown parameter '${param}'. Did you mean '${suggestions[0]}'?`);
+              } else {
+                throw new Error(`Unknown parameter '${param}'. Allowed parameters: ${allowedParams.join(', ')}`);
+              }
+            }
+          }
+        }
+      }
+      
       // Resolve any handle references in the arguments
       let resolvedArgs = args;
       try {

@@ -592,8 +592,8 @@ export class CliTerminal {
     this.output(`aiur> ${command}`, 'command');
     
     try {
-      // Parse command
-      const parsed = this.parser.parse(command);
+      // Parse command with access to tools for dynamic parameter mapping
+      const parsed = this.parser.parse(command, this.tools);
       
       switch (parsed.type) {
         case 'builtin':
@@ -731,6 +731,12 @@ export class CliTerminal {
         this.output(JSON.stringify(result, null, 2), 'result');
       }
       
+      // If this was a module operation, refresh the tool list
+      if ((toolName === 'module_load' || toolName === 'module_unload') && result && result.success) {
+        this.output('Refreshing tool list...', 'info');
+        await this.refreshToolsAfterModuleChange();
+      }
+      
       return result;
       
     } catch (error) {
@@ -757,7 +763,7 @@ export class CliTerminal {
       
       // Send the request
       const success = this.aiur.sendMessage({
-        type: 'mcp_request',
+        type: 'tool_request',
         requestId: requestId,
         method: 'tools/call',
         params: {
@@ -870,6 +876,38 @@ export class CliTerminal {
     
     // Update autocomplete
     this.autocomplete.updateTools(this.tools);
+  }
+
+  /**
+   * Refresh tools after module load/unload
+   */
+  async refreshToolsAfterModuleChange() {
+    try {
+      // Request updated tool list from server
+      const result = await this.aiur.sendToolRequest('tools/list', {});
+      
+      if (result && result.tools) {
+        // Clear and update tool definitions
+        this.aiur.toolDefinitions.clear();
+        
+        result.tools.forEach(tool => {
+          this.aiur.toolDefinitions.set(tool.name, tool);
+        });
+        
+        // Refresh the local tools map and autocomplete
+        await this.refreshTools();
+        
+        this.output(`✓ Tool list updated. ${result.tools.length} tools available.`, 'success');
+        
+        // If commands sidebar is open, refresh it
+        if (this.elements.commandsSidebar.classList.contains('active')) {
+          this.refreshCommands();
+        }
+      }
+    } catch (error) {
+      console.error('Failed to refresh tools after module change:', error);
+      this.output('Warning: Could not refresh tool list', 'warning');
+    }
   }
 
   /**

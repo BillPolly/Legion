@@ -79,6 +79,17 @@ class SessionToolProvider {
       );
       console.log('[SessionToolProvider] Added', definitions.length, 'module management tools');
       
+      // Add context management tools if session exists
+      if (this.session && this.session.context) {
+        try {
+          const contextTools = this.session.context.getToolDefinitions();
+          definitions.push(...contextTools);
+          console.log('[SessionToolProvider] Added', contextTools.length, 'context management tools');
+        } catch (error) {
+          console.error('[SessionToolProvider] Error adding context tools:', error);
+        }
+      }
+      
       // Add tools from session-specific loaded modules
       if (this.session && this.session.modules) {
         try {
@@ -347,6 +358,28 @@ class SessionToolProvider {
             success: false,
             error: error.message
           };
+        }
+      }
+      
+      // Handle context management tools
+      if (this.session && this.session.context) {
+        const contextToolNames = ['context_add', 'context_get', 'context_list'];
+        if (contextToolNames.includes(toolName)) {
+          console.log('[SessionToolProvider] Executing context tool:', toolName);
+          try {
+            // Execute the context tool directly
+            const result = await this.session.context.executeContextTool(toolName, args);
+            return {
+              success: true,
+              result: result
+            };
+          } catch (error) {
+            console.error('[SessionToolProvider] Context tool execution failed:', error);
+            return {
+              success: false,
+              error: error.message
+            };
+          }
         }
       }
       

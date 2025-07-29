@@ -136,8 +136,8 @@ async function main() {
     const debugPort = config.server.port;
     logger.info(`Clearing port ${debugPort} before starting...`);
     try {
-      const killScriptPath = path.join(__dirname, '..', '..', '..', '..', 'apps', 'aiur-debug', 'scripts', 'kill-port.js');
-      execSync(`node ${killScriptPath} ${debugPort}`, { encoding: 'utf8' });
+      // Use pkill or lsof to kill port instead of non-existent script
+      execSync(`lsof -ti:${debugPort} | xargs kill -9 2>/dev/null || true`, { encoding: 'utf8' });
     } catch (error) {
       logger.warn(`Could not clear port ${debugPort}:`, error.message);
     }
@@ -162,8 +162,8 @@ async function main() {
       const mcpPort = portMatch ? parseInt(portMatch[1]) : 8080;
       logger.info(`Clearing MCP port ${mcpPort} before starting...`);
       try {
-        const killScriptPath = path.join(__dirname, '..', '..', '..', '..', 'apps', 'aiur-debug', 'scripts', 'kill-port.js');
-        execSync(`node ${killScriptPath} ${mcpPort}`, { encoding: 'utf8' });
+        // Use pkill or lsof to kill port instead of non-existent script
+        execSync(`lsof -ti:${mcpPort} | xargs kill -9 2>/dev/null || true`, { encoding: 'utf8' });
       } catch (error) {
         logger.warn(`Could not clear MCP port ${mcpPort}:`, error.message);
       }

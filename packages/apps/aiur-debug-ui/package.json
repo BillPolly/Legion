@@ -8,6 +8,7 @@
     "start": "node src/start.js",
     "start:integrated": "node src/start.js",
     "start:ui-only": "node src/index.js",
+    "kill": "pkill -f 'node src/start.js' || pkill -f 'node src/index.js' || lsof -ti:3001 | xargs kill -9 2>/dev/null || echo 'No debug UI processes found'",
     "dev": "NODE_ENV=development node src/start.js",
     "dev:ui-only": "NODE_ENV=development node src/index.js",
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest",

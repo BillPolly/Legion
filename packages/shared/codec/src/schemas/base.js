@@ -147,3 +147,104 @@ export const PONG_MESSAGE = {
   required: ['type', 'messageId', 'timestamp'],
   additionalProperties: false
 };
+
+/**
+ * Session create request schema
+ */
+export const SESSION_CREATE_MESSAGE = {
+  $id: 'session_create',
+  type: 'object',
+  properties: {
+    type: { 
+      type: 'string', 
+      const: 'session_create' 
+    },
+    requestId: {
+      type: 'string'
+    }
+  },
+  required: ['type', 'requestId'],
+  additionalProperties: false
+};
+
+/**
+ * Session created response schema
+ */
+export const SESSION_CREATED_MESSAGE = {
+  $id: 'session_created',
+  type: 'object',
+  properties: {
+    type: { 
+      type: 'string', 
+      const: 'session_created' 
+    },
+    requestId: {
+      type: 'string'
+    },
+    sessionId: {
+      type: 'string'
+    },
+    success: {
+      type: 'boolean'
+    },
+    codecEnabled: {
+      type: 'boolean'
+    }
+  },
+  required: ['type', 'requestId', 'sessionId', 'success'],
+  additionalProperties: false
+};
+
+/**
+ * Tool request schema
+ */
+export const TOOL_REQUEST_MESSAGE = {
+  $id: 'tool_request',
+  type: 'object',
+  properties: {
+    type: { 
+      type: 'string', 
+      const: 'tool_request' 
+    },
+    requestId: {
+      type: 'string'
+    },
+    method: {
+      type: 'string'
+    },
+    params: {
+      type: 'object'
+    }
+  },
+  required: ['type', 'requestId', 'method'],
+  additionalProperties: false
+};
+
+/**
+ * Tool response schema
+ */
+export const TOOL_RESPONSE_MESSAGE = {
+  $id: 'tool_response',
+  type: 'object',
+  properties: {
+    type: { 
+      type: 'string', 
+      const: 'tool_response' 
+    },
+    requestId: {
+      type: 'string'
+    },
+    result: {
+      type: 'object'
+    },
+    error: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' },
+        code: { type: 'string' }
+      }
+    }
+  },
+  required: ['type', 'requestId'],
+  additionalProperties: false
+};

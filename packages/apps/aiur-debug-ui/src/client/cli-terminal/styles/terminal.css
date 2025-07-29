@@ -125,6 +125,10 @@
   font-size: 13px;
   line-height: 1.5;
   background: #1e1e1e;
+  user-select: text;  /* Make text selectable */
+  -webkit-user-select: text;  /* Safari */
+  -moz-user-select: text;  /* Firefox */
+  -ms-user-select: text;  /* IE/Edge */
 }
 
 .cli-output::-webkit-scrollbar {
@@ -215,6 +219,10 @@
   margin: 2px 0;
   white-space: pre-wrap;
   word-break: break-word;
+  user-select: text;  /* Make text selectable */
+  -webkit-user-select: text;  /* Safari */
+  -moz-user-select: text;  /* Firefox */
+  -ms-user-select: text;  /* IE/Edge */
 }
 
 .cli-output-line.command {

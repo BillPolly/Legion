@@ -7,7 +7,11 @@ import {
   ERROR_MESSAGE, 
   ACK_MESSAGE, 
   PING_MESSAGE, 
-  PONG_MESSAGE 
+  PONG_MESSAGE,
+  SESSION_CREATE_MESSAGE,
+  SESSION_CREATED_MESSAGE,
+  TOOL_REQUEST_MESSAGE,
+  TOOL_RESPONSE_MESSAGE
 } from './base.js';
 
 export class SchemaRegistry {
@@ -29,6 +33,10 @@ export class SchemaRegistry {
     this.register(ACK_MESSAGE);
     this.register(PING_MESSAGE);
     this.register(PONG_MESSAGE);
+    this.register(SESSION_CREATE_MESSAGE);
+    this.register(SESSION_CREATED_MESSAGE);
+    this.register(TOOL_REQUEST_MESSAGE);
+    this.register(TOOL_RESPONSE_MESSAGE);
   }
 
   /**

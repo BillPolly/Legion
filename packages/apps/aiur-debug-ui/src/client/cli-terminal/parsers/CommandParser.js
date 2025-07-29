@@ -13,9 +13,10 @@ export class CommandParser {
   /**
    * Parse a command string
    * @param {string} input - Raw command input
+   * @param {Map} tools - Tool definitions map for dynamic parameter mapping
    * @returns {Object} Parsed command object
    */
-  parse(input) {
+  parse(input, tools = new Map()) {
     const trimmed = input.trim();
     
     if (!trimmed) {
@@ -30,11 +31,11 @@ export class CommandParser {
     // Check for variable assignment
     const assignMatch = trimmed.match(/^\$(\w+)\s*=\s*(.+)$/);
     if (assignMatch) {
-      return this.parseAssignment(assignMatch);
+      return this.parseAssignment(assignMatch, tools);
     }
     
     // Parse as tool command
-    return this.parseToolCommand(trimmed);
+    return this.parseToolCommand(trimmed, tools);
   }
   
   /**
@@ -58,9 +59,9 @@ export class CommandParser {
   /**
    * Parse variable assignment
    */
-  parseAssignment(match) {
+  parseAssignment(match, tools) {
     const [, variable, commandStr] = match;
-    const command = this.parseToolCommand(commandStr.trim());
+    const command = this.parseToolCommand(commandStr.trim(), tools);
     
     return {
       type: 'assignment',
@@ -73,7 +74,7 @@ export class CommandParser {
   /**
    * Parse tool command with arguments
    */
-  parseToolCommand(command) {
+  parseToolCommand(command, tools) {
     const parts = this.splitCommand(command);
     const toolName = parts[0];
     
@@ -86,7 +87,7 @@ export class CommandParser {
     return {
       type: 'tool',
       tool: toolName,
-      args: this.mapArgumentsToSchema(toolName, args, options)
+      args: this.mapArgumentsToSchema(toolName, args, options, tools)
     };
   }
   
@@ -124,77 +125,63 @@ export class CommandParser {
   /**
    * Map arguments to tool schema
    */
-  mapArgumentsToSchema(toolName, args, options) {
-    // Tool-specific mappings
-    const mappings = {
-      'context_add': {
-        positional: ['name', 'data', 'description'],
-        aliases: { d: 'description' }
-      },
-      'context_get': {
-        positional: ['name']
-      },
-      'context_list': {
-        positional: ['filter']
-      },
-      'file_read': {
-        positional: ['path'],
-        aliases: { l: 'limit', o: 'offset' }
-      },
-      'file_write': {
-        positional: ['path', 'content']
-      },
-      'plan_create': {
-        positional: ['title'],
-        aliases: { s: 'steps', d: 'description' }
-      },
-      'plan_execute': {
-        positional: ['planHandle']
-      },
-      'module_tools': {
-        positional: ['module', 'format'],
-        aliases: { f: 'format' }
-      },
-      'module_load': {
-        positional: ['module']
-      },
-      'module_unload': {
-        positional: ['module']
-      },
-      'module_info': {
-        positional: ['module']
-      },
-      'module_list': {
-        positional: ['filter', 'format']
-      }
-    };
-    
-    const mapping = mappings[toolName] || { positional: [] };
+  mapArgumentsToSchema(toolName, args, options, tools) {
     const result = { ...options };
     
-    // Apply positional mappings
-    if (mapping.positional) {
-      mapping.positional.forEach((param, index) => {
-        if (index < args.length && !(param in result)) {
-          result[param] = args[index];
+    // Get the tool definition if available
+    const toolDef = tools && tools.get(toolName);
+    
+    if (toolDef && toolDef.inputSchema && toolDef.inputSchema.properties) {
+      // Extract parameter names in the order they appear in the schema
+      const paramNames = [];
+      const required = toolDef.inputSchema.required || [];
+      
+      // First add required parameters in order
+      for (const paramName of required) {
+        if (toolDef.inputSchema.properties[paramName]) {
+          paramNames.push(paramName);
+        }
+      }
+      
+      // Then add optional parameters
+      for (const paramName in toolDef.inputSchema.properties) {
+        if (!paramNames.includes(paramName)) {
+          paramNames.push(paramName);
+        }
+      }
+      
+      // Map positional arguments to parameters in order
+      paramNames.forEach((paramName, index) => {
+        if (index < args.length && !(paramName in result)) {
+          result[paramName] = args[index];
         }
       });
-    }
-    
-    // Apply aliases
-    if (mapping.aliases) {
-      Object.entries(mapping.aliases).forEach(([short, long]) => {
-        if (short in result && !(long in result)) {
-          result[long] = result[short];
-          delete result[short];
+    } else {
+      // No schema available - use fallback for known tools
+      const fallbackMappings = {
+        'module_load': ['name'],
+        'module_unload': ['name'],
+        'context_get': ['name'],
+        'context_list': ['filter'],
+        'file_read': ['path'],
+        'file_write': ['path', 'content']
+      };
+      
+      const fallbackParams = fallbackMappings[toolName];
+      if (fallbackParams) {
+        fallbackParams.forEach((param, index) => {
+          if (index < args.length && !(param in result)) {
+            result[param] = args[index];
+          }
+        });
+      } else {
+        // Unknown tool - just pass positional args as is
+        if (args.length > 0) {
+          args.forEach((arg, index) => {
+            result[`arg${index + 1}`] = arg;
+          });
         }
-      });
-    }
-    
-    // Add any remaining positional args
-    const mappedCount = mapping.positional?.length || 0;
-    if (args.length > mappedCount) {
-      result._args = args.slice(mappedCount);
+      }
     }
     
     return result;

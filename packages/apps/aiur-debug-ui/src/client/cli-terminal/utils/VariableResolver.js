@@ -44,7 +44,7 @@ export class VariableResolver {
 
     // Fetch context variables
     try {
-      const result = await this.aiur.sendMcpRequest('tools/call', {
+      const result = await this.aiur.sendToolRequest('tools/call', {
         name: 'context_list',
         arguments: {}
       });
@@ -118,7 +118,7 @@ export class VariableResolver {
 
       // Fetch from context
       try {
-        const result = await this.aiur.sendMcpRequest('tools/call', {
+        const result = await this.aiur.sendToolRequest('tools/call', {
           name: 'context_get',
           arguments: { name: varName }
         });

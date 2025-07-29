@@ -13,6 +13,7 @@ class AiurDebugApp {
     // Connection state
     this.ws = null;
     this.isConnected = false;
+    this.sessionId = null;
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 10;
     this.reconnectInterval = 5000;
@@ -25,6 +26,9 @@ class AiurDebugApp {
     
     // CLI Terminal
     this.cliTerminal = null;
+    
+    // Request handling
+    this.pendingRequests = new Map();
     
     // WebSocket logging
     this.wsLogs = [];
@@ -136,7 +140,7 @@ class AiurDebugApp {
   /**
    * Handle WebSocket message received
    */
-  onMessage(event) {
+  async onMessage(event) {
     const data = event.data;
     this.logWebSocketMessage('received', 'message', data);
     
@@ -159,7 +163,7 @@ class AiurDebugApp {
           break;
           
         case 'session_created':
-          this.handleSessionCreated(message);
+          await this.handleSessionCreated(message);
           break;
           
         case 'tool_response':
@@ -192,10 +196,8 @@ class AiurDebugApp {
       this.messageTypes = message.messageTypes;
       
       try {
-        this.codec.loadSchemas({
-          schemas: message.schemas,
-          messageTypes: message.messageTypes
-        });
+        // Load schemas into the codec using its registerSchemas method
+        this.codec.registerSchemas(message.schemas, message.messageTypes);
         this.codecReady = true;
         this.updateCodecStatus('ready');
         
@@ -211,8 +213,23 @@ class AiurDebugApp {
     // Update server info
     this.updateServerInfo(message);
     
-    // Initialize CLI terminal now that we have connection and schemas
-    this.initializeCLITerminal();
+    // Create a session
+    this.createSession();
+    
+    // CLI terminal will be initialized after session is created
+  }
+
+  /**
+   * Create a session with the server
+   */
+  createSession() {
+    const sessionRequest = {
+      type: 'session_create',
+      requestId: `req_session_${Date.now()}`
+    };
+    
+    this.sendMessage(sessionRequest);
+    console.log('Session creation requested');
   }
 
   /**
@@ -229,6 +246,10 @@ class AiurDebugApp {
     const aiurConnection = {
       isConnected: () => this.isConnected,
       sendMessage: (message) => this.sendMessage(message),
+      sendToolRequest: (method, params) => this.sendToolRequest(method, params),
+      toolDefinitions: new Map(), // CLI terminal expects this
+      requestId: 0, // ✓ FIXED: CLI terminal needs this for tool execution
+      pendingRequests: this.pendingRequests, // ✓ FIXED: Share the same pendingRequests Map!
       // Add other methods the CLI terminal needs
     };
     
@@ -242,9 +263,43 @@ class AiurDebugApp {
   /**
    * Handle session created response
    */
-  handleSessionCreated(message) {
+  async handleSessionCreated(message) {
+    this.sessionId = message.sessionId;
     console.log('Session created:', message);
     this.logWebSocketMessage('system', 'session', `Session created: ${message.sessionId}`);
+    
+    // Now that we have a session, initialize CLI terminal and load tools
+    this.initializeCLITerminal();
+    await this.loadInitialTools();
+  }
+
+  /**
+   * Load initial tools for CLI terminal
+   */
+  async loadInitialTools() {
+    try {
+      console.log('Loading initial tools...');
+      const result = await this.sendToolRequest('tools/list', {});
+      
+      if (result && result.tools) {
+        // Store tools in the aiur connection object for CLI terminal
+        const aiurConnection = this.cliTerminal.aiur;
+        aiurConnection.toolDefinitions.clear();
+        
+        result.tools.forEach(tool => {
+          aiurConnection.toolDefinitions.set(tool.name, tool);
+        });
+        
+        console.log('Loaded', result.tools.length, 'tools for CLI terminal');
+        
+        // Refresh the CLI terminal tools display
+        if (this.cliTerminal && this.cliTerminal.refreshTools) {
+          await this.cliTerminal.refreshTools();
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load initial tools:', error);
+    }
   }
 
   /**
@@ -252,7 +307,21 @@ class AiurDebugApp {
    */
   handleToolResponse(message) {
     console.log('Tool response:', message);
-    // CLI terminal will handle this through its own mechanism
+    
+    // Handle pending requests
+    if (message.requestId && this.pendingRequests && this.pendingRequests.has(message.requestId)) {
+      const pending = this.pendingRequests.get(message.requestId);
+      this.pendingRequests.delete(message.requestId);
+      
+      if (message.error) {
+        pending.reject(new Error(message.error.message || 'Tool execution failed'));
+      } else {
+        pending.resolve(message.result);
+      }
+      return;
+    }
+    
+    // CLI terminal will handle this through its own mechanism if not a pending request
   }
 
   /**
@@ -262,6 +331,13 @@ class AiurDebugApp {
     console.error('Server error:', message);
     this.logWebSocketMessage('error', 'server', `Server error: ${message.error?.message || message.message}`);
     this.showToast(`Server error: ${message.error?.message || message.message}`, 'error');
+    
+    // Handle pending requests
+    if (message.requestId && this.pendingRequests && this.pendingRequests.has(message.requestId)) {
+      const pending = this.pendingRequests.get(message.requestId);
+      this.pendingRequests.delete(message.requestId);
+      pending.reject(new Error(message.error?.message || message.message || 'Server error'));
+    }
   }
 
   /**
@@ -316,6 +392,40 @@ class AiurDebugApp {
       this.showToast('Error sending message to server', 'error');
       return false;
     }
+  }
+
+  // Tool request method for CLI terminal
+  async sendToolRequest(method, params = {}) {
+    if (!this.sessionId) {
+      throw new Error('No active session');
+    }
+
+    return new Promise((resolve, reject) => {
+      const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Store the promise resolver
+      if (!this.pendingRequests) {
+        this.pendingRequests = new Map();
+      }
+      this.pendingRequests.set(requestId, { resolve, reject });
+      
+      const message = {
+        type: 'tool_request',
+        requestId: requestId,
+        method: method,
+        params: params
+      };
+      
+      this.sendMessage(message);
+      
+      // Timeout after 30 seconds
+      setTimeout(() => {
+        if (this.pendingRequests.has(requestId)) {
+          this.pendingRequests.delete(requestId);
+          reject(new Error('Request timeout'));
+        }
+      }, 30000);
+    });
   }
 
   /**

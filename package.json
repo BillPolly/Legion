@@ -50,7 +50,11 @@
     "server:force-kill": "node scripts/server/kill-port.js 3000 --force",
     "kill-port": "node scripts/server/kill-port.js",
     "aiur": "npm start --workspace=@legion/aiur",
-    "aiur:start": "npm start --workspace=@legion/aiur"
+    "aiur:start": "npm start --workspace=@legion/aiur",
+    "aiur:kill": "npm run kill --workspace=@legion/aiur",
+    "debug-ui": "npm start --workspace=@legion/aiur-debug-ui",
+    "debug-ui:start": "npm start --workspace=@legion/aiur-debug-ui",
+    "debug-ui:kill": "npm run kill --workspace=@legion/aiur-debug-ui"
   },
   "devDependencies": {
     "eslint": "^8.56.0",
