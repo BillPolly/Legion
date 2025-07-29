@@ -15,11 +15,12 @@ import { ToolDefinitionProvider } from '../core/ToolDefinitionProvider.js';
 import { ToolRegistry } from '../tools/ToolRegistry.js';
 
 /**
- * Simple ToolProvider that manages tool definitions and execution
+ * Simple ToolProvider that manages tool definitions and execution per session
  */
 class SessionToolProvider {
-  constructor(sessionManager) {
+  constructor(sessionManager, session) {
     this.sessionManager = sessionManager;
+    this.session = session; // Reference to specific session for isolated module storage
   }
 
   async getAllToolDefinitions() {
@@ -78,37 +79,47 @@ class SessionToolProvider {
       );
       console.log('[SessionToolProvider] Added', definitions.length, 'module management tools');
       
-      // Add tools from loaded modules
-      if (this.sessionManager.server.moduleLoader && typeof this.sessionManager.server.moduleLoader.getAllTools === 'function') {
+      // Add tools from session-specific loaded modules
+      if (this.session && this.session.modules) {
         try {
-          const tools = await this.sessionManager.server.moduleLoader.getAllTools();
-          for (const tool of tools) {
-            // Handle multi-function tools
-            if (tool.getAllToolDescriptions) {
-              const allDescs = tool.getAllToolDescriptions();
-              if (Array.isArray(allDescs)) {
-                for (const desc of allDescs) {
-                  definitions.push({
-                    name: desc.function.name,
-                    description: desc.function.description,
-                    inputSchema: desc.function.parameters
-                  });
+          console.log('[SessionToolProvider] Loading tools from session modules, count:', this.session.modules.size);
+          
+          // Iterate through session-specific modules
+          for (const [moduleName, moduleInstance] of this.session.modules) {
+            console.log('[SessionToolProvider] Processing module:', moduleName);
+            
+            if (moduleInstance && typeof moduleInstance.getTools === 'function') {
+              const tools = await moduleInstance.getTools();
+              
+              for (const tool of tools) {
+                // Handle multi-function tools
+                if (tool.getAllToolDescriptions) {
+                  const allDescs = tool.getAllToolDescriptions();
+                  if (Array.isArray(allDescs)) {
+                    for (const desc of allDescs) {
+                      definitions.push({
+                        name: desc.function.name,
+                        description: desc.function.description,
+                        inputSchema: desc.function.parameters
+                      });
+                    }
+                  }
+                } else if (tool.getToolDescription) {
+                  // Single function tool
+                  const desc = tool.getToolDescription();
+                  if (desc && desc.function) {
+                    definitions.push({
+                      name: desc.function.name,
+                      description: desc.function.description,
+                      inputSchema: desc.function.parameters
+                    });
+                  }
                 }
-              }
-            } else if (tool.getToolDescription) {
-              // Single function tool
-              const desc = tool.getToolDescription();
-              if (desc && desc.function) {
-                definitions.push({
-                  name: desc.function.name,
-                  description: desc.function.description,
-                  inputSchema: desc.function.parameters
-                });
               }
             }
           }
         } catch (toolLoadError) {
-          console.error('Error loading tools from modules:', toolLoadError);
+          console.error('Error loading tools from session modules:', toolLoadError);
         }
       }
       
@@ -150,23 +161,23 @@ class SessionToolProvider {
           
           switch(args.name) {
             case 'file':
-              const { default: FileModule } = await import('../../../general-tools/src/file/index.js');
+              const { default: FileModule } = await import('../../../general-tools/src/file/FileModule.js');
               ModuleClass = FileModule;
               break;
             case 'calculator':
-              const { default: CalculatorModule } = await import('../../../general-tools/src/calculator/index.js');
+              const { default: CalculatorModule } = await import('../../../general-tools/src/calculator/CalculatorModule.js');
               ModuleClass = CalculatorModule;
               break;
             case 'serper':
-              const { default: SerperModule } = await import('../../../general-tools/src/serper/index.js');
+              const { default: SerperModule } = await import('../../../general-tools/src/serper/SerperModule.js');
               ModuleClass = SerperModule;
               break;
             case 'github':
-              const { default: GitHubModule } = await import('../../../general-tools/src/github/index.js');
+              const { default: GitHubModule } = await import('../../../general-tools/src/github/GitHubModule.js');
               ModuleClass = GitHubModule;
               break;
             case 'json':
-              const { default: JSONModule } = await import('../../../general-tools/src/json/index.js');
+              const { default: JSONModule } = await import('../../../general-tools/src/json/JsonModule.js');
               ModuleClass = JSONModule;
               break;
             default:
@@ -189,8 +200,10 @@ class SessionToolProvider {
             throw error;
           }
           
-          // Store the loaded module
-          this.sessionManager.server.moduleLoader.loadedModules.set(args.name, loadedModule);
+          // Store the loaded module in session-specific storage
+          this.session.modules.set(args.name, loadedModule);
+          
+          console.log('[SessionToolProvider] Module stored in session:', args.name, 'Session ID:', this.session.id);
           
           // Get the tools from the loaded module
           const tools = loadedModule.getTools ? (await loadedModule.getTools()) : [];
@@ -228,10 +241,13 @@ class SessionToolProvider {
       }
       
       if (toolName === 'module_list') {
+        const loadedModules = Array.from(this.session.modules.keys());
+        console.log('[SessionToolProvider] Session loaded modules:', loadedModules);
+        
         const result = {
           success: true,
           modules: {
-            loaded: [], // moduleLoader.getLoadedModules() - would need to implement this
+            loaded: loadedModules, // Session-specific loaded modules
             available: ['file', 'serper', 'calculator', 'github', 'json'] // available modules
           }
         };
@@ -240,12 +256,32 @@ class SessionToolProvider {
       }
       
       if (toolName === 'module_unload') {
-        const result = {
-          success: true,
-          message: `Module ${args.name} unloaded successfully`
-        };
+        if (!args.name) {
+          return {
+            success: false,
+            error: "Module name is required"
+          };
+        }
         
-        return result;
+        // Remove module from session storage
+        const wasLoaded = this.session.modules.has(args.name);
+        if (wasLoaded) {
+          this.session.modules.delete(args.name);
+          console.log('[SessionToolProvider] Module unloaded from session:', args.name, 'Session ID:', this.session.id);
+          
+          const result = {
+            success: true,
+            message: `Module ${args.name} unloaded successfully`,
+            module: args.name
+          };
+          
+          return result;
+        } else {
+          return {
+            success: false,
+            error: `Module ${args.name} was not loaded in this session`
+          };
+        }
       }
       
       if (toolName === 'module_tools') {
@@ -257,22 +293,32 @@ class SessionToolProvider {
         }
         
         try {
-          // Get tools from the specific module
-          const allTools = await this.sessionManager.server.moduleLoader.getAllTools();
+          // Get tools from the specific module in session storage
           const moduleTools = [];
           
-          // Get info about loaded modules to better filter
-          const loadedModules = this.sessionManager.server.moduleLoader.getLoadedModules();
           console.log('[SessionToolProvider] Looking for tools in module:', args.module);
-          console.log('[SessionToolProvider] Loaded modules:', loadedModules.length);
+          console.log('[SessionToolProvider] Session modules available:', Array.from(this.session.modules.keys()));
           
-          // For now, return all tools since we don't have module metadata
-          // In the future, we could add module name tracking to tools
-          for (const tool of allTools) {
-            if (tool.getAllToolDescriptions) {
-              const allDescs = tool.getAllToolDescriptions();
-              if (Array.isArray(allDescs)) {
-                for (const desc of allDescs) {
+          // Check if the requested module is loaded in this session
+          const moduleInstance = this.session.modules.get(args.module);
+          if (moduleInstance && typeof moduleInstance.getTools === 'function') {
+            const tools = await moduleInstance.getTools();
+            
+            for (const tool of tools) {
+              if (tool.getAllToolDescriptions) {
+                const allDescs = tool.getAllToolDescriptions();
+                if (Array.isArray(allDescs)) {
+                  for (const desc of allDescs) {
+                    moduleTools.push({
+                      name: desc.function.name,
+                      description: desc.function.description,
+                      parameters: desc.function.parameters
+                    });
+                  }
+                }
+              } else if (tool.getToolDescription) {
+                const desc = tool.getToolDescription();
+                if (desc && desc.function) {
                   moduleTools.push({
                     name: desc.function.name,
                     description: desc.function.description,
@@ -280,16 +326,12 @@ class SessionToolProvider {
                   });
                 }
               }
-            } else if (tool.getToolDescription) {
-              const desc = tool.getToolDescription();
-              if (desc && desc.function) {
-                moduleTools.push({
-                  name: desc.function.name,
-                  description: desc.function.description,
-                  parameters: desc.function.parameters
-                });
-              }
             }
+          } else {
+            return {
+              success: false,
+              error: `Module ${args.module} is not loaded in this session`
+            };
           }
           
           const result = {
@@ -308,46 +350,54 @@ class SessionToolProvider {
         }
       }
       
-      // Handle regular module tools
-      if (!this.sessionManager.server.moduleLoader) {
+      // Handle regular module tools from session-specific modules
+      if (!this.session || !this.session.modules) {
         return {
           success: false,
-          error: "Module loader not available"
+          error: "Session modules not available"
         };
       }
       
-      const tools = await this.sessionManager.server.moduleLoader.getAllTools();
+      console.log('[SessionToolProvider] Looking for tool:', toolName, 'in session modules:', this.session.modules.size);
       
-      // Find the tool that provides this function
-      for (const tool of tools) {
-        let canExecute = false;
-        
-        // Check multi-function tools
-        if (tool.getAllToolDescriptions) {
-          const allDescs = tool.getAllToolDescriptions();
-          if (Array.isArray(allDescs)) {
-            canExecute = allDescs.some(desc => desc.function.name === toolName);
-          }
-        } else if (tool.getToolDescription) {
-          const desc = tool.getToolDescription();
-          canExecute = desc && desc.function && desc.function.name === toolName;
-        }
-        
-        if (canExecute) {
-          // Execute using Legion tool format
-          const toolCall = {
-            id: `aiur-${Date.now()}`,
-            type: 'function',
-            function: {
-              name: toolName,
-              arguments: JSON.stringify(args)
+      // Find the tool that provides this function in session-specific modules
+      for (const [moduleName, moduleInstance] of this.session.modules) {
+        if (moduleInstance && typeof moduleInstance.getTools === 'function') {
+          const tools = await moduleInstance.getTools();
+          
+          for (const tool of tools) {
+            let canExecute = false;
+            
+            // Check multi-function tools
+            if (tool.getAllToolDescriptions) {
+              const allDescs = tool.getAllToolDescriptions();
+              if (Array.isArray(allDescs)) {
+                canExecute = allDescs.some(desc => desc.function.name === toolName);
+              }
+            } else if (tool.getToolDescription) {
+              const desc = tool.getToolDescription();
+              canExecute = desc && desc.function && desc.function.name === toolName;
             }
-          };
-          
-          const result = await tool.safeInvoke(toolCall);
-          
-          // Return raw result - UI will handle formatting
-          return result;
+            
+            if (canExecute) {
+              console.log('[SessionToolProvider] Found tool', toolName, 'in module', moduleName);
+              
+              // Execute using Legion tool format
+              const toolCall = {
+                id: `aiur-${Date.now()}`,
+                type: 'function',
+                function: {
+                  name: toolName,
+                  arguments: JSON.stringify(args)
+                }
+              };
+              
+              const result = await tool.safeInvoke(toolCall);
+              
+              // Return raw result - UI will handle formatting
+              return result;
+            }
+          }
         }
       }
       
@@ -408,10 +458,10 @@ export class SessionManager {
     // Create session-specific context manager (sessions need their own context)
     const contextManager = new ContextManager(handleRegistry, handleResolver);
     
-    // Create tool provider with reference to SessionManager
-    const toolProvider = new SessionToolProvider(this);
+    // Create session-specific module storage
+    const sessionModules = new Map(); // Map of moduleName -> module instance
     
-    // Create session object
+    // Create session object first (needed for circular reference with toolProvider)
     const session = {
       id: sessionId,
       created: now,
@@ -419,14 +469,19 @@ export class SessionManager {
       handles: handleRegistry,
       handleResolver: handleResolver,
       context: contextManager,
-      toolProvider: toolProvider,
+      toolProvider: null, // Will be set after creation
       toolRegistry: toolRegistry,
+      modules: sessionModules, // Session-specific module storage
       metadata: {
         requestCount: 0,
         toolCalls: 0,
         errors: 0
       }
     };
+    
+    // Create tool provider with reference to SessionManager and specific session
+    const toolProvider = new SessionToolProvider(this, session);
+    session.toolProvider = toolProvider;
     
     // Store session
     this.sessions.set(sessionId, session);
@@ -520,6 +575,11 @@ export class SessionManager {
     
     // Clear session data
     session.handles.clear();
+    
+    // Clear session modules
+    if (session.modules) {
+      session.modules.clear();
+    }
     
     // Remove session
     this.sessions.delete(sessionId);
