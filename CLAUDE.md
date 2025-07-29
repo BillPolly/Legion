@@ -488,7 +488,48 @@ Legion/
 - Playwright tools use Chromium for browser automation
 - Aiur provides persistent context across tool calls via MCP protocol
 - Generated code and logs are stored in package-specific directories
-- Keep all directories clean, never leave files around, always use nice directory structure
+
+## CRITICAL: Keep Repository Clean - Use Temporary Directories
+
+**ALWAYS use temporary directories for any generated artifacts, test files, or temporary scripts:**
+
+### Test Files and Artifacts
+- **Use OS temp directory** for test files: `import { tmpdir } from 'os'`
+- **Example**: `join(tmpdir(), 'legion-test-files')` instead of `__tests__/fixtures/`
+- **Never create test artifacts** in git-tracked directories
+- **Clean up after tests** - remove temp directories in test teardown
+
+### Scripts and Temporary Code
+- **Put ALL temporary scripts** in `/tmp/` or similar temp directories
+- **Never create** `test.js`, `temp.js`, `foo.js` files in the main codebase
+- **Use descriptive temp paths**: `/tmp/legion-debug-script.js` instead of `debug.js`
+- **Delete immediately** when done or document why it needs to stay
+
+### Generated Content
+- **Use temp directories** for any generated files, debug output, or scratch work
+- **Examples of what goes in temp**:
+  - Test database files (`*.db`, `*.sqlite`)
+  - Generated code artifacts
+  - Debug logs and traces
+  - Temporary HTML/JSON outputs
+  - Script experiments and prototypes
+
+### .gitignore Coverage
+The `.gitignore` already covers many patterns, but always check:
+```gitignore
+# Temporary directories (already covered)
+tmp/
+temp/
+**/tmp/
+**/temp/
+
+# Test patterns (already covered)  
+**/__tests__/**/test-*
+**/__tests__/**/temp-*
+**/__tests__/**/*.tmp
+```
+
+**Golden Rule**: If it's not meant to be committed, put it in a temp directory that's gitignored. Keep the repository clean and professional.
 
 ## Server Management Commands
 

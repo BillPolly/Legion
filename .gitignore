@@ -10,6 +10,17 @@ packages/response-parser/__tests__/testdata/
 packages/model-providers/__tests__/testdata/
 packages/agent/__tests__/testdata/
 
+# Aiur test files
+packages/aiur/__tests__/integration/fixtures/test-file.txt
+packages/aiur/__tests__/integration/fixtures/test-dir/
+**/test-file.txt
+**/test-dir/
+
+# General test patterns
+**/__tests__/**/test-*
+**/__tests__/**/temp-*
+**/__tests__/**/*.tmp
+
 # Environment variables
 .env
 
@@ -75,3 +86,11 @@ example.js
 test-results/
 .test-results/
 .jester/
+
+# Temporary directories
+tmp/
+/tmp/
+**/tmp/
+temp/
+/temp/
+**/temp/

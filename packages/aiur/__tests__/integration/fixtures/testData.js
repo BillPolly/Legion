@@ -4,16 +4,20 @@
 
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { tmpdir } from 'os';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Use OS temp directory for test files to avoid git tracking
+const testTmpDir = join(tmpdir(), 'legion-aiur-tests');
+
 export const testData = {
   // File operations test data
   files: {
-    testFile: join(__dirname, 'test-file.txt'),
-    testDir: join(__dirname, 'test-dir'),
-    nonExistent: join(__dirname, 'non-existent.txt'),
+    testFile: join(testTmpDir, 'test-file.txt'),
+    testDir: join(testTmpDir, 'test-dir'),
+    nonExistent: join(testTmpDir, 'non-existent.txt'),
     writeContent: 'This is test content written by integration tests\n',
     appendContent: 'This line was appended\n'
   },

@@ -39,11 +39,21 @@ describe('WebSocket Module Integration Tests', () => {
       await server.stop();
     }
     
-    // Cleanup test files
+    // Cleanup test files from temp directory
     try {
       await fs.unlink(testData.files.testFile);
     } catch (e) {
       // Ignore if doesn't exist
+    }
+    
+    // Try to cleanup temp test directory
+    try {
+      const path = require('path');
+      const tmpdir = require('os').tmpdir();
+      const testTmpDir = path.join(tmpdir, 'legion-aiur-tests');
+      await fs.rmdir(testTmpDir, { recursive: true });
+    } catch (e) {
+      // Ignore if doesn't exist or can't be removed
     }
   });
 
