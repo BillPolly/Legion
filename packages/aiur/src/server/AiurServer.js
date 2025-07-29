@@ -13,8 +13,6 @@ import { RequestHandler } from './RequestHandler.js';
 import { WebSocketHandler } from './WebSocketHandler.js';
 // ResourceManager only used internally by ModuleLoader
 import { LogManager } from '../core/LogManager.js';
-// Removed complex ErrorBroadcastService - just use simple logging
-// Removed complex codec system - just use simple JSON
 
 export class AiurServer {
   constructor(config = {}) {
@@ -145,8 +143,7 @@ export class AiurServer {
     });
   }
 
-  // Removed complex codec system - just use simple JSON
-
+  
   /**
    * Setup HTTP server
    * @private
@@ -341,7 +338,6 @@ export class AiurServer {
     }
   }
 
-  // Removed schema request handler - using simple JSON
 
   /**
    * Handle client disconnection

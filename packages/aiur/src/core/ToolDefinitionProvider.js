@@ -161,7 +161,6 @@ export class ToolDefinitionProvider {
    */
   async executeTool(toolName, resolvedArgs) {
     const toolType = await this.getToolType(toolName);
-    const errorBroadcastService = this._getErrorBroadcastService();
 
     try {
       switch (toolType) {
@@ -170,9 +169,6 @@ export class ToolDefinitionProvider {
             const result = await this.contextManager.executeContextTool(toolName, resolvedArgs);
             return this._formatToolResponse(result);
           } catch (contextError) {
-            if (errorBroadcastService) {
-              errorBroadcastService.captureContextError(contextError, 'execute-tool', { toolName, args: resolvedArgs });
-            }
             throw contextError;
           }
         
@@ -181,9 +177,6 @@ export class ToolDefinitionProvider {
             const result = await this.moduleOperationTools.executeModuleTool(toolName, resolvedArgs);
             return this._formatToolResponse(result);
           } catch (moduleOpError) {
-            if (errorBroadcastService) {
-              errorBroadcastService.captureToolError(moduleOpError, toolName, resolvedArgs);
-            }
             throw moduleOpError;
           }
         
@@ -192,9 +185,6 @@ export class ToolDefinitionProvider {
             const result = await this._executeModuleTool(toolName, resolvedArgs);
             return this._formatToolResponse(result);
           } catch (moduleError) {
-            if (errorBroadcastService) {
-              errorBroadcastService.captureToolError(moduleError, toolName, resolvedArgs);
-            }
             throw moduleError;
           }
         
@@ -203,17 +193,11 @@ export class ToolDefinitionProvider {
             const result = await this._debugTool.executeDebugTool(toolName, resolvedArgs);
             return this._formatToolResponse(result);
           } catch (debugError) {
-            if (errorBroadcastService) {
-              errorBroadcastService.captureToolError(debugError, toolName, resolvedArgs);
-            }
             throw debugError;
           }
         
         default:
           const error = new Error(`Unknown tool: ${toolName}`);
-          if (errorBroadcastService) {
-            errorBroadcastService.captureToolError(error, toolName, resolvedArgs);
-          }
           return {
             content: [{
               type: "text",
@@ -223,11 +207,6 @@ export class ToolDefinitionProvider {
           };
       }
     } catch (error) {
-      // Capture and broadcast the error
-      if (errorBroadcastService) {
-        errorBroadcastService.captureToolError(error, toolName, resolvedArgs);
-      }
-      
       // Re-throw to maintain original behavior
       throw error;
     }
@@ -790,20 +769,4 @@ export class ToolDefinitionProvider {
     };
   }
 
-  /**
-   * Get error broadcast service if available
-   * @private
-   * @returns {ErrorBroadcastService|null}
-   */
-  _getErrorBroadcastService() {
-    try {
-      // Try to get from resource manager if available
-      if (this._resourceManager) {
-        return this._resourceManager.get('errorBroadcastService');
-      }
-    } catch (error) {
-      // Service not available yet
-    }
-    return null;
-  }
 }
