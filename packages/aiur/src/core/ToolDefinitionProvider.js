@@ -108,13 +108,6 @@ export class ToolDefinitionProvider {
     console.log(`[ToolDefinitionProvider.getAllToolDefinitions] Module tools: ${moduleTools.length}`);
     allTools.push(...moduleTools);
 
-    // Add debug tools if they exist
-    if (this._debugTools) {
-      console.log(`[ToolDefinitionProvider.getAllToolDefinitions] Debug tools: ${this._debugTools.length}`);
-      allTools.push(...this._debugTools);
-    } else {
-      console.log('[ToolDefinitionProvider.getAllToolDefinitions] No debug tools!');
-    }
 
     console.log(`[ToolDefinitionProvider.getAllToolDefinitions] Total tools: ${allTools.length}`);
     return allTools;
@@ -128,14 +121,13 @@ export class ToolDefinitionProvider {
   async toolExists(toolName) {
     return this.contextManager.isContextTool(toolName) || 
            (this.moduleOperationTools && this.moduleOperationTools.isModuleTool(toolName)) ||
-           await this._isModuleTool(toolName) ||
-           this.isDebugTool(toolName);
+           await this._isModuleTool(toolName);
   }
 
   /**
    * Get tool type for routing
    * @param {string} toolName - Name of the tool
-   * @returns {Promise<string>} Tool type: 'context', 'module', 'moduleOp', 'debug', or 'unknown'
+   * @returns {Promise<string>} Tool type: 'context', 'module', 'moduleOp', or 'unknown'
    */
   async getToolType(toolName) {
     if (this.contextManager.isContextTool(toolName)) {
@@ -146,9 +138,6 @@ export class ToolDefinitionProvider {
     }
     if (await this._isModuleTool(toolName)) {
       return 'module';
-    }
-    if (this.isDebugTool(toolName)) {
-      return 'debug';
     }
     return 'unknown';
   }
@@ -186,14 +175,6 @@ export class ToolDefinitionProvider {
             return this._formatToolResponse(result);
           } catch (moduleError) {
             throw moduleError;
-          }
-        
-        case 'debug':
-          try {
-            const result = await this._debugTool.executeDebugTool(toolName, resolvedArgs);
-            return this._formatToolResponse(result);
-          } catch (debugError) {
-            throw debugError;
           }
         
         default:
@@ -287,14 +268,12 @@ export class ToolDefinitionProvider {
   getToolStatistics() {
     const contextTools = this.contextManager.getToolDefinitions();
     const moduleTools = this._getModuleToolDefinitions();
-    const debugTools = this._debugTools || [];
     const modules = this._getLoadedModulesInfo();
 
     return {
-      total: contextTools.length + moduleTools.length + debugTools.length,
+      total: contextTools.length + moduleTools.length,
       context: contextTools.length,
       modules: moduleTools.length,
-      debug: debugTools.length,
       loadedModules: modules.length,
       moduleDetails: modules
     };
@@ -317,37 +296,14 @@ export class ToolDefinitionProvider {
       source: 'Legion ModuleManager'
     }));
 
-    const debugTools = (this._debugTools || []).map(tool => ({
-      ...tool,
-      type: 'debug',
-      source: 'DebugTool'
-    }));
 
     return {
       contextTools,
       moduleTools,
-      debugTools,
-      allTools: [...contextTools, ...moduleTools, ...debugTools]
+      allTools: [...contextTools, ...moduleTools]
     };
   }
 
-  /**
-   * Check if a tool is a debug tool
-   * @param {string} toolName - Name of the tool to check
-   * @returns {boolean} True if tool is a debug tool
-   */
-  isDebugTool(toolName) {
-    if (!this._debugTools) return false;
-    return this._debugTools.some(tool => tool.name === toolName);
-  }
-
-  /**
-   * Set the debug tool instance for execution
-   * @param {DebugTool} debugTool - The debug tool instance
-   */
-  setDebugTool(debugTool) {
-    this._debugTool = debugTool;
-  }
 
   /**
    * Set up event listeners for module loading/unloading
