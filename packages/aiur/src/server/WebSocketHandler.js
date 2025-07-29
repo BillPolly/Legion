@@ -119,8 +119,8 @@ export class WebSocketHandler {
           await this._handleSessionAttach(ws, message);
           break;
           
-        case 'mcp_request':
-          await this._handleMcpRequest(ws, message);
+        case 'tool_request':
+          await this._handleToolRequest(ws, message);
           break;
           
         case 'schema_request':
@@ -253,10 +253,10 @@ export class WebSocketHandler {
   }
 
   /**
-   * Handle MCP request
+   * Handle tool execution request
    * @private
    */
-  async _handleMcpRequest(ws, message) {
+  async _handleToolRequest(ws, message) {
     const connection = this.connections.get(ws);
     
     // Verify connection has a session
@@ -272,7 +272,7 @@ export class WebSocketHandler {
         startTime: Date.now()
       });
       
-      // Process the MCP request
+      // Process the tool request
       const result = await this.requestHandler.handleRequest({
         method: message.method,
         params: message.params
@@ -281,18 +281,18 @@ export class WebSocketHandler {
       // Send response - handle both error formats
       const isError = result.error || (result.success === false);
       this._sendMessage(ws, {
-        type: 'mcp_response',
+        type: 'tool_response',
         requestId: message.requestId,
         result: isError ? result : result,
         error: isError ? { code: -32000, message: result.error || 'Request failed' } : undefined
-      }, 'mcp_response');
+      }, 'tool_response');
       
       // Clean up request tracking
       connection.requestQueue.delete(message.requestId);
       
-      await this.logManager.logInfo('MCP request completed', {
+      await this.logManager.logInfo('Tool request completed', {
         source: 'WebSocketHandler',
-        operation: 'mcp-request-complete',
+        operation: 'tool-request-complete',
         clientId: connection.clientId,
         sessionId: connection.sessionId,
         method: message.method,
@@ -302,7 +302,7 @@ export class WebSocketHandler {
     } catch (error) {
       await this.logManager.logError(error, {
         source: 'WebSocketHandler',
-        operation: 'mcp-request-error',
+        operation: 'tool-request-error',
         clientId: connection.clientId,
         sessionId: connection.sessionId,
         method: message.method

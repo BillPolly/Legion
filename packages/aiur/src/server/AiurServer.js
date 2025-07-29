@@ -13,6 +13,7 @@ import { RequestHandler } from './RequestHandler.js';
 import { WebSocketHandler } from './WebSocketHandler.js';
 // ResourceManager only used internally by ModuleLoader
 import { LogManager } from '../core/LogManager.js';
+import { Codec } from '../../../shared/codec/src/Codec.js';
 
 export class AiurServer {
   constructor(config = {}) {
@@ -35,6 +36,7 @@ export class AiurServer {
     this.wsHandler = null;
     this.moduleLoader = null;
     this.logManager = null;
+    this.codec = null;
     
     // Server state
     this.isRunning = false;
@@ -108,6 +110,12 @@ export class AiurServer {
    * @private
    */
   async _initializeSystems() {
+    // Initialize codec with schema validation
+    this.codec = new Codec({
+      strictValidation: true,
+      injectMetadata: true
+    });
+    
     // Create simple ModuleLoader (ResourceManager ONLY for module loading!)
     const { ModuleLoader } = await import('@legion/module-loader');
     this.moduleLoader = new ModuleLoader(); // Creates its own ResourceManager internally
@@ -132,7 +140,8 @@ export class AiurServer {
     this.wsHandler = new WebSocketHandler({
       sessionManager: this.sessionManager,
       requestHandler: this.requestHandler,
-      logManager: this.logManager
+      logManager: this.logManager,
+      codec: this.codec
     });
     
     // Web Debug Server will be started separately in _startWebDebugServer()
@@ -235,12 +244,16 @@ export class AiurServer {
       await this._handleDisconnection(ws, clientId);
     });
     
-    // Send simple welcome message
+    // Send welcome message with schema definitions
+    const schemaDefinition = this.codec.createSchemaDefinitionMessage();
+    const messageTypes = Object.keys(schemaDefinition.schemas);
     const welcomeData = {
       type: 'welcome',
       clientId,
       serverVersion: '1.0.0',
-      capabilities: ['sessions', 'tools', 'context', 'handles']
+      capabilities: ['sessions', 'tools', 'context', 'handles'],
+      schemas: schemaDefinition.schemas,
+      messageTypes: messageTypes
     };
     
     ws.send(JSON.stringify(welcomeData));

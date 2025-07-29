@@ -23,7 +23,7 @@
   "dependencies": {
     "@legion/llm": "*",
     "@legion/llm-planner": "*",
-    "@legion/module-loader": "*",
+    "@legion/module-loader": "*",  
     "@legion/plan-executor": "*",
     "express": "^4.18.2",
     "ws": "^8.14.2"
