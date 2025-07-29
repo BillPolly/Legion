@@ -278,12 +278,13 @@ export class WebSocketHandler {
         params: message.params
       }, connection.sessionId);
       
-      // Send response
+      // Send response - handle both error formats
+      const isError = result.error || (result.success === false);
       this._sendMessage(ws, {
         type: 'mcp_response',
         requestId: message.requestId,
-        result: result.error ? undefined : result,
-        error: result.error
+        result: isError ? result : result,
+        error: isError ? { code: -32000, message: result.error || 'Request failed' } : undefined
       }, 'mcp_response');
       
       // Clean up request tracking

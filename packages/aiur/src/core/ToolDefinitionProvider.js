@@ -180,11 +180,8 @@ export class ToolDefinitionProvider {
         default:
           const error = new Error(`Unknown tool: ${toolName}`);
           return {
-            content: [{
-              type: "text",
-              text: `Unknown tool: ${toolName}`
-            }],
-            isError: true,
+            success: false,
+            error: `Unknown tool: ${toolName}`
           };
       }
     } catch (error) {
@@ -200,65 +197,13 @@ export class ToolDefinitionProvider {
    * @private
    */
   /**
-   * CENTRALIZED formatter - converts ALL Legion tool responses to MCP format
-   * This is the ONLY place where Legion format gets converted to MCP format
-   * 
-   * Legion format: {success: true, message: "...", data: {...}}
-   * MCP format: {content: [{type: "text", text: "JSON string"}], isError: false}
+   * Return raw tool response without any formatting
+   * The UI should handle formatting for display
    */
   _formatToolResponse(result) {
-    // Get logManager from resource manager if available
-    const logManager = this._resourceManager?.get('logManager');
-    
-    if (logManager) {
-      logManager.logInfo('Formatting tool response from Legion to MCP format', {
-        source: 'ToolDefinitionProvider',
-        operation: 'format-response',
-        resultType: typeof result,
-        hasSuccess: result && typeof result === 'object' && 'success' in result
-      });
-    }
-    
-    // If already in MCP format, return as-is (should not happen now)
-    if (result && typeof result === 'object' && Array.isArray(result.content)) {
-      if (logManager) {
-        logManager.logInfo('Response already in MCP format, returning as-is', {
-          source: 'ToolDefinitionProvider',
-          operation: 'format-response-bypass'
-        });
-      }
-      return result;
-    }
-    
-    // Convert Legion format to proper MCP format
-    // For Legion responses, always JSON stringify the entire result
-    // This ensures consistent format that MCP clients can parse
-    let textContent;
-    if (typeof result === 'string') {
-      textContent = result;
-    } else {
-      // Use compact JSON to avoid escaping issues
-      textContent = JSON.stringify(result);
-    }
-    
-    const mcpResponse = {
-      content: [{
-        type: "text",
-        text: textContent
-      }],
-      isError: Boolean(result && typeof result === 'object' && result.success === false)
-    };
-    
-    if (logManager) {
-      logManager.logInfo('Successfully converted Legion format to MCP format', {
-        source: 'ToolDefinitionProvider',
-        operation: 'format-response-complete',
-        isError: mcpResponse.isError,
-        textLength: mcpResponse.content[0].text.length
-      });
-    }
-    
-    return mcpResponse;
+    // Just return the raw result - no formatting!
+    // The debug UI will handle formatting for display
+    return result;
   }
 
   /**

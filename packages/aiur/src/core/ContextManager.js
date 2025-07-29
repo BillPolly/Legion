@@ -109,14 +109,8 @@ export class ContextManager {
       }
     } catch (error) {
       return {
-        content: [{
-          type: "text",
-          text: JSON.stringify({
-            success: false,
-            error: error.message
-          }, null, 2)
-        }],
-        isError: true,
+        success: false,
+        error: error.message
       };
     }
   }

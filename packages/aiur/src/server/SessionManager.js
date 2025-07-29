@@ -135,8 +135,8 @@ class SessionToolProvider {
       if (toolName === 'module_load') {
         if (!args.name) {
           return {
-            content: [{ type: "text", text: "Error: module name is required" }],
-            isError: true
+            success: false,
+            error: "Module name is required"
           };
         }
         
@@ -144,16 +144,53 @@ class SessionToolProvider {
           // Try to load the module using the ModuleLoader
           let loadedModule;
           
-          // Map common module names to their actual paths
-          const modulePathMap = {
-            'file': '/Users/maxximus/Documents/max/pocs/Legion/packages/general-tools/src/file',
-            'calculator': '/Users/maxximus/Documents/max/pocs/Legion/packages/general-tools/src/calculator',
-            'serper': '/Users/maxximus/Documents/max/pocs/Legion/packages/general-tools/src/serper',
-            'github': '/Users/maxximus/Documents/max/pocs/Legion/packages/general-tools/src/github'
-          };
+          // Import the specific module classes directly
+          // This is simpler than trying to use generic module loading
+          let ModuleClass;
           
-          const modulePath = modulePathMap[args.name] || args.name;
-          loadedModule = await this.sessionManager.server.moduleLoader.loadModule(modulePath);
+          switch(args.name) {
+            case 'file':
+              const { default: FileModule } = await import('../../../general-tools/src/file/index.js');
+              ModuleClass = FileModule;
+              break;
+            case 'calculator':
+              const { default: CalculatorModule } = await import('../../../general-tools/src/calculator/index.js');
+              ModuleClass = CalculatorModule;
+              break;
+            case 'serper':
+              const { default: SerperModule } = await import('../../../general-tools/src/serper/index.js');
+              ModuleClass = SerperModule;
+              break;
+            case 'github':
+              const { default: GitHubModule } = await import('../../../general-tools/src/github/index.js');
+              ModuleClass = GitHubModule;
+              break;
+            case 'json':
+              const { default: JSONModule } = await import('../../../general-tools/src/json/index.js');
+              ModuleClass = JSONModule;
+              break;
+            default:
+              throw new Error(`Unknown module: ${args.name}`);
+          }
+          
+          // Create module instance
+          try {
+            // Check if module has a static create method (async resource manager pattern)
+            if (typeof ModuleClass.create === 'function') {
+              const resourceManager = this.sessionManager.server.moduleLoader.resourceManager;
+              loadedModule = await ModuleClass.create(resourceManager);
+            } else {
+              // Fall back to using module factory
+              const factory = this.sessionManager.server.moduleLoader.moduleFactory;
+              loadedModule = await factory.createModule(ModuleClass);
+            }
+          } catch (error) {
+            console.error(`[module_load] Failed to create module ${args.name}:`, error);
+            throw error;
+          }
+          
+          // Store the loaded module
+          this.sessionManager.server.moduleLoader.loadedModules.set(args.name, loadedModule);
           
           // Get the tools from the loaded module
           const tools = loadedModule.getTools ? (await loadedModule.getTools()) : [];
@@ -177,19 +214,15 @@ class SessionToolProvider {
             success: true,
             message: `Module ${args.name} loaded successfully`,
             module: args.name,
-            path: modulePath,
             toolsLoaded: toolNames,
             toolCount: toolNames.length
           };
           
-          return {
-            content: [{ type: "text", text: JSON.stringify(result) }],
-            isError: false
-          };
+          return result;
         } catch (error) {
           return {
-            content: [{ type: "text", text: JSON.stringify({ success: false, error: error.message }) }],
-            isError: true
+            success: false,
+            error: error.message
           };
         }
       }
@@ -199,14 +232,11 @@ class SessionToolProvider {
           success: true,
           modules: {
             loaded: [], // moduleLoader.getLoadedModules() - would need to implement this
-            available: ['file', 'serper', 'calculator'] // example modules
+            available: ['file', 'serper', 'calculator', 'github', 'json'] // available modules
           }
         };
         
-        return {
-          content: [{ type: "text", text: JSON.stringify(result) }],
-          isError: false
-        };
+        return result;
       }
       
       if (toolName === 'module_unload') {
@@ -215,17 +245,14 @@ class SessionToolProvider {
           message: `Module ${args.name} unloaded successfully`
         };
         
-        return {
-          content: [{ type: "text", text: JSON.stringify(result) }],
-          isError: false
-        };
+        return result;
       }
       
       if (toolName === 'module_tools') {
         if (!args.module) {
           return {
-            content: [{ type: "text", text: "Error: module name is required" }],
-            isError: true
+            success: false,
+            error: "Module name is required"
           };
         }
         
@@ -272,14 +299,11 @@ class SessionToolProvider {
             count: moduleTools.length
           };
           
-          return {
-            content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
-            isError: false
-          };
+          return result;
         } catch (error) {
           return {
-            content: [{ type: "text", text: JSON.stringify({ success: false, error: error.message }) }],
-            isError: true
+            success: false,
+            error: error.message
           };
         }
       }
@@ -287,8 +311,8 @@ class SessionToolProvider {
       // Handle regular module tools
       if (!this.sessionManager.server.moduleLoader) {
         return {
-          content: [{ type: "text", text: "Module loader not available" }],
-          isError: true
+          success: false,
+          error: "Module loader not available"
         };
       }
       
@@ -322,33 +346,21 @@ class SessionToolProvider {
           
           const result = await tool.safeInvoke(toolCall);
           
-          // Convert to MCP format
-          return {
-            content: [{
-              type: "text",
-              text: JSON.stringify(result)
-            }],
-            isError: Boolean(result && typeof result === 'object' && result.success === false)
-          };
+          // Return raw result - UI will handle formatting
+          return result;
         }
       }
       
       // Tool not found
       return {
-        content: [{
-          type: "text",
-          text: `Tool not found: ${toolName}`
-        }],
-        isError: true
+        success: false,
+        error: `Tool not found: ${toolName}`
       };
       
     } catch (error) {
       return {
-        content: [{
-          type: "text",
-          text: `Tool execution error: ${error.message}`
-        }],
-        isError: true
+        success: false,
+        error: `Tool execution error: ${error.message}`
       };
     }
   }

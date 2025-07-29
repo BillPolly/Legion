@@ -143,14 +143,8 @@ export class RequestHandler {
         });
         
         return {
-          content: [{
-            type: "text",
-            text: JSON.stringify({
-              success: false,
-              error: `Parameter resolution failed: ${resolutionError.message}`
-            }, null, 2)
-          }],
-          isError: true
+          success: false,
+          error: `Parameter resolution failed: ${resolutionError.message}`
         };
       }
       
@@ -186,11 +180,8 @@ export class RequestHandler {
       });
       
       return {
-        content: [{
-          type: "text",
-          text: `Error executing tool ${name}: ${error.message}`
-        }],
-        isError: true
+        success: false,
+        error: `Error executing tool ${name}: ${error.message}`
       };
     }
   }

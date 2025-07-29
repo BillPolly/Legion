@@ -297,5 +297,8 @@ class Serper extends Tool {
 // Export the Tool class for direct use (backward compatibility)
 export { Serper };
 
-// Default export for the module.json system
-export default Serper;
+// Import the module
+import SerperModule from './SerperModule.js';
+
+// Default export should be the module, not the tool
+export default SerperModule;
