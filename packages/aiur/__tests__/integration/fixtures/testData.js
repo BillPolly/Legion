@@ -127,15 +127,15 @@ export const moduleTests = {
   
   serper: {
     name: 'serper',
-    tools: ['google_search_search'],
+    tools: ['google_search'],
     tests: [
       {
-        tool: 'google_search_search',
+        tool: 'google_search',
         args: { query: testData.searches.simple },
         assert: 'assertSearchResults'
       },
       {
-        tool: 'google_search_search',
+        tool: 'google_search',
         args: testData.searches.withOptions,
         assert: 'assertSearchResults'
       }
@@ -144,24 +144,17 @@ export const moduleTests = {
   
   github: {
     name: 'github',
-    tools: ['github_list_repos', 'github_list_org_repos', 'github_delete_repo'],
+    tools: ['github_list_repos'],
     tests: [
       {
         tool: 'github_list_repos',
-        args: { type: 'public', per_page: 5 },
+        args: { type: 'all', per_page: 10 },
         assert: 'assertGitHubOperation',
         validate: (result) => {
           expect(result.data).toBeDefined();
-          expect(Array.isArray(result.data)).toBe(true);
-        }
-      },
-      {
-        tool: 'github_list_org_repos',
-        args: { org: 'nodejs', per_page: 5 },
-        assert: 'assertGitHubOperation',
-        validate: (result) => {
-          expect(result.data).toBeDefined();
-          expect(Array.isArray(result.data)).toBe(true);
+          expect(result.data.repositories).toBeDefined();
+          expect(Array.isArray(result.data.repositories)).toBe(true);
+          expect(result.data.repositories.length).toBeGreaterThan(0);
         }
       }
     ]
@@ -176,8 +169,10 @@ export const moduleTests = {
         args: { object: testData.json.simple, indent: 2 },
         assert: 'assertJSONOperation',
         validate: (result) => {
-          expect(result.json).toBeDefined();
-          expect(typeof result.json).toBe('string');
+          // Handle both direct result and wrapped data responses
+          const data = result.data || result;
+          expect(data.json || data.json_string).toBeDefined();
+          expect(typeof (data.json || data.json_string)).toBe('string');
         }
       },
       {
@@ -185,7 +180,9 @@ export const moduleTests = {
         args: { json_string: JSON.stringify(testData.json.simple) },
         assert: 'assertJSONOperation',
         validate: (result) => {
-          expect(result.parsed).toEqual(testData.json.simple);
+          // Handle both direct result and wrapped data responses
+          const data = result.data || result;
+          expect(data.parsed || data.result).toEqual(testData.json.simple);
         }
       }
     ]

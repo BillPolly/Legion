@@ -1,5 +1,5 @@
 import { Module } from '@legion/module-loader';
-import { Serper } from './index.js';
+import { Serper } from './Serper.js';
 
 /**
  * SerperModule - Module wrapper for Serper tool with proper initialization

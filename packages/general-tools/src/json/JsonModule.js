@@ -54,6 +54,7 @@ class JsonParseTool extends Tool {
 
       return ToolResult.success({
         parsed: result,
+        result: result,
         type: typeof result,
         isArray: Array.isArray(result)
       });
@@ -145,6 +146,7 @@ class JsonStringifyTool extends Tool {
       });
 
       return ToolResult.success({
+        json: result,
         json_string: result,
         length: result.length
       });
@@ -211,6 +213,7 @@ class JsonValidateTool extends Tool {
 
         return ToolResult.success({
           valid: true,
+          isValid: true,
           type: typeof parsed,
           isArray: Array.isArray(parsed),
           message: 'Valid JSON'
@@ -242,6 +245,7 @@ class JsonValidateTool extends Tool {
 
         return ToolResult.success({
           valid: false,
+          isValid: false,
           error: parseError.message,
           position,
           line,

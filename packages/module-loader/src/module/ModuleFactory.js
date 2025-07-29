@@ -37,7 +37,13 @@ class ModuleFactory {
     // Resolve dependencies from ResourceManager
     const resolvedDependencies = {};
     requiredResources.forEach(resourceName => {
-      resolvedDependencies[resourceName] = this.resourceManager.get(resourceName);
+      // Try to get as env variable first (e.g., env.GITHUB_PAT), then as direct resource
+      try {
+        resolvedDependencies[resourceName] = this.resourceManager.get(`env.${resourceName}`);
+      } catch (error) {
+        // Fallback to direct resource name if env.RESOURCE_NAME doesn't exist
+        resolvedDependencies[resourceName] = this.resourceManager.get(resourceName);
+      }
     });
     
     // Construct module with resolved dependencies

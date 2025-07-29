@@ -199,6 +199,35 @@ class GitHub extends Tool {
             required: ['org']
           }
         }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'github_get_file',
+          description: 'Get file contents from a GitHub repository',
+          parameters: {
+            type: 'object',
+            properties: {
+              owner: {
+                type: 'string',
+                description: 'Repository owner (username or organization)'
+              },
+              repo: {
+                type: 'string',
+                description: 'Repository name'
+              },
+              path: {
+                type: 'string',
+                description: 'Path to the file in the repository'
+              },
+              ref: {
+                type: 'string',
+                description: 'Branch, tag, or commit to get file from (default: default branch)'
+              }
+            },
+            required: ['owner', 'repo', 'path']
+          }
+        }
       }
     ];
   }
@@ -264,6 +293,10 @@ class GitHub extends Tool {
         case 'github_list_org_repos':
           this.validateRequiredParameters(args, ['org']);
           result = await this.listOrgRepos(args.org, args.type || 'all', args.sort || 'created', args.per_page || 100);
+          break;
+        case 'github_get_file':
+          this.validateRequiredParameters(args, ['owner', 'repo', 'path']);
+          result = await this.getFile(args.owner, args.repo, args.path, args.ref);
           break;
         default:
           throw new Error(`Unknown function: ${toolCall.function.name}`);
@@ -789,6 +822,92 @@ class GitHub extends Tool {
               statusCode: res.statusCode,
               error: error,
               org: org
+            });
+            reject(new Error(error.message || `Failed with status ${res.statusCode}`));
+          }
+        });
+      });
+
+      req.on('error', (error) => {
+        this.emitError(`Request failed: ${error.message}`, { error });
+        reject(error);
+      });
+
+      req.end();
+    });
+  }
+
+  /**
+   * Get file contents from a GitHub repository
+   */
+  async getFile(owner, repo, filePath, ref = null) {
+    this.emitProgress(`Getting file contents: ${owner}/${repo}/${filePath}`, {
+      owner,
+      repo,
+      filePath,
+      ref,
+      stage: 'get_file'
+    });
+    
+    const { token } = this.getCredentials();
+    
+    return new Promise((resolve, reject) => {
+      const pathParam = ref ? `?ref=${encodeURIComponent(ref)}` : '';
+      const options = {
+        hostname: this.githubApiBase,
+        path: `/repos/${owner}/${repo}/contents/${filePath}${pathParam}`,
+        method: 'GET',
+        headers: {
+          'Authorization': `token ${token}`,
+          'User-Agent': 'jsEnvoy-GitHub-Tool',
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      };
+
+      const req = https.request(options, (res) => {
+        let responseData = '';
+        res.on('data', (chunk) => { responseData += chunk; });
+        res.on('end', () => {
+          if (res.statusCode === 200) {
+            const fileData = JSON.parse(responseData);
+            
+            // Decode content if it's base64 encoded
+            let content = '';
+            if (fileData.encoding === 'base64' && fileData.content) {
+              content = Buffer.from(fileData.content, 'base64').toString('utf-8');
+            } else if (fileData.content) {
+              content = fileData.content;
+            }
+            
+            this.emitInfo(`File retrieved successfully: ${filePath}`, {
+              owner,
+              repo,
+              filePath,
+              size: fileData.size,
+              encoding: fileData.encoding
+            });
+            
+            resolve({
+              success: true,
+              file: {
+                name: fileData.name,
+                path: fileData.path,
+                sha: fileData.sha,
+                size: fileData.size,
+                url: fileData.html_url,
+                downloadUrl: fileData.download_url,
+                content: content,
+                encoding: fileData.encoding
+              }
+            });
+          } else {
+            const error = responseData ? JSON.parse(responseData) : {};
+            this.emitError(`Failed to get file: ${error.message || res.statusCode}`, {
+              statusCode: res.statusCode,
+              error: error,
+              owner,
+              repo,
+              filePath
             });
             reject(new Error(error.message || `Failed with status ${res.statusCode}`));
           }
