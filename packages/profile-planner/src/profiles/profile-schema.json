@@ -1,0 +1,124 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Legion Profile Schema",
+  "description": "Schema for defining planning profiles in Legion",
+  "type": "object",
+  "required": ["name", "toolName", "description", "allowableActions"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Internal name of the profile"
+    },
+    "toolName": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Tool name exposed in Legion (e.g., javascript_planner)"
+    },
+    "description": {
+      "type": "string",
+      "description": "User-facing description of what this planner does"
+    },
+    "requiredModules": {
+      "type": "array",
+      "description": "Legion modules that should be loaded for this profile",
+      "items": {
+        "type": "string"
+      }
+    },
+    "defaultInputs": {
+      "type": "array",
+      "description": "Default inputs for plans",
+      "items": {
+        "type": "string"
+      },
+      "default": ["user_request", "project_context"]
+    },
+    "defaultOutputs": {
+      "type": "array",
+      "description": "Default outputs expected from plans",
+      "items": {
+        "type": "string"
+      }
+    },
+    "maxSteps": {
+      "type": "integer",
+      "description": "Maximum number of steps allowed in plans",
+      "minimum": 1,
+      "default": 25
+    },
+    "contextPrompts": {
+      "type": "array",
+      "description": "Context prompts to guide the LLM",
+      "items": {
+        "type": "string"
+      }
+    },
+    "allowableActions": {
+      "type": "array",
+      "description": "Actions available for this profile",
+      "items": {
+        "type": "object",
+        "required": ["type", "description"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Action type identifier"
+          },
+          "description": {
+            "type": "string",
+            "description": "What this action does"
+          },
+          "inputs": {
+            "type": "object",
+            "description": "Input parameters for this action",
+            "additionalProperties": {
+              "type": "object",
+              "required": ["type", "description"],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["string", "number", "boolean", "object", "array"]
+                },
+                "description": {
+                  "type": "string"
+                },
+                "required": {
+                  "type": "boolean",
+                  "default": true
+                },
+                "default": {},
+                "examples": {
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "outputs": {
+            "type": "object",
+            "description": "Output parameters from this action",
+            "additionalProperties": {
+              "type": "object",
+              "required": ["type", "description"],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["string", "number", "boolean", "object", "array"]
+                },
+                "description": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "templates": {
+      "type": "object",
+      "description": "Code templates for this profile",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  }
+}

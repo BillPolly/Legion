@@ -7,6 +7,8 @@
 
 import { Module } from '@legion/module-loader';
 import { ProfilePlannerTool } from './tools/ProfilePlannerTool.js';
+import { ProfileTool } from './tools/ProfileTool.js';
+import { ProfileManager } from './ProfileManager.js';
 
 export class ProfilePlannerModule extends Module {
   constructor(dependencies = {}) {
@@ -38,9 +40,24 @@ export class ProfilePlannerModule extends Module {
   async initialize() {
     if (this.initialized) return;
     
-    // Initialize tools
+    // Initialize profile manager
+    this.profileManager = new ProfileManager(this.dependencies.resourceManager);
+    await this.profileManager.initialize();
+    
+    // Initialize the meta tool (for listing profiles, etc.)
     this.profilePlannerTool = new ProfilePlannerTool(this.dependencies);
     await this.profilePlannerTool.initialize();
+    
+    // Create a tool for each profile
+    this.profileTools = [];
+    const profiles = this.profileManager.listProfiles();
+    
+    for (const profileInfo of profiles) {
+      const profile = this.profileManager.getProfile(profileInfo.name);
+      const profileTool = new ProfileTool(profile, this.profileManager, this.dependencies.resourceManager);
+      this.profileTools.push(profileTool);
+      console.log(`Created tool: ${profile.toolName} for ${profile.name} profile`);
+    }
     
     this.initialized = true;
   }
@@ -50,8 +67,10 @@ export class ProfilePlannerModule extends Module {
    * @returns {Array} Array of tool instances
    */
   getTools() {
+    // Return both the meta tool and all profile-specific tools
     return [
-      this.profilePlannerTool
+      this.profilePlannerTool,
+      ...this.profileTools
     ];
   }
 

@@ -45,21 +45,19 @@ class ProfileManager {
     
     try {
       const files = await fs.readdir(profilesDir);
-      const profileFiles = files.filter(file => file.endsWith('.js'));
+      const profileFiles = files.filter(file => file.endsWith('.json'));
 
       for (const file of profileFiles) {
         try {
           const profilePath = join(profilesDir, file);
-          const profileModule = await import(profilePath);
-          
-          // Support both named and default exports
-          const profile = profileModule.default || profileModule[Object.keys(profileModule)[0]];
+          const profileContent = await fs.readFile(profilePath, 'utf8');
+          const profile = JSON.parse(profileContent);
           
           if (profile && profile.name) {
             await this.registerProfile(profile);
             console.log(`Loaded profile: ${profile.name}`);
           } else {
-            console.warn(`Profile file ${file} does not export a valid profile`);
+            console.warn(`Profile file ${file} does not contain a valid profile`);
           }
         } catch (error) {
           console.warn(`Failed to load profile from ${file}:`, error.message);
@@ -135,13 +133,41 @@ class ProfileManager {
    * @returns {Object} Planning context for LLM planner
    */
   createPlanningContext(profile, description) {
+    // Convert JSON profile actions to planner format
+    const convertedActions = (profile.allowableActions || []).map(action => {
+      // Check if inputs/outputs are already arrays (old format) or objects (new JSON format)
+      let inputKeys, outputKeys;
+      
+      if (Array.isArray(action.inputs)) {
+        // Old format - already arrays
+        inputKeys = action.inputs;
+      } else {
+        // New JSON format - extract keys from objects
+        inputKeys = Object.keys(action.inputs || {});
+      }
+      
+      if (Array.isArray(action.outputs)) {
+        // Old format - already arrays
+        outputKeys = action.outputs;
+      } else {
+        // New JSON format - extract keys from objects
+        outputKeys = Object.keys(action.outputs || {});
+      }
+      
+      return {
+        type: action.type,
+        description: action.description,
+        inputs: inputKeys,
+        outputs: outputKeys
+      };
+    });
+
     const context = {
       description: description,
       inputs: profile.defaultInputs || ['user_request'],
       requiredOutputs: profile.defaultOutputs || ['completed_task'],
-      allowableActions: profile.allowableActions || [],
+      allowableActions: convertedActions,
       maxSteps: profile.maxSteps || 20,
-      outputMapping: profile.outputMapping || {}, // Include output mapping from profile
       initialInputData: {
         user_request: description,
         profile_context: profile.contextPrompts?.join('\n') || ''
@@ -173,6 +199,12 @@ class ProfileManager {
       errors.push('Profile must have a string name');
     }
 
+    if (!profile.toolName || typeof profile.toolName !== 'string') {
+      errors.push('Profile must have a string toolName');
+    } else if (!/^[a-z][a-z0-9_]*$/.test(profile.toolName)) {
+      errors.push('toolName must start with lowercase letter and contain only lowercase letters, numbers, and underscores');
+    }
+
     if (!profile.description || typeof profile.description !== 'string') {
       errors.push('Profile must have a string description');
     }
@@ -181,15 +213,22 @@ class ProfileManager {
       errors.push('requiredModules must be an array');
     }
 
-    if (profile.allowableActions && !Array.isArray(profile.allowableActions)) {
-      errors.push('allowableActions must be an array');
-    }
-
-    if (profile.allowableActions) {
+    if (!profile.allowableActions || !Array.isArray(profile.allowableActions)) {
+      errors.push('allowableActions must be an array and is required');
+    } else {
       for (let i = 0; i < profile.allowableActions.length; i++) {
         const action = profile.allowableActions[i];
         if (!action.type || typeof action.type !== 'string') {
           errors.push(`allowableActions[${i}] must have a string type`);
+        }
+        if (!action.description || typeof action.description !== 'string') {
+          errors.push(`allowableActions[${i}] must have a string description`);
+        }
+        if (!action.inputs || typeof action.inputs !== 'object') {
+          errors.push(`allowableActions[${i}] must have inputs object`);
+        }
+        if (!action.outputs || typeof action.outputs !== 'object') {
+          errors.push(`allowableActions[${i}] must have outputs object`);
         }
       }
     }

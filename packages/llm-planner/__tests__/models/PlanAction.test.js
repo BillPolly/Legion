@@ -73,7 +73,7 @@ describe('PlanAction', () => {
   });
 
   describe('validateInputs', () => {
-    test('should validate inputs are satisfied', () => {
+    test('should validate inputs are satisfied by available outputs', () => {
       const action = new PlanAction(sampleActionDef);
       const availableOutputs = ['file-content', 'other-output'];
       
@@ -82,6 +82,69 @@ describe('PlanAction', () => {
       expect(validation.isValid).toBe(true);
       expect(validation.missingInputs).toEqual([]);
       expect(validation.satisfiedInputs).toEqual(['file-content']);
+    });
+
+    test('should validate inputs are satisfied by action parameters', () => {
+      // This test reproduces the bug: action has parameters that should satisfy inputs
+      const actionDef = {
+        type: 'create_js_file',
+        inputs: ['file_path', 'content'],
+        outputs: ['file_created']
+      };
+      
+      const action = new PlanAction(actionDef, {
+        file_path: 'src/calculator.js',
+        content: '/* JavaScript code here */'
+      });
+      
+      // No previous outputs available, but action has parameters
+      const validation = action.validateInputs([]);
+      
+      // This should pass because the action provides the required inputs as parameters
+      expect(validation.isValid).toBe(true);
+      expect(validation.missingInputs).toEqual([]);
+      expect(validation.satisfiedInputs).toEqual(['file_path', 'content']);
+    });
+
+    test('should validate inputs satisfied by combination of outputs and parameters', () => {
+      const actionDef = {
+        type: 'create_test_file',
+        inputs: ['test_file_path', 'function_to_test', 'project_name'],
+        outputs: ['test_file_created']
+      };
+      
+      const action = new PlanAction(actionDef, {
+        test_file_path: 'src/calculator.test.js',
+        function_to_test: 'const calc = require("./calculator");'
+      });
+      
+      // project_name comes from previous step, others from parameters
+      const availableOutputs = ['project_name'];
+      const validation = action.validateInputs(availableOutputs);
+      
+      expect(validation.isValid).toBe(true);
+      expect(validation.missingInputs).toEqual([]);
+      expect(validation.satisfiedInputs).toEqual(['test_file_path', 'function_to_test', 'project_name']);
+    });
+
+    test('should detect missing inputs not satisfied by either source', () => {
+      const actionDef = {
+        type: 'create_package_json',
+        inputs: ['project_name', 'dependencies', 'version'],
+        outputs: ['package_json_created']
+      };
+      
+      const action = new PlanAction(actionDef, {
+        project_name: 'my-project'
+        // Missing dependencies and version
+      });
+      
+      const availableOutputs = ['other_output'];
+      const validation = action.validateInputs(availableOutputs);
+      
+      expect(validation.isValid).toBe(false);
+      expect(validation.missingInputs).toEqual(['dependencies', 'version']);
+      expect(validation.satisfiedInputs).toEqual(['project_name']);
     });
 
     test('should detect missing inputs', () => {

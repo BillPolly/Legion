@@ -17,6 +17,7 @@ describe('ProfilePlanner Live Integration', () => {
   let resourceManager;
   let module;
   let tool;
+  let profileManager;
   
   beforeAll(async () => {
     // Setup ResourceManager
@@ -33,85 +34,116 @@ describe('ProfilePlanner Live Integration', () => {
     module = await ProfilePlannerModule.create(resourceManager);
     const tools = module.getTools();
     tool = tools[0];
+    
+    // Get the profile manager from the tool
+    profileManager = tool.profileManager;
   });
 
   test('should generate live plan with LLM', async () => {
     console.log('🤖 Generating plan with LLM...');
     
+    // Test parameters
+    const testRequest = {
+      profile: 'javascript',
+      task: 'Create a simple calculator function that can add and subtract numbers'
+    };
+    
+    // Create and clear output directory
+    const outputDir = path.join(__dirname, 'tmp');
+    try {
+      await fs.rm(outputDir, { recursive: true, force: true });
+    } catch (error) {
+      // Directory might not exist, ignore
+    }
+    await fs.mkdir(outputDir, { recursive: true });
+    
     const result = await tool.invoke({
       function: {
         name: 'plan_with_profile',
-        arguments: JSON.stringify({
-          profile: 'javascript',
-          task: 'Create a simple calculator function that can add and subtract numbers'
-        })
+        arguments: JSON.stringify(testRequest)
       }
     });
     
-    // Create output directory
-    const outputDir = path.join(__dirname, 'tmp');
-    await fs.mkdir(outputDir, { recursive: true });
-    
-    // Always save the result for inspection
-    const resultPath = path.join(outputDir, 'generated-plan.json');
-    await fs.writeFile(resultPath, JSON.stringify(result, null, 2));
-    
     if (result.success) {
       console.log('🎉 SUCCESS! Plan generated');
-      console.log(`   Plan: ${result.plan.name}`);
-      console.log(`   Steps: ${result.plan.steps.length}`);
+      console.log(`   Plan: ${result.data.plan.name}`);
+      console.log(`   Steps: ${result.data.plan.steps.length}`);
       
-      // Create a clean summary
-      const summary = {
-        success: true,
-        plan_name: result.plan.name,
-        description: result.plan.description,
-        total_steps: result.plan.steps.length,
-        steps: result.plan.steps.map(step => ({
-          id: step.id,
-          name: step.name,
-          type: step.type,
-          dependencies: step.dependencies,
-          actions: step.actions.length
-        })),
-        generated_at: new Date().toISOString(),
-        profile_used: result.profile
+      // Get the actual planning context that was sent to the LLM
+      const profile = await profileManager.getProfile(testRequest.profile);
+      const planningContext = profileManager.createPlanningContext(profile, testRequest.task);
+      
+      // Save request and plan together in one file
+      const testOutput = {
+        test_name: 'ProfilePlanner Live Integration',
+        timestamp: new Date().toISOString(),
+        profile_request: testRequest,
+        profile_json_actions: profile.allowableActions, // Show original JSON format
+        actual_planning_request: {
+          description: planningContext.description,
+          inputs: planningContext.inputs,
+          requiredOutputs: planningContext.requiredOutputs,
+          allowableActions: planningContext.allowableActions, // Show converted format
+          maxSteps: planningContext.maxSteps,
+          initialInputData: planningContext.initialInputData
+        },
+        allowable_actions_count: planningContext.allowableActions.length,
+        result: {
+          success: true,
+          plan_id: result.data.plan.id,
+          plan_name: result.data.plan.name,
+          plan_description: result.data.plan.description,
+          total_steps: result.data.plan.steps.length,
+          total_actions: result.data.plan.steps.reduce((sum, step) => sum + step.actions.length, 0),
+          plan: result.data.plan
+        }
       };
       
-      const summaryPath = path.join(outputDir, 'plan-summary.json');
-      await fs.writeFile(summaryPath, JSON.stringify(summary, null, 2));
+      const outputPath = path.join(outputDir, 'test-output.json');
+      await fs.writeFile(outputPath, JSON.stringify(testOutput, null, 2));
       
-      console.log(`\n📁 Files saved to __tests__/tmp/:`);
-      console.log(`   • generated-plan.json (complete result)`);
-      console.log(`   • plan-summary.json (clean summary)`);
+      console.log(`\n📁 File saved to __tests__/tmp/test-output.json`);
       
       // Test assertions
       expect(result.success).toBe(true);
-      expect(result.plan).toBeDefined();
-      expect(result.plan.name).toBeDefined();
-      expect(result.plan.steps).toBeInstanceOf(Array);
-      expect(result.plan.steps.length).toBeGreaterThan(0);
+      expect(result.data.plan).toBeDefined();
+      expect(result.data.plan.name).toBeDefined();
+      expect(result.data.plan.steps).toBeInstanceOf(Array);
+      expect(result.data.plan.steps.length).toBeGreaterThan(0);
       
     } else {
-      console.log('❌ Plan generation failed (expected due to validation)');
+      console.log('❌ Plan generation failed');
       console.log(`   Error: ${result.error}`);
       
-      // Create error summary
-      const errorSummary = {
-        success: false,
-        error_type: 'validation_error',
-        error_message: result.error,
-        profile_used: result.data?.profile,
-        task: result.data?.task,
-        generated_at: new Date().toISOString(),
-        note: 'This error is expected - validation logic needs alignment with LLM output'
+      // Get the actual planning context that was sent to the LLM
+      const profile = await profileManager.getProfile(testRequest.profile);
+      const planningContext = profileManager.createPlanningContext(profile, testRequest.task);
+      
+      // Save request and error together in one file
+      const testOutput = {
+        test_name: 'ProfilePlanner Live Integration',
+        timestamp: new Date().toISOString(),
+        profile_request: testRequest,
+        profile_json_actions: profile.allowableActions, // Show original JSON format
+        actual_planning_request: {
+          description: planningContext.description,
+          inputs: planningContext.inputs,
+          requiredOutputs: planningContext.requiredOutputs,
+          allowableActions: planningContext.allowableActions, // Show converted format
+          maxSteps: planningContext.maxSteps,
+          initialInputData: planningContext.initialInputData
+        },
+        allowable_actions_count: planningContext.allowableActions.length,
+        result: {
+          success: false,
+          error: result.error,
+          error_data: result.data
+        }
       };
       
-      const errorPath = path.join(outputDir, 'error-summary.json');
-      await fs.writeFile(errorPath, JSON.stringify(errorSummary, null, 2));
-      console.log(`\n📁 Files saved to __tests__/tmp/:`);
-      console.log(`   • generated-plan.json (complete result)`);
-      console.log(`   • error-summary.json (error details)`);
+      const outputPath = path.join(outputDir, 'test-output.json');
+      await fs.writeFile(outputPath, JSON.stringify(testOutput, null, 2));
+      console.log(`\n📁 File saved to __tests__/tmp/test-output.json`);
       
       // Test the core functionality - LLM was called and responded
       expect(result).toBeDefined();

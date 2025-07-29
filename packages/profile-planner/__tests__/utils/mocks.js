@@ -65,6 +65,7 @@ export function createMockModuleFactory() {
  */
 export const testProfile = {
   name: 'test-profile',
+  toolName: 'test_profile_planner',
   description: 'A test profile for unit testing',
   requiredModules: ['test-module'],
   allowableActions: [

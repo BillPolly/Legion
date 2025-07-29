@@ -198,14 +198,13 @@ class PlanStep {
     const missingInputs = [];
     const satisfiedInputs = [];
     
-    // Validate each action in sequence
+    // Validate each action in sequence using the action's own validation logic
     for (const action of this.actions) {
-      const actionInputs = action.getInputs();
-      const actionMissing = actionInputs.filter(input => !currentlyAvailable.includes(input));
-      const actionSatisfied = actionInputs.filter(input => currentlyAvailable.includes(input));
+      // Use the action's validateInputs method which handles both outputs and parameters
+      const actionValidation = action.validateInputs(currentlyAvailable);
       
-      missingInputs.push(...actionMissing);
-      satisfiedInputs.push(...actionSatisfied);
+      missingInputs.push(...actionValidation.missingInputs);
+      satisfiedInputs.push(...actionValidation.satisfiedInputs);
       
       // Add this action's outputs to available outputs for next action
       const actionOutputs = action.getOutputs();

@@ -108,10 +108,11 @@ describe('ProfileManager', () => {
       await profileManager.registerProfile({
         ...testProfile,
         name: 'another-profile',
+        toolName: 'another_profile_planner',
         description: 'Another test profile',
         allowableActions: [
-          { type: 'action1' },
-          { type: 'action2' }
+          { type: 'action1', inputs: {}, outputs: {}, description: 'Action 1' },
+          { type: 'action2', inputs: {}, outputs: {}, description: 'Action 2' }
         ]
       });
     });
@@ -170,7 +171,14 @@ describe('ProfileManager', () => {
         description: 'Context 1\nContext 2\n\nTask: Test task',
         inputs: ['input1', 'input2'],
         requiredOutputs: ['output1'],
-        allowableActions: profile.allowableActions,
+        allowableActions: [
+          {
+            type: 'test_action',
+            description: 'A test action',
+            inputs: ['input1'],
+            outputs: ['output1']
+          }
+        ],
         maxSteps: 15,
         initialInputData: {
           user_request: 'Test task',
@@ -225,7 +233,7 @@ describe('ProfileManager', () => {
       expect(validation.errors).toContain('Profile must have a string name');
       expect(validation.errors).toContain('Profile must have a string description');
       expect(validation.errors).toContain('requiredModules must be an array');
-      expect(validation.errors).toContain('allowableActions must be an array');
+      expect(validation.errors).toContain('allowableActions must be an array and is required');
       expect(validation.errors).toContain('contextPrompts must be an array');
       expect(validation.errors).toContain('maxSteps must be a positive number');
     });
