@@ -224,17 +224,24 @@ export class Autocomplete {
   }
 
   /**
-   * Navigate suggestions
+   * Navigate suggestions with wrap-around
    */
   navigate(direction) {
     if (this.suggestions.length === 0) return;
     
-    const newIndex = this.selectedIndex + direction;
+    let newIndex = this.selectedIndex + direction;
     
-    if (newIndex >= -1 && newIndex < this.suggestions.length) {
-      this.selectedIndex = newIndex;
-      this.updateSelection();
+    // Wrap around logic
+    if (newIndex >= this.suggestions.length) {
+      // Wrap to beginning (no selection)
+      newIndex = -1;
+    } else if (newIndex < -1) {
+      // Wrap to end
+      newIndex = this.suggestions.length - 1;
     }
+    
+    this.selectedIndex = newIndex;
+    this.updateSelection();
   }
 
   /**

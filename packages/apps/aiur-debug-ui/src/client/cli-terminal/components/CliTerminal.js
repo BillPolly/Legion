@@ -199,7 +199,13 @@ export class CliTerminal {
     switch(e.key) {
       case 'Enter':
         e.preventDefault();
-        this.executeCommand(this.elements.input.value);
+        // If autocomplete is showing and something is selected, apply it
+        if (this.autocomplete.suggestions.length > 0 && this.autocomplete.getSelected()) {
+          this.applyCompletion(this.autocomplete.getSelected());
+        } else {
+          // Otherwise execute the command
+          this.executeCommand(this.elements.input.value);
+        }
         break;
         
       case 'Tab':
@@ -263,26 +269,26 @@ export class CliTerminal {
    * Handle tab completion
    */
   handleTabCompletion() {
-    const selected = this.autocomplete.getSelected();
-    if (selected) {
-      // Apply the currently selected suggestion
-      this.applyCompletion(selected);
+    // If autocomplete is already showing, cycle through suggestions
+    if (this.autocomplete.suggestions.length > 0) {
+      this.autocomplete.navigate(1);
+      return;
+    }
+    
+    // Otherwise, get suggestions for current input
+    const suggestions = this.autocomplete.getSuggestions(this.currentInput);
+    
+    if (suggestions.length === 0) {
+      // No suggestions available
+      return;
+    } else if (suggestions.length === 1) {
+      // Single match - complete it immediately
+      this.applyCompletion(suggestions[0]);
     } else {
-      // No selection - get suggestions for current input
-      const suggestions = this.autocomplete.getSuggestions(this.currentInput);
-      
-      if (suggestions.length === 1) {
-        // Single match - complete it immediately
-        this.applyCompletion(suggestions[0]);
-      } else if (suggestions.length > 1) {
-        // Multiple matches - show them and select the first
-        this.autocomplete.show(suggestions, this.currentInput);
-        this.autocomplete.selectedIndex = 0;
-        this.autocomplete.updateSelection();
-      } else if (this.autocomplete.suggestions.length > 0) {
-        // Move to next suggestion in visible list
-        this.autocomplete.navigate(1);
-      }
+      // Multiple matches - show them and start cycling
+      this.autocomplete.show(suggestions, this.currentInput);
+      // Don't select anything initially, let user tab through
+      this.autocomplete.selectedIndex = -1;
     }
   }
 
@@ -325,25 +331,28 @@ export class CliTerminal {
    * Update ghost text parameter hints
    */
   updateGhostText(input) {
-    // Don't show ghost text if autocomplete is visible or input is empty
-    if (!input.trim() || this.autocomplete.suggestions.length > 0) {
+    // Don't show ghost text if input is empty
+    if (!input.trim()) {
       this.hideGhostText();
       return;
     }
     
     const parsed = this.parseInputForHints(input);
-    console.log('Ghost text debug:', { input, parsed }); // Debug log
     
     if (parsed) {
       const ghostText = this.generateParameterHint(parsed);
-      console.log('Generated ghost text:', ghostText); // Debug log
       
-      // If we're showing hints for a similar command (typo), use the actual typed command
-      const displayInput = parsed.actualCommand ? 
-        input.replace(parsed.actualCommand, parsed.actualCommand) : 
-        input;
-      
-      this.showGhostText(ghostText, displayInput);
+      // Only show ghost text if we have parameter hints to show
+      if (ghostText) {
+        // If we're showing hints for a similar command (typo), use the actual typed command
+        const displayInput = parsed.actualCommand ? 
+          input.replace(parsed.actualCommand, parsed.actualCommand) : 
+          input;
+        
+        this.showGhostText(ghostText, displayInput);
+      } else {
+        this.hideGhostText();
+      }
     } else {
       this.hideGhostText();
     }
