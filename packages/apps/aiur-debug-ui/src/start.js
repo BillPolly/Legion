@@ -8,8 +8,7 @@
  */
 
 import { ResourceManager } from '@legion/module-loader';
-import { createAiurMCPServer, getMCPServerStatus } from '@legion/module-loader/src/services/MCPServerFactory.js';
-import { LogManager } from '@legion/aiur/src/server.js';
+import { AiurServer } from '@legion/aiur/src/server/AiurServer.js';
 import { createWebSocketServer } from './server/websocket.js';
 import { loadConfig, validateConfig } from './utils/config.js';
 import { createLogger } from './utils/logger.js';
@@ -80,40 +79,18 @@ async function ensureMcpServerRunning(resourceManager, config, logger) {
     host: mcpHost 
   });
   
-  // Configure MCP server with environment variables and config
-  const mcpConfig = {
-    server: {
-      port: mcpPort,
-      host: mcpHost,
-      timeout: config.mcp.timeout || 30000
-    },
-    session: {
-      enableSessionMode: true,
-      timeout: config.mcp.sessionTimeout || 3600000,
-      maxSessions: config.mcp.maxSessions || 100
-    },
-    tools: {
-      enableContext: true,
-      enablePlanning: true,
-      enableFile: true,
-      customTools: config.mcp.customTools || []
-    },
-    logging: {
-      level: config.logging.level || 'info',
-      enableFile: config.mcp.logging?.enableFile !== false,
-      directory: config.mcp.logging?.directory || './logs',
-      retentionDays: config.mcp.logging?.retentionDays || 7
-    },
-    websocket: {
-      path: '/ws',
-      maxConnections: config.mcp.maxConnections || 1000,
-      heartbeatInterval: config.mcp.heartbeatInterval || 30000
-    }
-  };
+  // Create and start AiurServer
+  const aiurServer = new AiurServer({
+    port: mcpPort,
+    host: mcpHost,
+    sessionTimeout: config.mcp.sessionTimeout || 3600000,
+    enableFileLogging: config.mcp.logging?.enableFile !== false,
+    logDirectory: config.mcp.logging?.directory || './logs',
+    logRetentionDays: config.mcp.logging?.retentionDays || 7,
+    maxLogFileSize: 10 * 1024 * 1024
+  });
   
-  // Create and start MCP server
-  const mcpServer = await createAiurMCPServer(mcpConfig, resourceManager);
-  await mcpServer.start();
+  await aiurServer.start();
   
   logger.info('MCP server started successfully', {
     port: mcpPort,
@@ -126,7 +103,7 @@ async function ensureMcpServerRunning(resourceManager, config, logger) {
     port: mcpPort,
     host: mcpHost,
     autoStarted: true,
-    server: mcpServer
+    server: aiurServer
   };
 }
 
@@ -165,18 +142,8 @@ async function main() {
       logger.warn(`Could not clear port ${debugPort}:`, error.message);
     }
     
-    // Create LogManager for Aiur components
-    const logManager = new LogManager({
-      enableFileLogging: config.mcp.logging?.enableFile !== false,
-      logDirectory: config.mcp.logging?.directory || './logs',
-      logRetentionDays: config.mcp.logging?.retentionDays || 7,
-      maxLogFileSize: 10 * 1024 * 1024
-    });
-    await logManager.initialize();
-    
-    // Register both loggers in ResourceManager
-    resourceManager.register('logger', logger);           // For debug UI components
-    resourceManager.register('logManager', logManager);   // For Aiur MCP components
+    // Register logger in ResourceManager
+    resourceManager.register('logger', logger);
     
     logger.info('Starting Aiur Debug UI with integrated MCP server...');
     logger.info('Configuration loaded', {
@@ -247,13 +214,12 @@ async function main() {
             res.json(clientConfig);
           },
           '/api/health': (req, res) => {
-            const mcpStatus = getMCPServerStatus(resourceManager);
             res.json({
               status: 'healthy',
               timestamp: new Date().toISOString(),
               uptime: process.uptime(),
               mcp: {
-                running: mcpStatus ? mcpStatus.running : false,
+                running: mcpServerInfo.server ? mcpServerInfo.server.isRunning : false,
                 url: mcpServerInfo.url,
                 autoStarted: mcpServerInfo.autoStarted
               }
@@ -303,8 +269,7 @@ async function main() {
       mcpServer: mcpServerInfo.server,
       mcpAutoStarted: mcpServerInfo.autoStarted,
       resourceManager,
-      logger,
-      logManager
+      logger
     };
     
     // Setup graceful shutdown
@@ -321,7 +286,7 @@ async function main() {
  * @param {Object} serverInfo - Server information object
  */
 async function setupGracefulShutdown(serverInfo) {
-  const { debugServer, mcpServer, mcpAutoStarted, resourceManager, logger, logManager } = serverInfo;
+  const { debugServer, mcpServer, mcpAutoStarted, resourceManager, logger } = serverInfo;
   
   const gracefulShutdown = async (signal) => {
     logger.info(`Received ${signal}, shutting down gracefully...`);
@@ -337,24 +302,10 @@ async function setupGracefulShutdown(serverInfo) {
       if (mcpServer && mcpAutoStarted) {
         logger.info('Stopping auto-started MCP server...');
         await mcpServer.stop();
-        resourceManager.unregister('MCPServer');
-      } else if (mcpAutoStarted) {
-        logger.info('MCP server was auto-started but reference lost, attempting cleanup...');
-        try {
-          const existingMcpServer = resourceManager.get('MCPServer');
-          await existingMcpServer.stop();
-          resourceManager.unregister('MCPServer');
-        } catch (error) {
-          logger.warn('Could not stop MCP server during cleanup:', error.message);
-        }
       } else {
         logger.info('Leaving external MCP server running');
       }
       
-      // Shutdown LogManager
-      if (logManager) {
-        await logManager.shutdown();
-      }
       
       logger.info('Shutdown complete');
       process.exit(0);

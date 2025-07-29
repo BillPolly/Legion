@@ -5,8 +5,11 @@
  * integration with Legion's ModuleManager for module operations.
  */
 
-export class ModuleHandler {
+import { EventEmitter } from 'events';
+
+export class ModuleHandler extends EventEmitter {
   constructor(moduleManager, logManager) {
+    super();
     this.moduleManager = moduleManager;
     this.logManager = logManager;
   }
@@ -17,6 +20,11 @@ export class ModuleHandler {
   static async create(resourceManager) {
     const moduleManager = resourceManager.get('moduleManager');
     const logManager = resourceManager.get('logManager');
+    
+    console.log('[ModuleHandler.create] Getting moduleManager from resourceManager:', {
+      hasModuleManager: resourceManager.has('moduleManager'),
+      moduleManagerExists: !!moduleManager
+    });
     
     if (!moduleManager) {
       throw new Error('ModuleManager not found in ResourceManager');
@@ -91,6 +99,12 @@ export class ModuleHandler {
         module: moduleName
       });
       
+      // Debug: Check ModuleManager before loading
+      console.log(`[ModuleHandler] Before loading ${moduleName}:`, {
+        moduleManagerExists: !!this.moduleManager,
+        currentLoadedCount: this.moduleManager.getLoadedModules().length
+      });
+      
       // Load the module through ModuleManager
       const moduleInstance = await this.moduleManager.loadModule(moduleName);
       
@@ -98,8 +112,19 @@ export class ModuleHandler {
         throw new Error(`Failed to load module: ${moduleName}`);
       }
       
+      // Debug: Check ModuleManager after loading
+      console.log(`[ModuleHandler] After loading ${moduleName}:`, {
+        moduleInstanceExists: !!moduleInstance,
+        newLoadedCount: this.moduleManager.getLoadedModules().length,
+        loadedModules: this.moduleManager.getLoadedModules().map(m => m.name || 'unnamed')
+      });
+      
       // Get tools from the loaded module
-      const tools = await moduleInstance.getTools();
+      const toolsResult = moduleInstance.getTools();
+      // Handle both synchronous arrays and async promises
+      const tools = toolsResult && typeof toolsResult.then === 'function' 
+        ? await toolsResult 
+        : toolsResult;
       const toolCount = tools ? tools.length : 0;
       
       await this.logManager.logInfo('Module loaded successfully', {
@@ -109,8 +134,9 @@ export class ModuleHandler {
         toolCount
       });
       
-      // The ToolDefinitionProvider will automatically pick up the loaded module
-      // through ModuleManager.getLoadedModules()
+      // Emit event to notify ToolDefinitionProvider of module change
+      console.log(`[ModuleHandler] Emitting module-loaded event for: ${moduleName}`);
+      this.emit('module-loaded', moduleName, { toolCount, tools });
       
       return {
         success: true,
@@ -143,6 +169,10 @@ export class ModuleHandler {
       const result = await this.moduleManager.unloadModule(moduleName);
       
       if (result && result.success) {
+        // Emit event to notify ToolDefinitionProvider of module change
+        console.log(`[ModuleHandler] Emitting module-unloaded event for: ${moduleName}`);
+        this.emit('module-unloaded', moduleName);
+        
         return {
           success: true,
           message: `Module '${moduleName}' unloaded successfully`
@@ -177,8 +207,13 @@ export class ModuleHandler {
       const loadedModule = loaded.find(m => m.name === moduleName);
       
       if (loadedModule) {
-        const tools = loadedModule.instance.getTools ? 
-          await loadedModule.instance.getTools() : [];
+        let tools = [];
+        if (loadedModule.instance.getTools) {
+          const toolsResult = loadedModule.instance.getTools();
+          tools = toolsResult && typeof toolsResult.then === 'function' 
+            ? await toolsResult 
+            : toolsResult;
+        }
           
         return {
           success: true,

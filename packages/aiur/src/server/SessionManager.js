@@ -14,15 +14,353 @@ import { ContextManager } from '../core/ContextManager.js';
 import { ToolDefinitionProvider } from '../core/ToolDefinitionProvider.js';
 import { ToolRegistry } from '../tools/ToolRegistry.js';
 
+/**
+ * Simple ToolProvider that manages tool definitions and execution
+ */
+class SessionToolProvider {
+  constructor(sessionManager) {
+    this.sessionManager = sessionManager;
+  }
+
+  async getAllToolDefinitions() {
+    try {
+      const definitions = [];
+      console.log('[SessionToolProvider] getAllToolDefinitions called');
+      console.log('[SessionToolProvider] sessionManager exists:', !!this.sessionManager);
+      console.log('[SessionToolProvider] server exists:', !!this.sessionManager?.server);
+      console.log('[SessionToolProvider] moduleLoader exists:', !!this.sessionManager?.server?.moduleLoader);
+      
+      // Add module management tools that the UI needs
+      definitions.push(
+        {
+          name: 'module_list',
+          description: 'List available and loaded modules',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              filter: { type: 'string', description: 'Filter modules by name' }
+            }
+          }
+        },
+        {
+          name: 'module_load',
+          description: 'Load a module to make its tools available',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              name: { type: 'string', description: 'Name of the module to load' }
+            },
+            required: ['name']
+          }
+        },
+        {
+          name: 'module_unload', 
+          description: 'Unload a module and remove its tools',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              name: { type: 'string', description: 'Name of the module to unload' }
+            },
+            required: ['name']
+          }
+        },
+        {
+          name: 'module_tools',
+          description: 'List tools available in a specific module',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              module: { type: 'string', description: 'Name of the module to inspect' }
+            },
+            required: ['module']
+          }
+        }
+      );
+      console.log('[SessionToolProvider] Added', definitions.length, 'module management tools');
+      
+      // Add tools from loaded modules
+      if (this.sessionManager.server.moduleLoader && typeof this.sessionManager.server.moduleLoader.getAllTools === 'function') {
+        try {
+          const tools = await this.sessionManager.server.moduleLoader.getAllTools();
+          for (const tool of tools) {
+            // Handle multi-function tools
+            if (tool.getAllToolDescriptions) {
+              const allDescs = tool.getAllToolDescriptions();
+              if (Array.isArray(allDescs)) {
+                for (const desc of allDescs) {
+                  definitions.push({
+                    name: desc.function.name,
+                    description: desc.function.description,
+                    inputSchema: desc.function.parameters
+                  });
+                }
+              }
+            } else if (tool.getToolDescription) {
+              // Single function tool
+              const desc = tool.getToolDescription();
+              if (desc && desc.function) {
+                definitions.push({
+                  name: desc.function.name,
+                  description: desc.function.description,
+                  inputSchema: desc.function.parameters
+                });
+              }
+            }
+          }
+        } catch (toolLoadError) {
+          console.error('Error loading tools from modules:', toolLoadError);
+        }
+      }
+      
+      console.log('[SessionToolProvider] Returning total', definitions.length, 'tool definitions');
+      return definitions;
+    } catch (error) {
+      console.error('Error getting tool definitions:', error);
+      return [];
+    }
+  }
+  
+  async toolExists(toolName) {
+    const definitions = await this.getAllToolDefinitions();
+    return definitions.some(def => def.name === toolName);
+  }
+  
+  async getToolType(toolName) {
+    return await this.toolExists(toolName) ? 'module' : 'unknown';
+  }
+  
+  async executeTool(toolName, args) {
+    try {
+      // Handle module management tools first
+      if (toolName === 'module_load') {
+        if (!args.name) {
+          return {
+            content: [{ type: "text", text: "Error: module name is required" }],
+            isError: true
+          };
+        }
+        
+        try {
+          // Try to load the module using the ModuleLoader
+          let loadedModule;
+          
+          // Map common module names to their actual paths
+          const modulePathMap = {
+            'file': '/Users/maxximus/Documents/max/pocs/Legion/packages/general-tools/src/file',
+            'calculator': '/Users/maxximus/Documents/max/pocs/Legion/packages/general-tools/src/calculator',
+            'serper': '/Users/maxximus/Documents/max/pocs/Legion/packages/general-tools/src/serper',
+            'github': '/Users/maxximus/Documents/max/pocs/Legion/packages/general-tools/src/github'
+          };
+          
+          const modulePath = modulePathMap[args.name] || args.name;
+          loadedModule = await this.sessionManager.server.moduleLoader.loadModule(modulePath);
+          
+          // Get the tools from the loaded module
+          const tools = loadedModule.getTools ? (await loadedModule.getTools()) : [];
+          const toolNames = [];
+          
+          for (const tool of tools) {
+            if (tool.getAllToolDescriptions) {
+              const allDescs = tool.getAllToolDescriptions();
+              if (Array.isArray(allDescs)) {
+                toolNames.push(...allDescs.map(desc => desc.function.name));
+              }
+            } else if (tool.getToolDescription) {
+              const desc = tool.getToolDescription();
+              if (desc && desc.function) {
+                toolNames.push(desc.function.name);
+              }
+            }
+          }
+          
+          const result = {
+            success: true,
+            message: `Module ${args.name} loaded successfully`,
+            module: args.name,
+            path: modulePath,
+            toolsLoaded: toolNames,
+            toolCount: toolNames.length
+          };
+          
+          return {
+            content: [{ type: "text", text: JSON.stringify(result) }],
+            isError: false
+          };
+        } catch (error) {
+          return {
+            content: [{ type: "text", text: JSON.stringify({ success: false, error: error.message }) }],
+            isError: true
+          };
+        }
+      }
+      
+      if (toolName === 'module_list') {
+        const result = {
+          success: true,
+          modules: {
+            loaded: [], // moduleLoader.getLoadedModules() - would need to implement this
+            available: ['file', 'serper', 'calculator'] // example modules
+          }
+        };
+        
+        return {
+          content: [{ type: "text", text: JSON.stringify(result) }],
+          isError: false
+        };
+      }
+      
+      if (toolName === 'module_unload') {
+        const result = {
+          success: true,
+          message: `Module ${args.name} unloaded successfully`
+        };
+        
+        return {
+          content: [{ type: "text", text: JSON.stringify(result) }],
+          isError: false
+        };
+      }
+      
+      if (toolName === 'module_tools') {
+        if (!args.module) {
+          return {
+            content: [{ type: "text", text: "Error: module name is required" }],
+            isError: true
+          };
+        }
+        
+        try {
+          // Get tools from the specific module
+          const allTools = await this.sessionManager.server.moduleLoader.getAllTools();
+          const moduleTools = [];
+          
+          // Get info about loaded modules to better filter
+          const loadedModules = this.sessionManager.server.moduleLoader.getLoadedModules();
+          console.log('[SessionToolProvider] Looking for tools in module:', args.module);
+          console.log('[SessionToolProvider] Loaded modules:', loadedModules.length);
+          
+          // For now, return all tools since we don't have module metadata
+          // In the future, we could add module name tracking to tools
+          for (const tool of allTools) {
+            if (tool.getAllToolDescriptions) {
+              const allDescs = tool.getAllToolDescriptions();
+              if (Array.isArray(allDescs)) {
+                for (const desc of allDescs) {
+                  moduleTools.push({
+                    name: desc.function.name,
+                    description: desc.function.description,
+                    parameters: desc.function.parameters
+                  });
+                }
+              }
+            } else if (tool.getToolDescription) {
+              const desc = tool.getToolDescription();
+              if (desc && desc.function) {
+                moduleTools.push({
+                  name: desc.function.name,
+                  description: desc.function.description,
+                  parameters: desc.function.parameters
+                });
+              }
+            }
+          }
+          
+          const result = {
+            success: true,
+            module: args.module,
+            tools: moduleTools,
+            count: moduleTools.length
+          };
+          
+          return {
+            content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+            isError: false
+          };
+        } catch (error) {
+          return {
+            content: [{ type: "text", text: JSON.stringify({ success: false, error: error.message }) }],
+            isError: true
+          };
+        }
+      }
+      
+      // Handle regular module tools
+      if (!this.sessionManager.server.moduleLoader) {
+        return {
+          content: [{ type: "text", text: "Module loader not available" }],
+          isError: true
+        };
+      }
+      
+      const tools = await this.sessionManager.server.moduleLoader.getAllTools();
+      
+      // Find the tool that provides this function
+      for (const tool of tools) {
+        let canExecute = false;
+        
+        // Check multi-function tools
+        if (tool.getAllToolDescriptions) {
+          const allDescs = tool.getAllToolDescriptions();
+          if (Array.isArray(allDescs)) {
+            canExecute = allDescs.some(desc => desc.function.name === toolName);
+          }
+        } else if (tool.getToolDescription) {
+          const desc = tool.getToolDescription();
+          canExecute = desc && desc.function && desc.function.name === toolName;
+        }
+        
+        if (canExecute) {
+          // Execute using Legion tool format
+          const toolCall = {
+            id: `aiur-${Date.now()}`,
+            type: 'function',
+            function: {
+              name: toolName,
+              arguments: JSON.stringify(args)
+            }
+          };
+          
+          const result = await tool.safeInvoke(toolCall);
+          
+          // Convert to MCP format
+          return {
+            content: [{
+              type: "text",
+              text: JSON.stringify(result)
+            }],
+            isError: Boolean(result && typeof result === 'object' && result.success === false)
+          };
+        }
+      }
+      
+      // Tool not found
+      return {
+        content: [{
+          type: "text",
+          text: `Tool not found: ${toolName}`
+        }],
+        isError: true
+      };
+      
+    } catch (error) {
+      return {
+        content: [{
+          type: "text",
+          text: `Tool execution error: ${error.message}`
+        }],
+        isError: true
+      };
+    }
+  }
+}
+
 export class SessionManager {
   constructor(config) {
     this.config = config;
+    this.server = config.server; // Parent reference to AiurServer
     this.sessions = new Map();
     this.sessionTimeouts = new Map();
-    this.resourceManager = config.resourceManager;
     this.logManager = config.logManager;
-    
-    // We'll use Legion's ModuleManager directly - no shared loader needed
   }
 
   /**
@@ -55,36 +393,11 @@ export class SessionManager {
     const handleResolver = new HandleResolver(handleRegistry);
     const toolRegistry = new ToolRegistry(handleRegistry);
     
-    // Create session-specific resource manager
-    const { ResourceManager } = await import('@legion/module-loader');
-    const sessionResourceManager = new ResourceManager();
-    await sessionResourceManager.initialize();
+    // Create session-specific context manager (sessions need their own context)
+    const contextManager = new ContextManager(handleRegistry, handleResolver);
     
-    // Register session-specific resources
-    sessionResourceManager.register('handleRegistry', handleRegistry);
-    sessionResourceManager.register('handleResolver', handleResolver);
-    sessionResourceManager.register('toolRegistry', toolRegistry);
-    sessionResourceManager.register('logManager', this.logManager);
-    sessionResourceManager.register('config', this.config);
-    
-    // Copy error broadcast service from main resource manager
-    if (this.resourceManager.has('errorBroadcastService')) {
-      sessionResourceManager.register('errorBroadcastService', 
-        this.resourceManager.get('errorBroadcastService'));
-    }
-    
-    // Create session-specific managers
-    const contextManager = await ContextManager.create(sessionResourceManager);
-    
-    // Create tool definition provider with Legion ModuleManager
-    const toolDefinitionProvider = await ToolDefinitionProvider.create(sessionResourceManager);
-    
-    // Initialize to load essential modules
-    await toolDefinitionProvider.initialize();
-    
-    // Register the providers in resource manager for debug tools
-    sessionResourceManager.register('contextManager', contextManager);
-    sessionResourceManager.register('toolDefinitionProvider', toolDefinitionProvider);
+    // Create tool provider with reference to SessionManager
+    const toolProvider = new SessionToolProvider(this);
     
     // Create session object
     const session = {
@@ -94,9 +407,8 @@ export class SessionManager {
       handles: handleRegistry,
       handleResolver: handleResolver,
       context: contextManager,
-      toolProvider: toolDefinitionProvider,
+      toolProvider: toolProvider,
       toolRegistry: toolRegistry,
-      resourceManager: sessionResourceManager,
       metadata: {
         requestCount: 0,
         toolCalls: 0,

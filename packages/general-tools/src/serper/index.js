@@ -2,11 +2,11 @@ import { Tool, ToolResult } from '@legion/module-loader';
 import https from 'https';
 
 class Serper extends Tool {
-  constructor() {
+  constructor(config = {}) {
     super();
     this.name = 'google_search';
     this.description = 'Performs Google searches using the Serper API';
-    this.apiKey = null;
+    this.apiKey = config.apiKey || null;
     this.baseUrl = 'https://google.serper.dev/search';
   }
 

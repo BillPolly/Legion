@@ -24,7 +24,12 @@ class RailwayDeployTool extends Tool {
   async execute(input) {
     try {
       const validated = this.inputSchema.parse(input);
-      const provider = this.resourceManager.get('railwayProvider');
+      
+      // Get provider from resourceManager or module's provider
+      let provider;
+      if (this.resourceManager && typeof this.resourceManager.get === 'function') {
+        provider = this.resourceManager.get('railwayProvider');
+      }
       
       if (!provider) {
         throw new Error('Railway provider not initialized');

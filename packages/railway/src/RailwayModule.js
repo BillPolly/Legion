@@ -8,23 +8,40 @@ import RailwayListProjectsTool from './tools/RailwayListProjectsTool.js';
 import RailwayProvider from './providers/RailwayProvider.js';
 
 class RailwayModule extends Module {
-  constructor(resourceManager) {
-    super('railway', resourceManager);
+  constructor(dependencies = {}) {
+    super();
+    this.name = 'railway';
     this.displayName = 'Railway Deployment Module';
     this.description = 'Deploy and manage applications on Railway cloud platform';
-    
-    // Initialize Railway provider
-    const apiKey = this.resourceManager.get('env.RAILWAY_API_KEY') || 
-                   this.resourceManager.get('env.RAILWAY');
+    this.dependencies = dependencies;
+    this.provider = dependencies.railwayProvider;
+    this.resourceManager = dependencies.resourceManager;
+  }
+
+  /**
+   * Static async factory method following the ResourceManager pattern
+   */
+  static async create(resourceManager) {
+    // Get Railway API key from environment
+    const apiKey = resourceManager.get('env.RAILWAY_API_KEY') || 
+                   resourceManager.get('env.RAILWAY_API_TOKEN') ||
+                   resourceManager.get('env.RAILWAY');
     
     if (!apiKey) {
-      throw new Error('Railway API key not found. Set RAILWAY_API_KEY or RAILWAY environment variable.');
+      throw new Error('Railway API key not found. Set RAILWAY_API_KEY, RAILWAY_API_TOKEN, or RAILWAY environment variable.');
     }
     
-    this.provider = new RailwayProvider(apiKey);
+    // Create Railway provider
+    const provider = new RailwayProvider(apiKey);
     
     // Register provider with resource manager for other modules to use
-    this.resourceManager.register('railwayProvider', this.provider);
+    resourceManager.register('railwayProvider', provider);
+    
+    // Create module instance with dependencies
+    return new RailwayModule({
+      railwayProvider: provider,
+      resourceManager: resourceManager
+    });
   }
   
   getTools() {
@@ -41,11 +58,13 @@ class RailwayModule extends Module {
   async initialize() {
     // Verify API key works by making a simple request
     try {
-      const result = await this.provider.getAccountOverview();
-      if (result.success) {
-        console.log(`Railway module initialized for account: ${result.account.email}`);
-      } else {
-        console.warn('Railway API key verification failed:', result.error);
+      if (this.provider && this.provider.getAccountOverview) {
+        const result = await this.provider.getAccountOverview();
+        if (result.success) {
+          console.log(`Railway module initialized for account: ${result.account.email}`);
+        } else {
+          console.warn('Railway API key verification failed:', result.error);
+        }
       }
     } catch (error) {
       console.warn('Railway initialization warning:', error.message);

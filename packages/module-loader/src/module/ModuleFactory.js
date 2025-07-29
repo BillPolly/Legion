@@ -82,12 +82,24 @@ class ModuleFactory {
       
       // Resolve dependencies from ResourceManager
       const resolvedDependencies = {};
-      if (config.dependencies && Array.isArray(config.dependencies)) {
-        config.dependencies.forEach(dep => {
-          // Handle both string and object dependency formats
-          const depName = typeof dep === 'string' ? dep : dep.name;
-          resolvedDependencies[depName] = this.resourceManager.get(depName);
-        });
+      if (config.dependencies) {
+        // Handle object format (new style)
+        if (typeof config.dependencies === 'object' && !Array.isArray(config.dependencies)) {
+          Object.keys(config.dependencies).forEach(depName => {
+            // Get environment variable - no fallback, must exist as env.DEPNAME
+            const value = this.resourceManager.get(`env.${depName}`);
+            resolvedDependencies[depName] = value;
+          });
+        }
+        // Handle array format (old style) 
+        else if (Array.isArray(config.dependencies)) {
+          config.dependencies.forEach(dep => {
+            const depName = typeof dep === 'string' ? dep : dep.name;
+            // Get environment variable - no fallback, must exist as env.DEPNAME
+            const value = this.resourceManager.get(`env.${depName}`);
+            resolvedDependencies[depName] = value;
+          });
+        }
       }
       
       // Create and return the GenericModule

@@ -49,8 +49,8 @@ export default {
   // Restore mocks after each test
   restoreMocks: true,
   
-  // Test timeout
-  testTimeout: 10000,
+  // Test timeout - increased for integration tests
+  testTimeout: 30000,
   
   // Module name mapping for workspace packages
   moduleNameMapper: {

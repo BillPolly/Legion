@@ -11,11 +11,10 @@ import { createServer } from 'http';
 import { SessionManager } from './SessionManager.js';
 import { RequestHandler } from './RequestHandler.js';
 import { WebSocketHandler } from './WebSocketHandler.js';
-import { ResourceManager } from '@legion/module-loader';
+// ResourceManager only used internally by ModuleLoader
 import { LogManager } from '../core/LogManager.js';
-import { ErrorBroadcastService } from '../core/ErrorBroadcastService.js';
-import { Codec } from '../../../shared/codec/src/index.js';
-import { createAiurSchemaRegistry, AIUR_SCHEMAS } from '../schemas/aiur-protocol.js';
+// Removed complex ErrorBroadcastService - just use simple logging
+// Removed complex codec system - just use simple JSON
 
 export class AiurServer {
   constructor(config = {}) {
@@ -36,13 +35,8 @@ export class AiurServer {
     this.sessionManager = null;
     this.requestHandler = null;
     this.wsHandler = null;
-    this.resourceManager = null;
+    this.moduleLoader = null;
     this.logManager = null;
-    this.errorBroadcastService = null;
-    
-    // Codec system
-    this.codec = null;
-    this.schemaRegistry = null;
     
     // Server state
     this.isRunning = false;
@@ -63,11 +57,13 @@ export class AiurServer {
       // Setup HTTP server
       this._setupHttpServer();
       
-      // Setup WebSocket server
-      this._setupWebSocketServer();
+      // Setup main Aiur WebSocket server (for MCP protocol)
+      this._setupAiurWebSocketServer();
       
-      // Start listening
+      // Start main server listening
       await this._startListening();
+      
+      // Web Debug Server not needed - UI connects directly to main server
       
       this.isRunning = true;
       
@@ -114,81 +110,34 @@ export class AiurServer {
    * @private
    */
   async _initializeSystems() {
-    // Create ResourceManager for dependency injection
-    this.resourceManager = new ResourceManager();
-    await this.resourceManager.initialize();
+    // Create simple ModuleLoader (ResourceManager ONLY for module loading!)
+    const { ModuleLoader } = await import('@legion/module-loader');
+    this.moduleLoader = new ModuleLoader(); // Creates its own ResourceManager internally
+    await this.moduleLoader.initialize();
     
-    // Register shared resources
-    this.resourceManager.register('config', this.config);
-    this.resourceManager.register('logManager', this.logManager);
-    
-    // Create ErrorBroadcastService
-    this.errorBroadcastService = await ErrorBroadcastService.create(this.resourceManager);
-    this.errorBroadcastService.setLogManager(this.logManager);
-    this.resourceManager.register('errorBroadcastService', this.errorBroadcastService);
-    
-    // Create SessionManager
+    // Create SessionManager with parent reference
     this.sessionManager = new SessionManager({
+      server: this,  // Parent reference for accessing server resources
       sessionTimeout: this.config.sessionTimeout,
-      resourceManager: this.resourceManager,
       logManager: this.logManager
     });
     await this.sessionManager.initialize();
     
-    // Create RequestHandler
+    // Create RequestHandler (simple)
     this.requestHandler = new RequestHandler({
       sessionManager: this.sessionManager,
-      resourceManager: this.resourceManager,
       logManager: this.logManager
     });
     await this.requestHandler.initialize();
     
-    // Initialize codec system
-    await this._initializeCodec();
-    
-    // Register RequestHandler for WebDebugServer to access
-    this.resourceManager.register('requestHandler', this.requestHandler);
-    
-    // Create WebSocketHandler
+    // Create WebSocketHandler (simple)
     this.wsHandler = new WebSocketHandler({
       sessionManager: this.sessionManager,
       requestHandler: this.requestHandler,
-      logManager: this.logManager,
-      codec: this.codec
+      logManager: this.logManager
     });
     
-    // Register SessionManager for WebDebugServer
-    this.resourceManager.register('sessionManager', this.sessionManager);
-    
-    // Create and start WebDebugServer
-    try {
-      const { WebDebugServer } = await import('../debug/WebDebugServer.js');
-      this.webDebugServer = await WebDebugServer.create(this.resourceManager);
-      
-      // Start the debug server automatically
-      const debugServerInfo = await this.webDebugServer.start({
-        port: this.config.debugPort || 3001,
-        host: this.config.host || 'localhost',
-        openBrowser: false
-      });
-      
-      await this.logManager.logInfo('WebDebugServer started', {
-        source: 'AiurServer',
-        operation: 'debug-server-start',
-        url: debugServerInfo.url,
-        port: debugServerInfo.port
-      });
-      
-      // Register in resource manager for other components
-      this.resourceManager.register('webDebugServer', this.webDebugServer);
-    } catch (error) {
-      // Log but don't fail startup if debug server fails
-      await this.logManager.logError(error, {
-        source: 'AiurServer',
-        operation: 'debug-server-start-error',
-        severity: 'warning'
-      });
-    }
+    // Web Debug Server will be started separately in _startWebDebugServer()
     
     await this.logManager.logInfo('Core systems initialized', {
       source: 'AiurServer',
@@ -196,44 +145,7 @@ export class AiurServer {
     });
   }
 
-  /**
-   * Initialize codec system for message validation
-   * @private
-   */
-  async _initializeCodec() {
-    try {
-      // Create schema registry and register Aiur schemas
-      this.schemaRegistry = await createAiurSchemaRegistry();
-      
-      // Create codec instance
-      this.codec = new Codec({
-        strictValidation: true,
-        injectMetadata: true
-      });
-      
-      // Register all Aiur protocol schemas
-      for (const schema of AIUR_SCHEMAS) {
-        this.codec.registerSchema(schema);
-      }
-      
-      // Register codec in resource manager
-      this.resourceManager.register('codec', this.codec);
-      this.resourceManager.register('schemaRegistry', this.schemaRegistry);
-      
-      await this.logManager.logInfo('Codec system initialized', {
-        source: 'AiurServer',
-        operation: 'codec-init',
-        registeredSchemas: this.codec.getMessageTypes()
-      });
-      
-    } catch (error) {
-      await this.logManager.logError(error, {
-        source: 'AiurServer',
-        operation: 'codec-init-error'
-      });
-      throw error;
-    }
-  }
+  // Removed complex codec system - just use simple JSON
 
   /**
    * Setup HTTP server
@@ -280,10 +192,10 @@ export class AiurServer {
   }
 
   /**
-   * Setup WebSocket server
+   * Setup main Aiur WebSocket server (for MCP protocol - sessions, tools, context)
    * @private
    */
-  _setupWebSocketServer() {
+  _setupAiurWebSocketServer() {
     this.wss = new WebSocketServer({ 
       server: this.server,
       path: '/ws'
@@ -326,91 +238,110 @@ export class AiurServer {
       await this._handleDisconnection(ws, clientId);
     });
     
-    // Send welcome message with codec information
+    // Send simple welcome message
     const welcomeData = {
       type: 'welcome',
       clientId,
       serverVersion: '1.0.0',
-      capabilities: ['sessions', 'tools', 'context', 'handles'],
-      codecSupported: true,
-      schemaVersion: '1.0.0',
-      supportedSchemas: this.codec.getMessageTypes()
+      capabilities: ['sessions', 'tools', 'context', 'handles']
     };
     
-    // Use codec to encode welcome message if available
-    const welcomeResult = this.codec.encode('aiur_welcome', welcomeData);
-    if (welcomeResult.success) {
-      ws.send(welcomeResult.encoded);
+    ws.send(JSON.stringify(welcomeData));
+    
+    await this.logManager.logInfo('Welcome message sent', {
+      source: 'AiurServer',
+      operation: 'welcome-sent',
+      clientId
+    });
+  }
+
+  /**
+   * Start separate Web Debug Server (for browser UI with module_load tools)
+   * @private
+   */
+  async _startWebDebugServer() {
+    try {
+      // Create simple WebDebugServer for browser UI
+      const { WebDebugServer } = await import('../debug/WebDebugServer.js');
       
-      await this.logManager.logInfo('Welcome message sent with codec', {
-        source: 'AiurServer',
-        operation: 'welcome-sent',
-        clientId,
-        codecEnabled: true,
-        supportedSchemas: welcomeData.supportedSchemas.length
+      // Create a simple tool provider that includes module management tools
+      const webToolProvider = {
+        async getAllToolDefinitions() {
+          return [
+            {
+              name: 'module_list',
+              description: 'List available and loaded modules',
+              inputSchema: {
+                type: 'object',
+                properties: {
+                  filter: { type: 'string', description: 'Filter modules by name' }
+                }
+              }
+            },
+            {
+              name: 'module_load',
+              description: 'Load a module to make its tools available',
+              inputSchema: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string', description: 'Name of the module to load' }
+                },
+                required: ['name']
+              }
+            },
+            {
+              name: 'module_unload', 
+              description: 'Unload a module and remove its tools',
+              inputSchema: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string', description: 'Name of the module to unload' }
+                },
+                required: ['name']
+              }
+            }
+          ];
+        }
+      };
+      
+      // Create with the web-specific tool provider
+      this.webDebugServer = new WebDebugServer(
+        null, // contextManager - not needed for UI
+        webToolProvider, // toolDefinitionProvider - provides module tools
+        null  // monitoringSystem - not needed
+      );
+      
+      // Inject the components it needs
+      this.webDebugServer.sessionManager = this.sessionManager;
+      this.webDebugServer.logManager = this.logManager;
+      this.webDebugServer.moduleLoader = this.moduleLoader; // Give it access to load modules
+      
+      // Start on separate port for browser UI
+      const debugServerInfo = await this.webDebugServer.start({
+        port: this.config.debugPort || 3001,
+        host: this.config.host || 'localhost',
+        openBrowser: false
       });
-    } else {
-      // Fallback to plain JSON if codec fails
-      ws.send(JSON.stringify(welcomeData));
       
-      await this.logManager.logWarning('Welcome message sent without codec validation', {
+      await this.logManager.logInfo('Web Debug Server started for browser UI', {
         source: 'AiurServer',
-        operation: 'welcome-sent-fallback',
-        clientId,
-        codecError: welcomeResult.error
+        operation: 'web-debug-server-start',
+        url: debugServerInfo.url,
+        port: debugServerInfo.port,
+        purpose: 'browser-ui-with-module-tools'
+      });
+      
+    } catch (error) {
+      // Log but don't fail startup if debug server fails
+      await this.logManager.logError(error, {
+        source: 'AiurServer',
+        operation: 'web-debug-server-start-error',
+        severity: 'warning'
       });
     }
   }
 
-  /**
-   * Handle schema request from client
-   * @param {WebSocket} ws - WebSocket connection
-   * @param {object} message - Schema request message
-   * @private
-   */
-  async _handleSchemaRequest(ws, message) {
-    try {
-      // Create schema definition message
-      const schemaDefinition = this.codec.createSchemaDefinitionMessage();
-      
-      // Encode the response
-      const response = this.codec.encode('schema_definition', schemaDefinition);
-      
-      if (response.success) {
-        ws.send(response.encoded);
-        
-        await this.logManager.logInfo('Schema definition sent', {
-          source: 'AiurServer',
-          operation: 'schema-sent',
-          requestId: message.requestId,
-          schemaCount: Object.keys(schemaDefinition.schemas).length
-        });
-      } else {
-        // Send error response
-        const errorMessage = this.codec.createErrorMessage(
-          'SCHEMA_ERROR',
-          'Failed to create schema definition',
-          { originalError: response.error }
-        );
-        
-        const errorEncoded = JSON.stringify(errorMessage);
-        ws.send(errorEncoded);
-        
-        await this.logManager.logError('Failed to send schema definition', {
-          source: 'AiurServer',
-          operation: 'schema-send-error',
-          requestId: message.requestId,
-          error: response.error
-        });
-      }
-    } catch (error) {
-      await this.logManager.logError(error, {
-        source: 'AiurServer',
-        operation: 'schema-request-error',
-        requestId: message.requestId
-      });
-    }
-  }
+  // Removed schema request handler - using simple JSON
 
   /**
    * Handle client disconnection
@@ -476,19 +407,13 @@ export class AiurServer {
     // Stop accepting new connections
     this.server.close();
     
-    // Stop WebDebugServer
+    // Stop Web Debug Server (browser UI)
     if (this.webDebugServer) {
       await this.webDebugServer.stop();
     }
     
     // Clean up sessions
     await this.sessionManager.shutdown();
-    
-    // Clean up error broadcast service
-    if (this.errorBroadcastService) {
-      // ErrorBroadcastService extends EventEmitter, so remove all listeners
-      this.errorBroadcastService.removeAllListeners();
-    }
     
     // Shutdown logging
     await this.logManager.shutdown();

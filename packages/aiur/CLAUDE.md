@@ -1,5 +1,48 @@
 # CLAUDE.md - Aiur Architecture Guide
 
+## CRITICAL: Module Loading and API Key Rules
+
+**NEVER MANUALLY HANDLE API KEYS OR CREATE MULTIPLE MODULE MANAGERS!**
+
+### Module Loading Flow (Sacred Rules)
+
+1. **Environment Variables**
+   - `.env` file in Legion root contains: `SERPER_API_KEY=abc123`
+   - ResourceManager automatically loads `.env` and stores as: `SERPER_API_KEY` (raw key name)
+   - **NEVER manually register API keys with `resourceManager.register()`**
+
+2. **Module Definition (module.json)**
+   ```json
+   {
+     "dependencies": {
+       "SERPER_API_KEY": { "type": "string", "description": "..." }
+     },
+     "initialization": {
+       "config": { "apiKey": "${SERPER_API_KEY}" }
+     }
+   }
+   ```
+
+3. **Automatic Flow (DO NOT INTERFERE)**
+   - Single ModuleManager created ONCE in Aiur server startup
+   - ModuleFactory reads module.json dependencies
+   - For `SERPER_API_KEY`, calls `resourceManager.get('SERPER_API_KEY')`
+   - Config resolution: `${SERPER_API_KEY}` → actual API key value
+   - Module constructor receives `config.apiKey` with the key
+   - Tool instance can make authenticated API calls
+
+4. **Forbidden Actions**
+   - ❌ NEVER manually register API keys anywhere
+   - ❌ NEVER create multiple ModuleManager instances
+   - ❌ NEVER bypass ModuleFactory dependency resolution
+   - ❌ NEVER touch or handle API keys in code
+
+5. **Required Error Handling**
+   - ResourceManager MUST throw if .env not found
+   - ModuleFactory MUST throw if required dependency not found
+   - Module MUST throw if required config missing
+   - All failures must be explicit errors, NOT silent failures
+
 ## CRITICAL: Understanding Aiur's Architecture
 
 **AIUR IS NOT AN MCP SERVER!** This is a crucial distinction that must be understood:

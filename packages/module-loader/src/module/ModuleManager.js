@@ -285,7 +285,17 @@ export class ModuleManager extends EventEmitter {
             
             // Extract tools if getTools method exists
             if (typeof tempInstance.getTools === 'function') {
-              const tools = tempInstance.getTools();
+              const toolsResult = tempInstance.getTools();
+              // Handle both synchronous arrays and async promises
+              const tools = toolsResult && typeof toolsResult.then === 'function' 
+                ? await toolsResult 
+                : toolsResult;
+              
+              // Validate that getTools() returns an array
+              if (!Array.isArray(tools)) {
+                throw new Error(`Module ${moduleInfo.name} getTools() must return an array, got ${typeof tools}`);
+              }
+              
               toolsInfo = [];
             
             // Extract individual functions from each tool
@@ -662,14 +672,24 @@ export class ModuleManager extends EventEmitter {
   /**
    * Get cached tool information for a module (loaded or not)
    * @param {string} moduleName - Module name
-   * @returns {Array} Array of tool information
+   * @returns {Promise<Array>} Array of tool information
    */
-  getModuleTools(moduleName) {
+  async getModuleTools(moduleName) {
     // First check if module is loaded and get fresh tools
     const registered = this.registry.get(moduleName);
     if (registered && registered.instance?.getTools) {
       try {
-        const tools = registered.instance.getTools();
+        const toolsResult = registered.instance.getTools();
+        // Handle both synchronous arrays and async promises
+        const tools = toolsResult && typeof toolsResult.then === 'function' 
+          ? await toolsResult 
+          : toolsResult;
+        
+        // Validate that getTools() returns an array
+        if (!Array.isArray(tools)) {
+          throw new Error(`Module ${moduleName} getTools() must return an array, got ${typeof tools}`);
+        }
+        
         const expandedTools = [];
         
         tools.forEach(tool => {

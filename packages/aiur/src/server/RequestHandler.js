@@ -7,7 +7,6 @@
 export class RequestHandler {
   constructor(config) {
     this.sessionManager = config.sessionManager;
-    this.resourceManager = config.resourceManager;
     this.logManager = config.logManager;
   }
 
@@ -86,7 +85,7 @@ export class RequestHandler {
       await this.ensureDebugTools(session);
       
       // Get all tool definitions from the session's provider
-      const tools = session.toolProvider.getAllToolDefinitions();
+      const tools = await session.toolProvider.getAllToolDefinitions();
       
       await this.logManager.logInfo('Listed tools for session', {
         source: 'RequestHandler',
@@ -127,7 +126,7 @@ export class RequestHandler {
       await this.ensureDebugTools(session);
       
       // Check if tool exists
-      if (!session.toolProvider.toolExists(name)) {
+      if (!await session.toolProvider.toolExists(name)) {
         throw new Error(`Unknown tool: ${name}`);
       }
       

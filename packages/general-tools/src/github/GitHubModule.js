@@ -23,11 +23,9 @@ class GitHubModule extends Module {
     // Store configuration for tools
     const config = { token, org, user, apiBase };
 
-    // Create tools with configuration
-    this.tools = [
-      new GitHub(config),
-      new PolyRepoManager(config)
-    ];
+    // Create and register tools using the parent class method
+    this.registerTool('github', new GitHub(config));
+    this.registerTool('polyrepo', new PolyRepoManager(config));
   }
 
 }
