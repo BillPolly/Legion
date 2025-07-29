@@ -1,0 +1,37 @@
+{
+  "name": "@legion/aiur-mcp-bridge",
+  "version": "1.0.0",
+  "description": "stdio MCP bridge for connecting to Aiur WebSocket server",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "aiur-mcp": "./src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.16.0",
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "mcp",
+    "aiur",
+    "bridge",
+    "stdio",
+    "websocket",
+    "ai",
+    "claude"
+  ],
+  "author": "Legion Team",
+  "license": "MIT"
+}

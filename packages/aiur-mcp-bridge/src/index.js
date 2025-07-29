@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 
 /**
- * Aiur MCP Stub - Auto-launching Client with Proper Initialization
+ * Aiur MCP Bridge - stdio MCP server that connects to Aiur WebSocket server
  * 
- * Based on the working oldIndex.js but routes through WebSocket to backend.
- * Maintains proper LogManager initialization and MCP protocol handling.
+ * This bridge allows MCP clients (like Claude) to connect to the Aiur server
+ * via the Model Context Protocol over stdio. It translates between MCP and
+ * Aiur's WebSocket protocol.
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
