@@ -9,6 +9,7 @@ import { Module, Tool, ToolResult } from '@legion/module-loader';
 import { wrapTool } from '../../src/ToolWrapper.js';
 import { JestAgentWrapper } from './core/JestAgentWrapper.js';
 import { AgentTDDHelper } from './agents/AgentTDDHelper.js';
+import { GenerateTestReportTool } from './tools/GenerateTestReportTool.js';
 import { z } from 'zod';
 
 /**
@@ -433,7 +434,8 @@ export class JesterModule extends Module {
       wrapTool(new GetTestHistoryTool(this.jestWrapper)),
       wrapTool(new SearchLogsTool(this.jestWrapper)),
       wrapTool(new GetSlowestTestsTool(this.jestWrapper)),
-      wrapTool(new GetCommonErrorsTool(this.jestWrapper))
+      wrapTool(new GetCommonErrorsTool(this.jestWrapper)),
+      wrapTool(new GenerateTestReportTool(this.jestWrapper))
     ];
   }
 
@@ -471,7 +473,8 @@ export class JesterModule extends Module {
         'Performance monitoring',
         'Historical test tracking',
         'Error pattern analysis',
-        'Log searching and analytics'
+        'Log searching and analytics',
+        'Markdown test report generation'
       ]
     };
   }
