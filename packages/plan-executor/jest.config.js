@@ -15,5 +15,9 @@ export default {
   coverageReporters: ['text', 'lcov', 'html'],
   testMatch: [
     '**/__tests__/**/*.test.js'
+  ],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/__tests__/tmp/'
   ]
 };

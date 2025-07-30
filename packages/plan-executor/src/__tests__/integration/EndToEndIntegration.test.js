@@ -23,8 +23,8 @@ describe('End-to-End Integration', () => {
     module = new PlanExecutorModule({ resourceManager: mockResourceManager, moduleFactory: mockModuleFactory });
     tool = module.getTools()[0];
 
-    // Mock the module loader to not do real loading
-    module.executor.moduleLoader.loadModulesForPlan = jest.fn().mockResolvedValue();
+    // Mock the plan tool registry to not do real loading
+    module.executor.planToolRegistry.loadModulesForPlan = jest.fn().mockResolvedValue();
   });
 
   describe('simple plan execution', () => {
@@ -52,7 +52,7 @@ describe('End-to-End Integration', () => {
         }
       };
 
-      module.executor.moduleLoader.getTool = jest.fn().mockImplementation((toolName) => {
+      module.executor.planToolRegistry.getTool = jest.fn().mockImplementation((toolName) => {
         return mockTools[toolName] || { execute: jest.fn().mockResolvedValue({ success: true }) };
       });
 
@@ -124,7 +124,7 @@ describe('End-to-End Integration', () => {
         })
       };
 
-      module.executor.moduleLoader.getTool = jest.fn().mockReturnValue(dependencyTool);
+      module.executor.planToolRegistry.getTool = jest.fn().mockReturnValue(dependencyTool);
 
       const plan = {
         id: 'dependency-plan',
@@ -184,7 +184,7 @@ describe('End-to-End Integration', () => {
         })
       };
 
-      module.executor.moduleLoader.getTool = jest.fn().mockReturnValue(complexTool);
+      module.executor.planToolRegistry.getTool = jest.fn().mockReturnValue(complexTool);
 
       const plan = {
         id: 'complex-hierarchy',
@@ -285,7 +285,7 @@ describe('End-to-End Integration', () => {
         }
       };
 
-      module.executor.moduleLoader.getTool = jest.fn().mockImplementation((toolName) => {
+      module.executor.planToolRegistry.getTool = jest.fn().mockImplementation((toolName) => {
         return mockTools[toolName] || mockTools.success_tool;
       });
 
@@ -331,7 +331,7 @@ describe('End-to-End Integration', () => {
         execute: jest.fn().mockRejectedValue(specificError)
       };
 
-      module.executor.moduleLoader.getTool = jest.fn().mockReturnValue(errorTool);
+      module.executor.planToolRegistry.getTool = jest.fn().mockReturnValue(errorTool);
 
       const plan = {
         id: 'error-details-plan',
@@ -368,7 +368,7 @@ describe('End-to-End Integration', () => {
         })
       };
 
-      module.executor.moduleLoader.getTool = jest.fn().mockReturnValue(mixedTool);
+      module.executor.planToolRegistry.getTool = jest.fn().mockReturnValue(mixedTool);
 
       const plan = {
         id: 'mixed-results-plan',
@@ -426,7 +426,7 @@ describe('End-to-End Integration', () => {
         execute: jest.fn().mockResolvedValue({ success: true, result: 'tool result' })
       };
 
-      module.executor.moduleLoader.getTool = jest.fn().mockReturnValue(eventTool);
+      module.executor.planToolRegistry.getTool = jest.fn().mockReturnValue(eventTool);
 
       const plan = {
         id: 'event-stream-plan',
@@ -510,7 +510,7 @@ describe('End-to-End Integration', () => {
         })
       };
 
-      module.executor.moduleLoader.getTool = jest.fn().mockReturnValue(timingTool);
+      module.executor.planToolRegistry.getTool = jest.fn().mockReturnValue(timingTool);
 
       const plan = {
         id: 'timing-plan',
@@ -563,8 +563,8 @@ describe('End-to-End Integration', () => {
     it('should handle dependency injection correctly', () => {
       expect(module.resourceManager).toBe(mockResourceManager);
       expect(module.moduleFactory).toBe(mockModuleFactory);
-      expect(module.executor.moduleFactory).toBe(mockModuleFactory);
-      expect(module.executor.resourceManager).toBe(mockResourceManager);
+      expect(module.planToolRegistry).toBeDefined();
+      expect(module.executor.planToolRegistry).toBeDefined();
     });
 
     it('should work as standalone executor', async () => {
@@ -575,7 +575,7 @@ describe('End-to-End Integration', () => {
         execute: jest.fn().mockResolvedValue({ success: true, result: 'standalone result' })
       };
 
-      standaloneExecutor.moduleLoader.getTool = jest.fn().mockReturnValue(simpleTool);
+      standaloneExecutor.planToolRegistry.getTool = jest.fn().mockReturnValue(simpleTool);
 
       const plan = {
         id: 'standalone-plan',

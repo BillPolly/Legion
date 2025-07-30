@@ -21,6 +21,14 @@ class PlanAction {
     this.definedInputs = Array.isArray(actionDef.inputs) ? [...actionDef.inputs] : [];
     this.definedOutputs = Array.isArray(actionDef.outputs) ? [...actionDef.outputs] : [];
     
+    // Preserve tool and function mapping if present (needed for execution)
+    if (actionDef.tool) {
+      this.tool = actionDef.tool;
+    }
+    if (actionDef.function) {
+      this.function = actionDef.function;
+    }
+    
     // Instance-specific properties
     this.id = parameters.id || this._generateId();
     this.parameters = { ...parameters };
@@ -114,7 +122,7 @@ class PlanAction {
    * @returns {Object} JSON representation
    */
   toJSON() {
-    return {
+    const json = {
       id: this.id,
       type: this.type,
       inputs: this.definedInputs,
@@ -125,6 +133,16 @@ class PlanAction {
       description: this.description,
       estimatedDuration: this.estimatedDuration
     };
+    
+    // Include tool and function if present
+    if (this.tool) {
+      json.tool = this.tool;
+    }
+    if (this.function) {
+      json.function = this.function;
+    }
+    
+    return json;
   }
 
   /**
@@ -140,7 +158,16 @@ class PlanAction {
       throw new Error(`Unknown action type: ${json.type}`);
     }
 
-    const action = new PlanAction(actionDef, json.parameters);
+    // Merge json tool/function into actionDef if not already present
+    const mergedActionDef = { ...actionDef };
+    if (json.tool && !mergedActionDef.tool) {
+      mergedActionDef.tool = json.tool;
+    }
+    if (json.function && !mergedActionDef.function) {
+      mergedActionDef.function = json.function;
+    }
+    
+    const action = new PlanAction(mergedActionDef, json.parameters);
     action.id = json.id;
     action.status = json.status || 'pending';
     action.result = json.result || null;

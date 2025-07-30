@@ -25,8 +25,8 @@ describe('Plan Format Handling', () => {
     });
 
     // Mock moduleLoader methods
-    executor.moduleLoader.loadModulesForPlan = jest.fn().mockResolvedValue();
-    executor.moduleLoader.getTool = jest.fn().mockReturnValue({
+    executor.planToolRegistry.loadModulesForPlan = jest.fn().mockResolvedValue();
+    executor.planToolRegistry.getTool = jest.fn().mockReturnValue({
       execute: jest.fn().mockResolvedValue({ success: true, result: 'mock result' })
     });
   });
@@ -88,7 +88,7 @@ describe('Plan Format Handling', () => {
   describe('hierarchical step execution', () => {
     it('should execute nested steps in correct order', async () => {
       const executionOrder = [];
-      executor.moduleLoader.getTool = jest.fn().mockReturnValue({
+      executor.planToolRegistry.getTool = jest.fn().mockReturnValue({
         execute: jest.fn().mockImplementation((params) => {
           executionOrder.push(params.stepId || 'unknown');
           return Promise.resolve({ success: true, result: 'mock result' });
@@ -205,7 +205,7 @@ describe('Plan Format Handling', () => {
   describe('context-aware action extraction', () => {
     it('should extract actions from all step levels', async () => {
       const actionsCalled = [];
-      executor.moduleLoader.getTool = jest.fn().mockImplementation((toolName) => ({
+      executor.planToolRegistry.getTool = jest.fn().mockImplementation((toolName) => ({
         execute: jest.fn().mockImplementation((params) => {
           actionsCalled.push({ tool: toolName, params });
           return Promise.resolve({ success: true, result: `${toolName} result` });
@@ -246,7 +246,7 @@ describe('Plan Format Handling', () => {
 
     it('should handle multiple actions per step', async () => {
       const actionsCalled = [];
-      executor.moduleLoader.getTool = jest.fn().mockImplementation((toolName) => ({
+      executor.planToolRegistry.getTool = jest.fn().mockImplementation((toolName) => ({
         execute: jest.fn().mockImplementation(() => {
           actionsCalled.push(toolName);
           return Promise.resolve({ success: true, result: 'result' });
@@ -310,7 +310,7 @@ describe('Plan Format Handling', () => {
 
       // Mock variable handling in tools
       let context;
-      executor.moduleLoader.getTool = jest.fn().mockImplementation((toolName) => ({
+      executor.planToolRegistry.getTool = jest.fn().mockImplementation((toolName) => ({
         execute: jest.fn().mockImplementation((params) => {
           if (toolName === 'set_var_tool') {
             // This would be handled by the executor's context

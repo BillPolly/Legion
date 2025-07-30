@@ -17,6 +17,7 @@ export class ModuleLoader {
     this.resourceManager = resourceManager || new ResourceManager();
     this.moduleFactory = new ModuleFactory(this.resourceManager);
     this.loadedModules = new Map();
+    this.toolRegistry = new Map(); // Tool name -> Tool instance mapping
   }
 
   /**
@@ -45,6 +46,9 @@ export class ModuleLoader {
     // Store it
     this.loadedModules.set(modulePath, module);
     
+    // Register tools from the module
+    await this._registerModuleTools(module);
+    
     return module;
   }
 
@@ -64,6 +68,9 @@ export class ModuleLoader {
     
     // Store it
     this.loadedModules.set(jsonPath, module);
+    
+    // Register tools from the module
+    await this._registerModuleTools(module);
     
     return module;
   }
@@ -101,10 +108,93 @@ export class ModuleLoader {
   }
 
   /**
-   * Clear all loaded modules
+   * Get a specific tool by name
+   * @param {string} toolName - Name of the tool to get
+   * @returns {Object|null} Tool instance or null if not found
+   */
+  getTool(toolName) {
+    return this.toolRegistry.get(toolName) || null;
+  }
+
+  /**
+   * Get multiple tools by name
+   * @param {Array<string>} toolNames - Array of tool names to get
+   * @returns {Promise<Array>} Array of tool instances (null for not found)
+   */
+  async getToolsByName(toolNames) {
+    return toolNames.map(name => this.getTool(name));
+  }
+
+  /**
+   * Get all tool names currently registered
+   * @returns {Array<string>} Array of tool names
+   */
+  getToolNames() {
+    return Array.from(this.toolRegistry.keys());
+  }
+
+  /**
+   * Check if a tool is registered
+   * @param {string} toolName - Name of the tool to check
+   * @returns {boolean} True if tool is registered
+   */
+  hasTool(toolName) {
+    return this.toolRegistry.has(toolName);
+  }
+
+  /**
+   * Load a module by name from a known module (used by other packages)
+   * @param {string} moduleName - Name/identifier of the module
+   * @param {Function} ModuleClass - Module class to instantiate
+   * @returns {Promise<Object>} Loaded module instance
+   */
+  async loadModuleByName(moduleName, ModuleClass) {
+    // Check if already loaded
+    if (this.loadedModules.has(moduleName)) {
+      return this.loadedModules.get(moduleName);
+    }
+
+    // Use ModuleFactory to create the module
+    const module = this.moduleFactory.createModule(ModuleClass);
+    
+    // Store it
+    this.loadedModules.set(moduleName, module);
+    
+    // Register tools from the module
+    await this._registerModuleTools(module);
+    
+    return module;
+  }
+
+  /**
+   * Register tools from a module into the tool registry
+   * @private
+   * @param {Object} module - Module instance
+   */
+  async _registerModuleTools(module) {
+    if (module.getTools && typeof module.getTools === 'function') {
+      const toolsResult = module.getTools();
+      // Handle both sync and async getTools
+      const tools = toolsResult && typeof toolsResult.then === 'function' 
+        ? await toolsResult 
+        : toolsResult;
+      
+      if (Array.isArray(tools)) {
+        for (const tool of tools) {
+          if (tool && tool.name) {
+            this.toolRegistry.set(tool.name, tool);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Clear all loaded modules and tools
    */
   clear() {
     this.loadedModules.clear();
+    this.toolRegistry.clear();
   }
 }
 

@@ -119,59 +119,62 @@ class CommandExecutor extends Tool {
    * Executes a bash command
    */
   async executeCommand(command, timeout = 30000) {
-    try {
+    return new Promise((resolve) => {
       console.log(`Executing command: ${command}`);
       
       // Security check for dangerous commands
       if (command.includes('rm -rf /') || command.includes('dd if=/dev/zero')) {
         console.warn('WARNING: Potentially dangerous command detected');
-        return ToolResult.failure(
+        resolve(ToolResult.failure(
           'Command blocked for safety reasons',
           {
             command: command,
             errorType: 'dangerous_command'
           }
-        );
+        ));
+        return;
       }
       
-      // Execute the command with timeout
-      const { stdout, stderr } = await execAsync(command, {
+      // Use exec with callback to get exit code
+      exec(command, {
         timeout: timeout,
         maxBuffer: 1024 * 1024 * 10, // 10MB buffer
         shell: '/bin/bash'
+      }, (error, stdout, stderr) => {
+        if (error) {
+          let errorType = 'execution_error';
+          let errorMessage = `Failed to execute command: ${error.message}`;
+          let data = {
+            command: command,
+            errorType: errorType
+          };
+          
+          if (error.killed && error.signal === 'SIGTERM') {
+            errorType = 'timeout';
+            errorMessage = `Command timed out after ${timeout}ms`;
+          } else if (error.code !== undefined) {
+            errorType = 'exit_code';
+            errorMessage = `Command failed with exit code ${error.code}`;
+            data.exitCode = error.code;
+            data.stdout = stdout || '';
+            data.stderr = stderr || '';
+          }
+          
+          data.errorType = errorType;
+          
+          resolve(ToolResult.failure(errorMessage, data));
+        } else {
+          console.log('Command executed successfully');
+          
+          resolve(ToolResult.success({
+            stdout: stdout || '',
+            stderr: stderr || '',
+            command: command,
+            exitCode: 0
+          }));
+        }
       });
-      
-      console.log('Command executed successfully');
-      
-      return ToolResult.success({
-        stdout: stdout || '',
-        stderr: stderr || '',
-        command: command,
-        exitCode: 0
-      });
-    } catch (error) {
-      let errorType = 'execution_error';
-      let errorMessage = `Failed to execute command: ${error.message}`;
-      let data = {
-        command: command,
-        errorType: errorType
-      };
-      
-      if (error.killed && error.signal === 'SIGTERM') {
-        errorType = 'timeout';
-        errorMessage = `Command timed out after ${timeout}ms`;
-      } else if (error.code !== undefined) {
-        errorType = 'exit_code';
-        errorMessage = `Command failed with exit code ${error.code}`;
-        data.exitCode = error.code;
-        data.stdout = error.stdout || '';
-        data.stderr = error.stderr || '';
-      }
-      
-      data.errorType = errorType;
-      
-      return ToolResult.failure(errorMessage, data);
-    }
+    });
   }
 
   /**

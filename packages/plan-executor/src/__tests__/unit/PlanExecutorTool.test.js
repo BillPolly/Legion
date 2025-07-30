@@ -117,6 +117,7 @@ describe('PlanExecutorTool', () => {
       
       expect(result).toEqual({
         success: true,
+        status: 'completed',
         completedSteps: ['step1', 'step2'],
         failedSteps: ['step3'],
         skippedSteps: ['step4'],

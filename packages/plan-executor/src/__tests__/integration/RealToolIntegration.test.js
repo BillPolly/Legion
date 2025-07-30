@@ -6,7 +6,7 @@
  */
 
 import { PlanExecutor } from '../../core/PlanExecutor.js';
-import { ModuleLoader } from '../../core/ModuleLoader.js';
+import { PlanToolRegistry } from '../../core/PlanToolRegistry.js';
 import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
@@ -136,10 +136,10 @@ describe('Real Tool Integration Tests', () => {
       resourceManager: mockResourceManager
     });
 
-    // Override module loader to use real file tools
-    executor.moduleLoader = new class extends ModuleLoader {
+    // Override plan tool registry to use real file tools
+    executor.planToolRegistry = new class extends PlanToolRegistry {
       constructor() {
-        super(mockModuleFactory, mockResourceManager);
+        super();
         this.realTools = createRealFileTools();
       }
 
@@ -154,7 +154,7 @@ describe('Real Tool Integration Tests', () => {
         }
         return tool;
       }
-    }(mockModuleFactory, mockResourceManager);
+    }();
   });
 
   afterEach(async () => {

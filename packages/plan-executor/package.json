@@ -15,7 +15,9 @@
   },
   "devDependencies": {
     "jest": "^29.7.0",
-    "@legion/tools": "*"
+    "@legion/tools": "*",
+    "@legion/general-tools": "*",
+    "@legion/node-runner": "*"
   },
   "keywords": [
     "legion",
@@ -28,5 +30,11 @@
   ],
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "directories": {
+    "doc": "docs",
+    "example": "examples"
+  },
+  "author": "",
+  "license": "ISC"
 }

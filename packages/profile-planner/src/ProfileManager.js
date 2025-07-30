@@ -47,6 +47,16 @@ class ProfileManager {
       const files = await fs.readdir(profilesDir);
       const profileFiles = files.filter(file => file.endsWith('.json'));
 
+      // Sort to prioritize verified profiles
+      profileFiles.sort((a, b) => {
+        if (a.includes('-verified') && !b.includes('-verified')) return -1;
+        if (!a.includes('-verified') && b.includes('-verified')) return 1;
+        return a.localeCompare(b);
+      });
+
+      // Track loaded profile names to avoid duplicates
+      const loadedProfiles = new Set();
+
       for (const file of profileFiles) {
         try {
           const profilePath = join(profilesDir, file);
@@ -54,8 +64,15 @@ class ProfileManager {
           const profile = JSON.parse(profileContent);
           
           if (profile && profile.name) {
+            // Skip if we already loaded a verified version
+            if (loadedProfiles.has(profile.name)) {
+              console.log(`Skipping ${file} - already loaded verified version`);
+              continue;
+            }
+            
             await this.registerProfile(profile);
-            console.log(`Loaded profile: ${profile.name}`);
+            loadedProfiles.add(profile.name);
+            console.log(`Loaded profile: ${profile.name}${profile.verified ? ' (verified)' : ''}`);
           } else {
             console.warn(`Profile file ${file} does not contain a valid profile`);
           }
@@ -154,12 +171,22 @@ class ProfileManager {
         outputKeys = Object.keys(action.outputs || {});
       }
       
-      return {
+      const convertedAction = {
         type: action.type,
         description: action.description,
         inputs: inputKeys,
         outputs: outputKeys
       };
+      
+      // Preserve tool and function fields if present (needed for execution)
+      if (action.tool) {
+        convertedAction.tool = action.tool;
+      }
+      if (action.function) {
+        convertedAction.function = action.function;
+      }
+      
+      return convertedAction;
     });
 
     const context = {

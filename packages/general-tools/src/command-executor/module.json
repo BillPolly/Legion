@@ -11,7 +11,7 @@
   },
   "tools": [
     {
-      "name": "command_execute",
+      "name": "command_executor",
       "description": "Execute a bash command in the terminal and return the output",
       "function": "execute",
       "instanceMethod": true,

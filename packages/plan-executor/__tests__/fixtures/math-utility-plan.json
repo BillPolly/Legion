@@ -1,0 +1,200 @@
+{
+  "id": "plan-mdp1ivcg-3o3aa6ddy",
+  "name": "Math Utility Module Project",
+  "description": "Create and test a simple math utility module with add and subtract functions",
+  "version": "1.0.0",
+  "metadata": {
+    "createdAt": "2025-07-29T21:19:54.928Z",
+    "createdBy": "GenericPlanner",
+    "complexity": "unknown",
+    "profile": "javascript-executable",
+    "requiredModules": ["file", "node-runner"]
+  },
+  "context": {},
+  "inputs": [
+    "user_request"
+  ],
+  "requiredOutputs": [
+    "file_created",
+    "stdout"
+  ],
+  "steps": [
+    {
+      "id": "setup-project",
+      "name": "Project Setup",
+      "description": "Initialize project and create directory structure",
+      "type": "setup",
+      "status": "pending",
+      "dependencies": [],
+      "inputs": [],
+      "outputs": [],
+      "estimatedDuration": 0,
+      "result": null,
+      "steps": [],
+      "actions": [
+        {
+          "id": "action-mdp1ivch-iclgix0ox",
+          "type": "directory_create",
+          "inputs": [
+            "dirpath"
+          ],
+          "outputs": [
+            "directory_created"
+          ],
+          "parameters": {
+            "dirpath": "./src"
+          },
+          "status": "pending",
+          "result": null,
+          "description": "",
+          "estimatedDuration": 0
+        },
+        {
+          "id": "action-mdp1ivch-w1e71ni78",
+          "type": "directory_create",
+          "inputs": [
+            "dirpath"
+          ],
+          "outputs": [
+            "directory_created"
+          ],
+          "parameters": {
+            "dirpath": "./test"
+          },
+          "status": "pending",
+          "result": null,
+          "description": "",
+          "estimatedDuration": 0
+        },
+        {
+          "id": "action-mdp1ivch-3gxgb23p0",
+          "type": "npm_init",
+          "inputs": [
+            "project_name"
+          ],
+          "outputs": [
+            "package_json_created"
+          ],
+          "parameters": {
+            "project_name": "math-utils"
+          },
+          "status": "pending",
+          "result": null,
+          "description": "",
+          "estimatedDuration": 0
+        }
+      ]
+    },
+    {
+      "id": "create-math-module",
+      "name": "Create Math Module",
+      "description": "Implement the math utility module with add and subtract functions",
+      "type": "implementation",
+      "status": "pending",
+      "dependencies": [
+        "setup-project"
+      ],
+      "inputs": [],
+      "outputs": [],
+      "estimatedDuration": 0,
+      "result": null,
+      "steps": [],
+      "actions": [
+        {
+          "id": "action-mdp1ivch-d931wb697",
+          "type": "file_write",
+          "inputs": [
+            "filepath",
+            "content"
+          ],
+          "outputs": [
+            "file_created"
+          ],
+          "parameters": {
+            "filepath": "./src/mathUtils.js",
+            "content": "const mathUtils = {\n  add: (a, b) => a + b,\n  subtract: (a, b) => a - b\n};\n\nmodule.exports = mathUtils;"
+          },
+          "status": "pending",
+          "result": null,
+          "description": "",
+          "estimatedDuration": 0
+        }
+      ]
+    },
+    {
+      "id": "create-test",
+      "name": "Create Test File",
+      "description": "Create a test file to verify math functions",
+      "type": "testing",
+      "status": "pending",
+      "dependencies": [
+        "create-math-module"
+      ],
+      "inputs": [],
+      "outputs": [],
+      "estimatedDuration": 0,
+      "result": null,
+      "steps": [],
+      "actions": [
+        {
+          "id": "action-mdp1ivch-ljlehe9vq",
+          "type": "file_write",
+          "inputs": [
+            "filepath",
+            "content"
+          ],
+          "outputs": [
+            "file_created"
+          ],
+          "parameters": {
+            "filepath": "./test/mathUtils.test.js",
+            "content": "const mathUtils = require('../src/mathUtils');\n\nconsole.log('Testing add function:');\nconst addResult = mathUtils.add(5, 3);\nconsole.log(`5 + 3 = ${addResult}`);\nconsole.log(`Test ${addResult === 8 ? 'PASSED' : 'FAILED'}`);\n\nconsole.log('\\nTesting subtract function:');\nconst subtractResult = mathUtils.subtract(10, 4);\nconsole.log(`10 - 4 = ${subtractResult}`);\nconsole.log(`Test ${subtractResult === 6 ? 'PASSED' : 'FAILED'}`);"
+          },
+          "status": "pending",
+          "result": null,
+          "description": "",
+          "estimatedDuration": 0
+        }
+      ]
+    },
+    {
+      "id": "run-tests",
+      "name": "Run Tests",
+      "description": "Execute the test file to verify functionality",
+      "type": "testing",
+      "status": "pending",
+      "dependencies": [
+        "create-test"
+      ],
+      "inputs": [],
+      "outputs": [],
+      "estimatedDuration": 0,
+      "result": null,
+      "steps": [],
+      "actions": [
+        {
+          "id": "action-mdp1ivch-ne8xtbd57",
+          "type": "node_run_command",
+          "inputs": [
+            "command",
+            "cwd"
+          ],
+          "outputs": [
+            "stdout",
+            "success"
+          ],
+          "parameters": {
+            "command": "node test/mathUtils.test.js",
+            "cwd": "./"
+          },
+          "status": "pending",
+          "result": null,
+          "description": "",
+          "estimatedDuration": 0
+        }
+      ]
+    }
+  ],
+  "executionOrder": [],
+  "successCriteria": []
+}

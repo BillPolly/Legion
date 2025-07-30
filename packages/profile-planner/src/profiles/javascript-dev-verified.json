@@ -1,0 +1,624 @@
+{
+  "name": "javascript-dev",
+  "version": "1.0.0",
+  "description": "JavaScript development with file operations and command execution",
+  "toolName": "javascript_dev_planner",
+  "requiredModules": [
+    {
+      "name": "file",
+      "package": "@legion/general-tools",
+      "path": "src/file/FileModule.js"
+    },
+    {
+      "name": "command-executor",
+      "package": "@legion/general-tools",
+      "path": "src/command-executor/index.js"
+    }
+  ],
+  "tools": [
+    {
+      "module": "file",
+      "tool": "file_operations",
+      "functions": [
+        "file_read",
+        "file_write",
+        "directory_create",
+        "directory_list"
+      ]
+    },
+    {
+      "module": "command-executor",
+      "tool": "command_executor",
+      "functions": [
+        "execute"
+      ]
+    }
+  ],
+  "verified": true,
+  "verifiedAt": "2025-07-30T06:05:58.461Z",
+  "toolSignatures": {
+    "file_operations": {
+      "type": "multi-function",
+      "functions": {
+        "file_read": {
+          "name": "file_read",
+          "description": "Read the contents of a file from disk",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "filepath": {
+                "type": "string",
+                "description": "The path to the file to read (can be absolute or relative)"
+              }
+            },
+            "required": [
+              "filepath"
+            ]
+          },
+          "output": {
+            "success": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "string",
+                  "description": "The contents of the file"
+                },
+                "filepath": {
+                  "type": "string",
+                  "description": "The path of the file that was read"
+                },
+                "size": {
+                  "type": "number",
+                  "description": "Size of the file in bytes"
+                }
+              },
+              "required": [
+                "content",
+                "filepath"
+              ]
+            },
+            "failure": {
+              "type": "object",
+              "properties": {
+                "filepath": {
+                  "type": "string",
+                  "description": "The path that was attempted"
+                },
+                "errorCode": {
+                  "type": "string",
+                  "enum": [
+                    "ENOENT",
+                    "EACCES",
+                    "EISDIR",
+                    "UNKNOWN"
+                  ],
+                  "description": "System error code if applicable"
+                },
+                "details": {
+                  "type": "string",
+                  "description": "Additional error details"
+                }
+              },
+              "required": [
+                "filepath",
+                "errorCode"
+              ]
+            }
+          }
+        },
+        "file_write": {
+          "name": "file_write",
+          "description": "Create a new file and write text content to it",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "filepath": {
+                "type": "string",
+                "description": "The path where the file should be created (can be absolute or relative)"
+              },
+              "content": {
+                "type": "string",
+                "description": "The text content to write to the file"
+              }
+            },
+            "required": [
+              "filepath",
+              "content"
+            ]
+          },
+          "output": {
+            "success": {
+              "type": "object",
+              "properties": {
+                "filepath": {
+                  "type": "string",
+                  "description": "The path of the file that was written"
+                },
+                "bytesWritten": {
+                  "type": "number",
+                  "description": "Number of bytes written to the file"
+                },
+                "created": {
+                  "type": "boolean",
+                  "description": "Whether a new file was created (true) or existing file was overwritten (false)"
+                }
+              },
+              "required": [
+                "filepath",
+                "bytesWritten"
+              ]
+            },
+            "failure": {
+              "type": "object",
+              "properties": {
+                "filepath": {
+                  "type": "string",
+                  "description": "The path where write was attempted"
+                },
+                "errorCode": {
+                  "type": "string",
+                  "enum": [
+                    "EACCES",
+                    "ENOENT",
+                    "EISDIR",
+                    "ENOSPC",
+                    "UNKNOWN"
+                  ],
+                  "description": "System error code if applicable"
+                },
+                "details": {
+                  "type": "string",
+                  "description": "Additional error details"
+                }
+              },
+              "required": [
+                "filepath",
+                "errorCode"
+              ]
+            }
+          }
+        },
+        "directory_create": {
+          "name": "directory_create",
+          "description": "Create a new directory at the specified path",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "dirpath": {
+                "type": "string",
+                "description": "The path where the directory should be created (can be absolute or relative)"
+              }
+            },
+            "required": [
+              "dirpath"
+            ]
+          },
+          "output": {
+            "success": {
+              "type": "object",
+              "properties": {
+                "dirpath": {
+                  "type": "string",
+                  "description": "The path of the directory that was created"
+                },
+                "created": {
+                  "type": "boolean",
+                  "description": "Whether a new directory was created (true) or it already existed (false)"
+                }
+              },
+              "required": [
+                "dirpath",
+                "created"
+              ]
+            },
+            "failure": {
+              "type": "object",
+              "properties": {
+                "dirpath": {
+                  "type": "string",
+                  "description": "The path where directory creation was attempted"
+                },
+                "errorCode": {
+                  "type": "string",
+                  "enum": [
+                    "EACCES",
+                    "EEXIST",
+                    "ENOENT",
+                    "ENOTDIR",
+                    "UNKNOWN"
+                  ],
+                  "description": "System error code if applicable"
+                },
+                "details": {
+                  "type": "string",
+                  "description": "Additional error details"
+                }
+              },
+              "required": [
+                "dirpath",
+                "errorCode"
+              ]
+            }
+          }
+        },
+        "directory_current": {
+          "name": "directory_current",
+          "description": "Get the current working directory path",
+          "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          },
+          "output": {
+            "success": {
+              "type": "object",
+              "properties": {
+                "currentDirectory": {
+                  "type": "string",
+                  "description": "The absolute path of the current working directory"
+                }
+              },
+              "required": [
+                "currentDirectory"
+              ]
+            },
+            "failure": {
+              "type": "object",
+              "properties": {
+                "errorCode": {
+                  "type": "string",
+                  "enum": [
+                    "UNKNOWN"
+                  ],
+                  "description": "System error code if applicable"
+                },
+                "details": {
+                  "type": "string",
+                  "description": "Additional error details"
+                }
+              },
+              "required": [
+                "errorCode"
+              ]
+            }
+          }
+        },
+        "directory_list": {
+          "name": "directory_list",
+          "description": "List contents of a directory",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "dirpath": {
+                "type": "string",
+                "description": "The directory path to list (optional, defaults to current directory)"
+              }
+            },
+            "required": []
+          },
+          "output": {
+            "success": {
+              "type": "object",
+              "properties": {
+                "dirpath": {
+                  "type": "string",
+                  "description": "The directory path that was listed"
+                },
+                "contents": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "Name of the file or directory"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "file",
+                          "directory"
+                        ],
+                        "description": "Whether this is a file or directory"
+                      },
+                      "size": {
+                        "type": "number",
+                        "description": "Size in bytes (for files)"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "type"
+                    ]
+                  },
+                  "description": "Array of files and directories in the specified path"
+                }
+              },
+              "required": [
+                "dirpath",
+                "contents"
+              ]
+            },
+            "failure": {
+              "type": "object",
+              "properties": {
+                "dirpath": {
+                  "type": "string",
+                  "description": "The directory path where listing was attempted"
+                },
+                "errorCode": {
+                  "type": "string",
+                  "enum": [
+                    "ENOENT",
+                    "EACCES",
+                    "ENOTDIR",
+                    "UNKNOWN"
+                  ],
+                  "description": "System error code if applicable"
+                },
+                "details": {
+                  "type": "string",
+                  "description": "Additional error details"
+                }
+              },
+              "required": [
+                "dirpath",
+                "errorCode"
+              ]
+            }
+          }
+        },
+        "directory_change": {
+          "name": "directory_change",
+          "description": "Change the current working directory",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "dirpath": {
+                "type": "string",
+                "description": "The directory path to change to (can be absolute or relative)"
+              }
+            },
+            "required": [
+              "dirpath"
+            ]
+          },
+          "output": {
+            "success": {
+              "type": "object",
+              "properties": {
+                "previousDirectory": {
+                  "type": "string",
+                  "description": "The previous working directory path"
+                },
+                "currentDirectory": {
+                  "type": "string",
+                  "description": "The new current working directory path"
+                }
+              },
+              "required": [
+                "previousDirectory",
+                "currentDirectory"
+              ]
+            },
+            "failure": {
+              "type": "object",
+              "properties": {
+                "dirpath": {
+                  "type": "string",
+                  "description": "The directory path where change was attempted"
+                },
+                "errorCode": {
+                  "type": "string",
+                  "enum": [
+                    "ENOENT",
+                    "EACCES",
+                    "ENOTDIR",
+                    "UNKNOWN"
+                  ],
+                  "description": "System error code if applicable"
+                },
+                "details": {
+                  "type": "string",
+                  "description": "Additional error details"
+                }
+              },
+              "required": [
+                "dirpath",
+                "errorCode"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "command_executor": {
+      "type": "single-function",
+      "description": {
+        "name": "command_executor_execute",
+        "description": "Execute a bash command in the terminal and return the output",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "The bash command to execute (e.g., \"ls -la\", \"pwd\", \"echo hello\")"
+            },
+            "timeout": {
+              "type": "number",
+              "description": "Optional timeout in milliseconds (default: 30000ms)"
+            }
+          },
+          "required": [
+            "command"
+          ]
+        },
+        "output": {
+          "success": {
+            "type": "object",
+            "properties": {
+              "stdout": {
+                "type": "string",
+                "description": "Standard output from the command"
+              },
+              "stderr": {
+                "type": "string",
+                "description": "Standard error output from the command (may be empty)"
+              },
+              "command": {
+                "type": "string",
+                "description": "The command that was executed"
+              },
+              "exitCode": {
+                "type": "number",
+                "description": "Exit code of the command (0 for success)"
+              }
+            },
+            "required": [
+              "stdout",
+              "stderr",
+              "command"
+            ]
+          },
+          "failure": {
+            "type": "object",
+            "properties": {
+              "command": {
+                "type": "string",
+                "description": "The command that failed"
+              },
+              "errorType": {
+                "type": "string",
+                "enum": [
+                  "timeout",
+                  "exit_code",
+                  "execution_error",
+                  "dangerous_command"
+                ],
+                "description": "Type of error that occurred"
+              },
+              "exitCode": {
+                "type": "number",
+                "description": "Exit code if the command completed but failed"
+              },
+              "stdout": {
+                "type": "string",
+                "description": "Any partial stdout before failure"
+              },
+              "stderr": {
+                "type": "string",
+                "description": "Error output from the command"
+              }
+            },
+            "required": [
+              "command",
+              "errorType"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "allowableActions": [
+    {
+      "type": "write_file",
+      "description": "Write content to a file",
+      "tool": "file_operations",
+      "function": "file_write",
+      "inputs": {
+        "filepath": {
+          "type": "string",
+          "description": "Path where the file should be created"
+        },
+        "content": {
+          "type": "string",
+          "description": "Content to write to the file"
+        }
+      },
+      "outputs": {
+        "file_created": {
+          "type": "string",
+          "description": "Path to the created file"
+        }
+      }
+    },
+    {
+      "type": "create_directory",
+      "description": "Create a directory",
+      "tool": "file_operations",
+      "function": "directory_create",
+      "inputs": {
+        "dirpath": {
+          "type": "string",
+          "description": "Path of the directory to create"
+        }
+      },
+      "outputs": {
+        "directory_created": {
+          "type": "boolean",
+          "description": "True if directory was created"
+        }
+      }
+    },
+    {
+      "type": "read_file",
+      "description": "Read contents of a file",
+      "tool": "file_operations",
+      "function": "file_read",
+      "inputs": {
+        "filepath": {
+          "type": "string",
+          "description": "Path to the file to read"
+        }
+      },
+      "outputs": {
+        "content": {
+          "type": "string",
+          "description": "Content of the file"
+        }
+      }
+    },
+    {
+      "type": "run_command",
+      "description": "Execute a command in the shell",
+      "tool": "command_executor",
+      "function": "execute",
+      "inputs": {
+        "command": {
+          "type": "string",
+          "description": "Command to execute (e.g., 'node test.js', 'npm init -y')"
+        }
+      },
+      "outputs": {
+        "stdout": {
+          "type": "string",
+          "description": "Standard output from the command"
+        },
+        "success": {
+          "type": "boolean",
+          "description": "True if command succeeded"
+        }
+      }
+    }
+  ],
+  "defaultInputs": [
+    "user_request"
+  ],
+  "defaultOutputs": [
+    "file_created",
+    "stdout"
+  ],
+  "maxSteps": 10,
+  "contextPrompts": [
+    "You are creating a JavaScript project with proper file structure.",
+    "Always create directories before writing files into them.",
+    "Write clean, modular JavaScript code.",
+    "Include simple test files that can be run with Node.js directly.",
+    "Use console.log for test assertions to show results."
+  ],
+  "exampleTasks": [
+    "Create a math utility module with add and subtract functions and tests",
+    "Build a string manipulation library with reverse and capitalize functions",
+    "Create a simple calculator module with basic operations"
+  ]
+}

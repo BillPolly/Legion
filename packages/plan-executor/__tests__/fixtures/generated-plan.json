@@ -1,0 +1,246 @@
+{
+  "id": "plan-mdployap-kn3jkovly",
+  "name": "JavaScript Project Structure Setup",
+  "description": "Create a modular JavaScript project with proper file structure and tests",
+  "version": "1.0.0",
+  "metadata": {
+    "createdAt": "2025-07-30T06:44:31.009Z",
+    "createdBy": "GenericPlanner",
+    "complexity": "unknown"
+  },
+  "context": {},
+  "inputs": [
+    "user_request"
+  ],
+  "requiredOutputs": [
+    "file_created",
+    "stdout"
+  ],
+  "steps": [
+    {
+      "id": "setup-dirs",
+      "name": "Create Project Directory Structure",
+      "description": "Set up the basic project directory hierarchy",
+      "type": "setup",
+      "status": "pending",
+      "dependencies": [],
+      "inputs": [],
+      "outputs": [],
+      "estimatedDuration": 0,
+      "result": null,
+      "steps": [],
+      "actions": [
+        {
+          "id": "action-mdployap-78fnupvax",
+          "type": "create_directory",
+          "inputs": [
+            "dirpath"
+          ],
+          "outputs": [
+            "directory_created"
+          ],
+          "parameters": {
+            "dirpath": "src"
+          },
+          "status": "pending",
+          "result": null,
+          "description": "",
+          "estimatedDuration": 0,
+          "tool": "file_operations",
+          "function": "directory_create"
+        },
+        {
+          "id": "action-mdployap-w4f8txqwo",
+          "type": "create_directory",
+          "inputs": [
+            "dirpath"
+          ],
+          "outputs": [
+            "directory_created"
+          ],
+          "parameters": {
+            "dirpath": "tests"
+          },
+          "status": "pending",
+          "result": null,
+          "description": "",
+          "estimatedDuration": 0,
+          "tool": "file_operations",
+          "function": "directory_create"
+        },
+        {
+          "id": "action-mdployap-vdhwtp26n",
+          "type": "create_directory",
+          "inputs": [
+            "dirpath"
+          ],
+          "outputs": [
+            "directory_created"
+          ],
+          "parameters": {
+            "dirpath": "src/utils"
+          },
+          "status": "pending",
+          "result": null,
+          "description": "",
+          "estimatedDuration": 0,
+          "tool": "file_operations",
+          "function": "directory_create"
+        }
+      ]
+    },
+    {
+      "id": "create-main",
+      "name": "Create Main Application File",
+      "description": "Create the main application entry point",
+      "type": "implementation",
+      "status": "pending",
+      "dependencies": [
+        "setup-dirs"
+      ],
+      "inputs": [],
+      "outputs": [],
+      "estimatedDuration": 0,
+      "result": null,
+      "steps": [],
+      "actions": [
+        {
+          "id": "action-mdployap-etk9zlcni",
+          "type": "write_file",
+          "inputs": [
+            "filepath",
+            "content"
+          ],
+          "outputs": [
+            "file_created"
+          ],
+          "parameters": {
+            "filepath": "src/index.js",
+            "content": "const { add, subtract } = require('./utils/math');\n\nfunction main() {\n  console.log('Math operations example:');\n  console.log(`2 + 3 = ${add(2, 3)}`);\n  console.log(`5 - 2 = ${subtract(5, 2)}`);\n}\n\nif (require.main === module) {\n  main();\n}\n\nmodule.exports = { main };"
+          },
+          "status": "pending",
+          "result": null,
+          "description": "",
+          "estimatedDuration": 0,
+          "tool": "file_operations",
+          "function": "file_write"
+        }
+      ]
+    },
+    {
+      "id": "create-utils",
+      "name": "Create Utility Modules",
+      "description": "Create reusable utility functions",
+      "type": "implementation",
+      "status": "pending",
+      "dependencies": [
+        "setup-dirs"
+      ],
+      "inputs": [],
+      "outputs": [],
+      "estimatedDuration": 0,
+      "result": null,
+      "steps": [],
+      "actions": [
+        {
+          "id": "action-mdployap-g0kzri16o",
+          "type": "write_file",
+          "inputs": [
+            "filepath",
+            "content"
+          ],
+          "outputs": [
+            "file_created"
+          ],
+          "parameters": {
+            "filepath": "src/utils/math.js",
+            "content": "function add(a, b) {\n  return a + b;\n}\n\nfunction subtract(a, b) {\n  return a - b;\n}\n\nmodule.exports = { add, subtract };"
+          },
+          "status": "pending",
+          "result": null,
+          "description": "",
+          "estimatedDuration": 0,
+          "tool": "file_operations",
+          "function": "file_write"
+        }
+      ]
+    },
+    {
+      "id": "create-tests",
+      "name": "Create Test Files",
+      "description": "Create simple test files for the modules",
+      "type": "testing",
+      "status": "pending",
+      "dependencies": [
+        "create-utils"
+      ],
+      "inputs": [],
+      "outputs": [],
+      "estimatedDuration": 0,
+      "result": null,
+      "steps": [],
+      "actions": [
+        {
+          "id": "action-mdployap-3xghz5be1",
+          "type": "write_file",
+          "inputs": [
+            "filepath",
+            "content"
+          ],
+          "outputs": [
+            "file_created"
+          ],
+          "parameters": {
+            "filepath": "tests/math.test.js",
+            "content": "const { add, subtract } = require('../src/utils/math');\n\n// Test add function\nconsole.log('Testing add function:');\nconsole.log('2 + 3 should equal 5:', add(2, 3) === 5 ? 'PASS' : 'FAIL');\n\n// Test subtract function\nconsole.log('\\nTesting subtract function:');\nconsole.log('5 - 2 should equal 3:', subtract(5, 2) === 3 ? 'PASS' : 'FAIL');"
+          },
+          "status": "pending",
+          "result": null,
+          "description": "",
+          "estimatedDuration": 0,
+          "tool": "file_operations",
+          "function": "file_write"
+        }
+      ]
+    },
+    {
+      "id": "run-tests",
+      "name": "Run Tests",
+      "description": "Execute the test files",
+      "type": "testing",
+      "status": "pending",
+      "dependencies": [
+        "create-tests"
+      ],
+      "inputs": [],
+      "outputs": [],
+      "estimatedDuration": 0,
+      "result": null,
+      "steps": [],
+      "actions": [
+        {
+          "id": "action-mdployap-566rf17w0",
+          "type": "run_command",
+          "inputs": [
+            "command"
+          ],
+          "outputs": [
+            "stdout",
+            "success"
+          ],
+          "parameters": {
+            "command": "node tests/math.test.js"
+          },
+          "status": "pending",
+          "result": null,
+          "description": "",
+          "estimatedDuration": 0,
+          "tool": "command_executor",
+          "function": "execute"
+        }
+      ]
+    }
+  ],
+  "executionOrder": [],
+  "successCriteria": []
+}

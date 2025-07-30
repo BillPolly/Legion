@@ -5,49 +5,36 @@
 import { PlanExecutor } from '../../core/PlanExecutor.js';
 
 describe('PlanExecutor', () => {
-  let mockModuleFactory;
-  let mockResourceManager;
   let executor;
 
   beforeEach(() => {
-    mockModuleFactory = {
-      createModule: jest.fn()
-    };
-    
-    mockResourceManager = {
-      get: jest.fn(),
-      register: jest.fn()
+    const mockPlanToolRegistry = {
+      loadModulesForPlan: jest.fn().mockResolvedValue(),
+      getTool: jest.fn().mockReturnValue({
+        execute: jest.fn().mockResolvedValue({ success: true, result: 'mock result' })
+      })
     };
 
     executor = new PlanExecutor({
-      moduleFactory: mockModuleFactory,
-      resourceManager: mockResourceManager
+      planToolRegistry: mockPlanToolRegistry
     });
   });
 
   describe('constructor', () => {
-    it('should create instance with required options', () => {
+    it('should create instance with planToolRegistry', () => {
       expect(executor).toBeInstanceOf(PlanExecutor);
-      expect(executor.moduleFactory).toBe(mockModuleFactory);
-      expect(executor.resourceManager).toBe(mockResourceManager);
-      expect(executor.moduleLoader).toBeDefined();
+      expect(executor.planToolRegistry).toBeDefined();
     });
 
-    it('should throw error if moduleFactory is missing', () => {
-      expect(() => {
-        new PlanExecutor({});
-      }).toThrow('ModuleFactory is required');
+    it('should create default planToolRegistry if none provided', () => {
+      const defaultExecutor = new PlanExecutor({});
+      expect(defaultExecutor.planToolRegistry).toBeDefined();
     });
   });
 
   describe('executePlan', () => {
     beforeEach(() => {
-      // Mock moduleLoader methods - don't let it do any real loading
-      executor.moduleLoader.loadModulesForPlan = jest.fn().mockResolvedValue();
-      executor.moduleLoader._loadAllAvailableModules = jest.fn().mockResolvedValue();
-      executor.moduleLoader.getTool = jest.fn().mockReturnValue({
-        execute: jest.fn().mockResolvedValue({ success: true, result: 'mock result' })
-      });
+      // Mocks are already set up in the main beforeEach
     });
 
     it('should throw error for invalid plan', async () => {
@@ -66,8 +53,8 @@ describe('PlanExecutor', () => {
       
       expect(result).toBeDefined();
       expect(result.success).toBe(true);
-      expect(executor.moduleLoader.loadModulesForPlan.mock.calls.length).toBe(1);
-      expect(executor.moduleLoader.loadModulesForPlan.mock.calls[0][0]).toBe(plan);
+      expect(executor.planToolRegistry.loadModulesForPlan.mock.calls.length).toBe(1);
+      expect(executor.planToolRegistry.loadModulesForPlan.mock.calls[0][0]).toBe(plan);
     });
 
     it('should execute plan with single step and actions', async () => {
@@ -90,8 +77,8 @@ describe('PlanExecutor', () => {
       expect(result.success).toBe(true);
       expect(result.completedSteps).toEqual(['step1']);
       expect(result.failedSteps).toEqual([]);
-      expect(executor.moduleLoader.getTool.mock.calls.length).toBe(1);
-      expect(executor.moduleLoader.getTool.mock.calls[0][0]).toBe('test_tool');
+      expect(executor.planToolRegistry.getTool.mock.calls.length).toBe(1);
+      expect(executor.planToolRegistry.getTool.mock.calls[0][0]).toBe('test_tool');
     });
 
     it('should execute hierarchical plan with nested steps', async () => {
@@ -174,7 +161,7 @@ describe('PlanExecutor', () => {
       const failingToolExecute = jest.fn().mockRejectedValue(new Error('Tool failed'));
       const successToolExecute = jest.fn().mockResolvedValue({ success: true });
       
-      executor.moduleLoader.getTool = jest.fn().mockImplementation((toolName) => {
+      executor.planToolRegistry.getTool = jest.fn().mockImplementation((toolName) => {
         if (toolName === 'failing_tool') {
           return { execute: failingToolExecute };
         } else {
@@ -209,7 +196,7 @@ describe('PlanExecutor', () => {
       const failingToolExecute = jest.fn().mockRejectedValue(new Error('Tool failed'));
       const successToolExecute = jest.fn().mockResolvedValue({ success: true });
       
-      executor.moduleLoader.getTool = jest.fn().mockImplementation((toolName) => {
+      executor.planToolRegistry.getTool = jest.fn().mockImplementation((toolName) => {
         if (toolName === 'failing_tool') {
           return { execute: failingToolExecute };
         } else {

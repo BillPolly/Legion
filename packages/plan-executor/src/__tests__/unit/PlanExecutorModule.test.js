@@ -75,11 +75,13 @@ describe('PlanExecutorModule', () => {
   });
 
   describe('dependency injection', () => {
-    it('should pass dependencies to executor', () => {
+    it('should store dependencies and create planToolRegistry', () => {
       const module = new PlanExecutorModule({ resourceManager: mockResourceManager, moduleFactory: mockModuleFactory });
       
-      expect(module.executor.moduleFactory).toBe(mockModuleFactory);
-      expect(module.executor.resourceManager).toBe(mockResourceManager);
+      expect(module.resourceManager).toBe(mockResourceManager);
+      expect(module.moduleFactory).toBe(mockModuleFactory);
+      expect(module.planToolRegistry).toBeDefined();
+      expect(module.executor.planToolRegistry).toBeDefined();
     });
 
     it('should initialize with correct dependency list', () => {
@@ -93,8 +95,8 @@ describe('PlanExecutorModule', () => {
       const tool = module.getTools()[0];
 
       // Mock the executor's module loader
-      module.executor.moduleLoader.loadModulesForPlan = jest.fn().mockResolvedValue();
-      module.executor.moduleLoader.getTool = jest.fn().mockReturnValue({
+      module.executor.planToolRegistry.loadModulesForPlan = jest.fn().mockResolvedValue();
+      module.executor.planToolRegistry.getTool = jest.fn().mockReturnValue({
         execute: jest.fn().mockResolvedValue({ success: true, result: 'test result' })
       });
 

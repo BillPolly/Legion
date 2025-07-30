@@ -1,0 +1,161 @@
+{
+  "name": "javascript-dev",
+  "version": "1.0.0",
+  "description": "JavaScript development with file operations and command execution",
+  "toolName": "javascript_dev_planner",
+  
+  "requiredModules": [
+    {
+      "name": "file",
+      "package": "@legion/general-tools",
+      "path": "src/file/FileModule.js"
+    },
+    {
+      "name": "command-executor",
+      "package": "@legion/general-tools", 
+      "path": "src/command-executor/index.js"
+    }
+  ],
+  
+  "tools": [
+    {
+      "module": "file",
+      "tool": "file_operations",
+      "functions": ["file_read", "file_write", "directory_create", "directory_list"]
+    },
+    {
+      "module": "command-executor",
+      "tool": "command_executor",
+      "functions": ["execute"]
+    }
+  ],
+  
+  "verified": false,
+  "verifiedAt": null,
+  "toolSignatures": {},
+  
+  "allowableActions": [
+    {
+      "type": "write_file",
+      "description": "Write content to a file",
+      "tool": "file_operations",
+      "function": "file_write",
+      "inputs": {
+        "filepath": {
+          "type": "string",
+          "description": "Path where the file should be created"
+        },
+        "content": {
+          "type": "string",
+          "description": "Content to write to the file"
+        }
+      },
+      "outputs": {
+        "file_created": {
+          "type": "string",
+          "description": "Path to the created file"
+        }
+      }
+    },
+    {
+      "type": "create_directory",
+      "description": "Create a directory",
+      "tool": "file_operations",
+      "function": "directory_create",
+      "inputs": {
+        "dirpath": {
+          "type": "string",
+          "description": "Path of the directory to create"
+        }
+      },
+      "outputs": {
+        "directory_created": {
+          "type": "boolean",
+          "description": "True if directory was created"
+        }
+      }
+    },
+    {
+      "type": "read_file",
+      "description": "Read contents of a file",
+      "tool": "file_operations",
+      "function": "file_read",
+      "inputs": {
+        "filepath": {
+          "type": "string",
+          "description": "Path to the file to read"
+        }
+      },
+      "outputs": {
+        "content": {
+          "type": "string",
+          "description": "Content of the file"
+        }
+      }
+    },
+    {
+      "type": "run_command",
+      "description": "Execute a command in the shell",
+      "tool": "command_executor",
+      "function": "execute",
+      "inputs": {
+        "command": {
+          "type": "string",
+          "description": "Command to execute (e.g., 'node test.js', 'npm init -y')"
+        }
+      },
+      "outputs": {
+        "stdout": {
+          "type": "string",
+          "description": "Standard output from the command"
+        },
+        "success": {
+          "type": "boolean",
+          "description": "True if command succeeded"
+        }
+      }
+    },
+    {
+      "type": "validate_es_modules",
+      "description": "Validate that all JavaScript files use ES module syntax",
+      "tool": "command_executor",
+      "function": "execute",
+      "inputs": {
+        "command": {
+          "type": "string",
+          "description": "Command to check for CommonJS patterns in generated files"
+        }
+      },
+      "outputs": {
+        "stdout": {
+          "type": "string",
+          "description": "Validation results"
+        },
+        "success": {
+          "type": "boolean",
+          "description": "True if validation passed"
+        }
+      }
+    }
+  ],
+  
+  "defaultInputs": ["user_request"],
+  "defaultOutputs": ["file_created", "stdout"],
+  "maxSteps": 10,
+  "contextPrompts": [
+    "You are creating a JavaScript project with proper file structure.",
+    "Always create directories before writing files into them.",
+    "Write clean, modular JavaScript code using ES modules (import/export syntax).",
+    "NEVER use CommonJS (require/module.exports) - always use ES module syntax.",
+    "Use 'export' and 'import' statements with .js file extensions in import paths.",
+    "Include simple test files that can be run with Node.js directly.",
+    "Use console.log for test assertions to show results.",
+    "ALWAYS include a validation step after creating files to check for CommonJS patterns.",
+    "The validation step should use grep to search for 'require(' and 'module.exports' and fail if found."
+  ],
+  "exampleTasks": [
+    "Create a math utility module with add and subtract functions and tests",
+    "Build a string manipulation library with reverse and capitalize functions",
+    "Create a simple calculator module with basic operations"
+  ]
+}

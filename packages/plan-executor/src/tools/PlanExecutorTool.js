@@ -59,6 +59,7 @@ export class PlanExecutorTool {
       
       return {
         success: result.success,
+        status: result.success ? 'completed' : 'failed',
         completedSteps: result.completedSteps,
         failedSteps: result.failedSteps,
         skippedSteps: result.skippedSteps,
@@ -69,6 +70,7 @@ export class PlanExecutorTool {
     } catch (error) {
       return {
         success: false,
+        status: 'failed',
         error: error.message,
         completedSteps: [],
         failedSteps: [],

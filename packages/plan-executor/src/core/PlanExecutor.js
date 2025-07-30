@@ -3,21 +3,13 @@
  */
 
 import { EventEmitter } from 'events';
-import { ModuleLoader } from './ModuleLoader.js';
+import { PlanToolRegistry } from './PlanToolRegistry.js';
 import { ExecutionContext } from './ExecutionContext.js';
 
 export class PlanExecutor extends EventEmitter {
   constructor(options = {}) {
     super();
-    this.moduleFactory = options.moduleFactory;
-    this.resourceManager = options.resourceManager;
-    
-    if (!this.moduleFactory) {
-      throw new Error('ModuleFactory is required');
-    }
-    
-    // Initialize module loader
-    this.moduleLoader = new ModuleLoader(this.moduleFactory);
+    this.planToolRegistry = options.planToolRegistry || new PlanToolRegistry();
   }
   
   async executePlan(plan, options = {}) {
@@ -52,7 +44,7 @@ export class PlanExecutor extends EventEmitter {
     
     try {
       // Load required modules
-      await this.moduleLoader.loadModulesForPlan(plan);
+      await this.planToolRegistry.loadModulesForPlan(plan);
       
       // Execute plan steps
       await this._executeSteps(plan.steps, context);
@@ -224,22 +216,55 @@ export class PlanExecutor extends EventEmitter {
     const maxRetries = context.options.retries;
     let lastError;
     
+    // Debug logging removed for production
+    
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         // Get tool for this action
-        const tool = this.moduleLoader.getTool(action.type);
+        // First try to use the explicit tool field if present, otherwise fall back to type
+        const toolName = action.tool || action.type;
+        const tool = this.planToolRegistry.getTool(toolName);
         if (!tool) {
-          throw new Error(`Tool not found: ${action.type}`);
+          throw new Error(`Tool not found: ${toolName} (action type: ${action.type})`);
         }
         
         // Resolve parameters
         const resolvedParams = context.resolveParameters(action.parameters || {});
         
         // Execute tool with timeout
-        const result = await this._executeWithTimeout(
-          () => tool.execute(resolvedParams),
-          context.options.timeout
-        );
+        let result;
+        
+        // Check if this is a multi-function tool (has invoke method) or single-function tool (has execute method)
+        if (action.function && typeof tool.invoke === 'function') {
+          // Multi-function tool - call invoke with proper toolCall structure
+          // Multi-function tool - call invoke with proper toolCall structure
+          const toolCall = {
+            function: {
+              name: action.function,
+              arguments: JSON.stringify(resolvedParams)
+            }
+          };
+          result = await this._executeWithTimeout(
+            () => tool.invoke(toolCall),
+            context.options.timeout
+          );
+        } else if (typeof tool.execute === 'function') {
+          // Single-function tool - call execute directly
+          // Single-function tool - call execute directly
+          result = await this._executeWithTimeout(
+            () => tool.execute(resolvedParams),
+            context.options.timeout
+          );
+        } else {
+          throw new Error(`Tool '${toolName}' does not have a valid execute or invoke method`);
+        }
+        
+        // Tool execution completed
+        
+        // Check if tool result indicates failure
+        if (result && typeof result === 'object' && result.success === false) {
+          throw new Error(result.error || `Tool '${toolName}' failed`);
+        }
         
         // Store result
         context.setActionResult(step.id, action.type, result);
@@ -248,6 +273,7 @@ export class PlanExecutor extends EventEmitter {
         
       } catch (error) {
         lastError = error;
+        // Action failed, will retry if attempts remain
         
         if (attempt < maxRetries) {
           // Wait before retry with exponential backoff
