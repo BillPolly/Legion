@@ -7,20 +7,19 @@ import { z } from 'zod';
 
 export class ValidateJavaScriptSyntaxTool extends Tool {
   constructor() {
-    super({
-      name: 'validate_javascript_syntax',
-      description: 'Validate JavaScript code syntax using Function constructor',
-      inputSchema: z.object({
+    super();
+    this.name = 'validate_javascript_syntax';
+    this.description = 'Validate JavaScript code syntax using Function constructor';
+    this.inputSchema = z.object({
         code: z.string().describe('JavaScript code to validate'),
         strict: z.boolean().default(true).describe('Use strict mode validation')
-      }),
-      outputSchema: z.object({
+      });
+    this.outputSchema = z.object({
         valid: z.boolean().describe('Whether the code is syntactically valid'),
         error: z.string().optional().describe('Syntax error message if invalid'),
         line: z.number().optional().describe('Line number of error if available'),
         column: z.number().optional().describe('Column number of error if available')
-      })
-    });
+      });
   }
 
   async execute(args) {

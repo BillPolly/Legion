@@ -6,13 +6,20 @@
  */
 
 import { Module } from '@legion/module-loader';
+import { wrapTool } from '../../src/ToolWrapper.js';
 import { GenerateJavaScriptModuleTool } from './tools/GenerateJavaScriptModuleTool.js';
 import { GenerateJavaScriptFunctionTool } from './tools/GenerateJavaScriptFunctionTool.js';
+import { GenerateJavaScriptClassTool } from './tools/GenerateJavaScriptClassTool.js';
+import { GenerateApiEndpointTool } from './tools/GenerateApiEndpointTool.js';
+import { GenerateEventHandlerTool } from './tools/GenerateEventHandlerTool.js';
+import { GenerateUnitTestsTool } from './tools/GenerateUnitTestsTool.js';
 import { ValidateJavaScriptSyntaxTool } from './tools/ValidateJavaScriptSyntaxTool.js';
 
 export class JSGeneratorModule extends Module {
   constructor(dependencies = {}) {
-    super('JSGeneratorModule', dependencies);
+    super();
+    this.name = 'JSGeneratorModule';
+    this.dependencies = dependencies;
     this.description = 'JavaScript code generation tools for creating modules, functions, classes, and API endpoints';
     this.version = '1.0.0';
   }
@@ -36,14 +43,18 @@ export class JSGeneratorModule extends Module {
   async initialize() {
     if (this.initialized) return;
 
-    // Initialize tools
+    // Initialize tools and wrap them for Legion compatibility
     this.tools = [
-      new GenerateJavaScriptModuleTool(),
-      new GenerateJavaScriptFunctionTool(),
-      new ValidateJavaScriptSyntaxTool()
-      // TODO: Add remaining tools (class, API endpoint, event handler generation)
+      wrapTool(new GenerateJavaScriptModuleTool()),
+      wrapTool(new GenerateJavaScriptFunctionTool()),
+      wrapTool(new GenerateJavaScriptClassTool()),
+      wrapTool(new GenerateApiEndpointTool()),
+      wrapTool(new GenerateEventHandlerTool()),
+      wrapTool(new GenerateUnitTestsTool()),
+      wrapTool(new ValidateJavaScriptSyntaxTool())
     ];
 
+    this.initialized = true;
     await super.initialize();
   }
 

@@ -11,6 +11,10 @@ import { PlanToolRegistry } from '../../src/core/PlanToolRegistry.js';
 import path from 'path';
 import fs from 'fs/promises';
 import { tmpdir } from 'os';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 describe('Modular Code Generation Integration', () => {
   let resourceManager;
@@ -51,7 +55,7 @@ describe('Modular Code Generation Integration', () => {
 
   test('should load JS Generator module and execute tools', async () => {
     // Test loading the JS Generator module
-    const jsGeneratorPath = path.resolve(__dirname, '../../code-gen/js-generator/src/JSGeneratorModule.js');
+    const jsGeneratorPath = path.resolve(__dirname, '../../../code-gen/js-generator/src/JSGeneratorModule.js');
     
     try {
       // Dynamically import the module
@@ -93,7 +97,7 @@ describe('Modular Code Generation Integration', () => {
   }, 10000);
 
   test('should load Package Manager module and execute tools', async () => {
-    const packageManagerPath = path.resolve(__dirname, '../../code-gen/package-manager/src/PackageManagerModule.js');
+    const packageManagerPath = path.resolve(__dirname, '../../../code-gen/package-manager/src/PackageManagerModule.js');
     
     try {
       const { PackageManagerModule } = await import(packageManagerPath);
@@ -136,7 +140,7 @@ describe('Modular Code Generation Integration', () => {
   }, 10000);
 
   test('should load Code Analysis module and execute tools', async () => {
-    const codeAnalysisPath = path.resolve(__dirname, '../../code-gen/code-analysis/src/CodeAnalysisModule.js');
+    const codeAnalysisPath = path.resolve(__dirname, '../../../code-gen/code-analysis/src/CodeAnalysisModule.js');
     
     try {
       const { CodeAnalysisModule } = await import(codeAnalysisPath);

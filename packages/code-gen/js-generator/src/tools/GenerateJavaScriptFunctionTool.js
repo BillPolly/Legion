@@ -7,10 +7,10 @@ import { z } from 'zod';
 
 export class GenerateJavaScriptFunctionTool extends Tool {
   constructor() {
-    super({
-      name: 'generate_javascript_function',
-      description: 'Generate a JavaScript function with JSDoc, parameters, and body',
-      inputSchema: z.object({
+    super();
+    this.name = 'generate_javascript_function';
+    this.description = 'Generate a JavaScript function with JSDoc, parameters, and body';
+    this.inputSchema = z.object({
         name: z.string().describe('Function name'),
         params: z.array(z.union([
           z.string(),
@@ -31,13 +31,12 @@ export class GenerateJavaScriptFunctionTool extends Tool {
           returns: z.string().optional(),
           example: z.string().optional()
         }).optional().describe('JSDoc documentation')
-      }),
-      outputSchema: z.object({
+      });
+    this.outputSchema = z.object({
         code: z.string().describe('Generated function code'),
         signature: z.string().describe('Function signature'),
         hasJSDoc: z.boolean().describe('Whether JSDoc was generated')
-      })
-    });
+      });
 
     this.config = {
       indentation: 2,
@@ -63,9 +62,10 @@ export class GenerateJavaScriptFunctionTool extends Tool {
       const parts = [];
       let hasJSDoc = false;
 
-      // Add JSDoc if enabled
-      if (this.config.includeJSDoc && jsdoc) {
-        parts.push(this._generateJSDoc(jsdoc, params, returnType));
+      // Add JSDoc if enabled and jsdoc provided, or if returnType is specified
+      if (this.config.includeJSDoc && (jsdoc || returnType)) {
+        const jsdocObj = jsdoc || {};
+        parts.push(this._generateJSDoc(jsdocObj, params, returnType));
         hasJSDoc = true;
       }
 

@@ -5,12 +5,17 @@
  */
 
 import { Module } from '@legion/module-loader';
+import { wrapTool } from '../../src/ToolWrapper.js';
 import { InstallPackageTool } from './tools/InstallPackageTool.js';
+import { InstallPackagesTool } from './tools/InstallPackagesTool.js';
 import { CreatePackageJsonTool } from './tools/CreatePackageJsonTool.js';
+import { RunNpmScriptTool } from './tools/RunNpmScriptTool.js';
 
 export class PackageManagerModule extends Module {
   constructor(dependencies = {}) {
-    super('PackageManagerModule', dependencies);
+    super();
+    this.name = 'PackageManagerModule';
+    this.dependencies = dependencies;
     this.description = 'Node.js package management tools for npm operations, dependency analysis, and package.json management';
     this.version = '1.0.0';
   }
@@ -34,13 +39,15 @@ export class PackageManagerModule extends Module {
   async initialize() {
     if (this.initialized) return;
 
-    // Initialize tools
+    // Initialize tools and wrap them for Legion compatibility
     this.tools = [
-      new InstallPackageTool(),
-      new CreatePackageJsonTool()
-      // TODO: Add remaining tools (install_packages, validate_package_json, analyze_dependencies, etc.)
+      wrapTool(new InstallPackageTool()),
+      wrapTool(new InstallPackagesTool()),
+      wrapTool(new CreatePackageJsonTool()),
+      wrapTool(new RunNpmScriptTool())
     ];
 
+    this.initialized = true;
     await super.initialize();
   }
 

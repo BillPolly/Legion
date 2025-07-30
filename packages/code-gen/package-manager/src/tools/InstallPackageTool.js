@@ -13,24 +13,23 @@ import semver from 'semver';
 
 export class InstallPackageTool extends Tool {
   constructor() {
-    super({
-      name: 'install_package',
-      description: 'Install a single npm package with version and dependency type options',
-      inputSchema: z.object({
-        name: z.string().describe('Package name to install'),
-        version: z.string().optional().describe('Package version or range (e.g., "1.0.0", "^1.0.0", "latest")'),
-        projectPath: z.string().describe('Path to the project directory'),
-        isDev: z.boolean().default(false).describe('Install as dev dependency'),
-        registry: z.string().optional().describe('Custom npm registry URL')
-      }),
-      outputSchema: z.object({
-        packageName: z.string(),
-        status: z.enum(['installed', 'already-installed', 'error']),
-        version: z.string().optional(),
-        installationTime: z.number(),
-        isDev: z.boolean(),
-        error: z.string().optional()
-      })
+    super();
+    this.name = 'install_package';
+    this.description = 'Install a single npm package with version and dependency type options';
+    this.inputSchema = z.object({
+      name: z.string().describe('Package name to install'),
+      version: z.string().optional().describe('Package version or range (e.g., "1.0.0", "^1.0.0", "latest")'),
+      projectPath: z.string().describe('Path to the project directory'),
+      isDev: z.boolean().default(false).describe('Install as dev dependency'),
+      registry: z.string().optional().describe('Custom npm registry URL')
+    });
+    this.outputSchema = z.object({
+      packageName: z.string(),
+      status: z.enum(['installed', 'already-installed', 'error']),
+      version: z.string().optional(),
+      installationTime: z.number(),
+      isDev: z.boolean(),
+      error: z.string().optional()
     });
 
     this.timeout = 60000; // 60 seconds default timeout

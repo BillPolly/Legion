@@ -9,29 +9,28 @@ import path from 'path';
 
 export class CreatePackageJsonTool extends Tool {
   constructor() {
-    super({
-      name: 'create_package_json',
-      description: 'Generate a package.json file with dependencies and scripts',
-      inputSchema: z.object({
-        name: z.string().describe('Project name'),
-        version: z.string().default('1.0.0').describe('Project version'),
-        description: z.string().optional().describe('Project description'),
-        main: z.string().default('index.js').describe('Main entry point'),
-        scripts: z.record(z.string()).optional().describe('NPM scripts'),
-        dependencies: z.record(z.string()).optional().describe('Production dependencies'),
-        devDependencies: z.record(z.string()).optional().describe('Development dependencies'),
-        keywords: z.array(z.string()).optional().describe('Project keywords'),
-        author: z.string().optional().describe('Project author'),
-        license: z.string().default('ISC').describe('Project license'),
-        projectPath: z.string().describe('Path where package.json should be created')
-      }),
-      outputSchema: z.object({
-        created: z.boolean(),
-        path: z.string(),
-        content: z.record(z.any()).optional(),
-        message: z.string().optional(),
-        error: z.string().optional()
-      })
+    super();
+    this.name = 'create_package_json';
+    this.description = 'Generate a package.json file with dependencies and scripts';
+    this.inputSchema = z.object({
+      name: z.string().describe('Project name'),
+      version: z.string().default('1.0.0').describe('Project version'),
+      description: z.string().optional().describe('Project description'),
+      main: z.string().default('index.js').describe('Main entry point'),
+      scripts: z.record(z.string()).optional().describe('NPM scripts'),
+      dependencies: z.record(z.string()).optional().describe('Production dependencies'),
+      devDependencies: z.record(z.string()).optional().describe('Development dependencies'),
+      keywords: z.array(z.string()).optional().describe('Project keywords'),
+      author: z.string().optional().describe('Project author'),
+      license: z.string().default('ISC').describe('Project license'),
+      projectPath: z.string().describe('Path where package.json should be created')
+    });
+    this.outputSchema = z.object({
+      created: z.boolean(),
+      path: z.string(),
+      content: z.record(z.any()).optional(),
+      message: z.string().optional(),
+      error: z.string().optional()
     });
   }
 

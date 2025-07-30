@@ -1,0 +1,39 @@
+{
+  "server": {
+    "port": 8080,
+    "host": "localhost",
+    "maxConnections": 100,
+    "heartbeatInterval": 30000
+  },
+  "extension": {
+    "debug": false,
+    "logLevel": "info",
+    "panelTitle": "Cerebrate",
+    "autoConnect": true
+  },
+  "agent": {
+    "model": "claude-3-sonnet",
+    "maxTokens": 4096,
+    "temperature": 0.1,
+    "timeout": 30000
+  },
+  "websocket": {
+    "reconnectDelay": 1000,
+    "maxReconnectAttempts": 5,
+    "messageTimeout": 10000
+  },
+  "logging": {
+    "level": "info",
+    "format": "json",
+    "enableConsole": true,
+    "enableFile": false
+  },
+  "security": {
+    "allowedOrigins": [
+      "chrome-extension://"
+    ],
+    "maxPayloadSize": 1048576,
+    "enableCors": true
+  },
+  "debug": true
+}

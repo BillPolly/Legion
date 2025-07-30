@@ -5,11 +5,14 @@
  */
 
 import { Module } from '@legion/module-loader';
+import { wrapTool } from '../../src/ToolWrapper.js';
 import { ValidateJavaScriptTool } from './tools/ValidateJavaScriptTool.js';
 
 export class CodeAnalysisModule extends Module {
   constructor(dependencies = {}) {
-    super('CodeAnalysisModule', dependencies);
+    super();
+    this.name = 'CodeAnalysisModule';
+    this.dependencies = dependencies;
     this.description = 'Code analysis tools for JavaScript and CSS validation, security scanning, and performance analysis';
     this.version = '1.0.0';
   }
@@ -33,12 +36,13 @@ export class CodeAnalysisModule extends Module {
   async initialize() {
     if (this.initialized) return;
 
-    // Initialize tools
+    // Initialize tools and wrap them for Legion compatibility
     this.tools = [
-      new ValidateJavaScriptTool()
+      wrapTool(new ValidateJavaScriptTool())
       // TODO: Add remaining tools (security analysis, performance analysis, CSS validation, etc.)
     ];
 
+    this.initialized = true;
     await super.initialize();
   }
 

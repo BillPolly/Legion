@@ -9,10 +9,10 @@ import { z } from 'zod';
 
 export class GenerateJavaScriptModuleTool extends Tool {
   constructor() {
-    super({
-      name: 'generate_javascript_module',
-      description: 'Generate a complete JavaScript module with imports, exports, functions, and classes',
-      inputSchema: z.object({
+    super();
+    this.name = 'generate_javascript_module';
+    this.description = 'Generate a complete JavaScript module with imports, exports, functions, and classes';
+    this.inputSchema = z.object({
         name: z.string().describe('Name of the module'),
         description: z.string().optional().describe('Module description for header comment'),
         imports: z.array(z.object({
@@ -42,8 +42,8 @@ export class GenerateJavaScriptModuleTool extends Tool {
           default: z.string().optional(),
           named: z.array(z.string()).optional()
         }).optional().describe('Export statements')
-      }),
-      outputSchema: z.object({
+      });
+    this.outputSchema = z.object({
         code: z.string().describe('Generated JavaScript module code'),
         filename: z.string().describe('Suggested filename for the module'),
         linesOfCode: z.number().describe('Number of lines generated'),
@@ -53,8 +53,7 @@ export class GenerateJavaScriptModuleTool extends Tool {
           imports: z.number(),
           exports: z.number()
         })
-      })
-    });
+      });
 
     // Configuration options
     this.config = {

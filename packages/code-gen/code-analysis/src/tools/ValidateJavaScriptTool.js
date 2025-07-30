@@ -4,44 +4,43 @@
  * Extracted and adapted from cerebrate CodeAnalysisCommands for Legion framework
  */
 
-import { Tool } from '@legion/module-loader';
+import { Tool, ToolResult } from '@legion/module-loader';
 import { z } from 'zod';
 import fs from 'fs/promises';
 
 export class ValidateJavaScriptTool extends Tool {
   constructor() {
-    super({
-      name: 'validate_javascript',
-      description: 'Validate JavaScript code for syntax and quality issues',
-      inputSchema: z.object({
-        code: z.string().optional().describe('JavaScript code to validate'),
-        filePath: z.string().optional().describe('Path to JavaScript file to validate (alternative to code)'),
-        includeAnalysis: z.boolean().default(true).describe('Include code quality analysis'),
-        checkSecurity: z.boolean().default(true).describe('Check for security issues'),
-        checkPerformance: z.boolean().default(true).describe('Check for performance issues')
-      }),
-      outputSchema: z.object({
-        valid: z.boolean().describe('Whether the code is syntactically valid'),
-        errors: z.array(z.string()).describe('Array of validation errors'),
-        warnings: z.array(z.string()).describe('Array of code quality warnings'),
-        securityIssues: z.array(z.object({
-          type: z.string(),
-          severity: z.string(),
-          message: z.string(),
-          line: z.number().optional()
-        })).describe('Security vulnerabilities found'),
-        performanceIssues: z.array(z.object({
-          type: z.string(),
-          severity: z.string(),
-          message: z.string(),
-          suggestion: z.string()
-        })).describe('Performance issues found'),
-        metrics: z.object({
-          linesOfCode: z.number(),
-          complexity: z.number(),
-          maintainabilityIndex: z.number()
-        }).describe('Code metrics')
-      })
+    super();
+    this.name = 'validate_javascript';
+    this.description = 'Validate JavaScript code for syntax and quality issues';
+    this.inputSchema = z.object({
+      code: z.string().optional().describe('JavaScript code to validate'),
+      filePath: z.string().optional().describe('Path to JavaScript file to validate (alternative to code)'),
+      includeAnalysis: z.boolean().default(true).describe('Include code quality analysis'),
+      checkSecurity: z.boolean().default(true).describe('Check for security issues'),
+      checkPerformance: z.boolean().default(true).describe('Check for performance issues')
+    });
+    this.outputSchema = z.object({
+      valid: z.boolean().describe('Whether the code is syntactically valid'),
+      errors: z.array(z.string()).describe('Array of validation errors'),
+      warnings: z.array(z.string()).describe('Array of code quality warnings'),
+      securityIssues: z.array(z.object({
+        type: z.string(),
+        severity: z.string(),
+        message: z.string(),
+        line: z.number().optional()
+      })).describe('Security vulnerabilities found'),
+      performanceIssues: z.array(z.object({
+        type: z.string(),
+        severity: z.string(),
+        message: z.string(),
+        suggestion: z.string()
+      })).describe('Performance issues found'),
+      metrics: z.object({
+        linesOfCode: z.number(),
+        complexity: z.number(),
+        maintainabilityIndex: z.number()
+      }).describe('Code metrics')
     });
 
     // Security patterns to detect
@@ -70,6 +69,63 @@ export class ValidateJavaScriptTool extends Tool {
       { pattern: /var\s+\w+\s*=/g, type: 'global-variables', message: 'Global variable detected - consider encapsulation' },
       { pattern: /while\s*\([^}]*\{/g, type: 'while-loop', message: 'While loop detected - ensure proper exit conditions' }
     ];
+  }
+
+  /**
+   * Returns the tool description in standard function calling format
+   */
+  getToolDescription() {
+    return {
+      type: 'function',
+      function: {
+        name: this.name,
+        description: this.description,
+        parameters: this.inputSchema,
+        output: this.outputSchema || {
+          success: {
+            type: 'object',
+            properties: {
+              result: { type: 'any', description: 'Tool execution result' }
+            }
+          },
+          failure: {
+            type: 'object',
+            properties: {
+              error: { type: 'string', description: 'Error message' },
+              details: { type: 'object', description: 'Error details' }
+            }
+          }
+        }
+      }
+    };
+  }
+
+  async invoke(toolCall) {
+    // Parse arguments from the tool call
+    let args;
+    try {
+      args = typeof toolCall.function.arguments === 'string' 
+        ? JSON.parse(toolCall.function.arguments)
+        : toolCall.function.arguments;
+    } catch (error) {
+      return ToolResult.failure(error.message || 'Tool execution failed', {
+        toolName: this.name,
+        error: error.toString(),
+        stack: error.stack
+      });
+    }
+
+    // Execute the tool with parsed arguments
+    try {
+      const result = await this.execute(args);
+      return ToolResult.success(result);
+    } catch (error) {
+      return ToolResult.failure(error.message || 'Tool execution failed', {
+        toolName: this.name,
+        error: error.toString(),
+        stack: error.stack
+      });
+    }
   }
 
   async execute(args) {
