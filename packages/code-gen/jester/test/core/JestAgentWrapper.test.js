@@ -5,12 +5,18 @@
 
 import { JestAgentWrapper } from '../../src/core/JestAgentWrapper.js';
 import { promises as fs } from 'fs';
+import { TestDbHelper, setupTestDb, cleanupTestDb } from '../utils/test-db-helper.js';
 
 describe('JestAgentWrapper', () => {
   let wrapper;
-  const testDbPath = './test-jest-agent-wrapper.db';
+  let testDbPath;
+
+  beforeAll(async () => {
+    await setupTestDb();
+  });
 
   beforeEach(() => {
+    testDbPath = TestDbHelper.getTempDbPath('jest-agent-wrapper');
     wrapper = new JestAgentWrapper({
       dbPath: testDbPath,
       storage: 'sqlite',
@@ -26,11 +32,7 @@ describe('JestAgentWrapper', () => {
     }
     
     // Clean up test database
-    try {
-      await fs.unlink(testDbPath);
-    } catch (error) {
-      // File doesn't exist, that's fine
-    }
+    await cleanupTestDb(testDbPath);
   });
 
   describe('Initialization', () => {
@@ -38,7 +40,8 @@ describe('JestAgentWrapper', () => {
       const defaultWrapper = new JestAgentWrapper();
       
       expect(defaultWrapper.config.storage).toBe('sqlite');
-      expect(defaultWrapper.config.dbPath).toBe('./test-results.db');
+      // Default path now includes timestamp, so just check it starts with the right directory
+      expect(defaultWrapper.config.dbPath).toMatch(/^\.\/dbs\/test-results-\d+\.db$/);
       expect(defaultWrapper.config.collectConsole).toBe(true);
       expect(defaultWrapper.config.collectCoverage).toBe(true);
       expect(defaultWrapper.config.realTimeEvents).toBe(true);

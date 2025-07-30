@@ -6,13 +6,21 @@
 import { PerformanceAnalyzer } from '../../src/analytics/performance.js';
 import { JestAgentWrapper } from '../../src/core/JestAgentWrapper.js';
 import { promises as fs } from 'fs';
+import { TestDbHelper, setupTestDb, cleanupTestDb } from '../utils/test-db-helper.js';
 
 describe('PerformanceAnalyzer', () => {
+  let testDbPath;
+
+  beforeAll(async () => {
+    await setupTestDb();
+  });
+
   let analyzer;
   let mockJaw;
-  const testDbPath = './test-performance.db';
+  let testDbPath;
 
   beforeEach(async () => {
+    testDbPath = TestDbHelper.getTempDbPath('performance');
     // Create a real JAW instance for testing
     mockJaw = new JestAgentWrapper({
       dbPath: testDbPath,
@@ -28,11 +36,7 @@ describe('PerformanceAnalyzer', () => {
     }
     
     // Clean up test database
-    try {
-      await fs.unlink(testDbPath);
-    } catch (error) {
-      // File doesn't exist, that's fine
-    }
+    await cleanupTestDb(testDbPath);
   });
 
   describe('Initialization', () => {

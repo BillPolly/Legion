@@ -9,13 +9,21 @@ import { PerformanceAnalyzer } from '../../src/analytics/performance.js';
 import { ErrorPatternAnalyzer } from '../../src/analytics/error-patterns.js';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { TestDbHelper, setupTestDb, cleanupTestDb } from '../utils/test-db-helper.js';
 
 describe('End-to-End Integration Tests (Simplified)', () => {
+  let testDbPath;
+
+  beforeAll(async () => {
+    await setupTestDb();
+  });
+
   let jaw;
   let testDbPath;
   let tempDir;
 
   beforeEach(async () => {
+    testDbPath = TestDbHelper.getTempDbPath('e2e-simple');
     // Create temporary directory for test databases
     tempDir = path.join(process.cwd(), 'temp-e2e-simple');
     await fs.mkdir(tempDir, { recursive: true });

@@ -8,14 +8,22 @@ import { QueryEngine } from '../../src/storage/QueryEngine.js';
 import { JestAgentWrapper } from '../../src/core/JestAgentWrapper.js';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { TestDbHelper, setupTestDb, cleanupTestDb } from '../utils/test-db-helper.js';
 
 describe('Database Integration Tests', () => {
+  let testDbPath;
+
+  beforeAll(async () => {
+    await setupTestDb();
+  });
+
   let storage;
   let query;
   let testDbPath;
   let tempDir;
 
   beforeEach(async () => {
+    testDbPath = TestDbHelper.getTempDbPath('database');
     // Create temporary directory for test databases
     tempDir = path.join(process.cwd(), 'temp-database-integration');
     await fs.mkdir(tempDir, { recursive: true });

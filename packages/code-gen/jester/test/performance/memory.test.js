@@ -8,11 +8,19 @@ import { EventCollector } from '../../src/core/EventCollector.js';
 import { StorageEngine } from '../../src/storage/StorageEngine.js';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { TestDbHelper, setupTestDb, cleanupTestDb } from '../utils/test-db-helper.js';
 
 describe('Memory Leak Tests', () => {
+  let testDbPath;
+
+  beforeAll(async () => {
+    await setupTestDb();
+  });
+
   let tempDir;
 
   beforeEach(async () => {
+    testDbPath = TestDbHelper.getTempDbPath('memory');
     // Create temporary directory for test databases
     tempDir = path.join(process.cwd(), 'temp-memory-tests');
     await fs.mkdir(tempDir, { recursive: true });

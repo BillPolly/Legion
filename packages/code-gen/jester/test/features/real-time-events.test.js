@@ -6,14 +6,22 @@
 import { JestAgentWrapper } from '../../src/core/JestAgentWrapper.js';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { TestDbHelper, setupTestDb, cleanupTestDb } from '../utils/test-db-helper.js';
 
 describe('Real-time Event System Tests', () => {
+  let testDbPath;
+
+  beforeAll(async () => {
+    await setupTestDb();
+  });
+
   let jaw;
   let testDbPath;
   let tempDir;
   let eventLog;
 
   beforeEach(async () => {
+    testDbPath = TestDbHelper.getTempDbPath('real-time-events');
     // Create temporary directory for test databases
     tempDir = path.join(process.cwd(), 'temp-realtime-events');
     await fs.mkdir(tempDir, { recursive: true });

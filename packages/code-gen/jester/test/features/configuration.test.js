@@ -6,12 +6,20 @@
 import { JestAgentWrapper } from '../../src/core/JestAgentWrapper.js';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { TestDbHelper, setupTestDb, cleanupTestDb } from '../utils/test-db-helper.js';
 
 describe('Configuration System Tests', () => {
+  let testDbPath;
+
+  beforeAll(async () => {
+    await setupTestDb();
+  });
+
   let tempDir;
   let configPath;
 
   beforeEach(async () => {
+    testDbPath = TestDbHelper.getTempDbPath('configuration');
     // Create temporary directory for test configurations
     tempDir = path.join(process.cwd(), 'temp-config-tests');
     await fs.mkdir(tempDir, { recursive: true });
@@ -34,7 +42,7 @@ describe('Configuration System Tests', () => {
       
       expect(jaw.config).toMatchObject({
         storage: 'sqlite',
-        dbPath: './test-results.db',
+        dbPath: testDbPath,
         collectConsole: true,
         collectCoverage: true,
         collectPerformance: true,
@@ -47,14 +55,14 @@ describe('Configuration System Tests', () => {
     test('applies default values for missing configuration properties', () => {
       const partialConfig = {
         storage: 'sqlite',
-        dbPath: './custom.db'
+        dbPath: testDbPath
       };
       
       const jaw = new JestAgentWrapper(partialConfig);
       
       expect(jaw.config).toMatchObject({
         storage: 'sqlite',
-        dbPath: './custom.db',
+        dbPath: testDbPath,
         collectConsole: true, // Default value
         collectCoverage: true, // Default value
         collectPerformance: true, // Default value
@@ -86,7 +94,7 @@ describe('Configuration System Tests', () => {
     test('accepts custom configuration in constructor', () => {
       const customConfig = {
         storage: 'sqlite',
-        dbPath: './custom-test-results.db',
+        dbPath: testDbPath,
         collectConsole: false,
         collectCoverage: false,
         collectPerformance: false,
@@ -103,7 +111,7 @@ describe('Configuration System Tests', () => {
 
     test('merges custom config with defaults correctly', () => {
       const customConfig = {
-        dbPath: './custom.db',
+        dbPath: testDbPath,
         collectConsole: false
       };
       
@@ -111,7 +119,7 @@ describe('Configuration System Tests', () => {
       
       expect(jaw.config).toMatchObject({
         storage: 'sqlite', // Default
-        dbPath: './custom.db', // Custom
+        dbPath: testDbPath, // Custom
         collectConsole: false, // Custom
         collectCoverage: true, // Default
         collectPerformance: true, // Default
@@ -124,7 +132,7 @@ describe('Configuration System Tests', () => {
     test('handles nested configuration objects', () => {
       const customConfig = {
         storage: 'sqlite',
-        dbPath: './test.db',
+        dbPath: testDbPath,
         jestConfig: {
           testMatch: ['**/*.spec.js'],
           collectCoverage: true,
@@ -157,7 +165,7 @@ describe('Configuration System Tests', () => {
     test('loads configuration from JSON file', async () => {
       const configData = {
         storage: 'sqlite',
-        dbPath: './file-config.db',
+        dbPath: testDbPath,
         collectConsole: false,
         collectCoverage: true,
         realTimeEvents: false,
@@ -184,7 +192,7 @@ describe('Configuration System Tests', () => {
       const jaw = new JestAgentWrapper();
       
       expect(jaw.config.storage).toBe('sqlite');
-      expect(jaw.config.dbPath).toBe('./test-results.db'); // Default
+      expect(jaw.config.dbPath).toMatch(/^\.\/dbs\/test-results-\d+\.db$/); // Default with timestamp
       
       jaw.close();
     });
@@ -196,7 +204,7 @@ describe('Configuration System Tests', () => {
       // Should use defaults
       expect(jaw.config).toMatchObject({
         storage: 'sqlite',
-        dbPath: './test-results.db',
+        dbPath: testDbPath,
         collectConsole: true,
         collectCoverage: true,
         collectPerformance: true,
@@ -211,7 +219,7 @@ describe('Configuration System Tests', () => {
     test('applies development environment configuration', () => {
       const devConfig = {
         storage: 'sqlite',
-        dbPath: './dev-test-results.db',
+        dbPath: testDbPath,
         collectConsole: true,
         collectCoverage: false, // Faster in dev
         collectPerformance: true,
@@ -229,7 +237,7 @@ describe('Configuration System Tests', () => {
     test('applies production environment configuration', () => {
       const prodConfig = {
         storage: 'sqlite',
-        dbPath: './prod-test-results.db',
+        dbPath: testDbPath,
         collectConsole: false, // Reduce noise in prod
         collectCoverage: true,
         collectPerformance: true,
@@ -318,14 +326,14 @@ describe('Configuration System Tests', () => {
 
     test('validates path configuration options', () => {
       const pathConfig = {
-        dbPath: './custom/path/test.db',
+        dbPath: testDbPath,
         logPath: './logs/jaw.log',
         configPath: './config/jaw.config.json'
       };
       
       const jaw = new JestAgentWrapper(pathConfig);
       
-      expect(jaw.config.dbPath).toBe('./custom/path/test.db');
+      expect(jaw.config.dbPath).toBe(testDbPath); // Should use the test db path
       expect(jaw.config.logPath).toBe('./logs/jaw.log');
       expect(jaw.config.configPath).toBe('./config/jaw.config.json');
       
@@ -344,7 +352,7 @@ describe('Configuration System Tests', () => {
       
       const environmentConfig = {
         ...baseConfig,
-        dbPath: './env-specific.db',
+        dbPath: testDbPath,
         collectCoverage: false // Override
       };
       
@@ -360,7 +368,7 @@ describe('Configuration System Tests', () => {
         storage: 'sqlite', // From base
         collectConsole: true, // From base
         collectCoverage: false, // From environment override
-        dbPath: './env-specific.db', // From environment
+        dbPath: testDbPath, // From environment
         eventBufferSize: 200, // From user override
         customOption: 'user-value' // From user addition
       });
@@ -426,19 +434,19 @@ describe('Configuration System Tests', () => {
     test('allows runtime configuration updates', async () => {
       const jaw = new JestAgentWrapper({
         storage: 'sqlite',
-        dbPath: './initial.db',
+        dbPath: testDbPath,
         collectConsole: true
       });
       
       // Initial config
-      expect(jaw.config.dbPath).toBe('./initial.db');
+      expect(jaw.config.dbPath).toBe(testDbPath); // Should use the test db path
       expect(jaw.config.collectConsole).toBe(true);
       
       // In a real implementation, this would update config
       // For now, we'll simulate the update
       const updatedConfig = {
         ...jaw.config,
-        dbPath: './updated.db',
+        dbPath: testDbPath,
         collectConsole: false
       };
       
@@ -475,7 +483,7 @@ describe('Configuration System Tests', () => {
     test('exports current configuration to JSON', () => {
       const jaw = new JestAgentWrapper({
         storage: 'sqlite',
-        dbPath: './export-test.db',
+        dbPath: testDbPath,
         collectConsole: false,
         eventBufferSize: 150
       });
@@ -485,7 +493,7 @@ describe('Configuration System Tests', () => {
       
       expect(parsedConfig).toMatchObject({
         storage: 'sqlite',
-        dbPath: './export-test.db',
+        dbPath: testDbPath,
         collectConsole: false,
         eventBufferSize: 150
       });
@@ -496,7 +504,7 @@ describe('Configuration System Tests', () => {
     test('imports configuration from JSON string', () => {
       const configJson = JSON.stringify({
         storage: 'sqlite',
-        dbPath: './imported.db',
+        dbPath: testDbPath,
         collectCoverage: false,
         realTimeEvents: true,
         eventBufferSize: 300
@@ -507,7 +515,7 @@ describe('Configuration System Tests', () => {
       
       expect(jaw.config).toMatchObject({
         storage: 'sqlite',
-        dbPath: './imported.db',
+        dbPath: testDbPath,
         collectCoverage: false,
         realTimeEvents: true,
         eventBufferSize: 300
@@ -519,7 +527,7 @@ describe('Configuration System Tests', () => {
     test('handles configuration serialization edge cases', () => {
       const complexConfig = {
         storage: 'sqlite',
-        dbPath: './complex.db',
+        dbPath: testDbPath,
         jestConfig: {
           testMatch: ['**/*.test.js'],
           setupFiles: ['./setup1.js', './setup2.js']

@@ -6,13 +6,21 @@
 import { ErrorPatternAnalyzer } from '../../src/analytics/error-patterns.js';
 import { JestAgentWrapper } from '../../src/core/JestAgentWrapper.js';
 import { promises as fs } from 'fs';
+import { TestDbHelper, setupTestDb, cleanupTestDb } from '../utils/test-db-helper.js';
 
 describe('ErrorPatternAnalyzer', () => {
+  let testDbPath;
+
+  beforeAll(async () => {
+    await setupTestDb();
+  });
+
   let analyzer;
   let mockJaw;
-  const testDbPath = './test-error-patterns.db';
+  let testDbPath;
 
   beforeEach(async () => {
+    testDbPath = TestDbHelper.getTempDbPath('error-patterns');
     // Create a real JAW instance for testing
     mockJaw = new JestAgentWrapper({
       dbPath: testDbPath,
@@ -28,11 +36,7 @@ describe('ErrorPatternAnalyzer', () => {
     }
     
     // Clean up test database
-    try {
-      await fs.unlink(testDbPath);
-    } catch (error) {
-      // File doesn't exist, that's fine
-    }
+    await cleanupTestDb(testDbPath);
   });
 
   describe('Initialization', () => {

@@ -6,13 +6,21 @@
 import { JestAgentWrapper } from '../../src/core/JestAgentWrapper.js';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { TestDbHelper, setupTestDb, cleanupTestDb } from '../utils/test-db-helper.js';
 
 describe('Performance Load Tests', () => {
+  let testDbPath;
+
+  beforeAll(async () => {
+    await setupTestDb();
+  });
+
   let jaw;
   let testDbPath;
   let tempDir;
 
   beforeEach(async () => {
+    testDbPath = TestDbHelper.getTempDbPath('load');
     // Create temporary directory for test databases
     tempDir = path.join(process.cwd(), 'temp-performance-load');
     await fs.mkdir(tempDir, { recursive: true });

@@ -6,19 +6,18 @@
 import { StorageEngine } from '../../src/storage/StorageEngine.js';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { TestDbHelper, setupTestDb, cleanupTestDb } from '../utils/test-db-helper.js';
 
 describe('StorageEngine', () => {
   let storage;
-  const testDbPath = './test-storage-engine.db';
+  let testDbPath;
+
+  beforeAll(async () => {
+    await setupTestDb();
+  });
 
   beforeEach(async () => {
-    // Clean up any existing test database
-    try {
-      await fs.unlink(testDbPath);
-    } catch (error) {
-      // File doesn't exist, that's fine
-    }
-    
+    testDbPath = TestDbHelper.getTempDbPath('storage-engine');
     storage = new StorageEngine(testDbPath);
   });
 
@@ -28,11 +27,7 @@ describe('StorageEngine', () => {
     }
     
     // Clean up test database
-    try {
-      await fs.unlink(testDbPath);
-    } catch (error) {
-      // File doesn't exist, that's fine
-    }
+    await cleanupTestDb(testDbPath);
   });
 
   describe('Database Initialization', () => {

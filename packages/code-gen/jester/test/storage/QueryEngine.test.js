@@ -6,19 +6,19 @@
 import { QueryEngine } from '../../src/storage/QueryEngine.js';
 import { StorageEngine } from '../../src/storage/StorageEngine.js';
 import { promises as fs } from 'fs';
+import { TestDbHelper, setupTestDb, cleanupTestDb } from '../utils/test-db-helper.js';
 
 describe('QueryEngine', () => {
   let storage;
   let queryEngine;
-  const testDbPath = './test-query-engine.db';
+  let testDbPath;
+
+  beforeAll(async () => {
+    await setupTestDb();
+  });
 
   beforeEach(async () => {
-    // Clean up any existing test database
-    try {
-      await fs.unlink(testDbPath);
-    } catch (error) {
-      // File doesn't exist, that's fine
-    }
+    testDbPath = TestDbHelper.getTempDbPath('query-engine');
     
     storage = new StorageEngine(testDbPath);
     queryEngine = new QueryEngine(storage);
@@ -34,11 +34,7 @@ describe('QueryEngine', () => {
     }
     
     // Clean up test database
-    try {
-      await fs.unlink(testDbPath);
-    } catch (error) {
-      // File doesn't exist, that's fine
-    }
+    await cleanupTestDb(testDbPath);
   });
 
   async function createTestData() {

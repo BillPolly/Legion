@@ -5,10 +5,17 @@
 
 import { JestAgentCLI } from '../../src/cli/JestAgentCLI.js';
 import { promises as fs } from 'fs';
+import { TestDbHelper, setupTestDb, cleanupTestDb } from '../utils/test-db-helper.js';
 
 describe('JestAgentCLI', () => {
+  let testDbPath;
+
+  beforeAll(async () => {
+    await setupTestDb();
+  });
+
   let cli;
-  const testDbPath = './test-cli.db';
+  let testDbPath;
 
   beforeEach(() => {
     cli = new JestAgentCLI();
@@ -16,11 +23,7 @@ describe('JestAgentCLI', () => {
 
   afterEach(async () => {
     // Clean up test database
-    try {
-      await fs.unlink(testDbPath);
-    } catch (error) {
-      // File doesn't exist, that's fine
-    }
+    await cleanupTestDb(testDbPath);
     
     // Clean up CLI instance
     if (cli && cli.jaw) {

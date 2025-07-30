@@ -8,7 +8,7 @@ import fs from 'fs';
 import path from 'path';
 
 export class StorageEngine {
-  constructor(dbPath = './.jester/test-results.db') {
+  constructor(dbPath = './tmp/dbs/test-results.db') {
     this.dbPath = dbPath;
     this.db = null;
     this.initialized = false;

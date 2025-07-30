@@ -11,13 +11,21 @@ import { PerformanceAnalyzer } from '../../src/analytics/performance.js';
 import { ErrorPatternAnalyzer } from '../../src/analytics/error-patterns.js';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { TestDbHelper, setupTestDb, cleanupTestDb } from '../utils/test-db-helper.js';
 
 describe('End-to-End Integration Tests', () => {
+  let testDbPath;
+
+  beforeAll(async () => {
+    await setupTestDb();
+  });
+
   let jaw;
   let testDbPath;
   let tempDir;
 
   beforeEach(async () => {
+    testDbPath = TestDbHelper.getTempDbPath('e2e');
     // Create temporary directory for test databases
     tempDir = path.join(process.cwd(), 'temp-e2e-tests');
     await fs.mkdir(tempDir, { recursive: true });
@@ -485,7 +493,7 @@ describe('End-to-End Integration Tests', () => {
     test('handles database connection issues gracefully', async () => {
       // Create JAW with invalid database path
       const invalidJaw = new JestAgentWrapper({
-        dbPath: '/invalid/path/test.db',
+        dbPath: testDbPath,
         storage: 'sqlite'
       });
 

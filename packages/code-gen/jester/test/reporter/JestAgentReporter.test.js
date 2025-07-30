@@ -5,12 +5,19 @@
 
 import { JestAgentReporter } from '../../src/reporter/JestAgentReporter.js';
 import { promises as fs } from 'fs';
+import { TestDbHelper, setupTestDb, cleanupTestDb } from '../utils/test-db-helper.js';
 
 describe('JestAgentReporter', () => {
+  let testDbPath;
+
+  beforeAll(async () => {
+    await setupTestDb();
+  });
+
   let reporter;
   let mockGlobalConfig;
   let mockOptions;
-  const testDbPath = './test-jest-reporter.db';
+  let testDbPath;
 
   beforeEach(() => {
     mockGlobalConfig = {
@@ -33,11 +40,7 @@ describe('JestAgentReporter', () => {
     }
     
     // Clean up test database
-    try {
-      await fs.unlink(testDbPath);
-    } catch (error) {
-      // File doesn't exist, that's fine
-    }
+    await cleanupTestDb(testDbPath);
   });
 
   describe('Initialization', () => {
@@ -46,7 +49,7 @@ describe('JestAgentReporter', () => {
       expect(reporter.options).toEqual({
         collectConsole: true,
         collectCoverage: true,
-        dbPath: './test-jest-reporter.db',
+        dbPath: testDbPath,
         realTimeEvents: true
       });
       expect(reporter.collector).toBeDefined();
@@ -60,7 +63,7 @@ describe('JestAgentReporter', () => {
       expect(defaultReporter.options).toEqual({
         collectConsole: true,
         collectCoverage: true,
-        dbPath: './test-results.db',
+        dbPath: testDbPath,
         realTimeEvents: true
       });
       expect(defaultReporter.storage.dbPath).toBe('./test-results.db'); // Default path

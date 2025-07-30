@@ -6,13 +6,21 @@
 import { AgentTDDHelper } from '../../src/agents/AgentTDDHelper.js';
 import { JestAgentWrapper } from '../../src/core/JestAgentWrapper.js';
 import { promises as fs } from 'fs';
+import { TestDbHelper, setupTestDb, cleanupTestDb } from '../utils/test-db-helper.js';
 
 describe('AgentTDDHelper', () => {
+  let testDbPath;
+
+  beforeAll(async () => {
+    await setupTestDb();
+  });
+
   let helper;
   let mockJaw;
-  const testDbPath = './test-agent-tdd.db';
+  let testDbPath;
 
   beforeEach(async () => {
+    testDbPath = TestDbHelper.getTempDbPath('agenttddhelper');
     // Create a real JAW instance for testing
     mockJaw = new JestAgentWrapper({
       dbPath: testDbPath,
@@ -28,11 +36,7 @@ describe('AgentTDDHelper', () => {
     }
     
     // Clean up test database
-    try {
-      await fs.unlink(testDbPath);
-    } catch (error) {
-      // File doesn't exist, that's fine
-    }
+    await cleanupTestDb(testDbPath);
   });
 
   describe('Initialization', () => {
