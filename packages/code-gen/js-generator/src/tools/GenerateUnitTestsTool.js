@@ -7,6 +7,8 @@
 
 import { Tool, ToolResult } from '@legion/module-loader';
 import { z } from 'zod';
+import fs from 'fs/promises';
+import path from 'path';
 
 export class GenerateUnitTestsTool extends Tool {
   constructor() {
@@ -40,7 +42,10 @@ export class GenerateUnitTestsTool extends Tool {
         }).optional().describe('Setup and teardown hooks'),
         async_tests: z.boolean().optional().default(false).describe('Generate async test functions'),
         timeout: z.number().optional().describe('Test timeout in milliseconds'),
-        coverage: z.boolean().optional().default(false).describe('Include coverage annotations')
+        coverage: z.boolean().optional().default(false).describe('Include coverage annotations'),
+        projectPath: z.string().optional().describe('Project root directory (optional, for file writing)'),
+        writeToFile: z.boolean().optional().default(false).describe('Whether to write generated test file to disk'),
+        outputPath: z.string().optional().describe('Relative path within project for test file (when writeToFile is true)')
       });
     this.outputSchema = z.object({
         test_content: z.string().describe('Generated Jest test code'),
@@ -51,7 +56,9 @@ export class GenerateUnitTestsTool extends Tool {
           has_setup: z.boolean().describe('Whether setup/teardown hooks are included'),
           has_async: z.boolean().describe('Whether async tests are included'),
           coverage_enabled: z.boolean().describe('Whether coverage annotations are included')
-        }).describe('Analysis of generated test components')
+        }).describe('Analysis of generated test components'),
+        filePath: z.string().optional().describe('Full path to written test file (when writeToFile is true)'),
+        written: z.boolean().describe('Whether the test file was written to disk')
       });
   }
 
@@ -164,7 +171,9 @@ export class GenerateUnitTestsTool extends Tool {
         const testCaseCode = this._generateTestCase(
           testCase, 
           isAsync, 
-          validatedArgs.timeout
+          validatedArgs.timeout,
+          validatedArgs.target_file,
+          moduleName
         );
         
         testParts.push('');
@@ -206,10 +215,36 @@ export class GenerateUnitTestsTool extends Tool {
       coverage_enabled: !!validatedArgs.coverage
     };
     
+    // Write to file if requested
+    let filePath = null;
+    let written = false;
+    
+    if (validatedArgs.writeToFile && validatedArgs.outputPath) {
+      try {
+        // Determine the full file path
+        const projectPath = validatedArgs.projectPath || process.cwd();
+        filePath = path.join(projectPath, validatedArgs.outputPath);
+        
+        // Ensure the directory exists
+        const dir = path.dirname(filePath);
+        await fs.mkdir(dir, { recursive: true });
+        
+        // Write the test file
+        await fs.writeFile(filePath, testContent, 'utf8');
+        written = true;
+      } catch (error) {
+        console.error('Failed to write test file:', error);
+        // Don't throw - let the tool succeed with content generation
+        // The caller can check the 'written' flag
+      }
+    }
+    
     return {
       test_content: testContent,
       test_path: testPath,
-      components
+      components,
+      filePath,
+      written
     };
   }
 
@@ -225,19 +260,18 @@ export class GenerateUnitTestsTool extends Tool {
   _generateImports(targetFile, moduleName, mocks) {
     const imports = [];
     
-    // Import Jest globals
-    imports.push("import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach, jest } from '@jest/globals';");
+    // For CommonJS compatibility, use require instead of ES modules
+    // Import the module under test
+    const importName = moduleName.charAt(0).toLowerCase() + moduleName.slice(1);
+    imports.push(`const ${importName} = require('${targetFile}');`);
     
     // Import mocked modules
     if (mocks && mocks.length > 0) {
       mocks.forEach(mock => {
-        imports.push(`import ${mock.module.replace(/[^a-zA-Z0-9]/g, '')} from '${mock.module}';`);
+        const mockName = mock.module.replace(/[^a-zA-Z0-9]/g, '');
+        imports.push(`const ${mockName} = require('${mock.module}');`);
       });
     }
-    
-    // Import the module under test (use lowercase for import name)
-    const importName = moduleName.charAt(0).toLowerCase() + moduleName.slice(1);
-    imports.push(`import ${importName} from '${targetFile}';`);
     
     return imports.join('\n');
   }
@@ -316,7 +350,7 @@ export class GenerateUnitTestsTool extends Tool {
     return hasSetup;
   }
 
-  _generateTestCase(testCase, isAsync, timeout) {
+  _generateTestCase(testCase, isAsync, timeout, targetFile, moduleName) {
     const parts = [];
     
     // Generate test function signature
@@ -368,7 +402,9 @@ export class GenerateUnitTestsTool extends Tool {
           typeof arg === 'string' ? `'${arg}'` : JSON.stringify(arg)
         ).join(', ') : '';
         
-        const functionCall = `${testCase.function}(${argsStr})`;
+        // For CommonJS, access the function from the imported module
+        const importName = moduleName.charAt(0).toLowerCase() + moduleName.slice(1);
+        const functionCall = `${importName}.${testCase.function}(${argsStr})`;
         
         if (isAsync) {
           parts.push(`    const result = await ${functionCall};`);
@@ -391,7 +427,8 @@ export class GenerateUnitTestsTool extends Tool {
               assertion += `.toContain(${this._formatExpectedValue(expectation.expected)});`;
               break;
             case 'toThrow':
-              assertion = `    expect(() => ${functionCall}).toThrow(${expectation.expected ? this._formatExpectedValue(expectation.expected) : ''});`;
+              // For toThrow, we need to wrap the function call in an arrow function
+              assertion = `    expect(() => ${importName}.${testCase.function}(${argsStr})).toThrow(${expectation.expected ? this._formatExpectedValue(expectation.expected) : ''});`;
               break;
             case 'toBeTruthy':
               assertion += '.toBeTruthy();';

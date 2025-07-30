@@ -11,61 +11,76 @@ export class QueryEngine {
    * Find tests matching criteria
    */
   async findTests(criteria = {}) {
-    await this.storage.initialize();
-    
-    let query = 'SELECT * FROM test_cases WHERE 1=1';
-    const params = [];
-    
-    if (criteria.sessionId) {
-      query += ' AND session_id = ?';
-      params.push(criteria.sessionId);
+    try {
+      await this.storage.initialize();
+      
+      // Check if database is properly initialized
+      if (!this.storage.db) {
+        return [];
+      }
+      
+      let query = 'SELECT * FROM test_cases WHERE 1=1';
+      const params = [];
+      
+      if (criteria.sessionId) {
+        query += ' AND session_id = ?';
+        params.push(criteria.sessionId);
+      }
+      
+      if (criteria.status) {
+        query += ' AND status = ?';
+        params.push(criteria.status);
+      }
+      
+      if (criteria.name) {
+        query += ' AND name LIKE ?';
+        params.push(`%${criteria.name}%`);
+      }
+      
+      if (criteria.minDuration) {
+        query += ' AND duration >= ?';
+        params.push(criteria.minDuration);
+      }
+      
+      query += ' ORDER BY start_time DESC';
+      
+      if (criteria.limit) {
+        query += ' LIMIT ?';
+        params.push(criteria.limit);
+      }
+      
+      const stmt = this.storage.db.prepare(query);
+      const rows = stmt.all(...params);
+      
+      return rows.map(row => ({
+        id: row.id,
+        sessionId: row.session_id,
+        suiteId: row.suite_id,
+        name: row.name,
+        fullName: row.full_name,
+        startTime: new Date(row.start_time),
+        endTime: row.end_time ? new Date(row.end_time) : null,
+        status: row.status,
+        duration: row.duration
+      }));
+    } catch (error) {
+      // Return empty array if database is not available or query fails
+      return [];
     }
-    
-    if (criteria.status) {
-      query += ' AND status = ?';
-      params.push(criteria.status);
-    }
-    
-    if (criteria.name) {
-      query += ' AND name LIKE ?';
-      params.push(`%${criteria.name}%`);
-    }
-    
-    if (criteria.minDuration) {
-      query += ' AND duration >= ?';
-      params.push(criteria.minDuration);
-    }
-    
-    query += ' ORDER BY start_time DESC';
-    
-    if (criteria.limit) {
-      query += ' LIMIT ?';
-      params.push(criteria.limit);
-    }
-    
-    const stmt = this.storage.db.prepare(query);
-    const rows = stmt.all(...params);
-    
-    return rows.map(row => ({
-      id: row.id,
-      sessionId: row.session_id,
-      suiteId: row.suite_id,
-      name: row.name,
-      fullName: row.full_name,
-      startTime: new Date(row.start_time),
-      endTime: row.end_time ? new Date(row.end_time) : null,
-      status: row.status,
-      duration: row.duration
-    }));
   }
 
   /**
    * Get failed tests
    */
   async getFailedTests(sessionId = null) {
-    const criteria = { status: 'failed' };
-    if (sessionId) criteria.sessionId = sessionId;
-    return this.findTests(criteria);
+    try {
+      const criteria = { status: 'failed' };
+      if (sessionId) criteria.sessionId = sessionId;
+      return this.findTests(criteria);
+    } catch (error) {
+      // Return empty array if database is not available or query fails
+      return [];
+    }
   }
 
   /**
@@ -99,55 +114,65 @@ export class QueryEngine {
    * Search logs
    */
   async searchLogs(query = {}) {
-    await this.storage.initialize();
-    
-    let sql = 'SELECT * FROM logs WHERE 1=1';
-    const params = [];
-    
-    if (query.sessionId) {
-      sql += ' AND session_id = ?';
-      params.push(query.sessionId);
+    try {
+      await this.storage.initialize();
+      
+      // Check if database is properly initialized
+      if (!this.storage.db) {
+        return [];
+      }
+      
+      let sql = 'SELECT * FROM logs WHERE 1=1';
+      const params = [];
+      
+      if (query.sessionId) {
+        sql += ' AND session_id = ?';
+        params.push(query.sessionId);
+      }
+      
+      if (query.testId) {
+        sql += ' AND test_id = ?';
+        params.push(query.testId);
+      }
+      
+      if (query.level) {
+        sql += ' AND level = ?';
+        params.push(query.level);
+      }
+      
+      if (query.message) {
+        sql += ' AND message LIKE ?';
+        params.push(`%${query.message}%`);
+      }
+      
+      if (query.since) {
+        sql += ' AND timestamp >= ?';
+        params.push(query.since.toISOString());
+      }
+      
+      sql += ' ORDER BY timestamp DESC';
+      
+      if (query.limit) {
+        sql += ' LIMIT ?';
+        params.push(query.limit);
+      }
+      
+      const stmt = this.storage.db.prepare(sql);
+      const rows = stmt.all(...params);
+      
+      return rows.map(row => ({
+        sessionId: row.session_id,
+        testId: row.test_id,
+        timestamp: new Date(row.timestamp),
+        level: row.level,
+        message: row.message,
+        source: row.source,
+        metadata: JSON.parse(row.metadata || '{}')
+      }));
+    } catch (error) {
+      // Return empty array if database is not available or query fails
+      return [];
     }
-    
-    if (query.testId) {
-      sql += ' AND test_id = ?';
-      params.push(query.testId);
-    }
-    
-    if (query.level) {
-      sql += ' AND level = ?';
-      params.push(query.level);
-    }
-    
-    if (query.message) {
-      sql += ' AND message LIKE ?';
-      params.push(`%${query.message}%`);
-    }
-    
-    if (query.since) {
-      sql += ' AND timestamp >= ?';
-      params.push(query.since.toISOString());
-    }
-    
-    sql += ' ORDER BY timestamp DESC';
-    
-    if (query.limit) {
-      sql += ' LIMIT ?';
-      params.push(query.limit);
-    }
-    
-    const stmt = this.storage.db.prepare(sql);
-    const rows = stmt.all(...params);
-    
-    return rows.map(row => ({
-      sessionId: row.session_id,
-      testId: row.test_id,
-      timestamp: new Date(row.timestamp),
-      level: row.level,
-      message: row.message,
-      source: row.source,
-      metadata: JSON.parse(row.metadata || '{}')
-    }));
   }
 
   /**
@@ -182,56 +207,81 @@ export class QueryEngine {
    * Get most common errors
    */
   async getMostCommonErrors(limit = 10) {
-    await this.storage.initialize();
-    
-    const stmt = this.storage.db.prepare(`
-      SELECT type, message, COUNT(*) as count
-      FROM errors
-      GROUP BY type, message
-      ORDER BY count DESC
-      LIMIT ?
-    `);
-    
-    const rows = stmt.all(limit);
-    return rows.map(row => ({
-      type: row.type,
-      message: row.message,
-      count: row.count
-    }));
+    try {
+      await this.storage.initialize();
+      
+      // Check if database is properly initialized
+      if (!this.storage.db) {
+        return [];
+      }
+      
+      const stmt = this.storage.db.prepare(`
+        SELECT type, message, COUNT(*) as count
+        FROM errors
+        GROUP BY type, message
+        ORDER BY count DESC
+        LIMIT ?
+      `);
+      
+      const rows = stmt.all(limit);
+      return rows.map(row => ({
+        type: row.type,
+        message: row.message,
+        count: row.count
+      }));
+    } catch (error) {
+      // Return empty array if database is not available or query fails
+      return [];
+    }
   }
 
   /**
    * Get slowest tests
    */
   async getSlowestTests(limit = 10) {
-    await this.storage.initialize();
-    
-    const stmt = this.storage.db.prepare(`
-      SELECT * FROM test_cases 
-      WHERE duration IS NOT NULL 
-      ORDER BY duration DESC 
-      LIMIT ?
-    `);
-    
-    const rows = stmt.all(limit);
-    return rows.map(row => ({
-      id: row.id,
-      sessionId: row.session_id,
-      suiteId: row.suite_id,
-      name: row.name,
-      fullName: row.full_name,
-      startTime: new Date(row.start_time),
-      endTime: row.end_time ? new Date(row.end_time) : null,
-      status: row.status,
-      duration: row.duration
-    }));
+    try {
+      await this.storage.initialize();
+      
+      // Check if database is properly initialized
+      if (!this.storage.db) {
+        return [];
+      }
+      
+      const stmt = this.storage.db.prepare(`
+        SELECT * FROM test_cases 
+        WHERE duration IS NOT NULL 
+        ORDER BY duration DESC 
+        LIMIT ?
+      `);
+      
+      const rows = stmt.all(limit);
+      return rows.map(row => ({
+        id: row.id,
+        sessionId: row.session_id,
+        suiteId: row.suite_id,
+        name: row.name,
+        fullName: row.full_name,
+        startTime: new Date(row.start_time),
+        endTime: row.end_time ? new Date(row.end_time) : null,
+        status: row.status,
+        duration: row.duration
+      }));
+    } catch (error) {
+      // Return empty array if database is not available or query fails
+      return [];
+    }
   }
 
   /**
    * Get test history for a specific test name
    */
   async getTestHistory(testName) {
-    return this.findTests({ name: testName });
+    try {
+      return this.findTests({ name: testName });
+    } catch (error) {
+      // Return empty array if database is not available or query fails
+      return [];
+    }
   }
 
   /**

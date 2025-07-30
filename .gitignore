@@ -86,6 +86,8 @@ example.js
 test-results/
 .test-results/
 .jester/
+dbs/
+**/dbs/
 
 # Temporary directories
 tmp/

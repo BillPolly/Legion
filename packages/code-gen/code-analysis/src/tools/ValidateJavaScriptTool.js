@@ -7,6 +7,7 @@
 import { Tool, ToolResult } from '@legion/module-loader';
 import { z } from 'zod';
 import fs from 'fs/promises';
+import path from 'path';
 
 export class ValidateJavaScriptTool extends Tool {
   constructor() {
@@ -16,9 +17,11 @@ export class ValidateJavaScriptTool extends Tool {
     this.inputSchema = z.object({
       code: z.string().optional().describe('JavaScript code to validate'),
       filePath: z.string().optional().describe('Path to JavaScript file to validate (alternative to code)'),
+      projectPath: z.string().optional().describe('Project root directory for batch analysis of all JS files'),
       includeAnalysis: z.boolean().default(true).describe('Include code quality analysis'),
       checkSecurity: z.boolean().default(true).describe('Check for security issues'),
-      checkPerformance: z.boolean().default(true).describe('Check for performance issues')
+      checkPerformance: z.boolean().default(true).describe('Check for performance issues'),
+      filePattern: z.string().optional().default('**/*.{js,mjs,jsx}').describe('File pattern for batch analysis (when projectPath is provided)')
     });
     this.outputSchema = z.object({
       valid: z.boolean().describe('Whether the code is syntactically valid'),
@@ -28,19 +31,42 @@ export class ValidateJavaScriptTool extends Tool {
         type: z.string(),
         severity: z.string(),
         message: z.string(),
-        line: z.number().optional()
+        line: z.number().optional(),
+        file: z.string().optional()
       })).describe('Security vulnerabilities found'),
       performanceIssues: z.array(z.object({
         type: z.string(),
         severity: z.string(),
         message: z.string(),
-        suggestion: z.string()
+        suggestion: z.string(),
+        file: z.string().optional()
       })).describe('Performance issues found'),
       metrics: z.object({
         linesOfCode: z.number(),
         complexity: z.number(),
         maintainabilityIndex: z.number()
-      }).describe('Code metrics')
+      }).describe('Code metrics'),
+      results: z.object({
+        javascript: z.array(z.object({
+          file: z.string(),
+          valid: z.boolean(),
+          errors: z.array(z.string()),
+          warnings: z.array(z.string()),
+          metrics: z.object({
+            linesOfCode: z.number(),
+            complexity: z.number(),
+            maintainabilityIndex: z.number()
+          })
+        })).optional(),
+        summary: z.object({
+          totalFiles: z.number(),
+          validFiles: z.number(),
+          totalErrors: z.number(),
+          totalWarnings: z.number(),
+          securityIssues: z.number(),
+          performanceIssues: z.number()
+        }).optional()
+      }).optional().describe('Batch analysis results (when projectPath is provided)')
     });
 
     // Security patterns to detect

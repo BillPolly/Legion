@@ -9,7 +9,8 @@
     "test:coverage": "cross-env NODE_OPTIONS=\"--experimental-vm-modules\" jest --coverage",
     "test:js-generator": "cross-env NODE_OPTIONS=\"--experimental-vm-modules\" jest __tests__/integration/LiveJSGeneratorModule.test.js",
     "test:package-manager": "cross-env NODE_OPTIONS=\"--experimental-vm-modules\" jest __tests__/integration/LivePackageManagerModule.test.js",
-    "test:code-analysis": "cross-env NODE_OPTIONS=\"--experimental-vm-modules\" jest __tests__/integration/LiveCodeAnalysisModule.test.js"
+    "test:code-analysis": "cross-env NODE_OPTIONS=\"--experimental-vm-modules\" jest __tests__/integration/LiveCodeAnalysisModule.test.js",
+    "test:jester": "cross-env NODE_OPTIONS=\"--experimental-vm-modules\" jest __tests__/integration/LiveJesterModule.test.js"
   },
   "keywords": ["legion", "code-generation", "javascript", "npm", "analysis"],
   "author": "Legion Team",

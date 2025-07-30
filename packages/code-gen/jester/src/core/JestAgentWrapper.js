@@ -6,6 +6,8 @@ import { EventEmitter } from 'events';
 import { EventCollector } from './EventCollector.js';
 import { StorageEngine } from '../storage/StorageEngine.js';
 import { QueryEngine } from '../storage/QueryEngine.js';
+import fs from 'fs/promises';
+import path from 'path';
 
 export class JestAgentWrapper extends EventEmitter {
   constructor(config = {}) {
@@ -13,7 +15,7 @@ export class JestAgentWrapper extends EventEmitter {
     
     this.config = {
       storage: 'sqlite',
-      dbPath: './.jester/test-results.db',
+      dbPath: `./dbs/test-results-${Date.now()}.db`,
       collectConsole: true,
       collectCoverage: true,
       collectPerformance: true,
@@ -27,9 +29,45 @@ export class JestAgentWrapper extends EventEmitter {
     this.reporter = null;
     this.currentSession = null;
 
-    // Initialize storage
-    this.initializeStorage();
+    // Clean up old databases and initialize storage
+    this.cleanupDatabases().then(() => {
+      this.initializeStorage();
+    });
     this.setupEventForwarding();
+  }
+
+  /**
+   * Clean up old database files in the dbs directory
+   */
+  async cleanupDatabases() {
+    try {
+      const dbsDir = path.join(process.cwd(), 'dbs');
+      
+      // Check if dbs directory exists
+      try {
+        await fs.access(dbsDir);
+      } catch (error) {
+        // Directory doesn't exist, nothing to clean up
+        return;
+      }
+      
+      // Read directory contents
+      const files = await fs.readdir(dbsDir);
+      
+      // Delete all .db files and related SQLite files
+      const deletePromises = files
+        .filter(file => file.match(/\.(db|db-shm|db-wal|sqlite|sqlite3)$/))
+        .map(file => fs.unlink(path.join(dbsDir, file)).catch(() => {})); // Ignore errors
+      
+      await Promise.all(deletePromises);
+      
+      if (deletePromises.length > 0) {
+        console.log(`🧹 Cleaned up ${deletePromises.length} old database files from dbs/`);
+      }
+    } catch (error) {
+      // Silently ignore cleanup errors - not critical
+      console.warn('Database cleanup warning:', error.message);
+    }
   }
 
   /**

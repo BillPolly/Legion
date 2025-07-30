@@ -4,6 +4,8 @@
 
 import { Tool } from '@legion/module-loader';
 import { z } from 'zod';
+import fs from 'fs/promises';
+import path from 'path';
 
 export class GenerateJavaScriptFunctionTool extends Tool {
   constructor() {
@@ -30,12 +32,17 @@ export class GenerateJavaScriptFunctionTool extends Tool {
           description: z.string().optional(),
           returns: z.string().optional(),
           example: z.string().optional()
-        }).optional().describe('JSDoc documentation')
+        }).optional().describe('JSDoc documentation'),
+        projectPath: z.string().optional().describe('Project root directory (optional, for file writing)'),
+        writeToFile: z.boolean().optional().default(false).describe('Whether to write generated code to file'),
+        outputPath: z.string().optional().describe('Relative path within project for output file (when writeToFile is true)')
       });
     this.outputSchema = z.object({
         code: z.string().describe('Generated function code'),
         signature: z.string().describe('Function signature'),
-        hasJSDoc: z.boolean().describe('Whether JSDoc was generated')
+        hasJSDoc: z.boolean().describe('Whether JSDoc was generated'),
+        filePath: z.string().optional().describe('Full path to written file (when writeToFile is true)'),
+        written: z.boolean().describe('Whether the file was written to disk')
       });
 
     this.config = {

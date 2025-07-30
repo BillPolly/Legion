@@ -6,6 +6,8 @@
 
 import { Tool } from '@legion/module-loader';
 import { z } from 'zod';
+import fs from 'fs/promises';
+import path from 'path';
 
 export class GenerateJavaScriptModuleTool extends Tool {
   constructor() {
@@ -41,7 +43,10 @@ export class GenerateJavaScriptModuleTool extends Tool {
         exports: z.object({
           default: z.string().optional(),
           named: z.array(z.string()).optional()
-        }).optional().describe('Export statements')
+        }).optional().describe('Export statements'),
+        projectPath: z.string().optional().describe('Project root directory (optional, for file writing)'),
+        writeToFile: z.boolean().optional().default(false).describe('Whether to write generated code to file'),
+        outputPath: z.string().optional().describe('Relative path within project for output file (when writeToFile is true)')
       });
     this.outputSchema = z.object({
         code: z.string().describe('Generated JavaScript module code'),
@@ -52,7 +57,9 @@ export class GenerateJavaScriptModuleTool extends Tool {
           classes: z.number(),
           imports: z.number(),
           exports: z.number()
-        })
+        }),
+        filePath: z.string().optional().describe('Full path to written file (when writeToFile is true)'),
+        written: z.boolean().describe('Whether the file was written to disk')
       });
 
     // Configuration options
@@ -135,14 +142,46 @@ export class GenerateJavaScriptModuleTool extends Tool {
       const linesOfCode = code.split('\n').length;
       const filename = this._generateFilename(args.name);
 
-      this.emit('progress', { percentage: 100, status: 'Module generation complete' });
+      this.emit('progress', { percentage: 95, status: 'Module generation complete' });
 
-      return {
+      const result = {
         code,
         filename,
         linesOfCode,
-        components
+        components,
+        written: false
       };
+
+      // Handle file writing if requested
+      if (args.writeToFile && args.projectPath) {
+        this.emit('progress', { percentage: 98, status: 'Writing file to disk...' });
+        
+        try {
+          // Determine output path
+          const outputPath = args.outputPath || `src/${filename}`;
+          const fullPath = path.join(args.projectPath, outputPath);
+          
+          // Ensure directory exists
+          const dir = path.dirname(fullPath);
+          await fs.mkdir(dir, { recursive: true });
+          
+          // Write file
+          await fs.writeFile(fullPath, code, 'utf8');
+          
+          result.filePath = fullPath;
+          result.written = true;
+          
+          this.emit('progress', { percentage: 100, status: `File written to ${fullPath}` });
+        } catch (error) {
+          this.emit('error', { message: `Failed to write file: ${error.message}` });
+          // Don't throw - return the generated code even if file writing fails
+          result.written = false;
+        }
+      } else {
+        this.emit('progress', { percentage: 100, status: 'Module generation complete' });
+      }
+
+      return result;
 
     } catch (error) {
       this.emit('error', { message: error.message });

@@ -7,6 +7,8 @@
 
 import { Tool, ToolResult } from '@legion/module-loader';
 import { z } from 'zod';
+import fs from 'fs/promises';
+import path from 'path';
 
 export class GenerateJavaScriptClassTool extends Tool {
   constructor() {

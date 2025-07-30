@@ -6,51 +6,134 @@
  */
 
 import { Module, Tool, ToolResult } from '@legion/module-loader';
+import { wrapTool } from '../../src/ToolWrapper.js';
 import { JestAgentWrapper } from './core/JestAgentWrapper.js';
 import { AgentTDDHelper } from './agents/AgentTDDHelper.js';
 import { z } from 'zod';
+
+/**
+ * Helper function to create standard invoke method for Legion compatibility
+ */
+function createInvokeMethod(toolInstance) {
+  return async function invoke(toolCall) {
+    // Parse arguments from the tool call
+    let args;
+    try {
+      args = typeof toolCall.function.arguments === 'string' 
+        ? JSON.parse(toolCall.function.arguments)
+        : toolCall.function.arguments;
+    } catch (error) {
+      return ToolResult.failure(error.message || 'Tool execution failed', {
+        toolName: toolInstance.name,
+        error: error.toString(),
+        stack: error.stack
+      });
+    }
+
+    // Execute the tool with parsed arguments
+    try {
+      const result = await toolInstance.execute(args);
+      return ToolResult.success(result);
+    } catch (error) {
+      return ToolResult.failure(error.message || 'Tool execution failed', {
+        toolName: toolInstance.name,
+        error: error.toString(),
+        stack: error.stack
+      });
+    }
+  };
+}
 
 /**
  * Tool for running Jest tests with advanced analytics
  */
 class RunTestsTool extends Tool {
   constructor(jestWrapper, tddHelper) {
-    super({
-      name: 'run_tests',
-      description: 'Execute Jest tests with advanced analytics and reporting',
-      inputSchema: z.object({
-        pattern: z.string().optional().describe('Test file pattern to match (optional, runs all tests if not specified)'),
-        config: z.object({
-          collectCoverage: z.boolean().optional().describe('Collect code coverage during test run'),
-          verbose: z.boolean().optional().describe('Enable verbose output'),
-          bail: z.boolean().optional().describe('Stop after first test failure')
-        }).optional().describe('Jest configuration options')
+    super();
+    this.name = 'run_tests';
+    this.description = 'Execute Jest tests with advanced analytics and reporting';
+    this.inputSchema = z.object({
+      pattern: z.string().optional().describe('Test file pattern to match (optional, runs all tests if not specified)'),
+      projectPath: z.string().optional().default(process.cwd()).describe('Project root directory for Jest execution context'),
+      config: z.object({
+        collectCoverage: z.boolean().optional().describe('Collect code coverage during test run'),
+        verbose: z.boolean().optional().describe('Enable verbose output'),
+        bail: z.boolean().optional().describe('Stop after first test failure')
+      }).optional().describe('Jest configuration options')
+    });
+    this.outputSchema = z.object({
+      sessionId: z.string().describe('Unique session identifier for this test run'),
+      projectPath: z.string().describe('Project path where tests were executed'),
+      summary: z.object({
+        totalTests: z.number(),
+        passedTests: z.number(),
+        failedTests: z.number(),
+        skippedTests: z.number(),
+        duration: z.number(),
+        success: z.boolean()
       }),
-      outputSchema: z.object({
-        sessionId: z.string().describe('Unique session identifier for this test run'),
-        summary: z.object({
-          totalTests: z.number(),
-          passedTests: z.number(),
-          failedTests: z.number(),
-          skippedTests: z.number(),
-          duration: z.number(),
-          success: z.boolean()
-        }),
-        coverage: z.object({}).optional().describe('Code coverage information if enabled')
-      })
+      coverage: z.object({}).optional().describe('Code coverage information if enabled')
     });
     this.jestWrapper = jestWrapper;
     this.tddHelper = tddHelper;
+  }
+
+  async invoke(toolCall) {
+    // Parse arguments from the tool call
+    let args;
+    try {
+      args = typeof toolCall.function.arguments === 'string' 
+        ? JSON.parse(toolCall.function.arguments)
+        : toolCall.function.arguments;
+    } catch (error) {
+      return ToolResult.failure(error.message || 'Tool execution failed', {
+        toolName: this.name,
+        error: error.toString(),
+        stack: error.stack
+      });
+    }
+
+    // Execute the tool with parsed arguments
+    try {
+      const result = await this.execute(args);
+      return ToolResult.success(result);
+    } catch (error) {
+      return ToolResult.failure(error.message || 'Tool execution failed', {
+        toolName: this.name,
+        error: error.toString(),
+        stack: error.stack
+      });
+    }
   }
 
   async execute(args) {
     try {
       this.emit('progress', { percentage: 10, status: 'Starting test session...' });
       
-      const { pattern, config = {} } = args;
+      const { pattern, projectPath = process.cwd(), config = {} } = args;
+      
+      // Set working directory context for Jest
+      const originalCwd = process.cwd();
+      if (projectPath !== originalCwd) {
+        this.emit('progress', { percentage: 15, status: `Setting project context to ${projectPath}...` });
+      }
+      
+      // Create Jest configuration with project context
+      const jestConfig = {
+        ...config,
+        cwd: projectPath,
+        rootDir: projectPath
+      };
+      
+      // Resolve pattern relative to project path if provided
+      let resolvedPattern = pattern;
+      if (pattern && !pattern.startsWith('/')) {
+        // If pattern is relative, resolve it against projectPath
+        resolvedPattern = pattern;
+      }
       
       // Start a new test session
-      const session = await this.jestWrapper.runTests(pattern, config);
+      const session = await this.jestWrapper.runTests(resolvedPattern, jestConfig);
       
       this.emit('progress', { percentage: 50, status: 'Running tests...' });
       
@@ -61,6 +144,7 @@ class RunTestsTool extends Tool {
       
       const result = {
         sessionId: session.id,
+        projectPath: projectPath,
         summary: {
           totalTests: summary.totalTests || 0,
           passedTests: summary.passedTests || 0,
@@ -90,23 +174,26 @@ class RunTestsTool extends Tool {
  */
 class AnalyzeFailuresTool extends Tool {
   constructor(jestWrapper, tddHelper) {
-    super({
-      name: 'analyze_failures',
-      description: 'Analyze failed tests and provide actionable insights for TDD',
-      inputSchema: z.object({
-        sessionId: z.string().optional().describe('Session ID from a previous test run (optional, uses latest if not provided)')
-      }),
-      outputSchema: z.object({
-        status: z.enum(['green', 'red']).describe('TDD status - green if all passing, red if failures'),
-        failures: z.number().describe('Number of failed tests'),
-        errorSummary: z.object({}).describe('Analysis of error patterns and types'),
-        suggestions: z.array(z.object({})).describe('Implementation suggestions based on failures'),
-        nextActions: z.array(z.object({})).describe('Prioritized list of actions to take'),
-        detailedFailures: z.array(z.object({})).describe('Detailed information about each failed test')
-      })
+    super();
+    this.name = 'analyze_failures';
+    this.description = 'Analyze failed tests and provide actionable insights for TDD';
+    this.inputSchema = z.object({
+      sessionId: z.string().optional().describe('Session ID from a previous test run (optional, uses latest if not provided)')
+    });
+    this.outputSchema = z.object({
+      status: z.enum(['green', 'red']).describe('TDD status - green if all passing, red if failures'),
+      failures: z.number().describe('Number of failed tests'),
+      errorSummary: z.object({}).describe('Analysis of error patterns and types'),
+      suggestions: z.array(z.object({})).describe('Implementation suggestions based on failures'),
+      nextActions: z.array(z.object({})).describe('Prioritized list of actions to take'),
+      detailedFailures: z.array(z.object({})).describe('Detailed information about each failed test')
     });
     this.jestWrapper = jestWrapper;
     this.tddHelper = tddHelper;
+  }
+
+  async invoke(toolCall) {
+    return createInvokeMethod(this)(toolCall);
   }
 
   async execute(args) {
@@ -132,21 +219,24 @@ class AnalyzeFailuresTool extends Tool {
  */
 class GetTestHistoryTool extends Tool {
   constructor(jestWrapper) {
-    super({
-      name: 'get_test_history',
-      description: 'Get historical performance data for a specific test',
-      inputSchema: z.object({
-        testName: z.string().describe('Full name of the test to analyze')
-      }),
-      outputSchema: z.object({
-        totalRuns: z.number(),
-        successRate: z.number(),
-        averageDuration: z.number(),
-        trend: z.string(),
-        recommendation: z.string()
-      })
+    super();
+    this.name = 'get_test_history';
+    this.description = 'Get historical performance data for a specific test';
+    this.inputSchema = z.object({
+      testName: z.string().describe('Full name of the test to analyze')
+    });
+    this.outputSchema = z.object({
+      totalRuns: z.number(),
+      successRate: z.number(),
+      averageDuration: z.number(),
+      trend: z.string(),
+      recommendation: z.string()
     });
     this.jestWrapper = jestWrapper;
+  }
+
+  async invoke(toolCall) {
+    return createInvokeMethod(this)(toolCall);
   }
 
   async execute(args) {
@@ -167,34 +257,46 @@ class GetTestHistoryTool extends Tool {
  */
 class SearchLogsTool extends Tool {
   constructor(jestWrapper) {
-    super({
-      name: 'search_logs',
-      description: 'Search through test logs and console output',
-      inputSchema: z.object({
-        query: z.string().describe('Search query for log messages'),
-        sessionId: z.string().optional().describe('Limit search to specific session (optional)')
-      }),
-      outputSchema: z.object({
-        matches: z.array(z.object({})).describe('Array of matching log entries with context'),
-        totalMatches: z.number()
-      })
+    super();
+    this.name = 'search_logs';
+    this.description = 'Search through test logs and console output';
+    this.inputSchema = z.object({
+      query: z.string().describe('Search query for log messages'),
+      sessionId: z.string().optional().describe('Limit search to specific session (optional)')
+    });
+    this.outputSchema = z.object({
+      matches: z.array(z.object({})).describe('Array of matching log entries with context'),
+      totalMatches: z.number()
     });
     this.jestWrapper = jestWrapper;
+  }
+
+  async invoke(toolCall) {
+    return createInvokeMethod(this)(toolCall);
   }
 
   async execute(args) {
     try {
       const { query, sessionId } = args;
-      const results = await this.jestWrapper.searchLogs(query);
       
-      // Filter by session if provided
-      const filteredResults = sessionId 
-        ? results.filter(r => r.sessionId === sessionId)
-        : results;
+      // Handle different query formats
+      let searchQuery;
+      if (typeof query === 'string') {
+        searchQuery = { message: query };
+      } else {
+        searchQuery = query || {};
+      }
+      
+      // Add sessionId to query if provided
+      if (sessionId) {
+        searchQuery.sessionId = sessionId;
+      }
+      
+      const results = await this.jestWrapper.searchLogs(searchQuery);
       
       return {
-        matches: filteredResults,
-        totalMatches: filteredResults.length
+        matches: results,
+        totalMatches: results.length
       };
     } catch (error) {
       this.emit('error', { message: error.message });
@@ -208,17 +310,20 @@ class SearchLogsTool extends Tool {
  */
 class GetSlowestTestsTool extends Tool {
   constructor(jestWrapper) {
-    super({
-      name: 'get_slowest_tests',
-      description: 'Identify the slowest running tests for performance optimization',
-      inputSchema: z.object({
-        limit: z.number().default(10).describe('Number of slowest tests to return')
-      }),
-      outputSchema: z.object({
-        tests: z.array(z.object({})).describe('Array of slowest tests with duration information')
-      })
+    super();
+    this.name = 'get_slowest_tests';
+    this.description = 'Identify the slowest running tests for performance optimization';
+    this.inputSchema = z.object({
+      limit: z.number().default(10).describe('Number of slowest tests to return')
+    });
+    this.outputSchema = z.object({
+      tests: z.array(z.object({})).describe('Array of slowest tests with duration information')
     });
     this.jestWrapper = jestWrapper;
+  }
+
+  async invoke(toolCall) {
+    return createInvokeMethod(this)(toolCall);
   }
 
   async execute(args) {
@@ -238,17 +343,20 @@ class GetSlowestTestsTool extends Tool {
  */
 class GetCommonErrorsTool extends Tool {
   constructor(jestWrapper) {
-    super({
-      name: 'get_common_errors',
-      description: 'Get the most frequently occurring test errors',
-      inputSchema: z.object({
-        limit: z.number().default(10).describe('Number of error types to return')
-      }),
-      outputSchema: z.object({
-        errors: z.array(z.object({})).describe('Array of common errors with occurrence counts')
-      })
+    super();
+    this.name = 'get_common_errors';
+    this.description = 'Get the most frequently occurring test errors';
+    this.inputSchema = z.object({
+      limit: z.number().default(10).describe('Number of error types to return')
+    });
+    this.outputSchema = z.object({
+      errors: z.array(z.object({})).describe('Array of common errors with occurrence counts')
     });
     this.jestWrapper = jestWrapper;
+  }
+
+  async invoke(toolCall) {
+    return createInvokeMethod(this)(toolCall);
   }
 
   async execute(args) {
@@ -268,8 +376,11 @@ class GetCommonErrorsTool extends Tool {
  */
 export class JesterModule extends Module {
   constructor(dependencies = {}) {
-    super('JesterModule', dependencies);
+    super();
+    this.name = 'JesterModule';
+    this.dependencies = dependencies;
     this.description = 'Advanced Jest testing with intelligent analytics and TDD support';
+    this.version = '1.0.0';
     this.jestWrapper = null;
     this.tddHelper = null;
   }
@@ -304,6 +415,7 @@ export class JesterModule extends Module {
     // Initialize TDD Helper
     this.tddHelper = new AgentTDDHelper(this.jestWrapper);
 
+    this.initialized = true;
     await super.initialize();
   }
 
@@ -316,13 +428,20 @@ export class JesterModule extends Module {
     }
 
     return [
-      new RunTestsTool(this.jestWrapper, this.tddHelper),
-      new AnalyzeFailuresTool(this.jestWrapper, this.tddHelper),
-      new GetTestHistoryTool(this.jestWrapper),
-      new SearchLogsTool(this.jestWrapper),
-      new GetSlowestTestsTool(this.jestWrapper),
-      new GetCommonErrorsTool(this.jestWrapper)
+      wrapTool(new RunTestsTool(this.jestWrapper, this.tddHelper)),
+      wrapTool(new AnalyzeFailuresTool(this.jestWrapper, this.tddHelper)),
+      wrapTool(new GetTestHistoryTool(this.jestWrapper)),
+      wrapTool(new SearchLogsTool(this.jestWrapper)),
+      wrapTool(new GetSlowestTestsTool(this.jestWrapper)),
+      wrapTool(new GetCommonErrorsTool(this.jestWrapper))
     ];
+  }
+
+  /**
+   * Get tool by name
+   */
+  getTool(name) {
+    return this.getTools().find(tool => tool.name === name);
   }
 
   /**

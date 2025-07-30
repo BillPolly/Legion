@@ -23,6 +23,15 @@ export class AgentTDDHelper {
     if (failures.length === 0) {
       return {
         status: 'green',
+        failures: 0,
+        errorSummary: {
+          totalFailures: 0,
+          errorTypeDistribution: {},
+          commonMessages: []
+        },
+        suggestions: [],
+        nextActions: [],
+        detailedFailures: [],
         message: '✅ All tests passing - ready for refactor phase',
         nextAction: 'refactor'
       };
@@ -120,12 +129,19 @@ export class AgentTDDHelper {
     const history = await this.jaw.getTestHistory(testName);
     
     if (history.length === 0) {
-      return { message: 'No history found for this test' };
+      return { 
+        totalRuns: 0,
+        successRate: 0,
+        averageDuration: 0,
+        trend: 'no_data',
+        recommendation: 'No history found for this test - run the test to start tracking history',
+        message: 'No history found for this test' 
+      };
     }
     
     const totalRuns = history.length;
     const successRate = history.filter(t => t.status === 'passed').length / totalRuns;
-    const averageDuration = history.reduce((sum, t) => sum + t.duration, 0) / totalRuns;
+    const averageDuration = history.reduce((sum, t) => sum + (t.duration || 0), 0) / totalRuns;
     
     // Detect trends
     const recentRuns = history.slice(0, 5);
