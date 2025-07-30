@@ -1,0 +1,389 @@
+{
+  "name": "code-analysis",
+  "version": "1.0.0",
+  "description": "Code analysis tools for JavaScript and CSS validation, security scanning, and performance analysis",
+  "type": "legion",
+  "className": "CodeAnalysisModule", 
+  "classPath": "src/CodeAnalysisModule.js",
+  "dependencies": {
+    "zod": "^3.22.0"
+  },
+  "tools": [
+    {
+      "name": "validate_javascript",
+      "description": "Validate JavaScript code for syntax and quality issues",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "JavaScript code to validate"
+          },
+          "filePath": {
+            "type": "string",
+            "description": "Path to JavaScript file to validate (alternative to code)"
+          },
+          "includeAnalysis": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include code quality analysis"
+          },
+          "checkSecurity": {
+            "type": "boolean", 
+            "default": true,
+            "description": "Check for security issues"
+          },
+          "checkPerformance": {
+            "type": "boolean",
+            "default": true,
+            "description": "Check for performance issues"
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "valid": {
+            "type": "boolean",
+            "description": "Whether the code is syntactically valid"
+          },
+          "errors": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Array of validation errors"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Array of code quality warnings"
+          },
+          "securityIssues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {"type": "string"},
+                "severity": {"type": "string"},
+                "message": {"type": "string"},
+                "line": {"type": "number"}
+              }
+            },
+            "description": "Security vulnerabilities found"
+          },
+          "performanceIssues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {"type": "string"},
+                "severity": {"type": "string"},
+                "message": {"type": "string"},
+                "suggestion": {"type": "string"}
+              }
+            },
+            "description": "Performance issues found"
+          },
+          "metrics": {
+            "type": "object",
+            "properties": {
+              "linesOfCode": {"type": "number"},
+              "complexity": {"type": "number"},
+              "maintainabilityIndex": {"type": "number"}
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "analyze_js_security",
+      "description": "Analyze JavaScript code for security vulnerabilities like XSS, code injection, and data leakage",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "JavaScript code to analyze"
+          },
+          "scanDepth": {
+            "type": "string",
+            "enum": ["basic", "comprehensive"],
+            "default": "basic",
+            "description": "Depth of security scan"
+          }
+        },
+        "required": ["code"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "vulnerabilities": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {"type": "string"},
+                "severity": {"type": "string"},
+                "description": {"type": "string"},
+                "line": {"type": "number"},
+                "recommendation": {"type": "string"}
+              }
+            }
+          },
+          "riskLevel": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "critical"]
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "totalIssues": {"type": "number"},
+              "critical": {"type": "number"},
+              "high": {"type": "number"},
+              "medium": {"type": "number"},
+              "low": {"type": "number"}
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "analyze_js_performance",
+      "description": "Analyze JavaScript code for performance bottlenecks and optimization opportunities",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "JavaScript code to analyze"
+          },
+          "includeRecommendations": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include optimization recommendations"
+          }
+        },
+        "required": ["code"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {"type": "string"},
+                "severity": {"type": "string"},
+                "description": {"type": "string"},
+                "impact": {"type": "string"},
+                "recommendation": {"type": "string"}
+              }
+            }
+          },
+          "optimizations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "suggestion": {"type": "string"},
+                "expectedImprovement": {"type": "string"},
+                "difficulty": {"type": "string"}
+              }
+            }
+          },
+          "metrics": {
+            "type": "object",
+            "properties": {
+              "cyclomaticComplexity": {"type": "number"},
+              "globalVariables": {"type": "number"},
+              "functionCount": {"type": "number"},
+              "averageFunctionLength": {"type": "number"}
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "analyze_complexity",
+      "description": "Calculate code complexity metrics including cyclomatic complexity and maintainability index",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "JavaScript code to analyze"
+          },
+          "includeDetails": {
+            "type": "boolean",
+            "default": false,
+            "description": "Include detailed per-function analysis"
+          }
+        },
+        "required": ["code"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "overall": {
+            "type": "object",
+            "properties": {
+              "cyclomaticComplexity": {"type": "number"},
+              "cognitiveComplexity": {"type": "number"},
+              "maintainabilityIndex": {"type": "number"},
+              "linesOfCode": {"type": "number"},
+              "rating": {"type": "string"}
+            }
+          },
+          "functions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {"type": "string"},
+                "startLine": {"type": "number"},
+                "endLine": {"type": "number"},
+                "complexity": {"type": "number"},
+                "parameters": {"type": "number"},
+                "lines": {"type": "number"}
+              }
+            }
+          },
+          "recommendations": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      }
+    },
+    {
+      "name": "validate_css",
+      "description": "Validate CSS syntax and check browser compatibility",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "CSS code to validate"
+          },
+          "filePath": {
+            "type": "string",
+            "description": "Path to CSS file to validate (alternative to code)"
+          },
+          "checkCompatibility": {
+            "type": "boolean",
+            "default": true,
+            "description": "Check browser compatibility"
+          },
+          "checkPerformance": {
+            "type": "boolean",
+            "default": true,
+            "description": "Check for performance issues"
+          },
+          "targetBrowsers": {
+            "type": "array",
+            "items": {"type": "string"},
+            "default": ["chrome", "firefox", "safari", "edge"],
+            "description": "Target browsers for compatibility check"
+          }
+        },
+        "required": ["code"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "valid": {"type": "boolean"},
+          "errors": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "warnings": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "compatibilityIssues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "property": {"type": "string"},
+                "browsers": {"type": "array", "items": {"type": "string"}},
+                "fallback": {"type": "string"},
+                "severity": {"type": "string"}
+              }
+            }
+          },
+          "performanceIssues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {"type": "string"},
+                "severity": {"type": "string"},
+                "description": {"type": "string"},
+                "optimization": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "analyze_css_performance",
+      "description": "Analyze CSS for performance issues and optimization opportunities",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "CSS code to analyze" 
+          },
+          "includeOptimizations": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include optimization suggestions"
+          }
+        },
+        "required": ["code"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {"type": "string"},
+                "severity": {"type": "string"},
+                "selector": {"type": "string"},
+                "property": {"type": "string"},
+                "impact": {"type": "string"}
+              }
+            }
+          },
+          "optimizations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "suggestion": {"type": "string"},
+                "before": {"type": "string"},
+                "after": {"type": "string"},
+                "benefit": {"type": "string"}
+              }
+            }
+          },
+          "metrics": {
+            "type": "object",
+            "properties": {
+              "selectorsCount": {"type": "number"},
+              "rulesCount": {"type": "number"},
+              "universalSelectors": {"type": "number"},
+              "expensiveProperties": {"type": "number"}
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,482 @@
+{
+  "id": "tdd-workflow",
+  "name": "Test-Driven Development Workflow",
+  "description": "Demonstrates TDD workflow using modular tools - write tests first, implement code, refactor with continuous validation",
+  "version": "1.0.0",
+  "author": "Legion Plan System",
+  "tags": ["tdd", "testing", "workflow", "javascript", "development-process"],
+  "inputs": [
+    {
+      "name": "feature_name",
+      "type": "string",
+      "description": "Name of the feature to implement using TDD",
+      "required": true
+    },
+    {
+      "name": "project_path",
+      "type": "string",
+      "description": "Path to existing project or new project location",
+      "required": true
+    },
+    {
+      "name": "feature_description",
+      "type": "string",
+      "description": "Description of what the feature should do",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "name": "feature_implemented",
+      "type": "boolean",
+      "description": "Whether the feature was successfully implemented"
+    },
+    {
+      "name": "tests_passing",
+      "type": "boolean",
+      "description": "Whether all tests pass after implementation"
+    },
+    {
+      "name": "code_quality_score",
+      "type": "number",
+      "description": "Quality score of the final implementation"
+    }
+  ],
+  "steps": [
+    {
+      "id": "setup-tdd-environment",
+      "name": "Setup TDD Environment",
+      "type": "setup",
+      "description": "Prepare project structure for TDD workflow",
+      "actions": [
+        {
+          "type": "create_directory",
+          "parameters": {
+            "dirpath": "${inputs.project_path}"
+          }
+        },
+        {
+          "type": "create_directory",
+          "parameters": {
+            "dirpath": "${inputs.project_path}/src"
+          }
+        },
+        {
+          "type": "create_directory",
+          "parameters": {
+            "dirpath": "${inputs.project_path}/__tests__"
+          }
+        }
+      ],
+      "outputs": {
+        "project_dir": "${inputs.project_path}"
+      }
+    },
+    {
+      "id": "initialize-test-package",
+      "name": "Initialize Test Package",
+      "type": "configuration",
+      "description": "Create package.json optimized for TDD workflow",
+      "dependencies": ["setup-tdd-environment"],
+      "actions": [
+        {
+          "type": "create_package_json",
+          "module": "package-manager",
+          "parameters": {
+            "name": "tdd-${inputs.feature_name}",
+            "version": "1.0.0",
+            "description": "TDD implementation of ${inputs.feature_description}",
+            "projectPath": "${steps.setup-tdd-environment.outputs.project_dir}",
+            "scripts": {
+              "test": "jest",
+              "test:watch": "jest --watch",
+              "test:coverage": "jest --coverage",
+              "tdd": "jest --watch --verbose",
+              "validate": "node -c src/*.js"
+            },
+            "dependencies": [],
+            "devDependencies": ["jest"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "red-phase-write-failing-tests",
+      "name": "RED Phase - Write Failing Tests",
+      "type": "test-generation",
+      "description": "Write comprehensive tests before implementation (TDD Red phase)",
+      "dependencies": ["setup-tdd-environment"],
+      "actions": [
+        {
+          "type": "generate_unit_tests",
+          "module": "js-generator",
+          "parameters": {
+            "target_file": "../src/${inputs.feature_name}.js",
+            "test_cases": [
+              {
+                "function": "${inputs.feature_name}",
+                "description": "should exist and be a function",
+                "expectations": [
+                  {
+                    "type": "custom",
+                    "code": "const ${inputs.feature_name} = require('../src/${inputs.feature_name}');\\n    expect(typeof ${inputs.feature_name}).toBe('function');"
+                  }
+                ]
+              },
+              {
+                "function": "${inputs.feature_name}",
+                "description": "should handle empty input correctly",
+                "expectations": [
+                  {
+                    "type": "custom", 
+                    "code": "const ${inputs.feature_name} = require('../src/${inputs.feature_name}');\\n    const result = ${inputs.feature_name}();\\n    expect(result).toBeDefined();"
+                  }
+                ]
+              },
+              {
+                "function": "${inputs.feature_name}",
+                "description": "should handle valid input correctly",
+                "expectations": [
+                  {
+                    "type": "custom",
+                    "code": "const ${inputs.feature_name} = require('../src/${inputs.feature_name}');\\n    const result = ${inputs.feature_name}('test input');\\n    expect(result).toBeTruthy();"
+                  }
+                ]
+              },
+              {
+                "function": "${inputs.feature_name}",
+                "description": "should handle edge cases",
+                "expectations": [
+                  {
+                    "type": "custom",
+                    "code": "const ${inputs.feature_name} = require('../src/${inputs.feature_name}');\\n    expect(() => ${inputs.feature_name}(null)).not.toThrow();\\n    expect(() => ${inputs.feature_name}(undefined)).not.toThrow();"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "actions_post": [
+        {
+          "type": "write_file",
+          "parameters": {
+            "filepath": "${steps.setup-tdd-environment.outputs.project_dir}/__tests__/${inputs.feature_name}.test.js",
+            "content": "${actions[0].outputs.test_content}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "install-test-dependencies",
+      "name": "Install Test Dependencies",
+      "type": "setup",
+      "description": "Install Jest and testing utilities",
+      "dependencies": ["initialize-test-package"],
+      "actions": [
+        {
+          "type": "install_packages",
+          "module": "package-manager",
+          "parameters": {
+            "packages": ["jest"],
+            "dev": true,
+            "projectPath": "${steps.setup-tdd-environment.outputs.project_dir}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "run-initial-failing-tests",
+      "name": "Confirm Tests Fail (RED)",
+      "type": "testing",
+      "description": "Run tests to confirm they fail before implementation",
+      "dependencies": ["red-phase-write-failing-tests", "install-test-dependencies"],
+      "actions": [
+        {
+          "type": "run_tests",
+          "module": "jester",
+          "parameters": {
+            "projectPath": "${steps.setup-tdd-environment.outputs.project_dir}",
+            "pattern": "__tests__/**/*.test.js",
+            "config": {
+              "verbose": true,
+              "bail": false
+            }
+          }
+        }
+      ],
+      "validation": {
+        "conditions": [
+          {
+            "field": "actions[0].outputs.success",
+            "operator": "equals",
+            "value": false,
+            "error_message": "Tests should fail in RED phase but they're passing"
+          }
+        ]
+      }
+    },
+    {
+      "id": "green-phase-minimal-implementation",
+      "name": "GREEN Phase - Minimal Implementation",
+      "type": "code-generation",
+      "description": "Write minimal code to make tests pass (TDD Green phase)",
+      "dependencies": ["run-initial-failing-tests"],
+      "actions": [
+        {
+          "type": "generate_javascript_module",
+          "module": "js-generator",
+          "parameters": {
+            "module_name": "${inputs.feature_name}",
+            "functions": [
+              {
+                "name": "${inputs.feature_name}",
+                "params": ["input"],
+                "body": "// Minimal implementation to make tests pass\\n  if (input === null || input === undefined) {\\n    return 'handled';\\n  }\\n  if (!input) {\\n    return 'empty handled';\\n  }\\n  return 'processed ' + input;",
+                "jsdoc": {
+                  "description": "${inputs.feature_description}",
+                  "params": [{"name": "input", "type": "any", "description": "Input to process"}],
+                  "returns": "any - Processed result"
+                }
+              }
+            ],
+            "exports": ["${inputs.feature_name}"]
+          }
+        }
+      ],
+      "actions_post": [
+        {
+          "type": "write_file",
+          "parameters": {
+            "filepath": "${steps.setup-tdd-environment.outputs.project_dir}/src/${inputs.feature_name}.js",
+            "content": "${actions[0].outputs.module_content}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "run-tests-after-implementation",
+      "name": "Confirm Tests Pass (GREEN)",
+      "type": "testing",
+      "description": "Run tests to confirm they pass after minimal implementation",
+      "dependencies": ["green-phase-minimal-implementation"],
+      "actions": [
+        {
+          "type": "run_tests",
+          "module": "jester",
+          "parameters": {
+            "projectPath": "${steps.setup-tdd-environment.outputs.project_dir}",
+            "pattern": "__tests__/**/*.test.js",
+            "config": {
+              "verbose": true,
+              "coverage": true
+            }
+          }
+        }
+      ],
+      "validation": {
+        "conditions": [
+          {
+            "field": "actions[0].outputs.success",
+            "operator": "equals",
+            "value": true,
+            "error_message": "Tests should pass in GREEN phase"
+          }
+        ]
+      }
+    },
+    {
+      "id": "analyze-test-results",
+      "name": "Analyze Test Results and Coverage",
+      "type": "analysis",
+      "description": "Get detailed test analytics and identify areas for improvement",
+      "dependencies": ["run-tests-after-implementation"],
+      "actions": [
+        {
+          "type": "analyze_test_failures",
+          "module": "jester",
+          "parameters": {
+            "session_id": "${steps.run-tests-after-implementation.actions[0].outputs.session_id}"
+          }
+        },
+        {
+          "type": "get_test_performance",
+          "module": "jester",
+          "parameters": {
+            "limit": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "refactor-phase-code-analysis",
+      "name": "REFACTOR Phase - Code Analysis",
+      "type": "validation",
+      "description": "Analyze code quality and identify refactoring opportunities",
+      "dependencies": ["green-phase-minimal-implementation"],
+      "actions": [
+        {
+          "type": "validate_javascript",
+          "module": "code-analysis",
+          "parameters": {
+            "filePath": "${steps.setup-tdd-environment.outputs.project_dir}/src/${inputs.feature_name}.js",
+            "includeAnalysis": true,
+            "checkSecurity": true,
+            "checkPerformance": true
+          }
+        }
+      ],
+      "outputs": {
+        "quality_metrics": "${actions[0].outputs.metrics}",
+        "improvement_suggestions": "${actions[0].outputs.warnings}"
+      }
+    },
+    {
+      "id": "refactor-implementation",
+      "name": "REFACTOR Phase - Improve Implementation",
+      "type": "code-generation",
+      "description": "Refactor code based on analysis while keeping tests passing",
+      "dependencies": ["refactor-phase-code-analysis"],
+      "actions": [
+        {
+          "type": "generate_javascript_module",
+          "module": "js-generator",
+          "parameters": {
+            "module_name": "${inputs.feature_name}",
+            "functions": [
+              {
+                "name": "${inputs.feature_name}",
+                "params": ["input"],
+                "body": "// Refactored implementation with better error handling and structure\\n  \\n  // Input validation\\n  const isValidInput = (value) => value !== null && value !== undefined;\\n  \\n  // Handle edge cases\\n  if (!isValidInput(input)) {\\n    return handleInvalidInput();\\n  }\\n  \\n  if (isEmpty(input)) {\\n    return handleEmptyInput();\\n  }\\n  \\n  // Main processing logic\\n  return processInput(input);\\n  \\n  // Helper functions\\n  function handleInvalidInput() {\\n    return 'handled';\\n  }\\n  \\n  function isEmpty(value) {\\n    return !value || (typeof value === 'string' && value.trim() === '');\\n  }\\n  \\n  function handleEmptyInput() {\\n    return 'empty handled';\\n  }\\n  \\n  function processInput(value) {\\n    return 'processed ' + value;\\n  }",
+                "jsdoc": {
+                  "description": "${inputs.feature_description} - Refactored version with improved structure",
+                  "params": [{"name": "input", "type": "any", "description": "Input to process"}],
+                  "returns": "string - Processed result",
+                  "example": "${inputs.feature_name}('hello') // returns 'processed hello'"
+                }
+              }
+            ],
+            "exports": ["${inputs.feature_name}"]
+          }
+        }
+      ],
+      "actions_post": [
+        {
+          "type": "write_file",
+          "parameters": {
+            "filepath": "${steps.setup-tdd-environment.outputs.project_dir}/src/${inputs.feature_name}.js",
+            "content": "${actions[0].outputs.module_content}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "final-test-run",
+      "name": "Final Test Validation",
+      "type": "testing",
+      "description": "Ensure all tests still pass after refactoring",
+      "dependencies": ["refactor-implementation"],
+      "actions": [
+        {
+          "type": "run_tests",
+          "module": "jester",
+          "parameters": {
+            "projectPath": "${steps.setup-tdd-environment.outputs.project_dir}",
+            "pattern": "__tests__/**/*.test.js",
+            "config": {
+              "verbose": true,
+              "coverage": true,
+              "bail": true
+            }
+          }
+        }
+      ],
+      "validation": {
+        "conditions": [
+          {
+            "field": "actions[0].outputs.success",
+            "operator": "equals",
+            "value": true,
+            "error_message": "Refactored code broke existing tests"
+          }
+        ]
+      }
+    },
+    {
+      "id": "final-quality-analysis",
+      "name": "Final Code Quality Assessment",
+      "type": "validation",
+      "description": "Analyze final code quality and compare with initial implementation",
+      "dependencies": ["final-test-run"],
+      "actions": [
+        {
+          "type": "validate_javascript",
+          "module": "code-analysis",
+          "parameters": {
+            "filePath": "${steps.setup-tdd-environment.outputs.project_dir}/src/${inputs.feature_name}.js",
+            "includeAnalysis": true,
+            "checkSecurity": true,
+            "checkPerformance": true
+          }
+        }
+      ],
+      "outputs": {
+        "final_quality_score": "${actions[0].outputs.metrics.maintainabilityIndex}",
+        "complexity_score": "${actions[0].outputs.metrics.complexity}",
+        "security_issues": "${actions[0].outputs.securityIssues.length}"
+      }
+    },
+    {
+      "id": "create-tdd-report",
+      "name": "Generate TDD Workflow Report",
+      "type": "documentation",
+      "description": "Create comprehensive report of the TDD process and results",
+      "dependencies": ["final-quality-analysis"],
+      "actions": [
+        {
+          "type": "write_file",
+          "parameters": {
+            "filepath": "${steps.setup-tdd-environment.outputs.project_dir}/TDD_REPORT.md",
+            "content": "# TDD Workflow Report: ${inputs.feature_name}\\n\\n## Feature Description\\n${inputs.feature_description}\\n\\n## TDD Process Summary\\n\\nThis report documents the Test-Driven Development workflow for implementing the **${inputs.feature_name}** feature using Legion's modular tools.\\n\\n### Phase 1: RED - Write Failing Tests\\n\\n✅ **Completed**: Initial failing tests written\\n- Tests covered function existence, empty input handling, valid input processing, and edge cases\\n- Tests initially failed as expected (no implementation existed)\\n\\n### Phase 2: GREEN - Minimal Implementation\\n\\n✅ **Completed**: Minimal code written to pass tests\\n- Simple implementation created to make all tests pass\\n- No over-engineering - just enough code to satisfy test requirements\\n\\n### Phase 3: REFACTOR - Improve Code Quality\\n\\n✅ **Completed**: Code refactored for better quality\\n- Improved code structure with helper functions\\n- Better error handling and input validation\\n- Enhanced readability and maintainability\\n\\n## Quality Metrics\\n\\n### Initial Implementation\\n- Maintainability Index: ${steps.refactor-phase-code-analysis.outputs.quality_metrics.maintainabilityIndex}\\n- Complexity Score: ${steps.refactor-phase-code-analysis.outputs.quality_metrics.complexity}\\n- Lines of Code: ${steps.refactor-phase-code-analysis.outputs.quality_metrics.linesOfCode}\\n\\n### Final Implementation\\n- Maintainability Index: ${steps.final-quality-analysis.outputs.final_quality_score}\\n- Complexity Score: ${steps.final-quality-analysis.outputs.complexity_score}\\n- Security Issues: ${steps.final-quality-analysis.outputs.security_issues}\\n\\n## Test Results\\n\\n### Final Test Run\\n- Tests Passed: ${steps.final-test-run.actions[0].outputs.tests_passed}\\n- Tests Failed: ${steps.final-test-run.actions[0].outputs.tests_failed}\\n- Overall Success: ${steps.final-test-run.actions[0].outputs.success}\\n\\n## TDD Benefits Demonstrated\\n\\n1. **Test-First Approach**: Tests defined requirements before implementation\\n2. **Incremental Development**: Feature built step-by-step with continuous validation\\n3. **Refactoring Safety**: Tests provided safety net for code improvements\\n4. **Quality Assurance**: Automated validation ensured code quality throughout process\\n5. **Documentation**: Tests serve as living documentation of feature behavior\\n\\n## Tools Used\\n\\n- **JS Generator**: Created test files and implementation modules\\n- **Package Manager**: Set up project configuration and dependencies\\n- **Jester**: Executed tests with analytics and TDD insights\\n- **Code Analysis**: Validated code quality and identified improvements\\n\\n## Next Steps\\n\\n1. Add more comprehensive test cases as requirements evolve\\n2. Consider integration tests if feature interacts with other components\\n3. Monitor test performance and optimize slow tests\\n4. Expand feature functionality using the same TDD workflow\\n\\n---\\n\\n*Generated by Legion TDD Workflow Plan*\\n*Timestamp: $(date)*\\n"
+          }
+        }
+      ]
+    }
+  ],
+  "success_criteria": [
+    {
+      "description": "TDD environment set up successfully",
+      "condition": "${steps.setup-tdd-environment.success} && ${steps.initialize-test-package.success}"
+    },
+    {
+      "description": "RED phase completed - tests fail initially",
+      "condition": "${steps.red-phase-write-failing-tests.success} && ${steps.run-initial-failing-tests.success}"
+    },
+    {
+      "description": "GREEN phase completed - tests pass after implementation",
+      "condition": "${steps.green-phase-minimal-implementation.success} && ${steps.run-tests-after-implementation.success}"
+    },
+    {
+      "description": "REFACTOR phase completed - code improved while tests still pass",
+      "condition": "${steps.refactor-implementation.success} && ${steps.final-test-run.success}"
+    },
+    {
+      "description": "Code quality improved through TDD process",
+      "condition": "${steps.final-quality-analysis.outputs.final_quality_score} >= ${steps.refactor-phase-code-analysis.outputs.quality_metrics.maintainabilityIndex}"
+    },
+    {
+      "description": "TDD workflow documented and analyzed",
+      "condition": "${steps.create-tdd-report.success}"
+    }
+  ],
+  "estimated_duration": "8-12 minutes",
+  "complexity": "medium-high",
+  "demonstrates": [
+    "Complete Test-Driven Development workflow",
+    "RED-GREEN-REFACTOR cycle automation",
+    "Test analytics and TDD insights",
+    "Code quality measurement and improvement",
+    "Modular tool orchestration for complex workflows",
+    "Continuous validation throughout development process"
+  ]
+}

@@ -1,0 +1,376 @@
+{
+  "id": "simple-javascript-project",
+  "name": "Create Simple JavaScript Project",
+  "description": "Create a basic JavaScript project with proper structure, package.json, main file, tests, and validation",
+  "version": "1.0.0",
+  "author": "Legion Plan System",
+  "tags": ["javascript", "project-creation", "basic", "modular"],
+  "inputs": [
+    {
+      "name": "project_name",
+      "type": "string",
+      "description": "Name of the project to create",
+      "required": true
+    },
+    {
+      "name": "project_path",
+      "type": "string", 
+      "description": "Directory path where project should be created",
+      "required": true
+    },
+    {
+      "name": "description",
+      "type": "string",
+      "description": "Project description",
+      "default": "A JavaScript project created with Legion"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "project_created",
+      "type": "boolean",
+      "description": "Whether the project was successfully created"
+    },
+    {
+      "name": "project_path",
+      "type": "string",
+      "description": "Path to the created project"
+    },
+    {
+      "name": "tests_passing",
+      "type": "boolean", 
+      "description": "Whether the initial tests pass"
+    }
+  ],
+  "steps": [
+    {
+      "id": "create-project-directory",
+      "name": "Create Project Directory",
+      "type": "setup",
+      "description": "Create the main project directory",
+      "actions": [
+        {
+          "type": "create_directory",
+          "parameters": {
+            "dirpath": "${inputs.project_path}/${inputs.project_name}"
+          }
+        }
+      ],
+      "outputs": {
+        "project_dir": "${inputs.project_path}/${inputs.project_name}"
+      }
+    },
+    {
+      "id": "create-package-json",
+      "name": "Create Package Configuration",
+      "type": "configuration",
+      "description": "Generate package.json with proper dependencies and scripts",
+      "dependencies": ["create-project-directory"],
+      "actions": [
+        {
+          "type": "create_package_json",
+          "module": "package-manager",
+          "parameters": {
+            "name": "${inputs.project_name}",
+            "version": "1.0.0",
+            "description": "${inputs.description}",
+            "projectPath": "${steps.create-project-directory.outputs.project_dir}",
+            "scripts": {
+              "start": "node src/index.js",
+              "dev": "nodemon src/index.js",
+              "test": "jest",
+              "test:watch": "jest --watch",
+              "test:coverage": "jest --coverage"
+            },
+            "dependencies": [],
+            "devDependencies": ["jest", "nodemon"]
+          }
+        }
+      ],
+      "outputs": {
+        "package_created": true,
+        "package_path": "${steps.create-project-directory.outputs.project_dir}/package.json"
+      }
+    },
+    {
+      "id": "create-src-directory",
+      "name": "Create Source Directory",
+      "type": "setup",
+      "description": "Create src directory for source files",
+      "dependencies": ["create-project-directory"],
+      "actions": [
+        {
+          "type": "create_directory",
+          "parameters": {
+            "dirpath": "${steps.create-project-directory.outputs.project_dir}/src"
+          }
+        }
+      ]
+    },
+    {
+      "id": "generate-main-module",
+      "name": "Generate Main Application Module",
+      "type": "code-generation",
+      "description": "Create the main application entry point",
+      "dependencies": ["create-src-directory"],
+      "actions": [
+        {
+          "type": "generate_javascript_module",
+          "module": "js-generator",
+          "parameters": {
+            "module_name": "app",
+            "functions": [
+              {
+                "name": "main",
+                "params": [],
+                "body": "console.log('Hello from ${inputs.project_name}!');\\n  return 'Application started successfully';",
+                "jsdoc": {
+                  "description": "Main application entry point",
+                  "returns": "string - Success message"
+                }
+              },
+              {
+                "name": "greet",
+                "params": ["name"],
+                "body": "return `Hello, ${name}! Welcome to ${inputs.project_name}`;",
+                "jsdoc": {
+                  "description": "Greet function for user interaction",
+                  "params": [{"name": "name", "type": "string", "description": "User name to greet"}],
+                  "returns": "string - Greeting message"
+                }
+              }
+            ],
+            "exports": ["main", "greet"]
+          }
+        }
+      ],
+      "actions_post": [
+        {
+          "type": "write_file",
+          "parameters": {
+            "filepath": "${steps.create-project-directory.outputs.project_dir}/src/index.js",
+            "content": "${actions[0].outputs.module_content}\\n\\n// Run main function if this is the entry point\\nif (require.main === module) {\\n  main();\\n}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "create-test-directory",
+      "name": "Create Test Directory",
+      "type": "setup",
+      "description": "Create __tests__ directory for test files",
+      "dependencies": ["create-project-directory"],
+      "actions": [
+        {
+          "type": "create_directory",
+          "parameters": {
+            "dirpath": "${steps.create-project-directory.outputs.project_dir}/__tests__"
+          }
+        }
+      ]
+    },
+    {
+      "id": "generate-unit-tests",
+      "name": "Generate Unit Tests",
+      "type": "test-generation",
+      "description": "Create unit tests for the main module",
+      "dependencies": ["generate-main-module", "create-test-directory"],
+      "actions": [
+        {
+          "type": "generate_unit_tests",
+          "module": "js-generator",
+          "parameters": {
+            "target_file": "../src/index.js",
+            "test_cases": [
+              {
+                "function": "main",
+                "description": "should return success message",
+                "expectations": [
+                  {
+                    "type": "toBe",
+                    "expected": "Application started successfully"
+                  }
+                ]
+              },
+              {
+                "function": "greet",
+                "description": "should return greeting with provided name",
+                "args": ["World"],
+                "expectations": [
+                  {
+                    "type": "toContain", 
+                    "expected": "Hello, World!"
+                  },
+                  {
+                    "type": "toContain",
+                    "expected": "${inputs.project_name}"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "actions_post": [
+        {
+          "type": "write_file",
+          "parameters": {
+            "filepath": "${steps.create-project-directory.outputs.project_dir}/__tests__/index.test.js",
+            "content": "${actions[0].outputs.test_content}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "install-dependencies",
+      "name": "Install NPM Dependencies",
+      "type": "setup",
+      "description": "Install required npm packages",
+      "dependencies": ["create-package-json"],
+      "actions": [
+        {
+          "type": "install_packages",
+          "module": "package-manager",
+          "parameters": {
+            "packages": ["jest", "nodemon"],
+            "dev": true,
+            "projectPath": "${steps.create-project-directory.outputs.project_dir}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "validate-generated-code",
+      "name": "Validate Generated Code",
+      "type": "validation",
+      "description": "Validate the generated JavaScript code for quality and security",
+      "dependencies": ["generate-main-module"],
+      "actions": [
+        {
+          "type": "validate_javascript",
+          "module": "code-analysis",
+          "parameters": {
+            "filePath": "${steps.create-project-directory.outputs.project_dir}/src/index.js",
+            "includeAnalysis": true,
+            "checkSecurity": true,
+            "checkPerformance": true
+          }
+        }
+      ],
+      "validation": {
+        "conditions": [
+          {
+            "field": "actions[0].outputs.valid",
+            "operator": "equals",
+            "value": true,
+            "error_message": "Generated code failed validation"
+          },
+          {
+            "field": "actions[0].outputs.securityIssues.length",
+            "operator": "equals", 
+            "value": 0,
+            "error_message": "Security issues found in generated code"
+          }
+        ]
+      }
+    },
+    {
+      "id": "run-initial-tests",
+      "name": "Run Initial Test Suite",
+      "type": "testing",
+      "description": "Execute the generated tests to ensure everything works",
+      "dependencies": ["generate-unit-tests", "install-dependencies"],
+      "actions": [
+        {
+          "type": "run_tests",
+          "module": "jester",
+          "parameters": {
+            "projectPath": "${steps.create-project-directory.outputs.project_dir}",
+            "pattern": "__tests__/**/*.test.js",
+            "config": {
+              "coverage": false,
+              "verbose": true
+            }
+          }
+        }
+      ],
+      "validation": {
+        "conditions": [
+          {
+            "field": "actions[0].outputs.success",
+            "operator": "equals",
+            "value": true,
+            "error_message": "Initial tests are failing"
+          }
+        ]
+      }
+    },
+    {
+      "id": "create-readme",
+      "name": "Create Project Documentation",
+      "type": "documentation", 
+      "description": "Generate README.md with project information",
+      "dependencies": ["create-project-directory"],
+      "actions": [
+        {
+          "type": "write_file",
+          "parameters": {
+            "filepath": "${steps.create-project-directory.outputs.project_dir}/README.md",
+            "content": "# ${inputs.project_name}\\n\\n${inputs.description}\\n\\n## Installation\\n\\n```bash\\nnpm install\\n```\\n\\n## Usage\\n\\n```bash\\nnpm start\\n```\\n\\n## Development\\n\\n```bash\\nnpm run dev\\n```\\n\\n## Testing\\n\\n```bash\\nnpm test\\n```\\n\\n## Project Structure\\n\\n```\\n${inputs.project_name}/\\n├── src/\\n│   └── index.js    # Main application file\\n├── __tests__/\\n│   └── index.test.js # Unit tests\\n├── package.json    # Project configuration\\n└── README.md       # This file\\n```\\n\\n## Generated with Legion\\n\\nThis project was created using the Legion modular code generation system.\\n"
+          }
+        }
+      ]
+    },
+    {
+      "id": "create-gitignore",
+      "name": "Create Git Ignore File",
+      "type": "configuration",
+      "description": "Generate .gitignore for Node.js project",
+      "dependencies": ["create-project-directory"],
+      "actions": [
+        {
+          "type": "write_file", 
+          "parameters": {
+            "filepath": "${steps.create-project-directory.outputs.project_dir}/.gitignore",
+            "content": "# Dependencies\\nnode_modules/\\n\\n# Environment variables\\n.env\\n.env.local\\n.env.*.local\\n\\n# Logs\\nnpm-debug.log*\\nyarn-debug.log*\\nyarn-error.log*\\n\\n# Runtime data\\npids\\n*.pid\\n*.seed\\n*.pid.lock\\n\\n# Coverage\\ncoverage/\\n.nyc_output\\n\\n# Build output\\ndist/\\nbuild/\\n\\n# IDE\\n.vscode/\\n.idea/\\n\\n# OS\\n.DS_Store\\nThumbs.db\\n"
+          }
+        }
+      ]
+    }
+  ],
+  "success_criteria": [
+    {
+      "description": "Project directory structure created",
+      "condition": "${steps.create-project-directory.success} && ${steps.create-src-directory.success} && ${steps.create-test-directory.success}"
+    },
+    {
+      "description": "Package.json created with proper configuration", 
+      "condition": "${steps.create-package-json.success}"
+    },
+    {
+      "description": "Main application code generated and validated",
+      "condition": "${steps.generate-main-module.success} && ${steps.validate-generated-code.success}"
+    },
+    {
+      "description": "Unit tests generated and passing",
+      "condition": "${steps.generate-unit-tests.success} && ${steps.run-initial-tests.success}"
+    },
+    {
+      "description": "Dependencies installed successfully",
+      "condition": "${steps.install-dependencies.success}"
+    },
+    {
+      "description": "Documentation and configuration files created",
+      "condition": "${steps.create-readme.success} && ${steps.create-gitignore.success}"
+    }
+  ],
+  "estimated_duration": "5-10 minutes",
+  "complexity": "low",
+  "demonstrates": [
+    "Modular code generation using decomposed tools",
+    "Plan orchestration with dependencies",
+    "Multi-module tool coordination",
+    "Validation and testing integration",
+    "Complete project lifecycle automation"
+  ]
+}

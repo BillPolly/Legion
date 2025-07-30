@@ -1,0 +1,587 @@
+{
+  "name": "javascript-development",
+  "toolName": "javascript_development_planner",
+  "description": "Comprehensive JavaScript development planner with file operations, command execution, GitHub integration, and deployment",
+  "requiredModules": [
+    "file",
+    "command-executor", 
+    "github",
+    "node-runner",
+    "jester",
+    "js-generator",
+    "package-manager",
+    "code-analysis"
+  ],
+  "defaultInputs": [
+    "user_request",
+    "project_context",
+    "project_type"
+  ],
+  "defaultOutputs": [
+    "project_created",
+    "files_generated", 
+    "tests_passing",
+    "application_running"
+  ],
+  "maxSteps": 20,
+  "contextPrompts": [
+    "You are an expert JavaScript developer creating production-ready applications.",
+    "Always follow modern JavaScript/Node.js best practices and conventions.",
+    "Create proper project structure with package.json, README, and organized source files.",
+    "Write clean, modular, well-documented code with proper error handling.",
+    "Include comprehensive tests using Jest or similar testing framework.",
+    "Use semantic versioning and proper dependency management.",
+    "Always create directories before writing files into them.",
+    "Test the application thoroughly before considering it complete.",
+    "Include proper .gitignore and environment configuration files.",
+    "Follow security best practices - never commit secrets or API keys."
+  ],
+  "allowableActions": [
+    {
+      "type": "create_directory",
+      "description": "Create a directory structure for the project",
+      "inputs": {
+        "dirpath": {
+          "type": "string",
+          "description": "Path of the directory to create (e.g., 'src', 'tests', 'lib')"
+        }
+      },
+      "outputs": {
+        "directory_created": {
+          "type": "string",
+          "description": "Path to the created directory"
+        }
+      }
+    },
+    {
+      "type": "write_file",
+      "description": "Create and write content to a file",
+      "inputs": {
+        "filepath": {
+          "type": "string",
+          "description": "Path where the file should be created"
+        },
+        "content": {
+          "type": "string", 
+          "description": "Content to write to the file"
+        }
+      },
+      "outputs": {
+        "file_created": {
+          "type": "string",
+          "description": "Path to the created file"
+        },
+        "bytes_written": {
+          "type": "number",
+          "description": "Number of bytes written"
+        }
+      }
+    },
+    {
+      "type": "read_file",
+      "description": "Read contents of an existing file",
+      "inputs": {
+        "filepath": {
+          "type": "string",
+          "description": "Path to the file to read"
+        }
+      },
+      "outputs": {
+        "content": {
+          "type": "string",
+          "description": "Content of the file"
+        },
+        "file_size": {
+          "type": "number",
+          "description": "Size of the file in bytes"
+        }
+      }
+    },
+    {
+      "type": "list_directory",
+      "description": "List contents of a directory",
+      "inputs": {
+        "dirpath": {
+          "type": "string",
+          "description": "Directory path to list (optional, defaults to current directory)"
+        }
+      },
+      "outputs": {
+        "contents": {
+          "type": "array",
+          "description": "Array of files and directories"
+        }
+      }
+    },
+    {
+      "type": "execute_command",
+      "description": "Execute a shell command (npm, node, git, etc.)",
+      "inputs": {
+        "command": {
+          "type": "string",
+          "description": "Command to execute (e.g., 'npm init -y', 'node index.js', 'git init')"
+        },
+        "timeout": {
+          "type": "number",
+          "description": "Optional timeout in milliseconds",
+          "required": false
+        }
+      },
+      "outputs": {
+        "stdout": {
+          "type": "string",
+          "description": "Standard output from the command"
+        },
+        "stderr": {
+          "type": "string", 
+          "description": "Standard error output"
+        },
+        "exit_code": {
+          "type": "number",
+          "description": "Exit code (0 for success)"
+        },
+        "success": {
+          "type": "boolean",
+          "description": "True if command succeeded"
+        }
+      }
+    },
+    {
+      "type": "install_dependencies",
+      "description": "Install npm dependencies for the project",
+      "inputs": {
+        "packages": {
+          "type": "array",
+          "description": "Array of package names to install (e.g., ['express', 'jest'])"
+        },
+        "dev": {
+          "type": "boolean",
+          "description": "Install as dev dependencies",
+          "required": false
+        }
+      },
+      "outputs": {
+        "packages_installed": {
+          "type": "array",
+          "description": "List of successfully installed packages"
+        },
+        "success": {
+          "type": "boolean",
+          "description": "True if installation succeeded"
+        }
+      }
+    },
+    {
+      "type": "run_npm_script",
+      "description": "Execute an npm script defined in package.json",
+      "inputs": {
+        "script": {
+          "type": "string",
+          "description": "npm script name (e.g., 'test', 'start', 'build')"
+        }
+      },
+      "outputs": {
+        "stdout": {
+          "type": "string",
+          "description": "Output from the npm script"
+        },
+        "success": {
+          "type": "boolean",
+          "description": "True if script executed successfully"
+        }
+      }
+    },
+    {
+      "type": "start_dev_server",
+      "description": "Start a development server for the application",
+      "inputs": {
+        "port": {
+          "type": "number",
+          "description": "Port number to start server on",
+          "required": false
+        },
+        "script": {
+          "type": "string",
+          "description": "Entry point script (e.g., 'index.js', 'app.js')"
+        }
+      },
+      "outputs": {
+        "server_started": {
+          "type": "boolean",
+          "description": "True if server started successfully"
+        },
+        "port": {
+          "type": "number",
+          "description": "Port the server is running on"
+        },
+        "process_id": {
+          "type": "string",
+          "description": "Process ID of the running server"
+        }
+      }
+    },
+    {
+      "type": "run_tests",
+      "description": "Execute the test suite for the project",
+      "inputs": {
+        "test_pattern": {
+          "type": "string",
+          "description": "Test file pattern or specific test to run",
+          "required": false
+        }
+      },
+      "outputs": {
+        "tests_passed": {
+          "type": "number",
+          "description": "Number of tests that passed"
+        },
+        "tests_failed": {
+          "type": "number",
+          "description": "Number of tests that failed"
+        },
+        "coverage": {
+          "type": "object",
+          "description": "Code coverage information"
+        },
+        "success": {
+          "type": "boolean",
+          "description": "True if all tests passed"
+        }
+      }
+    },
+    {
+      "type": "validate_code",
+      "description": "Run code validation (linting, type checking)",
+      "inputs": {
+        "files": {
+          "type": "array",
+          "description": "Files to validate (optional, defaults to all)"
+        }
+      },
+      "outputs": {
+        "errors": {
+          "type": "array",
+          "description": "List of validation errors"
+        },
+        "warnings": {
+          "type": "array",
+          "description": "List of validation warnings"
+        },
+        "valid": {
+          "type": "boolean",
+          "description": "True if code passes validation"
+        }
+      }
+    },
+    {
+      "type": "test_with_analytics",
+      "description": "Run Jest tests with advanced analytics and TDD insights",
+      "inputs": {
+        "pattern": {
+          "type": "string",
+          "description": "Test file pattern to match (optional, runs all tests if not specified)",
+          "required": false
+        },
+        "config": {
+          "type": "object",
+          "description": "Jest configuration options (coverage, verbose, bail)",
+          "required": false
+        }
+      },
+      "outputs": {
+        "session_id": {
+          "type": "string",
+          "description": "Unique session identifier for this test run"
+        },
+        "tests_passed": {
+          "type": "number",
+          "description": "Number of tests that passed"
+        },
+        "tests_failed": {
+          "type": "number",
+          "description": "Number of tests that failed"
+        },
+        "success": {
+          "type": "boolean",
+          "description": "True if all tests passed"
+        }
+      }
+    },
+    {
+      "type": "analyze_test_failures",
+      "description": "Analyze failed tests and get TDD guidance",
+      "inputs": {
+        "session_id": {
+          "type": "string",
+          "description": "Session ID from a test run (optional, uses latest if not provided)",
+          "required": false
+        }
+      },
+      "outputs": {
+        "tdd_status": {
+          "type": "string",
+          "description": "TDD status: 'green' if passing, 'red' if failures"
+        },
+        "failure_insights": {
+          "type": "array",
+          "description": "Actionable insights about test failures"
+        },
+        "next_actions": {
+          "type": "array",
+          "description": "Prioritized actions to fix failing tests"
+        }
+      }
+    },
+    {
+      "type": "get_test_performance",
+      "description": "Get performance data and identify slow tests",
+      "inputs": {
+        "limit": {
+          "type": "number",
+          "description": "Number of slowest tests to return",
+          "required": false
+        }
+      },
+      "outputs": {
+        "slowest_tests": {
+          "type": "array",
+          "description": "List of slowest tests with duration information"
+        },
+        "common_errors": {
+          "type": "array",
+          "description": "Most frequently occurring error patterns"
+        }
+      }
+    },
+    {
+      "type": "generate_javascript_module",
+      "description": "Generate a complete JavaScript module with imports, exports, and functions",
+      "inputs": {
+        "module_name": {
+          "type": "string",
+          "description": "Name of the module to generate"
+        },
+        "functions": {
+          "type": "array",
+          "description": "Array of function specifications to include"
+        },
+        "classes": {
+          "type": "array",
+          "description": "Array of class specifications to include",
+          "required": false
+        },
+        "imports": {
+          "type": "array",
+          "description": "Array of imports needed",
+          "required": false
+        }
+      },
+      "outputs": {
+        "module_content": {
+          "type": "string",
+          "description": "Generated JavaScript module code"
+        },
+        "module_path": {
+          "type": "string",
+          "description": "Suggested file path for the module"
+        }
+      }
+    },
+    {
+      "type": "generate_unit_tests",
+      "description": "Generate Jest unit tests for JavaScript code",
+      "inputs": {
+        "target_file": {
+          "type": "string",
+          "description": "Path to the JavaScript file to test"
+        },
+        "test_cases": {
+          "type": "array",
+          "description": "Array of test case specifications"
+        }
+      },
+      "outputs": {
+        "test_content": {
+          "type": "string",
+          "description": "Generated Jest test code"
+        },
+        "test_path": {
+          "type": "string",
+          "description": "Suggested path for the test file"
+        }
+      }
+    },
+    {
+      "type": "create_package_json",
+      "description": "Generate a package.json file with dependencies and scripts",
+      "inputs": {
+        "project_name": {
+          "type": "string",
+          "description": "Name of the project"
+        },
+        "dependencies": {
+          "type": "array",
+          "description": "Array of npm packages to include as dependencies"
+        },
+        "dev_dependencies": {
+          "type": "array",
+          "description": "Array of npm packages to include as dev dependencies",
+          "required": false
+        },
+        "scripts": {
+          "type": "object",
+          "description": "NPM scripts to include",
+          "required": false
+        }
+      },
+      "outputs": {
+        "package_json": {
+          "type": "string",
+          "description": "Generated package.json content"
+        }
+      }
+    },
+    {
+      "type": "install_packages",
+      "description": "Install npm packages for the project",
+      "inputs": {
+        "packages": {
+          "type": "array",
+          "description": "Array of package names to install"
+        },
+        "dev": {
+          "type": "boolean",
+          "description": "Install as dev dependencies",
+          "required": false
+        }
+      },
+      "outputs": {
+        "installed_packages": {
+          "type": "array",
+          "description": "List of successfully installed packages"
+        }
+      }
+    },
+    {
+      "type": "validate_javascript",
+      "description": "Validate JavaScript code for syntax and quality issues",
+      "inputs": {
+        "file_path": {
+          "type": "string",
+          "description": "Path to JavaScript file to validate"
+        }
+      },
+      "outputs": {
+        "is_valid": {
+          "type": "boolean",
+          "description": "Whether the code is valid"
+        },
+        "errors": {
+          "type": "array",
+          "description": "Array of validation errors"
+        },
+        "warnings": {
+          "type": "array",
+          "description": "Array of code quality warnings"
+        }
+      }
+    },
+    {
+      "type": "deploy_application",
+      "description": "Deploy application to specified provider",
+      "inputs": {
+        "provider": {
+          "type": "string",
+          "description": "Deployment provider (local, docker, railway)"
+        },
+        "app_name": {
+          "type": "string",
+          "description": "Name for the deployed application"
+        },
+        "config": {
+          "type": "object",
+          "description": "Provider-specific deployment configuration",
+          "required": false
+        }
+      },
+      "outputs": {
+        "deployment_id": {
+          "type": "string",
+          "description": "Unique deployment identifier"
+        },
+        "deployment_url": {
+          "type": "string",
+          "description": "URL where the application is accessible"
+        },
+        "status": {
+          "type": "string",
+          "description": "Deployment status"
+        }
+      }
+    },
+    {
+      "type": "create_github_repo",
+      "description": "Create a new GitHub repository for the project",
+      "inputs": {
+        "name": {
+          "type": "string",
+          "description": "Repository name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Repository description"
+        },
+        "private": {
+          "type": "boolean",
+          "description": "Whether the repository should be private",
+          "required": false
+        }
+      },
+      "outputs": {
+        "repo_url": {
+          "type": "string",
+          "description": "URL of the created repository"
+        },
+        "clone_url": {
+          "type": "string",
+          "description": "Git clone URL"
+        },
+        "success": {
+          "type": "boolean",
+          "description": "True if repository was created successfully"
+        }
+      }
+    },
+    {
+      "type": "push_to_github",
+      "description": "Push code to GitHub repository",
+      "inputs": {
+        "repo_url": {
+          "type": "string",
+          "description": "GitHub repository URL"
+        },
+        "commit_message": {
+          "type": "string",
+          "description": "Git commit message"
+        }
+      },
+      "outputs": {
+        "commit_hash": {
+          "type": "string",
+          "description": "Git commit hash"
+        },
+        "success": {
+          "type": "boolean",
+          "description": "True if push was successful"
+        }
+      }
+    }
+  ],
+  "templates": {
+    "package_json": "{\n  \"name\": \"{{project_name}}\",\n  \"version\": \"1.0.0\",\n  \"description\": \"{{description}}\",\n  \"main\": \"index.js\",\n  \"scripts\": {\n    \"start\": \"node index.js\",\n    \"dev\": \"nodemon index.js\",\n    \"test\": \"jest\",\n    \"test:watch\": \"jest --watch\",\n    \"test:coverage\": \"jest --coverage\"\n  },\n  \"keywords\": [],\n  \"author\": \"\",\n  \"license\": \"MIT\",\n  \"devDependencies\": {\n    \"jest\": \"^29.0.0\",\n    \"nodemon\": \"^3.0.0\"\n  }\n}",
+    "gitignore": "node_modules/\n.env\n.env.local\n.env.*.local\nnpm-debug.log*\nyarn-debug.log*\nyarn-error.log*\n.DS_Store\n.vscode/\n.idea/\ndist/\nbuild/\ncoverage/\n*.log\n",
+    "readme": "# {{project_name}}\n\n{{description}}\n\n## Installation\n\n```bash\nnpm install\n```\n\n## Usage\n\n```bash\nnpm start\n```\n\n## Development\n\n```bash\nnpm run dev\n```\n\n## Testing\n\n```bash\nnpm test\n```\n\n## License\n\nMIT\n",
+    "test_template": "const {{module_name}} = require('../{{file_name}}');\n\ndescribe('{{module_name}}', () => {\n  test('should work correctly', () => {\n    // Add your test here\n    expect(true).toBe(true);\n  });\n});\n",
+    "express_app": "const express = require('express');\nconst app = express();\nconst PORT = process.env.PORT || 3000;\n\napp.use(express.json());\n\napp.get('/', (req, res) => {\n  res.json({ message: 'Hello World!' });\n});\n\napp.listen(PORT, () => {\n  console.log(`Server running on port ${PORT}`);\n});\n\nmodule.exports = app;\n"
+  }
+}
