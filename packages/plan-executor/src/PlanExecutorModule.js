@@ -4,6 +4,7 @@
 
 import { PlanExecutorTool } from './tools/PlanExecutorTool.js';
 import { PlanInspectorTool } from './tools/PlanInspectorTool.js';
+import { PlanToMarkdownTool } from './tools/PlanToMarkdownTool.js';
 import { ExecutionStatusTool } from './tools/ExecutionStatusTool.js';
 import { StepExecutorTool } from './tools/StepExecutorTool.js';
 import { DebugExecutorTool } from './tools/DebugExecutorTool.js';
@@ -35,6 +36,7 @@ export class PlanExecutorModule {
     // Create all tool instances (raw debugging tools)
     this.rawPlanExecutorTool = new PlanExecutorTool(this.executor);
     this.rawPlanInspectorTool = new PlanInspectorTool();
+    this.rawPlanToMarkdownTool = new PlanToMarkdownTool();
     this.rawExecutionStatusTool = new ExecutionStatusTool({ 
       executionContextRegistry: () => this.executionContext 
     });
@@ -48,6 +50,7 @@ export class PlanExecutorModule {
     // Wrap tools with Legion adapter for compatibility
     this.planExecutorTool = new LegionToolAdapter(this.rawPlanExecutorTool);
     this.planInspectorTool = new LegionToolAdapter(this.rawPlanInspectorTool);
+    this.planToMarkdownTool = new LegionToolAdapter(this.rawPlanToMarkdownTool);
     this.executionStatusTool = new LegionToolAdapter(this.rawExecutionStatusTool);
     this.stepExecutorTool = new LegionToolAdapter(this.rawStepExecutorTool);
     this.debugExecutorTool = new LegionToolAdapter(this.rawDebugExecutorTool);
@@ -86,6 +89,7 @@ export class PlanExecutorModule {
       this.stepExecutorTool,      // plan_execute_step
       this.debugExecutorTool,     // plan_debug
       this.planInspectorTool,     // plan_inspect
+      this.planToMarkdownTool,    // plan_to_markdown
       this.executionStatusTool    // plan_status
     ];
   }

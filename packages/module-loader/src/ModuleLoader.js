@@ -155,7 +155,7 @@ export class ModuleLoader {
     }
 
     // Use ModuleFactory to create the module
-    const module = this.moduleFactory.createModule(ModuleClass);
+    const module = await this.moduleFactory.createModule(ModuleClass);
     
     // Store it
     this.loadedModules.set(moduleName, module);

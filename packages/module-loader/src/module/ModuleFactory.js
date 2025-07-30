@@ -28,9 +28,17 @@ class ModuleFactory {
   /**
    * Create a module instance with resolved dependencies
    * @param {Class} ModuleClass - The module class to instantiate
-   * @returns {Module} The instantiated module
+   * @returns {Promise<Module>} The instantiated module
    */
-  createModule(ModuleClass) {
+  async createModule(ModuleClass) {
+    // Check if module uses Async Resource Manager Pattern (has static create method)
+    if (typeof ModuleClass.create === 'function') {
+      const module = await ModuleClass.create(this.resourceManager);
+      this._attachEventListeners(module);
+      return module;
+    }
+    
+    // Fallback to traditional constructor pattern
     // Get declared dependencies
     const requiredResources = ModuleClass.dependencies || [];
     
@@ -58,10 +66,11 @@ class ModuleFactory {
   /**
    * Create multiple modules at once
    * @param {Array<Class>} moduleClasses - Array of module classes to instantiate
-   * @returns {Array<Module>} Array of instantiated modules
+   * @returns {Promise<Array<Module>>} Array of instantiated modules
    */
-  createAllModules(moduleClasses) {
-    return moduleClasses.map(ModuleClass => this.createModule(ModuleClass));
+  async createAllModules(moduleClasses) {
+    const modulePromises = moduleClasses.map(ModuleClass => this.createModule(ModuleClass));
+    return await Promise.all(modulePromises);
   }
 
   /**

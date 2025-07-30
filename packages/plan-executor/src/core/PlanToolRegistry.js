@@ -8,6 +8,12 @@
 
 import { ModuleLoader } from '@legion/module-loader';
 import { PlanModuleAnalyzer } from './PlanModuleAnalyzer.js';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export class PlanToolRegistry {
   /**
@@ -20,6 +26,7 @@ export class PlanToolRegistry {
     this.moduleLoader = options.moduleLoader || new ModuleLoader();
     this.planAnalyzer = options.planAnalyzer || new PlanModuleAnalyzer();
     this.isInitialized = false;
+    this.moduleRegistry = null;
   }
 
   /**
@@ -28,6 +35,7 @@ export class PlanToolRegistry {
   async initialize() {
     if (!this.isInitialized) {
       await this.moduleLoader.initialize();
+      await this._loadModuleRegistry();
       this.isInitialized = true;
     }
   }
@@ -127,25 +135,53 @@ export class PlanToolRegistry {
   }
 
   /**
-   * Load a module by name
+   * Load the module registry from ModuleRegistry.json
+   * @private
+   */
+  async _loadModuleRegistry() {
+    try {
+      const projectRoot = this.moduleLoader.resourceManager.findProjectRoot();
+      if (!projectRoot) {
+        throw new Error('Project root not found');
+      }
+      
+      const registryPath = path.join(projectRoot, 'packages', 'module-loader', 'src', 'ModuleRegistry.json');
+      const registryContent = await fs.readFile(registryPath, 'utf8');
+      this.moduleRegistry = JSON.parse(registryContent);
+    } catch (error) {
+      console.warn(`Failed to load module registry: ${error.message}`);
+      this.moduleRegistry = { modules: {} };
+    }
+  }
+
+  /**
+   * Load a module by name using the module registry
    * @private
    * @param {string} moduleName - Name of the module to load
    */
   async _loadModuleByName(moduleName) {
     try {
-      // Try to load from known module locations
-      if (moduleName === 'file') {
-        const { FileModule } = await import('../../../general-tools/src/file/FileModule.js');
-        await this.moduleLoader.loadModuleByName('file', FileModule);
-      } else if (moduleName === 'command-executor') {
-        // Load command-executor from module.json
-        const modulePath = '../../../general-tools/src/command-executor/module.json';
-        const resolvedPath = new URL(modulePath, import.meta.url).pathname;
-        await this.moduleLoader.loadModuleFromJson(resolvedPath);
+      if (!this.moduleRegistry || !this.moduleRegistry.modules[moduleName]) {
+        throw new Error(`Module '${moduleName}' not found in registry`);
+      }
+
+      const moduleInfo = this.moduleRegistry.modules[moduleName];
+      const projectRoot = this.moduleLoader.resourceManager.findProjectRoot();
+      if (!projectRoot) {
+        throw new Error('Project root not found');
+      }
+      
+      const modulePath = path.join(projectRoot, moduleInfo.path);
+
+      if (moduleInfo.type === 'json') {
+        // Load from module.json
+        await this.moduleLoader.loadModuleFromJson(modulePath);
+      } else if (moduleInfo.type === 'class') {
+        // Load from JavaScript module
+        const { [moduleInfo.className]: ModuleClass } = await import(`file://${modulePath}`);
+        await this.moduleLoader.loadModuleByName(moduleName, ModuleClass);
       } else {
-        // For other modules, try to load from conventional locations
-        const modulePath = `../../../${moduleName}/src`;
-        await this.moduleLoader.loadModule(modulePath);
+        throw new Error(`Unknown module type '${moduleInfo.type}' for module '${moduleName}'`);
       }
     } catch (error) {
       throw new Error(`Failed to load module '${moduleName}': ${error.message}`);

@@ -551,7 +551,7 @@ describe('End-to-End Integration', () => {
     it('should integrate properly with Legion ecosystem patterns', () => {
       // Test module interface
       expect(PlanExecutorModule.dependencies).toEqual(['resourceManager', 'moduleFactory']);
-      expect(module.getTools()).toHaveLength(5);
+      expect(module.getTools()).toHaveLength(6);
       
       const tool = module.getTools()[0];
       expect(tool.name).toBe('plan_execute');

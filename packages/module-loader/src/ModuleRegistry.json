@@ -1,0 +1,105 @@
+{
+  "modules": {
+    "file": {
+      "type": "class",
+      "path": "packages/general-tools/src/file/FileModule.js",
+      "className": "FileModule"
+    },
+    "command-executor": {
+      "type": "json",
+      "path": "packages/general-tools/src/command-executor/module.json"
+    },
+    "js-generator": {
+      "type": "class",
+      "path": "packages/code-gen/js-generator/src/JSGeneratorModule.js",
+      "className": "JSGeneratorModule"
+    },
+    "package-manager": {
+      "type": "class", 
+      "path": "packages/code-gen/package-manager/src/PackageManagerModule.js",
+      "className": "PackageManagerModule"
+    },
+    "jester": {
+      "type": "class",
+      "path": "packages/code-gen/jester/src/JesterModule.js",
+      "className": "JesterModule"
+    },
+    "code-analysis": {
+      "type": "class",
+      "path": "packages/code-gen/code-analysis/src/CodeAnalysisModule.js",
+      "className": "CodeAnalysisModule"
+    },
+    "railway": {
+      "type": "class",
+      "path": "packages/railway/src/RailwayModule.js",
+      "className": "RailwayModule"
+    },
+    "llm-planner": {
+      "type": "class",
+      "path": "packages/llm-planner/src/LLMPlannerModule.js",
+      "className": "LLMPlannerModule"
+    },
+    "profile-planner": {
+      "type": "class",
+      "path": "packages/profile-planner/src/ProfilePlannerModule.js",
+      "className": "ProfilePlannerModule"
+    },
+    "plan-executor": {
+      "type": "class",
+      "path": "packages/plan-executor/src/PlanExecutorModule.js",
+      "className": "PlanExecutorModule"
+    },
+    "playwright": {
+      "type": "json",
+      "path": "packages/playwright/module.json"
+    },
+    "node-runner": {
+      "type": "json",
+      "path": "packages/node-runner/module.json"
+    },
+    "log-manager": {
+      "type": "json",
+      "path": "packages/log-manager/module.json"
+    },
+    "conan-the-deployer": {
+      "type": "json",
+      "path": "packages/conan-the-deployer/module.json"
+    },
+    "code-agent": {
+      "type": "json",
+      "path": "packages/code-gen/code-agent/module.json"
+    },
+    "crawler": {
+      "type": "json",
+      "path": "packages/general-tools/src/crawler/module.json"
+    },
+    "page-screenshoter": {
+      "type": "json",
+      "path": "packages/general-tools/src/page-screenshoter/module.json"
+    },
+    "webpage-to-markdown": {
+      "type": "json",
+      "path": "packages/general-tools/src/webpage-to-markdown/module.json"
+    },
+    "youtube-transcript": {
+      "type": "json",
+      "path": "packages/general-tools/src/youtube-transcript/module.json"
+    },
+    "server-starter": {
+      "type": "json",
+      "path": "packages/general-tools/src/server-starter/module.json"
+    },
+    "serper": {
+      "type": "json",
+      "path": "packages/general-tools/src/serper/module.json"
+    },
+    "lodash": {
+      "type": "json",
+      "path": "packages/general-tools/src/lodash/module.json"
+    },
+    "moment": {
+      "type": "json",
+      "path": "packages/general-tools/src/moment/module.json"
+    }
+  }
+}

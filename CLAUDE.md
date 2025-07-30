@@ -588,6 +588,11 @@ Legion/
 - **Never create test artifacts** in git-tracked directories
 - **Clean up after tests** - remove temp directories in test teardown
 
+### CRITICAL: Test Fixtures vs Temp Directories
+- **Test fixtures, plans, scripts** → `__tests__/fixtures/` or `__tests__/data/` ✅ (persist)
+- **Test execution output** → `/tmp/` or `tmpdir()` ✅ (gets cleared)
+- **NEVER put test files you want to keep in `__tests__/tmp/`** ❌ (will be deleted)
+
 ### Scripts and Temporary Code
 - **Put ALL temporary scripts** in `/tmp/` or similar temp directories
 - **Never create** `test.js`, `temp.js`, `foo.js` files in the main codebase
