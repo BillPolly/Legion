@@ -407,6 +407,62 @@ class FileOperationsTool extends Tool {
   }
 
   /**
+   * Standard execute method for plan executor compatibility
+   * Maps parameters to the appropriate file operation
+   */
+  async execute(params) {
+    try {
+      // Check if this is a file_write operation (most common from plan executor)
+      if (params.filepath !== undefined && params.content !== undefined) {
+        // This is a file write operation
+        return await this.writeFile(params.filepath, params.content);
+      }
+      // Check if this is a file_read operation
+      else if (params.filepath !== undefined && params.content === undefined) {
+        // This is a file read operation
+        return await this.readFile(params.filepath);
+      }
+      // Check if this is a directory operation
+      else if (params.dirpath !== undefined) {
+        // Could be create, list, or change directory
+        if (params.operation === 'create') {
+          return await this.createDirectory(params.dirpath);
+        } else if (params.operation === 'list') {
+          return await this.listDirectory(params.dirpath);
+        } else if (params.operation === 'change') {
+          return await this.changeDirectory(params.dirpath);
+        } else {
+          // Default to list if no operation specified
+          return await this.listDirectory(params.dirpath);
+        }
+      }
+      // Check if this is a get current directory operation
+      else if (params.operation === 'current') {
+        return await this.getCurrentDirectory();
+      }
+      // If we can't determine the operation, return an error
+      else {
+        return ToolResult.failure(
+          'Unable to determine file operation. Please provide filepath (for read/write) or dirpath (for directory operations)',
+          { 
+            providedParams: Object.keys(params),
+            errorType: 'invalid_parameters'
+          }
+        );
+      }
+    } catch (error) {
+      // Handle any errors
+      return ToolResult.failure(
+        error.message,
+        { 
+          errorType: 'execution_error',
+          details: error.stack
+        }
+      );
+    }
+  }
+
+  /**
    * Reads a file from disk
    */
   async readFile(filepath) {

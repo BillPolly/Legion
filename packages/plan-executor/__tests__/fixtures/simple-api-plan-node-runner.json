@@ -1,0 +1,293 @@
+{
+  "id": "simple-api-plan",
+  "name": "Simple Node.js Addition API",
+  "description": "Creates and tests a simple Express API server that adds two numbers",
+  "version": "1.0.0",
+  "type": "development",
+  "inputs": [
+    {
+      "name": "ARTIFACT_DIR",
+      "type": "string",
+      "description": "Directory for generated artifacts",
+      "required": true
+    }
+  ],
+  "modules": ["js-generator", "package-manager", "node-runner"],
+  "resources": [],
+  "estimatedDuration": 30000,
+  "tags": ["api", "nodejs", "express", "testing"],
+  "metadata": {
+    "author": "test-suite",
+    "created": "2024-07-22T12:00:00Z",
+    "complexity": "low",
+    "testingStrategy": "integration"
+  },
+  "steps": [
+    {
+      "id": "setup-project",
+      "name": "Setup Project Structure",
+      "description": "Create project directory and package.json",
+      "type": "setup",
+      "status": "pending",
+      "dependencies": [],
+      "inputs": ["ARTIFACT_DIR"],
+      "outputs": ["project_ready"],
+      "estimatedDuration": 5000,
+      "result": null,
+      "actions": [
+        {
+          "id": "cleanup-tmp",
+          "type": "command_executor",
+          "inputs": ["command"],
+          "outputs": ["cleanup_done"],
+          "parameters": {
+            "command": "rm -rf ${ARTIFACT_DIR} && mkdir -p ${ARTIFACT_DIR}",
+            "timeout": 5000
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Clean temporary directory",
+          "estimatedDuration": 1000
+        },
+        {
+          "id": "create-package",
+          "type": "create_package_json",
+          "inputs": ["package_config"],
+          "outputs": ["package_created"],
+          "parameters": {
+            "name": "simple-addition-api",
+            "version": "1.0.0",
+            "description": "Simple API that adds two numbers",
+            "main": "server.js",
+            "dependencies": {
+              "express": "^4.18.0"
+            },
+            "devDependencies": {
+              "nodemon": "^3.0.0"
+            },
+            "scripts": {
+              "test": "echo \"Error: no test specified\" && exit 1",
+              "start": "node server.js",
+              "dev": "nodemon server.js"
+            },
+            "outputPath": "${ARTIFACT_DIR}/package.json"
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Create package.json configuration",
+          "estimatedDuration": 500
+        }
+      ]
+    },
+    {
+      "id": "install-dependencies",
+      "name": "Install Node Dependencies",
+      "description": "Install Express and dependencies using node-runner",
+      "type": "setup",
+      "status": "pending",
+      "dependencies": ["setup-project"],
+      "inputs": ["project_ready"],
+      "outputs": ["dependencies_installed"],
+      "estimatedDuration": 5000,
+      "result": null,
+      "actions": [
+        {
+          "id": "npm-install",
+          "type": "install_dependencies",
+          "inputs": ["cwd"],
+          "outputs": ["install_result"],
+          "parameters": {
+            "cwd": "${ARTIFACT_DIR}",
+            "production": false,
+            "packageManager": "npm"
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Install NPM packages",
+          "estimatedDuration": 3000
+        }
+      ]
+    },
+    {
+      "id": "generate-server",
+      "name": "Generate Express Server",
+      "description": "Generate the Express server code",
+      "type": "generation",
+      "status": "pending",
+      "dependencies": ["install-dependencies"],
+      "inputs": ["dependencies_installed"],
+      "outputs": ["server_generated"],
+      "estimatedDuration": 2000,
+      "result": null,
+      "actions": [
+        {
+          "id": "generate-server-code",
+          "type": "generate_javascript_module",
+          "inputs": ["function_spec"],
+          "outputs": ["generated_code"],
+          "parameters": {
+            "name": "SimpleAPIServer",
+            "projectPath": "${ARTIFACT_DIR}",
+            "writeToFile": true,
+            "outputPath": "server.js",
+            "functions": [
+              {
+                "name": "startServer",
+                "params": [],
+                "body": "const express = require('express');\nconst app = express();\nconst PORT = process.env.PORT || 3000;\n\n// Middleware\napp.use(express.json());\napp.use((req, res, next) => {\n  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);\n  next();\n});\n\n// Addition endpoint\napp.post('/add', (req, res) => {\n  try {\n    const { a, b } = req.body;\n  \n    if (typeof a !== 'number' || typeof b !== 'number') {\n      return res.status(400).json({ \n        error: 'Both a and b must be numbers' \n      });\n    }\n  \n    const result = a + b;\n  \n    console.log(`Adding ${a} + ${b} = ${result}`);\n    res.json({ result });\n  } catch (error) {\n    console.error('Addition error:', error);\n    res.status(500).json({ error: 'Internal server error' });\n  }\n});\n\n// Health check endpoint\napp.get('/health', (req, res) => {\n  res.json({ status: 'ok', timestamp: new Date().toISOString() });\n});\n\n// Start server\napp.listen(PORT, () => {\n  console.log(`Server running on port ${PORT}`);\n  console.log(`Test with: curl -X POST http://localhost:${PORT}/add -H \\\"Content-Type: application/json\\\" -d '{\\\"a\\\": 5, \\\"b\\\": 3}'`);\n});"
+              }
+            ],
+            "outputPath": "${ARTIFACT_DIR}/server.js",
+            "includeMain": true
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Generate Express server with addition endpoint",
+          "estimatedDuration": 1000
+        }
+      ]
+    },
+    {
+      "id": "start-server",
+      "name": "Start API Server",
+      "description": "Start the server using node-runner with health checks",
+      "type": "deployment",
+      "status": "pending",
+      "dependencies": ["generate-server"],
+      "inputs": ["server_generated"],
+      "outputs": ["server_running", "server_id"],
+      "estimatedDuration": 10000,
+      "result": null,
+      "actions": [
+        {
+          "id": "launch-server",
+          "type": "start_web_server",
+          "inputs": ["command", "port", "cwd"],
+          "outputs": ["server_info"],
+          "parameters": {
+            "command": "node server.js",
+            "cwd": "${ARTIFACT_DIR}",
+            "port": 3000,
+            "healthCheck": true,
+            "healthCheckPath": "/health",
+            "healthCheckTimeout": 15000
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Start server with health monitoring",
+          "estimatedDuration": 5000
+        }
+      ]
+    },
+    {
+      "id": "test-api",
+      "name": "Test API with Curl",
+      "description": "Test the addition endpoint with curl requests",
+      "type": "testing",
+      "status": "pending",
+      "dependencies": ["start-server"],
+      "inputs": ["server_running"],
+      "outputs": ["api_tested"],
+      "estimatedDuration": 5000,
+      "result": null,
+      "actions": [
+        {
+          "id": "test-addition-basic",
+          "type": "command_executor",
+          "inputs": ["command"],
+          "outputs": ["addition_result"],
+          "parameters": {
+            "command": "curl -s -X POST http://localhost:3000/add -H \"Content-Type: application/json\" -d '{\"a\": 5, \"b\": 3}'",
+            "timeout": 10000
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Test basic addition: 5 + 3 = 8",
+          "estimatedDuration": 1000
+        },
+        {
+          "id": "test-addition-negative",
+          "type": "command_executor",
+          "inputs": ["command"],
+          "outputs": ["negative_result"],
+          "parameters": {
+            "command": "curl -s -X POST http://localhost:3000/add -H \"Content-Type: application/json\" -d '{\"a\": -2, \"b\": 7}'",
+            "timeout": 10000
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Test with negative number: -2 + 7 = 5",
+          "estimatedDuration": 1000
+        },
+        {
+          "id": "test-error-case",
+          "type": "command_executor",
+          "inputs": ["command"],
+          "outputs": ["error_result"],
+          "parameters": {
+            "command": "curl -s -X POST http://localhost:3000/add -H \"Content-Type: application/json\" -d '{\"a\": \"not_a_number\", \"b\": 3}'",
+            "timeout": 10000
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Test error handling with invalid input",
+          "estimatedDuration": 1000
+        }
+      ]
+    },
+    {
+      "id": "get-server-logs",
+      "name": "Get Server Logs",
+      "description": "Retrieve server logs for debugging",
+      "type": "monitoring",
+      "status": "pending",
+      "dependencies": ["test-api"],
+      "inputs": ["server_id", "api_tested"],
+      "outputs": ["server_logs"],
+      "estimatedDuration": 1000,
+      "result": null,
+      "actions": [
+        {
+          "id": "list-processes",
+          "type": "list_processes",
+          "inputs": [],
+          "outputs": ["process_list"],
+          "parameters": {},
+          "status": "pending",
+          "result": null,
+          "description": "List all running processes to get server logs",
+          "estimatedDuration": 500
+        }
+      ]
+    },
+    {
+      "id": "cleanup-server",
+      "name": "Stop Server",
+      "description": "Stop the server process cleanly",
+      "type": "cleanup",
+      "status": "pending",
+      "dependencies": ["get-server-logs"],
+      "inputs": ["server_id"],
+      "outputs": ["cleanup_complete"],
+      "estimatedDuration": 2000,
+      "result": null,
+      "actions": [
+        {
+          "id": "stop-server",
+          "type": "stop_process",
+          "inputs": ["processId"],
+          "outputs": ["stop_result"],
+          "parameters": {
+            "processId": "${server_info.id}",
+            "force": false,
+            "timeout": 5000
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Stop the server process",
+          "estimatedDuration": 1000
+        }
+      ]
+    }
+  ]
+}

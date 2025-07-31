@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@legion/module-loader": "*",
-    "@legion/llm-planner": "*"
+    "@legion/llm-planner": "*",
+    "@legion/log-manager": "*"
   },
   "devDependencies": {
     "jest": "^29.7.0",

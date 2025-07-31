@@ -35,8 +35,21 @@ export default class NodeRunner {
   /**
    * Start a Node.js process
    */
-  async startNodeProcess(command, options = {}) {
+  async startNodeProcess(params, options = {}) {
     try {
+      // Handle both old style and new style
+      let command, opts;
+      if (typeof params === 'string') {
+        // Old style: startNodeProcess(command, options)
+        command = params;
+        opts = options;
+      } else {
+        // New style: startNodeProcess({ command, ...options })
+        const { command: cmd, ...restOpts } = params;
+        command = cmd;
+        opts = restOpts;
+      }
+      
       // Parse command if it's a string
       let processCommand, args;
       if (typeof command === 'string') {
@@ -48,7 +61,7 @@ export default class NodeRunner {
         args = command.args || [];
       }
 
-      const result = await this.processManager.startProcess(processCommand, args, options);
+      const result = await this.processManager.startProcess(processCommand, args, opts);
       
       // Add to cleanup context
       if (this.config.autoCleanup) {
@@ -70,9 +83,22 @@ export default class NodeRunner {
   /**
    * Stop a process
    */
-  async stopProcess(processId, options = {}) {
+  async stopProcess(params, options = {}) {
     try {
-      const result = await this.processManager.stopProcess(processId, options);
+      // Handle both old style and new style
+      let processId, opts;
+      if (typeof params === 'string') {
+        // Old style: stopProcess(processId, options)
+        processId = params;
+        opts = options;
+      } else {
+        // New style: stopProcess({ processId, ...options })
+        const { processId: id, ...restOpts } = params;
+        processId = id;
+        opts = restOpts;
+      }
+      
+      const result = await this.processManager.stopProcess(processId, opts);
       return {
         success: true,
         ...result
@@ -125,8 +151,21 @@ export default class NodeRunner {
   /**
    * Start a web server
    */
-  async startWebServer(command, options = {}) {
+  async startWebServer(params) {
     try {
+      // Handle both old style (command, options) and new style (single params object)
+      let command, options;
+      if (typeof params === 'string') {
+        // Old style: startWebServer(command, options)
+        command = params;
+        options = arguments[1] || {};
+      } else {
+        // New style: startWebServer({ command, ...options })
+        const { command: cmd, ...opts } = params;
+        command = cmd;
+        options = opts;
+      }
+      
       const result = await this.serverManager.startWebServer(command, options);
       return {
         success: true,
@@ -161,8 +200,18 @@ export default class NodeRunner {
   /**
    * Check server health
    */
-  async checkServerHealth(serverId) {
+  async checkServerHealth(params) {
     try {
+      // Handle both old style and new style
+      let serverId;
+      if (typeof params === 'string') {
+        // Old style: checkServerHealth(serverId)
+        serverId = params;
+      } else {
+        // New style: checkServerHealth({ serverId })
+        serverId = params.serverId;
+      }
+      
       const result = await this.serverManager.checkServerHealth(serverId);
       return {
         success: true,

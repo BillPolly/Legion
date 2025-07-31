@@ -122,6 +122,7 @@
             "default": ["error", "warn", "info"]
           },
           "filter": {
+            "type": "object",
             "description": "Additional filter criteria"
           },
           "realtime": {
@@ -140,6 +141,7 @@
               "description": "Stream identifier"
             },
             "stream": {
+              "type": "object",
               "description": "Readable stream object"
             },
             "status": {

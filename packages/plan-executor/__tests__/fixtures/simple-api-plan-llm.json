@@ -1,0 +1,241 @@
+{
+  "id": "simple-api-plan-llm",
+  "name": "Simple Node.js Addition API with LLM",
+  "description": "Creates and tests a simple Express API server using LLM-powered code generation",
+  "version": "1.0.0",
+  "type": "development",
+  "inputs": [
+    {
+      "name": "ARTIFACT_DIR",
+      "type": "string",
+      "description": "Directory for generated artifacts",
+      "required": true
+    }
+  ],
+  "modules": ["command-executor", "code-agent", "node-runner"],
+  "resources": [],
+  "estimatedDuration": 60000,
+  "tags": ["api", "nodejs", "express", "llm", "testing"],
+  "metadata": {
+    "author": "test-suite",
+    "created": "2025-07-30T21:00:00Z",
+    "complexity": "medium",
+    "testingStrategy": "integration"
+  },
+  "steps": [
+    {
+      "id": "setup-workspace",
+      "name": "Setup Workspace",
+      "description": "Create clean workspace directory",
+      "type": "setup",
+      "status": "pending",
+      "dependencies": [],
+      "inputs": ["ARTIFACT_DIR"],
+      "outputs": ["workspace_ready"],
+      "estimatedDuration": 2000,
+      "result": null,
+      "actions": [
+        {
+          "id": "cleanup-workspace",
+          "type": "command_executor",
+          "inputs": ["command"],
+          "outputs": ["cleanup_done"],
+          "parameters": {
+            "command": "rm -rf ${ARTIFACT_DIR} && mkdir -p ${ARTIFACT_DIR}",
+            "timeout": 5000
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Clean workspace directory",
+          "estimatedDuration": 1000
+        }
+      ]
+    },
+    {
+      "id": "generate-api",
+      "name": "Generate API Server with LLM",
+      "description": "Use LLM to generate a complete Express API server",
+      "type": "generation",
+      "status": "pending",
+      "dependencies": ["setup-workspace"],
+      "inputs": ["workspace_ready"],
+      "outputs": ["api_generated"],
+      "estimatedDuration": 30000,
+      "result": null,
+      "actions": [
+        {
+          "id": "develop-api",
+          "type": "develop_code",
+          "inputs": ["workingDirectory", "task", "projectType"],
+          "outputs": ["generated_code"],
+          "parameters": {
+            "workingDirectory": "${ARTIFACT_DIR}",
+            "task": "Create a simple Express.js API server with a single POST endpoint /add that takes two numbers (a and b) in the request body and returns their sum. Include a /health endpoint for health checks.",
+            "projectType": "backend",
+            "requirements": {
+              "backend": "Express.js server with JSON body parsing, addition endpoint that validates inputs are numbers, proper error handling with status codes, health check endpoint, and console logging of requests",
+              "features": [
+                "POST /add endpoint that adds two numbers",
+                "GET /health endpoint for health checks",
+                "Input validation (ensure a and b are numbers)",
+                "Error handling with appropriate status codes",
+                "Request logging middleware"
+              ]
+            },
+            "config": {
+              "eslintRules": {
+                "no-console": "off"
+              }
+            }
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Generate Express API server using LLM",
+          "estimatedDuration": 25000
+        }
+      ]
+    },
+    {
+      "id": "start-server",
+      "name": "Start API Server",
+      "description": "Start the server using node-runner with health checks",
+      "type": "deployment",
+      "status": "pending",
+      "dependencies": ["generate-api"],
+      "inputs": ["api_generated"],
+      "outputs": ["server_running", "server_id"],
+      "estimatedDuration": 10000,
+      "result": null,
+      "actions": [
+        {
+          "id": "launch-server",
+          "type": "start_web_server",
+          "inputs": ["command", "port", "cwd"],
+          "outputs": ["server_info"],
+          "parameters": {
+            "command": "npm start",
+            "cwd": "${ARTIFACT_DIR}",
+            "port": 3000,
+            "healthCheck": true,
+            "healthCheckPath": "/health",
+            "healthCheckTimeout": 30000
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Start server with health monitoring",
+          "estimatedDuration": 8000
+        }
+      ]
+    },
+    {
+      "id": "test-api",
+      "name": "Test API Endpoints",
+      "description": "Test the addition endpoint with various inputs",
+      "type": "testing",
+      "status": "pending",
+      "dependencies": ["start-server"],
+      "inputs": ["server_running"],
+      "outputs": ["api_tested"],
+      "estimatedDuration": 5000,
+      "result": null,
+      "actions": [
+        {
+          "id": "test-addition-basic",
+          "type": "command_executor",
+          "inputs": ["command"],
+          "outputs": ["addition_result"],
+          "parameters": {
+            "command": "curl -s -X POST http://localhost:3000/add -H \"Content-Type: application/json\" -d '{\"a\": 5, \"b\": 3}'",
+            "timeout": 10000
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Test basic addition: 5 + 3 = 8",
+          "estimatedDuration": 1000
+        },
+        {
+          "id": "test-addition-negative",
+          "type": "command_executor",
+          "inputs": ["command"],
+          "outputs": ["negative_result"],
+          "parameters": {
+            "command": "curl -s -X POST http://localhost:3000/add -H \"Content-Type: application/json\" -d '{\"a\": -2, \"b\": 7}'",
+            "timeout": 10000
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Test with negative number: -2 + 7 = 5",
+          "estimatedDuration": 1000
+        },
+        {
+          "id": "test-error-case",
+          "type": "command_executor",
+          "inputs": ["command"],
+          "outputs": ["error_result"],
+          "parameters": {
+            "command": "curl -s -X POST http://localhost:3000/add -H \"Content-Type: application/json\" -d '{\"a\": \"not_a_number\", \"b\": 3}'",
+            "timeout": 10000
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Test error handling with invalid input",
+          "estimatedDuration": 1000
+        }
+      ]
+    },
+    {
+      "id": "get-server-logs",
+      "name": "Get Server Logs",
+      "description": "Retrieve server logs for debugging",
+      "type": "monitoring",
+      "status": "pending",
+      "dependencies": ["test-api"],
+      "inputs": ["server_id", "api_tested"],
+      "outputs": ["server_logs"],
+      "estimatedDuration": 1000,
+      "result": null,
+      "actions": [
+        {
+          "id": "list-processes",
+          "type": "list_processes",
+          "inputs": [],
+          "outputs": ["process_list"],
+          "parameters": {},
+          "status": "pending",
+          "result": null,
+          "description": "List all running processes to get server logs",
+          "estimatedDuration": 500
+        }
+      ]
+    },
+    {
+      "id": "cleanup-server",
+      "name": "Stop Server",
+      "description": "Stop the server process cleanly",
+      "type": "cleanup",
+      "status": "pending",
+      "dependencies": ["get-server-logs"],
+      "inputs": ["server_id"],
+      "outputs": ["cleanup_complete"],
+      "estimatedDuration": 2000,
+      "result": null,
+      "actions": [
+        {
+          "id": "stop-server",
+          "type": "stop_process",
+          "inputs": ["processId"],
+          "outputs": ["stop_result"],
+          "parameters": {
+            "processId": "${server_info.id}",
+            "force": false,
+            "timeout": 5000
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Stop the server process",
+          "estimatedDuration": 1000
+        }
+      ]
+    }
+  ]
+}

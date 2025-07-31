@@ -46,7 +46,9 @@ export class GenerateJavaScriptModuleTool extends Tool {
         }).optional().describe('Export statements'),
         projectPath: z.string().optional().describe('Project root directory (optional, for file writing)'),
         writeToFile: z.boolean().optional().default(false).describe('Whether to write generated code to file'),
-        outputPath: z.string().optional().describe('Relative path within project for output file (when writeToFile is true)')
+        outputPath: z.string().optional().describe('Relative path within project for output file (when writeToFile is true)'),
+        includeMain: z.boolean().optional().default(false).describe('Whether to include a main execution block'),
+        mainFunction: z.string().optional().describe('Code to execute in the main block (when includeMain is true)')
       });
     this.outputSchema = z.object({
         code: z.string().describe('Generated JavaScript module code'),
@@ -134,6 +136,12 @@ export class GenerateJavaScriptModuleTool extends Tool {
       if (args.exports) {
         parts.push(this._generateExports(args.exports));
         components.exports = (args.exports.named?.length || 0) + (args.exports.default ? 1 : 0);
+      }
+
+      // Add main execution block if requested
+      if (args.includeMain && args.mainFunction) {
+        parts.push('// Call the main function');
+        parts.push(args.mainFunction);
       }
 
       this.emit('progress', { percentage: 90, status: 'Finalizing module...' });

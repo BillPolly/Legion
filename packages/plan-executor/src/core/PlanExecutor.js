@@ -20,6 +20,11 @@ export class PlanExecutor extends EventEmitter {
       throw new Error('Invalid plan: must have steps array');
     }
     
+    // Check plan validation status
+    if (!plan.status || plan.status !== 'validated') {
+      throw new Error('Plan must be validated before execution. Please validate the plan using plan_inspect tool and set status to "validated"');
+    }
+    
     // Set default options
     const executionOptions = {
       emitProgress: true,
@@ -43,6 +48,9 @@ export class PlanExecutor extends EventEmitter {
     }
     
     try {
+      // Resolve plan inputs and inject into context
+      await this._resolvePlanInputs(plan, context);
+      
       // Load required modules
       await this.planToolRegistry.loadModulesForPlan(plan);
       
@@ -305,6 +313,103 @@ export class PlanExecutor extends EventEmitter {
   
   async _sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Resolve plan inputs and inject into execution context
+   * @private
+   * @param {Object} plan - Plan with inputs section
+   * @param {ExecutionContext} context - Execution context
+   */
+  async _resolvePlanInputs(plan, context) {
+    if (!plan.inputs || !Array.isArray(plan.inputs)) {
+      return; // No inputs to resolve
+    }
+
+    const resourceManager = this.planToolRegistry.moduleLoader.resourceManager;
+    const planId = plan.id || 'unknown-plan';
+
+    // Get workspace paths from ResourceManager
+    let workspacePaths;
+    try {
+      workspacePaths = resourceManager.getPlanWorkspacePaths(planId);
+    } catch (error) {
+      throw new Error(`Failed to get workspace paths: ${error.message}`);
+    }
+
+    // Resolve each input
+    for (const input of plan.inputs) {
+      let resolvedValue;
+
+      // Check if value provided in execution options
+      if (context.options.inputs && context.options.inputs[input.name] !== undefined) {
+        resolvedValue = context.options.inputs[input.name];
+      }
+      // Check for standard workspace variables
+      else if (workspacePaths[input.name]) {
+        resolvedValue = workspacePaths[input.name];
+      }
+      // Check for environment variables
+      else if (resourceManager.has(`env.${input.name}`)) {
+        resolvedValue = resourceManager.get(`env.${input.name}`);
+      }
+      // Use default value if available
+      else if (input.default !== undefined) {
+        resolvedValue = input.default;
+      }
+      // Check if required
+      else if (input.required) {
+        throw new Error(`Required plan input '${input.name}' not provided`);
+      }
+      else {
+        // Optional input with no default, skip
+        continue;
+      }
+
+      // Validate type if specified
+      if (input.type && resolvedValue !== undefined) {
+        if (!this._validateInputType(resolvedValue, input.type)) {
+          throw new Error(`Plan input '${input.name}' has incorrect type. Expected: ${input.type}, Got: ${typeof resolvedValue}`);
+        }
+      }
+
+      // Set the resolved value in context as a plan-level variable
+      context.setVariable(input.name, resolvedValue);
+    }
+
+    // Ensure workspace directories exist
+    const fs = await import('fs/promises');
+    for (const [name, dirPath] of Object.entries(workspacePaths)) {
+      if (context.getVariable(name) === dirPath) {
+        await fs.mkdir(dirPath, { recursive: true });
+      }
+    }
+  }
+
+  /**
+   * Validate input value type
+   * @private
+   * @param {*} value - Value to validate
+   * @param {string} expectedType - Expected type
+   * @returns {boolean} True if type matches
+   */
+  _validateInputType(value, expectedType) {
+    const actualType = typeof value;
+    
+    switch (expectedType) {
+      case 'string':
+        return actualType === 'string';
+      case 'number':
+        return actualType === 'number';
+      case 'boolean':
+        return actualType === 'boolean';
+      case 'object':
+        return actualType === 'object' && value !== null && !Array.isArray(value);
+      case 'array':
+        return Array.isArray(value);
+      default:
+        return false;
+    }
   }
   
   _countTotalSteps(plan) {

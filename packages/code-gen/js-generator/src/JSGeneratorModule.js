@@ -14,6 +14,7 @@ import { GenerateApiEndpointTool } from './tools/GenerateApiEndpointTool.js';
 import { GenerateEventHandlerTool } from './tools/GenerateEventHandlerTool.js';
 import { GenerateUnitTestsTool } from './tools/GenerateUnitTestsTool.js';
 import { ValidateJavaScriptSyntaxTool } from './tools/ValidateJavaScriptSyntaxTool.js';
+import { GenerateHTMLPageTool } from './tools/GenerateHTMLPageTool.js';
 
 export class JSGeneratorModule extends Module {
   constructor(dependencies = {}) {
@@ -51,7 +52,8 @@ export class JSGeneratorModule extends Module {
       wrapTool(new GenerateApiEndpointTool()),
       wrapTool(new GenerateEventHandlerTool()),
       wrapTool(new GenerateUnitTestsTool()),
-      wrapTool(new ValidateJavaScriptSyntaxTool())
+      wrapTool(new ValidateJavaScriptSyntaxTool()),
+      wrapTool(new GenerateHTMLPageTool())
     ];
 
     this.initialized = true;

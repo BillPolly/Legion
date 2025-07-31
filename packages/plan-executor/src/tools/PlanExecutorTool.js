@@ -4,8 +4,9 @@
 
 // TODO: Temporarily not extending Tool for MVP testing
 export class PlanExecutorTool {
-  constructor(executor) {
+  constructor(executor, module = null) {
     this.executor = executor;
+    this.module = module; // Reference to PlanExecutorModule for logging setup
   }
   
   get name() {
@@ -55,6 +56,11 @@ export class PlanExecutorTool {
   
   async execute(params) {
     try {
+      // Setup plan-specific logging if module is available
+      if (this.module && params.plan.id) {
+        await this.module.setupPlanLogging(params.plan.id);
+      }
+      
       const result = await this.executor.executePlan(params.plan, params.options || {});
       
       return {

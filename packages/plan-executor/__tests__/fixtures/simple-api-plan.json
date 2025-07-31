@@ -11,7 +11,14 @@
     "requiredModules": ["file", "js-generator", "package-manager", "command-executor"]
   },
   "context": {},
-  "inputs": [],
+  "inputs": [
+    {
+      "name": "ARTIFACT_DIR",
+      "type": "string",
+      "description": "Directory for generated artifacts and project files",
+      "required": true
+    }
+  ],
   "requiredOutputs": ["api_tested"],
   "steps": [
     {
@@ -32,7 +39,7 @@
           "inputs": ["command"],
           "outputs": ["cleanup_result"],
           "parameters": {
-            "command": "rm -rf /tmp/simple-api && mkdir -p /tmp/simple-api",
+            "command": "rm -rf ${ARTIFACT_DIR} && mkdir -p ${ARTIFACT_DIR}",
             "timeout": 5000
           },
           "status": "pending",
@@ -63,7 +70,7 @@
             "name": "simple-addition-api",
             "version": "1.0.0",
             "description": "Simple API that adds two numbers",
-            "projectPath": "/tmp/simple-api",
+            "projectPath": "${ARTIFACT_DIR}",
             "main": "server.js",
             "scripts": {
               "start": "node server.js",
@@ -84,12 +91,40 @@
       ]
     },
     {
+      "id": "install-dependencies",
+      "name": "Install Node Dependencies",
+      "description": "Install Express and other dependencies from package.json",
+      "type": "installation",
+      "status": "pending",
+      "dependencies": ["create-package"],
+      "inputs": [],
+      "outputs": ["dependencies_installed"],
+      "estimatedDuration": 15000,
+      "result": null,
+      "actions": [
+        {
+          "id": "npm-install",
+          "type": "command_executor",
+          "inputs": ["command"],
+          "outputs": ["install_result"],
+          "parameters": {
+            "command": "cd ${ARTIFACT_DIR} && npm install",
+            "timeout": 30000
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Install all dependencies from package.json",
+          "estimatedDuration": 15000
+        }
+      ]
+    },
+    {
       "id": "generate-server",
       "name": "Generate Express Server",
       "description": "Create server.js with addition endpoint",
       "type": "code-generation",
       "status": "pending",
-      "dependencies": ["create-package"],
+      "dependencies": ["install-dependencies"],
       "inputs": [],
       "outputs": ["server_created"],
       "estimatedDuration": 3000,
@@ -102,7 +137,7 @@
           "outputs": ["server_code"],
           "parameters": {
             "name": "SimpleAPIServer",
-            "projectPath": "/tmp/simple-api",
+            "projectPath": "${ARTIFACT_DIR}",
             "writeToFile": true,
             "outputPath": "server.js",
             "functions": [
@@ -144,7 +179,7 @@
           "inputs": ["command"],
           "outputs": ["server_process"],
           "parameters": {
-            "command": "cd /tmp/simple-api && node server.js &",
+            "command": "cd ${ARTIFACT_DIR} && node server.js &",
             "timeout": 10000
           },
           "status": "pending",
@@ -158,13 +193,13 @@
           "inputs": ["command"],
           "outputs": ["startup_wait"],
           "parameters": {
-            "command": "sleep 2",
-            "timeout": 5000
+            "command": "sleep 15",
+            "timeout": 20000
           },
           "status": "pending",
           "result": null,
           "description": "Wait for server to start",
-          "estimatedDuration": 2000
+          "estimatedDuration": 15000
         }
       ]
     },

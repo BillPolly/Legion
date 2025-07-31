@@ -9,6 +9,7 @@ export { default as ModuleLoader } from "./ModuleLoader.js";
 
 // Core infrastructure (usually only needed internally)
 export { default as ResourceManager } from "./resources/ResourceManager.js";
+export { getResourceManager } from "./resources/getResourceManager.js";
 
 // Base classes for creating tools and modules
 export { default as Tool } from "./tool/Tool.js";

@@ -587,6 +587,79 @@
           }
         }
       }
+    },
+    {
+      "name": "get_process_logs",
+      "description": "Get logs from a running or finished process",
+      "function": "getProcessLogs",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "processId": {
+            "type": "string",
+            "description": "The process ID to get logs for"
+          },
+          "stream": {
+            "type": "string",
+            "description": "Stream to get logs from",
+            "enum": ["stdout", "stderr", "all"],
+            "default": "all"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of log entries to return",
+            "default": 100
+          }
+        },
+        "required": ["processId"]
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "processId": {
+              "type": "string",
+              "description": "Process ID"
+            },
+            "logs": {
+              "type": "array",
+              "description": "Log entries",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "timestamp": {
+                    "type": "string",
+                    "description": "Log timestamp"
+                  },
+                  "data": {
+                    "type": "string",
+                    "description": "Log message"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Log type (stdout/stderr)"
+                  }
+                }
+              }
+            },
+            "count": {
+              "type": "number",
+              "description": "Number of log entries returned"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            }
+          }
+        }
+      }
     }
   ]
 }

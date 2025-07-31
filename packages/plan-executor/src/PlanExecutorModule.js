@@ -12,18 +12,33 @@ import { PlanExecutor } from './core/PlanExecutor.js';
 import { PlanToolRegistry } from './core/PlanToolRegistry.js';
 import { ExecutionContext } from './core/ExecutionContext.js';
 import { LegionToolAdapter } from './adapters/LegionToolAdapter.js';
+import { PlanExecutionLogger } from './logging/PlanExecutionLogger.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // TODO: Temporarily not extending Module for MVP testing
 export class PlanExecutorModule {
   static dependencies = ['resourceManager', 'moduleFactory'];
+  
+  /**
+   * Create a PlanExecutorModule using the singleton ResourceManager
+   * @returns {Promise<PlanExecutorModule>}
+   */
+  static async create() {
+    const { getResourceManager, ModuleFactory } = await import('@legion/module-loader');
+    const resourceManager = await getResourceManager();
+    const moduleFactory = new ModuleFactory(resourceManager);
+    
+    return new PlanExecutorModule({ resourceManager, moduleFactory });
+  }
   
   constructor(dependencies) {
     const { resourceManager, moduleFactory } = dependencies;
     this.resourceManager = resourceManager;
     this.moduleFactory = moduleFactory;
     
-    // Create plan tool registry
-    this.planToolRegistry = new PlanToolRegistry();
+    // Create plan tool registry with the shared resource manager
+    this.planToolRegistry = new PlanToolRegistry({ resourceManager, moduleFactory });
     
     // Create executor instance
     this.executor = new PlanExecutor({
@@ -33,8 +48,13 @@ export class PlanExecutorModule {
     // Create shared execution context (in real implementation this would be a registry/manager)
     this.executionContext = null; // Will be created when needed
     
+    // Initialize logging components
+    this.logManager = null;
+    this.planExecutionLogger = null;
+    this._initializeLogging();
+    
     // Create all tool instances (raw debugging tools)
-    this.rawPlanExecutorTool = new PlanExecutorTool(this.executor);
+    this.rawPlanExecutorTool = new PlanExecutorTool(this.executor, this);
     this.rawPlanInspectorTool = new PlanInspectorTool();
     this.rawPlanToMarkdownTool = new PlanToMarkdownTool();
     this.rawExecutionStatusTool = new ExecutionStatusTool({ 
@@ -57,14 +77,6 @@ export class PlanExecutorModule {
     
     // Set up context registry accessor for debugging tools
     this._setupContextRegistry();
-    
-    // TODO: Forward events from executor to module listeners (requires EventEmitter)
-    // this.executor.on('plan:start', (event) => this.emit('plan:start', event));
-    // this.executor.on('plan:complete', (event) => this.emit('plan:complete', event));
-    // this.executor.on('step:start', (event) => this.emit('step:start', event));
-    // this.executor.on('step:complete', (event) => this.emit('step:complete', event));
-    // this.executor.on('step:error', (event) => this.emit('step:error', event));
-    // this.executor.on('progress', (event) => this.emit('progress', event));
   }
   
   _setupContextRegistry() {
@@ -81,6 +93,63 @@ export class PlanExecutorModule {
     this.rawExecutionStatusTool._getExecutionContext = contextGetter;
     this.rawStepExecutorTool._getExecutionContext = contextGetter;
     this.rawDebugExecutorTool._getExecutionContext = contextGetter;
+  }
+  
+  /**
+   * Initialize logging components asynchronously
+   * @private
+   */
+  async _initializeLogging() {
+    try {
+      // For now, create a simple mock LogManager to test the event logging
+      // In a real implementation, this would load the actual LogManager module
+      this.logManager = {
+        captureLogs: async (options) => {
+          // Mock implementation - just log that capture was requested
+          console.log(`[LogManager] Capture requested for: ${options.source.id}`);
+          return { success: true, sourceId: options.source.id };
+        }
+      };
+      
+      // Get workspace LOG_DIR for this execution context
+      const workspaceDir = this.resourceManager.has('workspace.workspaceDir') 
+        ? this.resourceManager.get('workspace.workspaceDir')
+        : null;
+        
+      // Always use __tests__/tmp/logs/ for consistency
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      const packageRoot = path.resolve(__dirname, '..');
+      this.defaultLogDir = path.join(packageRoot, '__tests__', 'tmp', 'logs');
+      
+      // Initialize PlanExecutionLogger (will be fully set up when plan execution starts)
+      this.planExecutionLogger = new PlanExecutionLogger(this.logManager, this.defaultLogDir);
+      
+      // Attach event listeners to PlanExecutor
+      this.planExecutionLogger.attachToPlanExecutor(this.executor);
+      
+    } catch (error) {
+      console.warn('Failed to initialize plan execution logging:', error.message);
+      // Continue without logging - don't break the module
+    }
+  }
+  
+  /**
+   * Set up logging for a specific plan execution with workspace LOG_DIR
+   */
+  async setupPlanLogging(planId) {
+    if (!this.planExecutionLogger) {
+      return; // Logging not available
+    }
+    
+    try {
+      // Initialize the logger with the default log directory
+      // Logs go to __tests__/tmp/logs/, NOT inside the plan workspace
+      await this.planExecutionLogger.initialize();
+      
+    } catch (error) {
+      console.warn('Failed to setup plan-specific logging:', error.message);
+    }
   }
   
   getTools() {

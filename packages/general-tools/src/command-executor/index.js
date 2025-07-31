@@ -122,8 +122,20 @@ class CommandExecutor extends Tool {
     return new Promise((resolve) => {
       console.log(`Executing command: ${command}`);
       
-      // Security check for dangerous commands
-      if (command.includes('rm -rf /') || command.includes('dd if=/dev/zero')) {
+      // Security check for truly dangerous commands
+      const dangerousPatterns = [
+        /rm -rf \s*\/\s*$/,           // rm -rf / (root deletion)
+        /rm -rf \s*\/\s+/,            // rm -rf / something (root with args)
+        /dd if=\/dev\/zero/,          // disk wiping
+        /:(){ :|:& };:/,              // fork bomb
+        /mkfs\./,                     // format filesystem
+        /fdisk/,                      // disk partitioning
+        /> \/dev\/sd[a-z]/            // write to disk devices
+      ];
+      
+      const isDangerous = dangerousPatterns.some(pattern => pattern.test(command));
+      
+      if (isDangerous) {
         console.warn('WARNING: Potentially dangerous command detected');
         resolve(ToolResult.failure(
           'Command blocked for safety reasons',

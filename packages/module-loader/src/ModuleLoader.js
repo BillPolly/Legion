@@ -7,26 +7,39 @@
 
 import { ModuleFactory } from './module/ModuleFactory.js';
 import ResourceManager from './resources/ResourceManager.js';
+import { getResourceManager } from './resources/getResourceManager.js';
 
 export class ModuleLoader {
   /**
    * Create a simple module loader
-   * @param {ResourceManager} resourceManager - Optional resource manager (creates one if not provided)
+   * @param {ResourceManager} resourceManager - Optional resource manager (uses singleton if not provided)
    */
   constructor(resourceManager = null) {
-    this.resourceManager = resourceManager || new ResourceManager();
-    this.moduleFactory = new ModuleFactory(this.resourceManager);
+    this.resourceManager = resourceManager; // Will be set in initialize() if null
+    this.moduleFactory = null; // Will be created after getting resourceManager
     this.loadedModules = new Map();
     this.toolRegistry = new Map(); // Tool name -> Tool instance mapping
+    this._initialized = false;
   }
 
   /**
    * Initialize the loader (loads environment if needed)
    */
   async initialize() {
-    if (!this.resourceManager.initialized) {
+    if (this._initialized) {
+      return;
+    }
+    
+    // Get the singleton ResourceManager if not provided
+    if (!this.resourceManager) {
+      this.resourceManager = await getResourceManager();
+    } else if (!this.resourceManager.initialized) {
       await this.resourceManager.initialize();
     }
+    
+    // Now create the module factory
+    this.moduleFactory = new ModuleFactory(this.resourceManager);
+    this._initialized = true;
   }
 
   /**

@@ -23,7 +23,12 @@ export class PlanToolRegistry {
    * @param {PlanModuleAnalyzer} options.planAnalyzer - Plan analyzer instance (optional)
    */
   constructor(options = {}) {
-    this.moduleLoader = options.moduleLoader || new ModuleLoader();
+    // If resourceManager is provided, use it to create ModuleLoader
+    if (options.resourceManager) {
+      this.moduleLoader = options.moduleLoader || new ModuleLoader(options.resourceManager);
+    } else {
+      this.moduleLoader = options.moduleLoader || new ModuleLoader();
+    }
     this.planAnalyzer = options.planAnalyzer || new PlanModuleAnalyzer();
     this.isInitialized = false;
     this.moduleRegistry = null;
@@ -107,6 +112,28 @@ export class PlanToolRegistry {
    */
   async getAllTools() {
     return await this.moduleLoader.getAllTools();
+  }
+  
+  /**
+   * Get all available modules from the registry
+   * @returns {Array<string>} Array of module names
+   */
+  getAvailableModules() {
+    if (!this.moduleRegistry) {
+      return [];
+    }
+    return Object.keys(this.moduleRegistry.modules);
+  }
+  
+  /**
+   * Load a specific module by name
+   * @param {string} moduleName - Name of the module to load
+   * @returns {Promise<Object>} The loaded module
+   */
+  async loadModule(moduleName) {
+    await this.initialize();
+    await this._loadModuleByName(moduleName);
+    return this.moduleLoader.getModule(moduleName);
   }
 
   /**

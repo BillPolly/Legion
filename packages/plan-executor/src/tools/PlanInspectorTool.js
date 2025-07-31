@@ -150,6 +150,15 @@ export class PlanInspectorTool {
       return { isValid, errors }; // Can't continue without steps
     }
 
+    // Validate inputs section if present
+    if (plan.inputs) {
+      const inputValidation = this._validatePlanInputs(plan.inputs);
+      errors.push(...inputValidation.errors);
+      if (!inputValidation.isValid) {
+        isValid = false;
+      }
+    }
+
     // Validate each step
     plan.steps.forEach((step, index) => {
       if (!step.id) {
@@ -398,5 +407,74 @@ export class PlanInspectorTool {
       }
     });
     return allSteps;
+  }
+
+  /**
+   * Validate plan inputs section
+   * @private
+   * @param {Array} inputs - Plan inputs array
+   * @returns {Object} Validation result
+   */
+  _validatePlanInputs(inputs) {
+    const errors = [];
+    let isValid = true;
+
+    if (!Array.isArray(inputs)) {
+      errors.push('Plan inputs must be an array');
+      return { isValid: false, errors };
+    }
+
+    const inputNames = new Set();
+
+    inputs.forEach((input, index) => {
+      // Check required fields
+      if (!input.name) {
+        errors.push(`Input at index ${index} missing required 'name' field`);
+        isValid = false;
+      } else {
+        // Check for duplicate names
+        if (inputNames.has(input.name)) {
+          errors.push(`Duplicate input name: ${input.name}`);
+          isValid = false;
+        }
+        inputNames.add(input.name);
+
+        // Validate name format (should be valid variable name)
+        if (!/^[A-Z_][A-Z0-9_]*$/.test(input.name)) {
+          errors.push(`Input name '${input.name}' should be uppercase with underscores (e.g., ARTIFACT_DIR)`);
+        }
+      }
+
+      // Validate type if present
+      if (input.type && !['string', 'number', 'boolean', 'object', 'array'].includes(input.type)) {
+        errors.push(`Input '${input.name}' has invalid type: ${input.type}`);
+        isValid = false;
+      }
+
+      // Check description
+      if (input.description && typeof input.description !== 'string') {
+        errors.push(`Input '${input.name}' description must be a string`);
+        isValid = false;
+      }
+
+      // Validate required field
+      if (input.required !== undefined && typeof input.required !== 'boolean') {
+        errors.push(`Input '${input.name}' required field must be boolean`);
+        isValid = false;
+      }
+
+      // Validate default value type matches declared type
+      if (input.default !== undefined && input.type) {
+        const defaultType = typeof input.default;
+        const expectedType = input.type === 'array' ? 'object' : input.type;
+        
+        if (defaultType !== expectedType && !(input.type === 'array' && Array.isArray(input.default))) {
+          errors.push(`Input '${input.name}' default value type (${defaultType}) doesn't match declared type (${input.type})`);
+          isValid = false;
+        }
+      }
+    });
+
+    return { isValid, errors };
   }
 }

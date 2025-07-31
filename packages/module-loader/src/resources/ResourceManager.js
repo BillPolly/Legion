@@ -39,6 +39,9 @@ class ResourceManager {
     // Register built-in service factories
     await this.registerBuiltInFactories();
     
+    // Register workspace configuration
+    await this.registerWorkspaceConfiguration();
+    
     this.initialized = true;
   }
 
@@ -300,6 +303,101 @@ class ResourceManager {
       return [...new Set([...names, ...parentNames])];
     }
     return names;
+  }
+
+  /**
+   * Register workspace configuration and paths
+   * @private
+   */
+  async registerWorkspaceConfiguration() {
+    const projectRoot = this.findProjectRoot();
+    
+    // Helper function to safely get environment variables
+    const getEnvVar = (name) => {
+      try {
+        return this.get(`env.${name}`);
+      } catch (error) {
+        return undefined;
+      }
+    };
+
+    // Determine workspace base directory - prefer plan-executor package over monorepo root
+    let workspaceBaseDir;
+    if (projectRoot) {
+      const planExecutorDir = path.join(projectRoot, 'packages', 'plan-executor');
+      // Check if we're in the plan-executor context
+      try {
+        await import('fs/promises').then(fs => fs.access(planExecutorDir));
+        workspaceBaseDir = planExecutorDir;
+      } catch {
+        // Fallback to project root if plan-executor directory doesn't exist
+        workspaceBaseDir = projectRoot;
+      }
+    } else {
+      workspaceBaseDir = '/tmp';
+    }
+
+    // Default workspace configuration
+    const workspaceConfig = {
+      projectRoot: projectRoot,
+      workspaceBaseDir: workspaceBaseDir,
+      tempDir: getEnvVar('TEMP_DIR') || path.join(workspaceBaseDir, 'tmp'),
+      artifactDir: getEnvVar('ARTIFACT_DIR') || path.join(workspaceBaseDir, '__tests__', 'tmp'),
+      workspaceDir: getEnvVar('WORKSPACE_DIR') || path.join(workspaceBaseDir, '__tests__', 'tmp', 'workspaces')
+    };
+
+    // Register workspace paths
+    this.register('workspace.projectRoot', workspaceConfig.projectRoot);
+    this.register('workspace.workspaceBaseDir', workspaceConfig.workspaceBaseDir);
+    this.register('workspace.tempDir', workspaceConfig.tempDir);
+    this.register('workspace.artifactDir', workspaceConfig.artifactDir);
+    this.register('workspace.workspaceDir', workspaceConfig.workspaceDir);
+    
+    // Register complete workspace config
+    this.register('workspace.config', workspaceConfig);
+  }
+
+  /**
+   * Create a unique workspace directory for a plan execution
+   * @param {string} planId - Plan identifier
+   * @returns {string} Unique workspace path
+   */
+  createPlanWorkspace(planId) {
+    const workspaceDir = this.get('workspace.workspaceDir');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').slice(0, 19);
+    const uniqueId = Math.random().toString(36).substr(2, 6);
+    const planWorkspace = path.join(workspaceDir, `${planId}_${timestamp}_${uniqueId}`);
+    
+    return planWorkspace;
+  }
+
+  /**
+   * Get standard workspace paths for plan execution
+   * @param {string} planId - Plan identifier  
+   * @returns {Object} Workspace paths object
+   */
+  getPlanWorkspacePaths(planId) {
+    // Cache workspace paths per plan to avoid creating multiple directories
+    const cacheKey = `workspace_paths_${planId}`;
+    
+    if (this.has(cacheKey)) {
+      return this.get(cacheKey);
+    }
+    
+    const planWorkspace = this.createPlanWorkspace(planId);
+    
+    const workspacePaths = {
+      WORKSPACE: planWorkspace,
+      ARTIFACT_DIR: planWorkspace,
+      TEMP_DIR: path.join(planWorkspace, 'tmp'),
+      OUTPUT_DIR: path.join(planWorkspace, 'output'),
+      LOG_DIR: path.join(planWorkspace, 'logs')
+    };
+    
+    // Cache the workspace paths for this plan
+    this.register(cacheKey, workspacePaths);
+    
+    return workspacePaths;
   }
 }
 

@@ -191,10 +191,18 @@ export class ExecutionContext {
         return this.getStepResult(stepId) || value;
       }
       
-      // Environment variable: ${ENV_VAR}
-      const envMatch = value.match(/^\$\{([^}]+)\}$/);
-      if (envMatch) {
-        return process.env[envMatch[1]] || value;
+      // Template variable substitution: ${VAR_NAME} within strings
+      if (value.includes('${')) {
+        return value.replace(/\$\{([^}]+)\}/g, (match, varName) => {
+          // First check plan input variables
+          const inputValue = this.getVariable(varName);
+          if (inputValue !== undefined) {
+            return inputValue;
+          }
+          
+          // Fallback to environment variables
+          return process.env[varName] || match;
+        });
       }
     }
     

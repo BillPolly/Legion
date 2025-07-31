@@ -29,11 +29,21 @@ export class PlanModuleAnalyzer {
    * @returns {Array<string>} Array of module names required
    */
   extractRequiredModules(plan) {
-    if (!plan || !plan.metadata) {
+    if (!plan) {
       return [];
     }
     
-    return plan.metadata.requiredModules || [];
+    // Check for modules at plan level (newer format)
+    if (plan.modules && Array.isArray(plan.modules)) {
+      return plan.modules;
+    }
+    
+    // Check for modules in metadata (older format)
+    if (plan.metadata && plan.metadata.requiredModules) {
+      return plan.metadata.requiredModules;
+    }
+    
+    return [];
   }
 
   /**

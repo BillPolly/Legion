@@ -48,8 +48,19 @@ export class ServerManager {
       console.warn(`Port ${port} is in use, using ${availablePort} instead`);
     }
 
+    // Parse command if it's a string
+    let processCommand, args;
+    if (typeof command === 'string') {
+      const parts = command.split(' ');
+      processCommand = parts[0];
+      args = parts.slice(1);
+    } else {
+      processCommand = command.command || command;
+      args = command.args || [];
+    }
+
     // Start the process with PORT env variable
-    const result = await this.processManager.startProcess(command, [], {
+    const result = await this.processManager.startProcess(processCommand, args, {
       ...processOptions,
       env: {
         PORT: availablePort,
