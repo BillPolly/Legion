@@ -9,10 +9,11 @@ const inputSchema = z.object({
 
 class RailwayUpdateEnvTool extends Tool {
   constructor(resourceManager) {
-    super();
-    this.name = 'railway_update_env';
-    this.description = 'Update environment variables for a Railway service';
-    this.inputSchema = inputSchema;
+    super({
+      name: 'railway_update_env',
+      description: 'Update environment variables for a Railway service',
+      inputSchema: inputSchema
+    });
     this.resourceManager = resourceManager;
   }
 

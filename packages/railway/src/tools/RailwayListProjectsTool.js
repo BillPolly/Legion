@@ -5,10 +5,11 @@ const inputSchema = z.object({});
 
 class RailwayListProjectsTool extends Tool {
   constructor(resourceManager) {
-    super();
-    this.name = 'railway_list_projects';
-    this.description = 'List all Railway projects in the account';
-    this.inputSchema = inputSchema;
+    super({
+      name: 'railway_list_projects',
+      description: 'List all Railway projects in the account',
+      inputSchema: inputSchema
+    });
     this.resourceManager = resourceManager;
   }
 

@@ -1,105 +1,55 @@
-import { Tool, ToolResult } from '@legion/module-loader';
+import { Tool } from '@legion/module-loader';
 import puppeteer from 'puppeteer';
+import { z } from 'zod';
 
 class PageScreenshot extends Tool {
   constructor() {
-    super();
-    this.name = 'page_screenshot';
-    this.description = 'Takes screenshots of web pages';
+    super({
+      name: 'page_screenshot',
+      description: 'Takes screenshots of web pages',
+      inputSchema: z.object({
+        url: z.string().describe('The URL of the webpage to screenshot'),
+        fullPage: z.boolean().optional().default(false).describe('Whether to capture the full page or just the viewport'),
+        width: z.number().optional().default(1280).describe('Viewport width in pixels'),
+        height: z.number().optional().default(720).describe('Viewport height in pixels'),
+        waitForSelector: z.string().optional().describe('Optional CSS selector to wait for before taking screenshot')
+      })
+    });
   }
 
   /**
-   * Returns the tool description in standard function calling format
+   * Execute the screenshot tool with validated parameters
    */
-  getToolDescription() {
-    return {
-      type: 'function',
-      function: {
-        name: 'page_screenshot_capture',
-        description: 'Take a screenshot of a webpage and return it as a base64-encoded image',
-        parameters: {
-          type: 'object',
-          properties: {
-            url: {
-              type: 'string',
-              description: 'The URL of the webpage to screenshot'
-            },
-            fullPage: {
-              type: 'boolean',
-              description: 'Whether to capture the full page or just the viewport (default: false)'
-            },
-            width: {
-              type: 'number',
-              description: 'Viewport width in pixels (default: 1280)'
-            },
-            height: {
-              type: 'number',
-              description: 'Viewport height in pixels (default: 720)'
-            },
-            waitForSelector: {
-              type: 'string',
-              description: 'Optional CSS selector to wait for before taking screenshot'
-            }
-          },
-          required: ['url']
-        }
-      }
-    };
-  }
-
-  /**
-   * Invokes the screenshot tool with the given tool call
-   */
-  async invoke(toolCall) {
-    let args;
-    try {
-      // Parse the arguments
-      args = this.parseArguments(toolCall.function.arguments);
-      
-      // Validate required parameters
-      this.validateRequiredParameters(args, ['url']);
-      
-      // Emit progress event
-      this.emitProgress(`Starting screenshot capture: ${args.url}`, {
-        url: args.url,
-        fullPage: args.fullPage || false,
-        viewport: { width: args.width || 1280, height: args.height || 720 }
-      });
-      
-      // Take the screenshot
-      const result = await this.screenshot(
-        args.url,
-        args.fullPage,
-        args.width,
-        args.height,
-        args.waitForSelector
-      );
-      
-      // Emit success event
-      this.emitInfo(`Screenshot captured successfully`, {
-        url: args.url,
+  async execute(params) {
+    const { url, fullPage, width, height, waitForSelector } = params;
+    
+    // Emit progress event
+    this.progress(`Starting screenshot capture: ${url}`, 0, {
+      url,
+      fullPage,
+      viewport: { width, height }
+    });
+    
+    // Take the screenshot
+    const result = await this.screenshot(
+      url,
+      fullPage,
+      width,
+      height,
+      waitForSelector
+    );
+    
+    // Emit success event
+    this.info(`Screenshot captured successfully`, {
+        url: url,
         fullPage: result.fullPage,
         dimensions: result.dimensions
       });
       
-      // Return success response
-      return ToolResult.success(result);
-    } catch (error) {
-      // Emit error event
-      this.emitError(`Failed to capture screenshot: ${error.message}`, {
-        url: args?.url || 'unknown',
-        error: error.message
-      });
+      // Emit completion
+      this.progress('Screenshot capture complete', 100);
       
-      // Return error response
-      return ToolResult.failure(
-        error.message || 'Failed to capture screenshot',
-        {
-          url: args?.url || 'unknown',
-          errorType: 'screenshot_error'
-        }
-      );
-    }
+      return result;
   }
 
   /**
@@ -110,7 +60,7 @@ class PageScreenshot extends Tool {
     
     try {
       // Emit progress for browser launch
-      this.emitProgress('Launching browser for screenshot', {
+      this.progress('Launching browser for screenshot', 25, {
         stage: 'browser_launch'
       });
       
@@ -129,7 +79,7 @@ class PageScreenshot extends Tool {
       await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
       
       // Emit progress for navigation
-      this.emitProgress(`Navigating to ${url}`, {
+      this.progress(`Navigating to ${url}`, 50, {
         stage: 'navigation',
         url: url
       });
@@ -141,7 +91,7 @@ class PageScreenshot extends Tool {
       });
       
       if (!response.ok()) {
-        this.emitWarning(`Page returned status ${response.status()}`, {
+        this.warning(`Page returned status ${response.status()}`, {
           status: response.status(),
           statusText: response.statusText()
         });
@@ -150,7 +100,7 @@ class PageScreenshot extends Tool {
       
       // Wait for specific selector if provided
       if (waitForSelector) {
-        this.emitProgress(`Waiting for selector: ${waitForSelector}`, {
+        this.progress(`Waiting for selector: ${waitForSelector}`, 60, {
           stage: 'wait_selector',
           selector: waitForSelector
         });
@@ -158,13 +108,13 @@ class PageScreenshot extends Tool {
       }
       
       // Wait a bit for any animations to complete
-      this.emitProgress('Waiting for animations to complete', {
+      this.progress('Waiting for animations to complete', 75, {
         stage: 'wait_animations'
       });
       await page.waitForTimeout(1000);
       
       // Emit progress for screenshot capture
-      this.emitProgress('Capturing screenshot', {
+      this.progress('Capturing screenshot', 90, {
         stage: 'screenshot_capture',
         fullPage: fullPage
       });
@@ -176,7 +126,7 @@ class PageScreenshot extends Tool {
         encoding: 'base64'
       });
       
-      this.emitInfo('Screenshot captured', {
+      this.info('Screenshot captured', {
         url: url,
         fullPage: fullPage,
         encoding: 'base64'

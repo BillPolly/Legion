@@ -12,10 +12,10 @@ import path from 'path';
 
 export class GenerateJavaScriptClassTool extends Tool {
   constructor() {
-    super();
-    this.name = 'generate_javascript_class';
-    this.description = 'Generate a JavaScript class with constructor, methods, and properties';
-    this.inputSchema = z.object({
+    super({
+      name: 'generate_javascript_class',
+      description: 'Generate a JavaScript class with constructor, methods, and properties',
+      inputSchema: z.object({
         name: z.string().describe('Class name'),
         extends: z.string().optional().describe('Parent class to extend'),
         constructor: z.object({
@@ -63,7 +63,8 @@ export class GenerateJavaScriptClassTool extends Tool {
           example: z.string().optional(),
           deprecated: z.string().optional()
         }).optional()
-      });
+      })
+    });
     this.outputSchema = z.object({
         code: z.string().describe('Generated class code'),
         components: z.object({
@@ -77,58 +78,10 @@ export class GenerateJavaScriptClassTool extends Tool {
       });
   }
 
-  
-  /**
-   * Returns the tool description in standard function calling format
-   */
-  getToolDescription() {
-    return {
-      type: 'function',
-      function: {
-        name: this.name,
-        description: this.description,
-        parameters: this.inputSchema,
-        output: this.outputSchema || {
-          success: {
-            type: 'object',
-            properties: {
-              result: { type: 'any', description: 'Tool execution result' }
-            }
-          },
-          failure: {
-            type: 'object',
-            properties: {
-              error: { type: 'string', description: 'Error message' },
-              details: { type: 'object', description: 'Error details' }
-            }
-          }
-        }
-      }
-    };
-  }
-
-  async invoke(toolCall) {
-    // Parse arguments from the tool call
-    let args;
-    try {
-      args = typeof toolCall.function.arguments === 'string' 
-        ? JSON.parse(toolCall.function.arguments)
-        : toolCall.function.arguments;
-    } catch (error) {
-      return ToolResult.failure(error.message || 'Tool execution failed', {
-        toolName: this.name,
-        error: error.toString(),
-        stack: error.stack
-      });
-    }
-    
-    // Execute the tool logic
-    return this.execute(args);
-  }
 
   async execute(args) {
     try {
-      this.emit('progress', { percentage: 10, status: 'Generating class structure...' });
+      this.progress('Generating class structure...', 10);
 
       const parts = [];
       let hasJSDoc = false;
@@ -140,7 +93,7 @@ export class GenerateJavaScriptClassTool extends Tool {
         parts.push('');
       }
 
-      this.emit('progress', { percentage: 30, status: 'Creating class declaration...' });
+      this.progress('Creating class declaration...', 30);
 
       // Generate class declaration
       let classDeclaration = `${args.isExport ? 'export ' : ''}class ${args.name}`;
@@ -150,7 +103,7 @@ export class GenerateJavaScriptClassTool extends Tool {
       classDeclaration += ' {';
       parts.push(classDeclaration);
 
-      this.emit('progress', { percentage: 50, status: 'Adding constructor and properties...' });
+      this.progress('Adding constructor and properties...', 50);
 
       // Generate constructor if provided
       let hasConstructor = false;
@@ -167,7 +120,7 @@ export class GenerateJavaScriptClassTool extends Tool {
         parts.push('');
       }
 
-      this.emit('progress', { percentage: 70, status: 'Generating methods...' });
+      this.progress('Generating methods...', 70);
 
       // Generate methods
       if (args.methods && args.methods.length > 0) {
@@ -183,7 +136,7 @@ export class GenerateJavaScriptClassTool extends Tool {
 
       const code = parts.join('\n');
 
-      this.emit('progress', { percentage: 100, status: 'Class generation complete' });
+      this.progress('Class generation complete', 100);
 
       return {
         code,
@@ -198,7 +151,7 @@ export class GenerateJavaScriptClassTool extends Tool {
       };
 
     } catch (error) {
-      this.emit('error', { message: error.message });
+      this.error(error.message);
       throw error;
     }
   }

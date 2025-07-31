@@ -7,10 +7,11 @@ const inputSchema = z.object({
 
 class RailwayRemoveTool extends Tool {
   constructor(resourceManager) {
-    super();
-    this.name = 'railway_remove';
-    this.description = 'Remove a deployment or entire project from Railway';
-    this.inputSchema = inputSchema;
+    super({
+      name: 'railway_remove',
+      description: 'Remove a deployment or entire project from Railway',
+      inputSchema: inputSchema
+    });
     this.resourceManager = resourceManager;
   }
 

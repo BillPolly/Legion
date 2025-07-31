@@ -14,10 +14,10 @@ import path from 'path';
 
 export class GenerateTestReportTool extends Tool {
   constructor(jestWrapper) {
-    super();
-    this.name = 'generate_test_report';
-    this.description = 'Generate comprehensive markdown test reports with analytics and insights';
-    this.inputSchema = z.object({
+    super({
+      name: 'generate_test_report',
+      description: 'Generate comprehensive markdown test reports with analytics and insights',
+      inputSchema: z.object({
       sessionId: z.string().optional().describe('Specific session ID to report on (defaults to latest session)'),
       reportType: z.enum(['summary', 'detailed', 'performance', 'failure']).optional().default('summary').describe('Type of report to generate'),
       outputPath: z.string().optional().describe('File path to write the markdown report (optional)'),
@@ -26,6 +26,7 @@ export class GenerateTestReportTool extends Tool {
       includeCoverage: z.boolean().optional().default(true).describe('Include code coverage information'),
       includeRecommendations: z.boolean().optional().default(true).describe('Include actionable recommendations'),
       title: z.string().optional().describe('Custom title for the report')
+      })
     });
     this.outputSchema = z.object({
       reportContent: z.string().describe('Generated markdown report content'),
@@ -42,31 +43,6 @@ export class GenerateTestReportTool extends Tool {
     this.jestWrapper = jestWrapper;
   }
 
-  async invoke(toolCall) {
-    let args;
-    try {
-      args = typeof toolCall.function.arguments === 'string' 
-        ? JSON.parse(toolCall.function.arguments)
-        : toolCall.function.arguments;
-    } catch (error) {
-      return ToolResult.failure(error.message || 'Tool execution failed', {
-        toolName: this.name,
-        error: error.toString(),
-        stack: error.stack
-      });
-    }
-
-    try {
-      const result = await this.execute(args);
-      return ToolResult.success(result);
-    } catch (error) {
-      return ToolResult.failure(error.message || 'Tool execution failed', {
-        toolName: this.name,
-        error: error.toString(),
-        stack: error.stack
-      });
-    }
-  }
 
   async execute(args) {
     const validatedArgs = this.inputSchema.parse(args);

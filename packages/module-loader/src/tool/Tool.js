@@ -1,274 +1,238 @@
-import ToolResult from './ToolResult.js';
+import { EventEmitter } from 'events';
+import { z } from 'zod';
 
 /**
- * Base class for all tools in the jsEnvoy system
- * Provides standard interface for function calling format
+ * Tool - A clean, minimal base class for Legion tools
+ * 
+ * This base class provides:
+ * - Direct event emission without complex delegation
+ * - Simple execute() method for tool logic
+ * - Zod schema validation for inputs
+ * - Standardized event format
+ * 
+ * @example
+ * ```javascript
+ * import { Tool } from '@legion/module-loader';
+ * import { z } from 'zod';
+ * 
+ * class MyTool extends Tool {
+ *   constructor() {
+ *     super({
+ *       name: 'my_tool',
+ *       description: 'Does something useful',
+ *       inputSchema: z.object({
+ *         input: z.string().describe('The input value')
+ *       })
+ *     });
+ *   }
+ *   
+ *   async execute(params) {
+ *     this.emit('event', {
+ *       type: 'progress',
+ *       message: 'Starting processing...',
+ *       data: { percentage: 0 }
+ *     });
+ *     
+ *     const result = await doSomething(params.input);
+ *     
+ *     this.emit('event', {
+ *       type: 'progress',
+ *       message: 'Complete',
+ *       data: { percentage: 100 }
+ *     });
+ *     
+ *     return result;
+ *   }
+ * }
+ * ```
  */
-class Tool {
-  constructor() {
-    this.name = '';
-    this.description = '';
-    this.module = null; // Reference to parent module for event emission
-  }
-
+class Tool extends EventEmitter {
   /**
-   * Returns the tool description in standard function calling format
-   * MUST include output schema defining success and failure data structures
-   * @returns {Object} Tool description object with the following structure:
-   * {
-   *   type: 'function',
-   *   function: {
-   *     name: string,
-   *     description: string,
-   *     parameters: { ... },  // Input schema
-   *     output: {             // Output schema (REQUIRED)
-   *       success: { ... },   // Schema for successful execution
-   *       failure: { ... }    // Schema for failed execution
-   *     }
-   *   }
-   * }
+   * Create a new tool
+   * @param {Object} config - Tool configuration
+   * @param {string} config.name - Tool name (required)
+   * @param {string} config.description - Tool description (required)
+   * @param {z.ZodSchema} config.inputSchema - Zod schema for input validation (optional)
    */
-  getToolDescription() {
-    throw new Error('getToolDescription() must be implemented by subclass');
+  constructor(config = {}) {
+    super();
+    
+    // Support legacy pattern where properties are set after construction
+    if (config.name || config.description) {
+      this.name = config.name;
+      this.description = config.description;
+      this.inputSchema = config.inputSchema || z.any();
+    } else {
+      // Legacy support: allow setting properties after construction
+      this.name = '';
+      this.description = '';
+      this.inputSchema = z.any();
+    }
   }
-
+  
   /**
-   * Invokes the tool with the given tool call from the LLM
-   * MUST return a ToolResult instance (never throw exceptions)
-   * @param {Object} toolCall - The tool call object from the LLM
-   * @param {string} toolCall.id - Unique identifier for this tool call
-   * @param {string} toolCall.type - Should be "function"
-   * @param {Object} toolCall.function - Function details
-   * @param {string} toolCall.function.name - Name of the function to call
-   * @param {string} toolCall.function.arguments - JSON string of arguments
-   * @returns {Promise<ToolResult>} ToolResult with success/failure status and data
+   * Execute the tool with the given parameters
+   * This method must be implemented by subclasses
+   * 
+   * @param {Object} params - Tool parameters (validated against inputSchema)
+   * @returns {Promise<*>} Tool execution result
+   * @throws {Error} If not implemented by subclass
    */
-  async invoke(toolCall) {
-    throw new Error('invoke() must be implemented by subclass');
+  async execute(params) {
+    throw new Error(`execute() must be implemented by ${this.constructor.name}`);
   }
-
+  
   /**
-   * Safe wrapper for invoke that guarantees a ToolResult is returned
-   * Catches any exceptions from poorly implemented tools
-   * @param {Object} toolCall - The tool call object
-   * @returns {Promise<ToolResult>} Always returns a ToolResult
+   * Validate and execute the tool
+   * This method handles input validation and standardizes error responses
+   * 
+   * @param {Object} params - Raw tool parameters
+   * @returns {Promise<*>} Tool execution result
+   * @throws {Error} If validation fails or execution fails
    */
-  async safeInvoke(toolCall) {
+  async run(params = {}) {
     try {
-      const result = await this.invoke(toolCall);
-      
-      // Ensure we got a ToolResult
-      if (!(result instanceof ToolResult)) {
-        console.warn(`Tool ${this.name} did not return a ToolResult, wrapping response`);
-        // Try to interpret the result
-        if (result && typeof result === 'object' && 'success' in result) {
-          return new ToolResult(result.success, result.data || {}, result.error);
-        }
-        // Assume success if we got a result
-        return ToolResult.success({ result });
+      // Validate input parameters if schema is defined
+      let validatedParams = params;
+      if (this.inputSchema && this.inputSchema !== z.any()) {
+        validatedParams = this.inputSchema.parse(params);
       }
       
-      // Validate against output schema if available
-      const toolDesc = this.getToolDescription();
-      if (toolDesc?.function?.output) {
-        result.validate(toolDesc.function.output);
-      }
+      // Execute the tool
+      const result = await this.execute(validatedParams);
       
       return result;
+      
     } catch (error) {
-      // Tool threw an exception - wrap it in a failure
-      console.error(`Tool ${this.name} threw an exception:`, error);
-      return ToolResult.failure(
-        error.message || 'Tool execution failed',
-        { 
-          toolName: this.name,
-          errorType: 'exception',
-          stack: error.stack
-        }
-      );
-    }
-  }
-
-  /**
-   * Helper method to create a successful tool response
-   * @param {string} toolCallId - The tool call ID
-   * @param {string} functionName - The function name
-   * @param {*} content - The response content (will be JSON stringified)
-   * @returns {Object} Tool response object
-   */
-  createSuccessResponse(toolCallId, functionName, content) {
-    return {
-      tool_call_id: toolCallId,
-      role: 'tool',
-      name: functionName,
-      content: typeof content === 'string' ? content : JSON.stringify(content)
-    };
-  }
-
-  /**
-   * Helper method to create an error tool response
-   * @param {string} toolCallId - The tool call ID
-   * @param {string} functionName - The function name
-   * @param {Error|string} error - The error to report
-   * @returns {Object} Tool response object
-   */
-  createErrorResponse(toolCallId, functionName, error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return {
-      tool_call_id: toolCallId,
-      role: 'tool',
-      name: functionName,
-      content: JSON.stringify({ error: errorMessage })
-    };
-  }
-
-  /**
-   * Converts a ToolResult to OpenAI tool response format
-   * @param {string} toolCallId - The tool call ID
-   * @param {string} functionName - The function name
-   * @param {ToolResult} toolResult - The tool result
-   * @returns {Object} OpenAI format tool response
-   */
-  toolResultToResponse(toolCallId, functionName, toolResult) {
-    if (!(toolResult instanceof ToolResult)) {
-      throw new Error('toolResult must be an instance of ToolResult');
-    }
-
-    const responseData = {
-      success: toolResult.success,
-      data: toolResult.data
-    };
-
-    if (!toolResult.success && toolResult.error) {
-      responseData.error = toolResult.error;
-    }
-
-    return {
-      tool_call_id: toolCallId,
-      role: 'tool',
-      name: functionName,
-      content: JSON.stringify(responseData)
-    };
-  }
-
-  /**
-   * Helper method to parse and validate tool call arguments
-   * @param {string} argumentsJson - JSON string of arguments
-   * @returns {Object} Parsed arguments
-   * @throws {Error} If arguments are invalid JSON
-   */
-  parseArguments(argumentsJson) {
-    try {
-      return JSON.parse(argumentsJson);
-    } catch (error) {
-      throw new Error(`Invalid JSON arguments: ${error.message}`);
-    }
-  }
-
-  /**
-   * Helper method to validate required parameters
-   * @param {Object} args - The arguments object
-   * @param {string[]} required - Array of required parameter names
-   * @throws {Error} If required parameters are missing
-   */
-  validateRequiredParameters(args, required) {
-    const missing = required.filter(param => !(param in args));
-    if (missing.length > 0) {
-      throw new Error(`Missing required parameters: ${missing.join(', ')}`);
-    }
-  }
-
-  /**
-   * Execute method for CLI compatibility
-   * Adapts simple arguments to the OpenAI function calling format
-   * @param {Object} args - Simple key-value arguments
-   * @param {string} functionName - Optional function name for multi-function tools
-   * @returns {Promise<*>} The result of the tool execution
-   */
-  async execute(args, functionName = null) {
-    // If no function name provided, get it from the tool description
-    if (!functionName) {
-      const toolDesc = this.getToolDescription();
-      functionName = toolDesc.function.name;
-    }
-    
-    // Create a mock tool call in OpenAI format
-    const toolCall = {
-      id: `cli-${Date.now()}`,
-      type: 'function',
-      function: {
-        name: functionName,
-        arguments: JSON.stringify(args)
+      // Handle Zod validation errors
+      if (error.name === 'ZodError') {
+        const validationError = new Error(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`);
+        validationError.name = 'ValidationError';
+        validationError.zodErrors = error.errors;
+        
+        // Emit validation error event
+        this.emit('event', {
+          type: 'error',
+          tool: this.name,
+          message: validationError.message,
+          data: { zodErrors: error.errors },
+          timestamp: new Date().toISOString()
+        });
+        
+        throw validationError;
       }
-    };
-    
-    // Use safeInvoke to ensure we get a ToolResult
-    const toolResult = await this.safeInvoke(toolCall);
-    
-    // For CLI compatibility, throw on failure
-    if (!toolResult.success) {
-      throw new Error(toolResult.error || 'Tool execution failed');
-    }
-    
-    // Return the data directly for CLI use
-    return toolResult.data;
-  }
-
-  /**
-   * Set the parent module for event emission
-   * @param {Module} module - The parent module instance
-   */
-  setModule(module) {
-    this.module = module;
-  }
-
-  /**
-   * Emit an event through the parent module
-   * @param {string} type - Event type: 'progress', 'warning', 'error', 'info'
-   * @param {string} message - Human readable message
-   * @param {Object} data - Optional structured data
-   * @param {string} level - Optional priority level: 'low', 'medium', 'high'
-   */
-  emitEvent(type, message, data = {}, level = 'medium') {
-    if (this.module && typeof this.module.emitEvent === 'function') {
-      this.module.emitEvent(type, message, data, this.name, level);
+      
+      // Emit general error event
+      this.emit('event', {
+        type: 'error',
+        tool: this.name,
+        message: error.message,
+        data: { 
+          errorType: error.constructor.name,
+          stack: error.stack 
+        },
+        timestamp: new Date().toISOString()
+      });
+      
+      throw error;
     }
   }
-
+  
   /**
-   * Emit a progress event
+   * Override EventEmitter's emit to ensure consistent event format
+   * 
+   * @param {string} eventType - Event type (should be 'event' for tool events)
+   * @param {Object} eventData - Event data
+   * @returns {boolean} True if event had listeners
+   */
+  emit(eventType, eventData) {
+    // For 'event' type, ensure consistent format
+    if (eventType === 'event') {
+      const event = {
+        type: eventData.type || 'info',
+        tool: eventData.tool || this.name,
+        message: eventData.message || '',
+        data: eventData.data || {},
+        timestamp: eventData.timestamp || new Date().toISOString()
+      };
+      
+      return super.emit('event', event);
+    }
+    
+    // For other event types, pass through
+    return super.emit(eventType, eventData);
+  }
+  
+  /**
+   * Helper method to emit a progress event
    * @param {string} message - Progress message
-   * @param {Object} data - Optional progress data (percentage, step, etc.)
+   * @param {number} percentage - Progress percentage (0-100)
+   * @param {Object} additionalData - Additional data to include
    */
-  emitProgress(message, data = {}) {
-    this.emitEvent('progress', message, data, 'low');
+  progress(message, percentage = null, additionalData = {}) {
+    const data = { ...additionalData };
+    if (percentage !== null) {
+      data.percentage = percentage;
+    }
+    
+    this.emit('event', {
+      type: 'progress',
+      message,
+      data
+    });
   }
-
+  
   /**
-   * Emit a warning event
-   * @param {string} message - Warning message
-   * @param {Object} data - Optional warning data
-   */
-  emitWarning(message, data = {}) {
-    this.emitEvent('warning', message, data, 'medium');
-  }
-
-  /**
-   * Emit an error event
-   * @param {string} message - Error message
-   * @param {Object} data - Optional error data
-   */
-  emitError(message, data = {}) {
-    this.emitEvent('error', message, data, 'high');
-  }
-
-  /**
-   * Emit an info event
+   * Helper method to emit an info event
    * @param {string} message - Info message
-   * @param {Object} data - Optional info data
+   * @param {Object} data - Additional data
    */
-  emitInfo(message, data = {}) {
-    this.emitEvent('info', message, data, 'low');
+  info(message, data = {}) {
+    this.emit('event', {
+      type: 'info',
+      message,
+      data
+    });
+  }
+  
+  /**
+   * Helper method to emit a warning event
+   * @param {string} message - Warning message
+   * @param {Object} data - Additional data
+   */
+  warning(message, data = {}) {
+    this.emit('event', {
+      type: 'warning',
+      message,
+      data
+    });
+  }
+  
+  /**
+   * Helper method to emit an error event
+   * Note: This is for logging/informational purposes only.
+   * For actual errors, throw an Error object in execute()
+   * @param {string} message - Error message
+   * @param {Object} data - Additional data
+   */
+  error(message, data = {}) {
+    this.emit('event', {
+      type: 'error',
+      message,
+      data
+    });
+  }
+  
+  /**
+   * Get tool metadata in a standardized format
+   * @returns {Object} Tool metadata
+   */
+  getMetadata() {
+    return {
+      name: this.name,
+      description: this.description,
+      inputSchema: this.inputSchema
+    };
   }
 }
 

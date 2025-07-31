@@ -2,68 +2,30 @@
  * DebugExecutorTool - Interactive debugging tool with breakpoint and inspection capabilities
  */
 
-export class DebugExecutorTool {
+import { Tool } from '@legion/module-loader';
+import { z } from 'zod';
+
+export class DebugExecutorTool extends Tool {
   constructor(options = {}) {
+    super({
+      name: 'plan_debug',
+      description: 'Interactive debugging tool with breakpoint and inspection capabilities',
+      inputSchema: z.object({
+        plan: z.any().describe('The llm-planner Plan object to debug'),
+        sessionId: z.string().optional().describe('Session identifier for continuing debugging session'),
+        action: z.enum(['continue', 'step', 'inspect', 'abort']).optional().describe('Debugging action to take'),
+        breakpoints: z.array(z.string()).optional().default([]).describe('Array of step IDs where execution should pause'),
+        conditionalBreakpoints: z.array(z.object({
+          stepId: z.string(),
+          condition: z.string()
+        })).optional().default([]).describe('Array of conditional breakpoints'),
+        inspectVariables: z.boolean().optional().default(false).describe('Whether to include variable state in responses'),
+        traceExecution: z.boolean().optional().default(false).describe('Whether to include detailed execution traces')
+      })
+    });
     this.options = options;
     // Reference to global execution context registry (would be injected in real implementation)
     this._executionContextRegistry = options.executionContextRegistry || null;
-  }
-
-  get name() {
-    return 'plan_debug';
-  }
-  
-  get description() {
-    return 'Interactive debugging tool with breakpoint and inspection capabilities';
-  }
-  
-  get inputSchema() {
-    return {
-      type: 'object',
-      properties: {
-        plan: {
-          description: 'The llm-planner Plan object to debug'
-        },
-        sessionId: {
-          type: 'string',
-          description: 'Session identifier for continuing debugging session'
-        },
-        action: {
-          type: 'string',
-          enum: ['continue', 'step', 'inspect', 'abort'],
-          description: 'Debugging action to take'
-        },
-        breakpoints: {
-          type: 'array',
-          items: { type: 'string' },
-          default: [],
-          description: 'Array of step IDs where execution should pause'
-        },
-        conditionalBreakpoints: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              stepId: { type: 'string' },
-              condition: { type: 'string' }
-            }
-          },
-          default: [],
-          description: 'Array of conditional breakpoints'
-        },
-        inspectVariables: {
-          type: 'boolean',
-          default: false,
-          description: 'Whether to include variable state in responses'
-        },
-        traceExecution: {
-          type: 'boolean',
-          default: false,
-          description: 'Whether to include detailed execution traces'
-        }
-      },
-      required: ['plan']
-    };
   }
   
   async execute(params) {

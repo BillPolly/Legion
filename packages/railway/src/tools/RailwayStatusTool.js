@@ -7,10 +7,11 @@ const inputSchema = z.object({
 
 class RailwayStatusTool extends Tool {
   constructor(resourceManager) {
-    super();
-    this.name = 'railway_status';
-    this.description = 'Get the status and details of a Railway deployment';
-    this.inputSchema = inputSchema;
+    super({
+      name: 'railway_status',
+      description: 'Get the status and details of a Railway deployment',
+      inputSchema: inputSchema
+    });
     this.resourceManager = resourceManager;
   }
 

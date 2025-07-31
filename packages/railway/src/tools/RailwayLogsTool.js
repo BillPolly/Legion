@@ -8,10 +8,11 @@ const inputSchema = z.object({
 
 class RailwayLogsTool extends Tool {
   constructor(resourceManager) {
-    super();
-    this.name = 'railway_logs';
-    this.description = 'Retrieve logs from a Railway deployment';
-    this.inputSchema = inputSchema;
+    super({
+      name: 'railway_logs',
+      description: 'Retrieve logs from a Railway deployment',
+      inputSchema: inputSchema
+    });
     this.resourceManager = resourceManager;
   }
 

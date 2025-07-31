@@ -1,16 +1,7 @@
 import { jest } from '@jest/globals';
+import { z } from 'zod';
 
-// Mock ToolResult
-const mockToolResult = {
-  success: jest.fn((data) => ({ success: true, data })),
-  failure: jest.fn((error, data) => ({ success: false, error, data }))
-};
-
-jest.unstable_mockModule('../../src/tool/ToolResult.js', () => ({
-  default: mockToolResult
-}));
-
-// Import after mocking
+// Import GenericTool and Tool
 const { GenericTool } = await import('../../src/tool/GenericTool.js');
 const Tool = (await import('../../src/tool/Tool.js')).default;
 
@@ -69,8 +60,8 @@ describe('GenericTool', () => {
       const tool = new GenericTool(config, mockLibraryInstance);
 
       expect(tool).toBeInstanceOf(Tool);
-      expect(typeof tool.invoke).toBe('function');
-      expect(typeof tool.getToolDescription).toBe('function');
+      expect(typeof tool.execute).toBe('function');
+      expect(typeof tool.run).toBe('function');
     });
   });
 
@@ -99,95 +90,107 @@ describe('GenericTool', () => {
       expect(func).toBe(mockLibraryInstance.nested.method);
     });
 
-    it('should handle array notation', () => {
-      mockLibraryInstance.methods = [
-        jest.fn().mockReturnValue('first'),
-        jest.fn().mockReturnValue('second')
-      ];
-
-      const config = {
-        name: 'test',
-        function: 'methods[1]'
-      };
-
-      const tool = new GenericTool(config, mockLibraryInstance);
-      const func = tool.resolveFunction('methods[1]');
-
-      expect(func).toBe(mockLibraryInstance.methods[1]);
-    });
-
-    it('should throw for missing function', () => {
+    it('should throw error for non-existent function', () => {
       const config = {
         name: 'test',
         function: 'nonExistent'
       };
 
-      expect(() => new GenericTool(config, mockLibraryInstance))
-        .toThrow('Function \'nonExistent\' not found');
+      expect(() => {
+        new GenericTool(config, mockLibraryInstance);
+      }).toThrow("Function 'nonExistent' not found");
+    });
+
+    it('should throw error for non-function property', () => {
+      mockLibraryInstance.notAFunction = 'string value';
+      
+      const config = {
+        name: 'test',
+        function: 'notAFunction'
+      };
+
+      expect(() => {
+        new GenericTool(config, mockLibraryInstance);
+      }).toThrow("not found or is not a function");
     });
   });
 
-  describe('getToolDescription', () => {
-    it('should return OpenAI function format', () => {
-      const config = {
-        name: 'test_tool',
-        description: 'Test tool description',
-        function: 'method',
-        parameters: {
-          type: 'object',
-          properties: {
-            input: { type: 'string', description: 'Input value' }
-          },
-          required: ['input']
+  describe('jsonSchemaToZod', () => {
+    it('should convert string schema', () => {
+      const jsonSchema = {
+        type: 'string',
+        minLength: 3,
+        maxLength: 10
+      };
+
+      const zodSchema = GenericTool.jsonSchemaToZod(jsonSchema);
+      
+      expect(() => zodSchema.parse('ab')).toThrow(); // too short
+      expect(() => zodSchema.parse('12345678901')).toThrow(); // too long
+      expect(zodSchema.parse('hello')).toBe('hello');
+    });
+
+    it('should convert number schema', () => {
+      const jsonSchema = {
+        type: 'number',
+        minimum: 0,
+        maximum: 100
+      };
+
+      const zodSchema = GenericTool.jsonSchemaToZod(jsonSchema);
+      
+      expect(() => zodSchema.parse(-1)).toThrow();
+      expect(() => zodSchema.parse(101)).toThrow();
+      expect(zodSchema.parse(50)).toBe(50);
+    });
+
+    it('should convert object schema with required fields', () => {
+      const jsonSchema = {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          age: { type: 'number' }
         },
-        output: {
-          success: {
-            type: 'object',
-            properties: {
-              result: { type: 'string' }
-            }
-          },
-          failure: {
-            type: 'object',
-            properties: {
-              error: { type: 'string' }
-            }
-          }
-        }
+        required: ['name']
       };
 
-      const tool = new GenericTool(config, mockLibraryInstance);
-      const description = tool.getToolDescription();
-
-      expect(description).toEqual({
-        type: 'function',
-        function: {
-          name: 'test_tool',
-          description: 'Test tool description',
-          parameters: config.parameters,
-          output: config.output
-        }
-      });
+      const zodSchema = GenericTool.jsonSchemaToZod(jsonSchema);
+      
+      expect(() => zodSchema.parse({})).toThrow(); // missing required 'name'
+      expect(zodSchema.parse({ name: 'John' })).toEqual({ name: 'John' });
+      expect(zodSchema.parse({ name: 'John', age: 30 })).toEqual({ name: 'John', age: 30 });
     });
 
-    it('should provide default output schema if not specified', () => {
-      const config = {
-        name: 'test_tool',
-        description: 'Test',
-        function: 'method'
+    it('should convert array schema', () => {
+      const jsonSchema = {
+        type: 'array',
+        items: { type: 'string' },
+        minItems: 1,
+        maxItems: 3
       };
 
-      const tool = new GenericTool(config, mockLibraryInstance);
-      const description = tool.getToolDescription();
+      const zodSchema = GenericTool.jsonSchemaToZod(jsonSchema);
+      
+      expect(() => zodSchema.parse([])).toThrow(); // too few
+      expect(() => zodSchema.parse(['a', 'b', 'c', 'd'])).toThrow(); // too many
+      expect(zodSchema.parse(['hello'])).toEqual(['hello']);
+    });
 
-      expect(description.function.output).toBeDefined();
-      expect(description.function.output.success).toBeDefined();
-      expect(description.function.output.failure).toBeDefined();
+    it('should handle enum values', () => {
+      const jsonSchema = {
+        type: 'string',
+        enum: ['red', 'green', 'blue']
+      };
+
+      const zodSchema = GenericTool.jsonSchemaToZod(jsonSchema);
+      
+      expect(() => zodSchema.parse('yellow')).toThrow();
+      expect(zodSchema.parse('red')).toBe('red');
     });
   });
 
-  describe('invoke', () => {
-    it('should invoke simple method successfully', async () => {
+  describe('execute', () => {
+    it('should execute simple method', async () => {
       const config = {
         name: 'test_tool',
         function: 'simpleMethod'
@@ -195,23 +198,15 @@ describe('GenericTool', () => {
 
       const tool = new GenericTool(config, mockLibraryInstance);
       
-      const toolCall = {
-        id: 'call_123',
-        type: 'function',
-        function: {
-          name: 'test_tool',
-          arguments: JSON.stringify({ value: 'test' })
-        }
-      };
+      const params = { value: 'test' };
 
-      const result = await tool.invoke(toolCall);
+      const result = await tool.execute(params);
 
       expect(mockLibraryInstance.simpleMethod).toHaveBeenCalledWith({ value: 'test' });
-      expect(mockToolResult.success).toHaveBeenCalled();
-      expect(result.success).toBe(true);
+      expect(result).toBe('simple result');
     });
 
-    it('should invoke async method', async () => {
+    it('should execute async method', async () => {
       const config = {
         name: 'test_tool',
         function: 'asyncMethod',
@@ -220,20 +215,12 @@ describe('GenericTool', () => {
 
       const tool = new GenericTool(config, mockLibraryInstance);
       
-      const toolCall = {
-        id: 'call_123',
-        type: 'function',
-        function: {
-          name: 'test_tool',
-          arguments: '{}'
-        }
-      };
+      const params = {};
 
-      const result = await tool.invoke(toolCall);
+      const result = await tool.execute(params);
 
       expect(mockLibraryInstance.asyncMethod).toHaveBeenCalled();
-      expect(result.success).toBe(true);
-      expect(result.data).toBeDefined();
+      expect(result).toBe('async result');
     });
 
     it('should handle method errors', async () => {
@@ -244,45 +231,31 @@ describe('GenericTool', () => {
 
       const tool = new GenericTool(config, mockLibraryInstance);
       
-      const toolCall = {
-        id: 'call_123',
-        type: 'function',
-        function: {
-          name: 'test_tool',
-          arguments: '{}'
-        }
-      };
+      const params = {};
 
-      const result = await tool.invoke(toolCall);
-
-      expect(mockToolResult.failure).toHaveBeenCalledWith(
-        'Method failed',
-        expect.any(Object)
-      );
-      expect(result.success).toBe(false);
+      await expect(tool.execute(params)).rejects.toThrow('Method failed');
+      expect(mockLibraryInstance.errorMethod).toHaveBeenCalled();
     });
 
-    it('should handle invalid JSON arguments', async () => {
+    it('should handle validation with zod schema', async () => {
       const config = {
         name: 'test_tool',
-        function: 'simpleMethod'
+        function: 'simpleMethod',
+        parameters: {
+          type: 'object',
+          properties: {
+            value: { type: 'string' }
+          },
+          required: ['value']
+        }
       };
 
       const tool = new GenericTool(config, mockLibraryInstance);
       
-      const toolCall = {
-        id: 'call_123',
-        type: 'function',
-        function: {
-          name: 'test_tool',
-          arguments: 'invalid json'
-        }
-      };
+      // Invalid params - missing required field
+      const params = {};
 
-      const result = await tool.invoke(toolCall);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Invalid JSON');
+      await expect(tool.run(params)).rejects.toThrow();
     });
 
     it('should handle instance methods correctly', async () => {
@@ -301,19 +274,12 @@ describe('GenericTool', () => {
 
       const tool = new GenericTool(config, mockLibraryInstance);
       
-      const toolCall = {
-        id: 'call_123',
-        type: 'function',
-        function: {
-          name: 'test_tool',
-          arguments: JSON.stringify({ arg1: 'hello', arg2: 42 })
-        }
-      };
+      const params = { arg1: 'hello', arg2: 42 };
 
-      const result = await tool.invoke(toolCall);
+      const result = await tool.execute(params);
 
       expect(mockLibraryInstance.methodWithArgs).toHaveBeenCalledWith('hello', 42);
-      expect(result.success).toBe(true);
+      expect(result).toEqual({ arg1: 'hello', arg2: 42, result: 'success' });
     });
 
     it('should handle static methods', async () => {
@@ -327,26 +293,33 @@ describe('GenericTool', () => {
         instanceMethod: false
       };
 
-      const tool = new GenericTool(config, staticLibrary, 'staticMethod');
+      const tool = new GenericTool(config, staticLibrary);
       
-      const toolCall = {
-        id: 'call_123',
-        type: 'function',
-        function: {
-          name: 'test_tool',
-          arguments: '{}'
-        }
-      };
+      const params = {};
 
-      const result = await tool.invoke(toolCall);
+      const result = await tool.execute(params);
 
       expect(staticLibrary.staticMethod).toHaveBeenCalled();
-      expect(result.success).toBe(true);
+      expect(result).toBe('static result');
     });
   });
 
-  describe('callFunction', () => {
-    it('should call function with correct arguments', async () => {
+  describe('prepareArguments', () => {
+    it('should pass whole object when no parameters defined', async () => {
+      const config = {
+        name: 'test_tool',
+        function: 'simpleMethod'
+      };
+
+      const tool = new GenericTool(config, mockLibraryInstance);
+      const args = { foo: 'bar', baz: 42 };
+
+      const result = await tool.execute(args);
+
+      expect(mockLibraryInstance.simpleMethod).toHaveBeenCalledWith(args);
+    });
+
+    it('should extract parameters in order when multiple defined', async () => {
       const config = {
         name: 'test_tool',
         function: 'methodWithArgs',
@@ -360,15 +333,16 @@ describe('GenericTool', () => {
       };
 
       const tool = new GenericTool(config, mockLibraryInstance);
-      
       const args = { arg1: 'test', arg2: 123 };
-      const result = await tool.callFunction(args);
+
+      const result = await tool.execute(args);
 
       expect(mockLibraryInstance.methodWithArgs).toHaveBeenCalledWith('test', 123);
-      expect(result).toEqual({ arg1: 'test', arg2: 123, result: 'success' });
     });
+  });
 
-    it('should handle functions with no arguments', async () => {
+  describe('result mapping', () => {
+    it('should return raw result when no mapping defined', async () => {
       const config = {
         name: 'test_tool',
         function: 'simpleMethod'
@@ -376,86 +350,85 @@ describe('GenericTool', () => {
 
       const tool = new GenericTool(config, mockLibraryInstance);
       
-      const result = await tool.callFunction({});
+      const result = await tool.execute({});
 
-      expect(mockLibraryInstance.simpleMethod).toHaveBeenCalledWith({});
       expect(result).toBe('simple result');
     });
 
-    it('should preserve this context for instance methods', async () => {
-      const obj = {
-        value: 42,
-        getValue: jest.fn(function() { return this.value; })
-      };
+    it('should apply result mapping when defined', async () => {
+      mockLibraryInstance.complexMethod = jest.fn().mockReturnValue({
+        data: { value: 42 },
+        status: 'ok'
+      });
 
       const config = {
         name: 'test_tool',
-        function: 'getValue',
-        instanceMethod: true
+        function: 'complexMethod',
+        resultMapping: {
+          value: 'data.value',
+          success: { path: 'status', transform: 'equals:ok' }
+        }
       };
 
-      const tool = new GenericTool(config, obj);
+      const tool = new GenericTool(config, mockLibraryInstance);
       
-      await tool.callFunction({});
+      const result = await tool.execute({});
 
-      expect(obj.getValue).toHaveBeenCalled();
+      expect(result).toEqual({
+        value: 42,
+        success: true
+      });
     });
   });
 
-  describe('mapResult', () => {
-    it('should return raw result without mapping', () => {
+  describe('event emission', () => {
+    it('should emit progress events', async () => {
       const config = {
         name: 'test_tool',
-        function: 'method'
+        function: 'simpleMethod'
       };
 
       const tool = new GenericTool(config, mockLibraryInstance);
+      const progressEvents = [];
       
-      const result = { data: 'test', status: 200 };
-      const mapped = tool.mapResult(result);
-
-      expect(mapped).toEqual(result);
-    });
-
-    it('should apply result mapping', () => {
-      const config = {
-        name: 'test_tool',
-        function: 'method',
-        resultMapping: {
-          success: {
-            content: '$.data',
-            statusCode: '$.status'
-          }
+      tool.on('event', (event) => {
+        if (event.type === 'progress') {
+          progressEvents.push(event);
         }
-      };
-
-      const tool = new GenericTool(config, mockLibraryInstance);
-      
-      const result = { data: 'test content', status: 200, extra: 'ignored' };
-      const mapped = tool.mapResult(result);
-
-      expect(mapped).toEqual({
-        content: 'test content',
-        statusCode: 200
       });
+
+      await tool.execute({});
+
+      expect(progressEvents).toHaveLength(2);
+      expect(progressEvents[0].message).toContain('Executing simpleMethod');
+      expect(progressEvents[0].data.percentage).toBe(0);
+      expect(progressEvents[1].message).toContain('Completed simpleMethod');
+      expect(progressEvents[1].data.percentage).toBe(100);
     });
 
-    it('should handle transform type', () => {
+    it('should emit error events on failure', async () => {
       const config = {
         name: 'test_tool',
-        function: 'method',
-        resultMapping: {
-          transform: 'instance'
-        }
+        function: 'errorMethod'
       };
 
       const tool = new GenericTool(config, mockLibraryInstance);
+      const errorEvents = [];
       
-      const result = { someData: 'test' };
-      const mapped = tool.mapResult(result);
+      tool.on('event', (event) => {
+        if (event.type === 'error') {
+          errorEvents.push(event);
+        }
+      });
 
-      // For 'instance' transform, it wraps the result
-      expect(mapped).toHaveProperty('instance');
+      try {
+        await tool.run({});
+      } catch (e) {
+        // Expected error
+      }
+
+      expect(errorEvents).toHaveLength(1);
+      expect(errorEvents[0].message).toBe('Method failed');
     });
   });
 });

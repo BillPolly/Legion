@@ -2,45 +2,22 @@
  * PlanInspectorTool - Static analysis tool for plan structure validation
  */
 
-export class PlanInspectorTool {
+import { Tool } from '@legion/module-loader';
+import { z } from 'zod';
+
+export class PlanInspectorTool extends Tool {
   constructor(moduleLoader = null) {
+    super({
+      name: 'plan_inspect',
+      description: 'Analyze plan structure and validate dependencies',
+      inputSchema: z.object({
+        plan: z.any().describe('The llm-planner Plan object to inspect'),
+        analyzeDepth: z.enum(['shallow', 'deep', 'complete']).optional().default('deep').describe('Depth of hierarchical analysis'),
+        validateTools: z.boolean().optional().default(false).describe('Whether to validate tool availability'),
+        showDependencies: z.boolean().optional().default(false).describe('Whether to include dependency graph')
+      })
+    });
     this.moduleLoader = moduleLoader;
-  }
-  
-  get name() {
-    return 'plan_inspect';
-  }
-  
-  get description() {
-    return 'Analyze plan structure and validate dependencies';
-  }
-  
-  get inputSchema() {
-    return {
-      type: 'object',
-      properties: {
-        plan: {
-          description: 'The llm-planner Plan object to inspect'
-        },
-        analyzeDepth: {
-          type: 'string',
-          enum: ['shallow', 'deep', 'complete'],
-          default: 'deep',
-          description: 'Depth of hierarchical analysis'
-        },
-        validateTools: {
-          type: 'boolean',
-          default: false,
-          description: 'Whether to validate tool availability'
-        },
-        showDependencies: {
-          type: 'boolean',
-          default: false,
-          description: 'Whether to include dependency graph'
-        }
-      },
-      required: ['plan']
-    };
   }
   
   async execute(params) {

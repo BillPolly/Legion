@@ -2,56 +2,26 @@
  * PlanExecutorTool - Legion tool interface for plan execution
  */
 
-// TODO: Temporarily not extending Tool for MVP testing
-export class PlanExecutorTool {
+import { Tool } from '@legion/module-loader';
+import { z } from 'zod';
+
+export class PlanExecutorTool extends Tool {
   constructor(executor, module = null) {
+    super({
+      name: 'plan_execute',
+      description: 'Execute a plan using available Legion tools',
+      inputSchema: z.object({
+        plan: z.any().describe('The llm-planner Plan object to execute'),
+        options: z.object({
+          emitProgress: z.boolean().optional().default(true).describe('Emit progress events during execution'),
+          stopOnError: z.boolean().optional().default(true).describe('Stop execution on first error'),
+          timeout: z.number().optional().default(300000).describe('Step execution timeout in milliseconds'),
+          retries: z.number().optional().default(3).describe('Number of retry attempts for failed steps')
+        }).optional()
+      })
+    });
     this.executor = executor;
     this.module = module; // Reference to PlanExecutorModule for logging setup
-  }
-  
-  get name() {
-    return 'plan_execute';
-  }
-  
-  get description() {
-    return 'Execute a plan using available Legion tools';
-  }
-  
-  get inputSchema() {
-    return {
-      type: 'object',
-      properties: {
-        plan: {
-          description: 'The llm-planner Plan object to execute'
-        },
-        options: {
-          type: 'object',
-          properties: {
-            emitProgress: { 
-              type: 'boolean', 
-              default: true,
-              description: 'Emit progress events during execution'
-            },
-            stopOnError: { 
-              type: 'boolean', 
-              default: true,
-              description: 'Stop execution on first error'
-            },
-            timeout: { 
-              type: 'number', 
-              default: 300000,
-              description: 'Step execution timeout in milliseconds'
-            },
-            retries: { 
-              type: 'number', 
-              default: 3,
-              description: 'Number of retry attempts for failed steps'
-            }
-          }
-        }
-      },
-      required: ['plan']
-    };
   }
   
   async execute(params) {

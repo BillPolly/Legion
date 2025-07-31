@@ -2,44 +2,24 @@
  * StepExecutorTool - Manual progression execution tool for debugging
  */
 
-export class StepExecutorTool {
+import { Tool } from '@legion/module-loader';
+import { z } from 'zod';
+
+export class StepExecutorTool extends Tool {
   constructor(options = {}) {
+    super({
+      name: 'plan_execute_step',
+      description: 'Execute plan step-by-step with manual progression control',
+      inputSchema: z.object({
+        plan: z.any().describe('The llm-planner Plan object to execute step-by-step'),
+        sessionId: z.string().optional().describe('Session identifier for resuming existing executions'),
+        action: z.enum(['start', 'next', 'pause', 'resume', 'abort']).describe('Action to take: start, next, pause, resume, or abort'),
+        options: z.object({}).passthrough().optional().describe('Execution options (emitProgress, timeout, includeContext, etc.)')
+      })
+    });
     this.options = options;
     // Reference to global execution context registry (would be injected in real implementation)
     this._executionContextRegistry = options.executionContextRegistry || null;
-  }
-
-  get name() {
-    return 'plan_execute_step';
-  }
-  
-  get description() {
-    return 'Execute plan step-by-step with manual progression control';
-  }
-  
-  get inputSchema() {
-    return {
-      type: 'object',
-      properties: {
-        plan: {
-          description: 'The llm-planner Plan object to execute step-by-step'
-        },
-        sessionId: {
-          type: 'string',
-          description: 'Session identifier for resuming existing executions'
-        },
-        action: {
-          type: 'string',
-          enum: ['start', 'next', 'pause', 'resume', 'abort'],
-          description: 'Action to take: start, next, pause, resume, or abort'
-        },
-        options: {
-          type: 'object',
-          description: 'Execution options (emitProgress, timeout, includeContext, etc.)'
-        }
-      },
-      required: ['plan', 'action']
-    };
   }
   
   async execute(params) {

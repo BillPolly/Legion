@@ -9,10 +9,10 @@ import path from 'path';
 
 export class CreatePackageJsonTool extends Tool {
   constructor() {
-    super();
-    this.name = 'create_package_json';
-    this.description = 'Generate a package.json file with dependencies and scripts';
-    this.inputSchema = z.object({
+    super({
+      name: 'create_package_json',
+      description: 'Generate a package.json file with dependencies and scripts',
+      inputSchema: z.object({
       name: z.string().describe('Project name'),
       version: z.string().default('1.0.0').describe('Project version'),
       description: z.string().optional().describe('Project description'),
@@ -24,6 +24,7 @@ export class CreatePackageJsonTool extends Tool {
       author: z.string().optional().describe('Project author'),
       license: z.string().default('ISC').describe('Project license'),
       projectPath: z.string().describe('Path where package.json should be created')
+      })
     });
     this.outputSchema = z.object({
       created: z.boolean(),
@@ -36,7 +37,7 @@ export class CreatePackageJsonTool extends Tool {
 
   async execute(args) {
     try {
-      this.emit('progress', { percentage: 20, status: 'Validating project configuration...' });
+      this.progress('Validating project configuration...', 20);
 
       const {
         name,
@@ -54,7 +55,7 @@ export class CreatePackageJsonTool extends Tool {
 
       const packageJsonPath = path.join(projectPath, 'package.json');
 
-      this.emit('progress', { percentage: 40, status: 'Checking if package.json already exists...' });
+      this.progress('Checking if package.json already exists...', 40);
 
       // Check if package.json already exists
       try {
@@ -68,7 +69,7 @@ export class CreatePackageJsonTool extends Tool {
         // File doesn't exist, create it
       }
 
-      this.emit('progress', { percentage: 60, status: 'Generating package.json content...' });
+      this.progress('Generating package.json content...', 60);
 
       // Create package.json content
       const packageJson = {
@@ -91,7 +92,7 @@ export class CreatePackageJsonTool extends Tool {
         packageJson.scripts.start = `node ${main}`;
       }
 
-      this.emit('progress', { percentage: 80, status: 'Writing package.json file...' });
+      this.progress('Writing package.json file...', 80);
 
       // Ensure directory exists
       await fs.mkdir(projectPath, { recursive: true });
@@ -99,7 +100,7 @@ export class CreatePackageJsonTool extends Tool {
       // Write package.json file
       await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
-      this.emit('progress', { percentage: 100, status: 'Package.json created successfully' });
+      this.progress('Package.json created successfully', 100);
 
       return {
         created: true,
@@ -108,7 +109,7 @@ export class CreatePackageJsonTool extends Tool {
       };
 
     } catch (error) {
-      this.emit('error', { message: error.message });
+      this.error(error.message);
       
       return {
         created: false,

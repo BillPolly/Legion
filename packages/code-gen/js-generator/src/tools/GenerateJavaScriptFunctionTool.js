@@ -9,10 +9,10 @@ import path from 'path';
 
 export class GenerateJavaScriptFunctionTool extends Tool {
   constructor() {
-    super();
-    this.name = 'generate_javascript_function';
-    this.description = 'Generate a JavaScript function with JSDoc, parameters, and body';
-    this.inputSchema = z.object({
+    super({
+      name: 'generate_javascript_function',
+      description: 'Generate a JavaScript function with JSDoc, parameters, and body',
+      inputSchema: z.object({
         name: z.string().describe('Function name'),
         params: z.array(z.union([
           z.string(),
@@ -36,7 +36,8 @@ export class GenerateJavaScriptFunctionTool extends Tool {
         projectPath: z.string().optional().describe('Project root directory (optional, for file writing)'),
         writeToFile: z.boolean().optional().default(false).describe('Whether to write generated code to file'),
         outputPath: z.string().optional().describe('Relative path within project for output file (when writeToFile is true)')
-      });
+      })
+    });
     this.outputSchema = z.object({
         code: z.string().describe('Generated function code'),
         signature: z.string().describe('Function signature'),
@@ -53,7 +54,7 @@ export class GenerateJavaScriptFunctionTool extends Tool {
 
   async execute(args) {
     try {
-      this.emit('progress', { percentage: 20, status: 'Generating function...' });
+      this.progress('Generating function...', 20);
 
       const {
         name,
@@ -76,7 +77,7 @@ export class GenerateJavaScriptFunctionTool extends Tool {
         hasJSDoc = true;
       }
 
-      this.emit('progress', { percentage: 60, status: 'Building function signature...' });
+      this.progress('Building function signature...', 60);
 
       // Build function signature
       let signature = '';
@@ -95,7 +96,7 @@ export class GenerateJavaScriptFunctionTool extends Tool {
       // Generate function body
       const functionBody = body ? this._generateFunctionBody(body) : '  // TODO: Implement function';
       
-      this.emit('progress', { percentage: 90, status: 'Assembling function code...' });
+      this.progress('Assembling function code...', 90);
 
       if (isArrow && functionBody.split('\n').length === 1 && !functionBody.includes('return')) {
         // Single expression arrow function
@@ -109,7 +110,7 @@ export class GenerateJavaScriptFunctionTool extends Tool {
 
       const code = parts.join('\n');
 
-      this.emit('progress', { percentage: 100, status: 'Function generation complete' });
+      this.progress('Function generation complete', 100);
 
       return {
         code,
@@ -118,7 +119,7 @@ export class GenerateJavaScriptFunctionTool extends Tool {
       };
 
     } catch (error) {
-      this.emit('error', { message: error.message });
+      this.error(error.message);
       throw error;
     }
   }

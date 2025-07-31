@@ -14,10 +14,11 @@ const inputSchema = z.object({
 
 class RailwayDeployTool extends Tool {
   constructor(resourceManager) {
-    super();
-    this.name = 'railway_deploy';
-    this.description = 'Deploy an application to Railway from GitHub repository or Docker image';
-    this.inputSchema = inputSchema;
+    super({
+      name: 'railway_deploy',
+      description: 'Deploy an application to Railway from GitHub repository or Docker image',
+      inputSchema: inputSchema
+    });
     this.resourceManager = resourceManager;
   }
 

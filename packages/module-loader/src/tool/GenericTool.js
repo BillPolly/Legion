@@ -1,9 +1,10 @@
 import Tool from './Tool.js';
-import ToolResult from './ToolResult.js';
 import { ResultMapper } from '../utils/ResultMapper.js';
+import { z } from 'zod';
 
 /**
  * GenericTool - A tool implementation that wraps library functions
+ * This is used by module.json files to create tools from library functions
  */
 export class GenericTool extends Tool {
   /**
@@ -12,10 +13,15 @@ export class GenericTool extends Tool {
    * @param {string} functionPath - Optional explicit function path
    */
   constructor(config, libraryInstance, functionPath = null) {
-    super();
+    // Convert JSON Schema parameters to basic Zod schema
+    const zodSchema = config.parameters ? GenericTool.jsonSchemaToZod(config.parameters) : z.any();
     
-    this.name = config.name;
-    this.description = config.description;
+    super({
+      name: config.name,
+      description: config.description,
+      inputSchema: zodSchema
+    });
+    
     this.config = config;
     this.library = libraryInstance;
     this.functionPath = functionPath || config.function;
@@ -57,82 +63,29 @@ export class GenericTool extends Tool {
   }
   
   /**
-   * Get tool description in OpenAI function format
-   * @returns {Object} Tool description
+   * Execute the tool with validated parameters
+   * @param {Object} params - Validated parameters
+   * @returns {Promise<*>} Tool result
    */
-  getToolDescription() {
-    const { parameters, output } = this.config;
-    
-    return {
-      type: 'function',
-      function: {
-        name: this.name,
-        description: this.description,
-        parameters: parameters || {
-          type: 'object',
-          properties: {},
-          required: []
-        },
-        output: output || {
-          success: {
-            type: 'object',
-            properties: {
-              result: { type: 'any', description: 'Function result' }
-            }
-          },
-          failure: {
-            type: 'object',
-            properties: {
-              error: { type: 'string', description: 'Error message' },
-              details: { type: 'object', description: 'Error details' }
-            }
-          }
-        }
-      }
-    };
-  }
-  
-  /**
-   * Invoke the tool
-   * @param {Object} toolCall - Tool call from LLM
-   * @returns {Promise<ToolResult>} The result
-   */
-  async invoke(toolCall) {
+  async execute(params) {
     try {
-      // Parse arguments
-      let args;
-      try {
-        args = this.parseArguments(toolCall.function.arguments);
-      } catch (error) {
-        return ToolResult.failure(`Invalid JSON arguments: ${error.message}`, {
-          arguments: toolCall.function.arguments
-        });
-      }
+      // Emit progress
+      this.progress(`Executing ${this.functionPath}`, 0);
       
       // Call the function
-      const result = await this.callFunction(args);
+      const result = await this.callFunction(params);
       
       // Map the result if needed
       const mappedResult = this.mapResult(result);
       
-      // Return success
-      return ToolResult.success(mappedResult);
+      // Emit completion
+      this.progress(`Completed ${this.functionPath}`, 100);
+      
+      return mappedResult;
       
     } catch (error) {
-      // Map error if needed
-      const errorData = {
-        functionName: this.functionPath,
-        errorType: error.constructor.name,
-        stack: error.stack,
-        originalError: error
-      };
-      
-      const mappedError = this.config.resultMapping 
-        ? this.resultMapper.mapError(errorData, this.config.resultMapping)
-        : errorData;
-      
-      // Return failure
-      return ToolResult.failure(error.message, mappedError);
+      // Re-throw to let Tool base class handle error emission
+      throw error;
     }
   }
   
@@ -192,6 +145,86 @@ export class GenericTool extends Tool {
   mapResult(result) {
     const { resultMapping } = this.config;
     return this.resultMapper.mapResult(result, resultMapping);
+  }
+  
+  /**
+   * Convert JSON Schema to Zod schema
+   * This is a basic converter that handles common cases
+   * 
+   * @param {Object} jsonSchema - JSON Schema object
+   * @returns {z.ZodSchema} Zod schema
+   */
+  static jsonSchemaToZod(jsonSchema) {
+    const { type, properties, required = [], items, enum: enumValues } = jsonSchema;
+    
+    switch (type) {
+      case 'object':
+        if (!properties) {
+          return z.object({});
+        }
+        
+        const shape = {};
+        for (const [key, propSchema] of Object.entries(properties)) {
+          let fieldSchema = GenericTool.jsonSchemaToZod(propSchema);
+          
+          // Add description if available
+          if (propSchema.description) {
+            fieldSchema = fieldSchema.describe(propSchema.description);
+          }
+          
+          // Make optional if not in required array
+          if (!required.includes(key)) {
+            fieldSchema = fieldSchema.optional();
+          }
+          
+          // Add default if specified
+          if ('default' in propSchema) {
+            fieldSchema = fieldSchema.default(propSchema.default);
+          }
+          
+          shape[key] = fieldSchema;
+        }
+        
+        return z.object(shape);
+        
+      case 'string':
+        let stringSchema = z.string();
+        if (jsonSchema.minLength) stringSchema = stringSchema.min(jsonSchema.minLength);
+        if (jsonSchema.maxLength) stringSchema = stringSchema.max(jsonSchema.maxLength);
+        if (jsonSchema.pattern) stringSchema = stringSchema.regex(new RegExp(jsonSchema.pattern));
+        if (enumValues) return z.enum(enumValues);
+        return stringSchema;
+        
+      case 'number':
+      case 'integer':
+        let numberSchema = type === 'integer' ? z.number().int() : z.number();
+        if (jsonSchema.minimum !== undefined) numberSchema = numberSchema.min(jsonSchema.minimum);
+        if (jsonSchema.maximum !== undefined) numberSchema = numberSchema.max(jsonSchema.maximum);
+        return numberSchema;
+        
+      case 'boolean':
+        return z.boolean();
+        
+      case 'array':
+        const itemSchema = items ? GenericTool.jsonSchemaToZod(items) : z.any();
+        let arraySchema = z.array(itemSchema);
+        if (jsonSchema.minItems) arraySchema = arraySchema.min(jsonSchema.minItems);
+        if (jsonSchema.maxItems) arraySchema = arraySchema.max(jsonSchema.maxItems);
+        return arraySchema;
+        
+      case 'null':
+        return z.null();
+        
+      default:
+        // Handle union types
+        if (Array.isArray(type)) {
+          const schemas = type.map(t => GenericTool.jsonSchemaToZod({ ...jsonSchema, type: t }));
+          return z.union(schemas);
+        }
+        
+        // Fallback to any
+        return z.any();
+    }
   }
 }
 

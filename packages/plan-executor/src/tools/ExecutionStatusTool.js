@@ -2,41 +2,23 @@
  * ExecutionStatusTool - Real-time execution state inspection tool
  */
 
-export class ExecutionStatusTool {
+import { Tool } from '@legion/module-loader';
+import { z } from 'zod';
+
+export class ExecutionStatusTool extends Tool {
   constructor(options = {}) {
+    super({
+      name: 'plan_status',
+      description: 'Inspect execution state and monitor active plan executions',
+      inputSchema: z.object({
+        sessionId: z.string().optional().describe('Specific session to inspect, or "all" for all active sessions'),
+        includeContext: z.boolean().optional().default(false).describe('Whether to include execution context details'),
+        includeResults: z.boolean().optional().default(false).describe('Whether to include step results in response')
+      })
+    });
     this.options = options;
     // Reference to global execution context registry (would be injected in real implementation)
     this._executionContextRegistry = options.executionContextRegistry || null;
-  }
-
-  get name() {
-    return 'plan_status';
-  }
-  
-  get description() {
-    return 'Inspect execution state and monitor active plan executions';
-  }
-  
-  get inputSchema() {
-    return {
-      type: 'object',
-      properties: {
-        sessionId: {
-          type: 'string',
-          description: 'Specific session to inspect, or "all" for all active sessions'
-        },
-        includeContext: {
-          type: 'boolean',
-          default: false,
-          description: 'Whether to include execution context details'
-        },
-        includeResults: {
-          type: 'boolean',
-          default: false,
-          description: 'Whether to include step results in response'
-        }
-      }
-    };
   }
   
   async execute(params) {

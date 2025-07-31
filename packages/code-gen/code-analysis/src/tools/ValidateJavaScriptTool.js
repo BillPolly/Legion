@@ -11,10 +11,10 @@ import path from 'path';
 
 export class ValidateJavaScriptTool extends Tool {
   constructor() {
-    super();
-    this.name = 'validate_javascript';
-    this.description = 'Validate JavaScript code for syntax and quality issues';
-    this.inputSchema = z.object({
+    super({
+      name: 'validate_javascript',
+      description: 'Validate JavaScript code for syntax and quality issues',
+      inputSchema: z.object({
       code: z.string().optional().describe('JavaScript code to validate'),
       filePath: z.string().optional().describe('Path to JavaScript file to validate (alternative to code)'),
       projectPath: z.string().optional().describe('Project root directory for batch analysis of all JS files'),
@@ -22,6 +22,7 @@ export class ValidateJavaScriptTool extends Tool {
       checkSecurity: z.boolean().default(true).describe('Check for security issues'),
       checkPerformance: z.boolean().default(true).describe('Check for performance issues'),
       filePattern: z.string().optional().default('**/*.{js,mjs,jsx}').describe('File pattern for batch analysis (when projectPath is provided)')
+      })
     });
     this.outputSchema = z.object({
       valid: z.boolean().describe('Whether the code is syntactically valid'),
@@ -97,66 +98,10 @@ export class ValidateJavaScriptTool extends Tool {
     ];
   }
 
-  /**
-   * Returns the tool description in standard function calling format
-   */
-  getToolDescription() {
-    return {
-      type: 'function',
-      function: {
-        name: this.name,
-        description: this.description,
-        parameters: this.inputSchema,
-        output: this.outputSchema || {
-          success: {
-            type: 'object',
-            properties: {
-              result: { type: 'any', description: 'Tool execution result' }
-            }
-          },
-          failure: {
-            type: 'object',
-            properties: {
-              error: { type: 'string', description: 'Error message' },
-              details: { type: 'object', description: 'Error details' }
-            }
-          }
-        }
-      }
-    };
-  }
-
-  async invoke(toolCall) {
-    // Parse arguments from the tool call
-    let args;
-    try {
-      args = typeof toolCall.function.arguments === 'string' 
-        ? JSON.parse(toolCall.function.arguments)
-        : toolCall.function.arguments;
-    } catch (error) {
-      return ToolResult.failure(error.message || 'Tool execution failed', {
-        toolName: this.name,
-        error: error.toString(),
-        stack: error.stack
-      });
-    }
-
-    // Execute the tool with parsed arguments
-    try {
-      const result = await this.execute(args);
-      return ToolResult.success(result);
-    } catch (error) {
-      return ToolResult.failure(error.message || 'Tool execution failed', {
-        toolName: this.name,
-        error: error.toString(),
-        stack: error.stack
-      });
-    }
-  }
 
   async execute(args) {
     try {
-      this.emit('progress', { percentage: 10, status: 'Preparing code validation...' });
+      this.progress('Preparing code validation...', 10);
 
       let code = args.code;
       
@@ -187,7 +132,7 @@ export class ValidateJavaScriptTool extends Tool {
         };
       }
 
-      this.emit('progress', { percentage: 30, status: 'Validating syntax...' });
+      this.progress('Validating syntax...', 30);
 
       const result = {
         valid: true,
@@ -206,33 +151,33 @@ export class ValidateJavaScriptTool extends Tool {
         result.errors.push(`Syntax error: ${syntaxError.message}`);
       }
 
-      this.emit('progress', { percentage: 50, status: 'Analyzing code quality...' });
+      this.progress('Analyzing code quality...', 50);
 
       // Code quality analysis
       if (args.includeAnalysis) {
         result.warnings.push(...this._analyzeCodeQuality(code));
       }
 
-      this.emit('progress', { percentage: 70, status: 'Checking security issues...' });
+      this.progress('Checking security issues...', 70);
 
       // Security analysis
       if (args.checkSecurity) {
         result.securityIssues = this._analyzeSecurityIssues(code);
       }
 
-      this.emit('progress', { percentage: 90, status: 'Analyzing performance...' });
+      this.progress('Analyzing performance...', 90);
 
       // Performance analysis
       if (args.checkPerformance) {
         result.performanceIssues = this._analyzePerformanceIssues(code);
       }
 
-      this.emit('progress', { percentage: 100, status: 'Validation complete' });
+      this.progress('Validation complete', 100);
 
       return result;
 
     } catch (error) {
-      this.emit('error', { message: error.message });
+      this.error(error.message);
       throw error;
     }
   }

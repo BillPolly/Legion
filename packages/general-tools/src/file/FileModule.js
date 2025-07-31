@@ -1,15 +1,24 @@
 import { Tool, ToolResult, Module } from '@legion/module-loader';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { z } from 'zod';
 
 /**
  * Internal tool class for file operations
  */
 class FileOperationsTool extends Tool {
   constructor() {
-    super();
-    this.name = 'file_operations';
-    this.description = 'Comprehensive file system operations including reading, writing, and directory management';
+    super({
+      name: 'file_operations',
+      description: 'Comprehensive file system operations including reading, writing, and directory management',
+      inputSchema: z.object({
+        filepath: z.string().optional().describe('The path to the file (for read/write operations)'),
+        content: z.string().optional().describe('The content to write to the file'),
+        encoding: z.string().optional().default('utf8').describe('The encoding to use when reading/writing the file'),
+        dirpath: z.string().optional().describe('The directory path (for directory operations)'),
+        operation: z.enum(['read', 'write', 'create', 'list', 'change', 'current']).optional().describe('The operation to perform')
+      })
+    });
   }
 
   /**
@@ -473,14 +482,14 @@ class FileOperationsTool extends Tool {
   async readFile(filepath) {
     try {
       console.log(`Reading file: ${filepath}`);
-      this.emitProgress(`Reading file: ${filepath}`, { filepath });
+      this.progress(`Reading file: ${filepath}`, 50, { filepath });
       
       const resolvedPath = path.resolve(filepath);
       
       // Check if file exists and is readable
       const stats = await fs.stat(resolvedPath);
       if (!stats.isFile()) {
-        this.emitError(`Path is not a file: ${filepath}`, { filepath, errorCode: 'EISDIR' });
+        this.error(`Path is not a file: ${filepath}`, { filepath, errorCode: 'EISDIR' });
         return ToolResult.failure(
           `Path is not a file: ${filepath}`,
           { 
@@ -493,7 +502,7 @@ class FileOperationsTool extends Tool {
       
       const content = await fs.readFile(resolvedPath, 'utf8');
       console.log(`Successfully read ${content.length} characters from ${filepath}`);
-      this.emitInfo(`Successfully read ${content.length} characters from ${filepath}`, { 
+      this.info(`Successfully read ${content.length} characters from ${filepath}`, { 
         filepath, 
         size: content.length 
       });
@@ -518,7 +527,7 @@ class FileOperationsTool extends Tool {
         errorMessage = `Path is a directory, not a file: ${filepath}`;
       }
       
-      this.emitError(errorMessage, { filepath, errorCode, details: error.stack });
+      this.error(errorMessage, { filepath, errorCode, details: error.stack });
       
       return ToolResult.failure(
         errorMessage,
@@ -537,13 +546,13 @@ class FileOperationsTool extends Tool {
   async writeFile(filepath, content, encoding = 'utf8') {
     try {
       console.log(`Writing file: ${filepath}`);
-      this.emitProgress(`Writing file: ${filepath}`, { filepath, contentLength: content ? content.length : 0 });
+      this.progress(`Writing file: ${filepath}`, 50, { filepath, contentLength: content ? content.length : 0 });
       console.log(`Content length: ${content ? content.length : 0} chars`);
       console.log(`Content type: ${typeof content}`);
       
       if (content === undefined || content === null) {
         console.error('ERROR: Content is undefined or null!');
-        this.emitError('Content is required for file write', { filepath });
+        this.error('Content is required for file write', { filepath });
         return ToolResult.failure('Content is required', { filepath });
       }
       
@@ -576,7 +585,7 @@ class FileOperationsTool extends Tool {
       }
       
       console.log(`Successfully wrote ${content.length} characters to ${filepath}`);
-      this.emitInfo(`Successfully wrote ${content.length} characters to ${filepath}`, { 
+      this.info(`Successfully wrote ${content.length} characters to ${filepath}`, { 
         filepath, 
         bytesWritten: content.length,
         created: !fileExists 
@@ -605,7 +614,7 @@ class FileOperationsTool extends Tool {
         errorMessage = `Parent directory does not exist: ${filepath}`;
       }
       
-      this.emitError(errorMessage, { filepath, errorCode, details: error.stack });
+      this.error(errorMessage, { filepath, errorCode, details: error.stack });
       
       return ToolResult.failure(
         errorMessage,
@@ -624,7 +633,7 @@ class FileOperationsTool extends Tool {
   async createDirectory(dirpath) {
     try {
       console.log(`Creating directory: ${dirpath}`);
-      this.emitProgress(`Creating directory: ${dirpath}`, { dirpath });
+      this.progress(`Creating directory: ${dirpath}`, 50, { dirpath });
       
       const resolvedPath = path.resolve(dirpath);
       
@@ -639,7 +648,7 @@ class FileOperationsTool extends Tool {
       
       await fs.mkdir(resolvedPath, { recursive: true });
       console.log(`Successfully created directory: ${dirpath}`);
-      this.emitInfo(`Successfully created directory: ${dirpath}`, { dirpath, created: !dirExists });
+      this.info(`Successfully created directory: ${dirpath}`, { dirpath, created: !dirExists });
       
       return ToolResult.success({
         dirpath: dirpath,

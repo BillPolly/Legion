@@ -2,40 +2,21 @@
  * PlanToMarkdownTool - Convert plan JSON to readable markdown documentation
  */
 
-export class PlanToMarkdownTool {
-  get name() {
-    return 'plan_to_markdown';
-  }
-  
-  get description() {
-    return 'Convert plan JSON to readable markdown documentation with analysis and visualization';
-  }
-  
-  get inputSchema() {
-    return {
-      type: 'object',
-      properties: {
-        plan: {
-          description: 'The plan object to convert to markdown'
-        },
-        format: {
-          type: 'string',
-          enum: ['detailed', 'summary', 'execution-guide'],
-          default: 'detailed',
-          description: 'Markdown format style'
-        },
-        includeAnalysis: {
-          type: 'boolean',
-          default: true,
-          description: 'Include complexity and dependency analysis'
-        },
-        outputPath: {
-          type: 'string',
-          description: 'Optional file path to write markdown (relative to current directory)'
-        }
-      },
-      required: ['plan']
-    };
+import { Tool } from '@legion/module-loader';
+import { z } from 'zod';
+
+export class PlanToMarkdownTool extends Tool {
+  constructor() {
+    super({
+      name: 'plan_to_markdown',
+      description: 'Convert plan JSON to readable markdown documentation with analysis and visualization',
+      inputSchema: z.object({
+        plan: z.any().describe('The plan object to convert to markdown'),
+        format: z.enum(['detailed', 'summary', 'execution-guide']).optional().default('detailed').describe('Markdown format style'),
+        includeAnalysis: z.boolean().optional().default(true).describe('Include complexity and dependency analysis'),
+        outputPath: z.string().optional().describe('Optional file path to write markdown (relative to current directory)')
+      })
+    });
   }
   
   async execute(params) {
