@@ -1,30 +1,38 @@
 /**
- * PlanExecutorModule - Legion module wrapper for plan execution and debugging
+ * PlanExecutorToolsModule - Legion module that provides plan execution tools
  */
 
-import { PlanExecutorTool } from './tools/PlanExecutorTool.js';
-import { PlanInspectorTool } from './tools/PlanInspectorTool.js';
-import { PlanToMarkdownTool } from './tools/PlanToMarkdownTool.js';
-import { ExecutionStatusTool } from './tools/ExecutionStatusTool.js';
-import { StepExecutorTool } from './tools/StepExecutorTool.js';
-import { DebugExecutorTool } from './tools/DebugExecutorTool.js';
-import { PlanExecutor } from './core/PlanExecutor.js';
+import { PlanExecutorTool } from './PlanExecutorTool.js';
+import { PlanInspectorTool } from './PlanInspectorTool.js';
+import { PlanToMarkdownTool } from './PlanToMarkdownTool.js';
+import { ExecutionStatusTool } from './ExecutionStatusTool.js';
+import { StepExecutorTool } from './StepExecutorTool.js';
+import { DebugExecutorTool } from './DebugExecutorTool.js';
+import { PlanExecutor, ExecutionContext } from '@legion/plan-executor';
 import { ModuleLoader } from '@legion/module-loader';
-import { ExecutionContext } from './core/ExecutionContext.js';
 
-export class PlanExecutorModule {
+export class PlanExecutorToolsModule {
   static dependencies = ['resourceManager', 'moduleFactory'];
   
   /**
-   * Create a PlanExecutorModule using the singleton ResourceManager
-   * @returns {Promise<PlanExecutorModule>}
+   * Create a PlanExecutorToolsModule using the Async Resource Manager pattern
+   * @param {ResourceManager} resourceManager
+   * @returns {Promise<PlanExecutorToolsModule>}
    */
-  static async create() {
-    const { getResourceManager, ModuleFactory } = await import('@legion/module-loader');
-    const resourceManager = await getResourceManager();
+  static async create(resourceManager) {
+    const { ModuleFactory } = await import('@legion/module-loader');
     const moduleFactory = new ModuleFactory(resourceManager);
     
-    return new PlanExecutorModule({ resourceManager, moduleFactory });
+    // Create module instance
+    const moduleInstance = new PlanExecutorToolsModule({ resourceManager, moduleFactory });
+    
+    // Create executor using async factory pattern
+    moduleInstance.executor = await PlanExecutor.create(resourceManager);
+    
+    // Now create tool instances with the executor available
+    moduleInstance._createTools();
+    
+    return moduleInstance;
   }
   
   constructor(dependencies) {
@@ -35,15 +43,24 @@ export class PlanExecutorModule {
     // Create module loader directly
     this.moduleLoader = new ModuleLoader(resourceManager);
     
-    // Create executor instance
-    this.executor = new PlanExecutor({
-      moduleLoader: this.moduleLoader
-    });
+    // Create executor instance using the async factory pattern
+    this.executor = null; // Will be created when needed via async factory
     
     // Create shared execution context (in real implementation this would be a registry/manager)
     this.executionContext = null; // Will be created when needed
     
-    // Create tool instances - all tools already extend Legion Tool
+    // Tool instances will be created after executor is available
+    this.planExecutorTool = null;
+    this.planInspectorTool = null;
+    this.planToMarkdownTool = null;
+    this.executionStatusTool = null;
+    this.stepExecutorTool = null;
+    this.debugExecutorTool = null;
+    
+  }
+
+  _createTools() {
+    // Create tool instances - all tools extend Legion Tool
     this.planExecutorTool = new PlanExecutorTool(this.executor, this);
     this.planInspectorTool = new PlanInspectorTool(this.moduleLoader);
     this.planToMarkdownTool = new PlanToMarkdownTool();
@@ -76,7 +93,6 @@ export class PlanExecutorModule {
     this.stepExecutorTool._getExecutionContext = contextGetter;
     this.debugExecutorTool._getExecutionContext = contextGetter;
   }
-  
   
   getTools() {
     return [

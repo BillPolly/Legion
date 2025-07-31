@@ -357,48 +357,6 @@ class ResourceManager {
     this.register('workspace.config', workspaceConfig);
   }
 
-  /**
-   * Create a unique workspace directory for a plan execution
-   * @param {string} planId - Plan identifier
-   * @returns {string} Unique workspace path
-   */
-  createPlanWorkspace(planId) {
-    const workspaceDir = this.get('workspace.workspaceDir');
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').slice(0, 19);
-    const uniqueId = Math.random().toString(36).substr(2, 6);
-    const planWorkspace = path.join(workspaceDir, `${planId}_${timestamp}_${uniqueId}`);
-    
-    return planWorkspace;
-  }
-
-  /**
-   * Get standard workspace paths for plan execution
-   * @param {string} planId - Plan identifier  
-   * @returns {Object} Workspace paths object
-   */
-  getPlanWorkspacePaths(planId) {
-    // Cache workspace paths per plan to avoid creating multiple directories
-    const cacheKey = `workspace_paths_${planId}`;
-    
-    if (this.has(cacheKey)) {
-      return this.get(cacheKey);
-    }
-    
-    const planWorkspace = this.createPlanWorkspace(planId);
-    
-    const workspacePaths = {
-      WORKSPACE: planWorkspace,
-      ARTIFACT_DIR: planWorkspace,
-      TEMP_DIR: path.join(planWorkspace, 'tmp'),
-      OUTPUT_DIR: path.join(planWorkspace, 'output'),
-      LOG_DIR: path.join(planWorkspace, 'logs')
-    };
-    
-    // Cache the workspace paths for this plan
-    this.register(cacheKey, workspacePaths);
-    
-    return workspacePaths;
-  }
 }
 
 export default ResourceManager;

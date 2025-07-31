@@ -15,6 +15,21 @@ export class PlanExecutor extends EventEmitter {
       throw new Error('ModuleLoader is required for PlanExecutor');
     }
   }
+
+  /**
+   * Create a PlanExecutor using the Async Resource Manager pattern
+   * @param {ResourceManager} resourceManager - The resource manager instance
+   * @returns {Promise<PlanExecutor>}
+   */
+  static async create(resourceManager) {
+    const { ModuleLoader } = await import('@legion/module-loader');
+    const moduleLoader = new ModuleLoader(resourceManager);
+    
+    // Initialize the module loader
+    await moduleLoader.initialize();
+    
+    return new PlanExecutor({ moduleLoader });
+  }
   
   async executePlan(plan, options = {}) {
     const startTime = new Date();
@@ -52,8 +67,8 @@ export class PlanExecutor extends EventEmitter {
     }
     
     try {
-      // Resolve plan inputs and inject into context
-      await this._resolvePlanInputs(plan, context);
+      // Set up workspace directory if specified
+      await this._setupWorkspaceDirectory(plan, executionOptions, context);
       
       // Initialize module loader and load essential modules
       await this.moduleLoader.initialize();
@@ -306,100 +321,34 @@ export class PlanExecutor extends EventEmitter {
   }
 
   /**
-   * Resolve plan inputs and inject into execution context
+   * Set up workspace directory for plan execution
    * @private
-   * @param {Object} plan - Plan with inputs section
+   * @param {Object} plan - Plan object
+   * @param {Object} executionOptions - Execution options
    * @param {ExecutionContext} context - Execution context
    */
-  async _resolvePlanInputs(plan, context) {
-    if (!plan.inputs || !Array.isArray(plan.inputs)) {
-      return; // No inputs to resolve
-    }
-
-    const resourceManager = this.moduleLoader.resourceManager;
-    const planId = plan.id || 'unknown-plan';
-
-    // Get workspace paths from ResourceManager
-    let workspacePaths;
-    try {
-      workspacePaths = resourceManager.getPlanWorkspacePaths(planId);
-    } catch (error) {
-      throw new Error(`Failed to get workspace paths: ${error.message}`);
-    }
-
-    // Resolve each input
-    for (const input of plan.inputs) {
-      let resolvedValue;
-
-      // Check if value provided in execution options
-      if (context.options.inputs && context.options.inputs[input.name] !== undefined) {
-        resolvedValue = context.options.inputs[input.name];
-      }
-      // Check for standard workspace variables
-      else if (workspacePaths[input.name]) {
-        resolvedValue = workspacePaths[input.name];
-      }
-      // Check for environment variables
-      else if (resourceManager.has(`env.${input.name}`)) {
-        resolvedValue = resourceManager.get(`env.${input.name}`);
-      }
-      // Use default value if available
-      else if (input.default !== undefined) {
-        resolvedValue = input.default;
-      }
-      // Check if required
-      else if (input.required) {
-        throw new Error(`Required plan input '${input.name}' not provided`);
-      }
-      else {
-        // Optional input with no default, skip
-        continue;
-      }
-
-      // Validate type if specified
-      if (input.type && resolvedValue !== undefined) {
-        if (!this._validateInputType(resolvedValue, input.type)) {
-          throw new Error(`Plan input '${input.name}' has incorrect type. Expected: ${input.type}, Got: ${typeof resolvedValue}`);
-        }
-      }
-
-      // Set the resolved value in context as a plan-level variable
-      context.setVariable(input.name, resolvedValue);
-    }
-
-    // Ensure workspace directories exist
-    const fs = await import('fs/promises');
-    for (const [name, dirPath] of Object.entries(workspacePaths)) {
-      if (context.getVariable(name) === dirPath) {
-        await fs.mkdir(dirPath, { recursive: true });
-      }
-    }
-  }
-
-  /**
-   * Validate input value type
-   * @private
-   * @param {*} value - Value to validate
-   * @param {string} expectedType - Expected type
-   * @returns {boolean} True if type matches
-   */
-  _validateInputType(value, expectedType) {
-    const actualType = typeof value;
+  async _setupWorkspaceDirectory(plan, executionOptions, context) {
+    // Determine workspace directory from multiple sources
+    let workspaceDir = null;
     
-    switch (expectedType) {
-      case 'string':
-        return actualType === 'string';
-      case 'number':
-        return actualType === 'number';
-      case 'boolean':
-        return actualType === 'boolean';
-      case 'object':
-        return actualType === 'object' && value !== null && !Array.isArray(value);
-      case 'array':
-        return Array.isArray(value);
-      default:
-        return false;
+    // 1. Check execution options first (highest priority)
+    if (executionOptions.workspaceDir) {
+      workspaceDir = executionOptions.workspaceDir;
     }
+    // 2. Check plan workspaceDir field
+    else if (plan.workspaceDir) {
+      workspaceDir = plan.workspaceDir;
+    }
+    // 3. Use current working directory as fallback
+    else {
+      workspaceDir = process.cwd();
+    }
+    
+    // Set workspace directory as a context variable for $workspaceDir substitution
+    context.setVariable('workspaceDir', workspaceDir);
+    
+    // Create workspace directory if it doesn't exist
+    await fs.mkdir(workspaceDir, { recursive: true });
   }
   
   _countTotalSteps(plan) {

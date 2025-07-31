@@ -1,42 +1,24 @@
 /**
- * Plan Executor - Legion module for executing hierarchical plans
+ * Plan Executor - Core execution engine for hierarchical plans
  * 
- * This module provides a comprehensive plan execution engine that can:
+ * This package provides the core plan execution engine that can:
  * - Execute llm-planner generated hierarchical plans
- * - Dynamically load and use Legion tools
+ * - Dynamically load and use Legion tools via ModuleLoader
  * - Maintain execution context and variable scoping
  * - Emit progress events during execution
  * - Handle errors with configurable retry logic
  * 
- * @example
- * ```javascript
- * import { PlanExecutorModule } from '@legion/plan-executor';
- * 
- * // Use as Legion module
- * const module = new PlanExecutorModule(resourceManager, moduleFactory);
- * const tool = module.getTools()[0];
- * 
- * const result = await tool.execute({
- *   plan: {
- *     id: 'my-plan',
- *     steps: [
- *       {
- *         id: 'step1',
- *         actions: [
- *           { type: 'file_read', parameters: { path: 'input.txt' } }
- *         ]
- *       }
- *     ]
- *   }
- * });
- * ```
+ * For plan execution tools (validation, debugging, etc.), use @legion/plan-executor-tools
  * 
  * @example
  * ```javascript
  * import { PlanExecutor } from '@legion/plan-executor';
+ * import { ResourceManager } from '@legion/module-loader';
  * 
- * // Use as standalone executor
- * const executor = new PlanExecutor({ moduleFactory, resourceManager });
+ * // Create using async factory pattern
+ * const resourceManager = new ResourceManager();
+ * await resourceManager.initialize();
+ * const executor = await PlanExecutor.create(resourceManager);
  * 
  * const result = await executor.executePlan(plan, {
  *   stopOnError: false,
@@ -49,14 +31,12 @@
 // Core execution engine
 export { PlanExecutor } from './core/PlanExecutor.js';
 export { ExecutionContext } from './core/ExecutionContext.js';
-export { ModuleLoader } from './core/ModuleLoader.js';
 
-// Legion interfaces
-export { PlanExecutorModule } from './PlanExecutorModule.js';
-export { PlanExecutorTool } from './tools/PlanExecutorTool.js';
+// Logging utilities
+export { PlanExecutionLogger } from './logging/PlanExecutionLogger.js';
 
 // Import for default export
-import { PlanExecutorModule as DefaultModule } from './PlanExecutorModule.js';
+import { PlanExecutor as DefaultExport } from './core/PlanExecutor.js';
 
-// Default export is the Legion module
-export default DefaultModule;
+// Default export is the core executor
+export default DefaultExport;
