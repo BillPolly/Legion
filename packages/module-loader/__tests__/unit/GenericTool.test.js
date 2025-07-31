@@ -365,8 +365,10 @@ describe('GenericTool', () => {
         name: 'test_tool',
         function: 'complexMethod',
         resultMapping: {
-          value: 'data.value',
-          success: { path: 'status', transform: 'equals:ok' }
+          success: {
+            value: '$.data.value',
+            isOk: '$.status'
+          }
         }
       };
 
@@ -376,7 +378,7 @@ describe('GenericTool', () => {
 
       expect(result).toEqual({
         value: 42,
-        success: true
+        isOk: 'ok'
       });
     });
   });
