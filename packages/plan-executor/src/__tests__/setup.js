@@ -57,3 +57,28 @@ function createMockFn() {
 global.jest = {
   fn: createMockFn
 };
+
+// Test cleanup - remove any artifacts created during tests
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const testArtifactDirs = ['dbs', 'tmp', 'test-output'];
+const projectRoot = path.resolve(__dirname, '../../');
+
+afterAll(async () => {
+  // Clean up test artifacts in parallel
+  const cleanupPromises = testArtifactDirs.map(async (dir) => {
+    const dirPath = path.join(projectRoot, dir);
+    try {
+      await fs.rm(dirPath, { recursive: true, force: true });
+    } catch (error) {
+      // Ignore cleanup errors - directory might not exist
+    }
+  });
+  
+  await Promise.all(cleanupPromises);
+});
