@@ -8,27 +8,42 @@ describe('PlanExecutor', () => {
   let executor;
 
   beforeEach(() => {
-    const mockPlanToolRegistry = {
-      loadModulesForPlan: jest.fn().mockResolvedValue(),
+    const mockModuleLoader = {
+      initialize: jest.fn().mockResolvedValue(),
+      loadModuleFromJson: jest.fn().mockResolvedValue(),
+      loadModuleByName: jest.fn().mockResolvedValue(),
       getTool: jest.fn().mockReturnValue({
+        execute: jest.fn().mockResolvedValue({ success: true, result: 'mock result' })
+      }),
+      getToolByName: jest.fn().mockReturnValue({
         execute: jest.fn().mockResolvedValue({ success: true, result: 'mock result' })
       })
     };
 
+    const mockResourceManager = {
+      get: jest.fn(),
+      register: jest.fn()
+    };
+
+    const mockModuleFactory = {
+      createModule: jest.fn()
+    };
+
     executor = new PlanExecutor({
-      planToolRegistry: mockPlanToolRegistry
+      moduleLoader: mockModuleLoader,
+      resourceManager: mockResourceManager,
+      moduleFactory: mockModuleFactory
     });
   });
 
   describe('constructor', () => {
-    it('should create instance with planToolRegistry', () => {
+    it('should create instance with moduleLoader', () => {
       expect(executor).toBeInstanceOf(PlanExecutor);
-      expect(executor.planToolRegistry).toBeDefined();
+      expect(executor.moduleLoader).toBeDefined();
     });
 
-    it('should create default planToolRegistry if none provided', () => {
-      const defaultExecutor = new PlanExecutor({});
-      expect(defaultExecutor.planToolRegistry).toBeDefined();
+    it('should require moduleLoader', () => {
+      expect(() => new PlanExecutor({})).toThrow('ModuleLoader is required for PlanExecutor');
     });
   });
 
@@ -54,8 +69,7 @@ describe('PlanExecutor', () => {
       
       expect(result).toBeDefined();
       expect(result.success).toBe(true);
-      expect(executor.planToolRegistry.loadModulesForPlan.mock.calls.length).toBe(1);
-      expect(executor.planToolRegistry.loadModulesForPlan.mock.calls[0][0]).toBe(plan);
+      expect(executor.moduleLoader.initialize.mock.calls.length).toBe(1);
     });
 
     it('should execute plan with single step and actions', async () => {
@@ -79,8 +93,8 @@ describe('PlanExecutor', () => {
       expect(result.success).toBe(true);
       expect(result.completedSteps).toEqual(['step1']);
       expect(result.failedSteps).toEqual([]);
-      expect(executor.planToolRegistry.getTool.mock.calls.length).toBe(1);
-      expect(executor.planToolRegistry.getTool.mock.calls[0][0]).toBe('test_tool');
+      expect(executor.moduleLoader.getTool.mock.calls.length).toBe(1);
+      expect(executor.moduleLoader.getTool.mock.calls[0][0]).toBe('test_tool');
     });
 
     it('should execute hierarchical plan with nested steps', async () => {
@@ -166,7 +180,7 @@ describe('PlanExecutor', () => {
       const failingToolExecute = jest.fn().mockRejectedValue(new Error('Tool failed'));
       const successToolExecute = jest.fn().mockResolvedValue({ success: true });
       
-      executor.planToolRegistry.getTool = jest.fn().mockImplementation((toolName) => {
+      executor.moduleLoader.getTool = jest.fn().mockImplementation((toolName) => {
         if (toolName === 'failing_tool') {
           return { execute: failingToolExecute };
         } else {
@@ -202,7 +216,7 @@ describe('PlanExecutor', () => {
       const failingToolExecute = jest.fn().mockRejectedValue(new Error('Tool failed'));
       const successToolExecute = jest.fn().mockResolvedValue({ success: true });
       
-      executor.planToolRegistry.getTool = jest.fn().mockImplementation((toolName) => {
+      executor.moduleLoader.getTool = jest.fn().mockImplementation((toolName) => {
         if (toolName === 'failing_tool') {
           return { execute: failingToolExecute };
         } else {

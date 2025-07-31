@@ -26,11 +26,6 @@ export class PlanExecutorTool extends Tool {
   
   async execute(params) {
     try {
-      // Setup plan-specific logging if module is available
-      if (this.module && params.plan.id) {
-        await this.module.setupPlanLogging(params.plan.id);
-      }
-      
       const result = await this.executor.executePlan(params.plan, params.options || {});
       
       return {

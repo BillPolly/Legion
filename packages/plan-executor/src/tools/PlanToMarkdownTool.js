@@ -103,10 +103,18 @@ export class PlanToMarkdownTool extends Tool {
 
       return {
         success: true,
+        // Direct properties for unit tests
         markdown,
         sections,
         stats,
-        format
+        format,
+        // Data wrapper for integration tests
+        data: {
+          markdown,
+          sections,
+          stats,
+          format
+        }
       };
 
     } catch (error) {

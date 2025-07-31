@@ -43,10 +43,11 @@ describe('ExecutionStatusTool', () => {
     test('should have correct input schema', () => {
       const schema = tool.inputSchema;
       
-      expect(schema.type).toBe('object');
-      expect(schema.properties.sessionId).toBeDefined();
-      expect(schema.properties.includeContext).toBeDefined();
-      expect(schema.properties.includeResults).toBeDefined();
+      expect(schema).toBeDefined();
+      expect(schema._def).toBeDefined(); // Zod schema
+      // Test that the schema accepts the expected shape
+      const validInput = { sessionId: 'test-session', includeContext: true, includeResults: false };
+      expect(() => schema.parse(validInput)).not.toThrow();
     });
   });
 

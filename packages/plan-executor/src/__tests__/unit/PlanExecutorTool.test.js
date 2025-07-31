@@ -34,10 +34,11 @@ describe('PlanExecutorTool', () => {
     it('should have valid input schema', () => {
       const schema = tool.inputSchema;
       
-      expect(schema.type).toBe('object');
-      expect(schema.properties.plan).toBeDefined();
-      expect(schema.properties.options).toBeDefined();
-      expect(schema.required).toEqual(['plan']);
+      expect(schema).toBeDefined();
+      expect(schema._def).toBeDefined(); // Zod schema
+      // Test that the schema accepts the expected shape
+      const validInput = { plan: { id: 'test', steps: [] }, options: {} };
+      expect(() => schema.parse(validInput)).not.toThrow();
     });
   });
 

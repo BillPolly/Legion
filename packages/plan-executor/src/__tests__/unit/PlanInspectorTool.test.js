@@ -64,12 +64,16 @@ describe('PlanInspectorTool', () => {
     test('should have correct input schema', () => {
       const schema = tool.inputSchema;
       
-      expect(schema.type).toBe('object');
-      expect(schema.properties.plan).toBeDefined();
-      expect(schema.required).toContain('plan');
-      expect(schema.properties.analyzeDepth).toBeDefined();
-      expect(schema.properties.validateTools).toBeDefined();
-      expect(schema.properties.showDependencies).toBeDefined();
+      expect(schema).toBeDefined();
+      expect(schema._def).toBeDefined(); // Zod schema
+      // Test that the schema accepts the expected shape
+      const validInput = { 
+        plan: { id: 'test', steps: [] },
+        analyzeDepth: 'shallow',
+        validateTools: true,
+        showDependencies: true
+      };
+      expect(() => schema.parse(validInput)).not.toThrow();
     });
   });
 

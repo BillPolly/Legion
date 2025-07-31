@@ -40,17 +40,18 @@ describe('PlanExecutorModule', () => {
   });
 
   describe('getTools', () => {
-    it('should return array with all five debugging tools', () => {
+    it('should return array with all six debugging tools', () => {
       const module = new PlanExecutorModule({ resourceManager: mockResourceManager, moduleFactory: mockModuleFactory });
       const tools = module.getTools();
       
       expect(Array.isArray(tools)).toBe(true);
-      expect(tools).toHaveLength(5);
+      expect(tools).toHaveLength(6);
       expect(tools[0]).toBe(module.planExecutorTool);
       expect(tools[1]).toBe(module.stepExecutorTool);
       expect(tools[2]).toBe(module.debugExecutorTool);
       expect(tools[3]).toBe(module.planInspectorTool);
-      expect(tools[4]).toBe(module.executionStatusTool);
+      expect(tools[4]).toBe(module.planToMarkdownTool);
+      expect(tools[5]).toBe(module.executionStatusTool);
     });
 
     it('should return tools with correct properties', () => {
@@ -75,13 +76,12 @@ describe('PlanExecutorModule', () => {
   });
 
   describe('dependency injection', () => {
-    it('should store dependencies and create planToolRegistry', () => {
+    it('should store dependencies and create moduleLoader', () => {
       const module = new PlanExecutorModule({ resourceManager: mockResourceManager, moduleFactory: mockModuleFactory });
       
       expect(module.resourceManager).toBe(mockResourceManager);
       expect(module.moduleFactory).toBe(mockModuleFactory);
-      expect(module.planToolRegistry).toBeDefined();
-      expect(module.executor.planToolRegistry).toBeDefined();
+      expect(module.executor.moduleLoader).toBeDefined();
     });
 
     it('should initialize with correct dependency list', () => {
@@ -95,8 +95,8 @@ describe('PlanExecutorModule', () => {
       const tool = module.getTools()[0];
 
       // Mock the executor's module loader
-      module.executor.planToolRegistry.loadModulesForPlan = jest.fn().mockResolvedValue();
-      module.executor.planToolRegistry.getTool = jest.fn().mockReturnValue({
+      module.executor.moduleLoader.initialize = jest.fn().mockResolvedValue();
+      module.executor.moduleLoader.getTool = jest.fn().mockReturnValue({
         execute: jest.fn().mockResolvedValue({ success: true, result: 'test result' })
       });
 

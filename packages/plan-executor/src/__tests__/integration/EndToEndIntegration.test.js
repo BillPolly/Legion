@@ -23,8 +23,21 @@ describe('End-to-End Integration', () => {
     module = new PlanExecutorModule({ resourceManager: mockResourceManager, moduleFactory: mockModuleFactory });
     tool = module.getTools()[0];
 
-    // Mock the plan tool registry to not do real loading
-    module.executor.planToolRegistry.loadModulesForPlan = jest.fn().mockResolvedValue();
+    // Mock the module loader for faster tests
+    const mockModuleLoader = {
+      initialize: jest.fn().mockResolvedValue(),
+      loadModuleFromJson: jest.fn().mockResolvedValue(),
+      loadModuleByName: jest.fn().mockResolvedValue(),
+      getTool: jest.fn().mockReturnValue({
+        execute: jest.fn().mockResolvedValue({ success: true, result: 'mock result' })
+      }),
+      getToolByName: jest.fn().mockReturnValue({
+        execute: jest.fn().mockResolvedValue({ success: true, result: 'mock result' })
+      })
+    };
+    
+    // Replace the module loader with mock
+    module.executor.moduleLoader = mockModuleLoader;
   });
 
   describe('simple plan execution', () => {
@@ -52,7 +65,7 @@ describe('End-to-End Integration', () => {
         }
       };
 
-      module.executor.planToolRegistry.getTool = jest.fn().mockImplementation((toolName) => {
+      module.executor.moduleLoader.getTool = jest.fn().mockImplementation((toolName) => {
         return mockTools[toolName] || { execute: jest.fn().mockResolvedValue({ success: true }) };
       });
 
@@ -60,6 +73,7 @@ describe('End-to-End Integration', () => {
         id: 'simple-file-processing',
         name: 'Simple File Processing',
         description: 'Read a file, process it, and write the result',
+        status: 'validated',
         steps: [
           {
             id: 'read-input',
@@ -124,11 +138,12 @@ describe('End-to-End Integration', () => {
         })
       };
 
-      module.executor.planToolRegistry.getTool = jest.fn().mockReturnValue(dependencyTool);
+      module.executor.moduleLoader.getTool = jest.fn().mockReturnValue(dependencyTool);
 
       const plan = {
         id: 'dependency-plan',
         name: 'Plan with Dependencies',
+        status: 'validated',
         steps: [
           {
             id: 'step-a',
@@ -184,11 +199,12 @@ describe('End-to-End Integration', () => {
         })
       };
 
-      module.executor.planToolRegistry.getTool = jest.fn().mockReturnValue(complexTool);
+      module.executor.moduleLoader.getTool = jest.fn().mockReturnValue(complexTool);
 
       const plan = {
         id: 'complex-hierarchy',
         name: 'Complex Hierarchical Plan',
+        status: 'validated',
         steps: [
           {
             id: 'initialization',
@@ -285,12 +301,13 @@ describe('End-to-End Integration', () => {
         }
       };
 
-      module.executor.planToolRegistry.getTool = jest.fn().mockImplementation((toolName) => {
+      module.executor.moduleLoader.getTool = jest.fn().mockImplementation((toolName) => {
         return mockTools[toolName] || mockTools.success_tool;
       });
 
       const plan = {
         id: 'dependency-failure-plan',
+        status: 'validated',
         steps: [
           {
             id: 'step-1',
@@ -331,10 +348,11 @@ describe('End-to-End Integration', () => {
         execute: jest.fn().mockRejectedValue(specificError)
       };
 
-      module.executor.planToolRegistry.getTool = jest.fn().mockReturnValue(errorTool);
+      module.executor.moduleLoader.getTool = jest.fn().mockReturnValue(errorTool);
 
       const plan = {
         id: 'error-details-plan',
+        status: 'validated',
         steps: [
           {
             id: 'database-operation',
@@ -368,10 +386,11 @@ describe('End-to-End Integration', () => {
         })
       };
 
-      module.executor.planToolRegistry.getTool = jest.fn().mockReturnValue(mixedTool);
+      module.executor.moduleLoader.getTool = jest.fn().mockReturnValue(mixedTool);
 
       const plan = {
         id: 'mixed-results-plan',
+        status: 'validated',
         steps: [
           {
             id: 'step-1',
@@ -426,11 +445,12 @@ describe('End-to-End Integration', () => {
         execute: jest.fn().mockResolvedValue({ success: true, result: 'tool result' })
       };
 
-      module.executor.planToolRegistry.getTool = jest.fn().mockReturnValue(eventTool);
+      module.executor.moduleLoader.getTool = jest.fn().mockReturnValue(eventTool);
 
       const plan = {
         id: 'event-stream-plan',
         name: 'Event Stream Test Plan',
+        status: 'validated',
         steps: [
           {
             id: 'parent-step',
@@ -510,10 +530,11 @@ describe('End-to-End Integration', () => {
         })
       };
 
-      module.executor.planToolRegistry.getTool = jest.fn().mockReturnValue(timingTool);
+      module.executor.moduleLoader.getTool = jest.fn().mockReturnValue(timingTool);
 
       const plan = {
         id: 'timing-plan',
+        status: 'validated',
         steps: [
           {
             id: 'outer',
@@ -563,8 +584,7 @@ describe('End-to-End Integration', () => {
     it('should handle dependency injection correctly', () => {
       expect(module.resourceManager).toBe(mockResourceManager);
       expect(module.moduleFactory).toBe(mockModuleFactory);
-      expect(module.planToolRegistry).toBeDefined();
-      expect(module.executor.planToolRegistry).toBeDefined();
+      expect(module.executor.moduleLoader).toBeDefined();
     });
 
     it('should work as standalone executor', async () => {
@@ -575,10 +595,11 @@ describe('End-to-End Integration', () => {
         execute: jest.fn().mockResolvedValue({ success: true, result: 'standalone result' })
       };
 
-      standaloneExecutor.planToolRegistry.getTool = jest.fn().mockReturnValue(simpleTool);
+      standaloneExecutor.moduleLoader.getTool = jest.fn().mockReturnValue(simpleTool);
 
       const plan = {
         id: 'standalone-plan',
+        status: 'validated',
         steps: [
           {
             id: 'standalone-step',

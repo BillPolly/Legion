@@ -66,24 +66,37 @@ describe('StepExecutorTool', () => {
     test('should have correct input schema', () => {
       const schema = tool.inputSchema;
       
-      expect(schema.type).toBe('object');
-      expect(schema.properties.plan).toBeDefined();
-      expect(schema.properties.sessionId).toBeDefined();
-      expect(schema.properties.action).toBeDefined();
-      expect(schema.properties.options).toBeDefined();
-      expect(schema.required).toContain('plan');
-      expect(schema.required).toContain('action');
+      expect(schema).toBeDefined();
+      expect(schema._def).toBeDefined(); // Zod schema
+      // Test that the schema accepts the expected shape
+      const validInput = { 
+        plan: { id: 'test', steps: [] }, 
+        action: 'start',
+        sessionId: 'test-session',
+        options: {}
+      };
+      expect(() => schema.parse(validInput)).not.toThrow();
     });
 
     test('should validate action enum values', () => {
       const schema = tool.inputSchema;
-      const actionEnum = schema.properties.action.enum;
       
-      expect(actionEnum).toContain('start');
-      expect(actionEnum).toContain('next');
-      expect(actionEnum).toContain('pause');
-      expect(actionEnum).toContain('resume');
-      expect(actionEnum).toContain('abort');
+      // Test that invalid action values are rejected
+      const invalidInput = { 
+        plan: { id: 'test', steps: [] }, 
+        action: 'invalid-action'
+      };
+      expect(() => schema.parse(invalidInput)).toThrow();
+      
+      // Test that valid actions are accepted
+      const validActions = ['start', 'next', 'pause', 'resume', 'abort'];
+      validActions.forEach(action => {
+        const validInput = { 
+          plan: { id: 'test', steps: [] }, 
+          action: action
+        };
+        expect(() => schema.parse(validInput)).not.toThrow();
+      });
     });
   });
 

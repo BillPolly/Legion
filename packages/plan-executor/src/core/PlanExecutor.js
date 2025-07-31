@@ -247,32 +247,15 @@ export class PlanExecutor extends EventEmitter {
         const resolvedParams = context.resolveParameters(action.parameters || {});
         
         // Execute tool with timeout
-        let result;
-        
-        // Check if this is a multi-function tool (has invoke method) or single-function tool (has execute method)
-        if (action.function && typeof tool.invoke === 'function') {
-          // Multi-function tool - call invoke with proper toolCall structure
-          // Multi-function tool - call invoke with proper toolCall structure
-          const toolCall = {
-            function: {
-              name: action.function,
-              arguments: JSON.stringify(resolvedParams)
-            }
-          };
-          result = await this._executeWithTimeout(
-            () => tool.invoke(toolCall),
-            context.options.timeout
-          );
-        } else if (typeof tool.execute === 'function') {
-          // Single-function tool - call execute directly
-          // Single-function tool - call execute directly
-          result = await this._executeWithTimeout(
-            () => tool.execute(resolvedParams),
-            context.options.timeout
-          );
-        } else {
-          throw new Error(`Tool '${toolName}' does not have a valid execute or invoke method`);
+        if (typeof tool.execute !== 'function') {
+          throw new Error(`Tool '${toolName}' does not have a valid execute method`);
         }
+        
+        // All tools use execute() method only
+        const result = await this._executeWithTimeout(
+          () => tool.execute(resolvedParams),
+          context.options.timeout
+        );
         
         // Tool execution completed
         
@@ -459,37 +442,17 @@ export class PlanExecutor extends EventEmitter {
   }
   
   /**
-   * Load essential modules from registry
+   * Load essential modules for plan execution
+   * NOTE: This is a temporary method. In production, modules should be loaded 
+   * externally before plan execution. This method will be removed once
+   * proper module discovery is implemented.
    * @private
    */
   async _loadEssentialModules() {
-    try {
-      const projectRoot = this.moduleLoader.resourceManager.findProjectRoot();
-      const registryPath = path.join(projectRoot, 'packages', 'module-loader', 'src', 'ModuleRegistry.json');
-      const registryContent = await fs.readFile(registryPath, 'utf8');
-      const registry = JSON.parse(registryContent);
-      
-      const essentialModules = ['playwright', 'file', 'command-executor', 'node-runner'];
-      
-      for (const moduleName of essentialModules) {
-        try {
-          if (registry.modules[moduleName]) {
-            const moduleInfo = registry.modules[moduleName];
-            const modulePath = path.join(projectRoot, moduleInfo.path);
-            
-            if (moduleInfo.type === 'json') {
-              await this.moduleLoader.loadModuleFromJson(modulePath);
-            } else if (moduleInfo.type === 'class') {
-              const { [moduleInfo.className]: ModuleClass } = await import(`file://${modulePath}`);
-              await this.moduleLoader.loadModuleByName(moduleName, ModuleClass);
-            }
-          }
-        } catch (error) {
-          console.warn(`Failed to load module ${moduleName}: ${error.message}`);
-        }
-      }
-    } catch (error) {
-      console.warn(`Failed to load module registry: ${error.message}`);
-    }
+    // For now, this is a no-op. The ModuleLoader should be configured externally
+    // with the necessary modules before plan execution begins.
+    // 
+    // Future: Implement dynamic module discovery based on plan requirements
+    // or remove this method entirely and require external module configuration.
   }
 }

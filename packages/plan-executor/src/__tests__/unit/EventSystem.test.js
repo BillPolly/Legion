@@ -20,15 +20,22 @@ describe('PlanExecutor Event System', () => {
       register: jest.fn()
     };
 
+    const mockModuleLoader = {
+      initialize: jest.fn().mockResolvedValue(),
+      loadModuleFromJson: jest.fn().mockResolvedValue(),
+      loadModuleByName: jest.fn().mockResolvedValue(),
+      getTool: jest.fn().mockReturnValue({
+        execute: jest.fn().mockResolvedValue({ success: true, result: 'mock result' })
+      }),
+      getToolByName: jest.fn().mockReturnValue({
+        execute: jest.fn().mockResolvedValue({ success: true, result: 'mock result' })
+      })
+    };
+
     executor = new PlanExecutor({
       moduleFactory: mockModuleFactory,
-      resourceManager: mockResourceManager
-    });
-
-    // Mock moduleLoader methods
-    executor.planToolRegistry.loadModulesForPlan = jest.fn().mockResolvedValue();
-    executor.planToolRegistry.getTool = jest.fn().mockReturnValue({
-      execute: jest.fn().mockResolvedValue({ success: true, result: 'mock result' })
+      resourceManager: mockResourceManager,
+      moduleLoader: mockModuleLoader
     });
 
     // Capture all events
@@ -85,7 +92,7 @@ describe('PlanExecutor Event System', () => {
     });
 
     it('should emit plan:error event on failure', async () => {
-      executor.planToolRegistry.getTool = jest.fn().mockReturnValue({
+      executor.moduleLoader.getTool = jest.fn().mockReturnValue({
         execute: jest.fn().mockRejectedValue(new Error('Tool failed'))
       });
 
@@ -161,7 +168,7 @@ describe('PlanExecutor Event System', () => {
     });
 
     it('should emit step:error events on step failure', async () => {
-      executor.planToolRegistry.getTool = jest.fn().mockReturnValue({
+      executor.moduleLoader.getTool = jest.fn().mockReturnValue({
         execute: jest.fn().mockRejectedValue(new Error('Tool execution failed'))
       });
 

@@ -6,7 +6,7 @@ import { Tool } from '@legion/module-loader';
 import { z } from 'zod';
 
 export class PlanInspectorTool extends Tool {
-  constructor(moduleLoader = null) {
+  constructor(moduleLoaderOrRegistry = null) {
     super({
       name: 'plan_inspect',
       description: 'Analyze plan structure and validate dependencies',
@@ -17,7 +17,17 @@ export class PlanInspectorTool extends Tool {
         showDependencies: z.boolean().optional().default(false).describe('Whether to include dependency graph')
       })
     });
-    this.moduleLoader = moduleLoader;
+    
+    // Support both moduleLoader and legacy planToolRegistry for backward compatibility
+    if (moduleLoaderOrRegistry && typeof moduleLoaderOrRegistry.hasTool === 'function') {
+      // Legacy planToolRegistry interface
+      this.planToolRegistry = moduleLoaderOrRegistry;
+      this.moduleLoader = null;
+    } else {
+      // ModuleLoader interface  
+      this.moduleLoader = moduleLoaderOrRegistry;
+      this.planToolRegistry = null;
+    }
   }
   
   async execute(params) {

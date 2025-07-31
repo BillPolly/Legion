@@ -19,15 +19,22 @@ describe('Plan Format Handling', () => {
       register: jest.fn()
     };
 
+    const mockModuleLoader = {
+      initialize: jest.fn().mockResolvedValue(),
+      loadModuleFromJson: jest.fn().mockResolvedValue(),
+      loadModuleByName: jest.fn().mockResolvedValue(),
+      getTool: jest.fn().mockReturnValue({
+        execute: jest.fn().mockResolvedValue({ success: true, result: 'mock result' })
+      }),
+      getToolByName: jest.fn().mockReturnValue({
+        execute: jest.fn().mockResolvedValue({ success: true, result: 'mock result' })
+      })
+    };
+
     executor = new PlanExecutor({
       moduleFactory: mockModuleFactory,
-      resourceManager: mockResourceManager
-    });
-
-    // Mock moduleLoader methods
-    executor.planToolRegistry.loadModulesForPlan = jest.fn().mockResolvedValue();
-    executor.planToolRegistry.getTool = jest.fn().mockReturnValue({
-      execute: jest.fn().mockResolvedValue({ success: true, result: 'mock result' })
+      resourceManager: mockResourceManager,
+      moduleLoader: mockModuleLoader
     });
   });
 
@@ -35,8 +42,9 @@ describe('Plan Format Handling', () => {
     it('should accept valid llm-planner Plan objects', async () => {
       const plan = {
         id: 'valid-plan',
-        name: 'Valid Plan',
+        name: 'Valid Plan', 
         description: 'A valid plan for testing',
+        status: 'validated',
         steps: [
           {
             id: 'step1',
@@ -76,6 +84,7 @@ describe('Plan Format Handling', () => {
     it('should accept minimal plan with just id and steps', async () => {
       const minimalPlan = {
         id: 'minimal',
+        status: 'validated',
         steps: []
       };
 
@@ -88,7 +97,8 @@ describe('Plan Format Handling', () => {
   describe('hierarchical step execution', () => {
     it('should execute nested steps in correct order', async () => {
       const executionOrder = [];
-      executor.planToolRegistry.getTool = jest.fn().mockReturnValue({
+      const mockModuleLoader = executor.moduleLoader;
+      mockModuleLoader.getTool = jest.fn().mockReturnValue({
         execute: jest.fn().mockImplementation((params) => {
           executionOrder.push(params.stepId || 'unknown');
           return Promise.resolve({ success: true, result: 'mock result' });
@@ -97,6 +107,7 @@ describe('Plan Format Handling', () => {
 
       const plan = {
         id: 'hierarchical-plan',
+        status: 'validated',
         steps: [
           {
             id: 'parent1',
@@ -128,6 +139,7 @@ describe('Plan Format Handling', () => {
     it('should preserve control flow semantics', async () => {
       const plan = {
         id: 'control-flow-plan',
+        status: 'validated',
         steps: [
           {
             id: 'sequential1',
@@ -174,6 +186,7 @@ describe('Plan Format Handling', () => {
     it('should handle mixed step types (actions vs sub-steps)', async () => {
       const plan = {
         id: 'mixed-plan',
+        status: 'validated',
         steps: [
           {
             id: 'action-step',
@@ -205,7 +218,8 @@ describe('Plan Format Handling', () => {
   describe('context-aware action extraction', () => {
     it('should extract actions from all step levels', async () => {
       const actionsCalled = [];
-      executor.planToolRegistry.getTool = jest.fn().mockImplementation((toolName) => ({
+      const mockModuleLoader = executor.moduleLoader;
+      mockModuleLoader.getTool = jest.fn().mockImplementation((toolName) => ({
         execute: jest.fn().mockImplementation((params) => {
           actionsCalled.push({ tool: toolName, params });
           return Promise.resolve({ success: true, result: `${toolName} result` });
@@ -214,6 +228,7 @@ describe('Plan Format Handling', () => {
 
       const plan = {
         id: 'action-extraction-plan',
+        status: 'validated',
         steps: [
           {
             id: 'root-action',
@@ -246,7 +261,8 @@ describe('Plan Format Handling', () => {
 
     it('should handle multiple actions per step', async () => {
       const actionsCalled = [];
-      executor.planToolRegistry.getTool = jest.fn().mockImplementation((toolName) => ({
+      const mockModuleLoader = executor.moduleLoader;
+      mockModuleLoader.getTool = jest.fn().mockImplementation((toolName) => ({
         execute: jest.fn().mockImplementation(() => {
           actionsCalled.push(toolName);
           return Promise.resolve({ success: true, result: 'result' });
@@ -255,6 +271,7 @@ describe('Plan Format Handling', () => {
 
       const plan = {
         id: 'multi-action-plan',
+        status: 'validated',
         steps: [
           {
             id: 'multi-action-step',
@@ -277,6 +294,7 @@ describe('Plan Format Handling', () => {
     it('should maintain variable scope hierarchy', async () => {
       const plan = {
         id: 'scoping-plan',
+        status: 'validated',
         steps: [
           {
             id: 'parent-step',
@@ -310,7 +328,8 @@ describe('Plan Format Handling', () => {
 
       // Mock variable handling in tools
       let context;
-      executor.planToolRegistry.getTool = jest.fn().mockImplementation((toolName) => ({
+      const mockModuleLoader = executor.moduleLoader;
+      mockModuleLoader.getTool = jest.fn().mockImplementation((toolName) => ({
         execute: jest.fn().mockImplementation((params) => {
           if (toolName === 'set_var_tool') {
             // This would be handled by the executor's context
@@ -345,6 +364,7 @@ describe('Plan Format Handling', () => {
 
       const plan = {
         id: 'position-tracking-plan',
+        status: 'validated',
         steps: [
           {
             id: 'root1',
@@ -389,6 +409,7 @@ describe('Plan Format Handling', () => {
       // Spy on context enter/exit calls by monitoring the context
       const plan = {
         id: 'context-stack-plan',
+        status: 'validated',
         steps: [
           {
             id: 'level1',
@@ -418,6 +439,7 @@ describe('Plan Format Handling', () => {
     it('should handle empty steps gracefully', async () => {
       const plan = {
         id: 'empty-steps-plan',
+        status: 'validated',
         steps: []
       };
 
@@ -431,6 +453,7 @@ describe('Plan Format Handling', () => {
     it('should handle steps with no actions or sub-steps', async () => {
       const plan = {
         id: 'no-ops-plan',
+        status: 'validated',
         steps: [
           {
             id: 'empty-step1'
@@ -453,6 +476,7 @@ describe('Plan Format Handling', () => {
       // Create a plan with 5 levels of nesting
       const plan = {
         id: 'deep-nesting-plan',
+        status: 'validated',
         steps: [
           {
             id: 'level1',

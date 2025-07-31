@@ -25,9 +25,10 @@ describe('PlanToMarkdownTool', () => {
 
     test('should have input schema', () => {
       expect(tool.inputSchema).toBeDefined();
-      expect(tool.inputSchema.type).toBe('object');
-      expect(tool.inputSchema.properties.plan).toBeDefined();
-      expect(tool.inputSchema.required).toContain('plan');
+      expect(tool.inputSchema._def).toBeDefined(); // Zod schema
+      // Test that the schema accepts the expected shape
+      const validInput = { plan: { id: 'test', steps: [] } };
+      expect(() => tool.inputSchema.parse(validInput)).not.toThrow();
     });
   });
 

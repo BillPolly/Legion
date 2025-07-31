@@ -33,7 +33,7 @@ describe('PlanToMarkdownTool Integration', () => {
     planToMarkdownTool = tools.find(tool => tool.name === 'plan_to_markdown');
     
     // Load the test plan
-    const planPath = path.join(__dirname, '..', '..', '..', '__tests__', 'fixtures', 'simple-api-plan.json');
+    const planPath = path.join(__dirname, '..', '..', '..', '__tests__', 'fixtures', 'simple-api-plan-with-webpage.json');
     const planContent = await fs.readFile(planPath, 'utf8');
     testPlan = JSON.parse(planContent);
   });
@@ -44,18 +44,13 @@ describe('PlanToMarkdownTool Integration', () => {
   });
 
   test('should generate detailed markdown from plan', async () => {
-    const toolCall = {
-      function: {
-        name: 'plan_to_markdown',
-        arguments: JSON.stringify({
-          plan: testPlan,
-          format: 'detailed',
-          includeAnalysis: true
-        })
-      }
+    const params = {
+      plan: testPlan,
+      format: 'detailed',
+      includeAnalysis: true
     };
 
-    const result = await planToMarkdownTool.invoke(toolCall);
+    const result = await planToMarkdownTool.execute(params);
     
     expect(result.success).toBe(true);
     expect(result.data.format).toBe('detailed');
@@ -74,38 +69,28 @@ describe('PlanToMarkdownTool Integration', () => {
   });
 
   test('should generate summary markdown from plan', async () => {
-    const toolCall = {
-      function: {
-        name: 'plan_to_markdown',
-        arguments: JSON.stringify({
-          plan: testPlan,
-          format: 'summary'
-        })
-      }
+    const params = {
+      plan: testPlan,
+      format: 'summary'
     };
 
-    const result = await planToMarkdownTool.invoke(toolCall);
+    const result = await planToMarkdownTool.execute(params);
     
     expect(result.success).toBe(true);
     expect(result.data.format).toBe('summary');
     expect(result.data.markdown).toContain('## Quick Overview');
-    expect(result.data.markdown).toContain('**Total Steps**: 6');
-    expect(result.data.markdown).toContain('**Total Actions**: 11');
+    expect(result.data.markdown).toContain('**Total Steps**: 10');
+    expect(result.data.markdown).toContain('**Total Actions**: 21');
     expect(result.data.sections).toEqual(['overview', 'steps']);
   });
 
   test('should generate execution guide from plan', async () => {
-    const toolCall = {
-      function: {
-        name: 'plan_to_markdown',
-        arguments: JSON.stringify({
-          plan: testPlan,
-          format: 'execution-guide'
-        })
-      }
+    const params = {
+      plan: testPlan,
+      format: 'execution-guide'
     };
 
-    const result = await planToMarkdownTool.invoke(toolCall);
+    const result = await planToMarkdownTool.execute(params);
     
     expect(result.success).toBe(true);
     expect(result.data.format).toBe('execution-guide');
@@ -117,17 +102,12 @@ describe('PlanToMarkdownTool Integration', () => {
   });
 
   test('should include all step inputs and outputs', async () => {
-    const toolCall = {
-      function: {
-        name: 'plan_to_markdown',
-        arguments: JSON.stringify({
-          plan: testPlan,
-          format: 'detailed'
-        })
-      }
+    const params = {
+      plan: testPlan,
+      format: 'detailed'
     };
 
-    const result = await planToMarkdownTool.invoke(toolCall);
+    const result = await planToMarkdownTool.execute(params);
     
     expect(result.success).toBe(true);
     
@@ -144,17 +124,12 @@ describe('PlanToMarkdownTool Integration', () => {
   });
 
   test('should show proper indentation under step titles', async () => {
-    const toolCall = {
-      function: {
-        name: 'plan_to_markdown',
-        arguments: JSON.stringify({
-          plan: testPlan,
-          format: 'detailed'
-        })
-      }
+    const params = {
+      plan: testPlan,
+      format: 'detailed'
     };
 
-    const result = await planToMarkdownTool.invoke(toolCall);
+    const result = await planToMarkdownTool.execute(params);
     
     expect(result.success).toBe(true);
     

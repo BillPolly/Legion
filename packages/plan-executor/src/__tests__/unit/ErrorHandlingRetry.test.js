@@ -19,13 +19,23 @@ describe('Error Handling and Retry Logic', () => {
       register: jest.fn()
     };
 
+    const mockModuleLoader = {
+      initialize: jest.fn().mockResolvedValue(),
+      loadModuleFromJson: jest.fn().mockResolvedValue(),
+      loadModuleByName: jest.fn().mockResolvedValue(),
+      getTool: jest.fn().mockReturnValue({
+        execute: jest.fn().mockResolvedValue({ success: true, result: 'mock result' })
+      }),
+      getToolByName: jest.fn().mockReturnValue({
+        execute: jest.fn().mockResolvedValue({ success: true, result: 'mock result' })
+      })
+    };
+
     executor = new PlanExecutor({
       moduleFactory: mockModuleFactory,
-      resourceManager: mockResourceManager
+      resourceManager: mockResourceManager,
+      moduleLoader: mockModuleLoader
     });
-
-    // Mock moduleLoader methods
-    executor.planToolRegistry.loadModulesForPlan = jest.fn().mockResolvedValue();
   });
 
   describe('step-level error handling', () => {
@@ -33,7 +43,7 @@ describe('Error Handling and Retry Logic', () => {
       const failingTool = jest.fn().mockRejectedValue(new Error('Tool failure'));
       const successTool = jest.fn().mockResolvedValue({ success: true, result: 'success' });
 
-      executor.planToolRegistry.getTool = jest.fn().mockImplementation((toolName) => {
+      executor.moduleLoader.getTool = jest.fn().mockImplementation((toolName) => {
         return {
           execute: toolName === 'failing_tool' ? failingTool : successTool
         };
@@ -66,7 +76,7 @@ describe('Error Handling and Retry Logic', () => {
       const failingTool = jest.fn().mockRejectedValue(new Error('Tool failure'));
       const successTool = jest.fn().mockResolvedValue({ success: true, result: 'success' });
 
-      executor.planToolRegistry.getTool = jest.fn().mockImplementation((toolName) => {
+      executor.moduleLoader.getTool = jest.fn().mockImplementation((toolName) => {
         return {
           execute: toolName === 'failing_tool' ? failingTool : successTool
         };
@@ -102,7 +112,7 @@ describe('Error Handling and Retry Logic', () => {
       executor.on('step:error', (event) => errorEvents.push(event));
 
       const failingTool = jest.fn().mockRejectedValue(new Error('Specific tool error'));
-      executor.planToolRegistry.getTool = jest.fn().mockReturnValue({
+      executor.moduleLoader.getTool = jest.fn().mockReturnValue({
         execute: failingTool
       });
 
@@ -131,7 +141,7 @@ describe('Error Handling and Retry Logic', () => {
       const failingTool = jest.fn().mockRejectedValue(new Error('Nested failure'));
       const successTool = jest.fn().mockResolvedValue({ success: true, result: 'success' });
 
-      executor.planToolRegistry.getTool = jest.fn().mockImplementation((toolName) => {
+      executor.moduleLoader.getTool = jest.fn().mockImplementation((toolName) => {
         return {
           execute: toolName === 'failing_tool' ? failingTool : successTool
         };
@@ -176,7 +186,7 @@ describe('Error Handling and Retry Logic', () => {
         return Promise.resolve({ success: true, result: 'finally succeeded' });
       });
 
-      executor.planToolRegistry.getTool = jest.fn().mockReturnValue({
+      executor.moduleLoader.getTool = jest.fn().mockReturnValue({
         execute: retryingTool
       });
 
@@ -206,7 +216,7 @@ describe('Error Handling and Retry Logic', () => {
         return Promise.reject(new Error(`Attempt ${attemptCount} failed`));
       });
 
-      executor.planToolRegistry.getTool = jest.fn().mockReturnValue({
+      executor.moduleLoader.getTool = jest.fn().mockReturnValue({
         execute: alwaysFailingTool
       });
 
@@ -242,7 +252,7 @@ describe('Error Handling and Retry Logic', () => {
         return Promise.resolve({ success: true, result: 'succeeded' });
       });
 
-      executor.planToolRegistry.getTool = jest.fn().mockReturnValue({
+      executor.moduleLoader.getTool = jest.fn().mockReturnValue({
         execute: timedTool
       });
 
@@ -278,7 +288,7 @@ describe('Error Handling and Retry Logic', () => {
     it('should not retry on successful execution', async () => {
       const successTool = jest.fn().mockResolvedValue({ success: true, result: 'immediate success' });
 
-      executor.planToolRegistry.getTool = jest.fn().mockReturnValue({
+      executor.moduleLoader.getTool = jest.fn().mockReturnValue({
         execute: successTool
       });
 
@@ -305,7 +315,7 @@ describe('Error Handling and Retry Logic', () => {
       const specificError = new Error('Very specific tool error with details');
       const failingTool = jest.fn().mockRejectedValue(specificError);
 
-      executor.planToolRegistry.getTool = jest.fn().mockReturnValue({
+      executor.moduleLoader.getTool = jest.fn().mockReturnValue({
         execute: failingTool
       });
 
@@ -334,7 +344,7 @@ describe('Error Handling and Retry Logic', () => {
       const networkError = new Error('Network timeout');
       const validationError = new Error('Invalid input parameters');
       
-      executor.planToolRegistry.getTool = jest.fn().mockImplementation((toolName) => {
+      executor.moduleLoader.getTool = jest.fn().mockImplementation((toolName) => {
         if (toolName === 'network_tool') {
           return { execute: jest.fn().mockRejectedValue(networkError) };
         } else if (toolName === 'validation_tool') {
@@ -374,7 +384,7 @@ describe('Error Handling and Retry Logic', () => {
       errorWithStack.stack = 'Error: Error with stack trace\n    at test function';
       
       const failingTool = jest.fn().mockRejectedValue(errorWithStack);
-      executor.planToolRegistry.getTool = jest.fn().mockReturnValue({
+      executor.moduleLoader.getTool = jest.fn().mockReturnValue({
         execute: failingTool
       });
 
@@ -410,7 +420,7 @@ describe('Error Handling and Retry Logic', () => {
         });
       });
 
-      executor.planToolRegistry.getTool = jest.fn().mockReturnValue({
+      executor.moduleLoader.getTool = jest.fn().mockReturnValue({
         execute: slowTool
       });
 
@@ -447,7 +457,7 @@ describe('Error Handling and Retry Logic', () => {
         }
       });
 
-      executor.planToolRegistry.getTool = jest.fn().mockReturnValue({
+      executor.moduleLoader.getTool = jest.fn().mockReturnValue({
         execute: sometimesSlowTool
       });
 
@@ -482,7 +492,7 @@ describe('Error Handling and Retry Logic', () => {
         return Promise.resolve({ success: true });
       });
 
-      executor.planToolRegistry.getTool = jest.fn().mockImplementation((toolName) => {
+      executor.moduleLoader.getTool = jest.fn().mockImplementation((toolName) => {
         return {
           execute: toolName === 'failing_tool' ? failingTool : successTool
         };
@@ -531,7 +541,7 @@ describe('Error Handling and Retry Logic', () => {
         return Promise.resolve({ success: true });
       });
 
-      executor.planToolRegistry.getTool = jest.fn().mockImplementation((toolName) => {
+      executor.moduleLoader.getTool = jest.fn().mockImplementation((toolName) => {
         return {
           execute: toolName === 'failing_tool' ? failingTool : successTool
         };

@@ -81,18 +81,34 @@ describe('DebugExecutorTool', () => {
     test('should have correct input schema', () => {
       const schema = tool.inputSchema;
       
-      expect(schema.type).toBe('object');
-      expect(schema.properties.plan).toBeDefined();
-      expect(schema.properties.breakpoints).toBeDefined();
-      expect(schema.properties.inspectVariables).toBeDefined();
-      expect(schema.properties.traceExecution).toBeDefined();
-      expect(schema.required).toContain('plan');
+      expect(schema).toBeDefined();
+      expect(schema._def).toBeDefined(); // Zod schema
+      // Test that the schema accepts the expected shape
+      const validInput = { 
+        plan: { id: 'test', steps: [] },
+        breakpoints: ['step1', 'step2'],
+        inspectVariables: true,
+        traceExecution: false
+      };
+      expect(() => schema.parse(validInput)).not.toThrow();
     });
 
     test('should have breakpoints as array type', () => {
       const schema = tool.inputSchema;
-      expect(schema.properties.breakpoints.type).toBe('array');
-      expect(schema.properties.breakpoints.items.type).toBe('string');
+      
+      // Test that breakpoints accepts array input
+      const validInput = { 
+        plan: { id: 'test', steps: [] },
+        breakpoints: ['step1', 'step2']
+      };
+      expect(() => schema.parse(validInput)).not.toThrow();
+      
+      // Test that non-array breakpoints are rejected
+      const invalidInput = { 
+        plan: { id: 'test', steps: [] },
+        breakpoints: 'not-an-array'
+      };
+      expect(() => schema.parse(invalidInput)).toThrow();
     });
   });
 
