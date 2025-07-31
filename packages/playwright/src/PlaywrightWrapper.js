@@ -2,6 +2,8 @@ import { BrowserManager } from './BrowserManager.js';
 import { normalizeSelector, getElementWithFallback, waitForSelectorWithRetry } from './utils/selectors.js';
 import { waitForNetworkIdle, waitForPageLoad, waitForElementStable, waitForCondition } from './utils/waits.js';
 import { handlePlaywrightError, withRetry, safeOperation, validateParams, createErrorResponse } from './utils/errors.js';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 /**
  * Natural Playwright wrapper that provides browser automation capabilities
@@ -192,7 +194,8 @@ export default class PlaywrightWrapper {
       fullPage = false,
       format = 'png',
       quality = 80,
-      timeout = this.config.timeout
+      timeout = this.config.timeout,
+      path: outputPath = null
     } = options;
     
     return safeOperation(async () => {
@@ -209,6 +212,25 @@ export default class PlaywrightWrapper {
         screenshotOptions.quality = quality;
       }
       
+      // If path is provided, save directly to file
+      if (outputPath) {
+        // Ensure the path has a filename
+        let finalPath = outputPath;
+        if (finalPath.endsWith('/') || finalPath.endsWith('\\')) {
+          // Just a directory, add default filename
+          finalPath = path.join(finalPath, `screenshot.${format}`);
+        } else if (!path.extname(finalPath)) {
+          // No extension, add one based on format
+          finalPath = `${finalPath}.${format}`;
+        }
+        
+        // Create directory if it doesn't exist
+        const dir = path.dirname(finalPath);
+        await fs.mkdir(dir, { recursive: true });
+        
+        screenshotOptions.path = finalPath;
+      }
+      
       let screenshot;
       if (selector) {
         const element = await getElementWithFallback(page, selector);
@@ -219,11 +241,12 @@ export default class PlaywrightWrapper {
       
       return {
         success: true,
-        screenshot: screenshot.toString('base64'),
+        screenshot: outputPath ? `Saved to ${screenshotOptions.path}` : screenshot.toString('base64'),
         format,
         selector,
         fullPage,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        savedPath: outputPath ? screenshotOptions.path : null
       };
     }, { action: 'screenshot', selector });
   }

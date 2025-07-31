@@ -223,6 +223,10 @@
       "parameters": {
         "type": "object",
         "properties": {
+          "path": {
+            "type": "string",
+            "description": "Path where to save the screenshot. Can be a full path with filename, or just a directory (will use screenshot.png as default)"
+          },
           "selector": {
             "type": "string",
             "description": "Optional selector to screenshot specific element"
@@ -270,6 +274,10 @@
             "timestamp": {
               "type": "string",
               "description": "When the screenshot was taken"
+            },
+            "savedPath": {
+              "type": "string",
+              "description": "Path where the screenshot was saved (if path parameter was provided)"
             }
           }
         },

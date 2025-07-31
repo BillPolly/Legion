@@ -235,6 +235,52 @@ export class ModuleLoader {
   hasModule(moduleName) {
     return this.loadedModules.has(moduleName);
   }
+
+  /**
+   * Generate a comprehensive inventory of all loaded modules and their tools
+   * @returns {Object} Inventory with modules and tools information
+   */
+  getModuleAndToolInventory() {
+    const inventory = {
+      generatedAt: new Date().toISOString(),
+      moduleCount: this.loadedModules.size,
+      toolCount: this.toolRegistry.size,
+      modules: {},
+      tools: {}
+    };
+
+    // Document each module
+    for (const [moduleName, module] of this.loadedModules.entries()) {
+      inventory.modules[moduleName] = {
+        name: module.name || moduleName,
+        description: module.description || 'No description available',
+        toolCount: 0,
+        tools: []
+      };
+
+      // Get tools from this module
+      if (module.getTools && typeof module.getTools === 'function') {
+        const toolsResult = module.getTools();
+        const tools = Array.isArray(toolsResult) ? toolsResult : [];
+        
+        inventory.modules[moduleName].toolCount = tools.length;
+        inventory.modules[moduleName].tools = tools.map(tool => tool.name || 'unnamed');
+      }
+    }
+
+    // Document each tool
+    for (const [toolName, tool] of this.toolRegistry.entries()) {
+      inventory.tools[toolName] = {
+        name: toolName,
+        description: tool.description || 'No description available',
+        hasExecute: typeof tool.execute === 'function',
+        hasInvoke: typeof tool.invoke === 'function',
+        inputSchema: tool.inputSchema ? 'defined' : 'not defined'
+      };
+    }
+
+    return inventory;
+  }
 }
 
 export default ModuleLoader;

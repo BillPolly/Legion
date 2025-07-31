@@ -179,10 +179,13 @@ export class ExecutionContext {
   
   _resolveValue(value) {
     if (typeof value === 'string') {
-      // Variable reference: $variableName
-      if (value.startsWith('$') && !value.startsWith('${')) {
-        const varName = value.substring(1);
-        return this.getVariable(varName) || value;
+      // Handle $variableName in the middle of strings (e.g., "$workspaceDir/file.txt")
+      if (value.includes('$') && !value.includes('${')) {
+        // Replace all occurrences of $variableName with their values
+        return value.replace(/\$([a-zA-Z_][a-zA-Z0-9_]*)/g, (match, varName) => {
+          const resolvedValue = this.getVariable(varName);
+          return resolvedValue !== undefined ? resolvedValue : match;
+        });
       }
       
       // Step result reference: @stepId

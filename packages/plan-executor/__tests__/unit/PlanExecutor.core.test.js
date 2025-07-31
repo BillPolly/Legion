@@ -208,10 +208,10 @@ describe('PlanExecutor Core', () => {
     test('should emit events during execution', async () => {
       const events = [];
       
-      executor.on('plan:start', (data) => events.push('plan:start'));
-      executor.on('plan:complete', (data) => events.push('plan:complete'));
-      executor.on('step:start', (data) => events.push('step:start'));
-      executor.on('step:complete', (data) => events.push('step:complete'));
+      executor.on('plan:start', () => events.push('plan:start'));
+      executor.on('plan:complete', () => events.push('plan:complete'));
+      executor.on('step:start', () => events.push('step:start'));
+      executor.on('step:complete', () => events.push('step:complete'));
 
       const plan = {
         id: 'event-plan',
