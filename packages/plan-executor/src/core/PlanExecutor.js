@@ -3,13 +3,17 @@
  */
 
 import { EventEmitter } from 'events';
-import { PlanToolRegistry } from './PlanToolRegistry.js';
 import { ExecutionContext } from './ExecutionContext.js';
+import fs from 'fs/promises';
+import path from 'path';
 
 export class PlanExecutor extends EventEmitter {
   constructor(options = {}) {
     super();
-    this.planToolRegistry = options.planToolRegistry || new PlanToolRegistry();
+    this.moduleLoader = options.moduleLoader;
+    if (!this.moduleLoader) {
+      throw new Error('ModuleLoader is required for PlanExecutor');
+    }
   }
   
   async executePlan(plan, options = {}) {
@@ -51,8 +55,11 @@ export class PlanExecutor extends EventEmitter {
       // Resolve plan inputs and inject into context
       await this._resolvePlanInputs(plan, context);
       
-      // Load required modules
-      await this.planToolRegistry.loadModulesForPlan(plan);
+      // Initialize module loader and load essential modules
+      await this.moduleLoader.initialize();
+      
+      // Load essential modules for plan execution
+      await this._loadEssentialModules();
       
       // Execute plan steps
       await this._executeSteps(plan.steps, context);
@@ -231,7 +238,7 @@ export class PlanExecutor extends EventEmitter {
         // Get tool for this action
         // First try to use the explicit tool field if present, otherwise fall back to type
         const toolName = action.tool || action.type;
-        const tool = this.planToolRegistry.getTool(toolName);
+        const tool = this.moduleLoader.getTool(toolName);
         if (!tool) {
           throw new Error(`Tool not found: ${toolName} (action type: ${action.type})`);
         }
@@ -326,7 +333,7 @@ export class PlanExecutor extends EventEmitter {
       return; // No inputs to resolve
     }
 
-    const resourceManager = this.planToolRegistry.moduleLoader.resourceManager;
+    const resourceManager = this.moduleLoader.resourceManager;
     const planId = plan.id || 'unknown-plan';
 
     // Get workspace paths from ResourceManager
@@ -449,5 +456,40 @@ export class PlanExecutor extends EventEmitter {
     };
     
     markSkipped(steps);
+  }
+  
+  /**
+   * Load essential modules from registry
+   * @private
+   */
+  async _loadEssentialModules() {
+    try {
+      const projectRoot = this.moduleLoader.resourceManager.findProjectRoot();
+      const registryPath = path.join(projectRoot, 'packages', 'module-loader', 'src', 'ModuleRegistry.json');
+      const registryContent = await fs.readFile(registryPath, 'utf8');
+      const registry = JSON.parse(registryContent);
+      
+      const essentialModules = ['playwright', 'file', 'command-executor', 'node-runner'];
+      
+      for (const moduleName of essentialModules) {
+        try {
+          if (registry.modules[moduleName]) {
+            const moduleInfo = registry.modules[moduleName];
+            const modulePath = path.join(projectRoot, moduleInfo.path);
+            
+            if (moduleInfo.type === 'json') {
+              await this.moduleLoader.loadModuleFromJson(modulePath);
+            } else if (moduleInfo.type === 'class') {
+              const { [moduleInfo.className]: ModuleClass } = await import(`file://${modulePath}`);
+              await this.moduleLoader.loadModuleByName(moduleName, ModuleClass);
+            }
+          }
+        } catch (error) {
+          console.warn(`Failed to load module ${moduleName}: ${error.message}`);
+        }
+      }
+    } catch (error) {
+      console.warn(`Failed to load module registry: ${error.message}`);
+    }
   }
 }

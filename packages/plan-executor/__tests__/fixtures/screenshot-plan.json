@@ -1,0 +1,229 @@
+{
+  "id": "screenshot-plan",
+  "name": "Website Screenshot Capture",
+  "description": "Create a website, start server, and capture screenshot using Playwright",
+  "version": "1.0.0",
+  "status": "validated",
+  "metadata": {
+    "createdAt": "2025-07-31T00:00:00.000Z",
+    "createdBy": "Legion Framework",
+    "complexity": "simple"
+  },
+  "context": {},
+  "inputs": [],
+  "requiredOutputs": ["screenshot_taken"],
+  "steps": [
+    {
+      "id": "cleanup",
+      "name": "Clean Temporary Directory",
+      "description": "Remove old files and create fresh directory",
+      "type": "cleanup",
+      "status": "pending",
+      "dependencies": [],
+      "inputs": [],
+      "outputs": ["tmp_cleaned"],
+      "estimatedDuration": 1000,
+      "result": null,
+      "actions": [
+        {
+          "id": "clean-tmp",
+          "type": "command_executor",
+          "inputs": ["command"],
+          "outputs": ["cleanup_result"],
+          "parameters": {
+            "command": "rm -rf /tmp/legion-website && mkdir -p /tmp/legion-website",
+            "timeout": 5000
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Remove old website directory and create fresh one",
+          "estimatedDuration": 1000
+        }
+      ]
+    },
+    {
+      "id": "create-website",
+      "name": "Create Simple Website",
+      "description": "Generate HTML file with basic content",
+      "type": "file-creation",
+      "status": "pending",
+      "dependencies": ["cleanup"],
+      "inputs": [],
+      "outputs": ["website_created"],
+      "estimatedDuration": 2000,
+      "result": null,
+      "actions": [
+        {
+          "id": "create-html",
+          "type": "file_operations",
+          "inputs": ["filepath", "content"],
+          "outputs": ["html_file"],
+          "parameters": {
+            "filepath": "/tmp/legion-website/index.html",
+            "content": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>🚀 Legion Framework Demo</title>\n    <style>\n        * { margin: 0; padding: 0; box-sizing: border-box; }\n        body {\n            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;\n            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n            min-height: 100vh;\n            display: flex;\n            align-items: center;\n            justify-content: center;\n            padding: 20px;\n        }\n        .container {\n            background: white;\n            border-radius: 24px;\n            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);\n            max-width: 700px;\n            width: 100%;\n            overflow: hidden;\n            animation: slideIn 0.8s ease-out;\n        }\n        header {\n            background: linear-gradient(135deg, #2196F3 0%, #21CBF3 100%);\n            color: white;\n            padding: 40px;\n            text-align: center;\n        }\n        header h1 {\n            font-size: 2.5em;\n            font-weight: 700;\n            margin-bottom: 10px;\n        }\n        .subtitle {\n            font-size: 1.2em;\n            opacity: 0.9;\n        }\n        .status-card {\n            padding: 40px;\n            text-align: center;\n            border-bottom: 1px solid #e5e7eb;\n        }\n        .status-card .icon {\n            font-size: 4em;\n            margin-bottom: 20px;\n        }\n        .status-card h2 {\n            font-size: 1.8em;\n            color: #1f2937;\n            margin-bottom: 15px;\n        }\n        .status-card p {\n            color: #6b7280;\n            font-size: 1.1em;\n        }\n        .features {\n            padding: 40px;\n            background: #f9fafb;\n        }\n        .features h3 {\n            color: #374151;\n            margin-bottom: 25px;\n            font-size: 1.3em;\n        }\n        .feature-list {\n            list-style: none;\n        }\n        .feature-list li {\n            padding: 12px 0;\n            font-size: 1.1em;\n            color: #4b5563;\n            border-bottom: 1px solid #e5e7eb;\n        }\n        .feature-list li:last-child {\n            border-bottom: none;\n        }\n        .timestamp {\n            padding: 30px;\n            background: #1f2937;\n            color: white;\n            text-align: center;\n        }\n        .time-label {\n            font-size: 1em;\n            opacity: 0.8;\n            margin-bottom: 8px;\n        }\n        .time-value {\n            font-size: 1.4em;\n            font-weight: 300;\n            font-family: 'Courier New', monospace;\n        }\n        @keyframes slideIn {\n            from {\n                opacity: 0;\n                transform: translateY(30px) scale(0.95);\n            }\n            to {\n                opacity: 1;\n                transform: translateY(0) scale(1);\n            }\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <header>\n            <h1>🚀 Legion Framework</h1>\n            <div class=\"subtitle\">AI Agent Tools & Plan Execution</div>\n        </header>\n        \n        <div class=\"status-card\">\n            <div class=\"icon\">✅</div>\n            <h2>Plan Execution Complete</h2>\n            <p>This website was generated and captured automatically by the Legion Plan Executor framework.</p>\n        </div>\n        \n        <div class=\"features\">\n            <h3>🎯 Framework Features</h3>\n            <ul class=\"feature-list\">\n                <li>🔧 Modular AI tool architecture</li>\n                <li>📋 Complex plan validation & execution</li>\n                <li>🌐 Web automation with Playwright</li>\n                <li>📸 Automated screenshot capture</li>\n                <li>🚀 Resource management & dependency injection</li>\n                <li>⚡ Real-time progress tracking</li>\n            </ul>\n        </div>\n        \n        <div class=\"timestamp\">\n            <div class=\"time-label\">Screenshot Generated</div>\n            <div class=\"time-value\" id=\"timestamp\"></div>\n        </div>\n    </div>\n    \n    <script>\n        document.getElementById('timestamp').textContent = new Date().toISOString();\n    </script>\n</body>\n</html>"
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Create HTML file with Legion Framework demo content",
+          "estimatedDuration": 2000
+        }
+      ]
+    },
+    {
+      "id": "start-server",
+      "name": "Start Web Server",
+      "description": "Launch simple HTTP server for the website",
+      "type": "server-start",
+      "status": "pending",
+      "dependencies": ["create-website"],
+      "inputs": [],
+      "outputs": ["server_running"],
+      "estimatedDuration": 3000,
+      "result": null,
+      "actions": [
+        {
+          "id": "launch-http-server",
+          "type": "command_executor",
+          "inputs": ["command"],
+          "outputs": ["server_process"],
+          "parameters": {
+            "command": "cd /tmp/legion-website && python3 -m http.server 8080 &",
+            "timeout": 5000
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Start Python HTTP server on port 8080",
+          "estimatedDuration": 2000
+        },
+        {
+          "id": "wait-for-server",
+          "type": "command_executor",
+          "inputs": ["command"],
+          "outputs": ["server_ready"],
+          "parameters": {
+            "command": "sleep 2 && curl -s http://localhost:8080/ > /dev/null && echo 'Server ready'",
+            "timeout": 10000
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Wait for server to be ready",
+          "estimatedDuration": 3000
+        }
+      ]
+    },
+    {
+      "id": "capture-screenshot",
+      "name": "Capture Website Screenshot",
+      "description": "Use Playwright to navigate and screenshot the website",
+      "type": "screenshot",
+      "status": "pending",
+      "dependencies": ["start-server"],
+      "inputs": [],
+      "outputs": ["screenshot_taken"],
+      "estimatedDuration": 5000,
+      "result": null,
+      "actions": [
+        {
+          "id": "navigate-to-website",
+          "type": "navigate_to_page",
+          "inputs": ["url"],
+          "outputs": ["navigation_result"],
+          "parameters": {
+            "url": "http://localhost:8080/",
+            "waitUntil": "load",
+            "timeout": 10000
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Navigate to the generated website",
+          "estimatedDuration": 2000
+        },
+        {
+          "id": "take-full-screenshot",
+          "type": "take_screenshot",
+          "inputs": ["fullPage", "format"],
+          "outputs": ["screenshot_data"],
+          "parameters": {
+            "fullPage": true,
+            "format": "png"
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Take full page screenshot",
+          "estimatedDuration": 2000
+        },
+        {
+          "id": "save-screenshot",
+          "type": "file_operations",
+          "inputs": ["filepath", "content"],
+          "outputs": ["screenshot_file"],
+          "parameters": {
+            "filepath": "/tmp/legion-screenshot.png",
+            "content": "${actions.take-full-screenshot.result.screenshot}"
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Save screenshot to /tmp directory",
+          "estimatedDuration": 1000
+        }
+      ]
+    },
+    {
+      "id": "cleanup-server",
+      "name": "Stop Web Server",
+      "description": "Stop the HTTP server process",
+      "type": "cleanup",
+      "status": "pending",
+      "dependencies": ["capture-screenshot"],
+      "inputs": [],
+      "outputs": ["server_stopped"],
+      "estimatedDuration": 2000,
+      "result": null,
+      "actions": [
+        {
+          "id": "kill-server",
+          "type": "command_executor",
+          "inputs": ["command"],
+          "outputs": ["kill_result"],
+          "parameters": {
+            "command": "pkill -f 'python3 -m http.server 8080' || echo 'Server stopped'",
+            "timeout": 5000
+          },
+          "status": "pending",
+          "result": null,
+          "description": "Stop HTTP server process",
+          "estimatedDuration": 2000
+        }
+      ]
+    }
+  ],
+  "executionOrder": [
+    "cleanup",
+    "create-website", 
+    "start-server",
+    "capture-screenshot",
+    "cleanup-server"
+  ],
+  "successCriteria": [
+    {
+      "description": "Temporary directory prepared",
+      "condition": "${steps.cleanup.success}"
+    },
+    {
+      "description": "Website created successfully",
+      "condition": "${steps.create-website.success}"
+    },
+    {
+      "description": "Server started and accessible",
+      "condition": "${steps.start-server.success}"
+    },
+    {
+      "description": "Screenshot captured and saved",
+      "condition": "${steps.capture-screenshot.success}"
+    },
+    {
+      "description": "Server stopped cleanly",
+      "condition": "${steps.cleanup-server.success}"
+    }
+  ]
+}

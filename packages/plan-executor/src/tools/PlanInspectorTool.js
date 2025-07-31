@@ -3,8 +3,8 @@
  */
 
 export class PlanInspectorTool {
-  constructor(planToolRegistry = null) {
-    this.planToolRegistry = planToolRegistry;
+  constructor(moduleLoader = null) {
+    this.moduleLoader = moduleLoader;
   }
   
   get name() {

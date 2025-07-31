@@ -9,7 +9,7 @@ import { ExecutionStatusTool } from './tools/ExecutionStatusTool.js';
 import { StepExecutorTool } from './tools/StepExecutorTool.js';
 import { DebugExecutorTool } from './tools/DebugExecutorTool.js';
 import { PlanExecutor } from './core/PlanExecutor.js';
-import { PlanToolRegistry } from './core/PlanToolRegistry.js';
+import { ModuleLoader } from '@legion/module-loader';
 import { ExecutionContext } from './core/ExecutionContext.js';
 import { LegionToolAdapter } from './adapters/LegionToolAdapter.js';
 import { PlanExecutionLogger } from './logging/PlanExecutionLogger.js';
@@ -37,12 +37,12 @@ export class PlanExecutorModule {
     this.resourceManager = resourceManager;
     this.moduleFactory = moduleFactory;
     
-    // Create plan tool registry with the shared resource manager
-    this.planToolRegistry = new PlanToolRegistry({ resourceManager, moduleFactory });
+    // Create module loader directly
+    this.moduleLoader = new ModuleLoader(resourceManager);
     
     // Create executor instance
     this.executor = new PlanExecutor({
-      planToolRegistry: this.planToolRegistry
+      moduleLoader: this.moduleLoader
     });
     
     // Create shared execution context (in real implementation this would be a registry/manager)
@@ -55,7 +55,7 @@ export class PlanExecutorModule {
     
     // Create all tool instances (raw debugging tools)
     this.rawPlanExecutorTool = new PlanExecutorTool(this.executor, this);
-    this.rawPlanInspectorTool = new PlanInspectorTool(this.planToolRegistry);
+    this.rawPlanInspectorTool = new PlanInspectorTool(this.moduleLoader);
     this.rawPlanToMarkdownTool = new PlanToMarkdownTool();
     this.rawExecutionStatusTool = new ExecutionStatusTool({ 
       executionContextRegistry: () => this.executionContext 
