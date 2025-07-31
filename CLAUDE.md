@@ -643,11 +643,77 @@ npm run server:force-kill
 npm run kill-port -- 8080
 ```
 
+## CRITICAL: Plan Executor Architecture
+
+**The PlanExecutor executes validated plans using tools and modules loaded by the ModuleLoader.**
+
+### How Plan Execution Works:
+
+1. **Plan Validation Required**: Plans MUST have `status: "validated"` before execution
+2. **ModuleLoader Integration**: PlanExecutor uses ModuleLoader directly (NOT PlanToolRegistry)
+3. **Automatic Module Loading**: Essential modules are loaded from ModuleRegistry.json:
+   - `playwright` - Browser automation and screenshots
+   - `file` - File operations 
+   - `command-executor` - Shell command execution
+   - `node-runner` - Node.js process management
+
+### PlanExecutor Implementation:
+```javascript
+// CORRECT: PlanExecutor uses ModuleLoader directly
+export class PlanExecutor extends EventEmitter {
+  constructor(options = {}) {
+    super();
+    this.moduleLoader = options.moduleLoader; // ModuleLoader instance required
+  }
+  
+  async executePlan(plan, options = {}) {
+    // 1. Validate plan has status: "validated"
+    if (!plan.status || plan.status !== 'validated') {
+      throw new Error('Plan must be validated before execution');
+    }
+    
+    // 2. Initialize ModuleLoader and load essential modules
+    await this.moduleLoader.initialize();
+    await this._loadEssentialModules(); // Loads from ModuleRegistry.json
+    
+    // 3. Execute plan steps using loaded tools
+    await this._executeSteps(plan.steps, context);
+  }
+  
+  // Loads modules from registry by name
+  async _loadEssentialModules() {
+    const registry = /* load ModuleRegistry.json */;
+    for (const moduleName of ['playwright', 'file', 'command-executor', 'node-runner']) {
+      const moduleInfo = registry.modules[moduleName];
+      if (moduleInfo.type === 'json') {
+        await this.moduleLoader.loadModuleFromJson(modulePath);
+      } else if (moduleInfo.type === 'class') {
+        const { [moduleInfo.className]: ModuleClass } = await import(modulePath);
+        await this.moduleLoader.loadModuleByName(moduleName, ModuleClass);
+      }
+    }
+  }
+}
+```
+
+### Tool Execution:
+```javascript
+// Tools are retrieved directly from ModuleLoader
+const tool = this.moduleLoader.getTool(toolName);
+const result = await tool.execute(resolvedParams);
+```
+
+### NEVER do this:
+❌ Don't create wrapper registries around ModuleLoader
+❌ Don't bypass the ModuleLoader for tool access
+❌ Don't execute unvalidated plans
+❌ Don't manually manage module loading - use the registry
+
 ## CRITICAL: Always Use Railway Tools
 
 **NEVER use raw Railway API calls or GraphQL queries directly!** Always use the Railway tools and modules we've built:
 - Use `RailwayProvider` from `@legion/railway` for API operations
-- Use `RailwayCLI` for CLI operations
+- Use `RailwayCLI` for CLI operations  
 - Use the Railway module tools when working with Legion framework
 - This ensures consistency and proper error handling
 

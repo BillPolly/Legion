@@ -16,7 +16,6 @@ import { PlanExecutionLogger } from './logging/PlanExecutionLogger.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// TODO: Temporarily not extending Module for MVP testing
 export class PlanExecutorModule {
   static dependencies = ['resourceManager', 'moduleFactory'];
   

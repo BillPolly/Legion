@@ -191,17 +191,48 @@ export class ExecutionContext {
         return this.getStepResult(stepId) || value;
       }
       
-      // Template variable substitution: ${VAR_NAME} within strings
+      // Template variable substitution: ${VAR_NAME} and ${actions.action-id.result.field} within strings
       if (value.includes('${')) {
-        return value.replace(/\$\{([^}]+)\}/g, (match, varName) => {
+        return value.replace(/\$\{([^}]+)\}/g, (match, expression) => {
+          // Handle action result references: ${actions.action-id.result.field}
+          if (expression.startsWith('actions.')) {
+            const actionPath = expression.substring(8); // Remove 'actions.'
+            const pathParts = actionPath.split('.');
+            
+            if (pathParts.length >= 3 && pathParts[1] === 'result') {
+              const actionId = pathParts[0];
+              const fieldPath = pathParts.slice(2); // Everything after 'result.'
+              
+              // Find the action result in actionResults map
+              for (const [key, result] of this.state.actionResults) {
+                if (key.endsWith(`.${actionId}`)) {
+                  // Navigate through the result object using the field path
+                  let value = result;
+                  for (const field of fieldPath) {
+                    if (value && typeof value === 'object' && field in value) {
+                      value = value[field];
+                    } else {
+                      value = undefined;
+                      break;
+                    }
+                  }
+                  
+                  if (value !== undefined) {
+                    return value;
+                  }
+                }
+              }
+            }
+          }
+          
           // First check plan input variables
-          const inputValue = this.getVariable(varName);
+          const inputValue = this.getVariable(expression);
           if (inputValue !== undefined) {
             return inputValue;
           }
           
           // Fallback to environment variables
-          return process.env[varName] || match;
+          return process.env[expression] || match;
         });
       }
     }
