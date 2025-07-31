@@ -105,10 +105,38 @@ describe('Verified Profile Plan Execution', () => {
         }
       }
       
-      // Step 2: Execute the plan
-      console.log('\n🚀 Executing plan...');
+      // Step 2: Validate the plan
+      console.log('\n✅ Validating plan...');
       
       const executorTools = planExecutorModule.getTools();
+      const planInspectorTool = executorTools.find(t => t.name === 'plan_inspect');
+      expect(planInspectorTool).toBeDefined();
+      
+      const validationRequest = {
+        function: {
+          name: 'plan_inspect',
+          arguments: JSON.stringify({ 
+            plan: plan,
+            validateTools: true 
+          })
+        }
+      };
+      
+      const validationResult = await planInspectorTool.invoke(validationRequest);
+      
+      console.log('Validation result:', validationResult.success);
+      console.log('Plan is valid:', validationResult.data?.validation?.isValid);
+      
+      expect(validationResult.success).toBe(true);
+      expect(validationResult.data.validation.isValid).toBe(true);
+      
+      // Mark plan as validated
+      plan.status = 'validated';
+      console.log('Plan marked as validated');
+      
+      // Step 3: Execute the plan
+      console.log('\n🚀 Executing plan...');
+      
       const planExecuteTool = executorTools.find(t => t.name === 'plan_execute');
       
       const executeRequest = {

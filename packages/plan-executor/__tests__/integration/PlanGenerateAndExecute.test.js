@@ -106,10 +106,37 @@ describe('Plan Generation and Execution', () => {
       await fs.writeFile(planPath, JSON.stringify(plan, null, 2));
       console.log(`\nPlan saved to: generated-plan.json`);
       
-      // Step 2: Execute the plan
-      console.log('\n=== Step 2: Executing Plan ===');
+      // Step 2: Validate the plan
+      console.log('\n=== Step 2: Validating Plan ===');
       
       const executorTools = planExecutorModule.getTools();
+      const planInspectorTool = executorTools.find(t => t.name === 'plan_inspect');
+      expect(planInspectorTool).toBeDefined();
+      
+      const validationRequest = {
+        function: {
+          name: 'plan_inspect',
+          arguments: JSON.stringify({ 
+            plan: plan,
+            validateTools: true 
+          })
+        }
+      };
+      
+      console.log('Validating plan...');
+      const validationResult = await planInspectorTool.invoke(validationRequest);
+      
+      console.log('Validation result:', validationResult.success);
+      expect(validationResult.success).toBe(true);
+      expect(validationResult.data.validation.isValid).toBe(true);
+      
+      // Mark plan as validated
+      plan.status = 'validated';
+      console.log('Plan marked as validated');
+      
+      // Step 3: Execute the plan
+      console.log('\n=== Step 3: Executing Plan ===');
+      
       const planExecuteTool = executorTools.find(t => t.name === 'plan_execute');
       
       expect(planExecuteTool).toBeDefined();
@@ -145,8 +172,8 @@ describe('Plan Generation and Execution', () => {
       expect(executeResult.success).toBe(true);
       expect(executeResult.data.status).toBe('completed');
       
-      // Step 3: Verify generated files
-      console.log('\n=== Step 3: Verifying Generated Files ===');
+      // Step 4: Verify generated files
+      console.log('\n=== Step 4: Verifying Generated Files ===');
       
       const files = await fs.readdir(projectDir);
       console.log('Project root contains:', files);

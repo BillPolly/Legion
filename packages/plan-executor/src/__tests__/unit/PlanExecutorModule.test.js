@@ -102,6 +102,7 @@ describe('PlanExecutorModule', () => {
 
       const plan = {
         id: 'integration-test',
+        status: 'validated',
         steps: [
           {
             id: 'test-step',
@@ -123,7 +124,7 @@ describe('PlanExecutorModule', () => {
       // Mock the executor to throw an error
       module.executor.executePlan = jest.fn().mockRejectedValue(new Error('Execution failed'));
 
-      const plan = { id: 'error-test', steps: [] };
+      const plan = { id: 'error-test', status: 'validated', steps: [] };
       const result = await tool.execute({ plan });
 
       expect(result.success).toBe(false);

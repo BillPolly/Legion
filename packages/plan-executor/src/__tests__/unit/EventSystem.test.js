@@ -46,6 +46,7 @@ describe('PlanExecutor Event System', () => {
       const plan = {
         id: 'test-plan',
         name: 'Test Plan',
+        status: 'validated',
         steps: []
       };
 
@@ -63,6 +64,7 @@ describe('PlanExecutor Event System', () => {
       const plan = {
         id: 'test-plan',
         name: 'Test Plan',
+        status: 'validated',
         steps: [
           {
             id: 'step1',
@@ -89,6 +91,7 @@ describe('PlanExecutor Event System', () => {
 
       const plan = {
         id: 'test-plan',
+        status: 'validated',
         steps: [
           {
             id: 'step1',
@@ -107,6 +110,7 @@ describe('PlanExecutor Event System', () => {
     it('should calculate correct total steps count', async () => {
       const plan = {
         id: 'test-plan',
+        status: 'validated',
         steps: [
           {
             id: 'parent1',
@@ -133,6 +137,7 @@ describe('PlanExecutor Event System', () => {
     it('should emit step:start and step:complete events', async () => {
       const plan = {
         id: 'test-plan',
+        status: 'validated',
         steps: [
           {
             id: 'step1',
@@ -162,6 +167,7 @@ describe('PlanExecutor Event System', () => {
 
       const plan = {
         id: 'test-plan',
+        status: 'validated',
         steps: [
           {
             id: 'failing-step',
@@ -182,6 +188,7 @@ describe('PlanExecutor Event System', () => {
     it('should emit events for nested steps with correct paths', async () => {
       const plan = {
         id: 'test-plan',
+        status: 'validated',
         steps: [
           {
             id: 'parent',
@@ -216,6 +223,7 @@ describe('PlanExecutor Event System', () => {
     it('should not emit events when emitProgress is false', async () => {
       const plan = {
         id: 'test-plan',
+        status: 'validated',
         steps: [
           {
             id: 'step1',
@@ -232,6 +240,7 @@ describe('PlanExecutor Event System', () => {
     it('should emit events by default', async () => {
       const plan = {
         id: 'test-plan',
+        status: 'validated',
         steps: [
           {
             id: 'step1',
@@ -250,6 +259,7 @@ describe('PlanExecutor Event System', () => {
     it('should emit events in correct order', async () => {
       const plan = {
         id: 'test-plan',
+        status: 'validated',
         steps: [
           {
             id: 'step1',
@@ -272,6 +282,7 @@ describe('PlanExecutor Event System', () => {
     it('should have increasing timestamps', async () => {
       const plan = {
         id: 'test-plan',
+        status: 'validated',
         steps: [
           {
             id: 'step1',

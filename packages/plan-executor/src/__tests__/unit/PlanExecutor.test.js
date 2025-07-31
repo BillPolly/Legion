@@ -46,6 +46,7 @@ describe('PlanExecutor', () => {
       const plan = {
         id: 'test',
         name: 'Test Plan',
+        status: 'validated',
         steps: []
       };
       
@@ -61,6 +62,7 @@ describe('PlanExecutor', () => {
       const plan = {
         id: 'test',
         name: 'Test Plan',
+        status: 'validated',
         steps: [
           {
             id: 'step1',
@@ -85,6 +87,7 @@ describe('PlanExecutor', () => {
       const plan = {
         id: 'test',
         name: 'Hierarchical Plan',
+        status: 'validated',
         steps: [
           {
             id: 'parent',
@@ -119,6 +122,7 @@ describe('PlanExecutor', () => {
     it('should handle step dependencies', async () => {
       const plan = {
         id: 'test',
+        status: 'validated',
         steps: [
           {
             id: 'step1',
@@ -141,6 +145,7 @@ describe('PlanExecutor', () => {
     it('should fail on unsatisfied dependencies', async () => {
       const plan = {
         id: 'test',
+        status: 'validated',
         steps: [
           {
             id: 'step1',
@@ -171,6 +176,7 @@ describe('PlanExecutor', () => {
       
       const plan = {
         id: 'test',
+        status: 'validated',
         steps: [
           {
             id: 'step1',
@@ -206,6 +212,7 @@ describe('PlanExecutor', () => {
       
       const plan = {
         id: 'test',
+        status: 'validated',
         steps: [
           {
             id: 'step1',
