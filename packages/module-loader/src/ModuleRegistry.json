@@ -100,6 +100,10 @@
     "moment": {
       "type": "json",
       "path": "packages/general-tools/src/moment/module.json"
+    },
+    "encode": {
+      "type": "json",
+      "path": "packages/general-tools/src/encode/module.json"
     }
   }
 }

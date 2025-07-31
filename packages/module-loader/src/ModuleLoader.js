@@ -209,6 +209,32 @@ export class ModuleLoader {
     this.loadedModules.clear();
     this.toolRegistry.clear();
   }
+  
+  /**
+   * Get a loaded module by name
+   * @param {string} moduleName - Name of the module
+   * @returns {Object|null} The module instance or null if not loaded
+   */
+  getModule(moduleName) {
+    return this.loadedModules.get(moduleName) || null;
+  }
+  
+  /**
+   * Get names of all loaded modules
+   * @returns {Array<string>} Array of loaded module names
+   */
+  getLoadedModuleNames() {
+    return Array.from(this.loadedModules.keys());
+  }
+  
+  /**
+   * Check if a module is loaded
+   * @param {string} moduleName - Name of the module
+   * @returns {boolean} True if module is loaded
+   */
+  hasModule(moduleName) {
+    return this.loadedModules.has(moduleName);
+  }
 }
 
 export default ModuleLoader;

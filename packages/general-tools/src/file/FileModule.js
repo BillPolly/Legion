@@ -88,6 +88,11 @@ class FileOperationsTool extends Tool {
               content: {
                 type: 'string',
                 description: 'The text content to write to the file'
+              },
+              encoding: {
+                type: 'string',
+                description: 'The encoding to use when writing the file (default: utf8, use "binary" for binary data)',
+                default: 'utf8'
               }
             },
             required: ['filepath', 'content']
@@ -371,7 +376,7 @@ class FileOperationsTool extends Tool {
           
         case 'file_write':
           this.validateRequiredParameters(args, ['filepath', 'content']);
-          return await this.writeFile(args.filepath, args.content);
+          return await this.writeFile(args.filepath, args.content, args.encoding);
           
         case 'directory_create':
           this.validateRequiredParameters(args, ['dirpath']);
@@ -415,7 +420,7 @@ class FileOperationsTool extends Tool {
       // Check if this is a file_write operation (most common from plan executor)
       if (params.filepath !== undefined && params.content !== undefined) {
         // This is a file write operation
-        return await this.writeFile(params.filepath, params.content);
+        return await this.writeFile(params.filepath, params.content, params.encoding);
       }
       // Check if this is a file_read operation
       else if (params.filepath !== undefined && params.content === undefined) {
@@ -529,7 +534,7 @@ class FileOperationsTool extends Tool {
   /**
    * Writes content to a file
    */
-  async writeFile(filepath, content) {
+  async writeFile(filepath, content, encoding = 'utf8') {
     try {
       console.log(`Writing file: ${filepath}`);
       this.emitProgress(`Writing file: ${filepath}`, { filepath, contentLength: content ? content.length : 0 });
@@ -558,8 +563,8 @@ class FileOperationsTool extends Tool {
       const dir = path.dirname(resolvedPath);
       await fs.mkdir(dir, { recursive: true });
       
-      console.log(`Calling fs.writeFile with path: ${resolvedPath}, content: "${content}"`);
-      await fs.writeFile(resolvedPath, content, 'utf8');
+      console.log(`Calling fs.writeFile with path: ${resolvedPath}, encoding: ${encoding}`);
+      await fs.writeFile(resolvedPath, content, encoding);
       console.log(`fs.writeFile completed without error`);
       
       // Verify file was written

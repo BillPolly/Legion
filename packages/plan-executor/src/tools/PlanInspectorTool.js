@@ -3,6 +3,10 @@
  */
 
 export class PlanInspectorTool {
+  constructor(planToolRegistry = null) {
+    this.planToolRegistry = planToolRegistry;
+  }
+  
   get name() {
     return 'plan_inspect';
   }
@@ -102,6 +106,21 @@ export class PlanInspectorTool {
       let toolAnalysis = null;
       if (validateTools) {
         toolAnalysis = this._analyzeTools(plan);
+        
+        // If tools are not available, add validation errors
+        if (this.planToolRegistry) {
+          const unavailableTools = [];
+          Object.entries(toolAnalysis.toolStatus).forEach(([toolName, status]) => {
+            if (status.available === false) {
+              unavailableTools.push(toolName);
+            }
+          });
+          
+          if (unavailableTools.length > 0) {
+            validation.errors.push(`Required tools not available: ${unavailableTools.join(', ')}`);
+            validation.isValid = false;
+          }
+        }
       }
 
       // Calculate complexity metrics
@@ -316,12 +335,22 @@ export class PlanInspectorTool {
 
     collectTools(plan.steps);
 
-    // Check tool availability (simplified - would need actual tool registry)
+    // Check tool availability using the plan tool registry if available
     Array.from(requiredTools).forEach(toolName => {
-      toolStatus[toolName] = {
-        available: 'unknown', // Would check actual availability
-        module: 'unknown'
-      };
+      if (this.planToolRegistry) {
+        // Actually check if the tool exists
+        const toolExists = this.planToolRegistry.hasTool(toolName);
+        toolStatus[toolName] = {
+          available: toolExists,
+          module: toolExists ? 'loaded' : 'not found'
+        };
+      } else {
+        // No registry available, can't verify
+        toolStatus[toolName] = {
+          available: 'unknown',
+          module: 'unknown'
+        };
+      }
     });
 
     return {

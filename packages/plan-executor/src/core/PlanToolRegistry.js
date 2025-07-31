@@ -135,6 +135,43 @@ export class PlanToolRegistry {
     await this._loadModuleByName(moduleName);
     return this.moduleLoader.getModule(moduleName);
   }
+  
+  /**
+   * Check if a module is available in the registry (without loading it)
+   * @param {string} moduleName - Name of the module
+   * @returns {boolean} True if module is available
+   */
+  isModuleAvailable(moduleName) {
+    if (!this.moduleRegistry) {
+      return false;
+    }
+    return moduleName in this.moduleRegistry.modules;
+  }
+  
+  /**
+   * Get metadata about available tools for a module (without loading it)
+   * @param {string} moduleName - Name of the module
+   * @returns {Promise<Array>} Array of tool metadata or empty array
+   */
+  async getModuleToolMetadata(moduleName) {
+    // For now, we need to load the module to get tool metadata
+    // In future, this could read from module.json or cached metadata
+    try {
+      await this.loadModule(moduleName);
+      const module = this.moduleLoader.getModule(moduleName);
+      if (module && module.getTools) {
+        const tools = module.getTools();
+        return tools.map(tool => ({
+          name: tool.name,
+          description: tool.description,
+          module: moduleName
+        }));
+      }
+    } catch (error) {
+      console.warn(`Could not get tool metadata for ${moduleName}: ${error.message}`);
+    }
+    return [];
+  }
 
   /**
    * Clear all loaded modules and tools

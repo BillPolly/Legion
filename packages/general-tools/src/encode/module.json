@@ -1,0 +1,182 @@
+{
+  "name": "encode",
+  "version": "1.0.0",
+  "description": "Encoding and decoding utilities for various formats",
+  "package": "./index.js",
+  "type": "constructor",
+  "dependencies": {},
+  "initialization": {
+    "className": "EncodeTool",
+    "treatAsConstructor": true
+  },
+  "tools": [
+    {
+      "name": "encode_base64",
+      "description": "Encode text or binary data to base64 format",
+      "function": "encodeBase64",
+      "instanceMethod": true,
+      "async": false,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string",
+            "description": "The data to encode to base64"
+          },
+          "inputEncoding": {
+            "type": "string",
+            "enum": ["utf8", "binary", "hex"],
+            "default": "utf8",
+            "description": "The encoding of the input data"
+          }
+        },
+        "required": ["data"]
+      },
+      "resultMapping": {
+        "success": {
+          "encoded": "$.encoded",
+          "originalLength": "$.originalLength",
+          "encodedLength": "$.encodedLength"
+        }
+      }
+    },
+    {
+      "name": "decode_base64",
+      "description": "Decode base64 encoded data back to its original format",
+      "function": "decodeBase64",
+      "instanceMethod": true,
+      "async": false,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string",
+            "description": "The base64 encoded data to decode"
+          },
+          "outputEncoding": {
+            "type": "string",
+            "enum": ["utf8", "binary", "hex"],
+            "default": "utf8",
+            "description": "The desired encoding for the output"
+          }
+        },
+        "required": ["data"]
+      },
+      "resultMapping": {
+        "success": {
+          "decoded": "$.decoded",
+          "originalLength": "$.originalLength",
+          "decodedLength": "$.decodedLength"
+        }
+      }
+    },
+    {
+      "name": "encode_hex",
+      "description": "Encode data to hexadecimal format",
+      "function": "encodeHex",
+      "instanceMethod": true,
+      "async": false,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string",
+            "description": "The data to encode to hexadecimal"
+          },
+          "inputEncoding": {
+            "type": "string",
+            "enum": ["utf8", "binary", "base64"],
+            "default": "utf8",
+            "description": "The encoding of the input data"
+          }
+        },
+        "required": ["data"]
+      },
+      "resultMapping": {
+        "success": {
+          "encoded": "$.encoded",
+          "originalLength": "$.originalLength",
+          "encodedLength": "$.encodedLength"
+        }
+      }
+    },
+    {
+      "name": "decode_hex",
+      "description": "Decode hexadecimal encoded data",
+      "function": "decodeHex",
+      "instanceMethod": true,
+      "async": false,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string",
+            "description": "The hexadecimal encoded data to decode"
+          },
+          "outputEncoding": {
+            "type": "string",
+            "enum": ["utf8", "binary", "base64"],
+            "default": "utf8",
+            "description": "The desired encoding for the output"
+          }
+        },
+        "required": ["data"]
+      },
+      "resultMapping": {
+        "success": {
+          "decoded": "$.decoded",
+          "originalLength": "$.originalLength",
+          "decodedLength": "$.decodedLength"
+        }
+      }
+    },
+    {
+      "name": "encode_url",
+      "description": "URL encode a string",
+      "function": "encodeUrl",
+      "instanceMethod": true,
+      "async": false,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string",
+            "description": "The string to URL encode"
+          }
+        },
+        "required": ["data"]
+      },
+      "resultMapping": {
+        "success": {
+          "encoded": "$.encoded",
+          "originalLength": "$.originalLength",
+          "encodedLength": "$.encodedLength"
+        }
+      }
+    },
+    {
+      "name": "decode_url",
+      "description": "URL decode a string",
+      "function": "decodeUrl",
+      "instanceMethod": true,
+      "async": false,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string",
+            "description": "The URL encoded string to decode"
+          }
+        },
+        "required": ["data"]
+      },
+      "resultMapping": {
+        "success": {
+          "decoded": "$.decoded",
+          "originalLength": "$.originalLength",
+          "decodedLength": "$.decodedLength"
+        }
+      }
+    }
+  ]
+}

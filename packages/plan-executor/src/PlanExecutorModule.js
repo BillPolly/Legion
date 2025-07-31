@@ -55,7 +55,7 @@ export class PlanExecutorModule {
     
     // Create all tool instances (raw debugging tools)
     this.rawPlanExecutorTool = new PlanExecutorTool(this.executor, this);
-    this.rawPlanInspectorTool = new PlanInspectorTool();
+    this.rawPlanInspectorTool = new PlanInspectorTool(this.planToolRegistry);
     this.rawPlanToMarkdownTool = new PlanToMarkdownTool();
     this.rawExecutionStatusTool = new ExecutionStatusTool({ 
       executionContextRegistry: () => this.executionContext 
