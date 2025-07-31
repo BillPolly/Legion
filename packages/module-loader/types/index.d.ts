@@ -1,5 +1,5 @@
 /**
- * @jsenvoy/module-loader TypeScript Definitions
+ * @legion/module-loader TypeScript Definitions
  */
 
 export * from './events';

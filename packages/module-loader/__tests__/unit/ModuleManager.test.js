@@ -77,7 +77,7 @@ describe('ModuleManager', () => {
   });
 
   describe('module information', () => {
-    it('should get module info for loaded module', () => {
+    it('should get module info for loaded module', async () => {
       const module = new TestModule({ testDep: 'value' });
       moduleManager.registry.register('test-module', {
         name: 'test-module',
@@ -85,7 +85,7 @@ describe('ModuleManager', () => {
         type: 'class'
       }, module);
 
-      const info = moduleManager.getModuleInfo('test-module');
+      const info = await moduleManager.getModuleInfo('test-module');
       expect(info).toBeDefined();
       expect(info.name).toBe('test-module');
       expect(info.hasInstance).toBe(true);
@@ -95,8 +95,8 @@ describe('ModuleManager', () => {
       expect(info.tools[0]).toHaveProperty('type', 'loaded');
     });
 
-    it('should return null for unknown module', () => {
-      const info = moduleManager.getModuleInfo('unknown');
+    it('should return null for unknown module', async () => {
+      const info = await moduleManager.getModuleInfo('unknown');
       expect(info).toBeNull();
     });
   });

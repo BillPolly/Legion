@@ -153,15 +153,15 @@ describe('ModuleFactory - JSON Module Integration', () => {
       
       // Setup ResourceManager mocks
       mockResourceManager.get.mockImplementation((name) => {
-        if (name === 'apiKey') return 'test-api-key';
-        if (name === 'baseURL') return 'https://api.test.com';
+        if (name === 'env.apiKey') return 'test-api-key';
+        if (name === 'env.baseURL') return 'https://api.test.com';
         return null;
       });
 
       const module = await factory.createJsonModule(jsonPath);
 
-      expect(mockResourceManager.get).toHaveBeenCalledWith('apiKey');
-      expect(mockResourceManager.get).toHaveBeenCalledWith('baseURL');
+      expect(mockResourceManager.get).toHaveBeenCalledWith('env.apiKey');
+      expect(mockResourceManager.get).toHaveBeenCalledWith('env.baseURL');
       expect(module.dependencies).toEqual({
         apiKey: 'test-api-key',
         baseURL: 'https://api.test.com'
@@ -335,7 +335,7 @@ describe('ModuleFactory - JSON Module Integration', () => {
       mockResourceManager.get.mockReturnValue('shared-api-key');
       
       // Create both types
-      const traditional = factory.createModule(TraditionalModule);
+      const traditional = await factory.createModule(TraditionalModule);
       const jsonModule = await factory.createJsonModule(jsonPath);
       
       expect(traditional.name).toBe('traditional');

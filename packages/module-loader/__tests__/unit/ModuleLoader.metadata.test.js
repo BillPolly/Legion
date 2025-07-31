@@ -3,7 +3,7 @@
  */
 
 import { jest } from '@jest/globals';
-import { ModuleLoader } from '../../ModuleLoader.js';
+import { ModuleLoader } from '../../src/ModuleLoader.js';
 
 // We'll test with direct instantiation instead of mocking the singleton
 

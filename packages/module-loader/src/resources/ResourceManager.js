@@ -195,7 +195,7 @@ class ResourceManager {
    * @returns {boolean} True if the resource exists
    */
   has(name) {
-    return this.resources.has(name) || (this.parent && this.parent.has(name));
+    return this.resources.has(name) || !!(this.parent && this.parent.has(name));
   }
 
   /**
