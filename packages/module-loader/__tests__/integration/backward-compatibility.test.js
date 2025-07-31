@@ -101,11 +101,45 @@ class ModernModule extends Module {
 // Modern tool that uses event system
 class ModernTool extends Tool {
   constructor() {
-    super();
-    this.name = 'ModernTool';
-    this.description = 'Modern tool with event system';
+    super({
+      name: 'ModernTool',
+      description: 'Modern tool with event system'
+    });
+    this.module = null; // Tools track their module for backward compatibility
   }
 
+  async execute(params) {
+    this.progress('Tool execution started');
+    const result = { success: true, data: { result: 'modern result' } };
+    this.info('Tool execution completed');
+    return result;
+  }
+
+  // Legacy method support
+  setModule(module) {
+    this.module = module;
+  }
+
+  // Legacy event emission methods for backward compatibility
+  emitProgress(message, data = {}) {
+    if (this.module) {
+      this.module.emitProgress(message, data, this.name);
+    }
+  }
+
+  emitInfo(message, data = {}) {
+    if (this.module) {
+      this.module.emitInfo(message, data, this.name);
+    }
+  }
+
+  emitError(message, data = {}) {
+    if (this.module) {
+      this.module.emitError(message, data, this.name);
+    }
+  }
+
+  // Legacy methods for backward compatibility
   getToolDescription() {
     return {
       type: 'function',
@@ -213,11 +247,12 @@ describe('Backward Compatibility Tests', () => {
       expect(typeof modernModule.on).toBe('function');
       
       // Should have properly registered tools
-      expect(modernModule.tools).toHaveLength(1);
-      expect(modernModule.tools[0]).toBeInstanceOf(ModernTool);
+      const tools = modernModule.getTools();
+      expect(tools).toHaveLength(1);
+      expect(tools[0]).toBeInstanceOf(ModernTool);
       
       // Tool should have module reference
-      expect(modernModule.tools[0].module).toBe(modernModule);
+      expect(tools[0].module).toBe(modernModule);
     });
 
     test('should emit events during modern operations', () => {

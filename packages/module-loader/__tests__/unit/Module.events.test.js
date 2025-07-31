@@ -10,33 +10,39 @@ import { EventEmitter } from 'events';
 // Mock Tool class for testing
 class MockTool extends Tool {
   constructor(name) {
-    super();
-    this.name = name;
-    this.description = `Mock tool: ${name}`;
+    super({
+      name: name,
+      description: `Mock tool: ${name}`
+    });
+    this.module = null; // Tools need to track their module for backward compatibility
   }
 
-  getToolDescription() {
-    return {
-      type: 'function',
-      function: {
-        name: this.name,
-        description: this.description,
-        parameters: {
-          type: 'object',
-          properties: {
-            input: { type: 'string' }
-          }
-        },
-        output: {
-          success: { type: 'object' },
-          failure: { type: 'object' }
-        }
-      }
-    };
-  }
-
-  async invoke(toolCall) {
+  async execute(params) {
     return { success: true, data: { result: 'mock result' } };
+  }
+
+  // Legacy method support
+  setModule(module) {
+    this.module = module;
+  }
+
+  // Legacy method support
+  emitProgress(message, data) {
+    if (this.module) {
+      this.module.emitProgress(message, data, this.name);
+    }
+  }
+
+  emitInfo(message, data) {
+    if (this.module) {
+      this.module.emitInfo(message, data, this.name);
+    }
+  }
+
+  emitError(message, data) {
+    if (this.module) {
+      this.module.emitError(message, data, this.name);
+    }
   }
 }
 
@@ -227,7 +233,7 @@ describe('Module Event System', () => {
       module.registerTool('TestTool', tool);
       
       expect(tool.module).toBe(module);
-      expect(module.tools).toContain(tool);
+      expect(module.getTools()).toContain(tool);
     });
 
     test('should not fail if tool does not have setModule method', () => {
@@ -240,7 +246,7 @@ describe('Module Event System', () => {
         module.registerTool('BasicTool', basicTool);
       }).not.toThrow();
       
-      expect(module.tools).toContain(basicTool);
+      expect(module.getTools()).toContain(basicTool);
     });
 
     test('should propagate events from tool to module', () => {
@@ -336,7 +342,7 @@ describe('Module Event System', () => {
     test('should not break existing module functionality', () => {
       // Test basic module operations still work
       expect(module.name).toBe('TestModule');
-      expect(module.tools).toEqual([]);
+      expect(module.getTools()).toEqual([]);
       
       const tool = new MockTool('CompatTool');
       module.registerTool('CompatTool', tool);

@@ -61,15 +61,15 @@ describe('ModuleFactory', () => {
 
   describe('createModule()', () => {
     describe('with no dependencies', () => {
-      it('should create module without dependencies', () => {
-        const module = moduleFactory.createModule(SimpleModule);
+      it('should create module without dependencies', async () => {
+        const module = await moduleFactory.createModule(SimpleModule);
         
         expect(module).toBeInstanceOf(SimpleModule);
         expect(module.name).toBe('simple');
         expect(module.constructorCalled).toBe(true);
       });
 
-      it('should handle module with undefined dependencies', () => {
+      it('should handle module with undefined dependencies', async () => {
         class NoDepsPropertyModule extends Module {
           // No static dependencies property
           constructor() {
@@ -78,7 +78,7 @@ describe('ModuleFactory', () => {
           }
         }
 
-        const module = moduleFactory.createModule(NoDepsPropertyModule);
+        const module = await moduleFactory.createModule(NoDepsPropertyModule);
         expect(module).toBeInstanceOf(NoDepsPropertyModule);
         expect(module.name).toBe('no_deps_property');
       });
@@ -89,21 +89,21 @@ describe('ModuleFactory', () => {
         resourceManager.register('apiKey', 'test-api-key-123');
       });
 
-      it('should create module with resolved dependency', () => {
-        const module = moduleFactory.createModule(SingleDependencyModule);
+      it('should create module with resolved dependency', async () => {
+        const module = await moduleFactory.createModule(SingleDependencyModule);
         
         expect(module).toBeInstanceOf(SingleDependencyModule);
         expect(module.name).toBe('single_dep');
         expect(module.apiKey).toBe('test-api-key-123');
       });
 
-      it('should throw if dependency is missing', () => {
+      it('should throw if dependency is missing', async () => {
         const emptyResourceManager = new ResourceManager();
         const factory = new ModuleFactory(emptyResourceManager);
         
-        expect(() => {
-          factory.createModule(SingleDependencyModule);
-        }).toThrow("Resource 'apiKey' not found");
+        await expect(
+          factory.createModule(SingleDependencyModule)
+        ).rejects.toThrow("Resource 'apiKey' not found");
       });
     });
 
@@ -114,8 +114,8 @@ describe('ModuleFactory', () => {
         resourceManager.register('config', { debug: true, port: 3000 });
       });
 
-      it('should create module with all dependencies resolved', () => {
-        const module = moduleFactory.createModule(MultipleDependencyModule);
+      it('should create module with all dependencies resolved', async () => {
+        const module = await moduleFactory.createModule(MultipleDependencyModule);
         
         expect(module).toBeInstanceOf(MultipleDependencyModule);
         expect(module.name).toBe('multi_dep');
@@ -124,7 +124,7 @@ describe('ModuleFactory', () => {
         expect(module.config).toEqual({ debug: true, port: 3000 });
       });
 
-      it('should throw if any dependency is missing', () => {
+      it('should throw if any dependency is missing', async () => {
         // Remove one dependency
         const partialResourceManager = new ResourceManager();
         partialResourceManager.register('database', {});
@@ -133,12 +133,12 @@ describe('ModuleFactory', () => {
         
         const factory = new ModuleFactory(partialResourceManager);
         
-        expect(() => {
-          factory.createModule(MultipleDependencyModule);
-        }).toThrow("Resource 'config' not found");
+        await expect(
+          factory.createModule(MultipleDependencyModule)
+        ).rejects.toThrow("Resource 'config' not found");
       });
 
-      it('should pass exact resource references', () => {
+      it('should pass exact resource references', async () => {
         const dbObject = { connection: 'test' };
         const logFunction = jest.fn();
         const configObject = { test: true };
@@ -147,7 +147,7 @@ describe('ModuleFactory', () => {
         resourceManager.register('logger', logFunction);
         resourceManager.register('config', configObject);
         
-        const module = moduleFactory.createModule(MultipleDependencyModule);
+        const module = await moduleFactory.createModule(MultipleDependencyModule);
         
         // Should be exact same references
         expect(module.database).toBe(dbObject);
@@ -157,20 +157,20 @@ describe('ModuleFactory', () => {
     });
 
     describe('error handling', () => {
-      it('should provide helpful error message for missing dependency', () => {
+      it('should provide helpful error message for missing dependency', async () => {
         resourceManager.register('apiKey', 'test-key');
         resourceManager.register('database', {});
         // 'logger' and 'config' are missing
         
-        expect(() => {
-          moduleFactory.createModule(MultipleDependencyModule);
-        }).toThrow("Resource 'logger' not found");
+        await expect(
+          moduleFactory.createModule(MultipleDependencyModule)
+        ).rejects.toThrow("Resource 'logger' not found");
       });
 
-      it('should handle null and undefined dependencies', () => {
+      it('should handle null and undefined dependencies', async () => {
         resourceManager.register('apiKey', null);
         
-        const module = moduleFactory.createModule(SingleDependencyModule);
+        const module = await moduleFactory.createModule(SingleDependencyModule);
         expect(module.apiKey).toBe(null);
       });
     });
@@ -184,9 +184,9 @@ describe('ModuleFactory', () => {
       resourceManager.register('config', {});
     });
 
-    it('should create multiple modules', () => {
+    it('should create multiple modules', async () => {
       const moduleClasses = [SimpleModule, SingleDependencyModule, MultipleDependencyModule];
-      const modules = moduleFactory.createAllModules(moduleClasses);
+      const modules = await moduleFactory.createAllModules(moduleClasses);
       
       expect(modules).toHaveLength(3);
       expect(modules[0]).toBeInstanceOf(SimpleModule);
@@ -194,12 +194,12 @@ describe('ModuleFactory', () => {
       expect(modules[2]).toBeInstanceOf(MultipleDependencyModule);
     });
 
-    it('should handle empty array', () => {
-      const modules = moduleFactory.createAllModules([]);
+    it('should handle empty array', async () => {
+      const modules = await moduleFactory.createAllModules([]);
       expect(modules).toEqual([]);
     });
 
-    it('should stop on first error', () => {
+    it('should stop on first error', async () => {
       const partialResourceManager = new ResourceManager();
       partialResourceManager.register('apiKey', 'test');
       // Missing dependencies for MultipleDependencyModule
@@ -207,21 +207,21 @@ describe('ModuleFactory', () => {
       const factory = new ModuleFactory(partialResourceManager);
       const moduleClasses = [SimpleModule, SingleDependencyModule, MultipleDependencyModule];
       
-      expect(() => {
-        factory.createAllModules(moduleClasses);
-      }).toThrow("Resource 'database' not found");
+      await expect(
+        factory.createAllModules(moduleClasses)
+      ).rejects.toThrow("Resource 'database' not found");
     });
 
-    it('should create independent module instances', () => {
-      const modules1 = moduleFactory.createAllModules([SimpleModule]);
-      const modules2 = moduleFactory.createAllModules([SimpleModule]);
+    it('should create independent module instances', async () => {
+      const modules1 = await moduleFactory.createAllModules([SimpleModule]);
+      const modules2 = await moduleFactory.createAllModules([SimpleModule]);
       
       expect(modules1[0]).not.toBe(modules2[0]);
     });
   });
 
   describe('edge cases', () => {
-    it('should handle module with empty dependency name', () => {
+    it('should handle module with empty dependency name', async () => {
       class WeirdDepsModule extends Module {
         static dependencies = [''];
         
@@ -232,11 +232,11 @@ describe('ModuleFactory', () => {
       }
       
       resourceManager.register('', 'empty-name-value');
-      const module = moduleFactory.createModule(WeirdDepsModule);
+      const module = await moduleFactory.createModule(WeirdDepsModule);
       expect(module.emptyDep).toBe('empty-name-value');
     });
 
-    it('should handle module that throws in constructor', () => {
+    it('should handle module that throws in constructor', async () => {
       class ThrowingModule extends Module {
         static dependencies = [];
         
@@ -246,12 +246,12 @@ describe('ModuleFactory', () => {
         }
       }
       
-      expect(() => {
-        moduleFactory.createModule(ThrowingModule);
-      }).toThrow('Constructor error');
+      await expect(
+        moduleFactory.createModule(ThrowingModule)
+      ).rejects.toThrow('Constructor error');
     });
 
-    it('should preserve dependency object structure', () => {
+    it('should preserve dependency object structure', async () => {
       class ComplexDepsModule extends Module {
         static dependencies = ['complexResource'];
         
@@ -272,7 +272,7 @@ describe('ModuleFactory', () => {
       };
       
       resourceManager.register('complexResource', complexObject);
-      const module = moduleFactory.createModule(ComplexDepsModule);
+      const module = await moduleFactory.createModule(ComplexDepsModule);
       
       expect(module.resource).toBe(complexObject);
       expect(module.resource.nested.deep.value).toBe('test');
