@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { ResourceManager } from '@jsenvoy/module-loader';
+import { ResourceManager } from '@legion/module-loader';
 import https from 'https';
 
 async function createOrgRepo(orgName, repoName, description = '', isPrivate = false) {
