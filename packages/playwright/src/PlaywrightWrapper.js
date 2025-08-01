@@ -252,6 +252,255 @@ export default class PlaywrightWrapper {
   }
 
   /**
+   * Record a video of the browser session
+   */
+  async recordVideo(options = {}) {
+    const {
+      path: outputPath,
+      duration = 10, // Default 10 seconds
+      url = null,
+      actions = null,
+      format = null // Optional format override
+    } = options;
+    
+    return safeOperation(async () => {
+      // Determine format from path extension or use format parameter
+      let videoFormat = 'webm'; // Default format
+      let videoPath = outputPath;
+      
+      if (!videoPath) {
+        // No path provided, use default with format
+        videoFormat = format || 'webm';
+        videoPath = path.join(process.cwd(), 'videos', `recording-${Date.now()}.${videoFormat}`);
+      } else {
+        // Path provided, extract format from extension
+        const ext = path.extname(videoPath).toLowerCase().slice(1);
+        if (ext && ['webm', 'mp4', 'mov', 'avi', 'gif'].includes(ext)) {
+          videoFormat = ext;
+        } else if (format) {
+          // Use format parameter if provided
+          videoFormat = format;
+          // Add extension if not present
+          if (!path.extname(videoPath)) {
+            videoPath = `${videoPath}.${videoFormat}`;
+          }
+        } else {
+          // No extension and no format, add default
+          if (!path.extname(videoPath)) {
+            videoPath = `${videoPath}.webm`;
+          }
+        }
+      }
+      
+      const videoDir = path.dirname(videoPath);
+      await fs.mkdir(videoDir, { recursive: true });
+      
+      // Special handling for GIF format
+      if (videoFormat === 'gif') {
+        return await this._recordAnimatedGif(videoPath, duration, url, actions);
+      }
+      
+      // For video formats, use Playwright's video recording
+      // Close current context if exists
+      if (this.browserManager.context) {
+        await this.browserManager.closeContext();
+      }
+      
+      // Create new context with video recording
+      await this.browserManager.createContext({
+        recordVideo: {
+          dir: videoDir,
+          size: { width: 1280, height: 720 }
+        }
+      });
+      
+      // Create new page
+      await this.browserManager.createPage();
+      const page = await this.browserManager.getPage();
+      
+      // Navigate if URL provided
+      if (url) {
+        await page.goto(url, { waitUntil: 'networkidle' });
+      }
+      
+      // Execute custom actions if provided
+      if (actions && typeof actions === 'function') {
+        await actions(page);
+      }
+      
+      // Wait for the specified duration
+      await new Promise(resolve => setTimeout(resolve, duration * 1000));
+      
+      // Get video object from page
+      const video = await page.video();
+      
+      // Close context to save video
+      await this.browserManager.closeContext();
+      
+      // Wait a bit for video to be written
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Get the video path
+      const actualVideoPath = await video.path();
+      
+      if (actualVideoPath) {
+        let finalVideoPath = videoPath;
+        
+        // Playwright always records in WebM format
+        // If user requested a different format, we need to handle it
+        if (videoFormat !== 'webm') {
+          // Check if ffmpeg is available for conversion
+          const ffmpegAvailable = await this._checkFfmpeg();
+          
+          if (ffmpegAvailable && ['mp4', 'mov', 'avi'].includes(videoFormat)) {
+            // Convert using ffmpeg
+            console.log(`Converting WebM to ${videoFormat.toUpperCase()}...`);
+            const convertedPath = await this._convertVideo(actualVideoPath, videoPath, videoFormat);
+            finalVideoPath = convertedPath;
+            
+            // Clean up original WebM file
+            await fs.unlink(actualVideoPath);
+          } else {
+            // Can't convert, save as WebM with warning
+            console.warn(`Cannot convert to ${videoFormat} format. Saving as WebM instead.`);
+            finalVideoPath = videoPath.replace(/\.[^.]+$/, '.webm');
+            await fs.rename(actualVideoPath, finalVideoPath);
+          }
+        } else {
+          // Requested format is WebM, just move the file
+          if (actualVideoPath !== videoPath) {
+            await fs.rename(actualVideoPath, videoPath);
+          }
+        }
+        
+        const stats = await fs.stat(finalVideoPath);
+        
+        return {
+          success: true,
+          path: finalVideoPath,
+          size: stats.size,
+          duration: duration,
+          format: finalVideoPath.endsWith('.webm') ? 'webm' : videoFormat,
+          timestamp: new Date().toISOString(),
+          warning: finalVideoPath !== videoPath ? `Saved as ${path.extname(finalVideoPath).slice(1).toUpperCase()} format` : null
+        };
+      } else {
+        throw new Error('Video file not found after recording');
+      }
+    }, { action: 'recordVideo' });
+  }
+
+  /**
+   * Record animated GIF by taking screenshots
+   */
+  async _recordAnimatedGif(gifPath, duration, url, actions) {
+    console.log('Creating animated GIF from screenshots...');
+    
+    await this.initialize();
+    const page = await this.browserManager.getPage();
+    
+    // Navigate if URL provided
+    if (url) {
+      await page.goto(url, { waitUntil: 'networkidle' });
+    }
+    
+    // Execute custom actions if provided
+    if (actions && typeof actions === 'function') {
+      await actions(page);
+    }
+    
+    // Calculate frame settings
+    const fps = 10; // 10 frames per second for smooth animation
+    const frameCount = duration * fps;
+    const frameDelay = 1000 / fps; // milliseconds between frames
+    
+    const tempDir = path.join(path.dirname(gifPath), `temp-gif-${Date.now()}`);
+    await fs.mkdir(tempDir, { recursive: true });
+    
+    const screenshots = [];
+    
+    // Capture screenshots
+    console.log(`Capturing ${frameCount} frames...`);
+    for (let i = 0; i < frameCount; i++) {
+      const framePath = path.join(tempDir, `frame-${String(i).padStart(4, '0')}.png`);
+      await page.screenshot({ path: framePath, fullPage: false });
+      screenshots.push(framePath);
+      
+      // Show progress
+      if (i % 10 === 0) {
+        console.log(`  Progress: ${Math.round((i / frameCount) * 100)}%`);
+      }
+      
+      // Wait for next frame
+      await new Promise(resolve => setTimeout(resolve, frameDelay));
+    }
+    console.log('  Progress: 100%');
+    
+    // Check if we can create GIF
+    const gifskiAvailable = await this._checkGifski();
+    const imagemagickAvailable = await this._checkImageMagick();
+    
+    let gifCreated = false;
+    
+    if (gifskiAvailable) {
+      // Use gifski for high-quality GIF
+      console.log('Creating GIF with gifski...');
+      try {
+        await this._createGifWithGifski(screenshots, gifPath, fps);
+        gifCreated = true;
+      } catch (error) {
+        console.error('Gifski failed:', error.message);
+      }
+    } else if (imagemagickAvailable) {
+      // Use ImageMagick as fallback
+      console.log('Creating GIF with ImageMagick...');
+      try {
+        await this._createGifWithImageMagick(screenshots, gifPath, frameDelay);
+        gifCreated = true;
+      } catch (error) {
+        console.error('ImageMagick failed:', error.message);
+      }
+    }
+    
+    // Clean up temp files
+    for (const screenshot of screenshots) {
+      await fs.unlink(screenshot);
+    }
+    await fs.rmdir(tempDir);
+    
+    if (gifCreated) {
+      const stats = await fs.stat(gifPath);
+      return {
+        success: true,
+        path: gifPath,
+        size: stats.size,
+        duration: duration,
+        format: 'gif',
+        frameCount: frameCount,
+        fps: fps,
+        timestamp: new Date().toISOString()
+      };
+    } else {
+      // No GIF tools available, save first screenshot as static image
+      console.warn('No GIF creation tools available. Install gifski or ImageMagick for animated GIFs.');
+      console.warn('Saving first frame as static PNG instead.');
+      
+      const staticPath = gifPath.replace(/\.gif$/, '.png');
+      await page.screenshot({ path: staticPath, fullPage: false });
+      
+      return {
+        success: true,
+        path: staticPath,
+        size: (await fs.stat(staticPath)).size,
+        duration: 0,
+        format: 'png',
+        timestamp: new Date().toISOString(),
+        warning: 'Saved as static PNG. Install gifski or ImageMagick for animated GIFs.'
+      };
+    }
+  }
+
+  /**
    * Extract structured data from the page
    */
   async extractData(selectors, options = {}) {
@@ -453,5 +702,100 @@ export default class PlaywrightWrapper {
         timestamp: new Date().toISOString()
       };
     }, { action: 'getPageInfo' });
+  }
+
+  /**
+   * Check if ffmpeg is available
+   */
+  async _checkFfmpeg() {
+    try {
+      const { exec } = await import('child_process');
+      const { promisify } = await import('util');
+      const execAsync = promisify(exec);
+      
+      await execAsync('ffmpeg -version');
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Check if gifski is available
+   */
+  async _checkGifski() {
+    try {
+      const { exec } = await import('child_process');
+      const { promisify } = await import('util');
+      const execAsync = promisify(exec);
+      
+      await execAsync('gifski --version');
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Check if ImageMagick is available
+   */
+  async _checkImageMagick() {
+    try {
+      const { exec } = await import('child_process');
+      const { promisify } = await import('util');
+      const execAsync = promisify(exec);
+      
+      await execAsync('convert -version');
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Convert video using ffmpeg
+   */
+  async _convertVideo(inputPath, outputPath, format) {
+    const { exec } = await import('child_process');
+    const { promisify } = await import('util');
+    const execAsync = promisify(exec);
+    
+    try {
+      // Basic conversion command - can be enhanced with quality settings
+      const command = `ffmpeg -i "${inputPath}" -c:v libx264 -preset fast -crf 22 "${outputPath}" -y`;
+      await execAsync(command);
+      return outputPath;
+    } catch (error) {
+      throw new Error(`Failed to convert video: ${error.message}`);
+    }
+  }
+
+  /**
+   * Create GIF using gifski
+   */
+  async _createGifWithGifski(screenshots, outputPath, fps) {
+    const { exec } = await import('child_process');
+    const { promisify } = await import('util');
+    const execAsync = promisify(exec);
+    
+    const pattern = path.join(path.dirname(screenshots[0]), 'frame-*.png');
+    const command = `gifski -o "${outputPath}" --fps ${fps} --quality 80 "${pattern}"`;
+    
+    await execAsync(command);
+  }
+
+  /**
+   * Create GIF using ImageMagick
+   */
+  async _createGifWithImageMagick(screenshots, outputPath, frameDelay) {
+    const { exec } = await import('child_process');
+    const { promisify } = await import('util');
+    const execAsync = promisify(exec);
+    
+    const delay = Math.round(frameDelay / 10); // ImageMagick uses centiseconds
+    const pattern = path.join(path.dirname(screenshots[0]), 'frame-*.png');
+    const command = `convert -delay ${delay} -loop 0 "${pattern}" "${outputPath}"`;
+    
+    await execAsync(command);
   }
 }

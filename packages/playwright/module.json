@@ -658,6 +658,77 @@
           }
         }
       }
+    },
+    {
+      "name": "record_video",
+      "description": "Record a video of browser interactions for a specified duration",
+      "function": "recordVideo",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Path where to save the video file (defaults to videos/recording-{timestamp}.webm)"
+          },
+          "duration": {
+            "type": "number",
+            "default": 10,
+            "description": "Duration to record in seconds (default: 10)"
+          },
+          "url": {
+            "type": "string",
+            "description": "Optional URL to navigate to before recording"
+          },
+          "format": {
+            "type": "string",
+            "enum": ["webm", "mp4", "mov", "avi", "gif"],
+            "default": "webm",
+            "description": "Video format (can also be inferred from file extension). Note: mp4/mov/avi require ffmpeg, gif is not yet implemented"
+          }
+        }
+      },
+      "output": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path where the video was saved"
+            },
+            "size": {
+              "type": "number",
+              "description": "Size of the video file in bytes"
+            },
+            "duration": {
+              "type": "number",
+              "description": "Duration of the recording in seconds"
+            },
+            "timestamp": {
+              "type": "string",
+              "description": "When the recording was completed"
+            },
+            "format": {
+              "type": "string",
+              "description": "Actual format of the saved video"
+            },
+            "warning": {
+              "type": "string",
+              "description": "Warning message if format conversion was not possible"
+            }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "error": {
+              "type": "string",
+              "description": "Error message"
+            }
+          }
+        }
+      }
     }
   ]
 }

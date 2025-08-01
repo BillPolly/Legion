@@ -45,6 +45,7 @@ export class BrowserManager {
 
     const options = {
       viewport: { width: 1280, height: 720 },
+      ...this.config.contextOptions,
       ...contextOptions
     };
 
