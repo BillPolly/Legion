@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeEditor Demo - Umbilical Component System</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .demo-section {
+            padding: 30px;
+        }
+
+        .section-title {
+            color: #333;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        .control-group select,
+        .control-group input,
+        .control-group button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .control-group button {
+            background: #667eea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .control-group button:hover {
+            background: #5a6fd8;
+        }
+
+        .control-group button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .editor-container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            min-height: 400px;
+        }
+
+        .editor-toolbar {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .editor-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .status-bar {
+            background: #2c3e50;
+            color: white;
+            padding: 8px 15px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.8em;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .animation-demo {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .animation-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .animation-controls button {
+            padding: 8px 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .animation-controls button:hover {
+            background: #218838;
+        }
+
+        .code-samples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .code-sample {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .code-sample:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+        }
+
+        .code-sample h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 1em;
+        }
+
+        .code-sample pre {
+            margin: 0;
+            font-size: 0.8em;
+            color: #666;
+            white-space: pre-wrap;
+            overflow: hidden;
+            max-height: 100px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .feature-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .feature-card h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 1.3em;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .feature-list li {
+            padding: 5px 0;
+            color: #666;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .feature-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .back-link {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            background: white;
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .animation-controls {
+                flex-direction: column;
+            }
+            
+            .code-samples {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../" class="back-link">← Back to Examples</a>
+
+    <div class="container">
+        <div class="header">
+            <h1>CodeEditor Demo</h1>
+            <p>Advanced code editor with CodeMirror 6, syntax highlighting, themes, and AI agent animations</p>
+        </div>
+
+        <div class="demo-section">
+            <h2 class="section-title">Interactive Code Editor</h2>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label for="language-select">Programming Language</label>
+                    <select id="language-select">
+                        <option value="javascript">JavaScript</option>
+                        <option value="typescript">TypeScript</option>
+                        <option value="python">Python</option>
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                        <option value="json">JSON</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="theme-select">Editor Theme</label>
+                    <select id="theme-select">
+                        <option value="light">Light Theme</option>
+                        <option value="dark">Dark Theme</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="tab-size">Tab Size</label>
+                    <input type="number" id="tab-size" min="1" max="8" value="2">
+                </div>
+
+                <div class="control-group">
+                    <label>Editor Options</label>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 5px; font-weight: normal;">
+                            <input type="checkbox" id="line-numbers" checked>
+                            Line Numbers
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px; font-weight: normal;">
+                            <input type="checkbox" id="word-wrap">
+                            Word Wrap
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px; font-weight: normal;">
+                            <input type="checkbox" id="read-only">
+                            Read Only
+                        </label>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>History Actions</label>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="undo-btn" disabled>Undo</button>
+                        <button id="redo-btn" disabled>Redo</button>
+                        <button id="clear-btn">Clear</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Editor Commands</label>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button id="select-all-btn">Select All</button>
+                        <button id="duplicate-line-btn">Duplicate Line</button>
+                        <button id="toggle-comment-btn">Toggle Comment</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="editor-container">
+                <div class="editor-toolbar">
+                    <div class="editor-stats">
+                        <span id="cursor-position">Ln 1, Col 1</span>
+                        <span id="selection-info"></span>
+                        <span id="language-indicator">JavaScript</span>
+                    </div>
+                    <div>
+                        <span id="dirty-indicator"></span>
+                        <span id="validation-status">✓ Valid</span>
+                    </div>
+                </div>
+                <div id="editor-mount" style="min-height: 300px;"></div>
+                <div class="status-bar">
+                    <div id="editor-stats">Lines: 1 | Characters: 0 | Words: 0</div>
+                    <div>CodeMirror 6 • Umbilical Protocol</div>
+                </div>
+            </div>
+
+            <div class="animation-demo">
+                <h3 style="margin-top: 0; color: #333;">AI Agent Animation Features</h3>
+                <p style="color: #666; margin-bottom: 20px;">
+                    Demonstrate the animation capabilities designed for AI coding agents
+                </p>
+                
+                <div class="animation-controls">
+                    <button id="typewriter-demo">Typewriter Effect</button>
+                    <button id="highlight-demo">Highlight Changes</button>
+                    <button id="reset-baseline">Reset Baseline</button>
+                    <button id="build-function-demo">Build Function</button>
+                    <button id="build-class-demo">Build Class</button>
+                    <button id="code-explanation-demo">Code Explanation</button>
+                </div>
+
+                <div class="code-samples">
+                    <div class="code-sample" data-language="javascript" data-title="React Component">
+                        <h4>React Component</h4>
+                        <pre>import React from 'react';
+
+function Welcome({ name }) {
+  return (
+    &lt;div className="welcome"&gt;
+      &lt;h1&gt;Hello, {name}!&lt;/h1&gt;
+    &lt;/div&gt;
+  );
+}
+
+export default Welcome;</pre>
+                    </div>
+
+                    <div class="code-sample" data-language="python" data-title="Python Class">
+                        <h4>Python Class</h4>
+                        <pre>class Calculator:
+    def __init__(self):
+        self.history = []
+    
+    def add(self, a, b):
+        result = a + b
+        self.history.append(f"{a} + {b} = {result}")
+        return result
+    
+    def get_history(self):
+        return self.history</pre>
+                    </div>
+
+                    <div class="code-sample" data-language="typescript" data-title="TypeScript Interface">
+                        <h4>TypeScript Interface</h4>
+                        <pre>interface User {
+  id: number;
+  name: string;
+  email: string;
+  isActive: boolean;
+}
+
+class UserService {
+  private users: User[] = [];
+  
+  addUser(user: User): void {
+    this.users.push(user);
+  }
+  
+  findById(id: number): User | undefined {
+    return this.users.find(u => u.id === id);
+  }
+}</pre>
+                    </div>
+
+                    <div class="code-sample" data-language="css" data-title="CSS Grid Layout">
+                        <h4>CSS Grid Layout</h4>
+                        <pre>.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 20px;
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}</pre>
+                    </div>
+
+                    <div class="code-sample" data-language="html" data-title="HTML5 Structure">
+                        <h4>HTML5 Structure</h4>
+                        <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Modern Web App&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;header&gt;
+        &lt;nav&gt;
+            &lt;ul&gt;
+                &lt;li&gt;&lt;a href="#home"&gt;Home&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;&lt;a href="#about"&gt;About&lt;/a&gt;&lt;/li&gt;
+            &lt;/ul&gt;
+        &lt;/nav&gt;
+    &lt;/header&gt;
+    &lt;main&gt;
+        &lt;section id="content"&gt;
+            &lt;h1&gt;Welcome&lt;/h1&gt;
+        &lt;/section&gt;
+    &lt;/main&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+                    </div>
+
+                    <div class="code-sample" data-language="json" data-title="API Response">
+                        <h4>API Response</h4>
+                        <pre>{
+  "status": "success",
+  "data": {
+    "users": [
+      {
+        "id": 1,
+        "name": "John Doe",
+        "email": "john@example.com",
+        "role": "admin"
+      },
+      {
+        "id": 2,
+        "name": "Jane Smith",
+        "email": "jane@example.com",
+        "role": "user"
+      }
+    ]
+  },
+  "pagination": {
+    "page": 1,
+    "total": 25,
+    "hasNext": true
+  }
+}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2 class="section-title">Features Overview</h2>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>🎨 Syntax Highlighting</h3>
+                    <ul class="feature-list">
+                        <li>JavaScript & TypeScript</li>
+                        <li>Python syntax support</li>
+                        <li>HTML & CSS highlighting</li>
+                        <li>JSON formatting</li>
+                        <li>Context-aware coloring</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h3>🌙 Theme Support</h3>
+                    <ul class="feature-list">
+                        <li>Light & Dark themes</li>
+                        <li>Smooth theme transitions</li>
+                        <li>Customizable color schemes</li>
+                        <li>Professional appearance</li>
+                        <li>Eye-friendly design</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h3>⚡ Smart Features</h3>
+                    <ul class="feature-list">
+                        <li>Auto-completion</li>
+                        <li>Bracket matching</li>
+                        <li>Code folding</li>
+                        <li>Find & replace</li>
+                        <li>Multiple cursors</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h3>🤖 AI Agent Ready</h3>
+                    <ul class="feature-list">
+                        <li>Typewriter animations</li>
+                        <li>Progressive code building</li>
+                        <li>Highlight changes</li>
+                        <li>Real-time feedback</li>
+                        <li>Animation callbacks</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h3>🔧 Developer Tools</h3>
+                    <ul class="feature-list">
+                        <li>Undo/Redo history</li>
+                        <li>Line numbers</li>
+                        <li>Code validation</li>
+                        <li>Statistics tracking</li>
+                        <li>Keyboard shortcuts</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h3>🔌 Umbilical Protocol</h3>
+                    <ul class="feature-list">
+                        <li>Perfect component isolation</li>
+                        <li>Dependency discovery</li>
+                        <li>Validation support</li>
+                        <li>MVVM architecture</li>
+                        <li>Lifecycle management</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { CodeEditor } from '../../src/components/code-editor/index.js';
+
+        // Initialize the code editor
+        const editorMount = document.getElementById('editor-mount');
+        
+        const initialCode = `// Welcome to the CodeEditor Demo!
+// This editor supports multiple languages, themes, and AI agent animations
+
+function greetUser(name) {
+    const message = \`Hello, \${name}! Welcome to the Umbilical Component System.\`;
+    console.log(message);
+    
+    // Try changing the language, theme, or using the animation features
+    return {
+        message,
+        timestamp: new Date().toISOString(),
+        features: [
+            'Syntax highlighting',
+            'Theme support', 
+            'AI animations',
+            'MVVM architecture'
+        ]
+    };
+}
+
+// Call the function
+greetUser('Developer');`;
+
+        let editor = CodeEditor.create({
+            dom: editorMount,
+            content: initialCode,
+            language: 'javascript',
+            theme: 'light',
+            lineNumbers: true,
+            autocompletion: true,
+            enableAnimations: true,
+            onContentChange: updateStats,
+            onCursorChange: updateCursorPosition,
+            onSelectionChange: updateSelection,
+            onHistoryChange: updateHistoryButtons,
+            onLanguageChange: updateLanguageIndicator
+        });
+
+        // DOM elements
+        const languageSelect = document.getElementById('language-select');
+        const themeSelect = document.getElementById('theme-select');
+        const tabSizeInput = document.getElementById('tab-size');
+        const lineNumbersCheck = document.getElementById('line-numbers');
+        const wordWrapCheck = document.getElementById('word-wrap');
+        const readOnlyCheck = document.getElementById('read-only');
+        
+        const undoBtn = document.getElementById('undo-btn');
+        const redoBtn = document.getElementById('redo-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        
+        const selectAllBtn = document.getElementById('select-all-btn');
+        const duplicateLineBtn = document.getElementById('duplicate-line-btn');
+        const toggleCommentBtn = document.getElementById('toggle-comment-btn');
+
+        // Status elements
+        const cursorPosition = document.getElementById('cursor-position');
+        const selectionInfo = document.getElementById('selection-info');
+        const languageIndicator = document.getElementById('language-indicator');
+        const editorStats = document.getElementById('editor-stats');
+        const dirtyIndicator = document.getElementById('dirty-indicator');
+        const validationStatus = document.getElementById('validation-status');
+
+        // Animation buttons
+        const typewriterDemo = document.getElementById('typewriter-demo');
+        const highlightDemo = document.getElementById('highlight-demo');
+        const resetBaseline = document.getElementById('reset-baseline');
+        const buildFunctionDemo = document.getElementById('build-function-demo');
+        const buildClassDemo = document.getElementById('build-class-demo');
+        const codeExplanationDemo = document.getElementById('code-explanation-demo');
+
+        // Event listeners
+        languageSelect.addEventListener('change', (e) => {
+            editor.setLanguage(e.target.value);
+        });
+
+        themeSelect.addEventListener('change', (e) => {
+            editor.setTheme(e.target.value);
+        });
+
+        tabSizeInput.addEventListener('change', (e) => {
+            editor.updateConfig({ tabSize: parseInt(e.target.value) });
+        });
+
+        lineNumbersCheck.addEventListener('change', (e) => {
+            editor.updateConfig({ lineNumbers: e.target.checked });
+        });
+
+        wordWrapCheck.addEventListener('change', (e) => {
+            editor.updateConfig({ wordWrap: e.target.checked });
+        });
+
+        readOnlyCheck.addEventListener('change', (e) => {
+            editor.updateConfig({ readOnly: e.target.checked });
+        });
+
+        // History controls
+        undoBtn.addEventListener('click', () => editor.undo());
+        redoBtn.addEventListener('click', () => editor.redo());
+        clearBtn.addEventListener('click', () => {
+            if (confirm('Clear all content?')) {
+                editor.setContent('');
+            }
+        });
+
+        // Editor commands
+        selectAllBtn.addEventListener('click', () => editor.selectAll());
+        duplicateLineBtn.addEventListener('click', () => editor.duplicateLine());
+        toggleCommentBtn.addEventListener('click', () => editor.toggleComment());
+
+        // Animation demos
+        typewriterDemo.addEventListener('click', async () => {
+            const text = '// This text is being typed with typewriter animation\nconsole.log("AI coding agent simulation!");';
+            typewriterDemo.disabled = true;
+            editor.setContent('');
+            try {
+                await editor.typeText(text, { speed: 30 });
+            } catch (error) {
+                // Fallback for jsdom/testing environments
+                editor.setContent(text);
+            }
+            typewriterDemo.disabled = false;
+        });
+
+        // Track highlight state
+        let isHighlighted = false;
+        
+        highlightDemo.addEventListener('click', () => {
+            try {
+                if (isHighlighted) {
+                    // Clear highlights
+                    editor.clearHighlights();
+                    highlightDemo.textContent = 'Highlight Changes';
+                    isHighlighted = false;
+                } else {
+                    // Add highlights
+                    editor.toggleHighlight();
+                    highlightDemo.textContent = 'Clear Highlights';
+                    isHighlighted = true;
+                }
+            } catch (error) {
+                console.error('Toggle highlight error:', error);
+            }
+        });
+
+        resetBaseline.addEventListener('click', () => {
+            try {
+                editor.resetOriginalContent();
+                // Also clear any existing highlights
+                editor.clearHighlights();
+                if (isHighlighted) {
+                    highlightDemo.textContent = 'Highlight Changes';
+                    isHighlighted = false;
+                }
+                console.log('Reset baseline for change tracking');
+            } catch (error) {
+                console.error('Reset baseline error:', error);
+            }
+        });
+
+        buildFunctionDemo.addEventListener('click', async () => {
+            const codeBlocks = [
+                'function calculateSum(numbers) {',
+                '    if (!Array.isArray(numbers)) {',
+                '        throw new Error("Input must be an array");',
+                '    }',
+                '    ',
+                '    return numbers.reduce((sum, num) => {',
+                '        return sum + num;',
+                '    }, 0);',
+                '}'
+            ];
+            
+            buildFunctionDemo.disabled = true;
+            editor.setContent('');
+            try {
+                await editor.buildCode(codeBlocks, { speed: 50 });
+            } catch (error) {
+                // Fallback
+                editor.setContent(codeBlocks.join('\n'));
+            }
+            buildFunctionDemo.disabled = false;
+        });
+
+        buildClassDemo.addEventListener('click', async () => {
+            editor.setLanguage('typescript');
+            const codeBlocks = [
+                'class DataProcessor<T> {',
+                '    private data: T[] = [];',
+                '    ',
+                '    add(item: T): void {',
+                '        this.data.push(item);',
+                '    }',
+                '    ',
+                '    process(callback: (item: T) => T): T[] {',
+                '        return this.data.map(callback);',
+                '    }',
+                '    ',
+                '    get length(): number {',
+                '        return this.data.length;',
+                '    }',
+                '}'
+            ];
+            
+            buildClassDemo.disabled = true;
+            editor.setContent('');
+            try {
+                await editor.buildCode(codeBlocks, { speed: 40 });
+            } catch (error) {
+                // Fallback
+                editor.setContent(codeBlocks.join('\n'));
+            }
+            buildClassDemo.disabled = false;
+        });
+
+        codeExplanationDemo.addEventListener('click', async () => {
+            const explanation = `/**
+ * Code Explanation Demo
+ * 
+ * This demonstrates how an AI agent might explain code:
+ * 
+ * 1. First, we define a utility function
+ * 2. Then we add proper error handling
+ * 3. Finally, we return the processed result
+ */
+
+// Step 1: Define the utility function
+function processUserInput(input) {
+    // Step 2: Add validation
+    if (typeof input !== 'string') {
+        throw new TypeError('Input must be a string');
+    }
+    
+    // Step 3: Process and return
+    return input.trim().toLowerCase();
+}
+
+// Example usage:
+const result = processUserInput("  Hello World  ");
+console.log(result); // "hello world"`;
+
+            codeExplanationDemo.disabled = true;
+            editor.setContent('');
+            try {
+                await editor.typeText(explanation, { speed: 15 });
+            } catch (error) {
+                // Fallback
+                editor.setContent(explanation);
+            }
+            codeExplanationDemo.disabled = false;
+        });
+
+        // Code sample clicks
+        document.querySelectorAll('.code-sample').forEach(sample => {
+            sample.addEventListener('click', () => {
+                const language = sample.dataset.language;
+                const code = sample.querySelector('pre').textContent;
+                
+                editor.setLanguage(language);
+                languageSelect.value = language;
+                editor.setContent(code);
+                
+                // Highlight the sample briefly
+                sample.style.background = '#e8f4fd';
+                setTimeout(() => {
+                    sample.style.background = 'white';
+                }, 500);
+            });
+        });
+
+        // Status update functions
+        function updateStats() {
+            const stats = editor.getStats();
+            editorStats.textContent = `Lines: ${stats.lines} | Characters: ${stats.characters} | Words: ${stats.words}`;
+            dirtyIndicator.textContent = stats.isDirty ? '● Modified' : '';
+            
+            const errors = editor.getValidationErrors();
+            validationStatus.textContent = errors.length > 0 ? `⚠ ${errors.length} error(s)` : '✓ Valid';
+            validationStatus.style.color = errors.length > 0 ? '#dc3545' : '#28a745';
+        }
+
+        function updateCursorPosition(cursor) {
+            cursorPosition.textContent = `Ln ${cursor.line + 1}, Col ${cursor.ch + 1}`;
+        }
+
+        function updateSelection(cursor, selection) {
+            if (selection) {
+                const selectedText = editor.getSelectedText();
+                const lines = selectedText.split('\n').length;
+                const chars = selectedText.length;
+                selectionInfo.textContent = `(${chars} chars, ${lines} lines selected)`;
+            } else {
+                selectionInfo.textContent = '';
+            }
+        }
+
+        function updateHistoryButtons(historyIndex, canUndo, canRedo) {
+            undoBtn.disabled = !canUndo;
+            redoBtn.disabled = !canRedo;
+        }
+
+        function updateLanguageIndicator(language) {
+            const languageNames = {
+                javascript: 'JavaScript',
+                typescript: 'TypeScript',
+                python: 'Python',
+                html: 'HTML',
+                css: 'CSS',
+                json: 'JSON'
+            };
+            languageIndicator.textContent = languageNames[language] || language;
+        }
+
+        // Initial status update
+        updateStats();
+        updateHistoryButtons(0, false, false);
+        updateCursorPosition({ line: 0, ch: 0 });
+
+        // Focus the editor
+        editor.focus();
+
+        // Keyboard shortcuts info
+        console.log('CodeEditor Demo loaded!');
+        console.log('Keyboard shortcuts:');
+        console.log('- Ctrl+Z / Cmd+Z: Undo');
+        console.log('- Ctrl+Y / Cmd+Shift+Z: Redo');
+        console.log('- Ctrl+A / Cmd+A: Select All');
+        console.log('- Ctrl+D / Cmd+D: Duplicate Line');
+        console.log('- Ctrl+/ / Cmd+/: Toggle Comment');
+        console.log('- Ctrl+S / Cmd+S: Save (callback)');
+    </script>
+</body>
+</html>

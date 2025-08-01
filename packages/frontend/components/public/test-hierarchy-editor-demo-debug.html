@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug HierarchyEditor Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        #demo-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .error {
+            color: red;
+            background: #ffe0e0;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .success {
+            color: green;
+            background: #e0ffe0;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .log {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 5px 0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Debug HierarchyEditor Demo</h1>
+    <div id="log-container"></div>
+    <div id="demo-container">
+        <div style="padding: 20px; background: #f5f5f5; text-align: center;">
+            Demo will load here...
+        </div>
+    </div>
+    
+    <script type="module">
+        const log = (message, type = 'log') => {
+            const logContainer = document.getElementById('log-container');
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(div);
+            console.log(message);
+        };
+        
+        window.addEventListener('error', (e) => {
+            log(`ERROR: ${e.message} at ${e.filename}:${e.lineno}:${e.colno}`, 'error');
+        });
+        
+        async function testDemo() {
+            try {
+                log('Starting demo test...');
+                
+                // Import the demo component
+                log('Importing HierarchyEditorDemo...');
+                const { HierarchyEditorDemo } = await import('../../src/components/hierarchy-editor-demo/index.js');
+                log('✓ HierarchyEditorDemo imported successfully', 'success');
+                
+                // Get container
+                const container = document.getElementById('demo-container');
+                log('✓ Container element found', 'success');
+                
+                // Create demo with introspection first
+                log('Testing introspection mode...');
+                let requirements = null;
+                HierarchyEditorDemo.create({
+                    describe: (reqs) => { 
+                        requirements = reqs.getAll();
+                        log('✓ Introspection mode works', 'success');
+                        log(`Requirements: ${Object.keys(requirements).join(', ')}`);
+                    }
+                });
+                
+                // Create actual instance
+                log('Creating HierarchyEditorDemo instance...');
+                const demo = HierarchyEditorDemo.create({
+                    dom: container,
+                    theme: 'light',
+                    onMount: () => log('✓ onMount callback called', 'success'),
+                    onDestroy: () => log('✓ onDestroy callback called', 'success')
+                });
+                
+                if (!demo) {
+                    throw new Error('Demo instance is null');
+                }
+                
+                log('✓ Demo instance created', 'success');
+                log(`Demo methods: ${Object.keys(demo).filter(k => typeof demo[k] === 'function').join(', ')}`);
+                
+                // Check if content was rendered
+                setTimeout(() => {
+                    const demoContent = container.querySelector('.hierarchy-editor-demo');
+                    if (demoContent) {
+                        log('✓ Demo content rendered in DOM', 'success');
+                        
+                        // Check for specific sections
+                        const sections = container.querySelectorAll('[data-demo]');
+                        log(`Found ${sections.length} demo sections`);
+                        
+                        const editors = container.querySelectorAll('[data-editor-container]');
+                        log(`Found ${editors.length} editor containers`);
+                        
+                        // Try to get editor instances
+                        const basicEditor = demo.getEditorInstance('basic');
+                        log(`Basic editor instance: ${basicEditor ? 'found' : 'not found'}`);
+                        
+                    } else {
+                        log('ERROR: Demo content not found in DOM', 'error');
+                        log(`Container innerHTML length: ${container.innerHTML.length}`);
+                        log(`Container children: ${container.children.length}`);
+                    }
+                }, 100);
+                
+                // Store demo globally for debugging
+                window.demo = demo;
+                log('Demo instance available as window.demo for debugging');
+                
+            } catch (error) {
+                log(`ERROR: ${error.message}`, 'error');
+                log(`Stack: ${error.stack}`, 'error');
+            }
+        }
+        
+        testDemo();
+    </script>
+</body>
+</html>

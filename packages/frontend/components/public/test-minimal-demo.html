@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Minimal Demo Test</title>
+    <style>
+        body { padding: 20px; font-family: Arial; }
+        #demo { border: 2px solid #ccc; min-height: 200px; padding: 10px; }
+        .log { background: #f0f0f0; padding: 5px; margin: 5px 0; }
+        .error { color: red; background: #ffe0e0; }
+        .success { color: green; background: #e0ffe0; }
+    </style>
+</head>
+<body>
+    <h1>Minimal HierarchyEditorDemo Test</h1>
+    <div id="logs"></div>
+    <div id="demo">Initial content - should be replaced</div>
+    
+    <script type="module">
+        const log = (msg, type = 'log') => {
+            console.log(msg);
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = msg;
+            document.getElementById('logs').appendChild(div);
+        };
+        
+        window.addEventListener('error', e => {
+            log(`ERROR: ${e.message} at ${e.filename}:${e.lineno}`, 'error');
+        });
+        
+        // Mock HierarchyEditor to avoid dependency issues
+        window.MockHierarchyEditor = {
+            create(config) {
+                log('MockHierarchyEditor.create called with config: ' + JSON.stringify({
+                    dom: config.dom ? 'provided' : 'missing',
+                    format: config.format,
+                    hasCallbacks: !!config.onMount
+                }));
+                
+                const instance = {
+                    render: () => {
+                        log('MockEditor.render called');
+                        config.dom.innerHTML = '<div style="padding:10px;background:#e0f0e0;">Mock Editor Rendered</div>';
+                    },
+                    destroy: () => log('MockEditor.destroy called'),
+                    setMode: (mode) => log(`MockEditor.setMode(${mode})`),
+                    expandAll: () => log('MockEditor.expandAll'),
+                    collapseAll: () => log('MockEditor.collapseAll'),
+                    loadContent: (content, format) => log(`MockEditor.loadContent(${format})`),
+                    setContent: (content) => log('MockEditor.setContent'),
+                    getContent: () => '{"mock": "data"}',
+                    addNode: () => log('MockEditor.addNode'),
+                    editNode: () => log('MockEditor.editNode'),
+                    setTheme: (theme) => log(`MockEditor.setTheme(${theme})`),
+                    getTreeData: () => ({ id: 'root', children: [] })
+                };
+                
+                if (config.onMount) {
+                    config.onMount(instance);
+                }
+                
+                return instance;
+            }
+        };
+        
+        // Replace the real HierarchyEditor import
+        const originalDynamicImport = window.dynamicImport || import;
+        window.dynamicImport = async (path) => {
+            if (path.includes('hierarchy-editor/index.js')) {
+                log('Intercepted HierarchyEditor import, returning mock');
+                return { HierarchyEditor: window.MockHierarchyEditor };
+            }
+            return originalDynamicImport(path);
+        };
+        
+        async function test() {
+            try {
+                log('Starting test...');
+                
+                // Import demo - this should work with our simple model
+                const { HierarchyEditorDemo } = await import('../../src/components/hierarchy-editor-demo/index.js');
+                log('✓ HierarchyEditorDemo imported', 'success');
+                
+                const container = document.getElementById('demo');
+                log('Creating demo instance...');
+                
+                const demo = HierarchyEditorDemo.create({
+                    dom: container,
+                    theme: 'light'
+                });
+                
+                log('✓ Demo created', 'success');
+                
+                // Check what happened to container
+                setTimeout(() => {
+                    const content = container.innerHTML;
+                    log(`Container content length: ${content.length}`);
+                    if (content.includes('HierarchyEditor Component Demo')) {
+                        log('✓ Demo header found in DOM', 'success');
+                    } else if (content.includes('Mock Editor')) {
+                        log('✓ Mock editors rendered', 'success');
+                    } else {
+                        log('WARNING: Expected content not found', 'error');
+                        log(`First 200 chars: ${content.substring(0, 200)}`);
+                    }
+                }, 100);
+                
+            } catch (error) {
+                log(`ERROR: ${error.message}`, 'error');
+                log(`Stack: ${error.stack}`, 'error');
+            }
+        }
+        
+        test();
+    </script>
+</body>
+</html>

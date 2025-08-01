@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Umbilical Component Protocol - Examples</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .example {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            background: #f9f9f9;
+        }
+        
+        .example h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .example p {
+            color: #666;
+            margin: 10px 0;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 5px 5px 5px 0;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+        }
+        
+        .btn.secondary {
+            background: #6c757d;
+        }
+        
+        .btn.secondary:hover {
+            background: #545b62;
+        }
+        
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        
+        .console-output {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin: 15px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Umbilical Component Protocol - Examples</h1>
+    
+    <p>These examples demonstrate the key concepts of the Umbilical Component Protocol:</p>
+    <ul>
+        <li><strong>Single Interface:</strong> Every component has exactly one function: <code>create(umbilical)</code></li>
+        <li><strong>Perfect Isolation:</strong> Components can only access capabilities provided through the umbilical</li>
+        <li><strong>Agent-Friendly:</strong> Designed specifically for AI agents to discover, test, and compose</li>
+        <li><strong>Environmental Adaptation:</strong> Same component behaves differently based on umbilical capabilities</li>
+    </ul>
+
+    <div class="example">
+        <h3>Interactive Counter App</h3>
+        <p>A complete application built by composing three independent components: Counter (state), Display (rendering), and Button (interaction).</p>
+        <a href="counter-app.html" class="btn">View Counter App</a>
+        <p><em>Shows real DOM interaction and component composition in a browser environment.</em></p>
+    </div>
+
+    <div class="example">
+        <h3>Agent Composition Demo</h3>
+        <p>Demonstrates how an AI agent would discover component requirements, create umbilicals, and compose a working application programmatically.</p>
+        <button id="run-composition" class="btn secondary">Run Composition Demo</button>
+        <p><em>View the browser console to see the agent workflow in action.</em></p>
+        
+        <div id="composition-output" class="console-output" style="display: none;">
+            <div id="composition-log"></div>
+        </div>
+    </div>
+
+    <div class="example">
+        <h3>Component Introspection</h3>
+        <p>Shows how agents can discover what capabilities each component requires before instantiation.</p>
+        <button id="run-introspection" class="btn secondary">Discover Requirements</button>
+        
+        <div id="introspection-output" class="console-output" style="display: none;">
+            <div id="introspection-log"></div>
+        </div>
+    </div>
+
+    <div class="example">
+        <h3>Window Component with Counter</h3>
+        <p>A floating window component that contains the counter application. Demonstrates dragging, resizing, minimize/maximize, themes, and component composition.</p>
+        <a href="window-counter.html" class="btn">View Window Demo</a>
+        <p><em>Shows how complex UI components work with the umbilical protocol.</em></p>
+    </div>
+
+    <div class="example">
+        <h3>Image Viewer Component</h3>
+        <p>A rich image viewing component with pan, zoom, and controls. Supports URLs and base64 data, with configurable UI elements.</p>
+        <a href="image-viewer-demo.html" class="btn">View Image Viewer Demo</a>
+        <p><em>Demonstrates advanced mouse interactions and state management.</em></p>
+    </div>
+
+    <div class="example">
+        <h3>Context Menu Component</h3>
+        <p>A sophisticated popup menu component with hierarchical submenus, theming, and smart positioning. Perfect for right-click interactions.</p>
+        <a href="context-menu-demo.html" class="btn">View Context Menu Demo</a>
+        <p><em>Shows nested menus, different triggers, and context-aware menu items.</em></p>
+    </div>
+
+    <div class="example">
+        <h3>Interactive Data Grid</h3>
+        <p>A comprehensive grid component with drag & drop, resizing, inline editing, and dual modes (table/attribute). Demonstrates MVVM architecture within the umbilical protocol.</p>
+        <a href="grid-demo.html" class="btn">View Grid Demo</a>
+        <p><em>Shows complex data interactions, validation, and advanced UI patterns.</em></p>
+    </div>
+
+    <div class="example">
+        <h3>Hierarchical Tree Component</h3>
+        <p>A feature-rich tree view with expand/collapse, selection modes, drag & drop reordering, search, and keyboard navigation. Built with MVVM architecture and following the umbilical protocol.</p>
+        <a href="tree-demo.html" class="btn">View Tree Demo</a>
+        <p><em>Demonstrates hierarchical data management, advanced interactions, and state persistence.</em></p>
+    </div>
+
+    <div class="example">
+        <h3>Divider Component</h3>
+        <p>A draggable divider that can be vertical or horizontal, allowing users to resize areas by dragging. Supports programmatic control, bounds constraints, theming, and lock/enable states.</p>
+        <a href="divider-demo.html" class="btn">View Divider Demo</a>
+        <p><em>Shows drag-to-resize functionality, programmatic positioning, and state management.</em></p>
+    </div>
+
+    <div class="example">
+        <h3>Tabs Component (MVVM)</h3>
+        <p>A comprehensive tabs component built with MVVM architecture featuring multiple themes, drag & drop reordering, keyboard navigation, closable tabs, badges, icons, and extensive customization options.</p>
+        <a href="tabs-demo.html" class="btn">View Tabs Demo</a>
+        <p><em>Demonstrates complete MVVM architecture within the umbilical protocol, with advanced state management and interactive features.</em></p>
+    </div>
+
+    <div class="example">
+        <h3>Code Editor (MVVM)</h3>
+        <p>An advanced code editor with CodeMirror 6, syntax highlighting for multiple languages, light/dark themes, and AI agent animations including typewriter effects and progressive code building.</p>
+        <a href="code-editor-demo.html" class="btn">View Code Editor Demo</a>
+        <p><em>Features MVVM architecture, agent animation APIs, and comprehensive editing capabilities designed for AI coding agents.</em></p>
+    </div>
+
+    <div class="example">
+        <h3>Graph Editor</h3>
+        <p>A full-featured node-link diagram editor with pan/zoom, drag & drop, selection tools, undo/redo, and layout algorithms. Built with MVVM architecture following the umbilical protocol.</p>
+        <a href="graph-editor-demo.html" class="btn">View Graph Editor Demo</a>
+        <p><em>Demonstrates complex state management, command pattern, and interactive editing capabilities.</em></p>
+    </div>
+
+    <div class="example">
+        <h3>Node Types Customization</h3>
+        <p>Graph editor with customizable node types - drag different node shapes from a palette to create flowcharts, process diagrams, and more. Features property editing and visual customization.</p>
+        <a href="node-types-demo.html" class="btn">View Node Types Demo</a>
+        <p><em>Shows drag & drop palette, custom node rendering, and dynamic property editing.</em></p>
+    </div>
+
+    <div class="example">
+        <h3>Layout Algorithms</h3>
+        <p>Interactive demonstration of different graph layout algorithms including hierarchical (Dagre), force-directed, circular, and grid layouts with animated transitions and configuration options.</p>
+        <a href="layout-demo.html" class="btn">View Layout Demo</a>
+        <p><em>Explore automatic graph layout with real-time configuration and smooth animations.</em></p>
+    </div>
+
+    <div class="example">
+        <h3>ModernTree - MVVM Tree Component</h3>
+        <p>A feature-complete tree component built with MVVM base classes, showcasing ~90% boilerplate reduction. Includes hierarchical data, multi-selection, search, keyboard navigation, virtual scrolling, and comprehensive accessibility features.</p>
+        <a href="modern-tree-demo/" class="btn">View ModernTree Demo</a>
+        <p><em>Demonstrates the power of MVVM base classes with minimal code and maximum functionality. Perfect example of standardized component architecture.</em></p>
+    </div>
+
+    <div class="example">
+        <h3>TreeScribe YAML Document Viewer</h3>
+        <p>A comprehensive YAML document viewer with interactive tree navigation, search functionality, multiple content renderers, and full accessibility support. Demonstrates production-ready component architecture following the umbilical protocol.</p>
+        <a href="tree-scribe-demo.html" class="btn">View TreeScribe Demo</a>
+        <p><em>Features advanced search, keyboard navigation, export functions, and WCAG 2.1 AA accessibility compliance.</em></p>
+    </div>
+
+    <div class="example">
+        <h3>HierarchyEditor - Multi-Format Editable Hierarchy Display</h3>
+        <p>A powerful component for viewing and editing hierarchical data in multiple formats including JSON, XML, YAML, and Markdown. Features tree/source view modes, inline editing, syntax highlighting, and real-time synchronization.</p>
+        <a href="hierarchy-editor-demo.html" class="btn">View HierarchyEditor Demo</a>
+        <p><em>Demonstrates advanced editing capabilities, format conversion, event system, and comprehensive error handling following the umbilical protocol.</em></p>
+    </div>
+
+    <div class="example">
+        <h3>Testing Patterns</h3>
+        <p>Demonstrates how the umbilical protocol makes components trivially testable through umbilical mocking.</p>
+        <a href="../test/example-tests.html" class="btn secondary">View Test Examples</a>
+        <p><em>Shows unit testing patterns that would be perfect for AI agents.</em></p>
+    </div>
+
+    <script type="module">
+        import { runCompositionDemo } from './composition-demo.js';
+        import { Counter } from '/src/components/counter/index.js';
+        import { Display } from '/src/components/display/index.js';
+        import { Button } from '/src/components/button/index.js';
+        import { UmbilicalUtils } from '/src/umbilical/index.js';
+
+        // Composition demo
+        document.getElementById('run-composition').addEventListener('click', () => {
+            const output = document.getElementById('composition-output');
+            const log = document.getElementById('composition-log');
+            
+            // Clear previous output
+            log.innerHTML = '';
+            output.style.display = 'block';
+            
+            // Capture console output
+            const originalLog = console.log;
+            console.log = (...args) => {
+                originalLog(...args);
+                log.innerHTML += '<div>' + args.join(' ') + '</div>';
+                log.scrollTop = log.scrollHeight;
+            };
+            
+            try {
+                runCompositionDemo();
+            } finally {
+                console.log = originalLog;
+            }
+        });
+
+        // Introspection demo
+        document.getElementById('run-introspection').addEventListener('click', () => {
+            const output = document.getElementById('introspection-output');
+            const log = document.getElementById('introspection-log');
+            
+            log.innerHTML = '';
+            output.style.display = 'block';
+            
+            const logToDiv = (message) => {
+                log.innerHTML += '<div>' + message + '</div>';
+                log.scrollTop = log.scrollHeight;
+            };
+
+            logToDiv('🔍 Discovering component requirements...\n');
+
+            // Discover Counter requirements
+            logToDiv('=== Counter Component ===');
+            const counterReqs = UmbilicalUtils.createRequirements();
+            Counter.create({
+                describe: (reqs) => {
+                    Object.entries(reqs.getAll()).forEach(([key, spec]) => {
+                        counterReqs.add(key, spec.type, spec.description);
+                    });
+                }
+            });
+            
+            Object.entries(counterReqs.getAll()).forEach(([key, spec]) => {
+                logToDiv(`  ${key}: ${spec.type} - ${spec.description}`);
+            });
+
+            // Discover Display requirements
+            logToDiv('\n=== Display Component ===');
+            const displayReqs = UmbilicalUtils.createRequirements();
+            Display.create({
+                describe: (reqs) => {
+                    Object.entries(reqs.getAll()).forEach(([key, spec]) => {
+                        displayReqs.add(key, spec.type, spec.description);
+                    });
+                }
+            });
+            
+            Object.entries(displayReqs.getAll()).forEach(([key, spec]) => {
+                logToDiv(`  ${key}: ${spec.type} - ${spec.description}`);
+            });
+
+            // Discover Button requirements
+            logToDiv('\n=== Button Component ===');
+            const buttonReqs = UmbilicalUtils.createRequirements();
+            Button.create({
+                describe: (reqs) => {
+                    Object.entries(reqs.getAll()).forEach(([key, spec]) => {
+                        buttonReqs.add(key, spec.type, spec.description);
+                    });
+                }
+            });
+            
+            Object.entries(buttonReqs.getAll()).forEach(([key, spec]) => {
+                logToDiv(`  ${key}: ${spec.type} - ${spec.description}`);
+            });
+
+            logToDiv('\n✅ Component discovery complete!');
+            logToDiv('\nℹ️  An AI agent would use this information to:');
+            logToDiv('   1. Generate appropriate umbilical objects');
+            logToDiv('   2. Create mock umbilicals for testing');
+            logToDiv('   3. Validate component compatibility');
+            logToDiv('   4. Compose working applications');
+        });
+    </script>
+</body>
+</html>

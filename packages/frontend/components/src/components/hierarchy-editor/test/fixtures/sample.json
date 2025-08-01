@@ -1,0 +1,18 @@
+{
+  "name": "HierarchyEditor Test",
+  "version": "1.0.0",
+  "config": {
+    "editable": true,
+    "features": ["tree", "source", "editing"]
+  },
+  "data": {
+    "items": [
+      {"id": 1, "label": "First Item"},
+      {"id": 2, "label": "Second Item"}
+    ],
+    "metadata": {
+      "created": "2025-01-01",
+      "modified": null
+    }
+  }
+}

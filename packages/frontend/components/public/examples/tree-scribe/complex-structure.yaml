@@ -1,0 +1,1133 @@
+title: Advanced TreeScribe Demo - Complex Document Structure
+content: |
+  # Complex Document Demonstration
+  
+  This document showcases TreeScribe's ability to handle complex, deeply nested structures
+  with various content types, extensive metadata, and advanced features.
+  
+  **Document Features:**
+  - Deep nesting (up to 6 levels)
+  - Mixed content types (Markdown, YAML, plain text)
+  - Large amount of content for performance testing
+  - Advanced folding scenarios
+  - Rich metadata throughout
+
+type: markdown
+
+children:
+  - title: 🏢 Enterprise Software Architecture
+    content: |
+      # Enterprise Software Architecture Guide
+      
+      This section covers enterprise-level software architecture patterns,
+      best practices, and implementation strategies for large-scale applications.
+    type: markdown
+    
+    children:
+      - title: 🎯 Design Patterns
+        content: |
+          ## Fundamental Design Patterns for Enterprise Systems
+          
+          Understanding and applying proven design patterns is crucial for building
+          maintainable, scalable enterprise applications.
+        type: markdown
+        
+        children:
+          - title: Creational Patterns
+            content: |
+              ### Creational Design Patterns
+              
+              These patterns deal with object creation mechanisms, trying to create
+              objects in a manner suitable to the situation.
+            type: markdown
+            
+            children:
+              - title: Singleton Pattern
+                content: |
+                  #### Singleton Pattern Implementation
+                  
+                  Ensures a class has only one instance and provides global access to it.
+                  
+                  ```javascript
+                  class DatabaseConnection {
+                    constructor() {
+                      if (DatabaseConnection.instance) {
+                        return DatabaseConnection.instance;
+                      }
+                      
+                      this.connection = null;
+                      DatabaseConnection.instance = this;
+                      return this;
+                    }
+                    
+                    connect() {
+                      if (!this.connection) {
+                        this.connection = new Connection();
+                      }
+                      return this.connection;
+                    }
+                  }
+                  
+                  // Usage
+                  const db1 = new DatabaseConnection();
+                  const db2 = new DatabaseConnection();
+                  console.log(db1 === db2); // true
+                  ```
+                  
+                  **Benefits:**
+                  - Controlled access to single instance
+                  - Reduced memory footprint
+                  - Global access point
+                  
+                  **Drawbacks:**
+                  - Can make testing difficult
+                  - Violates Single Responsibility Principle
+                  - Can create hidden dependencies
+                type: markdown
+                
+                children:
+                  - title: Thread-Safe Singleton
+                    content: |
+                      ##### Thread-Safe Singleton Implementation
+                      
+                      For multi-threaded environments, ensure thread safety:
+                      
+                      ```javascript
+                      class ThreadSafeSingleton {
+                        static instance = null;
+                        static lock = new Mutex();
+                        
+                        constructor() {
+                          if (ThreadSafeSingleton.instance) {
+                            return ThreadSafeSingleton.instance;
+                          }
+                          throw new Error('Use ThreadSafeSingleton.getInstance()');
+                        }
+                        
+                        static async getInstance() {
+                          if (!ThreadSafeSingleton.instance) {
+                            await ThreadSafeSingleton.lock.acquire();
+                            try {
+                              if (!ThreadSafeSingleton.instance) {
+                                ThreadSafeSingleton.instance = Object.create(ThreadSafeSingleton.prototype);
+                                ThreadSafeSingleton.instance.initialize();
+                              }
+                            } finally {
+                              ThreadSafeSingleton.lock.release();
+                            }
+                          }
+                          return ThreadSafeSingleton.instance;
+                        }
+                        
+                        initialize() {
+                          // Initialization logic here
+                          this.data = new Map();
+                          this.timestamp = Date.now();
+                        }
+                      }
+                      ```
+                    type: markdown
+                    
+                  - title: Singleton Alternatives
+                    content: |
+                      ##### Modern Alternatives to Singleton
+                      
+                      Consider these alternatives for better testability:
+                      
+                      **Dependency Injection:**
+                      ```javascript
+                      // Instead of singleton
+                      class ServiceContainer {
+                        constructor() {
+                          this.services = new Map();
+                        }
+                        
+                        register(name, factory) {
+                          this.services.set(name, { factory, instance: null });
+                        }
+                        
+                        get(name) {
+                          const service = this.services.get(name);
+                          if (!service.instance) {
+                            service.instance = service.factory();
+                          }
+                          return service.instance;
+                        }
+                      }
+                      ```
+                      
+                      **Module Pattern:**
+                      ```javascript
+                      // ES6 modules are naturally singleton
+                      class DatabaseManager {
+                        constructor() {
+                          this.connections = new Map();
+                        }
+                        
+                        getConnection(name) {
+                          return this.connections.get(name);
+                        }
+                      }
+                      
+                      export default new DatabaseManager();
+                      ```
+                    type: markdown
+              
+              - title: Factory Pattern
+                content: |
+                  #### Factory Pattern Implementation
+                  
+                  Creates objects without specifying the exact class to create.
+                  
+                  ```javascript
+                  // Product interface
+                  class Vehicle {
+                    start() {
+                      throw new Error('start() method must be implemented');
+                    }
+                  }
+                  
+                  // Concrete products
+                  class Car extends Vehicle {
+                    start() {
+                      return 'Car engine started';
+                    }
+                  }
+                  
+                  class Motorcycle extends Vehicle {
+                    start() {
+                      return 'Motorcycle engine started';
+                    }
+                  }
+                  
+                  class Truck extends Vehicle {
+                    start() {
+                      return 'Truck engine started';
+                    }
+                  }
+                  
+                  // Factory
+                  class VehicleFactory {
+                    static createVehicle(type) {
+                      switch (type.toLowerCase()) {
+                        case 'car':
+                          return new Car();
+                        case 'motorcycle':
+                          return new Motorcycle();
+                        case 'truck':
+                          return new Truck();
+                        default:
+                          throw new Error(`Unknown vehicle type: ${type}`);
+                      }
+                    }
+                  }
+                  
+                  // Usage
+                  const car = VehicleFactory.createVehicle('car');
+                  console.log(car.start()); // "Car engine started"
+                  ```
+                type: markdown
+                
+              - title: Builder Pattern
+                content: |
+                  #### Builder Pattern for Complex Objects
+                  
+                  Constructs complex objects step by step.
+                  
+                  ```javascript
+                  class DatabaseQuery {
+                    constructor() {
+                      this.query = '';
+                      this.conditions = [];
+                      this.joins = [];
+                      this.orderBy = [];
+                      this.limit = null;
+                    }
+                    
+                    select(fields) {
+                      this.query = `SELECT ${fields.join(', ')}`;
+                      return this;
+                    }
+                    
+                    from(table) {
+                      this.query += ` FROM ${table}`;
+                      return this;
+                    }
+                    
+                    where(condition) {
+                      this.conditions.push(condition);
+                      return this;
+                    }
+                    
+                    join(table, on) {
+                      this.joins.push(`JOIN ${table} ON ${on}`);
+                      return this;
+                    }
+                    
+                    orderBy(column, direction = 'ASC') {
+                      this.orderBy.push(`${column} ${direction}`);
+                      return this;
+                    }
+                    
+                    limit(count) {
+                      this.limit = count;
+                      return this;
+                    }
+                    
+                    build() {
+                      let sql = this.query;
+                      
+                      if (this.joins.length > 0) {
+                        sql += ` ${this.joins.join(' ')}`;
+                      }
+                      
+                      if (this.conditions.length > 0) {
+                        sql += ` WHERE ${this.conditions.join(' AND ')}`;
+                      }
+                      
+                      if (this.orderBy.length > 0) {
+                        sql += ` ORDER BY ${this.orderBy.join(', ')}`;
+                      }
+                      
+                      if (this.limit) {
+                        sql += ` LIMIT ${this.limit}`;
+                      }
+                      
+                      return sql;
+                    }
+                  }
+                  
+                  // Usage
+                  const query = new DatabaseQuery()
+                    .select(['name', 'email', 'created_at'])
+                    .from('users')
+                    .join('profiles', 'users.id = profiles.user_id')
+                    .where('users.active = 1')
+                    .where('profiles.verified = 1')
+                    .orderBy('created_at', 'DESC')
+                    .limit(10)
+                    .build();
+                  ```
+                type: markdown
+          
+          - title: Structural Patterns
+            content: |
+              ### Structural Design Patterns
+              
+              These patterns explain how to assemble objects and classes into larger
+              structures while keeping these structures flexible and efficient.
+            type: markdown
+            
+            children:
+              - title: Adapter Pattern
+                content: |
+                  #### Adapter Pattern Implementation
+                  
+                  Allows incompatible interfaces to work together.
+                  
+                  ```javascript
+                  // Legacy payment system
+                  class OldPaymentSystem {
+                    makePayment(amount) {
+                      return `Processing $${amount} through old system`;
+                    }
+                  }
+                  
+                  // New payment interface
+                  class PaymentProcessor {
+                    processPayment(paymentData) {
+                      throw new Error('processPayment must be implemented');
+                    }
+                  }
+                  
+                  // Adapter
+                  class PaymentAdapter extends PaymentProcessor {
+                    constructor(oldSystem) {
+                      super();
+                      this.oldSystem = oldSystem;
+                    }
+                    
+                    processPayment(paymentData) {
+                      // Convert new interface to old interface
+                      const amount = paymentData.amount;
+                      return this.oldSystem.makePayment(amount);
+                    }
+                  }
+                  
+                  // Usage
+                  const oldSystem = new OldPaymentSystem();
+                  const adapter = new PaymentAdapter(oldSystem);
+                  
+                  const result = adapter.processPayment({ 
+                    amount: 100, 
+                    currency: 'USD',
+                    method: 'credit_card'
+                  });
+                  ```
+                type: markdown
+                
+              - title: Decorator Pattern
+                content: |
+                  #### Decorator Pattern for Feature Enhancement
+                  
+                  Adds new functionality to objects dynamically without altering structure.
+                  
+                  ```javascript
+                  // Base component
+                  class Coffee {
+                    cost() {
+                      return 2;
+                    }
+                    
+                    description() {
+                      return 'Simple coffee';
+                    }
+                  }
+                  
+                  // Base decorator
+                  class CoffeeDecorator extends Coffee {
+                    constructor(coffee) {
+                      super();
+                      this.coffee = coffee;
+                    }
+                    
+                    cost() {
+                      return this.coffee.cost();
+                    }
+                    
+                    description() {
+                      return this.coffee.description();
+                    }
+                  }
+                  
+                  // Concrete decorators
+                  class MilkDecorator extends CoffeeDecorator {
+                    cost() {
+                      return this.coffee.cost() + 0.5;
+                    }
+                    
+                    description() {
+                      return this.coffee.description() + ', milk';
+                    }
+                  }
+                  
+                  class SugarDecorator extends CoffeeDecorator {
+                    cost() {
+                      return this.coffee.cost() + 0.25;
+                    }
+                    
+                    description() {
+                      return this.coffee.description() + ', sugar';
+                    }
+                  }
+                  
+                  class WhipDecorator extends CoffeeDecorator {
+                    cost() {
+                      return this.coffee.cost() + 0.75;
+                    }
+                    
+                    description() {
+                      return this.coffee.description() + ', whip';
+                    }
+                  }
+                  
+                  // Usage
+                  let coffee = new Coffee();
+                  console.log(`${coffee.description()}: $${coffee.cost()}`);
+                  
+                  coffee = new MilkDecorator(coffee);
+                  coffee = new SugarDecorator(coffee);
+                  coffee = new WhipDecorator(coffee);
+                  
+                  console.log(`${coffee.description()}: $${coffee.cost()}`);
+                  // "Simple coffee, milk, sugar, whip: $3.5"
+                  ```
+                type: markdown
+          
+          - title: Behavioral Patterns
+            content: |
+              ### Behavioral Design Patterns
+              
+              These patterns are concerned with algorithms and the assignment of
+              responsibilities between objects.
+            type: markdown
+            
+            children:
+              - title: Observer Pattern
+                content: |
+                  #### Observer Pattern for Event Handling
+                  
+                  Defines a subscription mechanism to notify multiple objects about events.
+                  
+                  ```javascript
+                  class EventEmitter {
+                    constructor() {
+                      this.events = new Map();
+                    }
+                    
+                    on(event, callback) {
+                      if (!this.events.has(event)) {
+                        this.events.set(event, []);
+                      }
+                      this.events.get(event).push(callback);
+                      
+                      // Return unsubscribe function
+                      return () => {
+                        const callbacks = this.events.get(event);
+                        const index = callbacks.indexOf(callback);
+                        if (index > -1) {
+                          callbacks.splice(index, 1);
+                        }
+                      };
+                    }
+                    
+                    emit(event, data) {
+                      if (this.events.has(event)) {
+                        this.events.get(event).forEach(callback => {
+                          try {
+                            callback(data);
+                          } catch (error) {
+                            console.error(`Error in event handler for ${event}:`, error);
+                          }
+                        });
+                      }
+                    }
+                    
+                    once(event, callback) {
+                      const unsubscribe = this.on(event, (data) => {
+                        unsubscribe();
+                        callback(data);
+                      });
+                      return unsubscribe;
+                    }
+                  }
+                  
+                  // Usage example
+                  class UserService extends EventEmitter {
+                    constructor() {
+                      super();
+                      this.users = new Map();
+                    }
+                    
+                    createUser(userData) {
+                      const user = { id: Date.now(), ...userData };
+                      this.users.set(user.id, user);
+                      this.emit('userCreated', user);
+                      return user;
+                    }
+                    
+                    updateUser(id, updates) {
+                      const user = this.users.get(id);
+                      if (user) {
+                        Object.assign(user, updates);
+                        this.emit('userUpdated', user);
+                      }
+                      return user;
+                    }
+                  }
+                  
+                  // Observers
+                  const userService = new UserService();
+                  
+                  userService.on('userCreated', (user) => {
+                    console.log('Sending welcome email to:', user.email);
+                  });
+                  
+                  userService.on('userUpdated', (user) => {
+                    console.log('User profile updated:', user.id);
+                  });
+                  ```
+                type: markdown
+                
+              - title: Strategy Pattern
+                content: |
+                  #### Strategy Pattern for Algorithm Selection
+                  
+                  Defines a family of algorithms and makes them interchangeable.
+                  
+                  ```javascript
+                  // Strategy interface
+                  class SortingStrategy {
+                    sort(data) {
+                      throw new Error('sort method must be implemented');
+                    }
+                  }
+                  
+                  // Concrete strategies
+                  class BubbleSort extends SortingStrategy {
+                    sort(data) {
+                      console.log('Using Bubble Sort');
+                      const arr = [...data];
+                      for (let i = 0; i < arr.length; i++) {
+                        for (let j = 0; j < arr.length - 1; j++) {
+                          if (arr[j] > arr[j + 1]) {
+                            [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+                          }
+                        }
+                      }
+                      return arr;
+                    }
+                  }
+                  
+                  class QuickSort extends SortingStrategy {
+                    sort(data) {
+                      console.log('Using Quick Sort');
+                      return this.quickSort([...data]);
+                    }
+                    
+                    quickSort(arr) {
+                      if (arr.length <= 1) return arr;
+                      
+                      const pivot = arr[Math.floor(arr.length / 2)];
+                      const left = arr.filter(x => x < pivot);
+                      const middle = arr.filter(x => x === pivot);
+                      const right = arr.filter(x => x > pivot);
+                      
+                      return [
+                        ...this.quickSort(left),
+                        ...middle,
+                        ...this.quickSort(right)
+                      ];
+                    }
+                  }
+                  
+                  class MergeSort extends SortingStrategy {
+                    sort(data) {
+                      console.log('Using Merge Sort');
+                      return this.mergeSort([...data]);
+                    }
+                    
+                    mergeSort(arr) {
+                      if (arr.length <= 1) return arr;
+                      
+                      const mid = Math.floor(arr.length / 2);
+                      const left = this.mergeSort(arr.slice(0, mid));
+                      const right = this.mergeSort(arr.slice(mid));
+                      
+                      return this.merge(left, right);
+                    }
+                    
+                    merge(left, right) {
+                      const result = [];
+                      let i = 0, j = 0;
+                      
+                      while (i < left.length && j < right.length) {
+                        if (left[i] <= right[j]) {
+                          result.push(left[i++]);
+                        } else {
+                          result.push(right[j++]);
+                        }
+                      }
+                      
+                      return result.concat(left.slice(i)).concat(right.slice(j));
+                    }
+                  }
+                  
+                  // Context
+                  class SortingContext {
+                    constructor(strategy) {
+                      this.strategy = strategy;
+                    }
+                    
+                    setStrategy(strategy) {
+                      this.strategy = strategy;
+                    }
+                    
+                    sort(data) {
+                      return this.strategy.sort(data);
+                    }
+                  }
+                  
+                  // Strategy selection based on data size
+                  class SmartSortingContext extends SortingContext {
+                    constructor() {
+                      super();
+                    }
+                    
+                    sort(data) {
+                      // Choose strategy based on data size and characteristics
+                      if (data.length < 10) {
+                        this.setStrategy(new BubbleSort());
+                      } else if (data.length < 1000) {
+                        this.setStrategy(new QuickSort());
+                      } else {
+                        this.setStrategy(new MergeSort());
+                      }
+                      
+                      return super.sort(data);
+                    }
+                  }
+                  
+                  // Usage
+                  const sorter = new SmartSortingContext();
+                  
+                  const smallData = [3, 1, 4, 1, 5];
+                  const mediumData = Array.from({length: 100}, () => Math.floor(Math.random() * 100));
+                  const largeData = Array.from({length: 10000}, () => Math.floor(Math.random() * 10000));
+                  
+                  console.log('Small data:', sorter.sort(smallData));
+                  console.log('Medium data sorted');
+                  console.log('Large data sorted');
+                  ```
+                type: markdown
+
+      - title: 🏗️ Microservices Architecture
+        content: |
+          ## Microservices Architecture Patterns
+          
+          Comprehensive guide to designing, implementing, and maintaining microservices
+          at enterprise scale.
+        type: markdown
+        
+        children:
+          - title: Service Decomposition Strategies
+            content: |
+              ### Effective Service Decomposition
+              
+              Breaking down monoliths into microservices requires careful planning
+              and consideration of business domains, data ownership, and team structure.
+            type: markdown
+            
+            children:
+              - title: Domain-Driven Design Approach
+                content: |
+                  #### Using DDD for Service Boundaries
+                  
+                  Domain-Driven Design provides excellent guidance for microservice boundaries.
+                  
+                  **Bounded Context Identification:**
+                  
+                  ```yaml
+                  # E-commerce Domain Model
+                  domains:
+                    user_management:
+                      bounded_contexts:
+                        - authentication
+                        - user_profiles
+                        - permissions
+                      entities:
+                        - User
+                        - Role
+                        - Permission
+                      
+                    product_catalog:
+                      bounded_contexts:
+                        - product_information
+                        - inventory_management
+                        - pricing
+                      entities:
+                        - Product
+                        - Category
+                        - Inventory
+                        - Price
+                      
+                    order_management:
+                      bounded_contexts:
+                        - order_processing
+                        - payment_handling
+                        - shipping
+                      entities:
+                        - Order
+                        - OrderItem
+                        - Payment
+                        - Shipment
+                      
+                    customer_service:
+                      bounded_contexts:
+                        - support_tickets
+                        - knowledge_base
+                        - chat_system
+                      entities:
+                        - Ticket
+                        - Article
+                        - ChatSession
+                  ```
+                  
+                  **Service Mapping:**
+                  
+                  Each bounded context typically becomes a microservice:
+                  
+                  - **User Service**: Authentication, profiles, permissions
+                  - **Product Service**: Catalog, inventory, pricing
+                  - **Order Service**: Order processing, workflow management
+                  - **Payment Service**: Payment processing, billing
+                  - **Notification Service**: Email, SMS, push notifications
+                  - **Analytics Service**: Data collection, reporting
+                type: yaml
+                
+              - title: Data Decomposition Patterns
+                content: |
+                  #### Database Per Service Pattern
+                  
+                  Each microservice owns its data and database schema.
+                  
+                  **Service Data Ownership:**
+                  
+                  ```javascript
+                  // User Service - PostgreSQL
+                  const UserService = {
+                    database: 'postgresql://users_db',
+                    tables: ['users', 'roles', 'permissions', 'user_sessions'],
+                    
+                    async createUser(userData) {
+                      const user = await db.users.create(userData);
+                      await this.publishEvent('user.created', user);
+                      return user;
+                    },
+                    
+                    async getUserById(id) {
+                      return await db.users.findById(id);
+                    }
+                  };
+                  
+                  // Product Service - MongoDB
+                  const ProductService = {
+                    database: 'mongodb://products_db',
+                    collections: ['products', 'categories', 'inventory'],
+                    
+                    async createProduct(productData) {
+                      const product = await db.products.insertOne(productData);
+                      await this.publishEvent('product.created', product);
+                      return product;
+                    },
+                    
+                    async updateInventory(productId, quantity) {
+                      const result = await db.inventory.updateOne(
+                        { productId }, 
+                        { $inc: { quantity } }
+                      );
+                      await this.publishEvent('inventory.updated', { productId, quantity });
+                      return result;
+                    }
+                  };
+                  
+                  // Order Service - PostgreSQL + Redis
+                  const OrderService = {
+                    database: 'postgresql://orders_db',
+                    cache: 'redis://orders_cache',
+                    tables: ['orders', 'order_items', 'order_status'],
+                    
+                    async createOrder(orderData) {
+                      const order = await db.orders.create(orderData);
+                      
+                      // Cache order for quick access
+                      await cache.set(`order:${order.id}`, order, '1h');
+                      
+                      // Publish event for other services
+                      await this.publishEvent('order.created', order);
+                      
+                      return order;
+                    }
+                  };
+                  ```
+                  
+                  **Cross-Service Data Access:**
+                  
+                  ```javascript
+                  // Never directly access another service's database
+                  // ❌ Wrong
+                  const getUserOrders = async (userId) => {
+                    const user = await userDb.users.findById(userId);
+                    const orders = await orderDb.orders.findByUserId(userId);
+                    return { user, orders };
+                  };
+                  
+                  // ✅ Correct - Use API calls or events
+                  const getUserOrders = async (userId) => {
+                    const user = await UserService.getUserById(userId);
+                    const orders = await OrderService.getOrdersByUserId(userId);
+                    return { user, orders };
+                  };
+                  
+                  // ✅ Alternative - Event-driven with local cache
+                  const OrderService = {
+                    userCache: new Map(),
+                    
+                    // Listen to user events to maintain local cache
+                    onUserUpdated(userData) {
+                      this.userCache.set(userData.id, userData);
+                    },
+                    
+                    async getOrderWithUser(orderId) {
+                      const order = await this.getOrderById(orderId);
+                      const user = this.userCache.get(order.userId) || 
+                                  await UserService.getUserById(order.userId);
+                      return { order, user };
+                    }
+                  };
+                  ```
+                type: markdown
+
+  - title: 📊 Data Management & Storage
+    content: |
+      # Enterprise Data Management Strategies
+      
+      Comprehensive coverage of data storage, retrieval, processing, and governance
+      patterns for enterprise applications.
+    type: markdown
+    
+    children:
+      - title: Database Design Patterns
+        content: |
+          ## Advanced Database Design Patterns
+          
+          Modern database design patterns for scalable, maintainable systems.
+        type: markdown
+        
+        children:
+          - title: Polyglot Persistence
+            content: |
+              ### Choosing the Right Database for Each Use Case
+              
+              Different data has different requirements. Polyglot persistence uses
+              multiple database technologies optimized for specific use cases.
+            type: markdown
+            
+            children:
+              - title: Database Selection Matrix
+                content:
+                  # Database Selection Guidelines
+                  relational_databases:
+                    postgresql:
+                      best_for:
+                        - Complex transactions
+                        - Strong consistency requirements
+                        - Complex queries and reporting
+                        - ACID compliance needed
+                      use_cases:
+                        - Financial systems
+                        - User management
+                        - Order processing
+                        - Inventory management
+                      strengths:
+                        - ACID transactions
+                        - Complex queries
+                        - Mature ecosystem
+                        - Strong consistency
+                      weaknesses:
+                        - Vertical scaling limitations
+                        - Schema rigidity
+                        - Performance with massive scale
+                    
+                    mysql:
+                      best_for:
+                        - Web applications
+                        - Content management
+                        - E-commerce platforms
+                      use_cases:
+                        - WordPress sites
+                        - E-commerce platforms
+                        - CRM systems
+                      strengths:
+                        - Easy to use
+                        - Wide adoption
+                        - Good performance
+                      weaknesses:
+                        - Limited advanced features
+                        - Replication complexity
+                  
+                  document_databases:
+                    mongodb:
+                      best_for:
+                        - Flexible schema requirements
+                        - Rapid development
+                        - Content management
+                        - Real-time analytics
+                      use_cases:
+                        - Product catalogs
+                        - Content management
+                        - User profiles
+                        - Session storage
+                      strengths:
+                        - Schema flexibility
+                        - Horizontal scaling
+                        - Developer friendly
+                      weaknesses:
+                        - Memory usage
+                        - Eventual consistency
+                        - Complex queries
+                    
+                    couchdb:
+                      best_for:
+                        - Offline-first applications
+                        - Multi-master replication
+                        - Conflict resolution
+                      use_cases:
+                        - Mobile applications
+                        - Distributed systems
+                        - Sync applications
+                  
+                  key_value_stores:
+                    redis:
+                      best_for:
+                        - Caching
+                        - Session storage
+                        - Real-time applications
+                        - Message queuing
+                      use_cases:
+                        - Application cache
+                        - Session management
+                        - Real-time chat
+                        - Rate limiting
+                      strengths:
+                        - Extremely fast
+                        - Rich data types
+                        - Pub/sub messaging
+                      weaknesses:
+                        - Memory-based
+                        - Single-threaded
+                        - Persistence options
+                    
+                    dynamodb:
+                      best_for:
+                        - Serverless applications
+                        - High-scale applications
+                        - Predictable performance
+                      use_cases:
+                        - IoT data storage
+                        - Gaming leaderboards
+                        - Mobile backends
+                  
+                  graph_databases:
+                    neo4j:
+                      best_for:
+                        - Social networks
+                        - Recommendation engines
+                        - Fraud detection
+                        - Network analysis
+                      use_cases:
+                        - Social media platforms
+                        - Recommendation systems
+                        - Knowledge graphs
+                        - Security analysis
+                      strengths:
+                        - Relationship queries
+                        - Graph algorithms
+                        - Intuitive modeling
+                      weaknesses:
+                        - Learning curve
+                        - Limited aggregations
+                        - Memory requirements
+                  
+                  time_series_databases:
+                    influxdb:
+                      best_for:
+                        - Metrics and monitoring
+                        - IoT data
+                        - Real-time analytics
+                      use_cases:
+                        - Application monitoring
+                        - IoT sensor data
+                        - Financial time series
+                        - DevOps metrics
+                      strengths:
+                        - Time-based queries
+                        - Compression
+                        - Built-in retention
+                      weaknesses:
+                        - Specialized use case
+                        - Query complexity
+                  
+                  search_engines:
+                    elasticsearch:
+                      best_for:
+                        - Full-text search
+                        - Log analysis
+                        - Real-time analytics
+                      use_cases:
+                        - Application search
+                        - Log management
+                        - Business intelligence
+                        - Security monitoring
+                      strengths:
+                        - Powerful search
+                        - Real-time indexing
+                        - Scalable
+                      weaknesses:
+                        - Resource intensive
+                        - Complex configuration
+                        - Memory usage
+                  
+                  selection_criteria:
+                    consistency_requirements:
+                      strong_consistency:
+                        - Financial transactions
+                        - Inventory management
+                        - User authentication
+                        - recommended: PostgreSQL, MySQL
+                      eventual_consistency:
+                        - Social media feeds
+                        - Product catalogs
+                        - User profiles
+                        - recommended: MongoDB, DynamoDB
+                    
+                    scalability_needs:
+                      horizontal_scaling:
+                        - High-traffic applications
+                        - Global distribution
+                        - Variable load patterns
+                        - recommended: MongoDB, DynamoDB, Cassandra
+                      vertical_scaling:
+                        - Predictable load
+                        - Complex queries
+                        - Strong consistency
+                        - recommended: PostgreSQL, MySQL
+                    
+                    query_complexity:
+                      simple_queries:
+                        - Key-value lookups
+                        - Simple filtering
+                        - Fast reads/writes
+                        - recommended: Redis, DynamoDB
+                      complex_queries:
+                        - Multi-table joins
+                        - Aggregations
+                        - Reporting
+                        - recommended: PostgreSQL, MySQL
+                      search_queries:
+                        - Full-text search
+                        - Faceted search
+                        - Relevance scoring
+                        - recommended: Elasticsearch, Solr
+                    
+                    performance_requirements:
+                      low_latency:
+                        - Real-time applications
+                        - Gaming
+                        - Financial trading
+                        - recommended: Redis, MemoryDB
+                      high_throughput:
+                        - Analytics
+                        - Logging
+                        - IoT data
+                        - recommended: InfluxDB, Cassandra
+                type: yaml
+
+metadata:
+  document_stats:
+    total_sections: 45
+    max_depth: 6
+    content_types: ["markdown", "yaml", "plaintext"]
+    estimated_reading_time: "25 minutes"
+    last_updated: "2024-01-17T10:30:00Z"
+  
+  authors:
+    - name: "Senior Architect"
+      role: "Technical Lead"
+      email: "architect@company.com"
+    - name: "Database Specialist"
+      role: "Data Architect"
+      email: "data@company.com"
+  
+  tags:
+    - "enterprise-architecture"
+    - "design-patterns"
+    - "microservices"
+    - "database-design"
+    - "scalability"
+    - "performance"
+    - "best-practices"
+  
+  complexity: "advanced"
+  target_audience: ["senior-developers", "architects", "tech-leads"]
+  prerequisites: ["object-oriented-programming", "database-fundamentals", "distributed-systems"]

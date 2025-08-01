@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<user id="12345" status="active">
+  <personalInfo>
+    <firstName>Jane</firstName>
+    <lastName>Smith</lastName>
+    <email>jane.smith@example.com</email>
+    <phone type="mobile">+1-555-123-4567</phone>
+    <dateOfBirth>1990-05-15</dateOfBirth>
+  </personalInfo>
+  
+  <address type="home">
+    <street>123 Main Street</street>
+    <city>San Francisco</city>
+    <state>CA</state>
+    <zipCode>94105</zipCode>
+    <country>USA</country>
+  </address>
+  
+  <preferences>
+    <language>en-US</language>
+    <timezone>America/Los_Angeles</timezone>
+    <notifications>
+      <email enabled="true">
+        <frequency>daily</frequency>
+        <categories>
+          <category>updates</category>
+          <category>promotions</category>
+        </categories>
+      </email>
+      <sms enabled="false"/>
+      <push enabled="true">
+        <frequency>immediate</frequency>
+      </push>
+    </notifications>
+    <theme>dark</theme>
+  </preferences>
+  
+  <accounts>
+    <account type="checking" status="active">
+      <accountNumber>****1234</accountNumber>
+      <balance currency="USD">5432.10</balance>
+      <openDate>2018-03-20</openDate>
+    </account>
+    <account type="savings" status="active">
+      <accountNumber>****5678</accountNumber>
+      <balance currency="USD">25000.00</balance>
+      <openDate>2019-07-15</openDate>
+    </account>
+  </accounts>
+  
+  <activityLog>
+    <lastLogin>2024-01-15T10:30:00Z</lastLogin>
+    <loginCount>342</loginCount>
+    <lastPasswordChange>2023-11-20T15:45:00Z</lastPasswordChange>
+  </activityLog>
+</user>

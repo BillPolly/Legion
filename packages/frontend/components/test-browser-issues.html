@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Issue Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .test-result { margin: 10px 0; padding: 10px; }
+        .pass { background: #d4edda; color: #155724; }
+        .fail { background: #f8d7da; color: #721c24; }
+        .tree-container { width: 400px; height: 300px; border: 1px solid #ddd; margin: 10px 0; }
+        .theme-btn { margin: 5px; padding: 5px 10px; }
+        .theme-btn.active { background: #007bff; color: white; }
+    </style>
+</head>
+<body>
+    <h1>ModernTree Browser Issue Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Node Selection Issue</h2>
+        <div class="tree-container" id="selectionTestTree"></div>
+        <button onclick="testSelection()">Test Selection</button>
+        <button onclick="testAddNode()">Test Add Node</button>
+        <div id="selectionResult" class="test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 2: Theme Switching Issue</h2>
+        <div class="tree-container" id="themeTestTree"></div>
+        <div class="theme-selector">
+            <button class="theme-btn active" onclick="testSetTheme('light')">Light</button>
+            <button class="theme-btn" onclick="testSetTheme('dark')">Dark</button>
+        </div>
+        <div id="themeResult" class="test-result"></div>
+    </div>
+
+    <script type="module">
+        import { ModernTree } from './src/components/modern-tree/index.js';
+        
+        const testData = [
+            {
+                id: 'root1',
+                name: '📁 Root Folder 1',
+                children: [
+                    { id: 'child1', name: '📄 Child 1' },
+                    { id: 'child2', name: '📄 Child 2' }
+                ]
+            },
+            {
+                id: 'root2', 
+                name: '📁 Root Folder 2'
+            }
+        ];
+
+        let selectionTree = null;
+        let themeTree = null;
+
+        // Initialize trees
+        function initTests() {
+            // Selection test tree
+            const selectionContainer = document.getElementById('selectionTestTree');
+            selectionTree = ModernTree.create({
+                dom: selectionContainer,
+                data: testData,
+                selectable: 'single',
+                onSelectionChange: (nodes, data) => {
+                    console.log('Selection changed:', data);
+                    updateSelectionResult(`Selection: ${data.length} nodes selected`);
+                }
+            });
+
+            // Theme test tree  
+            const themeContainer = document.getElementById('themeTestTree');
+            themeTree = ModernTree.create({
+                dom: themeContainer,
+                data: testData,
+                theme: 'light'
+            });
+
+            updateSelectionResult('Trees initialized');
+            updateThemeResult('Trees initialized');
+        }
+
+        function updateSelectionResult(message) {
+            const result = document.getElementById('selectionResult');
+            result.innerHTML = `<div>${new Date().toLocaleTimeString()}: ${message}</div>` + result.innerHTML;
+        }
+
+        function updateThemeResult(message) {
+            const result = document.getElementById('themeResult');
+            result.innerHTML = `<div>${new Date().toLocaleTimeString()}: ${message}</div>` + result.innerHTML;
+        }
+
+        window.testSelection = () => {
+            console.log('=== TESTING SELECTION ===');
+            
+            // Try to select the first root node
+            const firstNode = document.querySelector('#selectionTestTree .tree-node[data-node-id="root1"]');
+            console.log('First node element:', firstNode);
+            
+            if (firstNode) {
+                console.log('Clicking first node...');
+                firstNode.click();
+                
+                setTimeout(() => {
+                    const selection = selectionTree.getSelection(); 
+                    console.log('Selection after click:', selection);
+                    updateSelectionResult(`After click: ${selection.length} nodes selected (${selection.map(s => s.id).join(', ')})`);
+                    
+                    if (selection.length > 0) {
+                        updateSelectionResult(`✅ Selection working: ${selection[0].data.name}`);
+                    } else {
+                        updateSelectionResult(`❌ Selection failed: No nodes selected`);
+                    }
+                }, 100);
+            } else {
+                updateSelectionResult('❌ Could not find first node element');
+            }
+        };
+
+        window.testAddNode = () => {
+            console.log('=== TESTING ADD NODE ===');
+            
+            const selection = selectionTree.getSelection();
+            console.log('Current selection before add:', selection);
+            updateSelectionResult(`Before add node: ${selection.length} selected`);
+            
+            if (selection.length === 0) {
+                updateSelectionResult('❌ No selection - cannot test add child');
+                return;
+            }
+
+            // Simulate adding a child node
+            const selectedNodeId = selection[0].id;
+            const newNode = {
+                id: `test_child_${Date.now()}`,
+                name: '🆕 Test Child Node'
+            };
+
+            console.log(`Adding child to selected node: ${selectedNodeId}`);
+            
+            // Get current data and modify it
+            const currentData = [...testData];
+            const addChildToNode = (nodes, targetId) => {
+                for (let node of nodes) {
+                    if (node.id === targetId) {
+                        if (!node.children) {
+                            node.children = [];
+                        }
+                        node.children.push(newNode);
+                        console.log(`Added child to node ${targetId}:`, newNode);
+                        return true;
+                    }
+                    if (node.children && addChildToNode(node.children, targetId)) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            if (addChildToNode(currentData, selectedNodeId)) {
+                selectionTree.updateConfig({ data: [...currentData] });
+                selectionTree.executeCommand('expandNode', { nodeId: selectedNodeId });
+                updateSelectionResult(`✅ Added child node to ${selectedNodeId}`);
+                
+                // Check if it's visible
+                setTimeout(() => {
+                    const childElement = document.querySelector(`#selectionTestTree .tree-node[data-node-id="${newNode.id}"]`);
+                    if (childElement) {
+                        updateSelectionResult(`✅ Child node is visible in DOM`);
+                    } else {
+                        updateSelectionResult(`❌ Child node not visible in DOM`);
+                    }
+                }, 200);
+            } else {
+                updateSelectionResult(`❌ Failed to add child to ${selectedNodeId}`);
+            }
+        };
+
+        window.testSetTheme = (theme) => {
+            console.log('=== TESTING THEME SWITCHING ===');
+            console.log('Setting theme to:', theme);
+            
+            // Update button states
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            const targetButton = document.querySelector(`.theme-btn[onclick="testSetTheme('${theme}')"]`);
+            if (targetButton) {
+                targetButton.classList.add('active');
+            }
+            
+            // Get tree container
+            const treeContainer = document.querySelector('#themeTestTree .modern-tree');
+            console.log('Tree container before theme change:', treeContainer);
+            console.log('Classes before:', Array.from(treeContainer.classList));
+            
+            // Update tree theme
+            themeTree.updateConfig({ theme });
+            
+            setTimeout(() => {
+                console.log('Classes after:', Array.from(treeContainer.classList));
+                
+                const hasLightTheme = treeContainer.classList.contains('theme-light');
+                const hasDarkTheme = treeContainer.classList.contains('theme-dark');
+                
+                updateThemeResult(`Theme classes: light=${hasLightTheme}, dark=${hasDarkTheme}`);
+                
+                if (theme === 'light' && hasLightTheme && !hasDarkTheme) {
+                    updateThemeResult(`✅ Light theme applied correctly`);
+                } else if (theme === 'dark' && hasDarkTheme && !hasLightTheme) {
+                    updateThemeResult(`✅ Dark theme applied correctly`);
+                } else {
+                    updateThemeResult(`❌ Theme not applied correctly. Expected: ${theme}, Got: light=${hasLightTheme}, dark=${hasDarkTheme}`);
+                }
+                
+                // Test visual differences
+                const computedStyle = window.getComputedStyle(treeContainer);
+                updateThemeResult(`Background color: ${computedStyle.backgroundColor}`);
+                updateThemeResult(`Color: ${computedStyle.color}`);
+                
+            }, 100);
+        };
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initTests);
+    </script>
+</body>
+</html>

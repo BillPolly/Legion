@@ -1,0 +1,315 @@
+title: TreeScribe Quick Start Guide
+content: |
+  # Welcome to TreeScribe
+  
+  TreeScribe is a powerful component for viewing hierarchical documents with YAML content.
+  This guide will show you the basic features and capabilities.
+
+  ## Features:
+  - **Folding**: Expand and collapse sections
+  - **Search**: Find content across the entire document
+  - **Multiple Renderers**: Support for Markdown, YAML, and plain text
+  - **Keyboard Navigation**: Full accessibility support
+  - **Export**: Export to HTML, JSON, and other formats
+
+children:
+  - title: Getting Started
+    content: |
+      ## Installation
+      
+      TreeScribe follows the Umbilical Component Protocol, making it easy to integrate:
+      
+      ```javascript
+      import { TreeScribe } from './components/tree-scribe/index.js';
+      
+      const container = document.getElementById('tree-container');
+      const treeScribe = TreeScribe.create({
+        dom: container,
+        theme: 'light'
+      });
+      
+      // Load your YAML content
+      await treeScribe.loadYaml(yamlContent);
+      ```
+    
+    children:
+      - title: Basic Configuration
+        content: |
+          TreeScribe accepts several configuration options:
+          
+          - `theme`: 'light' or 'dark'
+          - `enableSearch`: Enable/disable search functionality
+          - `enableFolding`: Enable/disable folding capabilities
+          - `enableKeyboard`: Enable/disable keyboard navigation
+          - `renderers`: Custom content renderers
+        
+      - title: Loading Content
+        content: |
+          You can load content in several ways:
+          
+          ```javascript
+          // From YAML string
+          await treeScribe.loadYaml(yamlString);
+          
+          // From URL
+          await treeScribe.loadYaml('https://example.com/document.yaml');
+          
+          // From file input
+          const file = event.target.files[0];
+          const content = await file.text();
+          await treeScribe.loadYaml(content);
+          ```
+
+  - title: Content Types
+    content: |
+      ## Supported Content Types
+      
+      TreeScribe automatically detects and renders different content types:
+    
+    children:
+      - title: Plain Text
+        content: |
+          Simple text content is rendered as-is with basic formatting.
+          
+          This is perfect for:
+          - Simple documentation
+          - Notes and comments
+          - Basic instructions
+          
+          Features:
+          - Automatic line breaks
+          - Preserves whitespace
+          - Clean, readable presentation
+        
+      - title: Markdown Content
+        content: |
+          # Markdown Rendering
+          
+          TreeScribe supports **full Markdown** rendering with:
+          
+          - **Bold** and *italic* text
+          - `inline code` and code blocks
+          - [Links](https://example.com)
+          - Lists and tables
+          - Headers and formatting
+          
+          ```javascript
+          // Example code block
+          function example() {
+            return "Syntax highlighting included!";
+          }
+          ```
+          
+          > Blockquotes and other Markdown features work perfectly!
+        type: markdown
+        
+      - title: YAML Data
+        content:
+          type: object
+          description: YAML content can represent structured data
+          properties:
+            title: 
+              type: string
+              description: The document title
+            sections:
+              type: array
+              items:
+                type: object
+                properties:
+                  name: string
+                  content: string
+            metadata:
+              type: object
+              properties:
+                author: 
+                  type: string
+                  default: "Anonymous"
+                created:
+                  type: string
+                  format: date-time
+                tags:
+                  type: array
+                  items:
+                    type: string
+        type: yaml
+
+  - title: Interactive Features
+    content: |
+      ## Navigation and Interaction
+      
+      TreeScribe provides multiple ways to navigate and interact with your content:
+    
+    children:
+      - title: Mouse Navigation
+        content: |
+          - **Click** node titles to expand/collapse
+          - **Scroll** to navigate long documents
+          - **Drag** to select text for copying
+          - **Right-click** for context menus (coming soon)
+        
+      - title: Keyboard Shortcuts
+        content: |
+          TreeScribe is fully keyboard accessible:
+          
+          | Key | Action |
+          |-----|--------|
+          | ↑/↓ | Navigate between nodes |
+          | ←/→ | Collapse/expand nodes |
+          | Home/End | Go to first/last node |
+          | Enter/Space | Toggle node expansion |
+          | / or Ctrl+F | Focus search |
+          | * | Expand all nodes |
+          | - | Collapse all nodes |
+        
+      - title: Search Functionality
+        content: |
+          **Powerful search capabilities:**
+          
+          - **Full-text search** across all content
+          - **Real-time highlighting** of matches
+          - **Navigate through results** with F3/Shift+F3
+          - **Case-sensitive** and **regex** search options
+          - **Search within specific sections**
+          
+          The search is fast and responsive, even with large documents.
+
+  - title: Advanced Usage
+    content: |
+      ## Advanced Features and Customization
+      
+      TreeScribe offers powerful customization options for advanced users:
+    
+    children:
+      - title: Custom Renderers
+        content: |
+          Create custom renderers for specialized content types:
+          
+          ```javascript
+          const customRenderer = {
+            getName: () => 'custom',
+            getVersion: () => '1.0.0',
+            getSupportedTypes: () => ['custom'],
+            render: (content, container) => {
+              // Your custom rendering logic
+              const element = document.createElement('div');
+              element.innerHTML = processContent(content);
+              container.appendChild(element);
+              return element;
+            },
+            destroy: () => {
+              // Cleanup logic
+            }
+          };
+          
+          const treeScribe = TreeScribe.create({
+            dom: container,
+            renderers: {
+              custom: customRenderer
+            }
+          });
+          ```
+        type: markdown
+        
+      - title: Event Handling
+        content: |
+          Listen to TreeScribe events for integration:
+          
+          ```javascript
+          const treeScribe = TreeScribe.create({
+            dom: container,
+            onMount: (instance) => {
+              console.log('TreeScribe mounted');
+            },
+            onNodeToggle: (nodeId, expanded) => {
+              console.log(`Node ${nodeId} ${expanded ? 'expanded' : 'collapsed'}`);
+            },
+            onSearch: (query, results) => {
+              console.log(`Search "${query}" found ${results.length} results`);
+            }
+          });
+          ```
+        type: markdown
+        
+      - title: Export Options
+        content: |
+          Export your documents in multiple formats:
+          
+          ```javascript
+          // Export as HTML
+          const html = treeScribe.exportHTML({
+            includeStyles: true,
+            includeCollapsed: false
+          });
+          
+          // Export as JSON
+          const json = treeScribe.exportJSON({
+            includeMetadata: true
+          });
+          
+          // Export as Markdown
+          const markdown = treeScribe.exportMarkdown({
+            headerLevel: 1
+          });
+          ```
+        type: markdown
+
+  - title: Best Practices
+    content: |
+      ## Tips for Effective Use
+      
+      Get the most out of TreeScribe with these recommendations:
+    
+    children:
+      - title: Document Structure
+        content: |
+          **Organize your content effectively:**
+          
+          - Use clear, descriptive titles for nodes
+          - Keep individual sections focused and concise
+          - Use nested structure to show relationships
+          - Include metadata for better organization
+          
+          **Example structure:**
+          ```
+          Project Documentation
+          ├── Overview
+          ├── Getting Started
+          │   ├── Installation
+          │   ├── Configuration
+          │   └── First Steps
+          ├── API Reference
+          │   ├── Core Methods
+          │   ├── Events
+          │   └── Examples
+          └── Advanced Topics
+          ```
+        
+      - title: Content Guidelines
+        content: |
+          **Writing effective content:**
+          
+          1. **Use appropriate content types** - Markdown for rich text, YAML for data
+          2. **Keep sections scannable** - Use headers, lists, and formatting
+          3. **Include examples** - Code snippets and use cases help users
+          4. **Add cross-references** - Link related sections together
+          5. **Update regularly** - Keep content current and accurate
+        
+      - title: Performance Tips
+        content: |
+          **Optimize for large documents:**
+          
+          - Enable virtual scrolling for 1000+ nodes
+          - Use lazy loading for heavy content
+          - Minimize deeply nested structures (>10 levels)
+          - Consider splitting very large documents
+          - Use efficient search patterns
+          
+          TreeScribe handles large documents well, but these tips ensure optimal performance.
+
+metadata:
+  author: TreeScribe Development Team
+  version: "1.0.0"
+  created: "2024-01-17"
+  updated: "2024-01-17"
+  tags: ["documentation", "guide", "tutorial", "treescribe"]
+  license: MIT
