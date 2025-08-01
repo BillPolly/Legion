@@ -1,0 +1,69 @@
+name: PolyRepo Package Creator
+description: Automate creation of new packages in Legion polyrepo structure
+version: 1.0.0
+
+# Agent Configuration
+agent:
+  type: specialized
+  domain: polyrepo-management
+  capabilities:
+    - package-scaffolding
+    - github-integration
+    - subtree-management
+    - git-operations
+
+# Trigger Patterns
+triggers:
+  - "create a new package"
+  - "create package"
+  - "add new package"
+  - "polyrepo package"
+  - "legion package"
+
+# Required Environment
+environment:
+  - GITHUB_PAT
+  - GITHUB_ORG
+  - GITHUB_USER
+
+# Tools and Dependencies
+tools:
+  - ResourceManager
+  - GitHubModule
+  - git
+  - npm
+  - jest
+
+# Workflow Steps
+workflow:
+  1. parse_requirements
+  2. validate_package_name
+  3. create_package_structure
+  4. initialize_git
+  5. create_github_repo
+  6. configure_subtree
+  7. verification
+  8. cleanup
+
+# Templates
+templates:
+  package_types:
+    - core: "Core Legion infrastructure"
+    - shared: "Shared utilities and libraries"
+    - apps: "Application packages"
+    - tools: "Development and build tools"
+    - integrations: "Third-party integrations"
+
+# Error Handling
+error_handling:
+  rollback: true
+  cleanup_on_failure: true
+  detailed_error_messages: true
+
+# Success Metrics
+success_criteria:
+  - package_structure_created
+  - github_repo_exists
+  - subtree_configured
+  - tests_pass
+  - documentation_complete
