@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aiur Actors UI</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div id="app" class="aiur-app">
+        <!-- Header Section -->
+        <header class="app-header">
+            <h1 class="app-title">Aiur Actors</h1>
+            <div class="connection-status" id="connection-status">
+                <span class="status-indicator"></span>
+                <span class="status-text">Disconnected</span>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="app-layout">
+            <!-- Left Sidebar -->
+            <aside class="sidebar sidebar-left">
+                <!-- Tools Panel -->
+                <section id="tools-panel" class="panel tools-panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Tools</h2>
+                        <button class="panel-action" data-action="refresh-tools">
+                            <span class="icon-refresh"></span>
+                        </button>
+                    </div>
+                    <div class="panel-content">
+                        <!-- Tools will be dynamically rendered here -->
+                        <div class="tools-list"></div>
+                    </div>
+                </section>
+
+                <!-- Sessions Panel -->
+                <section id="session-panel" class="panel session-panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Sessions</h2>
+                        <button class="panel-action" data-action="new-session">
+                            <span class="icon-plus"></span>
+                        </button>
+                    </div>
+                    <div class="panel-content">
+                        <!-- Sessions will be dynamically rendered here -->
+                        <div class="sessions-list"></div>
+                    </div>
+                </section>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="main-content">
+                <!-- Terminal -->
+                <section id="terminal" class="terminal-container">
+                    <div class="terminal-header">
+                        <span class="terminal-title">Terminal</span>
+                        <div class="terminal-actions">
+                            <button class="terminal-action" data-action="clear">Clear</button>
+                            <button class="terminal-action" data-action="export">Export</button>
+                        </div>
+                    </div>
+                    <div class="terminal-body">
+                        <!-- Terminal output will be rendered here -->
+                        <div class="terminal-output"></div>
+                        <!-- Autocomplete dropdown -->
+                        <div class="terminal-autocomplete" style="display: none;"></div>
+                        <!-- Terminal input -->
+                        <div class="terminal-input-container">
+                            <span class="terminal-prompt">$</span>
+                            <input 
+                                type="text" 
+                                class="terminal-input" 
+                                placeholder="Enter command..."
+                                autocomplete="off"
+                                spellcheck="false"
+                            />
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <!-- Right Sidebar -->
+            <aside class="sidebar sidebar-right">
+                <!-- Variables Panel -->
+                <section id="variables-panel" class="panel variables-panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Variables</h2>
+                        <div class="panel-actions">
+                            <button class="panel-action" data-action="new-variable">
+                                <span class="icon-plus"></span>
+                            </button>
+                            <button class="panel-action" data-action="import-variables">
+                                <span class="icon-upload"></span>
+                            </button>
+                            <button class="panel-action" data-action="export-variables">
+                                <span class="icon-download"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="panel-controls">
+                        <input 
+                            type="text" 
+                            class="variables-search" 
+                            placeholder="Search variables..."
+                        />
+                        <select class="variables-filter">
+                            <option value="all">All Variables</option>
+                            <option value="byType">Group by Type</option>
+                            <option value="byScope">Group by Scope</option>
+                        </select>
+                    </div>
+                    <div class="panel-content">
+                        <!-- Variables will be dynamically rendered here -->
+                        <div class="variables-list"></div>
+                    </div>
+                </section>
+            </aside>
+        </div>
+
+        <!-- Dialogs Container -->
+        <div id="dialogs-container" class="dialogs-container">
+            <!-- Dialogs will be dynamically created here -->
+        </div>
+
+        <!-- Context Menu Container -->
+        <div id="context-menu" class="context-menu" style="display: none;">
+            <!-- Context menu items will be dynamically rendered here -->
+        </div>
+    </div>
+
+    <!-- Application Scripts -->
+    <script type="module">
+        import { AiurActorsApp } from '/app/AiurActorsApp.js';
+        import { ComponentFactory } from '/components/ComponentFactory.js';
+        import { ClientActorSpace } from '/actors/ClientActorSpace.js';
+        
+        // Initialize the application when DOM is ready
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Create actor space
+                const actorSpace = new ClientActorSpace();
+                
+                // Create component factory
+                const componentFactory = new ComponentFactory();
+                
+                // Get WebSocket URL from environment or use default
+                const wsUrl = window.AIUR_WS_URL || 'ws://localhost:8080/actors';
+                
+                // Create application instance
+                const app = new AiurActorsApp({
+                    dom: document.getElementById('app'),
+                    componentFactory,
+                    actorSpace,
+                    options: {
+                        websocketUrl: wsUrl,
+                        theme: 'dark',
+                        terminal: {
+                            fontSize: '14px',
+                            fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+                            maxOutputLines: 1000
+                        },
+                        onConnectionError: (error) => {
+                            console.error('WebSocket connection error:', error);
+                            updateConnectionStatus('error');
+                        },
+                        onReady: (app) => {
+                            console.log('Application ready');
+                            updateConnectionStatus('connected');
+                        }
+                    }
+                });
+                
+                // Initialize and start the application
+                await app.initialize();
+                app.start();
+                
+                // Store app reference globally for debugging
+                window.aiurApp = app;
+                
+                // Update connection status
+                function updateConnectionStatus(status) {
+                    const statusEl = document.getElementById('connection-status');
+                    if (statusEl) {
+                        statusEl.className = `connection-status status-${status}`;
+                        const textEl = statusEl.querySelector('.status-text');
+                        if (textEl) {
+                            switch (status) {
+                                case 'connected':
+                                    textEl.textContent = 'Connected';
+                                    break;
+                                case 'error':
+                                    textEl.textContent = 'Connection Error';
+                                    break;
+                                default:
+                                    textEl.textContent = 'Disconnected';
+                            }
+                        }
+                    }
+                }
+                
+                // Handle window unload
+                window.addEventListener('beforeunload', () => {
+                    app.destroy();
+                });
+                
+            } catch (error) {
+                console.error('Failed to initialize application:', error);
+                document.body.innerHTML = `
+                    <div class="error-container">
+                        <h1>Application Error</h1>
+                        <p>Failed to initialize Aiur Actors UI</p>
+                        <pre>${error.message}</pre>
+                        <button onclick="location.reload()">Reload</button>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
