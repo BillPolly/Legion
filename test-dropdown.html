@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Dropdown Loading</title>
+</head>
+<body>
+    <h1>Testing Server File Loading</h1>
+    <p>Open the developer console and run these commands to test the dropdown:</p>
+    <pre>
+// 1. Select the dropdown
+const dropdown = document.querySelector('[data-demo="basic"] select[data-action="load-server-file"]');
+
+// 2. Load package.json
+dropdown.value = '/data/samples/package.json';
+dropdown.dispatchEvent(new Event('change', { bubbles: true }));
+
+// 3. Check status after a moment
+setTimeout(() => {
+    const status = document.querySelector('[data-status="basic"]');
+    console.log('Status:', status.textContent);
+}, 1000);
+
+// 4. Try other files
+dropdown.value = '/data/samples/user-profile.xml';
+dropdown.dispatchEvent(new Event('change', { bubbles: true }));
+    </pre>
+    
+    <iframe src="http://localhost:3600/examples/hierarchy-editor-demo.html" 
+            width="100%" 
+            height="800" 
+            style="border: 1px solid #ccc;">
+    </iframe>
+</body>
+</html>

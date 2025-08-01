@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <config editable="true">
+    <feature>tree</feature>
+    <feature>source</feature>
+    <feature>editing</feature>
+  </config>
+  <data>
+    <items>
+      <item id="1">First Item</item>
+      <item id="2">Second Item</item>
+    </items>
+    <metadata>
+      <created>2025-01-01</created>
+      <modified></modified>
+    </metadata>
+  </data>
+</root>

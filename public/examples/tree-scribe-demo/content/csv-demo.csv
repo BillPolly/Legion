@@ -1,0 +1,11 @@
+Name,Age,Department,Salary,Manager,Location
+John Doe,32,Engineering,85000,Jane Smith,San Francisco
+Jane Smith,28,Engineering,95000,Bob Johnson,San Francisco
+Alice Brown,35,Marketing,65000,Carol Wilson,New York
+Bob Johnson,42,Engineering,110000,,San Francisco
+Carol Wilson,38,Marketing,75000,Bob Johnson,New York
+David Lee,26,Design,55000,Jane Smith,Los Angeles
+Emma Davis,31,Sales,70000,Frank Miller,Chicago
+Frank Miller,45,Sales,90000,Bob Johnson,Chicago
+Grace Kim,29,Design,60000,Jane Smith,Los Angeles
+Henry Wang,33,Engineering,80000,Jane Smith,San Francisco

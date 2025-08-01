@@ -1,0 +1,285 @@
+/* Hierarchy Renderer Styles */
+
+.hierarchy-node {
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.node-content {
+  display: flex;
+  align-items: center;
+  padding: 2px 0;
+  position: relative;
+}
+
+.node-content:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.expand-control {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  color: #666;
+  font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+.expand-control:hover {
+  color: #333;
+  transform: scale(1.1);
+}
+
+.expand-control:focus {
+  outline: 2px solid #4A90E2;
+  outline-offset: -1px;
+  border-radius: 2px;
+}
+
+.expand-spacer {
+  display: inline-block;
+  width: 16px;
+}
+
+.node-children {
+  margin-left: 20px;
+}
+
+.node-value-container {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+/* Keys */
+.node-key {
+  color: #881391;
+  cursor: pointer;
+}
+
+.node-key[data-editable="true"]:hover {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+}
+
+.node-key.array-index {
+  color: #1A1AA6;
+}
+
+.node-key.xml-tag {
+  color: #015692;
+}
+
+.key-value-separator {
+  color: #666;
+}
+
+/* Values */
+.node-value {
+  cursor: pointer;
+}
+
+.node-value[data-editable="true"]:hover {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+}
+
+.node-value.string-value {
+  color: #0B7500;
+}
+
+.node-value.number-value {
+  color: #1A1AA6;
+}
+
+.node-value.boolean-value {
+  color: #0033B3;
+}
+
+.node-value.null-value,
+.node-value.undefined-value {
+  color: #999;
+  font-style: italic;
+}
+
+/* Empty containers */
+.empty-object,
+.empty-array {
+  color: #666;
+}
+
+/* Collapsed summary */
+.collapsed-summary {
+  color: #999;
+  font-style: italic;
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+/* XML specific */
+.xml-element {
+  display: flex;
+  gap: 4px;
+}
+
+.xml-attributes {
+  display: flex;
+  gap: 8px;
+}
+
+.xml-attribute {
+  display: flex;
+  gap: 2px;
+}
+
+.attr-key {
+  color: #793862;
+}
+
+.attr-equals {
+  color: #666;
+}
+
+.attr-value {
+  color: #0B7500;
+}
+
+/* Markdown specific */
+.markdown-heading {
+  color: #015692;
+  font-weight: bold;
+  margin: 0;
+  padding: 4px 0;
+}
+
+.markdown-heading h1 { font-size: 1.5em; }
+.markdown-heading h2 { font-size: 1.3em; }
+.markdown-heading h3 { font-size: 1.1em; }
+.markdown-heading h4 { font-size: 1em; }
+.markdown-heading h5 { font-size: 0.9em; }
+.markdown-heading h6 { font-size: 0.85em; }
+
+.markdown-content {
+  padding: 4px 0;
+}
+
+.content-code {
+  background-color: #f5f5f5;
+  padding: 8px;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.code-block {
+  display: block;
+  font-family: monospace;
+  white-space: pre;
+}
+
+.content-blockquote {
+  border-left: 3px solid #ddd;
+  padding-left: 12px;
+  color: #666;
+}
+
+/* Edit mode */
+.edit-input {
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0 4px;
+  border: 1px solid #4A90E2;
+  border-radius: 2px;
+  outline: none;
+  background: white;
+}
+
+.edit-input.key-edit {
+  color: #881391;
+}
+
+.edit-input.value-edit {
+  color: inherit;
+}
+
+/* Dark theme */
+.theme-dark .hierarchy-node {
+  color: #e0e0e0;
+}
+
+.theme-dark .node-content:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.theme-dark .expand-control {
+  color: #999;
+}
+
+.theme-dark .expand-control:hover {
+  color: #fff;
+}
+
+.theme-dark .node-key {
+  color: #C792EA;
+}
+
+.theme-dark .node-key.array-index {
+  color: #82AAFF;
+}
+
+.theme-dark .node-key.xml-tag {
+  color: #89DDFF;
+}
+
+.theme-dark .node-value.string-value {
+  color: #C3E88D;
+}
+
+.theme-dark .node-value.number-value {
+  color: #F78C6C;
+}
+
+.theme-dark .node-value.boolean-value {
+  color: #89DDFF;
+}
+
+.theme-dark .content-code {
+  background-color: #2b2b2b;
+}
+
+.theme-dark .edit-input {
+  background: #333;
+  color: #e0e0e0;
+  border-color: #4A90E2;
+}
+
+/* High contrast mode */
+.high-contrast .expand-control {
+  color: #000;
+  font-weight: bold;
+}
+
+.high-contrast .node-key {
+  color: #000;
+  font-weight: bold;
+}
+
+.high-contrast .node-value {
+  color: #000;
+}
+
+.high-contrast .collapsed-summary {
+  color: #333;
+}
+
+/* Empty state */
+.hierarchy-empty {
+  padding: 20px;
+  text-align: center;
+  color: #999;
+  font-style: italic;
+}

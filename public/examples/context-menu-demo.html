@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Context Menu Component Demo</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+        
+        .demo-header {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .demo-header h1 {
+            margin-top: 0;
+        }
+        
+        .demo-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .demo-section h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .demo-area {
+            height: 200px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 16px;
+            cursor: context-menu;
+            transition: all 0.3s ease;
+            background: #fafafa;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .demo-area:hover {
+            border-color: #007bff;
+            background: #f0f7ff;
+        }
+        
+        .demo-area.clicked {
+            animation: pulse 0.5s ease;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.98); }
+            100% { transform: scale(1); }
+        }
+        
+        .button-area {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #007bff;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+        
+        .button-area:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+        }
+        
+        .file-item {
+            padding: 12px 16px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: context-menu;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .file-item:hover {
+            background: #f8f9fa;
+            border-color: #007bff;
+            transform: translateX(4px);
+        }
+        
+        .file-icon {
+            font-size: 20px;
+        }
+        
+        .selected-item {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e8f4fd;
+            border-radius: 6px;
+            color: #0066cc;
+            font-weight: 500;
+            min-height: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        
+        .control-group label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        select, input[type="checkbox"] {
+            cursor: pointer;
+        }
+        
+        select {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+        }
+        
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+        
+        .editor-area {
+            width: 100%;
+            height: 150px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            background: white;
+        }
+        
+        .editor-area:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+        
+        .custom-menu-red .umbilical-context-menu {
+            background: #fff5f5 !important;
+            border-color: #ff6b6b !important;
+        }
+        
+        .custom-menu-red .umbilical-menu-item:hover {
+            background: #ffe0e0 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-header">
+        <h1>Context Menu Component Demo</h1>
+        <p>The ContextMenu component provides a flexible popup menu with support for:</p>
+        <ul>
+            <li>Hierarchical menus with smooth submenu transitions</li>
+            <li>Light and dark themes</li>
+            <li>Icons, shortcuts, and separators</li>
+            <li>Viewport-aware positioning</li>
+            <li>Keyboard navigation (Escape to close)</li>
+            <li>Multiple trigger types (right-click, click, or manual)</li>
+        </ul>
+    </div>
+
+    <div class="demo-section">
+        <h2>Basic Context Menu</h2>
+        <p>Right-click in the area below to see a context menu:</p>
+        <div id="basic-demo" class="demo-area">
+            Right-click anywhere in this area
+        </div>
+        <div class="selected-item" id="basic-selected">
+            Selected: <span style="opacity: 0.5">Nothing selected yet</span>
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h2>Themed Context Menu</h2>
+        <div class="controls">
+            <div class="control-group">
+                <label for="theme-select">Theme:</label>
+                <select id="theme-select">
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                </select>
+            </div>
+        </div>
+        <div id="themed-demo" class="demo-area">
+            Right-click to see themed menu
+        </div>
+        <div class="selected-item" id="themed-selected">
+            Action: <span style="opacity: 0.5">No action performed</span>
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h2>Click-triggered Menu</h2>
+        <p>Click the button below to show a menu:</p>
+        <div style="padding: 20px;">
+            <span id="click-trigger" class="button-area">
+                Click for Menu
+            </span>
+        </div>
+        <div class="selected-item" id="click-selected">
+            Selected: <span style="opacity: 0.5">Nothing selected</span>
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h2>File Explorer Example</h2>
+        <p>Right-click on files for context-specific menus:</p>
+        <div id="file-list">
+            <div class="file-item" data-type="folder" data-name="Documents">
+                <span class="file-icon">📁</span>
+                <span>Documents</span>
+            </div>
+            <div class="file-item" data-type="image" data-name="photo.jpg">
+                <span class="file-icon">🖼️</span>
+                <span>photo.jpg</span>
+            </div>
+            <div class="file-item" data-type="text" data-name="readme.txt">
+                <span class="file-icon">📄</span>
+                <span>readme.txt</span>
+            </div>
+            <div class="file-item" data-type="code" data-name="script.js">
+                <span class="file-icon">📜</span>
+                <span>script.js</span>
+            </div>
+        </div>
+        <div class="selected-item" id="file-action">
+            Action: <span style="opacity: 0.5">No file action performed</span>
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h2>Text Editor Example</h2>
+        <p>Right-click in the text area for editor actions:</p>
+        <textarea id="editor" class="editor-area">The quick brown fox jumps over the lazy dog.
+
+This is a sample text editor with context menu support.
+Try selecting some text and right-clicking!</textarea>
+        <div class="selected-item" id="editor-action">
+            Last action: <span style="opacity: 0.5">No editor action performed</span>
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h2>Programmatic Menu Control</h2>
+        <p>Use the buttons below to control a menu programmatically:</p>
+        <div class="controls">
+            <button id="show-menu" class="button-area" style="background: #28a745;">Show Menu</button>
+            <button id="hide-menu" class="button-area" style="background: #dc3545;">Hide Menu</button>
+            <button id="update-items" class="button-area" style="background: #ffc107; color: #333;">Update Items</button>
+        </div>
+        <div class="code-block">
+            <pre>// Show menu at specific position
+menu.show({ x: 100, y: 200 });
+
+// Update menu items dynamically
+menu.setItems([
+  { label: 'New Item 1' },
+  { label: 'New Item 2' }
+]);</pre>
+        </div>
+    </div>
+
+    <script type="module">
+        import { ContextMenu } from '/src/components/context-menu/index.js';
+
+        // Helper function to show action
+        const showAction = (elementId, message) => {
+            const element = document.getElementById(elementId);
+            element.innerHTML = message;
+            element.style.background = '#d4edda';
+            setTimeout(() => {
+                element.style.background = '#e8f4fd';
+            }, 300);
+        };
+
+        // Basic context menu
+        const basicMenu = ContextMenu.create({
+            trigger: 'rightclick',
+            targetElement: document.getElementById('basic-demo'),
+            items: [
+                { label: 'Cut', icon: '✂️', shortcut: 'Ctrl+X' },
+                { label: 'Copy', icon: '📋', shortcut: 'Ctrl+C' },
+                { label: 'Paste', icon: '📄', shortcut: 'Ctrl+V' },
+                { type: 'separator' },
+                { 
+                    label: 'Insert', 
+                    icon: '➕',
+                    subitems: [
+                        { label: 'Image', icon: '🖼️' },
+                        { label: 'Link', icon: '🔗' },
+                        { label: 'Table', icon: '📊' },
+                        { type: 'separator' },
+                        { label: 'Special Character', icon: '✨' }
+                    ]
+                },
+                { type: 'separator' },
+                { label: 'Select All', shortcut: 'Ctrl+A' },
+                { label: 'Find', icon: '🔍', shortcut: 'Ctrl+F' }
+            ],
+            onItemSelect: (item) => {
+                const display = item.shortcut ? `${item.label} (${item.shortcut})` : item.label;
+                showAction('basic-selected', `Selected: <strong>${display}</strong>`);
+            }
+        });
+
+        // Themed context menu
+        let currentTheme = 'light';
+        let themedMenu = null;
+
+        function createThemedMenu(theme) {
+            if (themedMenu) {
+                themedMenu.destroy();
+            }
+            
+            return ContextMenu.create({
+                trigger: 'rightclick',
+                targetElement: document.getElementById('themed-demo'),
+                theme: theme,
+                items: [
+                    { label: 'Theme Settings', icon: '🎨' },
+                    { type: 'separator' },
+                    { label: 'Light Mode', icon: '☀️', action: () => setTheme('light') },
+                    { label: 'Dark Mode', icon: '🌙', action: () => setTheme('dark') },
+                    { type: 'separator' },
+                    { 
+                        label: 'Appearance',
+                        icon: '🎭',
+                        subitems: [
+                            { label: 'Font Size', icon: '📏' },
+                            { label: 'Colors', icon: '🎨' },
+                            { label: 'Icons', icon: '🖼️' }
+                        ]
+                    }
+                ],
+                onItemSelect: (item) => {
+                    showAction('themed-selected', `Action: <strong>${item.label}</strong> in ${theme} theme`);
+                }
+            });
+        }
+
+        // Initialize themed menu
+        themedMenu = createThemedMenu(currentTheme);
+
+        function setTheme(theme) {
+            currentTheme = theme;
+            document.getElementById('theme-select').value = theme;
+            themedMenu = createThemedMenu(theme);
+            showAction('themed-selected', `Action: <strong>Switched to ${theme} theme</strong>`);
+        }
+
+        document.getElementById('theme-select').addEventListener('change', (e) => {
+            setTheme(e.target.value);
+        });
+
+        // Click-triggered menu
+        const clickMenu = ContextMenu.create({
+            trigger: 'click',
+            targetElement: document.getElementById('click-trigger'),
+            items: [
+                { label: 'New File', icon: '📄' },
+                { label: 'New Folder', icon: '📁' },
+                { type: 'separator' },
+                { 
+                    label: 'New from Template',
+                    icon: '📋',
+                    subitems: [
+                        { label: 'HTML Document', icon: '🌐' },
+                        { label: 'JavaScript File', icon: '📜' },
+                        { label: 'CSS Stylesheet', icon: '🎨' },
+                        { label: 'JSON Config', icon: '⚙️' }
+                    ]
+                },
+                { type: 'separator' },
+                { label: 'Import...', icon: '📥' }
+            ],
+            onItemSelect: (item) => {
+                showAction('click-selected', `Selected: <strong>${item.label}</strong>`);
+            }
+        });
+
+        // File explorer menus
+        document.querySelectorAll('.file-item').forEach(fileItem => {
+            const fileType = fileItem.dataset.type;
+            const fileName = fileItem.dataset.name;
+            
+            const fileMenu = ContextMenu.create({
+                trigger: 'rightclick',
+                targetElement: fileItem,
+                items: getFileMenuItems(fileType, fileName),
+                onItemSelect: (item) => {
+                    showAction('file-action', `Action: <strong>${item.label}</strong> on "${fileName}"`);
+                }
+            });
+        });
+
+        function getFileMenuItems(type, name) {
+            const common = [
+                { label: 'Open', icon: '📂' },
+                { label: 'Open With...', icon: '🔧' },
+                { type: 'separator' },
+                { label: 'Cut', icon: '✂️' },
+                { label: 'Copy', icon: '📋' },
+                { label: 'Paste', icon: '📄', disabled: true },
+                { type: 'separator' },
+                { label: 'Rename', icon: '✏️' },
+                { label: 'Delete', icon: '🗑️' }
+            ];
+
+            const typeSpecific = {
+                folder: [
+                    { label: 'Open in New Tab', icon: '📂' },
+                    { type: 'separator' },
+                    ...common,
+                    { type: 'separator' },
+                    { label: 'Properties', icon: 'ℹ️' }
+                ],
+                image: [
+                    { label: 'Preview', icon: '👁️' },
+                    { label: 'Edit', icon: '🖌️' },
+                    { type: 'separator' },
+                    ...common,
+                    { type: 'separator' },
+                    { 
+                        label: 'Convert To',
+                        icon: '🔄',
+                        subitems: [
+                            { label: 'PNG' },
+                            { label: 'JPEG' },
+                            { label: 'WebP' }
+                        ]
+                    }
+                ],
+                text: [
+                    { label: 'Open', icon: '📂' },
+                    { label: 'Edit', icon: '✏️' },
+                    { type: 'separator' },
+                    ...common
+                ],
+                code: [
+                    { label: 'Run', icon: '▶️' },
+                    { label: 'Debug', icon: '🐛' },
+                    { type: 'separator' },
+                    ...common,
+                    { type: 'separator' },
+                    { label: 'Format Document', icon: '📐' }
+                ]
+            };
+
+            return typeSpecific[type] || common;
+        }
+
+        // Text editor menu
+        const editorElement = document.getElementById('editor');
+        const editorMenu = ContextMenu.create({
+            trigger: 'rightclick',
+            targetElement: editorElement,
+            items: [
+                { label: 'Undo', icon: '↩️', shortcut: 'Ctrl+Z' },
+                { label: 'Redo', icon: '↪️', shortcut: 'Ctrl+Y' },
+                { type: 'separator' },
+                { label: 'Cut', icon: '✂️', shortcut: 'Ctrl+X' },
+                { label: 'Copy', icon: '📋', shortcut: 'Ctrl+C' },
+                { label: 'Paste', icon: '📄', shortcut: 'Ctrl+V' },
+                { type: 'separator' },
+                { 
+                    label: 'Format',
+                    icon: '🎨',
+                    subitems: [
+                        { label: 'Bold', icon: '𝐁', shortcut: 'Ctrl+B' },
+                        { label: 'Italic', icon: '𝐼', shortcut: 'Ctrl+I' },
+                        { label: 'Underline', icon: 'U̲', shortcut: 'Ctrl+U' },
+                        { type: 'separator' },
+                        { label: 'Uppercase', icon: 'A' },
+                        { label: 'Lowercase', icon: 'a' },
+                        { label: 'Title Case', icon: 'Aa' }
+                    ]
+                },
+                { type: 'separator' },
+                { label: 'Find & Replace', icon: '🔍', shortcut: 'Ctrl+H' },
+                { label: 'Go to Line...', icon: '📍', shortcut: 'Ctrl+G' }
+            ],
+            onItemSelect: (item) => {
+                const selection = editorElement.value.substring(
+                    editorElement.selectionStart,
+                    editorElement.selectionEnd
+                );
+                const selectionInfo = selection ? ` (selection: "${selection}")` : '';
+                showAction('editor-action', `Last action: <strong>${item.label}</strong>${selectionInfo}`);
+            }
+        });
+
+        // Programmatic control
+        let programmaticMenu = null;
+        
+        document.getElementById('show-menu').addEventListener('click', (e) => {
+            if (!programmaticMenu) {
+                programmaticMenu = ContextMenu.create({
+                    items: [
+                        { label: 'Action 1', icon: '1️⃣' },
+                        { label: 'Action 2', icon: '2️⃣' },
+                        { label: 'Action 3', icon: '3️⃣' }
+                    ],
+                    className: 'custom-menu-red',
+                    onItemSelect: (item) => {
+                        alert(`You selected: ${item.label}`);
+                    }
+                });
+            }
+            
+            const rect = e.target.getBoundingClientRect();
+            programmaticMenu.show({
+                x: rect.left,
+                y: rect.bottom + 5
+            });
+        });
+
+        document.getElementById('hide-menu').addEventListener('click', () => {
+            if (programmaticMenu) {
+                programmaticMenu.hide();
+            }
+        });
+
+        document.getElementById('update-items').addEventListener('click', () => {
+            if (programmaticMenu) {
+                const newItems = [
+                    { label: 'Updated Item 1', icon: '🔄' },
+                    { label: 'Updated Item 2', icon: '✨' },
+                    { type: 'separator' },
+                    { label: 'New Feature', icon: '🚀' }
+                ];
+                programmaticMenu.setItems(newItems);
+                alert('Menu items updated! Click "Show Menu" to see changes.');
+            }
+        });
+
+        // Add visual feedback for demo areas
+        document.querySelectorAll('.demo-area').forEach(area => {
+            area.addEventListener('contextmenu', () => {
+                area.classList.add('clicked');
+                setTimeout(() => area.classList.remove('clicked'), 500);
+            });
+        });
+    </script>
+</body>
+</html>

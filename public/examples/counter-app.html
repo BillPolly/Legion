@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Counter App - Umbilical Component Protocol Demo</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .counter-app {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            background: #f9f9f9;
+        }
+        
+        .display {
+            font-size: 48px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: 2px solid #007bff;
+            background: #007bff;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover:not(.disabled) {
+            background: #0056b3;
+            border-color: #0056b3;
+        }
+        
+        .btn.disabled {
+            background: #6c757d;
+            border-color: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .btn.secondary {
+            background: #6c757d;
+            border-color: #6c757d;
+        }
+        
+        .btn.secondary:hover:not(.disabled) {
+            background: #545b62;
+            border-color: #545b62;
+        }
+        
+        .debug {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .debug h4 {
+            margin-top: 0;
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <h1>Counter App - Umbilical Component Protocol Demo</h1>
+    
+    <p>This demo shows three components working together through the Umbilical Component Protocol:</p>
+    <ul>
+        <li><strong>Counter:</strong> Pure state management (no DOM knowledge)</li>
+        <li><strong>Display:</strong> DOM rendering (no business logic)</li>  
+        <li><strong>Button:</strong> User interaction (reusable across contexts)</li>
+    </ul>
+
+    <div class="counter-app">
+        <div id="display" class="display">0</div>
+        <div class="controls">
+            <button id="decrement" class="btn secondary">-1</button>
+            <button id="increment" class="btn">+1</button>
+            <button id="increment5" class="btn">+5</button>
+            <button id="reset" class="btn secondary">Reset</button>
+        </div>
+    </div>
+
+    <div class="debug">
+        <h4>Debug Output</h4>
+        <div id="debug-log"></div>
+    </div>
+
+    <script type="module">
+        import { Counter } from '/src/components/counter/index.js';
+        import { Display } from '/src/components/display/index.js';
+        import { Button } from '/src/components/button/index.js';
+
+        // Debug logging
+        const debugLog = document.getElementById('debug-log');
+        const log = (message) => {
+            const timestamp = new Date().toLocaleTimeString();
+            debugLog.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+        };
+
+        // Create display component
+        const display = Display.create({
+            dom: document.getElementById('display'),
+            className: 'counter-display',
+            format: (value) => value === null ? '0' : String(value),
+            onRender: (data) => {
+                log(`Display updated: ${data}`);
+            }
+        });
+
+        // Create counter component
+        const counter = Counter.create({
+            initialValue: 0,
+            onChange: (newValue, oldValue, action) => {
+                display.update(newValue);
+                log(`Counter ${action}: ${oldValue} → ${newValue}`);
+            },
+            onIncrement: (value) => {
+                // Could trigger achievements, sounds, etc.
+                if (value % 10 === 0) {
+                    log(`🎉 Milestone reached: ${value}!`);
+                }
+            }
+        });
+
+        // Create button components
+        const incrementBtn = Button.create({
+            dom: document.getElementById('increment'),
+            onClick: () => counter.increment(),
+            onStateChange: (state, reason) => {
+                if (reason === 'text-change') {
+                    log(`Increment button text changed to: ${state.text}`);
+                }
+            }
+        });
+
+        const increment5Btn = Button.create({
+            dom: document.getElementById('increment5'),
+            onClick: () => counter.increment(5)
+        });
+
+        const decrementBtn = Button.create({
+            dom: document.getElementById('decrement'),
+            onClick: () => counter.decrement()
+        });
+
+        const resetBtn = Button.create({
+            dom: document.getElementById('reset'),
+            onClick: () => counter.reset()
+        });
+
+        // Demonstrate dynamic behavior
+        setTimeout(() => {
+            incrementBtn.setText('+1 (Dynamic)');
+            log('Button text updated programmatically');
+        }, 3000);
+
+        // Demonstrate disable/enable
+        setTimeout(() => {
+            decrementBtn.disable();
+            log('Decrement button disabled');
+            
+            setTimeout(() => {
+                decrementBtn.enable();
+                log('Decrement button enabled');
+            }, 2000);
+        }, 5000);
+
+        log('Counter app initialized with umbilical components');
+    </script>
+</body>
+</html>
