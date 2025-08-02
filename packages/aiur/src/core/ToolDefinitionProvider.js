@@ -602,8 +602,23 @@ export class ToolDefinitionProvider {
       }
     };
     
-    // Execute using Legion tool and return the raw result
-    return await targetTool.safeInvoke(toolCall);
+    // Execute using Legion tool
+    // Multi-function tools like FileOperationsTool need invoke() with toolCall format
+    // Single-function tools need run() or execute() with parsed args
+    if (typeof targetTool.invoke === 'function') {
+      // Multi-function tool - use invoke with full toolCall
+      return await targetTool.invoke(toolCall);
+    } else if (typeof targetTool.run === 'function') {
+      // Single-function tool with run method - pass parsed args
+      const parsedArgs = typeof resolvedArgs === 'string' ? JSON.parse(resolvedArgs) : resolvedArgs;
+      return await targetTool.run(parsedArgs);
+    } else if (typeof targetTool.execute === 'function') {
+      // Single-function tool with execute method - pass parsed args
+      const parsedArgs = typeof resolvedArgs === 'string' ? JSON.parse(resolvedArgs) : resolvedArgs;
+      return await targetTool.execute(parsedArgs);
+    } else {
+      throw new Error(`Tool ${toolName} does not have invoke(), run() or execute() method`);
+    }
   }
 
   /**

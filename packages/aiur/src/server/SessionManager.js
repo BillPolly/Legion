@@ -416,16 +416,30 @@ class SessionToolProvider {
               console.log('[SessionToolProvider] Found tool', toolName, 'in module', moduleName);
               
               // Execute using Legion tool format
-              const toolCall = {
-                id: `aiur-${Date.now()}`,
-                type: 'function',
-                function: {
-                  name: toolName,
-                  arguments: JSON.stringify(args)
-                }
-              };
+              // Multi-function tools like FileOperationsTool need invoke() with toolCall format
+              // Single-function tools need run() or execute() with parsed args
+              let result;
               
-              const result = await tool.safeInvoke(toolCall);
+              if (typeof tool.invoke === 'function') {
+                // Multi-function tool - use invoke with proper toolCall format
+                const toolCall = {
+                  id: `aiur-${Date.now()}`,
+                  type: 'function',
+                  function: {
+                    name: toolName,
+                    arguments: JSON.stringify(args)
+                  }
+                };
+                result = await tool.invoke(toolCall);
+              } else if (typeof tool.run === 'function') {
+                // Single-function tool with run method - pass args directly
+                result = await tool.run(args);
+              } else if (typeof tool.execute === 'function') {
+                // Single-function tool with execute method - pass args directly
+                result = await tool.execute(args);
+              } else {
+                throw new Error(`Tool ${toolName} does not have invoke(), run() or execute() method`);
+              }
               
               // Return raw result - UI will handle formatting
               return result;

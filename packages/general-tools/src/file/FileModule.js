@@ -372,6 +372,31 @@ class FileOperationsTool extends Tool {
   }
 
   /**
+   * Parse arguments from JSON string or object
+   */
+  parseArguments(args) {
+    if (typeof args === 'string') {
+      try {
+        return JSON.parse(args);
+      } catch (e) {
+        return {};
+      }
+    }
+    return args || {};
+  }
+
+  /**
+   * Validate required parameters are present
+   */
+  validateRequiredParameters(args, required) {
+    for (const param of required) {
+      if (args[param] === undefined || args[param] === null) {
+        throw new Error(`Missing required parameter: ${param}`);
+      }
+    }
+  }
+
+  /**
    * Routes tool calls to the appropriate file operation
    */
   async invoke(toolCall) {

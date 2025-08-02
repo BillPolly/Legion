@@ -1,0 +1,15 @@
+{
+  "name": "@legion/aiur-ui-clean",
+  "version": "1.0.0",
+  "description": "Clean Aiur UI - TO BE IMPLEMENTED",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "NODE_ENV=development node src/server.js",
+    "startboth": "node scripts/start-both.js"
+  },
+  "keywords": ["aiur", "ui", "clean"],
+  "author": "",
+  "license": "MIT"
+}
