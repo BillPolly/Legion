@@ -41,13 +41,25 @@ export class TerminalViewModel extends ExtendedBaseViewModel {
     
     if (!trimmed) {
       return {
+        type: 'empty',
         command: '',
         args: [],
         raw: ''
       };
     }
     
-    // Simple parser that handles quoted arguments
+    // Check for built-in commands
+    if (trimmed.startsWith('.')) {
+      const parts = trimmed.split(/\s+/);
+      return {
+        type: 'builtin',
+        command: parts[0],
+        args: parts.slice(1),
+        raw: trimmed
+      };
+    }
+    
+    // Simple parser that handles quoted arguments for tool commands
     const parts = [];
     let current = '';
     let inQuotes = false;
@@ -72,6 +84,7 @@ export class TerminalViewModel extends ExtendedBaseViewModel {
     }
     
     return {
+      type: 'tool',
       command: parts[0] || '',
       args: parts.slice(1),
       raw: commandString
@@ -313,11 +326,217 @@ export class TerminalViewModel extends ExtendedBaseViewModel {
     this.model.setExecuting(true);
     
     try {
+      const parsed = this.parseCommand(command);
+      
+      // Handle built-in commands
+      if (parsed.type === 'builtin') {
+        const result = await this.handleBuiltinCommand(parsed);
+        return result;
+      }
+      
+      // Handle tool commands
       const result = await super.executeCommand(command);
       return result;
+    } catch (error) {
+      this.model.addOutput(`Error: ${error.message}`, 'error');
+      throw error;
     } finally {
       this.model.setExecuting(false);
     }
+  }
+
+  /**
+   * Handle built-in commands
+   * @param {Object} parsed - Parsed command
+   * @returns {Promise} Result of command execution
+   */
+  async handleBuiltinCommand(parsed) {
+    switch (parsed.command) {
+      case '.help':
+        return this.showHelp(parsed.args[0]);
+        
+      case '.commands':
+      case '.tools':
+        return this.showTools();
+        
+      case '.clear':
+        this.model.clearOutput();
+        return 'Terminal cleared';
+        
+      case '.history':
+        return this.showHistory();
+        
+      case '.session':
+        return this.showSession();
+        
+      case '.vars':
+        return this.showVariables();
+        
+      case '.describe':
+        return this.describeTool(parsed.args[0]);
+        
+      default:
+        this.model.addOutput(`Unknown command: ${parsed.command}`, 'error');
+        this.model.addOutput('Type .help for available commands', 'info');
+        return null;
+    }
+  }
+
+  /**
+   * Show help information
+   */
+  showHelp(command) {
+    if (!command) {
+      // General help
+      this.model.addOutput('Available commands:', 'info');
+      this.model.addOutput('', 'info');
+      this.model.addOutput('  Built-in Commands:', 'info');
+      this.model.addOutput('    .help [command]  - Show help information', 'info');
+      this.model.addOutput('    .commands        - List all available tools', 'info');
+      this.model.addOutput('    .tools           - List all available tools', 'info');
+      this.model.addOutput('    .clear           - Clear terminal output', 'info');
+      this.model.addOutput('    .history         - Show command history', 'info');
+      this.model.addOutput('    .session         - Show session information', 'info');
+      this.model.addOutput('    .vars            - Show variables', 'info');
+      this.model.addOutput('    .describe <tool> - Show tool details', 'info');
+      this.model.addOutput('', 'info');
+      this.model.addOutput('  Tool Execution:', 'info');
+      this.model.addOutput('    <tool_name> [args...]  - Execute a tool', 'info');
+      this.model.addOutput('', 'info');
+      this.model.addOutput('  Examples:', 'info');
+      this.model.addOutput('    module_list            - List all modules', 'info');
+      this.model.addOutput('    file_read /path/to/file - Read a file', 'info');
+      this.model.addOutput('    .describe module_list  - Get help for module_list', 'info');
+    } else {
+      // Command-specific help
+      this.describeTool(command);
+    }
+    return 'Help displayed';
+  }
+
+  /**
+   * Show available tools
+   */
+  showTools() {
+    const tools = this.model.get('availableTools') || [];
+    
+    if (tools.length === 0) {
+      this.model.addOutput('No tools available. Connect to server first.', 'info');
+    } else {
+      this.model.addOutput(`Available tools (${tools.length}):`, 'info');
+      this.model.addOutput('', 'info');
+      
+      // Group tools by category (based on prefix)
+      const categories = {};
+      tools.forEach(tool => {
+        const category = tool.name.split('_')[0] || 'other';
+        if (!categories[category]) {
+          categories[category] = [];
+        }
+        categories[category].push(tool);
+      });
+      
+      // Display by category
+      Object.keys(categories).sort().forEach(category => {
+        this.model.addOutput(`  ${category}:`, 'info');
+        categories[category].forEach(tool => {
+          const desc = tool.description ? ` - ${tool.description}` : '';
+          this.model.addOutput(`    ${tool.name}${desc}`, 'info');
+        });
+        this.model.addOutput('', 'info');
+      });
+    }
+    
+    return 'Tools listed';
+  }
+
+  /**
+   * Show command history
+   */
+  showHistory() {
+    const history = this.model.commandHistory;
+    
+    if (history.length === 0) {
+      this.model.addOutput('No command history', 'info');
+    } else {
+      this.model.addOutput('Command history:', 'info');
+      history.forEach((cmd, index) => {
+        this.model.addOutput(`  ${index + 1}: ${cmd}`, 'info');
+      });
+    }
+    
+    return 'History displayed';
+  }
+
+  /**
+   * Show session information
+   */
+  showSession() {
+    const sessionId = this.model.get('sessionId');
+    const connected = this.model.isConnected();
+    
+    this.model.addOutput('Session Information:', 'info');
+    this.model.addOutput(`  Connected: ${connected ? 'Yes' : 'No'}`, 'info');
+    
+    if (sessionId) {
+      this.model.addOutput(`  Session ID: ${sessionId}`, 'info');
+    }
+    
+    const tools = this.model.get('availableTools') || [];
+    this.model.addOutput(`  Available tools: ${tools.length}`, 'info');
+    
+    return 'Session info displayed';
+  }
+
+  /**
+   * Show variables
+   */
+  showVariables() {
+    // TODO: Implement variable storage
+    this.model.addOutput('Variables feature coming soon', 'info');
+    return 'Variables displayed';
+  }
+
+  /**
+   * Describe a specific tool
+   */
+  describeTool(toolName) {
+    if (!toolName) {
+      this.model.addOutput('Usage: .describe <tool_name>', 'error');
+      return 'Error: No tool specified';
+    }
+    
+    const tools = this.model.get('availableTools') || [];
+    const tool = tools.find(t => t.name === toolName);
+    
+    if (!tool) {
+      this.model.addOutput(`Tool not found: ${toolName}`, 'error');
+      this.model.addOutput('Use .tools to see available tools', 'info');
+      return 'Tool not found';
+    }
+    
+    this.model.addOutput(`Tool: ${tool.name}`, 'info');
+    
+    if (tool.description) {
+      this.model.addOutput(`Description: ${tool.description}`, 'info');
+    }
+    
+    if (tool.inputSchema?.properties) {
+      this.model.addOutput('', 'info');
+      this.model.addOutput('Parameters:', 'info');
+      
+      for (const [param, schema] of Object.entries(tool.inputSchema.properties)) {
+        const required = tool.inputSchema.required?.includes(param) ? ' (required)' : ' (optional)';
+        const type = schema.type || 'any';
+        this.model.addOutput(`  ${param}: ${type}${required}`, 'info');
+        
+        if (schema.description) {
+          this.model.addOutput(`    ${schema.description}`, 'info');
+        }
+      }
+    }
+    
+    return 'Tool described';
   }
 
   /**

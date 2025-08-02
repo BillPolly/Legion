@@ -134,9 +134,11 @@ export class TerminalView extends ExtendedBaseView {
    * @param {Object} output - Output object
    */
   appendOutputLine(output) {
-    const line = this.createElement('div', ['terminal-line', `terminal-line-${output.type || 'info'}`]);
+    const line = this.createElement('div', ['terminal-output-line', `terminal-output-line-${output.type || 'info'}`]);
     line.textContent = output.content;
-    line.setAttribute('data-id', output.id);
+    if (output.id) {
+      line.setAttribute('data-id', output.id);
+    }
     this.outputElement.appendChild(line);
   }
 

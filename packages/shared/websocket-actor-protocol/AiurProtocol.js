@@ -106,7 +106,20 @@ export class AiurProtocol extends Protocol {
           requestId: requestId || `req_${Date.now()}`
         };
         
+      case 'execute':
+        // Handle command execution from terminal
+        const command = payload.command || '';
+        if (!command) {
+          throw new Error('No command provided for execution');
+        }
+        return this.parseCommand(command, requestId);
+        
       default:
+        // Try parsing as a direct command
+        console.warn(`Unknown actor message type: ${type}, attempting to parse as command`);
+        if (payload && payload.command) {
+          return this.parseCommand(payload.command, requestId);
+        }
         throw new Error(`Unknown actor message type: ${type}`);
     }
   }
@@ -216,7 +229,7 @@ export class AiurProtocol extends Protocol {
       };
     }
     
-    if (cmdName === 'tools_list') {
+    if (cmdName === 'tools_list' || cmdName === 'module_list') {
       return {
         type: this.MESSAGE_TYPES.TOOL_REQUEST,
         method: 'tools/list',
@@ -225,13 +238,31 @@ export class AiurProtocol extends Protocol {
       };
     }
     
-    // Assume it's a tool call
+    // Assume it's a tool call - parse basic positional arguments
     const args = {};
-    for (let i = 1; i < parts.length; i++) {
-      const arg = parts[i];
-      if (arg.includes(':')) {
-        const [key, ...valueParts] = arg.split(':');
-        args[key] = valueParts.join(':');
+    
+    // Map positional arguments for known tools
+    if (cmdName === 'file_read' && parts[1]) {
+      args.path = parts[1];
+    } else if (cmdName === 'module_info' && parts[1]) {
+      args.module = parts[1];
+    } else if (cmdName === 'context_get' && parts[1]) {
+      args.name = parts[1];
+    } else if (parts.length > 1) {
+      // Check for key:value pairs
+      let hasKeyValue = false;
+      for (let i = 1; i < parts.length; i++) {
+        const arg = parts[i];
+        if (arg.includes(':')) {
+          const [key, ...valueParts] = arg.split(':');
+          args[key] = valueParts.join(':');
+          hasKeyValue = true;
+        }
+      }
+      
+      // If no key:value pairs found, pass as generic args
+      if (!hasKeyValue) {
+        args.args = parts.slice(1);
       }
     }
     
