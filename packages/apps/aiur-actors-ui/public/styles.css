@@ -263,9 +263,65 @@ body {
     border-color: var(--border-focus);
 }
 
-/* Terminal Component */
+/* Terminal Component - FIXED LAYOUT */
+.terminal-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.terminal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    flex: 0 0 auto; /* Don't grow or shrink */
+}
+
+.terminal-title {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.terminal-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.terminal-action {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.terminal-action:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+/* Terminal Body - Container */
+.terminal-body {
+    flex: 1 1 auto; /* Grow to fill */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0; /* Important for Firefox */
+}
+
+/* The actual terminal */
 .terminal {
-    flex: 1;
+    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -273,40 +329,33 @@ body {
     font-size: var(--font-size-md);
     position: relative;
     background-color: var(--bg-primary);
+    min-height: 0; /* Important for Firefox */
 }
 
-/* Terminal Body - Updated for subcomponent structure */
-.terminal-body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    font-family: var(--font-family-mono);
-    font-size: var(--font-size-md);
-    position: relative;
-}
-
-/* Terminal Output Container */
+/* Terminal Output Container - MUST GROW */
 .terminal-output-container {
-    flex: 1;
+    flex: 1 1 auto; /* Grow to fill available space */
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    min-height: 0; /* Important for Firefox */
 }
 
 .terminal-output {
-    flex: 1;
+    flex: 1 1 auto;
     overflow-y: auto;
     padding: var(--spacing-md);
     line-height: 1.5;
 }
 
-/* Terminal Input Container */
+/* Terminal Input Container - MUST STAY AT BOTTOM */
 .terminal-input-container {
-    flex-shrink: 0;
+    flex: 0 0 auto; /* Don't grow or shrink */
     display: flex;
     flex-direction: column;
     position: relative;
+    border-top: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
 }
 
 .terminal-output-line {

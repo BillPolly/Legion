@@ -113,8 +113,6 @@ export class TerminalOutputView extends BaseView {
    * Add a line to the output
    */
   addLine(content, type = 'info') {
-    console.log('🔵 TerminalOutputView.addLine() called:', { content, type });
-    
     const lineId = `line_${++this.lineIdCounter}`;
     
     // Create line data
@@ -130,21 +128,12 @@ export class TerminalOutputView extends BaseView {
     
     // Create DOM element
     const lineElement = this.createLineElement(lineData);
-    console.log('📄 Created line element:', lineElement);
     
     // Store reference
     this.elements.lines.set(lineId, lineElement);
     
     // Add to DOM
-    console.log('➕ Appending to output container:', this.elements.output);
     this.elements.output.appendChild(lineElement);
-    
-    // Check where it was added
-    const outputRect = this.elements.output.getBoundingClientRect();
-    const lineRect = lineElement.getBoundingClientRect();
-    console.log('📍 Output container position:', outputRect);
-    console.log('📍 New line position:', lineRect);
-    console.log('📍 Line is', lineRect.top < outputRect.bottom ? 'ABOVE' : 'BELOW', 'the bottom of output container');
     
     // Trim if needed
     this.trimLines();

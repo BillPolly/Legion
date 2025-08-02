@@ -1,6 +1,6 @@
 /**
- * TerminalView - Main terminal component that composes input and output
- * Maintains persistent DOM references and updates incrementally
+ * TerminalView - Main terminal component
+ * Creates its own container inside the given DOM element
  */
 import { ExtendedBaseView } from '../base/ExtendedBaseView.js';
 import { TerminalInputView } from './subcomponents/TerminalInputView.js';
@@ -12,7 +12,12 @@ export class TerminalView extends ExtendedBaseView {
     
     // DOM element references - create once, update many
     this.elements = {
-      terminal: null,
+      container: null,      // Our main container we create
+      header: null,
+      title: null,
+      actions: null,
+      body: null,
+      terminal: null,       // The actual terminal area
       outputContainer: null,
       inputContainer: null
     };
@@ -35,53 +40,66 @@ export class TerminalView extends ExtendedBaseView {
    * Render the terminal - creates DOM once, updates on subsequent calls
    */
   render(options = {}) {
-    console.log('🎨 TerminalView.render() called, initialized:', this.initialized);
-    console.log('📍 Current DOM container:', this.dom);
-    console.log('📍 Container children BEFORE render:', this.dom.children.length, Array.from(this.dom.children).map(c => c.className));
-    
     if (!this.initialized) {
       this.createDOMStructure();
       this.createSubcomponents();
       this.setupEventHandlers();
       this.initialized = true;
-      
-      // Add debug borders temporarily
-      this.elements.outputContainer.style.border = '2px solid red';
-      this.elements.outputContainer.style.borderBottom = 'none';
-      this.elements.inputContainer.style.border = '2px solid blue';
-      console.log('🎨 Added debug borders: RED = output (should be on top), BLUE = input (should be on bottom)');
-      
-      // Log the final DOM structure
-      console.log('🏗️ Final DOM structure after render:');
-      console.log('Terminal children:', Array.from(this.elements.terminal.children).map(el => ({
-        className: el.className,
-        tagName: el.tagName,
-        childCount: el.children.length
-      })));
-      console.log('📍 Container children AFTER render:', this.dom.children.length, Array.from(this.dom.children).map(c => c.className));
-    } else {
-      console.log('⚠️ render() called again but already initialized!');
     }
     
     // Update existing DOM with options
     this.update(options);
     
-    return this.elements.terminal;
+    return this.elements.container;
   }
 
   /**
    * Create DOM structure - ONLY CALLED ONCE
+   * Creates our own container inside the given DOM element
    */
   createDOMStructure() {
-    console.log('🔨 TerminalView.createDOMStructure() - Creating DOM structure');
-    console.log('🧹 Clearing any existing content in container');
-    
-    // CRITICAL: Clear any existing content first
+    // Clear any existing content
     while (this.dom.firstChild) {
       this.dom.removeChild(this.dom.firstChild);
     }
     
-    // Create main terminal container
+    // Create our main container
+    this.elements.container = document.createElement('section');
+    this.elements.container.className = 'terminal-container';
+    
+    // Create header
+    this.elements.header = document.createElement('div');
+    this.elements.header.className = 'terminal-header';
+    
+    this.elements.title = document.createElement('span');
+    this.elements.title.className = 'terminal-title';
+    this.elements.title.textContent = 'Terminal';
+    
+    this.elements.actions = document.createElement('div');
+    this.elements.actions.className = 'terminal-actions';
+    
+    // Create action buttons
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'terminal-action';
+    clearBtn.dataset.action = 'clear';
+    clearBtn.textContent = 'Clear';
+    
+    const exportBtn = document.createElement('button');
+    exportBtn.className = 'terminal-action';
+    exportBtn.dataset.action = 'export';
+    exportBtn.textContent = 'Export';
+    
+    this.elements.actions.appendChild(clearBtn);
+    this.elements.actions.appendChild(exportBtn);
+    
+    this.elements.header.appendChild(this.elements.title);
+    this.elements.header.appendChild(this.elements.actions);
+    
+    // Create body
+    this.elements.body = document.createElement('div');
+    this.elements.body.className = 'terminal-body';
+    
+    // Create the actual terminal inside body
     this.elements.terminal = document.createElement('div');
     this.elements.terminal.className = 'terminal';
     
@@ -92,21 +110,20 @@ export class TerminalView extends ExtendedBaseView {
     this.elements.inputContainer = document.createElement('div');
     this.elements.inputContainer.className = 'terminal-input-container';
     
-    // Assemble structure - OUTPUT ON TOP, INPUT ON BOTTOM
-    console.log('📦 Adding output container FIRST (on top)');
+    // Assemble structure
     this.elements.terminal.appendChild(this.elements.outputContainer);
-    console.log('📦 Adding input container SECOND (on bottom)');
     this.elements.terminal.appendChild(this.elements.inputContainer);
+    this.elements.body.appendChild(this.elements.terminal);
     
-    // Add to parent DOM
-    this.dom.appendChild(this.elements.terminal);
+    this.elements.container.appendChild(this.elements.header);
+    this.elements.container.appendChild(this.elements.body);
     
-    console.log('✅ DOM Structure created:', {
-      terminal: this.elements.terminal,
-      outputContainer: this.elements.outputContainer,
-      inputContainer: this.elements.inputContainer,
-      parent: this.dom
-    });
+    // Add our container to the parent DOM element
+    this.dom.appendChild(this.elements.container);
+    
+    // Bind action buttons
+    clearBtn.addEventListener('click', () => this.handleClearAction());
+    exportBtn.addEventListener('click', () => this.handleExportAction());
   }
 
   /**
@@ -184,19 +201,37 @@ export class TerminalView extends ExtendedBaseView {
   }
 
   /**
+   * Handle clear action
+   */
+  handleClearAction() {
+    this.clearOutput();
+  }
+
+  /**
+   * Handle export action
+   */
+  handleExportAction() {
+    const output = this.getOutputLines();
+    const text = output.map(line => line.content).join('\n');
+    
+    // Create download
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `terminal-output-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  /**
    * Add output line
    */
   appendOutput(output) {
-    console.log('📝 TerminalView.appendOutput() called with:', output);
     if (this.outputView) {
       const content = typeof output === 'string' ? output : output.content;
       const type = typeof output === 'string' ? 'info' : output.type;
-      console.log('➡️ Calling outputView.addLine() with:', { content, type });
-      const result = this.outputView.addLine(content, type);
-      console.log('✅ Line added with ID:', result);
-      return result;
-    } else {
-      console.log('❌ No outputView available!');
+      return this.outputView.addLine(content, type);
     }
   }
 
@@ -409,11 +444,7 @@ export class TerminalView extends ExtendedBaseView {
     }
     
     // Clear DOM references
-    this.elements = {
-      terminal: null,
-      outputContainer: null,
-      inputContainer: null
-    };
+    this.elements = {};
     
     this.initialized = false;
     super.destroy();
