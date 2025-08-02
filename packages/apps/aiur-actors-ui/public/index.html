@@ -53,7 +53,7 @@
             <!-- Main Content Area -->
             <main class="main-content">
                 <!-- Terminal -->
-                <section id="terminal" class="terminal-container">
+                <section class="terminal-container">
                     <div class="terminal-header">
                         <span class="terminal-title">Terminal</span>
                         <div class="terminal-actions">
@@ -61,22 +61,8 @@
                             <button class="terminal-action" data-action="export">Export</button>
                         </div>
                     </div>
-                    <div class="terminal-body">
-                        <!-- Terminal output will be rendered here -->
-                        <div class="terminal-output"></div>
-                        <!-- Autocomplete dropdown -->
-                        <div class="terminal-autocomplete" style="display: none;"></div>
-                        <!-- Terminal input -->
-                        <div class="terminal-input-container">
-                            <span class="terminal-prompt">$</span>
-                            <input 
-                                type="text" 
-                                class="terminal-input" 
-                                placeholder="Enter command..."
-                                autocomplete="off"
-                                spellcheck="false"
-                            />
-                        </div>
+                    <div id="terminal" class="terminal-body">
+                        <!-- Terminal component will be rendered here by JavaScript -->
                     </div>
                 </section>
             </main>

@@ -35,11 +35,32 @@ export class TerminalView extends ExtendedBaseView {
    * Render the terminal - creates DOM once, updates on subsequent calls
    */
   render(options = {}) {
+    console.log('🎨 TerminalView.render() called, initialized:', this.initialized);
+    console.log('📍 Current DOM container:', this.dom);
+    console.log('📍 Container children BEFORE render:', this.dom.children.length, Array.from(this.dom.children).map(c => c.className));
+    
     if (!this.initialized) {
       this.createDOMStructure();
       this.createSubcomponents();
       this.setupEventHandlers();
       this.initialized = true;
+      
+      // Add debug borders temporarily
+      this.elements.outputContainer.style.border = '2px solid red';
+      this.elements.outputContainer.style.borderBottom = 'none';
+      this.elements.inputContainer.style.border = '2px solid blue';
+      console.log('🎨 Added debug borders: RED = output (should be on top), BLUE = input (should be on bottom)');
+      
+      // Log the final DOM structure
+      console.log('🏗️ Final DOM structure after render:');
+      console.log('Terminal children:', Array.from(this.elements.terminal.children).map(el => ({
+        className: el.className,
+        tagName: el.tagName,
+        childCount: el.children.length
+      })));
+      console.log('📍 Container children AFTER render:', this.dom.children.length, Array.from(this.dom.children).map(c => c.className));
+    } else {
+      console.log('⚠️ render() called again but already initialized!');
     }
     
     // Update existing DOM with options
@@ -52,6 +73,14 @@ export class TerminalView extends ExtendedBaseView {
    * Create DOM structure - ONLY CALLED ONCE
    */
   createDOMStructure() {
+    console.log('🔨 TerminalView.createDOMStructure() - Creating DOM structure');
+    console.log('🧹 Clearing any existing content in container');
+    
+    // CRITICAL: Clear any existing content first
+    while (this.dom.firstChild) {
+      this.dom.removeChild(this.dom.firstChild);
+    }
+    
     // Create main terminal container
     this.elements.terminal = document.createElement('div');
     this.elements.terminal.className = 'terminal';
@@ -63,12 +92,21 @@ export class TerminalView extends ExtendedBaseView {
     this.elements.inputContainer = document.createElement('div');
     this.elements.inputContainer.className = 'terminal-input-container';
     
-    // Assemble structure
+    // Assemble structure - OUTPUT ON TOP, INPUT ON BOTTOM
+    console.log('📦 Adding output container FIRST (on top)');
     this.elements.terminal.appendChild(this.elements.outputContainer);
+    console.log('📦 Adding input container SECOND (on bottom)');
     this.elements.terminal.appendChild(this.elements.inputContainer);
     
     // Add to parent DOM
     this.dom.appendChild(this.elements.terminal);
+    
+    console.log('✅ DOM Structure created:', {
+      terminal: this.elements.terminal,
+      outputContainer: this.elements.outputContainer,
+      inputContainer: this.elements.inputContainer,
+      parent: this.dom
+    });
   }
 
   /**
@@ -149,10 +187,16 @@ export class TerminalView extends ExtendedBaseView {
    * Add output line
    */
   appendOutput(output) {
+    console.log('📝 TerminalView.appendOutput() called with:', output);
     if (this.outputView) {
       const content = typeof output === 'string' ? output : output.content;
       const type = typeof output === 'string' ? 'info' : output.type;
-      return this.outputView.addLine(content, type);
+      console.log('➡️ Calling outputView.addLine() with:', { content, type });
+      const result = this.outputView.addLine(content, type);
+      console.log('✅ Line added with ID:', result);
+      return result;
+    } else {
+      console.log('❌ No outputView available!');
     }
   }
 
