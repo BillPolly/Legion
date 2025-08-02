@@ -109,7 +109,7 @@ export class TerminalActor {
    * Check if this is a special command
    */
   isSpecialCommand(toolName) {
-    return toolName === 'tools';
+    return toolName === 'tools'; // Only 'tools' is special to list available tools
   }
   
   /**
@@ -117,8 +117,9 @@ export class TerminalActor {
    */
   async handleSpecialCommand(toolName) {
     if (toolName === 'tools') {
+      // Refresh and show the tools list
       const response = await this.actorSpace.callTool(toolMethods.LIST_TOOLS);
-      this.handleToolsList(response);
+      this.handleToolsList(response, false); // false = show output
     }
   }
   
@@ -133,6 +134,12 @@ export class TerminalActor {
       this.showNoSchemaError(toolName);
       return null;
     }
+    
+    console.log(`Building arguments for ${toolName}:`, {
+      args,
+      schema: toolDef.inputSchema,
+      properties: toolDef.inputSchema?.properties
+    });
     
     if (!toolDef.inputSchema || !toolDef.inputSchema.properties) {
       // Tool has no parameters
@@ -269,9 +276,10 @@ export class TerminalActor {
    * Handle post-execution actions
    */
   async handlePostExecution(toolName, response) {
-    // If module was loaded, update tool definitions
-    if (toolName === 'module_load' && response?.success && response?.toolsLoaded) {
-      this.updateToolDefinitions(response.toolsLoaded);
+    // If module was loaded, add new tool definitions to registry
+    if (toolName === 'module_load' && response?.success && response?.toolDefinitions) {
+      console.log('Module loaded, adding new tool definitions to registry...');
+      this.updateToolDefinitions(response.toolDefinitions);
     }
     
     // If module was unloaded, we'd need to remove tools
@@ -318,23 +326,34 @@ export class TerminalActor {
   /**
    * Handle tools list response
    */
-  handleToolsList(response) {
+  handleToolsList(response, silent = false) {
     console.log('TerminalActor: handleToolsList response:', response);
+    console.log('Silent mode:', silent);
     
     // The response structure from server is { result: { tools: [...] } }
     const toolsData = response?.tools || response?.result?.tools || response;
+    console.log('Tools data extracted:', toolsData?.length || 0, 'tools');
+    
+    // Log first few tool names to debug
+    if (Array.isArray(toolsData) && toolsData.length > 0) {
+      console.log('First few tools:', toolsData.slice(0, 5).map(t => t.name));
+    }
     
     if (!toolsData || (Array.isArray(toolsData) && toolsData.length === 0)) {
-      this.terminal.addOutput('No tools available', 'info');
-      this.terminal.addOutput('Try: module_load file', 'info');
+      if (!silent) {
+        this.terminal.addOutput('No tools available', 'info');
+        this.terminal.addOutput('Try: module_load file', 'info');
+      }
       return;
     }
     
     const tools = Array.isArray(toolsData) ? toolsData : (toolsData.tools || []);
     
     if (tools.length === 0) {
-      this.terminal.addOutput('No tools available', 'info');
-      this.terminal.addOutput('Try: module_load file', 'info');
+      if (!silent) {
+        this.terminal.addOutput('No tools available', 'info');
+        this.terminal.addOutput('Try: module_load file', 'info');
+      }
       return;
     }
     
@@ -349,30 +368,33 @@ export class TerminalActor {
       this.terminal.updateToolDefinitions(this.toolDefinitions);
     }
     
-    this.terminal.addOutput(`Available tools (${tools.length}):`, 'info');
-    tools.forEach(tool => {
-      this.terminal.addOutput(`  ${tool.name}: ${tool.description || 'No description'}`, 'info');
-      
-      // Show parameters if they exist
-      if (tool.inputSchema && tool.inputSchema.properties) {
-        const props = tool.inputSchema.properties;
-        const required = tool.inputSchema.required || [];
+    // Only show output if not in silent mode
+    if (!silent) {
+      this.terminal.addOutput(`Available tools (${tools.length}):`, 'info');
+      tools.forEach(tool => {
+        this.terminal.addOutput(`  ${tool.name}: ${tool.description || 'No description'}`, 'info');
         
-        Object.keys(props).forEach(param => {
-          const prop = props[param];
-          const isRequired = required.includes(param);
-          const typeStr = prop.type || 'any';
-          const desc = prop.description || '';
-          const requiredStr = isRequired ? ' (required)' : ' (optional)';
+        // Show parameters if they exist
+        if (tool.inputSchema && tool.inputSchema.properties) {
+          const props = tool.inputSchema.properties;
+          const required = tool.inputSchema.required || [];
           
-          this.terminal.addOutput(`    - ${param}: ${typeStr}${requiredStr} - ${desc}`, 'info');
-        });
-        
-        if (Object.keys(props).length === 0) {
-          this.terminal.addOutput(`    (no parameters)`, 'info');
+          Object.keys(props).forEach(param => {
+            const prop = props[param];
+            const isRequired = required.includes(param);
+            const typeStr = prop.type || 'any';
+            const desc = prop.description || '';
+            const requiredStr = isRequired ? ' (required)' : ' (optional)';
+            
+            this.terminal.addOutput(`    - ${param}: ${typeStr}${requiredStr} - ${desc}`, 'info');
+          });
+          
+          if (Object.keys(props).length === 0) {
+            this.terminal.addOutput(`    (no parameters)`, 'info');
+          }
         }
-      }
-    });
+      });
+    }
   }
   
   /**
@@ -733,12 +755,30 @@ export class TerminalActor {
       this.terminal.addOutput(`Session created: ${sessionId}`, 'success');
       this.terminal.addOutput('Type .help to see available commands', 'info');
       
-      // Load initial tool list to get schemas
+      // Load tool schemas so we know how to parse arguments
       try {
+        console.log('Loading initial tool schemas...');
         const response = await this.actorSpace.callTool(toolMethods.LIST_TOOLS);
-        this.handleToolsList(response);
+        console.log('Tool list response:', response);
+        
+        if (!response || (!response.tools && !response.result)) {
+          console.error('Invalid tools response:', response);
+          this.terminal.addOutput('Warning: Failed to load tool schemas. Run "tools" to load them.', 'warning');
+        } else {
+          this.handleToolsList(response, true); // true = silent mode
+          console.log('Tool schemas loaded. Available tools:', this.toolDefinitions.size);
+          
+          // Check if module_list is available
+          if (this.toolDefinitions.has('module_list')) {
+            console.log('module_list tool is available');
+          } else {
+            console.warn('module_list tool is NOT available in initial load');
+            console.log('Available tools:', Array.from(this.toolDefinitions.keys()).slice(0, 10));
+          }
+        }
       } catch (error) {
-        console.error('Failed to load initial tool list:', error);
+        console.error('Failed to load tool schemas:', error);
+        this.terminal.addOutput('Warning: Failed to load tool schemas. Run "tools" to load them.', 'warning');
       }
     });
     

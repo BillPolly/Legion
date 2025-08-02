@@ -83,6 +83,98 @@ class Tool extends EventEmitter {
   }
   
   /**
+   * Convert Zod schema to JSON Schema format
+   * @param {z.ZodSchema} schema - Zod schema
+   * @returns {Object} JSON Schema
+   */
+  zodToJsonSchema(schema) {
+    if (!schema || !schema._def) {
+      return { type: 'object', properties: {}, required: [] };
+    }
+    
+    const def = schema._def;
+    
+    // Handle ZodObject
+    if (def.typeName === 'ZodObject') {
+      const properties = {};
+      const required = [];
+      
+      for (const [key, value] of Object.entries(def.shape())) {
+        properties[key] = this.zodTypeToJsonSchema(value);
+        
+        // Check if field is required
+        if (!value.isOptional()) {
+          required.push(key);
+        }
+      }
+      
+      return {
+        type: 'object',
+        properties,
+        required: required.length > 0 ? required : undefined
+      };
+    }
+    
+    return this.zodTypeToJsonSchema(schema);
+  }
+  
+  /**
+   * Convert individual Zod type to JSON Schema
+   * @private
+   */
+  zodTypeToJsonSchema(zodType) {
+    if (!zodType || !zodType._def) {
+      return { type: 'string' };
+    }
+    
+    const def = zodType._def;
+    const result = {};
+    
+    // Get description if available
+    if (def.description) {
+      result.description = def.description;
+    }
+    
+    switch (def.typeName) {
+      case 'ZodString':
+        result.type = 'string';
+        break;
+      case 'ZodNumber':
+        result.type = 'number';
+        break;
+      case 'ZodBoolean':
+        result.type = 'boolean';
+        break;
+      case 'ZodArray':
+        result.type = 'array';
+        if (def.type) {
+          result.items = this.zodTypeToJsonSchema(def.type);
+        }
+        break;
+      case 'ZodObject':
+        return this.zodToJsonSchema(zodType);
+      case 'ZodOptional':
+        return this.zodTypeToJsonSchema(def.innerType);
+      default:
+        result.type = 'string'; // fallback
+    }
+    
+    return result;
+  }
+  
+  /**
+   * Get tool definition in JSON format (for UI)
+   * @returns {Object} Tool definition with JSON schema
+   */
+  toJSON() {
+    return {
+      name: this.name,
+      description: this.description,
+      inputSchema: this.zodToJsonSchema(this.inputSchema)
+    };
+  }
+  
+  /**
    * Validate and execute the tool
    * This method handles input validation and standardizes error responses
    * 

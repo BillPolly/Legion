@@ -99,10 +99,13 @@ export class ClientActorSpace {
       throw new Error('No active session. Create a session first.');
     }
     
-    return this.sendRequest('tool_request', {
+    console.log(`[ClientActorSpace] Calling tool: ${method}`, params);
+    const response = await this.sendRequest('tool_request', {
       method,
       params
     });
+    console.log(`[ClientActorSpace] Tool response for ${method}:`, response);
+    return response;
   }
   
   handleWebSocketMessage(event) {

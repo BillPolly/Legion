@@ -34,22 +34,195 @@ export class ModuleLoader {
     this.modules.clear();
     this.moduleClasses.clear();
     
-    // Discover all module files
-    const moduleFiles = await this.discoverModules();
-    
-    // Load each module
-    for (const moduleFile of moduleFiles) {
-      try {
-        await this.loadModule(moduleFile, options);
-      } catch (error) {
-        // Skip modules that fail to load
-        if (options.verbose) {
-          console.error(`Failed to load module from ${moduleFile}:`, error.message);
+    // Load from registry first
+    try {
+      const registryPath = path.resolve(__dirname, '../../../module-loader/src/ModuleRegistry.json');
+      const registryContent = await fs.readFile(registryPath, 'utf-8');
+      const registry = JSON.parse(registryContent);
+      
+      if (registry.modules) {
+        // Project root is the Legion root (4 levels up from cli/src/core to Legion root)
+        const projectRoot = path.resolve(__dirname, '../../../..');
+        
+        for (const [moduleName, moduleConfig] of Object.entries(registry.modules)) {
+          // Resolve the path correctly from Legion root
+          const modulePath = path.join(projectRoot, moduleConfig.path);
+          try {
+            await this.loadModuleFromRegistry(moduleName, modulePath, moduleConfig, options);
+          } catch (error) {
+            // Skip modules that fail to load
+            if (options.verbose) {
+              console.error(`Failed to load module ${moduleName} from ${modulePath}:`, error.message);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      // Fallback to discovering modules
+      const moduleFiles = await this.discoverModules();
+      
+      // Load each module
+      for (const moduleFile of moduleFiles) {
+        try {
+          await this.loadModule(moduleFile, options);
+        } catch (error) {
+          // Skip modules that fail to load
+          if (options.verbose) {
+            console.error(`Failed to load module from ${moduleFile}:`, error.message);
+          }
         }
       }
     }
     
     return this.modules;
+  }
+
+  /**
+   * Load a module from the registry
+   * @param {string} moduleName - Module name from registry
+   * @param {string} modulePath - Path to module file
+   * @param {object} moduleConfig - Module configuration from registry
+   * @param {object} options - Loading options
+   */
+  async loadModuleFromRegistry(moduleName, modulePath, moduleConfig, options = {}) {
+    try {
+      // Check if it's a JSON module
+      if (moduleConfig.type === 'json') {
+        return await this.loadJsonModuleFromRegistry(moduleName, modulePath, options);
+      }
+      
+      // Import the module class (ES modules)
+      const moduleExports = await import(`file://${modulePath}`);
+      const ModuleClass = moduleExports.default || moduleExports[moduleConfig.className];
+      
+      if (!ModuleClass) {
+        return;
+      }
+      
+      // Store the module class for later instantiation
+      this.moduleClasses.set(moduleName, ModuleClass);
+      
+      // Create a temporary instance to extract metadata
+      const mockDependencies = this.createMockDependencies(ModuleClass);
+      const tempInstance = new ModuleClass(mockDependencies);
+      
+      // Initialize the module if it has an initialize method
+      if (typeof tempInstance.initialize === 'function') {
+        try {
+          await tempInstance.initialize();
+        } catch (initError) {
+          // Some modules might fail initialization without proper dependencies
+          // Continue anyway - tools might still be available
+        }
+      }
+      
+      // Store module metadata - be careful with getTools as it might need initialization
+      let tools = [];
+      let functionCount = 0;
+      
+      try {
+        // getTools might be async or sync
+        let toolsResult = tempInstance.getTools ? tempInstance.getTools() : [];
+        // Handle async getTools
+        if (toolsResult && typeof toolsResult.then === 'function') {
+          toolsResult = await toolsResult;
+        }
+        tools = Array.isArray(toolsResult) ? toolsResult : [];
+        
+        // Count the actual number of functions
+        for (const tool of tools) {
+          if (typeof tool.getAllToolDescriptions === 'function') {
+            functionCount += tool.getAllToolDescriptions().length;
+          } else {
+            functionCount += 1;
+          }
+        }
+      } catch (error) {
+        // Module needs initialization - just set tools to empty for now
+        tools = [];
+        functionCount = 0;
+      }
+      
+      const moduleInfo = {
+        name: moduleName,
+        className: moduleConfig.className || ModuleClass.name,
+        dependencies: ModuleClass.dependencies || [],
+        tools: tools,
+        functionCount: functionCount,
+        isJsonModule: false
+      };
+      
+      this.modules.set(moduleName, moduleInfo);
+      
+    } catch (error) {
+      if (options.verbose) {
+        console.error(`Failed to load module ${moduleName} from ${modulePath}:`, error.message);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Load a JSON module from registry
+   * @param {string} moduleName - Module name from registry
+   * @param {string} jsonFile - Path to module.json file
+   * @param {object} options - Loading options
+   */
+  async loadJsonModuleFromRegistry(moduleName, jsonFile, options = {}) {
+    if (!this.moduleFactory) {
+      throw new Error('ModuleFactory not initialized. ResourceManager required for JSON modules.');
+    }
+
+    try {
+      // Use ModuleFactory to create the JSON module directly
+      const moduleInstance = await this.moduleFactory.createJsonModule(jsonFile);
+      
+      // Store the instance for later use
+      this.moduleInstances.set(moduleName, moduleInstance);
+      this.jsonModules.set(moduleName, true);
+      
+      // Get tools - be careful as getTools might return null/undefined
+      let tools = [];
+      let functionCount = 0;
+      
+      try {
+        // getTools might be async for GenericModule
+        const toolsResult = moduleInstance.getTools ? await moduleInstance.getTools() : [];
+        tools = Array.isArray(toolsResult) ? toolsResult : [];
+        
+        // Count functions
+        for (const tool of tools) {
+          if (typeof tool.getAllToolDescriptions === 'function') {
+            functionCount += tool.getAllToolDescriptions().length;
+          } else {
+            functionCount += 1;
+          }
+        }
+      } catch (error) {
+        // Module might need initialization or tools not available
+        tools = [];
+        functionCount = 0;
+      }
+      
+      // Store module info
+      const moduleInfo = {
+        name: moduleName,
+        className: moduleInstance.constructor.name,
+        dependencies: moduleInstance.dependencies || [],
+        tools: tools,
+        functionCount: functionCount,
+        isJsonModule: true
+      };
+      
+      this.modules.set(moduleName, moduleInfo);
+      
+      return moduleInfo;
+    } catch (error) {
+      if (options.verbose) {
+        console.error(`Failed to load JSON module ${moduleName} from ${jsonFile}:`, error.message);
+      }
+      throw error;
+    }
   }
 
   /**
@@ -84,17 +257,41 @@ export class ModuleLoader {
       const mockDependencies = this.createMockDependencies(ModuleClass);
       const tempInstance = new ModuleClass(mockDependencies);
       
-      // Store module metadata
-      const tools = tempInstance.getTools ? tempInstance.getTools() : [];
-      
-      // Count the actual number of functions
-      let functionCount = 0;
-      for (const tool of tools) {
-        if (typeof tool.getAllToolDescriptions === 'function') {
-          functionCount += tool.getAllToolDescriptions().length;
-        } else {
-          functionCount += 1;
+      // Initialize the module if it has an initialize method
+      if (typeof tempInstance.initialize === 'function') {
+        try {
+          await tempInstance.initialize();
+        } catch (initError) {
+          // Some modules might fail initialization without proper dependencies
+          // Continue anyway - tools might still be available
         }
+      }
+      
+      // Store module metadata - be careful with getTools as it might need initialization
+      let tools = [];
+      let functionCount = 0;
+      
+      try {
+        // getTools might be async or sync
+        let toolsResult = tempInstance.getTools ? tempInstance.getTools() : [];
+        // Handle async getTools
+        if (toolsResult && typeof toolsResult.then === 'function') {
+          toolsResult = await toolsResult;
+        }
+        tools = Array.isArray(toolsResult) ? toolsResult : [];
+        
+        // Count the actual number of functions
+        for (const tool of tools) {
+          if (typeof tool.getAllToolDescriptions === 'function') {
+            functionCount += tool.getAllToolDescriptions().length;
+          } else {
+            functionCount += 1;
+          }
+        }
+      } catch (error) {
+        // Module needs initialization - just set tools to empty for now
+        tools = [];
+        functionCount = 0;
       }
       
       const moduleInfo = {
@@ -138,17 +335,27 @@ export class ModuleLoader {
       this.moduleInstances.set(moduleName, moduleInstance);
       this.jsonModules.set(moduleName, true);
       
-      // Get tools
-      const tools = moduleInstance.getTools ? moduleInstance.getTools() : [];
-      
-      // Count functions
+      // Get tools - be careful as getTools might return null/undefined
+      let tools = [];
       let functionCount = 0;
-      for (const tool of tools) {
-        if (typeof tool.getAllToolDescriptions === 'function') {
-          functionCount += tool.getAllToolDescriptions().length;
-        } else {
-          functionCount += 1;
+      
+      try {
+        // getTools might be async for GenericModule
+        const toolsResult = moduleInstance.getTools ? await moduleInstance.getTools() : [];
+        tools = Array.isArray(toolsResult) ? toolsResult : [];
+        
+        // Count functions
+        for (const tool of tools) {
+          if (typeof tool.getAllToolDescriptions === 'function') {
+            functionCount += tool.getAllToolDescriptions().length;
+          } else {
+            functionCount += 1;
+          }
         }
+      } catch (error) {
+        // Module might need initialization or tools not available
+        tools = [];
+        functionCount = 0;
       }
       
       // Store module metadata
@@ -211,44 +418,64 @@ export class ModuleLoader {
   }
 
   /**
-   * Discover all module files
+   * Discover all module files from ModuleRegistry.json
    * @returns {string[]} Array of module file paths
    */
   async discoverModules() {
-    const modulesPath = this.getModulePath();
     const moduleFiles = [];
     
     try {
-      const entries = await fs.readdir(modulesPath, { withFileTypes: true });
+      // First, try to load from ModuleRegistry.json
+      const registryPath = path.resolve(__dirname, '../../../module-loader/src/ModuleRegistry.json');
+      const registryContent = await fs.readFile(registryPath, 'utf-8');
+      const registry = JSON.parse(registryContent);
       
-      for (const entry of entries) {
-        if (entry.isDirectory()) {
-          // Look for Module.js and module.json files in subdirectories
-          const subPath = path.join(modulesPath, entry.name);
-          const subFiles = await fs.readdir(subPath);
-          
-          let hasModuleJs = false;
-          let hasModuleJson = false;
-          
-          for (const file of subFiles) {
-            if (file.endsWith('Module.js')) {
-              const fullPath = path.join(subPath, file);
-              moduleFiles.push(fullPath);
-              hasModuleJs = true;
-            } else if (file === 'module.json') {
-              hasModuleJson = true;
-            }
-          }
-          
-          // Only add module.json if there's no Module.js (Module.js takes precedence)
-          if (!hasModuleJs && hasModuleJson) {
-            const jsonPath = path.join(subPath, 'module.json');
-            moduleFiles.push(jsonPath);
-          }
+      if (registry.modules) {
+        // Project root is the Legion root (4 levels up from cli/src/core)
+        const projectRoot = path.resolve(__dirname, '../../../..');
+        
+        for (const [moduleName, moduleConfig] of Object.entries(registry.modules)) {
+          // Resolve the path correctly from Legion root
+          const modulePath = path.join(projectRoot, moduleConfig.path);
+          moduleFiles.push(modulePath);
         }
       }
     } catch (error) {
-      // Ignore errors - directory might not exist
+      // Fallback to discovering from general-tools only
+      const modulesPath = this.getModulePath();
+      
+      try {
+        const entries = await fs.readdir(modulesPath, { withFileTypes: true });
+        
+        for (const entry of entries) {
+          if (entry.isDirectory()) {
+            // Look for Module.js and module.json files in subdirectories
+            const subPath = path.join(modulesPath, entry.name);
+            const subFiles = await fs.readdir(subPath);
+            
+            let hasModuleJs = false;
+            let hasModuleJson = false;
+            
+            for (const file of subFiles) {
+              if (file.endsWith('Module.js')) {
+                const fullPath = path.join(subPath, file);
+                moduleFiles.push(fullPath);
+                hasModuleJs = true;
+              } else if (file === 'module.json') {
+                hasModuleJson = true;
+              }
+            }
+            
+            // Only add module.json if there's no Module.js (Module.js takes precedence)
+            if (!hasModuleJs && hasModuleJson) {
+              const jsonPath = path.join(subPath, 'module.json');
+              moduleFiles.push(jsonPath);
+            }
+          }
+        }
+      } catch (error) {
+        // Ignore errors - directory might not exist
+      }
     }
     
     return moduleFiles;

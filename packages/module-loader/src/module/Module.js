@@ -29,10 +29,12 @@ class Module extends EventEmitter {
   /**
    * Create a new module
    * @param {string} name - Module name (optional for backward compatibility)
+   * @param {Object} dependencies - Dependencies injected by ModuleFactory
    */
-  constructor(name = '') {
+  constructor(name = '', dependencies = {}) {
     super();
     this.name = name;
+    this.dependencies = dependencies;
     this.tools = [];
     this.toolMap = new Map();
     this.toolAdapters = new Map();

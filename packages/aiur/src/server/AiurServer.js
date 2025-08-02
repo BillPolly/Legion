@@ -116,14 +116,26 @@ export class AiurServer {
       injectMetadata: true
     });
     
-    // Create simple ModuleLoader (ResourceManager ONLY for module loading!)
+    // Create THE singleton ModuleLoader
     const { ModuleLoader } = await import('@legion/module-loader');
     this.moduleLoader = new ModuleLoader(); // Creates its own ResourceManager internally
     await this.moduleLoader.initialize();
     
-    // Create SessionManager with parent reference
+    // The moduleLoader registers itself in ResourceManager during initialize()
+    // So the SystemModule will get it as a dependency
+    
+    // Load ONLY the system module at startup (provides module_load, module_list, etc)
+    console.log('[AiurServer] Loading system module...');
+    const { default: SystemModule } = await import('../../../general-tools/src/system/SystemModule.js');
+    await this.moduleLoader.loadModuleByName('system', SystemModule);
+    
+    // Log initial state
+    const allTools = await this.moduleLoader.getAllTools();
+    console.log(`[AiurServer] Started with ${this.moduleLoader.getLoadedModuleNames().length} modules, ${allTools.length} tools`);
+    
+    // Create SessionManager with moduleLoader reference
     this.sessionManager = new SessionManager({
-      server: this,  // Parent reference for accessing server resources
+      moduleLoader: this.moduleLoader,  // Direct access to the singleton ModuleLoader
       sessionTimeout: this.config.sessionTimeout,
       logManager: this.logManager
     });

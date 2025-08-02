@@ -2,7 +2,7 @@
   "name": "serper",
   "version": "1.0.0",
   "description": "Google search using Serper API",
-  "package": "./index.js",
+  "package": "./Serper.js",
   "type": "constructor",
   "dependencies": {
     "SERPER_API_KEY": {
@@ -12,7 +12,6 @@
   },
   "initialization": {
     "className": "Serper",
-    "treatAsConstructor": true,
     "config": {
       "apiKey": "${SERPER_API_KEY}"
     }

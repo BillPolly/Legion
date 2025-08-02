@@ -1,5 +1,10 @@
 {
   "modules": {
+    "system": {
+      "type": "class",
+      "path": "packages/general-tools/src/system/SystemModule.js",
+      "className": "SystemModule"
+    },
     "file": {
       "type": "class",
       "path": "packages/general-tools/src/file/FileModule.js",
@@ -13,11 +18,6 @@
       "type": "class",
       "path": "packages/code-gen/js-generator/src/JSGeneratorModule.js",
       "className": "JSGeneratorModule"
-    },
-    "package-manager": {
-      "type": "class", 
-      "path": "packages/code-gen/package-manager/src/PackageManagerModule.js",
-      "className": "PackageManagerModule"
     },
     "jester": {
       "type": "class",
@@ -43,11 +43,6 @@
       "type": "class",
       "path": "packages/profile-planner/src/ProfilePlannerModule.js",
       "className": "ProfilePlannerModule"
-    },
-    "plan-executor": {
-      "type": "class",
-      "path": "packages/plan-executor/src/PlanExecutorModule.js",
-      "className": "PlanExecutorModule"
     },
     "playwright": {
       "type": "json",

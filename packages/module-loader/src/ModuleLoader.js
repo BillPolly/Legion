@@ -39,6 +39,9 @@ export class ModuleLoader {
     
     // Now create the module factory
     this.moduleFactory = new ModuleFactory(this.resourceManager);
+    
+    // Register the ModuleLoader itself as a dependency for modules that need it
+    this.resourceManager.register('moduleLoader', this);
     this._initialized = true;
   }
 
@@ -97,6 +100,75 @@ export class ModuleLoader {
   }
 
   /**
+   * Load all modules from the registry
+   * @returns {Promise<Object>} Summary of loaded modules
+   */
+  async loadAllFromRegistry() {
+    if (!this._initialized) {
+      await this.initialize();
+    }
+    
+    // Load the registry
+    const { readFile } = await import('fs/promises');
+    const { resolve, dirname, join } = await import('path');
+    const { fileURLToPath } = await import('url');
+    
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const registryPath = resolve(__dirname, 'ModuleRegistry.json');
+    const registryContent = await readFile(registryPath, 'utf-8');
+    const registry = JSON.parse(registryContent);
+    
+    const results = {
+      successful: [],
+      failed: []
+    };
+    
+    // Load each module from the registry
+    for (const [moduleName, moduleInfo] of Object.entries(registry.modules)) {
+      try {
+        console.log(`[ModuleLoader] Loading module from registry: ${moduleName}`);
+        
+        const projectRoot = resolve(__dirname, '../../..');
+        const modulePath = resolve(projectRoot, moduleInfo.path);
+        
+        let module;
+        if (moduleInfo.type === 'json') {
+          module = await this.loadModuleFromJson(modulePath);
+        } else if (moduleInfo.type === 'class') {
+          // For class modules, import the file directly and instantiate
+          try {
+            const moduleExports = await import(modulePath);
+            const ModuleClass = moduleExports.default || moduleExports[moduleInfo.className];
+            
+            if (!ModuleClass) {
+              throw new Error(`Module class ${moduleInfo.className || 'default'} not found in ${modulePath}`);
+            }
+            
+            // Use factory to create the module with proper dependencies
+            module = await this.moduleFactory.createModule(ModuleClass);
+          } catch (importError) {
+            // Fallback to directory-based loading
+            const moduleDir = dirname(modulePath);
+            module = await this.loadModule(moduleDir);
+          }
+        }
+        
+        if (module) {
+          // Store with the registry name as key
+          this.loadedModules.set(moduleName, module);
+          results.successful.push(moduleName);
+        }
+      } catch (error) {
+        console.error(`[ModuleLoader] Failed to load module ${moduleName}:`, error.message);
+        results.failed.push({ name: moduleName, error: error.message });
+      }
+    }
+    
+    console.log(`[ModuleLoader] Registry loading complete: ${results.successful.length} successful, ${results.failed.length} failed`);
+    return results;
+  }
+
+  /**
    * Get all tools from all loaded modules
    * @returns {Promise<Array>} Array of all tools
    */
@@ -127,6 +199,39 @@ export class ModuleLoader {
    */
   getTool(toolName) {
     return this.toolRegistry.get(toolName) || null;
+  }
+
+  /**
+   * Execute a tool by name with arguments
+   * @param {string} toolName - Name of the tool to execute
+   * @param {Object} args - Arguments for the tool
+   * @returns {Promise<Object>} Tool execution result
+   */
+  async executeTool(toolName, args) {
+    const tool = this.getTool(toolName);
+    if (!tool) {
+      throw new Error(`Tool not found: ${toolName}`);
+    }
+    
+    // Execute based on tool type
+    if (typeof tool.execute === 'function') {
+      return await tool.execute(args);
+    } else if (typeof tool.invoke === 'function') {
+      // For multi-function tools that use invoke
+      const toolCall = {
+        id: `ml-${Date.now()}`,
+        type: 'function',
+        function: {
+          name: toolName,
+          arguments: JSON.stringify(args)
+        }
+      };
+      return await tool.invoke(toolCall);
+    } else if (typeof tool.run === 'function') {
+      return await tool.run(args);
+    } else {
+      throw new Error(`Tool ${toolName} has no execute/invoke/run method`);
+    }
   }
 
   /**
