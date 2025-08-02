@@ -1,0 +1,25 @@
+{
+  "verboseLogging": false,
+  "parallelExecution": true,
+  "timeout": 30000,
+  "showRecommendations": true,
+  "showBugDetails": true,
+  "minGrade": "C",
+  "outputFormat": "console",
+  "detectParameterBugs": true,
+  "detectCoordinationBugs": true,
+  "includeInvariantTests": true,
+  "includeFlowTests": true,
+  "includeActorTests": true,
+  "testPatterns": [
+    "**/*.component.js",
+    "**/components/*.js"
+  ],
+  "excludePatterns": [
+    "**/*.test.js",
+    "**/*.spec.js",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**"
+  ]
+}
