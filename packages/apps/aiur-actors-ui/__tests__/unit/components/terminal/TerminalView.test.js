@@ -320,7 +320,38 @@ describe('TerminalView', () => {
       view.destroy();
       
       expect(container.querySelector('.terminal')).toBeNull();
-      expect(view.destroyed).toBe(true);
+      expect(view.outputView).toBeNull();
+      expect(view.inputView).toBeNull();
+    });
+  });
+
+  describe('Subcomponent Coordination', () => {
+    test('should coordinate between input and output subcomponents', () => {
+      view.render();
+      
+      // Test that view methods properly delegate to subcomponents
+      expect(view.outputView).toBeDefined();
+      expect(view.inputView).toBeDefined();
+      
+      // Test output delegation
+      const outputSpy = jest.spyOn(view.outputView, 'addOutput');
+      view.appendOutput({ content: 'test', type: 'info' });
+      expect(outputSpy).toHaveBeenCalled();
+      
+      // Test input delegation
+      const inputSpy = jest.spyOn(view.inputView, 'setValue');
+      view.renderCommand('test', 4);
+      expect(inputSpy).toHaveBeenCalledWith('test');
+    });
+
+    test('should setup coordination callbacks', () => {
+      view.render();
+      
+      // Verify that subcomponent callbacks are set up
+      expect(view.inputView.onInput).toBeDefined();
+      expect(view.inputView.onKeyDown).toBeDefined();
+      expect(view.inputView.onCommand).toBeDefined();
+      expect(view.inputView.onAutocomplete).toBeDefined();
     });
   });
 });
