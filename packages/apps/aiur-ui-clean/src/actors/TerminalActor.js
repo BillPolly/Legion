@@ -201,6 +201,11 @@ export class TerminalActor {
       this.toolDefinitions.set(tool.name, tool);
     });
     
+    // Update terminal's tool definitions for tab completion
+    if (this.terminal.updateToolDefinitions) {
+      this.terminal.updateToolDefinitions(this.toolDefinitions);
+    }
+    
     this.terminal.addOutput(`Available tools (${tools.length}):`, 'info');
     tools.forEach(tool => {
       this.terminal.addOutput(`  ${tool.name}: ${tool.description || 'No description'}`, 'info');
@@ -288,80 +293,283 @@ export class TerminalActor {
     }
   }
   
+  
   /**
-   * Handle modules list response
+   * Format a tool response for display
    */
-  handleModulesList(response) {
-    if (!response || !response.modules) {
-      this.terminal.addOutput('No modules info available', 'info');
-      return;
+  formatToolResponse(response) {
+    // Handle ToolResult format from Legion tools
+    if (response && typeof response === 'object') {
+      // Check for success field first (standard tool response format)
+      if ('success' in response) {
+        if (response.success) {
+          // Success response - format the whole response minus the success field
+          const dataToFormat = { ...response };
+          delete dataToFormat.success;
+          return this.formatSuccessResponse(dataToFormat);
+        } else {
+          // Failure response
+          return this.formatErrorResponse(response.message || response.error || 'Operation failed', response);
+        }
+      }
+      
+      // Check for error field
+      if (response.error) {
+        return this.formatErrorResponse(response.error, response);
+      }
+      
+      // Check for result field
+      if (response.result !== undefined) {
+        return this.formatSuccessResponse(response.result);
+      }
+      
+      // Check for specific response types
+      if (response.content !== undefined) {
+        // File read response
+        return this.formatFileReadResponse(response);
+      }
+      
+      if (response.currentDirectory !== undefined) {
+        // Directory current response
+        return this.formatDirectoryCurrentResponse(response);
+      }
+      
+      if (response.contents !== undefined && response.dirpath !== undefined) {
+        // Directory list response
+        return this.formatDirectoryListResponse(response);
+      }
+      
+      if (response.filepath !== undefined && response.bytesWritten !== undefined) {
+        // File write response
+        return this.formatFileWriteResponse(response);
+      }
+      
+      if (response.message !== undefined) {
+        // Simple message response
+        return this.formatMessageResponse(response);
+      }
+      
+      // Default object formatting
+      return this.formatObjectResponse(response);
     }
     
-    if (response.loaded && response.loaded.length > 0) {
-      this.terminal.addOutput('Loaded modules:', 'info');
-      response.loaded.forEach(mod => {
-        this.terminal.addOutput(`  - ${mod}`, 'success');
-      });
+    // String response
+    if (typeof response === 'string') {
+      return [{ text: response, type: 'success' }];
     }
     
-    if (response.available && response.available.length > 0) {
-      this.terminal.addOutput('Available modules:', 'info');
-      response.available.forEach(mod => {
-        this.terminal.addOutput(`  - ${mod}`, 'info');
-      });
+    // Array response
+    if (Array.isArray(response)) {
+      return this.formatArrayResponse(response);
     }
+    
+    // Other types
+    return [{ text: String(response), type: 'success' }];
   }
   
+  formatSuccessResponse(data) {
+    if (typeof data === 'string') {
+      return [{ text: data, type: 'success' }];
+    }
+    if (typeof data === 'object' && data !== null) {
+      // Special formatting for known response types
+      if (data.currentDirectory) {
+        return this.formatDirectoryCurrentResponse(data);
+      }
+      if (data.contents && data.dirpath) {
+        return this.formatDirectoryListResponse(data);
+      }
+      if (data.content && data.filepath) {
+        return this.formatFileReadResponse(data);
+      }
+      if (data.modules) {
+        // Format module list
+        const output = [];
+        if (data.modules.loaded && data.modules.loaded.length > 0) {
+          output.push({ text: 'Loaded modules:', type: 'info' });
+          data.modules.loaded.forEach(mod => {
+            output.push({ text: `   ✓ ${mod}`, type: 'success' });
+          });
+        } else {
+          output.push({ text: 'No modules loaded', type: 'info' });
+        }
+        
+        if (data.modules.available && data.modules.available.length > 0) {
+          output.push({ text: 'Available modules:', type: 'info' });
+          data.modules.available.forEach(mod => {
+            output.push({ text: `   • ${mod}`, type: 'info' });
+          });
+        }
+        return output;
+      }
+      if (data.message) {
+        return this.formatMessageResponse(data);
+      }
+      return this.formatObjectResponse(data);
+    }
+    return [{ text: JSON.stringify(data, null, 2), type: 'success' }];
+  }
+  
+  formatErrorResponse(message, data) {
+    const output = [];
+    output.push({ text: `❌ Error: ${message}`, type: 'error' });
+    if (data && data.details) {
+      output.push({ text: `   Details: ${data.details}`, type: 'error' });
+    }
+    if (data && data.errorCode) {
+      output.push({ text: `   Code: ${data.errorCode}`, type: 'error' });
+    }
+    return output;
+  }
+  
+  formatFileReadResponse(response) {
+    const output = [];
+    output.push({ text: `📄 File: ${response.filepath}`, type: 'success' });
+    if (response.size !== undefined) {
+      output.push({ text: `   Size: ${this.formatBytes(response.size)}`, type: 'info' });
+    }
+    output.push({ text: '─'.repeat(40), type: 'info' });
+    if (response.content) {
+      // Split content by lines and display
+      const lines = response.content.split('\n');
+      const maxLines = 50; // Limit display to first 50 lines
+      const displayLines = lines.slice(0, maxLines);
+      displayLines.forEach(line => {
+        output.push({ text: line, type: 'success' });
+      });
+      if (lines.length > maxLines) {
+        output.push({ text: `... (${lines.length - maxLines} more lines)`, type: 'info' });
+      }
+    }
+    return output;
+  }
+  
+  formatFileWriteResponse(response) {
+    const output = [];
+    output.push({ text: `✅ File written: ${response.filepath}`, type: 'success' });
+    output.push({ text: `   Bytes written: ${this.formatBytes(response.bytesWritten)}`, type: 'info' });
+    if (response.created !== undefined) {
+      output.push({ text: `   Status: ${response.created ? 'Created new file' : 'Updated existing file'}`, type: 'info' });
+    }
+    return output;
+  }
+  
+  formatDirectoryCurrentResponse(response) {
+    return [
+      { text: `📁 Current directory: ${response.currentDirectory}`, type: 'success' }
+    ];
+  }
+  
+  formatDirectoryListResponse(response) {
+    const output = [];
+    output.push({ text: `📁 Directory: ${response.dirpath}`, type: 'success' });
+    output.push({ text: `   Total items: ${response.contents.length}`, type: 'info' });
+    output.push({ text: '─'.repeat(40), type: 'info' });
+    
+    // Separate files and directories
+    const dirs = response.contents.filter(item => item.type === 'directory');
+    const files = response.contents.filter(item => item.type === 'file');
+    
+    // Display directories first
+    if (dirs.length > 0) {
+      dirs.sort((a, b) => a.name.localeCompare(b.name));
+      dirs.forEach(dir => {
+        output.push({ text: `  📁 ${dir.name}/`, type: 'info' });
+      });
+    }
+    
+    // Then display files
+    if (files.length > 0) {
+      files.sort((a, b) => a.name.localeCompare(b.name));
+      files.forEach(file => {
+        const sizeStr = file.size !== undefined ? ` (${this.formatBytes(file.size)})` : '';
+        output.push({ text: `  📄 ${file.name}${sizeStr}`, type: 'success' });
+      });
+    }
+    
+    if (response.contents.length === 0) {
+      output.push({ text: '  (empty directory)', type: 'info' });
+    }
+    
+    return output;
+  }
+  
+  formatMessageResponse(response) {
+    const output = [];
+    
+    // Handle success/message format
+    if (response.message) {
+      if (response.success !== undefined) {
+        const icon = response.success ? '✅' : '❌';
+        output.push({ text: `${icon} ${response.message}`, type: response.success ? 'success' : 'error' });
+      } else {
+        output.push({ text: response.message, type: 'success' });
+      }
+    }
+    
+    // Add additional fields if present
+    if (response.module) {
+      output.push({ text: `   Module: ${response.module}`, type: 'info' });
+    }
+    
+    if (response.toolsLoaded && Array.isArray(response.toolsLoaded)) {
+      output.push({ text: `   Tools loaded: ${response.toolsLoaded.length}`, type: 'info' });
+      response.toolsLoaded.forEach(tool => {
+        output.push({ text: `     - ${tool}`, type: 'info' });
+      });
+    }
+    
+    
+    return output;
+  }
+  
+  formatObjectResponse(obj) {
+    const output = [];
+    // Pretty print object with proper indentation
+    const formatted = JSON.stringify(obj, null, 2);
+    formatted.split('\n').forEach(line => {
+      output.push({ text: line, type: 'success' });
+    });
+    return output;
+  }
+  
+  formatArrayResponse(arr) {
+    const output = [];
+    arr.forEach(item => {
+      if (typeof item === 'string') {
+        output.push({ text: `  • ${item}`, type: 'success' });
+      } else {
+        output.push({ text: `  • ${JSON.stringify(item)}`, type: 'success' });
+      }
+    });
+    return output;
+  }
+  
+  formatBytes(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
   /**
    * Handle generic tool result
    */
   handleToolResult(response) {
     console.log('TerminalActor: handleToolResult response:', response);
     
-    if (response && response.error) {
-      // Server returned an error - could be string or object
-      const errorMsg = typeof response.error === 'string' 
-        ? response.error 
-        : (response.error.message || JSON.stringify(response.error));
-      this.terminal.addOutput(`Error: ${errorMsg}`, 'error');
-      
-      // If it's an unknown tool error, suggest checking available tools
-      if (errorMsg.includes('Unknown tool') || errorMsg.includes('not found')) {
-        this.terminal.addOutput('Type "tools" to see available tools', 'info');
-      }
-    } else if (response && response.result !== undefined) {
-      // Handle different result types
-      if (typeof response.result === 'string') {
-        // String result - display directly
-        this.terminal.addOutput(response.result, 'success');
-      } else if (Array.isArray(response.result)) {
-        // Array result - display as list
-        response.result.forEach(item => {
-          if (typeof item === 'string') {
-            this.terminal.addOutput(`  - ${item}`, 'success');
-          } else {
-            this.terminal.addOutput(`  - ${JSON.stringify(item)}`, 'success');
-          }
+    try {
+      const formatted = this.formatToolResponse(response);
+      if (formatted) {
+        formatted.forEach(output => {
+          this.terminal.addOutput(output.text, output.type);
         });
-      } else if (typeof response.result === 'object' && response.result !== null) {
-        // Object result - format nicely
-        if (response.result.message) {
-          this.terminal.addOutput(response.result.message, 'success');
-        } else if (response.result.loaded !== undefined || response.result.available !== undefined) {
-          // Module list response
-          this.handleModulesList(response.result);
-        } else {
-          this.terminal.addOutput(JSON.stringify(response.result, null, 2), 'success');
-        }
-      } else {
-        // Other types - convert to string
-        this.terminal.addOutput(String(response.result), 'success');
       }
-    } else if (response) {
-      // Response without explicit result field
+    } catch (error) {
+      console.error('Error formatting response:', error);
+      // Fallback to simple JSON display
       this.terminal.addOutput(JSON.stringify(response, null, 2), 'success');
-    } else {
-      this.terminal.addOutput('Tool executed successfully', 'success');
     }
   }
   

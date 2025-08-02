@@ -117,6 +117,18 @@ export class Terminal {
       value: this.state.currentInput,
       prompt: '> '
     });
+    
+    // Set available local commands for completion
+    this.inputView.setAvailableCommands(['.help', '.clear', '.exit', '.about', 'tools']);
+  }
+  
+  /**
+   * Update tool definitions in input view for completion
+   */
+  updateToolDefinitions(tools) {
+    if (this.inputView) {
+      this.inputView.setToolDefinitions(tools);
+    }
   }
   
   /**
