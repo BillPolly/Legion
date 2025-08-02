@@ -275,7 +275,7 @@ body {
     background-color: var(--bg-primary);
 }
 
-/* Terminal Body */
+/* Terminal Body - Updated for subcomponent structure */
 .terminal-body {
     flex: 1;
     display: flex;
@@ -286,11 +286,27 @@ body {
     position: relative;
 }
 
+/* Terminal Output Container */
+.terminal-output-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
 .terminal-output {
     flex: 1;
     overflow-y: auto;
     padding: var(--spacing-md);
     line-height: 1.5;
+}
+
+/* Terminal Input Container */
+.terminal-input-container {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    position: relative;
 }
 
 .terminal-output-line {
@@ -323,26 +339,73 @@ body {
     margin: 4px 0;
     border-radius: 4px;
     font-size: var(--font-size-sm);
+    border-left: 3px solid var(--accent-primary);
 }
 
-/* Terminal Autocomplete */
+/* JSON content styling */
+.json-content {
+    background: var(--bg-primary);
+    padding: var(--spacing-sm);
+    border-radius: 3px;
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-sm);
+    white-space: pre;
+    overflow-x: auto;
+    margin: 0;
+}
+
+/* Table content styling */
+.output-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: var(--spacing-sm) 0;
+    font-size: var(--font-size-sm);
+}
+
+.output-table th,
+.output-table td {
+    border: 1px solid var(--border-color);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    text-align: left;
+}
+
+.output-table th {
+    background-color: var(--bg-tertiary);
+    font-weight: 600;
+}
+
+/* Line timestamp styling */
+.line-timestamp {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    margin-left: var(--spacing-sm);
+    opacity: 0.7;
+}
+
+/* Terminal Autocomplete - Updated for subcomponent structure */
 .terminal-autocomplete {
     position: absolute;
-    bottom: 40px;
-    left: var(--spacing-md);
-    right: var(--spacing-md);
+    bottom: 100%;
+    left: 0;
+    right: 0;
     background-color: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     border-radius: 4px;
     max-height: 200px;
     overflow-y: auto;
     z-index: 10;
+    margin-bottom: 4px;
 }
 
 .autocomplete-item {
     padding: var(--spacing-sm) var(--spacing-md);
     cursor: pointer;
     transition: background-color 0.2s ease;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
 }
 
 .autocomplete-item:hover,
@@ -350,24 +413,39 @@ body {
     background-color: var(--bg-hover);
 }
 
-.autocomplete-item-name {
+.autocomplete-name {
     color: var(--text-primary);
     font-weight: 500;
+    font-size: var(--font-size-md);
 }
 
-.autocomplete-item-description {
+.autocomplete-description {
     color: var(--text-secondary);
     font-size: var(--font-size-sm);
+    margin-top: 2px;
 }
 
-/* Terminal Input */
+.autocomplete-type-command {
+    border-left: 3px solid var(--accent-primary);
+}
+
+.autocomplete-type-tool {
+    border-left: 3px solid var(--accent-success);
+}
+
+/* Terminal Input - Updated for subcomponent structure */
 .terminal-input-line {
     display: flex;
     align-items: center;
     padding: var(--spacing-md);
     background-color: var(--bg-secondary);
     border-top: 1px solid var(--border-color);
-    flex-shrink: 0; /* Don't allow the input line to shrink */
+    flex-shrink: 0;
+    position: relative;
+}
+
+.terminal-input-line.executing {
+    opacity: 0.7;
 }
 
 .terminal-prompt {
@@ -375,11 +453,13 @@ body {
     margin-right: var(--spacing-sm);
     font-weight: 600;
     flex-shrink: 0;
+    user-select: none;
 }
 
 .terminal-input-wrapper {
     flex: 1;
     display: flex;
+    position: relative;
 }
 
 .terminal-input {
@@ -393,6 +473,13 @@ body {
     padding: 0;
     margin: 0;
     line-height: 1.5;
+    z-index: 2;
+    position: relative;
+}
+
+.terminal-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 /* Disable default input styling when in terminal */
@@ -407,6 +494,39 @@ body {
     border: none !important;
     outline: none !important;
     box-shadow: none !important;
+}
+
+/* Terminal connection states */
+.terminal.terminal-connected {
+    /* Connected state styling if needed */
+}
+
+.terminal.terminal-disconnected {
+    opacity: 0.8;
+}
+
+.terminal.terminal-executing {
+    /* Executing state styling if needed */
+}
+
+/* Terminal themes */
+.terminal.terminal-theme-dark {
+    /* Dark theme variations */
+}
+
+.terminal.terminal-theme-light {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+.terminal.terminal-theme-light .terminal-output {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+.terminal.terminal-theme-light .terminal-input-line {
+    background-color: #f5f5f5;
+    border-top-color: #ddd;
 }
 
 /* Form Elements */
@@ -578,6 +698,33 @@ button {
     min-width: 150px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     z-index: 2000;
+}
+
+/* Focus management for terminal */
+.terminal-focused .terminal-input {
+    /* Input focus styling if needed */
+}
+
+/* Prevent text selection on terminal UI elements */
+.terminal-prompt,
+.terminal-actions,
+.terminal-header {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+/* Allow text selection in output */
+.terminal-output,
+.terminal-output-line,
+.json-content,
+.output-table {
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    cursor: text;
 }
 
 .context-menu-item {

@@ -25,10 +25,11 @@ export class TerminalViewModel extends ExtendedBaseViewModel {
   bind() {
     super.bind();
     
-    // Bind view event handlers
+    // Bind view event handlers - now through the new subcomponent structure
     this.view.onInput = this.handleInput.bind(this);
     this.view.onKeyDown = this.handleKeyDown.bind(this);
-    this.view.onPaste = this.handlePaste.bind(this);
+    this.view.onCommand = this.handleCommand.bind(this);
+    this.view.onAutocomplete = this.handleAutocompleteRequest.bind(this);
   }
 
   /**
@@ -93,42 +94,26 @@ export class TerminalViewModel extends ExtendedBaseViewModel {
 
   /**
    * Handle input from view
+   * @param {string} value - Input value
    * @param {Event} event - Input event
    */
-  handleInput(event) {
-    const text = event.target.value || '';
-    this.model.setCurrentCommand(text);
+  handleInput(value, event) {
+    this.model.setCurrentCommand(value || '');
   }
 
   /**
    * Handle keyboard events
+   * @param {string} key - Key name 
    * @param {KeyboardEvent} event - Keyboard event
    */
-  handleKeyDown(event) {
-    switch (event.key) {
-      case 'Enter':
-        event.preventDefault();
-        this.handleEnter();
-        break;
-        
-      case 'ArrowUp':
-        event.preventDefault();
+  handleKeyDown(key, event) {
+    switch (key) {
+      case 'historyUp':
         this.navigateHistory('up');
         break;
         
-      case 'ArrowDown':
-        event.preventDefault();
+      case 'historyDown':
         this.navigateHistory('down');
-        break;
-        
-      case 'Tab':
-        event.preventDefault();
-        this.handleTab();
-        break;
-        
-      case 'Escape':
-        event.preventDefault();
-        this.handleEscape();
         break;
         
       case 'ArrowLeft':
@@ -137,6 +122,10 @@ export class TerminalViewModel extends ExtendedBaseViewModel {
         
       case 'ArrowRight':
         // Let default behavior handle cursor movement
+        break;
+        
+      default:
+        // Other keys handled by subcomponent
         break;
     }
   }
@@ -154,12 +143,11 @@ export class TerminalViewModel extends ExtendedBaseViewModel {
   }
 
   /**
-   * Handle Enter key
+   * Handle command execution from input view
+   * @param {string} command - Command to execute
    */
-  handleEnter() {
-    const command = this.model.currentCommand.trim();
-    
-    if (!command) {
+  handleCommand(command) {
+    if (!command.trim()) {
       return;
     }
     
@@ -168,11 +156,6 @@ export class TerminalViewModel extends ExtendedBaseViewModel {
     
     // Clear current command
     this.model.setCurrentCommand('');
-    
-    // Clear input element
-    if (this.view.inputElement) {
-      this.view.inputElement.value = '';
-    }
     
     // Clear autocomplete
     this.model.clearAutocomplete();
@@ -187,35 +170,15 @@ export class TerminalViewModel extends ExtendedBaseViewModel {
   }
 
   /**
-   * Handle Tab key for autocomplete
+   * Handle autocomplete request from input view
+   * @param {string} partial - Partial command
    */
-  handleTab() {
-    if (this.model.autocompleteActive) {
-      // Apply selected autocomplete
-      this.applyAutocomplete();
-    } else {
-      // Request autocomplete
-      const partial = this.model.currentCommand;
-      if (partial) {
-        this.requestAutocomplete(partial);
-      }
+  handleAutocompleteRequest(partial) {
+    if (partial) {
+      this.requestAutocomplete(partial);
     }
   }
 
-  /**
-   * Handle Escape key
-   */
-  handleEscape() {
-    if (this.model.autocompleteActive) {
-      this.model.clearAutocomplete();
-    } else {
-      this.model.setCurrentCommand('');
-      // Clear input element
-      if (this.view.inputElement) {
-        this.view.inputElement.value = '';
-      }
-    }
-  }
 
   /**
    * Navigate command history
@@ -225,10 +188,8 @@ export class TerminalViewModel extends ExtendedBaseViewModel {
     const command = this.model.navigateHistory(direction);
     this.model.setCurrentCommand(command);
     
-    // Update input element directly
-    if (this.view.inputElement) {
-      this.view.inputElement.value = command;
-    }
+    // Update view through the coordinated API
+    this.view.renderCommand(command, command.length);
   }
 
   /**
@@ -240,10 +201,8 @@ export class TerminalViewModel extends ExtendedBaseViewModel {
       this.model.setCurrentCommand(suggestion);
       this.model.clearAutocomplete();
       
-      // Update input element
-      if (this.view.inputElement) {
-        this.view.inputElement.value = suggestion;
-      }
+      // Update view through the coordinated API
+      this.view.renderCommand(suggestion, suggestion.length);
     }
   }
 
