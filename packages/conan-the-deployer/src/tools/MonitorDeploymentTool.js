@@ -147,12 +147,17 @@ class MonitorDeploymentTool extends Tool {
   /**
    * Execute monitoring action
    */
-  async invoke(toolCall) {
+  async execute(args) {
     try {
-      const args = this.parseArguments(toolCall.function.arguments);
+      // If args is a toolCall object, parse it
+      if (args.function && args.function.arguments) {
+        args = this.parseArguments(args.function.arguments);
+      }
       
       // Validate required parameters
-      this.validateRequiredParameters(args, ['deploymentId', 'action']);
+      if (!args.deploymentId || !args.action) {
+        throw new Error('deploymentId and action are required');
+      }
       
       // Validate action
       if (!this.validActions.includes(args.action)) {

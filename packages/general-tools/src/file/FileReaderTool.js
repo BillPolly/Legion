@@ -77,17 +77,16 @@ class FileReaderTool extends Tool {
   }
 
   /**
-   * Invoke the file reader tool
-   * @param {Object} toolCall - The tool call from the LLM
+   * Execute the file reader tool
+   * @param {Object} args - The arguments for reading the file
    * @returns {Promise<ToolResult>} The result of reading the file
    */
-  async invoke(toolCall) {
+  async execute(args) {
     try {
-      // Parse the arguments
-      const args = this.parseArguments(toolCall.function.arguments);
-      
       // Validate required parameters
-      this.validateRequiredParameters(args, ['filePath']);
+      if (!args || !args.filePath) {
+        throw new Error('filePath is required');
+      }
 
       const { filePath } = args;
 

@@ -119,7 +119,11 @@ export class Terminal {
     });
     
     // Set available local commands for completion
-    this.inputView.setAvailableCommands(['.help', '.clear', '.exit', '.about', 'tools']);
+    this.inputView.setAvailableCommands([
+      '.help', '.clear', '.exit', '.about', '.history', '.time',
+      '.connect', '.disconnect', '.status',
+      'tools', 'module_list', 'module_load', 'module_unload'
+    ]);
   }
   
   /**

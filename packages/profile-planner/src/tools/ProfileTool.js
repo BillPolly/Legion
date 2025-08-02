@@ -50,25 +50,31 @@ export class ProfileTool extends Tool {
 
   /**
    * Execute the tool
-   * @param {Object} toolCall - The tool call object
+   * @param {Object} args - The tool arguments
    * @returns {ToolResult} Tool execution result
    */
-  async invoke(toolCall) {
-    const { name: functionName, arguments: args } = toolCall.function;
-    let parsedArgs;
+  async execute(args) {
+    // Handle toolCall format if provided
+    if (args.function) {
+      const { name: functionName, arguments: funcArgs } = args.function;
+      let parsedArgs;
 
-    try {
-      parsedArgs = typeof args === 'string' ? JSON.parse(args) : args;
-    } catch (error) {
-      return ToolResult.failure(`Invalid arguments: ${error.message}`);
+      try {
+        parsedArgs = typeof funcArgs === 'string' ? JSON.parse(funcArgs) : funcArgs;
+      } catch (error) {
+        return ToolResult.failure(`Invalid arguments: ${error.message}`);
+      }
+
+      // Since this tool only has one function, we can directly process it
+      if (functionName !== this.profile.toolName) {
+        return ToolResult.failure(`Unknown function: ${functionName}. Expected: ${this.profile.toolName}`);
+      }
+
+      return await this._createPlan(parsedArgs);
     }
-
-    // Since this tool only has one function, we can directly process it
-    if (functionName !== this.profile.toolName) {
-      return ToolResult.failure(`Unknown function: ${functionName}. Expected: ${this.profile.toolName}`);
-    }
-
-    return await this._createPlan(parsedArgs);
+    
+    // Direct args format
+    return await this._createPlan(args);
   }
 
   /**

@@ -86,17 +86,16 @@ class FileWriterTool extends Tool {
   }
 
   /**
-   * Invoke the file writer tool
-   * @param {Object} toolCall - The tool call from the LLM
+   * Execute the file writer tool
+   * @param {Object} args - The arguments for writing the file
    * @returns {Promise<ToolResult>} The result of writing the file
    */
-  async invoke(toolCall) {
+  async execute(args) {
     try {
-      // Parse the arguments
-      const args = this.parseArguments(toolCall.function.arguments);
-      
       // Validate required parameters
-      this.validateRequiredParameters(args, ['filePath', 'content']);
+      if (!args || !args.filePath || args.content === undefined) {
+        throw new Error('filePath and content are required');
+      }
 
       const { filePath, content, append = false } = args;
 

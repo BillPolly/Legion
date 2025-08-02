@@ -95,31 +95,45 @@ export class ProfilePlannerTool extends Tool {
 
   /**
    * Execute the tool based on function name
-   * @param {Object} toolCall - The tool call object
+   * @param {Object} args - The tool arguments
    * @returns {ToolResult} Tool execution result
    */
-  async invoke(toolCall) {
+  async execute(args) {
     await this.initialize();
 
-    const { name: functionName, arguments: args } = toolCall.function;
-    let parsedArgs;
+    // Handle toolCall format if provided
+    if (args.function) {
+      const { name: functionName, arguments: funcArgs } = args.function;
+      let parsedArgs;
 
-    try {
-      parsedArgs = typeof args === 'string' ? JSON.parse(args) : args;
-    } catch (error) {
-      return ToolResult.failure(`Invalid arguments: ${error.message}`);
-    }
+      try {
+        parsedArgs = typeof funcArgs === 'string' ? JSON.parse(funcArgs) : funcArgs;
+      } catch (error) {
+        return ToolResult.failure(`Invalid arguments: ${error.message}`);
+      }
 
-    switch (functionName) {
-      case 'plan_with_profile':
-        return await this._planWithProfile(parsedArgs);
-      case 'profile_list':
-        return await this._profileList(parsedArgs);
-      case 'profile_info':
-        return await this._profileInfo(parsedArgs);
-      default:
-        return ToolResult.failure(`Unknown function: ${functionName}`);
+      switch (functionName) {
+        case 'plan_with_profile':
+          return await this._planWithProfile(parsedArgs);
+        case 'profile_list':
+          return await this._profileList(parsedArgs);
+        case 'profile_info':
+          return await this._profileInfo(parsedArgs);
+        default:
+          return ToolResult.failure(`Unknown function: ${functionName}`);
+      }
     }
+    
+    // Direct args format - determine which function to call based on args
+    if (args.profileName !== undefined) {
+      return await this._planWithProfile(args);
+    } else if (args.filter !== undefined) {
+      return await this._profileList(args);
+    } else if (args.name !== undefined) {
+      return await this._profileInfo(args);
+    }
+    
+    return ToolResult.failure('Unable to determine which function to call');
   }
 
   /**

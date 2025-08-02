@@ -67,18 +67,19 @@ class ResourceTool extends Tool {
   }
 
   /**
-   * Invoke the tool
+   * Execute the tool
    */
-  async invoke(toolCall) {
+  async execute(args) {
     try {
-      // Parse arguments
-      let args;
-      try {
-        args = this.parseArguments(toolCall.function.arguments);
-      } catch (error) {
-        return ToolResult.failure(`Invalid JSON arguments: ${error.message}`, {
-          arguments: toolCall.function.arguments
-        });
+      // Handle toolCall format if provided
+      if (args.function && args.function.arguments) {
+        try {
+          args = this.parseArguments(args.function.arguments);
+        } catch (error) {
+          return ToolResult.failure(`Invalid JSON arguments: ${error.message}`, {
+            arguments: args.function.arguments
+          });
+        }
       }
       
       // Get the resource

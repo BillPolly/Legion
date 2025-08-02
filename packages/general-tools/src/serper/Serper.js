@@ -22,6 +22,36 @@ export class Serper extends Tool {
   }
 
   /**
+   * Execute the tool with the given parameters
+   * This is the main entry point for single-function tools
+   */
+  async execute(args) {
+    // Check if initialized
+    if (!this.apiKey) {
+      return ToolResult.failure(
+        'Serper tool not initialized. Please provide SERPER_API_KEY in environment.',
+        {
+          query: args.query || 'unknown',
+          errorType: 'not_initialized'
+        }
+      );
+    }
+
+    // Validate required parameters
+    if (!args.query) {
+      return ToolResult.failure(
+        'Missing required parameter: query',
+        {
+          errorType: 'validation_error'
+        }
+      );
+    }
+
+    // Perform the search
+    return await this.performSearch(args.query, args.num, args.dateRange);
+  }
+
+  /**
    * Returns the tool description in standard function calling format
    */
   getToolDescription() {
@@ -113,56 +143,6 @@ export class Serper extends Tool {
     };
   }
 
-  /**
-   * Invokes the Google search with the given tool call
-   */
-  async invoke(toolCall) {
-    try {
-      // Parse the arguments
-      const args = this.parseArguments(toolCall.function.arguments);
-      
-      // Validate required parameters
-      this.validateRequiredParameters(args, ['query']);
-      
-      // Check if initialized
-      if (!this.apiKey) {
-        return ToolResult.failure(
-          'Serper tool not initialized. Please call initialize() with your API key first.',
-          {
-            query: args.query,
-            errorType: 'not_initialized'
-          }
-        );
-      }
-      
-      // Perform the search
-      return await this.performSearch(args.query, args.num, args.dateRange);
-    } catch (error) {
-      // Handle parameter validation errors
-      return ToolResult.failure(
-        error.message,
-        {
-          query: this.safeParseQuery(toolCall.function.arguments),
-          errorType: 'validation_error'
-        }
-      );
-    }
-  }
-
-  /**
-   * Safely parses query from JSON arguments
-   */
-  safeParseQuery(argumentsJson) {
-    try {
-      if (argumentsJson) {
-        const parsed = JSON.parse(argumentsJson);
-        return parsed.query || 'unknown';
-      }
-      return 'unknown';
-    } catch (error) {
-      return 'invalid_json';
-    }
-  }
 
   /**
    * Performs a Google search using Serper API

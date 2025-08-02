@@ -129,12 +129,17 @@ class StopDeploymentTool extends Tool {
   /**
    * Execute the stop operation
    */
-  async invoke(toolCall) {
+  async execute(args) {
     try {
-      const args = this.parseArguments(toolCall.function.arguments);
+      // If args is a toolCall object, parse it
+      if (args.function && args.function.arguments) {
+        args = this.parseArguments(args.function.arguments);
+      }
       
       // Validate required parameters
-      this.validateRequiredParameters(args, ['deploymentId']);
+      if (!args.deploymentId) {
+        throw new Error('deploymentId is required');
+      }
       
       // Validate timeout
       if (args.timeout !== undefined && (args.timeout < 1000 || args.timeout > 300000)) {

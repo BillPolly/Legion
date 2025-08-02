@@ -144,12 +144,17 @@ class DeployApplicationTool extends Tool {
   /**
    * Execute the deployment
    */
-  async invoke(toolCall) {
+  async execute(args) {
     try {
-      const args = this.parseArguments(toolCall.function.arguments);
+      // If args is a toolCall object, parse it
+      if (args.function && args.function.arguments) {
+        args = this.parseArguments(args.function.arguments);
+      }
       
       // Validate required parameters
-      this.validateRequiredParameters(args, ['provider', 'config']);
+      if (!args.provider || !args.config) {
+        throw new Error('provider and config are required');
+      }
       
       // Validate provider
       if (!this.validProviders.includes(args.provider)) {

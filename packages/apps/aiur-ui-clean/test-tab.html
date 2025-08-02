@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tab Completion Test</title>
+    <style>
+        body {
+            background: #1e1e1e;
+            color: #e0e0e0;
+            font-family: 'Monaco', 'Courier New', monospace;
+            padding: 20px;
+        }
+        #terminal {
+            background: #000;
+            padding: 20px;
+            border-radius: 5px;
+            min-height: 500px;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            background: #333;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tab Completion Test</h1>
+    <div class="status">
+        <div>Tool Count: <span id="toolCount">0</span></div>
+        <div>Commands: <span id="commands">[]</span></div>
+        <div>Last Event: <span id="lastEvent">-</span></div>
+    </div>
+    <div id="terminal"></div>
+
+    <script type="module">
+        import { Terminal } from './src/components/terminal/Terminal.js';
+        import { InputView } from './src/components/terminal/InputView.js';
+
+        // Create terminal
+        const container = document.getElementById('terminal');
+        const terminal = new Terminal(container);
+
+        // Access the input view directly
+        const inputView = terminal.inputView;
+
+        // Set up test data
+        const testTools = new Map([
+            ['file_read', {
+                name: 'file_read',
+                description: 'Read a file',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        filepath: { type: 'string', description: 'Path to file' }
+                    },
+                    required: ['filepath']
+                }
+            }],
+            ['file_write', {
+                name: 'file_write',
+                description: 'Write a file',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        filepath: { type: 'string', description: 'Path to file' },
+                        content: { type: 'string', description: 'Content to write' }
+                    },
+                    required: ['filepath', 'content']
+                }
+            }],
+            ['directory_list', {
+                name: 'directory_list',
+                description: 'List directory contents',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        dirpath: { type: 'string', description: 'Directory path' }
+                    }
+                }
+            }]
+        ]);
+
+        // Set tools and commands
+        inputView.setToolDefinitions(testTools);
+        inputView.setAvailableCommands(['.help', '.clear', 'tools']);
+
+        // Update status display
+        document.getElementById('toolCount').textContent = testTools.size;
+        document.getElementById('commands').textContent = JSON.stringify(['.help', '.clear', 'tools']);
+
+        // Monitor tab key
+        inputView.elements.input.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                document.getElementById('lastEvent').textContent = 
+                    `Tab pressed. Input: "${inputView.state.value}", Completions: ${inputView.completions.length}`;
+            }
+        });
+
+        // Monitor input changes
+        inputView.elements.input.addEventListener('input', (e) => {
+            document.getElementById('lastEvent').textContent = 
+                `Input changed: "${e.target.value}", Ghost: "${inputView.state.ghostText}"`;
+        });
+
+        // Focus input
+        inputView.focus();
+
+        console.log('Test setup complete. Try typing:');
+        console.log('- "file" then press Tab (should complete to file_read or file_write)');
+        console.log('- "dir" then press Tab (should complete to directory_list)');
+        console.log('- Press Tab with empty input (should show all commands)');
+    </script>
+</body>
+</html>

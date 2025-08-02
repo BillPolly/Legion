@@ -42,138 +42,258 @@ export class TerminalActor {
    * Commands are sent as tool calls to the server
    */
   async sendCommand(command) {
-    if (!this.actorSpace || !this.actorSpace.sessionId) {
-      this.terminal.addOutput('Not connected to server or no active session', 'error');
+    // Validate connection
+    if (!this.isConnected()) {
+      this.showConnectionError();
       return;
     }
     
     try {
-      let response;
+      // Parse the command
+      const { toolName, args } = this.parseCommand(command);
       
-      // Parse command into tool name and arguments
-      const parts = command.trim().split(' ');
-      const toolName = parts[0];
-      const args = parts.slice(1);
-      
-      // Special case: 'tools' command maps to 'tools/list' method
-      if (toolName === 'tools') {
-        response = await this.actorSpace.callTool(toolMethods.LIST_TOOLS);
-        this.handleToolsList(response);
+      // Handle special commands
+      if (this.isSpecialCommand(toolName)) {
+        await this.handleSpecialCommand(toolName);
         return;
       }
       
-      // Build arguments object based on the tool schema
-      let toolArgs = {};
-      
-      // Check if we have a schema for this tool
-      const toolDef = this.toolDefinitions.get(toolName);
-      if (toolDef && toolDef.inputSchema && toolDef.inputSchema.properties) {
-        // Use schema to parse arguments
-        const props = toolDef.inputSchema.properties;
-        const propNames = Object.keys(props);
-        const required = toolDef.inputSchema.required || [];
-        
-        // Parse arguments based on schema
-        if (propNames.length === 0) {
-          // No parameters needed
-          toolArgs = {};
-        } else if (args.length === 0 && required.length > 0) {
-          // Missing required parameters
-          this.terminal.addOutput(`Error: ${toolName} requires parameters:`, 'error');
-          required.forEach(param => {
-            const prop = props[param];
-            this.terminal.addOutput(`  ${param} (${prop.type}): ${prop.description || ''}`, 'error');
-          });
-          return;
-        } else {
-          // Parse arguments based on their format
-          let positionalIndex = 0;
-          
-          args.forEach(arg => {
-            if (arg.includes('=')) {
-              // Named parameter: key=value
-              const [key, ...valueParts] = arg.split('=');
-              const value = valueParts.join('='); // Handle values with '=' in them
-              if (props[key]) {
-                toolArgs[key] = value;
-              }
-            } else {
-              // Positional parameter - map to schema properties in order
-              if (positionalIndex < propNames.length) {
-                const paramName = propNames[positionalIndex];
-                toolArgs[paramName] = arg;
-                positionalIndex++;
-              }
-            }
-          });
-          
-          // For tools with 'content' parameter that should capture all remaining args
-          if (props.content && positionalIndex === 1 && args.length > 1) {
-            // Special case for commands like: file_write path "content with spaces"
-            toolArgs.content = args.slice(1).join(' ');
-          }
-        }
-        
-        // Validate required parameters
-        for (const reqParam of required) {
-          if (!(reqParam in toolArgs)) {
-            this.terminal.addOutput(`Error: Missing required parameter '${reqParam}' for ${toolName}`, 'error');
-            const prop = props[reqParam];
-            this.terminal.addOutput(`  ${reqParam} (${prop.type}): ${prop.description || ''}`, 'error');
-            return;
-          }
-        }
-      } else {
-        // No schema available - fall back to generic parsing
-        args.forEach((arg, index) => {
-          if (arg.includes('=')) {
-            const [key, ...valueParts] = arg.split('=');
-            toolArgs[key] = valueParts.join('=');
-          } else {
-            // Generic positional arguments
-            if (index === 0) toolArgs.path = arg;
-            else if (index === 1) toolArgs.content = arg;
-            else toolArgs[`arg${index}`] = arg;
-          }
-        });
+      // Build tool arguments from command args
+      const toolArgs = await this.buildToolArguments(toolName, args);
+      if (!toolArgs) {
+        // Error already displayed by buildToolArguments
+        return;
       }
       
-      // Call the tool via tools/call method
-      response = await this.actorSpace.callTool(toolMethods.CALL_TOOL, {
-        name: toolName,
-        arguments: toolArgs
-      });
+      // Execute the tool
+      const response = await this.executeTool(toolName, toolArgs);
       
       // Handle the response
       this.handleToolResult(response);
       
-      // If this was a module_load and successful, add the new tools
-      if (toolName === 'module_load' && response?.success && response?.toolsLoaded) {
-        // The response now contains full tool definitions
-        response.toolsLoaded.forEach(toolDef => {
-          // Add or update the tool definition
-          this.toolDefinitions.set(toolDef.name, toolDef);
-        });
-        
-        // Update terminal's tool definitions for tab completion
-        if (this.terminal.updateToolDefinitions) {
-          this.terminal.updateToolDefinitions(this.toolDefinitions);
-        }
-        
-        // Show a summary of what was loaded
-        console.log(`Module ${response.module} loaded with tools:`, response.toolsLoaded.map(t => t.name));
-      }
-      
-      // If this was module_unload and successful, remove the tools
-      if (toolName === 'module_unload' && response?.success) {
-        // We'd need the server to tell us which tools to remove
-        // For now, we can't easily determine which tools belong to which module
-      }
+      // Post-execution actions
+      await this.handlePostExecution(toolName, response);
       
     } catch (error) {
       console.error('TerminalActor: Error executing tool:', error);
       this.terminal.addOutput(`Error: ${error.message}`, 'error');
     }
+  }
+  
+  /**
+   * Check if connected to server
+   */
+  isConnected() {
+    return this.actorSpace && this.actorSpace.sessionId;
+  }
+  
+  /**
+   * Show connection error
+   */
+  showConnectionError() {
+    this.terminal.addOutput('Not connected to server or no active session', 'error');
+  }
+  
+  /**
+   * Parse command into tool name and arguments
+   */
+  parseCommand(command) {
+    const parts = command.trim().split(' ');
+    return {
+      toolName: parts[0],
+      args: parts.slice(1)
+    };
+  }
+  
+  /**
+   * Check if this is a special command
+   */
+  isSpecialCommand(toolName) {
+    return toolName === 'tools';
+  }
+  
+  /**
+   * Handle special commands
+   */
+  async handleSpecialCommand(toolName) {
+    if (toolName === 'tools') {
+      const response = await this.actorSpace.callTool(toolMethods.LIST_TOOLS);
+      this.handleToolsList(response);
+    }
+  }
+  
+  /**
+   * Build tool arguments from command arguments using schema
+   */
+  async buildToolArguments(toolName, args) {
+    // Get tool definition
+    const toolDef = this.toolDefinitions.get(toolName);
+    
+    if (!toolDef) {
+      this.showNoSchemaError(toolName);
+      return null;
+    }
+    
+    if (!toolDef.inputSchema || !toolDef.inputSchema.properties) {
+      // Tool has no parameters
+      return {};
+    }
+    
+    const schema = toolDef.inputSchema;
+    const props = schema.properties;
+    const required = schema.required || [];
+    const propNames = Object.keys(props);
+    
+    // No parameters needed
+    if (propNames.length === 0) {
+      return {};
+    }
+    
+    // Check for missing required parameters
+    if (args.length === 0 && required.length > 0) {
+      this.showMissingParametersError(toolName, required, props);
+      return null;
+    }
+    
+    // Parse arguments according to schema
+    const toolArgs = this.mapArgumentsToSchema(args, propNames, props);
+    
+    // Validate required parameters are present
+    const missingParams = this.findMissingRequiredParams(toolArgs, required);
+    if (missingParams.length > 0) {
+      this.showMissingParametersError(toolName, missingParams, props);
+      return null;
+    }
+    
+    return toolArgs;
+  }
+  
+  /**
+   * Map command arguments to schema parameters
+   */
+  mapArgumentsToSchema(args, propNames, props) {
+    const toolArgs = {};
+    let positionalIndex = 0;
+    
+    for (let i = 0; i < args.length; i++) {
+      const arg = args[i];
+      
+      if (this.isNamedArgument(arg)) {
+        // Handle named argument: key=value
+        const { key, value } = this.parseNamedArgument(arg);
+        if (props[key]) {
+          toolArgs[key] = value;
+        }
+      } else {
+        // Handle positional argument
+        if (positionalIndex < propNames.length) {
+          const paramName = propNames[positionalIndex];
+          
+          // If this is the last parameter and we have more args, join them
+          if (this.shouldJoinRemainingArgs(positionalIndex, propNames.length, i, args.length)) {
+            toolArgs[paramName] = args.slice(i).join(' ');
+            break;
+          } else {
+            toolArgs[paramName] = arg;
+          }
+          positionalIndex++;
+        }
+      }
+    }
+    
+    return toolArgs;
+  }
+  
+  /**
+   * Check if argument is named (contains =)
+   */
+  isNamedArgument(arg) {
+    return arg.includes('=');
+  }
+  
+  /**
+   * Parse named argument into key and value
+   */
+  parseNamedArgument(arg) {
+    const [key, ...valueParts] = arg.split('=');
+    return {
+      key,
+      value: valueParts.join('=') // Handle values with '=' in them
+    };
+  }
+  
+  /**
+   * Check if we should join remaining args for last parameter
+   */
+  shouldJoinRemainingArgs(positionalIndex, totalParams, currentArgIndex, totalArgs) {
+    return positionalIndex === totalParams - 1 && currentArgIndex < totalArgs - 1;
+  }
+  
+  /**
+   * Find missing required parameters
+   */
+  findMissingRequiredParams(toolArgs, required) {
+    return required.filter(param => !(param in toolArgs));
+  }
+  
+  /**
+   * Show error for missing schema
+   */
+  showNoSchemaError(toolName) {
+    this.terminal.addOutput(`Error: No schema available for tool '${toolName}'`, 'error');
+    this.terminal.addOutput('Try running "tools" to refresh the tool list', 'info');
+  }
+  
+  /**
+   * Show error for missing parameters
+   */
+  showMissingParametersError(toolName, params, props) {
+    this.terminal.addOutput(`Error: ${toolName} requires parameters:`, 'error');
+    params.forEach(param => {
+      const prop = props[param];
+      this.terminal.addOutput(`  ${param} (${prop.type}): ${prop.description || ''}`, 'error');
+    });
+  }
+  
+  /**
+   * Execute tool via server
+   */
+  async executeTool(toolName, toolArgs) {
+    return await this.actorSpace.callTool(toolMethods.CALL_TOOL, {
+      name: toolName,
+      arguments: toolArgs
+    });
+  }
+  
+  /**
+   * Handle post-execution actions
+   */
+  async handlePostExecution(toolName, response) {
+    // If module was loaded, update tool definitions
+    if (toolName === 'module_load' && response?.success && response?.toolsLoaded) {
+      this.updateToolDefinitions(response.toolsLoaded);
+    }
+    
+    // If module was unloaded, we'd need to remove tools
+    // But server doesn't tell us which tools belong to which module yet
+  }
+  
+  /**
+   * Update tool definitions after module load
+   */
+  updateToolDefinitions(newTools) {
+    // Add new tool definitions
+    newTools.forEach(toolDef => {
+      this.toolDefinitions.set(toolDef.name, toolDef);
+    });
+    
+    // Update terminal's tool definitions for tab completion
+    if (this.terminal.updateToolDefinitions) {
+      this.terminal.updateToolDefinitions(this.toolDefinitions);
+    }
+    
+    // Log what was loaded
+    console.log('Tools loaded:', newTools.map(t => t.name));
   }
   
   /**
@@ -315,7 +435,6 @@ export class TerminalActor {
       this.terminal.addOutput(`  Loaded tools: ${response.tools.length}`, 'info');
     }
   }
-  
   
   /**
    * Format a tool response for display

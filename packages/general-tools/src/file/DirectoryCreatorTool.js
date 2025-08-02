@@ -81,17 +81,16 @@ class DirectoryCreatorTool extends Tool {
   }
 
   /**
-   * Invoke the directory creator tool
-   * @param {Object} toolCall - The tool call from the LLM
+   * Execute the directory creator tool
+   * @param {Object} args - The arguments for creating the directory
    * @returns {Promise<ToolResult>} The result of creating the directory
    */
-  async invoke(toolCall) {
+  async execute(args) {
     try {
-      // Parse the arguments
-      const args = this.parseArguments(toolCall.function.arguments);
-      
       // Validate required parameters
-      this.validateRequiredParameters(args, ['directoryPath']);
+      if (!args || !args.directoryPath) {
+        throw new Error('directoryPath is required');
+      }
 
       const { directoryPath, recursive = true } = args;
 

@@ -426,29 +426,33 @@ class SessionToolProvider {
               console.log('[SessionToolProvider] Found tool', toolName, 'in module', moduleName);
               
               // Execute using Legion tool format
-              // Multi-function tools like FileOperationsTool need invoke() with toolCall format
-              // Single-function tools need run() or execute() with parsed args
               let result;
               
-              if (typeof tool.invoke === 'function') {
+              // Check if this is a multi-function tool (has getAllToolDescriptions)
+              if (tool.getAllToolDescriptions) {
                 // Multi-function tool - use invoke with proper toolCall format
-                const toolCall = {
-                  id: `aiur-${Date.now()}`,
-                  type: 'function',
-                  function: {
-                    name: toolName,
-                    arguments: JSON.stringify(args)
-                  }
-                };
-                result = await tool.invoke(toolCall);
-              } else if (typeof tool.run === 'function') {
-                // Single-function tool with run method - pass args directly
-                result = await tool.run(args);
-              } else if (typeof tool.execute === 'function') {
-                // Single-function tool with execute method - pass args directly
-                result = await tool.execute(args);
+                if (typeof tool.invoke === 'function') {
+                  const toolCall = {
+                    id: `aiur-${Date.now()}`,
+                    type: 'function',
+                    function: {
+                      name: toolName,
+                      arguments: JSON.stringify(args)
+                    }
+                  };
+                  result = await tool.invoke(toolCall);
+                } else {
+                  throw new Error(`Multi-function tool ${toolName} does not have invoke() method`);
+                }
               } else {
-                throw new Error(`Tool ${toolName} does not have invoke(), run() or execute() method`);
+                // Single-function tool - use execute or run with parsed args
+                if (typeof tool.execute === 'function') {
+                  result = await tool.execute(args);
+                } else if (typeof tool.run === 'function') {
+                  result = await tool.run(args);
+                } else {
+                  throw new Error(`Tool ${toolName} does not have execute() or run() method`);
+                }
               }
               
               // Return raw result - UI will handle formatting

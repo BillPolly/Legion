@@ -160,12 +160,17 @@ class UpdateDeploymentTool extends Tool {
   /**
    * Execute the update
    */
-  async invoke(toolCall) {
+  async execute(args) {
     try {
-      const args = this.parseArguments(toolCall.function.arguments);
+      // If args is a toolCall object, parse it
+      if (args.function && args.function.arguments) {
+        args = this.parseArguments(args.function.arguments);
+      }
       
       // Validate required parameters
-      this.validateRequiredParameters(args, ['deploymentId', 'updates']);
+      if (!args.deploymentId || !args.updates) {
+        throw new Error('deploymentId and updates are required');
+      }
       
       // Validate updates is object
       if (typeof args.updates !== 'object' || args.updates === null) {
