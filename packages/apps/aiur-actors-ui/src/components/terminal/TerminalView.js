@@ -31,7 +31,6 @@ export class TerminalView extends ExtendedBaseView {
     
     // Create terminal container
     this.terminal = this.createElement('div', ['terminal']);
-    this.terminal.setAttribute('tabindex', '0');
     
     // Apply theme
     if (options.theme) {
@@ -50,16 +49,18 @@ export class TerminalView extends ExtendedBaseView {
     this.promptElement.textContent = options.prompt || '> ';
     this.inputLine.appendChild(this.promptElement);
     
-    // Create input area
-    this.inputElement = this.createElement('div', ['terminal-input']);
-    this.inputElement.setAttribute('contenteditable', 'true');
+    // Create input wrapper for proper alignment
+    const inputWrapper = this.createElement('div', ['terminal-input-wrapper']);
+    
+    // Create input area using regular input element
+    this.inputElement = document.createElement('input');
+    this.inputElement.type = 'text';
+    this.inputElement.className = 'terminal-input';
+    this.inputElement.setAttribute('autocomplete', 'off');
     this.inputElement.setAttribute('spellcheck', 'false');
     
-    // Create cursor
-    this.cursorElement = this.createElement('span', ['terminal-cursor']);
-    this.cursorElement.textContent = '\u00A0'; // Non-breaking space
-    
-    this.inputLine.appendChild(this.inputElement);
+    inputWrapper.appendChild(this.inputElement);
+    this.inputLine.appendChild(inputWrapper);
     this.terminal.appendChild(this.inputLine);
     
     // Create autocomplete dropdown
@@ -79,22 +80,22 @@ export class TerminalView extends ExtendedBaseView {
    * Set up event handlers
    */
   setupEventHandlers() {
-    // Input events
-    this.addEventListener(this.terminal, 'input', (e) => {
+    // Input events - attach to the input element
+    this.addEventListener(this.inputElement, 'input', (e) => {
       if (this.onInput) {
         this.onInput(e);
       }
     });
     
-    // Keyboard events
-    this.addEventListener(this.terminal, 'keydown', (e) => {
+    // Keyboard events - attach to the input element
+    this.addEventListener(this.inputElement, 'keydown', (e) => {
       if (this.onKeyDown) {
         this.onKeyDown(e);
       }
     });
     
-    // Paste events
-    this.addEventListener(this.terminal, 'paste', (e) => {
+    // Paste events - attach to the input element
+    this.addEventListener(this.inputElement, 'paste', (e) => {
       e.preventDefault();
       if (this.onPaste && e.clipboardData) {
         const text = e.clipboardData.getData('text/plain');
@@ -102,7 +103,7 @@ export class TerminalView extends ExtendedBaseView {
       }
     });
     
-    // Focus events
+    // Focus input when clicking anywhere in the terminal
     this.addEventListener(this.terminal, 'click', () => {
       this.focusInput();
     });
@@ -167,27 +168,13 @@ export class TerminalView extends ExtendedBaseView {
    * @param {number} cursorPosition - Cursor position
    */
   renderCommand(command, cursorPosition) {
-    this.inputElement.innerHTML = '';
+    // For regular input element, just set the value
+    this.inputElement.value = command;
     
-    if (command.length === 0) {
-      // Just show cursor
-      this.inputElement.appendChild(this.cursorElement);
-    } else {
-      // Split command at cursor position
-      const before = command.substring(0, cursorPosition);
-      const after = command.substring(cursorPosition);
-      
-      if (before) {
-        const beforeText = document.createTextNode(before);
-        this.inputElement.appendChild(beforeText);
-      }
-      
-      this.inputElement.appendChild(this.cursorElement);
-      
-      if (after) {
-        const afterText = document.createTextNode(after);
-        this.inputElement.appendChild(afterText);
-      }
+    // Set cursor position if the element is focused
+    if (document.activeElement === this.inputElement && typeof cursorPosition === 'number') {
+      this.inputElement.selectionStart = cursorPosition;
+      this.inputElement.selectionEnd = cursorPosition;
     }
   }
 
@@ -196,14 +183,15 @@ export class TerminalView extends ExtendedBaseView {
    * @param {boolean} visible - Whether cursor is visible
    */
   setCursorVisible(visible) {
-    this.cursorElement.style.display = visible ? 'inline' : 'none';
+    // For regular input, cursor is handled by the browser
+    // This method is kept for compatibility
   }
 
   /**
    * Focus the input
    */
   focusInput() {
-    this.terminal.focus();
+    this.inputElement.focus();
   }
 
   /**
@@ -261,16 +249,16 @@ export class TerminalView extends ExtendedBaseView {
    * Position autocomplete dropdown near cursor
    */
   positionAutocomplete() {
-    // Get cursor position
-    const cursorRect = this.cursorElement.getBoundingClientRect();
+    // Get input position
+    const inputRect = this.inputElement.getBoundingClientRect();
     const terminalRect = this.terminal.getBoundingClientRect();
     
     // Position relative to terminal
-    const left = cursorRect.left - terminalRect.left;
-    const top = cursorRect.bottom - terminalRect.top + 5;
+    const left = inputRect.left - terminalRect.left;
+    const bottom = terminalRect.bottom - inputRect.bottom + 5;
     
     this.autocompleteElement.style.left = `${left}px`;
-    this.autocompleteElement.style.top = `${top}px`;
+    this.autocompleteElement.style.bottom = `${bottom}px`;
   }
 
   /**
@@ -279,10 +267,10 @@ export class TerminalView extends ExtendedBaseView {
    */
   setExecuting(executing) {
     if (executing) {
-      this.inputElement.setAttribute('contenteditable', 'false');
+      this.inputElement.disabled = true;
       this.addClass(this.terminal, 'terminal-executing');
     } else {
-      this.inputElement.setAttribute('contenteditable', 'true');
+      this.inputElement.disabled = false;
       this.removeClass(this.terminal, 'terminal-executing');
     }
   }

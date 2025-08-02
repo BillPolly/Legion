@@ -1,18 +1,14 @@
 #!/usr/bin/env node
-
 /**
  * Start both Aiur server and UI server
- * First kills any existing processes on required ports
  */
-
 import { spawn, execSync } from 'child_process';
-import { dirname, join } from 'path';
+import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const LEGION_ROOT = join(__dirname, '../../../..');
 
-// Colors for console output
+// ANSI color codes
 const colors = {
   reset: '\x1b[0m',
   red: '\x1b[31m',
@@ -22,9 +18,10 @@ const colors = {
   cyan: '\x1b[36m'
 };
 
-/**
- * Kill processes on specific ports
- */
+// Get the Legion root directory
+const LEGION_ROOT = join(__dirname, '../../../..');
+
+// Function to kill processes on specific ports
 function killPortProcesses() {
   console.log(`${colors.yellow}🔍 Checking for existing processes...${colors.reset}`);
   
@@ -37,7 +34,7 @@ function killPortProcesses() {
   
   for (const { port, name } of ports) {
     try {
-      // Get process IDs using the port
+      // Get PIDs of processes listening on the port
       const pids = execSync(`lsof -ti:${port}`, { encoding: 'utf-8' })
         .trim()
         .split('\n')
@@ -50,12 +47,11 @@ function killPortProcesses() {
         pids.forEach(pid => {
           try {
             process.kill(parseInt(pid), 'SIGTERM');
+            killedAny = true;
           } catch (e) {
-            // Process might already be dead
+            // Process might have already exited
           }
         });
-        
-        killedAny = true;
       }
     } catch (error) {
       // No process found on this port (lsof returns error when no process found)
@@ -80,12 +76,11 @@ console.log(`${colors.cyan}═════════════════�
 console.log(`${colors.cyan}     Starting Aiur Server and UI${colors.reset}`);
 console.log(`${colors.cyan}═══════════════════════════════════════════════${colors.reset}\n`);
 
-// Start Aiur server
+// Start Aiur server directly
 console.log(`${colors.blue}🚀 Starting Aiur server on port 8080...${colors.reset}`);
-const aiurProcess = spawn('npm', ['start'], {
-  cwd: join(LEGION_ROOT, 'packages/aiur'),
+const aiurProcess = spawn('node', [join(LEGION_ROOT, 'packages/aiur/src/server/index.js')], {
   stdio: 'inherit',
-  shell: true
+  env: { ...process.env }
 });
 
 let uiProcess = null;
@@ -107,16 +102,6 @@ setTimeout(() => {
     aiurProcess.kill();
     process.exit(code);
   });
-  
-  // After both servers start, show success message
-  setTimeout(() => {
-    console.log(`\n${colors.green}═══════════════════════════════════════════════${colors.reset}`);
-    console.log(`${colors.green}     ✅ Both servers are running!${colors.reset}`);
-    console.log(`${colors.green}═══════════════════════════════════════════════${colors.reset}`);
-    console.log(`\n  🚀 Aiur Server:   ${colors.cyan}ws://localhost:8080/actors${colors.reset}`);
-    console.log(`  🌐 UI Application: ${colors.cyan}http://localhost:3002${colors.reset}`);
-    console.log(`\n  ${colors.yellow}Press Ctrl+C to stop both servers${colors.reset}\n`);
-  }, 2000);
 }, 2000);
 
 // Handle Aiur process exit
@@ -128,26 +113,39 @@ aiurProcess.on('exit', (code) => {
   process.exit(code);
 });
 
+// Display success message after both are started
+setTimeout(() => {
+  console.log(`\n${colors.green}═══════════════════════════════════════════════${colors.reset}`);
+  console.log(`${colors.green}     ✅ Both servers are running!${colors.reset}`);
+  console.log(`${colors.green}═══════════════════════════════════════════════${colors.reset}\n`);
+  console.log(`  🚀 Aiur Server:   ${colors.cyan}ws://localhost:8080/ws${colors.reset}`);
+  console.log(`  🌐 UI Application: ${colors.cyan}http://localhost:3002${colors.reset}\n`);
+  console.log(`  ${colors.yellow}Press Ctrl+C to stop both servers${colors.reset}\n`);
+}, 3000);
+
 // Handle Ctrl+C
 process.on('SIGINT', () => {
   console.log(`\n${colors.yellow}Shutting down servers...${colors.reset}`);
   
-  if (aiurProcess) {
-    aiurProcess.kill();
-  }
   if (uiProcess) {
     uiProcess.kill();
   }
+  if (aiurProcess) {
+    aiurProcess.kill();
+  }
   
   setTimeout(() => {
-    console.log(`${colors.green}✓ Servers stopped${colors.reset}`);
     process.exit(0);
-  }, 500);
+  }, 1000);
 });
 
-// Handle other termination signals
+// Handle termination
 process.on('SIGTERM', () => {
-  if (aiurProcess) aiurProcess.kill();
-  if (uiProcess) uiProcess.kill();
+  if (uiProcess) {
+    uiProcess.kill();
+  }
+  if (aiurProcess) {
+    aiurProcess.kill();
+  }
   process.exit(0);
 });

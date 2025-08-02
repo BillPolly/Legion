@@ -2,8 +2,10 @@
  * AiurActorsApp - Main application entry point
  * Orchestrates the creation and coordination of all UI components and actors
  */
-import { ClientCommandActor } from '../actors/ClientCommandActor.js';
-import { UIUpdateActor } from '../actors/UIUpdateActor.js';
+import { ClientCommandActor } from '../actors/ClientCommandActor2.js';
+import { UIUpdateActor } from '../actors/UIUpdateActor2.js';
+import { ToolsActor, TerminalActor, SessionActor, VariablesActor } from '../actors/SimpleActors.js';
+import { createWebSocketBridge, ProtocolTypes } from '/legion/websocket-actor-protocol/index.js';
 
 export class AiurActorsApp {
   constructor(config) {
@@ -74,6 +76,7 @@ export class AiurActorsApp {
     this.components.terminal = componentFactory.createTerminal({
       dom: terminalEl,
       actorSpace,
+      app: this,  // Pass app reference for command execution
       config: options.terminal
     });
     
@@ -128,23 +131,21 @@ export class AiurActorsApp {
     this.actors.uiActor = new UIUpdateActor();
     actorSpace.register(this.actors.uiActor, 'ui-actor');
     
-    // Create mock actors for tools, sessions, and variables
-    // These will be replaced with real implementations later
-    const mockActor = {
-      isActor: true,
-      receive: (message) => {
-        console.log('Mock actor received:', message);
-      }
-    };
-    
-    this.actors.toolsActor = { ...mockActor, name: 'tools-actor' };
+    // Create specialized actors using the new BaseActor pattern
+    this.actors.toolsActor = new ToolsActor(this);
     actorSpace.register(this.actors.toolsActor, 'tools-actor');
     
-    this.actors.sessionsActor = { ...mockActor, name: 'sessions-actor' };
-    actorSpace.register(this.actors.sessionsActor, 'sessions-actor');
+    this.actors.terminalActor = new TerminalActor(this);
+    actorSpace.register(this.actors.terminalActor, 'terminal-actor');
     
-    this.actors.variablesActor = { ...mockActor, name: 'variables-actor' };
+    this.actors.sessionActor = new SessionActor(this);
+    actorSpace.register(this.actors.sessionActor, 'session-actor');
+    
+    this.actors.variablesActor = new VariablesActor(this);
     actorSpace.register(this.actors.variablesActor, 'variables-actor');
+    
+    // WebSocket bridge will be created when connection is established
+    this.actors.websocketBridge = null;
   }
 
   /**
@@ -165,8 +166,24 @@ export class AiurActorsApp {
       
       this.websocket.onopen = () => {
         console.log('WebSocket connected to:', websocketUrl);
-        // Create channel for actor communication
-        this.channel = this.config.actorSpace.createChannel(this.websocket);
+        // Create WebSocket bridge with Aiur protocol
+        this.actors.websocketBridge = createWebSocketBridge(ProtocolTypes.AIUR, {
+          actorSpace: this.config.actorSpace
+        });
+        this.config.actorSpace.register(this.actors.websocketBridge, 'websocket-bridge');
+        
+        // Set the websocket for sending (but don't let it attach handlers)
+        this.actors.websocketBridge.websocket = this.websocket;
+        
+        // Trigger the open handler
+        this.actors.websocketBridge.handleOpen();
+      };
+      
+      this.websocket.onmessage = (event) => {
+        // Pass messages to the bridge
+        if (this.actors.websocketBridge) {
+          this.actors.websocketBridge.handleMessage(event);
+        }
       };
       
       this.websocket.onclose = () => {
@@ -196,6 +213,93 @@ export class AiurActorsApp {
     if (this.config.onReady) {
       this.config.onReady(this);
     }
+  }
+
+  /**
+   * Load initial modules (called when session is created)
+   */
+  loadInitialModules() {
+    // Request available tools through the bridge
+    if (this.actors.websocketBridge) {
+      this.actors.websocketBridge.receive({
+        type: 'listTools',
+        payload: {}
+      });
+      console.log('Requested tools list from Aiur');
+    }
+  }
+
+  /**
+   * Update tools list in the UI
+   */
+  updateToolsList(tools) {
+    console.log('Updating tools list:', tools);
+    // Update the tools panel component through its model
+    if (this.components.toolsPanel && this.components.toolsPanel.model) {
+      this.components.toolsPanel.model.setTools(tools || []);
+    }
+  }
+
+  /**
+   * Display tool execution result
+   */
+  displayToolResult(result) {
+    console.log('Tool result:', result);
+    // Display in terminal
+    if (this.components.terminal) {
+      // Check if result has special formatting
+      if (result && typeof result === 'object') {
+        if (result.tools) {
+          // Tools list response
+          this.updateToolsList(result.tools);
+          const toolNames = result.tools.map(t => t.name).join(', ');
+          this.components.terminal.viewModel.appendOutput(`Available tools: ${toolNames}`);
+        } else {
+          // Generic result
+          this.components.terminal.viewModel.appendOutput(JSON.stringify(result, null, 2));
+        }
+      } else {
+        this.components.terminal.viewModel.appendOutput(String(result));
+      }
+    }
+  }
+
+  /**
+   * Display tool execution error
+   */
+  displayToolError(error) {
+    console.error('Tool error:', error);
+    // Display in terminal
+    if (this.components.terminal) {
+      const errorMsg = error.message || error.toString();
+      this.components.terminal.viewModel.appendOutput(`Error: ${errorMsg}`, 'error');
+    }
+  }
+
+  /**
+   * Execute a command from the terminal
+   */
+  executeCommand(command) {
+    if (!this.actors.websocketBridge) {
+      console.error('WebSocket bridge not ready');
+      return Promise.reject(new Error('Not connected to server'));
+    }
+    
+    return new Promise((resolve, reject) => {
+      const requestId = `req_${Date.now()}`;
+      
+      // Send command through the bridge
+      this.actors.websocketBridge.receive({
+        type: 'execute',
+        payload: { command },
+        requestId,
+        resolve,
+        reject
+      });
+      
+      // Provide immediate feedback
+      resolve(`Executing: ${command}`);
+    });
   }
 
   /**

@@ -61,7 +61,7 @@ async function start() {
     await server.start();
     
     console.log(`✅ Aiur Actors UI is running at http://localhost:${config.port}`);
-    console.log(`🔌 Expecting Aiur server at ws://localhost:8080/actors`);
+    console.log(`🔌 Expecting Aiur server at ws://localhost:8080/ws`);
     console.log('\nPress Ctrl+C to stop\n');
     
     // Log available routes
@@ -71,6 +71,7 @@ async function start() {
     console.log('  - http://localhost:' + config.port + '/components/* (UI components)');
     console.log('  - http://localhost:' + config.port + '/actors/* (Actor system)');
     console.log('  - http://localhost:' + config.port + '/services/* (Services)');
+    console.log('  - http://localhost:' + config.port + '/legion/* (Shared Legion packages)');
     
   } catch (error) {
     console.error('❌ Failed to start server:', error);

@@ -40,8 +40,74 @@ export class UIUpdateActor {
         this.handleComponentUpdate(message);
         break;
         
+      case 'connectionStateChanged':
+        // Handle connection state changes - broadcast to all components
+        console.log(`UIUpdateActor: Connection state changed to ${message.payload?.connected ? 'connected' : 'disconnected'}`);
+        this.broadcastToComponents({
+          type: 'connectionStateChanged',
+          connected: message.payload?.connected
+        });
+        break;
+        
+      case 'serverConnected':
+        // Handle server connection established
+        console.log(`UIUpdateActor: Server connected - version ${message.payload?.version}`);
+        this.broadcastToComponents({
+          type: 'serverConnected',
+          serverInfo: message.payload
+        });
+        break;
+        
+      case 'sessionCreated':
+        // Handle session creation - important for UI state
+        console.log(`UIUpdateActor: Session created - ${message.payload?.sessionId}`);
+        this.handleStateUpdate({
+          stateType: 'session',
+          data: {
+            sessionId: message.payload?.sessionId,
+            created: true
+          }
+        });
+        break;
+        
+      case 'toolsList':
+        // Handle tools list - update tools panel
+        console.log(`UIUpdateActor: Tools list received with ${message.payload?.tools?.length || 0} tools`);
+        this.handleStateUpdate({
+          stateType: 'tools',
+          data: message.payload?.tools || []
+        });
+        break;
+        
+      case 'toolResult':
+      case 'commandResult':
+        // Handle command/tool results - update terminal
+        console.log(`UIUpdateActor: Command result received`);
+        this.handleComponentUpdate({
+          component: 'terminal',
+          data: {
+            type: 'result',
+            result: message.payload?.result
+          }
+        });
+        break;
+        
+      case 'toolError':
+      case 'error':
+        // Handle errors - show in UI
+        console.error(`UIUpdateActor: Error - ${message.payload?.error?.message || 'Unknown error'}`);
+        this.handleComponentUpdate({
+          component: 'terminal',
+          data: {
+            type: 'error',
+            error: message.payload?.error
+          }
+        });
+        break;
+        
       default:
-        console.warn('UIUpdateActor: Unknown message type', message.type);
+        // Log but don't warn - we're handling all messages now
+        console.log(`UIUpdateActor: Received message type '${message.type}'`);
     }
   }
 

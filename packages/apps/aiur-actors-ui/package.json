@@ -37,8 +37,6 @@
   "author": "Legion Team",
   "license": "MIT",
   "dependencies": {
-    "@legion/actors": "*",
-    "@legion/components": "*",
     "@legion/module-loader": "*",
     "dotenv": "^16.3.1",
     "winston": "^3.11.0",

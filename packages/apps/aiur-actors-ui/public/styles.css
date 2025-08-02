@@ -335,7 +335,7 @@ body {
 }
 
 /* Terminal Input */
-.terminal-input-container {
+.terminal-input-line {
     display: flex;
     align-items: center;
     padding: var(--spacing-md);
@@ -347,6 +347,12 @@ body {
     color: var(--accent-primary);
     margin-right: var(--spacing-sm);
     font-weight: 600;
+    flex-shrink: 0;
+}
+
+.terminal-input-wrapper {
+    flex: 1;
+    display: flex;
 }
 
 .terminal-input {
@@ -357,10 +363,27 @@ body {
     color: var(--text-primary);
     font-family: var(--font-family-mono);
     font-size: var(--font-size-md);
+    padding: 0;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Disable default input styling when in terminal */
+.terminal-input-line input.terminal-input {
+    background-color: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+}
+
+.terminal-input-line input.terminal-input:focus {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 /* Form Elements */
-input[type="text"],
+input[type="text"]:not(.terminal-input),
 input[type="number"],
 select,
 textarea {
@@ -374,14 +397,14 @@ textarea {
     transition: border-color 0.2s ease;
 }
 
-input[type="text"]:focus,
+input[type="text"]:not(.terminal-input):focus,
 input[type="number"]:focus,
 select:focus,
 textarea:focus {
     border-color: var(--accent-primary);
 }
 
-input[type="text"]::placeholder {
+input[type="text"]:not(.terminal-input)::placeholder {
     color: var(--text-muted);
 }
 

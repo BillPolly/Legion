@@ -25,8 +25,69 @@ export class ClientCommandActor {
         this.handleResponse(message);
         break;
         
+      case 'connectionStateChanged':
+        // Handle connection state changes
+        this.handleConnectionStateChanged(message.payload);
+        break;
+        
+      case 'serverConnected':
+        // Handle server connection established
+        console.log(`ClientCommandActor: Server connected - version ${message.payload?.version}`);
+        if (message.payload?.connected) {
+          this.flushQueue();
+        }
+        break;
+        
+      case 'sessionCreated':
+        // Handle session creation
+        console.log(`ClientCommandActor: Session created - ${message.payload?.sessionId}`);
+        break;
+        
+      case 'toolsList':
+        // Tools list received - command actor doesn't need to process this
+        console.log(`ClientCommandActor: Tools list received with ${message.payload?.tools?.length || 0} tools`);
+        break;
+        
+      case 'toolResult':
+      case 'commandResult':
+        // Handle command/tool results
+        this.handleResponse({
+          requestId: message.requestId,
+          result: message.payload?.result
+        });
+        break;
+        
+      case 'toolError':
+      case 'error':
+        // Handle errors
+        console.error(`ClientCommandActor: Error - ${message.payload?.error?.message || 'Unknown error'}`);
+        if (message.requestId) {
+          this.handleResponse({
+            requestId: message.requestId,
+            error: message.payload?.error
+          });
+        }
+        break;
+        
       default:
-        console.warn('ClientCommandActor: Unknown message type', message.type);
+        // Log but don't warn - we're handling all messages now
+        console.log(`ClientCommandActor: Received message type '${message.type}'`);
+    }
+  }
+
+  /**
+   * Handle connection state changes
+   * @private
+   */
+  handleConnectionStateChanged(payload) {
+    const wasConnected = this.isConnected();
+    this._connected = payload?.connected || false;
+    
+    console.log(`ClientCommandActor: Connection state changed to ${this._connected ? 'connected' : 'disconnected'}`);
+    
+    // If we just connected, flush any queued messages
+    if (!wasConnected && this._connected) {
+      this.flushQueue();
     }
   }
 

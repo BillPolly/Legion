@@ -39,6 +39,12 @@ export class ExtendedBaseViewModel extends BaseViewModel {
    * @returns {Promise} Promise that resolves with command result
    */
   executeCommand(command) {
+    // If app is available with executeCommand, use it
+    if (this.umbilical?.app?.executeCommand) {
+      return this.umbilical.app.executeCommand(command);
+    }
+    
+    // Fallback to actor-based execution
     return new Promise((resolve, reject) => {
       const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       

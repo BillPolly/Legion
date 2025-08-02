@@ -141,6 +141,18 @@ export class StaticServer {
           pathname.startsWith('/actors/') || pathname.startsWith('/services/')) {
         // Serve source files from src directory
         filePath = join(this.srcDir, safePath);
+        // Debug logging
+        if (process.env.NODE_ENV === 'development') {
+          this.logger.log(`Serving source file: ${pathname} -> ${filePath}`);
+        }
+      } else if (pathname.startsWith('/legion/')) {
+        // Serve Legion shared packages
+        const packagePath = pathname.replace('/legion/', '');
+        filePath = join(this.srcDir, '../../../shared/', packagePath);
+        // Debug logging
+        if (process.env.NODE_ENV === 'development') {
+          this.logger.log(`Serving Legion package: ${pathname} -> ${filePath}`);
+        }
       } else {
         // Serve static files from public directory
         filePath = join(this.publicDir, safePath);

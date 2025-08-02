@@ -83,7 +83,7 @@ export class TerminalViewModel extends ExtendedBaseViewModel {
    * @param {Event} event - Input event
    */
   handleInput(event) {
-    const text = event.target.textContent || '';
+    const text = event.target.value || '';
     this.model.setCurrentCommand(text);
   }
 
@@ -156,6 +156,11 @@ export class TerminalViewModel extends ExtendedBaseViewModel {
     // Clear current command
     this.model.setCurrentCommand('');
     
+    // Clear input element
+    if (this.view.inputElement) {
+      this.view.inputElement.value = '';
+    }
+    
     // Clear autocomplete
     this.model.clearAutocomplete();
     
@@ -192,6 +197,10 @@ export class TerminalViewModel extends ExtendedBaseViewModel {
       this.model.clearAutocomplete();
     } else {
       this.model.setCurrentCommand('');
+      // Clear input element
+      if (this.view.inputElement) {
+        this.view.inputElement.value = '';
+      }
     }
   }
 
@@ -202,6 +211,11 @@ export class TerminalViewModel extends ExtendedBaseViewModel {
   navigateHistory(direction) {
     const command = this.model.navigateHistory(direction);
     this.model.setCurrentCommand(command);
+    
+    // Update input element directly
+    if (this.view.inputElement) {
+      this.view.inputElement.value = command;
+    }
   }
 
   /**
@@ -212,6 +226,11 @@ export class TerminalViewModel extends ExtendedBaseViewModel {
     if (suggestion) {
       this.model.setCurrentCommand(suggestion);
       this.model.clearAutocomplete();
+      
+      // Update input element
+      if (this.view.inputElement) {
+        this.view.inputElement.value = suggestion;
+      }
     }
   }
 
