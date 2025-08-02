@@ -87,13 +87,13 @@ export class TerminalView extends ExtendedBaseView {
     // Input view callbacks
     this.inputView.onInput = (value, event) => {
       if (this.onInput) {
-        this.onInput(event);
+        this.onInput(value, event);  // FIX: Pass both value and event correctly
       }
     };
     
     this.inputView.onKeyDown = (key, event) => {
       if (this.onKeyDown) {
-        this.onKeyDown(event);
+        this.onKeyDown(key, event);  // FIX: Pass both key and event correctly
       }
     };
     

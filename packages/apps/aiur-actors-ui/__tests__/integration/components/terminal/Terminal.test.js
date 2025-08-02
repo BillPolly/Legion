@@ -315,7 +315,7 @@ describe('Terminal Component Integration', () => {
       // Check input is disabled
       const input = container.querySelector('.terminal-input');
       terminal.model.setExecuting(true);
-      expect(input.getAttribute('contenteditable')).toBe('false');
+      expect(input.disabled).toBe(true);
     });
 
     test('should handle command timeout', async () => {

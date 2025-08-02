@@ -53,7 +53,8 @@ describe('TerminalView', () => {
       expect(terminal.getAttribute('tabindex')).toBe('0');
       
       const input = container.querySelector('.terminal-input');
-      expect(input.getAttribute('contenteditable')).toBe('true');
+      expect(input.tagName).toBe('INPUT');
+      expect(input.type).toBe('text');
       expect(input.getAttribute('spellcheck')).toBe('false');
     });
 
@@ -287,12 +288,12 @@ describe('TerminalView', () => {
       view.setExecuting(true);
       
       const input = container.querySelector('.terminal-input');
-      expect(input.getAttribute('contenteditable')).toBe('false');
+      expect(input.disabled).toBe(true);
       expect(container.querySelector('.terminal-executing')).toBeDefined();
       
       view.setExecuting(false);
       
-      expect(input.getAttribute('contenteditable')).toBe('true');
+      expect(input.disabled).toBe(false);
       expect(container.querySelector('.terminal-executing')).toBeNull();
     });
 
