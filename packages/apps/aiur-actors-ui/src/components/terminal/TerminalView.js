@@ -40,11 +40,23 @@ export class TerminalView extends ExtendedBaseView {
    * Render the terminal - creates DOM once, updates on subsequent calls
    */
   render(options = {}) {
+    console.log('TerminalView.render called', { initialized: this.initialized, domId: this.dom.id });
+    
     if (!this.initialized) {
+      console.log('Creating terminal structure...');
       this.createDOMStructure();
       this.createSubcomponents();
       this.setupEventHandlers();
       this.initialized = true;
+      
+      // Debug: Check the actual DOM structure
+      console.log('Terminal DOM created:', {
+        outputContainer: this.elements.outputContainer?.className,
+        inputContainer: this.elements.inputContainer?.className,
+        outputFirst: this.elements.terminal.firstChild === this.elements.outputContainer,
+        inputLast: this.elements.terminal.lastChild === this.elements.inputContainer,
+        childCount: this.elements.terminal.children.length
+      });
     }
     
     // Update existing DOM with options
@@ -63,28 +75,34 @@ export class TerminalView extends ExtendedBaseView {
       this.dom.removeChild(this.dom.firstChild);
     }
     
+    // Use the document that owns our DOM element
+    const doc = this.dom.ownerDocument || document;
+    
     // Create our main container
-    this.elements.container = document.createElement('section');
+    this.elements.container = doc.createElement('section');
     this.elements.container.className = 'terminal-container';
+    this.elements.container.style.display = 'flex';
+    this.elements.container.style.flexDirection = 'column';
+    this.elements.container.style.height = '100%';
     
     // Create header
-    this.elements.header = document.createElement('div');
+    this.elements.header = doc.createElement('div');
     this.elements.header.className = 'terminal-header';
     
-    this.elements.title = document.createElement('span');
+    this.elements.title = doc.createElement('span');
     this.elements.title.className = 'terminal-title';
     this.elements.title.textContent = 'Terminal';
     
-    this.elements.actions = document.createElement('div');
+    this.elements.actions = doc.createElement('div');
     this.elements.actions.className = 'terminal-actions';
     
     // Create action buttons
-    const clearBtn = document.createElement('button');
+    const clearBtn = doc.createElement('button');
     clearBtn.className = 'terminal-action';
     clearBtn.dataset.action = 'clear';
     clearBtn.textContent = 'Clear';
     
-    const exportBtn = document.createElement('button');
+    const exportBtn = doc.createElement('button');
     exportBtn.className = 'terminal-action';
     exportBtn.dataset.action = 'export';
     exportBtn.textContent = 'Export';
@@ -96,18 +114,26 @@ export class TerminalView extends ExtendedBaseView {
     this.elements.header.appendChild(this.elements.actions);
     
     // Create body
-    this.elements.body = document.createElement('div');
+    this.elements.body = doc.createElement('div');
     this.elements.body.className = 'terminal-body';
+    this.elements.body.style.flex = '1 1 auto';
+    this.elements.body.style.display = 'flex';
+    this.elements.body.style.flexDirection = 'column';
+    this.elements.body.style.minHeight = '0';
     
     // Create the actual terminal inside body
-    this.elements.terminal = document.createElement('div');
+    this.elements.terminal = doc.createElement('div');
     this.elements.terminal.className = 'terminal';
+    this.elements.terminal.style.flex = '1 1 auto';
+    this.elements.terminal.style.display = 'flex';
+    this.elements.terminal.style.flexDirection = 'column';
+    this.elements.terminal.style.minHeight = '0';
     
     // Create containers for subcomponents
-    this.elements.outputContainer = document.createElement('div');
+    this.elements.outputContainer = doc.createElement('div');
     this.elements.outputContainer.className = 'terminal-output-container';
     
-    this.elements.inputContainer = document.createElement('div');
+    this.elements.inputContainer = doc.createElement('div');
     this.elements.inputContainer.className = 'terminal-input-container';
     
     // Assemble structure
@@ -130,13 +156,39 @@ export class TerminalView extends ExtendedBaseView {
    * Create subcomponents - ONLY CALLED ONCE
    */
   createSubcomponents() {
+    console.log('Creating subcomponents...');
+    
     // Create output view with its container
     this.outputView = new TerminalOutputView(this.elements.outputContainer);
     this.outputView.render();
+    console.log('Output view created');
     
     // Create input view with its container
     this.inputView = new TerminalInputView(this.elements.inputContainer);
     this.inputView.render();
+    console.log('Input view created');
+    
+    // Verify DOM order and CSS
+    const terminal = this.elements.terminal;
+    console.log('DOM Order Check:', {
+      firstChild: terminal.firstChild?.className,
+      lastChild: terminal.lastChild?.className,
+      children: Array.from(terminal.children).map(c => c.className)
+    });
+    
+    // Force correct flex styles to ensure proper layout
+    terminal.style.display = 'flex';
+    terminal.style.flexDirection = 'column';
+    terminal.style.height = '100%';
+    
+    // Output should grow
+    this.elements.outputContainer.style.flex = '1 1 auto';
+    this.elements.outputContainer.style.overflow = 'auto';
+    this.elements.outputContainer.style.minHeight = '0';
+    
+    // Input should stay at bottom
+    this.elements.inputContainer.style.flex = '0 0 auto';
+    this.elements.inputContainer.style.borderTop = '1px solid var(--border-color)';
   }
 
   /**
@@ -172,10 +224,8 @@ export class TerminalView extends ExtendedBaseView {
   setupEventHandlers() {
     // Input events
     this.inputView.onCommand = (command) => {
-      // Add command to output
-      this.outputView.addLine(`> ${command}`, 'command');
-      
-      // Call parent handler
+      console.log('TerminalView: Command entered:', command);
+      // Just call parent handler - ViewModel will add to output
       if (this.onCommand) {
         this.onCommand(command);
       }
@@ -217,7 +267,8 @@ export class TerminalView extends ExtendedBaseView {
     // Create download
     const blob = new Blob([text], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const doc = this.dom.ownerDocument || document;
+    const a = doc.createElement('a');
     a.href = url;
     a.download = `terminal-output-${Date.now()}.txt`;
     a.click();

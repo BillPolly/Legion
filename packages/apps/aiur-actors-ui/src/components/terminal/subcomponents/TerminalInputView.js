@@ -34,10 +34,22 @@ export class TerminalInputView extends BaseView {
    * @param {Object} options - Render options
    */
   render(options = {}) {
+    console.log('TerminalInputView.render called', { hasInputLine: !!this.inputLine });
+    
     // Only create DOM structure if it doesn't exist
     if (!this.inputLine) {
+      console.log('Creating input DOM structure');
       this.createDOMStructure();
       this.bindEvents();
+      
+      // Log what was created
+      console.log('Input created in container:', {
+        container: this.container.className,
+        childCount: this.container.children.length,
+        inputElement: this.inputElement?.className
+      });
+    } else {
+      console.log('Input already exists, just updating');
     }
     
     // Update with options
@@ -48,6 +60,9 @@ export class TerminalInputView extends BaseView {
    * Create DOM structure (only called once)
    */
   createDOMStructure() {
+    // Use the document that owns our container element
+    const doc = this.container.ownerDocument || document;
+    
     // Create input line container
     this.inputLine = this.createElement('div', ['terminal-input-line']);
     
@@ -60,7 +75,7 @@ export class TerminalInputView extends BaseView {
     const inputWrapper = this.createElement('div', ['terminal-input-wrapper']);
     
     // Create input element
-    this.inputElement = document.createElement('input');
+    this.inputElement = doc.createElement('input');
     this.inputElement.type = 'text';
     this.inputElement.className = 'terminal-input';
     this.inputElement.setAttribute('autocomplete', 'off');
@@ -445,7 +460,8 @@ export class TerminalInputView extends BaseView {
    * @returns {HTMLElement} Created element
    */
   createElement(tag, classes = [], attributes = {}) {
-    const element = document.createElement(tag);
+    const doc = this.container?.ownerDocument || document;
+    const element = doc.createElement(tag);
     
     if (classes.length > 0) {
       element.classList.add(...classes);

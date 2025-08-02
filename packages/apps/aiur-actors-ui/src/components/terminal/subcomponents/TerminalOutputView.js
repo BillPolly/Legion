@@ -44,8 +44,11 @@ export class TerminalOutputView extends BaseView {
    * Create DOM structure - ONLY CALLED ONCE
    */
   createDOMStructure() {
+    // Use the document that owns our container element
+    const doc = this.container.ownerDocument || document;
+    
     // Create output scrollable area
-    this.elements.output = document.createElement('div');
+    this.elements.output = doc.createElement('div');
     this.elements.output.className = 'terminal-output';
     
     // Add to container
@@ -159,7 +162,8 @@ export class TerminalOutputView extends BaseView {
    * Create a line element
    */
   createLineElement(lineData) {
-    const element = document.createElement('div');
+    const doc = this.container.ownerDocument || document;
+    const element = doc.createElement('div');
     element.className = `terminal-output-line terminal-output-line-${lineData.type}`;
     element.dataset.lineId = lineData.id;
     element.dataset.type = lineData.type;
@@ -181,7 +185,7 @@ export class TerminalOutputView extends BaseView {
     if (content.html) {
       element.innerHTML = content.html;
     } else if (content.json) {
-      const pre = document.createElement('pre');
+      const pre = (this.container.ownerDocument || document).createElement('pre');
       pre.className = 'json-content';
       pre.textContent = JSON.stringify(content.json, null, 2);
       element.appendChild(pre);

@@ -6,6 +6,7 @@ import { ClientCommandActor } from '../actors/ClientCommandActor2.js';
 import { UIUpdateActor } from '../actors/UIUpdateActor2.js';
 import { ToolsActor, TerminalActor, SessionActor, VariablesActor } from '../actors/SimpleActors.js';
 import { createWebSocketBridge, ProtocolTypes } from '/legion/websocket-actor-protocol/index.js';
+import { AppLayout } from '../components/app/AppLayout.js';
 
 export class AiurActorsApp {
   constructor(config) {
@@ -13,7 +14,7 @@ export class AiurActorsApp {
     
     this.config = config;
     this.initialized = false;
-    this.components = {};
+    this.appLayout = null;  // Main layout component
     this.actors = {};
     this.errorState = false;
     this.websocket = null;
@@ -45,8 +46,8 @@ export class AiurActorsApp {
       // Setup actors first
       this.setupActors();
       
-      // Create UI components
-      this.createComponents();
+      // Create the app layout (which creates all components)
+      this.createAppLayout();
       
       // Setup WebSocket connection if configured
       if (this.config.options?.websocketUrl) {
@@ -62,59 +63,53 @@ export class AiurActorsApp {
   }
 
   /**
-   * Create all UI components
+   * Create the app layout component
+   * This creates the entire component hierarchy
    */
-  createComponents() {
+  createAppLayout() {
     const { dom, componentFactory, actorSpace, options = {} } = this.config;
     
-    // Terminal component
-    const terminalEl = dom.querySelector('#terminal');
-    if (!terminalEl) {
-      throw new Error('Terminal container not found');
-    }
-    
-    this.components.terminal = componentFactory.createTerminal({
-      dom: terminalEl,
+    // Create the app layout component
+    this.appLayout = new AppLayout(dom, {
+      title: options.title || 'Aiur Actors',
+      componentFactory,
       actorSpace,
-      app: this,  // Pass app reference for command execution
-      config: options.terminal
+      app: this,
+      terminalConfig: options.terminal,
+      toolsPanelConfig: options.toolsPanel,
+      sessionPanelConfig: options.sessionPanel,
+      variablesPanelConfig: options.variablesPanel
     });
     
-    // Tools panel
-    const toolsEl = dom.querySelector('#tools-panel');
-    if (!toolsEl) {
-      throw new Error('Tools panel container not found');
+    // Initialize the layout (which creates all child components)
+    this.appLayout.initialize();
+  }
+  
+  /**
+   * Get a component from the hierarchy
+   */
+  getComponent(path) {
+    if (!this.appLayout) return null;
+    
+    const parts = path.split('.');
+    let current = this.appLayout;
+    
+    for (const part of parts) {
+      if (current && current.getChild) {
+        current = current.getChild(part);
+      } else {
+        return null;
+      }
     }
     
-    this.components.toolsPanel = componentFactory.createToolsPanel({
-      dom: toolsEl,
-      actorSpace,
-      config: options.toolsPanel
-    });
-    
-    // Session panel
-    const sessionEl = dom.querySelector('#session-panel');
-    if (!sessionEl) {
-      throw new Error('Session panel container not found');
-    }
-    
-    this.components.sessionPanel = componentFactory.createSessionPanel({
-      dom: sessionEl,
-      actorSpace,
-      config: options.sessionPanel
-    });
-    
-    // Variables panel
-    const variablesEl = dom.querySelector('#variables-panel');
-    if (!variablesEl) {
-      throw new Error('Variables panel container not found');
-    }
-    
-    this.components.variablesPanel = componentFactory.createVariablesPanel({
-      dom: variablesEl,
-      actorSpace,
-      config: options.variablesPanel
-    });
+    return current;
+  }
+  
+  /**
+   * Get the terminal component (convenience method)
+   */
+  getTerminal() {
+    return this.appLayout?.getTerminal();
   }
 
   /**
@@ -235,8 +230,9 @@ export class AiurActorsApp {
   updateToolsList(tools) {
     console.log('Updating tools list:', tools);
     // Update the tools panel component through its model
-    if (this.components.toolsPanel && this.components.toolsPanel.model) {
-      this.components.toolsPanel.model.setTools(tools || []);
+    const toolsPanel = this.getComponent('leftSidebar.toolsPanel');
+    if (toolsPanel && toolsPanel.model) {
+      toolsPanel.model.setTools(tools || []);
     }
   }
 
@@ -246,20 +242,21 @@ export class AiurActorsApp {
   displayToolResult(result) {
     console.log('Tool result:', result);
     // Display in terminal
-    if (this.components.terminal) {
+    const terminal = this.getTerminal();
+    if (terminal) {
       // Check if result has special formatting
       if (result && typeof result === 'object') {
         if (result.tools) {
           // Tools list response
           this.updateToolsList(result.tools);
           const toolNames = result.tools.map(t => t.name).join(', ');
-          this.components.terminal.viewModel.appendOutput(`Available tools: ${toolNames}`);
+          terminal.viewModel.appendOutput(`Available tools: ${toolNames}`);
         } else {
           // Generic result
-          this.components.terminal.viewModel.appendOutput(JSON.stringify(result, null, 2));
+          terminal.viewModel.appendOutput(JSON.stringify(result, null, 2));
         }
       } else {
-        this.components.terminal.viewModel.appendOutput(String(result));
+        terminal.viewModel.appendOutput(String(result));
       }
     }
   }
@@ -270,9 +267,10 @@ export class AiurActorsApp {
   displayToolError(error) {
     console.error('Tool error:', error);
     // Display in terminal
-    if (this.components.terminal) {
+    const terminal = this.getTerminal();
+    if (terminal) {
       const errorMsg = error.message || error.toString();
-      this.components.terminal.viewModel.appendOutput(`Error: ${errorMsg}`, 'error');
+      terminal.viewModel.appendOutput(`Error: ${errorMsg}`, 'error');
     }
   }
 
@@ -323,15 +321,13 @@ export class AiurActorsApp {
     // Stop first
     this.stop();
     
-    // Destroy all components
-    Object.values(this.components).forEach(component => {
-      if (component && component.destroy) {
-        component.destroy();
-      }
-    });
+    // Destroy the app layout (which destroys all components)
+    if (this.appLayout && this.appLayout.destroy) {
+      this.appLayout.destroy();
+    }
     
     // Clear references
-    this.components = {};
+    this.appLayout = null;
     this.actors = {};
     
     // Destroy actor space
@@ -369,14 +365,6 @@ export class AiurActorsApp {
     }
   }
 
-  /**
-   * Get a component by name
-   * @param {string} name - Component name
-   * @returns {Object|undefined} Component instance
-   */
-  getComponent(name) {
-    return this.components[name];
-  }
 
   /**
    * Get an actor by key
