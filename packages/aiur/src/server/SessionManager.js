@@ -218,18 +218,28 @@ class SessionToolProvider {
           
           // Get the tools from the loaded module
           const tools = loadedModule.getTools ? (await loadedModule.getTools()) : [];
-          const toolNames = [];
+          const toolDefinitions = [];
           
           for (const tool of tools) {
             if (tool.getAllToolDescriptions) {
               const allDescs = tool.getAllToolDescriptions();
               if (Array.isArray(allDescs)) {
-                toolNames.push(...allDescs.map(desc => desc.function.name));
+                for (const desc of allDescs) {
+                  toolDefinitions.push({
+                    name: desc.function.name,
+                    description: desc.function.description,
+                    inputSchema: desc.function.parameters
+                  });
+                }
               }
             } else if (tool.getToolDescription) {
               const desc = tool.getToolDescription();
               if (desc && desc.function) {
-                toolNames.push(desc.function.name);
+                toolDefinitions.push({
+                  name: desc.function.name,
+                  description: desc.function.description,
+                  inputSchema: desc.function.parameters
+                });
               }
             }
           }
@@ -238,8 +248,8 @@ class SessionToolProvider {
             success: true,
             message: `Module ${args.name} loaded successfully`,
             module: args.name,
-            toolsLoaded: toolNames,
-            toolCount: toolNames.length
+            toolsLoaded: toolDefinitions,  // Now sending full definitions, not just names
+            toolCount: toolDefinitions.length
           };
           
           return result;

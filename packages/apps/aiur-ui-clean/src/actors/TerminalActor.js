@@ -147,6 +147,29 @@ export class TerminalActor {
       // Handle the response
       this.handleToolResult(response);
       
+      // If this was a module_load and successful, add the new tools
+      if (toolName === 'module_load' && response?.success && response?.toolsLoaded) {
+        // The response now contains full tool definitions
+        response.toolsLoaded.forEach(toolDef => {
+          // Add or update the tool definition
+          this.toolDefinitions.set(toolDef.name, toolDef);
+        });
+        
+        // Update terminal's tool definitions for tab completion
+        if (this.terminal.updateToolDefinitions) {
+          this.terminal.updateToolDefinitions(this.toolDefinitions);
+        }
+        
+        // Show a summary of what was loaded
+        console.log(`Module ${response.module} loaded with tools:`, response.toolsLoaded.map(t => t.name));
+      }
+      
+      // If this was module_unload and successful, remove the tools
+      if (toolName === 'module_unload' && response?.success) {
+        // We'd need the server to tell us which tools to remove
+        // For now, we can't easily determine which tools belong to which module
+      }
+      
     } catch (error) {
       console.error('TerminalActor: Error executing tool:', error);
       this.terminal.addOutput(`Error: ${error.message}`, 'error');
@@ -515,7 +538,9 @@ export class TerminalActor {
     if (response.toolsLoaded && Array.isArray(response.toolsLoaded)) {
       output.push({ text: `   Tools loaded: ${response.toolsLoaded.length}`, type: 'info' });
       response.toolsLoaded.forEach(tool => {
-        output.push({ text: `     - ${tool}`, type: 'info' });
+        // Handle both string (old format) and object (new format)
+        const toolName = typeof tool === 'string' ? tool : tool.name;
+        output.push({ text: `     - ${toolName}`, type: 'info' });
       });
     }
     
