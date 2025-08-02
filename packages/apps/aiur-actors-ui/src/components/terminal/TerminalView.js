@@ -136,9 +136,17 @@ export class TerminalView extends ExtendedBaseView {
     this.elements.inputContainer = doc.createElement('div');
     this.elements.inputContainer.className = 'terminal-input-container';
     
-    // Assemble structure
+    // Assemble structure - OUTPUT FIRST, INPUT SECOND
+    console.log('ASSEMBLING TERMINAL STRUCTURE:');
+    console.log('1. Adding output container to terminal');
     this.elements.terminal.appendChild(this.elements.outputContainer);
+    console.log('2. Adding input container to terminal');
     this.elements.terminal.appendChild(this.elements.inputContainer);
+    console.log('3. Order after assembly:', {
+      firstChild: this.elements.terminal.firstChild?.className,
+      secondChild: this.elements.terminal.children[1]?.className,
+      childCount: this.elements.terminal.children.length
+    });
     this.elements.body.appendChild(this.elements.terminal);
     
     this.elements.container.appendChild(this.elements.header);
@@ -176,19 +184,28 @@ export class TerminalView extends ExtendedBaseView {
       children: Array.from(terminal.children).map(c => c.className)
     });
     
-    // Force correct flex styles to ensure proper layout
+    // Fix the layout - output on top, input on bottom
     terminal.style.display = 'flex';
     terminal.style.flexDirection = 'column';
     terminal.style.height = '100%';
     
-    // Output should grow
+    // Output container should grow and be scrollable
     this.elements.outputContainer.style.flex = '1 1 auto';
     this.elements.outputContainer.style.overflow = 'auto';
     this.elements.outputContainer.style.minHeight = '0';
     
-    // Input should stay at bottom
+    // Input container should stay at bottom
     this.elements.inputContainer.style.flex = '0 0 auto';
-    this.elements.inputContainer.style.borderTop = '1px solid var(--border-color)';
+    this.elements.inputContainer.style.borderTop = '1px solid #444';
+    
+    // Debug: Check if elements are in right order
+    console.log('Terminal layout fixed. Order check:', {
+      outputFirst: terminal.children[0] === this.elements.outputContainer,
+      inputSecond: terminal.children[1] === this.elements.inputContainer,
+      terminalHeight: terminal.style.height,
+      outputFlex: this.elements.outputContainer.style.flex,
+      inputFlex: this.elements.inputContainer.style.flex
+    });
   }
 
   /**

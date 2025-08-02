@@ -116,6 +116,8 @@ export class TerminalOutputView extends BaseView {
    * Add a line to the output
    */
   addLine(content, type = 'info') {
+    console.log('TerminalOutputView.addLine called:', { content, type, container: this.container });
+    console.trace('addLine stack');
     const lineId = `line_${++this.lineIdCounter}`;
     
     // Create line data
