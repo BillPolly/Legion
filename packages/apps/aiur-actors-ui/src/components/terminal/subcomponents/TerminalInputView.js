@@ -34,15 +34,26 @@ export class TerminalInputView extends BaseView {
    * @param {Object} options - Render options
    */
   render(options = {}) {
-    // Clear container
-    this.container.innerHTML = '';
+    // Only create DOM structure if it doesn't exist
+    if (!this.inputLine) {
+      this.createDOMStructure();
+      this.bindEvents();
+    }
     
+    // Update with options
+    this.updateWithOptions(options);
+  }
+  
+  /**
+   * Create DOM structure (only called once)
+   */
+  createDOMStructure() {
     // Create input line container
     this.inputLine = this.createElement('div', ['terminal-input-line']);
     
     // Create prompt
     this.promptElement = this.createElement('span', ['terminal-prompt']);
-    this.promptElement.textContent = options.prompt || this.prompt;
+    this.promptElement.textContent = this.prompt;
     this.inputLine.appendChild(this.promptElement);
     
     // Create input wrapper
@@ -66,9 +77,22 @@ export class TerminalInputView extends BaseView {
     
     // Add to container
     this.container.appendChild(this.inputLine);
+  }
+  
+  /**
+   * Update component with options (without recreating DOM)
+   */
+  updateWithOptions(options = {}) {
+    // Update prompt if provided
+    if (options.prompt && this.promptElement) {
+      this.prompt = options.prompt;
+      this.promptElement.textContent = this.prompt;
+    }
     
-    // Bind events
-    this.bindEvents();
+    // Update theme if provided
+    if (options.theme && this.inputLine) {
+      this.inputLine.className = `terminal-input-line ${options.theme ? `theme-${options.theme}` : ''}`;
+    }
   }
 
   /**
@@ -233,36 +257,8 @@ export class TerminalInputView extends BaseView {
       return;
     }
     
-    // Clear autocomplete
-    this.autocompleteElement.innerHTML = '';
-    
-    // Add suggestions
-    this.suggestions.forEach((suggestion, index) => {
-      const item = this.createElement('div', ['autocomplete-item']);
-      item.dataset.index = index;
-      
-      if (typeof suggestion === 'object') {
-        // Structured suggestion
-        const name = this.createElement('div', ['autocomplete-name']);
-        name.textContent = suggestion.value || suggestion.name;
-        item.appendChild(name);
-        
-        if (suggestion.description) {
-          const desc = this.createElement('div', ['autocomplete-description']);
-          desc.textContent = suggestion.description;
-          item.appendChild(desc);
-        }
-        
-        if (suggestion.type) {
-          item.classList.add(`autocomplete-type-${suggestion.type}`);
-        }
-      } else {
-        // Simple string suggestion
-        item.textContent = suggestion;
-      }
-      
-      this.autocompleteElement.appendChild(item);
-    });
+    // Update autocomplete items efficiently without innerHTML
+    this.updateAutocompleteItems();
     
     this.autocompleteElement.style.display = 'block';
     this.autocompleteVisible = true;
@@ -271,6 +267,72 @@ export class TerminalInputView extends BaseView {
     if (this.suggestions.length > 0) {
       this.selectedIndex = 0;
       this.updateAutocompleteSelection();
+    }
+  }
+  
+  /**
+   * Update autocomplete items without recreating DOM
+   */
+  updateAutocompleteItems() {
+    const existingItems = this.autocompleteElement.querySelectorAll('.autocomplete-item');
+    
+    // Update or create items as needed
+    this.suggestions.forEach((suggestion, index) => {
+      let item = existingItems[index];
+      
+      if (!item) {
+        // Create new item if doesn't exist
+        item = this.createElement('div', ['autocomplete-item']);
+        item.dataset.index = index;
+        this.autocompleteElement.appendChild(item);
+      } else {
+        // Reset for reuse
+        item.className = 'autocomplete-item';
+        item.dataset.index = index;
+      }
+      
+      if (typeof suggestion === 'object') {
+        // Update complex suggestion
+        this.updateComplexSuggestion(item, suggestion);
+      } else {
+        // Simple string - just update text
+        item.textContent = suggestion;
+      }
+    });
+    
+    // Remove extra items if suggestions decreased
+    for (let i = this.suggestions.length; i < existingItems.length; i++) {
+      existingItems[i].remove();
+    }
+  }
+  
+  /**
+   * Update complex suggestion item without recreating
+   */
+  updateComplexSuggestion(item, suggestion) {
+    // Get or create name element
+    let nameEl = item.querySelector('.autocomplete-name');
+    if (!nameEl) {
+      nameEl = this.createElement('div', ['autocomplete-name']);
+      item.appendChild(nameEl);
+    }
+    nameEl.textContent = suggestion.value || suggestion.name;
+    
+    // Handle description
+    let descEl = item.querySelector('.autocomplete-description');
+    if (suggestion.description) {
+      if (!descEl) {
+        descEl = this.createElement('div', ['autocomplete-description']);
+        item.appendChild(descEl);
+      }
+      descEl.textContent = suggestion.description;
+    } else if (descEl) {
+      descEl.remove();
+    }
+    
+    // Handle type class
+    if (suggestion.type) {
+      item.classList.add(`autocomplete-type-${suggestion.type}`);
     }
   }
 

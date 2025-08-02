@@ -1,6 +1,11 @@
 // Jest setup for ES modules and jsdom environment
 // Note: @testing-library/jest-dom will be imported when needed
 import { jest, expect } from '@jest/globals';
+import { TextEncoder, TextDecoder } from 'util';
+
+// Add TextEncoder/TextDecoder for jsdom
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
 
 // Mock WebSocket for tests
 global.WebSocket = class MockWebSocket {

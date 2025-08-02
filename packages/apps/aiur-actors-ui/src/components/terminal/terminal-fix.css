@@ -1,0 +1,73 @@
+/* Terminal Layout Fix - Prevents input jumping */
+
+/* Ensure terminal uses proper flex layout */
+.terminal {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    position: relative !important;
+}
+
+/* Output container should grow, input should stay at bottom */
+.terminal-output-container {
+    flex: 1 1 auto !important;
+    min-height: 0 !important; /* Important for Firefox */
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.terminal-output {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    min-height: 0 !important;
+}
+
+/* Input container must stay at bottom */
+.terminal-input-container {
+    flex: 0 0 auto !important; /* Don't grow or shrink */
+    position: relative !important;
+    z-index: 10 !important; /* Ensure it stays on top */
+    background-color: var(--bg-secondary) !important; /* Ensure background is visible */
+}
+
+/* Prevent input line from being duplicated or moved */
+.terminal-input-line {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* Ensure only one input exists */
+.terminal-input-container .terminal-input-line:not(:first-child) {
+    display: none !important; /* Hide any duplicates */
+}
+
+/* Prevent input from jumping during execution */
+.terminal.terminal-executing .terminal-input-container {
+    position: relative !important; /* Not absolute or fixed */
+}
+
+/* Fix for potential CSS conflicts */
+.terminal * {
+    box-sizing: border-box !important;
+}
+
+/* Ensure proper stacking context */
+.terminal-body {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Prevent layout shifts during output updates */
+.terminal-output-line {
+    will-change: contents; /* Optimize for content changes */
+}
+
+/* Debug helper - uncomment to see borders */
+/*
+.terminal { border: 2px solid red !important; }
+.terminal-output-container { border: 2px solid blue !important; }
+.terminal-input-container { border: 2px solid green !important; }
+.terminal-input-line { border: 2px solid yellow !important; }
+*/

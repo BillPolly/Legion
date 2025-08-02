@@ -1,6 +1,6 @@
 /**
- * TerminalView - Main terminal view component
- * Coordinates subcomponents: input, output, and autocomplete
+ * TerminalView - Main terminal component that composes input and output
+ * Maintains persistent DOM references and updates incrementally
  */
 import { ExtendedBaseView } from '../base/ExtendedBaseView.js';
 import { TerminalInputView } from './subcomponents/TerminalInputView.js';
@@ -10,12 +10,14 @@ export class TerminalView extends ExtendedBaseView {
   constructor(dom) {
     super(dom);
     
-    // Main elements
-    this.terminal = null;
-    this.outputContainer = null;
-    this.inputContainer = null;
+    // DOM element references - create once, update many
+    this.elements = {
+      terminal: null,
+      outputContainer: null,
+      inputContainer: null
+    };
     
-    // Subcomponents
+    // Subcomponents - they manage their own DOM
     this.outputView = null;
     this.inputView = null;
     
@@ -24,82 +26,115 @@ export class TerminalView extends ExtendedBaseView {
     this.onKeyDown = null;
     this.onCommand = null;
     this.onAutocomplete = null;
+    
+    // State
+    this.initialized = false;
   }
 
   /**
-   * Render the terminal UI
-   * @param {Object} options - Render options
+   * Render the terminal - creates DOM once, updates on subsequent calls
    */
   render(options = {}) {
-    // Clear existing content
-    this.dom.innerHTML = '';
-    
-    // Create terminal container
-    this.terminal = this.createElement('div', ['terminal']);
-    
-    // Apply theme
-    if (options.theme) {
-      this.terminal.classList.add(`terminal-theme-${options.theme}`);
+    if (!this.initialized) {
+      this.createDOMStructure();
+      this.createSubcomponents();
+      this.setupEventHandlers();
+      this.initialized = true;
     }
     
-    // Create output container
-    this.outputContainer = this.createElement('div', ['terminal-output-container']);
-    this.terminal.appendChild(this.outputContainer);
+    // Update existing DOM with options
+    this.update(options);
     
-    // Create input container
-    this.inputContainer = this.createElement('div', ['terminal-input-container']);
-    this.terminal.appendChild(this.inputContainer);
-    
-    // Add to DOM
-    this.dom.appendChild(this.terminal);
-    
-    // Create subcomponents
-    this.createSubcomponents(options);
-    
-    // Setup coordination between subcomponents
-    this.setupCoordination();
+    return this.elements.terminal;
   }
 
   /**
-   * Create and initialize subcomponents
-   * @param {Object} options - Render options
+   * Create DOM structure - ONLY CALLED ONCE
    */
-  createSubcomponents(options) {
-    // Create output view
-    this.outputView = new TerminalOutputView(this.outputContainer);
-    this.outputView.render({
-      theme: options.theme,
-      maxLines: options.maxOutputLines || 10000
-    });
+  createDOMStructure() {
+    // Create main terminal container
+    this.elements.terminal = document.createElement('div');
+    this.elements.terminal.className = 'terminal';
     
-    // Create input view
-    this.inputView = new TerminalInputView(this.inputContainer);
-    this.inputView.render({
-      prompt: options.prompt || '> ',
-      theme: options.theme
-    });
+    // Create containers for subcomponents
+    this.elements.outputContainer = document.createElement('div');
+    this.elements.outputContainer.className = 'terminal-output-container';
+    
+    this.elements.inputContainer = document.createElement('div');
+    this.elements.inputContainer.className = 'terminal-input-container';
+    
+    // Assemble structure
+    this.elements.terminal.appendChild(this.elements.outputContainer);
+    this.elements.terminal.appendChild(this.elements.inputContainer);
+    
+    // Add to parent DOM
+    this.dom.appendChild(this.elements.terminal);
   }
 
   /**
-   * Setup coordination between subcomponents
+   * Create subcomponents - ONLY CALLED ONCE
    */
-  setupCoordination() {
-    // Input view callbacks
+  createSubcomponents() {
+    // Create output view with its container
+    this.outputView = new TerminalOutputView(this.elements.outputContainer);
+    this.outputView.render();
+    
+    // Create input view with its container
+    this.inputView = new TerminalInputView(this.elements.inputContainer);
+    this.inputView.render();
+  }
+
+  /**
+   * Update existing DOM - called multiple times
+   */
+  update(options = {}) {
+    // Update theme
+    if (options.theme) {
+      // Remove old theme classes
+      const classes = Array.from(this.elements.terminal.classList);
+      classes.forEach(cls => {
+        if (cls.startsWith('terminal-theme-')) {
+          this.elements.terminal.classList.remove(cls);
+        }
+      });
+      // Add new theme
+      this.elements.terminal.classList.add(`terminal-theme-${options.theme}`);
+    }
+    
+    // Update subcomponents
+    if (options.prompt && this.inputView) {
+      this.inputView.setPrompt(options.prompt);
+    }
+    
+    if (options.maxOutputLines && this.outputView) {
+      this.outputView.setMaxLines(options.maxOutputLines);
+    }
+  }
+
+  /**
+   * Setup event handlers between components
+   */
+  setupEventHandlers() {
+    // Input events
+    this.inputView.onCommand = (command) => {
+      // Add command to output
+      this.outputView.addLine(`> ${command}`, 'command');
+      
+      // Call parent handler
+      if (this.onCommand) {
+        this.onCommand(command);
+      }
+    };
+    
     this.inputView.onInput = (value, event) => {
       if (this.onInput) {
-        this.onInput(value, event);  // FIX: Pass both value and event correctly
+        this.onInput(value, event);
       }
     };
     
     this.inputView.onKeyDown = (key, event) => {
       if (this.onKeyDown) {
-        this.onKeyDown(key, event);  // FIX: Pass both key and event correctly
-      }
-    };
-    
-    this.inputView.onCommand = (command) => {
-      if (this.onCommand) {
-        this.onCommand(command);
+        this.onKeyDown(key, event);
       }
     };
     
@@ -111,23 +146,22 @@ export class TerminalView extends ExtendedBaseView {
   }
 
   /**
-   * Append output line
-   * @param {Object} output - Output object
-   * @returns {string} Line ID
+   * Add output line
    */
   appendOutput(output) {
     if (this.outputView) {
-      return this.outputView.addOutput(output);
+      const content = typeof output === 'string' ? output : output.content;
+      const type = typeof output === 'string' ? 'info' : output.type;
+      return this.outputView.addLine(content, type);
     }
   }
 
   /**
-   * Append multiple output lines
-   * @param {Array} outputs - Array of output objects
+   * Add multiple outputs
    */
   renderOutput(outputs) {
     if (this.outputView) {
-      this.outputView.addOutputs(outputs);
+      outputs.forEach(output => this.appendOutput(output));
     }
   }
 
@@ -141,131 +175,6 @@ export class TerminalView extends ExtendedBaseView {
   }
 
   /**
-   * Render current command (for history navigation)
-   * @param {string} command - Current command
-   * @param {number} cursorPosition - Cursor position (unused with input element)
-   */
-  renderCommand(command, cursorPosition) {
-    if (this.inputView) {
-      this.inputView.setValue(command);
-    }
-  }
-
-  /**
-   * Show autocomplete suggestions
-   * @param {Array} suggestions - Array of suggestions
-   * @param {number} selectedIndex - Selected index
-   */
-  showAutocomplete(suggestions, selectedIndex = 0) {
-    if (this.inputView) {
-      this.inputView.showAutocomplete(suggestions);
-      if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
-        this.inputView.selectedIndex = selectedIndex;
-        this.inputView.updateAutocompleteSelection();
-      }
-    }
-  }
-
-  /**
-   * Hide autocomplete dropdown
-   */
-  hideAutocomplete() {
-    if (this.inputView) {
-      this.inputView.hideAutocomplete();
-    }
-  }
-
-  /**
-   * Update autocomplete selection
-   * @param {number} selectedIndex - New selected index
-   */
-  updateAutocompleteSelection(selectedIndex) {
-    if (this.inputView) {
-      this.inputView.selectedIndex = selectedIndex;
-      this.inputView.updateAutocompleteSelection();
-    }
-  }
-
-  /**
-   * Focus the input
-   */
-  focusInput() {
-    if (this.inputView) {
-      this.inputView.focus();
-    }
-  }
-
-  /**
-   * Set prompt text
-   * @param {string} prompt - Prompt text
-   */
-  setPrompt(prompt) {
-    if (this.inputView) {
-      this.inputView.setPrompt(prompt);
-    }
-  }
-
-  /**
-   * Set executing state
-   * @param {boolean} executing - Whether executing
-   */
-  setExecuting(executing) {
-    if (this.inputView) {
-      this.inputView.setExecuting(executing);
-    }
-    
-    if (this.terminal) {
-      if (executing) {
-        this.terminal.classList.add('terminal-executing');
-      } else {
-        this.terminal.classList.remove('terminal-executing');
-      }
-    }
-  }
-
-  /**
-   * Update connection status
-   * @param {boolean} connected - Whether connected
-   */
-  updateConnectionStatus(connected) {
-    if (this.terminal) {
-      if (connected) {
-        this.terminal.classList.remove('terminal-disconnected');
-        this.terminal.classList.add('terminal-connected');
-      } else {
-        this.terminal.classList.remove('terminal-connected');
-        this.terminal.classList.add('terminal-disconnected');
-      }
-    }
-    
-    // Update input placeholder based on connection
-    if (this.inputView) {
-      const placeholder = connected ? 
-        'Enter command...' : 
-        'Not connected to server...';
-      this.inputView.setPlaceholder(placeholder);
-    }
-  }
-
-  /**
-   * Get current input value
-   * @returns {string} Input value
-   */
-  getCurrentInput() {
-    return this.inputView ? this.inputView.getValue() : '';
-  }
-
-  /**
-   * Set input value
-   * @param {string} value - Input value
-   */
-  setCurrentInput(value) {
-    if (this.inputView) {
-      this.inputView.setValue(value);
-    }
-  }
-
-  /**
    * Clear input
    */
   clearInput() {
@@ -275,7 +184,109 @@ export class TerminalView extends ExtendedBaseView {
   }
 
   /**
-   * Scroll output to bottom
+   * Set current command
+   */
+  renderCommand(command) {
+    if (this.inputView) {
+      this.inputView.setValue(command);
+    }
+  }
+
+  /**
+   * Get current input
+   */
+  getCurrentInput() {
+    return this.inputView ? this.inputView.getValue() : '';
+  }
+
+  /**
+   * Set current input
+   */
+  setCurrentInput(value) {
+    if (this.inputView) {
+      this.inputView.setValue(value);
+    }
+  }
+
+  /**
+   * Focus input
+   */
+  focusInput() {
+    if (this.inputView) {
+      this.inputView.focus();
+    }
+  }
+
+  /**
+   * Set prompt
+   */
+  setPrompt(prompt) {
+    if (this.inputView) {
+      this.inputView.setPrompt(prompt);
+    }
+  }
+
+  /**
+   * Set executing state
+   */
+  setExecuting(executing) {
+    if (this.inputView) {
+      this.inputView.setExecuting(executing);
+    }
+    if (this.elements.terminal) {
+      this.elements.terminal.classList.toggle('terminal-executing', executing);
+    }
+  }
+
+  /**
+   * Update connection status
+   */
+  updateConnectionStatus(connected) {
+    if (this.elements.terminal) {
+      this.elements.terminal.classList.toggle('terminal-connected', connected);
+      this.elements.terminal.classList.toggle('terminal-disconnected', !connected);
+    }
+    if (this.inputView) {
+      this.inputView.setPlaceholder(
+        connected ? 'Enter command...' : 'Not connected...'
+      );
+    }
+  }
+
+  /**
+   * Show autocomplete
+   */
+  showAutocomplete(suggestions, selectedIndex = 0) {
+    if (this.inputView) {
+      this.inputView.showAutocomplete(suggestions);
+      if (selectedIndex >= 0) {
+        this.inputView.selectedIndex = selectedIndex;
+        this.inputView.updateAutocompleteSelection();
+      }
+    }
+  }
+
+  /**
+   * Hide autocomplete
+   */
+  hideAutocomplete() {
+    if (this.inputView) {
+      this.inputView.hideAutocomplete();
+    }
+  }
+
+  /**
+   * Update autocomplete selection
+   */
+  updateAutocompleteSelection(selectedIndex) {
+    if (this.inputView) {
+      this.inputView.selectedIndex = selectedIndex;
+      this.inputView.updateAutocompleteSelection();
+    }
+  }
+
+  /**
+   * Scroll to bottom
    */
   scrollToBottom() {
     if (this.outputView) {
@@ -285,33 +296,27 @@ export class TerminalView extends ExtendedBaseView {
 
   /**
    * Get output lines
-   * @returns {Array} Array of output lines
    */
   getOutputLines() {
     return this.outputView ? this.outputView.getLines() : [];
   }
 
   /**
-   * Find output lines by type
-   * @param {string} type - Line type
-   * @returns {Array} Matching lines
-   */
-  findOutputLinesByType(type) {
-    return this.outputView ? this.outputView.findLinesByType(type) : [];
-  }
-
-  /**
    * Search output lines
-   * @param {string} query - Search query
-   * @returns {Array} Matching lines
    */
   searchOutputLines(query) {
     return this.outputView ? this.outputView.searchLines(query) : [];
   }
 
   /**
+   * Find lines by type
+   */
+  findOutputLinesByType(type) {
+    return this.outputView ? this.outputView.findLinesByType(type) : [];
+  }
+
+  /**
    * Remove output line
-   * @param {string} lineId - Line ID to remove
    */
   removeOutputLine(lineId) {
     if (this.outputView) {
@@ -321,8 +326,6 @@ export class TerminalView extends ExtendedBaseView {
 
   /**
    * Update output line
-   * @param {string} lineId - Line ID to update
-   * @param {Object} updates - Updates to apply
    */
   updateOutputLine(lineId, updates) {
     if (this.outputView) {
@@ -331,8 +334,7 @@ export class TerminalView extends ExtendedBaseView {
   }
 
   /**
-   * Set output auto-scroll
-   * @param {boolean} enabled - Whether to enable auto-scroll
+   * Set auto scroll
    */
   setOutputAutoScroll(enabled) {
     if (this.outputView) {
@@ -341,8 +343,7 @@ export class TerminalView extends ExtendedBaseView {
   }
 
   /**
-   * Set output max lines
-   * @param {number} maxLines - Maximum number of lines
+   * Set max output lines
    */
   setOutputMaxLines(maxLines) {
     if (this.outputView) {
@@ -351,79 +352,26 @@ export class TerminalView extends ExtendedBaseView {
   }
 
   /**
-   * Apply theme to terminal
-   * @param {string} theme - Theme name
-   */
-  applyTheme(theme) {
-    if (this.terminal) {
-      // Remove existing theme classes
-      const classList = Array.from(this.terminal.classList);
-      classList.forEach(className => {
-        if (className.startsWith('terminal-theme-')) {
-          this.terminal.classList.remove(className);
-        }
-      });
-      
-      // Add new theme
-      if (theme) {
-        this.terminal.classList.add(`terminal-theme-${theme}`);
-      }
-    }
-  }
-
-  /**
-   * Get terminal dimensions
-   * @returns {Object} Width and height
-   */
-  getDimensions() {
-    if (this.terminal) {
-      const rect = this.terminal.getBoundingClientRect();
-      return {
-        width: rect.width,
-        height: rect.height
-      };
-    }
-    return { width: 0, height: 0 };
-  }
-
-  /**
-   * Check if terminal is visible
-   * @returns {boolean} True if visible
-   */
-  isVisible() {
-    if (this.terminal) {
-      const rect = this.terminal.getBoundingClientRect();
-      return rect.width > 0 && rect.height > 0;
-    }
-    return false;
-  }
-
-  /**
-   * Clean up
+   * Destroy - cleanup
    */
   destroy() {
-    // Destroy subcomponents
     if (this.outputView) {
       this.outputView.destroy();
       this.outputView = null;
     }
-    
     if (this.inputView) {
       this.inputView.destroy();
       this.inputView = null;
     }
     
-    // Clear event handlers
-    this.onInput = null;
-    this.onKeyDown = null;
-    this.onCommand = null;
-    this.onAutocomplete = null;
+    // Clear DOM references
+    this.elements = {
+      terminal: null,
+      outputContainer: null,
+      inputContainer: null
+    };
     
-    // Clear references
-    this.terminal = null;
-    this.outputContainer = null;
-    this.inputContainer = null;
-    
+    this.initialized = false;
     super.destroy();
   }
 }

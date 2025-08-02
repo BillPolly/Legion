@@ -1,6 +1,6 @@
 /**
  * TerminalOutputView - Output subcomponent for terminal
- * Handles output display, scrolling, and line management
+ * Manages its own DOM completely with persistent references
  */
 import { BaseView } from '../../base/BaseView.js';
 
@@ -9,60 +9,89 @@ export class TerminalOutputView extends BaseView {
     super();
     this.container = container;
     
-    // Elements
-    this.outputElement = null;
+    // DOM element references - create once, update many
+    this.elements = {
+      output: null,
+      lines: new Map() // lineId -> DOM element mapping
+    };
     
     // State
     this.maxLines = 10000;
     this.autoScroll = true;
-    this.lines = [];
     this.lineIdCounter = 0;
+    this.linesData = []; // Array of line data
+    
+    this.initialized = false;
   }
 
   /**
-   * Render the output component
-   * @param {Object} options - Render options
+   * Render the output component - creates DOM once, updates on subsequent calls
    */
   render(options = {}) {
-    // Clear container
-    this.container.innerHTML = '';
-    
-    // Create output area
-    this.outputElement = this.createElement('div', ['terminal-output']);
-    
-    // Apply theme
-    if (options.theme) {
-      this.outputElement.classList.add(`terminal-output-theme-${options.theme}`);
+    if (!this.initialized) {
+      this.createDOMStructure();
+      this.bindEvents();
+      this.initialized = true;
     }
     
-    // Set max lines
-    if (options.maxLines) {
-      this.maxLines = options.maxLines;
-    }
+    // Update with options
+    this.update(options);
+    
+    return this.elements.output;
+  }
+  
+  /**
+   * Create DOM structure - ONLY CALLED ONCE
+   */
+  createDOMStructure() {
+    // Create output scrollable area
+    this.elements.output = document.createElement('div');
+    this.elements.output.className = 'terminal-output';
     
     // Add to container
-    this.container.appendChild(this.outputElement);
-    
-    // Bind events
-    this.bindEvents();
+    this.container.appendChild(this.elements.output);
   }
-
+  
   /**
-   * Bind event handlers
+   * Update existing DOM - called multiple times
+   */
+  update(options = {}) {
+    if (!this.elements.output) return;
+    
+    // Update theme
+    if (options.theme) {
+      // Remove old theme classes
+      const classes = Array.from(this.elements.output.classList);
+      classes.forEach(cls => {
+        if (cls.startsWith('terminal-output-theme-')) {
+          this.elements.output.classList.remove(cls);
+        }
+      });
+      // Add new theme
+      this.elements.output.classList.add(`terminal-output-theme-${options.theme}`);
+    }
+    
+    // Update max lines
+    if (options.maxLines !== undefined) {
+      this.maxLines = options.maxLines;
+      this.trimLines();
+    }
+  }
+  
+  /**
+   * Bind event handlers - ONLY CALLED ONCE
    */
   bindEvents() {
-    // Scroll event to manage auto-scroll
-    this.addTrackedListener(this.outputElement, 'scroll', () => {
+    // Track scroll position for auto-scroll
+    this.addTrackedListener(this.elements.output, 'scroll', () => {
       this.checkAutoScroll();
     });
     
-    // Mouse wheel to temporarily disable auto-scroll
-    this.addTrackedListener(this.outputElement, 'wheel', (e) => {
+    // Disable auto-scroll when user scrolls up
+    this.addTrackedListener(this.elements.output, 'wheel', (e) => {
       if (e.deltaY < 0) {
-        // Scrolling up - disable auto-scroll temporarily
         this.autoScroll = false;
-        
-        // Re-enable auto-scroll after a delay if at bottom
+        // Re-enable after delay if at bottom
         clearTimeout(this.autoScrollTimeout);
         this.autoScrollTimeout = setTimeout(() => {
           this.checkAutoScroll();
@@ -75,234 +104,154 @@ export class TerminalOutputView extends BaseView {
    * Check if we should auto-scroll
    */
   checkAutoScroll() {
-    if (!this.outputElement) return;
-    
-    const { scrollTop, scrollHeight, clientHeight } = this.outputElement;
-    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10; // 10px tolerance
-    
+    const output = this.elements.output;
+    const isAtBottom = output.scrollTop + output.clientHeight >= output.scrollHeight - 10;
     this.autoScroll = isAtBottom;
   }
 
   /**
-   * Add output line
-   * @param {Object} output - Output object
+   * Add a line to the output
    */
-  addOutput(output) {
-    // Create output object with ID
-    const outputLine = {
-      id: output.id || `line_${++this.lineIdCounter}`,
-      content: output.content || '',
-      type: output.type || 'info',
-      timestamp: output.timestamp || new Date(),
-      metadata: output.metadata || {}
+  addLine(content, type = 'info') {
+    const lineId = `line_${++this.lineIdCounter}`;
+    
+    // Create line data
+    const lineData = {
+      id: lineId,
+      content: content,
+      type: type,
+      timestamp: new Date()
     };
     
-    // Add to lines array
-    this.lines.push(outputLine);
+    // Add to data array
+    this.linesData.push(lineData);
     
-    // Enforce max lines
-    if (this.lines.length > this.maxLines) {
-      const removed = this.lines.shift();
-      // Remove from DOM
-      const removedElement = this.outputElement.querySelector(`[data-line-id="${removed.id}"]`);
-      if (removedElement) {
-        removedElement.remove();
-      }
-    }
+    // Create DOM element
+    const lineElement = this.createLineElement(lineData);
     
-    // Create and append DOM element
-    const lineElement = this.createOutputLine(outputLine);
-    this.outputElement.appendChild(lineElement);
+    // Store reference
+    this.elements.lines.set(lineId, lineElement);
     
-    // Auto-scroll if enabled
+    // Add to DOM
+    this.elements.output.appendChild(lineElement);
+    
+    // Trim if needed
+    this.trimLines();
+    
+    // Auto-scroll
     if (this.autoScroll) {
       this.scrollToBottom();
     }
     
-    return outputLine.id;
+    return lineId;
   }
 
   /**
-   * Add multiple output lines
-   * @param {Array} outputs - Array of output objects
+   * Add the old addOutput method for compatibility
    */
-  addOutputs(outputs) {
-    outputs.forEach(output => this.addOutput(output));
+  addOutput(output) {
+    const content = typeof output === 'string' ? output : output.content;
+    const type = typeof output === 'string' ? 'info' : output.type;
+    return this.addLine(content, type);
   }
 
   /**
-   * Create output line element
-   * @param {Object} outputLine - Output line object
-   * @returns {HTMLElement} Line element
+   * Create a line element
    */
-  createOutputLine(outputLine) {
-    const lineElement = this.createElement('div', [
-      'terminal-output-line',
-      `terminal-output-line-${outputLine.type}`
-    ]);
+  createLineElement(lineData) {
+    const element = document.createElement('div');
+    element.className = `terminal-output-line terminal-output-line-${lineData.type}`;
+    element.dataset.lineId = lineData.id;
+    element.dataset.type = lineData.type;
     
-    lineElement.setAttribute('data-line-id', outputLine.id);
-    lineElement.setAttribute('data-type', outputLine.type);
-    
-    // Handle different content types
-    if (typeof outputLine.content === 'object') {
-      this.renderObjectContent(lineElement, outputLine.content, outputLine.type);
+    // Handle content
+    if (typeof lineData.content === 'object' && lineData.content !== null) {
+      this.renderComplexContent(element, lineData.content);
     } else {
-      this.renderTextContent(lineElement, outputLine.content, outputLine.type);
+      element.textContent = String(lineData.content || '');
     }
     
-    // Add timestamp if needed
-    if (outputLine.metadata.showTimestamp) {
-      this.addTimestamp(lineElement, outputLine.timestamp);
-    }
-    
-    return lineElement;
+    return element;
   }
 
   /**
-   * Render text content
-   * @param {HTMLElement} element - Line element
-   * @param {string} content - Text content
-   * @param {string} type - Line type
+   * Render complex content
    */
-  renderTextContent(element, content, type) {
-    if (type === 'result' && this.isJsonString(content)) {
-      // Pretty print JSON results
-      try {
-        const parsed = JSON.parse(content);
-        const pre = this.createElement('pre', ['json-content']);
-        pre.textContent = JSON.stringify(parsed, null, 2);
-        element.appendChild(pre);
-      } catch {
-        element.textContent = content;
-      }
-    } else {
-      // Regular text content
-      element.textContent = content;
-    }
-  }
-
-  /**
-   * Render object content
-   * @param {HTMLElement} element - Line element
-   * @param {Object} content - Object content
-   * @param {string} type - Line type
-   */
-  renderObjectContent(element, content, type) {
+  renderComplexContent(element, content) {
     if (content.html) {
-      // HTML content (be careful with security)
       element.innerHTML = content.html;
     } else if (content.json) {
-      // JSON content
-      const pre = this.createElement('pre', ['json-content']);
+      const pre = document.createElement('pre');
+      pre.className = 'json-content';
       pre.textContent = JSON.stringify(content.json, null, 2);
       element.appendChild(pre);
-    } else if (content.table) {
-      // Table content
-      this.renderTable(element, content.table);
     } else {
-      // Fallback to string representation
       element.textContent = JSON.stringify(content);
     }
   }
 
   /**
-   * Render table content
-   * @param {HTMLElement} element - Line element
-   * @param {Object} tableData - Table data
+   * Trim lines to maxLines
    */
-  renderTable(element, tableData) {
-    const table = this.createElement('table', ['output-table']);
-    
-    // Headers
-    if (tableData.headers) {
-      const thead = this.createElement('thead');
-      const headerRow = this.createElement('tr');
-      
-      tableData.headers.forEach(header => {
-        const th = this.createElement('th');
-        th.textContent = header;
-        headerRow.appendChild(th);
-      });
-      
-      thead.appendChild(headerRow);
-      table.appendChild(thead);
+  trimLines() {
+    while (this.linesData.length > this.maxLines) {
+      const removed = this.linesData.shift();
+      const element = this.elements.lines.get(removed.id);
+      if (element) {
+        element.remove();
+        this.elements.lines.delete(removed.id);
+      }
     }
-    
-    // Body
-    if (tableData.rows) {
-      const tbody = this.createElement('tbody');
-      
-      tableData.rows.forEach(row => {
-        const tr = this.createElement('tr');
-        
-        row.forEach(cell => {
-          const td = this.createElement('td');
-          td.textContent = cell;
-          tr.appendChild(td);
-        });
-        
-        tbody.appendChild(tr);
-      });
-      
-      table.appendChild(tbody);
-    }
-    
-    element.appendChild(table);
-  }
-
-  /**
-   * Add timestamp to line
-   * @param {HTMLElement} element - Line element
-   * @param {Date} timestamp - Timestamp
-   */
-  addTimestamp(element, timestamp) {
-    const timeElement = this.createElement('span', ['line-timestamp']);
-    timeElement.textContent = timestamp.toLocaleTimeString();
-    element.appendChild(timeElement);
   }
 
   /**
    * Clear all output
    */
   clear() {
-    this.outputElement.innerHTML = '';
-    this.lines = [];
+    // Remove all line elements
+    this.elements.lines.forEach(element => {
+      element.remove();
+    });
+    
+    // Clear references
+    this.elements.lines.clear();
+    this.linesData = [];
     this.lineIdCounter = 0;
   }
 
   /**
-   * Remove specific line
-   * @param {string} lineId - Line ID to remove
+   * Remove a specific line
    */
   removeLine(lineId) {
-    // Remove from lines array
-    this.lines = this.lines.filter(line => line.id !== lineId);
-    
-    // Remove from DOM
-    const element = this.outputElement.querySelector(`[data-line-id="${lineId}"]`);
+    const element = this.elements.lines.get(lineId);
     if (element) {
       element.remove();
+      this.elements.lines.delete(lineId);
+      this.linesData = this.linesData.filter(line => line.id !== lineId);
     }
   }
 
   /**
-   * Update existing line
-   * @param {string} lineId - Line ID to update
-   * @param {Object} updates - Updates to apply
+   * Update an existing line
    */
   updateLine(lineId, updates) {
-    // Update in lines array
-    const lineIndex = this.lines.findIndex(line => line.id === lineId);
+    const lineIndex = this.linesData.findIndex(line => line.id === lineId);
     if (lineIndex >= 0) {
-      Object.assign(this.lines[lineIndex], updates);
+      // Update data
+      Object.assign(this.linesData[lineIndex], updates);
       
       // Update DOM element
-      const element = this.outputElement.querySelector(`[data-line-id="${lineId}"]`);
+      const element = this.elements.lines.get(lineId);
       if (element) {
-        // Recreate the line element with updates
-        const newElement = this.createOutputLine(this.lines[lineIndex]);
-        element.replaceWith(newElement);
+        // Update content
+        if (updates.content !== undefined) {
+          element.textContent = String(updates.content);
+        }
+        // Update type/class
+        if (updates.type !== undefined) {
+          element.className = `terminal-output-line terminal-output-line-${updates.type}`;
+          element.dataset.type = updates.type;
+        }
       }
     }
   }
@@ -311,8 +260,8 @@ export class TerminalOutputView extends BaseView {
    * Scroll to bottom
    */
   scrollToBottom() {
-    if (this.outputElement) {
-      this.outputElement.scrollTop = this.outputElement.scrollHeight;
+    if (this.elements.output) {
+      this.elements.output.scrollTop = this.elements.output.scrollHeight;
     }
   }
 
@@ -320,121 +269,67 @@ export class TerminalOutputView extends BaseView {
    * Scroll to top
    */
   scrollToTop() {
-    if (this.outputElement) {
-      this.outputElement.scrollTop = 0;
+    if (this.elements.output) {
+      this.elements.output.scrollTop = 0;
     }
   }
 
   /**
-   * Scroll to specific line
-   * @param {string} lineId - Line ID to scroll to
-   */
-  scrollToLine(lineId) {
-    const element = this.outputElement.querySelector(`[data-line-id="${lineId}"]`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }
-
-  /**
-   * Get all lines
-   * @returns {Array} Array of line objects
+   * Get all lines data
    */
   getLines() {
-    return [...this.lines];
+    return [...this.linesData];
   }
 
   /**
    * Find lines by type
-   * @param {string} type - Line type
-   * @returns {Array} Matching lines
    */
   findLinesByType(type) {
-    return this.lines.filter(line => line.type === type);
+    return this.linesData.filter(line => line.type === type);
   }
 
   /**
    * Search lines by content
-   * @param {string} query - Search query
-   * @returns {Array} Matching lines
    */
   searchLines(query) {
     const lowerQuery = query.toLowerCase();
-    return this.lines.filter(line => 
-      line.content.toLowerCase().includes(lowerQuery)
+    return this.linesData.filter(line => 
+      String(line.content).toLowerCase().includes(lowerQuery)
     );
   }
 
   /**
-   * Set auto-scroll behavior
-   * @param {boolean} enabled - Whether to enable auto-scroll
+   * Set auto-scroll
    */
   setAutoScroll(enabled) {
     this.autoScroll = enabled;
   }
 
   /**
-   * Set maximum number of lines
-   * @param {number} maxLines - Maximum lines
+   * Set max lines
    */
   setMaxLines(maxLines) {
     this.maxLines = maxLines;
-    
-    // Trim existing lines if needed
-    if (this.lines.length > maxLines) {
-      const toRemove = this.lines.length - maxLines;
-      const removedLines = this.lines.splice(0, toRemove);
-      
-      // Remove from DOM
-      removedLines.forEach(line => {
-        const element = this.outputElement.querySelector(`[data-line-id="${line.id}"]`);
-        if (element) {
-          element.remove();
-        }
-      });
-    }
-  }
-
-  /**
-   * Check if string is valid JSON
-   * @param {string} str - String to check
-   * @returns {boolean} True if valid JSON
-   */
-  isJsonString(str) {
-    try {
-      JSON.parse(str);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Create DOM element with classes
-   * @param {string} tag - Element tag
-   * @param {Array} classes - CSS classes
-   * @returns {HTMLElement} Created element
-   */
-  createElement(tag, classes = []) {
-    const element = document.createElement(tag);
-    if (classes.length > 0) {
-      element.classList.add(...classes);
-    }
-    return element;
+    this.trimLines();
   }
 
   /**
    * Clean up
    */
   destroy() {
-    // Clear timeouts
+    // Clear timeout
     if (this.autoScrollTimeout) {
       clearTimeout(this.autoScrollTimeout);
     }
     
-    // Clear state
-    this.lines = [];
+    // Clear DOM references
+    this.elements.lines.clear();
+    this.elements.output = null;
     
+    // Clear data
+    this.linesData = [];
+    
+    this.initialized = false;
     super.destroy();
   }
 }
