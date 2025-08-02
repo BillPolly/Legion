@@ -9,7 +9,7 @@ import { dirname, join } from 'path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Configuration
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3002;  // UI server port
 const PUBLIC_DIR = join(__dirname, 'public');
 const SRC_DIR = join(__dirname, 'src');
 
@@ -40,7 +40,8 @@ server.handleRequest = function(req, res) {
     // Map source file requests to the src directory
     if (url.pathname.startsWith('/app/') || 
         url.pathname.startsWith('/components/') || 
-        url.pathname.startsWith('/actors/')) {
+        url.pathname.startsWith('/actors/') ||
+        url.pathname.startsWith('/services/')) {
         
         // Rewrite the request to point to src directory
         const srcPath = url.pathname;

@@ -7,9 +7,12 @@
   "scripts": {
     "start": "node src/start.js",
     "start:ui-only": "node src/index.js",
+    "start:both": "node scripts/start-both.js",
     "kill": "pkill -f 'node src/start.js' || pkill -f 'node src/index.js' || lsof -ti:3002 | xargs kill -9 2>/dev/null || echo 'No aiur-actors-ui processes found'",
+    "kill:all": "node scripts/kill-all.js",
     "dev": "NODE_ENV=development node src/start.js",
     "dev:ui-only": "NODE_ENV=development node src/index.js",
+    "dev:both": "NODE_ENV=development node scripts/start-both.js",
     "serve": "node server.js",
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",

@@ -15,6 +15,7 @@ export class StaticServer {
   constructor(config = {}) {
     this.port = config.port || 8080;
     this.publicDir = config.publicDir || join(__dirname, '../../public');
+    this.srcDir = config.srcDir || join(__dirname, '../../src');
     this.server = null;
     this.logger = config.logger || console;
     
@@ -134,8 +135,16 @@ export class StaticServer {
         return;
       }
       
-      // Resolve file path
-      const filePath = join(this.publicDir, safePath);
+      // Determine which directory to serve from
+      let filePath;
+      if (pathname.startsWith('/app/') || pathname.startsWith('/components/') || 
+          pathname.startsWith('/actors/') || pathname.startsWith('/services/')) {
+        // Serve source files from src directory
+        filePath = join(this.srcDir, safePath);
+      } else {
+        // Serve static files from public directory
+        filePath = join(this.publicDir, safePath);
+      }
       
       // Check if file exists
       if (!existsSync(filePath)) {
