@@ -1,4 +1,4 @@
-import { serialize as customSerialize, deserialize as customDeserialize } from '@legion/utils';
+import { serialize as customSerialize, deserialize as customDeserialize } from '../../utils/src/index.js';
 
 /**
  * An alternative ActorSerializer that uses the advanced custom-serializer.js

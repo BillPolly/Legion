@@ -1,4 +1,4 @@
-import { generateGuid as generateGuidUtil } from '@legion/utils';
+import { generateGuid as generateGuidUtil } from '../../utils/src/index.js';
 import { Channel } from './Channel.js';
 //import { CustomActorSerializer as ActorSerializer } from './CustomActorSerializer.js';
 import { ActorSerializer } from './ActorSerializer.js';

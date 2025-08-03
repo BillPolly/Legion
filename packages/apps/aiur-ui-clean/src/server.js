@@ -25,6 +25,10 @@ const server = createServer((req, res) => {
     // Serve umbilical utilities
     const umbilicalPath = url.replace('/Legion/umbilical/', '');
     filePath = join(__dirname, '../../../frontend/components/src/umbilical/', umbilicalPath);
+  } else if (url.startsWith('/Legion/shared/')) {
+    // Serve shared modules (actors, utils, etc.)
+    const sharedPath = url.replace('/Legion/shared/', '');
+    filePath = join(__dirname, '../../../shared/', sharedPath);
   } else if (url.startsWith('/src/')) {
     filePath = join(__dirname, '../', url);
   } else {

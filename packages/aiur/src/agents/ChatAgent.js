@@ -24,7 +24,7 @@ export class ChatAgent extends Actor {
     this.llmConfig = {
       provider: config.provider || 'anthropic',
       apiKey: config.apiKey || process.env.ANTHROPIC_API_KEY,
-      model: config.model || 'claude-3-sonnet-20240229',
+      model: config.model || 'claude-3-5-sonnet-20241022',
       maxRetries: config.maxRetries || 3,
       temperature: config.temperature || 0.7,
       maxTokens: config.maxTokens || 2000

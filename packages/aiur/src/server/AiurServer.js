@@ -10,7 +10,6 @@ import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
 import { SessionManager } from './SessionManager.js';
 import { RequestHandler } from './RequestHandler.js';
-import { WebSocketHandler } from './WebSocketHandler.js';
 import { ServerActorSpace } from './ServerActorSpace.js';
 // ResourceManager only used internally by ModuleLoader
 import { LogManager } from '../core/LogManager.js';
@@ -34,8 +33,6 @@ export class AiurServer {
     this.wss = null;
     this.sessionManager = null;
     this.requestHandler = null;
-    this.wsHandler = null;
-    this.serverActorSpace = null;  // Add ServerActorSpace
     this.moduleLoader = null;
     this.logManager = null;
     this.codec = null;
@@ -151,17 +148,6 @@ export class AiurServer {
     });
     await this.requestHandler.initialize();
     
-    // Create ServerActorSpace for actor-based communication
-    this.serverActorSpace = new ServerActorSpace('aiur-server');
-    
-    // Keep WebSocketHandler for backward compatibility with terminal
-    this.wsHandler = new WebSocketHandler({
-      sessionManager: this.sessionManager,
-      requestHandler: this.requestHandler,
-      logManager: this.logManager,
-      codec: this.codec
-    });
-    
     // Web Debug Server will be started separately in _startWebDebugServer()
     
     await this.logManager.logInfo('Core systems initialized', {
@@ -251,52 +237,19 @@ export class AiurServer {
       remoteAddress: req.socket.remoteAddress
     });
     
-    // Use BOTH handlers - WebSocketHandler for regular messages, ServerActorSpace for actors
-    // Initialize the actor space connection
-    const sessionId = this.serverActorSpace.handleConnection(ws, clientId);
+    // Create NEW ServerActorSpace for THIS connection
+    const serverActorSpace = new ServerActorSpace(`server-${clientId}`);
     
-    // Also set up WebSocketHandler for non-actor messages (terminal, tools, etc)
-    this.wsHandler.handleConnection(ws, clientId);
+    // Handle the connection (will send first handshake)
+    serverActorSpace.handleConnection(ws, clientId);
     
-    // Track client
-    this.clients.set(ws, { clientId, sessionId: null });
+    // Track for cleanup
+    this.clients.set(ws, { clientId, actorSpace: serverActorSpace });
     
     // Handle disconnection
     ws.on('close', async () => {
       await this._handleDisconnection(ws, clientId);
-    });
-    
-    // Send welcome message with schema definitions
-    let welcomeData;
-    if (this.codec) {
-      const schemaDefinition = this.codec.createSchemaDefinitionMessage();
-      const messageTypes = Object.keys(schemaDefinition.schemas);
-      welcomeData = {
-        type: 'welcome',
-        clientId,
-        serverVersion: '1.0.0',
-        capabilities: ['sessions', 'tools', 'context', 'handles'],
-        schemas: schemaDefinition.schemas,
-        messageTypes: messageTypes
-      };
-    } else {
-      // Simplified welcome without codec
-      welcomeData = {
-        type: 'welcome',
-        clientId,
-        serverVersion: '1.0.0',
-        capabilities: ['sessions', 'tools', 'context', 'handles'],
-        schemas: {},
-        messageTypes: []
-      };
-    }
-    
-    ws.send(JSON.stringify(welcomeData));
-    
-    await this.logManager.logInfo('Welcome message sent', {
-      source: 'AiurServer',
-      operation: 'welcome-sent',
-      clientId
+      serverActorSpace.destroy();
     });
   }
 

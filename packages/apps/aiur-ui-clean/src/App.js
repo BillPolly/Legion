@@ -2,7 +2,6 @@ import { Terminal } from './components/terminal/Terminal.js';
 import { Chat } from './components/chat/Chat.js';
 import { Window } from '/Legion/components/window/index.js';
 import { FrontendActorSpace } from './actors/FrontendActorSpace.js';
-import { TerminalActor } from './actors/TerminalActor.js';
 import { ChatActor } from './actors/ChatActor.js';
 
 export class App {
@@ -13,7 +12,6 @@ export class App {
     this.terminalWindow = null;
     this.chatWindow = null;
     this.actorSpace = null;
-    this.terminalActor = null;
     this.chatActor = null;
   }
   
@@ -68,14 +66,9 @@ export class App {
       }
     });
     
-    // Create terminal inside its window
+    // Create terminal inside its window (purely local, no actor system)
     this.terminal = new Terminal(this.terminalWindow.contentElement);
-    
-    // Connect terminal actor
-    if (this.terminalActor) {
-      this.terminalActor.terminal = this.terminal;
-      this.terminal.terminalActor = this.terminalActor;
-    }
+    this.terminal.initialize();
     
     // Create chat inside its window
     this.chat = Chat.create({
@@ -103,26 +96,21 @@ export class App {
   
   async initializeActorSystem() {
     try {
-      // Create actor space with proper actor protocol
+      // Create actor space with proper actor protocol for chat only
       this.actorSpace = new FrontendActorSpace();
       
-      // Create actors
-      this.terminalActor = new TerminalActor(null); // Terminal will be set later
-      this.chatActor = new ChatActor();
-      
-      // Connect actors to actor space
-      this.terminalActor.connect(this.actorSpace);
-      this.chatActor.connect(this.actorSpace);
-      
       // Try to connect to server
-      console.log('Connecting to server...');
+      console.log('Connecting to server for chat...');
       await this.actorSpace.connect('ws://localhost:8080/ws');
       
-      console.log('Connected to server successfully');
+      // Get the chat actor that was created during handshake
+      this.chatActor = this.actorSpace.chatActor;
+      
+      console.log('Chat actor connected successfully');
       
     } catch (error) {
-      console.error('Failed to initialize actor system:', error);
-      // Continue anyway - components can work offline
+      console.error('Failed to initialize chat actor system:', error);
+      console.log('Chat will not be available');
     }
   }
   
@@ -152,9 +140,6 @@ export class App {
     }
     if (this.chatWindow) {
       this.chatWindow.destroy();
-    }
-    if (this.terminalActor) {
-      this.terminalActor.disconnect();
     }
     if (this.chatActor) {
       this.chatActor.destroy();

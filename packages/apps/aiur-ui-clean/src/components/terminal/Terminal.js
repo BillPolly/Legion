@@ -4,8 +4,6 @@
  */
 import { OutputView } from './OutputView.js';
 import { InputView } from './InputView.js';
-import { ClientActorSpace } from '../../actors/ClientActorSpace.js';
-import { TerminalActor } from '../../actors/TerminalActor.js';
 
 export class Terminal {
   constructor(container) {
@@ -17,7 +15,7 @@ export class Terminal {
       currentInput: '',
       commandHistory: [],
       historyIndex: 0,
-      connected: false
+      connected: false // Always false - terminal is local only
     };
     
     // DOM elements - created once, updated incrementally
@@ -31,15 +29,12 @@ export class Terminal {
     this.outputView = null;
     this.inputView = null;
     
-    // Actor system
-    this.actorSpace = null;
-    this.terminalActor = null;
+    // Terminal is now purely local - no actor system
     
     // Initialize
     this.createDOM();
     this.createSubcomponents();
     this.bindEvents();
-    this.initializeActorSystem();
   }
   
   /**
@@ -118,21 +113,17 @@ export class Terminal {
       prompt: '> '
     });
     
-    // Set available local commands for completion
+    // Set available local commands for completion (only local dot commands)
     this.inputView.setAvailableCommands([
-      '.help', '.clear', '.exit', '.about', '.history', '.time',
-      '.connect', '.disconnect', '.status',
-      'tools', 'module_list', 'module_load', 'module_unload'
+      '.help', '.clear', '.about', '.history', '.time'
     ]);
   }
   
   /**
-   * Update tool definitions in input view for completion
+   * Update tool definitions - no longer needed (terminal is local only)
    */
   updateToolDefinitions(tools) {
-    if (this.inputView) {
-      this.inputView.setToolDefinitions(tools);
-    }
+    // No-op - terminal is now local only
   }
   
   /**
@@ -183,31 +174,11 @@ export class Terminal {
   }
   
   /**
-   * Initialize actor system and connect to server
+   * Initialize terminal (purely local)
    */
-  async initializeActorSystem() {
-    try {
-      // Create actor space
-      this.actorSpace = new ClientActorSpace();
-      
-      // Create terminal actor
-      this.terminalActor = new TerminalActor(this);
-      
-      // Connect terminal actor to actor space
-      this.terminalActor.connect(this.actorSpace);
-      
-      // Try to connect to server
-      this.addOutput('Connecting to server...', 'info');
-      await this.actorSpace.connect('ws://localhost:8080/ws');
-      
-      this.state.connected = true;
-      
-    } catch (error) {
-      console.error('Failed to initialize actor system:', error);
-      this.addOutput('Failed to connect to server. Running in local mode.', 'warning');
-      this.addOutput('Some commands may not be available.', 'warning');
-      this.state.connected = false;
-    }
+  initialize() {
+    this.addOutput('Local terminal ready', 'success');
+    this.addOutput('Type .help for available commands', 'info');
   }
   
   /**
@@ -221,26 +192,15 @@ export class Terminal {
     if (cmdLower.startsWith('.')) {
       switch (cmdLower) {
         case '.help':
-        this.addOutput('Available commands:', 'info');
+        this.addOutput('Local Terminal Commands:', 'info');
         this.addOutput('  .help       - Show this help', 'info');
         this.addOutput('  .clear      - Clear output', 'info');
         this.addOutput('  .history    - Show command history', 'info');
         this.addOutput('  .time       - Show current time', 'info');
-        this.addOutput('  .connect    - Connect to server', 'info');
-        this.addOutput('  .disconnect - Disconnect from server', 'info');
-        this.addOutput('  .status     - Show connection status', 'info');
-        if (this.state.connected) {
-          this.addOutput('', 'info');
-          this.addOutput('Tool usage (type tool name directly):', 'info');
-          this.addOutput('  tools                     - List all available tools', 'info');
-          this.addOutput('  module_list               - List all modules', 'info');
-          this.addOutput('  module_load <name>        - Load a module', 'info');
-          this.addOutput('', 'info');
-          this.addOutput('Examples:', 'info');
-          this.addOutput('  module_load file          - Load the file module', 'info');
-          this.addOutput('  directory_list            - List current directory', 'info');
-          this.addOutput('  file_read package.json    - Read a file', 'info');
-        }
+        this.addOutput('  .about      - About this terminal', 'info');
+        this.addOutput('', 'info');
+        this.addOutput('Note: This terminal is local only.', 'info');
+        this.addOutput('For AI assistance, use the Chat window.', 'info');
         break;
         
       case '.clear':
@@ -255,16 +215,10 @@ export class Terminal {
         this.addOutput(new Date().toLocaleString(), 'success');
         break;
         
-      case '.connect':
-        this.reconnectToServer();
-        break;
-        
-      case '.disconnect':
-        this.disconnectFromServer();
-        break;
-        
-      case '.status':
-        this.showConnectionStatus();
+      case '.about':
+        this.addOutput('Aiur Local Terminal v1.0', 'info');
+        this.addOutput('Local command processor with basic utilities', 'info');
+        this.addOutput('Part of the Legion framework', 'info');
         break;
         
         default:
@@ -274,63 +228,13 @@ export class Terminal {
           break;
       }
     } else {
-      // Not a dot command - send to server as potential tool
-      if (this.state.connected && this.terminalActor) {
-        this.terminalActor.sendCommand(command);
-      } else {
-        this.addOutput('Not connected to server. Use .connect to connect.', 'warning');
-      }
+      // Not a dot command - terminal is local only
+      this.addOutput(`Unknown command: ${command}`, 'error');
+      this.addOutput('This terminal supports only local dot commands.', 'info');
+      this.addOutput('Type .help for available commands.', 'info');
     }
   }
   
-  /**
-   * Reconnect to server
-   */
-  async reconnectToServer() {
-    if (this.state.connected) {
-      this.addOutput('Already connected', 'info');
-      return;
-    }
-    
-    try {
-      this.addOutput('Reconnecting to server...', 'info');
-      await this.actorSpace.connect('ws://localhost:8080/ws');
-      this.state.connected = true;
-    } catch (error) {
-      this.addOutput('Failed to reconnect', 'error');
-      this.state.connected = false;
-    }
-  }
-  
-  /**
-   * Disconnect from server
-   */
-  disconnectFromServer() {
-    if (!this.state.connected) {
-      this.addOutput('Not connected', 'info');
-      return;
-    }
-    
-    if (this.actorSpace) {
-      this.actorSpace.disconnect();
-    }
-    this.state.connected = false;
-    this.addOutput('Disconnected from server', 'info');
-  }
-  
-  /**
-   * Show connection status
-   */
-  showConnectionStatus() {
-    if (this.state.connected) {
-      this.addOutput('Connected to server', 'success');
-      if (this.actorSpace) {
-        this.addOutput(`Actor Space ID: ${this.actorSpace.spaceId}`, 'info');
-      }
-    } else {
-      this.addOutput('Not connected to server', 'warning');
-    }
-  }
   
   /**
    * Add output line - updates state and view
@@ -421,9 +325,6 @@ export class Terminal {
    * Destroy component
    */
   destroy() {
-    if (this.actorSpace) {
-      this.actorSpace.disconnect();
-    }
     if (this.outputView) this.outputView.destroy();
     if (this.inputView) this.inputView.destroy();
     this.container.innerHTML = '';

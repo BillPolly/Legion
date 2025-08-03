@@ -1,4 +1,4 @@
-import { Actor } from '../../../../shared/actors/src/Actor.js';
+import { Actor } from '/Legion/shared/actors/src/Actor.js';
 
 /**
  * ChatActor - Handles chat communication with the backend via WebSocket
@@ -6,14 +6,10 @@ import { Actor } from '../../../../shared/actors/src/Actor.js';
 export class ChatActor extends Actor {
   constructor() {
     super();
-    this.actorSpace = null;
-    this.name = 'chat';
-    this.guid = null;
     this.remoteAgent = null; // Reference to server ChatAgent
     
     // Connection state
     this.connected = false;
-    this.sessionId = null;
     
     // Event handlers
     this.onResponse = null;
@@ -26,45 +22,28 @@ export class ChatActor extends Actor {
   }
   
   /**
-   * Connect to an actor space
+   * Set the remote agent reference for sending messages
    */
-  connect(actorSpace) {
-    this.actorSpace = actorSpace;
-    // Register with a simple GUID initially
-    this.guid = actorSpace.register(this, 'chat');
+  setRemoteAgent(remoteAgent) {
+    this.remoteAgent = remoteAgent;
+    this.connected = true;
+    console.log('ChatActor: Set remote agent reference');
     
-    // Don't set sessionId immediately - wait for session_ready event
-    // this.sessionId = actorSpace.sessionId;
+    // Notify connection change
+    if (this.onConnectionChange) {
+      this.onConnectionChange(true);
+    }
     
-    console.log(`ChatActor: Registered with GUID ${this.guid}`);
-    
-    // Listen for session ready event
-    actorSpace.on('session_ready', ({ sessionId }) => {
-      this.sessionId = sessionId;
-      this.connected = true;
-      console.log(`ChatActor: Session ready with ID ${sessionId}`);
-      
-      // Notify connection change
-      if (this.onConnectionChange) {
-        this.onConnectionChange(true);
-      }
-      
-      // Process any queued messages
-      this.processMessageQueue();
-    });
+    // Process any queued messages
+    this.processMessageQueue();
   }
   
   /**
-   * Disconnect from actor space
+   * Disconnect from remote agent
    */
   disconnect() {
-    if (this.actorSpace) {
-      this.actorSpace.unregister(this.guid);
-      this.actorSpace = null;
-    }
-    
+    this.remoteAgent = null;
     this.connected = false;
-    this.sessionId = null;
     
     console.log('ChatActor: Disconnected');
     
@@ -78,15 +57,7 @@ export class ChatActor extends Actor {
    * Check if connected
    */
   isConnected() {
-    return this.connected && this.actorSpace && this.sessionId;
-  }
-  
-  /**
-   * Set the remote agent reference for sending messages
-   */
-  setRemoteAgent(remoteAgent) {
-    this.remoteAgent = remoteAgent;
-    console.log('ChatActor: Set remote agent reference');
+    return this.connected && this.remoteAgent;
   }
   
   /**
@@ -179,7 +150,6 @@ export class ChatActor extends Actor {
     const message = {
       type: 'chat_message',
       content,
-      sessionId: this.sessionId,
       timestamp: new Date().toISOString()
     };
     
@@ -204,8 +174,7 @@ export class ChatActor extends Actor {
     }
     
     const message = {
-      type: 'clear_history',
-      sessionId: this.sessionId
+      type: 'clear_history'
     };
     
     this.remoteAgent.receive(message);
@@ -226,8 +195,7 @@ export class ChatActor extends Actor {
     }
     
     const message = {
-      type: 'get_history',
-      sessionId: this.sessionId
+      type: 'get_history'
     };
     
     this.remoteAgent.receive(message);
@@ -310,7 +278,6 @@ export class ChatActor extends Actor {
   getStatus() {
     return {
       connected: this.connected,
-      sessionId: this.sessionId,
       queuedMessages: this.messageQueue.length
     };
   }
