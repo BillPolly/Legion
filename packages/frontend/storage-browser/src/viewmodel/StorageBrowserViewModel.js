@@ -267,7 +267,9 @@ export class StorageBrowserViewModel {
     const collection = this.model.getState().collections.selected;
     if (!collection) throw new Error('No collection selected');
 
-    const result = await this.actorClient.insert(collection, data);
+    const result = await this.actorClient.insert(collection, data, {
+      provider: this.model.getState().connection.provider
+    });
     await this.refresh();
     
     this.emit('document:change', {

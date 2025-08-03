@@ -18,6 +18,8 @@ export class StorageBrowserView {
     this.listeners = new Map();
     this.editedCells = new Map(); // Track edited cells: "docId-field" -> newValue
     this.originalValues = new Map(); // Store original values for reverting
+    this.isAddingNew = false; // Track if we're adding a new document
+    this.newDocumentData = {}; // Store new document data
     
     this.render();
     this.setupEventHandlers();
@@ -127,6 +129,8 @@ export class StorageBrowserView {
         padding: 10px;
         display: flex;
         flex-direction: column;
+        overflow: hidden;
+        min-width: 0;
       }
       
       .query-editor {
@@ -149,6 +153,9 @@ export class StorageBrowserView {
         border-radius: 4px;
         overflow: auto;
         padding: 10px;
+        max-height: calc(100vh - 250px);
+        overflow-x: auto;
+        overflow-y: auto;
       }
       
       .collections-list .collection-item {
@@ -169,7 +176,9 @@ export class StorageBrowserView {
       
       .document-table {
         width: 100%;
+        min-width: 600px;
         border-collapse: collapse;
+        table-layout: auto;
       }
       
       .document-table th,
@@ -316,6 +325,78 @@ export class StorageBrowserView {
         background: #c82333;
         border-color: #bd2130;
       }
+      
+      .new-document-row {
+        background: #e8f5e9;
+        border: 2px solid #4caf50;
+      }
+      
+      .new-document-row .new-cell {
+        background: white;
+        border: 1px solid #4caf50;
+        min-height: 20px;
+        padding: 8px;
+      }
+      
+      .new-document-row .new-cell:empty::before {
+        content: attr(placeholder);
+        color: #999;
+        font-style: italic;
+      }
+      
+      .new-document-row .new-cell:focus {
+        outline: 2px solid #4caf50;
+        box-shadow: 0 0 3px rgba(76, 175, 80, 0.3);
+      }
+      
+      .save-new-btn {
+        background: #4caf50;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        cursor: pointer;
+      }
+      
+      .save-new-btn:hover {
+        background: #45a049;
+      }
+      
+      .cancel-new-btn {
+        background: #f44336;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        cursor: pointer;
+        margin-left: 4px;
+      }
+      
+      .cancel-new-btn:hover {
+        background: #da190b;
+      }
+      
+      /* Scrollbar styling */
+      .documents-grid::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+      }
+      
+      .documents-grid::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+      }
+      
+      .documents-grid::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+      }
+      
+      .documents-grid::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+      
+      .documents-grid::-webkit-scrollbar-corner {
+        background: #f1f1f1;
+      }
     `;
     
     if (!document.querySelector('#storage-browser-styles')) {
@@ -370,7 +451,7 @@ export class StorageBrowserView {
     });
 
     this.elements.newDocBtn.addEventListener('click', () => {
-      this.showNewDocumentDialog();
+      this.startNewDocument();
     });
   }
 
@@ -458,7 +539,7 @@ export class StorageBrowserView {
   }
 
   renderDocumentsTable(documents) {
-    if (documents.length === 0) {
+    if (documents.length === 0 && !this.isAddingNew) {
       this.elements.documentsGrid.innerHTML = '<div class="loading">No documents found</div>';
       return;
     }
@@ -468,8 +549,16 @@ export class StorageBrowserView {
     documents.forEach(doc => {
       Object.keys(doc).forEach(key => keys.add(key));
     });
+    
+    // If adding new, ensure we have some default fields
+    if (this.isAddingNew && keys.size === 0) {
+      // Add some default fields for common collections
+      keys.add('name');
+      keys.add('value');
+      keys.add('description');
+    }
 
-    const headers = Array.from(keys).slice(0, 10); // Limit columns
+    const headers = Array.from(keys).filter(key => key !== '_id').slice(0, 10); // Limit columns, exclude _id
 
     // Add save button if there are edits
     const saveButton = this.editedCells.size > 0 
@@ -478,6 +567,26 @@ export class StorageBrowserView {
           <button class="cancel-all-btn">❌ Cancel</button>
         </div>` 
       : '';
+
+    // Add new document row if in adding mode
+    const newDocumentRow = this.isAddingNew ? `
+      <tr class="new-document-row">
+        ${headers.map(field => `
+          <td 
+            class="document-cell editable new-cell"
+            contenteditable="true"
+            data-doc-id="new"
+            data-field="${field}"
+            data-type="string"
+            placeholder="Enter ${field}"
+          >${this.newDocumentData[field] || ''}</td>
+        `).join('')}
+        <td class="actions-column">
+          <button class="save-new-btn" title="Save">💾</button>
+          <button class="cancel-new-btn" title="Cancel">❌</button>
+        </td>
+      </tr>
+    ` : '';
 
     const table = `
       ${saveButton}
@@ -489,6 +598,7 @@ export class StorageBrowserView {
           </tr>
         </thead>
         <tbody>
+          ${newDocumentRow}
           ${documents.map(doc => {
             const docId = doc._id || doc.id;
             return `
@@ -546,8 +656,48 @@ export class StorageBrowserView {
   }
 
   attachCellEditHandlers() {
-    // Handle cell editing
-    this.elements.documentsGrid.querySelectorAll('.document-cell.editable').forEach(cell => {
+    // Handle new document row cells
+    this.elements.documentsGrid.querySelectorAll('.new-cell').forEach(cell => {
+      cell.addEventListener('blur', (e) => {
+        const field = e.target.dataset.field;
+        this.newDocumentData[field] = e.target.textContent.trim();
+      });
+      
+      cell.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          const field = e.target.dataset.field;
+          this.newDocumentData[field] = e.target.textContent.trim();
+          // Move to next field
+          const nextCell = e.target.nextElementSibling;
+          if (nextCell && nextCell.classList.contains('new-cell')) {
+            nextCell.focus();
+          }
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          this.cancelNewDocument();
+        }
+      });
+    });
+
+    // Handle save new button
+    const saveNewBtn = this.elements.documentsGrid.querySelector('.save-new-btn');
+    if (saveNewBtn) {
+      saveNewBtn.addEventListener('click', () => {
+        this.saveNewDocument();
+      });
+    }
+
+    // Handle cancel new button
+    const cancelNewBtn = this.elements.documentsGrid.querySelector('.cancel-new-btn');
+    if (cancelNewBtn) {
+      cancelNewBtn.addEventListener('click', () => {
+        this.cancelNewDocument();
+      });
+    }
+    
+    // Handle existing cell editing
+    this.elements.documentsGrid.querySelectorAll('.document-cell.editable:not(.new-cell)').forEach(cell => {
       // Store original value on focus
       cell.addEventListener('focus', (e) => {
         const docId = e.target.dataset.docId;
@@ -707,16 +857,58 @@ export class StorageBrowserView {
     this.emit('action', { type: 'refresh' });
   }
 
-  showNewDocumentDialog() {
-    const json = prompt('Enter document JSON:', '{\n  "name": "New Document"\n}');
-    if (json) {
-      try {
-        const data = JSON.parse(json);
-        this.emit('action', { type: 'createDocument', data });
-      } catch (error) {
-        alert('Invalid JSON');
-      }
+  startNewDocument() {
+    this.isAddingNew = true;
+    this.newDocumentData = {};
+    // Re-render the documents table to show the new row
+    const state = this.elements.documentsGrid.innerHTML;
+    if (state.includes('document-table')) {
+      // Trigger a re-render by emitting a refresh
+      this.emit('action', { type: 'refresh' });
+    } else {
+      // No documents yet, render empty table with new row
+      this.renderDocumentsTable([]);
     }
+  }
+
+  saveNewDocument() {
+    // Collect all data from the new document row
+    const newCells = this.elements.documentsGrid.querySelectorAll('.new-cell');
+    newCells.forEach(cell => {
+      const field = cell.dataset.field;
+      const value = cell.textContent.trim();
+      if (value) {
+        // Parse value based on content
+        let parsedValue = value;
+        try {
+          if (value === 'true' || value === 'false') {
+            parsedValue = value === 'true';
+          } else if (!isNaN(value) && value !== '') {
+            parsedValue = Number(value);
+          } else if (value.startsWith('{') || value.startsWith('[')) {
+            parsedValue = JSON.parse(value);
+          }
+        } catch (e) {
+          // Keep as string if parsing fails
+        }
+        this.newDocumentData[field] = parsedValue;
+      }
+    });
+
+    // Only save if we have some data
+    if (Object.keys(this.newDocumentData).length > 0) {
+      this.emit('action', { type: 'createDocument', data: this.newDocumentData });
+      this.cancelNewDocument();
+    } else {
+      alert('Please enter at least one field value');
+    }
+  }
+
+  cancelNewDocument() {
+    this.isAddingNew = false;
+    this.newDocumentData = {};
+    // Refresh to remove the new row
+    this.emit('action', { type: 'refresh' });
   }
 
   updateUI(data) {
