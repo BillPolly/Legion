@@ -390,9 +390,23 @@ export class StorageBrowserView {
     if (data.list) {
       console.log('[View] Database list received:', data.list);
       this.elements.databaseSelect.innerHTML = data.list
-        .map(db => `
-          <option value="${db.name || db}">${db.name || db}${db.sizeOnDisk ? ` (${Math.round(db.sizeOnDisk / 1024 / 1024)}MB)` : ''}</option>
-        `).join('');
+        .map(db => {
+          let sizeStr = '';
+          if (db.sizeOnDisk) {
+            const sizeInMB = db.sizeOnDisk / 1024 / 1024;
+            if (sizeInMB < 0.1) {
+              // Show in KB for very small databases
+              sizeStr = ` (${Math.round(db.sizeOnDisk / 1024)}KB)`;
+            } else if (sizeInMB < 1) {
+              // Show with decimal for small databases
+              sizeStr = ` (${sizeInMB.toFixed(1)}MB)`;
+            } else {
+              // Round to nearest MB for larger databases
+              sizeStr = ` (${Math.round(sizeInMB)}MB)`;
+            }
+          }
+          return `<option value="${db.name || db}">${db.name || db}${sizeStr}</option>`;
+        }).join('');
       
       // Select current database if provided
       if (data.current) {

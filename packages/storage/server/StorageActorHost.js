@@ -345,12 +345,23 @@ class CollectionActor {
   }
 
   async listCollections({ provider = 'memory' } = {}) {
+    console.log(`[CollectionActor] listCollections - provider: ${provider}`);
+    
     if (!this.storageProvider) {
       return ['users', 'products', 'orders'];
     }
 
     const storageProvider = this.storageProvider.getProvider(provider);
-    return await storageProvider.listCollections();
+    
+    // For MongoDB, ensure we're using the current database
+    if (provider === 'mongodb' && storageProvider) {
+      console.log(`[CollectionActor] Current database: ${storageProvider.databaseName || 'not set'}`);
+    }
+    
+    const collections = await storageProvider.listCollections();
+    console.log(`[CollectionActor] Found ${collections.length} collections:`, collections);
+    
+    return collections;
   }
 
   async createCollection({ name, options = {}, provider = 'memory' }) {

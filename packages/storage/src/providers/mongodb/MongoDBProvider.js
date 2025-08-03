@@ -179,7 +179,11 @@ export class MongoDBProvider extends Provider {
       throw new Error('MongoDBProvider: Not connected to database');
     }
 
-    return await this.db.collection(collection).countDocuments(query, options);
+    console.log(`[MongoDBProvider] count - db: ${this.db.databaseName}, collection: ${collection}`);
+    const count = await this.db.collection(collection).countDocuments(query, options);
+    console.log(`[MongoDBProvider] count result: ${count}`);
+    
+    return count;
   }
 
   async listCollections() {
@@ -187,7 +191,10 @@ export class MongoDBProvider extends Provider {
       throw new Error('MongoDBProvider: Not connected to database');
     }
 
+    console.log(`[MongoDBProvider] listCollections - current db: ${this.db.databaseName}`);
     const collections = await this.db.listCollections().toArray();
+    console.log(`[MongoDBProvider] Found collections in ${this.db.databaseName}:`, collections.map(col => col.name));
+    
     return collections.map(col => col.name);
   }
 
