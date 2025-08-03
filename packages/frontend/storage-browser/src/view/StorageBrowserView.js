@@ -16,6 +16,8 @@ export class StorageBrowserView {
     
     this.elements = {};
     this.listeners = new Map();
+    this.editedCells = new Map(); // Track edited cells: "docId-field" -> newValue
+    this.originalValues = new Map(); // Store original values for reverting
     
     this.render();
     this.setupEventHandlers();
@@ -36,6 +38,7 @@ export class StorageBrowserView {
           <select class="database-select" style="display: ${showDatabaseSelect ? 'inline-block' : 'none'};">
             <option value="">Loading databases...</option>
           </select>
+          <button class="delete-db-btn" style="display: ${showDatabaseSelect ? 'inline-block' : 'none'};" title="Delete Current Database">🗑️ DB</button>
           <button class="refresh-btn">↻ Refresh</button>
           <button class="new-doc-btn">+ New</button>
           <div class="connection-status">Disconnected</div>
@@ -73,6 +76,7 @@ export class StorageBrowserView {
     this.elements = {
       providerSelect: this.container.querySelector('.provider-select'),
       databaseSelect: this.container.querySelector('.database-select'),
+      deleteDbBtn: this.container.querySelector('.delete-db-btn'),
       refreshBtn: this.container.querySelector('.refresh-btn'),
       newDocBtn: this.container.querySelector('.new-doc-btn'),
       connectionStatus: this.container.querySelector('.connection-status'),
@@ -222,6 +226,96 @@ export class StorageBrowserView {
         background: #f8d7da;
         color: #721c24;
       }
+      
+      .document-cell.editable {
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      
+      .document-cell.editable:hover {
+        background: #f0f8ff;
+        outline: 1px solid #007acc;
+      }
+      
+      .document-cell.editable:focus {
+        background: white;
+        outline: 2px solid #007acc;
+        box-shadow: 0 0 3px rgba(0, 122, 204, 0.3);
+      }
+      
+      .document-cell.edited {
+        background: #fff3cd !important;
+        position: relative;
+      }
+      
+      .document-cell.edited::after {
+        content: '✏️';
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        font-size: 10px;
+      }
+      
+      .edit-toolbar {
+        padding: 10px;
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 4px;
+        margin-bottom: 10px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      
+      .save-all-btn {
+        background: #28a745;
+        color: white;
+        font-weight: bold;
+      }
+      
+      .save-all-btn:hover {
+        background: #218838;
+      }
+      
+      .cancel-all-btn {
+        background: #dc3545;
+        color: white;
+      }
+      
+      .cancel-all-btn:hover {
+        background: #c82333;
+      }
+      
+      .actions-column {
+        width: 80px;
+        text-align: center;
+      }
+      
+      .delete-doc-btn {
+        background: transparent;
+        border: 1px solid #dc3545;
+        color: #dc3545;
+        padding: 4px 8px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      
+      .delete-doc-btn:hover {
+        background: #dc3545;
+        color: white;
+      }
+      
+      .delete-db-btn {
+        background: #dc3545;
+        color: white;
+        border: 1px solid #dc3545;
+        font-weight: bold;
+      }
+      
+      .delete-db-btn:hover {
+        background: #c82333;
+        border-color: #bd2130;
+      }
     `;
     
     if (!document.querySelector('#storage-browser-styles')) {
@@ -240,13 +334,15 @@ export class StorageBrowserView {
       console.log('[View] Provider changed to:', provider);
       this.emit('action', { type: 'selectProvider', provider });
       
-      // Show database selector for MongoDB
+      // Show database selector and delete button for MongoDB
       if (provider === 'mongodb') {
         console.log('[View] Showing database selector, requesting database list');
         this.elements.databaseSelect.style.display = 'inline-block';
+        this.elements.deleteDbBtn.style.display = 'inline-block';
         this.emit('action', { type: 'listDatabases' });
       } else {
         this.elements.databaseSelect.style.display = 'none';
+        this.elements.deleteDbBtn.style.display = 'none';
       }
     });
 
@@ -254,6 +350,13 @@ export class StorageBrowserView {
       const database = this.elements.databaseSelect.value;
       if (database) {
         this.emit('action', { type: 'selectDatabase', database });
+      }
+    });
+
+    this.elements.deleteDbBtn.addEventListener('click', () => {
+      const currentDb = this.elements.databaseSelect.value;
+      if (currentDb) {
+        this.emit('action', { type: 'deleteDatabase', database: currentDb });
       }
     });
 
@@ -354,26 +457,57 @@ export class StorageBrowserView {
 
     const headers = Array.from(keys).slice(0, 10); // Limit columns
 
+    // Add save button if there are edits
+    const saveButton = this.editedCells.size > 0 
+      ? `<div class="edit-toolbar">
+          <button class="save-all-btn">💾 Save Changes (${this.editedCells.size})</button>
+          <button class="cancel-all-btn">❌ Cancel</button>
+        </div>` 
+      : '';
+
     const table = `
+      ${saveButton}
       <table class="document-table">
         <thead>
           <tr>
             ${headers.map(key => `<th>${key}</th>`).join('')}
+            <th class="actions-column">Actions</th>
           </tr>
         </thead>
         <tbody>
-          ${documents.map(doc => `
-            <tr>
-              ${headers.map(key => `
-                <td>${this.formatValue(doc[key])}</td>
-              `).join('')}
+          ${documents.map(doc => {
+            const docId = doc._id || doc.id;
+            return `
+            <tr data-doc-id="${docId}">
+              ${headers.map(key => {
+                const cellKey = `${docId}-${key}`;
+                const isEdited = this.editedCells.has(cellKey);
+                const value = isEdited ? this.editedCells.get(cellKey) : doc[key];
+                const isEditable = key !== '_id' && key !== 'id'; // Don't allow editing IDs
+                
+                return `
+                <td 
+                  class="document-cell ${isEdited ? 'edited' : ''} ${isEditable ? 'editable' : ''}"
+                  ${isEditable ? 'contenteditable="true"' : ''}
+                  data-doc-id="${docId}"
+                  data-field="${key}"
+                  data-type="${typeof doc[key]}"
+                  data-original="${this.escapeHtml(this.formatValueForEdit(doc[key]))}"
+                >${this.formatValueForEdit(value)}</td>
+              `;
+              }).join('')}
+              <td class="actions-column">
+                <button class="delete-doc-btn" data-doc-id="${docId}">🗑️</button>
+              </td>
             </tr>
-          `).join('')}
+          `;
+          }).join('')}
         </tbody>
       </table>
     `;
 
     this.elements.documentsGrid.innerHTML = table;
+    this.attachCellEditHandlers();
   }
 
   formatValue(value) {
@@ -383,6 +517,180 @@ export class StorageBrowserView {
       return value.substring(0, 50) + '...';
     }
     return String(value);
+  }
+
+  formatValueForEdit(value) {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'object') return JSON.stringify(value, null, 2);
+    return String(value);
+  }
+
+  escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  attachCellEditHandlers() {
+    // Handle cell editing
+    this.elements.documentsGrid.querySelectorAll('.document-cell.editable').forEach(cell => {
+      // Store original value on focus
+      cell.addEventListener('focus', (e) => {
+        const docId = e.target.dataset.docId;
+        const field = e.target.dataset.field;
+        const key = `${docId}-${field}`;
+        
+        if (!this.originalValues.has(key)) {
+          this.originalValues.set(key, e.target.textContent);
+        }
+        
+        // Select all text for easy editing
+        const range = document.createRange();
+        range.selectNodeContents(e.target);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+      });
+
+      // Handle blur (save changes)
+      cell.addEventListener('blur', (e) => {
+        this.handleCellEdit(e.target);
+      });
+
+      // Handle keyboard shortcuts
+      cell.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          e.target.blur();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          this.cancelCellEdit(e.target);
+        }
+      });
+    });
+
+    // Handle save all button
+    const saveAllBtn = this.elements.documentsGrid.querySelector('.save-all-btn');
+    if (saveAllBtn) {
+      saveAllBtn.addEventListener('click', () => {
+        this.saveAllChanges();
+      });
+    }
+
+    // Handle cancel all button
+    const cancelAllBtn = this.elements.documentsGrid.querySelector('.cancel-all-btn');
+    if (cancelAllBtn) {
+      cancelAllBtn.addEventListener('click', () => {
+        this.cancelAllChanges();
+      });
+    }
+
+    // Handle delete buttons
+    this.elements.documentsGrid.querySelectorAll('.delete-doc-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const docId = e.target.dataset.docId;
+        this.emit('action', { type: 'deleteDocument', id: docId });
+      });
+    });
+  }
+
+  handleCellEdit(cell) {
+    const docId = cell.dataset.docId;
+    const field = cell.dataset.field;
+    const type = cell.dataset.type;
+    const key = `${docId}-${field}`;
+    const newValue = cell.textContent.trim();
+    const originalValue = this.originalValues.get(key) || cell.dataset.original;
+
+    if (newValue !== originalValue) {
+      // Parse value based on type
+      let parsedValue = newValue;
+      try {
+        if (type === 'number') {
+          parsedValue = Number(newValue);
+          if (isNaN(parsedValue)) {
+            throw new Error('Invalid number');
+          }
+        } else if (type === 'boolean') {
+          parsedValue = newValue.toLowerCase() === 'true';
+        } else if (type === 'object' || newValue.startsWith('{') || newValue.startsWith('[')) {
+          parsedValue = JSON.parse(newValue);
+        }
+      } catch (error) {
+        alert(`Invalid value for ${field}: ${error.message}`);
+        cell.textContent = originalValue;
+        return;
+      }
+
+      // Mark as edited
+      this.editedCells.set(key, parsedValue);
+      cell.classList.add('edited');
+      
+      // Re-render to show save button
+      this.emit('action', { type: 'cellEdited', docId, field, value: parsedValue });
+    }
+  }
+
+  cancelCellEdit(cell) {
+    const docId = cell.dataset.docId;
+    const field = cell.dataset.field;
+    const key = `${docId}-${field}`;
+    
+    // Restore original value
+    const originalValue = this.originalValues.get(key) || cell.dataset.original;
+    cell.textContent = originalValue;
+    
+    // Remove from edited cells
+    this.editedCells.delete(key);
+    cell.classList.remove('edited');
+    
+    // Blur to exit edit mode
+    cell.blur();
+  }
+
+  async saveAllChanges() {
+    console.log('[View] saveAllChanges called');
+    console.log('[View] editedCells:', Array.from(this.editedCells.entries()));
+    
+    const changes = new Map();
+    
+    // Group changes by document
+    for (const [key, value] of this.editedCells) {
+      // Split at the last hyphen to handle IDs with hyphens
+      const lastHyphen = key.lastIndexOf('-');
+      const docId = key.substring(0, lastHyphen);
+      const field = key.substring(lastHyphen + 1);
+      
+      console.log(`[View] Processing edit - docId: ${docId}, field: ${field}, value:`, value);
+      
+      if (!changes.has(docId)) {
+        changes.set(docId, {});
+      }
+      changes.get(docId)[field] = value;
+    }
+
+    console.log('[View] Grouped changes:', Array.from(changes.entries()));
+
+    // Emit save action for each document
+    for (const [docId, updates] of changes) {
+      console.log(`[View] Emitting updateDocument for ${docId} with updates:`, { $set: updates });
+      this.emit('action', { 
+        type: 'updateDocument', 
+        id: docId, 
+        update: { $set: updates } 
+      });
+    }
+
+    // Clear edited cells after saving
+    this.editedCells.clear();
+    this.originalValues.clear();
+  }
+
+  cancelAllChanges() {
+    // Clear all edits and refresh
+    this.editedCells.clear();
+    this.originalValues.clear();
+    this.emit('action', { type: 'refresh' });
   }
 
   showNewDocumentDialog() {

@@ -310,12 +310,20 @@ class CollectionActor {
   }
 
   async update({ collection, filter, update, options = {} }) {
+    console.log(`[CollectionActor] update - collection: ${collection}, filter:`, filter, 'update:', update, 'options:', options);
+    
     if (!this.storageProvider) {
       return { acknowledged: true, modifiedCount: 1 };
     }
 
-    const provider = this.storageProvider.getProvider(options.provider || 'memory');
-    return await provider.update(collection, filter, update, options);
+    const providerName = options.provider || 'memory';
+    const provider = this.storageProvider.getProvider(providerName);
+    
+    console.log(`[CollectionActor] Using provider: ${providerName} for update`);
+    const result = await provider.update(collection, filter, update, options);
+    
+    console.log(`[CollectionActor] Update result:`, result);
+    return result;
   }
 
   async delete({ collection, filter, options = {} }) {

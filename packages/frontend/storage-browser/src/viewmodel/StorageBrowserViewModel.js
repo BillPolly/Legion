@@ -93,6 +93,16 @@ export class StorageBrowserViewModel {
         case 'deleteDocument':
           await this.deleteDocument(action.id);
           break;
+        case 'deleteDatabase':
+          await this.deleteDatabase(action.database);
+          break;
+        case 'cellEdited':
+          // Just trigger re-render to show save button
+          // Actual save happens when user clicks Save Changes
+          this.model.emitChange('documents', { 
+            items: this.model.getState().documents.items 
+          });
+          break;
         case 'refresh':
           await this.refresh();
           break;
@@ -274,7 +284,12 @@ export class StorageBrowserViewModel {
     const collection = this.model.getState().collections.selected;
     if (!collection) throw new Error('No collection selected');
 
-    const result = await this.actorClient.update(collection, { _id: id }, update);
+    console.log(`[ViewModel] Updating document ${id} in ${collection}:`, update);
+    
+    const result = await this.actorClient.update(collection, { _id: id }, update, {
+      provider: this.model.getState().connection.provider
+    });
+    
     await this.refresh();
     
     this.emit('document:change', {
@@ -292,7 +307,12 @@ export class StorageBrowserViewModel {
     const collection = this.model.getState().collections.selected;
     if (!collection) throw new Error('No collection selected');
 
-    const result = await this.actorClient.delete(collection, { _id: id });
+    console.log(`[ViewModel] Deleting document ${id} from ${collection}`);
+    
+    const result = await this.actorClient.delete(collection, { _id: id }, {
+      provider: this.model.getState().connection.provider
+    });
+    
     await this.refresh();
     
     this.emit('document:change', {
@@ -303,6 +323,31 @@ export class StorageBrowserViewModel {
     });
     
     return result;
+  }
+
+  async deleteDatabase(database) {
+    console.log(`[ViewModel] Deleting database ${database}`);
+    
+    try {
+      const result = await this.actorClient.dropDatabase(database);
+      
+      if (result.success) {
+        // Reload databases list
+        await this.loadDatabases();
+        
+        // Switch to first available database or default
+        const databases = this.model.getState().databases.list;
+        if (databases.length > 0) {
+          const nextDb = databases[0].name || databases[0];
+          await this.selectDatabase(nextDb);
+        }
+        
+        this.emit('database:deleted', { database });
+      }
+    } catch (error) {
+      console.error(`[ViewModel] Error deleting database:`, error);
+      throw error;
+    }
   }
 
   async refresh() {

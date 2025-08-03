@@ -5,7 +5,7 @@
  * change streams, and MongoDB-specific features.
  */
 
-import { MongoClient } from 'mongodb';
+import { MongoClient, ObjectId } from 'mongodb';
 import { Provider } from '../../core/Provider.js';
 
 export class MongoDBProvider extends Provider {
@@ -111,8 +111,33 @@ export class MongoDBProvider extends Provider {
       throw new Error('MongoDBProvider: Not connected to database');
     }
 
+    console.log(`[MongoDBProvider] update - db: ${this.db.databaseName}, collection: ${collection}`);
+    console.log(`[MongoDBProvider] query:`, query);
+    console.log(`[MongoDBProvider] update:`, update);
+    console.log(`[MongoDBProvider] options:`, options);
+    
+    // Convert _id string to ObjectId if needed
+    const processedQuery = { ...query };
+    if (processedQuery._id && typeof processedQuery._id === 'string') {
+      try {
+        // Check if it's a valid ObjectId format (24 hex chars)
+        if (/^[0-9a-fA-F]{24}$/.test(processedQuery._id)) {
+          processedQuery._id = new ObjectId(processedQuery._id);
+          console.log(`[MongoDBProvider] Converted _id to ObjectId:`, processedQuery._id);
+        }
+      } catch (error) {
+        console.log(`[MongoDBProvider] Could not convert _id to ObjectId, using as string`);
+      }
+    }
+    
     const updateMethod = options.multi ? 'updateMany' : 'updateOne';
-    const result = await this.db.collection(collection)[updateMethod](query, update, options);
+    const result = await this.db.collection(collection)[updateMethod](processedQuery, update, options);
+    
+    console.log(`[MongoDBProvider] update result:`, {
+      acknowledged: result.acknowledged,
+      modifiedCount: result.modifiedCount,
+      matchedCount: result.matchedCount
+    });
     
     return {
       acknowledged: result.acknowledged,
@@ -126,7 +151,22 @@ export class MongoDBProvider extends Provider {
       throw new Error('MongoDBProvider: Not connected to database');
     }
 
-    const result = await this.db.collection(collection).deleteMany(query, options);
+    // Convert _id string to ObjectId if needed
+    const processedQuery = { ...query };
+    if (processedQuery._id && typeof processedQuery._id === 'string') {
+      try {
+        // Check if it's a valid ObjectId format (24 hex chars)
+        if (/^[0-9a-fA-F]{24}$/.test(processedQuery._id)) {
+          processedQuery._id = new ObjectId(processedQuery._id);
+          console.log(`[MongoDBProvider] Converted _id to ObjectId for delete:`, processedQuery._id);
+        }
+      } catch (error) {
+        console.log(`[MongoDBProvider] Could not convert _id to ObjectId, using as string`);
+      }
+    }
+
+    const deleteMethod = options.multi === false ? 'deleteOne' : 'deleteMany';
+    const result = await this.db.collection(collection)[deleteMethod](processedQuery, options);
     
     return {
       acknowledged: result.acknowledged,
