@@ -21,6 +21,10 @@ export class StorageBrowserView {
     this.isAddingNew = false; // Track if we're adding a new document
     this.newDocumentData = {}; // Store new document data
     
+    // Sorting state
+    this.sortColumns = []; // Array of {field, direction, order}
+    this.originalDocuments = []; // Keep original unsorted documents
+    
     this.render();
     this.setupEventHandlers();
   }
@@ -191,6 +195,29 @@ export class StorageBrowserView {
       .document-table th {
         background: #f8f9fa;
         font-weight: 600;
+      }
+      
+      .sortable-header {
+        cursor: pointer;
+        user-select: none;
+        position: relative;
+        transition: background-color 0.2s;
+      }
+      
+      .sortable-header:hover {
+        background: #e9ecef;
+      }
+      
+      .sort-indicator {
+        margin-left: 5px;
+        color: #007acc;
+        font-size: 12px;
+      }
+      
+      .sort-indicator sup {
+        font-size: 10px;
+        margin-left: 2px;
+        color: #666;
       }
       
       .pagination {
@@ -544,9 +571,17 @@ export class StorageBrowserView {
       return;
     }
 
+    // Store original documents
+    this.originalDocuments = [...documents];
+    
+    // Apply sorting if any
+    const sortedDocuments = this.sortColumns.length > 0 
+      ? this.sortDocuments([...documents]) 
+      : documents;
+
     // Get all unique keys from documents
     const keys = new Set();
-    documents.forEach(doc => {
+    sortedDocuments.forEach(doc => {
       Object.keys(doc).forEach(key => keys.add(key));
     });
     
@@ -593,13 +628,19 @@ export class StorageBrowserView {
       <table class="document-table">
         <thead>
           <tr>
-            ${headers.map(key => `<th>${key}</th>`).join('')}
+            ${headers.map(key => {
+              const sortInfo = this.sortColumns.find(s => s.field === key);
+              const sortIndicator = sortInfo 
+                ? `<span class="sort-indicator">${sortInfo.direction === 'asc' ? '▲' : '▼'}${this.sortColumns.length > 1 ? `<sup>${sortInfo.order}</sup>` : ''}</span>`
+                : '';
+              return `<th class="sortable-header" data-field="${key}">${key}${sortIndicator}</th>`;
+            }).join('')}
             <th class="actions-column">Actions</th>
           </tr>
         </thead>
         <tbody>
           ${newDocumentRow}
-          ${documents.map(doc => {
+          ${sortedDocuments.map(doc => {
             const docId = doc._id || doc.id;
             return `
             <tr data-doc-id="${docId}">
@@ -632,6 +673,7 @@ export class StorageBrowserView {
 
     this.elements.documentsGrid.innerHTML = table;
     this.attachCellEditHandlers();
+    this.attachHeaderClickHandlers();
   }
 
   formatValue(value) {
@@ -909,6 +951,114 @@ export class StorageBrowserView {
     this.newDocumentData = {};
     // Refresh to remove the new row
     this.emit('action', { type: 'refresh' });
+  }
+
+  attachHeaderClickHandlers() {
+    const headers = this.elements.documentsGrid.querySelectorAll('.sortable-header');
+    headers.forEach(header => {
+      header.addEventListener('click', (e) => {
+        const field = header.dataset.field;
+        
+        console.log('Header clicked:', field, 'ctrlKey:', e.ctrlKey, 'metaKey:', e.metaKey, 'shiftKey:', e.shiftKey);
+        
+        if (e.ctrlKey || e.metaKey) {
+          // Multi-column sort
+          console.log('Adding to multi-column sort');
+          this.addOrToggleSort(field);
+        } else {
+          // Single column sort
+          console.log('Setting single column sort');
+          this.setSingleSort(field);
+        }
+        
+        // Re-render with new sort
+        this.renderDocumentsTable(this.originalDocuments);
+      });
+    });
+  }
+
+  setSingleSort(field) {
+    const existingSort = this.sortColumns.find(s => s.field === field);
+    
+    if (!existingSort) {
+      // First click: sort descending
+      this.sortColumns = [{ field, direction: 'desc', order: 1 }];
+    } else if (existingSort.direction === 'desc') {
+      // Second click: sort ascending
+      this.sortColumns = [{ field, direction: 'asc', order: 1 }];
+    } else {
+      // Third click: clear sort
+      this.sortColumns = [];
+    }
+  }
+
+  addOrToggleSort(field) {
+    const existingIndex = this.sortColumns.findIndex(s => s.field === field);
+    
+    if (existingIndex === -1) {
+      // Add new sort column
+      this.sortColumns.push({
+        field,
+        direction: 'desc',
+        order: this.sortColumns.length + 1
+      });
+    } else {
+      const existing = this.sortColumns[existingIndex];
+      if (existing.direction === 'desc') {
+        // Toggle to ascending
+        existing.direction = 'asc';
+      } else {
+        // Remove from sort
+        this.sortColumns.splice(existingIndex, 1);
+        // Reorder remaining columns
+        this.sortColumns.forEach((col, idx) => {
+          col.order = idx + 1;
+        });
+      }
+    }
+  }
+
+  sortDocuments(documents) {
+    if (this.sortColumns.length === 0) return documents;
+    
+    return documents.sort((a, b) => {
+      for (const sortCol of this.sortColumns) {
+        const { field, direction } = sortCol;
+        const aVal = this.getSortValue(a[field]);
+        const bVal = this.getSortValue(b[field]);
+        
+        let comparison = 0;
+        
+        // Handle null/undefined
+        if (aVal === null && bVal === null) continue;
+        if (aVal === null) return direction === 'asc' ? -1 : 1;
+        if (bVal === null) return direction === 'asc' ? 1 : -1;
+        
+        // Compare values
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          comparison = aVal - bVal;
+        } else if (typeof aVal === 'boolean' && typeof bVal === 'boolean') {
+          comparison = (aVal === bVal) ? 0 : aVal ? 1 : -1;
+        } else {
+          // String comparison
+          comparison = String(aVal).localeCompare(String(bVal));
+        }
+        
+        if (comparison !== 0) {
+          return direction === 'asc' ? comparison : -comparison;
+        }
+      }
+      return 0;
+    });
+  }
+
+  getSortValue(value) {
+    if (value === null || value === undefined) return null;
+    if (typeof value === 'object') {
+      // For objects, sort by JSON string representation
+      return JSON.stringify(value);
+    }
+    return value;
   }
 
   updateUI(data) {
