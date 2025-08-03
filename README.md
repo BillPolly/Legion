@@ -48,10 +48,35 @@ The agent now includes powerful code generation capabilities:
 - 🏗️ **Complete Applications**: Generate full-stack web applications
 - 🔧 **Code Fixing**: Debug and improve existing code
 - 📝 **Documentation**: Automatic documentation generation
+
+### [@legion/storage-browser](packages/frontend/storage-browser) - Storage Browser UI
+Interactive storage browser with Actor-based backend:
+- 🗄️ **Storage Browser**: Full-featured UI for database operations
+- 🔌 **Actor Protocol**: WebSocket-based communication with backend
+- 📊 **Real-time Updates**: Live data synchronization
+- 🎨 **Multiple Views**: Split view, document view, query builder
+- 💾 **Provider Support**: Memory, MongoDB, SQLite backends
 - 🧪 **Testing**: Test suites for generated code
 - 🚀 **Deployment**: Production-ready deployment configurations
 
 ## Quick Start
+
+### Storage Browser Demo
+
+```bash
+# Start both storage server and browser demo
+npm run storage:demo
+
+# Or run them separately:
+npm run storage:server    # Start storage actor server (port 3700)
+npm run storage:browser   # Start browser demo (port 3601)
+
+# Test the integration
+npm run storage:test
+
+# Stop the storage server
+npm run storage:kill
+```
 
 ### Using the CLI
 

@@ -1,4 +1,4 @@
-import { serialize as customSerialize, deserialize as customDeserialize } from '@metatron/shared-utils';
+import { serialize as customSerialize, deserialize as customDeserialize } from '@legion/utils';
 
 /**
  * An alternative ActorSerializer that uses the advanced custom-serializer.js

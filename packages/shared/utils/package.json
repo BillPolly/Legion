@@ -1,0 +1,18 @@
+{
+  "name": "@legion/utils",
+  "version": "1.0.0",
+  "description": "Shared utilities for Legion framework",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest"
+  },
+  "keywords": [
+    "legion",
+    "utils",
+    "shared",
+    "guid"
+  ],
+  "author": "Legion Framework",
+  "license": "MIT"
+}

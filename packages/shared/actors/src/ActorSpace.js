@@ -1,4 +1,4 @@
-import { generateGuid as generateGuidUtil } from '@metatron/shared-utils';
+import { generateGuid as generateGuidUtil } from '@legion/utils';
 import { Channel } from './Channel.js';
 //import { CustomActorSerializer as ActorSerializer } from './CustomActorSerializer.js';
 import { ActorSerializer } from './ActorSerializer.js';

@@ -37,8 +37,12 @@
   "jest": {
     "transform": {},
     "testEnvironment": "node",
-    "testMatch": ["**/__tests__/**/*.test.js"],
-    "setupFilesAfterEnv": ["<rootDir>/__tests__/setup.js"],
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/__tests__/setup.js"
+    ],
     "collectCoverageFrom": [
       "src/**/*.js",
       "!src/**/*.test.js"
@@ -54,7 +58,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/maxximus-dev/Legion.git",
+    "url": "git+https://github.com/maxximus-dev/Legion.git",
     "directory": "packages/storage"
-  }
+  },
+  "directories": {
+    "doc": "docs"
+  },
+  "bugs": {
+    "url": "https://github.com/maxximus-dev/Legion/issues"
+  },
+  "homepage": "https://github.com/maxximus-dev/Legion#readme"
 }

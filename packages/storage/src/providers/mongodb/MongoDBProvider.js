@@ -69,6 +69,8 @@ export class MongoDBProvider extends Provider {
       throw new Error('MongoDBProvider: Not connected to database');
     }
 
+    console.log(`[MongoDBProvider] find - db: ${this.db.databaseName}, collection: ${collection}, query:`, query);
+    
     const cursor = this.db.collection(collection).find(query);
     
     if (options.sort) cursor.sort(options.sort);
@@ -76,7 +78,10 @@ export class MongoDBProvider extends Provider {
     if (options.limit) cursor.limit(options.limit);
     if (options.projection) cursor.project(options.projection);
     
-    return await cursor.toArray();
+    const results = await cursor.toArray();
+    console.log(`[MongoDBProvider] found ${results.length} documents in ${this.db.databaseName}.${collection}`);
+    
+    return results;
   }
 
   async findOne(collection, query = {}, options = {}) {

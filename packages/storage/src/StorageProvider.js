@@ -40,11 +40,11 @@ export class StorageProvider {
     }
 
     // 🚨 ALL configuration comes from ResourceManager (.env loaded automatically)
-    const config = resourceManager.get('env.STORAGE_CONFIG') || {};
-    const mongoUrl = resourceManager.get('env.MONGODB_URL');
-    const postgresUrl = resourceManager.get('env.POSTGRESQL_URL');
-    const redisUrl = resourceManager.get('env.REDIS_URL');
-    const sqliteFile = resourceManager.get('env.SQLITE_FILE');
+    const config = resourceManager.has('env.STORAGE_CONFIG') ? resourceManager.get('env.STORAGE_CONFIG') : {};
+    const mongoUrl = resourceManager.has('env.MONGODB_URL') ? resourceManager.get('env.MONGODB_URL') : null;
+    const postgresUrl = resourceManager.has('env.POSTGRESQL_URL') ? resourceManager.get('env.POSTGRESQL_URL') : null;
+    const redisUrl = resourceManager.has('env.REDIS_URL') ? resourceManager.get('env.REDIS_URL') : null;
+    const sqliteFile = resourceManager.has('env.SQLITE_FILE') ? resourceManager.get('env.SQLITE_FILE') : null;
 
     const provider = new StorageProvider(resourceManager, config);
 
@@ -52,9 +52,10 @@ export class StorageProvider {
     try {
       const { ActorSpace } = await import('@legion/actors');
       provider.actorSpace = new ActorSpace(`storage-${Date.now()}`);
+      console.log('ActorSpace initialized successfully');
     } catch (error) {
       // ActorSpace is optional - only needed for actor-based usage
-      console.log('ActorSpace not available - actor-based operations disabled');
+      console.log('ActorSpace not available - actor-based operations disabled:', error.message);
     }
 
     // Auto-configure providers based on available URLs from ResourceManager
@@ -112,7 +113,8 @@ export class StorageProvider {
    * @private
    */
   _getProviderConfig(providerName) {
-    return this.resourceManager.get(`env.STORAGE_${providerName.toUpperCase()}_CONFIG`) || {};
+    const configKey = `env.STORAGE_${providerName.toUpperCase()}_CONFIG`;
+    return this.resourceManager.has(configKey) ? this.resourceManager.get(configKey) : {};
   }
 
   /**

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StorageBrowser Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .demo-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .storage-browser-container {
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .controls {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .controls button {
+            margin-right: 10px;
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .controls button:hover {
+            background: #e9ecef;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            background: #e7f3ff;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="demo-header">
+            <h1>StorageBrowser Demo</h1>
+            <p>A powerful storage browser component with Actor-based backend communication</p>
+        </div>
+        
+        <div class="controls">
+            <button onclick="toggleTheme()">Toggle Theme</button>
+            <button onclick="toggleMode()">Toggle Mode</button>
+            <button onclick="addSampleData()">Add Sample Data</button>
+            <button onclick="clearData()">Clear Data</button>
+        </div>
+        
+        <div class="storage-browser-container" id="storage-browser-container"></div>
+        
+        <div class="status" id="status">
+            Status: Initializing...
+        </div>
+    </div>
+
+    <script type="module">
+        import { StorageBrowser } from '/src/index.js';
+        
+        let browser;
+        let currentTheme = 'light';
+        let currentMode = 'split';
+        
+        // Initialize StorageBrowser
+        async function initStorageBrowser() {
+            const container = document.getElementById('storage-browser-container');
+            
+            try {
+                browser = StorageBrowser.create({
+                    dom: container,
+                    serverUrl: 'ws://localhost:3700/storage',
+                    provider: 'mongodb',
+                    
+                    theme: currentTheme,
+                    mode: currentMode,
+                    
+                    features: {
+                        query: true,
+                        create: true,
+                        update: true,
+                        delete: true,
+                        export: true
+                    },
+                    
+                    onConnect: (info) => {
+                        updateStatus(`Connected to ${info.provider} provider`);
+                    },
+                    
+                    onDisconnect: () => {
+                        updateStatus('Disconnected from server');
+                    },
+                    
+                    onError: (error) => {
+                        updateStatus(`Error: ${error.message}`);
+                    },
+                    
+                    onCollectionSelect: (collection) => {
+                        updateStatus(`Selected collection: ${collection}`);
+                    },
+                    
+                    onDocumentChange: (change) => {
+                        updateStatus(`Document ${change.type}: ${change.documentId || 'new'}`);
+                    },
+                    
+                    onMount: () => {
+                        updateStatus('StorageBrowser mounted successfully');
+                    }
+                });
+                
+                updateStatus('StorageBrowser initialized, connecting...');
+                
+            } catch (error) {
+                updateStatus(`Failed to initialize: ${error.message}`);
+                console.error('StorageBrowser initialization error:', error);
+            }
+        }
+        
+        // Demo functions
+        window.toggleTheme = () => {
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            if (browser) {
+                browser.setTheme(currentTheme);
+                updateStatus(`Theme changed to ${currentTheme}`);
+            }
+        };
+        
+        window.toggleMode = () => {
+            currentMode = currentMode === 'split' ? 'documents' : 'split';
+            if (browser) {
+                browser.setView(currentMode);
+                updateStatus(`View mode changed to ${currentMode}`);
+            }
+        };
+        
+        window.addSampleData = async () => {
+            if (!browser) return;
+            
+            try {
+                // Create sample collection and documents
+                await browser.createCollection('users');
+                await browser.selectCollection('users');
+                
+                const sampleUsers = [
+                    { name: 'John Doe', age: 30, email: 'john@example.com', status: 'active' },
+                    { name: 'Jane Smith', age: 25, email: 'jane@example.com', status: 'active' },
+                    { name: 'Bob Johnson', age: 35, email: 'bob@example.com', status: 'inactive' }
+                ];
+                
+                for (const user of sampleUsers) {
+                    await browser.createDocument(user);
+                }
+                
+                updateStatus('Sample data added successfully');
+            } catch (error) {
+                updateStatus(`Failed to add sample data: ${error.message}`);
+            }
+        };
+        
+        window.clearData = async () => {
+            if (!browser) return;
+            
+            try {
+                await browser.deleteDocuments({});
+                await browser.refresh();
+                updateStatus('Data cleared');
+            } catch (error) {
+                updateStatus(`Failed to clear data: ${error.message}`);
+            }
+        };
+        
+        function updateStatus(message) {
+            const status = document.getElementById('status');
+            status.textContent = `Status: ${message}`;
+            console.log('[StorageBrowser Demo]', message);
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', initStorageBrowser);
+    </script>
+</body>
+</html>

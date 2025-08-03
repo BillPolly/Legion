@@ -18,7 +18,7 @@ export class StorageActorHost {
     try {
       // Initialize StorageProvider if ResourceManager available
       if (this.resourceManager) {
-        const { StorageProvider } = await import('@legion/storage');
+        const { StorageProvider } = await import('../src/index.js');
         this.storageProvider = await StorageProvider.create(this.resourceManager);
       }
     } catch (error) {
@@ -27,6 +27,7 @@ export class StorageActorHost {
     }
 
     // Register core actors
+    this.registerActor('DatabaseActor', new DatabaseActor(this.storageProvider));
     this.registerActor('CollectionActor', new CollectionActor(this.storageProvider));
     this.registerActor('DocumentActor', new DocumentActor(this.storageProvider));
     this.registerActor('QueryActor', new QueryActor(this.storageProvider));
@@ -96,6 +97,142 @@ export class StorageActorHost {
 }
 
 /**
+ * DatabaseActor - Handles database-level operations
+ */
+class DatabaseActor {
+  constructor(storageProvider) {
+    this.storageProvider = storageProvider;
+    this.currentDatabase = 'legion_storage'; // Default database
+  }
+
+  async receive(method, params) {
+    switch (method) {
+      case 'listDatabases':
+        return await this.listDatabases(params);
+      case 'switchDatabase':
+        return await this.switchDatabase(params);
+      case 'getCurrentDatabase':
+        return await this.getCurrentDatabase(params);
+      case 'createDatabase':
+        return await this.createDatabase(params);
+      case 'dropDatabase':
+        return await this.dropDatabase(params);
+      default:
+        throw new Error(`Unknown method: ${method}`);
+    }
+  }
+
+  async listDatabases({ provider = 'mongodb' } = {}) {
+    if (!this.storageProvider) {
+      return ['legion_storage', 'test', 'admin', 'local'];
+    }
+
+    try {
+      const storageProvider = this.storageProvider.getProvider(provider);
+      if (storageProvider && storageProvider.client) {
+        const admin = storageProvider.client.db().admin();
+        const result = await admin.listDatabases();
+        return result.databases.map(db => ({
+          name: db.name,
+          sizeOnDisk: db.sizeOnDisk,
+          empty: db.empty
+        }));
+      }
+    } catch (error) {
+      console.error('Error listing databases:', error);
+      return [];
+    }
+  }
+
+  async switchDatabase({ database, provider = 'mongodb' } = {}) {
+    if (!database) {
+      throw new Error('Database name is required');
+    }
+
+    console.log(`[DatabaseActor] Switching to database: ${database}`);
+    this.currentDatabase = database;
+    
+    if (this.storageProvider) {
+      try {
+        const storageProvider = this.storageProvider.getProvider(provider);
+        if (storageProvider && storageProvider.client) {
+          // Switch the database in the provider
+          console.log(`[DatabaseActor] Updating MongoDB provider to use database: ${database}`);
+          storageProvider.db = storageProvider.client.db(database);
+          storageProvider.databaseName = database;
+          console.log(`[DatabaseActor] Database switched successfully. Provider now using: ${storageProvider.db.databaseName}`);
+        }
+      } catch (error) {
+        console.error('Error switching database:', error);
+      }
+    }
+
+    return { 
+      success: true, 
+      database: this.currentDatabase,
+      message: `Switched to database: ${database}`
+    };
+  }
+
+  async getCurrentDatabase() {
+    return {
+      database: this.currentDatabase
+    };
+  }
+
+  async createDatabase({ database, provider = 'mongodb' } = {}) {
+    if (!database) {
+      throw new Error('Database name is required');
+    }
+
+    if (this.storageProvider) {
+      try {
+        const storageProvider = this.storageProvider.getProvider(provider);
+        if (storageProvider && storageProvider.client) {
+          // MongoDB creates database on first collection creation
+          const db = storageProvider.client.db(database);
+          await db.createCollection('_init');
+          await db.collection('_init').drop();
+          return { success: true, message: `Database ${database} created` };
+        }
+      } catch (error) {
+        console.error('Error creating database:', error);
+        return { success: false, error: error.message };
+      }
+    }
+    
+    return { success: false, error: 'Storage provider not available' };
+  }
+
+  async dropDatabase({ database, provider = 'mongodb' } = {}) {
+    if (!database) {
+      throw new Error('Database name is required');
+    }
+
+    // Prevent dropping system databases
+    if (['admin', 'local', 'config'].includes(database)) {
+      throw new Error('Cannot drop system database');
+    }
+
+    if (this.storageProvider) {
+      try {
+        const storageProvider = this.storageProvider.getProvider(provider);
+        if (storageProvider && storageProvider.client) {
+          const db = storageProvider.client.db(database);
+          await db.dropDatabase();
+          return { success: true, message: `Database ${database} dropped` };
+        }
+      } catch (error) {
+        console.error('Error dropping database:', error);
+        return { success: false, error: error.message };
+      }
+    }
+    
+    return { success: false, error: 'Storage provider not available' };
+  }
+}
+
+/**
  * CollectionActor - Handles collection-level operations
  */
 class CollectionActor {
@@ -130,7 +267,10 @@ class CollectionActor {
   }
 
   async find({ collection, query = {}, options = {} }) {
+    console.log(`[CollectionActor] find - collection: ${collection}, query:`, query, 'options:', options);
+    
     if (!this.storageProvider) {
+      console.log('[CollectionActor] No storage provider, returning mock data');
       // Return mock data if no storage provider
       return [
         { _id: '1', name: 'Mock Document 1' },
@@ -138,8 +278,14 @@ class CollectionActor {
       ];
     }
 
-    const provider = this.storageProvider.getProvider(options.provider || 'memory');
-    return await provider.find(collection, query, options);
+    const providerName = options.provider || 'memory';
+    console.log(`[CollectionActor] Using provider: ${providerName}`);
+    
+    const provider = this.storageProvider.getProvider(providerName);
+    const result = await provider.find(collection, query, options);
+    
+    console.log(`[CollectionActor] Found ${result.length} documents`);
+    return result;
   }
 
   async findOne({ collection, query = {}, options = {} }) {

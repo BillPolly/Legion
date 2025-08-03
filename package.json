@@ -8,7 +8,8 @@
     "packages/*",
     "packages/apps/*",
     "packages/code-gen/*",
-    "packages/frontend/*"
+    "packages/frontend/*",
+    "packages/shared/*"
   ],
   "scripts": {
     "test": "npm run test --workspaces",
@@ -58,7 +59,12 @@
     "aiur:kill": "npm run kill --workspace=@legion/aiur",
     "debug-ui": "npm start --workspace=@legion/aiur-debug-ui",
     "debug-ui:start": "npm start --workspace=@legion/aiur-debug-ui",
-    "debug-ui:kill": "npm run kill --workspace=@legion/aiur-debug-ui"
+    "debug-ui:kill": "npm run kill --workspace=@legion/aiur-debug-ui",
+    "storage:server": "node scripts/server/start-storage-server.js",
+    "storage:demo": "node scripts/demo/storage-browser-demo.js",
+    "storage:browser": "npm start --workspace=@legion/storage-browser",
+    "storage:test": "node scripts/test/test-storage-integration.js",
+    "storage:kill": "node scripts/server/kill-port.js 3700"
   },
   "devDependencies": {
     "eslint": "^8.56.0",

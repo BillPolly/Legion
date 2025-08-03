@@ -1,0 +1,54 @@
+{
+  "name": "@legion/storage-browser",
+  "version": "1.0.0",
+  "description": "Umbilical MVVM component for browsing storage with Actor-based backend communication",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
+    "dev": "node server/demo-server.js",
+    "start": "node server/demo-server.js"
+  },
+  "keywords": [
+    "legion",
+    "storage",
+    "browser",
+    "umbilical",
+    "mvvm",
+    "actors",
+    "frontend",
+    "database",
+    "mongodb",
+    "sqlite"
+  ],
+  "author": "Legion Framework",
+  "license": "MIT",
+  "dependencies": {
+    "@legion/components": "file:../components",
+    "@legion/actors": "file:../../shared/actors",
+    "@legion/storage": "file:../../storage",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "express": "^4.18.2",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^30.0.5"
+  },
+  "jest": {
+    "transform": {},
+    "testEnvironment": "node",
+    "testMatch": ["**/__tests__/**/*.test.js"],
+    "setupFilesAfterEnv": ["<rootDir>/__tests__/setup.js"],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/**/*.test.js"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/maxximus-dev/Legion.git",
+    "directory": "packages/frontend/storage-browser"
+  }
+}
