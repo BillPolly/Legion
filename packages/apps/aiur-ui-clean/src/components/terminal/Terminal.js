@@ -76,11 +76,11 @@ export class Terminal {
    * Apply styles to force correct layout
    */
   applyStyles() {
-    // Terminal - full height flex column
+    // Terminal - full height flex column (100% instead of 100vh for window container)
     Object.assign(this.elements.terminal.style, {
       display: 'flex',
       flexDirection: 'column',
-      height: '100vh',
+      height: '100%',
       backgroundColor: '#1a1a1a',
       color: '#e0e0e0',
       fontFamily: 'monospace',

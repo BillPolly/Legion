@@ -17,7 +17,15 @@ const server = createServer((req, res) => {
   const url = req.url === '/' ? '/index.html' : req.url;
   
   let filePath;
-  if (url.startsWith('/src/')) {
+  if (url.startsWith('/Legion/components/')) {
+    // Serve components from frontend/components package
+    const componentPath = url.replace('/Legion/components/', '');
+    filePath = join(__dirname, '../../../frontend/components/src/components/', componentPath);
+  } else if (url.startsWith('/Legion/umbilical/')) {
+    // Serve umbilical utilities
+    const umbilicalPath = url.replace('/Legion/umbilical/', '');
+    filePath = join(__dirname, '../../../frontend/components/src/umbilical/', umbilicalPath);
+  } else if (url.startsWith('/src/')) {
     filePath = join(__dirname, '../', url);
   } else {
     filePath = join(__dirname, '../public', url);

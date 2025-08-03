@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aiur Terminal Window Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: monospace;
+            background: #2a2a2a;
+        }
+        #status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: #0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 10000;
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+    <div id="status">Loading...</div>
+    
+    <script type="module">
+        const status = document.getElementById('status');
+        
+        try {
+            status.textContent = 'Importing App...';
+            const { App } = await import('/src/App.js');
+            
+            status.textContent = 'Creating App instance...';
+            const app = new App(document.getElementById('app'));
+            
+            status.textContent = 'Rendering App...';
+            app.render();
+            
+            status.textContent = 'Terminal window loaded! Try dragging it around.';
+            
+            // Hide status after 3 seconds
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
+        } catch (error) {
+            status.textContent = 'Error: ' + error.message;
+            status.style.color = '#f00';
+            console.error(error);
+        }
+    </script>
+</body>
+</html>
