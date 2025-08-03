@@ -143,6 +143,17 @@ export class ClientActorSpace {
           console.log('ClientActorSpace: Received pong');
           break;
           
+        // Chat-related messages
+        case 'chat_response':
+        case 'chat_stream':
+        case 'chat_error':
+        case 'chat_processing':
+        case 'chat_complete':
+        case 'chat_history':
+        case 'chat_history_cleared':
+          this.handleChatMessage(message);
+          break;
+          
         default:
           // Unknown message type, emit for actors to handle
           this.emit('message', message);
@@ -213,6 +224,74 @@ export class ClientActorSpace {
       // General error not tied to a request
       console.error('ClientActorSpace: Server error:', message.error);
       this.emit('error', message.error);
+    }
+  }
+  
+  handleChatMessage(message) {
+    console.log('ClientActorSpace: Handling chat message:', message);
+    
+    // Route chat messages to the chat actor
+    const chatActor = this.actors.get('chat');
+    if (chatActor) {
+      chatActor.receive(message, {
+        from: 'server',
+        to: 'chat',
+        timestamp: Date.now()
+      });
+    } else {
+      console.warn('ClientActorSpace: No chat actor registered to handle message');
+    }
+    
+    // Also emit for general handling
+    this.emit('chat_message', message);
+  }
+  
+  // Send a message from an actor to the server or another actor
+  send(target, payload, from) {
+    if (target === 'server') {
+      // Send to server via WebSocket
+      const message = {
+        ...payload,
+        from,
+        sessionId: this.sessionId,
+        timestamp: Date.now()
+      };
+      
+      console.log('ClientActorSpace: Sending to server:', message);
+      this.wsManager.send(message);
+    } else {
+      // Send to local actor
+      const targetActor = this.actors.get(target);
+      if (targetActor) {
+        targetActor.receive(payload, {
+          from,
+          to: target,
+          timestamp: Date.now()
+        });
+      } else {
+        console.warn(`ClientActorSpace: No actor found with name ${target}`);
+      }
+    }
+  }
+  
+  // Register an actor with a name (convenience method)
+  register(name, actor) {
+    actor.actorSpace = this;
+    actor.name = name;
+    actor.guid = `${this.spaceId}:${name}`;
+    
+    this.actors.set(name, actor);
+    console.log(`ClientActorSpace: Registered actor ${name} with guid ${actor.guid}`);
+    
+    return actor.guid;
+  }
+  
+  // Unregister an actor
+  unregister(guid) {
+    const name = guid.split(':')[1];
+    if (this.actors.has(name)) {
+      this.actors.delete(name);
+      console.log(`ClientActorSpace: Unregistered actor ${name}`);
     }
   }
   

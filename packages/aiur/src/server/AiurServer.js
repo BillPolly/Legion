@@ -11,6 +11,7 @@ import { createServer } from 'http';
 import { SessionManager } from './SessionManager.js';
 import { RequestHandler } from './RequestHandler.js';
 import { WebSocketHandler } from './WebSocketHandler.js';
+import { ServerActorSpace } from './ServerActorSpace.js';
 // ResourceManager only used internally by ModuleLoader
 import { LogManager } from '../core/LogManager.js';
 import { Codec } from '../../../shared/codec/src/Codec.js';
@@ -34,6 +35,7 @@ export class AiurServer {
     this.sessionManager = null;
     this.requestHandler = null;
     this.wsHandler = null;
+    this.serverActorSpace = null;  // Add ServerActorSpace
     this.moduleLoader = null;
     this.logManager = null;
     this.codec = null;
@@ -111,10 +113,11 @@ export class AiurServer {
    */
   async _initializeSystems() {
     // Initialize codec with schema validation
-    this.codec = new Codec({
-      strictValidation: true,
-      injectMetadata: true
-    });
+    // Temporarily disable codec due to schema compilation error
+    this.codec = null; // new Codec({
+    //   strictValidation: true,
+    //   injectMetadata: true
+    // });
     
     // Create THE singleton ModuleLoader
     const { ModuleLoader } = await import('@legion/module-loader');
@@ -148,7 +151,10 @@ export class AiurServer {
     });
     await this.requestHandler.initialize();
     
-    // Create WebSocketHandler (simple)
+    // Create ServerActorSpace for actor-based communication
+    this.serverActorSpace = new ServerActorSpace('aiur-server');
+    
+    // Keep WebSocketHandler for backward compatibility with terminal
     this.wsHandler = new WebSocketHandler({
       sessionManager: this.sessionManager,
       requestHandler: this.requestHandler,
@@ -245,7 +251,11 @@ export class AiurServer {
       remoteAddress: req.socket.remoteAddress
     });
     
-    // Set up connection handling
+    // Use BOTH handlers - WebSocketHandler for regular messages, ServerActorSpace for actors
+    // Initialize the actor space connection
+    const sessionId = this.serverActorSpace.handleConnection(ws, clientId);
+    
+    // Also set up WebSocketHandler for non-actor messages (terminal, tools, etc)
     this.wsHandler.handleConnection(ws, clientId);
     
     // Track client
@@ -257,16 +267,29 @@ export class AiurServer {
     });
     
     // Send welcome message with schema definitions
-    const schemaDefinition = this.codec.createSchemaDefinitionMessage();
-    const messageTypes = Object.keys(schemaDefinition.schemas);
-    const welcomeData = {
-      type: 'welcome',
-      clientId,
-      serverVersion: '1.0.0',
-      capabilities: ['sessions', 'tools', 'context', 'handles'],
-      schemas: schemaDefinition.schemas,
-      messageTypes: messageTypes
-    };
+    let welcomeData;
+    if (this.codec) {
+      const schemaDefinition = this.codec.createSchemaDefinitionMessage();
+      const messageTypes = Object.keys(schemaDefinition.schemas);
+      welcomeData = {
+        type: 'welcome',
+        clientId,
+        serverVersion: '1.0.0',
+        capabilities: ['sessions', 'tools', 'context', 'handles'],
+        schemas: schemaDefinition.schemas,
+        messageTypes: messageTypes
+      };
+    } else {
+      // Simplified welcome without codec
+      welcomeData = {
+        type: 'welcome',
+        clientId,
+        serverVersion: '1.0.0',
+        capabilities: ['sessions', 'tools', 'context', 'handles'],
+        schemas: {},
+        messageTypes: []
+      };
+    }
     
     ws.send(JSON.stringify(welcomeData));
     

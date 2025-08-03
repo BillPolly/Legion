@@ -131,6 +131,19 @@ export class WebSocketHandler {
           this._sendMessage(ws, { type: 'pong', timestamp: Date.now() });
           break;
           
+        // Chat message types
+        case 'chat_message':
+          await this._handleChatMessage(ws, message);
+          break;
+          
+        case 'clear_history':
+          await this._handleClearHistory(ws, message);
+          break;
+          
+        case 'get_history':
+          await this._handleGetHistory(ws, message);
+          break;
+          
         default:
           this._sendError(ws, message.requestId, `Unknown message type: ${message.type}`);
       }
@@ -361,6 +374,132 @@ export class WebSocketHandler {
     }
   }
 
+  /**
+   * Handle chat message from client
+   * @private
+   */
+  async _handleChatMessage(ws, message) {
+    const connection = this.connections.get(ws);
+    
+    if (!connection || !connection.sessionId) {
+      this._sendError(ws, message.requestId, 'No active session');
+      return;
+    }
+    
+    try {
+      // Get or create ChatAgent for this session
+      const session = this.sessionManager.getSession(connection.sessionId);
+      if (!session) {
+        this._sendError(ws, message.requestId, 'Session not found');
+        return;
+      }
+      
+      // Get or create ChatAgent
+      if (!session.chatAgent) {
+        const { ChatAgent } = await import('../agents/ChatAgent.js');
+        session.chatAgent = new ChatAgent({ 
+          sessionId: connection.sessionId 
+        });
+        
+        // Store WebSocket reference for responses
+        session.chatAgent.ws = ws;
+        session.chatAgent.sendResponse = (response) => {
+          this._sendMessage(ws, response);
+        };
+      }
+      
+      // Send processing acknowledgment
+      this._sendMessage(ws, {
+        type: 'chat_processing',
+        sessionId: connection.sessionId
+      });
+      
+      // Process the message
+      await session.chatAgent.processMessage(message.content);
+      
+    } catch (error) {
+      await this.logManager.logError(error, {
+        source: 'WebSocketHandler',
+        operation: 'chat-message-error',
+        clientId: connection.clientId,
+        sessionId: connection.sessionId
+      });
+      
+      this._sendMessage(ws, {
+        type: 'chat_error',
+        message: error.message,
+        sessionId: connection.sessionId
+      });
+    }
+  }
+  
+  /**
+   * Handle clear history request
+   * @private
+   */
+  async _handleClearHistory(ws, message) {
+    const connection = this.connections.get(ws);
+    
+    if (!connection || !connection.sessionId) {
+      this._sendError(ws, message.requestId, 'No active session');
+      return;
+    }
+    
+    try {
+      const session = this.sessionManager.getSession(connection.sessionId);
+      if (session && session.chatAgent) {
+        session.chatAgent.clearHistory();
+        this._sendMessage(ws, {
+          type: 'chat_history_cleared',
+          sessionId: connection.sessionId
+        });
+      }
+    } catch (error) {
+      await this.logManager.logError(error, {
+        source: 'WebSocketHandler',
+        operation: 'clear-history-error',
+        clientId: connection.clientId
+      });
+    }
+  }
+  
+  /**
+   * Handle get history request
+   * @private
+   */
+  async _handleGetHistory(ws, message) {
+    const connection = this.connections.get(ws);
+    
+    if (!connection || !connection.sessionId) {
+      this._sendError(ws, message.requestId, 'No active session');
+      return;
+    }
+    
+    try {
+      const session = this.sessionManager.getSession(connection.sessionId);
+      if (session && session.chatAgent) {
+        const history = session.chatAgent.getHistory();
+        this._sendMessage(ws, {
+          type: 'chat_history',
+          history,
+          sessionId: connection.sessionId
+        });
+      } else {
+        this._sendMessage(ws, {
+          type: 'chat_history',
+          history: [],
+          sessionId: connection.sessionId
+        });
+      }
+    } catch (error) {
+      await this.logManager.logError(error, {
+        source: 'WebSocketHandler',
+        operation: 'get-history-error',
+        clientId: connection.clientId
+      });
+    }
+  }
+  
   /**
    * Handle WebSocket disconnection
    * @private

@@ -748,12 +748,20 @@ export class TerminalActor {
     
     // Set up connection status listeners
     actorSpace.on('connected', () => {
-      this.terminal.addOutput('Connected to server', 'success');
+      if (this.terminal) {
+        this.terminal.addOutput('Connected to server', 'success');
+      } else {
+        console.log('TerminalActor: Connected to server (terminal not yet attached)');
+      }
     });
     
     actorSpace.on('session_ready', async ({ sessionId }) => {
-      this.terminal.addOutput(`Session created: ${sessionId}`, 'success');
-      this.terminal.addOutput('Type .help to see available commands', 'info');
+      if (this.terminal) {
+        this.terminal.addOutput(`Session created: ${sessionId}`, 'success');
+        this.terminal.addOutput('Type .help to see available commands', 'info');
+      } else {
+        console.log(`TerminalActor: Session created: ${sessionId} (terminal not yet attached)`);
+      }
       
       // Load tool schemas so we know how to parse arguments
       try {
@@ -763,7 +771,9 @@ export class TerminalActor {
         
         if (!response || (!response.tools && !response.result)) {
           console.error('Invalid tools response:', response);
-          this.terminal.addOutput('Warning: Failed to load tool schemas. Run "tools" to load them.', 'warning');
+          if (this.terminal) {
+            this.terminal.addOutput('Warning: Failed to load tool schemas. Run "tools" to load them.', 'warning');
+          }
         } else {
           this.handleToolsList(response, true); // true = silent mode
           console.log('Tool schemas loaded. Available tools:', this.toolDefinitions.size);
