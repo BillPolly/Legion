@@ -13,6 +13,7 @@ export class App {
     this.chatWindow = null;
     this.actorSpace = null;
     this.chatActor = null;
+    this.terminalActor = null;
   }
   
   async render() {
@@ -24,9 +25,6 @@ export class App {
     this.container.style.height = '100vh';
     this.container.style.position = 'relative';
     this.container.style.background = '#1a1a1a';
-    
-    // Initialize actor system
-    await this.initializeActorSystem();
     
     // Create terminal window
     this.terminalWindow = Window.create({
@@ -66,11 +64,14 @@ export class App {
       }
     });
     
-    // Create terminal inside its window (purely local, no actor system)
+    // Create terminal inside its window
     this.terminal = new Terminal(this.terminalWindow.contentElement);
     this.terminal.initialize();
     
-    // Create chat inside its window
+    // Initialize actor system BEFORE creating chat
+    await this.initializeActorSystem();
+    
+    // Now create chat with the initialized chatActor
     this.chat = Chat.create({
       dom: this.chatWindow.contentElement,
       chatActor: this.chatActor,
@@ -96,21 +97,22 @@ export class App {
   
   async initializeActorSystem() {
     try {
-      // Create actor space with proper actor protocol for chat only
+      // Create actor space with proper actor protocol for both chat and terminal
       this.actorSpace = new FrontendActorSpace();
       
-      // Try to connect to server
-      console.log('Connecting to server for chat...');
-      await this.actorSpace.connect('ws://localhost:8080/ws');
+      // Try to connect to server - pass terminal for TerminalActor
+      console.log('Connecting to server...');
+      await this.actorSpace.connect('ws://localhost:8080/ws', this.terminal);
       
-      // Get the chat actor that was created during handshake
+      // Get the actors that were created during handshake
       this.chatActor = this.actorSpace.chatActor;
+      this.terminalActor = this.actorSpace.terminalActor;
       
-      console.log('Chat actor connected successfully');
+      console.log('Chat and Terminal actors connected successfully');
       
     } catch (error) {
-      console.error('Failed to initialize chat actor system:', error);
-      console.log('Chat will not be available');
+      console.error('Failed to initialize actor system:', error);
+      console.log('Actors will not be available');
     }
   }
   

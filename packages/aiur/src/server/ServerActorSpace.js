@@ -2,23 +2,29 @@
  * ServerActorSpace - Backend actor space for Aiur server
  * 
  * Each WebSocket connection gets its own ServerActorSpace instance
- * with its own ChatAgent for handling chat communication
+ * with its own SessionAgent for handling multi-actor communication
  */
 
 import { ActorSpace } from '../../../shared/actors/src/ActorSpace.js';
 import { ChatAgent } from '../agents/ChatAgent.js';
+import { TerminalAgent } from '../agents/TerminalAgent.js';
 
 export class ServerActorSpace extends ActorSpace {
-  constructor(spaceId = 'server') {
+  constructor(spaceId = 'server', config = {}) {
     super(spaceId);
     this.clientId = null;
     this.chatAgent = null;
-    this.clientRootGuid = null;
+    this.terminalAgent = null;
+    this.clientActorGuids = {};
+    
+    // Aiur integration for TerminalAgent
+    this.moduleManager = config.moduleManager || null;
+    this.toolRegistry = config.toolRegistry || null;
   }
 
   /**
    * Handle a new WebSocket connection
-   * Sends the first handshake message with our root actor GUID
+   * Sends the first handshake message with our actor GUIDs
    */
   handleConnection(ws, clientId) {
     console.log(`ServerActorSpace: New connection from ${clientId}`);
@@ -30,13 +36,26 @@ export class ServerActorSpace extends ActorSpace {
     this.register(chatAgent, chatGuid);
     this.chatAgent = chatAgent;
     
-    // Send FIRST message with our root actor GUID
+    // Create TerminalAgent for this connection
+    const terminalAgent = new TerminalAgent({ 
+      sessionId: this.spaceId,
+      moduleManager: this.moduleManager,
+      toolRegistry: this.toolRegistry
+    });
+    const terminalGuid = `${this.spaceId}-terminal`;
+    this.register(terminalAgent, terminalGuid);
+    this.terminalAgent = terminalAgent;
+    
+    // Send FIRST message with our actor GUIDs
     ws.send(JSON.stringify({
       type: 'actor_handshake',
-      serverRootGuid: chatGuid
+      serverActors: {
+        chat: chatGuid,
+        terminal: terminalGuid
+      }
     }));
     
-    console.log(`ServerActorSpace: Sent handshake with GUID ${chatGuid}`);
+    console.log(`ServerActorSpace: Sent handshake with actor GUIDs`);
     
     // Handle handshake response BEFORE giving to Channel
     const handleHandshake = (data) => {
@@ -44,17 +63,21 @@ export class ServerActorSpace extends ActorSpace {
         const msg = JSON.parse(data.toString());
         
         if (msg.type === 'actor_handshake_ack') {
-          console.log(`ServerActorSpace: Received handshake ACK with client GUID ${msg.clientRootGuid}`);
-          this.clientRootGuid = msg.clientRootGuid;
+          console.log(`ServerActorSpace: Received handshake ACK with client actor GUIDs:`, msg.clientActors);
+          this.clientActorGuids = msg.clientActors;
           
           // Now create Channel - it will take over ws message handling
           const channel = this.addChannel(ws);
           
-          // Create RemoteActor for client's root and give to ChatAgent
-          const clientRoot = channel.makeRemote(msg.clientRootGuid);
-          chatAgent.remoteActor = clientRoot;
+          // Create RemoteActors for client's actors
+          const remoteChatActor = channel.makeRemote(msg.clientActors.chat);
+          const remoteTerminalActor = channel.makeRemote(msg.clientActors.terminal);
           
-          console.log(`ServerActorSpace: Actor protocol active for ${clientId}`);
+          // Give RemoteActors to our agents
+          chatAgent.remoteActor = remoteChatActor;
+          terminalAgent.remoteActor = remoteTerminalActor;
+          
+          console.log(`ServerActorSpace: Actor protocol active for ${clientId} with multiple actors`);
           
           // Actor protocol now active - Channel handles all messages
         } else {

@@ -15,7 +15,7 @@ export class Terminal {
       currentInput: '',
       commandHistory: [],
       historyIndex: 0,
-      connected: false // Always false - terminal is local only
+      connected: false // Will be updated when TerminalActor connects
     };
     
     // DOM elements - created once, updated incrementally
@@ -174,11 +174,22 @@ export class Terminal {
   }
   
   /**
-   * Initialize terminal (purely local)
+   * Initialize terminal
    */
   initialize() {
-    this.addOutput('Local terminal ready', 'success');
+    this.addOutput('Terminal ready', 'success');
     this.addOutput('Type .help for available commands', 'info');
+  }
+  
+  /**
+   * Set the terminal actor for server communication
+   */
+  setTerminalActor(terminalActor) {
+    this.terminalActor = terminalActor;
+    if (terminalActor && terminalActor.isConnected()) {
+      this.state.connected = true;
+      this.addOutput('Connected to server', 'success');
+    }
   }
   
   /**
@@ -192,15 +203,22 @@ export class Terminal {
     if (cmdLower.startsWith('.')) {
       switch (cmdLower) {
         case '.help':
-        this.addOutput('Local Terminal Commands:', 'info');
+        this.addOutput('Terminal Commands:', 'info');
         this.addOutput('  .help       - Show this help', 'info');
         this.addOutput('  .clear      - Clear output', 'info');
         this.addOutput('  .history    - Show command history', 'info');
         this.addOutput('  .time       - Show current time', 'info');
         this.addOutput('  .about      - About this terminal', 'info');
-        this.addOutput('', 'info');
-        this.addOutput('Note: This terminal is local only.', 'info');
-        this.addOutput('For AI assistance, use the Chat window.', 'info');
+        if (this.state.connected) {
+          this.addOutput('', 'info');
+          this.addOutput('Server Commands (when connected):', 'info');
+          this.addOutput('  tools         - List available tools', 'info');
+          this.addOutput('  module_list   - List modules', 'info');
+          this.addOutput('  module_load   - Load a module', 'info');
+        } else {
+          this.addOutput('', 'info');
+          this.addOutput('Not connected to server', 'warning');
+        }
         break;
         
       case '.clear':
@@ -228,10 +246,14 @@ export class Terminal {
           break;
       }
     } else {
-      // Not a dot command - terminal is local only
-      this.addOutput(`Unknown command: ${command}`, 'error');
-      this.addOutput('This terminal supports only local dot commands.', 'info');
-      this.addOutput('Type .help for available commands.', 'info');
+      // Not a dot command - try to send to server if connected
+      if (this.state.connected && this.terminalActor) {
+        this.terminalActor.sendCommand(command);
+      } else {
+        this.addOutput(`Unknown command: ${command}`, 'error');
+        this.addOutput('Not connected to server.', 'warning');
+        this.addOutput('Type .help for available commands.', 'info');
+      }
     }
   }
   

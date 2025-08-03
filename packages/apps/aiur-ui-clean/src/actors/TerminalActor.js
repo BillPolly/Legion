@@ -1,132 +1,271 @@
-import { toolMethods } from '../schemas/messages.js';
+import { Actor } from '/Legion/shared/actors/src/Actor.js';
 
 /**
  * Terminal Actor - handles terminal commands and responses
  */
-export class TerminalActor {
+export class TerminalActor extends Actor {
   constructor(terminal) {
+    super();
     this.terminal = terminal;
-    this.actorSpace = null;
-    this.name = 'terminal';
-    this.guid = null;
+    this.remoteAgent = null; // Reference to server TerminalAgent
     this.toolDefinitions = new Map(); // Store tool definitions with schemas
+    this.connected = false;
   }
   
   /**
-   * Receive messages from other actors
+   * Set the remote agent reference for sending messages
    */
-  receive(payload, envelope) {
-    console.log('TerminalActor: Received message:', payload);
+  setRemoteAgent(remoteAgent) {
+    this.remoteAgent = remoteAgent;
+    this.connected = true;
+    console.log('TerminalActor: Set remote agent reference');
     
-    // Handle different message types
-    if (payload.type === 'output') {
-      this.handleOutput(payload);
-    } else if (payload.type === 'error') {
-      this.handleError(payload);
-    } else if (payload.type === 'clear') {
-      this.terminal.clear();
-    } else if (payload.type === 'tools') {
-      this.handleToolsResponse(payload);
-    } else if (payload.type === 'context') {
-      this.handleContextResponse(payload);
-    } else if (payload.type === 'session') {
-      this.handleSessionResponse(payload);
-    } else {
-      // Default: display as output
-      this.terminal.addOutput(JSON.stringify(payload, null, 2), 'info');
+    // Initialize terminal if available
+    if (this.terminal) {
+      this.terminal.addOutput('Connected to terminal agent', 'success');
+      this.terminal.addOutput('Type .help for available commands', 'info');
+      
+      // Request initial tools list
+      this.requestToolsList();
     }
   }
   
   /**
-   * Send a command to the server
-   * Commands are sent as tool calls to the server
+   * Disconnect from remote agent
    */
-  async sendCommand(command) {
+  disconnect() {
+    this.remoteAgent = null;
+    this.connected = false;
+    
+    if (this.terminal) {
+      this.terminal.addOutput('Disconnected from terminal agent', 'warning');
+    }
+  }
+  
+  /**
+   * Check if connected
+   */
+  isConnected() {
+    return this.connected && this.remoteAgent;
+  }
+  
+  /**
+   * Receive messages from TerminalAgent via actor protocol
+   */
+  receive(payload, envelope) {
+    console.log('TerminalActor: Received message:', payload);
+    
+    // Handle messages with eventName (from TerminalAgent's emit)
+    if (payload.eventName) {
+      const eventName = payload.eventName;
+      
+      switch (eventName) {
+        case 'terminal_response':
+          this.handleTerminalResponse(payload);
+          break;
+          
+        case 'terminal_error':
+          this.handleTerminalError(payload);
+          break;
+          
+        default:
+          console.log('TerminalActor: Unknown event:', eventName);
+      }
+    } else {
+      // Legacy message handling for compatibility
+      if (payload.type === 'output') {
+        this.handleOutput(payload);
+      } else if (payload.type === 'error') {
+        this.handleError(payload);
+      } else if (payload.type === 'clear') {
+        this.terminal.clear();
+      } else {
+        // Default: display as output
+        if (this.terminal) {
+          this.terminal.addOutput(JSON.stringify(payload, null, 2), 'info');
+        }
+      }
+    }
+  }
+  
+  /**
+   * Handle terminal response from agent
+   */
+  handleTerminalResponse(payload) {
+    console.log('TerminalActor: Terminal response:', payload);
+    
+    if (!this.terminal) return;
+    
+    switch (payload.type) {
+      case 'tools_list':
+        this.handleToolsList(payload.tools);
+        break;
+        
+      case 'tool_result':
+        this.handleToolResult(payload.result);
+        break;
+        
+      case 'module_loaded':
+        this.terminal.addOutput(payload.message, 'success');
+        break;
+        
+      case 'module_unloaded':
+        this.terminal.addOutput(payload.message, 'success');
+        break;
+        
+      case 'modules_list':
+        this.handleModulesList(payload.modules);
+        break;
+        
+      case 'session_info':
+        this.handleSessionInfo(payload.info);
+        break;
+        
+      default:
+        this.terminal.addOutput(JSON.stringify(payload, null, 2), 'info');
+    }
+  }
+  
+  /**
+   * Handle terminal error from agent
+   */
+  handleTerminalError(payload) {
+    console.error('TerminalActor: Error from agent:', payload);
+    
+    if (this.terminal) {
+      this.terminal.addOutput(`Error: ${payload.message}`, 'error');
+      if (payload.details) {
+        this.terminal.addOutput(payload.details, 'error');
+      }
+    }
+  }
+  
+  /**
+   * Send a command to the server via actor protocol
+   */
+  sendCommand(command) {
     // Validate connection
     if (!this.isConnected()) {
       this.showConnectionError();
       return;
     }
     
-    try {
-      // Parse the command
-      const { toolName, args } = this.parseCommand(command);
-      
-      // Handle special commands
-      if (this.isSpecialCommand(toolName)) {
-        await this.handleSpecialCommand(toolName);
-        return;
+    if (!this.remoteAgent) {
+      console.error('TerminalActor: No remote agent available');
+      if (this.terminal) {
+        this.terminal.addOutput('Not connected to terminal agent', 'error');
       }
-      
-      // Build tool arguments from command args
-      const toolArgs = await this.buildToolArguments(toolName, args);
-      if (!toolArgs) {
-        // Error already displayed by buildToolArguments
-        return;
+      return;
+    }
+    
+    console.log('TerminalActor: Sending command via actor protocol:', command);
+    
+    // Send command to TerminalAgent
+    this.remoteAgent.receive({
+      type: 'terminal_command',
+      command: command,
+      timestamp: new Date().toISOString()
+    });
+  }
+  
+  /**
+   * Request tools list from agent
+   */
+  requestToolsList() {
+    if (!this.isConnected() || !this.remoteAgent) {
+      console.warn('TerminalActor: Cannot request tools - not connected');
+      return;
+    }
+    
+    this.remoteAgent.receive({
+      type: 'tools_list',
+      timestamp: new Date().toISOString()
+    });
+  }
+  
+  /**
+   * Handle tools list from agent
+   */
+  handleToolsList(tools) {
+    if (!tools || tools.length === 0) {
+      if (this.terminal) {
+        this.terminal.addOutput('No tools available', 'info');
+        this.terminal.addOutput('Try: module_load file', 'info');
       }
-      
-      // Execute the tool
-      const response = await this.executeTool(toolName, toolArgs);
-      
-      // Handle the response
-      this.handleToolResult(response);
-      
-      // Post-execution actions
-      await this.handlePostExecution(toolName, response);
-      
-    } catch (error) {
-      console.error('TerminalActor: Error executing tool:', error);
-      this.terminal.addOutput(`Error: ${error.message}`, 'error');
+      return;
+    }
+    
+    // Store tool definitions
+    this.toolDefinitions.clear();
+    tools.forEach(tool => {
+      this.toolDefinitions.set(tool.name, tool);
+    });
+    
+    // Update terminal's tool definitions for tab completion
+    if (this.terminal && this.terminal.updateToolDefinitions) {
+      this.terminal.updateToolDefinitions(this.toolDefinitions);
+    }
+    
+    // Display tools
+    if (this.terminal) {
+      this.terminal.addOutput(`Available tools (${tools.length}):`, 'info');
+      tools.forEach(tool => {
+        this.terminal.addOutput(`  ${tool.name}: ${tool.description || 'No description'}`, 'info');
+      });
     }
   }
   
   /**
-   * Check if connected to server
+   * Handle modules list from agent
    */
-  isConnected() {
-    return this.actorSpace && this.actorSpace.sessionId;
+  handleModulesList(modules) {
+    if (!this.terminal) return;
+    
+    if (modules.loaded && modules.loaded.length > 0) {
+      this.terminal.addOutput('Loaded modules:', 'info');
+      modules.loaded.forEach(mod => {
+        this.terminal.addOutput(`  ✓ ${mod}`, 'success');
+      });
+    } else {
+      this.terminal.addOutput('No modules loaded', 'info');
+    }
+    
+    if (modules.available && modules.available.length > 0) {
+      this.terminal.addOutput('Available modules:', 'info');
+      modules.available.forEach(mod => {
+        this.terminal.addOutput(`  • ${mod}`, 'info');
+      });
+    }
   }
   
   /**
    * Show connection error
    */
   showConnectionError() {
-    this.terminal.addOutput('Not connected to server or no active session', 'error');
-  }
-  
-  /**
-   * Parse command into tool name and arguments
-   */
-  parseCommand(command) {
-    const parts = command.trim().split(' ');
-    return {
-      toolName: parts[0],
-      args: parts.slice(1)
-    };
-  }
-  
-  /**
-   * Check if this is a special command
-   */
-  isSpecialCommand(toolName) {
-    return toolName === 'tools'; // Only 'tools' is special to list available tools
-  }
-  
-  /**
-   * Handle special commands
-   */
-  async handleSpecialCommand(toolName) {
-    if (toolName === 'tools') {
-      // Refresh and show the tools list
-      const response = await this.actorSpace.callTool(toolMethods.LIST_TOOLS);
-      this.handleToolsList(response, false); // false = show output
+    if (this.terminal) {
+      this.terminal.addOutput('Not connected to terminal agent', 'error');
     }
   }
   
   /**
-   * Build tool arguments from command arguments using schema
+   * Handle session info from agent
    */
-  async buildToolArguments(toolName, args) {
+  handleSessionInfo(info) {
+    if (!this.terminal) return;
+    
+    this.terminal.addOutput('Session info:', 'info');
+    this.terminal.addOutput(`  Session ID: ${info.sessionId}`, 'info');
+    this.terminal.addOutput(`  Agent ID: ${info.agentId}`, 'info');
+    this.terminal.addOutput(`  Connected: ${info.connected}`, 'info');
+    if (info.timestamp) {
+      this.terminal.addOutput(`  Timestamp: ${info.timestamp}`, 'info');
+    }
+  }
+  
+  /**
+   * Build tool arguments from command arguments (kept for future use)
+   */
+  buildToolArguments(toolName, args) {
     // Get tool definition
     const toolDef = this.toolDefinitions.get(toolName);
     

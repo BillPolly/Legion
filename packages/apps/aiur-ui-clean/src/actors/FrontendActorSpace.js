@@ -5,17 +5,19 @@
 
 import { ActorSpace } from '/Legion/shared/actors/src/ActorSpace.js';
 import { ChatActor } from './ChatActor.js';
+import { TerminalActor } from './TerminalActor.js';
 
 export class FrontendActorSpace extends ActorSpace {
   constructor(spaceId = 'frontend') {
     super(spaceId);
     this.ws = null;
     this.chatActor = null;
-    this.serverRootGuid = null;
+    this.terminalActor = null;
+    this.serverActorGuids = {}; // Will store server's actor GUIDs
     this.messageHandlers = new Map(); // For event emitter compatibility
   }
   
-  async connect(url = 'ws://localhost:8080/ws') {
+  async connect(url = 'ws://localhost:8080/ws', terminal = null) {
     console.log(`FrontendActorSpace: Connecting to ${url}...`);
     
     // Create browser WebSocket
@@ -41,31 +43,44 @@ export class FrontendActorSpace extends ActorSpace {
           const msg = JSON.parse(event.data);
           
           if (msg.type === 'actor_handshake') {
-            console.log(`FrontendActorSpace: Received handshake with server GUID ${msg.serverRootGuid}`);
-            this.serverRootGuid = msg.serverRootGuid;
+            console.log(`FrontendActorSpace: Received handshake with server actor GUIDs:`, msg.serverActors);
+            this.serverActorGuids = msg.serverActors;
             
-            // Create ChatActor
+            // Create and register ChatActor
             const chatActor = new ChatActor();
             const chatGuid = `${this.spaceId}-chat`;
             this.register(chatActor, chatGuid);
             this.chatActor = chatActor;
             
-            // Send our root GUID back
+            // Create and register TerminalActor
+            const terminalActor = new TerminalActor(terminal);
+            const terminalGuid = `${this.spaceId}-terminal`;
+            this.register(terminalActor, terminalGuid);
+            this.terminalActor = terminalActor;
+            
+            // Send our actor GUIDs back
             ws.send(JSON.stringify({
               type: 'actor_handshake_ack',
-              clientRootGuid: chatGuid
+              clientActors: {
+                chat: chatGuid,
+                terminal: terminalGuid
+              }
             }));
             
-            console.log(`FrontendActorSpace: Sent handshake ACK with GUID ${chatGuid}`);
+            console.log(`FrontendActorSpace: Sent handshake ACK with actor GUIDs`);
             
             // Now create Channel - it will take over ws.onmessage
             const channel = this.addChannel(ws);
             
-            // Create RemoteActor for server's root and give to ChatActor
-            const serverRoot = channel.makeRemote(msg.serverRootGuid);
-            chatActor.setRemoteAgent(serverRoot);
+            // Create RemoteActors for server's actors
+            const remoteChatAgent = channel.makeRemote(msg.serverActors.chat);
+            const remoteTerminalAgent = channel.makeRemote(msg.serverActors.terminal);
             
-            console.log('FrontendActorSpace: Actor protocol active');
+            // Give RemoteActors to our local actors
+            chatActor.setRemoteAgent(remoteChatAgent);
+            terminalActor.setRemoteAgent(remoteTerminalAgent);
+            
+            console.log('FrontendActorSpace: Actor protocol active with multiple actors');
             
             // Emit connected event for compatibility
             this.emit('connected');

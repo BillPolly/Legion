@@ -237,8 +237,11 @@ export class AiurServer {
       remoteAddress: req.socket.remoteAddress
     });
     
-    // Create NEW ServerActorSpace for THIS connection
-    const serverActorSpace = new ServerActorSpace(`server-${clientId}`);
+    // Create NEW ServerActorSpace for THIS connection with Aiur integration
+    const serverActorSpace = new ServerActorSpace(`server-${clientId}`, {
+      moduleManager: this.moduleLoader,  // Pass the module loader
+      toolRegistry: this.sessionManager  // SessionManager manages tools per session
+    });
     
     // Handle the connection (will send first handshake)
     serverActorSpace.handleConnection(ws, clientId);
