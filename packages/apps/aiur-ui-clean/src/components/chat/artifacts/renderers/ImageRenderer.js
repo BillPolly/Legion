@@ -54,7 +54,8 @@ export class ImageRenderer extends ArtifactRenderer {
       position: relative;
     `;
 
-    if (artifact.path && artifact.exists) {
+    // Check for content (base64) OR path
+    if (artifact.content || (artifact.path && artifact.exists)) {
       const img = document.createElement('img');
       img.style.cssText = `
         max-width: 100%;
@@ -62,12 +63,12 @@ export class ImageRenderer extends ArtifactRenderer {
         object-fit: cover;
       `;
       
-      // For local files, we'll need to create a data URL or blob URL
-      // For now, show placeholder
+      // Use createImageDataUrl which handles both content and path
       img.src = this.createImageDataUrl(artifact);
       img.alt = artifact.title;
       
       img.onerror = () => {
+        console.log('[ImageRenderer] Thumbnail failed to load for:', artifact.title);
         thumbnail.innerHTML = '🖼️';
         thumbnail.style.fontSize = '20px';
         thumbnail.style.color = '#666';
@@ -125,6 +126,15 @@ export class ImageRenderer extends ArtifactRenderer {
   }
 
   renderContent(artifact, content) {
+    console.log('[ImageRenderer] Rendering artifact:', {
+      id: artifact.id,
+      title: artifact.title,
+      hasPath: !!artifact.path,
+      hasContent: !!artifact.content,
+      contentPreview: artifact.content ? artifact.content.substring(0, 50) : 'none',
+      exists: artifact.exists
+    });
+    
     const container = document.createElement('div');
     container.style.cssText = `
       display: flex;
@@ -136,7 +146,8 @@ export class ImageRenderer extends ArtifactRenderer {
       background: #0d1117;
     `;
 
-    if (artifact.path && artifact.exists) {
+    // Check for content (base64 data) OR path
+    if (artifact.content || (artifact.path && artifact.exists)) {
       const img = document.createElement('img');
       img.style.cssText = `
         max-width: 100%;
@@ -233,17 +244,21 @@ export class ImageRenderer extends ArtifactRenderer {
    * @returns {string} Data URL or placeholder
    */
   createImageDataUrl(artifact) {
-    // For now, return a placeholder data URL
-    // In a real implementation, you would:
-    // 1. Read the file from artifact.path
-    // 2. Convert to base64
-    // 3. Create data URL with proper MIME type
+    console.log('[ImageRenderer] createImageDataUrl called:', {
+      title: artifact.title,
+      hasContent: !!artifact.content,
+      contentPreview: artifact.content ? artifact.content.substring(0, 50) + '...' : 'none'
+    });
     
     if (artifact.content) {
       // If content is already base64 or data URL
       if (artifact.content.startsWith('data:')) {
+        console.log('[ImageRenderer] Using artifact.content as data URL');
         return artifact.content;
       }
+      // If it's raw base64, add the data URL prefix
+      console.log('[ImageRenderer] Adding data: prefix to raw base64');
+      return `data:image/png;base64,${artifact.content}`;
     }
 
     // Placeholder SVG for demonstration

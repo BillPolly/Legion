@@ -92,7 +92,6 @@ export class TerminalAgent extends Actor {
       const sessionInfo = await this.sessionManager.createSession();
       this.sessionId = sessionInfo.sessionId;
       
-      // Get the actual session object with toolProvider
       this.session = this.sessionManager.getSession(this.sessionId);
       if (!this.session) {
         throw new Error('Failed to get created session');
@@ -125,7 +124,6 @@ export class TerminalAgent extends Actor {
    */
   async handleSessionAttach(message) {
     try {
-      // Get the actual session object with toolProvider
       const session = this.sessionManager.getSession(message.sessionId);
       if (session) {
         this.sessionId = message.sessionId;
@@ -315,13 +313,7 @@ export class TerminalAgent extends Actor {
     }
     
     try {
-      // Get tools from session's tool provider
-      const toolProvider = this.session.toolProvider;
-      if (toolProvider && toolProvider.getAllToolDefinitions) {
-        return await toolProvider.getAllToolDefinitions();
-      }
-      
-      // Fallback: get from module loader
+ 
       if (this.moduleLoader) {
         const tools = await this.moduleLoader.getAllTools();
         return tools.map(tool => ({

@@ -41,6 +41,12 @@ export class GenericModule extends Module {
     
     this.library = await this.loadLibrary();
     this.instance = this.initializeLibrary(this.dependencies);
+    
+    // If the instance has an initialize method, call it
+    if (this.instance && typeof this.instance.initialize === 'function') {
+      await this.instance.initialize();
+    }
+    
     this.tools = await this.createTools();
     this._initialized = true;
   }

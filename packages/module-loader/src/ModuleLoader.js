@@ -261,9 +261,9 @@ export class ModuleLoader {
   }
 
   /**
-   * Load a module by name from a known module (used by other packages)
+   * Load a module by name from the registry or with a provided class
    * @param {string} moduleName - Name/identifier of the module
-   * @param {Function} ModuleClass - Module class to instantiate
+   * @param {Function} ModuleClass - Optional module class to instantiate. If not provided, loads from registry
    * @returns {Promise<Object>} Loaded module instance
    */
   async loadModuleByName(moduleName, ModuleClass) {
@@ -272,8 +272,49 @@ export class ModuleLoader {
       return this.loadedModules.get(moduleName);
     }
 
-    // Use ModuleFactory to create the module
-    const module = await this.moduleFactory.createModule(ModuleClass);
+    let module;
+    
+    // If no ModuleClass provided, try to load from registry
+    if (!ModuleClass) {
+      // Load the registry to find the module definition
+      const { readFile } = await import('fs/promises');
+      const { resolve, dirname } = await import('path');
+      const { fileURLToPath } = await import('url');
+      
+      const __dirname = dirname(fileURLToPath(import.meta.url));
+      const registryPath = resolve(__dirname, 'ModuleRegistry.json');
+      const registryContent = await readFile(registryPath, 'utf-8');
+      const registry = JSON.parse(registryContent);
+      
+      // Check if module exists in registry
+      if (!registry.modules[moduleName]) {
+        throw new Error(`Module '${moduleName}' not found in registry`);
+      }
+      
+      const moduleInfo = registry.modules[moduleName];
+      const projectRoot = resolve(__dirname, '../../..');
+      const modulePath = resolve(projectRoot, moduleInfo.path);
+      
+      // Load based on type
+      if (moduleInfo.type === 'json') {
+        module = await this.moduleFactory.createJsonModule(modulePath);
+      } else if (moduleInfo.type === 'class') {
+        // Import and create the class module
+        const moduleExports = await import(modulePath);
+        const LoadedModuleClass = moduleExports.default || moduleExports[moduleInfo.className];
+        
+        if (!LoadedModuleClass) {
+          throw new Error(`Module class ${moduleInfo.className || 'default'} not found in ${modulePath}`);
+        }
+        
+        module = await this.moduleFactory.createModule(LoadedModuleClass);
+      } else {
+        throw new Error(`Unknown module type: ${moduleInfo.type}`);
+      }
+    } else {
+      // Use provided ModuleClass
+      module = await this.moduleFactory.createModule(ModuleClass);
+    }
     
     // Store it
     this.loadedModules.set(moduleName, module);

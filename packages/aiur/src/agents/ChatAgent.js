@@ -70,21 +70,8 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
     }
     
     await this.initializeLLMClient();
-    
-    // Load the ai-generation module if we have a moduleLoader
-    if (this.moduleLoader) {
-      try {
-        // Check if ai-generation module is already loaded
-        if (!this.moduleLoader.hasModule('ai-generation')) {
-          console.log('ChatAgent: Loading ai-generation module for image generation...');
-          await this.moduleLoader.loadModuleByName('ai-generation');
-          console.log('ChatAgent: ai-generation module loaded successfully');
-        }
-      } catch (error) {
-        console.warn('ChatAgent: Could not load ai-generation module:', error.message);
-      }
-    }
-    
+    await this.moduleLoader.loadModuleByName('ai-generation');
+
     this.initialized = true;
   }
   
@@ -408,9 +395,34 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
           }
         }
         
+        // Filter out large data (like base64 images) from the result before sending to LLM
+        let resultForLLM = result;
+        
+        // Special handling for image generation results
+        if (toolCall.name === 'generate_image' && result.imageData) {
+          // Create a sanitized version without the actual image data
+          resultForLLM = {
+            success: result.success,
+            filename: result.filename,
+            metadata: result.metadata,
+            message: `Image generated successfully and saved as ${result.filename}`,
+            // Include size info but not the actual data
+            imageSizeKB: result.imageData ? Math.round(result.imageData.length / 1024) : 0
+          };
+        } else if (result.imageData || result.data) {
+          // Generic filtering for any tool that returns large data
+          const { imageData, data, ...sanitized } = result;
+          resultForLLM = {
+            ...sanitized,
+            dataOmitted: true,
+            dataType: imageData ? 'image' : 'binary',
+            dataSizeKB: (imageData || data) ? Math.round((imageData || data).length / 1024) : 0
+          };
+        }
+        
         results.push({
           tool_use_id: toolCall.id,
-          content: JSON.stringify(result)
+          content: JSON.stringify(resultForLLM)
         });
         
         // Emit tool execution event (existing functionality)

@@ -116,7 +116,7 @@ export class GenericTool extends Tool {
    * @private
    */
   prepareArguments(args) {
-    const { parameters } = this.config;
+    const { parameters, passAsObject = true } = this.config;
     
     // If no parameters defined, pass the whole args object
     if (!parameters || !parameters.properties) {
@@ -126,14 +126,21 @@ export class GenericTool extends Tool {
     // Get the parameter names in order
     const properties = Object.keys(parameters.properties);
     
-    // If we have exactly the same keys as parameters, extract them in order
+    // For functions that expect a single object parameter (most common pattern)
+    // Always pass as object unless explicitly configured otherwise
+    if (passAsObject !== false) {
+      return [args];
+    }
+    
+    // Only split into separate arguments if explicitly configured
+    // This is for functions that expect multiple separate parameters
     const argKeys = Object.keys(args);
     if (properties.length > 1 && argKeys.every(key => properties.includes(key))) {
       // Multiple parameters - pass as separate arguments
       return properties.map(prop => args[prop]);
     }
     
-    // Otherwise, pass the whole args object
+    // Default: pass the whole args object
     return [args];
   }
   

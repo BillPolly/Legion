@@ -68,26 +68,37 @@ export class ArtifactDetector {
     }
 
     try {
-      // Strategy 1: Look for explicit file paths in result
-      const filePaths = this.extractFilePaths(toolResult);
-      for (const filePath of filePaths) {
-        const artifact = await this.analyzeFilePath(filePath, toolName);
-        if (artifact) {
-          artifacts.push(artifact);
+      // For certain tools, ONLY use tool-specific detection to avoid duplicates
+      const toolSpecificOnly = ['generate_image', 'generate_html_page'];
+      
+      if (toolSpecificOnly.includes(toolName)) {
+        // Only use tool-specific detection for these tools
+        const toolSpecificArtifacts = this.detectToolSpecificArtifacts(toolName, toolResult);
+        artifacts.push(...toolSpecificArtifacts);
+      } else {
+        // Use all strategies for other tools
+        
+        // Strategy 1: Look for explicit file paths in result
+        const filePaths = this.extractFilePaths(toolResult);
+        for (const filePath of filePaths) {
+          const artifact = await this.analyzeFilePath(filePath, toolName);
+          if (artifact) {
+            artifacts.push(artifact);
+          }
         }
+
+        // Strategy 2: Look for content-based artifacts
+        const contentArtifacts = this.extractContentArtifacts(toolResult, toolName);
+        artifacts.push(...contentArtifacts);
+
+        // Strategy 3: Look for URLs and links
+        const urlArtifacts = this.extractUrlArtifacts(toolResult, toolName);
+        artifacts.push(...urlArtifacts);
+
+        // Strategy 4: Tool-specific artifact detection
+        const toolSpecificArtifacts = this.detectToolSpecificArtifacts(toolName, toolResult);
+        artifacts.push(...toolSpecificArtifacts);
       }
-
-      // Strategy 2: Look for content-based artifacts
-      const contentArtifacts = this.extractContentArtifacts(toolResult, toolName);
-      artifacts.push(...contentArtifacts);
-
-      // Strategy 3: Look for URLs and links
-      const urlArtifacts = this.extractUrlArtifacts(toolResult, toolName);
-      artifacts.push(...urlArtifacts);
-
-      // Strategy 4: Tool-specific artifact detection
-      const toolSpecificArtifacts = this.detectToolSpecificArtifacts(toolName, toolResult);
-      artifacts.push(...toolSpecificArtifacts);
 
     } catch (error) {
       console.warn('Error detecting artifacts:', error);

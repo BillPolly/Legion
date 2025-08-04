@@ -66,6 +66,7 @@ export default class AIGenerationModule extends Module {
    * @returns {Promise<Object>} Generated image data and metadata
    */
   async generateImage(params) {
+    console.log('[AIGenerationModule] === UPDATED VERSION WITH LOGGING ===');
     const {
       prompt,
       size = '1024x1024',
@@ -74,14 +75,30 @@ export default class AIGenerationModule extends Module {
       response_format = 'b64_json'
     } = params;
 
+    console.log('[AIGenerationModule] generateImage called with:', {
+      prompt: prompt ? prompt.substring(0, 50) + '...' : 'NO PROMPT',
+      size,
+      quality,
+      style,
+      response_format
+    });
+
     if (!prompt) {
       throw new Error('Prompt is required for image generation');
     }
 
+    if (!this.llmClient) {
+      console.error('[AIGenerationModule] LLMClient is null - was initialize() called?');
+      throw new Error('LLMClient not initialized. Module may not have been initialized properly.');
+    }
+
     try {
-      console.log(`Generating image with DALL-E 3: "${prompt.substring(0, 50)}..."`);
+      console.log(`[AIGenerationModule] Starting DALL-E 3 image generation...`);
+      console.log(`  Prompt: "${prompt.substring(0, 50)}..."`);
+      console.log(`  Using LLMClient:`, this.llmClient.constructor.name);
       
       // Call LLMClient's image generation method
+      console.log('[AIGenerationModule] Calling llmClient.generateImage()...');
       const response = await this.llmClient.generateImage({
         model: 'dall-e-3',
         prompt: prompt,
@@ -92,8 +109,19 @@ export default class AIGenerationModule extends Module {
         response_format: response_format
       });
 
+      console.log('[AIGenerationModule] Received response from LLMClient');
+      
       // Extract the generated image data (response is an array from provider)
       const imageData = Array.isArray(response) ? response[0] : response;
+      console.log('[AIGenerationModule] Image data type:', typeof imageData);
+      console.log('[AIGenerationModule] Has b64_json?', !!imageData.b64_json);
+      console.log('[AIGenerationModule] Has url?', !!imageData.url);
+      
+      // Check what the b64_json actually contains
+      if (imageData.b64_json) {
+        const first50 = imageData.b64_json.substring(0, 50);
+        console.log('[AIGenerationModule] First 50 chars of b64_json:', first50);
+      }
       
       // Create filename with timestamp
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
@@ -102,8 +130,23 @@ export default class AIGenerationModule extends Module {
       // Prepare the result based on response format
       let result;
       if (response_format === 'b64_json' && imageData.b64_json) {
-        // Convert base64 to data URL
-        const dataUrl = `data:image/png;base64,${imageData.b64_json}`;
+        // Check if the base64 already has the data URL prefix
+        let dataUrl;
+        if (imageData.b64_json.startsWith('data:')) {
+          // Already has prefix
+          dataUrl = imageData.b64_json;
+          console.log('[AIGenerationModule] Base64 already has data: prefix');
+        } else {
+          // Add the prefix
+          dataUrl = `data:image/png;base64,${imageData.b64_json}`;
+          console.log('[AIGenerationModule] Added data:image/png;base64, prefix');
+        }
+        
+        // Log what we're actually sending
+        console.log('[AIGenerationModule] Final imageData first 50 chars:', dataUrl.substring(0, 50));
+        
+        // Save the image to file for verification
+        await this.saveImageToFile(imageData.b64_json, filename);
         
         result = {
           success: true,
@@ -149,7 +192,9 @@ export default class AIGenerationModule extends Module {
       return result;
 
     } catch (error) {
-      console.error('Error generating image:', error);
+      console.error('[AIGenerationModule] Error generating image:', error);
+      console.error('[AIGenerationModule] Error type:', error.constructor.name);
+      console.error('[AIGenerationModule] Error stack:', error.stack);
       
       // Handle specific OpenAI errors
       if (error.response) {
@@ -160,6 +205,43 @@ export default class AIGenerationModule extends Module {
       } else {
         throw new Error('Image generation failed with unknown error');
       }
+    }
+  }
+
+  /**
+   * Save base64 image to file for verification
+   * @param {string} base64Data - Raw base64 data (without data: prefix)
+   * @param {string} filename - Filename to save as
+   */
+  async saveImageToFile(base64Data, filename) {
+    try {
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      const os = await import('os');
+      
+      // Create a temp directory for generated images
+      const tempDir = path.join(os.tmpdir(), 'legion-generated-images');
+      await fs.mkdir(tempDir, { recursive: true });
+      
+      // Full path for the file
+      const filePath = path.join(tempDir, filename);
+      
+      // Convert base64 to buffer
+      const imageBuffer = Buffer.from(base64Data, 'base64');
+      
+      // Write the file
+      await fs.writeFile(filePath, imageBuffer);
+      
+      console.log(`[AIGenerationModule] ✅ Image saved to: ${filePath}`);
+      console.log(`[AIGenerationModule] File size: ${(imageBuffer.length / 1024).toFixed(2)} KB`);
+      
+      // Also save a small text file with the first 100 chars of base64 for debugging
+      const debugPath = path.join(tempDir, `${filename}.base64-preview.txt`);
+      await fs.writeFile(debugPath, base64Data.substring(0, 500) + '...');
+      console.log(`[AIGenerationModule] Debug preview saved to: ${debugPath}`);
+      
+    } catch (error) {
+      console.error('[AIGenerationModule] Error saving image file:', error);
     }
   }
 

@@ -42,8 +42,10 @@ export class ImageGenerationTool extends Tool {
    * @returns {Promise<Object>} Generated image data
    */
   async execute(args) {
+    console.log('[ImageGenerationTool] Execute called');
     try {
       // Emit progress event
+      console.log('[ImageGenerationTool] Emitting progress: 10%');
       this.emit('progress', {
         percentage: 10,
         status: 'Preparing image generation request...'
@@ -51,8 +53,10 @@ export class ImageGenerationTool extends Tool {
 
       // Validate inputs
       const validated = this.inputSchema.parse(args);
+      console.log('[ImageGenerationTool] Inputs validated');
 
       // Emit progress event
+      console.log('[ImageGenerationTool] Emitting progress: 30%');
       this.emit('progress', {
         percentage: 30,
         status: `Generating image: "${validated.prompt.substring(0, 50)}..."`
@@ -60,10 +64,16 @@ export class ImageGenerationTool extends Tool {
 
       // Call the module's generateImage method
       if (!this.module || !this.module.generateImage) {
+        console.error('[ImageGenerationTool] Module not available:', {
+          hasModule: !!this.module,
+          hasGenerateImage: this.module ? !!this.module.generateImage : false
+        });
         throw new Error('AIGenerationModule instance not available');
       }
 
+      console.log('[ImageGenerationTool] Calling module.generateImage()...');
       const result = await this.module.generateImage(validated);
+      console.log('[ImageGenerationTool] Module returned result');
 
       // Emit progress event
       this.emit('progress', {
