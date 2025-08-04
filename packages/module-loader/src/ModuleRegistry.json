@@ -99,6 +99,10 @@
     "encode": {
       "type": "json",
       "path": "packages/general-tools/src/encode/module.json"
+    },
+    "ai-generation": {
+      "type": "json",
+      "path": "packages/general-tools/src/ai-generation/module.json"
     }
   }
 }

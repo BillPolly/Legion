@@ -70,6 +70,21 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
     }
     
     await this.initializeLLMClient();
+    
+    // Load the ai-generation module if we have a moduleLoader
+    if (this.moduleLoader) {
+      try {
+        // Check if ai-generation module is already loaded
+        if (!this.moduleLoader.hasModule('ai-generation')) {
+          console.log('ChatAgent: Loading ai-generation module for image generation...');
+          await this.moduleLoader.loadModuleByName('ai-generation');
+          console.log('ChatAgent: ai-generation module loaded successfully');
+        }
+      } catch (error) {
+        console.warn('ChatAgent: Could not load ai-generation module:', error.message);
+      }
+    }
+    
     this.initialized = true;
   }
   
@@ -439,11 +454,13 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
     const tools = [];
     
     try {
-      // Get tools from moduleLoader if available
-      if (this.moduleLoader) {
-        const allTools = await this.moduleLoader.getAllTools();
+      // Get tools from moduleLoader's toolRegistry directly
+      // getAllTools() is broken due to module initialization issues
+      if (this.moduleLoader && this.moduleLoader.toolRegistry) {
+        // Use the toolRegistry Map directly which has all registered tools
+        const toolsFromRegistry = Array.from(this.moduleLoader.toolRegistry.values());
         
-        for (const tool of allTools) {
+        for (const tool of toolsFromRegistry) {
           // Convert to standard format
           if (tool.toJSON) {
             const toolDef = tool.toJSON();

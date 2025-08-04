@@ -1,0 +1,62 @@
+{
+  "name": "ai-generation",
+  "version": "1.0.0",
+  "description": "AI-powered content generation tools including DALL-E 3 image generation",
+  "package": "./AIGenerationModule.js",
+  "type": "constructor",
+  "dependencies": {
+    "OPENAI_API_KEY": {
+      "type": "string",
+      "description": "OpenAI API key for DALL-E image generation"
+    }
+  },
+  "initialization": {
+    "className": "AIGenerationModule",
+    "config": {
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  },
+  "tools": [
+    {
+      "name": "generate_image",
+      "description": "Generate an image using DALL-E 3 AI model",
+      "function": "generateImage",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "description": "Text description of the image to generate"
+          },
+          "size": {
+            "type": "string",
+            "enum": ["1024x1024", "1792x1024", "1024x1792"],
+            "default": "1024x1024",
+            "description": "Size of the generated image"
+          },
+          "quality": {
+            "type": "string",
+            "enum": ["standard", "hd"],
+            "default": "standard",
+            "description": "Quality of the generated image (hd costs more)"
+          },
+          "style": {
+            "type": "string",
+            "enum": ["vivid", "natural"],
+            "default": "vivid",
+            "description": "Style of the generated image"
+          },
+          "response_format": {
+            "type": "string",
+            "enum": ["b64_json", "url"],
+            "default": "b64_json",
+            "description": "Format for the generated image (b64_json for base64, url for hosted URL)"
+          }
+        },
+        "required": ["prompt"]
+      }
+    }
+  ]
+}

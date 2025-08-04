@@ -13,6 +13,7 @@ import GitHubModule from './github/GitHubModule.js';
 import JsonModule from './json/JsonModule.js';
 import SerperModule from './serper/index.js';
 import CommandExecutorModule from './command-executor/index.js';
+import AIGenerationModule from './ai-generation/index.js';
 
 // Export module classes only - no hardcoded tool instantiation
 export {
@@ -21,5 +22,6 @@ export {
   GitHubModule,
   JsonModule,
   SerperModule,
-  CommandExecutorModule
+  CommandExecutorModule,
+  AIGenerationModule
 };

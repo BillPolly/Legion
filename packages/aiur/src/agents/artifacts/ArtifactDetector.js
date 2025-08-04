@@ -368,6 +368,42 @@ export class ArtifactDetector {
           });
         }
         break;
+
+      case 'generate_image':
+        // Handle AI-generated images from DALL-E or other providers
+        if (toolResult.imageData || toolResult.imageUrl) {
+          artifacts.push({
+            id: `artifact-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            type: 'image',
+            subtype: toolResult.subtype || 'png',
+            title: toolResult.filename || 'Generated Image',
+            content: toolResult.imageData || toolResult.imageUrl,
+            size: toolResult.imageData ? 
+              Math.round((toolResult.imageData.length * 3) / 4) : // Estimate base64 decoded size
+              0,
+            exists: true,
+            preview: toolResult.imageData ? 
+              toolResult.imageData.substring(0, 100) + '...' : 
+              toolResult.imageUrl,
+            createdBy: toolName,
+            createdAt: new Date().toISOString(),
+            metadata: {
+              ...toolResult.metadata,
+              isGenerated: true,
+              isBase64: !!toolResult.imageData,
+              isUrl: !!toolResult.imageUrl,
+              downloadable: !!toolResult.imageData,
+              prompt: toolResult.metadata?.prompt,
+              model: toolResult.metadata?.model || 'dall-e-3',
+              size: toolResult.metadata?.size,
+              quality: toolResult.metadata?.quality,
+              style: toolResult.metadata?.style
+            }
+          });
+          
+          console.log(`ArtifactDetector: Detected generated image artifact from ${toolName}`);
+        }
+        break;
     }
 
     return artifacts;

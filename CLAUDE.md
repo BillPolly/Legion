@@ -6,44 +6,108 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Legion is a modular framework for building AI agent tools with consistent interfaces. It's organized as a monorepo using npm workspaces with packages for core infrastructure, AI/LLM services, tool collections, and applications.
 
-## 🚨 CRITICAL: ResourceManager Automatically Contains ALL API Keys 🚨
+## 🚨 CRITICAL: Module Loading and API Key Management 🚨
+
+### Complete Module Loading Flow
+
+The Legion framework uses a sophisticated module loading system that automatically handles API keys and dependencies:
+
+```
+.env File → ResourceManager → ModuleFactory → Module Instance → Tools
+```
+
+### 1. ResourceManager Initialization
 
 **THE RESOURCE MANAGER LOADS THE ENTIRE .env FILE ON INITIALIZATION**
 
 When ResourceManager initializes, it automatically:
 
-1. **Finds .env file** - Searches project root and parent directories for .env file
+1. **Finds .env file** - Searches for "legion" directory in path, then checks parent directories
 2. **Loads ALL environment variables** - Uses `dotenv.config()` to load the entire .env file  
 3. **Registers every variable** - Makes ALL env vars available as `resourceManager.get('env.VARIABLE_NAME')`
-4. **Provides automatic injection** - ModuleFactory uses these for dependency injection to modules
+4. **Provides automatic injection** - ModuleFactory uses these for dependency injection
 
-### This Means:
+### 2. Module Loading Patterns
 
-✅ **All API keys are automatically available to modules**
-- `ANTHROPIC_API_KEY` becomes `resourceManager.get('env.ANTHROPIC_API_KEY')`
-- `GITHUB_PAT` becomes `resourceManager.get('env.GITHUB_PAT')`
-- `RAILWAY_API_TOKEN` becomes `resourceManager.get('env.RAILWAY_API_TOKEN')`
-- **Every .env variable is available without any manual setup**
+#### Pattern A: JSON Module Configuration (Recommended for Simple Modules)
+```json
+// module.json
+{
+  "name": "my-module",
+  "dependencies": {
+    "OPENAI_API_KEY": {
+      "type": "string",
+      "description": "OpenAI API key"
+    }
+  },
+  "initialization": {
+    "config": {
+      "apiKey": "${OPENAI_API_KEY}"  // Resolved by ModuleFactory
+    }
+  }
+}
+```
 
-✅ **Live tests get real API keys via ResourceManager**
-- Integration tests use `resourceManager.get('env.API_KEY')` for real API calls
-- No need to manually load .env or access process.env
-- Follow existing patterns in `LiveGitHubIntegration.test.js`
+#### Pattern B: Async Factory Pattern (For Complex Modules)
+```javascript
+// MyModule.js
+export default class MyModule extends Module {
+  static async create(resourceManager) {
+    const apiKey = resourceManager.get('env.OPENAI_API_KEY');
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY required');
+    }
+    const module = new MyModule({ apiKey });
+    await module.initialize();
+    return module;
+  }
+}
+```
 
-✅ **Module loading provides automatic API key injection**
-- When Aiur loads modules, ModuleFactory automatically injects required API keys
-- Modules receive API keys through constructor dependency injection
-- No manual key management required by module developers
+### 3. How ModuleFactory Resolves Dependencies
+
+```javascript
+// ModuleFactory.js behavior:
+1. Check for static create method → Pass ResourceManager directly
+2. Read module.json dependencies → For each dependency:
+   - Call resourceManager.get('env.DEPENDENCY_NAME')
+   - Resolve ${DEPENDENCY_NAME} placeholders in config
+3. Instantiate module with resolved dependencies
+```
+
+### 4. API Keys Available to Modules
+
+✅ **All API keys are automatically available**
+- `ANTHROPIC_API_KEY` → `resourceManager.get('env.ANTHROPIC_API_KEY')`
+- `OPENAI_API_KEY` → `resourceManager.get('env.OPENAI_API_KEY')`
+- `GITHUB_PAT` → `resourceManager.get('env.GITHUB_PAT')`
+- `SERPER_API_KEY` → `resourceManager.get('env.SERPER_API_KEY')`
+- `RAILWAY_API_TOKEN` → `resourceManager.get('env.RAILWAY_API_TOKEN')`
+- **Every .env variable is available without manual setup**
+
+### 5. Module Loading in Aiur
+
+```javascript
+// AiurServer.js creates singleton ModuleLoader:
+this.moduleLoader = new ModuleLoader(); // Creates ResourceManager internally
+await this.moduleLoader.initialize();   // ResourceManager loads .env here
+
+// Modules are loaded with automatic dependency injection:
+await this.moduleLoader.loadModuleByName('ai-generation', AIGenerationModule);
+```
+
+### Critical Rules
 
 ❌ **NEVER access process.env directly** - Always use ResourceManager
 ❌ **NEVER manually register API keys** - ResourceManager does this automatically
+❌ **NEVER create multiple ModuleLoader instances** - Use the singleton
+❌ **NEVER bypass ModuleFactory dependency resolution** - It handles everything
 ❌ **NEVER load .env manually** - ResourceManager handles this during initialization
 
-### The Complete Flow:
-```
-.env File → ResourceManager.initialize() → Load ALL vars as env.* → 
-ModuleFactory dependency injection → Modules receive API keys automatically
-```
+✅ **ALWAYS use resourceManager.get('env.KEY_NAME')** for env variables
+✅ **ALWAYS throw errors if required API keys are missing**
+✅ **ALWAYS follow async factory pattern for modules needing ResourceManager**
+✅ **ALWAYS let ModuleFactory handle dependency injection**
 
 ## Essential Commands
 
