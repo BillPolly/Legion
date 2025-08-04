@@ -912,9 +912,67 @@ class FileModule extends Module {
     // Store configuration
     this.config = config;
     
-    // Create and register the file operations tool
-    const fileOperationsTool = new FileOperationsTool();
-    this.registerTool('file_operations', fileOperationsTool);
+    // Create the file operations tool instance
+    this.fileOperationsTool = new FileOperationsTool();
+    
+    // Register individual tools from the file operations tool
+    this._registerIndividualTools();
+  }
+  
+  /**
+   * Register each function as an individual tool
+   */
+  _registerIndividualTools() {
+    // Get all tool descriptions from the file operations tool
+    const toolDescriptions = this.fileOperationsTool.getAllToolDescriptions();
+    
+    // Create and register a wrapper tool for each function
+    for (const desc of toolDescriptions) {
+      const toolName = desc.function.name;
+      const toolDescription = desc.function.description;
+      const toolSchema = desc.function.parameters;
+      
+      // Create a wrapper tool that delegates to the file operations tool
+      const wrapperTool = {
+        name: toolName,
+        description: toolDescription,
+        inputSchema: toolSchema,
+        
+        // Execute method that delegates to the file operations tool
+        execute: async (args) => {
+          // Map the tool name to the operation
+          const operationMap = {
+            'file_read': 'read',
+            'file_write': 'write',
+            'directory_create': 'create',
+            'directory_list': 'list',
+            'directory_change': 'change',
+            'directory_current': 'current'
+          };
+          
+          // Build the arguments for the file operations tool
+          const fileOpsArgs = {
+            operation: operationMap[toolName] || toolName,
+            ...args
+          };
+          
+          // Execute through the file operations tool
+          return await this.fileOperationsTool.execute(fileOpsArgs);
+        },
+        
+        // For compatibility with tool definition providers
+        toJSON: function() {
+          return {
+            name: this.name,
+            description: this.description,
+            inputSchema: this.inputSchema
+          };
+        }
+      };
+      
+      // Register the wrapper tool
+      this.registerTool(toolName, wrapperTool);
+    }
   }
 }
 
