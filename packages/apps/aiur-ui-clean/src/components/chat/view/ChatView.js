@@ -1,3 +1,5 @@
+import { artifactRegistry } from '../artifacts/index.js';
+
 /**
  * ChatView - Handles chat UI rendering and DOM manipulation
  */
@@ -320,9 +322,130 @@ export class ChatView {
     timestamp.textContent = new Date(message.timestamp).toLocaleTimeString();
     
     messageElement.appendChild(bubble);
+    
+    // Add artifacts if present
+    if (message.artifacts && message.artifacts.length > 0) {
+      const artifactsContainer = this.renderArtifacts(message.artifacts);
+      messageElement.appendChild(artifactsContainer);
+    }
+    
     messageElement.appendChild(timestamp);
     
     return messageElement;
+  }
+  
+  /**
+   * Render artifacts container for a message
+   * @param {Array} artifacts - Array of artifact objects
+   * @returns {HTMLElement} Artifacts container element
+   */
+  renderArtifacts(artifacts) {
+    const container = document.createElement('div');
+    container.className = 'message-artifacts';
+    container.style.cssText = `
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-width: 100%;
+    `;
+
+    artifacts.forEach(artifact => {
+      try {
+        const renderer = artifactRegistry.getRenderer(artifact);
+        const artifactElement = renderer.renderPreview(artifact);
+        
+        // Add click handler for viewing
+        artifactElement.addEventListener('click', () => {
+          this.handleArtifactClick(artifact, renderer);
+        });
+        
+        container.appendChild(artifactElement);
+      } catch (error) {
+        console.warn('Error rendering artifact:', artifact, error);
+        
+        // Fallback rendering
+        const fallback = this.renderArtifactFallback(artifact);
+        container.appendChild(fallback);
+      }
+    });
+
+    return container;
+  }
+  
+  /**
+   * Render fallback artifact card when renderer fails
+   * @param {Object} artifact - Artifact metadata
+   * @returns {HTMLElement} Fallback artifact element
+   */
+  renderArtifactFallback(artifact) {
+    const card = document.createElement('div');
+    card.className = 'artifact-card artifact-fallback';
+    card.style.cssText = `
+      background: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 12px;
+      margin: 4px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      opacity: 0.7;
+    `;
+
+    const icon = document.createElement('div');
+    icon.style.cssText = `
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: #444;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    `;
+    icon.textContent = '📎';
+
+    const content = document.createElement('div');
+    content.style.cssText = 'flex: 1;';
+
+    const title = document.createElement('div');
+    title.style.cssText = `
+      font-weight: 500;
+      color: #e0e0e0;
+      font-size: 14px;
+      margin-bottom: 4px;
+    `;
+    title.textContent = artifact.title || 'Unknown Artifact';
+
+    const details = document.createElement('div');
+    details.style.cssText = `
+      font-size: 12px;
+      color: #999;
+    `;
+    details.textContent = `${artifact.type || 'unknown'} • Rendering failed`;
+
+    content.appendChild(title);
+    content.appendChild(details);
+    
+    card.appendChild(icon);
+    card.appendChild(content);
+
+    return card;
+  }
+  
+  /**
+   * Handle artifact click event
+   * @param {Object} artifact - Artifact metadata
+   * @param {ArtifactRenderer} renderer - Renderer instance
+   */
+  handleArtifactClick(artifact, renderer) {
+    // Emit event for parent components to handle
+    const event = new CustomEvent('artifact-click', {
+      detail: { artifact, renderer },
+      bubbles: true
+    });
+    this.container.dispatchEvent(event);
   }
   
   /**

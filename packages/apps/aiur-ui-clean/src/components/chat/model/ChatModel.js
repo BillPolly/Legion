@@ -26,6 +26,7 @@ export class ChatModel {
       content,
       role, // 'user' or 'assistant'
       timestamp: new Date().toISOString(),
+      artifacts: metadata.artifacts || [],
       ...metadata
     };
     

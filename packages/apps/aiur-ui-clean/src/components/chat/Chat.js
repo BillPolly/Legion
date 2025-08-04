@@ -6,6 +6,7 @@
 import { ChatModel } from './model/ChatModel.js';
 import { ChatView } from './view/ChatView.js';
 import { ChatViewModel } from './viewmodel/ChatViewModel.js';
+import { ArtifactViewer } from './artifacts/ArtifactViewer.js';
 
 export class Chat {
   /**
@@ -85,8 +86,14 @@ export class Chat {
     this.view = new ChatView(this.container);
     this.viewModel = new ChatViewModel(this.model, this.view, this.chatActor);
     
+    // Initialize artifact viewer
+    this.artifactViewer = new ArtifactViewer();
+    
     // Set up umbilical callbacks
     this.setupCallbacks();
+    
+    // Set up artifact event handling
+    this.setupArtifactHandling();
     
     // Apply configuration
     this.applyConfiguration();
@@ -125,6 +132,100 @@ export class Chat {
           break;
       }
     });
+  }
+  
+  /**
+   * Set up artifact event handling
+   */
+  setupArtifactHandling() {
+    // Listen for artifact clicks from the chat view
+    this.container.addEventListener('artifact-click', (event) => {
+      const { artifact, renderer } = event.detail;
+      this.artifactViewer.show(artifact, renderer);
+    });
+
+    // Handle global artifact events
+    document.addEventListener('artifact-view', (event) => {
+      const { artifact, renderer } = event.detail;
+      this.artifactViewer.show(artifact, renderer);
+    });
+
+    document.addEventListener('artifact-download', (event) => {
+      const { artifact } = event.detail;
+      this.downloadArtifact(artifact);
+    });
+
+    // Set up artifact viewer callbacks
+    this.artifactViewer.onDownload = (artifact) => {
+      this.downloadArtifact(artifact);
+    };
+  }
+
+  /**
+   * Download artifact content
+   * @param {Object} artifact - Artifact metadata
+   */
+  async downloadArtifact(artifact) {
+    try {
+      // This is a placeholder - in a real implementation you would
+      // fetch the content from the server or file system
+      let content = artifact.content;
+      let filename = artifact.title;
+
+      if (!content && artifact.preview) {
+        content = artifact.preview;
+        filename = filename + ' (preview)';
+      }
+
+      if (!content) {
+        throw new Error('No content available for download');
+      }
+
+      // Create blob and download
+      const mimeType = this.getMimeType(artifact);
+      const blob = new Blob([content], { type: mimeType });
+      
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      console.log(`Downloaded artifact: ${filename}`);
+    } catch (error) {
+      console.error('Download failed:', error);
+      if (this.umbilical.onError) {
+        this.umbilical.onError(new Error(`Download failed: ${error.message}`));
+      }
+    }
+  }
+
+  /**
+   * Get MIME type for artifact
+   * @param {Object} artifact - Artifact metadata
+   * @returns {string} MIME type
+   */
+  getMimeType(artifact) {
+    const mimeMap = {
+      js: 'text/javascript',
+      jsx: 'text/javascript',
+      ts: 'text/typescript',
+      tsx: 'text/typescript',
+      html: 'text/html',
+      css: 'text/css',
+      json: 'application/json',
+      md: 'text/markdown',
+      txt: 'text/plain',
+      py: 'text/x-python',
+      java: 'text/x-java-source',
+      xml: 'application/xml',
+      csv: 'text/csv'
+    };
+
+    return mimeMap[artifact.subtype] || 'text/plain';
   }
   
   /**
@@ -290,6 +391,11 @@ export class Chat {
       this.view.destroy();
     }
     
+    // Destroy artifact viewer
+    if (this.artifactViewer) {
+      this.artifactViewer.destroy();
+    }
+    
     // Clear references
     this.model = null;
     this.view = null;
@@ -297,5 +403,6 @@ export class Chat {
     this.chatActor = null;
     this.container = null;
     this.umbilical = null;
+    this.artifactViewer = null;
   }
 }

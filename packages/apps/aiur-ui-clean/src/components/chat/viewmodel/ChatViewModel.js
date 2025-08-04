@@ -193,12 +193,14 @@ export class ChatViewModel {
         // Update the streaming message to complete
         this.model.updateMessage(this.streamingMessageId, {
           content: response.content,
+          artifacts: response.artifacts || [],
           isComplete: true
         });
         this.streamingMessageId = null;
       } else {
         // Add new assistant message
         this.model.addMessage(response.content, 'assistant', {
+          artifacts: response.artifacts || [],
           isComplete: true
         });
       }

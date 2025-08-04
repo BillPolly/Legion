@@ -254,6 +254,7 @@ export class ChatActor extends Actor {
       this.onResponse({
         content: payload.content,
         isComplete: payload.isComplete || false,
+        artifacts: payload.artifacts || [],
         timestamp: payload.timestamp || new Date().toISOString()
       });
     }

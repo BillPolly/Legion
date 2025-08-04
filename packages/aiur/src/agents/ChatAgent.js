@@ -1,4 +1,6 @@
 import { Actor } from '../../../shared/actors/src/Actor.js';
+import { ArtifactDetector } from './artifacts/ArtifactDetector.js';
+import { ArtifactManager } from './artifacts/ArtifactManager.js';
 
 /**
  * ChatAgent - Handles chat interactions with LLM as a backend actor
@@ -38,6 +40,10 @@ export class ChatAgent extends Actor {
     
     // Initialize LLM client
     this.llmClient = null;
+    
+    // Initialize artifact system
+    this.artifactDetector = new ArtifactDetector();
+    this.artifactManager = new ArtifactManager({ sessionId: this.sessionId });
     
     // System prompt for the assistant
     this.systemPrompt = config.systemPrompt || `You are a helpful AI assistant integrated into the Aiur development environment.
@@ -178,11 +184,21 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
         timestamp: new Date().toISOString()
       });
       
-      // Send response back through the remote actor (unchanged)
+      // Get all artifacts from this conversation turn
+      const currentArtifacts = this.artifactManager.getAllArtifacts()
+        .filter(artifact => {
+          // Include artifacts created in the last few seconds (during this tool execution)
+          const artifactTime = new Date(artifact.createdAt).getTime();
+          const now = Date.now();
+          return (now - artifactTime) < 30000; // 30 seconds window
+        });
+
+      // Send response back through the remote actor with artifacts
       this.emit('message', {
         type: 'chat_response',
         content: finalResponse,
         isComplete: true,
+        artifacts: currentArtifacts,
         sessionId: this.sessionId
       });
       
@@ -322,6 +338,7 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
    */
   async executeTools(toolCalls) {
     const results = [];
+    const allArtifacts = [];
     
     for (const toolCall of toolCalls) {
       try {
@@ -346,6 +363,36 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
           };
         }
         
+        // Detect artifacts from tool result
+        let artifacts = [];
+        if (result && result.success !== false) {
+          try {
+            artifacts = await this.artifactDetector.detectArtifacts(toolCall.name, result);
+            
+            // Register artifacts with the manager
+            for (const artifact of artifacts) {
+              const registered = this.artifactManager.registerArtifact(artifact);
+              allArtifacts.push(registered);
+            }
+            
+            if (artifacts.length > 0) {
+              console.log(`ChatAgent: Detected ${artifacts.length} artifacts from ${toolCall.name}`);
+              
+              // Emit artifact detection event
+              this.emit('artifacts_detected', {
+                type: 'artifacts_detected',
+                toolName: toolCall.name,
+                toolId: toolCall.id,
+                artifacts: artifacts,
+                sessionId: this.sessionId,
+                timestamp: new Date().toISOString()
+              });
+            }
+          } catch (artifactError) {
+            console.warn(`ChatAgent: Error detecting artifacts for ${toolCall.name}:`, artifactError);
+          }
+        }
+        
         results.push({
           tool_use_id: toolCall.id,
           content: JSON.stringify(result)
@@ -356,6 +403,7 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
           type: 'tool_execution',
           tool: toolCall.name,
           success: result.success !== false,
+          artifacts: artifacts, // Include artifacts in the event
           sessionId: this.sessionId
         });
         
@@ -368,6 +416,17 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
           })
         });
       }
+    }
+    
+    // If we detected any artifacts, emit a summary event
+    if (allArtifacts.length > 0) {
+      this.emit('tool_artifacts_summary', {
+        type: 'tool_artifacts_summary',
+        artifacts: allArtifacts,
+        totalCount: allArtifacts.length,
+        sessionId: this.sessionId,
+        timestamp: new Date().toISOString()
+      });
     }
     
     return results;
@@ -581,6 +640,14 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
     this.conversationHistory = [];
     this.llmClient = null;
     this.remoteActor = null;
+    
+    // Cleanup artifact system
+    if (this.artifactManager) {
+      this.artifactManager.destroy();
+      this.artifactManager = null;
+    }
+    this.artifactDetector = null;
+    
     console.log(`ChatAgent ${this.id} destroyed`);
   }
 }
