@@ -30,8 +30,12 @@ export class ServerActorSpace extends ActorSpace {
     console.log(`ServerActorSpace: New connection from ${clientId}`);
     this.clientId = clientId;
     
-    // Create ChatAgent for this connection
-    const chatAgent = new ChatAgent({ sessionId: this.spaceId });
+    // Create ChatAgent for this connection with access to tools
+    const chatAgent = new ChatAgent({ 
+      sessionId: this.spaceId,
+      sessionManager: this.sessionManager,
+      moduleLoader: this.moduleLoader
+    });
     const chatGuid = `${this.spaceId}-chat`;
     this.register(chatAgent, chatGuid);
     this.chatAgent = chatAgent;

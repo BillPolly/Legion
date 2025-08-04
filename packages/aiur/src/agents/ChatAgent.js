@@ -16,6 +16,10 @@ export class ChatAgent extends Actor {
     // Reference to the remote actor (frontend ChatActor)
     this.remoteActor = config.remoteActor || null;
     
+    // Tool access - sessionManager or moduleLoader
+    this.sessionManager = config.sessionManager || null;
+    this.moduleLoader = config.moduleLoader || null;
+    
     // Conversation state
     this.conversationHistory = [];
     this.isProcessing = false;
@@ -90,7 +94,7 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
   }
   
   /**
-   * Process a chat message from the user
+   * Process a chat message from the user with tool support
    */
   async processMessage(userMessage) {
     if (this.isProcessing) {
@@ -118,32 +122,36 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
         sessionId: this.sessionId
       });
       
-      // Build the prompt with conversation history
-      const prompt = this.buildPrompt(userMessage);
+      // Get available tools if we have access to them
+      const tools = await this.getAvailableTools();
       
-      // Get response from LLM
-      const response = await this.llmClient.complete(prompt, this.llmConfig.maxTokens);
+      // Build messages array for the LLM
+      const messages = this.buildMessages();
+      
+      // Call LLM with tools if available
+      let finalResponse;
+      if (tools && tools.length > 0 && this.llmClient.executeWithTools) {
+        finalResponse = await this.processWithTools(messages, tools);
+      } else {
+        // Fallback to regular completion without tools
+        const prompt = this.buildPrompt(userMessage);
+        finalResponse = await this.llmClient.complete(prompt, this.llmConfig.maxTokens);
+      }
       
       // Add assistant response to history
       this.conversationHistory.push({
         role: 'assistant',
-        content: response,
+        content: finalResponse,
         timestamp: new Date().toISOString()
       });
       
       // Send response back through the remote actor
       this.emit('message', {
         type: 'chat_response',
-        content: response,
+        content: finalResponse,
         isComplete: true,
         sessionId: this.sessionId
       });
-      
-      // Store conversation for potential tool use later
-      this.lastExchange = {
-        user: userMessage,
-        assistant: response
-      };
       
     } catch (error) {
       console.error('Error processing message:', error);
@@ -163,6 +171,204 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
         sessionId: this.sessionId
       });
     }
+  }
+  
+  /**
+   * Process message with tool calling support
+   */
+  async processWithTools(messages, tools) {
+    // Call LLM with tools
+    const response = await this.llmClient.executeWithTools(messages, tools, {
+      temperature: this.llmConfig.temperature,
+      maxTokens: this.llmConfig.maxTokens
+    });
+    
+    // Check if LLM wants to use tools
+    if (response.toolCalls && response.toolCalls.length > 0) {
+      // Save assistant message with tool calls to history
+      const assistantMessage = {
+        role: 'assistant',
+        content: response.content || '',
+        tool_calls: response.toolCalls,
+        timestamp: new Date().toISOString()
+      };
+      this.conversationHistory.push(assistantMessage);
+      
+      // Execute the tool calls
+      const toolResults = await this.executeTools(response.toolCalls);
+      
+      // Save tool results to history as user messages
+      for (const result of toolResults) {
+        this.conversationHistory.push({
+          role: 'user',
+          content: result.content,
+          tool_result: true,
+          tool_use_id: result.tool_use_id,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      // Build updated messages for final response
+      const updatedMessages = this.buildMessages();
+      
+      // Call LLM again with tool results to get final response
+      const finalResponse = await this.llmClient.executeWithTools(updatedMessages, tools, {
+        temperature: this.llmConfig.temperature,
+        maxTokens: this.llmConfig.maxTokens
+      });
+      
+      return finalResponse.content || 'I executed the requested tools.';
+    }
+    
+    // No tools needed, return the response
+    return response.content || '';
+  }
+  
+  /**
+   * Execute tool calls
+   */
+  async executeTools(toolCalls) {
+    const results = [];
+    
+    for (const toolCall of toolCalls) {
+      try {
+        // Execute tool via moduleLoader
+        let result;
+        if (this.moduleLoader && this.moduleLoader.hasTool(toolCall.name)) {
+          result = await this.moduleLoader.executeTool(toolCall.name, toolCall.input);
+        } else {
+          result = {
+            success: false,
+            error: `Tool '${toolCall.name}' not found`
+          };
+        }
+        
+        results.push({
+          tool_use_id: toolCall.id,
+          content: JSON.stringify(result)
+        });
+        
+        // Emit tool execution event
+        this.emit('tool_executed', {
+          type: 'tool_execution',
+          tool: toolCall.name,
+          success: result.success !== false,
+          sessionId: this.sessionId
+        });
+        
+      } catch (error) {
+        results.push({
+          tool_use_id: toolCall.id,
+          content: JSON.stringify({
+            success: false,
+            error: error.message
+          })
+        });
+      }
+    }
+    
+    return results;
+  }
+  
+  /**
+   * Get available tools
+   */
+  async getAvailableTools() {
+    const tools = [];
+    
+    try {
+      // Get tools from moduleLoader if available
+      if (this.moduleLoader) {
+        const allTools = await this.moduleLoader.getAllTools();
+        
+        for (const tool of allTools) {
+          // Convert to standard format
+          if (tool.toJSON) {
+            const toolDef = tool.toJSON();
+            tools.push({
+              name: toolDef.name,
+              description: toolDef.description,
+              input_schema: toolDef.inputSchema
+            });
+          } else if (tool.name) {
+            tools.push({
+              name: tool.name,
+              description: tool.description || 'No description',
+              input_schema: tool.inputSchema || { type: 'object', properties: {} }
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error getting tools:', error);
+    }
+    
+    return tools;
+  }
+  
+  /**
+   * Build messages array from conversation history
+   */
+  buildMessages() {
+    const messages = [
+      {
+        role: 'system',
+        content: this.systemPrompt
+      }
+    ];
+    
+    // Add recent conversation history with proper formatting
+    const recentHistory = this.conversationHistory.slice(-20);
+    
+    for (const msg of recentHistory) {
+      if (msg.tool_result) {
+        // This is a tool result - format as user message with tool_result content
+        messages.push({
+          role: 'user',
+          content: [
+            {
+              type: 'tool_result',
+              tool_use_id: msg.tool_use_id,
+              content: msg.content
+            }
+          ]
+        });
+      } else if (msg.tool_calls && msg.tool_calls.length > 0) {
+        // Assistant message with tool calls
+        const content = [];
+        
+        // Add text content if present
+        if (msg.content) {
+          content.push({
+            type: 'text',
+            text: msg.content
+          });
+        }
+        
+        // Add tool use blocks
+        for (const toolCall of msg.tool_calls) {
+          content.push({
+            type: 'tool_use',
+            id: toolCall.id,
+            name: toolCall.name,
+            input: toolCall.input
+          });
+        }
+        
+        messages.push({
+          role: 'assistant',
+          content: content
+        });
+      } else {
+        // Regular text message
+        messages.push({
+          role: msg.role,
+          content: msg.content
+        });
+      }
+    }
+    
+    return messages;
   }
   
   /**

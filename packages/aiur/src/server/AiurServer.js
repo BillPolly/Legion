@@ -124,10 +124,15 @@ export class AiurServer {
     // The moduleLoader registers itself in ResourceManager during initialize()
     // So the SystemModule will get it as a dependency
     
-    // Load ONLY the system module at startup (provides module_load, module_list, etc)
+    // Load the system module at startup (provides module_load, module_list, etc)
     console.log('[AiurServer] Loading system module...');
     const { default: SystemModule } = await import('../../../general-tools/src/system/SystemModule.js');
     await this.moduleLoader.loadModuleByName('system', SystemModule);
+    
+    // Also preload file module for common operations
+    console.log('[AiurServer] Loading file module...');
+    const { default: FileModule } = await import('../../../general-tools/src/file/FileModule.js');
+    await this.moduleLoader.loadModuleByName('file', FileModule);
     
     // Log initial state
     const allTools = await this.moduleLoader.getAllTools();
