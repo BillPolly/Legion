@@ -137,13 +137,14 @@ export class ImageRenderer extends ArtifactRenderer {
     
     const container = document.createElement('div');
     container.style.cssText = `
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
+      width: 100%;
       height: 100%;
       background: #0d1117;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
     `;
 
     // Check for content (base64 data) OR path
@@ -152,9 +153,9 @@ export class ImageRenderer extends ArtifactRenderer {
       img.style.cssText = `
         max-width: 100%;
         max-height: 100%;
+        width: auto;
+        height: auto;
         object-fit: contain;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
       `;
       
       img.src = this.createImageDataUrl(artifact);
@@ -187,17 +188,56 @@ export class ImageRenderer extends ArtifactRenderer {
       img.style.transition = 'transform 0.3s ease';
 
       container.appendChild(img);
-
-      // Add image info
-      const info = document.createElement('div');
-      info.style.cssText = `
-        margin-top: 16px;
-        text-align: center;
-        color: #8b949e;
-        font-size: 12px;
+      
+      // Add floating download button
+      const downloadBtn = document.createElement('button');
+      downloadBtn.innerHTML = '⬇';
+      downloadBtn.title = 'Download Image';
+      downloadBtn.style.cssText = `
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        opacity: 0.3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
       `;
-      info.textContent = `${artifact.title} • Click to zoom`;
-      container.appendChild(info);
+      
+      // Hover effects
+      downloadBtn.addEventListener('mouseenter', () => {
+        downloadBtn.style.opacity = '1';
+        downloadBtn.style.background = 'rgba(0, 0, 0, 0.6)';
+        downloadBtn.style.color = 'rgba(255, 255, 255, 0.9)';
+        downloadBtn.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+        downloadBtn.style.transform = 'scale(1.1)';
+      });
+      
+      downloadBtn.addEventListener('mouseleave', () => {
+        downloadBtn.style.opacity = '0.3';
+        downloadBtn.style.background = 'rgba(0, 0, 0, 0.3)';
+        downloadBtn.style.color = 'rgba(255, 255, 255, 0.5)';
+        downloadBtn.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+        downloadBtn.style.transform = 'scale(1)';
+      });
+      
+      // Download functionality
+      downloadBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent zoom toggle
+        this.handleDownload(artifact);
+      });
+      
+      container.appendChild(downloadBtn);
     } else {
       container.innerHTML = `
         <div style="text-align: center; color: #8b949e;">

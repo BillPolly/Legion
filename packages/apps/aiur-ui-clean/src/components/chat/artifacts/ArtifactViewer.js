@@ -93,8 +93,11 @@ export class ArtifactViewer {
       overflow: hidden;
     `;
     
-    // Add header with artifact info and actions
-    this.createHeader(artifact);
+    // Skip header for images - they fill the entire window
+    if (artifact.type !== 'image') {
+      // Add header with artifact info and actions
+      this.createHeader(artifact);
+    }
   }
 
   /**
