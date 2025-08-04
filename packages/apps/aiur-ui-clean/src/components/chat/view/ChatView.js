@@ -356,7 +356,9 @@ export class ChatView {
         const artifactElement = renderer.renderPreview(artifact);
         
         // Add click handler for viewing
-        artifactElement.addEventListener('click', () => {
+        artifactElement.addEventListener('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
           this.handleArtifactClick(artifact, renderer);
         });
         
@@ -440,12 +442,16 @@ export class ChatView {
    * @param {ArtifactRenderer} renderer - Renderer instance
    */
   handleArtifactClick(artifact, renderer) {
+    console.log('ChatView: Handling artifact click:', artifact.title);
+    
     // Emit event for parent components to handle
     const event = new CustomEvent('artifact-click', {
       detail: { artifact, renderer },
       bubbles: true
     });
     this.container.dispatchEvent(event);
+    
+    console.log('ChatView: Dispatched artifact-click event');
   }
   
   /**

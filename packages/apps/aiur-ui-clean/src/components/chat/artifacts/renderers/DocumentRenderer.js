@@ -99,8 +99,8 @@ export class DocumentRenderer extends ArtifactRenderer {
     // Italic
     html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
 
-    // Links
-    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+    // Links - convert to plain text to avoid navigation issues in previews
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1');
 
     // Lists
     html = html.replace(/^\* (.*)$/gm, '<li>$1</li>');

@@ -1,335 +1,240 @@
+import { Window } from '/Legion/components/window/index.js';
+
 /**
- * ArtifactViewer - Modal component for viewing artifacts in full detail
+ * ArtifactViewer - Window component for viewing artifacts in full detail
  * 
- * This component creates a modal overlay for viewing artifacts with their
+ * This component creates a draggable window for viewing artifacts with their
  * full content, metadata, and interaction capabilities.
  */
 export class ArtifactViewer {
-  constructor() {
-    this.isVisible = false;
+  constructor(container) {
+    this.container = container;
+    this.window = null;
     this.currentArtifact = null;
     this.currentRenderer = null;
-    this.modal = null;
-    this.overlay = null;
+    this.contentArea = null;
+    
+    // Track open position for next window
+    this.nextPosition = { x: 400, y: 100 };
+    this.positionOffset = 30; // Offset for cascading windows
     
     // Event handlers
     this.onClose = null;
     this.onDownload = null;
-    
-    this.createModal();
-    this.bindEvents();
   }
 
   /**
-   * Create modal DOM structure
-   */
-  createModal() {
-    // Overlay
-    this.overlay = document.createElement('div');
-    this.overlay.className = 'artifact-viewer-overlay';
-    this.overlay.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.8);
-      z-index: 10000;
-      display: none;
-      backdrop-filter: blur(4px);
-    `;
-
-    // Modal
-    this.modal = document.createElement('div');
-    this.modal.className = 'artifact-viewer-modal';
-    this.modal.style.cssText = `
-      position: fixed;
-      top: 5%;
-      left: 5%;
-      right: 5%;
-      bottom: 5%;
-      background: #1a1a1a;
-      border: 1px solid #333;
-      border-radius: 12px;
-      display: flex;
-      flex-direction: column;
-      z-index: 10001;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-      overflow: hidden;
-    `;
-
-    // Header
-    const header = document.createElement('div');
-    header.className = 'artifact-viewer-header';
-    header.style.cssText = `
-      padding: 16px 20px;
-      border-bottom: 1px solid #333;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #222;
-      flex-shrink: 0;
-    `;
-
-    // Title area
-    const titleArea = document.createElement('div');
-    titleArea.style.cssText = `
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex: 1;
-      min-width: 0;
-    `;
-
-    this.titleIcon = document.createElement('div');
-    this.titleIcon.style.cssText = `
-      width: 24px;
-      height: 24px;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      flex-shrink: 0;
-    `;
-
-    this.titleText = document.createElement('h2');
-    this.titleText.style.cssText = `
-      margin: 0;
-      font-size: 18px;
-      font-weight: 600;
-      color: #e0e0e0;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    `;
-
-    this.subtitleText = document.createElement('div');
-    this.subtitleText.style.cssText = `
-      font-size: 12px;
-      color: #999;
-      margin-top: 2px;
-    `;
-
-    const titleContent = document.createElement('div');
-    titleContent.style.cssText = 'flex: 1; min-width: 0;';
-    titleContent.appendChild(this.titleText);
-    titleContent.appendChild(this.subtitleText);
-
-    titleArea.appendChild(this.titleIcon);
-    titleArea.appendChild(titleContent);
-
-    // Actions
-    const actions = document.createElement('div');
-    actions.style.cssText = `
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    `;
-
-    this.downloadBtn = this.createActionButton('⬇️', 'Download', () => {
-      this.handleDownload();
-    });
-
-    this.closeBtn = this.createActionButton('✕', 'Close', () => {
-      this.hide();
-    });
-
-    actions.appendChild(this.downloadBtn);
-    actions.appendChild(this.closeBtn);
-
-    header.appendChild(titleArea);
-    header.appendChild(actions);
-
-    // Content area
-    this.contentArea = document.createElement('div');
-    this.contentArea.className = 'artifact-viewer-content';
-    this.contentArea.style.cssText = `
-      flex: 1;
-      overflow: auto;
-      background: #0d1117;
-    `;
-
-    // Loading indicator
-    this.loadingIndicator = document.createElement('div');
-    this.loadingIndicator.style.cssText = `
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: #999;
-      font-size: 14px;
-      display: none;
-    `;
-    this.loadingIndicator.textContent = 'Loading artifact content...';
-
-    // Error display
-    this.errorDisplay = document.createElement('div');
-    this.errorDisplay.style.cssText = `
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: #ff6b6b;
-      font-size: 14px;
-      text-align: center;
-      display: none;
-    `;
-
-    this.modal.appendChild(header);
-    this.modal.appendChild(this.contentArea);
-    this.modal.appendChild(this.loadingIndicator);
-    this.modal.appendChild(this.errorDisplay);
-
-    this.overlay.appendChild(this.modal);
-    document.body.appendChild(this.overlay);
-  }
-
-  /**
-   * Create action button
-   * @param {string} icon - Button icon/text
-   * @param {string} title - Button title
-   * @param {Function} onClick - Click handler
-   * @returns {HTMLElement} Button element
-   */
-  createActionButton(icon, title, onClick) {
-    const btn = document.createElement('button');
-    btn.textContent = icon;
-    btn.title = title;
-    btn.style.cssText = `
-      background: #333;
-      border: 1px solid #555;
-      border-radius: 6px;
-      color: #e0e0e0;
-      cursor: pointer;
-      font-size: 14px;
-      padding: 8px 12px;
-      transition: all 0.2s ease;
-      min-width: 36px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    `;
-
-    btn.addEventListener('mouseenter', () => {
-      btn.style.background = '#444';
-      btn.style.borderColor = '#666';
-    });
-
-    btn.addEventListener('mouseleave', () => {
-      btn.style.background = '#333';
-      btn.style.borderColor = '#555';
-    });
-
-    btn.addEventListener('click', onClick);
-
-    return btn;
-  }
-
-  /**
-   * Bind event handlers
-   */
-  bindEvents() {
-    // Close on overlay click
-    this.overlay.addEventListener('click', (e) => {
-      if (e.target === this.overlay) {
-        this.hide();
-      }
-    });
-
-    // Close on escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.isVisible) {
-        this.hide();
-      }
-    });
-
-    // Prevent modal clicks from closing
-    this.modal.addEventListener('click', (e) => {
-      e.stopPropagation();
-    });
-  }
-
-  /**
-   * Show the artifact viewer
+   * Show the artifact viewer window
    * @param {Object} artifact - Artifact metadata
    * @param {ArtifactRenderer} renderer - Renderer instance
    */
   async show(artifact, renderer) {
+    console.log('ArtifactViewer: Showing artifact in window:', artifact.title, artifact.type);
+    
     this.currentArtifact = artifact;
     this.currentRenderer = renderer;
-
-    // Update header
-    this.updateHeader(artifact);
-
-    // Show modal
-    this.overlay.style.display = 'block';
-    this.isVisible = true;
-
+    
+    // If window already exists, destroy it first
+    if (this.window) {
+      this.window.destroy();
+    }
+    
+    // Create new window for this artifact
+    this.createWindow(artifact);
+    
     // Load and display content
     await this.loadContent(artifact, renderer);
-
-    // Animate in
-    requestAnimationFrame(() => {
-      this.overlay.style.opacity = '0';
-      this.overlay.style.transition = 'opacity 0.3s ease';
-      requestAnimationFrame(() => {
-        this.overlay.style.opacity = '1';
-      });
-    });
+    
+    // Update position for next window (cascade effect)
+    this.nextPosition.x += this.positionOffset;
+    this.nextPosition.y += this.positionOffset;
+    
+    // Reset position if too far
+    if (this.nextPosition.x > 800 || this.nextPosition.y > 500) {
+      this.nextPosition = { x: 400, y: 100 };
+    }
   }
 
   /**
-   * Hide the artifact viewer
-   */
-  hide() {
-    if (!this.isVisible) return;
-
-    this.overlay.style.transition = 'opacity 0.3s ease';
-    this.overlay.style.opacity = '0';
-
-    setTimeout(() => {
-      this.overlay.style.display = 'none';
-      this.isVisible = false;
-      this.currentArtifact = null;
-      this.currentRenderer = null;
-
-      if (this.onClose) {
-        this.onClose();
-      }
-    }, 300);
-  }
-
-  /**
-   * Update header with artifact information
+   * Create the artifact window
    * @param {Object} artifact - Artifact metadata
    */
-  updateHeader(artifact) {
-    // Update icon
+  createWindow(artifact) {
+    const windowTitle = `${artifact.title} - ${artifact.type}${artifact.subtype ? '/' + artifact.subtype : ''}`;
+    
+    this.window = Window.create({
+      dom: this.container,
+      title: windowTitle,
+      width: 800,
+      height: 600,
+      position: { ...this.nextPosition },
+      theme: 'dark',
+      resizable: true,
+      draggable: true,
+      onClose: () => {
+        console.log('Artifact window closed');
+        this.handleClose();
+      },
+      onResize: (width, height) => {
+        console.log(`Artifact window resized to ${width}x${height}`);
+      }
+    });
+    
+    // Get the content area from the window
+    this.contentArea = this.window.contentElement;
+    
+    // Style the content area
+    this.contentArea.style.cssText = `
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: #0d1117;
+      color: #e0e0e0;
+      overflow: hidden;
+    `;
+    
+    // Add header with artifact info and actions
+    this.createHeader(artifact);
+  }
+
+  /**
+   * Create header with artifact info and actions
+   * @param {Object} artifact - Artifact metadata
+   */
+  createHeader(artifact) {
+    const header = document.createElement('div');
+    header.style.cssText = `
+      padding: 12px 16px;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #161b22;
+      flex-shrink: 0;
+    `;
+    
+    // Info section
+    const info = document.createElement('div');
+    info.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    `;
+    
+    // Icon
+    const icon = document.createElement('div');
     const { emoji, bgColor } = this.getIconInfo(artifact);
-    this.titleIcon.style.background = bgColor;
-    this.titleIcon.textContent = emoji;
-
-    // Update title and subtitle
-    this.titleText.textContent = artifact.title;
+    icon.style.cssText = `
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: ${bgColor};
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    `;
+    icon.textContent = emoji;
     
-    const details = [];
-    details.push(`${artifact.type}${artifact.subtype ? '/' + artifact.subtype : ''}`);
+    // Metadata
+    const metadata = document.createElement('div');
+    metadata.style.cssText = `
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    `;
     
+    const title = document.createElement('div');
+    title.style.cssText = `
+      font-weight: 600;
+      font-size: 14px;
+      color: #f0f6fc;
+    `;
+    title.textContent = artifact.title;
+    
+    const details = document.createElement('div');
+    details.style.cssText = `
+      font-size: 12px;
+      color: #8b949e;
+    `;
+    const detailParts = [];
+    detailParts.push(`${artifact.type}${artifact.subtype ? '/' + artifact.subtype : ''}`);
     if (artifact.size) {
-      details.push(this.formatSize(artifact.size));
+      detailParts.push(this.formatSize(artifact.size));
     }
-
     if (artifact.createdBy) {
-      details.push(`Created by ${artifact.createdBy}`);
+      detailParts.push(`via ${artifact.createdBy}`);
     }
+    details.textContent = detailParts.join(' • ');
+    
+    metadata.appendChild(title);
+    metadata.appendChild(details);
+    
+    info.appendChild(icon);
+    info.appendChild(metadata);
+    
+    // Actions section
+    const actions = document.createElement('div');
+    actions.style.cssText = `
+      display: flex;
+      gap: 8px;
+    `;
+    
+    // Download button
+    if (artifact.path || artifact.content) {
+      const downloadBtn = this.createActionButton('⬇️ Download', () => {
+        this.handleDownload();
+      });
+      actions.appendChild(downloadBtn);
+    }
+    
+    // Copy button (for text content)
+    if (artifact.type === 'code' || artifact.type === 'document' || artifact.type === 'config') {
+      const copyBtn = this.createActionButton('📋 Copy', async () => {
+        await this.handleCopy();
+      });
+      actions.appendChild(copyBtn);
+    }
+    
+    header.appendChild(info);
+    header.appendChild(actions);
+    this.contentArea.appendChild(header);
+  }
 
-    this.subtitleText.textContent = details.join(' • ');
-
-    // Update download button visibility
-    this.downloadBtn.style.display = 
-      (artifact.path || artifact.content) ? 'flex' : 'none';
+  /**
+   * Create action button
+   * @param {string} text - Button text
+   * @param {Function} onClick - Click handler
+   * @returns {HTMLElement} Button element
+   */
+  createActionButton(text, onClick) {
+    const btn = document.createElement('button');
+    btn.textContent = text;
+    btn.style.cssText = `
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #c9d1d9;
+      cursor: pointer;
+      font-size: 12px;
+      padding: 6px 12px;
+      transition: all 0.2s ease;
+    `;
+    
+    btn.addEventListener('mouseenter', () => {
+      btn.style.background = '#30363d';
+      btn.style.borderColor = '#8b949e';
+    });
+    
+    btn.addEventListener('mouseleave', () => {
+      btn.style.background = '#21262d';
+      btn.style.borderColor = '#30363d';
+    });
+    
+    btn.addEventListener('click', onClick);
+    
+    return btn;
   }
 
   /**
@@ -338,38 +243,56 @@ export class ArtifactViewer {
    * @param {ArtifactRenderer} renderer - Renderer instance
    */
   async loadContent(artifact, renderer) {
-    // Show loading
-    this.showLoading();
-
+    // Create scrollable content container
+    const scrollContainer = document.createElement('div');
+    scrollContainer.style.cssText = `
+      flex: 1;
+      overflow: auto;
+      padding: 0;
+    `;
+    
     try {
       let content = null;
-
+      
       // Try to get content from artifact directly
       if (artifact.content) {
         content = artifact.content;
+      } else if (artifact.preview) {
+        content = artifact.preview;
       } else if (artifact.path) {
-        // For file-based artifacts, we would need to fetch the content
-        // This is a placeholder - in a real implementation, you would
-        // make an API call to get the file content
+        // For file-based artifacts, show placeholder
         content = await this.fetchArtifactContent(artifact);
       }
-
-      // Hide loading
-      this.hideLoading();
-
-      // Render content
+      
+      // Render content using the appropriate renderer
       if (content !== null) {
-        const contentElement = renderer.renderFull(artifact, content);
-        this.contentArea.innerHTML = '';
-        this.contentArea.appendChild(contentElement);
+        const contentElement = renderer.renderContent(artifact, content);
+        scrollContainer.appendChild(contentElement);
       } else {
-        this.showError('Content not available');
+        scrollContainer.innerHTML = `
+          <div style="padding: 40px; text-align: center; color: #8b949e;">
+            <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
+            <div>Content not available</div>
+            <div style="font-size: 12px; margin-top: 8px; color: #6e7681;">
+              ${artifact.path || 'No content to display'}
+            </div>
+          </div>
+        `;
       }
     } catch (error) {
       console.error('Error loading artifact content:', error);
-      this.hideLoading();
-      this.showError(`Failed to load content: ${error.message}`);
+      scrollContainer.innerHTML = `
+        <div style="padding: 40px; text-align: center; color: #f85149;">
+          <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+          <div>Failed to load content</div>
+          <div style="font-size: 12px; margin-top: 8px; color: #8b949e;">
+            ${error.message}
+          </div>
+        </div>
+      `;
     }
+    
+    this.contentArea.appendChild(scrollContainer);
   }
 
   /**
@@ -382,48 +305,45 @@ export class ArtifactViewer {
     // In a real application, you would make an API call to get file content
     
     if (artifact.preview) {
-      return artifact.preview; // Just return the preview without the placeholder text
+      return artifact.preview;
     }
     
-    // For now, return a helpful message instead of throwing an error
-    return `# ${artifact.title}\n\nThis is a preview of the artifact.\n\n**Type:** ${artifact.type}${artifact.subtype ? '/' + artifact.subtype : ''}\n**Size:** ${this.formatSize(artifact.size || 0)}\n\n*Full content loading from file system is not yet implemented in this demo.*`;
-  }
-
-  /**
-   * Show loading indicator
-   */
-  showLoading() {
-    this.loadingIndicator.style.display = 'block';
-    this.errorDisplay.style.display = 'none';
-    this.contentArea.innerHTML = '';
-  }
-
-  /**
-   * Hide loading indicator
-   */
-  hideLoading() {
-    this.loadingIndicator.style.display = 'none';
-  }
-
-  /**
-   * Show error message
-   * @param {string} message - Error message
-   */
-  showError(message) {
-    this.errorDisplay.textContent = message;
-    this.errorDisplay.style.display = 'block';
-    this.loadingIndicator.style.display = 'none';
+    // Return a helpful message for files that need server loading
+    return `# ${artifact.title}\n\nFile location: ${artifact.path}\n\n*Note: Full file content loading from server is not yet implemented.*`;
   }
 
   /**
    * Handle download action
    */
-  handleDownload() {
+  async handleDownload() {
+    if (!this.currentArtifact) return;
+    
     if (this.onDownload) {
       this.onDownload(this.currentArtifact);
     } else {
-      // Default download behavior
-      this.downloadArtifact(this.currentArtifact);
+      await this.downloadArtifact(this.currentArtifact);
+    }
+  }
+
+  /**
+   * Handle copy action
+   */
+  async handleCopy() {
+    if (!this.currentArtifact) return;
+    
+    try {
+      let content = this.currentArtifact.content || this.currentArtifact.preview || '';
+      
+      if (!content && this.currentArtifact.path) {
+        content = await this.fetchArtifactContent(this.currentArtifact);
+      }
+      
+      await navigator.clipboard.writeText(content);
+      console.log('Content copied to clipboard');
+      
+      // TODO: Show success feedback to user
+    } catch (error) {
+      console.error('Failed to copy content:', error);
     }
   }
 
@@ -435,15 +355,19 @@ export class ArtifactViewer {
     try {
       let content = artifact.content;
       let filename = artifact.title;
-
+      
+      if (!content && artifact.preview) {
+        content = artifact.preview;
+      }
+      
       if (!content && artifact.path) {
         content = await this.fetchArtifactContent(artifact);
       }
-
+      
       if (!content) {
         throw new Error('No content available for download');
       }
-
+      
       // Create blob and download
       const blob = new Blob([content], { 
         type: this.getMimeType(artifact) 
@@ -457,9 +381,33 @@ export class ArtifactViewer {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      
+      console.log(`Downloaded artifact: ${filename}`);
     } catch (error) {
       console.error('Download failed:', error);
       alert(`Download failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Handle window close
+   */
+  handleClose() {
+    this.currentArtifact = null;
+    this.currentRenderer = null;
+    this.contentArea = null;
+    
+    if (this.onClose) {
+      this.onClose();
+    }
+  }
+
+  /**
+   * Hide the artifact viewer
+   */
+  hide() {
+    if (this.window) {
+      this.window.hide();
     }
   }
 
@@ -484,7 +432,7 @@ export class ArtifactViewer {
       xml: 'application/xml',
       csv: 'text/csv'
     };
-
+    
     return mimeMap[artifact.subtype] || 'text/plain';
   }
 
@@ -505,7 +453,7 @@ export class ArtifactViewer {
       url: { emoji: '🔗', bgColor: '#47321a' },
       archive: { emoji: '📦', bgColor: '#2a471a' }
     };
-
+    
     return iconMap[artifact.type] || { emoji: '📎', bgColor: '#444' };
   }
 
@@ -528,13 +476,13 @@ export class ArtifactViewer {
    * Destroy the viewer
    */
   destroy() {
-    if (this.overlay && this.overlay.parentNode) {
-      this.overlay.parentNode.removeChild(this.overlay);
+    if (this.window) {
+      this.window.destroy();
+      this.window = null;
     }
     
-    this.modal = null;
-    this.overlay = null;
     this.currentArtifact = null;
     this.currentRenderer = null;
+    this.contentArea = null;
   }
 }

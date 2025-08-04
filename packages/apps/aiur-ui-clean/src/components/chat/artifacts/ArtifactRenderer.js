@@ -288,6 +288,7 @@ export class ArtifactRenderer {
     });
 
     btn.addEventListener('click', (e) => {
+      e.preventDefault();
       e.stopPropagation();
       onClick();
     });

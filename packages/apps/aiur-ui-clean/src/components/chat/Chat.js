@@ -86,8 +86,11 @@ export class Chat {
     this.view = new ChatView(this.container);
     this.viewModel = new ChatViewModel(this.model, this.view, this.chatActor);
     
-    // Initialize artifact viewer
-    this.artifactViewer = new ArtifactViewer();
+    // Initialize artifact viewer with the app container for Windows
+    // Find the root app container (parent of chat window)
+    const appContainer = this.container.closest('#app') || document.getElementById('app') || document.body;
+    this.artifactViewer = new ArtifactViewer(appContainer);
+    console.log('Chat: ArtifactViewer initialized with container:', appContainer);
     
     // Set up umbilical callbacks
     this.setupCallbacks();
@@ -140,6 +143,7 @@ export class Chat {
   setupArtifactHandling() {
     // Listen for artifact clicks from the chat view
     this.container.addEventListener('artifact-click', (event) => {
+      console.log('Chat: Artifact clicked:', event.detail);
       const { artifact, renderer } = event.detail;
       this.artifactViewer.show(artifact, renderer);
     });
