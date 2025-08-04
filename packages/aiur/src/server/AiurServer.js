@@ -239,8 +239,8 @@ export class AiurServer {
     
     // Create NEW ServerActorSpace for THIS connection with Aiur integration
     const serverActorSpace = new ServerActorSpace(`server-${clientId}`, {
-      moduleManager: this.moduleLoader,  // Pass the module loader
-      toolRegistry: this.sessionManager  // SessionManager manages tools per session
+      sessionManager: this.sessionManager,  // Pass the session manager
+      moduleLoader: this.moduleLoader  // Pass the module loader
     });
     
     // Handle the connection (will send first handshake)

@@ -23,11 +23,27 @@ export class TerminalActor extends Actor {
     // Initialize terminal if available
     if (this.terminal) {
       this.terminal.addOutput('Connected to terminal agent', 'success');
-      this.terminal.addOutput('Type .help for available commands', 'info');
       
-      // Request initial tools list
-      this.requestToolsList();
+      // Create a session first
+      this.createSession();
     }
+  }
+  
+  /**
+   * Create a new session with the TerminalAgent
+   */
+  createSession() {
+    if (!this.remoteAgent) {
+      console.error('TerminalActor: Cannot create session - no remote agent');
+      return;
+    }
+    
+    console.log('TerminalActor: Creating session...');
+    this.remoteAgent.receive({
+      type: 'session_create',
+      requestId: `req_${Date.now()}`,
+      timestamp: new Date().toISOString()
+    });
   }
   
   /**
@@ -55,88 +71,205 @@ export class TerminalActor extends Actor {
   receive(payload, envelope) {
     console.log('TerminalActor: Received message:', payload);
     
-    // Handle messages with eventName (from TerminalAgent's emit)
-    if (payload.eventName) {
-      const eventName = payload.eventName;
-      
-      switch (eventName) {
-        case 'terminal_response':
-          this.handleTerminalResponse(payload);
+    // Handle Aiur protocol messages from TerminalAgent
+    if (payload.type) {
+      switch (payload.type) {
+        case 'session_created':
+          this.handleSessionCreated(payload);
           break;
           
-        case 'terminal_error':
-          this.handleTerminalError(payload);
+        case 'session_attached':
+          this.handleSessionAttached(payload);
+          break;
+          
+        case 'initial_tools':
+          this.handleInitialTools(payload);
+          break;
+          
+        case 'tools_list_response':
+          this.handleToolsListResponse(payload);
+          break;
+          
+        case 'tools_updated':
+          this.handleToolsUpdated(payload);
+          break;
+          
+        case 'tool_response':
+          this.handleToolResponse(payload);
+          break;
+          
+        case 'tool_error':
+          this.handleToolError(payload);
+          break;
+          
+        case 'module_list_response':
+          this.handleModuleListResponse(payload);
+          break;
+          
+        case 'module_loaded':
+          this.handleModuleLoaded(payload);
+          break;
+          
+        case 'module_unloaded':
+          this.handleModuleUnloaded(payload);
+          break;
+          
+        case 'module_error':
+          this.handleModuleError(payload);
+          break;
+          
+        case 'session_error':
+          this.handleSessionError(payload);
+          break;
+          
+        case 'error':
+          this.handleError(payload);
+          break;
+          
+        case 'pong':
+          // Ping response
+          console.log('TerminalActor: Received pong');
           break;
           
         default:
-          console.log('TerminalActor: Unknown event:', eventName);
-      }
-    } else {
-      // Legacy message handling for compatibility
-      if (payload.type === 'output') {
-        this.handleOutput(payload);
-      } else if (payload.type === 'error') {
-        this.handleError(payload);
-      } else if (payload.type === 'clear') {
-        this.terminal.clear();
-      } else {
-        // Default: display as output
-        if (this.terminal) {
-          this.terminal.addOutput(JSON.stringify(payload, null, 2), 'info');
-        }
+          console.log('TerminalActor: Unknown message type:', payload.type);
+          if (this.terminal) {
+            this.terminal.addOutput(JSON.stringify(payload, null, 2), 'info');
+          }
       }
     }
   }
   
   /**
-   * Handle terminal response from agent
+   * Handle session created message
    */
-  handleTerminalResponse(payload) {
-    console.log('TerminalActor: Terminal response:', payload);
-    
-    if (!this.terminal) return;
-    
-    switch (payload.type) {
-      case 'tools_list':
-        this.handleToolsList(payload.tools);
-        break;
-        
-      case 'tool_result':
-        this.handleToolResult(payload.result);
-        break;
-        
-      case 'module_loaded':
-        this.terminal.addOutput(payload.message, 'success');
-        break;
-        
-      case 'module_unloaded':
-        this.terminal.addOutput(payload.message, 'success');
-        break;
-        
-      case 'modules_list':
-        this.handleModulesList(payload.modules);
-        break;
-        
-      case 'session_info':
-        this.handleSessionInfo(payload.info);
-        break;
-        
-      default:
-        this.terminal.addOutput(JSON.stringify(payload, null, 2), 'info');
-    }
-  }
-  
-  /**
-   * Handle terminal error from agent
-   */
-  handleTerminalError(payload) {
-    console.error('TerminalActor: Error from agent:', payload);
+  handleSessionCreated(payload) {
+    console.log('TerminalActor: Session created:', payload);
+    this.sessionId = payload.sessionId;
     
     if (this.terminal) {
-      this.terminal.addOutput(`Error: ${payload.message}`, 'error');
-      if (payload.details) {
-        this.terminal.addOutput(payload.details, 'error');
+      this.terminal.addOutput(`Session created: ${payload.sessionId}`, 'success');
+      this.terminal.addOutput('Type .help for available commands', 'info');
+    }
+  }
+  
+  /**
+   * Handle session attached message
+   */
+  handleSessionAttached(payload) {
+    console.log('TerminalActor: Session attached:', payload);
+    this.sessionId = payload.sessionId;
+    
+    if (this.terminal) {
+      this.terminal.addOutput(`Attached to session: ${payload.sessionId}`, 'success');
+    }
+  }
+  
+  /**
+   * Handle initial tools list
+   */
+  handleInitialTools(payload) {
+    console.log('TerminalActor: Received initial tools:', payload.tools?.length || 0);
+    this.updateToolDefinitions(payload.tools || []);
+    
+    if (this.terminal) {
+      this.terminal.addOutput(`Loaded ${payload.tools?.length || 0} tools`, 'info');
+    }
+  }
+  
+  /**
+   * Handle tools list response
+   */
+  handleToolsListResponse(payload) {
+    console.log('TerminalActor: Tools list response:', payload);
+    this.handleToolsList(payload.tools || []);
+  }
+  
+  /**
+   * Handle tools updated message
+   */
+  handleToolsUpdated(payload) {
+    console.log('TerminalActor: Tools updated:', payload.tools?.length || 0);
+    this.updateToolDefinitions(payload.tools || []);
+  }
+  
+  /**
+   * Handle tool response
+   */
+  handleToolResponse(payload) {
+    console.log('TerminalActor: Tool response:', payload);
+    this.handleToolResult(payload.result);
+  }
+  
+  /**
+   * Handle tool error
+   */
+  handleToolError(payload) {
+    console.error('TerminalActor: Tool error:', payload);
+    
+    if (this.terminal) {
+      this.terminal.addOutput(`Tool error: ${payload.error}`, 'error');
+      if (payload.tool) {
+        this.terminal.addOutput(`Tool: ${payload.tool}`, 'error');
       }
+    }
+  }
+  
+  /**
+   * Handle module list response
+   */
+  handleModuleListResponse(payload) {
+    console.log('TerminalActor: Module list response:', payload);
+    this.handleModulesList(payload.modules || { loaded: [], available: [] });
+  }
+  
+  /**
+   * Handle module loaded message
+   */
+  handleModuleLoaded(payload) {
+    console.log('TerminalActor: Module loaded:', payload);
+    
+    if (this.terminal) {
+      this.terminal.addOutput(payload.message || `Module ${payload.moduleName} loaded`, 'success');
+      if (payload.toolsLoaded && payload.toolsLoaded.length > 0) {
+        this.terminal.addOutput(`Added ${payload.toolsLoaded.length} tools`, 'info');
+      }
+    }
+  }
+  
+  /**
+   * Handle module unloaded message
+   */
+  handleModuleUnloaded(payload) {
+    console.log('TerminalActor: Module unloaded:', payload);
+    
+    if (this.terminal) {
+      this.terminal.addOutput(payload.message || `Module ${payload.moduleName} unloaded`, 'success');
+    }
+  }
+  
+  /**
+   * Handle module error
+   */
+  handleModuleError(payload) {
+    console.error('TerminalActor: Module error:', payload);
+    
+    if (this.terminal) {
+      this.terminal.addOutput(`Module error: ${payload.error}`, 'error');
+      if (payload.moduleName) {
+        this.terminal.addOutput(`Module: ${payload.moduleName}`, 'error');
+      }
+    }
+  }
+  
+  /**
+   * Handle session error
+   */
+  handleSessionError(payload) {
+    console.error('TerminalActor: Session error:', payload);
+    
+    if (this.terminal) {
+      this.terminal.addOutput(`Session error: ${payload.error}`, 'error');
     }
   }
   
@@ -158,30 +291,103 @@ export class TerminalActor extends Actor {
       return;
     }
     
-    console.log('TerminalActor: Sending command via actor protocol:', command);
+    console.log('TerminalActor: Processing command:', command);
     
-    // Send command to TerminalAgent
-    this.remoteAgent.receive({
-      type: 'terminal_command',
-      command: command,
-      timestamp: new Date().toISOString()
-    });
+    // Parse the command to determine what Aiur message to send
+    const parts = command.trim().split(/\s+/);
+    const cmd = parts[0];
+    const args = parts.slice(1);
+    
+    // Generate request ID
+    const requestId = `req_${Date.now()}`;
+    
+    // Handle different commands
+    switch (cmd) {
+      case 'tools':
+      case 'list_tools':
+        this.remoteAgent.receive({
+          type: 'tools_list',
+          requestId
+        });
+        break;
+        
+      case 'modules':
+      case 'module_list':
+        this.remoteAgent.receive({
+          type: 'module_list', 
+          requestId
+        });
+        break;
+        
+      case 'module_load':
+        if (args.length === 0) {
+          this.terminal.addOutput('Usage: module_load <module_name>', 'error');
+          return;
+        }
+        this.remoteAgent.receive({
+          type: 'module_load',
+          requestId,
+          moduleName: args[0]
+        });
+        break;
+        
+      case 'module_unload':
+        if (args.length === 0) {
+          this.terminal.addOutput('Usage: module_unload <module_name>', 'error');
+          return;
+        }
+        this.remoteAgent.receive({
+          type: 'module_unload',
+          requestId,
+          moduleName: args[0]
+        });
+        break;
+        
+      case 'ping':
+        this.remoteAgent.receive({
+          type: 'ping',
+          requestId,
+          timestamp: Date.now()
+        });
+        break;
+        
+      default:
+        // Assume it's a tool request
+        const toolName = cmd;
+        const toolArgs = this.parseToolArguments(args);
+        
+        this.remoteAgent.receive({
+          type: 'tool_request',
+          requestId,
+          tool: toolName,
+          arguments: toolArgs
+        });
+        break;
+    }
   }
   
   /**
-   * Request tools list from agent
+   * Parse tool arguments from command line args
    */
-  requestToolsList() {
-    if (!this.isConnected() || !this.remoteAgent) {
-      console.warn('TerminalActor: Cannot request tools - not connected');
-      return;
+  parseToolArguments(args) {
+    const result = {};
+    
+    for (let i = 0; i < args.length; i++) {
+      const arg = args[i];
+      
+      // Check for key=value format
+      if (arg.includes('=')) {
+        const [key, ...valueParts] = arg.split('=');
+        result[key] = valueParts.join('=');
+      } else {
+        // Positional argument - use as 'arg0', 'arg1', etc
+        result[`arg${i}`] = arg;
+      }
     }
     
-    this.remoteAgent.receive({
-      type: 'tools_list',
-      timestamp: new Date().toISOString()
-    });
+    return result;
   }
+  
   
   /**
    * Handle tools list from agent
@@ -429,18 +635,24 @@ export class TerminalActor extends Actor {
    * Update tool definitions after module load
    */
   updateToolDefinitions(newTools) {
-    // Add new tool definitions
+    if (!Array.isArray(newTools)) {
+      console.warn('TerminalActor: Invalid tools array:', newTools);
+      return;
+    }
+    
+    // Clear and rebuild tool definitions
+    this.toolDefinitions.clear();
     newTools.forEach(toolDef => {
       this.toolDefinitions.set(toolDef.name, toolDef);
     });
     
     // Update terminal's tool definitions for tab completion
-    if (this.terminal.updateToolDefinitions) {
+    if (this.terminal && this.terminal.updateToolDefinitions) {
       this.terminal.updateToolDefinitions(this.toolDefinitions);
     }
     
     // Log what was loaded
-    console.log('Tools loaded:', newTools.map(t => t.name));
+    console.log('TerminalActor: Updated tool definitions:', newTools.map(t => t.name));
   }
   
   /**

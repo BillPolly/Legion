@@ -244,3 +244,184 @@ class MyTool extends Tool {
 ```
 
 **Event System:** Tools emit `progress`, `info`, `warning`, `error` events that propagate through the system.
+
+## Actor System and WebSocket Communication
+
+### Overview
+
+The Legion actor system enables multiple actors to communicate over a single WebSocket connection using automatic GUID-based routing. This is implemented through ActorSpace, Channel, and RemoteActor classes in `packages/shared/actors/`.
+
+### Core Concepts
+
+1. **ActorSpace** - Container that manages actors and routing
+   - Registers actors with GUIDs using `register(actor, guid)`
+   - Handles message routing automatically via `handleIncomingMessage()`
+   - Creates and manages Channel for WebSocket communication
+
+2. **Channel** - WebSocket wrapper that handles actor protocol
+   - Wraps WebSocket and handles encoding/decoding
+   - Creates RemoteActor instances via `makeRemote(guid)`
+   - Sends messages as `{targetGuid, payload}` format
+
+3. **RemoteActor** - Proxy for actors in different ActorSpace
+   - Has a GUID and reference to Channel
+   - When `receive()` is called, forwards through Channel using GUID
+   - Actors communicate through RemoteActor references, not direct GUID handling
+
+4. **Actor** - Base class for actors
+   - Extends from `Actor` class in shared/actors
+   - Implements `receive(payload, envelope)` method
+   - Gets RemoteActor reference to communicate with counterpart
+
+### Multi-Actor Architecture
+
+**CRITICAL: Multiple actors share ONE WebSocket connection via the same ActorSpace and Channel!**
+
+```
+WebSocket Connection
+      │
+   Channel
+      │
+  ActorSpace
+   ├─ Actor1 (guid: "space-actor1")
+   ├─ Actor2 (guid: "space-actor2")
+   └─ Actor3 (guid: "space-actor3")
+```
+
+### Handshake Protocol for Multi-Actor Systems
+
+When establishing multi-actor communication:
+
+1. **Server sends first** with all actor GUIDs:
+```javascript
+ws.send(JSON.stringify({
+  type: 'actor_handshake',
+  serverActors: {
+    chat: 'server-123-chat',
+    terminal: 'server-123-terminal',
+    // ... more actors
+  }
+}));
+```
+
+2. **Client responds** with its actor GUIDs:
+```javascript
+ws.send(JSON.stringify({
+  type: 'actor_handshake_ack',
+  clientActors: {
+    chat: 'frontend-chat',
+    terminal: 'frontend-terminal',
+    // ... more actors
+  }
+}));
+```
+
+3. **After handshake**, create Channel and RemoteActors:
+```javascript
+// Create Channel (takes over WebSocket message handling)
+const channel = actorSpace.addChannel(ws);
+
+// Create RemoteActors for each remote actor
+const remoteChatActor = channel.makeRemote(remoteGuids.chat);
+const remoteTerminalActor = channel.makeRemote(remoteGuids.terminal);
+
+// Give RemoteActors to local actors
+chatActor.setRemoteAgent(remoteChatActor);
+terminalActor.setRemoteAgent(remoteTerminalActor);
+```
+
+### Implementation Pattern
+
+**Frontend ActorSpace:**
+```javascript
+class FrontendActorSpace extends ActorSpace {
+  async connect(url, ...dependencies) {
+    const ws = new WebSocket(url);
+    // Wait for handshake...
+    
+    // Register multiple actors in the SAME ActorSpace
+    this.register(chatActor, `${this.spaceId}-chat`);
+    this.register(terminalActor, `${this.spaceId}-terminal`);
+    
+    // Create ONE Channel for the WebSocket
+    const channel = this.addChannel(ws);
+    
+    // Create RemoteActors and connect
+    chatActor.setRemoteAgent(channel.makeRemote(serverGuids.chat));
+    terminalActor.setRemoteAgent(channel.makeRemote(serverGuids.terminal));
+  }
+}
+```
+
+**Backend ActorSpace:**
+```javascript
+class ServerActorSpace extends ActorSpace {
+  handleConnection(ws, clientId) {
+    // Register multiple agents
+    this.register(chatAgent, `${this.spaceId}-chat`);
+    this.register(terminalAgent, `${this.spaceId}-terminal`);
+    
+    // Send handshake, wait for response, create Channel
+    // Then create RemoteActors for client actors
+  }
+}
+```
+
+### Actor Communication Pattern
+
+**Actors DON'T manage GUIDs directly!** They just use RemoteActor references:
+
+```javascript
+class ChatActor extends Actor {
+  setRemoteAgent(remoteAgent) {
+    this.remoteAgent = remoteAgent;
+  }
+  
+  sendMessage(content) {
+    // Just call receive on the RemoteActor
+    // No GUID handling needed!
+    this.remoteAgent.receive({
+      type: 'chat_message',
+      content: content
+    });
+  }
+  
+  receive(payload) {
+    // Handle incoming messages
+    console.log('Received:', payload);
+  }
+}
+```
+
+### Message Flow
+
+1. Actor calls `remoteActor.receive(payload)`
+2. RemoteActor forwards to Channel with its GUID
+3. Channel sends `{targetGuid, payload}` through WebSocket
+4. Remote Channel receives and decodes message
+5. Remote ActorSpace looks up targetGuid
+6. Remote ActorSpace calls `actor.receive(payload)` on target actor
+
+### Key Rules
+
+✅ **DO:**
+- Register all actors in the SAME ActorSpace for shared WebSocket
+- Use ONE Channel per WebSocket connection
+- Create RemoteActor via `channel.makeRemote(guid)`
+- Let actors communicate through RemoteActor references
+- Let ActorSpace handle all routing automatically
+
+❌ **DON'T:**
+- Create multiple ActorSpaces for one connection
+- Try to manually route messages between actors
+- Have actors manage GUIDs directly
+- Create multiple Channels for the same WebSocket
+- Implement custom routing logic
+
+### Benefits
+
+- **Single WebSocket** - Multiple actors share one connection efficiently
+- **Automatic Routing** - ActorSpace handles all GUID-based routing
+- **Clean Separation** - Actors focus on logic, not transport
+- **Point-to-Point** - Direct actor-to-actor communication
+- **Scalable** - Easy to add more actors to existing connection

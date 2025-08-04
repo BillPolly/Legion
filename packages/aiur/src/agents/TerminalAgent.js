@@ -1,376 +1,178 @@
 import { Actor } from '../../../shared/actors/src/Actor.js';
 
 /**
- * TerminalAgent - Backend agent that handles terminal commands via actor protocol
- * Integrates with Aiur's module system and tool registry
+ * TerminalAgent - Simple actor wrapper for existing Aiur functionality
+ * Handles the same protocol messages as WebSocketHandler but via actor protocol
  */
 export class TerminalAgent extends Actor {
   constructor(config = {}) {
     super();
     
-    // Agent identification
-    this.id = `terminal-agent-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    this.sessionId = config.sessionId;
+    // Existing Aiur components
+    this.sessionManager = config.sessionManager;
+    this.moduleLoader = config.moduleLoader;
     
-    // Reference to the remote actor (frontend TerminalActor)
-    this.remoteActor = config.remoteActor || null;
+    // Remote actor reference (set after handshake)
+    this.remoteActor = null;
     
-    // Aiur system integration
-    this.moduleManager = config.moduleManager || null;
-    this.toolRegistry = config.toolRegistry || null;
+    // Session state
+    this.sessionId = null;
+    this.session = null;
     
-    // Terminal state
-    this.isProcessing = false;
-    
-    console.log(`TerminalAgent ${this.id} initialized for session ${this.sessionId}`);
-  }
-  
-  /**
-   * Emit function that sends messages through the remote actor
-   * This replaces EventEmitter.emit() with actor protocol communication
-   */
-  emit(eventName, data) {
-    if (this.remoteActor) {
-      this.remoteActor.receive({
-        ...data,
-        eventName: eventName
-      });
-    } else {
-      console.warn(`TerminalAgent: Cannot emit ${eventName} - no remote actor`);
-    }
+    console.log(`TerminalAgent initialized`);
   }
   
   /**
    * Receive messages from frontend TerminalActor
+   * Handle the SAME protocol as WebSocketHandler
    */
-  receive(payload, envelope) {
-    console.log('TerminalAgent: Received message:', payload);
+  async receive(message) {
+    console.log('TerminalAgent: Received message:', message.type);
     
-    // Handle different message types
-    switch (payload.type) {
-      case 'terminal_command':
-        this.handleCommand(payload);
-        break;
-        
-      case 'tool_call':
-        this.handleToolCall(payload);
-        break;
-        
-      case 'module_load':
-        this.handleModuleLoad(payload);
-        break;
-        
-      case 'module_unload':
-        this.handleModuleUnload(payload);
-        break;
-        
-      case 'tools_list':
-        this.handleToolsList(payload);
-        break;
-        
-      case 'get_session_info':
-        this.handleGetSessionInfo(payload);
-        break;
-        
-      default:
-        console.log('TerminalAgent: Unknown message type:', payload.type);
-        this.emit('terminal_error', {
-          message: `Unknown command type: ${payload.type}`,
-          timestamp: new Date().toISOString()
-        });
+    try {
+      switch (message.type) {
+        case 'session_create':
+          await this.handleSessionCreate(message);
+          break;
+          
+        case 'session_attach':
+          await this.handleSessionAttach(message);
+          break;
+          
+        case 'tool_request':
+          await this.handleToolRequest(message);
+          break;
+          
+        case 'tools_list':
+          await this.handleToolsList(message);
+          break;
+          
+        case 'module_list':
+          await this.handleModuleList(message);
+          break;
+          
+        case 'module_load':
+          await this.handleModuleLoad(message);
+          break;
+          
+        case 'module_unload':
+          await this.handleModuleUnload(message);
+          break;
+          
+        case 'ping':
+          this.remoteActor.receive({ 
+            type: 'pong', 
+            timestamp: Date.now() 
+          });
+          break;
+          
+        default:
+          this.remoteActor.receive({
+            type: 'error',
+            error: `Unknown message type: ${message.type}`,
+            requestId: message.requestId
+          });
+      }
+    } catch (error) {
+      console.error('TerminalAgent: Error handling message:', error);
+      this.remoteActor.receive({
+        type: 'error',
+        error: error.message,
+        requestId: message.requestId
+      });
     }
   }
   
   /**
-   * Handle terminal command
+   * Handle session creation
    */
-  async handleCommand(payload) {
-    const { command, timestamp } = payload;
-    
-    if (this.isProcessing) {
-      this.emit('terminal_error', {
-        message: 'Another command is already processing',
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-    
-    this.isProcessing = true;
-    
+  async handleSessionCreate(message) {
     try {
-      console.log(`TerminalAgent: Processing command: ${command}`);
+      // Create new session
+      const sessionInfo = await this.sessionManager.createSession();
+      this.sessionId = sessionInfo.sessionId;
+      this.session = sessionInfo;
       
-      // Parse command
-      const parts = command.trim().split(' ');
-      const toolName = parts[0];
-      const args = parts.slice(1);
+      // Send response
+      this.remoteActor.receive({
+        type: 'session_created',
+        requestId: message.requestId,
+        sessionId: sessionInfo.sessionId,
+        success: true,
+        created: sessionInfo.created,
+        capabilities: sessionInfo.capabilities || []
+      });
       
-      // Handle special commands
-      if (toolName === 'tools') {
-        await this.listAvailableTools();
-      } else if (toolName === 'module_list') {
-        await this.listModules();
-      } else if (toolName.startsWith('module_load')) {
-        const moduleName = args[0];
-        if (moduleName) {
-          await this.loadModule(moduleName);
-        } else {
-          this.emit('terminal_error', {
-            message: 'module_load requires a module name',
-            timestamp: new Date().toISOString()
-          });
-        }
-      } else if (toolName.startsWith('module_unload')) {
-        const moduleName = args[0];
-        if (moduleName) {
-          await this.unloadModule(moduleName);
-        } else {
-          this.emit('terminal_error', {
-            message: 'module_unload requires a module name',
-            timestamp: new Date().toISOString()
-          });
-        }
+      // Send initial tools list
+      await this.sendInitialTools();
+      
+    } catch (error) {
+      this.remoteActor.receive({
+        type: 'session_error',
+        requestId: message.requestId,
+        error: error.message
+      });
+    }
+  }
+  
+  /**
+   * Handle session attachment
+   */
+  async handleSessionAttach(message) {
+    try {
+      const session = await this.sessionManager.getSession(message.sessionId);
+      if (session) {
+        this.sessionId = message.sessionId;
+        this.session = session;
+        
+        this.remoteActor.receive({
+          type: 'session_attached',
+          requestId: message.requestId,
+          sessionId: message.sessionId,
+          success: true
+        });
+        
+        // Send current tools list
+        await this.sendInitialTools();
       } else {
-        // Try to execute as a tool
-        await this.executeTool(toolName, args);
+        throw new Error(`Session ${message.sessionId} not found`);
+      }
+    } catch (error) {
+      this.remoteActor.receive({
+        type: 'session_error',
+        requestId: message.requestId,
+        error: error.message
+      });
+    }
+  }
+  
+  /**
+   * Handle tool request
+   */
+  async handleToolRequest(message) {
+    try {
+      if (!this.session) {
+        throw new Error('No active session');
       }
       
-    } catch (error) {
-      console.error('TerminalAgent: Error processing command:', error);
-      this.emit('terminal_error', {
-        message: error.message || 'Command failed',
-        details: error.stack,
-        timestamp: new Date().toISOString()
-      });
-    } finally {
-      this.isProcessing = false;
-    }
-  }
-  
-  /**
-   * Handle direct tool call
-   */
-  async handleToolCall(payload) {
-    const { toolName, arguments: toolArgs } = payload;
-    
-    try {
-      await this.executeTool(toolName, [], toolArgs);
-    } catch (error) {
-      this.emit('terminal_error', {
-        message: `Tool execution failed: ${error.message}`,
-        timestamp: new Date().toISOString()
-      });
-    }
-  }
-  
-  /**
-   * Execute a tool via Aiur's tool registry
-   */
-  async executeTool(toolName, cmdArgs = [], toolArgs = null) {
-    // For now, tools are not available
-    this.emit('terminal_error', {
-      message: 'Tool execution not available yet. Module system integration pending.',
-      timestamp: new Date().toISOString()
-    });
-    return;
-    
-    // Get tool from registry
-    const tool = this.toolRegistry.getTool(toolName);
-    if (!tool) {
-      throw new Error(`Tool '${toolName}' not found. Use 'tools' to list available tools.`);
-    }
-    
-    // Build arguments
-    let finalArgs = toolArgs;
-    if (!finalArgs && cmdArgs.length > 0) {
-      // Parse command line arguments into tool arguments
-      finalArgs = this.parseCommandArgs(toolName, cmdArgs, tool);
-    }
-    
-    console.log(`TerminalAgent: Executing tool ${toolName} with args:`, finalArgs);
-    
-    // Execute tool
-    const result = await tool.invoke({
-      name: toolName,
-      arguments: finalArgs || {}
-    });
-    
-    // Send formatted response
-    this.emit('terminal_response', {
-      type: 'tool_result',
-      toolName,
-      result,
-      timestamp: new Date().toISOString()
-    });
-  }
-  
-  /**
-   * Parse command line arguments for a tool
-   */
-  parseCommandArgs(toolName, args, tool) {
-    // Basic argument parsing - can be enhanced later
-    const toolArgs = {};
-    
-    // For now, just handle simple positional arguments
-    if (tool.inputSchema && tool.inputSchema.properties) {
-      const props = Object.keys(tool.inputSchema.properties);
+      const result = await this.sessionManager.executeTool(
+        message.tool,
+        message.arguments || {}
+      );
       
-      args.forEach((arg, index) => {
-        if (index < props.length) {
-          toolArgs[props[index]] = arg;
-        }
-      });
-    }
-    
-    return toolArgs;
-  }
-  
-  /**
-   * List available tools
-   */
-  async listAvailableTools() {
-    // For now, return empty tools list since we don't have proper registry
-    this.emit('terminal_response', {
-      type: 'tools_list',
-      tools: [],
-      count: 0,
-      timestamp: new Date().toISOString()
-    });
-    return;
-    
-    // TODO: Properly integrate with Aiur's tool system
-    // const tools = await this.moduleManager.getAllTools();
-    // const toolList = tools.map(tool => ({
-    //   name: tool.name,
-    //   description: tool.description || 'No description',
-    //   inputSchema: tool.inputSchema || null
-    // }));
-    
-    this.emit('terminal_response', {
-      type: 'tools_list',
-      tools: toolList,
-      count: toolList.length,
-      timestamp: new Date().toISOString()
-    });
-  }
-  
-  /**
-   * Handle module load request
-   */
-  async handleModuleLoad(payload) {
-    await this.loadModule(payload.moduleName);
-  }
-  
-  /**
-   * Load a module
-   */
-  async loadModule(moduleName) {
-    if (!this.moduleManager) {
-      this.emit('terminal_error', {
-        message: 'Module loading not available yet',
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-    
-    try {
-      console.log(`TerminalAgent: Loading module: ${moduleName}`);
-      
-      const result = await this.moduleManager.loadModule(moduleName);
-      
-      this.emit('terminal_response', {
-        type: 'module_loaded',
-        moduleName,
-        success: true,
-        message: `Module '${moduleName}' loaded successfully`,
-        toolsLoaded: result.tools || [],
-        timestamp: new Date().toISOString()
-      });
-      
-      // Refresh tools list
-      await this.listAvailableTools();
-      
-    } catch (error) {
-      this.emit('terminal_error', {
-        message: `Failed to load module '${moduleName}': ${error.message}`,
-        timestamp: new Date().toISOString()
-      });
-    }
-  }
-  
-  /**
-   * Handle module unload request
-   */
-  async handleModuleUnload(payload) {
-    await this.unloadModule(payload.moduleName);
-  }
-  
-  /**
-   * Unload a module
-   */
-  async unloadModule(moduleName) {
-    if (!this.moduleManager) {
-      throw new Error('No module manager available');
-    }
-    
-    try {
-      console.log(`TerminalAgent: Unloading module: ${moduleName}`);
-      
-      await this.moduleManager.unloadModule(moduleName);
-      
-      this.emit('terminal_response', {
-        type: 'module_unloaded',
-        moduleName,
-        success: true,
-        message: `Module '${moduleName}' unloaded successfully`,
-        timestamp: new Date().toISOString()
-      });
-      
-      // Refresh tools list
-      await this.listAvailableTools();
-      
-    } catch (error) {
-      this.emit('terminal_error', {
-        message: `Failed to unload module '${moduleName}': ${error.message}`,
-        timestamp: new Date().toISOString()
-      });
-    }
-  }
-  
-  /**
-   * List modules
-   */
-  async listModules() {
-    if (!this.moduleManager) {
-      this.emit('terminal_response', {
-        type: 'modules_list',
-        modules: {
-          loaded: [],
-          available: ['file', 'search', 'github', 'railway', 'web']
-        },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-    
-    try {
-      const loadedModules = this.moduleManager.getLoadedModules();
-      const availableModules = this.moduleManager.getAvailableModules ? 
-        this.moduleManager.getAvailableModules() : [];
-      
-      this.emit('terminal_response', {
-        type: 'modules_list',
-        modules: {
-          loaded: loadedModules,
-          available: availableModules
-        },
-        timestamp: new Date().toISOString()
+      this.remoteActor.receive({
+        type: 'tool_response',
+        requestId: message.requestId,
+        tool: message.tool,
+        result: result
       });
       
     } catch (error) {
-      this.emit('terminal_error', {
-        message: `Failed to list modules: ${error.message}`,
-        timestamp: new Date().toISOString()
+      this.remoteActor.receive({
+        type: 'tool_error',
+        requestId: message.requestId,
+        tool: message.tool,
+        error: error.message
       });
     }
   }
@@ -378,44 +180,199 @@ export class TerminalAgent extends Actor {
   /**
    * Handle tools list request
    */
-  async handleToolsList(payload) {
-    await this.listAvailableTools();
+  async handleToolsList(message) {
+    try {
+      const tools = await this.getAvailableTools();
+      
+      this.remoteActor.receive({
+        type: 'tools_list_response',
+        requestId: message.requestId,
+        tools: tools
+      });
+      
+    } catch (error) {
+      this.remoteActor.receive({
+        type: 'error',
+        requestId: message.requestId,
+        error: error.message
+      });
+    }
   }
   
   /**
-   * Handle session info request
+   * Handle module list request
    */
-  handleGetSessionInfo(payload) {
-    const sessionInfo = {
-      sessionId: this.sessionId,
-      agentId: this.id,
-      connected: this.remoteActor !== null,
-      hasModuleManager: this.moduleManager !== null,
-      hasToolRegistry: this.toolRegistry !== null,
-      isProcessing: this.isProcessing,
-      timestamp: new Date().toISOString()
-    };
+  async handleModuleList(message) {
+    try {
+      // Execute module_list as a tool
+      const result = await this.sessionManager.executeTool('module_list', {});
+      
+      this.remoteActor.receive({
+        type: 'module_list_response',
+        requestId: message.requestId,
+        modules: result.modules || { loaded: [], available: [] }
+      });
+      
+    } catch (error) {
+      this.remoteActor.receive({
+        type: 'error',
+        requestId: message.requestId,
+        error: error.message
+      });
+    }
+  }
+  
+  /**
+   * Handle module load request
+   */
+  async handleModuleLoad(message) {
+    try {
+      // Execute module_load as a tool
+      const result = await this.sessionManager.executeTool('module_load', {
+        name: message.moduleName
+      });
+      
+      this.remoteActor.receive({
+        type: 'module_loaded',
+        requestId: message.requestId,
+        moduleName: message.moduleName,
+        success: result.success,
+        message: result.message || `Module ${message.moduleName} loaded`,
+        toolsLoaded: result.toolsLoaded || []
+      });
+      
+      // Send updated tools list
+      await this.sendToolsList();
+      
+    } catch (error) {
+      this.remoteActor.receive({
+        type: 'module_error',
+        requestId: message.requestId,
+        moduleName: message.moduleName,
+        error: error.message
+      });
+    }
+  }
+  
+  /**
+   * Handle module unload request
+   */
+  async handleModuleUnload(message) {
+    try {
+      // Execute module_unload as a tool
+      const result = await this.sessionManager.executeTool('module_unload', {
+        name: message.moduleName
+      });
+      
+      this.remoteActor.receive({
+        type: 'module_unloaded',
+        requestId: message.requestId,
+        moduleName: message.moduleName,
+        success: result.success,
+        message: result.message || `Module ${message.moduleName} unloaded`
+      });
+      
+      // Send updated tools list
+      await this.sendToolsList();
+      
+    } catch (error) {
+      this.remoteActor.receive({
+        type: 'module_error',
+        requestId: message.requestId,
+        moduleName: message.moduleName,
+        error: error.message
+      });
+    }
+  }
+  
+  /**
+   * Get available tools from session
+   */
+  async getAvailableTools() {
+    if (!this.session) {
+      return [];
+    }
     
-    this.emit('terminal_response', {
-      type: 'session_info',
-      info: sessionInfo,
-      timestamp: new Date().toISOString()
-    });
+    try {
+      // Get tools from session's tool provider
+      const toolProvider = this.session.toolProvider;
+      if (toolProvider && toolProvider.getAllToolDefinitions) {
+        return await toolProvider.getAllToolDefinitions();
+      }
+      
+      // Fallback: get from module loader
+      if (this.moduleLoader) {
+        const tools = await this.moduleLoader.getAllTools();
+        return tools.map(tool => ({
+          name: tool.name,
+          description: tool.description,
+          inputSchema: tool.inputSchema
+        }));
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('TerminalAgent: Error getting tools:', error);
+      return [];
+    }
   }
   
   /**
-   * Disconnect from remote actor
+   * Send initial tools list after connection
    */
-  disconnect() {
-    this.remoteActor = null;
-    console.log('TerminalAgent: Disconnected');
+  async sendInitialTools() {
+    if (!this.remoteActor) return;
+    
+    try {
+      const tools = await this.getAvailableTools();
+      
+      // Always include system tools
+      const systemTools = [
+        { name: 'module_list', description: 'List available and loaded modules' },
+        { name: 'module_load', description: 'Load a module to make its tools available' },
+        { name: 'module_unload', description: 'Unload a module and remove its tools' }
+      ];
+      
+      const allTools = [...systemTools, ...tools];
+      
+      this.remoteActor.receive({
+        type: 'initial_tools',
+        tools: allTools
+      });
+      
+      console.log(`TerminalAgent: Sent ${allTools.length} initial tools`);
+      
+    } catch (error) {
+      console.error('TerminalAgent: Error sending initial tools:', error);
+    }
   }
   
   /**
-   * Destroy the agent
+   * Send updated tools list
+   */
+  async sendToolsList() {
+    if (!this.remoteActor) return;
+    
+    try {
+      const tools = await this.getAvailableTools();
+      
+      this.remoteActor.receive({
+        type: 'tools_updated',
+        tools: tools
+      });
+      
+    } catch (error) {
+      console.error('TerminalAgent: Error sending tools list:', error);
+    }
+  }
+  
+  /**
+   * Clean up
    */
   destroy() {
-    this.disconnect();
-    console.log(`TerminalAgent ${this.id} destroyed`);
+    this.remoteActor = null;
+    this.sessionId = null;
+    this.session = null;
+    console.log('TerminalAgent destroyed');
   }
 }

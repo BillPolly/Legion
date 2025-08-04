@@ -18,8 +18,8 @@ export class ServerActorSpace extends ActorSpace {
     this.clientActorGuids = {};
     
     // Aiur integration for TerminalAgent
-    this.moduleManager = config.moduleManager || null;
-    this.toolRegistry = config.toolRegistry || null;
+    this.sessionManager = config.sessionManager || null;
+    this.moduleLoader = config.moduleLoader || null;
   }
 
   /**
@@ -38,9 +38,8 @@ export class ServerActorSpace extends ActorSpace {
     
     // Create TerminalAgent for this connection
     const terminalAgent = new TerminalAgent({ 
-      sessionId: this.spaceId,
-      moduleManager: this.moduleManager,
-      toolRegistry: this.toolRegistry
+      sessionManager: this.sessionManager,
+      moduleLoader: this.moduleLoader
     });
     const terminalGuid = `${this.spaceId}-terminal`;
     this.register(terminalAgent, terminalGuid);
@@ -79,6 +78,9 @@ export class ServerActorSpace extends ActorSpace {
           
           console.log(`ServerActorSpace: Actor protocol active for ${clientId} with multiple actors`);
           
+          // Proactively send initial data to actors
+          this.sendInitialData();
+          
           // Actor protocol now active - Channel handles all messages
         } else {
           // Not a handshake, wait for the right message
@@ -96,6 +98,21 @@ export class ServerActorSpace extends ActorSpace {
   }
   
   /**
+   * Send initial data to connected actors
+   */
+  sendInitialData() {
+    // Send initial tools list to terminal
+    if (this.terminalAgent) {
+      this.terminalAgent.sendInitialTools();
+    }
+    
+    // Chat agent could send initial greeting or status
+    if (this.chatAgent) {
+      // chatAgent could send welcome message if needed
+    }
+  }
+  
+  /**
    * Clean up when connection closes
    */
   destroy() {
@@ -103,6 +120,10 @@ export class ServerActorSpace extends ActorSpace {
     
     if (this.chatAgent && this.chatAgent.destroy) {
       this.chatAgent.destroy();
+    }
+    
+    if (this.terminalAgent && this.terminalAgent.destroy) {
+      this.terminalAgent.destroy();
     }
     
     // Clear all actors
