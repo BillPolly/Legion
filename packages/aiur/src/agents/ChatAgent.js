@@ -178,12 +178,20 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
         timestamp: new Date().toISOString()
       });
       
-      // Send response back through the remote actor
+      // Send response back through the remote actor (unchanged)
       this.emit('message', {
         type: 'chat_response',
         content: finalResponse,
         isComplete: true,
         sessionId: this.sessionId
+      });
+      
+      // ALSO send raw LLM response as a separate debug message
+      this.emit('llm_debug', {
+        type: 'llm_raw_response',
+        rawResponse: finalResponse,
+        sessionId: this.sessionId,
+        timestamp: new Date().toISOString()
       });
       
     } catch (error) {
@@ -207,54 +215,106 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
   }
   
   /**
-   * Process message with tool calling support
+   * Process message with tool calling support - supports multiple rounds
    */
   async processWithTools(messages, tools) {
-    // Call LLM with tools
-    const response = await this.llmClient.executeWithTools(messages, tools, {
-      temperature: this.llmConfig.temperature,
-      maxTokens: this.llmConfig.maxTokens
-    });
+    let currentMessages = messages;
+    let iterations = 0;
+    const maxIterations = 10; // Prevent infinite loops
+    let finalContent = '';
     
-    // Check if LLM wants to use tools
-    if (response.toolCalls && response.toolCalls.length > 0) {
-      // Save assistant message with tool calls to history
-      const assistantMessage = {
-        role: 'assistant',
-        content: response.content || '',
-        tool_calls: response.toolCalls,
-        timestamp: new Date().toISOString()
-      };
-      this.conversationHistory.push(assistantMessage);
+    // Keep processing until no more tools are needed
+    while (iterations < maxIterations) {
+      iterations++;
       
-      // Execute the tool calls
-      const toolResults = await this.executeTools(response.toolCalls);
+      // Send thinking status
+      this.emit('agent_thinking', {
+        type: 'agent_thinking',
+        iteration: iterations,
+        sessionId: this.sessionId
+      });
       
-      // Save tool results to history as user messages
-      for (const result of toolResults) {
-        this.conversationHistory.push({
-          role: 'user',
-          content: result.content,
-          tool_result: true,
-          tool_use_id: result.tool_use_id,
-          timestamp: new Date().toISOString()
-        });
-      }
-      
-      // Build updated messages for final response
-      const updatedMessages = this.buildMessages();
-      
-      // Call LLM again with tool results to get final response
-      const finalResponse = await this.llmClient.executeWithTools(updatedMessages, tools, {
+      // Call LLM with tools
+      const response = await this.llmClient.executeWithTools(currentMessages, tools, {
         temperature: this.llmConfig.temperature,
         maxTokens: this.llmConfig.maxTokens
       });
       
-      return finalResponse.content || 'I executed the requested tools.';
+      // Send the complete LLM response for debugging
+      this.emit('llm_complete_response', {
+        type: 'llm_complete_response',
+        response: response,
+        sessionId: this.sessionId,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Check if LLM wants to use tools
+      if (response.toolCalls && response.toolCalls.length > 0) {
+        // Send the LLM's reasoning if any
+        if (response.content) {
+          this.emit('agent_thought', {
+            type: 'agent_thought',
+            thought: response.content,
+            sessionId: this.sessionId
+          });
+        }
+        
+        // Save assistant message with tool calls to history
+        const assistantMessage = {
+          role: 'assistant',
+          content: response.content || '',
+          tool_calls: response.toolCalls,
+          timestamp: new Date().toISOString()
+        };
+        this.conversationHistory.push(assistantMessage);
+        
+        // Execute the tool calls
+        const toolResults = await this.executeTools(response.toolCalls);
+        
+        // Save tool results to history as user messages
+        for (const result of toolResults) {
+          this.conversationHistory.push({
+            role: 'user',
+            content: result.content,
+            tool_result: true,
+            tool_use_id: result.tool_use_id,
+            timestamp: new Date().toISOString()
+          });
+          
+          // Send tool result to UI
+          this.emit('tool_result', {
+            type: 'tool_result',
+            toolId: result.tool_use_id,
+            result: result.content,
+            sessionId: this.sessionId
+          });
+        }
+        
+        // Build updated messages for next iteration
+        currentMessages = this.buildMessages();
+        
+        // Continue loop to see if more tools are needed
+      } else {
+        // No more tools needed, we have the final response
+        finalContent = response.content || 'I completed the requested tasks.';
+        
+        // Send completion status
+        this.emit('agent_complete', {
+          type: 'agent_complete',
+          iterations: iterations,
+          sessionId: this.sessionId
+        });
+        
+        break;
+      }
     }
     
-    // No tools needed, return the response
-    return response.content || '';
+    if (iterations >= maxIterations) {
+      console.warn('ChatAgent: Reached maximum tool iterations');
+      finalContent = 'I reached the maximum number of tool operations. The task may be incomplete.';
+    }
+    
+    return finalContent;
   }
   
   /**
@@ -265,6 +325,16 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
     
     for (const toolCall of toolCalls) {
       try {
+        // Send tool execution start status
+        this.emit('tool_executing', {
+          type: 'tool_executing',
+          toolName: toolCall.name,
+          toolId: toolCall.id,
+          parameters: toolCall.input,
+          sessionId: this.sessionId,
+          timestamp: new Date().toISOString()
+        });
+        
         // Execute tool via moduleLoader
         let result;
         if (this.moduleLoader && this.moduleLoader.hasTool(toolCall.name)) {
@@ -281,7 +351,7 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
           content: JSON.stringify(result)
         });
         
-        // Emit tool execution event
+        // Emit tool execution event (existing functionality)
         this.emit('tool_executed', {
           type: 'tool_execution',
           tool: toolCall.name,

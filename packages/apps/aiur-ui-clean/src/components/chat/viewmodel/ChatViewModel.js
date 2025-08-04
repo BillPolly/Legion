@@ -1,3 +1,5 @@
+import { ThoughtsDisplay } from '../ThoughtsDisplay.js';
+
 /**
  * ChatViewModel - Coordinates between Model and View, handles business logic
  */
@@ -9,6 +11,10 @@ export class ChatViewModel {
     
     // Track streaming messages
     this.streamingMessageId = null;
+    
+    // Create thoughts display
+    this.thoughtsDisplay = null;
+    this.currentThoughtMessageId = null;
     
     // Set up model listeners
     this.setupModelListeners();
@@ -112,6 +118,11 @@ export class ChatViewModel {
     this.chatActor.onConnectionChange = (connected) => {
       this.handleConnectionChange(connected);
     };
+    
+    // Listen for thought updates
+    this.chatActor.onThought = (thought) => {
+      this.handleThought(thought);
+    };
   }
   
   /**
@@ -191,6 +202,11 @@ export class ChatViewModel {
           isComplete: true
         });
       }
+      
+      // Hide thoughts display if visible
+      if (this.thoughtsDisplay) {
+        // Let it fade out naturally after completion
+      }
     }
   }
   
@@ -253,11 +269,52 @@ export class ChatViewModel {
   }
   
   /**
+   * Handle thought updates from the agent
+   */
+  handleThought(thought) {
+    // Create thoughts display if not exists
+    if (!this.thoughtsDisplay) {
+      this.thoughtsDisplay = new ThoughtsDisplay();
+      
+      // Find the messages container to insert thoughts display
+      const messagesContainer = this.view.elements.messagesContainer;
+      if (messagesContainer) {
+        // If we have a current assistant message being built, insert before it
+        // Otherwise append to messages
+        if (this.streamingMessageId) {
+          const messageEl = messagesContainer.querySelector(`[data-message-id="${this.streamingMessageId}"]`);
+          if (messageEl) {
+            messagesContainer.insertBefore(this.thoughtsDisplay.getElement(), messageEl);
+          } else {
+            messagesContainer.appendChild(this.thoughtsDisplay.getElement());
+          }
+        } else {
+          messagesContainer.appendChild(this.thoughtsDisplay.getElement());
+        }
+        
+        // Auto-scroll to show thoughts
+        this.view.scrollToBottom();
+      }
+    }
+    
+    // Add thought to display
+    this.thoughtsDisplay.addThought(thought);
+    
+    // Auto-scroll to keep thoughts visible
+    this.view.scrollToBottom();
+  }
+  
+  /**
    * Clear chat history
    */
   clearChat() {
     this.model.clearMessages();
     this.streamingMessageId = null;
+    
+    // Clear thoughts display
+    if (this.thoughtsDisplay) {
+      this.thoughtsDisplay.clear();
+    }
     
     // Send clear command to server if connected
     if (this.chatActor && this.chatActor.isConnected()) {
@@ -310,6 +367,13 @@ export class ChatViewModel {
       this.chatActor.onStream = null;
       this.chatActor.onError = null;
       this.chatActor.onConnectionChange = null;
+      this.chatActor.onThought = null;
+    }
+    
+    // Destroy thoughts display
+    if (this.thoughtsDisplay) {
+      this.thoughtsDisplay.destroy();
+      this.thoughtsDisplay = null;
     }
     
     // Clear references

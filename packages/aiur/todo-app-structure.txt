@@ -1,0 +1,42 @@
+TODO App Directory Structure
+========================
+
+/todo-app
+├── frontend/                 # Frontend application code
+│   ├── src/                 # Source files
+│   │   ├── components/      # React/Vue components
+│   │   │   ├── TodoList/    # Todo list component
+│   │   │   ├── TodoItem/    # Individual todo item
+│   │   │   └── AddTodo/     # New todo form
+│   │   ├── styles/          # CSS/SCSS files
+│   │   ├── utils/           # Helper functions
+│   │   └── assets/          # Images, icons, etc.
+│   ├── public/              # Static files
+│   └── tests/               # Frontend tests
+│
+├── backend/                  # Backend application code
+│   ├── src/                 # Source files
+│   │   ├── controllers/     # Request handlers
+│   │   ├── models/          # Data models
+│   │   ├── middleware/      # Custom middleware
+│   │   └── utils/           # Helper functions
+│   ├── config/              # Configuration files
+│   └── tests/               # Backend tests
+│
+├── database/                # Database-related files
+│   ├── migrations/          # Database migrations
+│   └── seeds/               # Seed data
+│
+├── docs/                    # Documentation
+│   ├── api/                 # API documentation
+│   └── setup/               # Setup instructions
+│
+└── scripts/                 # Utility scripts
+
+Key Features:
+- Separate frontend and backend for clear separation of concerns
+- Component-based frontend architecture
+- Organized backend with MVC-like structure
+- Dedicated testing directories
+- Clear separation of configuration and business logic
+- Documentation structure for maintainability

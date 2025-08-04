@@ -81,6 +81,26 @@ export class ChatActor extends Actor {
         this.handleChatResponse(payload);
         break;
         
+      case 'llm_raw_response':
+        // Log the raw LLM response
+        console.log('[LLM Raw Response]:', payload.rawResponse);
+        break;
+        
+      case 'llm_complete_response':
+        // Log the complete LLM response including tool calls
+        console.log('[LLM Complete Response]:', payload.response);
+        break;
+        
+      case 'tool_execution_debug':
+        // Log tool execution details
+        console.log('[Tool Execution]:', {
+          tool: payload.toolName,
+          id: payload.toolId,
+          parameters: payload.parameters,
+          timestamp: payload.timestamp
+        });
+        break;
+        
       case 'chat_stream':
         this.handleChatStream(payload);
         break;
@@ -107,6 +127,26 @@ export class ChatActor extends Actor {
         console.log('ChatActor: History cleared on server');
         break;
         
+      case 'agent_thinking':
+        this.handleAgentThinking(payload);
+        break;
+        
+      case 'agent_thought':
+        this.handleAgentThought(payload);
+        break;
+        
+      case 'tool_executing':
+        this.handleToolExecuting(payload);
+        break;
+        
+      case 'tool_result':
+        this.handleToolResult(payload);
+        break;
+        
+      case 'agent_complete':
+        this.handleAgentComplete(payload);
+        break;
+        
       default:
         console.log('ChatActor: Unknown message type:', payload.type);
     }
@@ -123,7 +163,12 @@ export class ChatActor extends Actor {
       'processing_started': 'chat_processing',
       'processing_complete': 'chat_complete',
       'history': 'chat_history',
-      'history_cleared': 'chat_history_cleared'
+      'history_cleared': 'chat_history_cleared',
+      'agent_thinking': 'agent_thinking',
+      'agent_thought': 'agent_thought',
+      'tool_executing': 'tool_executing',
+      'tool_result': 'tool_result',
+      'agent_complete': 'agent_complete'
     };
     return mapping[eventName] || null;
   }
@@ -283,6 +328,74 @@ export class ChatActor extends Actor {
   }
   
   /**
+   * Handle agent thinking status
+   */
+  handleAgentThinking(payload) {
+    if (this.onThought) {
+      this.onThought({
+        type: 'thinking',
+        iteration: payload.iteration,
+        timestamp: payload.timestamp || new Date().toISOString()
+      });
+    }
+  }
+  
+  /**
+   * Handle agent thought/reasoning
+   */
+  handleAgentThought(payload) {
+    if (this.onThought) {
+      this.onThought({
+        type: 'thought',
+        content: payload.thought,
+        timestamp: payload.timestamp || new Date().toISOString()
+      });
+    }
+  }
+  
+  /**
+   * Handle tool execution start
+   */
+  handleToolExecuting(payload) {
+    if (this.onThought) {
+      this.onThought({
+        type: 'tool_executing',
+        toolName: payload.toolName,
+        toolId: payload.toolId,
+        parameters: payload.parameters,
+        timestamp: payload.timestamp || new Date().toISOString()
+      });
+    }
+  }
+  
+  /**
+   * Handle tool execution result
+   */
+  handleToolResult(payload) {
+    if (this.onThought) {
+      this.onThought({
+        type: 'tool_result',
+        toolId: payload.toolId,
+        result: payload.result,
+        timestamp: payload.timestamp || new Date().toISOString()
+      });
+    }
+  }
+  
+  /**
+   * Handle agent completion
+   */
+  handleAgentComplete(payload) {
+    if (this.onThought) {
+      this.onThought({
+        type: 'complete',
+        iterations: payload.iterations,
+        timestamp: payload.timestamp || new Date().toISOString()
+      });
+    }
+  }
+  
+  /**
    * Destroy the actor
    */
   destroy() {
@@ -293,6 +406,7 @@ export class ChatActor extends Actor {
     this.onStream = null;
     this.onError = null;
     this.onConnectionChange = null;
+    this.onThought = null;
     
     // Clear queue
     this.messageQueue = [];
