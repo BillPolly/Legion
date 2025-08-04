@@ -1,4 +1,3 @@
-import { LLMClient } from '@legion/llm';
 import { Actor } from '../../../shared/actors/src/Actor.js';
 
 /**
@@ -20,14 +19,17 @@ export class ChatAgent extends Actor {
     this.sessionManager = config.sessionManager || null;
     this.moduleLoader = config.moduleLoader || null;
     
+    // ResourceManager for getting LLMClient
+    this.resourceManager = config.resourceManager || null;
+    
     // Conversation state
     this.conversationHistory = [];
     this.isProcessing = false;
+    this.initialized = false;
     
-    // LLM configuration
+    // LLM configuration (NO API KEY HERE!)
     this.llmConfig = {
       provider: config.provider || 'anthropic',
-      apiKey: config.apiKey || process.env.ANTHROPIC_API_KEY,
       model: config.model || 'claude-3-5-sonnet-20241022',
       maxRetries: config.maxRetries || 3,
       temperature: config.temperature || 0.7,
@@ -36,14 +38,33 @@ export class ChatAgent extends Actor {
     
     // Initialize LLM client
     this.llmClient = null;
-    this.initializeLLMClient();
     
     // System prompt for the assistant
-    this.systemPrompt = config.systemPrompt || `You are a helpful AI assistant integrated into the Aiur development environment. 
-You have access to various tools and can help with coding, file operations, and system tasks.
+    this.systemPrompt = config.systemPrompt || `You are a helpful AI assistant integrated into the Aiur development environment.
+
+You can:
+1. Have conversations and answer questions
+2. Use tools when needed to perform actions like reading/writing files, running commands, etc.
+
+When the user asks you to perform an action (like writing a file, reading data, etc.), you should use the appropriate tool.
+When the user just wants to chat or ask questions, respond conversationally.
+
+You will automatically choose whether to use tools or just respond based on what the user needs.
 Be concise but thorough in your responses. Use markdown formatting when appropriate.`;
     
     console.log(`ChatAgent ${this.id} initialized for session ${this.sessionId}`);
+  }
+  
+  /**
+   * Initialize the ChatAgent (must be called after construction)
+   */
+  async initialize() {
+    if (this.initialized) {
+      return;
+    }
+    
+    await this.initializeLLMClient();
+    this.initialized = true;
   }
   
   /**
@@ -63,25 +84,32 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
   }
   
   /**
-   * Initialize the LLM client
+   * Initialize the LLM client using ResourceManager
    */
-  initializeLLMClient() {
+  async initializeLLMClient() {
     try {
-      this.llmClient = new LLMClient({
+      if (!this.resourceManager) {
+        console.error('ChatAgent: No ResourceManager provided, cannot create LLMClient');
+        return;
+      }
+      
+      // Request LLMClient from ResourceManager with our config (NO API KEY!)
+      this.llmClient = await this.resourceManager.createLLMClient({
         provider: this.llmConfig.provider,
-        apiKey: this.llmConfig.apiKey,
         model: this.llmConfig.model,
         maxRetries: this.llmConfig.maxRetries
       });
       
       // Listen to LLM events for streaming
-      this.llmClient.on('stream', (chunk) => {
-        this.emit('stream', {
-          type: 'chat_stream',
-          content: chunk,
-          sessionId: this.sessionId
+      if (this.llmClient.on) {
+        this.llmClient.on('stream', (chunk) => {
+          this.emit('stream', {
+            type: 'chat_stream',
+            content: chunk,
+            sessionId: this.sessionId
+          });
         });
-      });
+      }
       
     } catch (error) {
       console.error('Failed to initialize LLM client:', error);
@@ -97,6 +125,11 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
    * Process a chat message from the user with tool support
    */
   async processMessage(userMessage) {
+    // Ensure we're initialized
+    if (!this.initialized) {
+      await this.initialize();
+    }
+    
     if (this.isProcessing) {
       this.emit('error', {
         type: 'processing_error',

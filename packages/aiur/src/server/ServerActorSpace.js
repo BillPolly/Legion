@@ -17,9 +17,10 @@ export class ServerActorSpace extends ActorSpace {
     this.terminalAgent = null;
     this.clientActorGuids = {};
     
-    // Aiur integration for TerminalAgent
+    // Aiur integration
     this.sessionManager = config.sessionManager || null;
     this.moduleLoader = config.moduleLoader || null;
+    this.resourceManager = config.resourceManager || null;
   }
 
   /**
@@ -30,11 +31,12 @@ export class ServerActorSpace extends ActorSpace {
     console.log(`ServerActorSpace: New connection from ${clientId}`);
     this.clientId = clientId;
     
-    // Create ChatAgent for this connection with access to tools
+    // Create ChatAgent for this connection with access to tools and ResourceManager
     const chatAgent = new ChatAgent({ 
       sessionId: this.spaceId,
       sessionManager: this.sessionManager,
-      moduleLoader: this.moduleLoader
+      moduleLoader: this.moduleLoader,
+      resourceManager: this.resourceManager
     });
     const chatGuid = `${this.spaceId}-chat`;
     this.register(chatAgent, chatGuid);

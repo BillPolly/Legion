@@ -357,6 +357,55 @@ class ResourceManager {
     this.register('workspace.config', workspaceConfig);
   }
 
+  /**
+   * Create an LLMClient with the appropriate API key based on provider
+   * @param {Object} config - Configuration for the LLMClient (provider, model, etc)
+   * @returns {Promise<LLMClient>} Configured LLMClient instance
+   */
+  async createLLMClient(config) {
+    const { LLMClient } = await import('@legion/llm');
+    
+    // Map provider to the appropriate API key
+    let apiKey;
+    switch (config.provider) {
+      case 'anthropic':
+        apiKey = this.get('env.ANTHROPIC_API_KEY');
+        if (!apiKey) {
+          throw new Error('ANTHROPIC_API_KEY not found in environment');
+        }
+        break;
+      case 'openai':
+        apiKey = this.get('env.OPENAI_API_KEY');
+        if (!apiKey) {
+          throw new Error('OPENAI_API_KEY not found in environment');
+        }
+        break;
+      case 'deepseek':
+        apiKey = this.get('env.DEEPSEEK_API_KEY');
+        if (!apiKey) {
+          throw new Error('DEEPSEEK_API_KEY not found in environment');
+        }
+        break;
+      case 'openrouter':
+        apiKey = this.get('env.OPENROUTER_API_KEY');
+        if (!apiKey) {
+          throw new Error('OPENROUTER_API_KEY not found in environment');
+        }
+        break;
+      case 'mock':
+        // Mock provider doesn't need an API key
+        break;
+      default:
+        throw new Error(`Unknown LLM provider: ${config.provider}`);
+    }
+    
+    // Create and return the LLMClient with the API key injected
+    return new LLMClient({
+      ...config,
+      apiKey: apiKey
+    });
+  }
+
 }
 
 export default ResourceManager;
