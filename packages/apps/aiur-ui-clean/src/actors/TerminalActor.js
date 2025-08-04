@@ -10,6 +10,11 @@ export class TerminalActor extends Actor {
     this.remoteAgent = null; // Reference to server TerminalAgent
     this.toolDefinitions = new Map(); // Store tool definitions with schemas
     this.connected = false;
+    
+    // Set this actor on the terminal (MVVM binding)
+    if (this.terminal) {
+      this.terminal.actor = this;
+    }
   }
   
   /**
@@ -425,19 +430,34 @@ export class TerminalActor extends Actor {
    * Handle modules list from agent
    */
   handleModulesList(modules) {
-    if (!this.terminal) return;
+    console.log('TerminalActor: handleModulesList called with:', modules);
+    console.log('TerminalActor: terminal exists?', !!this.terminal);
     
+    if (!this.terminal) {
+      console.error('TerminalActor: No terminal reference!');
+      return;
+    }
+    
+    // Handle loaded modules
     if (modules.loaded && modules.loaded.length > 0) {
       this.terminal.addOutput('Loaded modules:', 'info');
       modules.loaded.forEach(mod => {
-        this.terminal.addOutput(`  ✓ ${mod}`, 'success');
+        // Check if we have details for this module
+        if (modules.details && modules.details[mod]) {
+          const details = modules.details[mod];
+          this.terminal.addOutput(`  ✓ ${mod} (${details.toolCount} tools)`, 'success');
+        } else {
+          this.terminal.addOutput(`  ✓ ${mod}`, 'success');
+        }
       });
     } else {
       this.terminal.addOutput('No modules loaded', 'info');
     }
     
+    // Handle available modules
     if (modules.available && modules.available.length > 0) {
-      this.terminal.addOutput('Available modules:', 'info');
+      this.terminal.addOutput('', 'info');
+      this.terminal.addOutput('Available modules (use module_load <name> to load):', 'info');
       modules.available.forEach(mod => {
         this.terminal.addOutput(`  • ${mod}`, 'info');
       });

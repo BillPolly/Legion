@@ -91,7 +91,12 @@ export class TerminalAgent extends Actor {
       // Create new session
       const sessionInfo = await this.sessionManager.createSession();
       this.sessionId = sessionInfo.sessionId;
-      this.session = sessionInfo;
+      
+      // Get the actual session object with toolProvider
+      this.session = this.sessionManager.getSession(this.sessionId);
+      if (!this.session) {
+        throw new Error('Failed to get created session');
+      }
       
       // Send response
       this.remoteActor.receive({
@@ -120,7 +125,8 @@ export class TerminalAgent extends Actor {
    */
   async handleSessionAttach(message) {
     try {
-      const session = await this.sessionManager.getSession(message.sessionId);
+      // Get the actual session object with toolProvider
+      const session = this.sessionManager.getSession(message.sessionId);
       if (session) {
         this.sessionId = message.sessionId;
         this.session = session;
@@ -151,11 +157,26 @@ export class TerminalAgent extends Actor {
    */
   async handleToolRequest(message) {
     try {
-      if (!this.session) {
-        throw new Error('No active session');
+      // First check if it's a context tool and we have a session
+      if (this.session && this.session.context) {
+        const contextToolNames = ['context_add', 'context_get', 'context_list'];
+        if (contextToolNames.includes(message.tool)) {
+          const result = await this.session.context.executeContextTool(
+            message.tool,
+            message.arguments || {}
+          );
+          this.remoteActor.receive({
+            type: 'tool_response',
+            requestId: message.requestId,
+            tool: message.tool,
+            result: { success: true, result: result }
+          });
+          return;
+        }
       }
       
-      const result = await this.sessionManager.executeTool(
+      // Execute tool directly from moduleLoader
+      const result = await this.moduleLoader.executeTool(
         message.tool,
         message.arguments || {}
       );
@@ -204,8 +225,8 @@ export class TerminalAgent extends Actor {
    */
   async handleModuleList(message) {
     try {
-      // Execute module_list as a tool
-      const result = await this.sessionManager.executeTool('module_list', {});
+      // Execute module_list directly from moduleLoader
+      const result = await this.moduleLoader.executeTool('module_list', {});
       
       this.remoteActor.receive({
         type: 'module_list_response',
@@ -227,8 +248,8 @@ export class TerminalAgent extends Actor {
    */
   async handleModuleLoad(message) {
     try {
-      // Execute module_load as a tool
-      const result = await this.sessionManager.executeTool('module_load', {
+      // Execute module_load directly from moduleLoader
+      const result = await this.moduleLoader.executeTool('module_load', {
         name: message.moduleName
       });
       
@@ -259,8 +280,8 @@ export class TerminalAgent extends Actor {
    */
   async handleModuleUnload(message) {
     try {
-      // Execute module_unload as a tool
-      const result = await this.sessionManager.executeTool('module_unload', {
+      // Execute module_unload directly from moduleLoader
+      const result = await this.moduleLoader.executeTool('module_unload', {
         name: message.moduleName
       });
       

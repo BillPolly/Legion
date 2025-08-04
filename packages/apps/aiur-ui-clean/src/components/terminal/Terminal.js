@@ -18,6 +18,9 @@ export class Terminal {
       connected: false // Will be updated when TerminalActor connects
     };
     
+    // Reference to TerminalActor (will be set by actor)
+    this.actor = null;
+    
     // DOM elements - created once, updated incrementally
     this.elements = {
       terminal: null,
@@ -120,10 +123,13 @@ export class Terminal {
   }
   
   /**
-   * Update tool definitions - no longer needed (terminal is local only)
+   * Update tool definitions for tab completion
    */
   updateToolDefinitions(tools) {
-    // No-op - terminal is now local only
+    // Pass to InputView for tab completion
+    if (this.inputView) {
+      this.inputView.setToolDefinitions(tools);
+    }
   }
   
   /**
@@ -209,12 +215,32 @@ export class Terminal {
         this.addOutput('  .history    - Show command history', 'info');
         this.addOutput('  .time       - Show current time', 'info');
         this.addOutput('  .about      - About this terminal', 'info');
-        if (this.state.connected) {
+        
+        // Check if actor is connected (MVVM - check the ViewModel state)
+        const isConnected = this.actor && this.actor.isConnected();
+        if (isConnected) {
           this.addOutput('', 'info');
           this.addOutput('Server Commands (when connected):', 'info');
           this.addOutput('  tools         - List available tools', 'info');
-          this.addOutput('  module_list   - List modules', 'info');
-          this.addOutput('  module_load   - Load a module', 'info');
+          this.addOutput('  modules       - List loaded and available modules', 'info');
+          this.addOutput('  module_load   - Load a module (e.g., module_load file)', 'info');
+          this.addOutput('  module_unload - Unload a module', 'info');
+          
+          // Show some available tools if we have them
+          if (this.actor && this.actor.toolDefinitions && this.actor.toolDefinitions.size > 0) {
+            this.addOutput('', 'info');
+            this.addOutput(`Available tools (${this.actor.toolDefinitions.size} total):`, 'info');
+            let count = 0;
+            for (const [name, tool] of this.actor.toolDefinitions) {
+              if (count < 5) {
+                this.addOutput(`  ${name} - ${tool.description || 'No description'}`, 'info');
+                count++;
+              }
+            }
+            if (this.actor.toolDefinitions.size > 5) {
+              this.addOutput(`  ... and ${this.actor.toolDefinitions.size - 5} more (use 'tools' to see all)`, 'info');
+            }
+          }
         } else {
           this.addOutput('', 'info');
           this.addOutput('Not connected to server', 'warning');
@@ -246,9 +272,9 @@ export class Terminal {
           break;
       }
     } else {
-      // Not a dot command - try to send to server if connected
-      if (this.state.connected && this.terminalActor) {
-        this.terminalActor.sendCommand(command);
+      // Not a dot command - try to send to server if connected (MVVM)
+      if (this.actor && this.actor.isConnected()) {
+        this.actor.sendCommand(command);
       } else {
         this.addOutput(`Unknown command: ${command}`, 'error');
         this.addOutput('Not connected to server.', 'warning');

@@ -1,11 +1,16 @@
 import { Tool } from '@legion/module-loader';
 import { z } from 'zod';
+import { readFileSync } from 'fs';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export class ModuleListTool extends Tool {
   constructor(dependencies = {}) {
     super({
       name: 'module_list',
-      description: 'List all loaded modules',
+      description: 'List all loaded and available modules',
       inputSchema: z.object({
         filter: z.string().optional().describe('Filter modules by name')
       })
@@ -22,9 +27,22 @@ export class ModuleListTool extends Tool {
       };
     }
 
+    // Get loaded modules
     const loadedModules = moduleLoader.getLoadedModuleNames();
     const allTools = await moduleLoader.getAllTools();
     
+    // Get available modules from registry
+    let availableModules = [];
+    try {
+      const registryPath = resolve(__dirname, '../../../module-loader/src/ModuleRegistry.json');
+      const registry = JSON.parse(readFileSync(registryPath, 'utf-8'));
+      availableModules = Object.keys(registry.modules);
+    } catch (error) {
+      console.error('Failed to load module registry:', error);
+      // Continue without available modules list
+    }
+    
+    // Build module details for loaded modules
     const moduleDetails = {};
     for (const moduleName of loadedModules) {
       const module = moduleLoader.getModule(moduleName);
@@ -40,21 +58,28 @@ export class ModuleListTool extends Tool {
       };
     }
     
+    // Separate loaded and available modules
+    const notLoadedModules = availableModules.filter(name => !loadedModules.includes(name));
+    
     // Apply filter if provided
-    let filteredModules = loadedModules;
+    let filteredLoaded = loadedModules;
+    let filteredAvailable = notLoadedModules;
+    
     if (args.filter) {
       const regex = new RegExp(args.filter, 'i');
-      filteredModules = loadedModules.filter(name => regex.test(name));
+      filteredLoaded = loadedModules.filter(name => regex.test(name));
+      filteredAvailable = notLoadedModules.filter(name => regex.test(name));
     }
     
     return {
       success: true,
       modules: {
-        loaded: filteredModules,
-        total: filteredModules.length,
+        loaded: filteredLoaded,
+        available: filteredAvailable,
+        total: filteredLoaded.length + filteredAvailable.length,
         details: Object.fromEntries(
           Object.entries(moduleDetails).filter(([name]) => 
-            filteredModules.includes(name)
+            filteredLoaded.includes(name)
           )
         )
       },

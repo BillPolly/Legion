@@ -10,6 +10,7 @@ import { ModuleListTool } from './ModuleListTool.js';
 import { ModuleInfoTool } from './ModuleInfoTool.js';
 import { ModuleToolsTool } from './ModuleToolsTool.js';
 import { ModuleLoadTool } from './ModuleLoadTool.js';
+import { ModuleUnloadTool } from './ModuleUnloadTool.js';
 
 export default class SystemModule extends Module {
   static dependencies = ['moduleLoader']; // Declare that we need moduleLoader
@@ -22,6 +23,7 @@ export default class SystemModule extends Module {
   getTools() {
     return [
       new ModuleLoadTool(this.dependencies),
+      new ModuleUnloadTool(this.dependencies),
       new ModuleListTool(this.dependencies),
       new ModuleInfoTool(this.dependencies),
       new ModuleToolsTool(this.dependencies)
