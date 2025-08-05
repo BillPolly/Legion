@@ -1,7 +1,7 @@
 import { Actor } from '../../../shared/actors/src/Actor.js';
 import { ArtifactActor } from './ArtifactActor.js';
 import { ArtifactManager } from './artifacts/ArtifactManager.js';
-import { TaskOrchestrator } from './TaskOrchestrator.js';
+import { TaskOrchestrator } from './task-orchestrator/TaskOrchestrator.js';
 
 /**
  * ChatAgent - Handles chat interactions with LLM as a backend actor
@@ -49,6 +49,9 @@ export class ChatAgent extends Actor {
     // Initialize task orchestrator
     this.taskOrchestrator = null; // Will be initialized later
     this.orchestratorActive = false;
+    
+    // Agent context - all capabilities that can be delegated
+    this.agentContext = null; // Will be built after initialization
     
     // Voice configuration
     this.voiceEnabled = false;
@@ -142,7 +145,39 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
       this.voiceEnabled = false;
     }
 
+    // Build the agent context after all components are initialized
+    this.buildAgentContext();
+    
     this.initialized = true;
+  }
+  
+  /**
+   * Build the agent context with all capabilities
+   */
+  buildAgentContext() {
+    const self = this;
+    this.agentContext = {
+      // Communication
+      emit: this.emit.bind(this),
+      
+      // LLM
+      llmClient: this.llmClient,
+      
+      // Artifacts
+      artifactManager: this.artifactManager,
+      
+      // Conversation (reference, not copy)
+      get conversationHistory() { return self.conversationHistory; },
+      
+      // Session
+      sessionId: this.sessionId,
+      
+      // Resources
+      resourceManager: this.resourceManager,
+      
+      // Module loader reference (tools can be accessed via moduleLoader)
+      moduleLoader: this.moduleLoader
+    };
   }
   
   /**
@@ -494,15 +529,12 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
         // Handle special internal tools
         if (toolCall.name === 'handle_complex_task') {
           // Delegate to orchestrator
-          if (this.taskOrchestrator) {
+          if (this.taskOrchestrator && this.agentContext) {
             this.orchestratorActive = true;
             await this.taskOrchestrator.receive({
               type: 'start_task',
               description: processedInput.task_description,
-              context: {
-                userMessage: this.conversationHistory.slice(-1)[0]?.content
-              },
-              conversationHistory: this.conversationHistory.slice(-10) // Last 10 messages for context
+              agentContext: this.agentContext
             });
             result = {
               success: true,
@@ -817,7 +849,7 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
    * Actor receive method - handles incoming messages from the actor system
    * This is the main entry point for actor communication
    */
-  async receive(payload, envelope) {
+  async receive(payload) {
     console.log('ChatAgent: Received message via actor system:', payload);
     
     // If payload is a message object, handle it
@@ -1125,10 +1157,7 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
         break;
         
       case 'orchestrator_complete':
-        // Task completed, clear active flag
-        this.orchestratorActive = false;
-        
-        // Send completion message
+        // Send completion message first
         this.emit('message', {
           type: 'chat_response',
           content: message.message,
@@ -1138,7 +1167,7 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
           sessionId: this.sessionId
         });
         
-        // If the task was cancelled or failed, add to history
+        // Add to history
         if (message.wasActive) {
           this.conversationHistory.push({
             role: 'assistant',
@@ -1146,6 +1175,9 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
             timestamp: new Date().toISOString()
           });
         }
+        
+        // Clear active flag AFTER sending the message
+        this.orchestratorActive = false;
         break;
         
       case 'orchestrator_error':
@@ -1167,7 +1199,7 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
   /**
    * Prepare for tool usage (future enhancement)
    */
-  async executeWithTools(userMessage, availableTools) {
+  async executeWithTools(userMessage) {
     // This will be implemented when tool usage is added
     // For now, just process as a regular message
     return this.processMessage(userMessage);
