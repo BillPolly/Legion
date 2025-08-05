@@ -237,12 +237,38 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
           return (now - artifactTime) < 30000; // 30 seconds window
         });
 
-      // Send response back through the remote actor with artifacts
+      // Generate voice if enabled and auto-play is on
+      let voiceData = null;
+      if (this.voiceEnabled && this.voicePreferences.enabled && this.voicePreferences.autoPlay) {
+        try {
+          const voiceResult = await this.moduleLoader.executeTool('generate_voice', {
+            text: finalResponse,
+            voice: this.voicePreferences.voice,
+            model: 'tts-1',  // Use standard model for lower latency
+            format: 'mp3',
+            speed: 1.5  // Generate at 1.5x speed for faster playback
+          });
+          
+          if (voiceResult.success !== false && voiceResult.audio) {
+            voiceData = {
+              audio: voiceResult.audio,
+              format: voiceResult.format || 'mp3',
+              voice: voiceResult.voice || this.voicePreferences.voice
+            };
+          }
+        } catch (voiceError) {
+          console.error('ChatAgent: Failed to generate voice:', voiceError);
+          // Continue without voice - text response is still valid
+        }
+      }
+
+      // Send response back through the remote actor with artifacts and optional voice
       this.emit('message', {
         type: 'chat_response',
         content: finalResponse,
         isComplete: true,
         artifacts: currentArtifacts,
+        voiceData: voiceData,  // Include voice data if generated
         sessionId: this.sessionId
       });
       
@@ -922,7 +948,8 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
         text: message.text,
         voice: message.voice || this.voicePreferences.voice,
         model: 'tts-1',  // Use standard model for lower latency
-        format: 'mp3'
+        format: 'mp3',
+        speed: 1.5  // Generate at 1.5x speed for faster playback
       });
       
       if (result.success !== false && result.audio) {

@@ -342,6 +342,7 @@ export class ChatActor extends Actor {
         content: payload.content,
         isComplete: payload.isComplete || false,
         artifacts: payload.artifacts || [],
+        voiceData: payload.voiceData || null,  // Include voice data if present
         timestamp: payload.timestamp || new Date().toISOString()
       });
     }

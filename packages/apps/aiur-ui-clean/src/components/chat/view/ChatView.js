@@ -474,7 +474,7 @@ export class ChatView {
     contentContainer.style.flex = '1';
     
     // Parse markdown if assistant message
-    if (!isUser && message.content.includes('```') || message.content.includes('**')) {
+    if (!isUser && (message.content.includes('```') || message.content.includes('**'))) {
       contentContainer.innerHTML = this.parseMarkdown(message.content);
     } else {
       contentContainer.textContent = message.content;
@@ -684,10 +684,14 @@ export class ChatView {
     if (messageElement) {
       const bubble = messageElement.querySelector('.message-bubble');
       if (bubble) {
+        // Find the content container span within the bubble
+        const contentContainer = bubble.querySelector('span') || bubble;
+        
+        // Only update the content container, preserving speaker button and structure
         if (content.includes('```') || content.includes('**')) {
-          bubble.innerHTML = this.parseMarkdown(content);
+          contentContainer.innerHTML = this.parseMarkdown(content);
         } else {
-          bubble.textContent = content;
+          contentContainer.textContent = content;
         }
       }
     }
@@ -846,14 +850,17 @@ export class ChatView {
    * Update speaker button state
    */
   updateSpeakerButton(messageId, isPlaying) {
-    const button = this.container.querySelector(`[data-message-id="${messageId}"]`);
-    if (button) {
-      if (isPlaying) {
-        button.classList.add('playing');
-        button.innerHTML = '⏸️';
-      } else {
-        button.classList.remove('playing');
-        button.innerHTML = '🔊';
+    const messageElement = this.container.querySelector(`[data-message-id="${messageId}"]`);
+    if (messageElement) {
+      const button = messageElement.querySelector('.message-speaker-button');
+      if (button) {
+        if (isPlaying) {
+          button.classList.add('playing');
+          button.innerHTML = '⏸️';
+        } else {
+          button.classList.remove('playing');
+          button.innerHTML = '🔊';
+        }
       }
     }
   }

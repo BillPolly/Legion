@@ -525,16 +525,29 @@ export class ChatViewModel {
     // Call original handler
     this.handleChatResponse(response);
     
-    // If auto-play is enabled and this is a complete response
-    if (this.voiceController.autoPlayEnabled && response.isComplete && response.content) {
-      // Check if content should be auto-played
+    // If voice data is included in the response, play it immediately
+    if (response.voiceData && response.voiceData.audio) {
+      const messageId = this.model.getMessages().slice(-1)[0]?.id;
+      if (messageId) {
+        // Play the pre-generated voice
+        this.voiceController.play(
+          response.voiceData.audio,
+          messageId,
+          {
+            format: response.voiceData.format || 'mp3',
+            voice: response.voiceData.voice,
+            priority: this.voiceController.autoPlayEnabled ? 'normal' : 'high'
+          }
+        );
+      }
+    } else if (this.voiceController.autoPlayEnabled && response.isComplete && response.content) {
+      // Fallback: Request voice generation if not included
       const shouldPlay = this.voiceController.shouldAutoPlay({
         role: 'assistant',
         content: response.content
       });
       
       if (shouldPlay) {
-        // Request voice generation
         const messageId = this.model.getMessages().slice(-1)[0]?.id;
         if (messageId && this.chatActor && this.chatActor.isConnected()) {
           this.chatActor.requestVoiceGeneration(response.content, messageId);
