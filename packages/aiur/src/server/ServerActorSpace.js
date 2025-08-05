@@ -5,59 +5,65 @@
  * with its own SessionAgent for handling multi-actor communication
  */
 
-import { ActorSpace } from '../../../shared/actors/src/ActorSpace.js';
+import { ConfigurableActorSpace } from '../../../shared/actors/src/ConfigurableActorSpace.js';
 import { ChatAgent } from '../agents/ChatAgent.js';
 import { TerminalAgent } from '../agents/TerminalAgent.js';
+import { ArtifactAgent } from '../agents/ArtifactAgent.js';
 
-export class ServerActorSpace extends ActorSpace {
+// Actor configuration with interface declarations
+const actorConfig = {
+  actorPairs: [
+    { 
+      name: 'chat', 
+      frontend: 'ChatActor', 
+      backend: 'ChatAgent',
+      interface: 'chat',
+      provides: ['chat_response', 'chat_stream', 'chat_history'],
+      requires: ['chat_message', 'clear_history']
+    },
+    { 
+      name: 'terminal', 
+      frontend: 'TerminalActor', 
+      backend: 'TerminalAgent',
+      interface: 'terminal',
+      provides: ['terminal_output', 'tool_list'],
+      requires: ['terminal_input', 'execute_tool']
+    },
+    { 
+      name: 'artifactDebug', 
+      frontend: 'ArtifactDebugActor', 
+      backend: 'ArtifactAgent',
+      interface: 'artifacts',
+      provides: ['artifact_created', 'artifact_updated', 'artifacts_list'],
+      requires: ['get_artifacts', 'clear_artifacts']
+    }
+  ]
+};
+
+export class ServerActorSpace extends ConfigurableActorSpace {
   constructor(spaceId = 'server', config = {}) {
-    super(spaceId);
-    this.clientId = null;
-    this.chatAgent = null;
-    this.terminalAgent = null;
-    this.clientActorGuids = {};
+    // Pass actor configuration to parent
+    super(spaceId, actorConfig, config);
     
-    // Aiur integration
-    this.sessionManager = config.sessionManager || null;
-    this.moduleLoader = config.moduleLoader || null;
-    this.resourceManager = config.resourceManager || null;
+    this.clientId = null;
+    this.clientActorGuids = {};
   }
 
   /**
    * Handle a new WebSocket connection
    * Sends the first handshake message with our actor GUIDs
    */
-  handleConnection(ws, clientId) {
+  async handleConnection(ws, clientId) {
     console.log(`ServerActorSpace: New connection from ${clientId}`);
     this.clientId = clientId;
     
-    // Create ChatAgent for this connection with access to tools and ResourceManager
-    const chatAgent = new ChatAgent({ 
-      sessionId: this.spaceId,
-      sessionManager: this.sessionManager,
-      moduleLoader: this.moduleLoader,
-      resourceManager: this.resourceManager
-    });
-    const chatGuid = `${this.spaceId}-chat`;
-    this.register(chatAgent, chatGuid);
-    this.chatAgent = chatAgent;
-    
-    // Create TerminalAgent for this connection
-    const terminalAgent = new TerminalAgent({ 
-      sessionManager: this.sessionManager,
-      moduleLoader: this.moduleLoader
-    });
-    const terminalGuid = `${this.spaceId}-terminal`;
-    this.register(terminalAgent, terminalGuid);
-    this.terminalAgent = terminalAgent;
+    // Setup actors based on configuration
+    await this.setupActors('backend');
     
     // Send FIRST message with our actor GUIDs
     ws.send(JSON.stringify({
       type: 'actor_handshake',
-      serverActors: {
-        chat: chatGuid,
-        terminal: terminalGuid
-      }
+      serverActors: this.getHandshakeData()
     }));
     
     console.log(`ServerActorSpace: Sent handshake with actor GUIDs`);
@@ -74,15 +80,14 @@ export class ServerActorSpace extends ActorSpace {
           // Now create Channel - it will take over ws message handling
           const channel = this.addChannel(ws);
           
-          // Create RemoteActors for client's actors
-          const remoteChatActor = channel.makeRemote(msg.clientActors.chat);
-          const remoteTerminalActor = channel.makeRemote(msg.clientActors.terminal);
-          
-          // Give RemoteActors to our agents
-          chatAgent.remoteActor = remoteChatActor;
-          terminalAgent.remoteActor = remoteTerminalActor;
+          // Wire all actors to their remote counterparts
+          this.wireActors(channel, msg.clientActors);
           
           console.log(`ServerActorSpace: Actor protocol active for ${clientId} with multiple actors`);
+          
+          // Keep references for backwards compatibility
+          this.chatAgent = this.getActor('chat');
+          this.terminalAgent = this.getActor('terminal');
           
           // Proactively send initial data to actors
           this.sendInitialData();
@@ -119,21 +124,51 @@ export class ServerActorSpace extends ActorSpace {
   }
   
   /**
+   * Create an actor instance based on class name
+   * @param {string} className - Name of the actor class to create
+   * @param {string} name - Logical name of the actor
+   * @returns {Promise<Actor>} The created actor instance
+   */
+  async createActor(className, name) {
+    const config = {
+      sessionId: this.spaceId,
+      sessionManager: this.dependencies.sessionManager,
+      moduleLoader: this.dependencies.moduleLoader,
+      resourceManager: this.dependencies.resourceManager,
+      artifactManager: this.dependencies.artifactManager
+    };
+    
+    switch (className) {
+      case 'ChatAgent':
+        this.chatAgent = new ChatAgent(config);
+        return this.chatAgent;
+        
+      case 'TerminalAgent':
+        return new TerminalAgent({
+          sessionManager: this.dependencies.sessionManager,
+          moduleLoader: this.dependencies.moduleLoader
+        });
+        
+      case 'ArtifactAgent':
+        this.artifactAgent = new ArtifactAgent(config);
+        // Connect to ChatAgent for internal artifact events
+        if (this.chatAgent) {
+          this.artifactAgent.setChatAgent(this.chatAgent);
+          // Tell ChatAgent about ArtifactAgent
+          this.chatAgent.setArtifactAgent(this.artifactAgent);
+        }
+        return this.artifactAgent;
+        
+      default:
+        throw new Error(`Unknown backend actor class: ${className}`);
+    }
+  }
+  
+  /**
    * Clean up when connection closes
    */
   destroy() {
-    console.log(`ServerActorSpace: Destroying space ${this.spaceId}`);
-    
-    if (this.chatAgent && this.chatAgent.destroy) {
-      this.chatAgent.destroy();
-    }
-    
-    if (this.terminalAgent && this.terminalAgent.destroy) {
-      this.terminalAgent.destroy();
-    }
-    
-    // Clear all actors
-    this.guidToObject.clear();
-    this.objectToGuid.clear();
+    // Parent class handles actor cleanup
+    super.destroy();
   }
 }

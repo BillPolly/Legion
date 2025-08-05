@@ -3,6 +3,7 @@ import { Chat } from './components/chat/Chat.js';
 import { Window } from '/Legion/components/window/index.js';
 import { FrontendActorSpace } from './actors/FrontendActorSpace.js';
 import { ChatActor } from './actors/ChatActor.js';
+import { ArtifactDebugView } from './components/debug/ArtifactDebugView.js';
 
 export class App {
   constructor(container) {
@@ -14,6 +15,8 @@ export class App {
     this.actorSpace = null;
     this.chatActor = null;
     this.terminalActor = null;
+    this.artifactDebugActor = null;
+    this.artifactDebugView = null;
   }
   
   async render() {
@@ -107,8 +110,14 @@ export class App {
       // Get the actors that were created during handshake
       this.chatActor = this.actorSpace.chatActor;
       this.terminalActor = this.actorSpace.terminalActor;
+      this.artifactDebugActor = this.actorSpace.getActor('artifactDebug');
       
       console.log('Chat and Terminal actors connected successfully');
+      
+      // Initialize artifact debug view if actor is available
+      if (this.artifactDebugActor) {
+        this.initializeArtifactDebug();
+      }
       
     } catch (error) {
       console.error('Failed to initialize actor system:', error);
@@ -130,12 +139,53 @@ export class App {
     }
   }
   
+  /**
+   * Initialize artifact debug system
+   */
+  initializeArtifactDebug() {
+    console.log('Initializing artifact debug system...');
+    
+    // Create artifact debug view
+    this.artifactDebugView = new ArtifactDebugView(
+      this.container,
+      this.chat?.artifactViewer // Share the artifact viewer from chat
+    );
+    
+    // Connect artifact debug actor to view
+    if (this.artifactDebugActor) {
+      // Set up event handlers
+      this.artifactDebugActor.onArtifactCreated = (artifacts) => {
+        console.log('ArtifactDebugView: New artifacts detected:', artifacts.length);
+        this.artifactDebugView.addArtifacts(artifacts);
+      };
+      
+      this.artifactDebugActor.onArtifactUpdated = (artifact) => {
+        console.log('ArtifactDebugView: Artifact updated:', artifact.id);
+        this.artifactDebugView.updateArtifact(artifact);
+      };
+      
+      this.artifactDebugActor.onArtifactsCleared = () => {
+        console.log('ArtifactDebugView: Artifacts cleared');
+        this.artifactDebugView.clearArtifacts();
+      };
+      
+      // Request initial artifacts
+      this.artifactDebugActor.requestArtifacts();
+      
+      // Show the debug view
+      this.artifactDebugView.show();
+    }
+  }
+  
   destroy() {
     if (this.terminal) {
       this.terminal.destroy();
     }
     if (this.chat) {
       this.chat.destroy();
+    }
+    if (this.artifactDebugView) {
+      this.artifactDebugView.destroy();
     }
     if (this.terminalWindow) {
       this.terminalWindow.destroy();

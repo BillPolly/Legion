@@ -1,0 +1,22 @@
+{
+  "actorPairs": [
+    {
+      "name": "chat",
+      "frontend": "ChatActor",
+      "backend": "ChatAgent",
+      "description": "Handles chat interactions with LLM"
+    },
+    {
+      "name": "terminal",
+      "frontend": "TerminalActor",
+      "backend": "TerminalAgent",
+      "description": "Handles terminal commands and tool execution"
+    },
+    {
+      "name": "artifactDebug",
+      "frontend": "ArtifactDebugActor",
+      "backend": "ChatAgent",
+      "description": "Monitors artifact creation and updates"
+    }
+  ]
+}

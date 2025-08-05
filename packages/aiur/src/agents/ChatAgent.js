@@ -426,6 +426,12 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
                 sessionId: this.sessionId,
                 timestamp: new Date().toISOString()
               });
+              
+              // Also send to artifact debug actor if connected
+              this.sendArtifactEventToDebugActor('artifact_created', {
+                artifacts: artifactResult.artifacts,
+                toolName: toolCall.name
+              });
             }
           } catch (artifactError) {
             console.warn(`ChatAgent: Error processing artifacts for ${toolCall.name}:`, artifactError);
@@ -708,6 +714,32 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
         
       default:
         console.log(`ChatAgent: Unknown message type ${message.type}`);
+    }
+  }
+  
+  /**
+   * Set the ArtifactAgent for internal communication
+   */
+  setArtifactAgent(artifactAgent) {
+    this.artifactAgent = artifactAgent;
+  }
+  
+  /**
+   * Send artifact event to the artifact agent
+   * @param {string} eventType - Type of artifact event
+   * @param {Object} data - Event data
+   */
+  sendArtifactEventToDebugActor(eventType, data) {
+    // Send to artifact agent internally (not through actor protocol)
+    if (this.artifactAgent) {
+      this.artifactAgent.receive({
+        type: eventType,
+        eventName: eventType, // For compatibility
+        ...data,
+        sessionId: this.sessionId,
+        timestamp: new Date().toISOString()
+      });
+      console.log(`ChatAgent: Sent ${eventType} event to artifact agent`);
     }
   }
   

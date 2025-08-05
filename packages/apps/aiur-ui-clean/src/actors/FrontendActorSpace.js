@@ -3,22 +3,55 @@
  * Handles the client side of the actor protocol
  */
 
-import { ActorSpace } from '/Legion/shared/actors/src/ActorSpace.js';
+import { ConfigurableActorSpace } from '/Legion/shared/actors/src/ConfigurableActorSpace.js';
 import { ChatActor } from './ChatActor.js';
 import { TerminalActor } from './TerminalActor.js';
+import { ArtifactDebugActor } from './ArtifactDebugActor.js';
 
-export class FrontendActorSpace extends ActorSpace {
-  constructor(spaceId = 'frontend') {
-    super(spaceId);
+// Default actor configuration with interface declarations
+const DEFAULT_ACTOR_CONFIG = {
+  actorPairs: [
+    { 
+      name: 'chat', 
+      frontend: 'ChatActor', 
+      backend: 'ChatAgent',
+      interface: 'chat',
+      provides: ['chat_message', 'clear_history'],
+      requires: ['chat_response', 'chat_stream', 'chat_history']
+    },
+    { 
+      name: 'terminal', 
+      frontend: 'TerminalActor', 
+      backend: 'TerminalAgent',
+      interface: 'terminal',
+      provides: ['terminal_input', 'execute_tool'],
+      requires: ['terminal_output', 'tool_list']
+    },
+    { 
+      name: 'artifactDebug', 
+      frontend: 'ArtifactDebugActor', 
+      backend: 'ArtifactAgent',
+      interface: 'artifacts',
+      provides: ['get_artifacts', 'clear_artifacts'],
+      requires: ['artifact_created', 'artifact_updated', 'artifacts_list']
+    }
+  ]
+};
+
+export class FrontendActorSpace extends ConfigurableActorSpace {
+  constructor(spaceId = 'frontend', actorConfig = DEFAULT_ACTOR_CONFIG) {
+    super(spaceId, actorConfig);
     this.ws = null;
-    this.chatActor = null;
-    this.terminalActor = null;
     this.serverActorGuids = {}; // Will store server's actor GUIDs
     this.messageHandlers = new Map(); // For event emitter compatibility
+    this.terminal = null; // Terminal reference for TerminalActor
   }
   
   async connect(url = 'ws://localhost:8080/ws', terminal = null) {
     console.log(`FrontendActorSpace: Connecting to ${url}...`);
+    
+    // Store terminal reference for actor creation
+    this.terminal = terminal;
     
     // Create browser WebSocket
     const ws = new WebSocket(url);
@@ -36,6 +69,9 @@ export class FrontendActorSpace extends ActorSpace {
       };
     });
     
+    // Setup actors based on configuration
+    await this.setupActors('frontend');
+    
     // Wait for server's handshake message
     return new Promise((resolve) => {
       const handleHandshake = (event) => {
@@ -46,25 +82,10 @@ export class FrontendActorSpace extends ActorSpace {
             console.log(`FrontendActorSpace: Received handshake with server actor GUIDs:`, msg.serverActors);
             this.serverActorGuids = msg.serverActors;
             
-            // Create and register ChatActor
-            const chatActor = new ChatActor();
-            const chatGuid = `${this.spaceId}-chat`;
-            this.register(chatActor, chatGuid);
-            this.chatActor = chatActor;
-            
-            // Create and register TerminalActor
-            const terminalActor = new TerminalActor(terminal);
-            const terminalGuid = `${this.spaceId}-terminal`;
-            this.register(terminalActor, terminalGuid);
-            this.terminalActor = terminalActor;
-            
             // Send our actor GUIDs back
             ws.send(JSON.stringify({
               type: 'actor_handshake_ack',
-              clientActors: {
-                chat: chatGuid,
-                terminal: terminalGuid
-              }
+              clientActors: this.getHandshakeData()
             }));
             
             console.log(`FrontendActorSpace: Sent handshake ACK with actor GUIDs`);
@@ -72,15 +93,14 @@ export class FrontendActorSpace extends ActorSpace {
             // Now create Channel - it will take over ws.onmessage
             const channel = this.addChannel(ws);
             
-            // Create RemoteActors for server's actors
-            const remoteChatAgent = channel.makeRemote(msg.serverActors.chat);
-            const remoteTerminalAgent = channel.makeRemote(msg.serverActors.terminal);
-            
-            // Give RemoteActors to our local actors
-            chatActor.setRemoteAgent(remoteChatAgent);
-            terminalActor.setRemoteAgent(remoteTerminalAgent);
+            // Wire all actors to their remote counterparts
+            this.wireActors(channel, msg.serverActors);
             
             console.log('FrontendActorSpace: Actor protocol active with multiple actors');
+            
+            // Keep references for backwards compatibility
+            this.chatActor = this.getActor('chat');
+            this.terminalActor = this.getActor('terminal');
             
             // Emit connected event for compatibility
             this.emit('connected');
@@ -136,15 +156,37 @@ export class FrontendActorSpace extends ActorSpace {
     });
   }
   
+  /**
+   * Create an actor instance based on class name
+   * @param {string} className - Name of the actor class to create
+   * @param {string} name - Logical name of the actor
+   * @returns {Promise<Actor>} The created actor instance
+   */
+  async createActor(className, name) {
+    switch (className) {
+      case 'ChatActor':
+        return new ChatActor();
+        
+      case 'TerminalActor':
+        return new TerminalActor(this.terminal);
+        
+      case 'ArtifactDebugActor':
+        // Will be created when we implement it
+        return new ArtifactDebugActor();
+        
+      default:
+        throw new Error(`Unknown frontend actor class: ${className}`);
+    }
+  }
+  
   disconnect() {
     if (this.ws) {
       this.ws.close();
       this.ws = null;
     }
     
-    if (this.chatActor && this.chatActor.destroy) {
-      this.chatActor.destroy();
-    }
+    // Parent class handles actor cleanup
+    this.destroy();
     
     this.emit('disconnected');
   }
