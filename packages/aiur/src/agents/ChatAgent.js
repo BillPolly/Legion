@@ -63,6 +63,12 @@ You can:
 When the user asks you to perform an action (like writing a file, reading data, etc.), you should use the appropriate tool.
 When the user just wants to chat or ask questions, respond conversationally.
 
+IMPORTANT: When you need to use tools to fulfill a request:
+- ALWAYS include a brief, conversational message to the user in your response
+- This message should acknowledge their request and explain what you're about to do
+- For example: "I'll help you read that file" or "Let me analyze that code for you"
+- Include both your message AND the tool calls in the same response
+
 You will automatically choose whether to use tools or just respond based on what the user needs.
 Be concise but thorough in your responses. Use markdown formatting when appropriate.`;
     
@@ -353,13 +359,24 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
       
       // Check if LLM wants to use tools
       if (response.toolCalls && response.toolCalls.length > 0) {
-        // Send the LLM's reasoning if any
+        // Send the LLM's response to the user
         if (response.content) {
-          this.emit('agent_thought', {
-            type: 'agent_thought',
-            thought: response.content,
-            sessionId: this.sessionId
-          });
+          if (iterations === 1) {
+            // First iteration: send as user-facing message
+            this.emit('message', {
+              type: 'chat_response',
+              content: response.content,
+              isComplete: false,  // More to come from tool execution
+              sessionId: this.sessionId
+            });
+          } else {
+            // Subsequent iterations: send as agent thought
+            this.emit('agent_thought', {
+              type: 'agent_thought',
+              thought: response.content,
+              sessionId: this.sessionId
+            });
+          }
         }
         
         // Save assistant message with tool calls to history
