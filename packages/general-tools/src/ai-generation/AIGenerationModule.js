@@ -146,7 +146,7 @@ export default class AIGenerationModule extends Module {
         console.log('[AIGenerationModule] Final imageData first 50 chars:', dataUrl.substring(0, 50));
         
         // Save the image to file for verification
-        await this.saveImageToFile(imageData.b64_json, filename);
+        const savedPath = await this.saveImageToFile(imageData.b64_json, filename);
         
         result = {
           success: true,
@@ -161,12 +161,14 @@ export default class AIGenerationModule extends Module {
             timestamp: new Date().toISOString()
           },
           filename: filename,
+          filePath: savedPath, // Include full path for analyze_file
           type: 'image',
           subtype: 'png',
           createdBy: 'generate_image'
         };
       } else if (imageData.url) {
-        // Return URL format
+        // For URL format, we should download and save the image
+        // For now, just return the URL with a note
         result = {
           success: true,
           imageUrl: imageData.url,
@@ -180,9 +182,11 @@ export default class AIGenerationModule extends Module {
             timestamp: new Date().toISOString()
           },
           filename: filename,
+          filePath: null, // Would need to download from URL to get local path
           type: 'image',
           subtype: 'png',
-          createdBy: 'generate_image'
+          createdBy: 'generate_image',
+          note: 'Image is hosted at URL. Use file_path from base64 response for local analysis.'
         };
       } else {
         throw new Error('Unexpected response format from DALL-E API');
@@ -212,6 +216,7 @@ export default class AIGenerationModule extends Module {
    * Save base64 image to file for verification
    * @param {string} base64Data - Raw base64 data (without data: prefix)
    * @param {string} filename - Filename to save as
+   * @returns {Promise<string>} Full path to the saved file
    */
   async saveImageToFile(base64Data, filename) {
     try {
@@ -240,8 +245,11 @@ export default class AIGenerationModule extends Module {
       await fs.writeFile(debugPath, base64Data.substring(0, 500) + '...');
       console.log(`[AIGenerationModule] Debug preview saved to: ${debugPath}`);
       
+      return filePath; // Return the full path
+      
     } catch (error) {
       console.error('[AIGenerationModule] Error saving image file:', error);
+      throw error; // Re-throw to handle upstream
     }
   }
 

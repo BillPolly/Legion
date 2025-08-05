@@ -103,6 +103,10 @@
     "ai-generation": {
       "type": "json",
       "path": "packages/general-tools/src/ai-generation/module.json"
+    },
+    "file-analysis": {
+      "type": "json",
+      "path": "packages/general-tools/src/file-analysis/module.json"
     }
   }
 }

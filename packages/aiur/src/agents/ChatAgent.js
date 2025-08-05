@@ -71,6 +71,7 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
     
     await this.initializeLLMClient();
     await this.moduleLoader.loadModuleByName('ai-generation');
+    await this.moduleLoader.loadModuleByName('file-analysis');
 
     this.initialized = true;
   }
@@ -404,6 +405,7 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
           resultForLLM = {
             success: result.success,
             filename: result.filename,
+            filePath: result.filePath,  // Include full path so LLM can reference it
             metadata: result.metadata,
             message: `Image generated successfully and saved as ${result.filename}`,
             // Include size info but not the actual data

@@ -291,7 +291,12 @@ export class ImageRenderer extends ArtifactRenderer {
     });
     
     if (artifact.content) {
-      // If content is already base64 or data URL
+      // If content is a URL (http:// or https://)
+      if (artifact.content.startsWith('http://') || artifact.content.startsWith('https://')) {
+        console.log('[ImageRenderer] Using artifact.content as URL');
+        return artifact.content;
+      }
+      // If content is already a data URL
       if (artifact.content.startsWith('data:')) {
         console.log('[ImageRenderer] Using artifact.content as data URL');
         return artifact.content;

@@ -1,0 +1,48 @@
+{
+  "name": "file-analysis",
+  "version": "1.0.0",
+  "package": "./FileAnalysisModule.js",
+  "type": "constructor",
+  "description": "Analyze files including images, PDFs, and documents using AI",
+  "tools": [
+    {
+      "name": "analyze_file",
+      "description": "Analyze a file (image, PDF, document) with a given prompt using AI vision capabilities",
+      "function": "analyzeFile",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "file_path": {
+            "type": "string",
+            "description": "Path to the file to analyze"
+          },
+          "prompt": {
+            "type": "string",
+            "description": "Analysis prompt or question about the file"
+          },
+          "provider": {
+            "type": "string",
+            "enum": ["anthropic", "openai"],
+            "description": "LLM provider to use (defaults to anthropic)",
+            "default": "anthropic"
+          }
+        },
+        "required": ["file_path", "prompt"]
+      }
+    }
+  ],
+  "dependencies": {
+    "ANTHROPIC_API_KEY": {
+      "type": "string",
+      "description": "Anthropic API key for Claude"
+    }
+  },
+  "initialization": {
+    "className": "FileAnalysisModule",
+    "config": {
+      "anthropicKey": "${ANTHROPIC_API_KEY}"
+    }
+  }
+}

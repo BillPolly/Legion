@@ -118,6 +118,9 @@ export class ArtifactDetector {
     // Common keys that might contain file paths
     const pathKeys = ['path', 'filePath', 'file', 'output', 'outputPath', 'location'];
     
+    // Skip file_path if this is an error result (indicates input path, not output)
+    const skipKeys = toolResult.success === false ? ['file_path'] : [];
+    
     const extractFromValue = (value) => {
       if (typeof value === 'string') {
         // Check if it looks like a file path
@@ -133,13 +136,17 @@ export class ArtifactDetector {
 
     // Check specific keys first
     pathKeys.forEach(key => {
-      if (toolResult[key]) {
+      if (toolResult[key] && !skipKeys.includes(key)) {
         extractFromValue(toolResult[key]);
       }
     });
 
-    // Then check all values recursively
-    Object.values(toolResult).forEach(extractFromValue);
+    // Then check all values recursively, but skip error-related keys
+    Object.entries(toolResult).forEach(([key, value]) => {
+      if (!skipKeys.includes(key)) {
+        extractFromValue(value);
+      }
+    });
 
     return [...new Set(filePaths)]; // Remove duplicates
   }
