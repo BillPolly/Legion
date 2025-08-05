@@ -9,6 +9,7 @@ import { ConfigurableActorSpace } from '../../../shared/actors/src/ConfigurableA
 import { ChatAgent } from '../agents/ChatAgent.js';
 import { TerminalAgent } from '../agents/TerminalAgent.js';
 import { ArtifactAgent } from '../agents/ArtifactAgent.js';
+import { ArtifactActor } from '../agents/ArtifactActor.js';
 
 // Actor configuration with interface declarations
 const actorConfig = {
@@ -36,6 +37,14 @@ const actorConfig = {
       interface: 'artifacts',
       provides: ['artifact_created', 'artifact_updated', 'artifacts_list'],
       requires: ['get_artifacts', 'clear_artifacts']
+    },
+    { 
+      name: 'artifactProcessor',
+      frontend: 'ArtifactProcessorActor', 
+      backend: 'ArtifactActor',
+      interface: 'artifactProcessing',
+      provides: ['artifacts_processed', 'artifact_detected'],
+      requires: ['process_tool_result']
     }
   ]
 };
@@ -88,6 +97,11 @@ export class ServerActorSpace extends ConfigurableActorSpace {
           // Keep references for backwards compatibility
           this.chatAgent = this.getActor('chat');
           this.terminalAgent = this.getActor('terminal');
+          this.artifactAgent = this.getActor('artifactDebug');
+          this.artifactActor = this.getActor('artifactProcessor');
+          
+          // Wire actor references after all actors are created
+          this.wireActorReferences();
           
           // Proactively send initial data to actors
           this.sendInitialData();
@@ -106,6 +120,26 @@ export class ServerActorSpace extends ConfigurableActorSpace {
     
     // Listen for handshake response
     ws.once('message', handleHandshake);
+  }
+  
+  /**
+   * Wire actor references after all actors are created
+   */
+  wireActorReferences() {
+    // Give ChatAgent reference to ArtifactActor
+    if (this.chatAgent && this.artifactActor) {
+      this.chatAgent.setArtifactActor(this.artifactActor);
+    }
+    
+    // Give ArtifactActor reference to ArtifactAgent
+    if (this.artifactActor && this.artifactAgent) {
+      this.artifactActor.setArtifactAgent(this.artifactAgent);
+    }
+    
+    // Give ArtifactAgent reference to ChatAgent (for backwards compatibility)
+    if (this.artifactAgent && this.chatAgent) {
+      this.artifactAgent.setChatAgent(this.chatAgent);
+    }
   }
   
   /**
@@ -151,13 +185,11 @@ export class ServerActorSpace extends ConfigurableActorSpace {
         
       case 'ArtifactAgent':
         this.artifactAgent = new ArtifactAgent(config);
-        // Connect to ChatAgent for internal artifact events
-        if (this.chatAgent) {
-          this.artifactAgent.setChatAgent(this.chatAgent);
-          // Tell ChatAgent about ArtifactAgent
-          this.chatAgent.setArtifactAgent(this.artifactAgent);
-        }
         return this.artifactAgent;
+        
+      case 'ArtifactActor':
+        this.artifactActor = new ArtifactActor(config);
+        return this.artifactActor;
         
       default:
         throw new Error(`Unknown backend actor class: ${className}`);

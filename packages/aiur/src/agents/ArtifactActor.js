@@ -22,6 +22,9 @@ export class ArtifactActor extends Actor {
     this.artifactDetector = new ArtifactDetector();
     this.artifactManager = config.artifactManager || new ArtifactManager({ sessionId: this.sessionId });
     
+    // Reference to ArtifactAgent for UI notifications
+    this.artifactAgent = null;
+    
     // LLM access for curation
     this.resourceManager = config.resourceManager;
     this.llmClient = null;
@@ -100,6 +103,16 @@ export class ArtifactActor extends Actor {
       }
       
       console.log(`ArtifactActor: Stored ${storedArtifacts.length} artifacts`);
+      
+      // Notify ArtifactAgent about new artifacts
+      if (storedArtifacts.length > 0 && this.artifactAgent) {
+        this.artifactAgent.handleArtifactCreated({
+          type: 'artifact_created',
+          artifacts: storedArtifacts,
+          toolName: toolName,
+          sessionId: this.sessionId
+        });
+      }
       
       return {
         success: true,
@@ -327,12 +340,30 @@ Respond with JSON only:
     switch (payload.type) {
       case 'process_tool_result':
         const result = await this.processToolResult(payload);
-        // Could emit result back if needed
+        // Send result back to remote peer
+        if (this.remoteActor) {
+          this.remoteActor.receive({
+            type: 'artifacts_processed',
+            eventName: 'artifacts_processed',
+            result: result,
+            sessionId: this.sessionId,
+            timestamp: new Date().toISOString()
+          });
+        }
         break;
         
       case 'get_stats':
         const stats = this.artifactManager.getStatistics();
-        // Could emit stats back
+        // Send stats back to remote peer
+        if (this.remoteActor) {
+          this.remoteActor.receive({
+            type: 'artifact_stats',
+            eventName: 'artifact_stats',
+            stats: stats,
+            sessionId: this.sessionId,
+            timestamp: new Date().toISOString()
+          });
+        }
         break;
         
       default:
@@ -346,6 +377,14 @@ Respond with JSON only:
    */
   getArtifactManager() {
     return this.artifactManager;
+  }
+  
+  /**
+   * Set reference to ArtifactAgent for UI notifications
+   * @param {ArtifactAgent} artifactAgent - The artifact agent instance
+   */
+  setArtifactAgent(artifactAgent) {
+    this.artifactAgent = artifactAgent;
   }
   
   /**

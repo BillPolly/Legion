@@ -1,5 +1,4 @@
 import { Actor } from '../../../shared/actors/src/Actor.js';
-import { ArtifactActor } from './ArtifactActor.js';
 import { ArtifactManager } from './artifacts/ArtifactManager.js';
 import { TaskOrchestrator } from './task-orchestrator/TaskOrchestrator.js';
 
@@ -102,13 +101,11 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
     await this.moduleLoader.loadModuleByName('ai-generation');
     await this.moduleLoader.loadModuleByName('file-analysis');
     
-    // Initialize ArtifactActor with shared ArtifactManager
-    this.artifactActor = new ArtifactActor({
-      sessionId: this.sessionId,
-      artifactManager: this.artifactManager,
-      resourceManager: this.resourceManager
-    });
-    await this.artifactActor.initialize();
+    // ArtifactActor will be set by ServerActorSpace
+    // Ensure it's initialized if available
+    if (this.artifactActor) {
+      await this.artifactActor.initialize();
+    }
     
     // Initialize TaskOrchestrator
     this.taskOrchestrator = new TaskOrchestrator({
@@ -913,6 +910,17 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
    */
   setArtifactAgent(artifactAgent) {
     this.artifactAgent = artifactAgent;
+  }
+  
+  /**
+   * Set the ArtifactActor for artifact processing
+   */
+  setArtifactActor(artifactActor) {
+    this.artifactActor = artifactActor;
+    // Share the same ArtifactManager
+    if (this.artifactActor && this.artifactManager) {
+      this.artifactActor.artifactManager = this.artifactManager;
+    }
   }
   
   /**
