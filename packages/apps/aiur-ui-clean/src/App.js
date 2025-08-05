@@ -145,11 +145,8 @@ export class App {
   initializeArtifactDebug() {
     console.log('Initializing artifact debug system...');
     
-    // Create artifact debug view
-    this.artifactDebugView = new ArtifactDebugView(
-      this.container,
-      this.chat?.artifactViewer // Share the artifact viewer from chat
-    );
+    // Create artifact debug view with its own ArtifactViewer
+    this.artifactDebugView = new ArtifactDebugView(this.container);
     
     // Connect artifact debug actor to view
     if (this.artifactDebugActor) {

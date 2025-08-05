@@ -1,4 +1,5 @@
 import { Window } from '/Legion/components/window/index.js';
+import { ArtifactViewer } from '../chat/artifacts/ArtifactViewer.js';
 
 /**
  * ArtifactDebugView - Debug panel for monitoring artifacts
@@ -7,9 +8,9 @@ import { Window } from '/Legion/components/window/index.js';
  * labels, descriptions, and metadata. Allows clicking to view full content.
  */
 export class ArtifactDebugView {
-  constructor(container, artifactViewer) {
+  constructor(container, artifactViewer = null) {
     this.container = container;
-    this.artifactViewer = artifactViewer; // Reference to existing ArtifactViewer
+    this.artifactViewer = artifactViewer || new ArtifactViewer(container); // Create or use provided ArtifactViewer
     this.window = null;
     this.contentArea = null;
     this.artifactListElement = null;
@@ -375,58 +376,43 @@ export class ArtifactDebugView {
    */
   async viewArtifact(artifact) {
     if (this.artifactViewer) {
-      // Get the appropriate renderer
-      const rendererType = this.getRendererType(artifact);
+      // Import the artifact registry to get the proper renderer
+      const { artifactRegistry } = await import('../chat/artifacts/index.js');
       
-      // For now, create a simple renderer proxy
-      const renderer = {
-        renderContent: (artifact, content) => {
-          const container = document.createElement('div');
-          container.style.padding = '20px';
-          
-          if (artifact.type === 'image' && content) {
-            const img = document.createElement('img');
-            img.src = content.startsWith('data:') ? content : `data:image/png;base64,${content}`;
-            img.style.maxWidth = '100%';
-            img.style.height = 'auto';
-            container.appendChild(img);
-          } else {
-            const pre = document.createElement('pre');
-            pre.style.cssText = `
-              margin: 0;
-              white-space: pre-wrap;
-              word-wrap: break-word;
-              font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
-              font-size: 13px;
-              line-height: 1.5;
-              color: #c9d1d9;
+      // Get the appropriate renderer from the registry
+      const renderer = artifactRegistry.getRenderer(artifact);
+      
+      if (renderer) {
+        console.log('ArtifactDebugView: Using renderer:', renderer.name, 'for artifact:', artifact.title);
+        await this.artifactViewer.show(artifact, renderer);
+      } else {
+        console.warn('ArtifactDebugView: No renderer found for artifact type:', artifact.type);
+        // Fallback to simple text display
+        const fallbackRenderer = {
+          renderContent: (artifact, content) => {
+            const container = document.createElement('div');
+            container.style.cssText = `
+              padding: 20px;
+              text-align: center;
+              color: #8b949e;
             `;
-            pre.textContent = content || artifact.content || 'No content available';
-            container.appendChild(pre);
+            container.innerHTML = `
+              <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
+              <div>No renderer available for type: ${artifact.type}</div>
+              <div style="font-size: 12px; margin-top: 8px; color: #6e7681;">
+                ${artifact.title}
+              </div>
+            `;
+            return container;
           }
-          
-          return container;
-        }
-      };
-      
-      await this.artifactViewer.show(artifact, renderer);
+        };
+        await this.artifactViewer.show(artifact, fallbackRenderer);
+      }
+    } else {
+      console.warn('ArtifactDebugView: No artifact viewer available');
     }
   }
   
-  /**
-   * Get renderer type for artifact
-   */
-  getRendererType(artifact) {
-    const typeMap = {
-      'image': 'ImageRenderer',
-      'code': 'CodeRenderer',
-      'document': 'DocumentRenderer',
-      'text': 'DocumentRenderer',
-      'data': 'CodeRenderer'
-    };
-    
-    return typeMap[artifact.type] || 'DocumentRenderer';
-  }
   
   /**
    * Update stats display
