@@ -1,5 +1,5 @@
 import { Actor } from '../../../shared/actors/src/Actor.js';
-import { ArtifactDetector } from './artifacts/ArtifactDetector.js';
+import { ArtifactActor } from './ArtifactActor.js';
 import { ArtifactManager } from './artifacts/ArtifactManager.js';
 
 /**
@@ -42,8 +42,8 @@ export class ChatAgent extends Actor {
     this.llmClient = null;
     
     // Initialize artifact system
-    this.artifactDetector = new ArtifactDetector();
     this.artifactManager = new ArtifactManager({ sessionId: this.sessionId });
+    this.artifactActor = null; // Will be initialized later
     
     // System prompt for the assistant
     this.systemPrompt = config.systemPrompt || `You are a helpful AI assistant integrated into the Aiur development environment.
@@ -72,6 +72,14 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
     await this.initializeLLMClient();
     await this.moduleLoader.loadModuleByName('ai-generation');
     await this.moduleLoader.loadModuleByName('file-analysis');
+    
+    // Initialize ArtifactActor with shared ArtifactManager
+    this.artifactActor = new ArtifactActor({
+      sessionId: this.sessionId,
+      artifactManager: this.artifactManager,
+      resourceManager: this.resourceManager
+    });
+    await this.artifactActor.initialize();
 
     this.initialized = true;
   }
@@ -355,10 +363,13 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
           timestamp: new Date().toISOString()
         });
         
+        // Substitute artifact labels in tool parameters
+        const processedInput = await this.substituteArtifactLabels(toolCall.input);
+        
         // Execute tool via moduleLoader
         let result;
         if (this.moduleLoader && this.moduleLoader.hasTool(toolCall.name)) {
-          result = await this.moduleLoader.executeTool(toolCall.name, toolCall.input);
+          result = await this.moduleLoader.executeTool(toolCall.name, processedInput);
         } else {
           result = {
             success: false,
@@ -366,33 +377,34 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
           };
         }
         
-        // Detect artifacts from tool result
-        let artifacts = [];
-        if (result && result.success !== false) {
+        // Process artifacts through ArtifactActor
+        if (result && result.success !== false && this.artifactActor) {
           try {
-            artifacts = await this.artifactDetector.detectArtifacts(toolCall.name, result);
+            const artifactResult = await this.artifactActor.processToolResult({
+              toolName: toolCall.name,
+              toolResult: result,
+              context: {
+                userMessage: this.conversationHistory.slice(-1)[0]?.content
+              }
+            });
             
-            // Register artifacts with the manager
-            for (const artifact of artifacts) {
-              const registered = this.artifactManager.registerArtifact(artifact);
-              allArtifacts.push(registered);
-            }
-            
-            if (artifacts.length > 0) {
-              console.log(`ChatAgent: Detected ${artifacts.length} artifacts from ${toolCall.name}`);
+            if (artifactResult.success && artifactResult.artifacts.length > 0) {
+              allArtifacts.push(...artifactResult.artifacts);
+              
+              console.log(`ChatAgent: ArtifactActor processed ${artifactResult.artifactsStored} artifacts from ${toolCall.name}`);
               
               // Emit artifact detection event
               this.emit('artifacts_detected', {
                 type: 'artifacts_detected',
                 toolName: toolCall.name,
                 toolId: toolCall.id,
-                artifacts: artifacts,
+                artifacts: artifactResult.artifacts,
                 sessionId: this.sessionId,
                 timestamp: new Date().toISOString()
               });
             }
           } catch (artifactError) {
-            console.warn(`ChatAgent: Error detecting artifacts for ${toolCall.name}:`, artifactError);
+            console.warn(`ChatAgent: Error processing artifacts for ${toolCall.name}:`, artifactError);
           }
         }
         
@@ -561,6 +573,15 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
       }
     }
     
+    // Add artifact context if artifacts exist
+    const artifactContext = this.artifactManager.getArtifactContext();
+    if (artifactContext) {
+      messages.push({
+        role: 'system',
+        content: artifactContext
+      });
+    }
+    
     return messages;
   }
   
@@ -656,6 +677,63 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
   }
   
   /**
+   * Substitute artifact labels in tool parameters
+   * @param {Object} params - Tool parameters that may contain artifact labels
+   * @returns {Promise<Object>} Parameters with labels replaced by actual values
+   */
+  async substituteArtifactLabels(params) {
+    if (!params || typeof params !== 'object') {
+      return params;
+    }
+    
+    const processed = {};
+    
+    for (const [key, value] of Object.entries(params)) {
+      if (typeof value === 'string' && value.startsWith('@')) {
+        // This looks like an artifact label
+        const artifact = this.artifactManager.getArtifactByLabel(value);
+        
+        if (artifact) {
+          // Determine what to substitute based on the parameter name
+          if (key.toLowerCase().includes('path') || key.toLowerCase().includes('file')) {
+            // For file-related parameters, use the path if available
+            if (artifact.path) {
+              processed[key] = artifact.path;
+            } else if (artifact.content && artifact.type === 'image' && artifact.content.startsWith('http')) {
+              // For URL-based images, we might need to download first
+              // For now, just pass the URL
+              processed[key] = artifact.content;
+            } else {
+              // No path available, throw error
+              throw new Error(`Artifact ${value} does not have a file path`);
+            }
+          } else if (key.toLowerCase().includes('content')) {
+            // For content parameters, use the actual content
+            processed[key] = artifact.content || '';
+          } else {
+            // Default: try path first, then content
+            processed[key] = artifact.path || artifact.content || value;
+          }
+          
+          console.log(`ChatAgent: Substituted artifact ${value} with ${typeof processed[key] === 'string' ? processed[key].substring(0, 50) + '...' : processed[key]}`);
+        } else {
+          // Artifact not found, keep original value
+          console.warn(`ChatAgent: Artifact label ${value} not found`);
+          processed[key] = value;
+        }
+      } else if (typeof value === 'object' && value !== null) {
+        // Recursively process nested objects
+        processed[key] = await this.substituteArtifactLabels(value);
+      } else {
+        // Keep original value
+        processed[key] = value;
+      }
+    }
+    
+    return processed;
+  }
+
+  /**
    * Prepare for tool usage (future enhancement)
    */
   async executeWithTools(userMessage, availableTools) {
@@ -677,7 +755,10 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
       this.artifactManager.destroy();
       this.artifactManager = null;
     }
-    this.artifactDetector = null;
+    if (this.artifactActor) {
+      this.artifactActor.destroy();
+      this.artifactActor = null;
+    }
     
     console.log(`ChatAgent ${this.id} destroyed`);
   }

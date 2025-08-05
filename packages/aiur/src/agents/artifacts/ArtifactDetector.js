@@ -69,7 +69,7 @@ export class ArtifactDetector {
 
     try {
       // For certain tools, ONLY use tool-specific detection to avoid duplicates
-      const toolSpecificOnly = ['generate_image', 'generate_html_page'];
+      const toolSpecificOnly = ['generate_image', 'generate_html_page', 'analyze_file'];
       
       if (toolSpecificOnly.includes(toolName)) {
         // Only use tool-specific detection for these tools
@@ -337,6 +337,29 @@ export class ArtifactDetector {
     const artifacts = [];
 
     switch (toolName) {
+      case 'analyze_file':
+        // Capture analysis results as text artifacts
+        if (toolResult.analysis && toolResult.success) {
+          artifacts.push({
+            id: `artifact-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            type: 'text',
+            subtype: 'analysis',
+            title: `Analysis of ${toolResult.file?.name || 'file'}`,
+            content: toolResult.analysis,
+            size: toolResult.analysis.length,
+            exists: true,
+            preview: toolResult.analysis.substring(0, 200) + '...',
+            createdBy: toolName,
+            createdAt: new Date().toISOString(),
+            metadata: {
+              isAnalysis: true,
+              analyzedFile: toolResult.file?.name,
+              provider: toolResult.provider,
+              model: toolResult.model
+            }
+          });
+        }
+        break;
       case 'generate_html_page':
         if (toolResult.html) {
           artifacts.push({

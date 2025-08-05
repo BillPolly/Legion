@@ -17,6 +17,9 @@ export class ArtifactManager {
     // In-memory artifact registry
     this.artifacts = new Map();
     
+    // Label to artifact ID mapping
+    this.labelMap = new Map();
+    
     // Content cache for quick access
     this.contentCache = new Map();
     this.cacheSize = 0;
@@ -44,7 +47,12 @@ export class ArtifactManager {
     // Store in registry
     this.artifacts.set(artifact.id, { ...artifact });
     
-    console.log(`ArtifactManager: Registered artifact ${artifact.id} (${artifact.type}/${artifact.subtype})`);
+    // If artifact has a label, store the mapping
+    if (artifact.label) {
+      this.labelMap.set(artifact.label, artifact.id);
+    }
+    
+    console.log(`ArtifactManager: Registered artifact ${artifact.id} (${artifact.type}/${artifact.subtype})${artifact.label ? ' with label ' + artifact.label : ''}`);
     
     return artifact;
   }
@@ -56,6 +64,30 @@ export class ArtifactManager {
    */
   getArtifact(artifactId) {
     return this.artifacts.get(artifactId) || null;
+  }
+
+  /**
+   * Get artifact by label
+   * @param {string} label - Label of the artifact (e.g., '@image1')
+   * @returns {Object|null} Artifact metadata or null if not found
+   */
+  getArtifactByLabel(label) {
+    const artifactId = this.labelMap.get(label);
+    return artifactId ? this.getArtifact(artifactId) : null;
+  }
+
+  /**
+   * Get artifact by ID or label
+   * @param {string} identifier - ID or label of the artifact
+   * @returns {Object|null} Artifact metadata or null if not found
+   */
+  getArtifactByIdentifier(identifier) {
+    // Check if it's a label (starts with @)
+    if (identifier && identifier.startsWith('@')) {
+      return this.getArtifactByLabel(identifier);
+    }
+    // Otherwise treat as ID
+    return this.getArtifact(identifier);
   }
 
   /**
@@ -175,9 +207,15 @@ export class ArtifactManager {
    * @returns {boolean} True if removed, false if not found
    */
   removeArtifact(artifactId) {
+    const artifact = this.artifacts.get(artifactId);
     const removed = this.artifacts.delete(artifactId);
     
     if (removed) {
+      // Remove label mapping if exists
+      if (artifact && artifact.label) {
+        this.labelMap.delete(artifact.label);
+      }
+      
       this.invalidateContentCache(artifactId);
       console.log(`ArtifactManager: Removed artifact ${artifactId}`);
     }
@@ -221,6 +259,52 @@ export class ArtifactManager {
       cacheSize: this.cacheSize,
       cacheEntries: this.contentCache.size
     };
+  }
+
+  /**
+   * Get artifact context for LLM
+   * @param {Object} options - Options for context generation
+   * @returns {string} Formatted artifact context
+   */
+  getArtifactContext(options = {}) {
+    const artifacts = this.getAllArtifacts();
+    
+    if (artifacts.length === 0) {
+      return '';
+    }
+    
+    const contextLines = ['Available artifacts you can reference:'];
+    
+    artifacts.forEach(artifact => {
+      if (artifact.label) {
+        let line = `${artifact.label}: "${artifact.title || 'Untitled'}"`;
+        
+        // Add type info
+        line += ` (${artifact.type}`;
+        if (artifact.subtype) {
+          line += `/${artifact.subtype}`;
+        }
+        line += ')';
+        
+        // Add description if available
+        if (artifact.description) {
+          line += ` - ${artifact.description}`;
+        }
+        
+        // Add file path if available and requested
+        if (options.includePaths && artifact.path) {
+          line += ` [${artifact.path}]`;
+        }
+        
+        contextLines.push(line);
+      }
+    });
+    
+    // Add usage instructions
+    contextLines.push('');
+    contextLines.push('To use an artifact in a tool call, reference it by its label (e.g., analyze_file("@image1"))');
+    
+    return contextLines.join('\n');
   }
 
   /**
