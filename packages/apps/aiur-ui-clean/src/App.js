@@ -29,6 +29,9 @@ export class App {
     this.container.style.position = 'relative';
     this.container.style.background = '#1a1a1a';
     
+    // Set up right-click context menu
+    this.setupContextMenu();
+    
     // Create terminal window
     this.terminalWindow = Window.create({
       dom: this.container,
@@ -39,9 +42,9 @@ export class App {
       theme: 'dark',
       resizable: true,
       draggable: true,
+      hideOnClose: true,
       onClose: () => {
         console.log('Terminal window closed');
-        this.terminalWindow.show(); // Re-show if closed
       },
       onResize: (width, height) => {
         console.log(`Terminal window resized to ${width}x${height}`);
@@ -58,9 +61,9 @@ export class App {
       theme: 'dark',
       resizable: true,
       draggable: true,
+      hideOnClose: true,
       onClose: () => {
         console.log('Chat window closed');
-        this.chatWindow.show(); // Re-show if closed
       },
       onResize: (width, height) => {
         console.log(`Chat window resized to ${width}x${height}`);
@@ -172,6 +175,83 @@ export class App {
       // Show the debug view
       this.artifactDebugView.show();
     }
+  }
+  
+  /**
+   * Set up right-click context menu for window management
+   */
+  setupContextMenu() {
+    // Create context menu element
+    const contextMenu = document.createElement('div');
+    contextMenu.id = 'window-context-menu';
+    contextMenu.style.cssText = `
+      position: absolute;
+      background: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 8px;
+      display: none;
+      z-index: 10000;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      color: #e0e0e0;
+    `;
+    
+    this.container.appendChild(contextMenu);
+    
+    // Set up right-click handler
+    this.container.addEventListener('contextmenu', (e) => {
+      // Only show menu on background, not on windows
+      if (e.target === this.container) {
+        e.preventDefault();
+        
+        // Build menu items
+        contextMenu.innerHTML = '';
+        
+        const menuItems = [
+          { label: 'Show Terminal', action: () => this.terminalWindow?.show() },
+          { label: 'Show Chat', action: () => this.chatWindow?.show() },
+          { label: 'Show Artifact Debug', action: () => this.artifactDebugView?.show() }
+        ];
+        
+        menuItems.forEach(item => {
+          const menuItem = document.createElement('div');
+          menuItem.textContent = item.label;
+          menuItem.style.cssText = `
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.2s;
+          `;
+          
+          menuItem.addEventListener('mouseover', () => {
+            menuItem.style.background = '#1f6feb';
+          });
+          
+          menuItem.addEventListener('mouseout', () => {
+            menuItem.style.background = 'transparent';
+          });
+          
+          menuItem.addEventListener('click', () => {
+            item.action();
+            contextMenu.style.display = 'none';
+          });
+          
+          contextMenu.appendChild(menuItem);
+        });
+        
+        // Position and show menu
+        contextMenu.style.left = `${e.pageX}px`;
+        contextMenu.style.top = `${e.pageY}px`;
+        contextMenu.style.display = 'block';
+      }
+    });
+    
+    // Hide menu on click elsewhere
+    document.addEventListener('click', () => {
+      contextMenu.style.display = 'none';
+    });
   }
   
   destroy() {

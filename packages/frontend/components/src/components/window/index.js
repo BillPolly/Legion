@@ -30,6 +30,7 @@ export const Window = {
       requirements.add('onMinimize', 'function', 'Callback when window is minimized/restored (optional)');
       requirements.add('onMaximize', 'function', 'Callback when window is maximized/restored (optional)');
       requirements.add('onFocus', 'function', 'Callback when window gains focus (optional)');
+      requirements.add('hideOnClose', 'boolean', 'Hide window instead of destroying on close (optional, defaults to false)');
       
       umbilical.describe(requirements);
       return;
@@ -229,7 +230,11 @@ export const Window = {
 
     // Close button
     closeBtn.addEventListener('click', () => {
-      instance.close();
+      if (umbilical.hideOnClose) {
+        instance.hide();
+      } else {
+        instance.close();
+      }
     });
 
     // Minimize button
@@ -256,12 +261,16 @@ export const Window = {
         const x = e.clientX - parentRect.left - offsetX;
         const y = e.clientY - parentRect.top - offsetY;
 
-        // Apply boundaries relative to parent container
-        const maxX = parentRect.width - windowEl.offsetWidth;
-        const maxY = parentRect.height - windowEl.offsetHeight;
+        // Apply boundaries - only constrain title bar to stay in parent
+        // Allow window bottom and sides to go outside parent bounds
+        const titleBarHeight = titleBar.offsetHeight || 30; // fallback height
+        const minX = -windowEl.offsetWidth + 100; // Allow most of window to go off left edge
+        const maxX = parentRect.width - 100; // Allow most of window to go off right edge
+        const minY = 0; // Keep title bar top edge in view
+        const maxY = parentRect.height - titleBarHeight; // Keep title bar bottom in view
 
-        windowEl.style.left = `${Math.min(Math.max(0, x), maxX)}px`;
-        windowEl.style.top = `${Math.min(Math.max(0, y), maxY)}px`;
+        windowEl.style.left = `${Math.min(Math.max(minX, x), maxX)}px`;
+        windowEl.style.top = `${Math.min(Math.max(minY, y), maxY)}px`;
       } else if (isResizing) {
         e.preventDefault();
         const width = startWidth + (e.clientX - offsetX);
@@ -377,6 +386,11 @@ export const Window = {
       show() {
         windowEl.style.display = 'flex';
         bringToFront();
+      },
+
+      hide() {
+        windowEl.style.display = 'none';
+        // Note: hide does not trigger onClose callback
       },
 
       close() {

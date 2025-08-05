@@ -33,16 +33,7 @@ export class ArtifactActor extends Actor {
       autoLabel: config.autoLabel !== false // Default true
     };
     
-    // Track artifact counts for labeling
-    this.artifactCounts = {
-      image: 0,
-      text: 0,
-      code: 0,
-      document: 0,
-      data: 0,
-      markup: 0,
-      other: 0
-    };
+    // Removed artifactCounts - now using descriptive labels with uniqueness checks
     
     console.log(`ArtifactActor ${this.id} initialized for session ${this.sessionId}`);
   }
@@ -205,14 +196,105 @@ Respond with JSON only:
   autoLabelArtifacts(artifacts) {
     return artifacts.map(artifact => {
       const type = artifact.type || 'other';
-      const count = ++this.artifactCounts[type] || 1;
       
-      artifact.label = `@${type}${count}`;
-      artifact.description = artifact.title || `${type} artifact #${count}`;
+      // Generate a unique, descriptive label (max 3 words)
+      const label = this.generateDescriptiveLabel(artifact, type);
+      
+      // Ensure uniqueness by checking existing labels
+      artifact.label = this.ensureUniqueLabel(label);
+      artifact.description = artifact.title || this.generateDescription(artifact, type);
       artifact.curated = false;
       
       return artifact;
     });
+  }
+
+  /**
+   * Generate a descriptive label from artifact properties
+   * @param {Object} artifact - Artifact to label
+   * @param {string} type - Artifact type
+   * @returns {string} Descriptive label (without @)
+   */
+  generateDescriptiveLabel(artifact, type) {
+    const words = [];
+    
+    // Extract meaningful words from title
+    if (artifact.title) {
+      const titleWords = artifact.title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .split(/[\s-]+/)
+        .filter(word => word.length > 2 && !['the', 'and', 'for', 'with', 'png', 'jpg', 'txt', 'pdf'].includes(word))
+        .slice(0, 2);
+      words.push(...titleWords);
+    }
+    
+    // Add type-specific context
+    if (words.length === 0) {
+      switch (type) {
+        case 'image':
+          words.push(artifact.subtype === 'png' ? 'png' : 'image');
+          break;
+        case 'code':
+          words.push(artifact.subtype || 'code');
+          break;
+        case 'document':
+          words.push('doc');
+          break;
+        default:
+          words.push(type);
+      }
+    }
+    
+    // Add a short unique suffix if needed
+    if (words.length < 2) {
+      const timestamp = Date.now().toString().slice(-4);
+      words.push(timestamp);
+    }
+    
+    // Limit to 3 words max, join with hyphens
+    return words.slice(0, 3).join('-');
+  }
+
+  /**
+   * Ensure label is unique by checking existing artifacts
+   * @param {string} baseLabel - Base label to make unique
+   * @returns {string} Unique label with @ prefix
+   */
+  ensureUniqueLabel(baseLabel) {
+    let label = `@${baseLabel}`;
+    let counter = 1;
+    
+    // Check if label already exists in manager
+    while (this.artifactManager.getArtifactByLabel(label)) {
+      counter++;
+      label = `@${baseLabel}-${counter}`;
+    }
+    
+    return label;
+  }
+
+  /**
+   * Generate a description for the artifact
+   * @param {Object} artifact - Artifact to describe
+   * @param {string} type - Artifact type
+   * @returns {string} Description
+   */
+  generateDescription(artifact, type) {
+    if (artifact.title) {
+      return artifact.title;
+    }
+    
+    switch (type) {
+      case 'image':
+        return `Generated ${artifact.subtype || 'image'}`;
+      case 'code':
+        return `${artifact.subtype || 'Code'} file`;
+      case 'document':
+        return `${artifact.subtype || 'Document'} file`;
+      default:
+        return `${type} artifact`;
+    }
   }
   
   /**
