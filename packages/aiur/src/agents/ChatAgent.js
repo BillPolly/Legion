@@ -1,6 +1,7 @@
 import { Actor } from '../../../shared/actors/src/Actor.js';
 import { ArtifactActor } from './ArtifactActor.js';
 import { ArtifactManager } from './artifacts/ArtifactManager.js';
+import { TaskOrchestrator } from './TaskOrchestrator.js';
 
 /**
  * ChatAgent - Handles chat interactions with LLM as a backend actor
@@ -45,6 +46,10 @@ export class ChatAgent extends Actor {
     this.artifactManager = new ArtifactManager({ sessionId: this.sessionId });
     this.artifactActor = null; // Will be initialized later
     
+    // Initialize task orchestrator
+    this.taskOrchestrator = null; // Will be initialized later
+    this.orchestratorActive = false;
+    
     // Voice configuration
     this.voiceEnabled = false;
     this.voicePreferences = {
@@ -59,9 +64,16 @@ export class ChatAgent extends Actor {
 You can:
 1. Have conversations and answer questions
 2. Use tools when needed to perform actions like reading/writing files, running commands, etc.
+3. Handle complex tasks that require multiple steps or planning
 
 When the user asks you to perform an action (like writing a file, reading data, etc.), you should use the appropriate tool.
 When the user just wants to chat or ask questions, respond conversationally.
+
+IMPORTANT: Complex Task Detection
+If the user asks for something complex that would require many steps or planning (examples: "build me a web app", "create a complete system", "implement a feature with tests", "design and implement a database schema", etc.), you should:
+1. Recognize this is a complex task
+2. Use the 'handle_complex_task' tool
+3. Let the system handle the planning and step-by-step execution
 
 IMPORTANT: When you need to use tools to fulfill a request:
 - ALWAYS include a brief, conversational message to the user in your response
@@ -94,6 +106,16 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
       resourceManager: this.resourceManager
     });
     await this.artifactActor.initialize();
+    
+    // Initialize TaskOrchestrator
+    this.taskOrchestrator = new TaskOrchestrator({
+      sessionId: this.sessionId,
+      chatAgent: this,
+      resourceManager: this.resourceManager,
+      moduleLoader: this.moduleLoader
+    });
+    await this.taskOrchestrator.initialize();
+    this.taskOrchestrator.setChatAgent(this);
     
     // Load voice module if available
     try {
@@ -466,9 +488,33 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
         // Substitute artifact labels in tool parameters
         const processedInput = await this.substituteArtifactLabels(toolCall.input);
         
-        // Execute tool via moduleLoader
+        // Execute tool via moduleLoader or handle special tools
         let result;
-        if (this.moduleLoader && this.moduleLoader.hasTool(toolCall.name)) {
+        
+        // Handle special internal tools
+        if (toolCall.name === 'handle_complex_task') {
+          // Delegate to orchestrator
+          if (this.taskOrchestrator) {
+            this.orchestratorActive = true;
+            await this.taskOrchestrator.receive({
+              type: 'start_task',
+              description: processedInput.task_description,
+              context: {
+                userMessage: this.conversationHistory.slice(-1)[0]?.content
+              },
+              conversationHistory: this.conversationHistory.slice(-10) // Last 10 messages for context
+            });
+            result = {
+              success: true,
+              message: 'Task delegated to complex task handler'
+            };
+          } else {
+            result = {
+              success: false,
+              error: 'Complex task handler not available'
+            };
+          }
+        } else if (this.moduleLoader && this.moduleLoader.hasTool(toolCall.name)) {
           result = await this.moduleLoader.executeTool(toolCall.name, processedInput);
         } else {
           result = {
@@ -583,6 +629,22 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
    */
   async getAvailableTools() {
     const tools = [];
+    
+    // Add the complex task handling tool
+    tools.push({
+      name: 'handle_complex_task',
+      description: 'Use this tool when the user asks for something complex that requires multiple steps, planning, or building something significant (like a web app, system, feature with tests, etc.)',
+      input_schema: {
+        type: 'object',
+        properties: {
+          task_description: {
+            type: 'string',
+            description: 'A clear description of what the user wants to build or accomplish'
+          }
+        },
+        required: ['task_description']
+      }
+    });
     
     try {
       // Get tools from moduleLoader's toolRegistry directly
@@ -772,7 +834,16 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
   async handleMessage(message) {
     switch (message.type) {
       case 'chat_message':
-        await this.processMessage(message.content);
+        // If orchestrator is active, forward the message
+        if (this.orchestratorActive && this.taskOrchestrator) {
+          await this.taskOrchestrator.receive({
+            type: 'user_message',
+            content: message.content,
+            timestamp: message.timestamp
+          });
+        } else {
+          await this.processMessage(message.content);
+        }
         break;
         
       case 'clear_history':
@@ -1034,6 +1105,66 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
   }
   
   /**
+   * Handle messages from TaskOrchestrator
+   */
+  handleOrchestratorMessage(message) {
+    console.log('ChatAgent: Received message from TaskOrchestrator:', message);
+    
+    switch (message.type) {
+      case 'orchestrator_status':
+      case 'orchestrator_update':
+        // Send status updates as chat responses
+        this.emit('message', {
+          type: 'chat_response',
+          content: message.message,
+          isComplete: false,
+          isOrchestrator: true,
+          progress: message.progress,
+          sessionId: this.sessionId
+        });
+        break;
+        
+      case 'orchestrator_complete':
+        // Task completed, clear active flag
+        this.orchestratorActive = false;
+        
+        // Send completion message
+        this.emit('message', {
+          type: 'chat_response',
+          content: message.message,
+          isComplete: true,
+          isOrchestrator: true,
+          taskSummary: message.taskSummary,
+          sessionId: this.sessionId
+        });
+        
+        // If the task was cancelled or failed, add to history
+        if (message.wasActive) {
+          this.conversationHistory.push({
+            role: 'assistant',
+            content: message.message,
+            timestamp: new Date().toISOString()
+          });
+        }
+        break;
+        
+      case 'orchestrator_error':
+        // Send error as chat response
+        this.emit('message', {
+          type: 'chat_response',
+          content: message.message,
+          isComplete: true,
+          isError: true,
+          sessionId: this.sessionId
+        });
+        break;
+        
+      default:
+        console.warn('ChatAgent: Unknown orchestrator message type:', message.type);
+    }
+  }
+  
+  /**
    * Prepare for tool usage (future enhancement)
    */
   async executeWithTools(userMessage, availableTools) {
@@ -1058,6 +1189,12 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
     if (this.artifactActor) {
       this.artifactActor.destroy();
       this.artifactActor = null;
+    }
+    
+    // Cleanup task orchestrator
+    if (this.taskOrchestrator) {
+      this.taskOrchestrator.destroy();
+      this.taskOrchestrator = null;
     }
     
     console.log(`ChatAgent ${this.id} destroyed`);
