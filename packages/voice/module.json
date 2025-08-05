@@ -1,0 +1,95 @@
+{
+  "name": "voice",
+  "version": "1.0.0",
+  "description": "Voice services for speech-to-text and text-to-speech",
+  "package": "./src/VoiceModule.js",
+  "type": "constructor",
+  "dependencies": {
+    "OPENAI_API_KEY": {
+      "type": "string",
+      "description": "OpenAI API key for Whisper and TTS"
+    }
+  },
+  "initialization": {
+    "className": "VoiceModule",
+    "config": {
+      "apiKey": "${OPENAI_API_KEY}",
+      "provider": "openai"
+    }
+  },
+  "tools": [
+    {
+      "name": "transcribe_audio",
+      "description": "Convert audio to text using speech recognition",
+      "function": "transcribeAudio",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "audio": {
+            "type": "string",
+            "description": "Base64 encoded audio data or file path"
+          },
+          "format": {
+            "type": "string",
+            "enum": ["mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm"],
+            "default": "webm",
+            "description": "Audio format"
+          },
+          "language": {
+            "type": "string",
+            "description": "Language code (e.g., 'en', 'es', 'fr'). Auto-detect if not specified"
+          },
+          "prompt": {
+            "type": "string",
+            "description": "Optional prompt to guide the transcription"
+          }
+        },
+        "required": ["audio"]
+      }
+    },
+    {
+      "name": "generate_voice",
+      "description": "Convert text to speech audio",
+      "function": "generateVoice",
+      "instanceMethod": true,
+      "async": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Text to convert to speech"
+          },
+          "voice": {
+            "type": "string",
+            "enum": ["alloy", "echo", "fable", "onyx", "nova", "shimmer"],
+            "default": "alloy",
+            "description": "Voice to use for speech generation"
+          },
+          "model": {
+            "type": "string",
+            "enum": ["tts-1", "tts-1-hd"],
+            "default": "tts-1",
+            "description": "TTS model (tts-1 is faster, tts-1-hd is higher quality)"
+          },
+          "speed": {
+            "type": "number",
+            "minimum": 0.25,
+            "maximum": 4.0,
+            "default": 1.0,
+            "description": "Speech speed multiplier"
+          },
+          "format": {
+            "type": "string",
+            "enum": ["mp3", "opus", "aac", "flac"],
+            "default": "mp3",
+            "description": "Output audio format"
+          }
+        },
+        "required": ["text"]
+      }
+    }
+  ]
+}
