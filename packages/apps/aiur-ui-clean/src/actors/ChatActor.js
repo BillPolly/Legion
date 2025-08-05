@@ -16,9 +16,15 @@ export class ChatActor extends Actor {
     this.onStream = null;
     this.onError = null;
     this.onConnectionChange = null;
+    this.onVoiceTranscription = null;
+    this.onVoiceAudio = null;
     
     // Message queue for when not connected
     this.messageQueue = [];
+    
+    // Voice state
+    this.voiceEnabled = false;
+    this.preferredVoice = 'nova';
   }
   
   /**
@@ -147,6 +153,18 @@ export class ChatActor extends Actor {
         this.handleAgentComplete(payload);
         break;
         
+      case 'voice_transcription':
+        this.handleVoiceTranscription(payload);
+        break;
+        
+      case 'voice_audio':
+        this.handleVoiceAudio(payload);
+        break;
+        
+      case 'voice_error':
+        this.handleVoiceError(payload);
+        break;
+        
       default:
         console.log('ChatActor: Unknown message type:', payload.type);
     }
@@ -244,6 +262,75 @@ export class ChatActor extends Actor {
     };
     
     this.remoteAgent.receive(message);
+  }
+  
+  /**
+   * Send voice input for transcription
+   */
+  async sendVoiceInput(audioData, format = 'webm') {
+    if (!this.isConnected()) {
+      throw new Error('Not connected to chat server');
+    }
+    
+    if (!this.remoteAgent) {
+      throw new Error('No remote agent connection established');
+    }
+    
+    const message = {
+      type: 'voice_input',
+      audio: audioData,
+      format: format,
+      timestamp: new Date().toISOString()
+    };
+    
+    console.log('ChatActor: Sending voice input for transcription');
+    
+    // Send via remote agent
+    this.remoteAgent.receive(message);
+  }
+  
+  /**
+   * Request voice generation for text
+   */
+  requestVoiceGeneration(text, messageId) {
+    if (!this.isConnected()) {
+      console.warn('ChatActor: Cannot generate voice - not connected');
+      return;
+    }
+    
+    if (!this.remoteAgent) {
+      console.warn('ChatActor: No remote agent connection');
+      return;
+    }
+    
+    const message = {
+      type: 'generate_speech',
+      text: text,
+      voice: this.preferredVoice,
+      messageId: messageId,
+      timestamp: new Date().toISOString()
+    };
+    
+    console.log('ChatActor: Requesting voice generation');
+    
+    this.remoteAgent.receive(message);
+  }
+  
+  /**
+   * Set voice preferences
+   */
+  setVoicePreferences(enabled, voice = 'nova') {
+    this.voiceEnabled = enabled;
+    this.preferredVoice = voice;
+    
+    // Notify server of voice preference
+    if (this.isConnected() && this.remoteAgent) {
+      this.remoteAgent.receive({
+        type: 'voice_preferences',
+        enabled: enabled,
+        voice: voice
+      });
+    }
   }
   
   /**
@@ -397,6 +484,54 @@ export class ChatActor extends Actor {
   }
   
   /**
+   * Handle voice transcription result
+   */
+  handleVoiceTranscription(payload) {
+    console.log('ChatActor: Received voice transcription:', payload.text);
+    
+    if (this.onVoiceTranscription) {
+      this.onVoiceTranscription({
+        text: payload.text,
+        language: payload.language,
+        timestamp: payload.timestamp || new Date().toISOString()
+      });
+    }
+  }
+  
+  /**
+   * Handle voice audio data
+   */
+  handleVoiceAudio(payload) {
+    console.log('ChatActor: Received voice audio for message:', payload.messageId);
+    
+    if (this.onVoiceAudio) {
+      this.onVoiceAudio({
+        audio: payload.audio,
+        format: payload.format,
+        messageId: payload.messageId,
+        voice: payload.voice,
+        timestamp: payload.timestamp || new Date().toISOString()
+      });
+    }
+  }
+  
+  /**
+   * Handle voice error
+   */
+  handleVoiceError(payload) {
+    console.error('ChatActor: Voice error:', payload.message);
+    
+    if (this.onError) {
+      this.onError({
+        message: payload.message,
+        type: 'voice_error',
+        details: payload.details,
+        timestamp: payload.timestamp || new Date().toISOString()
+      });
+    }
+  }
+  
+  /**
    * Destroy the actor
    */
   destroy() {
@@ -408,6 +543,8 @@ export class ChatActor extends Actor {
     this.onError = null;
     this.onConnectionChange = null;
     this.onThought = null;
+    this.onVoiceTranscription = null;
+    this.onVoiceAudio = null;
     
     // Clear queue
     this.messageQueue = [];

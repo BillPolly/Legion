@@ -1,4 +1,6 @@
 import { ThoughtsDisplay } from '../ThoughtsDisplay.js';
+import { VoiceRecorder } from '../voice/VoiceRecorder.js';
+import { VoiceController } from '../voice/VoiceController.js';
 
 /**
  * ChatViewModel - Coordinates between Model and View, handles business logic
@@ -15,6 +17,13 @@ export class ChatViewModel {
     // Create thoughts display
     this.thoughtsDisplay = null;
     this.currentThoughtMessageId = null;
+    
+    // Initialize voice components
+    this.voiceRecorder = new VoiceRecorder();
+    this.voiceController = new VoiceController();
+    
+    // Voice state
+    this.voiceEnabled = false;
     
     // Set up model listeners
     this.setupModelListeners();
@@ -91,6 +100,31 @@ export class ChatViewModel {
     this.view.eventHandlers.onClear = () => {
       this.clearChat();
     };
+    
+    // Handle voice input
+    this.view.eventHandlers.onVoiceInput = (action) => {
+      if (action === 'start') {
+        this.startVoiceRecording();
+      } else if (action === 'stop') {
+        this.stopVoiceRecording();
+      }
+    };
+    
+    // Handle voice mode toggle
+    this.view.eventHandlers.onVoiceModeToggle = (enabled) => {
+      this.setVoiceAutoPlay(enabled);
+    };
+    
+    // Handle play audio
+    this.view.eventHandlers.onPlayAudio = (message) => {
+      this.playMessageAudio(message);
+    };
+    
+    // Set up voice recorder handlers
+    this.setupVoiceRecorderHandlers();
+    
+    // Set up voice controller handlers
+    this.setupVoiceControllerHandlers();
   }
   
   /**
@@ -101,7 +135,7 @@ export class ChatViewModel {
     
     // Listen for chat responses
     this.chatActor.onResponse = (response) => {
-      this.handleChatResponse(response);
+      this.handleChatResponseWithVoice(response);
     };
     
     // Listen for streaming chunks
@@ -122,6 +156,16 @@ export class ChatViewModel {
     // Listen for thought updates
     this.chatActor.onThought = (thought) => {
       this.handleThought(thought);
+    };
+    
+    // Listen for voice transcription
+    this.chatActor.onVoiceTranscription = (result) => {
+      this.handleVoiceTranscription(result);
+    };
+    
+    // Listen for voice audio
+    this.chatActor.onVoiceAudio = (data) => {
+      this.handleVoiceAudio(data);
     };
   }
   
@@ -354,6 +398,152 @@ export class ChatViewModel {
   }
   
   /**
+   * Set up voice recorder handlers
+   */
+  setupVoiceRecorderHandlers() {
+    this.voiceRecorder.onDataAvailable = (data) => {
+      // Send audio data to server
+      if (this.chatActor && this.chatActor.isConnected()) {
+        this.chatActor.sendVoiceInput(data.audio, data.format);
+      }
+    };
+    
+    this.voiceRecorder.onError = (error) => {
+      console.error('Voice recording error:', error);
+      this.model.setError(error.message);
+      this.view.hideVoiceIndicator();
+    };
+  }
+  
+  /**
+   * Set up voice controller handlers
+   */
+  setupVoiceControllerHandlers() {
+    this.voiceController.onPlaybackStart = (messageId) => {
+      this.view.updateSpeakerButton(messageId, true);
+    };
+    
+    this.voiceController.onPlaybackEnd = (messageId) => {
+      this.view.updateSpeakerButton(messageId, false);
+    };
+    
+    this.voiceController.onError = (error) => {
+      console.error('Voice playback error:', error);
+      if (error.messageId) {
+        this.view.updateSpeakerButton(error.messageId, false);
+      }
+    };
+  }
+  
+  /**
+   * Start voice recording
+   */
+  async startVoiceRecording() {
+    try {
+      await this.voiceRecorder.start();
+      this.view.showVoiceIndicator('🎤 Recording...');
+    } catch (error) {
+      console.error('Failed to start recording:', error);
+      this.model.setError('Failed to start voice recording');
+    }
+  }
+  
+  /**
+   * Stop voice recording
+   */
+  stopVoiceRecording() {
+    this.voiceRecorder.stop();
+    this.view.hideVoiceIndicator();
+  }
+  
+  /**
+   * Set voice auto-play mode
+   */
+  setVoiceAutoPlay(enabled) {
+    this.voiceController.setAutoPlay(enabled);
+    
+    // Update actor preferences
+    if (this.chatActor) {
+      this.chatActor.setVoicePreferences(enabled, 'nova');
+    }
+    
+    // If enabling auto-play and there are recent assistant messages, offer to play them
+    if (enabled) {
+      const recentMessages = this.model.getMessages().filter(m => m.role === 'assistant').slice(-1);
+      if (recentMessages.length > 0) {
+        // Could auto-play the last message here if desired
+      }
+    }
+  }
+  
+  /**
+   * Play audio for a message
+   */
+  async playMessageAudio(message) {
+    if (!message || !message.content) return;
+    
+    // Request audio generation from server
+    if (this.chatActor && this.chatActor.isConnected()) {
+      this.chatActor.requestVoiceGeneration(message.content, message.id);
+    }
+  }
+  
+  /**
+   * Handle voice transcription result
+   */
+  handleVoiceTranscription(result) {
+    // The transcribed text will be automatically processed as a chat message
+    // by the server, so we just need to show feedback
+    this.view.showVoiceIndicator(`📝 "${result.text}"`);
+    
+    // Hide indicator after a moment
+    setTimeout(() => {
+      this.view.hideVoiceIndicator();
+    }, 2000);
+  }
+  
+  /**
+   * Handle voice audio data
+   */
+  async handleVoiceAudio(data) {
+    // Play the audio
+    await this.voiceController.play(
+      data.audio,
+      data.messageId,
+      {
+        format: data.format,
+        voice: data.voice,
+        priority: 'high'  // Manual request has high priority
+      }
+    );
+  }
+  
+  /**
+   * Override handleChatResponse to support auto-play
+   */
+  handleChatResponseWithVoice(response) {
+    // Call original handler
+    this.handleChatResponse(response);
+    
+    // If auto-play is enabled and this is a complete response
+    if (this.voiceController.autoPlayEnabled && response.isComplete && response.content) {
+      // Check if content should be auto-played
+      const shouldPlay = this.voiceController.shouldAutoPlay({
+        role: 'assistant',
+        content: response.content
+      });
+      
+      if (shouldPlay) {
+        // Request voice generation
+        const messageId = this.model.getMessages().slice(-1)[0]?.id;
+        if (messageId && this.chatActor && this.chatActor.isConnected()) {
+          this.chatActor.requestVoiceGeneration(response.content, messageId);
+        }
+      }
+    }
+  }
+  
+  /**
    * Destroy the view model
    */
   destroy() {
@@ -370,12 +560,25 @@ export class ChatViewModel {
       this.chatActor.onError = null;
       this.chatActor.onConnectionChange = null;
       this.chatActor.onThought = null;
+      this.chatActor.onVoiceTranscription = null;
+      this.chatActor.onVoiceAudio = null;
     }
     
     // Destroy thoughts display
     if (this.thoughtsDisplay) {
       this.thoughtsDisplay.destroy();
       this.thoughtsDisplay = null;
+    }
+    
+    // Destroy voice components
+    if (this.voiceRecorder) {
+      this.voiceRecorder.destroy();
+      this.voiceRecorder = null;
+    }
+    
+    if (this.voiceController) {
+      this.voiceController.destroy();
+      this.voiceController = null;
     }
     
     // Clear references

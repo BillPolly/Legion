@@ -14,8 +14,11 @@ export class ChatView {
       inputContainer: null,
       inputField: null,
       sendButton: null,
+      voiceButton: null,
+      voiceModeToggle: null,
       loadingIndicator: null,
-      errorContainer: null
+      errorContainer: null,
+      voiceIndicator: null
     };
     
     // Event handlers storage
@@ -23,7 +26,16 @@ export class ChatView {
       onSend: null,
       onInputChange: null,
       onKeyPress: null,
-      onClear: null
+      onClear: null,
+      onVoiceInput: null,
+      onVoiceModeToggle: null,
+      onPlayAudio: null
+    };
+    
+    // Voice state
+    this.voiceState = {
+      isRecording: false,
+      autoPlayEnabled: false
     };
     
     // Create the UI
@@ -49,6 +61,45 @@ export class ChatView {
       color: #e0e0e0;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     `;
+    
+    // Header with voice mode toggle
+    const header = document.createElement('div');
+    header.className = 'chat-header';
+    header.style.cssText = `
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      background: #222;
+      border-bottom: 1px solid #444;
+    `;
+    
+    const title = document.createElement('h3');
+    title.textContent = 'Chat';
+    title.style.cssText = `
+      margin: 0;
+      font-size: 16px;
+      font-weight: 500;
+    `;
+    
+    // Voice mode toggle
+    this.elements.voiceModeToggle = document.createElement('button');
+    this.elements.voiceModeToggle.className = 'voice-mode-toggle';
+    this.elements.voiceModeToggle.title = 'Toggle auto-play voice';
+    this.elements.voiceModeToggle.innerHTML = '🔇';
+    this.elements.voiceModeToggle.style.cssText = `
+      background: none;
+      border: 1px solid #444;
+      border-radius: 20px;
+      padding: 6px 12px;
+      color: #999;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.2s;
+    `;
+    
+    header.appendChild(title);
+    header.appendChild(this.elements.voiceModeToggle);
     
     // Messages container
     this.elements.messagesContainer = document.createElement('div');
@@ -96,6 +147,21 @@ export class ChatView {
       margin: 10px 20px;
     `;
     
+    // Voice indicator (shows when recording or playing)
+    this.elements.voiceIndicator = document.createElement('div');
+    this.elements.voiceIndicator.className = 'voice-indicator';
+    this.elements.voiceIndicator.style.cssText = `
+      display: none;
+      padding: 8px 16px;
+      background: rgba(255, 107, 107, 0.1);
+      border: 1px solid rgba(255, 107, 107, 0.3);
+      border-radius: 20px;
+      color: #ff6b6b;
+      margin: 10px 20px;
+      text-align: center;
+      font-size: 14px;
+    `;
+    
     // Input container
     this.elements.inputContainer = document.createElement('div');
     this.elements.inputContainer.className = 'input-container';
@@ -126,6 +192,23 @@ export class ChatView {
       max-height: 120px;
     `;
     
+    // Voice button
+    this.elements.voiceButton = document.createElement('button');
+    this.elements.voiceButton.className = 'voice-button';
+    this.elements.voiceButton.innerHTML = '🎤';
+    this.elements.voiceButton.title = 'Hold to record voice';
+    this.elements.voiceButton.style.cssText = `
+      padding: 12px 16px;
+      background: #444;
+      border: none;
+      border-radius: 24px;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 50px;
+    `;
+    
     // Send button
     this.elements.sendButton = document.createElement('button');
     this.elements.sendButton.className = 'send-button';
@@ -144,10 +227,13 @@ export class ChatView {
     
     // Assemble the structure
     this.elements.inputContainer.appendChild(this.elements.inputField);
+    this.elements.inputContainer.appendChild(this.elements.voiceButton);
     this.elements.inputContainer.appendChild(this.elements.sendButton);
     
+    chatContainer.appendChild(header);
     chatContainer.appendChild(this.elements.messagesContainer);
     chatContainer.appendChild(this.elements.errorContainer);
+    chatContainer.appendChild(this.elements.voiceIndicator);
     chatContainer.appendChild(this.elements.inputContainer);
     
     this.container.appendChild(chatContainer);
@@ -220,6 +306,51 @@ export class ChatView {
       .messages-container::-webkit-scrollbar-thumb:hover {
         background: #555;
       }
+      
+      /* Voice button states */
+      .voice-button.recording {
+        background: #ff4444 !important;
+        animation: pulse 1.5s infinite;
+      }
+      
+      .voice-button:hover {
+        background: #555 !important;
+      }
+      
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+      
+      /* Voice mode toggle */
+      .voice-mode-toggle.active {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+      }
+      
+      /* Speaker button in messages */
+      .message-speaker-button {
+        background: #444;
+        border: none;
+        border-radius: 16px;
+        padding: 6px 12px;
+        color: white;
+        cursor: pointer;
+        font-size: 14px;
+        margin-left: 8px;
+        transition: all 0.2s;
+      }
+      
+      .message-speaker-button:hover {
+        background: #555;
+      }
+      
+      .message-speaker-button.playing {
+        background: #007bff;
+        animation: pulse 1.5s infinite;
+      }
     `;
     document.head.appendChild(style);
   }
@@ -247,6 +378,37 @@ export class ChatView {
       if (this.eventHandlers.onInputChange) {
         this.eventHandlers.onInputChange(this.elements.inputField.value);
       }
+    });
+    
+    // Voice button - hold to record
+    this.elements.voiceButton.addEventListener('mousedown', () => {
+      this.startRecording();
+    });
+    
+    this.elements.voiceButton.addEventListener('mouseup', () => {
+      this.stopRecording();
+    });
+    
+    this.elements.voiceButton.addEventListener('mouseleave', () => {
+      if (this.voiceState.isRecording) {
+        this.stopRecording();
+      }
+    });
+    
+    // Touch events for mobile
+    this.elements.voiceButton.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      this.startRecording();
+    });
+    
+    this.elements.voiceButton.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      this.stopRecording();
+    });
+    
+    // Voice mode toggle
+    this.elements.voiceModeToggle.addEventListener('click', () => {
+      this.toggleVoiceMode();
     });
   }
   
@@ -302,13 +464,38 @@ export class ChatView {
       word-wrap: break-word;
       white-space: pre-wrap;
       line-height: 1.4;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     `;
+    
+    // Message content container
+    const contentContainer = document.createElement('span');
+    contentContainer.style.flex = '1';
     
     // Parse markdown if assistant message
     if (!isUser && message.content.includes('```') || message.content.includes('**')) {
-      bubble.innerHTML = this.parseMarkdown(message.content);
+      contentContainer.innerHTML = this.parseMarkdown(message.content);
     } else {
-      bubble.textContent = message.content;
+      contentContainer.textContent = message.content;
+    }
+    
+    bubble.appendChild(contentContainer);
+    
+    // Add speaker button for assistant messages (if not in auto-play mode)
+    if (!isUser && !this.voiceState.autoPlayEnabled) {
+      const speakerButton = document.createElement('button');
+      speakerButton.className = 'message-speaker-button';
+      speakerButton.innerHTML = '🔊';
+      speakerButton.title = 'Play audio';
+      speakerButton.dataset.messageId = message.id;
+      
+      speakerButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.handlePlayAudio(message);
+      });
+      
+      bubble.appendChild(speakerButton);
     }
     
     // Timestamp
@@ -578,6 +765,104 @@ export class ChatView {
    */
   focus() {
     this.elements.inputField.focus();
+  }
+  
+  /**
+   * Start voice recording
+   */
+  startRecording() {
+    if (this.voiceState.isRecording) return;
+    
+    this.voiceState.isRecording = true;
+    this.elements.voiceButton.classList.add('recording');
+    this.showVoiceIndicator('🔴 Recording...');
+    
+    if (this.eventHandlers.onVoiceInput) {
+      this.eventHandlers.onVoiceInput('start');
+    }
+  }
+  
+  /**
+   * Stop voice recording
+   */
+  stopRecording() {
+    if (!this.voiceState.isRecording) return;
+    
+    this.voiceState.isRecording = false;
+    this.elements.voiceButton.classList.remove('recording');
+    this.hideVoiceIndicator();
+    
+    if (this.eventHandlers.onVoiceInput) {
+      this.eventHandlers.onVoiceInput('stop');
+    }
+  }
+  
+  /**
+   * Toggle voice auto-play mode
+   */
+  toggleVoiceMode() {
+    this.voiceState.autoPlayEnabled = !this.voiceState.autoPlayEnabled;
+    
+    if (this.voiceState.autoPlayEnabled) {
+      this.elements.voiceModeToggle.classList.add('active');
+      this.elements.voiceModeToggle.innerHTML = '🔊';
+      this.elements.voiceModeToggle.title = 'Auto-play is ON';
+    } else {
+      this.elements.voiceModeToggle.classList.remove('active');
+      this.elements.voiceModeToggle.innerHTML = '🔇';
+      this.elements.voiceModeToggle.title = 'Auto-play is OFF';
+    }
+    
+    if (this.eventHandlers.onVoiceModeToggle) {
+      this.eventHandlers.onVoiceModeToggle(this.voiceState.autoPlayEnabled);
+    }
+  }
+  
+  /**
+   * Handle play audio for a message
+   */
+  handlePlayAudio(message) {
+    if (this.eventHandlers.onPlayAudio) {
+      this.eventHandlers.onPlayAudio(message);
+    }
+  }
+  
+  /**
+   * Show voice indicator
+   */
+  showVoiceIndicator(text) {
+    this.elements.voiceIndicator.textContent = text;
+    this.elements.voiceIndicator.style.display = 'block';
+  }
+  
+  /**
+   * Hide voice indicator
+   */
+  hideVoiceIndicator() {
+    this.elements.voiceIndicator.style.display = 'none';
+  }
+  
+  /**
+   * Update speaker button state
+   */
+  updateSpeakerButton(messageId, isPlaying) {
+    const button = this.container.querySelector(`[data-message-id="${messageId}"]`);
+    if (button) {
+      if (isPlaying) {
+        button.classList.add('playing');
+        button.innerHTML = '⏸️';
+      } else {
+        button.classList.remove('playing');
+        button.innerHTML = '🔊';
+      }
+    }
+  }
+  
+  /**
+   * Get voice auto-play state
+   */
+  isAutoPlayEnabled() {
+    return this.voiceState.autoPlayEnabled;
   }
   
   /**

@@ -27,6 +27,42 @@ export class VoiceModule extends Module {
   }
 
   /**
+   * Static async factory method following the ResourceManager pattern
+   * @param {ResourceManager} resourceManager - The resource manager for dependency injection
+   * @returns {Promise<VoiceModule>} Initialized module instance
+   */
+  static async create(resourceManager) {
+    // Get OpenAI API key from ResourceManager
+    const apiKey = resourceManager.get('env.OPENAI_API_KEY');
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY environment variable is required for voice module');
+    }
+    
+    // Create module with dependencies from ResourceManager
+    const module = new VoiceModule({
+      apiKey: apiKey,
+      provider: 'openai'  // Default to OpenAI provider
+    });
+    
+    // Initialize if needed (currently constructor handles everything)
+    await module.initialize();
+    
+    return module;
+  }
+
+  /**
+   * Initialize the module
+   */
+  async initialize() {
+    // Module base class initialization if needed
+    if (super.initialize) {
+      await super.initialize();
+    }
+    // Provider is already initialized in constructor
+    return this;
+  }
+
+  /**
    * Initialize the voice provider based on configuration
    */
   initializeProvider(config) {

@@ -45,6 +45,14 @@ export class ChatAgent extends Actor {
     this.artifactManager = new ArtifactManager({ sessionId: this.sessionId });
     this.artifactActor = null; // Will be initialized later
     
+    // Voice configuration
+    this.voiceEnabled = false;
+    this.voicePreferences = {
+      enabled: false,
+      voice: 'nova',
+      autoPlay: false
+    };
+    
     // System prompt for the assistant
     this.systemPrompt = config.systemPrompt || `You are a helpful AI assistant integrated into the Aiur development environment.
 
@@ -80,6 +88,31 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
       resourceManager: this.resourceManager
     });
     await this.artifactActor.initialize();
+    
+    // Load voice module if available
+    try {
+      // For backend code, we can use the factory pattern directly with ResourceManager
+      const VoiceModule = (await import('../../../voice/src/VoiceModule.js')).default;
+      const voiceModule = await VoiceModule.create(this.resourceManager);
+      
+      // Register the module with the module loader
+      this.moduleLoader.loadedModules.set('voice', voiceModule);
+      
+      // Register voice tools
+      const voiceTools = voiceModule.getTools();
+      for (const tool of voiceTools) {
+        if (tool && tool.name) {
+          this.moduleLoader.toolRegistry.set(tool.name, tool);
+        }
+      }
+      
+      console.log('ChatAgent: Voice module loaded successfully with', voiceTools.length, 'tools');
+      this.voiceEnabled = true;
+    } catch (error) {
+      console.error('ChatAgent: Voice module failed to load:', error);
+      console.error('Stack trace:', error.stack);
+      this.voiceEnabled = false;
+    }
 
     this.initialized = true;
   }
@@ -712,6 +745,18 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
         });
         break;
         
+      case 'voice_input':
+        await this.handleVoiceInput(message);
+        break;
+        
+      case 'generate_speech':
+        await this.handleGenerateSpeech(message);
+        break;
+        
+      case 'voice_preferences':
+        this.handleVoicePreferences(message);
+        break;
+        
       default:
         console.log(`ChatAgent: Unknown message type ${message.type}`);
     }
@@ -810,6 +855,140 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
     return processed;
   }
 
+  /**
+   * Handle voice input (speech-to-text)
+   */
+  async handleVoiceInput(message) {
+    if (!this.voiceEnabled) {
+      this.emit('voice_error', {
+        type: 'voice_error',
+        message: 'Voice module not available',
+        sessionId: this.sessionId
+      });
+      return;
+    }
+    
+    try {
+      // Use the voice module to transcribe
+      const result = await this.moduleLoader.executeTool('transcribe_audio', {
+        audio: message.audio,
+        format: message.format,
+        language: message.language
+      });
+      
+      if (result.success !== false && result.text) {
+        // Send transcription result
+        this.emit('voice_transcription', {
+          type: 'voice_transcription',
+          text: result.text,
+          language: result.language || 'auto-detected',
+          sessionId: this.sessionId
+        });
+        
+        // Automatically process the transcribed text as a chat message
+        await this.processMessage(result.text);
+      } else {
+        throw new Error(result.error || 'Transcription failed');
+      }
+      
+    } catch (error) {
+      console.error('ChatAgent: Voice transcription error:', error);
+      this.emit('voice_error', {
+        type: 'voice_error',
+        message: `Transcription failed: ${error.message}`,
+        details: error,
+        sessionId: this.sessionId
+      });
+    }
+  }
+  
+  /**
+   * Handle speech generation (text-to-speech)
+   */
+  async handleGenerateSpeech(message) {
+    if (!this.voiceEnabled) {
+      this.emit('voice_error', {
+        type: 'voice_error',
+        message: 'Voice module not available',
+        messageId: message.messageId,
+        sessionId: this.sessionId
+      });
+      return;
+    }
+    
+    try {
+      // Use the voice module to generate speech
+      const result = await this.moduleLoader.executeTool('generate_voice', {
+        text: message.text,
+        voice: message.voice || this.voicePreferences.voice,
+        model: 'tts-1',  // Use standard model for lower latency
+        format: 'mp3'
+      });
+      
+      if (result.success !== false && result.audio) {
+        // Send audio data back
+        this.emit('voice_audio', {
+          type: 'voice_audio',
+          audio: result.audio,
+          format: result.format || 'mp3',
+          messageId: message.messageId,
+          voice: message.voice || this.voicePreferences.voice,
+          sessionId: this.sessionId
+        });
+      } else {
+        throw new Error(result.error || 'Speech generation failed');
+      }
+      
+    } catch (error) {
+      console.error('ChatAgent: Voice generation error:', error);
+      this.emit('voice_error', {
+        type: 'voice_error',
+        message: `Speech generation failed: ${error.message}`,
+        messageId: message.messageId,
+        details: error,
+        sessionId: this.sessionId
+      });
+    }
+  }
+  
+  /**
+   * Handle voice preferences update
+   */
+  handleVoicePreferences(message) {
+    this.voicePreferences = {
+      enabled: message.enabled || false,
+      voice: message.voice || 'nova',
+      autoPlay: message.autoPlay || false
+    };
+    
+    console.log('ChatAgent: Updated voice preferences:', this.voicePreferences);
+  }
+  
+  /**
+   * Override processMessage to optionally generate voice for responses
+   */
+  async processMessageWithVoice(userMessage) {
+    const response = await this.processMessage(userMessage);
+    
+    // If voice auto-play is enabled, generate speech for the response
+    if (this.voicePreferences.enabled && this.voicePreferences.autoPlay && response) {
+      // Get the last assistant message
+      const lastMessage = this.conversationHistory.slice(-1)[0];
+      if (lastMessage && lastMessage.role === 'assistant') {
+        // Generate speech in background (don't wait)
+        this.handleGenerateSpeech({
+          text: lastMessage.content,
+          messageId: `msg_${Date.now()}`,
+          voice: this.voicePreferences.voice
+        }).catch(err => {
+          console.error('ChatAgent: Auto-play voice generation failed:', err);
+        });
+      }
+    }
+    
+    return response;
+  }
+  
   /**
    * Prepare for tool usage (future enhancement)
    */

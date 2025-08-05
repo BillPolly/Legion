@@ -107,6 +107,11 @@
     "file-analysis": {
       "type": "json",
       "path": "packages/general-tools/src/file-analysis/module.json"
+    },
+    "voice": {
+      "type": "class",
+      "path": "packages/voice/src/VoiceModule.js",
+      "className": "VoiceModule"
     }
   }
 }

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Integration Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #e0e0e0;
+    }
+    .test-section {
+      margin: 20px 0;
+      padding: 20px;
+      border: 1px solid #444;
+      border-radius: 8px;
+      background: #222;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    button:disabled {
+      background: #555;
+      cursor: not-allowed;
+    }
+    .status {
+      margin: 10px 0;
+      padding: 10px;
+      background: #333;
+      border-radius: 4px;
+    }
+    .error {
+      color: #ff6b6b;
+    }
+    .success {
+      color: #51cf66;
+    }
+  </style>
+</head>
+<body>
+  <h1>Voice Integration Test</h1>
+  
+  <div class="test-section">
+    <h2>1. Voice Recorder Test</h2>
+    <button id="startRecord">Start Recording</button>
+    <button id="stopRecord" disabled>Stop Recording</button>
+    <div id="recordStatus" class="status">Ready</div>
+  </div>
+  
+  <div class="test-section">
+    <h2>2. Voice Controller Test</h2>
+    <button id="playTest">Play Test Audio</button>
+    <button id="stopPlayback">Stop Playback</button>
+    <div id="playStatus" class="status">Ready</div>
+  </div>
+  
+  <div class="test-section">
+    <h2>3. Integration Test</h2>
+    <button id="fullTest">Test Full Voice Flow</button>
+    <div id="integrationStatus" class="status">Ready</div>
+  </div>
+
+  <script type="module">
+    import { VoiceRecorder } from './src/components/chat/voice/VoiceRecorder.js';
+    import { VoiceController } from './src/components/chat/voice/VoiceController.js';
+    
+    // Initialize components
+    const recorder = new VoiceRecorder();
+    const controller = new VoiceController();
+    
+    // Get elements
+    const startBtn = document.getElementById('startRecord');
+    const stopBtn = document.getElementById('stopRecord');
+    const recordStatus = document.getElementById('recordStatus');
+    
+    const playBtn = document.getElementById('playTest');
+    const stopPlayBtn = document.getElementById('stopPlayback');
+    const playStatus = document.getElementById('playStatus');
+    
+    const fullTestBtn = document.getElementById('fullTest');
+    const integrationStatus = document.getElementById('integrationStatus');
+    
+    // Recorder test
+    startBtn.addEventListener('click', async () => {
+      try {
+        recordStatus.textContent = 'Initializing...';
+        await recorder.initialize();
+        
+        recorder.onDataAvailable = (data) => {
+          recordStatus.innerHTML = `<span class="success">✓ Recording complete!</span><br>
+            Format: ${data.format}<br>
+            Duration: ${data.duration}ms<br>
+            Size: ${Math.round(data.blob.size / 1024)}KB`;
+          
+          // Store for playback test
+          window.lastRecording = data;
+        };
+        
+        recorder.onError = (error) => {
+          recordStatus.innerHTML = `<span class="error">✗ Error: ${error.message}</span>`;
+        };
+        
+        await recorder.start();
+        recordStatus.textContent = '🔴 Recording...';
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        
+      } catch (error) {
+        recordStatus.innerHTML = `<span class="error">✗ Failed: ${error.message}</span>`;
+      }
+    });
+    
+    stopBtn.addEventListener('click', () => {
+      recorder.stop();
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+    });
+    
+    // Controller test
+    playBtn.addEventListener('click', async () => {
+      if (!window.lastRecording) {
+        playStatus.innerHTML = '<span class="error">✗ No recording available. Record something first!</span>';
+        return;
+      }
+      
+      playStatus.textContent = 'Playing recorded audio...';
+      
+      controller.onPlaybackStart = () => {
+        playStatus.innerHTML = '<span class="success">🔊 Playing...</span>';
+      };
+      
+      controller.onPlaybackEnd = () => {
+        playStatus.innerHTML = '<span class="success">✓ Playback complete!</span>';
+      };
+      
+      controller.onError = (error) => {
+        playStatus.innerHTML = `<span class="error">✗ Playback error: ${error.message}</span>`;
+      };
+      
+      // Play the recording
+      await controller.play(window.lastRecording.audio, 'test-message', {
+        format: window.lastRecording.format
+      });
+    });
+    
+    stopPlayBtn.addEventListener('click', () => {
+      controller.stop();
+      playStatus.textContent = 'Playback stopped';
+    });
+    
+    // Full integration test
+    fullTestBtn.addEventListener('click', async () => {
+      integrationStatus.textContent = 'Starting full test...';
+      
+      try {
+        // Test 1: Record audio
+        integrationStatus.textContent = 'Step 1: Recording audio...';
+        await recorder.initialize();
+        
+        const recordPromise = new Promise((resolve, reject) => {
+          recorder.onDataAvailable = resolve;
+          recorder.onError = reject;
+        });
+        
+        await recorder.start();
+        
+        // Record for 3 seconds
+        setTimeout(() => recorder.stop(), 3000);
+        
+        const recordData = await recordPromise;
+        integrationStatus.innerHTML += '<br><span class="success">✓ Recording successful</span>';
+        
+        // Test 2: Play back the audio
+        integrationStatus.innerHTML += '<br>Step 2: Playing back audio...';
+        
+        const playPromise = new Promise((resolve, reject) => {
+          controller.onPlaybackEnd = resolve;
+          controller.onError = reject;
+        });
+        
+        await controller.play(recordData.audio, 'test', {
+          format: recordData.format
+        });
+        
+        await playPromise;
+        integrationStatus.innerHTML += '<br><span class="success">✓ Playback successful</span>';
+        
+        // Test 3: Verify components work together
+        integrationStatus.innerHTML += '<br><br><span class="success">✅ All tests passed!</span>';
+        
+      } catch (error) {
+        integrationStatus.innerHTML += `<br><span class="error">✗ Test failed: ${error.message}</span>`;
+      }
+    });
+    
+    // Show browser support
+    const supportInfo = recorder.getState();
+    if (!supportInfo.supported) {
+      document.body.insertAdjacentHTML('afterbegin', 
+        '<div class="error">⚠️ Your browser does not support audio recording</div>'
+      );
+    }
+  </script>
+</body>
+</html>
