@@ -69,8 +69,8 @@ setTimeout(() => {
   // Start Aiur server
   console.log(`${colors.blue}🚀 Starting Aiur server on port 8080...${colors.reset}`);
   
-  const aiurProcess = spawn('npm', ['run', 'aiur'], {
-    cwd: join(__dirname, '../../../..'), // Go to root of monorepo
+  const aiurProcess = spawn('node', ['src/server/index.js'], {
+    cwd: join(__dirname, '../../../aiur'), // Go to aiur package directly
     stdio: ['ignore', 'pipe', 'pipe'],
     shell: true
   });

@@ -102,8 +102,8 @@ export default {
   
   // Module name mapping for local development
   moduleNameMapper: {
-    '^@legion/llm-planner/(.*)$': '<rootDir>/../../llm-planner/$1',
-    '^@legion/llm-planner$': '<rootDir>/../../llm-planner/src',
+    '^@legion/llm-planner/(.*)$': '<rootDir>/../../planning/llm-planner/$1',
+    '^@legion/llm-planner$': '<rootDir>/../../planning/llm-planner/src',
     '^@legion/module-loader$': '<rootDir>/../../module-loader/src',
     '^@legion/llm$': '<rootDir>/../../llm/src',
     '^@legion/jester$': '<rootDir>/../jester/src'

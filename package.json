@@ -9,6 +9,7 @@
     "packages/apps/*",
     "packages/code-gen/*",
     "packages/frontend/*",
+    "packages/planning/*",
     "packages/shared/*"
   ],
   "scripts": {
