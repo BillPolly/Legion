@@ -261,6 +261,23 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
         sessionId: this.sessionId
       });
       
+      // Debug log the message structure before sending
+      if (process.env.DEBUG_MESSAGES === 'true') {
+        console.log('\n=== DEBUG: Messages being sent to LLM ===');
+        currentMessages.forEach((msg, idx) => {
+          console.log(`Message ${idx} - Role: ${msg.role}`);
+          if (Array.isArray(msg.content)) {
+            console.log(`  Content blocks: ${msg.content.length}`);
+            msg.content.forEach(block => {
+              console.log(`    - Type: ${block.type}, ID: ${block.id || block.tool_use_id || 'N/A'}`);
+            });
+          } else {
+            console.log(`  Content: ${typeof msg.content === 'string' ? msg.content.substring(0, 50) + '...' : msg.content}`);
+          }
+        });
+        console.log('=== END DEBUG ===\n');
+      }
+      
       // Call LLM with tools
       const response = await this.llmClient.executeWithTools(currentMessages, tools, {
         temperature: this.llmConfig.temperature,
@@ -298,23 +315,30 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
         // Execute the tool calls
         const toolResults = await this.executeTools(response.toolCalls);
         
-        // Save tool results to history as user messages
-        for (const result of toolResults) {
+        // Save all tool results as a single user message
+        if (toolResults.length > 0) {
+          // Create a single user message with all tool results
           this.conversationHistory.push({
             role: 'user',
-            content: result.content,
-            tool_result: true,
-            tool_use_id: result.tool_use_id,
+            content: JSON.stringify({
+              tool_results: toolResults.map(result => ({
+                tool_use_id: result.tool_use_id,
+                content: result.content
+              }))
+            }),
+            tool_results: toolResults, // Store the raw results for buildMessages
             timestamp: new Date().toISOString()
           });
           
-          // Send tool result to UI
-          this.emit('tool_result', {
-            type: 'tool_result',
-            toolId: result.tool_use_id,
-            result: result.content,
-            sessionId: this.sessionId
-          });
+          // Send individual tool results to UI
+          for (const result of toolResults) {
+            this.emit('tool_result', {
+              type: 'tool_result',
+              toolId: result.tool_use_id,
+              result: result.content,
+              sessionId: this.sessionId
+            });
+          }
         }
         
         // Build updated messages for next iteration
@@ -444,7 +468,6 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
           type: 'tool_execution',
           tool: toolCall.name,
           success: result.success !== false,
-          artifacts: artifacts, // Include artifacts in the event
           sessionId: this.sessionId
         });
         
@@ -526,8 +549,20 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
     const recentHistory = this.conversationHistory.slice(-20);
     
     for (const msg of recentHistory) {
-      if (msg.tool_result) {
-        // This is a tool result - format as user message with tool_result content
+      if (msg.tool_results) {
+        // This is a message containing multiple tool results
+        const content = msg.tool_results.map(result => ({
+          type: 'tool_result',
+          tool_use_id: result.tool_use_id,
+          content: result.content
+        }));
+        
+        messages.push({
+          role: 'user',
+          content: content
+        });
+      } else if (msg.tool_result) {
+        // Legacy single tool result - for backwards compatibility
         messages.push({
           role: 'user',
           content: [
@@ -699,13 +734,23 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
             // For file-related parameters, use the path if available
             if (artifact.path) {
               processed[key] = artifact.path;
-            } else if (artifact.content && artifact.type === 'image' && artifact.content.startsWith('http')) {
-              // For URL-based images, we might need to download first
-              // For now, just pass the URL
-              processed[key] = artifact.content;
+            } else if (artifact.content) {
+              // For artifacts with content but no path
+              if (artifact.type === 'image' && artifact.content.startsWith('http')) {
+                // URL-based image
+                processed[key] = artifact.content;
+                console.log(`ChatAgent: Using URL for artifact ${value}`);
+              } else if (artifact.type === 'image' && artifact.content.startsWith('data:')) {
+                // Base64 image - we might need to save it to a temp file
+                // For now, return the path if it was saved, or error
+                throw new Error(`Artifact ${value} has base64 content but no file path. This shouldn't happen if saved properly.`);
+              } else {
+                // Other content types might work as-is
+                processed[key] = artifact.content;
+              }
             } else {
-              // No path available, throw error
-              throw new Error(`Artifact ${value} does not have a file path`);
+              // No path or content available
+              throw new Error(`Artifact ${value} does not have a file path or accessible content`);
             }
           } else if (key.toLowerCase().includes('content')) {
             // For content parameters, use the actual content

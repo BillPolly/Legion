@@ -419,6 +419,7 @@ export class ArtifactDetector {
             subtype: toolResult.subtype || 'png',
             title: toolResult.filename || 'Generated Image',
             content: toolResult.imageData || toolResult.imageUrl,
+            path: toolResult.filePath || null, // Include the file path if available
             size: toolResult.imageData ? 
               Math.round((toolResult.imageData.length * 3) / 4) : // Estimate base64 decoded size
               0,
