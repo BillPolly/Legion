@@ -60,7 +60,7 @@ export class PlanInspectorTool extends Tool {
       const showDependencies = params.showDependencies || false;
 
       // Perform plan validation
-      const validation = this._validatePlanStructure(plan);
+      const validation = await this._validatePlanStructure(plan);
       
       // If validation failed completely, return early but with success=true (analysis completed)
       if (!validation.isValid && validation.errors.includes('Plan missing steps array')) {
@@ -140,7 +140,7 @@ export class PlanInspectorTool extends Tool {
     }
   }
 
-  _validatePlanStructure(plan) {
+  async _validatePlanStructure(plan) {
     const errors = [];
     let isValid = true;
 
@@ -166,23 +166,127 @@ export class PlanInspectorTool extends Tool {
     }
 
     // Validate each step
-    plan.steps.forEach((step, index) => {
+    for (let index = 0; index < plan.steps.length; index++) {
+      const step = plan.steps[index];
       if (!step.id) {
         errors.push(`Step at index ${index} missing required id field`);
         isValid = false;
       }
 
+      // Validate actions if present
+      if (step.actions && Array.isArray(step.actions)) {
+        for (let actionIndex = 0; actionIndex < step.actions.length; actionIndex++) {
+          const action = step.actions[actionIndex];
+          const actionErrors = await this._validateAction(action, step.id, actionIndex);
+          errors.push(...actionErrors);
+          if (actionErrors.length > 0) {
+            isValid = false;
+          }
+        }
+      }
+
       // Recursively validate sub-steps
       if (step.steps && Array.isArray(step.steps)) {
-        const subValidation = this._validatePlanStructure({ id: 'sub', steps: step.steps });
+        const subValidation = await this._validatePlanStructure({ id: 'sub', steps: step.steps });
         errors.push(...subValidation.errors.map(error => `${step.id}: ${error}`));
         if (!subValidation.isValid) {
           isValid = false;
         }
       }
-    });
+    }
 
     return { isValid, errors };
+  }
+
+  /**
+   * Validate an action's parameters against tool schema
+   * @private
+   */
+  async _validateAction(action, stepId, actionIndex) {
+    const errors = [];
+    
+    if (!action.type) {
+      errors.push(`Step ${stepId} action ${actionIndex}: missing 'type' field`);
+      return errors;
+    }
+
+    // Check if we have a moduleLoader to validate against
+    if (!this.moduleLoader) {
+      // Can't validate parameters without moduleLoader
+      return errors;
+    }
+
+    // Try to get the tool to check its schema
+    try {
+      const tool = await this.moduleLoader.getToolByNameOrAlias(action.type);
+      if (!tool) {
+        errors.push(`Step ${stepId} action ${actionIndex}: tool '${action.type}' not found`);
+        return errors;
+      }
+
+      // Check if tool has inputSchema for validation
+      if (tool.inputSchema && action.parameters) {
+        // Validate parameters against schema
+        const paramErrors = this._validateParameters(action.parameters, tool.inputSchema, action.type);
+        paramErrors.forEach(err => {
+          errors.push(`Step ${stepId} action ${actionIndex}: ${err}`);
+        });
+      }
+    } catch (error) {
+      // If we can't load the tool, note it as a warning
+      errors.push(`Step ${stepId} action ${actionIndex}: unable to validate tool '${action.type}' - ${error.message}`);
+    }
+
+    return errors;
+  }
+
+  /**
+   * Validate parameters against a schema
+   * @private
+   */
+  _validateParameters(params, schema, toolName) {
+    const errors = [];
+    
+    // Check for Zod schema
+    if (schema && typeof schema.parse === 'function') {
+      try {
+        schema.parse(params);
+      } catch (zodError) {
+        if (zodError.errors) {
+          zodError.errors.forEach(err => {
+            errors.push(`${toolName} parameter '${err.path.join('.')}': ${err.message}`);
+          });
+        } else {
+          errors.push(`${toolName} parameters invalid: ${zodError.message}`);
+        }
+      }
+    } else if (schema && schema.properties) {
+      // JSON Schema validation
+      const required = schema.required || [];
+      
+      // Check required fields
+      required.forEach(field => {
+        if (!(field in params)) {
+          errors.push(`${toolName} missing required parameter: ${field}`);
+        }
+      });
+      
+      // Check parameter types
+      for (const [key, value] of Object.entries(params)) {
+        if (schema.properties[key]) {
+          const expectedType = schema.properties[key].type;
+          const actualType = Array.isArray(value) ? 'array' : typeof value;
+          
+          if (expectedType && expectedType !== actualType) {
+            errors.push(`${toolName} parameter '${key}' should be ${expectedType} but got ${actualType}`);
+          }
+        } else if (schema.additionalProperties === false) {
+          errors.push(`${toolName} has unknown parameter: ${key}`);
+        }
+      }
+    }
+    
+    return errors;
   }
 
   _analyzeDependencies(plan) {

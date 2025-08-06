@@ -12,9 +12,6 @@ export { ProfilePlannerModule } from './ProfilePlannerModule.js';
 // Tools
 export { ProfilePlannerTool } from './tools/ProfilePlannerTool.js';
 
-// Built-in profiles
-export { JavascriptProfile } from './profiles/javascript.js';
-
 // Default export is the Legion module
 import { ProfilePlannerModule as DefaultModule } from './ProfilePlannerModule.js';
 export default DefaultModule;

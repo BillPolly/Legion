@@ -285,6 +285,16 @@
             "description": "Path for health check endpoint",
             "default": "/health"
           },
+          "killExisting": {
+            "type": "boolean",
+            "description": "Kill any existing processes on the port before starting",
+            "default": false
+          },
+          "strictPort": {
+            "type": "boolean",
+            "description": "Fail if the exact port is not available (don't use alternative port)",
+            "default": false
+          },
           "env": {
             "type": "object",
             "description": "Environment variables",
@@ -351,6 +361,16 @@
             "description": "Framework type (auto-detected if not specified)",
             "enum": ["auto", "react", "vue", "angular", "next", "nuxt", "svelte", "vite"],
             "default": "auto"
+          },
+          "killExisting": {
+            "type": "boolean",
+            "description": "Kill any existing processes on the port before starting",
+            "default": false
+          },
+          "strictPort": {
+            "type": "boolean",
+            "description": "Fail if the exact port is not available (don't use alternative port)",
+            "default": false
           },
           "env": {
             "type": "object",

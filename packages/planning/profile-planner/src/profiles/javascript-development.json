@@ -4,12 +4,10 @@
   "description": "Comprehensive JavaScript development planner with file operations, command execution, GitHub integration, and deployment",
   "requiredModules": [
     "file",
-    "command-executor", 
-    "github",
+    "command-executor",
     "node-runner",
     "jester",
     "js-generator",
-    "package-manager",
     "code-analysis"
   ],
   "defaultInputs": [
@@ -17,17 +15,13 @@
     "project_context",
     "project_type"
   ],
-  "defaultOutputs": [
-    "project_created",
-    "files_generated", 
-    "tests_passing",
-    "application_running"
-  ],
+  "defaultOutputs": [],
   "maxSteps": 20,
   "contextPrompts": [
     "You are an expert JavaScript developer creating production-ready applications.",
     "Always follow modern JavaScript/Node.js best practices and conventions.",
     "Create proper project structure with package.json, README, and organized source files.",
+    "Use file_write to create package.json files with proper JSON content including name, version, dependencies, and scripts.",
     "Write clean, modular, well-documented code with proper error handling.",
     "Include comprehensive tests using Jest or similar testing framework.",
     "Use semantic versioning and proper dependency management.",
@@ -38,47 +32,77 @@
   ],
   "allowableActions": [
     {
-      "type": "create_directory",
-      "description": "Create a directory structure for the project",
+      "type": "directory_create",
+      "description": "Create a directory at the specified path",
       "inputs": {
         "dirpath": {
           "type": "string",
-          "description": "Path of the directory to create (e.g., 'src', 'tests', 'lib')"
+          "description": "Path of the directory to create (e.g., './project', './project/src', './project/tests')",
+          "required": true
         }
       },
       "outputs": {
-        "directory_created": {
+        "dirpath": {
           "type": "string",
           "description": "Path to the created directory"
+        },
+        "created": {
+          "type": "boolean",
+          "description": "Whether a new directory was created"
         }
-      }
+      },
+      "examples": [
+        {
+          "description": "Create project root directory",
+          "parameters": {"dirpath": "./my-project"}
+        },
+        {
+          "description": "Create src directory",
+          "parameters": {"dirpath": "./my-project/src"}
+        }
+      ]
     },
     {
-      "type": "write_file",
-      "description": "Create and write content to a file",
+      "type": "file_write",
+      "description": "Write text content to a file (creates the file if it doesn't exist)",
       "inputs": {
         "filepath": {
           "type": "string",
-          "description": "Path where the file should be created"
+          "description": "Path where the file should be created/written",
+          "required": true
         },
         "content": {
           "type": "string", 
-          "description": "Content to write to the file"
+          "description": "Text content to write to the file",
+          "required": true
         }
       },
       "outputs": {
-        "file_created": {
+        "filepath": {
           "type": "string",
-          "description": "Path to the created file"
+          "description": "Path to the created/updated file"
         },
-        "bytes_written": {
+        "bytesWritten": {
           "type": "number",
           "description": "Number of bytes written"
+        },
+        "created": {
+          "type": "boolean",
+          "description": "Whether a new file was created"
         }
-      }
+      },
+      "examples": [
+        {
+          "description": "Create a README file",
+          "parameters": {
+            "filepath": "./project/README.md",
+            "content": "# My Project\n\nDescription here..."
+          }
+        }
+      ]
     },
     {
-      "type": "read_file",
+      "type": "file_read",
       "description": "Read contents of an existing file",
       "inputs": {
         "filepath": {
@@ -98,7 +122,7 @@
       }
     },
     {
-      "type": "list_directory",
+      "type": "directory_list",
       "description": "List contents of a directory",
       "inputs": {
         "dirpath": {
@@ -114,7 +138,7 @@
       }
     },
     {
-      "type": "execute_command",
+      "type": "command_executor",
       "description": "Execute a shell command (npm, node, git, etc.)",
       "inputs": {
         "command": {
@@ -250,7 +274,7 @@
       }
     },
     {
-      "type": "validate_code",
+      "type": "validate_javascript",
       "description": "Run code validation (linting, type checking)",
       "inputs": {
         "files": {
@@ -408,36 +432,6 @@
         "test_path": {
           "type": "string",
           "description": "Suggested path for the test file"
-        }
-      }
-    },
-    {
-      "type": "create_package_json",
-      "description": "Generate a package.json file with dependencies and scripts",
-      "inputs": {
-        "project_name": {
-          "type": "string",
-          "description": "Name of the project"
-        },
-        "dependencies": {
-          "type": "array",
-          "description": "Array of npm packages to include as dependencies"
-        },
-        "dev_dependencies": {
-          "type": "array",
-          "description": "Array of npm packages to include as dev dependencies",
-          "required": false
-        },
-        "scripts": {
-          "type": "object",
-          "description": "NPM scripts to include",
-          "required": false
-        }
-      },
-      "outputs": {
-        "package_json": {
-          "type": "string",
-          "description": "Generated package.json content"
         }
       }
     },

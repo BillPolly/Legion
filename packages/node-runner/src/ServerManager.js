@@ -2,6 +2,7 @@ import { ProcessManager } from './ProcessManager.js';
 import detectPort from 'detect-port';
 import http from 'http';
 import https from 'https';
+import { killProcessesOnPort } from './utils/ports.js';
 
 /**
  * Manages web servers and development servers
@@ -36,16 +37,43 @@ export class ServerManager {
       healthCheckInterval = 5000,
       healthCheckTimeout = 30000,
       env = {},
+      killExisting = false,
       ...processOptions
     } = options;
 
-    // Check if port is available (port 0 means any available port)
-    const availablePort = port === 0 ? await this.findAvailablePort(3000) : await this.findAvailablePort(port);
-    if (port !== 0 && availablePort !== port) {
-      if (options.strictPort) {
-        throw new Error(`Port ${port} is already in use`);
+    // Kill existing processes on the port if requested
+    if (killExisting && port !== 0) {
+      console.log(`Killing any existing processes on port ${port}...`);
+      const killResult = await killProcessesOnPort(port, { 
+        force: false, 
+        silent: false 
+      });
+      
+      if (killResult.total > 0) {
+        console.log(`Killed ${killResult.killed} of ${killResult.total} processes on port ${port}`);
+        
+        // Wait a moment for port to be fully released
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
-      console.warn(`Port ${port} is in use, using ${availablePort} instead`);
+    }
+
+    // Determine which port to use
+    let availablePort;
+    if (killExisting && port !== 0) {
+      // If killExisting is true, use the exact port (we just killed anything on it)
+      availablePort = port;
+    } else if (port === 0) {
+      // Port 0 means find any available port
+      availablePort = await this.findAvailablePort(3000);
+    } else {
+      // Check if the requested port is available
+      availablePort = await this.findAvailablePort(port);
+      if (availablePort !== port) {
+        if (options.strictPort) {
+          throw new Error(`Port ${port} is already in use`);
+        }
+        console.warn(`Port ${port} is in use, using ${availablePort} instead`);
+      }
     }
 
     // Parse command if it's a string

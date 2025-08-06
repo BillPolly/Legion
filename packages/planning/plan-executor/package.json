@@ -15,10 +15,7 @@
     "@legion/log-manager": "*"
   },
   "devDependencies": {
-    "jest": "^29.7.0",
-    "@legion/tools": "*",
-    "@legion/general-tools": "*",
-    "@legion/node-runner": "*"
+    "jest": "^29.7.0"
   },
   "keywords": [
     "legion",

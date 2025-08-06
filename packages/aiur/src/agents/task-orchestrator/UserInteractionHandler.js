@@ -39,7 +39,7 @@ export class UserInteractionHandler {
    * Process user input using LLM
    */
   async processWithLLM(input) {
-    const currentState = this.orchestrator.planExecutionEngine.getStatus();
+    const currentState = this.orchestrator.planExecution.getStatus();
     const taskDescription = this.orchestrator.currentTask?.description || 'Unknown task';
     
     const prompt = `You are simulating a task orchestration system that is currently executing a complex task.
@@ -71,13 +71,25 @@ If they want to modify something, acknowledge it and explain what will happen.`;
       // Handle the intent
       switch (analysis.intent) {
         case 'cancel':
+          // Cancel both planning and execution
+          this.orchestrator.planExecution.cancel();
           this.orchestrator.planExecutionEngine.cancel();
           break;
         case 'pause':
-          this.orchestrator.planExecutionEngine.pause();
+          // Pause execution if running, planning cannot be paused
+          if (this.orchestrator.planExecutionEngine.state === 'executing') {
+            this.orchestrator.planExecutionEngine.pause();
+          } else {
+            this.orchestrator.planExecution.pause();
+          }
           break;
         case 'resume':
-          this.orchestrator.planExecutionEngine.resume();
+          // Resume execution if paused
+          if (this.orchestrator.planExecutionEngine.state === 'paused') {
+            this.orchestrator.planExecutionEngine.resume();
+          } else {
+            this.orchestrator.planExecution.resume();
+          }
           break;
         case 'modify':
           if (analysis.modificationDetails) {
@@ -101,23 +113,37 @@ If they want to modify something, acknowledge it and explain what will happen.`;
     const lowerInput = input.toLowerCase();
     
     if (lowerInput.includes('stop') || lowerInput.includes('cancel')) {
+      this.orchestrator.planExecution.cancel();
       this.orchestrator.planExecutionEngine.cancel();
       return this.respond('I\'ve cancelled the task.');
     }
     
     if (lowerInput.includes('pause')) {
-      this.orchestrator.planExecutionEngine.pause();
-      return this.respond('Task paused. Say "resume" to continue.');
+      if (this.orchestrator.planExecutionEngine.state === 'executing') {
+        this.orchestrator.planExecutionEngine.pause();
+        return this.respond('Execution paused. Say "resume" to continue.');
+      } else {
+        this.orchestrator.planExecution.pause();
+        return this.respond('Task paused. Say "resume" to continue.');
+      }
     }
     
-    if (lowerInput.includes('resume') && this.orchestrator.planExecutionEngine.state === 'paused') {
-      this.orchestrator.planExecutionEngine.resume();
-      return this.respond('Resuming the task...');
+    if (lowerInput.includes('resume')) {
+      if (this.orchestrator.planExecutionEngine.state === 'paused') {
+        this.orchestrator.planExecutionEngine.resume();
+        return this.respond('Resuming execution...');
+      } else if (this.orchestrator.planExecution.state === 'paused') {
+        this.orchestrator.planExecution.resume();
+        return this.respond('Resuming the task...');
+      } else {
+        return this.respond('Nothing to resume.');
+      }
     }
     
     if (lowerInput.includes('status') || lowerInput.includes('progress')) {
-      const status = this.orchestrator.planExecutionEngine.getStatus();
-      return this.respond(status);
+      const planStatus = this.orchestrator.planExecution.getStatus();
+      const execStatus = this.orchestrator.planExecutionEngine.getStatus();
+      return this.respond(`Planning: ${planStatus}\nExecution: ${execStatus}`);
     }
     
     // Check for plan modifications
@@ -126,7 +152,7 @@ If they want to modify something, acknowledge it and explain what will happen.`;
     }
     
     // Default: acknowledge and continue
-    return this.respond(`I understand. I'm currently ${this.orchestrator.planExecutionEngine.getPhaseDescription()}. The task is progressing well.`);
+    return this.respond(`I understand. I'm currently working on creating your plan.`);
   }
   
   /**
@@ -157,7 +183,7 @@ If they want to modify something, acknowledge it and explain what will happen.`;
       this.startClarification(questions);
     } else {
       // Start immediately - the PlanExecutionEngine will send the initial acknowledgment
-      this.orchestrator.planExecutionEngine.start(taskDescription, context);
+      this.orchestrator.planExecution.start(taskDescription, context);
     }
   }
   
@@ -169,7 +195,8 @@ If they want to modify something, acknowledge it and explain what will happen.`;
     const lowerDesc = taskDescription.toLowerCase();
     
     // Mock questions for now - will be enhanced later
-    if (lowerDesc.includes('web') || lowerDesc.includes('app')) {
+    if ((lowerDesc.includes('web') && lowerDesc.includes('frontend')) || 
+        lowerDesc.includes('react') || lowerDesc.includes('vue') || lowerDesc.includes('angular')) {
       questions.push({
         key: 'framework',
         question: 'What framework would you like to use? (e.g., React, Vue, Angular)'
@@ -204,8 +231,8 @@ If they want to modify something, acknowledge it and explain what will happen.`;
     
     // All questions answered, continue with task
     this.conversationMode = 'normal';
-    this.orchestrator.planExecutionEngine.provideContext(this.context);
-    this.orchestrator.planExecutionEngine.start(this.orchestrator.currentTask.description, this.context);
+    this.orchestrator.planExecution.provideContext(this.context);
+    this.orchestrator.planExecution.start(this.orchestrator.currentTask.description, this.context);
     return this.respond('Thank you! I have all the information I need. Let me start working on this...');
   }
   
@@ -221,11 +248,7 @@ If they want to modify something, acknowledge it and explain what will happen.`;
    * Handle plan modification request
    */
   handlePlanModification(input) {
-    this.respond(`I'll update the plan to incorporate that change. Let me adjust things...`);
-    this.orchestrator.planExecutionEngine.requestReplan({
-      modification: input,
-      timestamp: new Date().toISOString()
-    });
+    this.respond(`Plan modification is not yet supported in this version. The current plan will continue as created.`);
   }
   
   /**
@@ -246,7 +269,7 @@ If they want to modify something, acknowledge it and explain what will happen.`;
     this.orchestrator.sendToChatAgent({
       type: 'orchestrator_status',
       message: message,
-      progress: this.orchestrator.planExecutionEngine.progress
+      progress: this.orchestrator.planExecution.progress
     });
   }
 }

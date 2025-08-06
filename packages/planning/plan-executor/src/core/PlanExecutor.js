@@ -251,10 +251,45 @@ export class PlanExecutor extends EventEmitter {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         // Get tool for this action
-        // First try to use the explicit tool field if present, otherwise fall back to type
-        const toolName = action.tool || action.type;
-        const tool = this.moduleLoader.getTool(toolName);
+        // Use the action type as the tool name (this is the standard)
+        // The 'tool' field is often incorrect from LLM generation
+        let toolName = action.type;
+        
+        // Map profile action types to actual tool names if needed
+        // Most file operations use their type as the tool name directly
+        const toolNameMap = {
+          'command_executor': 'execute_command',
+          'install_packages': 'execute_command',
+          'test_with_analytics': 'jest_runner',
+          'analyze_test_failures': 'jest_analyzer',
+          'get_test_performance': 'jest_performance'
+        };
+        
+        // Apply mapping if needed
+        if (toolNameMap[toolName]) {
+          toolName = toolNameMap[toolName];
+        }
+        
+        // If there's an explicit tool field and it's different from what we computed,
+        // try it first but fall back to the computed name if it doesn't exist
+        let tool = null;
+        if (action.tool && action.tool !== toolName) {
+          // Try the explicit tool name first
+          tool = await this.moduleLoader.getToolByNameOrAlias(action.tool);
+          if (!tool) {
+            // Fall back to the computed tool name from type
+            tool = await this.moduleLoader.getToolByNameOrAlias(toolName);
+          }
+        } else {
+          // Use the computed tool name from type
+          tool = await this.moduleLoader.getToolByNameOrAlias(toolName);
+        }
         if (!tool) {
+          // Check if module needs to be loaded
+          const moduleId = await this.moduleLoader.getModuleIdForTool(toolName);
+          if (moduleId && !this.moduleLoader.hasModule(moduleId)) {
+            throw new Error(`Tool '${toolName}' requires module '${moduleId}' to be loaded`);
+          }
           throw new Error(`Tool not found: ${toolName} (action type: ${action.type})`);
         }
         

@@ -1,5 +1,6 @@
 import { Actor } from '../../../../shared/actors/src/Actor.js';
 import { UserInteractionHandler } from './UserInteractionHandler.js';
+import { PlanExecution } from './PlanExecution.js';
 import { PlanExecutionEngine } from './PlanExecutionEngine.js';
 
 /**
@@ -27,12 +28,14 @@ export class TaskOrchestrator extends Actor {
     // Resource access
     this.resourceManager = config.resourceManager || null;
     this.moduleLoader = config.moduleLoader || null;
+    this.artifactManager = config.artifactManager || null;
     
     // LLM access (will come from ChatAgent)
     this.llmClient = null;
     
     // Internal components
     this.interactionHandler = new UserInteractionHandler(this);
+    this.planExecution = new PlanExecution(this);
     this.planExecutionEngine = new PlanExecutionEngine(this);
     
     // Task state
@@ -81,6 +84,10 @@ export class TaskOrchestrator extends Actor {
           await this.startTask(payload);
           break;
           
+        case 'execute_plan':
+          await this.executePlan(payload);
+          break;
+          
         case 'user_message':
           await this.interactionHandler.processUserInput(payload);
           break;
@@ -95,7 +102,7 @@ export class TaskOrchestrator extends Actor {
    * Start working on a complex task
    */
   async startTask(payload) {
-    if (this.planExecutionEngine.state !== 'idle') {
+    if (this.planExecution.state !== 'idle') {
       // Use agentContext if available, otherwise fall back to old method
       if (payload.agentContext) {
         payload.agentContext.emit('message', {
@@ -123,24 +130,49 @@ export class TaskOrchestrator extends Actor {
       conversationHistory: this.agentContext?.conversationHistory || []
     };
     
-    // Send initial acknowledgment using agentContext
-    if (this.agentContext) {
-      this.agentContext.emit('message', {
-        type: 'chat_response',
-        content: 'I\'m analyzing your complex request. Let me see if I need any additional information...',
-        isComplete: false,
-        sessionId: this.agentContext.sessionId
-      });
-    } else {
-      this.sendToChatAgent({
-        type: 'orchestrator_status',
-        message: 'I\'m analyzing your complex request. Let me see if I need any additional information...',
-        progress: 0
-      });
+    // Skip the interaction handler and go straight to planning
+    await this.planExecution.start(this.currentTask.description, this.currentTask.context);
+  }
+  
+  /**
+   * Execute a validated plan
+   */
+  async executePlan(payload) {
+    if (this.planExecutionEngine.state !== 'idle') {
+      // Use agentContext if available, otherwise fall back to old method
+      if (payload.agentContext) {
+        payload.agentContext.emit('message', {
+          type: 'chat_response',
+          content: 'I\'m already executing a plan. Please wait for it to complete or cancel it first.',
+          isComplete: true,
+          sessionId: payload.agentContext.sessionId
+        });
+      } else {
+        this.sendToChatAgent({
+          type: 'orchestrator_error',
+          message: 'I\'m already executing a plan. Please wait for it to complete or cancel it first.',
+          currentState: this.planExecutionEngine.state
+        });
+      }
+      return;
     }
     
-    // Let the interaction handler take over
-    await this.interactionHandler.handleTaskStart(this.currentTask.description, this.currentTask.context);
+    // Store the agent context
+    this.agentContext = payload.agentContext;
+    
+    const plan = payload.plan;
+    const options = payload.options || {};
+    
+    if (!plan) {
+      this.sendToChatAgent({
+        type: 'orchestrator_error',
+        message: 'No plan provided for execution'
+      });
+      return;
+    }
+    
+    // Execute the plan
+    await this.planExecutionEngine.executePlan(plan, options);
   }
   
   /**
@@ -202,7 +234,7 @@ export class TaskOrchestrator extends Actor {
       
     } else if (this.chatAgent) {
       // Fallback to old method
-      const isActive = this.planExecutionEngine.state !== 'idle';
+      const isActive = this.planExecution.state !== 'idle';
       
       this.chatAgent.handleOrchestratorMessage({
         ...message,
@@ -239,7 +271,8 @@ export class TaskOrchestrator extends Actor {
    * Clean up resources
    */
   destroy() {
-    this.planExecutionEngine.clearTimers();
+    this.planExecution.clearTimers();
+    this.planExecutionEngine.clearResources();
     this.currentTask = null;
     this.chatAgent = null;
     console.log(`TaskOrchestrator ${this.id} destroyed`);

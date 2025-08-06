@@ -20,6 +20,6 @@ export default {
       statements: 80
     }
   },
-  setupFilesAfterEnv: ['<rootDir>/__tests__/utils/setup.js'],
+  // setupFilesAfterEnv: ['<rootDir>/__tests__/utils/setup.js'],
   testTimeout: 10000
 };

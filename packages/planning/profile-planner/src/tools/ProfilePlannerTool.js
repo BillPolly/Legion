@@ -155,7 +155,7 @@ export class ProfilePlannerTool extends Tool {
       }
 
       // Create planning context from profile
-      const planningContext = this.profileManager.createPlanningContext(profile, task);
+      const planningContext = await this.profileManager.createPlanningContext(profile, task);
 
       // Create LLM client for planning
       const llmClient = await this._createLLMClient();

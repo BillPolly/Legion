@@ -884,12 +884,12 @@ class FileModule extends Module {
     // Handle both object destructuring and ResourceManager patterns
     let config = {};
     if (resourceManager && typeof resourceManager.get === 'function') {
-      // ResourceManager pattern
+      // ResourceManager pattern - try to get resources but don't fail if not found
       config = {
-        basePath: resourceManager.get('basePath') || process.cwd(),
-        encoding: resourceManager.get('encoding') || 'utf8',
-        createDirectories: resourceManager.get('createDirectories') !== false,
-        permissions: resourceManager.get('permissions') || 0o755
+        basePath: (resourceManager.has && resourceManager.has('basePath') ? resourceManager.get('basePath') : null) || process.cwd(),
+        encoding: (resourceManager.has && resourceManager.has('encoding') ? resourceManager.get('encoding') : null) || 'utf8',
+        createDirectories: (resourceManager.has && resourceManager.has('createDirectories') ? resourceManager.get('createDirectories') : true) !== false,
+        permissions: (resourceManager.has && resourceManager.has('permissions') ? resourceManager.get('permissions') : null) || 0o755
       };
     } else if (resourceManager && typeof resourceManager === 'object') {
       // Direct config object

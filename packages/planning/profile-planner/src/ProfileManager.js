@@ -133,8 +133,42 @@ class ProfileManager {
 
     console.log(`Preparing profile: ${profileName}`);
 
-    // For now, just return the profile - module loading will be handled
-    // by the user through the module_load command before using the profile
+    // Load required modules if they're specified
+    if (profile.requiredModules && profile.requiredModules.length > 0) {
+      const moduleLoader = this.resourceManager.get('moduleLoader');
+      if (moduleLoader) {
+        console.log(`[ProfileManager] Loading required modules for ${profileName}:`, profile.requiredModules);
+        
+        const loadResults = { loaded: [], failed: [] };
+        for (const moduleName of profile.requiredModules) {
+          try {
+            // Check if module is already loaded
+            if (moduleLoader.hasModule(moduleName)) {
+              console.log(`[ProfileManager] Module '${moduleName}' already loaded`);
+              loadResults.loaded.push(moduleName);
+            } else {
+              // Try to load the module
+              await moduleLoader.loadModuleByName(moduleName);
+              console.log(`[ProfileManager] Successfully loaded module '${moduleName}'`);
+              loadResults.loaded.push(moduleName);
+            }
+          } catch (error) {
+            console.warn(`[ProfileManager] Failed to load required module '${moduleName}':`, error.message);
+            loadResults.failed.push({ module: moduleName, error: error.message });
+          }
+        }
+        
+        // Add load results to profile
+        profile.moduleLoadResults = loadResults;
+        
+        if (loadResults.failed.length > 0) {
+          console.warn(`[ProfileManager] Some required modules failed to load for profile '${profileName}'`);
+        }
+      } else {
+        console.warn('[ProfileManager] ModuleLoader not available, cannot load required modules');
+      }
+    }
+
     const preparedProfile = {
       ...profile,
       preparedAt: new Date().toISOString()
@@ -147,11 +181,24 @@ class ProfileManager {
    * Create planning context from profile
    * @param {Object} profile - The prepared profile
    * @param {string} description - User's planning request
-   * @returns {Object} Planning context for LLM planner
+   * @returns {Promise<Object>} Planning context for LLM planner
    */
-  createPlanningContext(profile, description) {
+  async createPlanningContext(profile, description) {
+    // Get actions dynamically from tools if using allowedTools
+    let actions;
+    
+    if (profile.allowedTools && Array.isArray(profile.allowedTools)) {
+      // New format: dynamically load tool schemas
+      actions = await this._loadToolSchemas(profile.allowedTools);
+    } else if (profile.allowableActions) {
+      // Legacy format: use static definitions
+      actions = profile.allowableActions;
+    } else {
+      throw new Error(`Profile ${profile.name} has neither allowedTools nor allowableActions`);
+    }
+    
     // Convert JSON profile actions to planner format
-    const convertedActions = (profile.allowableActions || []).map(action => {
+    const convertedActions = actions.map(action => {
       // Check if inputs/outputs are already arrays (old format) or objects (new JSON format)
       let inputKeys, outputKeys;
       
@@ -178,6 +225,29 @@ class ProfileManager {
         outputs: outputKeys
       };
       
+      // Preserve full input/output schemas if available (for better LLM prompts)
+      if (!Array.isArray(action.inputs) && typeof action.inputs === 'object') {
+        convertedAction.inputSchema = action.inputs;
+      }
+      if (!Array.isArray(action.outputs) && typeof action.outputs === 'object') {
+        convertedAction.outputSchema = action.outputs;
+      }
+      
+      // Mark required inputs
+      if (convertedAction.inputSchema) {
+        convertedAction.requiredInputs = [];
+        for (const [key, schema] of Object.entries(convertedAction.inputSchema)) {
+          if (schema.required !== false) {
+            convertedAction.requiredInputs.push(key);
+          }
+        }
+      }
+      
+      // Add examples if present
+      if (action.examples) {
+        convertedAction.examples = action.examples;
+      }
+      
       // Preserve tool and function fields if present (needed for execution)
       if (action.tool) {
         convertedAction.tool = action.tool;
@@ -189,11 +259,14 @@ class ProfileManager {
       return convertedAction;
     });
 
+    // Validate and fix action types against available tools
+    const validatedActions = await this._validateAndFixActionTypes(convertedActions);
+
     const context = {
       description: description,
       inputs: profile.defaultInputs || ['user_request'],
       requiredOutputs: profile.defaultOutputs || ['completed_task'],
-      allowableActions: convertedActions,
+      allowableActions: validatedActions,
       maxSteps: profile.maxSteps || 20,
       initialInputData: {
         user_request: description,
@@ -272,6 +345,227 @@ class ProfileManager {
       isValid: errors.length === 0,
       errors
     };
+  }
+
+  /**
+   * Dynamically load tool schemas from ModuleLoader
+   * @private
+   * @param {Array<string>} toolNames - List of tool names to load
+   * @returns {Promise<Array>} Array of action definitions with full schemas
+   */
+  async _loadToolSchemas(toolNames) {
+    // Get ModuleLoader from ResourceManager
+    const moduleLoader = this.resourceManager.get('moduleLoader');
+    if (!moduleLoader) {
+      console.warn('ModuleLoader not available - cannot load tool schemas dynamically');
+      return [];
+    }
+
+    const actions = [];
+    const missingTools = [];
+
+    for (const toolName of toolNames) {
+      try {
+        const tool = await moduleLoader.getToolByNameOrAlias(toolName);
+        if (!tool) {
+          missingTools.push(toolName);
+          continue;
+        }
+
+        // Convert tool to action format
+        const action = {
+          type: tool.name,
+          description: tool.description || `Execute ${tool.name}`,
+          inputs: [],
+          outputs: [],
+          inputSchema: {},
+          outputSchema: {}
+        };
+
+        // Extract schema information
+        if (tool.inputSchema) {
+          // Handle Zod schemas
+          if (tool.inputSchema._def && tool.inputSchema._def.shape) {
+            const shape = tool.inputSchema._def.shape();
+            action.inputSchema = {};
+            action.inputs = [];
+            
+            for (const [key, zodType] of Object.entries(shape)) {
+              action.inputs.push(key);
+              
+              // Extract type information from Zod
+              let type = 'string';
+              let description = '';
+              let required = true;
+              
+              if (zodType._def) {
+                // Get base type
+                if (zodType._def.typeName === 'ZodString') type = 'string';
+                else if (zodType._def.typeName === 'ZodNumber') type = 'number';
+                else if (zodType._def.typeName === 'ZodBoolean') type = 'boolean';
+                else if (zodType._def.typeName === 'ZodArray') type = 'array';
+                else if (zodType._def.typeName === 'ZodObject') type = 'object';
+                else if (zodType._def.typeName === 'ZodOptional') {
+                  required = false;
+                  // Get inner type
+                  if (zodType._def.innerType?._def?.typeName === 'ZodString') type = 'string';
+                  else if (zodType._def.innerType?._def?.typeName === 'ZodNumber') type = 'number';
+                  else if (zodType._def.innerType?._def?.typeName === 'ZodBoolean') type = 'boolean';
+                }
+                
+                // Get description if available
+                if (zodType._def.description) {
+                  description = zodType._def.description;
+                }
+              }
+              
+              action.inputSchema[key] = {
+                type,
+                description,
+                required
+              };
+            }
+          } else if (tool.inputSchema.properties) {
+            // JSON Schema format
+            action.inputSchema = tool.inputSchema.properties;
+            action.inputs = Object.keys(tool.inputSchema.properties);
+            
+            // Mark required fields
+            if (tool.inputSchema.required) {
+              for (const key of Object.keys(tool.inputSchema.properties)) {
+                if (action.inputSchema[key]) {
+                  action.inputSchema[key].required = tool.inputSchema.required.includes(key);
+                }
+              }
+            }
+          } else if (typeof tool.inputSchema === 'object') {
+            // Direct object format
+            action.inputSchema = tool.inputSchema;
+            action.inputs = Object.keys(tool.inputSchema);
+          }
+        }
+
+        // For outputs, we typically don't have detailed schemas, so use generic
+        if (tool.outputSchema) {
+          if (tool.outputSchema.properties) {
+            action.outputSchema = tool.outputSchema.properties;
+            action.outputs = Object.keys(tool.outputSchema.properties);
+          } else if (typeof tool.outputSchema === 'object') {
+            action.outputSchema = tool.outputSchema;
+            action.outputs = Object.keys(tool.outputSchema);
+          }
+        } else {
+          // Default outputs
+          action.outputs = ['result', 'success'];
+        }
+
+        actions.push(action);
+        console.log(`Loaded tool schema for: ${toolName}`);
+      } catch (error) {
+        console.warn(`Failed to load tool ${toolName}: ${error.message}`);
+        missingTools.push(toolName);
+      }
+    }
+
+    if (missingTools.length > 0) {
+      console.warn(`Missing tools: ${missingTools.join(', ')}`);
+    }
+
+    return actions;
+  }
+
+  /**
+   * Validate and fix action types against available tools
+   * @param {Array} actions - Array of action objects
+   * @returns {Promise<Array>} Array of validated actions with corrected tool names
+   * @private
+   */
+  async _validateAndFixActionTypes(actions) {
+    // Get ModuleLoader from ResourceManager
+    const moduleLoader = this.resourceManager.get('moduleLoader');
+    if (!moduleLoader) {
+      console.warn('[ProfileManager] ModuleLoader not available, skipping tool validation');
+      return actions;
+    }
+
+    const validatedActions = [];
+    const warnings = [];
+    const suggestions = [];
+
+    for (const action of actions) {
+      // Check if the action type exists as a tool
+      const toolExists = await moduleLoader.hasToolByNameOrAlias(action.type);
+      
+      if (toolExists) {
+        // Tool exists, use as-is
+        validatedActions.push(action);
+      } else {
+        // Tool doesn't exist, try to find a replacement
+        const actualTool = await this._findReplacementTool(moduleLoader, action.type);
+        
+        if (actualTool) {
+          // Found a replacement, update the action
+          const updatedAction = { ...action, type: actualTool };
+          validatedActions.push(updatedAction);
+          warnings.push(`Mapped '${action.type}' -> '${actualTool}'`);
+        } else {
+          // No replacement found, keep original but warn
+          validatedActions.push(action);
+          suggestions.push(`Tool '${action.type}' not available. Check profile configuration.`);
+        }
+      }
+    }
+
+    // Log warnings and suggestions
+    if (warnings.length > 0) {
+      console.log('[ProfileManager] Tool mappings applied:', warnings);
+    }
+    if (suggestions.length > 0) {
+      console.warn('[ProfileManager] Tool validation issues:', suggestions);
+    }
+
+    return validatedActions;
+  }
+
+  /**
+   * Find a replacement tool for an invalid action type
+   * @param {ModuleLoader} moduleLoader - ModuleLoader instance
+   * @param {string} actionType - Invalid action type
+   * @returns {Promise<string|null>} Replacement tool name or null
+   * @private
+   */
+  async _findReplacementTool(moduleLoader, actionType) {
+    // Common mappings based on our analysis
+    const commonMappings = {
+      'execute_command': 'command_executor',
+      'write_file': 'file_write',
+      'read_file': 'file_read', 
+      'create_directory': 'directory_create',
+      'list_directory': 'directory_list',
+      'validate_code': 'validate_javascript'
+    };
+
+    // Check direct mapping first
+    if (commonMappings[actionType]) {
+      const mapped = commonMappings[actionType];
+      const exists = await moduleLoader.hasToolByNameOrAlias(mapped);
+      if (exists) {
+        return mapped;
+      }
+    }
+
+    // Try to find similar tools by name matching
+    const allTools = await moduleLoader.getAllToolNames(false);
+    const actionParts = actionType.split('_');
+    
+    for (const tool of allTools) {
+      // Check if tool contains any of the action parts
+      if (actionParts.some(part => tool.includes(part))) {
+        return tool;
+      }
+    }
+
+    return null;
   }
 }
 

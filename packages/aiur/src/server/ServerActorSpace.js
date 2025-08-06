@@ -131,6 +131,11 @@ export class ServerActorSpace extends ConfigurableActorSpace {
       this.chatAgent.setArtifactActor(this.artifactActor);
     }
     
+    // Give ChatAgent reference to ArtifactAgent for direct notifications
+    if (this.chatAgent && this.artifactAgent) {
+      this.chatAgent.setArtifactAgent(this.artifactAgent);
+    }
+    
     // Give ArtifactActor reference to ArtifactAgent
     if (this.artifactActor && this.artifactAgent) {
       this.artifactActor.setArtifactAgent(this.artifactAgent);

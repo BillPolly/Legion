@@ -1,423 +1,473 @@
 /**
- * PlanExecutionEngine - Handles both planning and execution of tasks
+ * PlanExecutionEngine - Handles actual plan execution using PlanExecutor
  * 
  * This component manages:
- * - Planning phase: Creating detailed execution plans
- * - Execution phase: Running the plan steps
- * - Replanning: Modifying plans during execution
- * - State management throughout the process
+ * - Integration with PlanExecutor for step-by-step execution
+ * - Real-time execution progress and events
+ * - Execution control (pause, resume, cancel)
+ * - Communication with TaskOrchestrator
  * 
- * Future enhancements will include:
- * - Integration with LLM planner module
- * - Real tool execution
- * - Dependency tracking
- * - Error recovery
+ * State machine: idle → executing → paused/complete/failed
  */
 export class PlanExecutionEngine {
   constructor(orchestrator) {
     this.orchestrator = orchestrator;
-    this.state = 'idle'; // 'idle', 'planning', 'executing', 'replanning', 'paused'
-    this.progress = 0;
-    this.currentPlan = null;
-    this.executionPhase = null;
-    this.timers = [];
-    
-    // Future: Will integrate with plan executor module
+    this.state = 'idle'; // 'idle', 'executing', 'paused', 'complete', 'failed'
     this.planExecutor = null;
+    this.currentExecution = null;
+    this.executionResult = null;
   }
   
   /**
-   * Start planning and execution
+   * Execute a validated plan
    */
-  start(taskDescription, context = {}) {
-    this.state = 'planning';
-    this.progress = 0;
+  async executePlan(plan, options = {}) {
+    if (this.state !== 'idle') {
+      throw new Error(`Cannot start execution, current state: ${this.state}`);
+    }
     
-    // Send immediate acknowledgment
-    this.orchestrator.sendToChatAgent({
-      type: 'orchestrator_status',
-      message: `I'll help you build a Shopify clone with all the features you requested. Let me create a detailed plan for this comprehensive e-commerce platform.`,
-      progress: 0
-    });
-    
-    // Then send planning status
-    this.orchestrator.sendToChatAgent({
-      type: 'orchestrator_update',
-      message: 'Analyzing requirements and creating a plan...',
-      progress: 0
-    });
-    
-    // Start planning immediately
-    this.createAndExecutePlan(taskDescription, context);
-  }
-  
-  /**
-   * Create and execute plan
-   */
-  async createAndExecutePlan(taskDescription, context) {
-    if (this.state !== 'planning') return;
-    
-    // Create plan using LLM or mock
-    this.currentPlan = await this.createPlan(taskDescription, context);
-    this.progress = 20;
-    
-    this.orchestrator.sendToChatAgent({
-      type: 'orchestrator_update',
-      message: `Plan created with ${this.currentPlan.steps.length} steps. Beginning execution...`,
-      progress: 20
-    });
+    if (!plan || plan.status !== 'validated') {
+      throw new Error('Plan must be validated before execution');
+    }
     
     this.state = 'executing';
-    this.continueExecution();
-  }
-  
-  /**
-   * Create a plan using LLM or fallback to mock
-   */
-  async createPlan(taskDescription, context) {
-    if (this.orchestrator.llmClient) {
-      return this.createLLMPlan(taskDescription, context);
-    }
-    return this.createMockPlan(taskDescription, context);
-  }
-  
-  /**
-   * Create a plan using LLM
-   */
-  async createLLMPlan(taskDescription, context) {
-    const contextStr = Object.entries(context)
-      .map(([k, v]) => `${k}: ${v}`)
-      .join('\n');
     
-    const prompt = `You are simulating a task planning system. Create a realistic execution plan for this task.
-
-Task: ${taskDescription}
-Context:
-${contextStr || 'No additional context'}
-
-Generate a JSON response with a detailed plan:
-{
-  "steps": [
-    {"name": "Step Name", "description": "What this step does", "estimatedTime": 30},
-    ...
-  ],
-  "totalEstimatedTime": 300,
-  "complexity": "low|medium|high",
-  "requiresUserInput": ["List of decisions that will need user input during execution"]
-}
-
-Make the steps realistic and specific to the task. Include EXACTLY 6 steps.
-Each step should have a clear name and description.
-Make sure at least 2 of the steps will require user input (include these in requiresUserInput).`;
-
+    // Send detailed execution start message
+    this.orchestrator.sendToChatAgent({
+      type: 'orchestrator_status',
+      message: `🚀 Starting Plan Execution\n\n📋 Plan: ${plan.name || 'JavaScript Development Plan'}\n• Total steps: ${plan.steps?.length || 0}\n• Working directory: ${options.workspaceDir || process.cwd()}\n• Continue on error: Yes\n• Max retries: ${options.retries || 2}\n\nInitializing execution environment...`,
+      progress: 0
+    });
+    
     try {
-      const result = await this.orchestrator.llmClient.complete(prompt, 2000);
-      const plan = this.parseJSONResponse(result);
+      // Load required modules before execution
+      await this.loadRequiredModules(plan);
       
-      if (plan && plan.steps) {
-        return {
-          description: taskDescription,
-          context: context,
-          steps: plan.steps.map(s => s.name),
-          stepDetails: plan.steps,
-          currentStep: 0,
-          metadata: {
-            createdAt: new Date().toISOString(),
-            estimatedTime: plan.totalEstimatedTime || plan.steps.length * 30,
-            complexity: plan.complexity || 'medium',
-            requiresUserInput: plan.requiresUserInput || []
-          }
-        };
-      }
-    } catch (error) {
-      console.error('PlanExecutionEngine: LLM plan generation failed:', error);
-    }
-    
-    // Fallback to mock
-    return this.createMockPlan(taskDescription, context);
-  }
-  
-  /**
-   * Create a mock plan for testing
-   */
-  createMockPlan(taskDescription, context) {
-    // Always create exactly 6 steps
-    const steps = [
-      'Initialize Project',
-      'Setup Core Architecture', 
-      'Implement Main Features',
-      'Configure Integrations',
-      'Testing & Quality Assurance',
-      'Final Review & Deployment'
-    ];
-    
-    return {
-      description: taskDescription,
-      context: context,
-      steps: steps,
-      currentStep: 0,
-      metadata: {
-        createdAt: new Date().toISOString(),
-        estimatedTime: steps.length * 2, // 2 seconds per step for mock
-        requiresUserInput: ['Setup Core Architecture', 'Configure Integrations'] // Steps that might need user input
-      }
-    };
-  }
-  
-  /**
-   * Parse JSON from LLM response
-   */
-  parseJSONResponse(text) {
-    try {
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
-      }
-    } catch (e) {
-      console.error('Failed to parse JSON:', e);
-    }
-    return null;
-  }
-  
-  /**
-   * Continue execution
-   */
-  async continueExecution() {
-    if (this.state !== 'executing') return;
-    
-    const step = this.currentPlan.steps[this.currentPlan.currentStep];
-    const stepDetail = this.currentPlan.stepDetails?.[this.currentPlan.currentStep];
-    this.executionPhase = step;
-    
-    // Generate execution narrative if LLM available
-    if (this.orchestrator.llmClient && stepDetail) {
-      await this.simulateStepExecution(step, stepDetail);
-    } else {
-      // Simple execution message
+      // Create PlanExecutor if not already created
+      await this.ensurePlanExecutor();
+      
+      // Set up execution options
+      const executionOptions = {
+        emitProgress: true,
+        stopOnError: false, // Continue on errors to provide better feedback
+        timeout: 300000, // 5 minutes per action
+        retries: 2,
+        workspaceDir: options.workspaceDir || process.cwd(),
+        ...options
+      };
+      
+      // Set up event listeners for real-time progress
+      this.setupExecutionEventListeners();
+      
+      // Execute the plan
       this.orchestrator.sendToChatAgent({
         type: 'orchestrator_update',
-        message: `Executing step ${this.currentPlan.currentStep + 1}/${this.currentPlan.steps.length}: ${step}...`,
-        progress: this.progress
+        message: 'Executing plan steps...',
+        progress: 10
       });
-    }
-    
-    // Check if this step needs user input
-    const needsInput = await this.checkForUserInput(step);
-    if (needsInput) {
-      return; // Wait for user response
-    }
-    
-    // Send thought update about step completion
-    await this.sendStepCompletionThought(step, this.currentPlan.currentStep);
-    
-    // Immediately proceed to next step (no timeout)
-    this.currentPlan.currentStep++;
-    this.progress = Math.min(95, this.progress + Math.floor(75 / this.currentPlan.steps.length));
-    
-    if (this.currentPlan.currentStep < this.currentPlan.steps.length) {
-      // Brief delay to allow UI to update, then continue
-      setTimeout(() => {
-        if (this.state === 'executing') {
-          this.continueExecution();
-        }
-      }, 100); // Very short delay just for UI updates
-    } else {
-      this.complete();
+      
+      const result = await this.planExecutor.executePlan(plan, executionOptions);
+      this.executionResult = result;
+      
+      // Handle execution completion
+      if (result.success) {
+        this.handleExecutionSuccess(result);
+      } else {
+        this.handleExecutionFailure(result);
+      }
+      
+    } catch (error) {
+      this.handleExecutionError(error);
+    } finally {
+      // Clean up event listeners
+      this.cleanupExecutionEventListeners();
     }
   }
   
   /**
-   * Send thought update about step completion
+   * Load required modules based on plan metadata
    */
-  async sendStepCompletionThought(stepName, completedStepIndex) {
-    if (!this.orchestrator.llmClient) {
-      // Simple fallback thought
-      this.orchestrator.sendThoughtToUser(`✅ Completed step ${completedStepIndex + 1}: ${stepName}`);
+  async loadRequiredModules(plan) {
+    // Check if we have module loader
+    const moduleLoader = this.orchestrator.moduleLoader;
+    if (!moduleLoader) {
+      this.orchestrator.sendToChatAgent({
+        type: 'orchestrator_update',
+        message: 'Warning: No module loader available. Some tools may not work.',
+        progress: 5
+      });
       return;
     }
     
-    const stepDetail = this.currentPlan.stepDetails?.[completedStepIndex];
-    const prompt = `You just completed a step in a complex task. Generate a thoughtful progress update.
-
-Completed Step: ${stepName} (Step ${completedStepIndex + 1} of 6)
-Step Description: ${stepDetail?.description || stepName}
-Overall Task: ${this.currentPlan.description}
-Progress: ${this.progress}%
-
-Generate a brief, conversational thought that shows:
-1. What was accomplished in this step
-2. How it contributes to the overall goal
-3. Brief hint about what's coming next (if not the last step)
-
-Keep it to 1-2 sentences. Sound like you're actually doing the work and making progress.
-Start with an appropriate emoji (✅ for completion, 🔧 for technical work, 📋 for planning, etc.)`;
-
-    try {
-      const thought = await this.orchestrator.llmClient.complete(prompt, 300);
-      this.orchestrator.sendThoughtToUser(thought.trim());
-    } catch (error) {
-      console.error('PlanExecutionEngine: Failed to generate step completion thought:', error);
-      // Fallback to simple thought
-      this.orchestrator.sendThoughtToUser(`✅ Completed step ${completedStepIndex + 1}: ${stepName}`);
-    }
-  }
-  
-  /**
-   * Simulate step execution with LLM
-   */
-  async simulateStepExecution(stepName, stepDetail) {
-    const prompt = `You are simulating the execution of a task step. Generate a realistic progress update.
-
-Current Step: ${stepName}
-Step Description: ${stepDetail?.description || stepName}
-Step Number: ${this.currentPlan.currentStep + 1} of ${this.currentPlan.steps.length}
-
-Generate a conversational status update that sounds like the system is actually doing the work.
-Be specific about what's happening. Include technical details if relevant.
-Keep it to 1-2 sentences.`;
-
-    try {
-      const update = await this.orchestrator.llmClient.complete(prompt, 200);
-      this.orchestrator.sendToChatAgent({
-        type: 'orchestrator_update',
-        message: update.trim(),
-        progress: this.progress
-      });
-    } catch (error) {
-      // Fallback to simple message
-      this.orchestrator.sendToChatAgent({
-        type: 'orchestrator_update',
-        message: `Executing: ${stepName}...`,
-        progress: this.progress
-      });
-    }
-  }
-  
-  /**
-   * Check if current step needs user input
-   */
-  async checkForUserInput(step) {
-    // Use LLM to decide if this step needs user input
-    if (this.orchestrator.llmClient) {
-      return this.checkForUserInputWithLLM(step);
-    }
+    // Get required modules from plan metadata or profile
+    let requiredModules = [];
     
-    // Fallback: No LLM available, don't ask for input
-    return false;
-  }
-  
-  /**
-   * Use LLM to decide if user input is needed
-   */
-  async checkForUserInputWithLLM(step) {
-    const stepIndex = this.currentPlan.currentStep;
-    const stepDetail = this.currentPlan.stepDetails?.[stepIndex];
-    
-    const prompt = `You are simulating task execution. Decide if this step needs user input.
-
-Current Step: ${step} (Step ${stepIndex + 1} of 6)
-Step Description: ${stepDetail?.description || step}
-Task: ${this.currentPlan.description}
-
-During complex task execution, you sometimes need to ask the user for decisions or clarifications.
-This should feel realistic - about 30-40% of steps need some user input.
-
-Respond with JSON:
-{
-  "needsInput": true/false,
-  "question": "Your question for the user (if needsInput is true)",
-  "reason": "Why you need input or why you don't"
-}
-
-Be realistic about when input is actually needed for this type of step.`;
-
-    try {
-      const result = await this.orchestrator.llmClient.complete(prompt, 500);
-      const decision = this.parseJSONResponse(result);
-      
-      if (decision && decision.needsInput) {
-        this.requestUserInput(decision.question || this.generateQuestionForStep(step));
-        return true;
+    // Check plan metadata for profile info
+    if (plan.metadata?.profile) {
+      // For javascript-development profile, we know the required modules
+      if (plan.metadata.profile === 'javascript-development') {
+        requiredModules = ['file', 'command-executor', 'node-runner', 'jester', 'js-generator', 'code-analysis'];
       }
-      
-      return false;
-    } catch (error) {
-      console.error('PlanExecutionEngine: LLM input check failed:', error);
-      // No fallback - just continue without user input
-      return false;
-    }
-  }
-  
-  /**
-   * Generate a question based on the step
-   */
-  generateQuestionForStep(step) {
-    const stepLower = step.toLowerCase();
-    
-    if (stepLower.includes('architecture')) {
-      return 'Would you prefer a microservices architecture or a monolithic approach for easier deployment?';
-    } else if (stepLower.includes('integration')) {
-      return 'Which payment provider would you like to integrate: Stripe, PayPal, or both?';
-    } else if (stepLower.includes('database')) {
-      return 'What database would you prefer: PostgreSQL for relational data or MongoDB for flexibility?';
-    } else if (stepLower.includes('frontend')) {
-      return 'Which frontend framework should we use: React for flexibility or Next.js for full-stack features?';
     }
     
-    return 'What approach would you prefer for this step?';
-  }
-  
-  /**
-   * Request replanning
-   */
-  requestReplan(modification) {
-    this.state = 'replanning';
-    this.clearTimers();
+    // Also extract unique tool types from plan actions
+    const toolTypes = new Set();
+    const extractToolTypes = (steps) => {
+      for (const step of steps) {
+        if (step.actions) {
+          for (const action of step.actions) {
+            if (action.type) {
+              // Map action types to module names
+              const moduleMap = {
+                'directory_create': 'file',
+                'file_write': 'file',
+                'file_read': 'file',
+                'directory_list': 'file',
+                'command_executor': 'command-executor',
+                'install_dependencies': 'command-executor',
+                'run_npm_script': 'node-runner',
+                'run_tests': 'jester',
+                'test_with_analytics': 'jester',
+                'generate_javascript_module': 'js-generator',
+                'generate_unit_tests': 'js-generator',
+                'validate_javascript': 'code-analysis',
+                'create_package_json': 'js-generator',
+                'install_packages': 'command-executor'
+              };
+              
+              const moduleName = moduleMap[action.type];
+              if (moduleName) {
+                toolTypes.add(moduleName);
+              }
+            }
+          }
+        }
+        // Recursively check nested steps
+        if (step.steps) {
+          extractToolTypes(step.steps);
+        }
+      }
+    };
+    
+    if (plan.steps) {
+      extractToolTypes(plan.steps);
+    }
+    
+    // Combine required modules
+    const allModules = new Set([...requiredModules, ...toolTypes]);
+    
+    if (allModules.size === 0) {
+      return;
+    }
+    
+    // Check which modules are already loaded
+    const modulesToLoad = [];
+    for (const moduleName of allModules) {
+      try {
+        const existingTools = await moduleLoader.getToolsFromModule(moduleName);
+        if (!existingTools || existingTools.length === 0) {
+          modulesToLoad.push(moduleName);
+        } else {
+          console.log(`PlanExecutionEngine: Module ${moduleName} already loaded with ${existingTools.length} tools`);
+        }
+      } catch (error) {
+        // Module not loaded yet
+        modulesToLoad.push(moduleName);
+      }
+    }
+    
+    if (modulesToLoad.length === 0) {
+      console.log('PlanExecutionEngine: All required modules are already loaded');
+      return;
+    }
     
     this.orchestrator.sendToChatAgent({
       type: 'orchestrator_update',
-      message: 'Updating the plan based on your feedback...',
-      progress: this.progress
+      message: `Loading ${modulesToLoad.length} required modules: ${modulesToLoad.join(', ')}...`,
+      progress: 8
     });
     
-    // Immediate replanning (no timeout)
-    setTimeout(() => {
-      if (this.state === 'replanning') {
-        // Mock: Add a new step to demonstrate replanning
-        const newStep = `Handle modification: ${modification.modification.substring(0, 50)}...`;
-        this.currentPlan.steps.splice(this.currentPlan.currentStep + 1, 0, newStep);
-        
-        this.state = 'executing';
-        
+    // Load each missing module
+    const loadPromises = [];
+    for (const moduleName of modulesToLoad) {
+      console.log(`PlanExecutionEngine: Loading module ${moduleName}`);
+      loadPromises.push(
+        moduleLoader.loadModuleByName(moduleName)
+          .then(() => console.log(`PlanExecutionEngine: Loaded module ${moduleName}`))
+          .catch(err => console.error(`PlanExecutionEngine: Failed to load module ${moduleName}:`, err.message))
+      );
+    }
+    
+    // Wait for all modules to load
+    if (loadPromises.length > 0) {
+      await Promise.all(loadPromises);
+      
+      this.orchestrator.sendToChatAgent({
+        type: 'orchestrator_update', 
+        message: 'All required modules loaded successfully.',
+        progress: 10
+      });
+    }
+  }
+  
+  /**
+   * Ensure PlanExecutor is created and ready
+   */
+  async ensurePlanExecutor() {
+    if (this.planExecutor) {
+      return;
+    }
+    
+    try {
+      // Import PlanExecutor
+      const { PlanExecutor } = await import('@legion/plan-executor');
+      
+      // Use the existing moduleLoader from orchestrator instead of creating a new one
+      // This ensures tools loaded in ChatAgent are available to PlanExecutor
+      if (this.orchestrator.moduleLoader) {
+        console.log('PlanExecutionEngine: Using existing moduleLoader from orchestrator');
+        this.planExecutor = new PlanExecutor({
+          moduleLoader: this.orchestrator.moduleLoader
+        });
+      } else {
+        // Fallback: Create executor using ResourceManager (creates new ModuleLoader)
+        console.warn('PlanExecutionEngine: No moduleLoader in orchestrator, creating new one');
+        this.planExecutor = await PlanExecutor.create(this.orchestrator.resourceManager);
+      }
+      
+      console.log('PlanExecutionEngine: PlanExecutor created successfully');
+      
+    } catch (error) {
+      console.error('PlanExecutionEngine: Failed to create PlanExecutor:', error);
+      throw new Error(`Failed to initialize plan executor: ${error.message}`);
+    }
+  }
+  
+  /**
+   * Set up event listeners for plan execution
+   */
+  setupExecutionEventListeners() {
+    if (!this.planExecutor) return;
+    
+    // Plan-level events
+    this.planExecutor.on('plan:start', (data) => {
+      this.orchestrator.sendToChatAgent({
+        type: 'orchestrator_update',
+        message: `🎯 Started executing plan: ${data.planName}\n\nPlan overview:\n• Total steps: ${data.totalSteps}\n• Estimated time: ${data.estimatedTime || 'calculating...'}\n• Starting execution...`,
+        progress: 15
+      });
+    });
+    
+    this.planExecutor.on('plan:complete', (data) => {
+      this.orchestrator.sendToChatAgent({
+        type: 'orchestrator_update',
+        message: `✅ Plan execution completed successfully!\n\n• Execution time: ${Math.round(data.executionTime / 1000)}s\n• Steps completed: ${data.stepsCompleted}/${data.totalSteps}\n• Status: ${data.status}`,
+        progress: 95
+      });
+    });
+    
+    this.planExecutor.on('plan:error', (data) => {
+      this.orchestrator.sendToChatAgent({
+        type: 'orchestrator_update',
+        message: `❌ Plan execution error:\n${data.error}\n\nTroubleshooting:\n• Check error details above\n• Verify required tools are available\n• Ensure file paths are correct`,
+        progress: null
+      });
+    });
+    
+    // Step-level events with detailed updates
+    this.planExecutor.on('step:start', (data) => {
+      const stepNumber = data.stepIndex !== undefined ? data.stepIndex + 1 : '?';
+      const totalSteps = data.totalSteps || '?';
+      
+      this.orchestrator.sendToChatAgent({
+        type: 'orchestrator_update',
+        message: `📋 Step ${stepNumber}/${totalSteps}: ${data.stepName}\n• Type: ${data.stepType || 'general'}\n• Starting execution...`,
+        progress: null
+      });
+      
+      // Send detailed progress as a thought
+      this.orchestrator.sendThoughtToUser(`🔄 Starting ${data.stepName}: ${data.description || 'Processing...'}`);
+    });
+    
+    this.planExecutor.on('step:complete', (data) => {
+      const stepNumber = data.stepIndex !== undefined ? data.stepIndex + 1 : '?';
+      const executionTime = data.executionTime ? ` in ${Math.round(data.executionTime / 1000)}s` : '';
+      
+      this.orchestrator.sendThoughtToUser(`✅ Step ${stepNumber} completed${executionTime}: ${data.stepName}`);
+      
+      // Update progress
+      if (data.totalSteps && data.stepsCompleted) {
+        const progressPercentage = Math.round((data.stepsCompleted / data.totalSteps) * 100);
         this.orchestrator.sendToChatAgent({
           type: 'orchestrator_update',
-          message: 'Plan updated. Continuing with the modified approach...',
-          progress: this.progress
+          message: `Progress: ${data.stepsCompleted}/${data.totalSteps} steps completed (${progressPercentage}%)`,
+          progress: 15 + (progressPercentage * 0.8)
         });
-        
-        this.continueExecution();
       }
-    }, 100); // Very brief delay for UI updates
+    });
+    
+    this.planExecutor.on('step:error', (data) => {
+      const stepNumber = data.stepIndex !== undefined ? data.stepIndex + 1 : '?';
+      
+      this.orchestrator.sendThoughtToUser(`❌ Step ${stepNumber} failed: ${data.stepName} - ${data.error}`);
+      
+      // Also send as status update for critical errors
+      this.orchestrator.sendToChatAgent({
+        type: 'orchestrator_update',
+        message: `❌ Step ${stepNumber} failed: ${data.stepName}\n\nError: ${data.error}\n\nThe plan execution will continue with remaining steps if possible.`,
+        progress: null
+      });
+    });
+    
+    // Action-level events for granular updates
+    this.planExecutor.on('action:start', (data) => {
+      const actionDesc = data.description || `${data.actionType} operation`;
+      this.orchestrator.sendThoughtToUser(`⚡ Executing: ${actionDesc}`);
+    });
+    
+    this.planExecutor.on('action:complete', (data) => {
+      if (data.result) {
+        let resultMessage = '';
+        if (data.result.message) {
+          resultMessage = `: ${data.result.message}`;
+        } else if (data.result.success !== undefined) {
+          resultMessage = data.result.success ? ' successfully' : ' with errors';
+        }
+        
+        this.orchestrator.sendThoughtToUser(`✓ Completed ${data.actionType}${resultMessage}`);
+      }
+    });
+    
+    this.planExecutor.on('action:error', (data) => {
+      this.orchestrator.sendThoughtToUser(`✗ Failed ${data.actionType}: ${data.error}`);
+    });
+    
+    // Tool execution events
+    this.planExecutor.on('tool:execute', (data) => {
+      this.orchestrator.sendThoughtToUser(`🔧 Using tool: ${data.toolName} - ${data.functionName || 'execute'}`);
+    });
+    
+    // Retry events
+    this.planExecutor.on('action:retry', (data) => {
+      this.orchestrator.sendThoughtToUser(`🔄 Retrying ${data.actionType} (attempt ${data.attempt}/${data.maxRetries})`);
+    });
   }
   
   /**
-   * Request information from user (called by engine when needed)
+   * Clean up event listeners
    */
-  requestUserInput(question) {
-    this.pause();
-    this.orchestrator.interactionHandler.startClarification([{
-      key: 'engineRequest',
-      question: question
-    }]);
+  cleanupExecutionEventListeners() {
+    if (this.planExecutor) {
+      this.planExecutor.removeAllListeners('plan:start');
+      this.planExecutor.removeAllListeners('plan:complete');
+      this.planExecutor.removeAllListeners('plan:error'); 
+      this.planExecutor.removeAllListeners('step:start');
+      this.planExecutor.removeAllListeners('step:complete');
+      this.planExecutor.removeAllListeners('step:error');
+      this.planExecutor.removeAllListeners('action:start');
+      this.planExecutor.removeAllListeners('action:complete');
+      this.planExecutor.removeAllListeners('action:error');
+      this.planExecutor.removeAllListeners('tool:execute');
+      this.planExecutor.removeAllListeners('action:retry');
+    }
   }
   
   /**
-   * Pause execution
+   * Handle successful execution
+   */
+  handleExecutionSuccess(result) {
+    this.state = 'complete';
+    
+    let summary = `🎉 Plan execution completed successfully!`;
+    summary += `\n\n📊 Execution Summary:`;
+    summary += `\n• ${result.completedSteps.length} steps completed`;
+    summary += `\n• ${result.failedSteps.length} steps failed`;
+    summary += `\n• ${result.skippedSteps.length} steps skipped`;
+    summary += `\n• Total execution time: ${Math.round(result.statistics.executionTime / 1000)}s`;
+    
+    if (result.failedSteps.length > 0) {
+      summary += `\n\n⚠️ Failed steps: ${result.failedSteps.join(', ')}`;
+    }
+    
+    this.orchestrator.sendToChatAgent({
+      type: 'orchestrator_complete',
+      message: summary,
+      success: true,
+      wasActive: true,
+      taskSummary: {
+        description: 'Plan execution',
+        completedSteps: result.completedSteps.length,
+        failedSteps: result.failedSteps.length,
+        executionTime: result.statistics.executionTime
+      }
+    });
+    
+    this.state = 'idle';
+  }
+  
+  /**
+   * Handle failed execution
+   */
+  handleExecutionFailure(result) {
+    this.state = 'failed';
+    
+    let summary = `❌ Plan execution completed with errors`;
+    summary += `\n\n📊 Execution Summary:`;
+    summary += `\n• ${result.completedSteps.length} steps completed`;
+    summary += `\n• ${result.failedSteps.length} steps failed`;
+    summary += `\n• ${result.skippedSteps.length} steps skipped`;
+    summary += `\n• Total execution time: ${Math.round(result.statistics.executionTime / 1000)}s`;
+    
+    if (result.failedSteps.length > 0) {
+      summary += `\n\n❌ Failed steps: ${result.failedSteps.join(', ')}`;
+    }
+    
+    if (result.error) {
+      summary += `\n\n🚨 Error: ${result.error}`;
+    }
+    
+    this.orchestrator.sendToChatAgent({
+      type: 'orchestrator_complete',
+      message: summary,
+      success: false,
+      wasActive: true,
+      taskSummary: {
+        description: 'Plan execution (with errors)',
+        completedSteps: result.completedSteps.length,
+        failedSteps: result.failedSteps.length,
+        executionTime: result.statistics.executionTime,
+        error: result.error
+      }
+    });
+    
+    this.state = 'idle';
+  }
+  
+  /**
+   * Handle execution error (before execution starts)
+   */
+  handleExecutionError(error) {
+    this.state = 'failed';
+    
+    this.orchestrator.sendToChatAgent({
+      type: 'orchestrator_error',
+      message: `Failed to execute plan: ${error.message}`
+    });
+    
+    this.state = 'idle';
+  }
+  
+  /**
+   * Pause execution (if possible)
    */
   pause() {
-    if (this.state === 'executing' || this.state === 'planning') {
-      this.clearTimers();
+    if (this.state === 'executing') {
       this.state = 'paused';
+      // Note: PlanExecutor doesn't support pausing yet, but we track the state
+      this.orchestrator.sendToChatAgent({
+        type: 'orchestrator_status',
+        message: 'Execution pause requested (will pause after current step completes)'
+      });
     }
   }
   
@@ -427,106 +477,60 @@ Be realistic about when input is actually needed for this type of step.`;
   resume() {
     if (this.state === 'paused') {
       this.state = 'executing';
-      this.continueExecution();
+      this.orchestrator.sendToChatAgent({
+        type: 'orchestrator_status',
+        message: 'Resuming execution...'
+      });
     }
   }
   
   /**
-   * Cancel everything
+   * Cancel execution
    */
   cancel() {
-    this.clearTimers();
-    this.state = 'idle';
-    this.progress = 0;
-    this.currentPlan = null;
-    this.executionPhase = null;
+    if (this.state === 'executing' || this.state === 'paused') {
+      this.state = 'idle';
+      this.currentExecution = null;
+      this.executionResult = null;
+      
+      // Clean up event listeners
+      this.cleanupExecutionEventListeners();
+      
+      this.orchestrator.sendToChatAgent({
+        type: 'orchestrator_status',
+        message: 'Plan execution cancelled'
+      });
+    }
   }
   
   /**
-   * Complete the task
-   */
-  complete() {
-    this.state = 'idle';
-    this.progress = 100;
-    
-    const summary = this.generateTaskSummary();
-    
-    this.orchestrator.sendToChatAgent({
-      type: 'orchestrator_complete',
-      message: `Task completed successfully! ${summary}`,
-      success: true,
-      wasActive: true,
-      taskSummary: {
-        description: this.currentPlan.description,
-        stepsCompleted: this.currentPlan.steps.length,
-        duration: this.calculateDuration()
-      }
-    });
-    
-    // Reset
-    this.currentPlan = null;
-    this.executionPhase = null;
-  }
-  
-  /**
-   * Generate task summary
-   */
-  generateTaskSummary() {
-    if (!this.currentPlan) return 'All steps have been executed.';
-    
-    return `Completed ${this.currentPlan.steps.length} steps for "${this.currentPlan.description}".`;
-  }
-  
-  /**
-   * Calculate task duration
-   */
-  calculateDuration() {
-    if (!this.currentPlan || !this.currentPlan.metadata.createdAt) return 'unknown';
-    
-    const start = new Date(this.currentPlan.metadata.createdAt);
-    const duration = Date.now() - start.getTime();
-    return `${Math.round(duration / 1000)} seconds`;
-  }
-  
-  /**
-   * Get current status
+   * Get current execution status
    */
   getStatus() {
-    const phaseInfo = this.getPhaseDescription();
-    const stepInfo = this.currentPlan && this.state === 'executing' 
-      ? ` (Step ${this.currentPlan.currentStep + 1}/${this.currentPlan.steps.length})`
-      : '';
-    
-    return `Current state: ${this.state}, Progress: ${this.progress}%, ${phaseInfo}${stepInfo}`;
-  }
-  
-  /**
-   * Get phase description
-   */
-  getPhaseDescription() {
-    if (this.state === 'planning') return 'creating the plan';
-    if (this.state === 'replanning') return 'updating the plan';
-    if (this.state === 'executing' && this.executionPhase) return `executing ${this.executionPhase}`;
-    if (this.state === 'paused') return 'paused';
-    return 'idle';
-  }
-  
-  /**
-   * Provide context information
-   */
-  provideContext(context) {
-    // Merge with existing context
-    if (this.currentPlan) {
-      this.currentPlan.context = { ...this.currentPlan.context, ...context };
+    switch (this.state) {
+      case 'idle':
+        return 'Ready to execute plans';
+      case 'executing':
+        return 'Executing plan...';
+      case 'paused':
+        return 'Execution paused';
+      case 'complete':
+        return 'Last execution completed successfully';
+      case 'failed':
+        return 'Last execution failed';
+      default:
+        return `Unknown state: ${this.state}`;
     }
-    console.log('PlanExecutionEngine: Received context', context);
   }
   
   /**
-   * Clear all timers
+   * Clear any resources
    */
-  clearTimers() {
-    this.timers.forEach(timer => clearTimeout(timer));
-    this.timers = [];
+  clearResources() {
+    this.cleanupExecutionEventListeners();
+    this.planExecutor = null;
+    this.currentExecution = null;
+    this.executionResult = null;
+    this.state = 'idle';
   }
 }

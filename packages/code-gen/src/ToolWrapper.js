@@ -122,6 +122,129 @@ export class ToolWrapper extends LegionTool {
       throw new Error(result.error);
     }
   }
+
+  /**
+   * Convert to JSON format for ChatAgent compatibility
+   */
+  toJSON() {
+    let inputSchema = { type: 'object', properties: {}, required: [] };
+    
+    // Try to get input schema from wrapped tool
+    if (this.wrappedTool.inputSchema) {
+      if (this.wrappedTool.inputSchema._def) {
+        // It's a Zod schema - convert it
+        inputSchema = this.convertZodToJsonSchema(this.wrappedTool.inputSchema);
+      } else if (typeof this.wrappedTool.inputSchema === 'object' && this.wrappedTool.inputSchema.type) {
+        // It's already a JSON schema
+        inputSchema = this.wrappedTool.inputSchema;
+      }
+    }
+
+    return {
+      name: this.name,
+      description: this.description,
+      inputSchema: inputSchema
+    };
+  }
+
+  /**
+   * Convert Zod schema to JSON Schema format
+   * @private
+   */
+  convertZodToJsonSchema(schema) {
+    if (!schema || !schema._def) {
+      return { type: 'object', properties: {}, required: [] };
+    }
+    
+    const def = schema._def;
+    
+    // Handle ZodObject
+    if (def.typeName === 'ZodObject') {
+      const properties = {};
+      const required = [];
+      
+      for (const [key, value] of Object.entries(def.shape())) {
+        properties[key] = this.convertZodTypeToJsonSchema(value);
+        
+        // Check if field is required (not optional)
+        if (!this.isZodOptional(value)) {
+          required.push(key);
+        }
+      }
+      
+      return {
+        type: 'object',
+        properties,
+        required: required.length > 0 ? required : undefined
+      };
+    }
+    
+    return this.convertZodTypeToJsonSchema(schema);
+  }
+
+  /**
+   * Convert individual Zod type to JSON Schema
+   * @private
+   */
+  convertZodTypeToJsonSchema(zodType) {
+    if (!zodType || !zodType._def) {
+      return { type: 'string' };
+    }
+    
+    const def = zodType._def;
+    const result = {};
+    
+    // Get description if available
+    if (def.description) {
+      result.description = def.description;
+    }
+    
+    switch (def.typeName) {
+      case 'ZodString':
+        result.type = 'string';
+        break;
+      case 'ZodNumber':
+        result.type = 'number';
+        break;
+      case 'ZodBoolean':
+        result.type = 'boolean';
+        break;
+      case 'ZodArray':
+        result.type = 'array';
+        if (def.type) {
+          result.items = this.convertZodTypeToJsonSchema(def.type);
+        }
+        break;
+      case 'ZodObject':
+        return this.convertZodToJsonSchema(zodType);
+      case 'ZodOptional':
+        return this.convertZodTypeToJsonSchema(def.innerType);
+      case 'ZodDefault':
+        const innerResult = this.convertZodTypeToJsonSchema(def.innerType);
+        innerResult.default = def.defaultValue();
+        return innerResult;
+      default:
+        result.type = 'string'; // fallback
+    }
+    
+    return result;
+  }
+
+  /**
+   * Check if a Zod type is optional
+   * @private
+   */
+  isZodOptional(zodType) {
+    if (!zodType._def) return false;
+    
+    // Check for ZodOptional
+    if (zodType._def.typeName === 'ZodOptional') return true;
+    
+    // Check for ZodDefault (also makes field optional)
+    if (zodType._def.typeName === 'ZodDefault') return true;
+    
+    return false;
+  }
 }
 
 /**

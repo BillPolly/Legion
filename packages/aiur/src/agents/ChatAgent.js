@@ -101,6 +101,18 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
     await this.moduleLoader.loadModuleByName('ai-generation');
     await this.moduleLoader.loadModuleByName('file-analysis');
     
+    // Preload common development modules for TaskOrchestrator
+    console.log('ChatAgent: Preloading development modules...');
+    const devModules = ['file', 'command-executor', 'node-runner', 'jester', 'js-generator', 'code-analysis'];
+    for (const moduleName of devModules) {
+      try {
+        await this.moduleLoader.loadModuleByName(moduleName);
+        console.log(`ChatAgent: Loaded ${moduleName}`);
+      } catch (error) {
+        console.warn(`ChatAgent: Failed to load ${moduleName}:`, error.message);
+      }
+    }
+    
     // ArtifactActor will be set by ServerActorSpace
     // Ensure it's initialized if available
     if (this.artifactActor) {
@@ -112,7 +124,8 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
       sessionId: this.sessionId,
       chatAgent: this,
       resourceManager: this.resourceManager,
-      moduleLoader: this.moduleLoader
+      moduleLoader: this.moduleLoader,
+      artifactManager: this.artifactManager
     });
     await this.taskOrchestrator.initialize();
     this.taskOrchestrator.setChatAgent(this);
@@ -526,12 +539,12 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
         // Handle special internal tools
         if (toolCall.name === 'handle_complex_task') {
           // Delegate to orchestrator
-          if (this.taskOrchestrator && this.agentContext) {
+          if (this.taskOrchestrator) {
             this.orchestratorActive = true;
             await this.taskOrchestrator.receive({
               type: 'start_task',
               description: processedInput.task_description,
-              agentContext: this.agentContext
+              agentContext: this  // Pass ChatAgent itself as the agentContext
             });
             result = {
               success: true,
@@ -682,14 +695,35 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
         // Use the toolRegistry Map directly which has all registered tools
         const toolsFromRegistry = Array.from(this.moduleLoader.toolRegistry.values());
         
+        let toolIndex = 0;
         for (const tool of toolsFromRegistry) {
+          toolIndex++;
+          
           // Convert to standard format
           if (tool.toJSON) {
             const toolDef = tool.toJSON();
+            
+            // Validate and fix input schema
+            let inputSchema = toolDef.inputSchema;
+            
+            // Check if this might be tool 25 that's causing issues
+            if (toolIndex === 25 || toolIndex === 26) {
+              console.log(`Tool ${toolIndex}: ${toolDef.name}, schema type: ${inputSchema?.type}, schema:`, JSON.stringify(inputSchema).substring(0, 100));
+            }
+            
+            if (!inputSchema || typeof inputSchema !== 'object') {
+              inputSchema = { type: 'object', properties: {} };
+            } else if (!inputSchema.type) {
+              inputSchema.type = 'object';
+            } else if (inputSchema.type !== 'object') {
+              console.warn(`Tool ${toolDef.name} (index ${toolIndex}) has invalid schema type: ${inputSchema.type}, converting to object`);
+              inputSchema = { type: 'object', properties: inputSchema.properties || {} };
+            }
+            
             tools.push({
               name: toolDef.name,
               description: toolDef.description,
-              input_schema: toolDef.inputSchema
+              input_schema: inputSchema
             });
           } else if (tool.name) {
             tools.push({
@@ -699,6 +733,9 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
             });
           }
         }
+        
+        // Log total tools count
+        console.log(`ChatAgent: Loaded ${tools.length} tools for LLM`);
       }
     } catch (error) {
       console.error('Error getting tools:', error);
@@ -863,6 +900,59 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
   async handleMessage(message) {
     switch (message.type) {
       case 'chat_message':
+        // Check if user is responding to execute plan prompt
+        if (this.taskOrchestrator && this.taskOrchestrator.lastValidatedPlan) {
+          const userMessage = message.content?.toLowerCase() || '';
+          
+          // Check for execution confirmation
+          if (userMessage.includes('yes') || userMessage.includes('execute') || 
+              userMessage.includes('run') || userMessage.includes('start')) {
+            
+            // Execute the last validated plan
+            const plan = this.taskOrchestrator.lastValidatedPlan;
+            this.taskOrchestrator.lastValidatedPlan = null; // Clear it
+            
+            this.orchestratorActive = true; // Reactivate orchestrator
+            
+            await this.taskOrchestrator.receive({
+              type: 'execute_plan',
+              plan: plan,
+              options: {},
+              agentContext: this
+            });
+            
+            return; // Don't process as normal chat
+          } 
+          
+          // Check for rejection
+          if (userMessage.includes('no') || userMessage.includes('not now') || 
+              userMessage.includes('later') || userMessage.includes('cancel')) {
+            
+            this.taskOrchestrator.lastValidatedPlan = null; // Clear it
+            
+            await this.sendToRemote({
+              type: 'chat_response',
+              content: 'Understood. The plan has been saved and you can execute it later using the artifact label.',
+              isComplete: true
+            });
+            
+            return; // Don't process as normal chat
+          }
+          
+          // Check for "show plan" request
+          if (userMessage.includes('show') && userMessage.includes('plan')) {
+            const plan = this.taskOrchestrator.lastValidatedPlan;
+            
+            await this.sendToRemote({
+              type: 'chat_response',
+              content: `Here's the plan structure:\n\n\`\`\`json\n${JSON.stringify(plan, null, 2)}\n\`\`\`\n\nWould you like me to execute this plan now?`,
+              isComplete: true
+            });
+            
+            return; // Don't process as normal chat
+          }
+        }
+        
         // If orchestrator is active, forward the message
         if (this.orchestratorActive && this.taskOrchestrator) {
           await this.taskOrchestrator.receive({
@@ -929,8 +1019,12 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
    * @param {Object} data - Event data
    */
   sendArtifactEventToDebugActor(eventType, data) {
+    console.log(`ChatAgent: sendArtifactEventToDebugActor called with type: ${eventType}`);
+    console.log(`ChatAgent: artifactAgent exists?`, !!this.artifactAgent);
+    
     // Send to artifact agent internally (not through actor protocol)
     if (this.artifactAgent) {
+      console.log(`ChatAgent: Sending ${eventType} to artifactAgent`);
       this.artifactAgent.receive({
         type: eventType,
         eventName: eventType, // For compatibility
@@ -939,6 +1033,8 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
         timestamp: new Date().toISOString()
       });
       console.log(`ChatAgent: Sent ${eventType} event to artifact agent`);
+    } else {
+      console.log(`ChatAgent: No artifactAgent reference, cannot send ${eventType}`);
     }
   }
   
