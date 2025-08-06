@@ -21,42 +21,26 @@ const variableNameSchema = z.string()
   .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, 'Variable name must start with letter or underscore and contain only letters, numbers, and underscores');
 
 const inputVariableNameSchema = z.string()
-  .regex(/^[A-Z_][A-Z0-9_]*$/, 'Input variable name must be uppercase with underscores (e.g., PROJECT_DIR)');
+  .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, 'Input variable name must start with letter or underscore and contain only letters, numbers, and underscores');
 
-// Action schemas for both formats
-const newFormatActionSchema = z.object({
+// Action schema - only the current format
+const actionSchema = z.object({
   id: actionIdSchema,
   toolName: z.string().min(1, 'Action toolName is required'),
   inputs: z.record(z.any()).describe('Input parameters mapped to values or @variables'),
-  outputs: z.record(variableNameSchema).optional().describe('Output fields mapped to variable names'),
+  outputs: z.record(z.any()).optional().describe('Output fields mapped to variable names'),
   description: z.string().optional(),
   status: z.enum(['pending', 'running', 'completed', 'failed', 'skipped']).default('pending').optional(),
   estimatedDuration: z.number().min(0).optional(),
   result: z.any().nullable().optional()
-}).strict();
-
-const legacyFormatActionSchema = z.object({
-  id: actionIdSchema,
-  toolName: z.string().min(1, 'Action toolName is required'),
-  parameters: z.record(z.any()).describe('Legacy parameters object'),
-  description: z.string().optional(),
-  status: z.enum(['pending', 'running', 'completed', 'failed', 'skipped']).default('pending').optional(),
-  estimatedDuration: z.number().min(0).optional(),
-  result: z.any().nullable().optional()
-}).strict();
-
-// Combined action schema that accepts either format
-const actionSchema = z.union([
-  newFormatActionSchema,
-  legacyFormatActionSchema
-]).describe('Action in either new (inputs/outputs) or legacy (parameters) format');
+}).describe('Action with inputs/outputs format');
 
 // Recursive step schema
 const stepSchema = z.lazy(() => z.object({
   id: stepIdSchema,
   name: z.string().optional(),
   description: z.string().optional(),
-  type: z.enum(['setup', 'implementation', 'validation', 'cleanup', 'action', 'group', 'parallel', 'conditional']).optional(),
+  type: z.enum(['setup', 'implementation', 'validation', 'cleanup', 'action', 'group', 'parallel', 'conditional', 'documentation', 'testing', 'deployment']).optional(),
   status: z.enum(['pending', 'running', 'completed', 'failed', 'skipped']).default('pending').optional(),
   dependencies: z.array(z.string()).default([]).optional(),
   inputs: z.array(z.string()).default([]).optional().describe('Variables required by this step'),
@@ -67,7 +51,7 @@ const stepSchema = z.lazy(() => z.object({
   retries: z.number().min(0).max(10).optional(),
   timeout: z.number().min(0).optional(),
   result: z.any().nullable().optional()
-}).strict().refine(
+}).refine(
   (step) => {
     // A step should have either actions OR sub-steps, not both (but can have neither)
     const hasActions = step.actions && step.actions.length > 0;
@@ -86,7 +70,7 @@ const planInputSchema = z.object({
   description: z.string().optional(),
   required: z.boolean().default(true).optional(),
   default: z.any().optional()
-}).strict();
+});
 
 // Main plan schema
 export const PlanSchemaZod = z.object({
@@ -136,7 +120,7 @@ export const PlanSchemaZod = z.object({
   executionOrder: z.array(z.string()).optional().describe('Explicit execution order of step IDs'),
   
   successCriteria: z.array(z.string()).optional().describe('Conditions for plan success')
-}).strict();
+});
 
 /**
  * Validate a plan against the schema
@@ -145,14 +129,74 @@ export const PlanSchemaZod = z.object({
  */
 export function validatePlanSchema(plan) {
   try {
+    // DEBUG: Log the plan structure we're about to validate
+    console.log('🔍 [PLAN SCHEMA DEBUG] Starting schema validation');
+    console.log('🔍 [PLAN SCHEMA DEBUG] Plan keys:', Object.keys(plan || {}));
+    
+    if (plan.steps && plan.steps.length > 0) {
+      console.log('🔍 [PLAN SCHEMA DEBUG] First step keys:', Object.keys(plan.steps[0] || {}));
+      if (plan.steps[0].actions && plan.steps[0].actions.length > 0) {
+        console.log('🔍 [PLAN SCHEMA DEBUG] First action keys:', Object.keys(plan.steps[0].actions[0] || {}));
+        console.log('🔍 [PLAN SCHEMA DEBUG] First action:', JSON.stringify(plan.steps[0].actions[0], null, 2));
+      }
+    }
+    
+    // DEBUG: Check what we're about to parse
+    console.log('🔍 [PLAN SCHEMA DEBUG] About to parse plan with keys:', Object.keys(plan));
+    console.log('🔍 [PLAN SCHEMA DEBUG] Plan string check:');
+    const planStr = JSON.stringify(plan);
+    console.log('   Contains "receive":', planStr.includes('"receive"'));
+    console.log('   Contains "CREATE":', planStr.includes('"CREATE"'));
+    
     const validatedPlan = PlanSchemaZod.parse(plan);
+    console.log('✅ [PLAN SCHEMA DEBUG] Schema validation passed');
     return {
       success: true,
       data: validatedPlan,
       errors: []
     };
   } catch (error) {
+    console.log('❌ [PLAN SCHEMA DEBUG] Schema validation failed');
     if (error instanceof z.ZodError) {
+      // DEBUG: Log detailed error information
+      console.log('🔍 [PLAN SCHEMA DEBUG] Zod errors:');
+      error.errors.forEach((err, i) => {
+        console.log(`  ${i + 1}. Path: ${err.path.join('.')} | Code: ${err.code} | Message: ${err.message}`);
+        if (err.received !== undefined) {
+          console.log(`     Received: ${JSON.stringify(err.received)}`);
+        }
+        // More detailed debugging for union errors
+        if (err.code === 'invalid_union' && err.unionErrors) {
+          console.log(`     Union validation details:`);
+          err.unionErrors.forEach((uerr, ui) => {
+            console.log(`       Option ${ui + 1} errors:`, uerr.errors?.map(e => `${e.path.join('.')}: ${e.message}`).join(', '));
+          });
+        }
+        if (err.expected !== undefined) {
+          console.log(`     Expected: ${JSON.stringify(err.expected)}`);
+        }
+        
+        // DEBUG: Check what object has the unexpected keys
+        if (err.code === 'unrecognized_keys') {
+          const pathParts = err.path;
+          let obj = plan;
+          for (const part of pathParts) {
+            if (obj && obj[part] !== undefined) {
+              obj = obj[part];
+            }
+          }
+          console.log(`     Object at path ${err.path.join('.')}:`, Object.keys(obj || {}));
+          console.log(`     Object type:`, Object.prototype.toString.call(obj));
+          
+          // Check if it's inheriting properties
+          if (obj) {
+            console.log(`     Own properties:`, Object.getOwnPropertyNames(obj));
+            console.log(`     Prototype:`, Object.getPrototypeOf(obj));
+            console.log(`     Constructor:`, obj.constructor?.name);
+          }
+        }
+      });
+      
       return {
         success: false,
         errors: error.errors.map(err => ({
@@ -162,6 +206,7 @@ export function validatePlanSchema(plan) {
         }))
       };
     }
+    console.log('🔍 [PLAN SCHEMA DEBUG] Non-Zod error:', error.message);
     return {
       success: false,
       errors: [{
@@ -174,47 +219,37 @@ export function validatePlanSchema(plan) {
 }
 
 /**
- * Check if a plan uses the new format (inputs/outputs) or legacy format (parameters)
+ * Check if a plan has valid format
  * @param {Object} plan - The plan to check
- * @returns {string} 'new', 'legacy', or 'mixed'
+ * @returns {boolean} true if valid format
  */
 export function detectPlanFormat(plan) {
-  let hasNewFormat = false;
-  let hasLegacyFormat = false;
+  if (!plan || !plan.steps) {
+    return false;
+  }
   
   const checkActions = (actions) => {
-    if (!actions) return;
+    if (!actions) return true;
     
     for (const action of actions) {
-      if ('inputs' in action) {
-        hasNewFormat = true;
-      }
-      if ('parameters' in action) {
-        hasLegacyFormat = true;
+      if (!action.toolName || !action.inputs) {
+        return false;
       }
     }
+    return true;
   };
   
   const checkSteps = (steps) => {
-    if (!steps) return;
+    if (!steps) return true;
     
     for (const step of steps) {
-      checkActions(step.actions);
-      checkSteps(step.steps);
+      if (!checkActions(step.actions)) return false;
+      if (!checkSteps(step.steps)) return false;
     }
+    return true;
   };
   
-  checkSteps(plan.steps);
-  
-  if (hasNewFormat && hasLegacyFormat) {
-    return 'mixed';
-  } else if (hasNewFormat) {
-    return 'new';
-  } else if (hasLegacyFormat) {
-    return 'legacy';
-  }
-  
-  return 'empty';
+  return checkSteps(plan.steps);
 }
 
 /**

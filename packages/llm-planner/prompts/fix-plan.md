@@ -72,11 +72,11 @@ Return a corrected JSON object with this exact structure:
       "id": "step-id",
       "name": "Step Name",
       "description": "Step description", 
-      "type": "setup|implementation|integration|testing|deployment",
+      "type": "setup",
       "dependencies": ["dependent-step-id"],
       "actions": [
         {
-          "type": "exact-action-type-from-allowable-actions",
+          "toolName": "exact-tool-name-from-allowable-actions",
           "inputs": {
             "inputField": "value-or-@variable"
           },
@@ -89,5 +89,24 @@ Return a corrected JSON object with this exact structure:
   ]
 }
 ```
+
+**CRITICAL REQUIREMENTS:**
+- Plan MUST have "id" field (unique identifier)
+- Actions MUST use "toolName" field (NOT "type")
+- Actions MUST have "inputs" object and optional "outputs" object
+- Step "type" MUST be one of: setup, implementation, validation, cleanup, documentation, testing, deployment
+- Plan inputs array: Each object must have "name" field (can be lowercase, uppercase, or mixed case)
+- Input names must start with letter or underscore and contain only letters, numbers, and underscores
+- NO extra fields allowed - schema is strict
+- Follow exact field structure shown above
+
+**CRITICAL JSON FORMATTING - COMMON CAUSE OF VALIDATION FAILURES:**
+🚨 **NEVER use backticks (`) - they create invalid JSON that cannot be parsed!**
+- ❌ WRONG: "content": `multiline string`
+- ✅ CORRECT: "content": "multiline\\nstring"
+- Use \\n for line breaks in strings
+- Use double quotes only, never single quotes
+- For multiline content like README files, use escaped newlines: "Line 1\\nLine 2\\nLine 3"
+- Backticks inside strings are fine: "Run `npm install` to setup"
 
 Fix ALL the validation errors listed above and return a corrected plan that will pass validation.

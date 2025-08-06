@@ -37,6 +37,7 @@ export class ArtifactAgent extends Actor {
     if (payload && typeof payload === 'object') {
       switch (payload.type) {
         case 'get_artifacts':
+        case 'request_artifacts':  // Handle both message types
           this.sendArtifacts();
           break;
           

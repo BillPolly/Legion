@@ -8,9 +8,7 @@
 import { Module, Tool, ToolResult } from '@legion/module-loader';
 import { GenericPlanner } from './GenericPlanner.js';
 import { FlowValidator } from './FlowValidator.js';
-import { Plan } from './models/Plan.js';
-import { PlanStep } from './models/PlanStep.js';
-import { PlanAction } from './models/PlanAction.js';
+// Models removed - LLM generates complete plans directly
 
 /**
  * Tool for creating plans using LLM
@@ -83,7 +81,7 @@ class CreatePlanTool extends Tool {
       const plan = await planner.createPlan(params);
       
       return ToolResult.success({
-        plan: plan.toJSON()
+        plan: plan
       });
     } catch (error) {
       return ToolResult.failure(error.message);
@@ -126,8 +124,8 @@ class ValidatePlanTool extends Tool {
     try {
       const validator = new FlowValidator({ strictMode: params.strictMode });
       
-      // Create plan from JSON, which properly creates PlanStep instances
-      const plan = Plan.fromJSON(params.plan);
+      // Use plan directly - no conversion needed
+      const plan = params.plan;
       
       const validation = validator.validate(plan);
       const report = validator.generateFlowReport(plan);

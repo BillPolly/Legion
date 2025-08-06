@@ -706,19 +706,13 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
             // Validate and fix input schema
             let inputSchema = toolDef.inputSchema;
             
-            // Check if this might be tool 25 that's causing issues
-            if (toolIndex === 25 || toolIndex === 26) {
-              console.log(`Tool ${toolIndex}: ${toolDef.name}, schema type: ${inputSchema?.type}, schema:`, JSON.stringify(inputSchema).substring(0, 100));
+            // Log tools to debug schema issues
+            if (toolIndex <= 10 || toolIndex === 25 || toolIndex === 26) {
+              console.log(`Tool ${toolIndex}: ${toolDef.name}, schema type: ${inputSchema?.type}, schema:`, JSON.stringify(inputSchema).substring(0, 200));
             }
             
-            if (!inputSchema || typeof inputSchema !== 'object') {
-              inputSchema = { type: 'object', properties: {} };
-            } else if (!inputSchema.type) {
-              inputSchema.type = 'object';
-            } else if (inputSchema.type !== 'object') {
-              console.warn(`Tool ${toolDef.name} (index ${toolIndex}) has invalid schema type: ${inputSchema.type}, converting to object`);
-              inputSchema = { type: 'object', properties: inputSchema.properties || {} };
-            }
+            // Clean and validate the schema for JSON Schema 2020-12 compliance
+            inputSchema = this._cleanSchemaForAnthropic(inputSchema, toolDef.name, toolIndex);
             
             tools.push({
               name: toolDef.name,
@@ -726,10 +720,17 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
               input_schema: inputSchema
             });
           } else if (tool.name) {
+            // Clean schema for tools without toJSON method
+            const cleanedSchema = this._cleanSchemaForAnthropic(
+              tool.inputSchema, 
+              tool.name, 
+              toolIndex
+            );
+            
             tools.push({
               name: tool.name,
               description: tool.description || 'No description',
-              input_schema: tool.inputSchema || { type: 'object', properties: {} }
+              input_schema: cleanedSchema
             });
           }
         }
@@ -744,6 +745,89 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
     return tools;
   }
   
+  /**
+   * Clean schema for Anthropic's JSON Schema 2020-12 requirements
+   * @private
+   */
+  _cleanSchemaForAnthropic(inputSchema, toolName, toolIndex) {
+    // Default empty schema
+    const defaultSchema = { type: 'object', properties: {}, required: [] };
+    
+    if (!inputSchema || typeof inputSchema !== 'object') {
+      return defaultSchema;
+    }
+    
+    // Create a clean schema with only valid JSON Schema properties
+    const cleanSchema = {
+      type: inputSchema.type || 'object'
+    };
+    
+    // Only add properties if type is object
+    if (cleanSchema.type === 'object') {
+      cleanSchema.properties = {};
+      cleanSchema.required = [];
+      
+      // Clean properties if they exist
+      if (inputSchema.properties && typeof inputSchema.properties === 'object') {
+        for (const [key, prop] of Object.entries(inputSchema.properties)) {
+          // Skip invalid property definitions
+          if (!prop || typeof prop !== 'object') {
+            console.warn(`Tool ${toolName} (${toolIndex}): Skipping invalid property ${key}`);
+            continue;
+          }
+          
+          // Create clean property definition
+          const cleanProp = {};
+          
+          // Only include valid JSON Schema keywords
+          if (prop.type) cleanProp.type = prop.type;
+          if (prop.description) cleanProp.description = prop.description;
+          if (prop.enum) cleanProp.enum = prop.enum;
+          if (prop.default !== undefined) cleanProp.default = prop.default;
+          if (prop.minimum !== undefined) cleanProp.minimum = prop.minimum;
+          if (prop.maximum !== undefined) cleanProp.maximum = prop.maximum;
+          if (prop.minLength !== undefined) cleanProp.minLength = prop.minLength;
+          if (prop.maxLength !== undefined) cleanProp.maxLength = prop.maxLength;
+          if (prop.pattern) cleanProp.pattern = prop.pattern;
+          if (prop.items) cleanProp.items = prop.items;
+          
+          // Handle nested properties for objects
+          if (cleanProp.type === 'object' && prop.properties) {
+            cleanProp.properties = {};
+            for (const [nestedKey, nestedProp] of Object.entries(prop.properties)) {
+              if (nestedProp && typeof nestedProp === 'object') {
+                cleanProp.properties[nestedKey] = {
+                  type: nestedProp.type || 'string',
+                  description: nestedProp.description
+                };
+              }
+            }
+          }
+          
+          cleanSchema.properties[key] = cleanProp;
+        }
+      }
+      
+      // Handle required fields
+      if (Array.isArray(inputSchema.required)) {
+        cleanSchema.required = inputSchema.required.filter(field => 
+          typeof field === 'string' && cleanSchema.properties[field]
+        );
+      }
+      
+      // Remove required array if empty
+      if (cleanSchema.required.length === 0) {
+        delete cleanSchema.required;
+      }
+    } else if (cleanSchema.type !== 'object') {
+      // For non-object types, convert to object wrapper
+      console.warn(`Tool ${toolName} (${toolIndex}) has non-object schema type: ${cleanSchema.type}, converting to object`);
+      return defaultSchema;
+    }
+    
+    return cleanSchema;
+  }
+
   /**
    * Build messages array from conversation history
    */

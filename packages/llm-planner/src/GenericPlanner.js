@@ -2,11 +2,13 @@
  * GenericPlanner - LLM-based planner that creates hierarchical plans using user-provided actions
  */
 
-import { Plan } from './models/Plan.js';
-import { PlanStep } from './models/PlanStep.js';
-import { PlanAction } from './models/PlanAction.js';
+// Not using these anymore - they mangle the LLM output!
+// import { Plan } from './models/Plan.js';
+// import { PlanStep } from './models/PlanStep.js';
+// import { PlanAction } from './models/PlanAction.js';
 import { PromptTemplateLoader } from './PromptTemplateLoader.js';
 import { ValidatePlanTool } from '@legion/plan-executor-tools';
+import JSON5 from 'json5';
 
 class GenericPlanner {
   constructor(options = {}) {
@@ -99,19 +101,23 @@ class GenericPlanner {
         const plan = this._parsePlanResponse(response, allowableActions, inputs, requiredOutputs, initialInputData);
         
         console.log('\n📋 Generated Plan JSON:');
-        console.log(JSON.stringify(plan.toJSON(), null, 2));
+        console.log(JSON.stringify(plan, null, 2));
         
         // Validate the plan using plan-executor-tools
-        const validationResult = await this._validatePlanWithTools(plan.toJSON());
+        const validationResult = await this._validatePlanWithTools(plan);
         
         if (validationResult.valid) {
           console.log('✅ Plan validation successful');
           return plan;
         } else {
           console.log('❌ Plan validation failed:', validationResult.errors);
-          lastFailedPlan = plan.toJSON();
-          const validationError = new Error(`Plan validation failed: ${validationResult.errors.join(', ')}`);
-          validationError.validationErrors = validationResult.errors;
+          lastFailedPlan = plan;
+          // If there are no specific errors but validation failed, add a generic message
+          const errorMessages = validationResult.errors && validationResult.errors.length > 0 
+            ? validationResult.errors 
+            : ['Plan validation failed (check warnings or tool availability)'];
+          const validationError = new Error(`Plan validation failed: ${errorMessages.join(', ')}`);
+          validationError.validationErrors = errorMessages;
           throw validationError;
         }
       } catch (error) {
@@ -145,7 +151,7 @@ class GenericPlanner {
       });
       
       return {
-        valid: result.valid,
+        valid: result.errors?.length === 0, // Valid if no errors, regardless of result.valid flag
         errors: result.errors || []
       };
     } catch (error) {
@@ -323,235 +329,122 @@ Generate a complete, executable plan.`;
       throw new Error(`Failed to parse JSON response: ${error.message}`);
     }
 
-    // Create the plan with allowable actions context and proper inputs/outputs
-    const plan = new Plan({
-      name: planData.name,
-      description: planData.description,
-      steps: planData.steps || [],
-      inputs: inputs,
-      requiredOutputs: requiredOutputs
-    }, allowableActions);
+    // Don't use Plan class - it mangles the data!
+    // Just return the LLM's plan with some defaults
+    const plan = {
+      ...planData,
+      id: planData.id || `plan-${Date.now().toString(36)}-${Math.random().toString(36).substr(2, 9)}`,
+      inputs: planData.inputs || inputs.map(name => ({
+        name: name.toUpperCase().replace(/[^A-Z0-9_]/g, '_'),
+        type: 'string',
+        required: true
+      })),
+      requiredOutputs: planData.requiredOutputs || requiredOutputs,
+      status: planData.status || 'draft',
+      version: planData.version || '1.0.0',
+      metadata: {
+        createdAt: new Date().toISOString(),
+        createdBy: 'GenericPlanner',
+        complexity: 'medium',
+        ...planData.metadata
+      }
+    };
 
     return plan;
   }
 
-  /**
-   * Validate the generated plan
-   * @private
-   */
-  _validatePlan(plan, inputs, requiredOutputs, allowableActions, initialInputData = {}) {
-    const errors = [];
-
-    // Validate plan structure
-    const structureValidation = plan.validate();
-    if (!structureValidation.isValid) {
-      errors.push(...structureValidation.errors);
-    }
-
-    // Validate all actions use allowable action types
-    const allActions = this._getAllActionsFromPlan(plan);
-    const allowableTypes = allowableActions.map(a => a.type);
-    
-    for (const action of allActions) {
-      const actionType = action.toolName || action.type;
-      if (!allowableTypes.includes(actionType)) {
-        errors.push(`Invalid action type: ${actionType}`);
-      }
-    }
-
-    // Validate input/output flow with initial input data
-    const flowValidation = this._validatePlanInputOutputFlow(plan, initialInputData);
-    if (!flowValidation.isValid) {
-      errors.push(...flowValidation.errors);
-    }
-
-    // Check required outputs are produced
-    const availableOutputs = flowValidation.availableOutputs || [];
-    const missingOutputs = requiredOutputs.filter(output => !availableOutputs.includes(output));
-    if (missingOutputs.length > 0) {
-      errors.push(`Missing required outputs: ${missingOutputs.join(', ')}`);
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
-  }
-
-  /**
-   * Validate plan input/output flow with initial input data
-   * @private
-   */
-  _validatePlanInputOutputFlow(plan, initialInputData = {}) {
-    const errors = [];
-    const warnings = [];
-    
-    // Track all available outputs (starting with plan inputs + initial input data)
-    const availableOutputs = [...plan.inputs, ...Object.keys(initialInputData)];
-    
-    // Check each step in execution order
-    const executionOrder = plan.executionOrder.length > 0 ? plan.executionOrder : plan.generateExecutionOrder();
-    
-    for (const stepId of executionOrder) {
-      const step = plan.getStep(stepId);
-      if (!step) continue;
-      
-      // Validate step inputs
-      const stepInputValidation = step.validateInputs(availableOutputs);
-      if (!stepInputValidation.isValid) {
-        errors.push(`Step '${step.name}' (${stepId}) missing required inputs: ${stepInputValidation.missingInputs.join(', ')}`);
-      }
-      
-      // Add step outputs to available outputs
-      const stepOutputs = step.getOutputs();
-      for (const output of stepOutputs) {
-        if (!availableOutputs.includes(output)) {
-          availableOutputs.push(output);
-        }
-      }
-    }
-    
-    return {
-      isValid: errors.length === 0,
-      errors,
-      warnings,
-      availableOutputs
-    };
-  }
-
-  /**
-   * Get all actions from the plan recursively
-   * @private
-   */
-  _getAllActionsFromPlan(plan) {
-    const allActions = [];
-    
-    for (const step of plan.steps) {
-      allActions.push(...step.getAllActions());
-    }
-    
-    return allActions;
-  }
+  // All validation is now done by ValidatePlanTool - no need for these methods
 
   /**
    * Parse JSON response from LLM
    * @private
    */
   _parseJSONResponse(responseText) {
-    // Step 1: Extract JSON from code blocks
-    const extracted = this._extractJsonFromCodeBlocks(responseText);
+    // Step 1: Clean up the response - remove markdown blocks and extra text
+    const cleaned = this._cleanLLMResponse(responseText);
     
-    // Step 2: Try parsing with multiple strategies
-    const parseStrategies = [
-      () => JSON.parse(extracted),
-      () => this._parseWithJSON5(extracted),
-      () => JSON.parse(responseText), // Try original text
-      () => this._parseWithJSON5(responseText)
-    ];
+    // Log the full cleaned response with chevrons (no truncation)
+    console.log('\n>>>>' + cleaned + '<<<<\n');
     
-    for (let i = 0; i < parseStrategies.length; i++) {
+    // Step 2: Try parsing with JSON5 (handles most edge cases)
+    try {
+      return JSON5.parse(cleaned);
+    } catch (error) {
+      console.log(`❌ JSON5 parse failed: ${error.message}`);
+      
+      // Try with original text as fallback
       try {
-        const result = parseStrategies[i]();
-        if (i > 0) {
-          console.log(`✅ JSON parsed successfully using strategy ${i + 1}`);
-        }
-        return result;
-      } catch (error) {
-        console.log(`❌ Parse strategy ${i + 1} failed: ${error.message}`);
+        return JSON5.parse(responseText);
+      } catch (fallbackError) {
+        console.log(`❌ JSON5 fallback parse failed: ${fallbackError.message}`);
       }
     }
     
-    // All strategies failed - show the extracted content for debugging
-    console.error('🚨 ALL JSON PARSING STRATEGIES FAILED 🚨');
-    console.error('\n📝 EXTRACTED JSON THAT FAILED TO PARSE:');
+    // If all fails, show what we tried to parse
+    console.error('🚨 JSON PARSING FAILED 🚨');
+    console.error('\n📝 CLEANED TEXT THAT FAILED TO PARSE:');
     console.error('='.repeat(60));
-    console.error(extracted);
-    console.error('='.repeat(60));
-    console.error('\n📝 ORIGINAL LLM RESPONSE:');
-    console.error('='.repeat(60));
-    console.error(responseText);
+    console.error(cleaned.substring(0, 1000) + (cleaned.length > 1000 ? '...' : ''));
     console.error('='.repeat(60));
     
-    throw new Error(`Could not parse JSON response with any strategy. See console output above for full details.`);
+    throw new Error(`Could not parse JSON response: ${cleaned.substring(0, 100)}...`);
   }
-
+  
   /**
-   * Extract JSON from code blocks - SIMPLE approach
+   * Clean LLM response by removing markdown and extra text
    * @private
    */
-  _extractJsonFromCodeBlocks(responseText) {
-    const text = responseText.trim();
+  _cleanLLMResponse(responseText) {
+    let text = responseText.trim();
     
-    // Strategy 1: Extract from ```json code blocks
-    const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/i);
-    if (jsonMatch) {
-      return jsonMatch[1].trim();
+    // STEP 1: Strip from the beginning - remove everything up to and including ```json or ```
+    const codeBlockStart = text.match(/```(?:json|JSON|Json)?\s*\n?/);
+    if (codeBlockStart) {
+      const startIndex = text.indexOf(codeBlockStart[0]) + codeBlockStart[0].length;
+      text = text.substring(startIndex);
     }
     
-    // Strategy 2: Extract from any ``` code blocks that look like JSON
-    const codeMatches = text.match(/```[a-zA-Z]*\s*([\s\S]*?)\s*```/g);
-    if (codeMatches) {
-      for (const match of codeMatches) {
-        const content = match.replace(/```[a-zA-Z]*\s*/, '').replace(/\s*```$/, '').trim();
-        if (content.startsWith('{') || content.startsWith('[')) {
-          return content;
-        }
-      }
+    // STEP 2: Strip from the end - remove ``` and everything after
+    const lastTripleBacktick = text.lastIndexOf('```');
+    if (lastTripleBacktick !== -1) {
+      text = text.substring(0, lastTripleBacktick);
     }
     
-    // Strategy 3: Find first complete JSON object or array
+    // STEP 3: Find the JSON boundaries (first { or [ and last } or ])
     const firstBrace = text.indexOf('{');
-    const lastBrace = text.lastIndexOf('}');
-    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-      return text.substring(firstBrace, lastBrace + 1);
-    }
-    
     const firstBracket = text.indexOf('[');
+    const lastBrace = text.lastIndexOf('}');
     const lastBracket = text.lastIndexOf(']');
-    if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
-      return text.substring(firstBracket, lastBracket + 1);
+    
+    // Determine the start position
+    let startPos = 0;
+    if (firstBrace !== -1 && firstBracket !== -1) {
+      startPos = Math.min(firstBrace, firstBracket);
+    } else if (firstBrace !== -1) {
+      startPos = firstBrace;
+    } else if (firstBracket !== -1) {
+      startPos = firstBracket;
     }
     
-    // Return original text if nothing found
-    return text;
+    // Determine the end position
+    let endPos = text.length;
+    if (lastBrace !== -1 && lastBracket !== -1) {
+      endPos = Math.max(lastBrace, lastBracket) + 1;
+    } else if (lastBrace !== -1) {
+      endPos = lastBrace + 1;
+    } else if (lastBracket !== -1) {
+      endPos = lastBracket + 1;
+    }
+    
+    // Extract the JSON part
+    if (startPos < endPos) {
+      text = text.substring(startPos, endPos);
+    }
+    
+    return text.trim();
   }
 
-  /**
-   * Parse with JSON5 for more robust parsing
-   * @private
-   */
-  _parseWithJSON5(jsonText) {
-    // Simple JSON5-like parsing without the library
-    // Handle basic JSON5 features that LLMs commonly generate
-    let cleaned = jsonText.trim();
-    
-    // Remove comments
-    cleaned = cleaned.replace(/\/\/.*$/gm, '');
-    cleaned = cleaned.replace(/\/\*[\s\S]*?\*\//g, '');
-    
-    // Fix trailing commas
-    cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1');
-    
-    // Fix unquoted property names (basic cases)
-    cleaned = cleaned.replace(/([{,]\s*)([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, '$1"$2":');
-    
-    // Fix single quotes
-    cleaned = cleaned.replace(/'([^'\\]*(\\.[^'\\]*)*)'/g, '"$1"');
-    
-    // Handle template literals by converting to strings
-    cleaned = cleaned.replace(/`([^`\\]*(\\.[^`\\]*)*)`/g, (match, content) => {
-      // Basic escaping for JSON
-      const escaped = content
-        .replace(/\\/g, '\\\\')
-        .replace(/"/g, '\\"')
-        .replace(/\n/g, '\\n')
-        .replace(/\r/g, '\\r')
-        .replace(/\t/g, '\\t');
-      return `"${escaped}"`;
-    });
-    
-    return JSON.parse(cleaned);
-  }
+
 }
 
 export { GenericPlanner };

@@ -1,6 +1,6 @@
 {
-  "name": "javascript-development",
-  "toolName": "javascript_development_planner",
+  "name": "javascript-development-dynamic",
+  "toolName": "javascript_development_dynamic_planner",
   "description": "Comprehensive JavaScript development planner with dynamic tool loading",
   "requiredModules": [
     "file",

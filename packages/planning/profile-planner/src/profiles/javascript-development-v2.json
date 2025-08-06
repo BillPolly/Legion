@@ -1,6 +1,6 @@
 {
   "name": "javascript-development-v2",
-  "toolName": "javascript_development_planner",
+  "toolName": "javascript_development_v2_planner",
   "description": "Comprehensive JavaScript development planner with file operations, command execution, GitHub integration, and deployment",
   "requiredModules": [
     "file",

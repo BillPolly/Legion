@@ -181,7 +181,7 @@ export class ProfilePlannerTool extends Tool {
         profile: profileName,
         profileDescription: profile.description,
         requiredModules: profile.requiredModules || [],
-        plan: plan.toJSON(),
+        plan: plan,
         planId: plan.id || `plan_${Date.now()}`,
         createdAt: new Date().toISOString(),
         note: profile.requiredModules?.length > 0 ? 

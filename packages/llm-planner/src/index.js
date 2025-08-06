@@ -4,10 +4,8 @@
  * Generic LLM-based planning component with input/output flow validation
  */
 
-// Models - Core data structures for plans
-export { Plan } from './models/Plan.js';
-export { PlanStep } from './models/PlanStep.js';
-export { PlanAction } from './models/PlanAction.js';
+// Models removed - they were mangling the LLM output!
+// The LLM generates complete plans directly now
 
 // Main planner - Generic planner that takes description and allowable actions
 export { GenericPlanner } from './GenericPlanner.js';

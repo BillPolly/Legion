@@ -462,7 +462,7 @@ Respond with JSON only:
         artifact.content = artifactDef.content;
         artifact.size = artifactDef.content.length;
         artifact.exists = true;
-        artifact.preview = this.generatePreview(artifactDef.content, artifact.type);
+        artifact.preview = this.artifactDetector.generatePreview(artifactDef.content, artifact.type);
         artifact.metadata.isContent = true;
       }
       

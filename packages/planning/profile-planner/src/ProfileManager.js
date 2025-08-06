@@ -45,7 +45,10 @@ class ProfileManager {
     
     try {
       const files = await fs.readdir(profilesDir);
-      const profileFiles = files.filter(file => file.endsWith('.json'));
+      const profileFiles = files.filter(file => 
+        file.endsWith('.json') && 
+        file !== 'profile-schema.json' // Exclude the schema file
+      );
 
       // Sort to prioritize verified profiles
       profileFiles.sort((a, b) => {
@@ -116,7 +119,7 @@ class ProfileManager {
       name: profile.name,
       description: profile.description,
       requiredModules: profile.requiredModules || [],
-      actionCount: profile.allowableActions?.length || 0
+      actionCount: profile.allowableActions?.length || profile.allowedTools?.length || 0
     }));
   }
 
@@ -318,22 +321,37 @@ class ProfileManager {
       errors.push('requiredModules must be an array');
     }
 
-    if (!profile.allowableActions || !Array.isArray(profile.allowableActions)) {
-      errors.push('allowableActions must be an array and is required');
-    } else {
-      for (let i = 0; i < profile.allowableActions.length; i++) {
-        const action = profile.allowableActions[i];
-        if (!action.type || typeof action.type !== 'string') {
-          errors.push(`allowableActions[${i}] must have a string type`);
+    // Accept either allowableActions (full definitions) or allowedTools (tool names)
+    if (!profile.allowableActions && !profile.allowedTools) {
+      errors.push('Profile must have either allowableActions or allowedTools array');
+    } else if (profile.allowableActions) {
+      if (!Array.isArray(profile.allowableActions)) {
+        errors.push('allowableActions must be an array');
+      } else {
+        for (let i = 0; i < profile.allowableActions.length; i++) {
+          const action = profile.allowableActions[i];
+          if (!action.type || typeof action.type !== 'string') {
+            errors.push(`allowableActions[${i}] must have a string type`);
+          }
+          if (!action.description || typeof action.description !== 'string') {
+            errors.push(`allowableActions[${i}] must have a string description`);
+          }
+          if (!action.inputs || typeof action.inputs !== 'object') {
+            errors.push(`allowableActions[${i}] must have inputs object`);
+          }
+          if (!action.outputs || typeof action.outputs !== 'object') {
+            errors.push(`allowableActions[${i}] must have outputs object`);
+          }
         }
-        if (!action.description || typeof action.description !== 'string') {
-          errors.push(`allowableActions[${i}] must have a string description`);
-        }
-        if (!action.inputs || typeof action.inputs !== 'object') {
-          errors.push(`allowableActions[${i}] must have inputs object`);
-        }
-        if (!action.outputs || typeof action.outputs !== 'object') {
-          errors.push(`allowableActions[${i}] must have outputs object`);
+      }
+    } else if (profile.allowedTools) {
+      if (!Array.isArray(profile.allowedTools)) {
+        errors.push('allowedTools must be an array');
+      } else {
+        for (let i = 0; i < profile.allowedTools.length; i++) {
+          if (typeof profile.allowedTools[i] !== 'string') {
+            errors.push(`allowedTools[${i}] must be a string`);
+          }
         }
       }
     }

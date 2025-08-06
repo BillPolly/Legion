@@ -115,7 +115,7 @@ export class ProfileTool extends Tool {
         profile: this.profile.name,
         profileDescription: this.profile.description,
         requiredModules: this.profile.requiredModules || [],
-        plan: plan.toJSON(),
+        plan: plan,
         planId: plan.id || `plan_${Date.now()}`,
         createdAt: new Date().toISOString(),
         note: this.profile.requiredModules?.length > 0 ? 

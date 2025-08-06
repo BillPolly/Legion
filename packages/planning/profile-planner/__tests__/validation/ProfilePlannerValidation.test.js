@@ -203,10 +203,11 @@ describe('ProfilePlanner Validation Integration', () => {
   test('should handle validation of real profile-generated plan', async () => {
     // Get a profile tool from the module
     const tools = profilePlannerModule.getTools();
-    const profileTool = tools.find(tool => tool.name === 'javascript_dev');
+    const profileTool = tools.find(tool => tool.name === 'javascript_dev_planner');
     
     if (!profileTool) {
-      console.warn('javascript_dev profile tool not found, skipping test');
+      console.warn('javascript_dev_planner profile tool not found, skipping test');
+      console.log('Available tools:', tools.map(t => t.name));
       return;
     }
 
@@ -224,7 +225,7 @@ describe('ProfilePlanner Validation Integration', () => {
           description: 'Initialize JavaScript project',
           actions: [
             {
-              type: 'file_write',
+              toolName: 'file_write',
               inputs: {
                 filepath: 'package.json',
                 content: '{"name": "test-project", "version": "1.0.0"}'
@@ -241,7 +242,7 @@ describe('ProfilePlanner Validation Integration', () => {
           description: 'Create main JavaScript file',
           actions: [
             {
-              type: 'file_write',
+              toolName: 'file_write',
               inputs: {
                 filepath: 'index.js',
                 content: 'console.log("Hello, World!");'

@@ -232,6 +232,8 @@ export class PlanInspectorTool extends Tool {
       }
     }
 
+    // Final validation: isValid should be true if there are no errors
+    isValid = errors.length === 0;
     return { isValid, errors };
   }
 
@@ -242,8 +244,10 @@ export class PlanInspectorTool extends Tool {
   async _validateAction(action, stepId, actionIndex) {
     const errors = [];
     
-    if (!action.type) {
-      errors.push(`Step ${stepId} action ${actionIndex}: missing 'type' field`);
+    // Check for either 'toolName' (new format) or 'type' (legacy format)
+    const toolName = action.toolName || action.type;
+    if (!toolName) {
+      errors.push(`Step ${stepId} action ${actionIndex}: missing 'toolName' or 'type' field`);
       return errors;
     }
 
@@ -255,18 +259,17 @@ export class PlanInspectorTool extends Tool {
 
     // Try to get the tool to check its schema
     try {
-      const tool = await this.moduleLoader.getToolByNameOrAlias(action.type);
+      const tool = await this.moduleLoader.getToolByNameOrAlias(toolName);
       if (!tool) {
-        errors.push(`Step ${stepId} action ${actionIndex}: tool '${action.type}' not found`);
+        errors.push(`Step ${stepId} action ${actionIndex}: tool '${toolName}' not found`);
         return errors;
       }
 
       // Get tool schema for comprehensive validation
-      const toolSchema = await this.moduleLoader.getToolSchema(action.type);
+      const toolSchema = await this.moduleLoader.getToolSchema(toolName);
       
-      // Validate based on format (new inputs/outputs vs legacy parameters)
+      // Validate inputs/outputs
       if (action.inputs !== undefined) {
-        // New format validation
         const inputErrors = await this._validateInputsFormat(action, toolSchema, stepId, actionIndex);
         errors.push(...inputErrors);
         
@@ -274,20 +277,12 @@ export class PlanInspectorTool extends Tool {
           const outputErrors = this._validateOutputsFormat(action.outputs, toolSchema, stepId, actionIndex);
           errors.push(...outputErrors);
         }
-      } else if (action.parameters !== undefined) {
-        // Legacy format validation
-        if (tool.inputSchema) {
-          const paramErrors = this._validateParameters(action.parameters, tool.inputSchema, action.type);
-          paramErrors.forEach(err => {
-            errors.push(`Step ${stepId} action ${actionIndex}: ${err}`);
-          });
-        }
       } else {
-        errors.push(`Step ${stepId} action ${actionIndex}: action must have either 'inputs' or 'parameters'`);
+        errors.push(`Step ${stepId} action ${actionIndex}: action must have 'inputs' field`);
       }
     } catch (error) {
       // If we can't load the tool, note it as an error
-      errors.push(`Step ${stepId} action ${actionIndex}: unable to validate tool '${action.type}' - ${error.message}`);
+      errors.push(`Step ${stepId} action ${actionIndex}: unable to validate tool '${toolName}' - ${error.message}`);
     }
 
     return errors;
@@ -579,7 +574,10 @@ export class PlanInspectorTool extends Tool {
       steps.forEach(step => {
         if (step.actions) {
           step.actions.forEach(action => {
-            requiredTools.add(action.type);
+            const toolName = action.toolName || action.type;
+            if (toolName) {
+              requiredTools.add(toolName);
+            }
           });
         }
         if (step.steps) {
@@ -860,8 +858,8 @@ export class PlanInspectorTool extends Tool {
         inputNames.add(input.name);
 
         // Validate name format (should be valid variable name)
-        if (!/^[A-Z_][A-Z0-9_]*$/.test(input.name)) {
-          errors.push(`Input name '${input.name}' should be uppercase with underscores (e.g., ARTIFACT_DIR)`);
+        if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(input.name)) {
+          errors.push(`Input name '${input.name}' must start with letter or underscore and contain only letters, numbers, and underscores`);
         }
       }
 

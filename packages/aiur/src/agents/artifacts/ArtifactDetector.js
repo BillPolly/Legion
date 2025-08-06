@@ -214,11 +214,12 @@ export class ArtifactDetector {
       // Determine artifact type
       const artifactType = this.getArtifactTypeFromExtension(extension);
       
-      // Generate preview if possible
+      // Generate preview and read content if possible
       let preview = null;
+      let content = null;
       if (exists && stats.isFile() && stats.size < 10000) { // Only preview small files
         try {
-          const content = await fs.readFile(filePath, 'utf8');
+          content = await fs.readFile(filePath, 'utf8');
           preview = this.generatePreview(content, artifactType);
         } catch (error) {
           console.debug(`Could not read file for preview: ${filePath}`);
@@ -234,6 +235,7 @@ export class ArtifactDetector {
         directory: dirName,
         size: stats ? stats.size : 0,
         exists,
+        content,
         preview,
         createdBy: toolName,
         createdAt: new Date().toISOString(),

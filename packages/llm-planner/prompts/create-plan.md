@@ -22,7 +22,7 @@ You MUST only use these exact action types:
 
 ### Plan Structure
 - Create a hierarchical plan with steps that can contain sub-steps or actions
-- Each step should have a name, description, and type (setup, implementation, integration, testing, deployment)
+- Each step should have a name, description, and type (setup, implementation, validation, cleanup, documentation, testing, deployment)
 - Steps can have dependencies on other steps (use step IDs)
 - At the leaf level, use only the allowable actions listed above
 - Each action must use the exact type and input/output signature from the allowable actions
@@ -35,7 +35,7 @@ You MUST only use these exact action types:
       "id": "step-1",
       "actions": [
         {
-          "type": "directory_create",
+          "toolName": "directory_create",
           "inputs": {
             "dirpath": "/project"
           },
@@ -51,7 +51,7 @@ You MUST only use these exact action types:
       "dependencies": ["step-1"],
       "actions": [
         {
-          "type": "file_write",
+          "toolName": "file_write",
           "inputs": {
             "filepath": "@projectDir/README.md",
             "content": "Project documentation"
@@ -95,10 +95,10 @@ Return a JSON object with this exact structure:
   "status": "draft",
   "inputs": [
     {
-      "name": "INPUT_NAME",
+      "name": "user_request",
       "type": "string", 
       "required": true,
-      "description": "Input description"
+      "description": "User's requirements for the task"
     }
   ],
   "steps": [
@@ -106,7 +106,7 @@ Return a JSON object with this exact structure:
       "id": "step-id",
       "name": "Step Name",
       "description": "Step description",
-      "type": "setup|implementation|validation|cleanup",
+      "type": "setup",
       "dependencies": ["dependent-step-id"],
       "steps": [
         // Optional sub-steps (same structure)
@@ -129,8 +129,21 @@ Return a JSON object with this exact structure:
 
 **CRITICAL REQUIREMENTS:**
 - Plan MUST have "id" field (unique identifier)
-- Step "type" MUST be one of: setup, implementation, validation, cleanup
-- Input names MUST be UPPERCASE (e.g., "INPUT_NAME")
+- Actions MUST use "toolName" field (NOT "type")
+- Actions MUST have "inputs" object and optional "outputs" object
+- Step "type" MUST be one of: setup, implementation, validation, cleanup, documentation, testing, deployment
+- Plan inputs array: Each object must have "name" field (can be lowercase, uppercase, or mixed case)
+- Input names must start with letter or underscore and contain only letters, numbers, and underscores
+- NO extra fields allowed - schema is strict
 - Follow exact field structure shown above
+
+**CRITICAL JSON FORMATTING - THIS BREAKS PARSING:**
+🚨 **NEVER use backticks (`) - they create invalid JSON that cannot be parsed!**
+- ❌ WRONG: "content": `multiline string`
+- ✅ CORRECT: "content": "multiline\\nstring"
+- Use \\n for line breaks in strings
+- Use double quotes only, never single quotes
+- For multiline content like README files, use escaped newlines: "Line 1\\nLine 2\\nLine 3"
+- Backticks inside strings are fine: "Run `npm install` to setup"
 
 Generate a complete, executable plan that produces all required outputs and follows proper variable flow.
