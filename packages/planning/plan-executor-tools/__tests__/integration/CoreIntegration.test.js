@@ -34,33 +34,8 @@ describe('Core Integration', () => {
     expect(module.executor).toBeInstanceOf(PlanExecutor);
     
     const tools = module.getTools();
-    expect(tools).toHaveLength(6);
+    expect(tools).toHaveLength(7);
   });
 
-  test('should be able to execute a simple plan validation', async () => {
-    module = await PlanExecutorToolsModule.create(resourceManager);
-    
-    const planInspectorTool = module.getTool('plan_inspect');
-    expect(planInspectorTool).toBeDefined();
-    
-    // Test with a minimal valid plan
-    const testPlan = {
-      id: 'test-plan',
-      name: 'Test Plan',
-      steps: [
-        {
-          id: 'step1',
-          name: 'Test Step',
-          actions: [
-            { type: 'test_action', parameters: {} }
-          ]
-        }
-      ]
-    };
-    
-    const result = await planInspectorTool.execute({ plan: testPlan });
-    expect(result.success).toBe(true);
-    expect(result.validation).toBeDefined();
-    expect(result.validation.isValid).toBe(true);
-  });
+  // Note: Plan validation testing is covered in dedicated validation test files
 });

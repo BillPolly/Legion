@@ -4,6 +4,7 @@
 
 import { PlanExecutorTool } from './PlanExecutorTool.js';
 import { PlanInspectorTool } from './PlanInspectorTool.js';
+import { ValidatePlanTool } from './ValidatePlanTool.js';
 import { PlanToMarkdownTool } from './PlanToMarkdownTool.js';
 import { ExecutionStatusTool } from './ExecutionStatusTool.js';
 import { StepExecutorTool } from './StepExecutorTool.js';
@@ -52,6 +53,7 @@ export class PlanExecutorToolsModule {
     // Tool instances will be created after executor is available
     this.planExecutorTool = null;
     this.planInspectorTool = null;
+    this.validatePlanTool = null;
     this.planToMarkdownTool = null;
     this.executionStatusTool = null;
     this.stepExecutorTool = null;
@@ -63,6 +65,7 @@ export class PlanExecutorToolsModule {
     // Create tool instances - all tools extend Legion Tool
     this.planExecutorTool = new PlanExecutorTool(this.executor, this);
     this.planInspectorTool = new PlanInspectorTool(this.moduleLoader);
+    this.validatePlanTool = new ValidatePlanTool(this.moduleLoader);
     this.planToMarkdownTool = new PlanToMarkdownTool();
     this.executionStatusTool = new ExecutionStatusTool({ 
       executionContextRegistry: () => this.executionContext 
@@ -100,6 +103,7 @@ export class PlanExecutorToolsModule {
       this.stepExecutorTool,      // plan_execute_step
       this.debugExecutorTool,     // plan_debug
       this.planInspectorTool,     // plan_inspect
+      this.validatePlanTool,      // plan_validate
       this.planToMarkdownTool,    // plan_to_markdown
       this.executionStatusTool    // plan_status
     ];

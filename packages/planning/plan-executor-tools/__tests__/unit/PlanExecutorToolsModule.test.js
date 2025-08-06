@@ -29,11 +29,11 @@ describe('PlanExecutorToolsModule', () => {
       expect(module.executor).toBeDefined();
     });
 
-    test('should have all 6 tools', async () => {
+    test('should have all 7 tools', async () => {
       module = await PlanExecutorToolsModule.create(resourceManager);
       
       const tools = module.getTools();
-      expect(tools).toHaveLength(6);
+      expect(tools).toHaveLength(7);
       
       const toolNames = tools.map(tool => tool.name);
       expect(toolNames).toEqual([
@@ -41,6 +41,7 @@ describe('PlanExecutorToolsModule', () => {
         'plan_execute_step', 
         'plan_debug',
         'plan_inspect',
+        'plan_validate',
         'plan_to_markdown',
         'plan_status'
       ]);

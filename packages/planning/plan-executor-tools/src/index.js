@@ -35,6 +35,7 @@ export { PlanExecutorToolsModule } from './PlanExecutorToolsModule.js';
 // Individual tool exports
 export { PlanExecutorTool } from './PlanExecutorTool.js';
 export { PlanInspectorTool } from './PlanInspectorTool.js';
+export { ValidatePlanTool } from './ValidatePlanTool.js';
 export { PlanToMarkdownTool } from './PlanToMarkdownTool.js';
 export { ExecutionStatusTool } from './ExecutionStatusTool.js';
 export { StepExecutorTool } from './StepExecutorTool.js';

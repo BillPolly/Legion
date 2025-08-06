@@ -4,6 +4,7 @@
 
 import { Tool } from '@legion/module-loader';
 import { z } from 'zod';
+import { validatePlanSchema, formatSchemaErrors } from './schemas/PlanSchemaZod.js';
 
 export class PlanInspectorTool extends Tool {
   constructor(moduleLoaderOrRegistry = null) {
@@ -69,6 +70,7 @@ export class PlanInspectorTool extends Tool {
           validation,
           dependencyAnalysis: null,
           toolAnalysis: null,
+          variableFlowAnalysis: null,
           complexity: { totalSteps: 0, totalActions: 0, maxDepth: 0, dependencyCount: 0, complexityScore: 0 },
           hierarchicalStructure: null,
           analysis: {
@@ -76,6 +78,13 @@ export class PlanInspectorTool extends Tool {
             timestamp: new Date().toISOString()
           }
         };
+      }
+      
+      // Perform variable flow analysis (always do this for new format plans)
+      const variableFlowAnalysis = await this._analyzeVariableFlow(plan);
+      if (variableFlowAnalysis.errors.length > 0) {
+        validation.errors.push(...variableFlowAnalysis.errors);
+        validation.isValid = false;
       }
       
       // Perform dependency analysis if requested
@@ -92,16 +101,16 @@ export class PlanInspectorTool extends Tool {
       // Perform tool analysis if requested
       let toolAnalysis = null;
       if (validateTools) {
-        toolAnalysis = this._analyzeTools(plan);
+        toolAnalysis = await this._analyzeTools(plan);
         
-        // If tools are not available, add validation errors
-        if (this.planToolRegistry) {
+        // If we have a moduleLoader, check tool availability
+        if (this.moduleLoader) {
           const unavailableTools = [];
-          Object.entries(toolAnalysis.toolStatus).forEach(([toolName, status]) => {
+          for (const [toolName, status] of Object.entries(toolAnalysis.toolStatus)) {
             if (status.available === false) {
               unavailableTools.push(toolName);
             }
-          });
+          }
           
           if (unavailableTools.length > 0) {
             validation.errors.push(`Required tools not available: ${unavailableTools.join(', ')}`);
@@ -124,6 +133,7 @@ export class PlanInspectorTool extends Tool {
         validation,
         dependencyAnalysis,
         toolAnalysis,
+        variableFlowAnalysis,
         complexity,
         hierarchicalStructure,
         analysis: {
@@ -144,7 +154,34 @@ export class PlanInspectorTool extends Tool {
     const errors = [];
     let isValid = true;
 
-    // Check required fields
+    // STEP 1: Validate against schema first
+    try {
+      const schemaValidation = validatePlanSchema(plan);
+      
+      if (!schemaValidation.success) {
+        // Add schema errors
+        const formattedErrors = formatSchemaErrors(schemaValidation.errors);
+        errors.push(...formattedErrors.split('\n').filter(e => e.trim() && !e.includes('Plan Schema Validation Errors:')));
+        isValid = false;
+        
+        // If critical schema errors, return early
+        const hasCriticalError = schemaValidation.errors.some(err => 
+          err.path.includes('id') || 
+          err.path.includes('name') || 
+          err.path === 'steps'
+        );
+        
+        if (hasCriticalError) {
+          return { isValid, errors, schemaValidation: schemaValidation.errors };
+        }
+      }
+    } catch (schemaError) {
+      // If schema validation fails to load, continue with basic validation
+      errors.push(`Schema validation unavailable: ${schemaError.message}`);
+    }
+
+    // STEP 2: Continue with existing validation
+    // Check required fields (redundant but kept for backward compatibility)
     if (!plan.id) {
       errors.push('Plan missing required id field');
       isValid = false;
@@ -212,7 +249,7 @@ export class PlanInspectorTool extends Tool {
 
     // Check if we have a moduleLoader to validate against
     if (!this.moduleLoader) {
-      // Can't validate parameters without moduleLoader
+      // Can't validate without moduleLoader
       return errors;
     }
 
@@ -224,16 +261,32 @@ export class PlanInspectorTool extends Tool {
         return errors;
       }
 
-      // Check if tool has inputSchema for validation
-      if (tool.inputSchema && action.parameters) {
-        // Validate parameters against schema
-        const paramErrors = this._validateParameters(action.parameters, tool.inputSchema, action.type);
-        paramErrors.forEach(err => {
-          errors.push(`Step ${stepId} action ${actionIndex}: ${err}`);
-        });
+      // Get tool schema for comprehensive validation
+      const toolSchema = await this.moduleLoader.getToolSchema(action.type);
+      
+      // Validate based on format (new inputs/outputs vs legacy parameters)
+      if (action.inputs !== undefined) {
+        // New format validation
+        const inputErrors = await this._validateInputsFormat(action, toolSchema, stepId, actionIndex);
+        errors.push(...inputErrors);
+        
+        if (action.outputs !== undefined) {
+          const outputErrors = this._validateOutputsFormat(action.outputs, toolSchema, stepId, actionIndex);
+          errors.push(...outputErrors);
+        }
+      } else if (action.parameters !== undefined) {
+        // Legacy format validation
+        if (tool.inputSchema) {
+          const paramErrors = this._validateParameters(action.parameters, tool.inputSchema, action.type);
+          paramErrors.forEach(err => {
+            errors.push(`Step ${stepId} action ${actionIndex}: ${err}`);
+          });
+        }
+      } else {
+        errors.push(`Step ${stepId} action ${actionIndex}: action must have either 'inputs' or 'parameters'`);
       }
     } catch (error) {
-      // If we can't load the tool, note it as a warning
+      // If we can't load the tool, note it as an error
       errors.push(`Step ${stepId} action ${actionIndex}: unable to validate tool '${action.type}' - ${error.message}`);
     }
 
@@ -283,6 +336,117 @@ export class PlanInspectorTool extends Tool {
         } else if (schema.additionalProperties === false) {
           errors.push(`${toolName} has unknown parameter: ${key}`);
         }
+      }
+    }
+    
+    return errors;
+  }
+
+  /**
+   * Validate inputs format (new system)
+   * @private
+   */
+  async _validateInputsFormat(action, toolSchema, stepId, actionIndex) {
+    const errors = [];
+    
+    if (!action.inputs || typeof action.inputs !== 'object') {
+      errors.push(`Step ${stepId} action ${actionIndex}: 'inputs' must be an object`);
+      return errors;
+    }
+
+    // If we have a schema, validate input field names
+    if (toolSchema && toolSchema.inputSchema) {
+      const schema = toolSchema.inputSchema;
+      
+      // Handle Zod schema
+      if (schema._def && schema._def.shape) {
+        const shape = schema._def.shape();
+        const schemaFields = Object.keys(shape);
+        
+        // Check each input field exists in schema
+        for (const fieldName of Object.keys(action.inputs)) {
+          if (!schemaFields.includes(fieldName)) {
+            errors.push(`Step ${stepId} action ${actionIndex}: input field '${fieldName}' not found in tool schema. Available fields: ${schemaFields.join(', ')}`);
+          }
+        }
+        
+        // Check required fields (if we can determine them)
+        // Note: This is complex with Zod, so we'll do basic validation
+      } else if (schema.properties) {
+        // JSON Schema format
+        const schemaFields = Object.keys(schema.properties);
+        const required = schema.required || [];
+        
+        // Check each input field exists in schema
+        for (const fieldName of Object.keys(action.inputs)) {
+          if (!schemaFields.includes(fieldName)) {
+            errors.push(`Step ${stepId} action ${actionIndex}: input field '${fieldName}' not found in tool schema. Available fields: ${schemaFields.join(', ')}`);
+          }
+        }
+        
+        // Check required fields are provided (considering @variables will be resolved at runtime)
+        for (const requiredField of required) {
+          if (!(requiredField in action.inputs)) {
+            errors.push(`Step ${stepId} action ${actionIndex}: missing required input field '${requiredField}'`);
+          }
+        }
+      }
+    }
+    
+    // Validate @variable syntax in input values
+    for (const [field, value] of Object.entries(action.inputs)) {
+      if (typeof value === 'string' && value.startsWith('@')) {
+        // This is a variable reference - will be validated in variable flow analysis
+        // Just check syntax here
+        const varName = value.substring(1).split('/')[0];
+        if (!varName || !/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(varName)) {
+          errors.push(`Step ${stepId} action ${actionIndex}: invalid variable reference '${value}' in field '${field}'`);
+        }
+      }
+    }
+    
+    return errors;
+  }
+
+  /**
+   * Validate outputs format (new system)
+   * @private
+   */
+  _validateOutputsFormat(outputs, toolSchema, stepId, actionIndex) {
+    const errors = [];
+    
+    if (!outputs || typeof outputs !== 'object') {
+      errors.push(`Step ${stepId} action ${actionIndex}: 'outputs' must be an object`);
+      return errors;
+    }
+
+    // Validate output field names against tool schema if available
+    if (toolSchema && toolSchema.outputSchema) {
+      const schema = toolSchema.outputSchema;
+      let availableFields = [];
+      
+      // Extract available output fields from schema
+      if (schema.properties) {
+        availableFields = Object.keys(schema.properties);
+      } else if (schema._def && schema._def.shape) {
+        const shape = schema._def.shape();
+        availableFields = Object.keys(shape);
+      }
+      
+      // Check each output mapping references a valid tool output field
+      for (const outputField of Object.keys(outputs)) {
+        if (availableFields.length > 0 && !availableFields.includes(outputField)) {
+          errors.push(`Step ${stepId} action ${actionIndex}: output field '${outputField}' not found in tool output schema. Available fields: ${availableFields.join(', ')}`);
+        }
+      }
+    }
+    
+    // Validate variable names in outputs
+    for (const [field, varName] of Object.entries(outputs)) {
+      if (typeof varName !== 'string') {
+        errors.push(`Step ${stepId} action ${actionIndex}: output variable name for field '${field}' must be a string`);
+      } else if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(varName)) {
+        errors.push(`Step ${stepId} action ${actionIndex}: invalid variable name '${varName}' for output field '${field}'. Variable names must start with a letter or underscore and contain only letters, numbers, and underscores`);
       }
     }
     
@@ -406,7 +570,7 @@ export class PlanInspectorTool extends Tool {
     });
   }
 
-  _analyzeTools(plan) {
+  async _analyzeTools(plan) {
     const requiredTools = new Set();
     const toolStatus = {};
 
@@ -426,23 +590,30 @@ export class PlanInspectorTool extends Tool {
 
     collectTools(plan.steps);
 
-    // Check tool availability using the plan tool registry if available
-    Array.from(requiredTools).forEach(toolName => {
-      if (this.planToolRegistry) {
-        // Actually check if the tool exists
+    // Check tool availability using moduleLoader if available
+    for (const toolName of requiredTools) {
+      if (this.moduleLoader) {
+        // Check if the tool exists using moduleLoader
+        const tool = await this.moduleLoader.getToolByNameOrAlias(toolName);
+        toolStatus[toolName] = {
+          available: tool !== null,
+          module: tool ? 'loaded' : 'not found'
+        };
+      } else if (this.planToolRegistry) {
+        // Fallback to legacy registry
         const toolExists = this.planToolRegistry.hasTool(toolName);
         toolStatus[toolName] = {
           available: toolExists,
           module: toolExists ? 'loaded' : 'not found'
         };
       } else {
-        // No registry available, can't verify
+        // No way to verify
         toolStatus[toolName] = {
           available: 'unknown',
           module: 'unknown'
         };
       }
-    });
+    }
 
     return {
       requiredTools: Array.from(requiredTools),
@@ -527,6 +698,135 @@ export class PlanInspectorTool extends Tool {
       }
     });
     return allSteps;
+  }
+
+  /**
+   * Analyze variable flow throughout the plan
+   * @private
+   */
+  async _analyzeVariableFlow(plan) {
+    const errors = [];
+    const warnings = [];
+    const variableDefinitions = new Map(); // Map of variable name to step/action where defined
+    const variableUsage = new Map(); // Map of variable name to array of step/action where used
+    const executionOrder = [];
+    
+    // Build execution order considering dependencies
+    const buildExecutionOrder = (steps, visited = new Set()) => {
+      steps.forEach(step => {
+        if (visited.has(step.id)) return;
+        
+        // Process dependencies first
+        if (step.dependencies) {
+          step.dependencies.forEach(depId => {
+            const depStep = this._findStepById(depId, plan.steps);
+            if (depStep && !visited.has(depId)) {
+              buildExecutionOrder([depStep], visited);
+            }
+          });
+        }
+        
+        visited.add(step.id);
+        executionOrder.push(step);
+        
+        // Process sub-steps
+        if (step.steps) {
+          buildExecutionOrder(step.steps, visited);
+        }
+      });
+    };
+    
+    buildExecutionOrder(plan.steps);
+    
+    // Track variables as we process steps in execution order
+    const availableVariables = new Set();
+    
+    // Add plan inputs as available variables if they exist
+    if (plan.inputs && Array.isArray(plan.inputs)) {
+      plan.inputs.forEach(input => {
+        if (input.name) {
+          availableVariables.add(input.name);
+          variableDefinitions.set(input.name, 'plan.inputs');
+        }
+      });
+    }
+    
+    // Process each step in execution order
+    for (const step of executionOrder) {
+      if (step.actions) {
+        for (let i = 0; i < step.actions.length; i++) {
+          const action = step.actions[i];
+          const actionRef = `${step.id}.action[${i}]`;
+          
+          // Check inputs for variable usage (new format)
+          if (action.inputs) {
+            for (const [field, value] of Object.entries(action.inputs)) {
+              if (typeof value === 'string' && value.startsWith('@')) {
+                const varName = value.substring(1).split('/')[0];
+                
+                // Track usage
+                if (!variableUsage.has(varName)) {
+                  variableUsage.set(varName, []);
+                }
+                variableUsage.get(varName).push(`${actionRef}.inputs.${field}`);
+                
+                // Check if variable is available
+                if (!availableVariables.has(varName)) {
+                  errors.push(`Step ${step.id} action ${i}: variable '@${varName}' used in field '${field}' is not defined. Available variables: ${Array.from(availableVariables).join(', ') || 'none'}`);
+                }
+              }
+            }
+          }
+          
+          // Check parameters for variable usage (legacy format)
+          if (action.parameters) {
+            for (const [field, value] of Object.entries(action.parameters)) {
+              if (typeof value === 'string' && value.includes('${') && value.includes('}')) {
+                // Legacy variable syntax ${VAR_NAME}
+                const matches = value.match(/\$\{([^}]+)\}/g);
+                if (matches) {
+                  matches.forEach(match => {
+                    const varName = match.slice(2, -1);
+                    warnings.push(`Step ${step.id} action ${i}: using legacy variable syntax '${match}'. Consider using new '@${varName}' syntax`);
+                  });
+                }
+              }
+            }
+          }
+          
+          // Track outputs as new variable definitions (new format)
+          if (action.outputs) {
+            for (const [field, varName] of Object.entries(action.outputs)) {
+              if (typeof varName === 'string') {
+                // Check for duplicate definitions
+                if (variableDefinitions.has(varName)) {
+                  warnings.push(`Variable '${varName}' redefined in ${actionRef}.outputs.${field}. Previously defined in ${variableDefinitions.get(varName)}`);
+                }
+                
+                availableVariables.add(varName);
+                variableDefinitions.set(varName, `${actionRef}.outputs.${field}`);
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // Check for unused variables
+    for (const [varName, definedAt] of variableDefinitions) {
+      if (!variableUsage.has(varName) && varName !== 'plan.inputs') {
+        warnings.push(`Variable '${varName}' defined at ${definedAt} is never used`);
+      }
+    }
+    
+    return {
+      errors,
+      warnings,
+      variableDefinitions: Object.fromEntries(variableDefinitions),
+      variableUsage: Object.fromEntries(variableUsage),
+      availableVariables: Array.from(availableVariables),
+      executionOrder: executionOrder.map(s => s.id)
+    };
   }
 
   /**
