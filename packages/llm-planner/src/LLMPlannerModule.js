@@ -16,9 +16,10 @@ import { PlanAction } from './models/PlanAction.js';
  * Tool for creating plans using LLM
  */
 class CreatePlanTool extends Tool {
-  constructor(llmClient) {
+  constructor(llmClient, moduleLoader) {
     super();
     this.llmClient = llmClient;
+    this.moduleLoader = moduleLoader;
   }
 
   getToolDescription() {
@@ -75,6 +76,7 @@ class CreatePlanTool extends Tool {
     try {
       const planner = new GenericPlanner({
         llmClient: this.llmClient,
+        moduleLoader: this.moduleLoader,
         maxSteps: params.maxSteps || 20
       });
       
@@ -144,15 +146,16 @@ class ValidatePlanTool extends Tool {
  * LLMPlannerModule - Module for LLM-based planning
  */
 class LLMPlannerModule extends Module {
-  constructor(llmClient) {
+  constructor(llmClient, moduleLoader) {
     super();
     this.name = 'llm-planner';
     this.description = 'LLM-based planning component for intelligent task decomposition';
     this.llmClient = llmClient;
+    this.moduleLoader = moduleLoader;
     
     // Create and register tools
     this.tools = [
-      new CreatePlanTool(llmClient),
+      new CreatePlanTool(llmClient, moduleLoader),
       new ValidatePlanTool()
     ];
   }
@@ -184,7 +187,19 @@ class LLMPlannerModule extends Module {
       resourceManager.register('llmClient', llmClient);
     }
 
-    return new LLMPlannerModule(llmClient);
+    // Create or get ModuleLoader for validation
+    let moduleLoader;
+    try {
+      moduleLoader = resourceManager.get('moduleLoader');
+    } catch (e) {
+      // Create ModuleLoader if not already available
+      const { ModuleLoader } = await import('@legion/module-loader');
+      moduleLoader = new ModuleLoader();
+      await moduleLoader.initialize();
+      resourceManager.register('moduleLoader', moduleLoader);
+    }
+
+    return new LLMPlannerModule(llmClient, moduleLoader);
   }
 }
 

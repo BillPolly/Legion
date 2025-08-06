@@ -5,15 +5,23 @@
 import { Plan } from './models/Plan.js';
 import { PlanStep } from './models/PlanStep.js';
 import { PlanAction } from './models/PlanAction.js';
+import { PromptTemplateLoader } from './PromptTemplateLoader.js';
+import { ValidatePlanTool } from '@legion/plan-executor-tools';
 
 class GenericPlanner {
   constructor(options = {}) {
     this.llmClient = options.llmClient;
+    this.moduleLoader = options.moduleLoader;
     this.maxRetries = options.maxRetries || 3;
     this.maxSteps = options.maxSteps || 20;
+    this.templateLoader = new PromptTemplateLoader();
     
     if (!this.llmClient) {
       throw new Error('LLM client is required');
+    }
+    
+    if (!this.moduleLoader) {
+      throw new Error('ModuleLoader is required for plan validation');
     }
   }
 
@@ -40,17 +48,44 @@ class GenericPlanner {
       throw new Error('Allowable actions are required');
     }
 
-    const prompt = this._buildPrompt(description, inputs, requiredOutputs, allowableActions, maxSteps);
-    
-    console.log(`🔍 [DEBUG] GenericPlanner.createPlan - About to call LLM with prompt:`);
-    console.log(`🔍 [DEBUG] Prompt length: ${prompt.length} characters`);
-    console.log(`🔍 [DEBUG] First 500 chars:`, prompt.substring(0, 500));
-    console.log(`🔍 [DEBUG] Last 500 chars:`, prompt.substring(Math.max(0, prompt.length - 500)));
-    
     let lastError;
+    let lastFailedPlan = null;
+    
+    // Main generation and validation loop
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
       try {
-        console.log(`🔍 [DEBUG] GenericPlanner - Attempt ${attempt} calling complete`);
+        let prompt;
+        
+        if (attempt === 1) {
+          // First attempt - use create-plan template
+          prompt = await this.templateLoader.loadCreatePlanTemplate({
+            description,
+            inputs,
+            requiredOutputs,
+            allowableActions,
+            maxSteps
+          });
+        } else {
+          // Retry attempt - use fix-plan template with previous failure
+          if (!lastFailedPlan) {
+            throw new Error('No previous failed plan to fix');
+          }
+          
+          prompt = await this.templateLoader.loadFixPlanTemplate({
+            description,
+            inputs,
+            requiredOutputs,
+            allowableActions,
+            maxSteps,
+            failedPlan: lastFailedPlan,
+            validationErrors: lastError.validationErrors || [lastError.message]
+          });
+        }
+        
+        console.log(`🔍 [DEBUG] GenericPlanner - Attempt ${attempt} calling LLM`);
+        console.log(`🔍 [DEBUG] Prompt type: ${attempt === 1 ? 'create-plan' : 'fix-plan'}`);
+        console.log(`🔍 [DEBUG] Prompt length: ${prompt.length} characters`);
+        
         const responseText = await this.llmClient.complete(prompt, 'claude-3-5-sonnet-20241022');
         
         console.log(`🔍 [DEBUG] Raw LLM response:`, responseText.substring(0, 500));
@@ -66,13 +101,19 @@ class GenericPlanner {
         console.log('\n📋 Generated Plan JSON:');
         console.log(JSON.stringify(plan.toJSON(), null, 2));
         
-        // Validate the plan - DISABLED for now to allow plan generation without strict output requirements
-        // const validation = this._validatePlan(plan, inputs, requiredOutputs, allowableActions, initialInputData);
-        // if (!validation.isValid) {
-        //   throw new Error(`Plan validation failed: ${validation.errors.join(', ')}`);
-        // }
-
-        return plan;
+        // Validate the plan using plan-executor-tools
+        const validationResult = await this._validatePlanWithTools(plan.toJSON());
+        
+        if (validationResult.valid) {
+          console.log('✅ Plan validation successful');
+          return plan;
+        } else {
+          console.log('❌ Plan validation failed:', validationResult.errors);
+          lastFailedPlan = plan.toJSON();
+          const validationError = new Error(`Plan validation failed: ${validationResult.errors.join(', ')}`);
+          validationError.validationErrors = validationResult.errors;
+          throw validationError;
+        }
       } catch (error) {
         lastError = error;
         console.warn(`Plan generation attempt ${attempt} failed: ${error.message}`);
@@ -87,6 +128,33 @@ class GenericPlanner {
     }
 
     throw new Error(`Failed to generate valid plan after ${this.maxRetries} attempts: ${lastError.message}`);
+  }
+
+  /**
+   * Validate a plan using plan-executor-tools
+   * @private
+   */
+  async _validatePlanWithTools(planJson) {
+    try {
+      const validator = new ValidatePlanTool(this.moduleLoader);
+      
+      const result = await validator.execute({
+        plan: planJson,
+        markAsValidated: false, // Don't modify the plan, just validate
+        verbose: true
+      });
+      
+      return {
+        valid: result.valid,
+        errors: result.errors || []
+      };
+    } catch (error) {
+      console.error('Plan validation error:', error);
+      return {
+        valid: false,
+        errors: [`Validation failed: ${error.message}`]
+      };
+    }
   }
 
   /**

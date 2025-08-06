@@ -27,7 +27,8 @@
   "license": "MIT",
   "dependencies": {
     "@legion/llm": "*",
-    "@legion/module-loader": "*"
+    "@legion/module-loader": "*",
+    "@legion/plan-executor-tools": "*"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

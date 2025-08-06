@@ -36,9 +36,14 @@ describe('Real LLM Integration Tests', () => {
       maxRetries: 2
     });
     
-    // Create planner
+    // Create planner with moduleLoader for validation
+    const { ModuleLoader } = await import('@legion/module-loader');
+    const moduleLoader = new ModuleLoader();
+    await moduleLoader.initialize();
+    
     planner = new GenericPlanner({ 
       llmClient,
+      moduleLoader,
       maxRetries: 2
     });
   });
