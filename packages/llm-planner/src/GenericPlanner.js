@@ -187,7 +187,7 @@ class GenericPlanner {
     Parameters: ${JSON.stringify(example.parameters)}`;
       }
       
-      return `- ${action.type}: ${action.description || ''}
+      return `- ${action.toolName || action.type}: ${action.description || ''}
   Parameters:${paramDetails || ' ' + (action.inputs?.join(', ') || 'none')}
   Outputs: ${action.outputs?.join(', ') || 'none'}${exampleText}`;
     }).join('\n\n');
@@ -353,8 +353,9 @@ Generate a complete, executable plan.`;
     const allowableTypes = allowableActions.map(a => a.type);
     
     for (const action of allActions) {
-      if (!allowableTypes.includes(action.type)) {
-        errors.push(`Invalid action type: ${action.type}`);
+      const actionType = action.toolName || action.type;
+      if (!allowableTypes.includes(actionType)) {
+        errors.push(`Invalid action type: ${actionType}`);
       }
     }
 
@@ -437,156 +438,119 @@ Generate a complete, executable plan.`;
    * @private
    */
   _parseJSONResponse(responseText) {
-    // Step 1: Try direct parsing
-    try {
-      return JSON.parse(responseText);
-    } catch (error) {
-      // Continue to extraction and cleaning
-    }
+    // Step 1: Extract JSON from code blocks
+    const extracted = this._extractJsonFromCodeBlocks(responseText);
     
-    // Step 2: Extract JSON from various markdown code block formats
-    let extractedJson = this._extractJsonFromResponse(responseText);
+    // Step 2: Try parsing with multiple strategies
+    const parseStrategies = [
+      () => JSON.parse(extracted),
+      () => this._parseWithJSON5(extracted),
+      () => JSON.parse(responseText), // Try original text
+      () => this._parseWithJSON5(responseText)
+    ];
     
-    if (!extractedJson) {
-      console.error('🚨 JSON EXTRACTION FAILED 🚨');
-      console.error('\n📝 FULL LLM RESPONSE THAT FAILED TO EXTRACT:');
-      console.error('='.repeat(60));
-      console.error(responseText);
-      console.error('='.repeat(60));
-      throw new Error(`Could not extract JSON from response. No JSON structure found.\n\nSee console output above for the full LLM response.`);
-    }
-    
-    // Step 3: Clean the extracted JSON
-    const cleanedJson = this._cleanJsonString(extractedJson);
-    
-    // Step 4: Final parsing attempt
-    try {
-      return JSON.parse(cleanedJson);
-    } catch (error) {
-      console.error('🚨 JSON PARSING FAILED 🚨');
-      console.error('Error:', error.message);
-      console.error('\n📝 FULL CLEANED JSON THAT FAILED TO PARSE:');
-      console.error('='.repeat(60));
-      console.error(cleanedJson);
-      console.error('='.repeat(60));
-      console.error(`\n📍 Error position: ${error.message.match(/position (\d+)/)?.[1] || 'unknown'}`);
-      
-      // Show problematic section around error position if available
-      const posMatch = error.message.match(/position (\d+)/);
-      if (posMatch) {
-        const pos = parseInt(posMatch[1]);
-        const start = Math.max(0, pos - 50);
-        const end = Math.min(cleanedJson.length, pos + 50);
-        console.error(`\n🎯 PROBLEM AREA (chars ${start}-${end}):`);
-        console.error('"' + cleanedJson.substring(start, end) + '"');
-        console.error(' '.repeat(pos - start) + '^ ERROR HERE');
+    for (let i = 0; i < parseStrategies.length; i++) {
+      try {
+        const result = parseStrategies[i]();
+        if (i > 0) {
+          console.log(`✅ JSON parsed successfully using strategy ${i + 1}`);
+        }
+        return result;
+      } catch (error) {
+        console.log(`❌ Parse strategy ${i + 1} failed: ${error.message}`);
       }
-      
-      throw new Error(`Could not parse cleaned JSON: ${error.message}\n\nSee console output above for the full problematic JSON text.`);
     }
+    
+    // All strategies failed - show the extracted content for debugging
+    console.error('🚨 ALL JSON PARSING STRATEGIES FAILED 🚨');
+    console.error('\n📝 EXTRACTED JSON THAT FAILED TO PARSE:');
+    console.error('='.repeat(60));
+    console.error(extracted);
+    console.error('='.repeat(60));
+    console.error('\n📝 ORIGINAL LLM RESPONSE:');
+    console.error('='.repeat(60));
+    console.error(responseText);
+    console.error('='.repeat(60));
+    
+    throw new Error(`Could not parse JSON response with any strategy. See console output above for full details.`);
   }
 
   /**
-   * Extract JSON from LLM response text using multiple strategies
+   * Extract JSON from code blocks - SIMPLE approach
    * @private
    */
-  _extractJsonFromResponse(responseText) {
+  _extractJsonFromCodeBlocks(responseText) {
     const text = responseText.trim();
     
     // Strategy 1: Extract from ```json code blocks
-    const jsonCodeBlockMatch = text.match(/```json\s*([\s\S]*?)\s*```/i);
-    if (jsonCodeBlockMatch) {
-      return jsonCodeBlockMatch[1].trim();
+    const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/i);
+    if (jsonMatch) {
+      return jsonMatch[1].trim();
     }
     
-    // Strategy 2: Extract from generic ``` code blocks
-    const genericCodeBlockMatch = text.match(/```\s*([\s\S]*?)\s*```/);
-    if (genericCodeBlockMatch) {
-      const content = genericCodeBlockMatch[1].trim();
-      // Check if it looks like JSON (starts with { or [)
-      if (content.startsWith('{') || content.startsWith('[')) {
-        return content;
+    // Strategy 2: Extract from any ``` code blocks that look like JSON
+    const codeMatches = text.match(/```[a-zA-Z]*\s*([\s\S]*?)\s*```/g);
+    if (codeMatches) {
+      for (const match of codeMatches) {
+        const content = match.replace(/```[a-zA-Z]*\s*/, '').replace(/\s*```$/, '').trim();
+        if (content.startsWith('{') || content.startsWith('[')) {
+          return content;
+        }
       }
     }
     
-    // Strategy 3: Find JSON-like content between first { and last }
+    // Strategy 3: Find first complete JSON object or array
     const firstBrace = text.indexOf('{');
     const lastBrace = text.lastIndexOf('}');
     if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
       return text.substring(firstBrace, lastBrace + 1);
     }
     
-    // Strategy 4: Find JSON-like content between first [ and last ]
     const firstBracket = text.indexOf('[');
     const lastBracket = text.lastIndexOf(']');
     if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
       return text.substring(firstBracket, lastBracket + 1);
     }
     
-    return null;
+    // Return original text if nothing found
+    return text;
   }
 
   /**
-   * Clean JSON string by fixing common LLM-generated issues
+   * Parse with JSON5 for more robust parsing
    * @private
    */
-  _cleanJsonString(jsonStr) {
-    let cleaned = jsonStr.trim();
+  _parseWithJSON5(jsonText) {
+    // Simple JSON5-like parsing without the library
+    // Handle basic JSON5 features that LLMs commonly generate
+    let cleaned = jsonText.trim();
     
-    // Remove JavaScript comments (before other processing)
-    // Remove single-line comments
+    // Remove comments
     cleaned = cleaned.replace(/\/\/.*$/gm, '');
-    // Remove multi-line comments
     cleaned = cleaned.replace(/\/\*[\s\S]*?\*\//g, '');
     
-    // Fix undefined values (replace with null)
-    cleaned = cleaned.replace(/:\s*undefined\b/g, ': null');
+    // Fix trailing commas
+    cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1');
     
-    // Fix single quotes around property names (convert to double quotes)
-    cleaned = cleaned.replace(/'([^']+)'(\s*:)/g, '"$1"$2');
+    // Fix unquoted property names (basic cases)
+    cleaned = cleaned.replace(/([{,]\s*)([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, '$1"$2":');
     
-    // Fix single quoted string values (convert to double quotes)
-    // Be more careful to avoid conflicts with apostrophes in content
-    cleaned = cleaned.replace(/:\s*'([^']*)'(?=\s*[,}\]])/g, ': "$1"');
+    // Fix single quotes
+    cleaned = cleaned.replace(/'([^'\\]*(\\.[^'\\]*)*)'/g, '"$1"');
     
-    // CRITICAL: Handle template literals (backticks) which are the main issue
-    // Use a more precise regex that handles multiline content correctly
-    cleaned = cleaned.replace(/`([^`]*?)`/gs, (match, content) => {
-      // Properly escape the content for JSON
+    // Handle template literals by converting to strings
+    cleaned = cleaned.replace(/`([^`\\]*(\\.[^`\\]*)*)`/g, (match, content) => {
+      // Basic escaping for JSON
       const escaped = content
-        .replace(/\\/g, '\\\\')  // Escape backslashes first
-        .replace(/"/g, '\\"')    // Escape double quotes
-        .replace(/\n/g, '\\n')   // Escape newlines
-        .replace(/\r/g, '\\r')   // Escape carriage returns
-        .replace(/\t/g, '\\t');  // Escape tabs
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r')
+        .replace(/\t/g, '\\t');
       return `"${escaped}"`;
     });
     
-    // Fix backticks inside regular double-quoted strings - leave them as literal backticks
-    // Backticks are valid in JSON strings and don't need escaping
-    
-    // Fix unescaped newlines in regular string values
-    cleaned = cleaned.replace(/("(?:[^"\\]|\\.)*?")/g, (match) => {
-      // Only process if it contains unescaped newlines
-      if (match.includes('\n') || match.includes('\r')) {
-        // Simple approach: replace all newlines/returns, then fix double-escaped ones
-        return match
-          .replace(/\n/g, '\\n')
-          .replace(/\r/g, '\\r')
-          .replace(/\\\\n/g, '\\n')  // Fix double-escaped
-          .replace(/\\\\r/g, '\\r'); // Fix double-escaped
-      }
-      return match;
-    });
-    
-    // Fix trailing commas before closing braces/brackets
-    cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1');
-    
-    // Clean up whitespace around structural elements
-    cleaned = cleaned.replace(/,\s*\n\s*}/g, '\n}');
-    cleaned = cleaned.replace(/,\s*\n\s*]/g, '\n]');
-    
-    return cleaned;
+    return JSON.parse(cleaned);
   }
 }
 

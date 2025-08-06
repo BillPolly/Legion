@@ -90,7 +90,7 @@ export class ProfileTool extends Tool {
       console.log(`Creating ${this.profile.name} plan for task: ${task}`);
 
       // Create planning context from profile
-      const planningContext = this.profileManager.createPlanningContext(this.profile, task);
+      const planningContext = await this.profileManager.createPlanningContext(this.profile, task);
 
       // Create LLM client and module loader for planning
       const llmClient = await this._createLLMClient();
@@ -104,7 +104,7 @@ export class ProfileTool extends Tool {
       });
 
       console.log(`Planning with ${this.profile.name} profile:`, {
-        actionsCount: planningContext.allowableActions.length,
+        actionsCount: planningContext.allowableActions?.length || 0,
         maxSteps: planningContext.maxSteps
       });
 

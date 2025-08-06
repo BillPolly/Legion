@@ -26,7 +26,7 @@ const inputVariableNameSchema = z.string()
 // Action schemas for both formats
 const newFormatActionSchema = z.object({
   id: actionIdSchema,
-  type: z.string().min(1, 'Action type is required'),
+  toolName: z.string().min(1, 'Action toolName is required'),
   inputs: z.record(z.any()).describe('Input parameters mapped to values or @variables'),
   outputs: z.record(variableNameSchema).optional().describe('Output fields mapped to variable names'),
   description: z.string().optional(),
@@ -37,7 +37,7 @@ const newFormatActionSchema = z.object({
 
 const legacyFormatActionSchema = z.object({
   id: actionIdSchema,
-  type: z.string().min(1, 'Action type is required'),
+  toolName: z.string().min(1, 'Action toolName is required'),
   parameters: z.record(z.any()).describe('Legacy parameters object'),
   description: z.string().optional(),
   status: z.enum(['pending', 'running', 'completed', 'failed', 'skipped']).default('pending').optional(),

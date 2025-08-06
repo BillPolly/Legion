@@ -28,7 +28,8 @@
   "dependencies": {
     "@legion/llm": "*",
     "@legion/module-loader": "*",
-    "@legion/plan-executor-tools": "*"
+    "@legion/plan-executor-tools": "*",
+    "json5": "^2.2.3"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

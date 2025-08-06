@@ -183,7 +183,7 @@ class ProfileManager {
    * @param {string} description - User's planning request
    * @returns {Promise<Object>} Planning context for LLM planner
    */
-  async createPlanningContext(profile, description) {
+  async createPlanningContext(profile, task) {
     // Get actions dynamically from tools if using allowedTools
     let actions;
     
@@ -262,21 +262,26 @@ class ProfileManager {
     // Validate and fix action types against available tools
     const validatedActions = await this._validateAndFixActionTypes(convertedActions);
 
+    console.log(`[DEBUG] convertedActions: ${convertedActions.length}, validatedActions: ${validatedActions.length}`);
+    
+    const finalActions = validatedActions.length > 0 ? validatedActions : convertedActions;
+    console.log(`[DEBUG] Using ${finalActions.length} actions for planning`);
+
     const context = {
-      description: description,
+      description: task,
       inputs: profile.defaultInputs || ['user_request'],
       requiredOutputs: profile.defaultOutputs || ['completed_task'],
-      allowableActions: validatedActions,
+      allowableActions: finalActions, // Use fallback actions
       maxSteps: profile.maxSteps || 20,
       initialInputData: {
-        user_request: description,
+        user_request: task,
         profile_context: profile.contextPrompts?.join('\n') || ''
       }
     };
 
     // Add profile-specific context to the description
     if (profile.contextPrompts && profile.contextPrompts.length > 0) {
-      context.description = `${profile.contextPrompts.join('\n')}\n\nTask: ${description}`;
+      context.description = `${profile.contextPrompts.join('\n')}\n\nTask: ${task}`;
     }
 
     console.log(`Created planning context for profile ${profile.name}:`);

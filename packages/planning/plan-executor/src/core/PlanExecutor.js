@@ -237,8 +237,12 @@ export class PlanExecutor extends EventEmitter {
   }
   
   async _executeActions(actions, step, context) {
-    for (const action of actions) {
-      await this._executeAction(action, step, context);
+    for (let i = 0; i < actions.length; i++) {
+      // Auto-generate action ID if missing (only used for logging)
+      if (!actions[i].id) {
+        actions[i].id = `${step.id}-action-${i + 1}`;
+      }
+      await this._executeAction(actions[i], step, context);
     }
   }
   
@@ -253,7 +257,7 @@ export class PlanExecutor extends EventEmitter {
         stepId: step.id,
         stepName: step.name,
         actionId: action.id,
-        actionType: action.type,
+        actionType: action.toolName || action.type,
         parameters: action.inputs || action.parameters,
         description: action.description,
         timestamp: new Date()
@@ -263,9 +267,9 @@ export class PlanExecutor extends EventEmitter {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         // Get tool for this action
-        // Use the action type as the tool name (this is the standard)
-        // The 'tool' field is often incorrect from LLM generation
-        let toolName = action.type;
+        // Use the action toolName as the tool name (this is the standard)
+        // Fall back to 'type' field for backward compatibility
+        let toolName = action.toolName || action.type;
         
         // Map profile action types to actual tool names if needed
         // Most file operations use their type as the tool name directly
@@ -302,7 +306,7 @@ export class PlanExecutor extends EventEmitter {
           if (moduleId && !this.moduleLoader.hasModule(moduleId)) {
             throw new Error(`Tool '${toolName}' requires module '${moduleId}' to be loaded`);
           }
-          throw new Error(`Tool not found: ${toolName} (action type: ${action.type})`);
+          throw new Error(`Tool not found: ${toolName} (action toolName: ${action.toolName || action.type})`);
         }
         
         // Resolve inputs (new system) or fallback to parameters (legacy)
@@ -334,7 +338,7 @@ export class PlanExecutor extends EventEmitter {
         }
         
         // Store result in legacy action results
-        context.setActionResult(step.id, action.type, result);
+        context.setActionResult(step.id, action.toolName || action.type, result);
         
         // Handle output mapping (new system)
         if (action.outputs && result && typeof result === 'object') {
@@ -354,7 +358,7 @@ export class PlanExecutor extends EventEmitter {
             stepId: step.id,
             stepName: step.name,
             actionId: action.id,
-            actionType: action.type,
+            actionType: action.toolName || action.type,
             toolName: toolName,
             parameters: resolvedInputs,
             result: result,
@@ -375,7 +379,7 @@ export class PlanExecutor extends EventEmitter {
               planId: context.plan.id,
               stepId: step.id,
               actionId: action.id,
-              actionType: action.type,
+              actionType: action.toolName || action.type,
               attempt: attempt + 1,
               maxRetries: maxRetries,
               error: error.message,
@@ -396,7 +400,7 @@ export class PlanExecutor extends EventEmitter {
         stepId: step.id,
         stepName: step.name,
         actionId: action.id,
-        actionType: action.type,
+        actionType: action.toolName || action.type,
         error: lastError.message,
         attempts: maxRetries + 1,
         timestamp: new Date()

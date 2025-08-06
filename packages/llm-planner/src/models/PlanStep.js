@@ -87,9 +87,10 @@ class PlanStep {
       action = actionData;
     } else {
       // Find the action definition
-      const actionDef = this.allowableActions.find(a => a.type === actionData.type);
+      const actionType = actionData.toolName || actionData.type;
+      const actionDef = this.allowableActions.find(a => a.type === actionType);
       if (!actionDef) {
-        throw new Error(`Unknown action type: ${actionData.type}`);
+        throw new Error(`Unknown action type: ${actionType}`);
       }
       action = new PlanAction(actionDef, actionData.parameters || {});
     }

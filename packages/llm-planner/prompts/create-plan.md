@@ -67,15 +67,15 @@ You MUST only use these exact action types:
 ```
 
 ## CRITICAL ACTION FORMAT
-- Each action MUST have a "type" field that exactly matches one of the allowable action types above
-- Each action MUST have an "inputs" object with the exact input field names shown in the allowable actions
+- Each action MUST have a "toolName" field that exactly matches one of the allowable tool names above
+- Each action MUST have an "inputs" object with the exact input field names shown in the allowable actions  
 - Each action MUST have an "outputs" object mapping output field names to variable names
 - Use @variableName syntax to reference variables from previous step outputs
 - DO NOT use a "parameters" field - use "inputs" instead
-- DO NOT use action types that are not in the allowable actions list
+- DO NOT use tool names that are not in the allowable actions list
 
-## CONSTRAINTS
-- You can only use the action types provided in the allowable actions list
+## CONSTRAINTS  
+- You can only use the tool names provided in the allowable actions list
 - Each action must specify its inputs and outputs exactly as defined
 - Steps can be hierarchical (steps containing sub-steps)
 - Dependencies must reference actual step IDs
@@ -95,7 +95,7 @@ Return a JSON object with this exact structure:
   "status": "draft",
   "inputs": [
     {
-      "name": "inputName",
+      "name": "INPUT_NAME",
       "type": "string", 
       "required": true,
       "description": "Input description"
@@ -106,14 +106,14 @@ Return a JSON object with this exact structure:
       "id": "step-id",
       "name": "Step Name",
       "description": "Step description",
-      "type": "setup|implementation|integration|testing|deployment",
+      "type": "setup|implementation|validation|cleanup",
       "dependencies": ["dependent-step-id"],
       "steps": [
         // Optional sub-steps (same structure)
       ],
       "actions": [
         {
-          "type": "exact-action-type-from-allowable-actions",
+          "toolName": "exact-tool-name-from-allowable-actions",
           "inputs": {
             "inputField": "value-or-@variable"
           },
@@ -126,5 +126,11 @@ Return a JSON object with this exact structure:
   ]
 }
 ```
+
+**CRITICAL REQUIREMENTS:**
+- Plan MUST have "id" field (unique identifier)
+- Step "type" MUST be one of: setup, implementation, validation, cleanup
+- Input names MUST be UPPERCASE (e.g., "INPUT_NAME")
+- Follow exact field structure shown above
 
 Generate a complete, executable plan that produces all required outputs and follows proper variable flow.

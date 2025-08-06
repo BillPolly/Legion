@@ -152,10 +152,11 @@ class PlanAction {
    * @returns {PlanAction} PlanAction instance
    */
   static fromJSON(json, allowableActions = []) {
-    // Find the action definition
-    const actionDef = allowableActions.find(a => a.type === json.type);
+    // Find the action definition  
+    const actionType = json.toolName || json.type;
+    const actionDef = allowableActions.find(a => a.type === actionType);
     if (!actionDef) {
-      throw new Error(`Unknown action type: ${json.type}`);
+      throw new Error(`Unknown action type: ${actionType}`);
     }
 
     // Merge json tool/function into actionDef if not already present
