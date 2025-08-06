@@ -254,7 +254,7 @@ export class PlanExecutor extends EventEmitter {
         stepName: step.name,
         actionId: action.id,
         actionType: action.type,
-        parameters: action.parameters,
+        parameters: action.inputs || action.parameters,
         description: action.description,
         timestamp: new Date()
       });
@@ -305,8 +305,15 @@ export class PlanExecutor extends EventEmitter {
           throw new Error(`Tool not found: ${toolName} (action type: ${action.type})`);
         }
         
-        // Resolve parameters
-        const resolvedParams = context.resolveParameters(action.parameters || {});
+        // Resolve inputs (new system) or fallback to parameters (legacy)
+        let resolvedInputs;
+        if (action.inputs) {
+          // New system: resolve inputs object
+          resolvedInputs = context.resolveParameters(action.inputs);
+        } else {
+          // Legacy system: resolve parameters object  
+          resolvedInputs = context.resolveParameters(action.parameters || {});
+        }
         
         // Execute tool with timeout
         if (typeof tool.execute !== 'function') {
@@ -315,7 +322,7 @@ export class PlanExecutor extends EventEmitter {
         
         // All tools use execute() method only
         const result = await this._executeWithTimeout(
-          () => tool.execute(resolvedParams),
+          () => tool.execute(resolvedInputs),
           context.options.timeout
         );
         
@@ -326,8 +333,19 @@ export class PlanExecutor extends EventEmitter {
           throw new Error(result.error || `Tool '${toolName}' failed`);
         }
         
-        // Store result
+        // Store result in legacy action results
         context.setActionResult(step.id, action.type, result);
+        
+        // Handle output mapping (new system)
+        if (action.outputs && result && typeof result === 'object') {
+          // For ToolResult objects, the actual data is in the 'data' field
+          const resultData = result.data || result;
+          for (const [resultField, contextVar] of Object.entries(action.outputs)) {
+            if (resultData.hasOwnProperty(resultField)) {
+              context.setVariable(contextVar, resultData[resultField]);
+            }
+          }
+        }
         
         // Emit action:complete event
         if (context.options.emitProgress) {
@@ -338,7 +356,7 @@ export class PlanExecutor extends EventEmitter {
             actionId: action.id,
             actionType: action.type,
             toolName: toolName,
-            parameters: resolvedParams,
+            parameters: resolvedInputs,
             result: result,
             timestamp: new Date()
           });

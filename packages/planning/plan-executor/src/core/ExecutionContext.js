@@ -97,13 +97,13 @@ export class ExecutionContext {
   }
   
   // Variable management with hierarchical scoping
-  setVariable(name, value) {
-    // Set variable in current step context
-    if (this.executionStack.length > 0) {
+  setVariable(name, value, scope = 'global') {
+    if (scope === 'step' && this.executionStack.length > 0) {
+      // Set variable in current step context (will be lost when step exits)
       const currentContext = this.executionStack[this.executionStack.length - 1];
       currentContext.variables.set(name, value);
     } else {
-      // Set in global context
+      // Set in global context (persists across steps)
       this.state.variables.set(name, value);
     }
   }
@@ -179,64 +179,25 @@ export class ExecutionContext {
   
   _resolveValue(value) {
     if (typeof value === 'string') {
-      // Handle $variableName in the middle of strings (e.g., "$workspaceDir/file.txt")
-      if (value.includes('$') && !value.includes('${')) {
-        // Replace all occurrences of $variableName with their values
-        return value.replace(/\$([a-zA-Z_][a-zA-Z0-9_]*)/g, (match, varName) => {
-          const resolvedValue = this.getVariable(varName);
-          return resolvedValue !== undefined ? resolvedValue : match;
-        });
-      }
-      
-      // Step result reference: @stepId
+      // Variable reference: @variableName or @variableName/path
       if (value.startsWith('@')) {
-        const stepId = value.substring(1);
-        return this.getStepResult(stepId) || value;
-      }
-      
-      // Template variable substitution: ${VAR_NAME} and ${actions.action-id.result.field} within strings
-      if (value.includes('${')) {
-        return value.replace(/\$\{([^}]+)\}/g, (match, expression) => {
-          // Handle action result references: ${actions.action-id.result.field}
-          if (expression.startsWith('actions.')) {
-            const actionPath = expression.substring(8); // Remove 'actions.'
-            const pathParts = actionPath.split('.');
-            
-            if (pathParts.length >= 3 && pathParts[1] === 'result') {
-              const actionId = pathParts[0];
-              const fieldPath = pathParts.slice(2); // Everything after 'result.'
-              
-              // Find the action result in actionResults map
-              for (const [key, result] of this.state.actionResults) {
-                if (key.endsWith(`.${actionId}`)) {
-                  // Navigate through the result object using the field path
-                  let value = result;
-                  for (const field of fieldPath) {
-                    if (value && typeof value === 'object' && field in value) {
-                      value = value[field];
-                    } else {
-                      value = undefined;
-                      break;
-                    }
-                  }
-                  
-                  if (value !== undefined) {
-                    return value;
-                  }
-                }
-              }
-            }
+        // Find the end of the variable name (up to '/' or end of string)
+        const slashIndex = value.indexOf('/');
+        const varName = slashIndex > -1 ? value.substring(1, slashIndex) : value.substring(1);
+        const remainingPath = slashIndex > -1 ? value.substring(slashIndex) : '';
+        
+        const resolvedValue = this.getVariable(varName);
+        
+        if (resolvedValue !== undefined) {
+          // If there's no remaining path, return the value as-is (preserves type)
+          if (remainingPath === '') {
+            return resolvedValue;
           }
-          
-          // First check plan input variables
-          const inputValue = this.getVariable(expression);
-          if (inputValue !== undefined) {
-            return inputValue;
-          }
-          
-          // Fallback to environment variables
-          return process.env[expression] || match;
-        });
+          // Otherwise, concatenate as strings for path building
+          return String(resolvedValue) + remainingPath;
+        } else {
+          return value; // Return original if not found
+        }
       }
     }
     

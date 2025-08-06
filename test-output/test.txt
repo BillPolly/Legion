@@ -1,0 +1,1 @@
+Hello from new input/output system!

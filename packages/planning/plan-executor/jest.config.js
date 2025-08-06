@@ -1,15 +1,15 @@
 export default {
   testEnvironment: 'node',
+  setupFiles: ['<rootDir>/__tests__/utils/jest-globals.js'],
   transform: {},
-  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/__tests__/utils/setup.js'],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1'
   },
   collectCoverageFrom: [
     'src/**/*.js',
     '!src/**/*.test.js',
-    '!src/**/index.js',
-    '!src/__tests__/**'
+    '!src/**/index.js'
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
@@ -18,6 +18,10 @@ export default {
   ],
   testPathIgnorePatterns: [
     '/node_modules/',
-    '/__tests__/tmp/'
-  ]
+    '/__tests__/tmp/',
+    '/__tests__/fixtures/'
+  ],
+  testTimeout: 30000,
+  maxWorkers: 4,
+  verbose: false
 };
