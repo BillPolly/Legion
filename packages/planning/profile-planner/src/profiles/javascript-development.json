@@ -381,7 +381,7 @@
       "type": "generate_javascript_module",
       "description": "Generate a complete JavaScript module with imports, exports, and functions",
       "inputs": {
-        "module_name": {
+        "name": {
           "type": "string",
           "description": "Name of the module to generate"
         },

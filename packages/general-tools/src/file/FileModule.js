@@ -13,7 +13,7 @@ class FileOperationsTool extends Tool {
       description: 'Comprehensive file system operations including reading, writing, and directory management',
       inputSchema: z.object({
         filepath: z.string().optional().describe('The path to the file (for read/write operations)'),
-        content: z.string().optional().describe('The content to write to the file'),
+        content: z.union([z.string(), z.object({}).passthrough()]).optional().describe('The content to write to the file (string or object - objects will be JSON stringified)'),
         encoding: z.string().optional().default('utf8').describe('The encoding to use when reading/writing the file'),
         dirpath: z.string().optional().describe('The directory path (for directory operations)'),
         operation: z.enum(['read', 'write', 'create', 'list', 'change', 'current']).optional().describe('The operation to perform')
@@ -95,8 +95,11 @@ class FileOperationsTool extends Tool {
                 description: 'The path where the file should be created (can be absolute or relative)'
               },
               content: {
-                type: 'string',
-                description: 'The text content to write to the file'
+                oneOf: [
+                  { type: 'string' },
+                  { type: 'object' }
+                ],
+                description: 'The content to write to the file (string or object - objects will be JSON stringified)'
               },
               encoding: {
                 type: 'string',
@@ -596,6 +599,12 @@ class FileOperationsTool extends Tool {
       // Ensure the directory exists
       const dir = path.dirname(resolvedPath);
       await fs.mkdir(dir, { recursive: true });
+      
+      // Convert content to string if it's an object (for package.json, etc.)
+      if (typeof content === 'object' && content !== null) {
+        content = JSON.stringify(content, null, 2);
+        console.log(`Converted object content to JSON string`);
+      }
       
       console.log(`Calling fs.writeFile with path: ${resolvedPath}, encoding: ${encoding}`);
       await fs.writeFile(resolvedPath, content, encoding);

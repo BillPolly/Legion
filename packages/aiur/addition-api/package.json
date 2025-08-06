@@ -1,0 +1,11 @@
+{
+  "name": "addition-api",
+  "version": "1.0.0",
+  "description": "API service for adding two numbers",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "jest",
+    "dev": "nodemon src/index.js"
+  }
+}

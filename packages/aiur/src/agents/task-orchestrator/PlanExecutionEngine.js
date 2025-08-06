@@ -361,6 +361,8 @@ export class PlanExecutionEngine {
    */
   async handleActionArtifacts(data) {
     console.log('PlanExecutionEngine: handleActionArtifacts called for', data.actionType, data.toolName);
+    console.log('  Result:', data.result);
+    console.log('  Parameters:', data.parameters);
     
     // Check if this is a file operation that should create an artifact
     const fileOperations = ['file_write', 'generate_javascript_module', 'generate_unit_tests', 
@@ -392,8 +394,18 @@ export class PlanExecutionEngine {
     const artifacts = [];
     
     // Check for file path in common result fields
-    const filePath = result.path || result.filePath || result.file || result.outputPath || data.parameters?.path;
-    const content = result.content || result.code || result.html || result.generatedCode || data.parameters?.content;
+    // FileWriterTool returns { path: ..., bytesWritten: ... }
+    // The content is in the parameters, not the result
+    // Note: parameters might use 'filepath' (lowercase p) or 'filePath' (camelCase)
+    const filePath = result.path || result.filePath || result.file || result.outputPath || 
+                     data.parameters?.path || data.parameters?.filePath || data.parameters?.filepath;
+    let content = result.content || result.code || result.html || result.generatedCode || 
+                  data.parameters?.content;
+    
+    // If content is an object (like package.json), stringify it
+    if (content && typeof content === 'object') {
+      content = JSON.stringify(content, null, 2);
+    }
     
     if (filePath && content) {
       // Determine file type from extension
@@ -415,12 +427,17 @@ export class PlanExecutionEngine {
         subtype = extension;
       }
       
+      const filename = filePath.split('/').pop();
+      const label = `@${filename.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`;
+      
       artifacts.push({
         type: type,
         subtype: subtype,
-        title: filePath.split('/').pop(),
+        label: label,
+        title: filename,
+        description: `${data.stepName}: ${filename}`,
         path: filePath,
-        content: content,
+        content: content,  // This is the actual file content from parameters
         createdBy: data.toolName || data.actionType,
         metadata: {
           stepId: data.stepId,
@@ -450,11 +467,15 @@ export class PlanExecutionEngine {
         title = 'package.json';
       }
       
+      const label = `@${title.toLowerCase().replace(/[^a-zA-Z0-9]/g, '-')}`;
+      
       artifacts.push({
         type: type,
         subtype: subtype,
+        label: label,
         title: title,
-        content: content,
+        description: `${data.stepName}: ${title}`,
+        content: content,  // This is the actual content
         createdBy: data.toolName || data.actionType,
         metadata: {
           stepId: data.stepId,

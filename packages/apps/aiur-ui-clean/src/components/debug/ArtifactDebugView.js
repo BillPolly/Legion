@@ -109,12 +109,20 @@ export class ArtifactDebugView {
       this.updateArtifactList();
     });
     
+    // Controls container (sort and copy)
+    const controlsContainer = document.createElement('div');
+    controlsContainer.style.cssText = `
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 8px;
+    `;
+    
     // Sort controls
     const sortContainer = document.createElement('div');
     sortContainer.style.cssText = `
       display: flex;
       gap: 8px;
-      margin-top: 8px;
       font-size: 12px;
     `;
     
@@ -149,8 +157,46 @@ export class ArtifactDebugView {
     sortContainer.appendChild(sortLabel);
     sortButtons.forEach(btn => sortContainer.appendChild(btn));
     
+    // Copy button
+    const copyButton = document.createElement('button');
+    copyButton.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z"/>
+        <path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z"/>
+      </svg>
+      Copy JSON
+    `;
+    copyButton.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #c9d1d9;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s ease;
+    `;
+    
+    copyButton.addEventListener('mouseenter', () => {
+      copyButton.style.background = '#30363d';
+      copyButton.style.borderColor = '#8b949e';
+    });
+    
+    copyButton.addEventListener('mouseleave', () => {
+      copyButton.style.background = '#21262d';
+      copyButton.style.borderColor = '#30363d';
+    });
+    
+    copyButton.addEventListener('click', () => this.copyArtifactsAsJSON(copyButton));
+    
+    controlsContainer.appendChild(sortContainer);
+    controlsContainer.appendChild(copyButton);
+    
     header.appendChild(searchInput);
-    header.appendChild(sortContainer);
+    header.appendChild(controlsContainer);
     
     // Artifact list container
     const listContainer = document.createElement('div');
@@ -464,6 +510,99 @@ export class ArtifactDebugView {
   clearArtifacts() {
     this.artifacts.clear();
     this.updateArtifactList();
+  }
+  
+  /**
+   * Copy all artifacts as JSON to clipboard
+   */
+  async copyArtifactsAsJSON(button) {
+    try {
+      // Get all artifacts as an array with full details including content
+      const artifactsArray = Array.from(this.artifacts.values()).map(artifact => {
+        // Create a complete copy including all fields
+        const fullArtifact = {
+          id: artifact.id,
+          type: artifact.type,
+          subtype: artifact.subtype,
+          label: artifact.label,
+          title: artifact.title,
+          description: artifact.description,
+          content: artifact.content || null, // Include the actual content
+          path: artifact.path || null,
+          url: artifact.url || null,
+          size: artifact.size || 0,
+          createdAt: artifact.createdAt,
+          createdBy: artifact.createdBy || null,
+          metadata: artifact.metadata || {},
+          // Include any additional fields that might exist
+          ...Object.keys(artifact).reduce((acc, key) => {
+            // Skip fields we've already explicitly included
+            const handledFields = ['id', 'type', 'subtype', 'label', 'title', 
+                                  'description', 'content', 'path', 'url', 
+                                  'size', 'createdAt', 'createdBy', 'metadata'];
+            if (!handledFields.includes(key)) {
+              acc[key] = artifact[key];
+            }
+            return acc;
+          }, {})
+        };
+        
+        return fullArtifact;
+      });
+      
+      // Convert to formatted JSON string
+      const jsonString = JSON.stringify(artifactsArray, null, 2);
+      
+      // Copy to clipboard
+      await navigator.clipboard.writeText(jsonString);
+      
+      // Update button to show success
+      const originalHTML = button.innerHTML;
+      const originalBackground = button.style.background;
+      const originalBorderColor = button.style.borderColor;
+      
+      button.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="#3fb950">
+          <path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/>
+        </svg>
+        Copied!
+      `;
+      button.style.background = '#1c2f2c';
+      button.style.borderColor = '#3fb950';
+      button.style.color = '#3fb950';
+      
+      // Reset after 2 seconds
+      setTimeout(() => {
+        button.innerHTML = originalHTML;
+        button.style.background = originalBackground;
+        button.style.borderColor = originalBorderColor;
+        button.style.color = '#c9d1d9';
+      }, 2000);
+      
+      console.log(`Copied ${artifactsArray.length} artifacts to clipboard (${jsonString.length} characters)`);
+      
+    } catch (error) {
+      console.error('Failed to copy artifacts:', error);
+      
+      // Show error state
+      const originalHTML = button.innerHTML;
+      button.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="#f85149">
+          <path d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z"/>
+        </svg>
+        Failed
+      `;
+      button.style.background = '#2d1f1f';
+      button.style.borderColor = '#f85149';
+      button.style.color = '#f85149';
+      
+      setTimeout(() => {
+        button.innerHTML = originalHTML;
+        button.style.background = '#21262d';
+        button.style.borderColor = '#30363d';
+        button.style.color = '#c9d1d9';
+      }, 2000);
+    }
   }
   
   /**

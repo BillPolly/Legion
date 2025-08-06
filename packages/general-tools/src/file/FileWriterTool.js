@@ -35,8 +35,7 @@ class FileWriterTool extends Tool {
               description: 'The path where the file should be written'
             },
             content: {
-              type: 'string',
-              description: 'The content to write to the file'
+              description: 'The content to write to the file (string or object - objects will be JSON stringified)'
             },
             append: {
               type: 'boolean',
@@ -97,7 +96,12 @@ class FileWriterTool extends Tool {
         throw new Error('filePath and content are required');
       }
 
-      const { filePath, content, append = false } = args;
+      let { filePath, content, append = false } = args;
+      
+      // Convert content to string if needed (handles objects like package.json)
+      if (typeof content !== 'string') {
+        content = typeof content === 'object' ? JSON.stringify(content, null, 2) : String(content);
+      }
 
       // Validate input
       if (typeof filePath !== 'string') {
@@ -107,12 +111,6 @@ class FileWriterTool extends Tool {
         });
       }
 
-      if (typeof content !== 'string') {
-        return ToolResult.failure('Content must be a string', {
-          filePath: filePath,
-          errorType: 'invalid_path'
-        });
-      }
 
       if (filePath.trim() === '') {
         return ToolResult.failure('File path cannot be empty', {

@@ -260,11 +260,10 @@ export class ArtifactViewer {
       // Try to get content from artifact directly
       if (artifact.content) {
         content = artifact.content;
-      } else if (artifact.preview) {
-        content = artifact.preview;
       } else if (artifact.path) {
-        // For file-based artifacts, show placeholder
-        content = await this.fetchArtifactContent(artifact);
+        // For file-based artifacts, try to fetch from server
+        // For now, show a message that content needs to be loaded
+        content = null; // Don't use preview as fallback - it's misleading
       }
       
       // Render content using the appropriate renderer
@@ -272,13 +271,24 @@ export class ArtifactViewer {
         const contentElement = renderer.renderContent(artifact, content);
         scrollContainer.appendChild(contentElement);
       } else {
+        // Show detailed message about why content is not available
+        const reason = artifact.path ? 
+          `File path: ${artifact.path}<br/>Content was not captured during execution` :
+          'No content was provided for this artifact';
+          
         scrollContainer.innerHTML = `
           <div style="padding: 40px; text-align: center; color: #8b949e;">
             <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
-            <div>Content not available</div>
-            <div style="font-size: 12px; margin-top: 8px; color: #6e7681;">
-              ${artifact.path || 'No content to display'}
+            <div style="font-size: 16px; margin-bottom: 12px;">Content Not Available</div>
+            <div style="font-size: 13px; line-height: 1.5; color: #6e7681; max-width: 400px; margin: 0 auto;">
+              ${reason}
             </div>
+            ${artifact.preview ? `
+              <div style="margin-top: 20px; padding: 12px; background: #161b22; border-radius: 6px; text-align: left;">
+                <div style="font-size: 11px; color: #8b949e; margin-bottom: 8px;">Preview (truncated):</div>
+                <pre style="font-size: 12px; color: #c9d1d9; white-space: pre-wrap; word-wrap: break-word; margin: 0; font-family: 'SF Mono', Monaco, monospace;">${artifact.preview}</pre>
+              </div>
+            ` : ''}
           </div>
         `;
       }

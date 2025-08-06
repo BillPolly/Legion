@@ -67,6 +67,19 @@ export class ArtifactDetector {
       return artifacts;
     }
 
+    // Tools that should NEVER create artifacts
+    const nonArtifactTools = [
+      'directory_change', 'directory_create', 'directory_current',
+      'install_dependencies', 'install_packages', 
+      'run_tests', 'validate_javascript',
+      'execute_command', 'run_npm_script'
+    ];
+    
+    if (nonArtifactTools.includes(toolName)) {
+      // These tools don't produce artifacts, skip detection entirely
+      return artifacts;
+    }
+
     try {
       // For certain tools, ONLY use tool-specific detection to avoid duplicates
       const toolSpecificOnly = ['generate_image', 'generate_html_page', 'analyze_file'];
