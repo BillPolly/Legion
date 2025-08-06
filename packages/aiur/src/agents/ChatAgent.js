@@ -379,7 +379,7 @@ Be concise but thorough in your responses. Use markdown formatting when appropri
   async processWithTools(messages, tools) {
     let currentMessages = messages;
     let iterations = 0;
-    const maxIterations = 10; // Prevent infinite loops
+    const maxIterations = 50; // Allow for complex multi-step tasks
     let finalContent = '';
     
     // Keep processing until no more tools are needed

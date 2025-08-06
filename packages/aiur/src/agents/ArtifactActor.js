@@ -1,6 +1,8 @@
 import { Actor } from '../../../shared/actors/src/Actor.js';
 import { ArtifactDetector } from './artifacts/ArtifactDetector.js';
 import { ArtifactManager } from './artifacts/ArtifactManager.js';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 /**
  * ArtifactActor - Manages artifact lifecycle: detection, curation, and storage
@@ -50,7 +52,7 @@ export class ArtifactActor extends Actor {
         // Initialize LLM client for curation
         this.llmClient = await this.resourceManager.createLLMClient({
           provider: 'anthropic',
-          model: 'claude-3-haiku-20240307', // Use fast model for curation
+          model: 'claude-3-5-sonnet-20241022', // Use Sonnet for curation (Haiku max_tokens too low)
           maxRetries: 2
         });
       } catch (error) {
@@ -127,6 +129,70 @@ export class ArtifactActor extends Actor {
         success: false,
         error: error.message,
         artifactsDetected: 0,
+        artifactsStored: 0,
+        artifacts: []
+      };
+    }
+  }
+  
+  /**
+   * Assert artifacts directly - for plan execution mode where artifacts are pre-defined
+   * @param {Object} params - Assertion parameters
+   * @param {Array} params.artifacts - Array of artifact definitions to assert
+   * @param {Object} params.context - Additional context (user message, etc.)
+   * @returns {Promise<Object>} Processing result with artifact info
+   */
+  async assertArtifacts(params) {
+    const { artifacts, context = {} } = params;
+    
+    try {
+      if (!Array.isArray(artifacts) || artifacts.length === 0) {
+        return {
+          success: true,
+          artifactsAsserted: 0,
+          artifactsStored: 0,
+          artifacts: []
+        };
+      }
+      
+      console.log(`ArtifactActor: Asserting ${artifacts.length} pre-defined artifacts`);
+      
+      // Process each artifact definition
+      const storedArtifacts = [];
+      for (const artifactDef of artifacts) {
+        // Create full artifact object from definition
+        const artifact = await this.createArtifactFromDefinition(artifactDef);
+        if (artifact) {
+          const stored = this.artifactManager.registerArtifact(artifact);
+          storedArtifacts.push(stored);
+        }
+      }
+      
+      console.log(`ArtifactActor: Stored ${storedArtifacts.length} asserted artifacts`);
+      
+      // Notify ArtifactAgent about new artifacts
+      if (storedArtifacts.length > 0 && this.artifactAgent) {
+        this.artifactAgent.handleArtifactCreated({
+          type: 'artifact_created',
+          artifacts: storedArtifacts,
+          toolName: 'plan_execution',
+          sessionId: this.sessionId
+        });
+      }
+      
+      return {
+        success: true,
+        artifactsAsserted: artifacts.length,
+        artifactsStored: storedArtifacts.length,
+        artifacts: storedArtifacts
+      };
+      
+    } catch (error) {
+      console.error('ArtifactActor: Error asserting artifacts:', error);
+      return {
+        success: false,
+        error: error.message,
+        artifactsAsserted: 0,
         artifactsStored: 0,
         artifacts: []
       };
@@ -332,6 +398,91 @@ Respond with JSON only:
   }
   
   /**
+   * Create artifact object from definition (for assertion mode)
+   * @param {Object} artifactDef - Artifact definition
+   * @returns {Promise<Object|null>} Full artifact object or null
+   */
+  async createArtifactFromDefinition(artifactDef) {
+    try {
+      // Required fields
+      if (!artifactDef.label || !artifactDef.description) {
+        console.warn('ArtifactActor: Artifact definition missing required fields (label, description)');
+        return null;
+      }
+      
+      // Create base artifact object
+      const artifact = {
+        id: `artifact-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        label: artifactDef.label,
+        description: artifactDef.description,
+        type: artifactDef.type || 'document',
+        subtype: artifactDef.subtype || 'unknown',
+        title: artifactDef.title || artifactDef.label.replace('@', ''),
+        curated: true, // Asserted artifacts are considered curated
+        createdBy: 'plan_execution',
+        createdAt: new Date().toISOString(),
+        metadata: {
+          isAsserted: true,
+          ...artifactDef.metadata
+        }
+      };
+      
+      // Handle file-based artifacts
+      if (artifactDef.path) {
+        artifact.path = artifactDef.path;
+        artifact.directory = path.dirname(artifactDef.path);
+        
+        try {
+          const stats = await fs.stat(artifactDef.path);
+          artifact.exists = true;
+          artifact.size = stats.size;
+          artifact.metadata.modified = stats.mtime.toISOString();
+          artifact.metadata.isFile = true;
+          
+          // Generate preview for small files
+          if (stats.isFile() && stats.size < 10000) {
+            try {
+              const content = await fs.readFile(artifactDef.path, 'utf8');
+              artifact.preview = this.generatePreview(content, artifact.type);
+              if (artifactDef.includeContent) {
+                artifact.content = content;
+              }
+            } catch (error) {
+              console.debug(`Could not read file for preview: ${artifactDef.path}`);
+            }
+          }
+        } catch (error) {
+          artifact.exists = false;
+          artifact.size = 0;
+        }
+      }
+      
+      // Handle content-based artifacts
+      if (artifactDef.content) {
+        artifact.content = artifactDef.content;
+        artifact.size = artifactDef.content.length;
+        artifact.exists = true;
+        artifact.preview = this.generatePreview(artifactDef.content, artifact.type);
+        artifact.metadata.isContent = true;
+      }
+      
+      // Handle URL-based artifacts
+      if (artifactDef.url) {
+        artifact.url = artifactDef.url;
+        artifact.exists = true;
+        artifact.size = artifactDef.url.length;
+        artifact.preview = artifactDef.url;
+        artifact.metadata.isUrl = true;
+      }
+      
+      return artifact;
+    } catch (error) {
+      console.warn('ArtifactActor: Error creating artifact from definition:', error);
+      return null;
+    }
+  }
+  
+  /**
    * Actor receive method - handles incoming messages
    */
   async receive(payload, envelope) {
@@ -346,6 +497,20 @@ Respond with JSON only:
             type: 'artifacts_processed',
             eventName: 'artifacts_processed',
             result: result,
+            sessionId: this.sessionId,
+            timestamp: new Date().toISOString()
+          });
+        }
+        break;
+        
+      case 'assert_artifacts':
+        const assertResult = await this.assertArtifacts(payload);
+        // Send result back to remote peer
+        if (this.remoteActor) {
+          this.remoteActor.receive({
+            type: 'artifacts_asserted',
+            eventName: 'artifacts_asserted',
+            result: assertResult,
             sessionId: this.sessionId,
             timestamp: new Date().toISOString()
           });

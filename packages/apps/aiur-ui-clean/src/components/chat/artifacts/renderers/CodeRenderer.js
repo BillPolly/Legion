@@ -74,13 +74,47 @@ export class CodeRenderer extends ArtifactRenderer {
     const code = document.createElement('code');
     code.className = `language-${artifact.subtype}`;
     
-    // Apply basic syntax highlighting
-    code.innerHTML = this.highlightCode(content, artifact.subtype);
+    // Check if content already contains HTML formatting
+    const hasHtmlFormatting = content.includes('style="color:') || 
+                             content.includes('<span') || 
+                             content.includes('&lt;') ||
+                             content.includes('&gt;');
+    
+    if (hasHtmlFormatting) {
+      // Content is already formatted, strip HTML tags for display
+      const cleanContent = this.stripHtmlTags(content);
+      // Apply fresh syntax highlighting
+      code.innerHTML = this.highlightCode(cleanContent, artifact.subtype);
+    } else {
+      // Apply basic syntax highlighting
+      code.innerHTML = this.highlightCode(content, artifact.subtype);
+    }
     
     pre.appendChild(code);
     container.appendChild(pre);
 
     return container;
+  }
+
+  /**
+   * Strip HTML tags and decode HTML entities from content
+   * @param {string} htmlContent - Content with HTML formatting
+   * @returns {string} Plain text content
+   */
+  stripHtmlTags(htmlContent) {
+    // First, remove all HTML tags
+    let text = htmlContent.replace(/<[^>]*>/g, '');
+    
+    // Then decode HTML entities
+    text = text
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&nbsp;/g, ' ');
+    
+    return text;
   }
 
   /**

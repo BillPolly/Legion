@@ -1,0 +1,14 @@
+{
+  "name": "number-api",
+  "version": "1.0.0",
+  "description": "Express API for number operations",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "jest",
+    "dev": "nodemon src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

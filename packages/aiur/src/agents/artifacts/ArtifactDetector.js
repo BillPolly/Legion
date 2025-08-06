@@ -248,15 +248,15 @@ export class ArtifactDetector {
   extractContentArtifacts(toolResult, toolName) {
     const artifacts = [];
 
-    // Look for code/content in common keys
-    const contentKeys = ['code', 'content', 'html', 'css', 'javascript', 'output', 'result', 'data'];
+    // Look for code/content in specific keys - avoid console output keys
+    const contentKeys = ['code', 'content', 'html', 'css', 'javascript', 'data'];
     
     contentKeys.forEach(key => {
       if (toolResult[key] && typeof toolResult[key] === 'string') {
         const content = toolResult[key];
         
-        // Only create artifact for substantial content
-        if (content.length > 50) {
+        // Filter out console output and colored text
+        if (this.isActualContent(content) && content.length > 50) {
           const type = this.detectContentType(content, key);
           
           artifacts.push({

@@ -1,58 +1,51 @@
 const express = require('express');
 const app = express();
+const PORT = process.env.PORT || 3000;
 
 // Middleware to parse JSON bodies
 app.use(express.json());
 
-// Addition endpoint
-app.post('/add', (req, res) => {
-    try {
-        const { num1, num2 } = req.body;
-
-        // Check if both numbers are provided
-        if (num1 === undefined || num2 === undefined) {
-            return res.status(400).json({
-                error: 'Both numbers are required'
-            });
-        }
-
-        // Convert to numbers and validate
-        const number1 = Number(num1);
-        const number2 = Number(num2);
-
-        if (isNaN(number1) || isNaN(number2)) {
-            return res.status(400).json({
-                error: 'Invalid numbers provided'
-            });
-        }
-
-        // Calculate sum and return result
-        const sum = number1 + number2;
-        res.json({
-            result: sum
-        });
-    } catch (error) {
-        res.status(500).json({
-            error: 'Internal server error'
-        });
-    }
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({
-        error: 'Something went wrong!'
-    });
-});
-
-const PORT = process.env.PORT || 3000;
-
-// Only listen if this file is run directly (not in tests)
-if (require.main === module) {
-    app.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT}`);
-    });
+/**
+ * Validates that both inputs are valid numbers
+ * @param {number} num1 First number
+ * @param {number} num2 Second number
+ * @returns {boolean} True if both inputs are valid numbers
+ */
+function validateNumbers(num1, num2) {
+  return !isNaN(num1) && !isNaN(num2);
 }
 
-module.exports = app;
+// Addition endpoint
+app.post('/add', (req, res) => {
+  try {
+    const { num1, num2 } = req.body;
+    
+    if (!num1 || !num2) {
+      return res.status(400).json({
+        error: 'Both numbers are required'
+      });
+    }
+
+    if (!validateNumbers(num1, num2)) {
+      return res.status(400).json({
+        error: 'Invalid input: both parameters must be numbers'
+      });
+    }
+
+    const sum = Number(num1) + Number(num2);
+    
+    res.json({
+      result: sum,
+      numbers: [num1, num2]
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Internal server error'
+    });
+  }
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

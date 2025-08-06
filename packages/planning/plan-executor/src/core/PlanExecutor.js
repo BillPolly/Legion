@@ -246,7 +246,19 @@ export class PlanExecutor extends EventEmitter {
     const maxRetries = context.options.retries;
     let lastError;
     
-    // Debug logging removed for production
+    // Emit action:start event
+    if (context.options.emitProgress) {
+      this.emit('action:start', {
+        planId: context.plan.id,
+        stepId: step.id,
+        stepName: step.name,
+        actionId: action.id,
+        actionType: action.type,
+        parameters: action.parameters,
+        description: action.description,
+        timestamp: new Date()
+      });
+    }
     
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
@@ -317,6 +329,21 @@ export class PlanExecutor extends EventEmitter {
         // Store result
         context.setActionResult(step.id, action.type, result);
         
+        // Emit action:complete event
+        if (context.options.emitProgress) {
+          this.emit('action:complete', {
+            planId: context.plan.id,
+            stepId: step.id,
+            stepName: step.name,
+            actionId: action.id,
+            actionType: action.type,
+            toolName: toolName,
+            parameters: resolvedParams,
+            result: result,
+            timestamp: new Date()
+          });
+        }
+        
         return result;
         
       } catch (error) {
@@ -324,10 +351,38 @@ export class PlanExecutor extends EventEmitter {
         // Action failed, will retry if attempts remain
         
         if (attempt < maxRetries) {
+          // Emit action:retry event
+          if (context.options.emitProgress) {
+            this.emit('action:retry', {
+              planId: context.plan.id,
+              stepId: step.id,
+              actionId: action.id,
+              actionType: action.type,
+              attempt: attempt + 1,
+              maxRetries: maxRetries,
+              error: error.message,
+              timestamp: new Date()
+            });
+          }
+          
           // Wait before retry with exponential backoff
           await this._sleep(Math.pow(2, attempt) * 1000);
         }
       }
+    }
+    
+    // Emit action:error event for final failure
+    if (context.options.emitProgress) {
+      this.emit('action:error', {
+        planId: context.plan.id,
+        stepId: step.id,
+        stepName: step.name,
+        actionId: action.id,
+        actionType: action.type,
+        error: lastError.message,
+        attempts: maxRetries + 1,
+        timestamp: new Date()
+      });
     }
     
     throw lastError;

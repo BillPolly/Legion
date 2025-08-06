@@ -1,46 +1,45 @@
 const express = require('express');
-
-const PORT = process.env.PORT || 3000;
 const app = express();
-
-// Middleware to parse JSON bodies
-app.use(express.json());
+const PORT = process.env.PORT || 3000;
 
 /**
  * Validates that both inputs are valid numbers
- * @param {number} num1 First number
- * @param {number} num2 Second number
- * @throws {Error} If inputs are invalid
+ * @param {string} num1 First number to validate
+ * @param {string} num2 Second number to validate
+ * @returns {Object} Validation result
  */
 function validateNumbers(num1, num2) {
-  if (typeof num1 !== 'number' || typeof num2 !== 'number' || isNaN(num1) || isNaN(num2)) {
-    throw new Error('Invalid input: Both parameters must be valid numbers');
+  const n1 = Number(num1);
+  const n2 = Number(num2);
+  
+  if (isNaN(n1) || isNaN(n2)) {
+    return { valid: false, error: 'Both parameters must be valid numbers' };
   }
-  return true;
+  
+  return { valid: true, numbers: [n1, n2] };
 }
 
 // Addition endpoint
-app.post('/add', (req, res) => {
-  try {
-    const { num1, num2 } = req.body;
-    const parsedNum1 = parseFloat(num1);
-    const parsedNum2 = parseFloat(num2);
-    
-    validateNumbers(parsedNum1, parsedNum2);
-    
-    const result = parsedNum1 + parsedNum2;
-    res.json({ result });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+app.get('/add/:num1/:num2', (req, res) => {
+  const { num1, num2 } = req.params;
+  const validation = validateNumbers(num1, num2);
+  
+  if (!validation.valid) {
+    return res.status(400).json({ error: validation.error });
   }
+  
+  const [n1, n2] = validation.numbers;
+  const sum = n1 + n2;
+  
+  res.json({ 
+    result: sum,
+    inputs: { num1: n1, num2: n2 }
+  });
 });
 
-// Start the server if not being required as a module (for testing)
-if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-}
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
 
-// Export for testing
-module.exports = app;
+module.exports = app; // Export for testing

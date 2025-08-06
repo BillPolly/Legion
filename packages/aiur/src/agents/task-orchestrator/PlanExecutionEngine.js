@@ -325,7 +325,7 @@ export class PlanExecutionEngine {
       this.orchestrator.sendThoughtToUser(`⚡ Executing: ${actionDesc}`);
     });
     
-    this.planExecutor.on('action:complete', (data) => {
+    this.planExecutor.on('action:complete', async (data) => {
       if (data.result) {
         let resultMessage = '';
         if (data.result.message) {
@@ -335,6 +335,9 @@ export class PlanExecutionEngine {
         }
         
         this.orchestrator.sendThoughtToUser(`✓ Completed ${data.actionType}${resultMessage}`);
+        
+        // Handle artifact assertion for file operations
+        await this.handleActionArtifacts(data);
       }
     });
     
@@ -351,6 +354,140 @@ export class PlanExecutionEngine {
     this.planExecutor.on('action:retry', (data) => {
       this.orchestrator.sendThoughtToUser(`🔄 Retrying ${data.actionType} (attempt ${data.attempt}/${data.maxRetries})`);
     });
+  }
+  
+  /**
+   * Handle artifact assertion for completed actions
+   */
+  async handleActionArtifacts(data) {
+    console.log('PlanExecutionEngine: handleActionArtifacts called for', data.actionType, data.toolName);
+    
+    // Check if this is a file operation that should create an artifact
+    const fileOperations = ['file_write', 'generate_javascript_module', 'generate_unit_tests', 
+                           'generate_html_page', 'create_package_json'];
+    
+    if (!fileOperations.includes(data.actionType) && !fileOperations.includes(data.toolName)) {
+      console.log('PlanExecutionEngine: Not a file operation, skipping artifact creation');
+      return;
+    }
+    
+    // Get the ArtifactActor from ChatAgent (passed as agentContext)
+    const artifactActor = this.orchestrator.agentContext?.artifactActor;
+    if (!artifactActor) {
+      console.log('PlanExecutionEngine: No ArtifactActor available for artifact assertion');
+      return;
+    }
+    
+    // Extract file information from the result
+    const result = data.result;
+    if (!result || result.success === false) {
+      console.log('PlanExecutionEngine: No result or failed result, skipping');
+      return;
+    }
+    
+    console.log('PlanExecutionEngine: Result keys:', Object.keys(result));
+    console.log('PlanExecutionEngine: Parameters:', data.parameters);
+    
+    // Build artifact definition based on the tool result
+    const artifacts = [];
+    
+    // Check for file path in common result fields
+    const filePath = result.path || result.filePath || result.file || result.outputPath || data.parameters?.path;
+    const content = result.content || result.code || result.html || result.generatedCode || data.parameters?.content;
+    
+    if (filePath && content) {
+      // Determine file type from extension
+      const extension = filePath.split('.').pop().toLowerCase();
+      let type = 'code';
+      let subtype = extension;
+      
+      if (['html', 'htm'].includes(extension)) {
+        type = 'markup';
+        subtype = 'html';
+      } else if (['css', 'scss', 'sass'].includes(extension)) {
+        type = 'stylesheet';
+        subtype = extension;
+      } else if (['json', 'yaml', 'yml'].includes(extension)) {
+        type = 'config';
+        subtype = extension;
+      } else if (['md', 'txt'].includes(extension)) {
+        type = 'document';
+        subtype = extension;
+      }
+      
+      artifacts.push({
+        type: type,
+        subtype: subtype,
+        title: filePath.split('/').pop(),
+        path: filePath,
+        content: content,
+        createdBy: data.toolName || data.actionType,
+        metadata: {
+          stepId: data.stepId,
+          stepName: data.stepName,
+          actionId: data.actionId,
+          planId: data.planId,
+          isFromPlanExecution: true
+        }
+      });
+    } else if (content && !filePath) {
+      // Handle generated content without a file path
+      let type = 'code';
+      let subtype = 'javascript';
+      let title = 'Generated Content';
+      
+      // Try to determine type from action/tool name
+      if (data.actionType.includes('html') || data.toolName?.includes('html')) {
+        type = 'markup';
+        subtype = 'html';
+        title = 'Generated HTML';
+      } else if (data.actionType.includes('test')) {
+        title = 'Generated Test';
+        subtype = 'test.js';
+      } else if (data.actionType.includes('package')) {
+        type = 'config';
+        subtype = 'json';
+        title = 'package.json';
+      }
+      
+      artifacts.push({
+        type: type,
+        subtype: subtype,
+        title: title,
+        content: content,
+        createdBy: data.toolName || data.actionType,
+        metadata: {
+          stepId: data.stepId,
+          stepName: data.stepName,
+          actionId: data.actionId,
+          planId: data.planId,
+          isFromPlanExecution: true,
+          noFilePath: true
+        }
+      });
+    }
+    
+    // Assert artifacts if any were found
+    if (artifacts.length > 0) {
+      try {
+        console.log(`PlanExecutionEngine: Asserting ${artifacts.length} artifacts from ${data.actionType}`);
+        const result = await artifactActor.assertArtifacts({
+          artifacts: artifacts,
+          context: {
+            source: 'plan_execution',
+            planId: data.planId,
+            stepId: data.stepId,
+            toolName: data.toolName
+          }
+        });
+        
+        if (result.success) {
+          console.log(`PlanExecutionEngine: Successfully asserted ${result.artifactsStored} artifacts`);
+        }
+      } catch (error) {
+        console.error('PlanExecutionEngine: Error asserting artifacts:', error);
+      }
+    }
   }
   
   /**
