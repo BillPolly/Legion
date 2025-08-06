@@ -10,6 +10,11 @@ import { jest } from '@jest/globals';
 export function createMockResourceManager(overrides = {}) {
   const defaultValues = {
     'env.ANTHROPIC_API_KEY': 'test-anthropic-key',
+    'moduleLoader': {
+      getToolByNameOrAlias: jest.fn(),
+      hasToolByNameOrAlias: jest.fn().mockResolvedValue(true),
+      getAllToolNames: jest.fn().mockResolvedValue([])
+    },
     ...overrides
   };
 

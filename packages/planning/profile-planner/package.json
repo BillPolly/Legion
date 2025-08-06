@@ -1,39 +1,28 @@
 {
   "name": "@legion/profile-planner",
   "version": "0.0.1",
-  "description": "Profile-based planning module for Legion framework - simplifies complex task planning with pre-configured domain environments",
   "type": "module",
-  "main": "./src/index.js",
+  "description": "Profile-based planning tools for Legion framework",
+  "main": "src/ProfilePlannerModule.js",
   "scripts": {
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
-    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathPattern=integration",
-    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathIgnorePatterns=integration",
-    "lint": "eslint src __tests__",
-    "lint:fix": "eslint src __tests__ --fix"
+    "lint": "eslint src/ --ext .js",
+    "lint:fix": "eslint src/ --ext .js --fix"
   },
-  "keywords": [
-    "planning",
-    "profiles",
-    "development",
-    "automation",
-    "llm-planner",
-    "legion"
-  ],
-  "author": "Legion Team",
+  "keywords": ["ai", "planning", "profile", "legion"],
+  "author": "Legion Framework",
   "license": "MIT",
   "dependencies": {
-    "@legion/module-loader": "*",
-    "@legion/llm": "*",
-    "@legion/llm-planner": "*"
+    "@legion/llm": "workspace:*",
+    "@legion/llm-planner": "workspace:*",
+    "@legion/module-loader": "workspace:*",
+    "@legion/plan-executor-tools": "workspace:*",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
-    "eslint": "^8.57.0",
     "jest": "^29.7.0"
-  },
-  "engines": {
-    "node": ">=18.0.0"
   }
 }

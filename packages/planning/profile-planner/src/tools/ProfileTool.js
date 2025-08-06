@@ -92,12 +92,14 @@ export class ProfileTool extends Tool {
       // Create planning context from profile
       const planningContext = this.profileManager.createPlanningContext(this.profile, task);
 
-      // Create LLM client for planning
+      // Create LLM client and module loader for planning
       const llmClient = await this._createLLMClient();
+      const moduleLoader = await this._getOrCreateModuleLoader();
 
       // Create and execute planner
       const planner = new GenericPlanner({
         llmClient: llmClient,
+        moduleLoader: moduleLoader,
         maxSteps: planningContext.maxSteps
       });
 
@@ -170,5 +172,32 @@ export class ProfileTool extends Tool {
     this.resourceManager.register('llmClient', llmClient);
 
     return llmClient;
+  }
+
+  /**
+   * Get or create ModuleLoader for plan validation
+   * @returns {ModuleLoader} Configured ModuleLoader
+   * @private
+   */
+  async _getOrCreateModuleLoader() {
+    // Try to get existing ModuleLoader from resource manager
+    try {
+      const existingLoader = this.resourceManager.get('moduleLoader');
+      if (existingLoader) {
+        return existingLoader;
+      }
+    } catch (error) {
+      // ModuleLoader doesn't exist, create new one
+    }
+
+    // Create new ModuleLoader
+    const { ModuleLoader } = await import('@legion/module-loader');
+    const moduleLoader = new ModuleLoader();
+    await moduleLoader.initialize();
+
+    // Register for reuse
+    this.resourceManager.register('moduleLoader', moduleLoader);
+
+    return moduleLoader;
   }
 }
