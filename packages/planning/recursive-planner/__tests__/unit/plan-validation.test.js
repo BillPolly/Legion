@@ -88,7 +88,7 @@ describe('PlanValidator', () => {
       const result = await validator.validate(plan, tools);
       
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.type === 'MISSING_REQUIRED_FIELD')).toBe(true);
+      expect(result.errors.some(e => e.type === 'SCHEMA_VALIDATION_ERROR')).toBe(true);
     });
 
     test('should allow optional parameters to be missing', async () => {

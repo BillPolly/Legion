@@ -6,8 +6,7 @@ import { describe, test, expect, beforeAll } from '@jest/globals';
 import { createLLMProvider } from '../../src/factories/AgentFactory.js';
 import { LLMPlanningStrategy } from '../../src/core/execution/planning/strategies/index.js';
 import { Planner } from '../../src/core/planning/Planner.js';
-import { PlanValidator } from '../../src/core/planning/validation/PlanValidator.js';
-import { SchemaValidator } from '../../src/core/planning/validation/SchemaValidator.js';
+import { PlanValidator } from '@legion/plan-validator';
 import { PlanStep } from '../../src/foundation/types/interfaces/interfaces.js';
 import { config } from '../../src/runtime/config/index.js';
 

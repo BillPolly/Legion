@@ -1,7 +1,7 @@
 /**
  * Tool Architecture Framework - Main Entry Point
  * 
- * Exports all tool architecture components
+ * Complete replacement for @legion/module-loader
  */
 
 // Core module components
@@ -12,6 +12,11 @@ export { Tool } from './modules/Tool.js';
 // Resource management
 export { ResourceManager } from './ResourceManager.js';
 
+// Module loading system
+export { ModuleLoader } from './ModuleLoader.js';
+export { default as ModuleLoader } from './ModuleLoader.js';
+export { ModuleFactory } from './ModuleFactory.js';
+
 // Compatibility exports for migration from module-loader
 export { 
   Module,
@@ -19,6 +24,19 @@ export {
   CompatTool as LegacyTool,
   CompatResourceManager 
 } from './compatibility.js';
+
+// Additional compatibility exports
+export {
+  GenericTool,
+  GenericModule,
+  OpenAIToolAdapter,
+  LegacyToolAdapter,
+  adaptLegacyTool,
+  ModuleManager,
+  ModuleRegistry,
+  JsonModuleLoader,
+  getResourceManager
+} from './additional-compat.js';
 
 // Alias for easier migration
 export { ModuleInstance as BaseModule } from './modules/ModuleInstance.js';
