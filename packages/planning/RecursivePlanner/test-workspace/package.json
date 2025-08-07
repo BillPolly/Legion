@@ -1,0 +1,9 @@
+{
+  "name": "test-project",
+  "version": "1.0.0",
+  "description": "Generated test project",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {}
+}

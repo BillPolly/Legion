@@ -1,0 +1,281 @@
+{
+  "name": "APIGenerator", 
+  "description": "Generates complete REST API with endpoints, validation, tests, and documentation",
+  "domains": ["api", "web", "backend", "testing"],
+  "capabilities": ["api-generation", "endpoint-creation", "validation", "testing"],
+
+  "input": {
+    "apiName": {
+      "type": "string",
+      "required": true,
+      "description": "Name of the API (e.g., 'UserAPI', 'OrderAPI')"
+    },
+    "endpoints": {
+      "type": "array",
+      "required": true,
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": { "type": "string" },
+          "method": { "type": "string", "enum": ["GET", "POST", "PUT", "DELETE", "PATCH"] },
+          "description": { "type": "string" }
+        }
+      },
+      "description": "List of API endpoints to generate"
+    },
+    "options": {
+      "type": "object",
+      "description": "Additional generation options",
+      "properties": {
+        "authentication": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include authentication middleware"
+        },
+        "validation": {
+          "type": "boolean", 
+          "default": true,
+          "description": "Include request validation"
+        },
+        "documentation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Generate API documentation"
+        },
+        "testing": {
+          "type": "boolean",
+          "default": true,
+          "description": "Generate integration tests"
+        },
+        "database": {
+          "type": "string",
+          "enum": ["mongodb", "postgresql", "mysql", "none"],
+          "default": "mongodb",
+          "description": "Database integration type"
+        }
+      }
+    }
+  },
+
+  "output": {
+    "status": {
+      "type": "string",
+      "enum": ["SUCCESS", "FAILURE"],
+      "description": "Generation status"
+    },
+    "apiCode": {
+      "type": "string",
+      "description": "Generated API server code"
+    },
+    "routes": {
+      "type": "object",
+      "description": "Generated route handlers"
+    },
+    "tests": {
+      "type": "string",
+      "description": "Generated test suite"
+    },
+    "documentation": {
+      "type": "string",
+      "description": "Generated API documentation"
+    },
+    "schemas": {
+      "type": "object", 
+      "description": "Generated validation schemas"
+    }
+  },
+
+  "implementation": {
+    "type": "sequence",
+    "children": [
+      {
+        "type": "action",
+        "tool": "apiPlanner",
+        "description": "Plan API structure and architecture",
+        "params": {
+          "apiName": "{{apiName}}",
+          "endpoints": "{{endpoints}}",
+          "options": "{{options}}"
+        }
+      },
+      {
+        "type": "parallel",
+        "successPolicy": "all",
+        "description": "Generate core API components",
+        "children": [
+          {
+            "type": "sequence",
+            "description": "Generate server and routes",
+            "children": [
+              {
+                "type": "action",
+                "tool": "serverGenerator",
+                "params": {
+                  "apiName": "{{apiName}}",
+                  "plan": "{{apiPlanner.result}}"
+                }
+              },
+              {
+                "type": "action",
+                "tool": "routeGenerator", 
+                "params": {
+                  "endpoints": "{{endpoints}}",
+                  "options": "{{options}}"
+                }
+              }
+            ]
+          },
+          {
+            "type": "sequence",
+            "description": "Generate validation schemas",
+            "condition": "{{options.validation}} === true",
+            "children": [
+              {
+                "type": "action",
+                "tool": "schemaGenerator",
+                "params": {
+                  "endpoints": "{{endpoints}}",
+                  "apiName": "{{apiName}}"
+                }
+              },
+              {
+                "type": "action",
+                "tool": "validationMiddleware",
+                "params": {
+                  "schemas": "{{schemaGenerator.result}}"
+                }
+              }
+            ]
+          },
+          {
+            "type": "action",
+            "tool": "authMiddleware",
+            "description": "Generate authentication middleware",
+            "condition": "{{options.authentication}} === true",
+            "params": {
+              "apiName": "{{apiName}}"
+            }
+          }
+        ]
+      },
+      {
+        "type": "selector",
+        "description": "Choose database integration approach",
+        "children": [
+          {
+            "type": "sequence",
+            "description": "MongoDB integration",
+            "children": [
+              {
+                "type": "condition",
+                "check": "{{options.database}} === 'mongodb'"
+              },
+              {
+                "type": "action",
+                "tool": "mongodbModels",
+                "params": {
+                  "apiName": "{{apiName}}",
+                  "endpoints": "{{endpoints}}"
+                }
+              }
+            ]
+          },
+          {
+            "type": "sequence", 
+            "description": "PostgreSQL integration",
+            "children": [
+              {
+                "type": "condition",
+                "check": "{{options.database}} === 'postgresql'"
+              },
+              {
+                "type": "action",
+                "tool": "postgresqlModels",
+                "params": {
+                  "apiName": "{{apiName}}",
+                  "endpoints": "{{endpoints}}"
+                }
+              }
+            ]
+          },
+          {
+            "type": "action",
+            "tool": "noOpDatabaseStub",
+            "description": "No database integration",
+            "params": {}
+          }
+        ]
+      },
+      {
+        "type": "parallel",
+        "successPolicy": "any",
+        "description": "Generate tests and documentation (optional)",
+        "children": [
+          {
+            "type": "sequence",
+            "description": "Generate comprehensive tests",
+            "condition": "{{options.testing}} === true",
+            "children": [
+              {
+                "type": "action",
+                "tool": "integrationTestGenerator",
+                "params": {
+                  "endpoints": "{{endpoints}}",
+                  "apiCode": "{{serverGenerator.result}}"
+                }
+              },
+              {
+                "type": "action",
+                "tool": "testRunner",
+                "params": {
+                  "testCode": "{{integrationTestGenerator.result}}"
+                }
+              }
+            ]
+          },
+          {
+            "type": "sequence",
+            "description": "Generate API documentation",
+            "condition": "{{options.documentation}} === true", 
+            "children": [
+              {
+                "type": "action",
+                "tool": "openAPIGenerator",
+                "params": {
+                  "endpoints": "{{endpoints}}",
+                  "schemas": "{{schemaGenerator.result}}",
+                  "apiName": "{{apiName}}"
+                }
+              },
+              {
+                "type": "action",
+                "tool": "markdownDocGenerator",
+                "params": {
+                  "openAPISpec": "{{openAPIGenerator.result}}"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "action",
+        "tool": "FileSystemModule.writeFile",
+        "description": "Save main API file",
+        "params": {
+          "path": "{{apiName}}.js",
+          "content": "{{serverGenerator.result}}"
+        }
+      },
+      {
+        "type": "action",
+        "tool": "FileSystemModule.writeFile",
+        "description": "Save package.json",
+        "params": {
+          "path": "package.json", 
+          "content": "{{packageJsonGenerator.result}}"
+        }
+      }
+    ]
+  }
+}

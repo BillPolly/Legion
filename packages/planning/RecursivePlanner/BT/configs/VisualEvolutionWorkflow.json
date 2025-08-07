@@ -1,0 +1,129 @@
+{
+  "type": "sequence",
+  "id": "visual-evolution-workflow",
+  "description": "Workflow for iterative visual design testing and evolution",
+  "children": [
+    {
+      "type": "action",
+      "id": "setup-browser",
+      "tool": "browserManager",
+      "params": {
+        "action": "launch",
+        "browserName": "design-browser",
+        "headless": false,
+        "viewport": {"width": 1440, "height": 900},
+        "devtools": true,
+        "slowMo": 200
+      }
+    },
+    {
+      "type": "retry",
+      "maxAttempts": 5,
+      "retryDelay": 1000,
+      "exponentialBackoff": true,
+      "child": {
+        "type": "sequence",
+        "id": "design-iteration-loop",
+        "description": "Single design iteration with testing",
+        "children": [
+          {
+            "type": "action",
+            "id": "capture-current-design",
+            "tool": "screenshotCapture",
+            "params": {
+              "url": "${app_url}",
+              "browserName": "design-browser",
+              "type": "fullPage",
+              "fileName": "design-iteration-${iteration_number}.png",
+              "waitFor": 3000
+            }
+          },
+          {
+            "type": "action",
+            "id": "test-responsive-mobile",
+            "tool": "screenshotCapture",
+            "params": {
+              "url": "${app_url}",
+              "browserName": "design-browser",
+              "type": "fullPage",
+              "fileName": "mobile-design-${iteration_number}.png",
+              "clip": {"x": 0, "y": 0, "width": 375, "height": 812}
+            }
+          },
+          {
+            "type": "action",
+            "id": "test-user-interactions",
+            "tool": "interactionTester",
+            "params": {
+              "url": "${app_url}",
+              "browserName": "design-browser",
+              "interactions": [
+                {"type": "wait", "timeout": 1000},
+                {"type": "click", "selector": "button", "continueOnError": true},
+                {"type": "wait", "timeout": 500},
+                {"type": "scroll", "x": 0, "y": 300},
+                {"type": "wait", "timeout": 500},
+                {"type": "scroll", "x": 0, "y": 0}
+              ],
+              "screenshotAfterEach": true
+            }
+          },
+          {
+            "type": "action",
+            "id": "measure-design-performance",
+            "tool": "performanceTester",
+            "params": {
+              "url": "${app_url}",
+              "browserName": "design-browser",
+              "metrics": ["FCP", "LCP", "CLS"],
+              "runs": 1,
+              "waitTime": 1000
+            }
+          },
+          {
+            "type": "selector",
+            "id": "visual-comparison-check",
+            "description": "Compare with baseline or create new baseline",
+            "children": [
+              {
+                "type": "condition",
+                "id": "has-baseline",
+                "check": "${baseline_exists}",
+                "child": {
+                  "type": "action",
+                  "id": "compare-with-baseline",
+                  "tool": "visualRegressionTester",
+                  "params": {
+                    "url": "${app_url}",
+                    "browserName": "design-browser",
+                    "baselineImage": "${baseline_image}",
+                    "threshold": 0.05
+                  }
+                }
+              },
+              {
+                "type": "action",
+                "id": "create-new-baseline",
+                "tool": "visualRegressionTester",
+                "params": {
+                  "url": "${app_url}",
+                  "browserName": "design-browser",
+                  "generateBaseline": true
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "action",
+      "id": "cleanup-browser",
+      "tool": "browserManager",
+      "params": {
+        "action": "close",
+        "browserName": "design-browser"
+      }
+    }
+  ]
+}

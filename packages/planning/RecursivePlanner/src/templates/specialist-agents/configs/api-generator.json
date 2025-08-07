@@ -1,0 +1,93 @@
+{
+  "name": "APIGenerator",
+  "description": "Creates complete REST APIs with validation, documentation, and comprehensive testing",
+  "domains": ["api", "web", "backend", "rest", "http"],
+  "capabilities": [
+    "api-design",
+    "endpoint-creation",
+    "request-validation",
+    "response-formatting", 
+    "api-documentation",
+    "integration-testing",
+    "error-handling"
+  ],
+  "toolDependencies": [
+    "codeGenerator",
+    "schemaValidator",
+    "docGenerator", 
+    "testGenerator",
+    "testRunner",
+    "apiTester"
+  ],
+  "promptTemplate": "api-generator.md",
+  "examples": [
+    {
+      "goal": "Create a user management API",
+      "apiSpec": {
+        "basePath": "/api/v1/users",
+        "endpoints": [
+          { "method": "GET", "path": "/", "description": "List all users" },
+          { "method": "POST", "path": "/", "description": "Create a new user" },
+          { "method": "GET", "path": "/:id", "description": "Get user by ID" },
+          { "method": "PUT", "path": "/:id", "description": "Update user" },
+          { "method": "DELETE", "path": "/:id", "description": "Delete user" }
+        ]
+      },
+      "requirements": [
+        "Include input validation",
+        "Add proper error handling",
+        "Create OpenAPI documentation", 
+        "Include integration tests",
+        "Support JSON responses"
+      ]
+    }
+  ],
+  "parameters": {
+    "framework": {
+      "type": "string",
+      "description": "Web framework to use",
+      "default": "express",
+      "options": ["express", "fastify", "koa", "nestjs"]
+    },
+    "database": {
+      "type": "string",
+      "description": "Database integration",
+      "default": "mongodb",
+      "options": ["mongodb", "postgresql", "mysql", "sqlite"]
+    },
+    "apiSpec": {
+      "type": "object",
+      "description": "API specification with endpoints",
+      "required": true,
+      "properties": {
+        "basePath": { "type": "string" },
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "method": { "type": "string" },
+              "path": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "authentication": {
+      "type": "boolean",
+      "description": "Include authentication middleware",
+      "default": false
+    }
+  },
+  "orchestration": {
+    "enabled": true,
+    "maxReplanAttempts": 3,
+    "executionStrategy": "sequential", 
+    "continueOnFailure": false,
+    "stepTimeout": 90000
+  },
+  "temperature": 0.4,
+  "maxRetries": 2,
+  "debugMode": false
+}
