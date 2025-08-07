@@ -23,8 +23,6 @@
     "test:log-manager": "npm run test --workspace=@legion/log-manager",
     "test:railway": "npm run test --workspace=@legion/railway",
     "test:aiur": "npm run test --workspace=@legion/aiur",
-    "test:plan-executor": "npm run test --workspace=@legion/plan-executor",
-    "test:plan-executor-tools": "npm run test --workspace=@legion/plan-executor-tools",
     "test:actor-bt": "npm run test --workspace=@legion/actor-bt",
     "test:tools": "npm run test --workspace=@legion/tools",
     "test:tool-core": "npm run test --workspace=@legion/tool-core",

@@ -21,8 +21,8 @@
   "license": "MIT",
   "dependencies": {
     "@legion/llm": "^1.0.0",
-    "@legion/llm-planner": "^0.0.1",
-    "@legion/plan-executor-tools": "^1.0.0",
+    "@legion/unified-planner": "^0.0.1",
+    "@legion/bt-validator": "^0.0.1",
     "zod": "^3.22.4",
     "@legion/tool-system": "^1.0.0"
   },

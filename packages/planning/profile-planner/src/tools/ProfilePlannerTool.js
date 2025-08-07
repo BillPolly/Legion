@@ -6,7 +6,7 @@
  */
 
 import { Tool, ToolResult } from '@legion/tool-system';
-import { GenericPlanner } from '@legion/llm-planner';
+import { PlannerEngine } from '@legion/unified-planner';
 import { LLMClient } from '@legion/llm';
 import { ProfileManager } from '../ProfileManager.js';
 
@@ -162,10 +162,9 @@ export class ProfilePlannerTool extends Tool {
       const moduleLoader = await this._getOrCreateModuleLoader();
 
       // Create and execute planner
-      const planner = new GenericPlanner({
+      const planner = new PlannerEngine({
         llmClient: llmClient,
-        moduleLoader: moduleLoader,
-        maxSteps: planningContext.maxSteps
+        moduleLoader: moduleLoader
       });
 
       console.log(`Planning with context:`, {
@@ -174,25 +173,32 @@ export class ProfilePlannerTool extends Tool {
         maxSteps: planningContext.maxSteps
       });
 
-      const plan = await planner.createPlan(planningContext);
+      // Create plan using LLM strategy with BT output
+      const bt = await planner.createPlan({
+        description: planningContext.description,
+        allowableActions: planningContext.allowableActions,
+        maxSteps: planningContext.maxSteps,
+        initialInputData: planningContext.initialInputData
+      }, 'llm');
 
       const result = {
         success: true,
         profile: profileName,
         profileDescription: profile.description,
         requiredModules: profile.requiredModules || [],
-        plan: plan,
-        planId: plan.id || `plan_${Date.now()}`,
+        behaviorTree: bt,
+        planId: bt.id || `plan_${Date.now()}`,
         createdAt: new Date().toISOString(),
         note: profile.requiredModules?.length > 0 ? 
           `Make sure to load required modules first: ${profile.requiredModules.join(', ')}` : 
-          undefined
+          undefined,
+        format: 'behavior_tree'
       };
 
       // TODO: Save to context if requested (when context management is available)
       if (saveAs) {
         result.savedAs = saveAs;
-        result.saveNote = `Plan created but context saving not yet implemented. Use the plan object directly.`;
+        result.saveNote = `Behavior tree created but context saving not yet implemented. Use the behaviorTree object directly.`;
       }
 
       return ToolResult.success(result);
