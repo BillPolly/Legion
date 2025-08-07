@@ -12,6 +12,17 @@ export { Tool } from './modules/Tool.js';
 // Resource management
 export { ResourceManager } from './ResourceManager.js';
 
+// Compatibility exports for migration from module-loader
+export { 
+  Module,
+  ToolResult,
+  CompatTool as LegacyTool,
+  CompatResourceManager 
+} from './compatibility.js';
+
+// Alias for easier migration
+export { ModuleInstance as BaseModule } from './modules/ModuleInstance.js';
+
 // Module implementations
 export { FileSystemModuleDefinition, FileSystemModuleInstance } from './modules/FileSystemModule.js';
 export { GitModuleDefinition, GitModuleInstance } from './modules/GitModule.js';

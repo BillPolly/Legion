@@ -4,8 +4,7 @@
 
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
 import { Planner } from '../../src/core/planning/Planner.js';
-import { PlanValidator } from '../../src/core/planning/validation/PlanValidator.js';
-import { SchemaValidator } from '../../src/core/planning/validation/SchemaValidator.js';
+import { PlanValidator } from '@legion/plan-validator';
 import { PlanStep } from '../../src/foundation/types/interfaces/interfaces.js';
 
 describe('Planner', () => {
@@ -41,7 +40,6 @@ describe('Planner', () => {
 
     // Create real validator
     validator = new PlanValidator({
-      schemaValidator: new SchemaValidator({ strictTypes: true }),
       strictMode: true,
       validateArtifacts: true
     });
