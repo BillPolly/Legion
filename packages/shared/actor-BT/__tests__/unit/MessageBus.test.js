@@ -14,6 +14,13 @@ class MockNode {
     this.receivedMessages = [];
   }
 
+  // Actor-compatible receive method
+  receive(payload) {
+    if (payload && typeof payload === 'object' && payload.from && payload.message) {
+      this.handleMessage(payload.from, payload.message);
+    }
+  }
+
   handleMessage(from, message) {
     this.receivedMessages.push({ from: from.id, message, timestamp: Date.now() });
   }

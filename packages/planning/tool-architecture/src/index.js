@@ -10,21 +10,21 @@ export { ModuleInstance } from './modules/ModuleInstance.js';
 export { Tool } from './modules/Tool.js';
 
 // Module implementations
-export { FileSystemModule } from './modules/FileSystemModule.js';
-export { GitModule } from './modules/GitModule.js';
-export { HTTPModule } from './modules/HTTPModule.js';
+export { FileSystemModuleDefinition, FileSystemModuleInstance } from './modules/FileSystemModule.js';
+export { GitModuleDefinition, GitModuleInstance } from './modules/GitModule.js';
+export { HTTPModuleDefinition, HTTPModuleInstance } from './modules/HTTPModule.js';
 
 // Integration components
 export { ToolRegistry } from './integration/ToolRegistry.js';
 export { ConfigurationManager } from './integration/ConfigurationManager.js';
 
 // Utilities
-export { CLIWrapper } from './utils/CLIWrapper.js';
-export { ConfigurationWrapper } from './utils/ConfigurationWrapper.js';
-export { ErrorHandling } from './utils/ErrorHandling.js';
+export { CLIWrapper, createCLITool } from './utils/CLIWrapper.js';
+export { parseToolConfiguration, validateToolSchema } from './utils/ConfigurationWrapper.js';
+export { ToolError, createStandardError } from './utils/ErrorHandling.js';
 export { EventEmitter } from './utils/EventEmitter.js';
-export { HandleManager } from './utils/HandleManager.js';
-export { LibraryIntegration } from './utils/LibraryIntegration.js';
-export { MethodWrapper } from './utils/MethodWrapper.js';
-export { ToolFactory } from './utils/ToolFactory.js';
-export { Validation } from './utils/Validation.js';
+export { generateHandle, validateHandleStructure } from './utils/HandleManager.js';
+export { NodeModuleWrapper, NPMPackageWrapper } from './utils/LibraryIntegration.js';
+export { wrapMethod, wrapAsyncMethod } from './utils/MethodWrapper.js';
+export { createToolFromMethod, createToolFromFunction } from './utils/ToolFactory.js';
+export { ValidationError, validateParameter } from './utils/Validation.js';

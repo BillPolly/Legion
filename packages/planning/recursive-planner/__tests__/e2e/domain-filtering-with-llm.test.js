@@ -11,9 +11,9 @@ import { describe, test, expect, beforeAll, beforeEach, afterAll } from '@jest/g
 import { createPlanningAgent, createLLMProvider } from '../../src/factories/AgentFactory.js';
 import { LLMPlanningStrategy } from '../../src/core/execution/planning/index.js';
 import { ToolRegistry, ModuleProvider } from '../../tools/src/integration/ToolRegistry.js';
-import { FileSystemModuleDefinition } from '../../tools/src/modules/FileSystemModule.js';
-import { HTTPModuleDefinition } from '../../tools/src/modules/HTTPModule.js';
-import { GitModuleDefinition } from '../../tools/src/modules/GitModule.js';
+import { FileSystemModuleDefinition } from '@legion/tool-architecture/src/modules/FileSystemModule.js';
+import { HTTPModuleDefinition } from '@legion/tool-architecture/src/modules/HTTPModule.js';
+import { GitModuleDefinition } from '@legion/tool-architecture/src/modules/GitModule.js';
 import { config } from '../../src/runtime/config/index.js';
 import fs from 'fs/promises';
 import path from 'path';

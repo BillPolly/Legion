@@ -8,10 +8,21 @@
  */
 
 import { describe, test, expect, beforeAll, beforeEach } from '@jest/globals';
-import { ToolRegistry, ModuleProvider } from '../../tools/src/integration/ToolRegistry.js';
-import { FileSystemModuleDefinition } from '../../tools/src/modules/FileSystemModule.js';
-import { HTTPModuleDefinition } from '../../tools/src/modules/HTTPModule.js';
-import { GitModuleDefinition } from '../../tools/src/modules/GitModule.js';
+// Import from tool-architecture package
+import { 
+  ToolRegistry, 
+  FileSystemModuleDefinition,
+  HTTPModuleDefinition,
+  GitModuleDefinition
+} from '@legion/tool-architecture';
+
+// ModuleProvider for compatibility
+class ModuleProvider {
+  constructor(metadata, instance) {
+    this.metadata = metadata;
+    this.instance = instance;
+  }
+}
 
 describe('Domain-Based Tool Filtering', () => {
   let toolRegistry;

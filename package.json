@@ -28,7 +28,7 @@
     "test:plan-executor": "npm run test --workspace=@legion/plan-executor",
     "test:plan-executor-tools": "npm run test --workspace=@legion/plan-executor-tools",
     "test:recursive-planner": "npm run test --workspace=@legion/recursive-planner",
-    "test:behavior-tree": "npm run test --workspace=@legion/behavior-tree",
+    "test:actor-bt": "npm run test --workspace=@legion/actor-bt",
     "test:tool-architecture": "npm run test --workspace=@legion/tool-architecture",
     "test:components": "npm run test --workspace=@legion/components",
     "test:watch": "npm run test:watch --workspaces",

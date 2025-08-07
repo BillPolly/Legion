@@ -21,20 +21,26 @@ export { RetryNode } from './RetryNode.js';
 
 /**
  * Registry of all available node types for easy registration
+ * Use a getter function to avoid circular dependency issues
  */
-export const BUILT_IN_NODE_TYPES = [
-  { name: 'sequence', class: SequenceNode },
-  { name: 'selector', class: SelectorNode },
-  { name: 'action', class: ActionNode },
-  { name: 'retry', class: RetryNode }
-];
+export function getBUILT_IN_NODE_TYPES() {
+  return [
+    { name: 'sequence', class: SequenceNode },
+    { name: 'selector', class: SelectorNode },
+    { name: 'action', class: ActionNode },
+    { name: 'retry', class: RetryNode }
+  ];
+}
+
+// BUILT_IN_NODE_TYPES is now accessed via getBUILT_IN_NODE_TYPES() function
+// to avoid circular dependency issues with ES modules
 
 /**
  * Register all built-in node types with an executor
  * @param {BehaviorTreeExecutor} executor - Target executor
  */
 export function registerBuiltInNodes(executor) {
-  for (const { name, class: NodeClass } of BUILT_IN_NODE_TYPES) {
+  for (const { name, class: NodeClass } of getBUILT_IN_NODE_TYPES()) {
     executor.registerNodeType(name, NodeClass);
   }
 }
@@ -45,7 +51,7 @@ export function registerBuiltInNodes(executor) {
  * @returns {Class|null} Node class or null if not found
  */
 export function getNodeClass(typeName) {
-  const nodeType = BUILT_IN_NODE_TYPES.find(type => type.name === typeName);
+  const nodeType = getBUILT_IN_NODE_TYPES().find(type => type.name === typeName);
   return nodeType ? nodeType.class : null;
 }
 
@@ -54,7 +60,7 @@ export function getNodeClass(typeName) {
  * @returns {Array<string>} Array of node type names
  */
 export function getAvailableNodeTypes() {
-  return BUILT_IN_NODE_TYPES.map(type => type.name);
+  return getBUILT_IN_NODE_TYPES().map(type => type.name);
 }
 
 /**

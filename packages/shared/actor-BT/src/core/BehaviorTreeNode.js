@@ -6,7 +6,10 @@
  * - Message-passing communication system
  * - Dynamic child management
  * - Pluggable execution patterns
+ * - Actor-based communication
  */
+
+import { Actor } from '@legion/actors';
 
 export const NodeStatus = {
   SUCCESS: 'SUCCESS',
@@ -14,8 +17,9 @@ export const NodeStatus = {
   RUNNING: 'RUNNING'
 };
 
-export class BehaviorTreeNode {
+export class BehaviorTreeNode extends Actor {
   constructor(config, toolRegistry, executor) {
+    super(); // Call Actor constructor
     this.config = config;
     this.toolRegistry = toolRegistry;
     this.executor = executor;
@@ -128,6 +132,20 @@ export class BehaviorTreeNode {
   sendToChildren(message) {
     for (const child of this.children) {
       this.send(child, message);
+    }
+  }
+
+  /**
+   * Actor receive method - handles incoming messages
+   * @param {Object} payload - Message payload with from and message properties
+   */
+  receive(payload, ...args) {
+    // Handle actor protocol messages
+    if (payload && typeof payload === 'object' && payload.from && payload.message) {
+      this.handleMessage(payload.from, payload.message);
+    } else {
+      // Fallback to parent Actor receive for other message types
+      super.receive(payload, ...args);
     }
   }
 

@@ -54,7 +54,8 @@ export class MessageBus {
         await new Promise(resolve => {
           setTimeout(() => {
             try {
-              to.handleMessage(from, message);
+              // Use actor's receive method with proper payload structure
+              to.receive({ from, message });
             } catch (error) {
               console.error('[MessageBus] Message handling error:', error);
               // Optionally emit error event for monitoring

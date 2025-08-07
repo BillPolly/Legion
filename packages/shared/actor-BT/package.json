@@ -1,7 +1,7 @@
 {
-  "name": "@legion/behavior-tree",
+  "name": "@legion/actor-bt",
   "version": "1.0.0",
-  "description": "Behavior Tree execution engine for Legion framework",
+  "description": "Actor-based Behavior Tree execution engine for Legion framework",
   "type": "module",
   "main": "src/index.js",
   "scripts": {
@@ -12,6 +12,7 @@
   "keywords": [
     "behavior-tree",
     "bt",
+    "actor",
     "orchestration",
     "workflow",
     "legion"
@@ -19,6 +20,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@legion/actors": "^1.0.0",
     "@legion/tool-architecture": "^1.0.0"
   },
   "devDependencies": {

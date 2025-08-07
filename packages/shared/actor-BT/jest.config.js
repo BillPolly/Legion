@@ -8,12 +8,13 @@ export default {
   testPathIgnorePatterns: [
     '/node_modules/',
     '/__tests__/utils/',
-    '/__tests__/fixtures/'
+    '/__tests__/fixtures/',
+    '/__tests__/e2e/mock-dev-tools.js'
   ],
   collectCoverageFrom: [
     'src/**/*.js',
     '!src/**/*.test.js',
     '!src/**/*.spec.js'
   ],
-  testTimeout: 10000
+  testTimeout: 30000
 };

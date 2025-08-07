@@ -14,7 +14,7 @@ import { Planner } from '../../src/core/planning/Planner.js';
 import { PlanValidator } from '../../src/core/planning/validation/PlanValidator.js';
 import { SchemaValidator } from '../../src/core/planning/validation/SchemaValidator.js';
 import { ToolRegistry, ModuleProvider } from '../../tools/src/integration/ToolRegistry.js';
-import { FileSystemModuleDefinition } from '../../tools/src/modules/FileSystemModule.js';
+import { FileSystemModuleDefinition } from '@legion/tool-architecture/src/modules/FileSystemModule.js';
 import { config } from '../../src/runtime/config/index.js';
 import { createTool } from '../../src/factories/ToolFactory.js';
 import { createValidatingToolWrapper } from '../../src/utils/ToolValidation.js';

@@ -4,15 +4,14 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import { PlanningAgent } from '../../../src/core/agents/base/PlanningAgent.js';
-import { AgentConfig } from '../../../src/core/agents/base/AgentConfig.js';
+// Import from recursive-planner package
+import RecursivePlanner from '@legion/recursive-planner';
+const planner = new RecursivePlanner();
+const { PlanningAgent, AgentConfig, PlanStep, strategies: { TemplatePlanningStrategy }, utils: { IdGenerator, ValidationUtils } } = planner;
+
 import { ToolRegistry, ModuleProvider } from '../../src/integration/ToolRegistry.js';
 import { FileSystemModuleDefinition } from '../../src/modules/FileSystemModule.js';
 import { HTTPModuleDefinition } from '../../src/modules/HTTPModule.js';
-import { TemplatePlanningStrategy } from '../../../src/core/execution/planning/strategies/PlanningStrategy.js';
-import { PlanStep } from '../../../src/foundation/types/interfaces/interfaces.js';
-import { IdGenerator } from '../../../src/foundation/utils/generators/IdGenerator.js';
-import { ValidationUtils } from '../../../src/foundation/utils/validation/ValidationUtils.js';
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';

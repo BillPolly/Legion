@@ -11,7 +11,7 @@ import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
 import { createPlanningAgent, createLLMProvider } from '../../src/factories/AgentFactory.js';
 import { LLMPlanningStrategy } from '../../src/core/execution/planning/index.js';
 import { ToolRegistry, ModuleProvider } from '../../tools/src/integration/ToolRegistry.js';
-import { FileSystemModuleDefinition } from '../../tools/src/modules/FileSystemModule.js';
+import { FileSystemModuleDefinition } from '@legion/tool-architecture/src/modules/FileSystemModule.js';
 import { config } from '../../src/runtime/config/index.js';
 import { createTool } from '../../src/factories/ToolFactory.js';
 import fs from 'fs/promises';
