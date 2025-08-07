@@ -7,22 +7,27 @@ import { RequirementParserTool } from '../../src/tools/requirements/RequirementP
 import { ToolResult } from '@legion/tool-core';
 
 // Mock @legion/tool-core
-jest.mock('@legion/tool-core', () => ({
-  Tool: class {
-    constructor(config) {
-      this.name = config.name;
-      this.description = config.description;
-      this.inputSchema = config.inputSchema;
+jest.mock('@legion/tool-core', () => {
+  const mockSuccess = jest.fn((data) => ({ success: true, data }));
+  const mockFailure = jest.fn((message) => ({ success: false, error: message }));
+  
+  return {
+    Tool: class {
+      constructor(config) {
+        this.name = config.name;
+        this.description = config.description;
+        this.inputSchema = config.inputSchema;
+      }
+      emit(event, data) {
+        // Mock emit
+      }
+    },
+    ToolResult: {
+      success: mockSuccess,
+      failure: mockFailure
     }
-    emit(event, data) {
-      // Mock emit
-    }
-  },
-  ToolResult: {
-    success: jest.fn((data) => ({ success: true, data })),
-    failure: jest.fn((message) => ({ success: false, error: message }))
-  }
-}));
+  };
+});
 
 describe('RequirementParserTool', () => {
   let tool;
