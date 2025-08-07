@@ -6,7 +6,7 @@
  */
 
 import { GenericPlanner } from '@legion/llm-planner';
-import { ResourceManager } from '@legion/tool-system';
+import { ResourceManager } from '@legion/tools';
 
 // Planning domain configurations
 import { RequirementAnalyzerConfig } from './configs/RequirementAnalyzerConfig.js';

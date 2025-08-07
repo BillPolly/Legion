@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterEach, beforeEach } from '@jest/globals';
-import { ResourceManager } from '@legion/tool-system';
+import { ResourceManager } from '@legion/tools';
 import GitIntegrationManager from '../../../src/integration/GitIntegrationManager.js';
 import GitConfigValidator from '../../../src/config/GitConfigValidator.js';
 import { promises as fs } from 'fs';

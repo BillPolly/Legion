@@ -7,7 +7,7 @@
 
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
 import { UnifiedPlanner } from '../UnifiedPlanner.js';
-import { ResourceManager } from '@legion/tool-system';
+import { ResourceManager } from '@legion/tools';
 
 describe('UnifiedPlanner', () => {
   let mockResourceManager;

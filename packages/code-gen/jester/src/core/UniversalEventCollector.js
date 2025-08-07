@@ -82,6 +82,7 @@ export class UniversalEventCollector extends EventCollector {
       service: context.service || 'unknown',
       userId: context.userId,
       requestId: context.requestId,
+      correlationId: context.correlationId,
       source: 'production'
     });
 
@@ -136,6 +137,8 @@ export class UniversalEventCollector extends EventCollector {
       duration,
       success: status >= 200 && status < 300,
       context,
+      correlationId: context.correlationId,
+      userId: context.userId,
       source: 'api'
     });
 

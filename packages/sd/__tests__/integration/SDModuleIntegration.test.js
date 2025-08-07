@@ -24,7 +24,7 @@ jest.mock('@legion/llm', () => ({
   }))
 }));
 
-jest.mock('@legion/actor-BT', () => ({
+jest.mock('../../src/core/BTAgentBase.js', () => ({
   BTAgentBase: class {
     constructor(config) {
       this.config = config;
@@ -66,14 +66,41 @@ describe('SD Module Integration', () => {
   let mockResourceManager;
 
   beforeEach(() => {
+    const mockLLMClient = {
+      complete: jest.fn().mockResolvedValue(JSON.stringify({
+        functional: [
+          {
+            id: 'FR-001',
+            description: 'Test requirement',
+            priority: 'high'
+          }
+        ],
+        nonFunctional: [],
+        constraints: [],
+        assumptions: [],
+        dependencies: [],
+        reasoning: 'Test analysis'
+      }))
+    };
+    
     mockResourceManager = {
       get: jest.fn((key) => {
         if (key === 'env.ANTHROPIC_API_KEY') return 'test-key';
         if (key === 'env.MONGODB_URI') return 'mongodb://localhost:27017/test';
+        if (key === 'llmClient') return mockLLMClient;
         return null;
       }),
-      register: jest.fn()
+      register: jest.fn(),
+      set: jest.fn() // Add set method for completeness
     };
+    
+    // Pre-register the mock LLM client
+    mockResourceManager.get.mockImplementation((key) => {
+      if (key === 'env.ANTHROPIC_API_KEY') return 'test-key';
+      if (key === 'env.MONGODB_URI') return 'mongodb://localhost:27017/test';
+      if (key === 'llmClient') return mockLLMClient;
+      return null;
+    });
   });
 
   describe('Module Loading', () => {
@@ -100,7 +127,7 @@ describe('SD Module Integration', () => {
       // Domain tools
       expect(toolNames).toContain('identify_bounded_contexts');
       expect(toolNames).toContain('model_entities');
-      expect(toolNames).toContain('identify_aggregates');
+      expect(toolNames).toContain('design_aggregates');
       
       // Architecture tools
       expect(toolNames).toContain('design_layers');
@@ -196,8 +223,11 @@ describe('SD Module Integration', () => {
 
   describe('Tool Integration', () => {
     it('should execute RequirementParserTool', async () => {
+      // Create module first to ensure LLM client is available
+      module = await SDModule.create(mockResourceManager);
+      
       const tool = new RequirementParserTool({
-        llmClient: module?.llmClient || mockResourceManager.get('llmClient'),
+        llmClient: module.llmClient,
         resourceManager: mockResourceManager
       });
       
@@ -214,9 +244,24 @@ describe('SD Module Integration', () => {
 
   describe('End-to-End Workflow', () => {
     it('should process requirements through agent', async () => {
+      // Create module first to ensure LLM client is available
+      module = await SDModule.create(mockResourceManager);
+      
+      // Create enhanced mock resource manager that includes the LLM client from module
+      const enhancedMockResourceManager = {
+        ...mockResourceManager,
+        get: jest.fn((key) => {
+          if (key === 'env.ANTHROPIC_API_KEY') return 'test-key';
+          if (key === 'env.MONGODB_URI') return 'mongodb://localhost:27017/test';
+          if (key === 'llmClient') return module.llmClient;
+          if (key === 'sdModule') return { llmClient: module.llmClient };
+          return null;
+        })
+      };
+      
       const agent = new RequirementsAgent({
         designDatabase: {},
-        resourceManager: mockResourceManager
+        resourceManager: enhancedMockResourceManager
       });
       
       await agent.initialize();

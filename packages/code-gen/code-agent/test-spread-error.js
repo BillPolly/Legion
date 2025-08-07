@@ -4,7 +4,7 @@
  * Find the spread syntax error
  */
 
-import { ResourceManager } from '@legion/tool-system';
+import { ResourceManager } from '@legion/tools';
 import { UnifiedPlanner } from './src/planning/llm/UnifiedPlanner.js';
 
 async function testSpreadError() {

@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterEach } from '@jest/globals';
-import { ResourceManager } from '@legion/tool-system';
+import { ResourceManager } from '@legion/tools';
 import GitHubAuthentication from '../../../src/integration/GitHubAuthentication.js';
 
 describe('GitHub Authentication', () => {

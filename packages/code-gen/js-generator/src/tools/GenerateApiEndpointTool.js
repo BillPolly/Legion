@@ -5,7 +5,7 @@
  * middleware integration, and proper HTTP response patterns.
  */
 
-import { Tool, ToolResult } from '@legion/tool-system';
+import { Tool, ToolResult } from '@legion/tools';
 import { z } from 'zod';
 
 export class GenerateApiEndpointTool extends Tool {

@@ -4,7 +4,7 @@
  * This demonstrates how to load and use the CodeAgent tools directly
  */
 
-import { ModuleFactory } from '@legion/tool-system';
+import { ModuleFactory } from '@legion/tools';
 import ResourceManager from '@legion/module-loader/src/resources/ResourceManager.js';
 import path from 'path';
 import { fileURLToPath } from 'url';

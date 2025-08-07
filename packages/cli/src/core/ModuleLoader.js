@@ -5,7 +5,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { ModuleFactory } from '@legion/tool-system';
+import { ModuleFactory } from '@legion/tools';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

@@ -4,7 +4,7 @@
  * Extracted and adapted from cerebrate CodeAnalysisCommands for Legion framework
  */
 
-import { Tool, ToolResult } from '@legion/tool-system';
+import { Tool, ToolResult } from '@legion/tools';
 import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';

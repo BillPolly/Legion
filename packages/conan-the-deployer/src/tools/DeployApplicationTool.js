@@ -1,4 +1,4 @@
-import { Tool, ToolResult, ResourceManager } from '@legion/tool-system';
+import { Tool, ToolResult, ResourceManager } from '@legion/tools';
 import DeploymentManager from '../DeploymentManager.js';
 
 /**

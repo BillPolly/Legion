@@ -5,7 +5,7 @@
  * performance insights, error analysis, and actionable recommendations.
  */
 
-import { Tool, ToolResult } from '@legion/tool-system';
+import { Tool, ToolResult } from '@legion/tools';
 import { z } from 'zod';
 import { PerformanceAnalyzer } from '../analytics/performance.js';
 import { ErrorPatternAnalyzer } from '../analytics/error-patterns.js';

@@ -14,7 +14,7 @@
  */
 
 import { CodeAgent } from '../../src/index.js';
-import { ModuleLoader, ResourceManager } from '@legion/tool-system';
+import { ModuleLoader, ResourceManager } from '@legion/tools';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';

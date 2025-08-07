@@ -4,7 +4,7 @@
  * Provides tools for JavaScript and CSS validation, security scanning, and performance analysis
  */
 
-import { Module } from '@legion/tool-system';
+import { Module } from '@legion/tools';
 import { wrapTool } from '../../src/ToolWrapper.js';
 import { ValidateJavaScriptTool } from './tools/ValidateJavaScriptTool.js';
 

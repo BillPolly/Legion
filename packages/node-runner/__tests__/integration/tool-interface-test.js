@@ -5,7 +5,7 @@
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { EventEmitter } from 'events';
 import { Readable } from 'stream';
-import { ModuleFactory } from '@legion/tool-system';
+import { ModuleFactory } from '@legion/tools';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import * as childProcess from 'child_process';

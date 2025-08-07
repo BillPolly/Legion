@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import FileAnalysisModule from '../FileAnalysisModule.js';
 import { FileConverter } from '../utils/FileConverter.js';
-import { ModuleFactory } from '@legion/tool-system';
+import { ModuleFactory } from '@legion/tools';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises';

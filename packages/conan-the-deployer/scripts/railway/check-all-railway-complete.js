@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { ResourceManager } from '@legion/tool-system';
+import { ResourceManager } from '@legion/tools';
 
 console.log('🚂 COMPLETE RAILWAY INFRASTRUCTURE CHECK\n');
 

@@ -5,7 +5,7 @@
  * the loaded modules and their tools.
  */
 
-import { Module } from '@legion/tool-system';
+import { Module } from '@legion/tools';
 import { ModuleListTool } from './ModuleListTool.js';
 import { ModuleInfoTool } from './ModuleInfoTool.js';
 import { ModuleToolsTool } from './ModuleToolsTool.js';

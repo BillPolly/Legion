@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
-import { ResourceManager } from '@legion/tool-system';
+import { ResourceManager } from '@legion/tools';
 
 describe('Resource Manager GitHub Environment Access', () => {
   let resourceManager;

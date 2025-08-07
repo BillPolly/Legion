@@ -7,7 +7,7 @@
  * for basic code generation without full deployment.
  */
 
-import { ResourceManager } from '@legion/tool-system';
+import { ResourceManager } from '@legion/tools';
 import { CodeAgent } from '../src/agent/CodeAgent.js';
 import { promises as fs } from 'fs';
 import path from 'path';

@@ -5,7 +5,7 @@
  * stopPropagation, and modern addEventListener patterns.
  */
 
-import { Tool, ToolResult } from '@legion/tool-system';
+import { Tool, ToolResult } from '@legion/tools';
 import { z } from 'zod';
 
 export class GenerateEventHandlerTool extends Tool {

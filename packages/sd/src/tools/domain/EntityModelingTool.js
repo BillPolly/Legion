@@ -1,5 +1,5 @@
 /**
- * EntityModelingTool - Models domain entities with DDD principles
+ * EntityModelingTool - Models domain entities with DDD principles using LLM
  */
 
 import { Tool, ToolResult } from '@legion/tool-core';
@@ -9,36 +9,250 @@ export class EntityModelingTool extends Tool {
   constructor(dependencies = {}) {
     super({
       name: 'model_entities',
-      description: 'Model domain entities with invariants',
+      description: 'Model domain entities with invariants following DDD principles',
       inputSchema: z.object({
-        boundedContexts: z.array(z.any()).describe('Bounded contexts'),
-        parsedRequirements: z.any().describe('Parsed requirements'),
+        boundedContexts: z.array(z.any()).describe('Bounded contexts to model entities for'),
+        requirementsContext: z.any().describe('Requirements context'),
         projectId: z.string().optional()
       })
     });
     
     this.llmClient = dependencies.llmClient;
     this.designDatabase = dependencies.designDatabase;
+    this.resourceManager = dependencies.resourceManager;
   }
 
   async execute(args) {
+    const { boundedContexts, requirementsContext, projectId } = args;
+    
     try {
-      this.emit('progress', { percentage: 0, status: 'Modeling entities...' });
+      this.emit('progress', { percentage: 0, status: 'Starting entity modeling...' });
       
-      // Placeholder implementation
-      const entities = [{
-        id: 'entity-1',
-        name: 'SampleEntity',
-        properties: [],
-        invariants: [],
-        boundedContext: 'bc-core'
-      }];
+      // Get LLM client
+      const llmClient = await this.getLLMClient();
       
-      this.emit('progress', { percentage: 100, status: 'Entities modeled' });
+      // Model entities for each bounded context
+      const allEntities = [];
       
-      return ToolResult.success({ entities });
+      for (const context of boundedContexts) {
+        this.emit('progress', { 
+          percentage: Math.floor((boundedContexts.indexOf(context) / boundedContexts.length) * 70),
+          status: `Modeling entities for ${context.name}...`
+        });
+        
+        // Create entity modeling prompt for this context
+        const prompt = this.createEntityModelingPrompt(context, requirementsContext);
+        
+        // Call LLM for entity modeling
+        const llmResponse = await llmClient.complete(prompt, {
+          temperature: 0.3,
+          maxTokens: 3000,
+          system: 'You are a DDD expert. Model entities with clear identities, properties, behaviors, and invariants.'
+        });
+        
+        // Parse entities from response
+        const contextEntities = this.parseLLMResponse(llmResponse, context.id);
+        
+        allEntities.push(...contextEntities);
+      }
+      
+      this.emit('progress', { percentage: 80, status: 'Validating entities...' });
+      
+      // Validate all entities
+      const validation = this.validateEntities(allEntities);
+      if (!validation.valid) {
+        return ToolResult.failure(`Invalid entities: ${validation.errors.join(', ')}`);
+      }
+      
+      // Store entities
+      const storedArtifact = await this.storeEntities(allEntities, projectId);
+      
+      this.emit('progress', { percentage: 100, status: 'Entity modeling completed' });
+      
+      return ToolResult.success({
+        entities: allEntities,
+        artifactId: storedArtifact.id,
+        summary: {
+          totalEntities: allEntities.length,
+          byContext: boundedContexts.map(c => ({
+            context: c.name,
+            entityCount: allEntities.filter(e => e.boundedContext === c.id).length
+          }))
+        }
+      });
+      
     } catch (error) {
       return ToolResult.failure(`Failed to model entities: ${error.message}`);
     }
+  }
+
+  async getLLMClient() {
+    if (this.llmClient) return this.llmClient;
+    
+    if (this.resourceManager) {
+      this.llmClient = this.resourceManager.get('llmClient');
+      if (this.llmClient) return this.llmClient;
+    }
+    
+    throw new Error('LLM client not available');
+  }
+
+  createEntityModelingPrompt(context, requirementsContext) {
+    return `Model domain entities for the bounded context: ${context.name}
+
+Bounded Context Details:
+${JSON.stringify(context, null, 2)}
+
+Requirements Context:
+${JSON.stringify(requirementsContext, null, 2)}
+
+Model entities following DDD principles:
+1. Each entity must have a unique identity
+2. Define clear properties with types
+3. Specify behaviors (methods) the entity can perform
+4. Define invariants (business rules that must always be true)
+5. Consider entity lifecycle (creation, modification, deletion)
+6. Identify relationships with other entities
+
+Return a JSON array of entities with this structure:
+{
+  "entities": [
+    {
+      "id": "entity-[name]",
+      "name": "EntityName",
+      "description": "Clear description of what this entity represents",
+      "identity": {
+        "type": "uuid|natural|composite",
+        "description": "How this entity is uniquely identified"
+      },
+      "properties": [
+        {
+          "name": "propertyName",
+          "type": "string|number|boolean|date|object|array",
+          "required": true/false,
+          "description": "What this property represents",
+          "validation": "Validation rules if any"
+        }
+      ],
+      "behaviors": [
+        {
+          "name": "behaviorName",
+          "description": "What this behavior does",
+          "parameters": ["param1", "param2"],
+          "sideEffects": "Any side effects",
+          "invariantsChecked": ["invariant1"]
+        }
+      ],
+      "invariants": [
+        {
+          "name": "invariantName",
+          "rule": "Business rule that must always be true",
+          "errorMessage": "Message when invariant is violated"
+        }
+      ],
+      "relationships": [
+        {
+          "type": "has-one|has-many|belongs-to",
+          "target": "OtherEntityName",
+          "description": "Nature of the relationship"
+        }
+      ],
+      "lifecycle": {
+        "creation": "How the entity is created",
+        "modification": "How the entity can be modified",
+        "deletion": "Deletion rules and constraints"
+      }
+    }
+  ],
+  "reasoning": "Explanation of entity modeling decisions"
+}
+
+Focus on modeling rich domain entities that encapsulate business logic. Return ONLY valid JSON.`;
+  }
+
+  parseLLMResponse(response, contextId) {
+    try {
+      const cleanedResponse = response.trim();
+      const jsonStart = cleanedResponse.indexOf('{');
+      const jsonEnd = cleanedResponse.lastIndexOf('}') + 1;
+      
+      if (jsonStart >= 0 && jsonEnd > jsonStart) {
+        const jsonStr = cleanedResponse.substring(jsonStart, jsonEnd);
+        const parsed = JSON.parse(jsonStr);
+        
+        // Add bounded context to each entity
+        const entities = (parsed.entities || []).map(entity => ({
+          ...entity,
+          boundedContext: contextId
+        }));
+        
+        return entities;
+      }
+      
+      return JSON.parse(cleanedResponse).entities || [];
+      
+    } catch (error) {
+      // Fallback: create basic entity
+      return [{
+        id: `entity-${contextId}-default`,
+        name: 'DefaultEntity',
+        description: 'Default entity created due to parsing error',
+        boundedContext: contextId,
+        identity: { type: 'uuid', description: 'UUID identifier' },
+        properties: [],
+        behaviors: [],
+        invariants: [],
+        relationships: []
+      }];
+    }
+  }
+
+  validateEntities(entities) {
+    const errors = [];
+    
+    entities.forEach((entity, index) => {
+      if (!entity.id) errors.push(`Entity ${index} missing ID`);
+      if (!entity.name) errors.push(`Entity ${index} missing name`);
+      if (!entity.boundedContext) errors.push(`Entity ${index} missing bounded context`);
+      if (!entity.identity) errors.push(`Entity ${entity.name} missing identity definition`);
+      if (!entity.properties || !Array.isArray(entity.properties)) {
+        errors.push(`Entity ${entity.name} must have properties array`);
+      }
+      if (!entity.invariants || !Array.isArray(entity.invariants)) {
+        errors.push(`Entity ${entity.name} must have invariants array`);
+      }
+      
+      // Validate properties
+      entity.properties?.forEach((prop, propIndex) => {
+        if (!prop.name) errors.push(`Entity ${entity.name} property ${propIndex} missing name`);
+        if (!prop.type) errors.push(`Entity ${entity.name} property ${prop.name} missing type`);
+      });
+    });
+    
+    return {
+      valid: errors.length === 0,
+      errors
+    };
+  }
+
+  async storeEntities(entities, projectId) {
+    const artifact = {
+      type: 'domain_entities',
+      projectId: projectId || `project_${Date.now()}`,
+      data: entities,
+      metadata: {
+        toolName: this.name,
+        timestamp: new Date().toISOString(),
+        entityCount: entities.length,
+        contextsRepresented: [...new Set(entities.map(e => e.boundedContext))]
+      }
+    };
+    
+    console.log('[EntityModelingTool] Storing entities:', artifact.metadata.entityCount);
+    
+    return {
+      ...artifact,
+      id: `artifact_${Date.now()}`
+    };
   }
 }

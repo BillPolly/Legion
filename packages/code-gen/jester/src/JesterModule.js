@@ -5,7 +5,7 @@
  * intelligent analytics, TDD support, and test history tracking.
  */
 
-import { Module, Tool, ToolResult } from '@legion/tool-system';
+import { Module, Tool, ToolResult } from '@legion/tools';
 import { wrapTool } from '../../src/ToolWrapper.js';
 import { JestAgentWrapper } from './core/JestAgentWrapper.js';
 import { AgentTDDHelper } from './agents/AgentTDDHelper.js';

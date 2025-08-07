@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { ResourceManager } from '@legion/tool-system';
+import { ResourceManager } from '@legion/tools';
 
 console.log('🚂 RAILWAY TEAM PROJECTS DETAILED CHECK\n');
 

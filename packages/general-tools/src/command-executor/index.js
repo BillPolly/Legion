@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@legion/tool-system';
+import { Tool, ToolResult } from '@legion/tools';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 

@@ -1,4 +1,4 @@
-import { Module } from '@legion/tool-system';
+import { Module } from '@legion/tools';
 import { Serper } from './Serper.js';
 
 /**

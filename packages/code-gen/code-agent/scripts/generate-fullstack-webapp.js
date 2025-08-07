@@ -4,7 +4,7 @@
  * Generate a complete fullstack web app with frontend and backend
  */
 
-import { ResourceManager } from '@legion/tool-system';
+import { ResourceManager } from '@legion/tools';
 import { CodeAgent } from '../src/agent/CodeAgent.js';
 import { promises as fs } from 'fs';
 import path from 'path';

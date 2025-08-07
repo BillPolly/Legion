@@ -4,7 +4,7 @@
  * Debug script to test GenericPlanner with simple actions
  */
 
-import { ResourceManager } from '@legion/tool-system';
+import { ResourceManager } from '@legion/tools';
 import { LLMClientManager } from '../src/integration/LLMClientManager.js';
 import { GenericPlanner } from '../../llm-planner/src/GenericPlanner.js';
 

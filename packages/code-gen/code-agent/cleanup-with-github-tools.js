@@ -7,7 +7,7 @@
  * in the AgentResults organization.
  */
 
-import { ResourceManager } from '@legion/tool-system';
+import { ResourceManager } from '@legion/tools';
 import GitHub from '../../general-tools/src/github/index.js';
 import readline from 'readline';
 import https from 'https';

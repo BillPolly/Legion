@@ -5,7 +5,8 @@
  * including design database context, LLM integration, and methodology enforcement
  */
 
-import { BTAgentBase } from '@legion/actor-BT';
+import { BTAgentBase } from '../core/BTAgentBase.js';
+import { DesignDatabaseService } from '../services/DesignDatabaseService.js';
 
 export class SDAgentBase extends BTAgentBase {
   constructor(config) {
@@ -16,6 +17,7 @@ export class SDAgentBase extends BTAgentBase {
     this.methodologyRules = config.methodologyRules || {};
     this.llmClient = null;
     this.contextBuilder = new ContextBuilder(this.designDatabase);
+    this.databaseService = null;
   }
 
   /**
@@ -26,6 +28,12 @@ export class SDAgentBase extends BTAgentBase {
     
     // Get LLM client from ResourceManager
     this.llmClient = await this.getLLMClient();
+    
+    // Initialize database service using ResourceManager
+    if (this.getResourceManager()) {
+      this.databaseService = new DesignDatabaseService(this.getResourceManager());
+      await this.databaseService.initialize();
+    }
   }
 
   /**
@@ -188,22 +196,25 @@ export class SDAgentBase extends BTAgentBase {
    * @returns {Object} Stored artifact with ID
    */
   async storeArtifact(artifact) {
-    // This will use ArtifactStorageTool when implemented
     const enrichedArtifact = {
       ...artifact,
-      agentId: this.id,
+      agentId: this.agentId,
       agentType: this.constructor.name,
       timestamp: new Date().toISOString(),
       methodologyPhase: this.getCurrentPhase()
     };
     
-    // Store in database (placeholder for now)
-    console.log(`[${this.constructor.name}] Storing artifact:`, enrichedArtifact.type);
-    
-    return {
-      ...enrichedArtifact,
-      id: `artifact_${Date.now()}`
-    };
+    if (this.databaseService) {
+      // Use real database service
+      return await this.databaseService.storeArtifact(enrichedArtifact);
+    } else {
+      // Fallback for tests
+      console.log(`[${this.constructor.name}] Storing artifact:`, enrichedArtifact.type);
+      return {
+        ...enrichedArtifact,
+        id: `artifact_${Date.now()}`
+      };
+    }
   }
 
   /**
@@ -213,15 +224,23 @@ export class SDAgentBase extends BTAgentBase {
    * @returns {Object|Array} Retrieved artifact(s)
    */
   async retrieveArtifact(type, query) {
-    // This will use ContextRetrievalTool when implemented
-    console.log(`[${this.constructor.name}] Retrieving ${type} with query:`, query);
-    
-    // Placeholder return
-    return {
-      type,
-      query,
-      results: []
-    };
+    if (this.databaseService) {
+      // Use real database service
+      const artifacts = await this.databaseService.retrieveArtifacts(type, query);
+      return {
+        type,
+        query,
+        results: artifacts
+      };
+    } else {
+      // Fallback for tests
+      console.log(`[${this.constructor.name}] Retrieving ${type} with query:`, query);
+      return {
+        type,
+        query,
+        results: []
+      };
+    }
   }
 
   /**

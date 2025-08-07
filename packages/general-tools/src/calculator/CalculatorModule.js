@@ -1,4 +1,4 @@
-import { Tool, Module } from '@legion/tool-system';
+import { Tool, Module } from '@legion/tools';
 import { z } from 'zod';
 
 /**

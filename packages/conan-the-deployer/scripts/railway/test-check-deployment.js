@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { ResourceManager, ModuleFactory } from '@legion/tool-system';
+import { ResourceManager, ModuleFactory } from '@legion/tools';
 import ConanTheDeployer from '../../src/ConanTheDeployer.js';
 
 // Initialize ResourceManager

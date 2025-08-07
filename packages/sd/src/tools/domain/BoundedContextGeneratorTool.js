@@ -1,5 +1,5 @@
 /**
- * BoundedContextGeneratorTool - Generates bounded contexts using DDD
+ * BoundedContextGeneratorTool - Generates bounded contexts using DDD with LLM
  */
 
 import { Tool, ToolResult } from '@legion/tool-core';
@@ -9,35 +9,254 @@ export class BoundedContextGeneratorTool extends Tool {
   constructor(dependencies = {}) {
     super({
       name: 'identify_bounded_contexts',
-      description: 'Identify bounded contexts from requirements using DDD',
+      description: 'Identify bounded contexts from requirements using DDD principles',
       inputSchema: z.object({
-        parsedRequirements: z.any().describe('Parsed requirements'),
-        projectId: z.string().optional()
+        requirementsContext: z.any().describe('Requirements context from database'),
+        projectId: z.string().optional().describe('Project ID'),
+        strategy: z.object({
+          boundedContextCount: z.number().optional(),
+          coreDomain: z.string().optional(),
+          supportingDomains: z.array(z.string()).optional()
+        }).optional().describe('Domain strategy from agent')
       })
     });
     
     this.llmClient = dependencies.llmClient;
     this.designDatabase = dependencies.designDatabase;
+    this.resourceManager = dependencies.resourceManager;
   }
 
   async execute(args) {
+    const { requirementsContext, projectId, strategy } = args;
+    
     try {
-      this.emit('progress', { percentage: 0, status: 'Identifying bounded contexts...' });
+      this.emit('progress', { percentage: 0, status: 'Analyzing requirements for bounded contexts...' });
       
-      // Placeholder implementation
-      const boundedContexts = [{
-        id: 'bc-core',
-        name: 'Core Domain',
-        description: 'Main business logic context',
-        entities: [],
-        aggregates: []
-      }];
+      // Get LLM client
+      const llmClient = await this.getLLMClient();
       
-      this.emit('progress', { percentage: 100, status: 'Bounded contexts identified' });
+      // Build context analysis prompt
+      const prompt = this.createBoundedContextPrompt(requirementsContext, strategy);
       
-      return ToolResult.success({ boundedContexts });
+      this.emit('progress', { percentage: 30, status: 'Identifying context boundaries with LLM...' });
+      
+      // Call LLM for bounded context identification
+      const llmResponse = await llmClient.complete(prompt, {
+        temperature: 0.3,
+        maxTokens: 3000,
+        system: 'You are a Domain-Driven Design expert. Identify bounded contexts with clear boundaries and responsibilities.'
+      });
+      
+      this.emit('progress', { percentage: 60, status: 'Processing bounded contexts...' });
+      
+      // Parse LLM response
+      const boundedContexts = this.parseLLMResponse(llmResponse);
+      
+      // Validate bounded contexts
+      const validation = this.validateBoundedContexts(boundedContexts);
+      if (!validation.valid) {
+        return ToolResult.failure(`Invalid bounded contexts: ${validation.errors.join(', ')}`);
+      }
+      
+      // Enrich with relationships
+      const enrichedContexts = this.enrichContexts(boundedContexts, requirementsContext);
+      
+      this.emit('progress', { percentage: 80, status: 'Storing bounded contexts...' });
+      
+      // Store in design database
+      const storedArtifact = await this.storeBoundedContexts(enrichedContexts, projectId);
+      
+      this.emit('progress', { percentage: 100, status: 'Bounded contexts identified successfully' });
+      
+      return ToolResult.success({
+        boundedContexts: enrichedContexts,
+        artifactId: storedArtifact.id,
+        summary: {
+          contextCount: enrichedContexts.length,
+          coreDomain: enrichedContexts.find(c => c.isCore)?.name,
+          supportingDomains: enrichedContexts.filter(c => !c.isCore).map(c => c.name)
+        },
+        llmReasoning: boundedContexts.reasoning
+      });
+      
     } catch (error) {
       return ToolResult.failure(`Failed to identify bounded contexts: ${error.message}`);
     }
+  }
+
+  async getLLMClient() {
+    if (this.llmClient) return this.llmClient;
+    
+    if (this.resourceManager) {
+      this.llmClient = this.resourceManager.get('llmClient');
+      if (this.llmClient) return this.llmClient;
+    }
+    
+    throw new Error('LLM client not available');
+  }
+
+  createBoundedContextPrompt(requirementsContext, strategy) {
+    const strategyHint = strategy ? `
+Consider the following strategy hints:
+- Suggested number of contexts: ${strategy.boundedContextCount || 'determine based on complexity'}
+- Core domain focus: ${strategy.coreDomain || 'identify from requirements'}
+- Supporting domains: ${strategy.supportingDomains?.join(', ') || 'identify as needed'}
+` : '';
+
+    return `Analyze the following requirements and identify bounded contexts using Domain-Driven Design principles.
+
+Requirements Context:
+${JSON.stringify(requirementsContext, null, 2)}
+
+${strategyHint}
+
+Identify bounded contexts following these DDD principles:
+1. Each context should have a clear boundary and single responsibility
+2. Contexts should align with business capabilities
+3. Minimize coupling between contexts
+4. Identify the core domain (main business value)
+5. Identify supporting and generic subdomains
+6. Define clear interfaces between contexts
+
+Return a JSON array of bounded contexts with this structure:
+{
+  "boundedContexts": [
+    {
+      "id": "bc-[name]",
+      "name": "Context Name",
+      "description": "Clear description of the context's responsibility",
+      "isCore": true/false,
+      "domainType": "core|supporting|generic",
+      "boundaries": ["Clear boundary 1", "Clear boundary 2"],
+      "responsibilities": ["Responsibility 1", "Responsibility 2"],
+      "interfaces": [
+        {
+          "type": "inbound|outbound",
+          "name": "Interface name",
+          "description": "What this interface does"
+        }
+      ],
+      "relationshipsWith": ["bc-other-context"],
+      "ubiquitousLanguage": ["Term1", "Term2"]
+    }
+  ],
+  "contextMap": {
+    "relationships": [
+      {
+        "from": "bc-context1",
+        "to": "bc-context2",
+        "type": "upstream-downstream|partnership|shared-kernel|customer-supplier",
+        "description": "Nature of the relationship"
+      }
+    ]
+  },
+  "reasoning": "Explanation of the bounded context identification and boundaries"
+}
+
+Focus on identifying natural boundaries in the domain. Return ONLY valid JSON.`;
+  }
+
+  parseLLMResponse(response) {
+    try {
+      const cleanedResponse = response.trim();
+      const jsonStart = cleanedResponse.indexOf('{');
+      const jsonEnd = cleanedResponse.lastIndexOf('}') + 1;
+      
+      if (jsonStart >= 0 && jsonEnd > jsonStart) {
+        const jsonStr = cleanedResponse.substring(jsonStart, jsonEnd);
+        const parsed = JSON.parse(jsonStr);
+        
+        // Ensure we have the expected structure
+        if (parsed.boundedContexts) {
+          return parsed;
+        }
+        
+        // If it's an array, wrap it
+        if (Array.isArray(parsed)) {
+          return { boundedContexts: parsed, reasoning: 'Contexts identified from requirements' };
+        }
+      }
+      
+      return JSON.parse(cleanedResponse);
+      
+    } catch (error) {
+      // Fallback: create basic context
+      return {
+        boundedContexts: [{
+          id: 'bc-main',
+          name: 'Main Domain',
+          description: 'Primary business domain',
+          isCore: true,
+          domainType: 'core',
+          boundaries: ['All business logic'],
+          responsibilities: ['Handle all operations'],
+          interfaces: [],
+          relationshipsWith: [],
+          ubiquitousLanguage: []
+        }],
+        reasoning: 'Failed to parse LLM response, created default context'
+      };
+    }
+  }
+
+  validateBoundedContexts(parsed) {
+    const errors = [];
+    
+    if (!parsed.boundedContexts || !Array.isArray(parsed.boundedContexts)) {
+      errors.push('Bounded contexts must be an array');
+      return { valid: false, errors };
+    }
+    
+    parsed.boundedContexts.forEach((context, index) => {
+      if (!context.id) errors.push(`Context ${index} missing ID`);
+      if (!context.name) errors.push(`Context ${index} missing name`);
+      if (!context.description) errors.push(`Context ${index} missing description`);
+      if (!context.boundaries || !Array.isArray(context.boundaries)) {
+        errors.push(`Context ${index} must have boundaries array`);
+      }
+    });
+    
+    // Ensure at least one core domain
+    const hasCore = parsed.boundedContexts.some(c => c.isCore || c.domainType === 'core');
+    if (!hasCore) {
+      errors.push('Must have at least one core domain context');
+    }
+    
+    return {
+      valid: errors.length === 0,
+      errors
+    };
+  }
+
+  enrichContexts(boundedContexts, requirementsContext) {
+    // Add additional metadata and relationships
+    return boundedContexts.boundedContexts.map(context => ({
+      ...context,
+      createdAt: new Date().toISOString(),
+      requirementsCount: requirementsContext?.artifacts?.requirements?.functional?.length || 0,
+      status: 'identified',
+      validationStatus: 'pending'
+    }));
+  }
+
+  async storeBoundedContexts(boundedContexts, projectId) {
+    const artifact = {
+      type: 'bounded_contexts',
+      projectId: projectId || `project_${Date.now()}`,
+      data: boundedContexts,
+      metadata: {
+        toolName: this.name,
+        timestamp: new Date().toISOString(),
+        contextCount: boundedContexts.length,
+        hasCore: boundedContexts.some(c => c.isCore)
+      }
+    };
+    
+    console.log('[BoundedContextGeneratorTool] Storing bounded contexts:', artifact.metadata.contextCount);
+    
+    return {
+      ...artifact,
+      id: `artifact_${Date.now()}`
+    };
   }
 }

@@ -4,7 +4,7 @@
 
 import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach } from '@jest/globals';
 import NodeRunner from '../../src/NodeRunner.js';
-import { ModuleFactory, ResourceManager } from '@legion/tool-system';
+import { ModuleFactory, ResourceManager } from '@legion/tools';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises';

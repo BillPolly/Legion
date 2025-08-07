@@ -4,7 +4,7 @@
  * Debug script to isolate LLM client hanging issue
  */
 
-import { ResourceManager } from '@legion/tool-system';
+import { ResourceManager } from '@legion/tools';
 import { LLMClientManager } from '../src/integration/LLMClientManager.js';
 
 async function debugLLMClient() {

@@ -1,4 +1,4 @@
-import { Module } from '@legion/tool-system';
+import { Module } from '@legion/tools';
 import { OpenAIVoiceProvider } from './providers/OpenAIVoiceProvider.js';
 import { TranscribeAudioTool } from './tools/TranscribeAudioTool.js';
 import { GenerateVoiceTool } from './tools/GenerateVoiceTool.js';

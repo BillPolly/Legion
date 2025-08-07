@@ -384,17 +384,18 @@ export class AgentEventAnalyzer {
    */
   initializeQueryPatterns() {
     return new Map([
-      // Error search patterns
-      [/error|exception|failure|crash|bug/i, 'error_search'],
-      [/what.*wrong|problem|issue|broken/i, 'error_search'],
-      
-      // Test failure patterns  
+      // Test failure patterns - MUST come before error patterns
       [/test.*fail|failing.*test|unit.*test|integration.*test/i, 'test_failure_analysis'],
-      [/jest|spec|describe|it\(.*fail/i, 'test_failure_analysis'],
+      [/analyze.*test|test.*analysis|jest.*fail/i, 'test_failure_analysis'],
+      [/spec.*fail|describe.*fail|it\(.*fail/i, 'test_failure_analysis'],
       
       // Correlation tracing
       [/trace|follow|correlation|request.*id|user.*journey/i, 'correlation_trace'],
       [/what.*happen.*user|track.*request/i, 'correlation_trace'],
+      
+      // Error search patterns - After test patterns
+      [/error|exception|failure|crash|bug/i, 'error_search'],
+      [/what.*wrong|problem|issue|broken/i, 'error_search'],
       
       // Similar issues
       [/similar|like.*this|same.*error|related.*problem/i, 'similar_issues'],
@@ -614,10 +615,10 @@ export class AgentEventAnalyzer {
    */
   extractCorrelationId(query) {
     const patterns = [
-      /correlation[_\s]*id[:\s]+([a-f0-9\-]+)/i,
-      /corr[_\s]*id[:\s]+([a-f0-9\-]+)/i,
-      /trace[_\s]*id[:\s]+([a-f0-9\-]+)/i,
-      /id[:\s]+([a-f0-9\-]{8,})/i
+      /correlation[_\s]*id[:\s]+([a-zA-Z0-9\-_]+)/i,
+      /corr[_\s]*id[:\s]+([a-zA-Z0-9\-_]+)/i,
+      /trace[_\s]*id[:\s]+([a-zA-Z0-9\-_]+)/i,
+      /id[:\s]+([a-zA-Z0-9\-_]{8,})/i
     ];
     
     for (const pattern of patterns) {

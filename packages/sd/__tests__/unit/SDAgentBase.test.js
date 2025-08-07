@@ -5,8 +5,8 @@
 import { jest } from '@jest/globals';
 import { SDAgentBase } from '../../src/agents/SDAgentBase.js';
 
-// Mock BTAgentBase
-jest.mock('@legion/actor-BT', () => ({
+// Mock BTAgentBase from local core module
+jest.mock('../../src/core/BTAgentBase.js', () => ({
   BTAgentBase: class {
     constructor(config) {
       this.config = config;
@@ -199,7 +199,7 @@ describe('SDAgentBase', () => {
       const stored = await agent.storeArtifact(artifact);
       
       expect(stored).toHaveProperty('id');
-      expect(stored).toHaveProperty('agentId', 'test-agent-id');
+      expect(stored).toHaveProperty('agentId', agent.agentId);
       expect(stored).toHaveProperty('agentType', 'SDAgentBase');
       expect(stored).toHaveProperty('timestamp');
       expect(stored).toHaveProperty('methodologyPhase', 'test-phase');

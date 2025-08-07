@@ -1,4 +1,4 @@
-import { Module } from '@legion/tool-system';
+import { Module } from '@legion/tools';
 import DeploymentManager from './DeploymentManager.js';
 import MonitoringSystem from './MonitoringSystem.js';
 import LocalProvider from './providers/LocalProvider.js';
