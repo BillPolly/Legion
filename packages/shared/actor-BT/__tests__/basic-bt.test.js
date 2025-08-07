@@ -23,6 +23,10 @@ class MockToolRegistry {
   registerTool(name, tool) {
     this.tools.set(name, tool);
   }
+
+  hasTool(name) {
+    return this.tools.has(name);
+  }
 }
 
 // Mock tools with schema support

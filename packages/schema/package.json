@@ -1,0 +1,32 @@
+{
+  "name": "@legion/schema",
+  "version": "0.0.1",
+  "description": "JSON Schema to Zod validator conversion for Legion framework",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+  },
+  "dependencies": {
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "keywords": [
+    "json-schema",
+    "zod",
+    "validation",
+    "schema",
+    "converter",
+    "legion"
+  ],
+  "author": "Legion Framework",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/maxximus-dev/Legion.git"
+  }
+}

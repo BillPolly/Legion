@@ -398,10 +398,10 @@ describe('BehaviorTreeTool Integration Tests', () => {
         await loader.registerBehaviorTreeTool(btTool);
       }
 
-      // Verify all were registered
-      expect(toolRegistry.hasProvider('Tool1')).toBe(true);
-      expect(toolRegistry.hasProvider('Tool2')).toBe(true);
-      expect(toolRegistry.hasProvider('Tool3')).toBe(true);
+      // Verify all were registered as tools
+      expect(toolRegistry.hasTool('Tool1')).toBe(true);
+      expect(toolRegistry.hasTool('Tool2')).toBe(true);
+      expect(toolRegistry.hasTool('Tool3')).toBe(true);
     });
 
     test('should validate BT configuration before registration', () => {

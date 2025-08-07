@@ -98,6 +98,9 @@ describe('MessageBus Unit Tests', () => {
     test('should handle message processing errors gracefully', async () => {
       const errorNode = {
         id: 'errorNode',
+        receive(payload) {
+          throw new Error('Message handling failed');
+        },
         handleMessage() {
           throw new Error('Message handling failed');
         }

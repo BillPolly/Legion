@@ -32,6 +32,10 @@ class MockToolRegistry {
   registerTool(name, tool) {
     this.tools.set(name, tool);
   }
+
+  hasTool(name) {
+    return this.tools.has(name);
+  }
 }
 
 // Mock tools for testing
@@ -362,16 +366,13 @@ describe('JSON Configuration System', () => {
       // Register the tool
       await loader.registerBehaviorTreeTool(btTool);
       
-      // Verify it was registered
-      expect(toolRegistry.providers.has('IntegrationTest')).toBe(true);
+      // Verify it was registered as a tool
+      expect(toolRegistry.hasTool('IntegrationTest')).toBe(true);
       
-      // Test the registration creates the expected provider structure
-      const provider = toolRegistry.providers.get('IntegrationTest');
-      expect(provider.definition).toBeDefined();
-      
-      const metadata = provider.definition.getMetadata();
-      expect(metadata.name).toBe('IntegrationTest');
-      expect(metadata.tools.IntegrationTest).toBeDefined();
+      // Test that the tool can be retrieved
+      const tool = await toolRegistry.getTool('IntegrationTest');
+      expect(tool).toBeDefined();
+      expect(tool.config.name).toBe('IntegrationTest');
     });
   });
 });

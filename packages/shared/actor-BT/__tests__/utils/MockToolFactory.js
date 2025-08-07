@@ -233,6 +233,10 @@ export class MockToolRegistry {
     return this.providers.has(name);
   }
 
+  hasTool(name) {
+    return this.tools.has(name);
+  }
+
   clear() {
     this.tools.clear();
     this.providers.clear();
