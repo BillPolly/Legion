@@ -1,0 +1,312 @@
+/**
+ * Tests for SemanticSearchProvider
+ */
+
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { SemanticSearchProvider } from '../../src/SemanticSearchProvider.js';
+import { TestUtils } from '../setup.js';
+
+describe('SemanticSearchProvider', () => {
+  let mockResourceManager;
+  let provider;
+
+  beforeEach(() => {
+    mockResourceManager = TestUtils.createMockResourceManager();
+  });
+
+  describe('create', () => {
+    it('should create provider with valid ResourceManager', async () => {
+      provider = await SemanticSearchProvider.create(mockResourceManager);
+      
+      expect(provider).toBeInstanceOf(SemanticSearchProvider);
+      expect(provider.initialized).toBe(true);
+    });
+
+    it('should throw error without ResourceManager', async () => {
+      await expect(SemanticSearchProvider.create(null))
+        .rejects.toThrow('SemanticSearchProvider requires an initialized ResourceManager');
+    });
+
+    it('should throw error without OpenAI API key', async () => {
+      const invalidRM = TestUtils.createMockResourceManager({
+        'env.OPENAI_API_KEY': undefined
+      });
+
+      await expect(SemanticSearchProvider.create(invalidRM))
+        .rejects.toThrow('OPENAI_API_KEY is required for semantic search');
+    });
+
+    it('should use default configuration values', async () => {
+      provider = await SemanticSearchProvider.create(mockResourceManager);
+      
+      expect(provider.config.embeddingModel).toBe('text-embedding-3-small');
+      expect(provider.config.batchSize).toBe(100);
+      expect(provider.config.cacheTtl).toBe(3600);
+      expect(provider.config.enableCache).toBe(true);
+    });
+  });
+
+  describe('connection management', () => {
+    beforeEach(async () => {
+      provider = await SemanticSearchProvider.create(mockResourceManager);
+    });
+
+    it('should connect successfully', async () => {
+      await provider.connect();
+      expect(provider.connected).toBe(true);
+    });
+
+    it('should disconnect successfully', async () => {
+      await provider.connect();
+      await provider.disconnect();
+      expect(provider.connected).toBe(false);
+    });
+  });
+
+  describe('document insertion', () => {
+    beforeEach(async () => {
+      provider = await SemanticSearchProvider.create(mockResourceManager);
+      await provider.connect();
+    });
+
+    it('should insert single document', async () => {
+      const document = { id: '1', content: 'Test content', name: 'Test' };
+      
+      const result = await provider.insert('test_collection', document);
+      
+      expect(result.success).toBe(true);
+      expect(result.insertedCount).toBe(1);
+      expect(result.vectorsStored).toBe(1);
+    });
+
+    it('should insert multiple documents', async () => {
+      const documents = TestUtils.createMockTools(3);
+      
+      const result = await provider.insert('test_collection', documents);
+      
+      expect(result.success).toBe(true);
+      expect(result.insertedCount).toBe(3);
+      expect(result.vectorsStored).toBe(3);
+    });
+
+    it('should process documents before insertion', async () => {
+      const document = { name: 'Test Tool', description: 'A test tool' };
+      
+      await provider.insert('test_collection', document);
+      
+      // Verify document processor was called
+      expect(provider.documentProcessor.processDocument).toBeDefined();
+    });
+  });
+
+  describe('semantic search', () => {
+    beforeEach(async () => {
+      provider = await SemanticSearchProvider.create(mockResourceManager);
+      await provider.connect();
+      
+      // Mock vector store search to return test results
+      provider.vectorStore.search = jest.fn().mockResolvedValue(
+        TestUtils.createMockSearchResults(3)
+      );
+    });
+
+    it('should perform semantic search with default options', async () => {
+      const query = 'find files and directories';
+      
+      const results = await provider.semanticSearch('test_collection', query);
+      
+      expect(Array.isArray(results)).toBe(true);
+      expect(results.length).toBe(3);
+      
+      results.forEach(result => {
+        TestUtils.assertValidSearchResult(result);
+        expect(result._searchType).toBe('semantic');
+      });
+    });
+
+    it('should respect search options', async () => {
+      const query = 'find files';
+      const options = {
+        limit: 5,
+        threshold: 0.8,
+        includeMetadata: true,
+        filter: { module: 'file-ops' }
+      };
+      
+      await provider.semanticSearch('test_collection', query, options);
+      
+      expect(provider.vectorStore.search).toHaveBeenCalledWith(
+        'test_collection',
+        expect.any(Array), // embedding vector
+        expect.objectContaining({
+          limit: 5,
+          threshold: 0.8,
+          includeMetadata: true,
+          filter: { module: 'file-ops' }
+        })
+      );
+    });
+
+    it('should handle empty search results', async () => {
+      provider.vectorStore.search = jest.fn().mockResolvedValue([]);
+      
+      const results = await provider.semanticSearch('test_collection', 'nonexistent');
+      
+      expect(results).toEqual([]);
+    });
+  });
+
+  describe('hybrid search', () => {
+    beforeEach(async () => {
+      provider = await SemanticSearchProvider.create(mockResourceManager);
+      await provider.connect();
+      
+      // Mock both semantic and keyword results
+      provider.vectorStore.search = jest.fn().mockResolvedValue(
+        TestUtils.createMockSearchResults(2, 0.9)
+      );
+      provider.vectorStore.find = jest.fn().mockResolvedValue(
+        TestUtils.createMockTools(2)
+      );
+    });
+
+    it('should perform hybrid search', async () => {
+      const query = 'file operations';
+      
+      const results = await provider.hybridSearch('test_collection', query);
+      
+      expect(Array.isArray(results)).toBe(true);
+      results.forEach(result => {
+        TestUtils.assertValidHybridResult(result);
+        expect(result._searchType).toBe('hybrid');
+      });
+    });
+
+    it('should respect weight parameters', async () => {
+      const query = 'database tools';
+      const options = {
+        semanticWeight: 0.8,
+        keywordWeight: 0.2
+      };
+      
+      const results = await provider.hybridSearch('test_collection', query, options);
+      
+      results.forEach(result => {
+        expect(result._hybridScore).toBeGreaterThan(0);
+        expect(result._semanticScore).toBeGreaterThanOrEqual(0);
+        expect(result._keywordScore).toBeGreaterThanOrEqual(0);
+      });
+    });
+  });
+
+  describe('findSimilar', () => {
+    beforeEach(async () => {
+      provider = await SemanticSearchProvider.create(mockResourceManager);
+      await provider.connect();
+      
+      provider.vectorStore.search = jest.fn().mockResolvedValue(
+        TestUtils.createMockSearchResults(3)
+      );
+    });
+
+    it('should find similar documents', async () => {
+      const document = { name: 'File Reader', description: 'Read files from disk' };
+      
+      const results = await provider.findSimilar('test_collection', document);
+      
+      expect(Array.isArray(results)).toBe(true);
+      results.forEach(result => {
+        TestUtils.assertValidSearchResult(result);
+      });
+    });
+  });
+
+  describe('standard CRUD operations', () => {
+    beforeEach(async () => {
+      provider = await SemanticSearchProvider.create(mockResourceManager);
+      await provider.connect();
+    });
+
+    it('should delegate find to vector store', async () => {
+      provider.vectorStore.find = jest.fn().mockResolvedValue([]);
+      
+      await provider.find('test_collection', { name: 'test' });
+      
+      expect(provider.vectorStore.find).toHaveBeenCalledWith(
+        'test_collection',
+        { name: 'test' },
+        {}
+      );
+    });
+
+    it('should delegate update to vector store', async () => {
+      provider.vectorStore.update = jest.fn().mockResolvedValue({ modifiedCount: 1 });
+      
+      const result = await provider.update('test_collection', { id: '1' }, { name: 'updated' });
+      
+      expect(provider.vectorStore.update).toHaveBeenCalled();
+      expect(result.modifiedCount).toBe(1);
+    });
+
+    it('should delegate delete to vector store', async () => {
+      provider.vectorStore.delete = jest.fn().mockResolvedValue({ operation_id: 1 });
+      
+      await provider.delete('test_collection', { id: '1' });
+      
+      expect(provider.vectorStore.delete).toHaveBeenCalled();
+    });
+  });
+
+  describe('metadata and capabilities', () => {
+    beforeEach(async () => {
+      provider = await SemanticSearchProvider.create(mockResourceManager);
+    });
+
+    it('should return correct capabilities', () => {
+      const capabilities = provider.getCapabilities();
+      
+      expect(capabilities).toContain('semanticSearch');
+      expect(capabilities).toContain('hybridSearch');
+      expect(capabilities).toContain('findSimilar');
+      expect(capabilities).toContain('vectorSearch');
+      expect(capabilities).toContain('embeddingGeneration');
+    });
+
+    it('should return provider metadata', () => {
+      const metadata = provider.getMetadata();
+      
+      expect(metadata).toHaveProperty('name');
+      expect(metadata).toHaveProperty('embeddingModel');
+      expect(metadata).toHaveProperty('initialized');
+      expect(metadata.initialized).toBe(true);
+    });
+  });
+
+  describe('error handling', () => {
+    it('should handle embedding service errors gracefully', async () => {
+      provider = await SemanticSearchProvider.create(mockResourceManager);
+      await provider.connect();
+
+      // Mock embedding service to throw error
+      provider.embeddingService.generateEmbeddings = jest.fn().mockRejectedValue(
+        new Error('OpenAI API error')
+      );
+
+      await expect(provider.semanticSearch('test_collection', 'test query'))
+        .rejects.toThrow('OpenAI API error');
+    });
+
+    it('should handle vector store errors gracefully', async () => {
+      provider = await SemanticSearchProvider.create(mockResourceManager);
+      await provider.connect();
+
+      // Mock vector store to throw error
+      provider.vectorStore.search = jest.fn().mockRejectedValue(
+        new Error('Qdrant connection error')
+      );
+
+      await expect(provider.semanticSearch('test_collection', 'test query'))
+        .rejects.toThrow('Qdrant connection error');
+    });
+  });
+});
