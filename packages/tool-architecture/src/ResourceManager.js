@@ -100,6 +100,31 @@ export class ResourceManager {
   }
   
   /**
+   * Initialize ResourceManager (compatibility method)
+   * Loads environment variables from .env file automatically
+   * @returns {Promise<void>}
+   */
+  async initialize() {
+    try {
+      // Try to load dotenv for environment variables
+      const dotenv = await import('dotenv');
+      dotenv.config();
+      
+      // Load all environment variables as env.* resources
+      if (process.env) {
+        const envObj = {};
+        for (const [key, value] of Object.entries(process.env)) {
+          envObj[key] = value;
+        }
+        this._resources.set('env', envObj);
+      }
+    } catch (error) {
+      // dotenv is optional, don't fail if not available
+      console.warn('ResourceManager: dotenv not available, environment variables not loaded');
+    }
+  }
+  
+  /**
    * Load resources from an object
    * @param {Object} resources - Object with key-value pairs to load
    */

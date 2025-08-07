@@ -2,7 +2,7 @@
  * Additional compatibility exports for complete module-loader replacement
  */
 
-import { Module, Tool } from './compatibility.js';
+import { Module, CompatTool } from './compatibility.js';
 import { ModuleInstance } from './modules/ModuleInstance.js';
 import { ModuleLoader } from './ModuleLoader.js';
 import { ResourceManager } from './ResourceManager.js';
@@ -10,7 +10,7 @@ import { ResourceManager } from './ResourceManager.js';
 /**
  * GenericTool - Base tool with common functionality
  */
-export class GenericTool extends Tool {
+export class GenericTool extends CompatTool {
   constructor(config) {
     super(config);
     this.config = config;
@@ -158,7 +158,7 @@ export class JsonModuleLoader {
       }
 
       createTool(toolDef) {
-        return new Tool({
+        return new CompatTool({
           name: toolDef.name,
           description: toolDef.description,
           inputSchema: toolDef.schema,

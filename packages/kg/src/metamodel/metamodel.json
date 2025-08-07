@@ -1,0 +1,1115 @@
+[
+  {
+    "_id": "Thing",
+    "subtypeOf": "Thing",
+    "attributes": [
+      "is-instance",
+      "metadata-attr"
+    ]
+  },
+  {
+    "_id": "Metadata",
+    "subtypeOf": "Thing",
+    "attributes": [
+      "name",
+      "description",
+      "version",
+      "source",
+      {
+        "metadata": {
+          "version": 1,
+          "source": "metamodel",
+          "description": "Container for metadata information about entities."
+        }
+      }
+    ]
+  },
+  {
+    "_id": "Attribute",
+    "subtypeOf": "Thing",
+    "attributes": [
+      "domain",
+      "range",
+      "cardinality",
+      "is-is-dependent",
+      "relationship-attr",
+      "default-value",
+      {
+        "metadata": {
+          "version": 1,
+          "source": "metamodel",
+          "description": "Represents one end of a binary relationship. Optionally references a relationship entity."
+        }
+      }
+    ]
+  },
+  {
+    "_id": "metadata-attribute",
+    "subtypeOf": "Attribute",
+    "attributes": {
+      "domain": "Thing",
+      "range": "String",
+      "cardinality": "0..1",
+      "is-dependent": true,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Attributes that provide metadata information about entities."
+      }
+    }
+  },
+  {
+    "_id": "structural-attribute",
+    "subtypeOf": "Attribute",
+    "attributes": {
+      "domain": "Thing",
+      "range": "String",
+      "cardinality": "0..1",
+      "is-dependent": true,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Attributes that define the structural properties of metamodel elements."
+      }
+    }
+  },
+  {
+    "_id": "relationship-attribute",
+    "subtypeOf": "Attribute",
+    "attributes": {
+      "domain": "Thing",
+      "range": "Thing",
+      "cardinality": "0..1",
+      "is-dependent": false,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Attributes that represent relationships between entities."
+      }
+    }
+  },
+  {
+    "_id": "value-attribute",
+    "subtypeOf": "Attribute",
+    "attributes": {
+      "domain": "Thing",
+      "range": "Value",
+      "cardinality": "0..1",
+      "is-dependent": true,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Attributes that store actual values and data."
+      }
+    }
+  },
+  {
+    "_id": "temporal-attribute",
+    "subtypeOf": "Attribute",
+    "attributes": {
+      "domain": "Thing",
+      "range": "Date",
+      "cardinality": "0..1",
+      "is-dependent": true,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Attributes that deal with time and temporal relationships."
+      }
+    }
+  },
+  {
+    "_id": "constraint-attribute",
+    "subtypeOf": "Attribute",
+    "attributes": {
+      "domain": "Thing",
+      "range": "String",
+      "cardinality": "0..1",
+      "is-dependent": true,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Attributes that define constraints and validation rules."
+      }
+    }
+  },
+  {
+    "_id": "type-attribute",
+    "subtypeOf": "structural-attribute",
+    "attributes": {
+      "domain": "Attribute",
+      "range": "String",
+      "cardinality": "1",
+      "is-dependent": true,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Attributes that specify type information."
+      }
+    }
+  },
+  {
+    "_id": "cardinality-attribute",
+    "subtypeOf": "constraint-attribute",
+    "attributes": {
+      "domain": "Attribute",
+      "range": "String",
+      "cardinality": "1",
+      "is-dependent": true,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Attributes that specify cardinality constraints."
+      }
+    }
+  },
+  {
+    "_id": "dependency-attribute",
+    "subtypeOf": "structural-attribute",
+    "attributes": {
+      "domain": "Attribute",
+      "range": "Boolean",
+      "cardinality": "1",
+      "is-dependent": true,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Attributes that specify dependency relationships."
+      }
+    }
+  },
+  {
+    "_id": "composition-attribute",
+    "subtypeOf": "relationship-attribute",
+    "attributes": {
+      "domain": "CompoundThing",
+      "range": "Part",
+      "cardinality": "0..*",
+      "is-dependent": true,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Attributes that represent part-whole relationships."
+      }
+    }
+  },
+  {
+    "_id": "state-attribute",
+    "subtypeOf": "relationship-attribute",
+    "attributes": {
+      "domain": "Process",
+      "range": "State",
+      "cardinality": "1",
+      "is-dependent": false,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Attributes that relate to states and state transitions."
+      }
+    }
+  },
+  {
+    "_id": "quantitative-attribute",
+    "subtypeOf": "value-attribute",
+    "attributes": {
+      "domain": "Value",
+      "range": "Number",
+      "cardinality": "1",
+      "is-dependent": true,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Attributes that store quantitative values with units or measures."
+      }
+    }
+  },
+  {
+    "_id": "qualitative-attribute",
+    "subtypeOf": "value-attribute",
+    "attributes": {
+      "domain": "Value",
+      "range": "String",
+      "cardinality": "1",
+      "is-dependent": true,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Attributes that store qualitative or categorical values."
+      }
+    }
+  },
+  {
+    "_id": "geospatial-attribute",
+    "subtypeOf": "value-attribute",
+    "attributes": {
+      "domain": "GeographicRegion",
+      "range": "ObjectType",
+      "cardinality": "0..1",
+      "is-dependent": true,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Attributes that store geographic and spatial information."
+      }
+    }
+  },
+  {
+    "_id": "Relationship",
+    "subtypeOf": "Thing",
+    "attributes": [
+      "dependent-end",
+      "independent-end",
+      {
+        "metadata": {
+          "version": 1,
+          "source": "metamodel",
+          "description": "Reified binary relationships with exactly one is-dependent and one inis-dependent end."
+        }
+      }
+    ]
+  },
+  {
+    "_id": "Kind",
+    "subtypeOf": "Thing",
+    "attributes": {
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Abstract supertype for all concrete types in the ontology."
+      }
+    }
+  },
+  {
+    "_id": "AtomicThing",
+    "subtypeOf": "Kind",
+    "attributes": {
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Abstract entities with no parts - numbers, values, time, space, measures."
+      }
+    }
+  },
+  {
+    "_id": "CompoundThing",
+    "subtypeOf": "Kind",
+    "attributes": [
+      "parts",
+      "essence-attr",
+      {
+        "metadata": {
+          "version": 1,
+          "source": "metamodel",
+          "description": "Entities that have parts - all physical reality is compound."
+        }
+      }
+    ]
+  },
+  {
+    "_id": "Object",
+    "subtypeOf": "CompoundThing",
+    "attributes": {
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Temporal, passive entities that get acted upon by processes."
+      }
+    }
+  },
+  {
+    "_id": "Entity",
+    "subtypeOf": "Object",
+    "attributes": {
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Persistent compound things that exist over time - Person, Car, Organization, Database."
+      }
+    }
+  },
+  {
+    "_id": "State",
+    "subtypeOf": "Object",
+    "attributes": [
+      "applies-to",
+      {
+        "metadata": {
+          "version": 1,
+          "source": "metamodel",
+          "description": "States that any Thing can be in - Healthy, Broken, Valid, Active, Prime."
+        }
+      }
+    ]
+  },
+  {
+    "_id": "Process",
+    "subtypeOf": "CompoundThing",
+    "attributes": [
+      "input-state",
+      "output-state",
+      {
+        "metadata": {
+          "version": 1,
+          "source": "metamodel",
+          "description": "Temporal, active entities that affect objects by changing them from a starting state to a finishing state. For the process to be applicable, the object's current state must satisfy the state the process is expecting (inputState). The process then transforms the object to the specified finishing state (outputState)."
+        }
+      }
+    ]
+  },
+  {
+    "_id": "Part",
+    "subtypeOf": "Kind",
+    "attributes": [
+      "part-of-attr",
+      "current-filler",
+      "start-time",
+      "end-time",
+      {
+        "metadata": {
+          "version": 1,
+          "source": "metamodel",
+          "description": "Represents a part position in a compound thing - can be filled by different entities over time."
+        }
+      }
+    ]
+  },
+  {
+    "_id": "Value",
+    "subtypeOf": "AtomicThing",
+    "attributes": [
+      "value-attr",
+      {
+        "metadata": {
+          "version": 1,
+          "source": "metamodel",
+          "description": "Atomic things that represent literal values - strings, numbers, booleans."
+        }
+      }
+    ]
+  },
+  {
+    "_id": "Duration",
+    "subtypeOf": "Value",
+    "attributes": [
+      "unit",
+      {
+        "metadata": {
+          "version": 1,
+          "source": "metamodel",
+          "description": "Temporal measurements - minutes, hours, days, etc."
+        }
+      }
+    ]
+  },
+  {
+    "_id": "Money",
+    "subtypeOf": "Value",
+    "attributes": [
+      "currency",
+      {
+        "metadata": {
+          "version": 1,
+          "source": "metamodel",
+          "description": "Monetary values with currency specification."
+        }
+      }
+    ]
+  },
+  {
+    "_id": "GeographicRegion",
+    "subtypeOf": "Value",
+    "attributes": [
+      "coordinates",
+      {
+        "metadata": {
+          "version": 1,
+          "source": "metamodel",
+          "description": "Geographic locations and regions with optional coordinate data."
+        }
+      }
+    ]
+  },
+  {
+    "_id": "Enum",
+    "subtypeOf": "Value",
+    "attributes": [
+      "allowed-values",
+      {
+        "metadata": {
+          "version": 1,
+          "source": "metamodel",
+          "description": "Enumerated values - a constrained list of valid string options."
+        }
+      }
+    ]
+  },
+  {
+    "_id": "Boolean",
+    "subtypeOf": "Enum",
+    "attributes": [
+      {
+        "allowed-values": [
+          "true",
+          "false"
+        ]
+      },
+      {
+        "metadata": {
+          "version": 1,
+          "source": "metamodel",
+          "description": "Boolean enumeration with true/false string values."
+        }
+      }
+    ]
+  },
+  {
+    "_id": "Essence",
+    "subtypeOf": "Enum",
+    "attributes": [
+      {
+        "allowed-values": [
+          "abstract",
+          "concrete"
+        ]
+      },
+      {
+        "metadata": {
+          "version": 1,
+          "source": "metamodel",
+          "description": "Essence enumeration distinguishing abstract from concrete compound things."
+        }
+      }
+    ]
+  },
+  {
+    "_id": "String",
+    "subtypeOf": "Value",
+    "attributes": {
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "String primitive type for text values."
+      }
+    }
+  },
+  {
+    "_id": "Number",
+    "subtypeOf": "Value",
+    "attributes": {
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Number primitive type for numeric values."
+      }
+    }
+  },
+  {
+    "_id": "Date",
+    "subtypeOf": "Value",
+    "attributes": {
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Date primitive type for date/time values."
+      }
+    }
+  },
+  {
+    "_id": "Array",
+    "subtypeOf": "Value",
+    "attributes": {
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Array primitive type for collections."
+      }
+    }
+  },
+  {
+    "_id": "ObjectType",
+    "subtypeOf": "Value",
+    "attributes": {
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Object primitive type for structured data."
+      }
+    }
+  },
+  {
+    "_id": "Any",
+    "subtypeOf": "Value",
+    "attributes": {
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Any type - accepts any value type."
+      }
+    }
+  },
+  {
+    "_id": "name",
+    "subtypeOf": "metadata-attribute",
+    "attributes": {
+      "domain": "Metadata",
+      "range": "String",
+      "cardinality": "1",
+      "is-dependent": true,
+      "constraints": [
+        "non-empty"
+      ],
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The name field in metadata - string identifier."
+      }
+    }
+  },
+  {
+    "_id": "named-thing",
+    "subtypeOf": "Attribute",
+    "attributes": {
+      "domain": "String",
+      "range": "Thing",
+      "cardinality": "0..*",
+      "is-dependent": false,
+      "relationship": "NamingRelationship",
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The inis-dependent end - things that have this name."
+      }
+    }
+  },
+  {
+    "_id": "description",
+    "subtypeOf": "metadata-attribute",
+    "attributes": {
+      "domain": "Metadata",
+      "range": "String",
+      "cardinality": "0..1",
+      "is-dependent": true,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The description field in metadata - optional text description."
+      }
+    }
+  },
+  {
+    "_id": "described-thing-attr",
+    "subtypeOf": "Attribute",
+    "attributes": {
+      "domain": "String",
+      "range": "Thing",
+      "cardinality": "0..*",
+      "is-dependent": false,
+      "relationship": "DescriptionRelationship",
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The inis-dependent end - things that have this description."
+      }
+    }
+  },
+  {
+    "_id": "domain",
+    "subtypeOf": "type-attribute",
+    "attributes": {
+      "domain": "Attribute",
+      "range": "String",
+      "cardinality": "1",
+      "is-dependent": true,
+      "constraints": [
+        "valid-type-name"
+      ],
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The domain of an Attribute - the type that owns this Attribute."
+      }
+    }
+  },
+  {
+    "_id": "range",
+    "subtypeOf": "type-attribute",
+    "attributes": {
+      "domain": "Attribute",
+      "range": "String",
+      "cardinality": "1",
+      "is-dependent": true,
+      "constraints": [
+        "valid-type-name"
+      ],
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The range of an Attribute - the type of values this Attribute can hold."
+      }
+    }
+  },
+  {
+    "_id": "cardinality",
+    "subtypeOf": "cardinality-attribute",
+    "attributes": {
+      "domain": "Attribute",
+      "range": "String",
+      "cardinality": "1",
+      "is-dependent": true,
+      "constraints": [
+        "cardinality-format"
+      ],
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The cardinality constraint of an Attribute."
+      }
+    }
+  },
+  {
+    "_id": "is-dependent",
+    "subtypeOf": "dependency-attribute",
+    "attributes": {
+      "domain": "Attribute",
+      "range": "Boolean",
+      "cardinality": "1",
+      "is-dependent": true,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Whether this Attribute is ontologically is-dependent on its owner."
+      }
+    }
+  },
+  {
+    "_id": "relationship-attr",
+    "subtypeOf": "relationship-attribute",
+    "attributes": {
+      "domain": "Attribute",
+      "range": "Relationship",
+      "cardinality": "0..1",
+      "is-dependent": false,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Optional reference to a relationship entity for attributes whose domain is not a primitive type."
+      }
+    }
+  },
+  {
+    "_id": "parts",
+    "subtypeOf": "composition-attribute",
+    "attributes": {
+      "domain": "CompoundThing",
+      "range": "Part",
+      "cardinality": "0..*",
+      "is-dependent": true,
+      "constraints": [
+        "part-positions"
+      ],
+      "relationship": "PartRelationship",
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The parts that make up a compound thing."
+      }
+    }
+  },
+  {
+    "_id": "part-of-attr",
+    "subtypeOf": "composition-attribute",
+    "attributes": {
+      "domain": "Part",
+      "range": "CompoundThing",
+      "cardinality": "1",
+      "is-dependent": false,
+      "relationship": "PartRelationship",
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The inis-dependent end - the compound thing this part belongs to."
+      }
+    }
+  },
+  {
+    "_id": "applies-to",
+    "subtypeOf": "state-attribute",
+    "attributes": {
+      "domain": "State",
+      "range": "String",
+      "cardinality": "1",
+      "is-dependent": true,
+      "constraints": [
+        "valid-type-name"
+      ],
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "What type of thing this state can apply to."
+      }
+    }
+  },
+  {
+    "_id": "input-state",
+    "subtypeOf": "state-attribute",
+    "attributes": {
+      "domain": "Process",
+      "range": "State",
+      "cardinality": "1",
+      "is-dependent": false,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The input state for a process to be applicable."
+      }
+    }
+  },
+  {
+    "_id": "output-state",
+    "subtypeOf": "state-attribute",
+    "attributes": {
+      "domain": "Process",
+      "range": "State",
+      "cardinality": "1",
+      "is-dependent": false,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The resulting output state after a process completes."
+      }
+    }
+  },
+  {
+    "_id": "current-filler",
+    "subtypeOf": "composition-attribute",
+    "attributes": {
+      "domain": "Part",
+      "range": "CompoundThing",
+      "cardinality": "0..1",
+      "is-dependent": false,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The current thing filling this part position."
+      }
+    }
+  },
+  {
+    "_id": "start-time",
+    "subtypeOf": "temporal-attribute",
+    "attributes": {
+      "domain": "Part",
+      "range": "Date",
+      "cardinality": "0..1",
+      "is-dependent": true,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "When this part relationship started."
+      }
+    }
+  },
+  {
+    "_id": "end-time",
+    "subtypeOf": "temporal-attribute",
+    "attributes": {
+      "domain": "Part",
+      "range": "Date",
+      "cardinality": "0..1",
+      "is-dependent": true,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "When this part relationship ended."
+      }
+    }
+  },
+  {
+    "_id": "value-attr",
+    "subtypeOf": "value-attribute",
+    "attributes": {
+      "domain": "Value",
+      "range": "Any",
+      "cardinality": "1",
+      "is-dependent": true,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The actual value stored in a value entity."
+      }
+    }
+  },
+  {
+    "_id": "money-value-attr",
+    "subtypeOf": "quantitative-attribute",
+    "attributes": {
+      "domain": "Money",
+      "range": "Number",
+      "cardinality": "1",
+      "is-dependent": true,
+      "constraints": [
+        "non-negative"
+      ],
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The monetary amount - must be non-negative."
+      }
+    }
+  },
+  {
+    "_id": "duration-value-attr",
+    "subtypeOf": "quantitative-attribute",
+    "attributes": {
+      "domain": "Duration",
+      "range": "Number",
+      "cardinality": "1",
+      "is-dependent": true,
+      "constraints": [
+        "positive"
+      ],
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The duration amount - must be positive."
+      }
+    }
+  },
+  {
+    "_id": "unit",
+    "subtypeOf": "qualitative-attribute",
+    "attributes": {
+      "domain": "Duration",
+      "range": "String",
+      "cardinality": "1",
+      "is-dependent": true,
+      "constraints": [
+        "time-unit"
+      ],
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The unit of measurement for a duration."
+      }
+    }
+  },
+  {
+    "_id": "currency",
+    "subtypeOf": "qualitative-attribute",
+    "attributes": {
+      "domain": "Money",
+      "range": "String",
+      "cardinality": "1",
+      "is-dependent": true,
+      "constraints": [
+        "currency-code"
+      ],
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The currency code for a monetary value."
+      }
+    }
+  },
+  {
+    "_id": "coordinates",
+    "subtypeOf": "geospatial-attribute",
+    "attributes": {
+      "domain": "GeographicRegion",
+      "range": "ObjectType",
+      "cardinality": "0..1",
+      "is-dependent": true,
+      "constraints": [
+        "lat-lng-format"
+      ],
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Geographic coordinates for a location."
+      }
+    }
+  },
+  {
+    "_id": "allowed-values",
+    "subtypeOf": "constraint-attribute",
+    "attributes": {
+      "domain": "Enum",
+      "range": "Array",
+      "cardinality": "1",
+      "is-dependent": true,
+      "constraints": [
+        "non-empty-array",
+        "string-elements"
+      ],
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The list of allowed string values for an enumeration."
+      }
+    }
+  },
+  {
+    "_id": "default-value",
+    "subtypeOf": "constraint-attribute",
+    "attributes": {
+      "domain": "Attribute",
+      "range": "Any",
+      "cardinality": "0..1",
+      "is-dependent": true,
+      "constraints": [
+        "range-compatible"
+      ],
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Optional default value for an Attribute. Must be a constant value specialization of the Attribute's range type."
+      }
+    }
+  },
+  {
+    "_id": "is-instance",
+    "subtypeOf": "structural-attribute",
+    "attributes": {
+      "domain": "Thing",
+      "range": "Boolean",
+      "cardinality": "1",
+      "is-dependent": true,
+      "defaultValue": false,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Indicates whether this thing is an instance (true) or a type/class (false)."
+      }
+    }
+  },
+  {
+    "_id": "essence-attr",
+    "subtypeOf": "qualitative-attribute",
+    "attributes": {
+      "domain": "CompoundThing",
+      "range": "Essence",
+      "cardinality": "1",
+      "is-dependent": true,
+      "defaultValue": "concrete",
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Indicates whether this compound thing is abstract or concrete in nature."
+      }
+    }
+  },
+  {
+    "_id": "dependent-end",
+    "subtypeOf": "relationship-attribute",
+    "attributes": {
+      "domain": "Relationship",
+      "range": "Attribute",
+      "cardinality": "1",
+      "is-dependent": false,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The is-dependent end of a reified relationship."
+      }
+    }
+  },
+  {
+    "_id": "independent-end",
+    "subtypeOf": "relationship-attribute",
+    "attributes": {
+      "domain": "Relationship",
+      "range": "Attribute",
+      "cardinality": "1",
+      "is-dependent": false,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The inis-dependent end of a reified relationship."
+      }
+    }
+  },
+  {
+    "_id": "version",
+    "subtypeOf": "metadata-attribute",
+    "attributes": {
+      "domain": "Metadata",
+      "range": "Number",
+      "cardinality": "1",
+      "is-dependent": true,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Version number of the entity."
+      }
+    }
+  },
+  {
+    "_id": "source",
+    "subtypeOf": "metadata-attribute",
+    "attributes": {
+      "domain": "Metadata",
+      "range": "String",
+      "cardinality": "1",
+      "is-dependent": true,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "Source of the entity definition."
+      }
+    }
+  },
+  {
+    "_id": "metadata-attr",
+    "subtypeOf": "relationship-attribute",
+    "attributes": {
+      "domain": "Thing",
+      "range": "Metadata",
+      "cardinality": "1",
+      "is-dependent": false,
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The Thing that this metadata describes - independent relationship."
+      }
+    }
+  },
+  {
+    "_id": "NamingRelationship",
+    "subtypeOf": "Relationship",
+    "attributes": {
+      "dependent-end": "name",
+      "independent-end": "named-thing",
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The relationship between things and their names."
+      }
+    }
+  },
+  {
+    "_id": "DescriptionRelationship",
+    "subtypeOf": "Relationship",
+    "attributes": {
+      "dependent-end": "description",
+      "independent-end": "described-thing-attr",
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The relationship between things and their descriptions."
+      }
+    }
+  },
+  {
+    "_id": "PartRelationship",
+    "subtypeOf": "Relationship",
+    "attributes": {
+      "dependent-end": "parts",
+      "independent-end": "part-of-attr",
+      "metadata": {
+        "version": 1,
+        "source": "metamodel",
+        "description": "The relationship between compound things and their parts."
+      }
+    }
+  }
+]
