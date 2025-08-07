@@ -1,56 +1,48 @@
 /**
  * Validation result types for the Unified Capability Ontology
+ * ES6 JavaScript version
  */
 
-export interface ValidationError {
-  field: string;
-  message: string;
-  code: string;
-}
-
-export interface ValidationResult {
-  isValid: boolean;
-  errors: ValidationError[];
-}
-
 export class ValidationResultBuilder {
-  private errors: ValidationError[] = [];
+  constructor() {
+    this.errors = [];
+  }
 
-  public addError(field: string, message: string, code: string): this {
+  addError(field, message, code) {
     this.errors.push({ field, message, code });
     return this;
   }
 
-  public addFieldRequired(field: string): this {
+  addFieldRequired(field) {
     return this.addError(field, `${field} is required`, 'FIELD_REQUIRED');
   }
 
-  public addInvalidValue(field: string, value: any, expectedType?: string): this {
+  addInvalidValue(field, value, expectedType) {
     const message = expectedType 
       ? `${field} has invalid value '${value}', expected ${expectedType}`
       : `${field} has invalid value '${value}'`;
     return this.addError(field, message, 'INVALID_VALUE');
   }
 
-  public addConstraintViolation(field: string, constraint: string): this {
+  addConstraintViolation(field, constraint) {
     return this.addError(field, `${field} violates constraint: ${constraint}`, 'CONSTRAINT_VIOLATION');
   }
 
-  public build(): ValidationResult {
+  build() {
     return {
       isValid: this.errors.length === 0,
       errors: [...this.errors]
     };
   }
 
-  public static success(): ValidationResult {
+  static success() {
     return {
       isValid: true,
       errors: []
     };
   }
 
-  public static failure(errors: ValidationError[]): ValidationResult {
+  static failure(errors) {
     return {
       isValid: false,
       errors

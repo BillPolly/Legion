@@ -1,15 +1,25 @@
-module.exports = {
-  preset: 'ts-jest',
+/**
+ * Jest configuration for ES6 JavaScript
+ */
+
+export default {
   testEnvironment: 'node',
-  roots: ['<rootDir>'],
-  testMatch: ['<rootDir>/src/**/*.test.ts'],
+  transform: {},
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1'
+  },
+  testMatch: [
+    '**/__tests__/**/*.test.js',
+    '**/__tests__/**/*.spec.js'
+  ],
   collectCoverageFrom: [
-    'src/**/*.ts',
-    '!src/**/*.d.ts',
-    '!src/__tests__/**',
+    'src-js/**/*.js',
+    '!src-js/**/*.test.js',
+    '!src-js/**/*.spec.js',
+    '!src-js/__tests__/**'
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
-  testTimeout: 30000, // 30 seconds for MongoDB operations
-  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts']
+  testTimeout: 10000,
+  setupFilesAfterEnv: ['<rootDir>/__tests__/setup.js']
 };

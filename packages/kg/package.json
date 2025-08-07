@@ -1,26 +1,20 @@
 {
-  "name": "@search-demo/kg-new",
+  "name": "@legion/kg",
   "version": "1.0.0",
   "description": "Unified Capability Ontology - Next Generation Knowledge Graph System",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
+  "main": "src-js/index.js",
   "scripts": {
-    "build": "tsc",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "clean": "rm -rf dist",
-    "dev": "tsc --watch"
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
+    "clean": "rm -rf dist coverage"
   },
   "license": "MIT",
   "dependencies": {
     "mongodb": "^6.0.0"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.0",
-    "@types/node": "^20.0.0",
-    "jest": "^29.5.0",
-    "ts-jest": "^29.1.0",
-    "typescript": "^5.0.0"
+    "jest": "^29.7.0"
   }
 }
