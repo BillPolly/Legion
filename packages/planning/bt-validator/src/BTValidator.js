@@ -3,7 +3,7 @@
  * 
  * Validates:
  * - BT node structures and hierarchy
- * - Node type validity (sequence, selector, action, retry)
+ * - Node type validity (sequence, selector, action, retry, condition, parallel)
  * - Tool existence and availability
  * - Parameter schemas against tool metadata
  * - Tree structural integrity (cycles, orphans)
@@ -230,7 +230,7 @@ export class BTValidator {
    * @param {string} path - Node path for error reporting
    */
   validateNodeTypes(node, result, path = 'root') {
-    const validTypes = ['sequence', 'selector', 'action', 'retry', 'parallel'];
+    const validTypes = ['sequence', 'selector', 'action', 'retry', 'parallel', 'condition'];
     
     if (!validTypes.includes(node.type)) {
       result.addError('INVALID_NODE_TYPE', 
@@ -260,6 +260,15 @@ export class BTValidator {
       case 'retry':
         if (!node.child && (!node.children || node.children.length !== 1)) {
           result.addError('INVALID_RETRY_STRUCTURE', 'Retry nodes must have exactly one child', node.id, { path });
+        }
+        break;
+
+      case 'condition':
+        if (!node.check && !node.condition) {
+          result.addError('MISSING_CONDITION', 'Condition nodes must specify check or condition expression', node.id, { path });
+        }
+        if (node.children && node.children.length > 0) {
+          result.addWarning('UNEXPECTED_CHILDREN', 'Condition nodes should not have children', node.id, { path });
         }
         break;
     }

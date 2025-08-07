@@ -5,19 +5,44 @@
  * that provide domain-specific context and allowable actions
  */
 
-import { Tool, ToolResult } from '@legion/tool-system';
-import { PlannerEngine } from '@legion/unified-planner';
+import { Tool, ToolResult } from '@legion/tool-core';
+import { PlanningRequest, createLLMPlanner } from '@legion/unified-planner';
 import { LLMClient } from '@legion/llm';
 import { ProfileManager } from '../ProfileManager.js';
 
 export class ProfilePlannerTool extends Tool {
   constructor(dependencies = {}) {
-    super();
-    this.name = 'profile_planner';
+    super({
+      name: 'profile_planner',
+      execute: null, // Will be set after initialization
+      inputSchema: {
+        type: 'object',
+        properties: {
+          profile: {
+            type: 'string',
+            description: 'Profile name (e.g. "javascript-development", "python-data-science")'
+          },
+          description: {
+            type: 'string', 
+            description: 'Task description for planning'
+          },
+          strategy: {
+            type: 'string',
+            enum: ['llm', 'template'],
+            default: 'llm',
+            description: 'Planning strategy to use'
+          }
+        },
+        required: ['profile', 'description']
+      }
+    });
     this.description = 'Profile-based planning for simplified domain-specific task planning';
-    this.resourceManager = dependencies.resourceManager;
+    this.resourceManager = dependencies.resourceManager || dependencies;
     this.profileManager = null;
     this.initialized = false;
+    
+    // Set the actual execute function
+    this._execute = this.execute.bind(this);
   }
 
   /**
@@ -161,10 +186,11 @@ export class ProfilePlannerTool extends Tool {
       const llmClient = await this._createLLMClient();
       const moduleLoader = await this._getOrCreateModuleLoader();
 
-      // Create and execute planner
-      const planner = new PlannerEngine({
-        llmClient: llmClient,
-        moduleLoader: moduleLoader
+      // Create planner using factory function that properly registers strategies
+      const planner = createLLMPlanner(llmClient, {
+        debugMode: true,
+        moduleLoader: moduleLoader,
+        templateLoader: null // Use inline prompts instead of templates
       });
 
       console.log(`Planning with context:`, {
@@ -174,12 +200,16 @@ export class ProfilePlannerTool extends Tool {
       });
 
       // Create plan using LLM strategy with BT output
-      const bt = await planner.createPlan({
+      const planningRequest = new PlanningRequest({
         description: planningContext.description,
-        allowableActions: planningContext.allowableActions,
+        allowableActions: planningContext.allowableActions.length > 0 ? planningContext.allowableActions : (() => {
+          throw new Error(`Profile '${profileName}' has no allowable actions. Profile must define available tools - no fallbacks allowed!`);
+        })(),
         maxSteps: planningContext.maxSteps,
         initialInputData: planningContext.initialInputData
-      }, 'llm');
+      });
+      
+      const bt = await planner.createPlan(planningRequest);
 
       const result = {
         success: true,
@@ -284,8 +314,10 @@ export class ProfilePlannerTool extends Tool {
       // Client doesn't exist, create new one
     }
 
-    // Create new LLM client
-    const anthropicKey = this.resourceManager.env.ANTHROPIC_API_KEY;
+    // ResourceManager automatically loads ALL env vars from .env file
+    // Access API key using dot notation (now supported by ResourceManager)
+    const anthropicKey = this.resourceManager.get('env.ANTHROPIC_API_KEY');
+    
     if (!anthropicKey) {
       throw new Error('ANTHROPIC_API_KEY not found in environment variables. Please set it in your .env file.');
     }
@@ -296,8 +328,8 @@ export class ProfilePlannerTool extends Tool {
       model: 'claude-3-5-sonnet-20241022' // Use current Claude 3.5 Sonnet model
     });
 
-    // Register for reuse
-    this.resourceManager.register('llmClient', llmClient);
+    // Store for reuse using proxy-based access
+    this.resourceManager.llmClient = llmClient;
 
     return llmClient;
   }
@@ -319,12 +351,12 @@ export class ProfilePlannerTool extends Tool {
     }
 
     // Create new ModuleLoader
-    const { ModuleLoader } = await import('@legion/module-loader');
+    const { ModuleLoader } = await import('@legion/tool-core');
     const moduleLoader = new ModuleLoader();
     await moduleLoader.initialize();
 
-    // Register for reuse
-    this.resourceManager.register('moduleLoader', moduleLoader);
+    // Store for reuse using proxy-based access
+    this.resourceManager.moduleLoader = moduleLoader;
 
     return moduleLoader;
   }

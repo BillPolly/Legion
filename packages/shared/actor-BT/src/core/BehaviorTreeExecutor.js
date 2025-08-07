@@ -14,6 +14,7 @@ import { ActionNode } from '../nodes/ActionNode.js';
 import { SequenceNode } from '../nodes/SequenceNode.js';
 import { SelectorNode } from '../nodes/SelectorNode.js';
 import { RetryNode } from '../nodes/RetryNode.js';
+import { ConditionNode } from '../nodes/ConditionNode.js';
 
 export class BehaviorTreeExecutor {
   constructor(toolRegistry) {
@@ -100,7 +101,7 @@ export class BehaviorTreeExecutor {
     }
 
     if (NodeClass.getTypeName() !== typeName) {
-      console.warn(`[BehaviorTreeExecutor] Type name mismatch: ${typeName} vs ${NodeClass.getTypeName()}`);
+      throw new Error(`[BehaviorTreeExecutor] FATAL: Type name mismatch - registering '${typeName}' but node class returns '${NodeClass.getTypeName()}'. Node types must be consistent!`);
     }
 
     this.nodeTypes.set(typeName, NodeClass);
@@ -151,11 +152,11 @@ export class BehaviorTreeExecutor {
     this.registerNodeType('sequence', SequenceNode);
     this.registerNodeType('selector', SelectorNode);
     this.registerNodeType('retry', RetryNode);
+    this.registerNodeType('condition', ConditionNode);
     
     // Register placeholder classes for nodes not yet implemented
     const placeholderTypes = [
       'parallel',
-      'condition',
       'llm-decision'
     ];
 

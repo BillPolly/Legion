@@ -20,7 +20,14 @@
  * console.log(rm.has('model')); // true
  */
 export class ResourceManager {
+  static _instance = null;
+  
   constructor(initialResources = {}) {
+    // Implement singleton pattern
+    if (ResourceManager._instance) {
+      return ResourceManager._instance;
+    }
+    
     // Internal storage
     this._resources = new Map();
     
@@ -29,8 +36,8 @@ export class ResourceManager {
       this.load(initialResources);
     }
     
-    // Return a Proxy that intercepts property access
-    return new Proxy(this, {
+    // Create the proxy
+    const proxiedInstance = new Proxy(this, {
       get(target, prop, receiver) {
         // If it's a ResourceManager method or private property, access directly
         if (prop in target || prop.startsWith('_')) {
@@ -97,6 +104,21 @@ export class ResourceManager {
         return undefined;
       }
     });
+    
+    // Set singleton instance to the proxy
+    ResourceManager._instance = proxiedInstance;
+    return proxiedInstance;
+  }
+  
+  /**
+   * Get the singleton instance of ResourceManager
+   * @returns {ResourceManager} The singleton instance
+   */
+  static getInstance() {
+    if (!ResourceManager._instance) {
+      ResourceManager._instance = new ResourceManager();
+    }
+    return ResourceManager._instance;
   }
   
   /**
@@ -108,7 +130,34 @@ export class ResourceManager {
     try {
       // Try to load dotenv for environment variables
       const dotenv = await import('dotenv');
-      dotenv.config();
+      
+      // Look for .env file starting from current directory and going up to find Legion root  
+      const { existsSync } = await import('fs');
+      const path = await import('path');
+      
+      let currentDir = process.cwd();
+      let envPath = null;
+      
+      // Search up to 5 levels for Legion directory or .env file
+      for (let i = 0; i < 5; i++) {
+        const envFile = path.join(currentDir, '.env');
+        if (existsSync(envFile)) {
+          envPath = envFile;
+          break;
+        }
+        
+        const parentDir = path.dirname(currentDir);
+        if (parentDir === currentDir) break; // reached root
+        currentDir = parentDir;
+      }
+      
+      if (envPath) {
+        console.log(`ResourceManager: Loading .env from ${envPath}`);
+        dotenv.config({ path: envPath });
+      } else {
+        console.log('ResourceManager: Using default .env lookup');
+        dotenv.config(); // fallback to default behavior
+      }
       
       // Load all environment variables as env.* resources
       if (process.env) {
@@ -147,10 +196,26 @@ export class ResourceManager {
   
   /**
    * Get a resource (explicit method)
-   * @param {string} name - Resource name
+   * @param {string} name - Resource name (supports dot notation like 'env.ANTHROPIC_API_KEY')
    * @returns {*} The resource value
    */
   get(name) {
+    // Handle dot notation (e.g., 'env.ANTHROPIC_API_KEY')
+    if (name.includes('.')) {
+      const parts = name.split('.');
+      let current = this._resources.get(parts[0]);
+      
+      for (let i = 1; i < parts.length; i++) {
+        if (current === null || current === undefined) {
+          return undefined;
+        }
+        current = current[parts[i]];
+      }
+      
+      return current;
+    }
+    
+    // Direct key access
     return this._resources.get(name);
   }
   
@@ -221,6 +286,37 @@ export class ResourceManager {
     });
     
     return child;
+  }
+
+  /**
+   * Create LLM client using environment variables
+   * @param {Object} config - LLM configuration
+   * @returns {Promise<Object>} LLM client instance
+   */
+  async createLLMClient(config = {}) {
+    // Get API key from environment
+    const anthropicKey = this.get('env.ANTHROPIC_API_KEY');
+    
+    if (!anthropicKey) {
+      throw new Error('ANTHROPIC_API_KEY not found in environment variables. Please set it in your .env file.');
+    }
+
+    // Import LLMClient dynamically
+    const { LLMClient } = await import('@legion/llm');
+    
+    const llmClient = new LLMClient({
+      provider: config.provider || 'anthropic',
+      apiKey: anthropicKey,
+      model: config.model || 'claude-3-5-sonnet-20241022',
+      maxTokens: config.maxTokens || 1000,
+      temperature: config.temperature || 0.7,
+      ...config
+    });
+
+    // Store in ResourceManager for reuse
+    this.llmClient = llmClient;
+
+    return llmClient;
   }
 }
 

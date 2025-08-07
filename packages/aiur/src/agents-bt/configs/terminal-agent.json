@@ -1,0 +1,265 @@
+{
+  "type": "message_handler",
+  "name": "TerminalBTAgent_Configuration",
+  "description": "Behavior tree configuration for terminal agent tool execution workflows",
+  "debugMode": false,
+  
+  "routes": {
+    "session_create": {
+      "type": "sequence",
+      "name": "create_session_workflow",
+      "description": "Create new session and send initial tools",
+      "children": [
+        {
+          "type": "session_manager",
+          "name": "create_session_action",
+          "action": "create_session",
+          "description": "Create a new session"
+        },
+        {
+          "type": "tools_list",
+          "name": "send_initial_tools",
+          "action": "send_initial_tools",
+          "includeSystemTools": true,
+          "description": "Send initial tools list to client"
+        }
+      ]
+    },
+
+    "session_attach": {
+      "type": "sequence",
+      "name": "attach_session_workflow",
+      "description": "Attach to existing session and send tools",
+      "children": [
+        {
+          "type": "session_manager",
+          "name": "attach_session_action",
+          "action": "attach_session",
+          "sessionId": "{{message.sessionId}}",
+          "description": "Attach to existing session"
+        },
+        {
+          "type": "tools_list",
+          "name": "send_current_tools",
+          "action": "send_initial_tools",
+          "includeSystemTools": true,
+          "description": "Send current tools list to client"
+        }
+      ]
+    },
+
+    "tool_request": {
+      "type": "sequence",
+      "name": "execute_tool_workflow",
+      "description": "Execute requested tool and return result",
+      "children": [
+        {
+          "type": "selector",
+          "name": "tool_execution_strategy",
+          "description": "Choose between context tools and regular tools",
+          "children": [
+            {
+              "type": "sequence",
+              "name": "context_tool_execution",
+              "condition": "['context_add', 'context_get', 'context_list'].includes(message.tool)",
+              "children": [
+                {
+                  "type": "tool_execution",
+                  "name": "execute_context_tool",
+                  "tool": "{{message.tool}}",
+                  "parameters": "{{message.arguments}}",
+                  "useContextTools": true,
+                  "description": "Execute context-specific tool"
+                }
+              ]
+            },
+            {
+              "type": "tool_execution",
+              "name": "execute_regular_tool",
+              "tool": "{{message.tool}}",
+              "parameters": "{{message.arguments}}",
+              "allowParameterResolution": true,
+              "validateInput": true,
+              "processOutput": true,
+              "description": "Execute regular tool via module loader"
+            }
+          ]
+        },
+        {
+          "type": "response_sender",
+          "name": "send_tool_result",
+          "responseType": "tool_response",
+          "includeToolMetadata": true,
+          "description": "Send tool execution result"
+        }
+      ]
+    },
+
+    "tools_list": {
+      "type": "sequence",
+      "name": "list_tools_workflow",
+      "description": "Get and send available tools list",
+      "children": [
+        {
+          "type": "tools_list",
+          "name": "get_all_available_tools",
+          "action": "get_all_tools",
+          "includeSystemTools": true,
+          "includeModuleTools": true,
+          "description": "Get all available tools"
+        },
+        {
+          "type": "response_sender",
+          "name": "send_tools_list",
+          "responseType": "tools_list_response",
+          "includeToolSchemas": true,
+          "description": "Send tools list to client"
+        }
+      ]
+    },
+
+    "module_list": {
+      "type": "sequence",
+      "name": "list_modules_workflow",
+      "description": "Get and send available modules list",
+      "children": [
+        {
+          "type": "module_manager",
+          "name": "get_modules_list",
+          "action": "list_modules",
+          "includeLoaded": true,
+          "includeAvailable": true,
+          "description": "Get loaded and available modules"
+        },
+        {
+          "type": "response_sender",
+          "name": "send_modules_list",
+          "responseType": "module_list_response",
+          "description": "Send modules list to client"
+        }
+      ]
+    },
+
+    "module_load": {
+      "type": "sequence",
+      "name": "load_module_workflow", 
+      "description": "Load module and update tools list",
+      "children": [
+        {
+          "type": "module_manager",
+          "name": "load_module_action",
+          "action": "load_module",
+          "moduleName": "{{message.moduleName}}",
+          "description": "Load the requested module"
+        },
+        {
+          "type": "tools_list",
+          "name": "send_updated_tools_after_load",
+          "action": "send_updated_tools",
+          "includeSystemTools": true,
+          "description": "Send updated tools list after module load"
+        },
+        {
+          "type": "response_sender",
+          "name": "confirm_module_loaded",
+          "responseType": "module_loaded",
+          "content": "Module {{message.moduleName}} loaded successfully",
+          "includeLoadedTools": true,
+          "description": "Confirm module loading success"
+        }
+      ]
+    },
+
+    "module_unload": {
+      "type": "sequence",
+      "name": "unload_module_workflow",
+      "description": "Unload module and update tools list",
+      "children": [
+        {
+          "type": "module_manager",
+          "name": "unload_module_action",
+          "action": "unload_module",
+          "moduleName": "{{message.moduleName}}",
+          "description": "Unload the requested module"
+        },
+        {
+          "type": "tools_list",
+          "name": "send_updated_tools_after_unload",
+          "action": "send_updated_tools",
+          "includeSystemTools": true,
+          "description": "Send updated tools list after module unload"
+        },
+        {
+          "type": "response_sender",
+          "name": "confirm_module_unloaded",
+          "responseType": "module_unloaded",
+          "content": "Module {{message.moduleName}} unloaded successfully",
+          "description": "Confirm module unloading success"
+        }
+      ]
+    },
+
+    "ping": {
+      "type": "response_sender",
+      "name": "respond_to_ping",
+      "responseType": "pong",
+      "content": "pong",
+      "timestamp": "{{Date.now()}}",
+      "description": "Respond to health check ping"
+    }
+  },
+
+  "defaultRoute": {
+    "type": "sequence",
+    "name": "handle_unknown_terminal_message",
+    "description": "Handle unrecognized terminal message types",
+    "children": [
+      {
+        "type": "error_handler",
+        "name": "log_unknown_terminal_message",
+        "strategy": "report",
+        "reportErrors": true,
+        "description": "Log the unknown message type"
+      },
+      {
+        "type": "response_sender",
+        "name": "send_terminal_unknown_message_error",
+        "responseType": "error",
+        "content": "Unknown terminal message type: {{messageType}}. Available types: session_create, session_attach, tool_request, tools_list, module_list, module_load, module_unload, ping",
+        "description": "Inform client about unknown message type"
+      }
+    ]
+  },
+
+  "configuration": {
+    "fallbackBehavior": "error",
+    "logUnroutedMessages": true,
+    "routingStrategy": "exact_match",
+    "enableSessionManagement": true,
+    "enableModuleManagement": true,
+    "enableToolExecution": true,
+    "includeToolSchemas": true,
+    "maxConcurrentTools": 5
+  },
+
+  "errorHandling": {
+    "strategy": "retry",
+    "maxRetries": 2,
+    "retryDelay": 500,
+    "retryBackoff": 1.2,
+    "reportErrors": true
+  },
+
+  "metadata": {
+    "version": "1.0.0",
+    "author": "Legion BT System",
+    "description": "Terminal agent workflow for tool execution, session management, and module operations",
+    "capabilities": [
+      "session_management",
+      "tool_execution",
+      "module_management",
+      "tools_listing",
+      "health_checking"
+    ]
+  }
+}

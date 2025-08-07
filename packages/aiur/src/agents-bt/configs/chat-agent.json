@@ -1,0 +1,288 @@
+{
+  "type": "message_handler",
+  "name": "ChatBTAgent_Configuration", 
+  "description": "Behavior tree configuration for chat agent workflows",
+  "debugMode": false,
+  
+  "routes": {
+    "chat_message": {
+      "type": "sequence",
+      "name": "process_chat_message",
+      "description": "Main chat message processing workflow",
+      "children": [
+        {
+          "type": "conversation_manager",
+          "name": "add_user_message",
+          "action": "add_user_message",
+          "description": "Add user message to conversation history"
+        },
+        {
+          "type": "selector",
+          "name": "response_strategy_selector",
+          "description": "Choose between complex task handling and standard LLM interaction",
+          "children": [
+            {
+              "type": "sequence",
+              "name": "complex_task_workflow",
+              "description": "Handle complex multi-step tasks",
+              "condition": "message.content && (message.content.toLowerCase().includes('build') || message.content.toLowerCase().includes('create') || message.content.toLowerCase().includes('implement') || message.content.length > 200)",
+              "children": [
+                {
+                  "type": "tool_execution",
+                  "name": "delegate_to_orchestrator",
+                  "tool": "handle_complex_task",
+                  "parameters": {
+                    "task_description": "{{message.content}}"
+                  },
+                  "description": "Delegate complex task to orchestrator"
+                },
+                {
+                  "type": "response_sender",
+                  "name": "send_delegation_response",
+                  "responseType": "chat_response",
+                  "content": "I'll handle this complex task step by step. Let me break it down and work through it systematically.",
+                  "isComplete": false,
+                  "description": "Inform user that task has been delegated"
+                }
+              ]
+            },
+            {
+              "type": "sequence", 
+              "name": "standard_llm_workflow",
+              "description": "Standard LLM interaction with tool calling",
+              "children": [
+                {
+                  "type": "llm_interaction",
+                  "name": "process_with_llm",
+                  "streaming": true,
+                  "tools": true,
+                  "maxIterations": 50,
+                  "temperature": 0.7,
+                  "maxTokens": 2000,
+                  "description": "Process message with LLM and available tools"
+                },
+                {
+                  "type": "conversation_manager",
+                  "name": "add_llm_response",
+                  "action": "add_assistant_message",
+                  "description": "Add LLM response to conversation history"
+                },
+                {
+                  "type": "response_sender",
+                  "name": "send_chat_response",
+                  "responseType": "chat_response",
+                  "includeArtifacts": true,
+                  "includeVoice": true,
+                  "description": "Send final response to user"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    "clear_history": {
+      "type": "sequence",
+      "name": "clear_conversation_history",
+      "description": "Clear conversation history workflow",
+      "children": [
+        {
+          "type": "conversation_manager",
+          "name": "clear_history_action",
+          "action": "clear_history",
+          "description": "Clear the conversation history"
+        },
+        {
+          "type": "response_sender",
+          "name": "confirm_history_cleared",
+          "responseType": "chat_response",
+          "content": "Conversation history has been cleared.",
+          "isComplete": true,
+          "description": "Confirm history clearing to user"
+        }
+      ]
+    },
+
+    "get_history": {
+      "type": "sequence",
+      "name": "retrieve_conversation_history",
+      "description": "Retrieve and send conversation history",
+      "children": [
+        {
+          "type": "conversation_manager",
+          "name": "get_history_action",
+          "action": "get_history",
+          "sendToRemote": true,
+          "description": "Get conversation history and send to remote actor"
+        }
+      ]
+    },
+
+    "voice_input": {
+      "type": "sequence",
+      "name": "process_voice_input",
+      "description": "Process speech-to-text input and convert to chat message",
+      "children": [
+        {
+          "type": "voice_integration",
+          "name": "transcribe_audio",
+          "action": "transcribe",
+          "parameters": {
+            "audio": "{{message.audio}}",
+            "format": "{{message.format}}",
+            "language": "{{message.language}}"
+          },
+          "description": "Transcribe audio to text"
+        },
+        {
+          "type": "selector",
+          "name": "transcription_result_handler",
+          "description": "Handle transcription success or failure",
+          "children": [
+            {
+              "type": "sequence",
+              "name": "transcription_success",
+              "condition": "transcriptionResult.success !== false",
+              "children": [
+                {
+                  "type": "response_sender",
+                  "name": "send_transcription",
+                  "responseType": "voice_transcription",
+                  "content": "{{transcriptionResult.text}}",
+                  "description": "Send transcription result"
+                },
+                {
+                  "type": "message_handler",
+                  "name": "process_transcribed_text",
+                  "routes": {
+                    "transcribed_message": {
+                      "type": "process_chat_message"
+                    }
+                  },
+                  "description": "Process transcribed text as chat message"
+                }
+              ]
+            },
+            {
+              "type": "response_sender",
+              "name": "transcription_error",
+              "responseType": "voice_error",
+              "content": "Failed to transcribe audio: {{error.message}}",
+              "description": "Send transcription error"
+            }
+          ]
+        }
+      ]
+    },
+
+    "generate_speech": {
+      "type": "sequence",
+      "name": "text_to_speech",
+      "description": "Generate speech from text",
+      "children": [
+        {
+          "type": "voice_integration", 
+          "name": "synthesize_speech",
+          "action": "synthesize",
+          "parameters": {
+            "text": "{{message.text}}",
+            "voice": "{{message.voice}}",
+            "model": "tts-1",
+            "format": "mp3",
+            "speed": 1.5
+          },
+          "description": "Generate speech audio"
+        },
+        {
+          "type": "response_sender",
+          "name": "send_audio_response",
+          "responseType": "voice_audio",
+          "includeVoiceData": true,
+          "messageId": "{{message.messageId}}",
+          "description": "Send generated audio to client"
+        }
+      ]
+    },
+
+    "voice_preferences": {
+      "type": "sequence",
+      "name": "update_voice_preferences",
+      "description": "Update voice configuration preferences",
+      "children": [
+        {
+          "type": "voice_integration",
+          "name": "update_preferences",
+          "action": "update_preferences",
+          "parameters": {
+            "enabled": "{{message.enabled}}",
+            "voice": "{{message.voice}}",
+            "autoPlay": "{{message.autoPlay}}"
+          },
+          "description": "Update voice preferences"
+        },
+        {
+          "type": "response_sender",
+          "name": "confirm_preferences_updated",
+          "responseType": "status",
+          "content": "Voice preferences updated successfully.",
+          "description": "Confirm preference update"
+        }
+      ]
+    }
+  },
+
+  "defaultRoute": {
+    "type": "sequence",
+    "name": "handle_unknown_message",
+    "description": "Handle unrecognized message types",
+    "children": [
+      {
+        "type": "error_handler",
+        "name": "log_unknown_message",
+        "strategy": "report",
+        "reportErrors": true,
+        "description": "Log the unknown message type"
+      },
+      {
+        "type": "response_sender",
+        "name": "send_unknown_message_error",
+        "responseType": "error",
+        "content": "Unknown message type: {{messageType}}. Available types: chat_message, clear_history, get_history, voice_input, generate_speech, voice_preferences",
+        "description": "Inform user about unknown message type"
+      }
+    ]
+  },
+
+  "configuration": {
+    "fallbackBehavior": "error",
+    "logUnroutedMessages": true,
+    "routingStrategy": "conditional",
+    "maxConversationHistory": 50,
+    "enableVoiceIntegration": true,
+    "enableArtifactProcessing": true,
+    "enableComplexTaskHandling": true
+  },
+
+  "errorHandling": {
+    "strategy": "retry",
+    "maxRetries": 3,
+    "retryDelay": 1000,
+    "retryBackoff": 1.5,
+    "reportErrors": true
+  },
+
+  "metadata": {
+    "version": "1.0.0",
+    "author": "Legion BT System",
+    "description": "Comprehensive chat agent workflow with LLM interaction, tool calling, voice integration, and complex task handling",
+    "capabilities": [
+      "conversation_management",
+      "llm_interaction", 
+      "tool_execution",
+      "voice_processing",
+      "complex_task_orchestration",
+      "artifact_processing"
+    ]
+  }
+}

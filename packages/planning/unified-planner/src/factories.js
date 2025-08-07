@@ -7,6 +7,7 @@
 
 import { PlannerEngine, PlanningRequest } from './core/PlannerEngine.js';
 import { LLMStrategy } from './strategies/LLMStrategy.js';
+import { JSONOnlyLLMStrategy } from './strategies/JSONOnlyLLMStrategy.js';
 import { TemplateStrategy } from './strategies/TemplateStrategy.js';
 import { RuleStrategy } from './strategies/RuleStrategy.js';
 import { PromptTemplateLoader } from './templates/PromptTemplateLoader.js';
@@ -26,9 +27,12 @@ export function createLLMPlanner(llmClient, options = {}) {
   });
 
   // Create and register LLM strategy
-  const templateLoader = options.templateLoader || new PromptTemplateLoader(options.templatesDir);
-  const llmStrategy = new LLMStrategy(llmClient, {
-    templateLoader,
+  const templateLoader = options.templateLoader !== null ? 
+    (options.templateLoader || new PromptTemplateLoader(options.templatesDir)) : 
+    null;
+  
+  // Use JSON-only strategy for better reliability
+  const llmStrategy = new JSONOnlyLLMStrategy(llmClient, {
     model: options.model,
     temperature: options.temperature,
     maxTokens: options.maxTokens,
@@ -36,6 +40,16 @@ export function createLLMPlanner(llmClient, options = {}) {
   });
 
   engine.registerStrategy('llm', llmStrategy);
+  
+  // Also register the original strategy as 'llm-mixed' for backward compatibility
+  const mixedStrategy = new LLMStrategy(llmClient, {
+    templateLoader,
+    model: options.model,
+    temperature: options.temperature,
+    maxTokens: options.maxTokens,
+    debugMode: options.debugMode
+  });
+  engine.registerStrategy('llm-mixed', mixedStrategy);
 
   // Return simple API (compatible with original llm-planner)
   return {

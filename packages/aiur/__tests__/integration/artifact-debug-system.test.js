@@ -152,19 +152,19 @@ describe('Artifact Debug System Integration', () => {
     });
 
     // Create frontend actor space
-    const { FrontendActorSpace } = await import('../../../apps/aiur-ui-clean/src/actors/FrontendActorSpace.js');
-    const { ChatActor } = await import('../../../apps/aiur-ui-clean/src/actors/ChatActor.js');
-    const { ArtifactDebugActor } = await import('../../../apps/aiur-ui-clean/src/actors/ArtifactDebugActor.js');
+    const { FrontendActorSpace } = await import('../../../apps/aiur-ui/src/actors/FrontendActorSpace.js');
+    const { ChatActor } = await import('../../../apps/aiur-ui/src/actors/ChatActor.js');
+    const { ArtifactDebugActor } = await import('../../../apps/aiur-ui/src/actors/ArtifactDebugActor.js');
     
     // Mock actor imports
-    jest.mock('../../../apps/aiur-ui-clean/src/actors/ChatActor.js', () => ({
+    jest.mock('../../../apps/aiur-ui/src/actors/ChatActor.js', () => ({
       ChatActor: jest.fn(() => ({
         setRemoteAgent: jest.fn(),
         receive: jest.fn()
       }))
     }));
     
-    jest.mock('../../../apps/aiur-ui-clean/src/actors/TerminalActor.js', () => ({
+    jest.mock('../../../apps/aiur-ui/src/actors/TerminalActor.js', () => ({
       TerminalActor: jest.fn(() => ({
         setRemoteAgent: jest.fn(),
         receive: jest.fn()
@@ -197,7 +197,7 @@ describe('Artifact Debug System Integration', () => {
 
   test('Artifact events propagate from ChatAgent to ArtifactDebugActor', async () => {
     // Import required classes
-    const { ArtifactDebugActor } = await import('../../../apps/aiur-ui-clean/src/actors/ArtifactDebugActor.js');
+    const { ArtifactDebugActor } = await import('../../../apps/aiur-ui/src/actors/ArtifactDebugActor.js');
     
     // Create mock ChatAgent
     chatAgent = new ChatAgent({ sessionId: 'test' });
@@ -248,7 +248,7 @@ describe('Artifact Debug System Integration', () => {
 
   test('ArtifactDebugView updates when artifacts are created', async () => {
     // Import ArtifactDebugView
-    const { ArtifactDebugView } = await import('../../../apps/aiur-ui-clean/src/components/debug/ArtifactDebugView.js');
+    const { ArtifactDebugView } = await import('../../../apps/aiur-ui/src/components/debug/ArtifactDebugView.js');
     
     // Create container
     const container = document.getElementById('app');
@@ -344,7 +344,7 @@ describe('Artifact Debug System Integration', () => {
     });
     
     // 3. Create ArtifactDebugActor
-    const { ArtifactDebugActor } = await import('../../../apps/aiur-ui-clean/src/actors/ArtifactDebugActor.js');
+    const { ArtifactDebugActor } = await import('../../../apps/aiur-ui/src/actors/ArtifactDebugActor.js');
     artifactDebugActor = new ArtifactDebugActor();
     
     // 4. Wire actors
@@ -355,7 +355,7 @@ describe('Artifact Debug System Integration', () => {
     chatAgent.remoteActors = mockRemoteActors;
     
     // 5. Create ArtifactDebugView
-    const { ArtifactDebugView } = await import('../../../apps/aiur-ui-clean/src/components/debug/ArtifactDebugView.js');
+    const { ArtifactDebugView } = await import('../../../apps/aiur-ui/src/components/debug/ArtifactDebugView.js');
     artifactDebugView = new ArtifactDebugView(document.getElementById('app'), null);
     artifactDebugView.show();
     

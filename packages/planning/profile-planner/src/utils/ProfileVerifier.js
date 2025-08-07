@@ -5,7 +5,7 @@
  * for both planning and execution.
  */
 
-import { ResourceManager, ModuleFactory } from '@legion/tool-system';
+import { ResourceManager, ModuleFactory } from '@legion/tool-core';
 import { promises as fs } from 'fs';
 import path from 'path';
 

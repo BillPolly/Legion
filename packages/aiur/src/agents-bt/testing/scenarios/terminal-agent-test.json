@@ -1,0 +1,326 @@
+{
+  "type": "test_scenario",
+  "name": "TerminalBTAgent Tool Execution Test",
+  "description": "Test TerminalBTAgent's tool execution, module management, and session handling",
+  "version": "1.0.0",
+  
+  "configuration": {
+    "timeout": 20000,
+    "debugMode": true,
+    "continueOnFailure": false
+  },
+
+  "setup": {
+    "type": "sequence",
+    "name": "terminal_test_setup",
+    "children": [
+      {
+        "type": "mock_environment",
+        "name": "create_terminal_environment",
+        "action": "setup",
+        "environmentId": "terminal_test_env",
+        "mockServices": [
+          {
+            "name": "toolService",
+            "type": "custom",
+            "responses": {
+              "file_read": {
+                "success": true,
+                "content": "Mock file content from terminal test",
+                "filePath": "/test/example.txt"
+              },
+              "directory_list": {
+                "success": true,
+                "files": ["file1.txt", "file2.js", "subfolder/"],
+                "path": "/test/"
+              }
+            }
+          }
+        ],
+        "mockData": {
+          "sessionId": "terminal-session-456",
+          "toolName": "file_read",
+          "toolArgs": { "filePath": "/test/example.txt" }
+        }
+      }
+    ]
+  },
+
+  "tests": {
+    "type": "sequence",
+    "name": "terminal_agent_tests",
+    "children": [
+      {
+        "type": "sequence",
+        "name": "test_session_creation",
+        "description": "Test session creation and initial tool list",
+        "children": [
+          {
+            "type": "send_message",
+            "name": "create_session",
+            "targetAgent": "terminalAgent",
+            "messageType": "session_create",
+            "messageData": {
+              "requestId": "req_create_session"
+            },
+            "waitForResponse": true,
+            "responseTimeout": 5000
+          },
+          {
+            "type": "assert_response",
+            "name": "validate_session_creation",
+            "dataSource": "lastResponse",
+            "assertions": [
+              {
+                "field": "type",
+                "type": "equals",
+                "expected": "tools_list_response",
+                "description": "Should respond with initial tools list"
+              },
+              {
+                "field": "tools",
+                "type": "exists",
+                "description": "Response should contain tools array"
+              },
+              {
+                "field": "tools.length",
+                "type": "greater_than",
+                "expected": 0,
+                "description": "Should have at least some tools available"
+              }
+            ]
+          }
+        ]
+      },
+
+      {
+        "type": "sequence",
+        "name": "test_tool_execution",
+        "description": "Test executing a file_read tool",
+        "children": [
+          {
+            "type": "send_message",
+            "name": "execute_file_read",
+            "targetAgent": "terminalAgent",
+            "messageType": "tool_request",
+            "messageData": {
+              "tool": "{{mockData.toolName}}",
+              "arguments": "{{mockData.toolArgs}}"
+            },
+            "waitForResponse": true,
+            "responseTimeout": 10000
+          },
+          {
+            "type": "assert_response",
+            "name": "validate_tool_execution",
+            "dataSource": "lastResponse",
+            "assertions": [
+              {
+                "field": "type",
+                "type": "equals",
+                "expected": "tool_response",
+                "description": "Should respond with tool_response type"
+              },
+              {
+                "field": "result.success",
+                "type": "equals",
+                "expected": true,
+                "description": "Tool execution should be successful"
+              },
+              {
+                "field": "result.content",
+                "type": "exists",
+                "description": "Should have content from file read"
+              },
+              {
+                "field": "toolName",
+                "type": "equals",
+                "expected": "file_read",
+                "description": "Should confirm the tool that was executed"
+              }
+            ]
+          }
+        ]
+      },
+
+      {
+        "type": "sequence",
+        "name": "test_tools_list_request",
+        "description": "Test requesting current tools list",
+        "children": [
+          {
+            "type": "send_message",
+            "name": "request_tools_list",
+            "targetAgent": "terminalAgent",
+            "messageType": "tools_list",
+            "messageData": {},
+            "waitForResponse": true,
+            "responseTimeout": 5000
+          },
+          {
+            "type": "assert_response",
+            "name": "validate_tools_list",
+            "dataSource": "lastResponse",
+            "assertions": [
+              {
+                "field": "type",
+                "type": "equals",
+                "expected": "tools_list_response",
+                "description": "Should respond with tools_list_response"
+              },
+              {
+                "field": "tools",
+                "type": "exists",
+                "description": "Should have tools array"
+              },
+              {
+                "field": "systemTools",
+                "type": "exists",
+                "description": "Should include system tools"
+              }
+            ]
+          }
+        ]
+      },
+
+      {
+        "type": "sequence",
+        "name": "test_module_management",
+        "description": "Test module loading and tool updates",
+        "children": [
+          {
+            "type": "send_message",
+            "name": "load_module",
+            "targetAgent": "terminalAgent",
+            "messageType": "module_load",
+            "messageData": {
+              "moduleName": "web"
+            },
+            "waitForResponse": true,
+            "responseTimeout": 8000
+          },
+          {
+            "type": "assert_response",
+            "name": "validate_module_load",
+            "dataSource": "lastResponse",
+            "assertions": [
+              {
+                "field": "type",
+                "type": "equals",
+                "expected": "module_loaded",
+                "description": "Should confirm module loading"
+              },
+              {
+                "field": "content",
+                "type": "contains",
+                "expected": "web",
+                "description": "Should mention the loaded module name"
+              }
+            ]
+          }
+        ]
+      },
+
+      {
+        "type": "sequence",
+        "name": "test_ping_pong",
+        "description": "Test health check ping-pong",
+        "children": [
+          {
+            "type": "send_message",
+            "name": "send_ping",
+            "targetAgent": "terminalAgent",
+            "messageType": "ping",
+            "messageData": {},
+            "waitForResponse": true,
+            "responseTimeout": 2000
+          },
+          {
+            "type": "assert_response",
+            "name": "validate_pong",
+            "dataSource": "lastResponse",
+            "assertions": [
+              {
+                "field": "type",
+                "type": "equals",
+                "expected": "pong",
+                "description": "Should respond with pong"
+              },
+              {
+                "field": "content",
+                "type": "equals",
+                "expected": "pong",
+                "description": "Content should be 'pong'"
+              },
+              {
+                "field": "timestamp",
+                "type": "exists",
+                "description": "Should include timestamp"
+              }
+            ]
+          }
+        ]
+      },
+
+      {
+        "type": "sequence",
+        "name": "test_unknown_message_handling",
+        "description": "Test handling of unknown message types",
+        "children": [
+          {
+            "type": "send_message",
+            "name": "send_unknown_message",
+            "targetAgent": "terminalAgent",
+            "messageType": "unknown_terminal_message",
+            "messageData": {},
+            "waitForResponse": true,
+            "responseTimeout": 3000
+          },
+          {
+            "type": "assert_response",
+            "name": "validate_unknown_message_response",
+            "dataSource": "lastResponse",
+            "assertions": [
+              {
+                "field": "type",
+                "type": "equals",
+                "expected": "error",
+                "description": "Should respond with error for unknown message"
+              },
+              {
+                "field": "content",
+                "type": "contains",
+                "expected": "Unknown terminal message type",
+                "description": "Should explain the unknown message type"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+
+  "teardown": {
+    "type": "sequence",
+    "name": "terminal_test_teardown",
+    "children": [
+      {
+        "type": "mock_environment",
+        "name": "cleanup_terminal_environment",
+        "action": "teardown",
+        "environmentId": "terminal_test_env"
+      }
+    ]
+  },
+
+  "metadata": {
+    "author": "Legion BT Testing System",
+    "created": "2024-01-01T00:00:00Z",
+    "tags": ["terminal", "tools", "modules", "session"],
+    "requirements": [
+      "TerminalBTAgent must be registered as 'terminalAgent'",
+      "Mock module loader must be configured",
+      "File and web modules should be available"
+    ]
+  }
+}

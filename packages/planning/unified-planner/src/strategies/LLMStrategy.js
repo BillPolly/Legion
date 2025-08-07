@@ -23,7 +23,7 @@ export class LLMStrategy extends PlanningStrategy {
     this.templateLoader = options.templateLoader;
     this.model = options.model || 'claude-3-5-sonnet-20241022';
     this.temperature = options.temperature || 0.3;
-    this.maxTokens = options.maxTokens || 2000;
+    this.maxTokens = options.maxTokens || 4000; // Increased for complex BT plans
     this.examples = options.examples || [];
   }
 
@@ -40,11 +40,13 @@ export class LLMStrategy extends PlanningStrategy {
       // Build prompt for BT generation
       const prompt = await this.buildBTPrompt(request, context);
       
-      // Call LLM
+      // Call LLM with JSON-only instruction
+      const systemPrompt = "You are a JSON generator. Return ONLY valid JSON with no additional text, markdown, or explanations.";
       const response = await this.llmClient.complete(prompt, {
         model: this.model,
         temperature: this.temperature,
-        maxTokens: this.maxTokens
+        maxTokens: this.maxTokens,
+        system: systemPrompt
       });
       
       if (this.debugMode) {
@@ -78,10 +80,12 @@ export class LLMStrategy extends PlanningStrategy {
       const prompt = await this.buildRetryBTPrompt(request, retryContext);
       
       // Call LLM with slightly higher temperature for variation
+      const systemPrompt = "You are a JSON generator. Return ONLY valid JSON with no additional text, markdown, or explanations.";
       const response = await this.llmClient.complete(prompt, {
         model: this.model,
         temperature: Math.min(this.temperature + 0.1, 0.5), // Slight increase for variety
-        maxTokens: this.maxTokens
+        maxTokens: this.maxTokens,
+        system: systemPrompt
       });
       
       // Parse BT from response
@@ -175,11 +179,48 @@ Each node must have:
 - For retry nodes: child object and maxRetries number
 
 BT DESIGN PRINCIPLES:
-- Use sequence for ordered execution
+- Use sequence for ordered execution (especially for multi-file projects)
 - Use selector for fallback strategies
 - Use parallel for independent concurrent tasks
 - Use retry for unreliable operations
 - Use action nodes only with tools from allowable actions list
+
+MULTI-FILE PROJECT GUIDELINES:
+- For web projects, create multiple coordinated files (HTML, CSS, JS, README)
+- Use directory_create before creating files in subdirectories
+- Ensure HTML files properly reference CSS and JS files
+- Generate README.md with project description and usage instructions
+- Use descriptive filenames that reflect their purpose
+- Create proper project structure with organized file layout
+
+CODE QUALITY GUIDELINES:
+- Generate high-quality, production-ready code that follows best practices
+- Include code quality actions (eslint_check, prettier_format, validate_code) in BT plans
+- Use modern JavaScript features (const/let instead of var, arrow functions)
+- Avoid security risks (no eval(), proper input validation)
+- Include proper error handling and user feedback
+- Add meaningful comments for complex logic
+- Ensure consistent code formatting and style
+- Validate code structure and syntax after generation
+- For quality-focused projects, include linting and formatting steps in the BT
+
+TESTING & DOCUMENTATION GUIDELINES:
+- For complete projects, generate accompanying test files using test_write action
+- Include test_run actions to validate generated tests pass
+- Generate comprehensive documentation using doc_generate action
+- Add JSDoc comments to functions and classes using jsdoc_add action
+- Update README with project information using readme_update action
+- Test files should follow naming convention: *.test.js or *.spec.js
+- Include unit tests for all major functions and edge cases
+- Generate test coverage reports using test_coverage action
+- Documentation should include API reference, usage examples, and setup instructions
+- For professional projects, include testing and documentation in the BT sequence
+
+IMPORTANT OUTPUT FORMAT:
+- Return ONLY a JSON object - no markdown, no code blocks, no explanations
+- The JSON must be complete and valid
+- Do not include README content or code snippets outside the BT structure
+- All file content should be in the "content" field of file_write params
 
 Return a JSON object with this structure:
 {
@@ -200,7 +241,29 @@ Return a JSON object with this structure:
   ]
 }
 
-Generate a complete, executable BT structure that achieves the goal using only the allowable actions.`;
+CRITICAL: Return ONLY valid JSON. Do not include any markdown, explanations, or additional text.
+The response must start with { and end with }
+
+EXAMPLE RESPONSE:
+{
+  "type": "sequence",
+  "id": "example-bt",
+  "description": "Example BT structure",
+  "children": [
+    {
+      "type": "action",
+      "id": "action-1",
+      "tool": "file_write",
+      "description": "Write a file",
+      "params": {
+        "filepath": "example.txt",
+        "content": "content here"
+      }
+    }
+  ]
+}
+
+Generate a complete, executable BT structure in valid JSON format ONLY.`;
   }
 
   /**
@@ -238,8 +301,41 @@ Please analyze the validation errors and create a corrected BT that:
 4. Includes all required fields (id, type, description)
 5. Uses correct parameter formats
 
-Return a corrected JSON BT structure following the same format as before.
-Focus on fixing the specific errors while maintaining the overall goal.`;
+Return a corrected JSON BT structure with this exact format:
+{
+  "type": "sequence|selector|parallel|action|retry",
+  "id": "descriptive-root-id",
+  "description": "What this BT accomplishes",
+  "children": [
+    {
+      "type": "action",
+      "id": "descriptive-action-id", 
+      "tool": "exact-tool-name-from-allowable-actions",
+      "description": "What this action does",
+      "params": {
+        "param1": "value1",
+        "param2": "value2"
+      }
+    }
+  ]
+}
+
+CRITICAL RULES:
+1. Use "tool" field for action nodes, not "action"
+2. Return ONLY valid JSON - no markdown, no explanations, no code blocks
+3. Start with { and end with }
+4. Ensure all braces are properly matched
+5. Put all file content inside params.content as a string
+
+VALID JSON EXAMPLE:
+{
+  "type": "sequence",
+  "id": "root",
+  "description": "Description",
+  "children": [...]
+}
+
+Return ONLY the corrected JSON BT structure.`;
   }
 
   /**
@@ -281,8 +377,64 @@ Focus on fixing the specific errors while maintaining the overall goal.`;
    */
   parseBTResponse(response) {
     try {
-      // Clean the response using robust JSON extraction
-      const cleanedJson = this.cleanLLMResponse(response);
+      // Try to parse the response directly first (in case it's already clean JSON)
+      let cleanedJson = response.trim();
+      
+      // If it starts with a code block, extract it
+      if (cleanedJson.includes('```')) {
+        cleanedJson = this.cleanLLMResponse(response);
+      }
+      
+      // Additional safety: ensure we have valid JSON structure
+      if (!cleanedJson.startsWith('{')) {
+        // Try to find the first { and extract from there
+        const firstBrace = cleanedJson.indexOf('{');
+        if (firstBrace !== -1) {
+          cleanedJson = cleanedJson.substring(firstBrace);
+        }
+      }
+      
+      // Find the proper end of the JSON object
+      if (cleanedJson.startsWith('{')) {
+        let depth = 0;
+        let inString = false;
+        let escape = false;
+        let endIndex = -1;
+        
+        for (let i = 0; i < cleanedJson.length; i++) {
+          const char = cleanedJson[i];
+          
+          if (escape) {
+            escape = false;
+            continue;
+          }
+          
+          if (char === '\\') {
+            escape = true;
+            continue;
+          }
+          
+          if (char === '"') {
+            inString = !inString;
+            continue;
+          }
+          
+          if (!inString) {
+            if (char === '{') depth++;
+            else if (char === '}') {
+              depth--;
+              if (depth === 0) {
+                endIndex = i;
+                break;
+              }
+            }
+          }
+        }
+        
+        if (endIndex !== -1) {
+          cleanedJson = cleanedJson.substring(0, endIndex + 1);
+        }
+      }
       
       if (this.debugMode) {
         this.debug(`Cleaned JSON length: ${cleanedJson.length}`);
@@ -331,12 +483,49 @@ Focus on fixing the specific errors while maintaining the overall goal.`;
       text = text.substring(0, lastTripleBacktick);
     }
     
-    // STEP 3: Find JSON boundaries
+    // STEP 3: Find JSON boundaries more carefully
+    // Count braces to find matching closing brace
     const firstBrace = text.indexOf('{');
-    const lastBrace = text.lastIndexOf('}');
-    
-    if (firstBrace !== -1 && lastBrace !== -1 && firstBrace < lastBrace) {
-      text = text.substring(firstBrace, lastBrace + 1);
+    if (firstBrace !== -1) {
+      let braceCount = 0;
+      let inString = false;
+      let escapeNext = false;
+      let lastClosingBrace = -1;
+      
+      for (let i = firstBrace; i < text.length; i++) {
+        const char = text[i];
+        
+        if (escapeNext) {
+          escapeNext = false;
+          continue;
+        }
+        
+        if (char === '\\') {
+          escapeNext = true;
+          continue;
+        }
+        
+        if (char === '"' && !escapeNext) {
+          inString = !inString;
+          continue;
+        }
+        
+        if (!inString) {
+          if (char === '{') {
+            braceCount++;
+          } else if (char === '}') {
+            braceCount--;
+            if (braceCount === 0) {
+              lastClosingBrace = i;
+              break;
+            }
+          }
+        }
+      }
+      
+      if (lastClosingBrace !== -1) {
+        text = text.substring(firstBrace, lastClosingBrace + 1);
+      }
     }
     
     return text.trim();

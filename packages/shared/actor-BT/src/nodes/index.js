@@ -13,10 +13,10 @@ export { SequenceNode } from './SequenceNode.js';
 export { SelectorNode } from './SelectorNode.js';
 export { ActionNode } from './ActionNode.js';
 export { RetryNode } from './RetryNode.js';
+export { ConditionNode } from './ConditionNode.js';
 
 // Advanced coordination patterns (to be implemented)
 // export { ParallelNode } from './ParallelNode.js';
-// export { ConditionNode } from './ConditionNode.js';
 // export { LLMDecisionNode } from './LLMDecisionNode.js';
 
 /**
@@ -28,7 +28,8 @@ export function getBUILT_IN_NODE_TYPES() {
     { name: 'sequence', class: SequenceNode },
     { name: 'selector', class: SelectorNode },
     { name: 'action', class: ActionNode },
-    { name: 'retry', class: RetryNode }
+    { name: 'retry', class: RetryNode },
+    { name: 'condition', class: ConditionNode }
   ];
 }
 

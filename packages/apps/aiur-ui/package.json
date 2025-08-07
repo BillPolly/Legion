@@ -1,0 +1,24 @@
+{
+  "name": "@legion/aiur-ui",
+  "version": "1.0.0",
+  "description": "Clean Aiur UI - TO BE IMPLEMENTED",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "NODE_ENV=development node src/server.js",
+    "startboth": "node scripts/start-both.js",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
+    "test:voice": "NODE_OPTIONS='--experimental-vm-modules' jest test/voice-integration.test.js"
+  },
+  "keywords": ["aiur", "ui", "clean"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jsdom": "^24.0.0",
+    "@jest/globals": "^29.7.0"
+  }
+}

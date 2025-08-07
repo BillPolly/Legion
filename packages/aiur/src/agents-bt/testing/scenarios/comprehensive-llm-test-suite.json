@@ -1,0 +1,574 @@
+{
+  "name": "Comprehensive LLM and Planning Test Suite",
+  "description": "Full testing of BT agents with live LLM, planning, artifacts, and tool execution",
+  "version": "1.0.0",
+  "configuration": {
+    "timeout": 120000,
+    "requireLLM": true,
+    "requireModules": ["file", "ai-generation", "llm-planner"],
+    "debugMode": true
+  },
+  "setup": {
+    "type": "parallel",
+    "children": [
+      {
+        "type": "mock_environment",
+        "environmentId": "test-env",
+        "config": {
+          "sessionId": "test-session-{{timestamp}}",
+          "testDirectory": "/tmp/bt-test-{{timestamp}}"
+        }
+      },
+      {
+        "type": "action",
+        "name": "create_test_directory",
+        "command": "mkdir -p {{testDirectory}}"
+      }
+    ]
+  },
+  "tests": [
+    {
+      "name": "LLM Planning and Code Generation",
+      "description": "Test ChatAgent's ability to plan and generate code with live LLM",
+      "priority": "high",
+      "tests": {
+        "type": "sequence",
+        "children": [
+          {
+            "type": "send_message",
+            "targetAgent": "chatAgent",
+            "messageType": "chat_message",
+            "messageContent": "Create a detailed implementation plan for a REST API that manages a library of books. Include endpoints for CRUD operations, data models, and error handling strategies. Then provide the actual code implementation for the main server file.",
+            "messageData": {
+              "sessionId": "{{sessionId}}",
+              "requestPlan": true,
+              "requestCode": true
+            },
+            "waitForResponse": true,
+            "responseTimeout": 45000,
+            "storeResponse": true,
+            "responseKey": "planningResponse"
+          },
+          {
+            "type": "assert_response",
+            "dataSource": "planningResponse",
+            "assertions": [
+              {
+                "field": "content",
+                "type": "contains",
+                "expected": "endpoint",
+                "description": "Plan should mention API endpoints"
+              },
+              {
+                "field": "content",
+                "type": "contains",
+                "expected": "CRUD",
+                "description": "Plan should include CRUD operations"
+              },
+              {
+                "field": "artifacts",
+                "type": "exists",
+                "description": "Should generate code artifacts"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Tool Chain Execution",
+      "description": "Test complex tool execution workflows through TerminalAgent",
+      "priority": "high",
+      "tests": {
+        "type": "sequence",
+        "children": [
+          {
+            "type": "send_message",
+            "targetAgent": "terminalAgent",
+            "messageType": "tool_request",
+            "messageData": {
+              "tool": "directory_create",
+              "arguments": {
+                "path": "{{testDirectory}}/project"
+              },
+              "sessionId": "{{sessionId}}"
+            },
+            "waitForResponse": true,
+            "responseTimeout": 10000
+          },
+          {
+            "type": "send_message",
+            "targetAgent": "terminalAgent",
+            "messageType": "tool_request",
+            "messageData": {
+              "tool": "file_write",
+              "arguments": {
+                "filepath": "{{testDirectory}}/project/package.json",
+                "content": "{\n  \"name\": \"bt-test-project\",\n  \"version\": \"1.0.0\",\n  \"description\": \"Test project created by BT agents\",\n  \"main\": \"index.js\",\n  \"scripts\": {\n    \"start\": \"node index.js\",\n    \"test\": \"jest\"\n  },\n  \"dependencies\": {\n    \"express\": \"^4.18.0\"\n  }\n}"
+              },
+              "sessionId": "{{sessionId}}"
+            },
+            "waitForResponse": true,
+            "responseTimeout": 10000
+          },
+          {
+            "type": "send_message",
+            "targetAgent": "terminalAgent",
+            "messageType": "tool_request",
+            "messageData": {
+              "tool": "file_write",
+              "arguments": {
+                "filepath": "{{testDirectory}}/project/index.js",
+                "content": "const express = require('express');\nconst app = express();\n\napp.get('/', (req, res) => {\n  res.json({ message: 'BT Agent Test Server', status: 'running' });\n});\n\nconst PORT = process.env.PORT || 3000;\napp.listen(PORT, () => {\n  console.log(`Server running on port ${PORT}`);\n});"
+              },
+              "sessionId": "{{sessionId}}"
+            },
+            "waitForResponse": true,
+            "responseTimeout": 10000
+          },
+          {
+            "type": "send_message",
+            "targetAgent": "terminalAgent",
+            "messageType": "tool_request",
+            "messageData": {
+              "tool": "directory_list",
+              "arguments": {
+                "path": "{{testDirectory}}/project"
+              },
+              "sessionId": "{{sessionId}}"
+            },
+            "waitForResponse": true,
+            "responseTimeout": 10000,
+            "storeResponse": true,
+            "responseKey": "projectFiles"
+          },
+          {
+            "type": "assert_response",
+            "dataSource": "projectFiles",
+            "assertions": [
+              {
+                "field": "result.files",
+                "type": "contains",
+                "expected": "package.json",
+                "description": "Project should have package.json"
+              },
+              {
+                "field": "result.files",
+                "type": "contains",
+                "expected": "index.js",
+                "description": "Project should have index.js"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Artifact Processing and Validation",
+      "description": "Test artifact creation, storage, and retrieval workflows",
+      "priority": "high",
+      "tests": {
+        "type": "sequence",
+        "children": [
+          {
+            "type": "send_message",
+            "targetAgent": "chatAgent",
+            "messageType": "chat_message",
+            "messageContent": "Write a comprehensive React component for a todo list with the following features:\n1. Add new todos\n2. Mark todos as complete\n3. Delete todos\n4. Filter by status (all, active, completed)\n5. Local storage persistence\n\nInclude both the component code and CSS styles.",
+            "messageData": {
+              "sessionId": "{{sessionId}}",
+              "generateArtifacts": true
+            },
+            "waitForResponse": true,
+            "responseTimeout": 40000
+          },
+          {
+            "type": "action",
+            "name": "wait_for_artifact_processing",
+            "duration": 3000
+          },
+          {
+            "type": "send_message",
+            "targetAgent": "artifactAgent",
+            "messageType": "get_artifacts",
+            "messageData": {
+              "sessionId": "{{sessionId}}",
+              "filter": {
+                "type": "code"
+              }
+            },
+            "waitForResponse": true,
+            "responseTimeout": 10000,
+            "storeResponse": true,
+            "responseKey": "codeArtifacts"
+          },
+          {
+            "type": "assert_response",
+            "dataSource": "codeArtifacts",
+            "assertions": [
+              {
+                "field": "artifacts",
+                "type": "array_not_empty",
+                "description": "Should have created code artifacts"
+              },
+              {
+                "field": "artifacts[0].content",
+                "type": "contains",
+                "expected": "React",
+                "description": "Artifact should contain React code"
+              }
+            ]
+          },
+          {
+            "type": "send_message",
+            "targetAgent": "artifactAgent",
+            "messageType": "update_artifact",
+            "messageData": {
+              "artifactId": "{{codeArtifacts.artifacts[0].id}}",
+              "updates": {
+                "labels": ["react", "todo", "component"],
+                "metadata": {
+                  "validated": true,
+                  "validatedAt": "{{timestamp}}"
+                }
+              },
+              "sessionId": "{{sessionId}}"
+            },
+            "waitForResponse": true,
+            "responseTimeout": 10000
+          }
+        ]
+      }
+    },
+    {
+      "name": "Multi-Agent Coordination",
+      "description": "Test coordination between multiple agents for complex workflows",
+      "priority": "high",
+      "tests": {
+        "type": "sequence",
+        "children": [
+          {
+            "type": "send_message",
+            "targetAgent": "chatAgent",
+            "messageType": "chat_message",
+            "messageContent": "I need to create a data processing pipeline. First, generate a Python script that reads CSV data and converts it to JSON.",
+            "messageData": {
+              "sessionId": "{{sessionId}}"
+            },
+            "waitForResponse": true,
+            "responseTimeout": 30000,
+            "storeResponse": true,
+            "responseKey": "scriptResponse"
+          },
+          {
+            "type": "send_message",
+            "targetAgent": "terminalAgent",
+            "messageType": "tool_request",
+            "messageData": {
+              "tool": "file_write",
+              "arguments": {
+                "filepath": "{{testDirectory}}/processor.py",
+                "content": "import csv\nimport json\nimport sys\n\ndef csv_to_json(csv_file, json_file):\n    data = []\n    with open(csv_file, 'r') as f:\n        csv_reader = csv.DictReader(f)\n        for row in csv_reader:\n            data.append(row)\n    \n    with open(json_file, 'w') as f:\n        json.dump(data, f, indent=2)\n    \n    return len(data)\n\nif __name__ == '__main__':\n    if len(sys.argv) != 3:\n        print('Usage: python processor.py input.csv output.json')\n        sys.exit(1)\n    \n    count = csv_to_json(sys.argv[1], sys.argv[2])\n    print(f'Converted {count} records')"
+              },
+              "sessionId": "{{sessionId}}"
+            },
+            "waitForResponse": true,
+            "responseTimeout": 10000
+          },
+          {
+            "type": "send_message",
+            "targetAgent": "terminalAgent",
+            "messageType": "tool_request",
+            "messageData": {
+              "tool": "file_write",
+              "arguments": {
+                "filepath": "{{testDirectory}}/test.csv",
+                "content": "name,age,city\nAlice,30,New York\nBob,25,San Francisco\nCharlie,35,Chicago"
+              },
+              "sessionId": "{{sessionId}}"
+            },
+            "waitForResponse": true,
+            "responseTimeout": 10000
+          },
+          {
+            "type": "send_message",
+            "targetAgent": "artifactAgent",
+            "messageType": "get_artifacts",
+            "messageData": {
+              "sessionId": "{{sessionId}}"
+            },
+            "waitForResponse": true,
+            "responseTimeout": 10000,
+            "storeResponse": true,
+            "responseKey": "allArtifacts"
+          },
+          {
+            "type": "assert_response",
+            "dataSource": "allArtifacts",
+            "assertions": [
+              {
+                "field": "artifacts",
+                "type": "exists",
+                "description": "Should have artifacts from multi-agent workflow"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Context Retention and Memory",
+      "description": "Test conversation context and memory across multiple interactions",
+      "priority": "medium",
+      "tests": {
+        "type": "sequence",
+        "children": [
+          {
+            "type": "send_message",
+            "targetAgent": "chatAgent",
+            "messageType": "chat_message",
+            "messageContent": "I'm working on a project called 'DataViz Pro' that visualizes financial data using D3.js and React. Remember this for our conversation.",
+            "messageData": {
+              "sessionId": "{{sessionId}}"
+            },
+            "waitForResponse": true,
+            "responseTimeout": 20000
+          },
+          {
+            "type": "send_message",
+            "targetAgent": "chatAgent",
+            "messageType": "chat_message",
+            "messageContent": "What libraries am I using in my project?",
+            "messageData": {
+              "sessionId": "{{sessionId}}"
+            },
+            "waitForResponse": true,
+            "responseTimeout": 20000,
+            "storeResponse": true,
+            "responseKey": "memoryResponse1"
+          },
+          {
+            "type": "assert_response",
+            "dataSource": "memoryResponse1",
+            "assertions": [
+              {
+                "field": "content",
+                "type": "contains",
+                "expected": "D3.js",
+                "description": "Should remember D3.js"
+              },
+              {
+                "field": "content",
+                "type": "contains",
+                "expected": "React",
+                "description": "Should remember React"
+              }
+            ]
+          },
+          {
+            "type": "send_message",
+            "targetAgent": "chatAgent",
+            "messageType": "chat_message",
+            "messageContent": "What's the name of my project and what does it do?",
+            "messageData": {
+              "sessionId": "{{sessionId}}"
+            },
+            "waitForResponse": true,
+            "responseTimeout": 20000,
+            "storeResponse": true,
+            "responseKey": "memoryResponse2"
+          },
+          {
+            "type": "assert_response",
+            "dataSource": "memoryResponse2",
+            "assertions": [
+              {
+                "field": "content",
+                "type": "contains",
+                "expected": "DataViz Pro",
+                "description": "Should remember project name"
+              },
+              {
+                "field": "content",
+                "type": "contains",
+                "expected": "financial",
+                "description": "Should remember it's for financial data"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Error Handling and Recovery",
+      "description": "Test how agents handle errors and recover gracefully",
+      "priority": "medium",
+      "tests": {
+        "type": "sequence",
+        "children": [
+          {
+            "type": "send_message",
+            "targetAgent": "terminalAgent",
+            "messageType": "tool_request",
+            "messageData": {
+              "tool": "file_read",
+              "arguments": {
+                "filepath": "/nonexistent/path/to/file.txt"
+              },
+              "sessionId": "{{sessionId}}"
+            },
+            "waitForResponse": true,
+            "responseTimeout": 10000,
+            "storeResponse": true,
+            "responseKey": "errorResponse1"
+          },
+          {
+            "type": "assert_response",
+            "dataSource": "errorResponse1",
+            "assertions": [
+              {
+                "field": "error",
+                "type": "exists",
+                "description": "Should return error for nonexistent file"
+              }
+            ]
+          },
+          {
+            "type": "send_message",
+            "targetAgent": "terminalAgent",
+            "messageType": "tool_request",
+            "messageData": {
+              "tool": "invalid_tool_name",
+              "arguments": {},
+              "sessionId": "{{sessionId}}"
+            },
+            "waitForResponse": true,
+            "responseTimeout": 10000,
+            "storeResponse": true,
+            "responseKey": "errorResponse2"
+          },
+          {
+            "type": "assert_response",
+            "dataSource": "errorResponse2",
+            "assertions": [
+              {
+                "field": "error",
+                "type": "exists",
+                "description": "Should handle invalid tool gracefully"
+              }
+            ]
+          },
+          {
+            "type": "send_message",
+            "targetAgent": "chatAgent",
+            "messageType": "chat_message",
+            "messageContent": "{{INVALID_TEMPLATE_VARIABLE}}",
+            "messageData": {
+              "sessionId": "{{sessionId}}"
+            },
+            "waitForResponse": true,
+            "responseTimeout": 20000,
+            "storeResponse": true,
+            "responseKey": "errorResponse3"
+          },
+          {
+            "type": "assert_response",
+            "dataSource": "errorResponse3",
+            "assertions": [
+              {
+                "field": "type",
+                "type": "exists",
+                "description": "Should handle malformed input gracefully"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Performance and Stress Testing",
+      "description": "Test agents under load with multiple rapid requests",
+      "priority": "low",
+      "tests": {
+        "type": "parallel",
+        "children": [
+          {
+            "type": "sequence",
+            "children": [
+              {
+                "type": "send_message",
+                "targetAgent": "terminalAgent",
+                "messageType": "ping",
+                "messageData": {},
+                "waitForResponse": true,
+                "responseTimeout": 5000
+              },
+              {
+                "type": "send_message",
+                "targetAgent": "terminalAgent",
+                "messageType": "ping",
+                "messageData": {},
+                "waitForResponse": true,
+                "responseTimeout": 5000
+              },
+              {
+                "type": "send_message",
+                "targetAgent": "terminalAgent",
+                "messageType": "ping",
+                "messageData": {},
+                "waitForResponse": true,
+                "responseTimeout": 5000
+              }
+            ]
+          },
+          {
+            "type": "sequence",
+            "children": [
+              {
+                "type": "send_message",
+                "targetAgent": "artifactAgent",
+                "messageType": "get_artifacts",
+                "messageData": {
+                  "sessionId": "{{sessionId}}"
+                },
+                "waitForResponse": true,
+                "responseTimeout": 5000
+              },
+              {
+                "type": "send_message",
+                "targetAgent": "artifactAgent",
+                "messageType": "get_artifacts",
+                "messageData": {
+                  "sessionId": "{{sessionId}}"
+                },
+                "waitForResponse": true,
+                "responseTimeout": 5000
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "cleanup": {
+    "type": "sequence",
+    "children": [
+      {
+        "type": "action",
+        "name": "cleanup_test_directory",
+        "command": "rm -rf {{testDirectory}}"
+      },
+      {
+        "type": "action",
+        "name": "clear_session",
+        "command": "clear_session {{sessionId}}"
+      }
+    ]
+  },
+  "reporting": {
+    "format": "detailed",
+    "includeTimings": true,
+    "includeStackTraces": false,
+    "saveToFile": false
+  }
+}

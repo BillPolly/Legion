@@ -5,7 +5,7 @@
  * that automatically include required tools and domain-specific context prompts.
  */
 
-import { Module } from '@legion/tool-system';
+import { Module } from '@legion/tool-core';
 import { ProfilePlannerTool } from './tools/ProfilePlannerTool.js';
 import { ProfileTool } from './tools/ProfileTool.js';
 import { ProfileManager } from './ProfileManager.js';

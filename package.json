@@ -28,6 +28,8 @@
     "test:tool-core": "npm run test --workspace=@legion/tool-core",
     "test:kg": "npm run test --workspace=@legion/kg",
     "test:components": "npm run test --workspace=@legion/components",
+    "test:aiur-ui": "npm run test --workspace=@legion/aiur-ui",
+    "test:planning-integration": "npm run test --workspace=@legion/planning-integration-tests",
     "test:watch": "npm run test:watch --workspaces",
     "test:coverage": "npm run test:coverage --workspaces",
     "lint": "eslint packages/*/src/**/*.js",

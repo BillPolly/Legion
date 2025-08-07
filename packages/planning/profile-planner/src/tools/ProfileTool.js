@@ -4,18 +4,33 @@
  * Each profile becomes its own tool with a simplified interface
  */
 
-import { Tool, ToolResult } from '@legion/tool-system';
-import { GenericPlanner } from '@legion/llm-planner';
+import { Tool, ToolResult } from '@legion/tool-core';
+import { PlannerEngine } from '@legion/unified-planner';
 import { LLMClient } from '@legion/llm';
 
 export class ProfileTool extends Tool {
   constructor(profile, profileManager, resourceManager) {
-    super();
+    super({
+      name: profile.toolName,
+      execute: null, // Will be set after initialization
+      inputSchema: {
+        type: 'object',
+        properties: {
+          task: {
+            type: 'string',
+            description: 'Natural language description of what needs to be accomplished'
+          }
+        },
+        required: ['task']
+      }
+    });
     this.profile = profile;
     this.profileManager = profileManager;
     this.resourceManager = resourceManager;
-    this.name = profile.toolName;
     this.description = profile.description;
+    
+    // Set the actual execute function
+    this._execute = this.execute.bind(this);
   }
 
   /**

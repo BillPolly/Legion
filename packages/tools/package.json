@@ -24,6 +24,8 @@
   },
   "dependencies": {
     "@legion/schema": "^0.0.1",
-    "glob": "^10.3.10"
+    "glob": "^10.3.10",
+    "simple-git": "^3.19.0",
+    "dotenv": "^16.0.0"
   }
 }

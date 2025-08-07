@@ -222,6 +222,7 @@ class ProfileManager {
       }
       
       const convertedAction = {
+        name: action.type,  // CRITICAL: BTValidator needs this property
         type: action.type,
         description: action.description,
         inputs: inputKeys,
@@ -371,16 +372,19 @@ class ProfileManager {
   }
 
   /**
-   * Dynamically load tool schemas from ModuleLoader
+   * Dynamically load tool schemas from ModuleLoader - ONLY tools that actually exist
    * @private
    * @param {Array<string>} toolNames - List of tool names to load
    * @returns {Promise<Array>} Array of action definitions with full schemas
    */
   async _loadToolSchemas(toolNames) {
-    // Get ModuleLoader from ResourceManager
-    const moduleLoader = this.resourceManager.moduleLoader;
+    // Get the singleton ResourceManager and ModuleLoader
+    const { ResourceManager } = await import('../../../tools/src/ResourceManager.js');
+    const resourceManager = ResourceManager.getInstance();
+    const moduleLoader = resourceManager.get('moduleLoader');
+    
     if (!moduleLoader) {
-      console.warn('ModuleLoader not available - cannot load tool schemas dynamically');
+      console.warn('[ProfileManager] ModuleLoader not available, cannot load required modules');
       return [];
     }
 
@@ -389,6 +393,15 @@ class ProfileManager {
 
     for (const toolName of toolNames) {
       try {
+        // CRITICAL: Only include tools that actually exist in the registry
+        const hasToolInRegistry = await moduleLoader.hasToolByNameOrAlias(toolName);
+        
+        if (!hasToolInRegistry) {
+          console.warn(`[ProfileManager] Tool '${toolName}' not found in tool registry - skipping`);
+          missingTools.push(toolName);
+          continue;
+        }
+
         const tool = await moduleLoader.getToolByNameOrAlias(toolName);
         if (!tool) {
           missingTools.push(toolName);
@@ -397,6 +410,7 @@ class ProfileManager {
 
         // Convert tool to action format
         const action = {
+          name: tool.name,  // CRITICAL: BTValidator needs this property
           type: tool.name,
           description: tool.description || `Execute ${tool.name}`,
           inputs: [],
@@ -504,8 +518,11 @@ class ProfileManager {
    * @private
    */
   async _validateAndFixActionTypes(actions) {
-    // Get ModuleLoader from ResourceManager
-    const moduleLoader = this.resourceManager.moduleLoader;
+    // Get ModuleLoader from singleton ResourceManager
+    const { ResourceManager } = await import('../../../tools/src/ResourceManager.js');
+    const resourceManager = ResourceManager.getInstance();
+    const moduleLoader = resourceManager.get('moduleLoader');
+    
     if (!moduleLoader) {
       console.warn('[ProfileManager] ModuleLoader not available, skipping tool validation');
       return actions;

@@ -1,0 +1,14 @@
+{
+  "name": "tested-calculator-app",
+  "version": "1.0.0",
+  "main": "src/calculator.js",
+  "scripts": {
+    "test": "jest",
+    "coverage": "jest --coverage"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "eslint": "^8.0.0"
+  }
+}
