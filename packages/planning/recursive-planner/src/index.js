@@ -1,23 +1,32 @@
 /**
  * Recursive Planning Agent Framework - Main Entry Point
  * 
- * Single clean export of the framework
+ * Now uses @legion/unified-planner for all planning functionality
+ * while maintaining backward compatibility for existing APIs.
  */
 
-// Import all components
+// Import unified planning components
+import { 
+  PlannerEngine,
+  PlanningRequest,
+  LLMStrategy,
+  TemplateStrategy,
+  RuleStrategy,
+  createLLMPlanner,
+  createMultiStrategyPlanner,
+  createTemplatePlanner,
+  createRulePlanner
+} from '@legion/unified-planner';
+
+// Import validation components
+import { BTValidator } from '@legion/bt-validator';
+
+// Import remaining framework components
 import { PlanningAgent, AgentConfig } from './core/agents/base/index.js';
 import { AtomicTool } from './core/execution/tools/index.js';
-import { 
-  PlanningStrategy,
-  SequentialPlanningStrategy,
-  TemplatePlanningStrategy,
-  RuleBasedPlanningStrategy,
-  LLMPlanningStrategy
-} from './core/execution/planning/strategies/index.js';
 import { ArtifactStore } from './core/storage/artifacts/index.js';
 import { createPlanningAgent, createLLMProvider } from './factories/AgentFactory.js';
 import { createTool } from './factories/ToolFactory.js';
-import { createTemplatePlanner, createRulePlanner } from './factories/PlannerFactory.js';
 import { IdGenerator } from './foundation/utils/generators/index.js';
 import { ValidationUtils, InputValidator } from './foundation/utils/validation/index.js';
 import { ConfigManager, config } from './runtime/config/index.js';
@@ -35,23 +44,33 @@ class RecursivePlanner {
     this.ArtifactStore = ArtifactStore;
     this.PlanStep = PlanStep;
     
-    // Planning strategies
+    // Planning strategies (now from unified-planner)
     this.strategies = {
-      PlanningStrategy,
-      SequentialPlanningStrategy,
-      TemplatePlanningStrategy,
-      RuleBasedPlanningStrategy,
-      LLMPlanningStrategy
+      LLMStrategy,
+      TemplateStrategy,
+      RuleStrategy,
+      // Backward compatibility aliases
+      LLMPlanningStrategy: LLMStrategy,
+      TemplatePlanningStrategy: TemplateStrategy,
+      RuleBasedPlanningStrategy: RuleStrategy
     };
     
-    // Factory functions
+    // Factory functions (now from unified-planner + legacy)
     this.factories = {
       createPlanningAgent,
       createTool,
+      createLLMProvider,
+      // New unified planner factories
+      createLLMPlanner,
+      createMultiStrategyPlanner, 
       createTemplatePlanner,
-      createRulePlanner,
-      createLLMProvider
+      createRulePlanner
     };
+    
+    // Planning engine (new from unified-planner)
+    this.PlannerEngine = PlannerEngine;
+    this.PlanningRequest = PlanningRequest;
+    this.BTValidator = BTValidator;
     
     // Utilities
     this.utils = {
@@ -97,6 +116,43 @@ class RecursivePlanner {
   }
 
   /**
+   * Create a new LLM-based planner (new unified API)
+   * @param {Object} llmClient - LLM client
+   * @param {Object} options - Planner options
+   * @returns {Object} LLM planner instance
+   */
+  createLLMPlanner(llmClient, options) {
+    return this.factories.createLLMPlanner(llmClient, options);
+  }
+
+  /**
+   * Create a multi-strategy planner (new unified API)
+   * @param {Object} options - Planner options
+   * @returns {Object} Multi-strategy planner instance
+   */
+  createMultiStrategyPlanner(options) {
+    return this.factories.createMultiStrategyPlanner(options);
+  }
+
+  /**
+   * Create a planning request (new unified API)
+   * @param {Object} params - Request parameters
+   * @returns {PlanningRequest} Planning request instance
+   */
+  createPlanningRequest(params) {
+    return new this.PlanningRequest(params);
+  }
+
+  /**
+   * Create a BT validator (new unified API)  
+   * @param {Object} options - Validator options
+   * @returns {BTValidator} BT validator instance
+   */
+  createBTValidator(options) {
+    return new this.BTValidator(options);
+  }
+
+  /**
    * Get information about the framework
    * @returns {Object} Framework information
    */
@@ -112,5 +168,26 @@ class RecursivePlanner {
     return this.VERSION;
   }
 }
+
+// Re-export unified planner components for direct access
+export {
+  PlannerEngine,
+  PlanningRequest,
+  LLMStrategy,
+  TemplateStrategy, 
+  RuleStrategy,
+  createLLMPlanner,
+  createMultiStrategyPlanner,
+  createTemplatePlanner,
+  createRulePlanner
+} from '@legion/unified-planner';
+
+export { BTValidator } from '@legion/bt-validator';
+
+// Legacy exports for backward compatibility
+export { PlanningAgent, AgentConfig } from './core/agents/base/index.js';
+export { AtomicTool } from './core/execution/tools/index.js';
+export { ArtifactStore } from './core/storage/artifacts/index.js';
+export { PlanStep } from './foundation/types/index.js';
 
 export default RecursivePlanner;
