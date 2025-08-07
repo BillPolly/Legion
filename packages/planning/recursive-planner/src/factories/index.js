@@ -4,4 +4,4 @@
 
 export { createPlanningAgent, createLLMProvider } from './AgentFactory.js';
 export { createTool } from './ToolFactory.js';
-export { createTemplatePlanner, createRulePlanner } from './PlannerFactory.js';
+// Planner factories are now available from @legion/unified-planner

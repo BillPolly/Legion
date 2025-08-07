@@ -13,11 +13,10 @@ import { IdGenerator } from '../../../foundation/utils/generators/IdGenerator.js
 import { PlanningError, ToolExecutionError } from '../../../foundation/types/errors/errors.js';
 
 // Import orchestration components
-import { AgentOrchestrator } from '../../orchestration/AgentOrchestrator.js';
-import { PlanExecutor } from '../../execution/PlanExecutor.js';
+// import { AgentOrchestrator } from '../../orchestration/AgentOrchestrator.js';
 
-// Import planning components
-import { PromptBuilder } from '../../execution/planning/prompts/PromptBuilder.js';
+// NOTE: Execution is now handled by the BT package, not within this planning agent
+// AgentOrchestrator is deprecated as it contains execution logic
 
 /**
  * Unified Planning Agent with orchestration capabilities
@@ -31,8 +30,6 @@ export class PlanningAgent {
     
     // Internal components (initialized on first use)
     this._orchestrator = null;
-    this._planExecutor = null;
-    this._promptBuilder = new PromptBuilder();
     
     // Dependencies (injected)
     this.llmProvider = null;
@@ -55,29 +52,9 @@ export class PlanningAgent {
   _initializeOrchestration() {
     if (this._orchestrator) return;
     
-    // Create executor
-    this._planExecutor = new PlanExecutor({
-      strategy: this.config.orchestration.executionStrategy,
-      continueOnFailure: this.config.orchestration.continueOnFailure,
-      stepTimeout: this.config.orchestration.stepTimeout,
-      debugMode: this.config.debugMode
-    });
-    
-    // Create orchestrator with this agent as the planner
-    this._orchestrator = new AgentOrchestrator(this, this._planExecutor, {
-      maxReplanAttempts: this.config.orchestration.maxReplanAttempts,
-      debugMode: this.config.debugMode,
-      resourceConstraints: this.config.resourceConstraints
-    });
-    
-    // Propagate dependencies to orchestrator
-    if (this.tracer) {
-      this._orchestrator.setDependencies({ tracer: this.tracer });
-    }
-    
-    if (this.config.debugMode) {
-      console.log(`[PlanningAgent] Orchestration initialized for ${this.config.name}`);
-    }
+    // NOTE: Execution is now handled by the BT package
+    // This method is deprecated - orchestration should be handled externally
+    throw new Error('Orchestration with execution is deprecated. Use BT package for execution. This agent now only handles planning.');
   }
 
   /**
@@ -99,9 +76,8 @@ export class PlanningAgent {
 
     try {
       if (this.config.orchestration.enabled) {
-        // Use orchestration for full planning + execution + replanning
-        this._initializeOrchestration();
-        return await this._orchestrator.achieve(goal, tools, context);
+        // Orchestration with execution is deprecated - use BT package instead
+        throw new Error('Orchestration with execution is deprecated. Use BT package for execution. Configure orchestration.enabled=false to use planning-only mode.');
       } else {
         // Planning-only mode (for sub-agents that only generate plans)
         return await this._planningOnlyMode(goal, tools, context);
