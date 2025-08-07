@@ -1,4 +1,4 @@
-import { Tool } from '@legion/module-loader';
+import { Tool } from '@legion/tool-system';
 import { z } from 'zod';
 
 /**
@@ -32,7 +32,7 @@ export class ImageGenerationTool extends Tool {
       })
     });
     
-    this.dependencies = dependencies;
+    this.config = dependencies;
     this.module = dependencies.module; // Reference to AIGenerationModule instance
   }
 

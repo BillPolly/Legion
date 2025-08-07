@@ -5,7 +5,7 @@
  */
 
 import { PlanExecutor } from '../../src/core/PlanExecutor.js';
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 
 describe('Live API Modules Integration with New Input/Output System', () => {
   let executor;
@@ -55,9 +55,9 @@ describe('Live API Modules Integration with New Input/Output System', () => {
     }
     
     // Check for required API keys
-    const githubPat = resourceManager.get('env.GITHUB_PAT');
-    const serperKey = resourceManager.get('env.SERPER_API_KEY');
-    const anthropicKey = resourceManager.get('env.ANTHROPIC_API_KEY');
+    const githubPat = resourceManager.env.GITHUB_PAT;
+    const serperKey = resourceManager.env.SERPER_API_KEY;
+    const anthropicKey = resourceManager.env.ANTHROPIC_API_KEY;
     
     if (!githubPat) {
       console.warn('GITHUB_PAT not available - GitHub tests will be skipped');
@@ -87,7 +87,7 @@ describe('Live API Modules Integration with New Input/Output System', () => {
 
   describe('GitHub API Integration', () => {
     test('should search repositories and get details using new input/output format', async () => {
-      const githubPat = resourceManager.get('env.GITHUB_PAT');
+      const githubPat = resourceManager.env.GITHUB_PAT;
       const hasGitHubSearch = 'github_search_repositories' in availableTools;
       const hasGitHubRepo = 'github_get_repository' in availableTools;
       
@@ -158,7 +158,7 @@ describe('Live API Modules Integration with New Input/Output System', () => {
     }, 30000);
 
     test('should get user profile information', async () => {
-      const githubPat = resourceManager.get('env.GITHUB_PAT');
+      const githubPat = resourceManager.env.GITHUB_PAT;
       const hasGitHubUser = 'github_get_user' in availableTools;
       
       if (!githubPat || !hasGitHubUser) {
@@ -213,7 +213,7 @@ describe('Live API Modules Integration with New Input/Output System', () => {
 
   describe('Serper Search API Integration', () => {
     test('should perform web search and extract information', async () => {
-      const serperKey = resourceManager.get('env.SERPER_API_KEY');
+      const serperKey = resourceManager.env.SERPER_API_KEY;
       const hasSerperSearch = 'serper_search' in availableTools;
       
       if (!serperKey || !hasSerperSearch) {
@@ -266,7 +266,7 @@ describe('Live API Modules Integration with New Input/Output System', () => {
     }, 15000);
 
     test('should search for images', async () => {
-      const serperKey = resourceManager.get('env.SERPER_API_KEY');
+      const serperKey = resourceManager.env.SERPER_API_KEY;
       const hasSerperSearch = 'serper_search' in availableTools;
       
       if (!serperKey || !hasSerperSearch) {
@@ -316,7 +316,7 @@ describe('Live API Modules Integration with New Input/Output System', () => {
 
   describe('AI Generation Integration', () => {
     test('should generate text and use output in subsequent actions', async () => {
-      const anthropicKey = resourceManager.get('env.ANTHROPIC_API_KEY');
+      const anthropicKey = resourceManager.env.ANTHROPIC_API_KEY;
       const hasAIGenerate = Object.keys(availableTools).some(t => 
         t.includes('ai_generate') || t.includes('generate_text')
       );

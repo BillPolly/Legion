@@ -7,7 +7,7 @@
  * in the AgentResults organization.
  */
 
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import GitHub from '../../general-tools/src/github/index.js';
 import readline from 'readline';
 import https from 'https';
@@ -90,7 +90,7 @@ async function main() {
     // Get GitHub token
     let githubToken;
     try {
-      githubToken = resourceManager.get('GITHUB_PAT');
+      githubToken = resourceManager.GITHUB_PAT;
     } catch {
       githubToken = process.env.GITHUB_PAT;
     }

@@ -4,7 +4,7 @@ import { ResourceManager } from '../../../module-loader/src/index.js';
 
 const resourceManager = new ResourceManager();
 await resourceManager.initialize();
-const RAILWAY_API_TOKEN = resourceManager.get('env.RAILWAY_API_TOKEN');
+const RAILWAY_API_TOKEN = resourceManager.env.RAILWAY_API_TOKEN;
 
 async function cleanupTeamProjects() {
   console.log('🔍 Checking Railway account INCLUDING TEAMS...\n');

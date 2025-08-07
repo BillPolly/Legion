@@ -3,7 +3,7 @@
  */
 
 import { describe, test } from '@jest/globals';
-import { ResourceManager, ModuleLoader } from '@legion/module-loader';
+import { ResourceManager, ModuleLoader } from '@legion/tool-system';
 
 describe('ISOLATED LLM DEBUG', () => {
   test('JUST THE LLM CALL - NOTHING ELSE', async () => {
@@ -21,7 +21,7 @@ describe('ISOLATED LLM DEBUG', () => {
     await moduleLoader.initialize();
 
     // Create LLM client
-    const anthropicKey = resourceManager.get('env.ANTHROPIC_API_KEY');
+    const anthropicKey = resourceManager.env.ANTHROPIC_API_KEY;
     const { LLMClient } = await import('@legion/llm');
     const llmClient = new LLMClient({
       provider: 'anthropic',

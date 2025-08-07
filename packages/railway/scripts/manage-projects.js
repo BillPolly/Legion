@@ -11,7 +11,7 @@
  *   details <id>      - Get project details
  */
 
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import { RailwayProvider } from '../src/index.js';
 
 const args = process.argv.slice(2);
@@ -32,7 +32,7 @@ async function manageProjects() {
     const resourceManager = new ResourceManager();
     await resourceManager.initialize();
     
-    const apiKey = resourceManager.get('env.RAILWAY') || resourceManager.get('env.RAILWAY_API_KEY');
+    const apiKey = resourceManager.env.RAILWAY || resourceManager.env.RAILWAY_API_KEY;
     const railwayProvider = new RailwayProvider(apiKey);
     
     switch (command) {

@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterEach, beforeEach } from '@jest/globals';
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import GitIntegrationManager from '../../../src/integration/GitIntegrationManager.js';
 import GitConfigValidator from '../../../src/config/GitConfigValidator.js';
 import { promises as fs } from 'fs';
@@ -22,13 +22,13 @@ describe('GitIntegrationManager Resource Integration', () => {
     
     // Register GitHub environment variables
     if (resourceManager.has('env.GITHUB_PAT')) {
-      resourceManager.register('GITHUB_PAT', resourceManager.get('env.GITHUB_PAT'));
+      resourceManager.register('GITHUB_PAT', resourceManager.env.GITHUB_PAT);
     }
     if (resourceManager.has('env.GITHUB_AGENT_ORG')) {
-      resourceManager.register('GITHUB_AGENT_ORG', resourceManager.get('env.GITHUB_AGENT_ORG'));
+      resourceManager.register('GITHUB_AGENT_ORG', resourceManager.env.GITHUB_AGENT_ORG);
     }
     if (resourceManager.has('env.GITHUB_USER')) {
-      resourceManager.register('GITHUB_USER', resourceManager.get('env.GITHUB_USER'));
+      resourceManager.register('GITHUB_USER', resourceManager.env.GITHUB_USER);
     }
     
     // Register CodeAgent-like resources
@@ -76,11 +76,11 @@ describe('GitIntegrationManager Resource Integration', () => {
     expect(gitIntegrationManager.resourceManager).toBe(resourceManager);
     
     // Test access to registered resources
-    const llmClient = gitIntegrationManager.resourceManager.get('llmClient');
+    const llmClient = gitIntegrationManager.resourceManager.llmClient;
     expect(llmClient).toBeDefined();
     expect(typeof llmClient.generateResponse).toBe('function');
     
-    const fileOps = gitIntegrationManager.resourceManager.get('fileOperations');
+    const fileOps = gitIntegrationManager.resourceManager.fileOperations;
     expect(fileOps).toBeDefined();
     expect(typeof fileOps.readFile).toBe('function');
     
@@ -117,7 +117,7 @@ describe('GitIntegrationManager Resource Integration', () => {
     await gitIntegrationManager.initialize(tempDir);
     
     // Test that components can access file operations
-    const fileOps = gitIntegrationManager.resourceManager.get('fileOperations');
+    const fileOps = gitIntegrationManager.resourceManager.fileOperations;
     
     const content = await fileOps.readFile('test.js');
     expect(content).toBe('file content');
@@ -154,8 +154,8 @@ describe('GitIntegrationManager Resource Integration', () => {
     await minimalResourceManager.initialize();
     
     // Only register GitHub credentials
-    minimalResourceManager.register('GITHUB_PAT', resourceManager.get('GITHUB_PAT'));
-    minimalResourceManager.register('llmClient', resourceManager.get('llmClient'));
+    minimalResourceManager.register('GITHUB_PAT', resourceManager.GITHUB_PAT);
+    minimalResourceManager.register('llmClient', resourceManager.llmClient);
     
     gitIntegrationManager = new GitIntegrationManager(minimalResourceManager, config);
     
@@ -195,8 +195,8 @@ describe('GitIntegrationManager Resource Integration', () => {
     await limitedResourceManager.initialize();
     
     // Register only required resources
-    limitedResourceManager.register('GITHUB_PAT', resourceManager.get('GITHUB_PAT'));
-    limitedResourceManager.register('llmClient', resourceManager.get('llmClient'));
+    limitedResourceManager.register('GITHUB_PAT', resourceManager.GITHUB_PAT);
+    limitedResourceManager.register('llmClient', resourceManager.llmClient);
     
     gitIntegrationManager = new GitIntegrationManager(limitedResourceManager, config);
     
@@ -217,10 +217,10 @@ describe('GitIntegrationManager Resource Integration', () => {
     expect(gitIntegrationManager.resourceManager).toBe(resourceManager);
     
     // Test direct resource access
-    const githubPat = gitIntegrationManager.resourceManager.get('GITHUB_PAT');
+    const githubPat = gitIntegrationManager.resourceManager.GITHUB_PAT;
     expect(githubPat).toBeDefined();
     
-    const llmClient = gitIntegrationManager.resourceManager.get('llmClient');
+    const llmClient = gitIntegrationManager.resourceManager.llmClient;
     expect(llmClient).toBeDefined();
     
     console.log('✅ ResourceManager exposure working');

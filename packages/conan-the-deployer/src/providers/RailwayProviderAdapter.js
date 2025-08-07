@@ -21,7 +21,7 @@ class RailwayProviderAdapter extends BaseProvider {
     
     // First try to get the Railway provider from resource manager (registered by Railway module)
     try {
-      this.railwayProvider = this.resourceManager.get('railwayProvider');
+      this.railwayProvider = this.resourceManager.railwayProvider;
     } catch (error) {
       // Not available from module
     }
@@ -31,8 +31,8 @@ class RailwayProviderAdapter extends BaseProvider {
       try {
         let apiKey;
         try {
-          apiKey = this.resourceManager.get('env.RAILWAY') || 
-                   this.resourceManager.get('env.RAILWAY_API_KEY');
+          apiKey = this.resourceManager.env.RAILWAY || 
+                   this.resourceManager.env.RAILWAY_API_KEY;
         } catch (error) {
           // Try alternative method
           apiKey = process.env.RAILWAY || process.env.RAILWAY_API_KEY;

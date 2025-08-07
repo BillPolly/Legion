@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@legion/module-loader';
+import { Tool, ToolResult } from '@legion/tool-system';
 import { promises as fs } from 'fs';
 import path from 'path';
 

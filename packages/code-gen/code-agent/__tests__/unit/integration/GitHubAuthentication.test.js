@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterEach } from '@jest/globals';
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import GitHubAuthentication from '../../../src/integration/GitHubAuthentication.js';
 
 describe('GitHub Authentication', () => {
@@ -17,10 +17,10 @@ describe('GitHub Authentication', () => {
     
     // Register GitHub environment variables for testing
     if (resourceManager.has('env.GITHUB_PAT')) {
-      resourceManager.register('GITHUB_PAT', resourceManager.get('env.GITHUB_PAT'));
+      resourceManager.register('GITHUB_PAT', resourceManager.env.GITHUB_PAT);
     }
     if (resourceManager.has('env.GITHUB_USER')) {
-      resourceManager.register('GITHUB_USER', resourceManager.get('env.GITHUB_USER'));
+      resourceManager.register('GITHUB_USER', resourceManager.env.GITHUB_USER);
     }
   });
 

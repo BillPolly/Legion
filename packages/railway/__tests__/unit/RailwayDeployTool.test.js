@@ -1,5 +1,5 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import RailwayDeployTool from '../../src/tools/RailwayDeployTool.js';
 
 describe('RailwayDeployTool', () => {

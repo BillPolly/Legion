@@ -10,7 +10,7 @@
  * and includes multiple safety checks.
  */
 
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import GitHubModule from '../../general-tools/src/github/GitHubModule.js';
 import readline from 'readline';
 

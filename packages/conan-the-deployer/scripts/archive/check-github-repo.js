@@ -8,9 +8,9 @@ const resourceManager = new ResourceManager();
 await resourceManager.initialize();
 
 // Register GitHub resources from environment
-resourceManager.register('GITHUB_PAT', resourceManager.get('env.GITHUB_PAT'));
-resourceManager.register('GITHUB_ORG', resourceManager.get('env.GITHUB_ORG') || 'Bill234');
-resourceManager.register('GITHUB_USER', resourceManager.get('env.GITHUB_USER') || 'Bill234');
+resourceManager.register('GITHUB_PAT', resourceManager.env.GITHUB_PAT);
+resourceManager.register('GITHUB_ORG', resourceManager.env.GITHUB_ORG || 'Bill234');
+resourceManager.register('GITHUB_USER', resourceManager.env.GITHUB_USER || 'Bill234');
 
 // Create module using ModuleFactory
 const moduleFactory = new ModuleFactory(resourceManager);
@@ -23,7 +23,7 @@ const githubTool = tools.find(tool => tool.name === 'github');
 // The GitHub tool we have only supports create/push operations
 // To check if repos exist, we need to use the GitHub API directly
 
-const GITHUB_PAT = resourceManager.get('env.GITHUB_PAT');
+const GITHUB_PAT = resourceManager.env.GITHUB_PAT;
 
 async function checkRepository(owner, repo) {
   const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {

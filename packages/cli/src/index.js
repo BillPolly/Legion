@@ -4,7 +4,7 @@
  * This is the modularized version that orchestrates all the extracted components
  */
 
-import { ResourceManager, ModuleFactory } from '@legion/module-loader';
+import { ResourceManager, ModuleFactory } from '@legion/tool-system';
 import ora from 'ora';
 
 // Core modules

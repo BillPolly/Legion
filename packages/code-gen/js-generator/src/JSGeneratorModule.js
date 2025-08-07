@@ -5,7 +5,7 @@
  * event handlers, and validating JavaScript syntax.
  */
 
-import { Module } from '@legion/module-loader';
+import { Module } from '@legion/tool-system';
 import { wrapTool } from '../../src/ToolWrapper.js';
 import { GenerateJavaScriptModuleTool } from './tools/GenerateJavaScriptModuleTool.js';
 import { GenerateJavaScriptFunctionTool } from './tools/GenerateJavaScriptFunctionTool.js';
@@ -20,7 +20,7 @@ export class JSGeneratorModule extends Module {
   constructor(dependencies = {}) {
     super();
     this.name = 'JSGeneratorModule';
-    this.dependencies = dependencies;
+    this.config = dependencies;
     this.description = 'JavaScript code generation tools for creating modules, functions, classes, and API endpoints';
     this.version = '1.0.0';
   }

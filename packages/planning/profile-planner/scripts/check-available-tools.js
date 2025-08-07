@@ -7,8 +7,8 @@
  * and maps them against profile requirements to identify mismatches.
  */
 
-import { ModuleLoader } from '@legion/module-loader';
-import { ResourceManager } from '@legion/module-loader';
+import { ModuleLoader } from '@legion/tool-system';
+import { ResourceManager } from '@legion/tool-system';
 
 async function main() {
   console.log('🔍 Checking Available Tools vs Profile Requirements\n');

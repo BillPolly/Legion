@@ -4,7 +4,7 @@
  */
 class DependencyGraph {
   constructor() {
-    this.dependencies = new Map(); // resource -> Set of dependencies
+    this.config = new Map(); // resource -> Set of dependencies
     this.dependents = new Map();   // resource -> Set of dependents
     this.nodes = new Set();        // All known resources
   }
@@ -22,8 +22,8 @@ class DependencyGraph {
     this.nodes.add(resource);
     
     // Initialize dependencies set
-    if (!this.dependencies.has(resource)) {
-      this.dependencies.set(resource, new Set());
+    if (!this.config.has(resource)) {
+      this.config.set(resource, new Set());
     }
     
     // Add dependencies
@@ -51,21 +51,21 @@ class DependencyGraph {
     this.nodes.add(dependency);
 
     // Initialize sets if needed
-    if (!this.dependencies.has(resource)) {
-      this.dependencies.set(resource, new Set());
+    if (!this.config.has(resource)) {
+      this.config.set(resource, new Set());
     }
     if (!this.dependents.has(dependency)) {
       this.dependents.set(dependency, new Set());
     }
 
     // Add the dependency
-    this.dependencies.get(resource).add(dependency);
+    this.config.get(resource).add(dependency);
     this.dependents.get(dependency).add(resource);
 
     // Check for circular dependencies
     if (this.hasCircularDependencies()) {
       // Remove the dependency we just added
-      this.dependencies.get(resource).delete(dependency);
+      this.config.get(resource).delete(dependency);
       this.dependents.get(dependency).delete(resource);
       throw new Error(`Adding dependency '${dependency}' to '${resource}' would create a circular dependency`);
     }
@@ -77,8 +77,8 @@ class DependencyGraph {
    * @param {string} dependency - Dependency to remove
    */
   removeDependency(resource, dependency) {
-    if (this.dependencies.has(resource)) {
-      this.dependencies.get(resource).delete(dependency);
+    if (this.config.has(resource)) {
+      this.config.get(resource).delete(dependency);
     }
     
     if (this.dependents.has(dependency)) {
@@ -95,20 +95,20 @@ class DependencyGraph {
     this.nodes.delete(resource);
 
     // Remove all dependencies of this resource
-    if (this.dependencies.has(resource)) {
-      for (const dep of this.dependencies.get(resource)) {
+    if (this.config.has(resource)) {
+      for (const dep of this.config.get(resource)) {
         if (this.dependents.has(dep)) {
           this.dependents.get(dep).delete(resource);
         }
       }
-      this.dependencies.delete(resource);
+      this.config.delete(resource);
     }
 
     // Remove this resource as a dependency of others
     if (this.dependents.has(resource)) {
       for (const dependent of this.dependents.get(resource)) {
-        if (this.dependencies.has(dependent)) {
-          this.dependencies.get(dependent).delete(resource);
+        if (this.config.has(dependent)) {
+          this.config.get(dependent).delete(resource);
         }
       }
       this.dependents.delete(resource);
@@ -121,7 +121,7 @@ class DependencyGraph {
    * @returns {string[]} Array of dependency names
    */
   getDependencies(resource) {
-    const deps = this.dependencies.get(resource);
+    const deps = this.config.get(resource);
     return deps ? Array.from(deps) : [];
   }
 
@@ -351,7 +351,7 @@ class DependencyGraph {
     dot += '\n';
 
     // Add edges
-    for (const [resource, deps] of this.dependencies) {
+    for (const [resource, deps] of this.config) {
       for (const dep of deps) {
         dot += `  "${dep}" -> "${resource}";\n`;
       }
@@ -372,7 +372,7 @@ class DependencyGraph {
     let totalDependencies = 0;
     let maxDependencies = 0;
     
-    for (const deps of this.dependencies.values()) {
+    for (const deps of this.config.values()) {
       totalDependencies += deps.size;
       maxDependencies = Math.max(maxDependencies, deps.size);
     }
@@ -393,7 +393,7 @@ class DependencyGraph {
    * Clear all dependencies and nodes
    */
   clear() {
-    this.dependencies.clear();
+    this.config.clear();
     this.dependents.clear();
     this.nodes.clear();
   }

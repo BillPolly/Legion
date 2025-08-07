@@ -1,4 +1,4 @@
-import { Tool, ToolResult, ResourceManager } from '@legion/module-loader';
+import { Tool, ToolResult, ResourceManager } from '@legion/tool-system';
 import DeploymentManager from '../DeploymentManager.js';
 
 /**
@@ -273,7 +273,7 @@ class DeployApplicationTool extends Tool {
       let deploymentManager;
       
       if (resourceManager.has('deployment-manager')) {
-        deploymentManager = resourceManager.get('deployment-manager');
+        deploymentManager = resourceManager.deployment-manager;
       } else {
         // Create new deployment manager if not available
         deploymentManager = new DeploymentManager({ resourceManager });

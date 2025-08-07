@@ -4,7 +4,7 @@
  * Provides tools for JavaScript and CSS validation, security scanning, and performance analysis
  */
 
-import { Module } from '@legion/module-loader';
+import { Module } from '@legion/tool-system';
 import { wrapTool } from '../../src/ToolWrapper.js';
 import { ValidateJavaScriptTool } from './tools/ValidateJavaScriptTool.js';
 
@@ -12,7 +12,7 @@ export class CodeAnalysisModule extends Module {
   constructor(dependencies = {}) {
     super();
     this.name = 'CodeAnalysisModule';
-    this.dependencies = dependencies;
+    this.config = dependencies;
     this.description = 'Code analysis tools for JavaScript and CSS validation, security scanning, and performance analysis';
     this.version = '1.0.0';
   }

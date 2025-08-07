@@ -11,7 +11,7 @@
  * 5. Verify the live deployment
  */
 
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import { CodeAgent } from '../src/agent/CodeAgent.js';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -36,9 +36,9 @@ async function runExample2Workflow() {
     await resourceManager.initialize();
     
     // Get tokens from ResourceManager
-    const githubToken = resourceManager.get('env.GITHUB_PAT');
-    const railwayToken = resourceManager.get('env.RAILWAY_API_TOKEN') || resourceManager.get('env.RAILWAY');
-    const anthropicKey = resourceManager.get('env.ANTHROPIC_API_KEY');
+    const githubToken = resourceManager.env.GITHUB_PAT;
+    const railwayToken = resourceManager.env.RAILWAY_API_TOKEN || resourceManager.env.RAILWAY;
+    const anthropicKey = resourceManager.env.ANTHROPIC_API_KEY;
     
     if (!githubToken || !railwayToken) {
       throw new Error('Missing required tokens: GITHUB_PAT and RAILWAY_API_TOKEN must be set in .env');
@@ -71,7 +71,7 @@ async function runExample2Workflow() {
     
     // Register LLM client factory for Anthropic BEFORE CodeAgent init
     resourceManager.registerFactory('llmClient', async (config, rm) => {
-      const apiKey = config.apiKey || rm.get('env.ANTHROPIC_API_KEY');
+      const apiKey = config.apiKey || rm.env.ANTHROPIC_API_KEY;
       console.log('   ✓ Using Anthropic LLM provider');
       
       const { LLMClientManager } = await import('../src/integration/LLMClientManager.js');

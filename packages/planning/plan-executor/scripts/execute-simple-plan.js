@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { ResourceManager, ModuleLoader } from '@legion/module-loader';
+import { ResourceManager, ModuleLoader } from '@legion/tool-system';
 import { PlanExecutor } from '../src/core/PlanExecutor.js';
 import path from 'path';
 import { fileURLToPath } from 'url';

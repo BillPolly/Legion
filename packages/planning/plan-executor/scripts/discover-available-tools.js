@@ -5,7 +5,7 @@
  * This generates a comprehensive inventory that shows what tools are available for plan execution
  */
 
-import { ResourceManager, ModuleLoader } from '@legion/module-loader';
+import { ResourceManager, ModuleLoader } from '@legion/tool-system';
 import FileModule from '../../general-tools/src/file/FileModule.js';
 import fs from 'fs/promises';
 import path from 'path';

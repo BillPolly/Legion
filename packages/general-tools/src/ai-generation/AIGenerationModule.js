@@ -1,4 +1,4 @@
-import { Module } from '@legion/module-loader';
+import { Module } from '@legion/tool-system';
 import { LLMClient } from '@legion/llm';
 
 /**
@@ -10,7 +10,7 @@ export default class AIGenerationModule extends Module {
     super();
     this.name = 'AIGenerationModule';
     this.description = 'AI-powered content generation tools including DALL-E 3 image generation';
-    this.dependencies = dependencies;
+    this.config = dependencies;
     this.llmClient = null;
   }
 
@@ -21,7 +21,7 @@ export default class AIGenerationModule extends Module {
    */
   static async create(resourceManager) {
     // Get OpenAI API key from environment
-    const apiKey = resourceManager.get('env.OPENAI_API_KEY');
+    const apiKey = resourceManager.env.OPENAI_API_KEY;
     if (!apiKey) {
       throw new Error('OPENAI_API_KEY environment variable is required for AI generation module');
     }
@@ -39,10 +39,10 @@ export default class AIGenerationModule extends Module {
     await super.initialize();
     
     // Initialize LLMClient with OpenAI provider for image generation
-    if (this.dependencies.apiKey) {
+    if (this.config.apiKey) {
       this.llmClient = new LLMClient({
         provider: 'openai',
-        apiKey: this.dependencies.apiKey,
+        apiKey: this.config.apiKey,
         model: 'dall-e-3' // Default model for images
       });
     } else {

@@ -8,7 +8,7 @@
  */
 
 import { EnhancedCodeAgent } from './src/agent/EnhancedCodeAgent.js';
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import { promises as fs } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -27,7 +27,7 @@ async function main() {
   // Get GitHub PAT
   let githubPat;
   try {
-    githubPat = resourceManager.get('GITHUB_PAT');
+    githubPat = resourceManager.GITHUB_PAT;
     process.env.GITHUB_PAT = githubPat;
   } catch {
     githubPat = process.env.GITHUB_PAT;
@@ -43,7 +43,7 @@ async function main() {
   let llmProvider, llmModel, llmApiKey;
   
   try {
-    const openaiKey = resourceManager.get('OPENAI_API_KEY');
+    const openaiKey = resourceManager.OPENAI_API_KEY;
     if (openaiKey) {
       process.env.OPENAI_API_KEY = openaiKey;
       llmProvider = 'openai';
@@ -54,7 +54,7 @@ async function main() {
   
   if (!llmApiKey) {
     try {
-      const anthropicKey = resourceManager.get('ANTHROPIC_API_KEY');
+      const anthropicKey = resourceManager.ANTHROPIC_API_KEY;
       if (anthropicKey) {
         process.env.ANTHROPIC_API_KEY = anthropicKey;
         llmProvider = 'anthropic';

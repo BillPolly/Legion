@@ -141,7 +141,7 @@ describe('ModuleLoader - JSON Module Support', () => {
       const MockCalculatorModule = class CalculatorModule {
         static dependencies = ['precision'];
         constructor(deps) {
-          this.dependencies = deps;
+          this.config = deps;
         }
         getTools() {
           return [{ 

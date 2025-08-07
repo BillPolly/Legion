@@ -4,7 +4,7 @@
  * Full Railway deployment test with verification
  */
 
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import { CodeAgent } from '../src/index.js';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -19,8 +19,8 @@ async function main() {
   await resourceManager.initialize();
   
   // Check credentials
-  const githubToken = resourceManager.get('env.GITHUB_PAT');
-  const railwayToken = resourceManager.get('env.RAILWAY_API_TOKEN');
+  const githubToken = resourceManager.env.GITHUB_PAT;
+  const railwayToken = resourceManager.env.RAILWAY_API_TOKEN;
   
   console.log('Environment check:');
   console.log(`GITHUB_PAT: ${githubToken ? '✅ Found' : '❌ Missing'}`);

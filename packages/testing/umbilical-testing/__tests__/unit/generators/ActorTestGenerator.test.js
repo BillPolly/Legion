@@ -245,7 +245,7 @@ describe('ActorTestGenerator', () => {
           send: (actorId, messageType, payload) => deps.actorSpace.sendMessage(actorId, messageType, payload),
           receive: (message) => ({ status: 'received' }),
           registerWithActorSpace: function() {
-            this.dependencies.actorSpace.registerActor(this.actorId, this);
+            this.config.actorSpace.registerActor(this.actorId, this);
           },
           created: true
         })

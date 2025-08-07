@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 
 describe('Resource Manager GitHub Environment Access', () => {
   let resourceManager;
@@ -16,18 +16,18 @@ describe('Resource Manager GitHub Environment Access', () => {
     // Register GitHub environment variables directly for easy access
     // (This is what the Git integration will do)
     if (resourceManager.has('env.GITHUB_PAT')) {
-      resourceManager.register('GITHUB_PAT', resourceManager.get('env.GITHUB_PAT'));
+      resourceManager.register('GITHUB_PAT', resourceManager.env.GITHUB_PAT);
     }
     if (resourceManager.has('env.GITHUB_AGENT_ORG')) {
-      resourceManager.register('GITHUB_AGENT_ORG', resourceManager.get('env.GITHUB_AGENT_ORG'));
+      resourceManager.register('GITHUB_AGENT_ORG', resourceManager.env.GITHUB_AGENT_ORG);
     }
     if (resourceManager.has('env.GITHUB_USER')) {
-      resourceManager.register('GITHUB_USER', resourceManager.get('env.GITHUB_USER'));
+      resourceManager.register('GITHUB_USER', resourceManager.env.GITHUB_USER);
     }
   });
 
   test('should access GITHUB_PAT from environment via env prefix', async () => {
-    const githubPat = resourceManager.get('env.GITHUB_PAT');
+    const githubPat = resourceManager.env.GITHUB_PAT;
     
     expect(githubPat).toBeDefined();
     expect(githubPat).not.toBe('');
@@ -38,7 +38,7 @@ describe('Resource Manager GitHub Environment Access', () => {
   });
 
   test('should access GITHUB_PAT directly after registration', async () => {
-    const githubPat = resourceManager.get('GITHUB_PAT');
+    const githubPat = resourceManager.GITHUB_PAT;
     
     expect(githubPat).toBeDefined();
     expect(githubPat).not.toBe('');
@@ -49,7 +49,7 @@ describe('Resource Manager GitHub Environment Access', () => {
   });
 
   test('should access GITHUB_AGENT_ORG from environment', async () => {
-    const githubOrg = resourceManager.get('GITHUB_AGENT_ORG');
+    const githubOrg = resourceManager.GITHUB_AGENT_ORG;
     
     expect(githubOrg).toBeDefined();
     expect(githubOrg).toBe('AgentResults');
@@ -59,7 +59,7 @@ describe('Resource Manager GitHub Environment Access', () => {
   });
 
   test('should access GITHUB_USER from environment', async () => {
-    const githubUser = resourceManager.get('GITHUB_USER');
+    const githubUser = resourceManager.GITHUB_USER;
     
     expect(githubUser).toBeDefined();
     expect(githubUser).not.toBe('');
@@ -74,19 +74,19 @@ describe('Resource Manager GitHub Environment Access', () => {
     
     // Should throw when trying to get non-existent resource
     expect(() => {
-      resourceManager.get('NON_EXISTENT_GITHUB_VAR');
+      resourceManager.NON_EXISTENT_GITHUB_VAR;
     }).toThrow('Resource \'NON_EXISTENT_GITHUB_VAR\' not found');
   });
 
   test('should provide consistent access to GitHub variables', () => {
     // Test that multiple calls return the same value
-    const pat1 = resourceManager.get('GITHUB_PAT');
-    const pat2 = resourceManager.get('GITHUB_PAT');
+    const pat1 = resourceManager.GITHUB_PAT;
+    const pat2 = resourceManager.GITHUB_PAT;
     
     expect(pat1).toBe(pat2);
     
-    const org1 = resourceManager.get('GITHUB_AGENT_ORG');
-    const org2 = resourceManager.get('GITHUB_AGENT_ORG');
+    const org1 = resourceManager.GITHUB_AGENT_ORG;
+    const org2 = resourceManager.GITHUB_AGENT_ORG;
     
     expect(org1).toBe(org2);
   });

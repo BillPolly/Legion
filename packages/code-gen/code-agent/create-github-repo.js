@@ -7,7 +7,7 @@
  * and adds a simple Node.js server.
  */
 
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import GitIntegrationManager from './src/integration/GitIntegrationManager.js';
 import { promises as fs } from 'fs';
 import { fileURLToPath } from 'url';
@@ -27,7 +27,7 @@ async function main() {
   // Set up environment
   let githubPat;
   try {
-    githubPat = resourceManager.get('GITHUB_PAT');
+    githubPat = resourceManager.GITHUB_PAT;
     process.env.GITHUB_PAT = githubPat;
   } catch {
     githubPat = process.env.GITHUB_PAT;

@@ -4,7 +4,7 @@
  * Debug script to isolate GenericPlanner hanging issue
  */
 
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import { GenericPlanner } from '../../llm-planner/src/GenericPlanner.js';
 
 async function debugGenericPlanner() {
@@ -16,7 +16,7 @@ async function debugGenericPlanner() {
     await resourceManager.initialize();
     
     // Get LLM client
-    const llmClient = resourceManager.get('llm-client');
+    const llmClient = resourceManager.llm-client;
     if (!llmClient) {
       throw new Error('LLM client not available');
     }

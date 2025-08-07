@@ -12,7 +12,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll, jest } from '@jest/globals';
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import { CodeAgent } from '../../src/agent/CodeAgent.js';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -41,8 +41,8 @@ describe('Example2 Full Workflow', () => {
     await resourceManager.initialize();
     
     // Get tokens from ResourceManager
-    githubToken = resourceManager.get('env.GITHUB_PAT');
-    railwayToken = resourceManager.get('env.RAILWAY_API_TOKEN') || resourceManager.get('env.RAILWAY');
+    githubToken = resourceManager.env.GITHUB_PAT;
+    railwayToken = resourceManager.env.RAILWAY_API_TOKEN || resourceManager.env.RAILWAY;
     
     if (!githubToken || !railwayToken) {
       throw new Error('Missing required tokens: GITHUB_PAT and RAILWAY_API_TOKEN must be set in .env');

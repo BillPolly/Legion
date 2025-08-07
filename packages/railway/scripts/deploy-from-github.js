@@ -7,7 +7,7 @@
  * Example: node deploy-from-github.js AgentResults/test-express-railway my-app
  */
 
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import { RailwayProvider } from '../src/index.js';
 
 const args = process.argv.slice(2);
@@ -25,7 +25,7 @@ async function deployFromGitHub() {
     const resourceManager = new ResourceManager();
     await resourceManager.initialize();
     
-    const apiKey = resourceManager.get('env.RAILWAY') || resourceManager.get('env.RAILWAY_API_KEY');
+    const apiKey = resourceManager.env.RAILWAY || resourceManager.env.RAILWAY_API_KEY;
     const railwayProvider = new RailwayProvider(apiKey);
     
     console.log(`🚂 Deploying ${githubRepo} to Railway\n`);

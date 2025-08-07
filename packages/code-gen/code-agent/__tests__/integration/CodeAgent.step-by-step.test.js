@@ -5,7 +5,7 @@
 
 import { describe, test, expect, beforeAll, beforeEach, afterEach } from '@jest/globals';
 import { CodeAgent } from '../../src/index.js';
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -21,7 +21,7 @@ describe('CodeAgent Step-by-Step Integration Tests', () => {
   beforeAll(async () => {
     const resourceManager = new ResourceManager();
     await resourceManager.initialize();
-    apiKey = resourceManager.get('env.ANTHROPIC_API_KEY');
+    apiKey = resourceManager.env.ANTHROPIC_API_KEY;
     
     if (!apiKey) {
       throw new Error('ANTHROPIC_API_KEY not found in ResourceManager');

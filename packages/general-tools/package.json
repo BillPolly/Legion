@@ -36,7 +36,6 @@
     "CHANGELOG.md"
   ],
   "dependencies": {
-    "@legion/module-loader": "*",
     "axios": "^1.6.2",
     "cheerio": "^1.0.0-rc.12",
     "puppeteer": "^21.5.2",
@@ -47,7 +46,8 @@
     "node-xlsx": "^0.23.0",
     "js-beautify": "^1.14.11",
     "dotenv": "^16.3.1",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "@legion/tool-system": "^1.0.0"
   },
   "devDependencies": {
     "jest": "^29.7.0"

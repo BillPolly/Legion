@@ -1,4 +1,4 @@
-import { Module } from '@legion/module-loader';
+import { Module } from '@legion/tool-system';
 import { LLMClient } from '@legion/llm';
 import { FileConverter } from './utils/FileConverter.js';
 
@@ -11,7 +11,7 @@ export default class FileAnalysisModule extends Module {
     super();
     this.name = 'FileAnalysisModule';
     this.description = 'Analyze files including images, PDFs, and documents using AI';
-    this.dependencies = dependencies;
+    this.config = dependencies;
     this.llmClient = null;
     this.openaiClient = null;
   }
@@ -23,8 +23,8 @@ export default class FileAnalysisModule extends Module {
    */
   static async create(resourceManager) {
     // Get API keys from environment
-    const anthropicKey = resourceManager.get('env.ANTHROPIC_API_KEY');
-    const openaiKey = resourceManager.get('env.OPENAI_API_KEY');
+    const anthropicKey = resourceManager.env.ANTHROPIC_API_KEY;
+    const openaiKey = resourceManager.env.OPENAI_API_KEY;
     
     if (!anthropicKey) {
       throw new Error('ANTHROPIC_API_KEY environment variable is required for file analysis module');
@@ -43,18 +43,18 @@ export default class FileAnalysisModule extends Module {
     await super.initialize();
     
     // Initialize Anthropic client (primary)
-    if (this.dependencies.anthropicKey) {
+    if (this.config.anthropicKey) {
       this.llmClient = new LLMClient({
         provider: 'anthropic',
-        apiKey: this.dependencies.anthropicKey
+        apiKey: this.config.anthropicKey
       });
     }
     
     // Initialize OpenAI client if available
-    if (this.dependencies.openaiKey) {
+    if (this.config.openaiKey) {
       this.openaiClient = new LLMClient({
         provider: 'openai',
-        apiKey: this.dependencies.openaiKey
+        apiKey: this.config.openaiKey
       });
     }
   }

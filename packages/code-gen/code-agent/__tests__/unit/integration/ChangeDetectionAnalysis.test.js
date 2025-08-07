@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterEach, beforeEach, jest } from '@jest/globals';
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import ChangeTracker from '../../../src/integration/ChangeTracker.js';
 import RepositoryManager from '../../../src/integration/RepositoryManager.js';
 import GitConfigValidator from '../../../src/config/GitConfigValidator.js';

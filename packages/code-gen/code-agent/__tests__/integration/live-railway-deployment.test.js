@@ -10,7 +10,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll, jest } from '@jest/globals';
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import { CodeAgent } from '../../src/agent/CodeAgent.js';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -34,8 +34,8 @@ describe('Live Railway Deployment Test', () => {
     await resourceManager.initialize();
     
     // Get tokens from ResourceManager
-    githubToken = resourceManager.get('env.GITHUB_PAT');
-    railwayToken = resourceManager.get('env.RAILWAY_API_TOKEN');
+    githubToken = resourceManager.env.GITHUB_PAT;
+    railwayToken = resourceManager.env.RAILWAY_API_TOKEN;
     
     if (!githubToken || !railwayToken) {
       console.warn('⚠️ Skipping live deployment test - missing GITHUB_PAT or RAILWAY_API_TOKEN in .env');

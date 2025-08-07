@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import GitHubRateLimiter from '../../src/integration/GitHubRateLimiter.js';
 import GitHubAuthentication from '../../src/integration/GitHubAuthentication.js';
 
@@ -19,7 +19,7 @@ describe('Live GitHub Rate Limiting', () => {
     
     // Register GitHub environment variables
     if (resourceManager.has('env.GITHUB_PAT')) {
-      resourceManager.register('GITHUB_PAT', resourceManager.get('env.GITHUB_PAT'));
+      resourceManager.register('GITHUB_PAT', resourceManager.env.GITHUB_PAT);
     }
     
     // Initialize GitHub authentication

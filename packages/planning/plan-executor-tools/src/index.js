@@ -11,7 +11,7 @@
  * @example
  * ```javascript
  * import { PlanExecutorToolsModule } from '@legion/plan-executor-tools';
- * import { ResourceManager } from '@legion/module-loader';
+ * import { ResourceManager } from '@legion/tool-system';
  * 
  * // Create module using async factory pattern
  * const resourceManager = new ResourceManager();

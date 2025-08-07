@@ -12,7 +12,13 @@
     "test:code-analysis": "cross-env NODE_OPTIONS=\"--experimental-vm-modules\" jest __tests__/integration/LiveCodeAnalysisModule.test.js",
     "test:jester": "cross-env NODE_OPTIONS=\"--experimental-vm-modules\" jest __tests__/integration/LiveJesterModule.test.js"
   },
-  "keywords": ["legion", "code-generation", "javascript", "npm", "analysis"],
+  "keywords": [
+    "legion",
+    "code-generation",
+    "javascript",
+    "npm",
+    "analysis"
+  ],
   "author": "Legion Team",
   "license": "MIT",
   "devDependencies": {
@@ -21,8 +27,8 @@
     "@jest/globals": "^29.7.0"
   },
   "dependencies": {
-    "@legion/module-loader": "file:../module-loader",
     "zod": "^3.22.0",
-    "semver": "^7.5.0"
+    "semver": "^7.5.0",
+    "@legion/tool-system": "^1.0.0"
   }
 }

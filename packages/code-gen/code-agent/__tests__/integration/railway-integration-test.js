@@ -14,7 +14,7 @@
  */
 
 import { CodeAgent } from '../../src/index.js';
-import { ModuleLoader, ResourceManager } from '@legion/module-loader';
+import { ModuleLoader, ResourceManager } from '@legion/tool-system';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -99,8 +99,8 @@ async function main() {
   await resourceManager.initialize();
   
   // Get tokens from ResourceManager
-  const githubToken = resourceManager.get('env.GITHUB_PAT');
-  const railwayToken = resourceManager.get('env.RAILWAY_API_TOKEN');
+  const githubToken = resourceManager.env.GITHUB_PAT;
+  const railwayToken = resourceManager.env.RAILWAY_API_TOKEN;
   
   if (!githubToken || !railwayToken) {
     console.error('❌ Missing required environment variables in .env file');

@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@legion/module-loader';
+import { Tool, ToolResult } from '@legion/tool-system';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import https from 'https';

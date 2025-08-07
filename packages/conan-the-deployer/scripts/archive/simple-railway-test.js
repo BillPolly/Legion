@@ -18,8 +18,8 @@ const resourceManager = new ResourceManager();
 await resourceManager.initialize();
 
 // Get API tokens from ResourceManager
-const RAILWAY_API_TOKEN = resourceManager.get('env.RAILWAY_API_TOKEN');
-const GITHUB_PAT = resourceManager.get('env.GITHUB_PAT');
+const RAILWAY_API_TOKEN = resourceManager.env.RAILWAY_API_TOKEN;
+const GITHUB_PAT = resourceManager.env.GITHUB_PAT;
 
 if (!RAILWAY_API_TOKEN) {
   console.error('❌ RAILWAY_API_TOKEN not found in environment');

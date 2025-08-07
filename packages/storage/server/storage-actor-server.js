@@ -15,8 +15,8 @@ export class StorageActorServer {
     // Load configuration from ResourceManager if available
     if (resourceManager) {
       this.resourceManager = resourceManager;
-      this.port = resourceManager.get('env.STORAGE_ACTOR_PORT') || port || 3700;
-      this.path = resourceManager.get('env.STORAGE_ACTOR_PATH') || path || '/storage';
+      this.port = resourceManager.env.STORAGE_ACTOR_PORT || port || 3700;
+      this.path = resourceManager.env.STORAGE_ACTOR_PATH || path || '/storage';
     } else {
       this.port = port || 3700;
       this.path = path || '/storage';

@@ -21,13 +21,13 @@
   "author": "jsEnvoy Team",
   "license": "MIT",
   "dependencies": {
-    "@legion/module-loader": "*",
     "@legion/log-manager": "*",
     "cross-spawn": "^7.0.3",
     "detect-port": "^1.5.1",
     "execa": "^8.0.1",
     "tree-kill": "^1.2.2",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "@legion/tool-system": "^1.0.0"
   },
   "devDependencies": {
     "jest": "^29.7.0"

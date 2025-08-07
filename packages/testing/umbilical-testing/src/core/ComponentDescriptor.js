@@ -6,7 +6,7 @@ export class ComponentDescriptor {
   constructor() {
     this.componentName = '';
     this.componentDescription = '';
-    this.dependencies = [];
+    this.config = [];
     this.domStructure = [];
     this.stateProperties = [];
     this.events = [];
@@ -43,7 +43,7 @@ export class ComponentDescriptor {
    * @param {Object} options - Additional options
    */
   requires(name, type, options = {}) {
-    this.dependencies.push({
+    this.config.push({
       name,
       type,
       required: true,
@@ -59,7 +59,7 @@ export class ComponentDescriptor {
    * @param {Object} options - Additional options including default value
    */
   optional(name, type, options = {}) {
-    this.dependencies.push({
+    this.config.push({
       name,
       type,
       required: false,
@@ -234,7 +234,7 @@ export class ComponentDescriptor {
     return {
       name: this.componentName,
       description: this.componentDescription,
-      dependencies: [...this.dependencies],
+      dependencies: [...this.config],
       domStructure: [...this.domStructure],
       stateProperties: [...this.stateProperties],
       events: [...this.events],
@@ -255,7 +255,7 @@ export class ComponentDescriptor {
     const warnings = [];
 
     // Check for required fields
-    if (this.dependencies.length === 0) {
+    if (this.config.length === 0) {
       warnings.push('No dependencies declared - component may not be properly isolated');
     }
 

@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
-import { ResourceManager, ModuleFactory } from '@legion/module-loader';
+import { ResourceManager, ModuleFactory } from '@legion/tool-system';
 import { PackageManagerModule } from '../../package-manager/src/PackageManagerModule.js';
 import fs from 'fs/promises';
 import path from 'path';

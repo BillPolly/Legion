@@ -5,7 +5,7 @@
  * the loaded modules and their tools.
  */
 
-import { Module } from '@legion/module-loader';
+import { Module } from '@legion/tool-system';
 import { ModuleListTool } from './ModuleListTool.js';
 import { ModuleInfoTool } from './ModuleInfoTool.js';
 import { ModuleToolsTool } from './ModuleToolsTool.js';
@@ -22,11 +22,11 @@ export default class SystemModule extends Module {
 
   getTools() {
     return [
-      new ModuleLoadTool(this.dependencies),
-      new ModuleUnloadTool(this.dependencies),
-      new ModuleListTool(this.dependencies),
-      new ModuleInfoTool(this.dependencies),
-      new ModuleToolsTool(this.dependencies)
+      new ModuleLoadTool(this.config),
+      new ModuleUnloadTool(this.config),
+      new ModuleListTool(this.config),
+      new ModuleInfoTool(this.config),
+      new ModuleToolsTool(this.config)
     ];
   }
 }

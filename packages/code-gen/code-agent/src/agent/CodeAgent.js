@@ -530,13 +530,13 @@ class CodeAgent extends EventEmitter {
       
       // Register GitHub resources if not already present
       if (this.resourceManager.has('env.GITHUB_USER')) {
-        this.resourceManager.register('GITHUB_USER', this.resourceManager.get('env.GITHUB_USER'));
+        this.resourceManager.register('GITHUB_USER', this.resourceManager.env.GITHUB_USER);
       }
       if (this.resourceManager.has('env.GITHUB_PAT')) {
-        this.resourceManager.register('GITHUB_PAT', this.resourceManager.get('env.GITHUB_PAT'));
+        this.resourceManager.register('GITHUB_PAT', this.resourceManager.env.GITHUB_PAT);
       }
       if (this.resourceManager.has('env.GITHUB_AGENT_ORG')) {
-        this.resourceManager.register('GITHUB_AGENT_ORG', this.resourceManager.get('env.GITHUB_AGENT_ORG'));
+        this.resourceManager.register('GITHUB_AGENT_ORG', this.resourceManager.env.GITHUB_AGENT_ORG);
       } else {
         this.resourceManager.register('GITHUB_AGENT_ORG', 'AgentResults');
       }
@@ -886,7 +886,7 @@ class CodeAgent extends EventEmitter {
         let apiKey = config.apiKey;
         
         if (!provider && resourceManager.has('env.LLM_PROVIDER')) {
-          provider = resourceManager.get('env.LLM_PROVIDER');
+          provider = resourceManager.env.LLM_PROVIDER;
         }
         
         if (!provider) {

@@ -1,4 +1,4 @@
-import { Tool } from '@legion/module-loader';
+import { Tool } from '@legion/tool-system';
 import { z } from 'zod';
 
 const inputSchema = z.object({
@@ -20,7 +20,7 @@ class RailwayUpdateEnvTool extends Tool {
   async execute(input) {
     try {
       const validated = this.inputSchema.parse(input);
-      const provider = this.resourceManager.get('railwayProvider');
+      const provider = this.resourceManager.railwayProvider;
       
       if (!provider) {
         throw new Error('Railway provider not initialized');

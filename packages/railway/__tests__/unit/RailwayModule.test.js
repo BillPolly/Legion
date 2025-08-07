@@ -1,5 +1,5 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import RailwayModule from '../../src/RailwayModule.js';
 
 describe('RailwayModule', () => {
@@ -122,7 +122,7 @@ describe('RailwayModule', () => {
     it('should register provider with resource manager', () => {
       const module = new RailwayModule(resourceManager);
       
-      const registeredProvider = resourceManager.get('railwayProvider');
+      const registeredProvider = resourceManager.railwayProvider;
       expect(registeredProvider).toBeDefined();
       expect(registeredProvider).toBe(module.provider);
     });

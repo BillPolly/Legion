@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect, beforeAll, beforeEach } from '@jest/globals';
-import { ModuleLoader, ResourceManager } from '@legion/module-loader';
+import { ModuleLoader, ResourceManager } from '@legion/tool-system';
 import { ProfilePlannerModule } from '../../src/ProfilePlannerModule.js';
 import fs from 'fs/promises';
 import path from 'path';
@@ -36,7 +36,7 @@ describe('ProfilePlanner Live Tool Integration', () => {
     await resourceManager.initialize();
     
     // Check for API key
-    const apiKey = resourceManager.get('env.ANTHROPIC_API_KEY');
+    const apiKey = resourceManager.env.ANTHROPIC_API_KEY;
     if (!apiKey || apiKey === 'test-key') {
       throw new Error('ANTHROPIC_API_KEY required for live tests');
     }

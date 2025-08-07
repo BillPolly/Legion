@@ -7,7 +7,7 @@
  * for basic code generation without full deployment.
  */
 
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import { CodeAgent } from '../src/agent/CodeAgent.js';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -27,7 +27,7 @@ async function testRealLLM() {
     await resourceManager.initialize();
     
     // Check for Anthropic API key
-    const anthropicKey = resourceManager.get('env.ANTHROPIC_API_KEY');
+    const anthropicKey = resourceManager.env.ANTHROPIC_API_KEY;
     if (!anthropicKey) {
       throw new Error('ANTHROPIC_API_KEY must be set in .env file');
     }
@@ -39,7 +39,7 @@ async function testRealLLM() {
     
     // Register real LLM client factory
     resourceManager.registerFactory('llmClient', async (config, rm) => {
-      const apiKey = config.apiKey || rm.get('env.ANTHROPIC_API_KEY');
+      const apiKey = config.apiKey || rm.env.ANTHROPIC_API_KEY;
       console.log('   ✓ Creating Anthropic LLM client...');
       
       const { LLMClientManager } = await import('../src/integration/LLMClientManager.js');

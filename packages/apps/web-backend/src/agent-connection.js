@@ -62,9 +62,9 @@ export class AgentConnection {
                 bio: "I am a helpful AI assistant powered by jsEnvoy. I can help with various tasks including calculations, file operations, and web searches.",
                 steps: ["Understand the user's request", "Use available tools if needed", "Provide a helpful response"],
                 modelConfig: {
-                    provider: this.resourceManager.has('env.MODEL_PROVIDER') ? this.resourceManager.get('env.MODEL_PROVIDER') : 'OPEN_AI',
-                    apiKey: this.resourceManager.get('env.OPENAI_API_KEY'),
-                    model: this.resourceManager.has('env.MODEL_NAME') ? this.resourceManager.get('env.MODEL_NAME') : 'gpt-4'
+                    provider: this.resourceManager.has('env.MODEL_PROVIDER') ? this.resourceManager.env.MODEL_PROVIDER : 'OPEN_AI',
+                    apiKey: this.resourceManager.env.OPENAI_API_KEY,
+                    model: this.resourceManager.has('env.MODEL_NAME') ? this.resourceManager.env.MODEL_NAME : 'gpt-4'
                 },
                 tools: tools,
                 showToolUsage: true,

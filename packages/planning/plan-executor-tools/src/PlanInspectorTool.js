@@ -2,7 +2,7 @@
  * PlanInspectorTool - Static analysis tool for plan structure validation
  */
 
-import { Tool } from '@legion/module-loader';
+import { Tool } from '@legion/tool-system';
 import { z } from 'zod';
 import { validatePlanSchema, formatSchemaErrors } from './schemas/PlanSchemaZod.js';
 

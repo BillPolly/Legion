@@ -3,7 +3,7 @@
  */
 
 import { describe, test, expect, beforeEach } from '@jest/globals';
-import { ResourceManager, ModuleFactory } from '@legion/module-loader';
+import { ResourceManager, ModuleFactory } from '@legion/tool-system';
 import JsonModule from '../../src/json/JsonModule.js';
 
 describe('JSON Module Tools', () => {

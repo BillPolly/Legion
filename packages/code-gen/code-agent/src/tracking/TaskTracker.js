@@ -23,7 +23,7 @@ class TaskTracker {
 
     // Task storage
     this.tasks = new Map();
-    this.dependencies = new Map(); // taskId -> Set of dependency taskIds
+    this.config = new Map(); // taskId -> Set of dependency taskIds
     this.dependents = new Map(); // taskId -> Set of dependent taskIds
     
     // State tracking
@@ -99,7 +99,7 @@ class TaskTracker {
     this.tasks.set(task.id, task);
     
     // Initialize dependency tracking
-    this.dependencies.set(task.id, new Set());
+    this.config.set(task.id, new Set());
     this.dependents.set(task.id, new Set());
     
     // Mark as dirty for auto-save
@@ -228,11 +228,11 @@ class TaskTracker {
     }
 
     // Remove dependencies
-    this.dependencies.delete(taskId);
+    this.config.delete(taskId);
     this.dependents.delete(taskId);
     
     // Remove from other tasks' dependencies
-    for (const [id, deps] of this.dependencies.entries()) {
+    for (const [id, deps] of this.config.entries()) {
       deps.delete(taskId);
     }
     
@@ -340,7 +340,7 @@ class TaskTracker {
       throw new Error('Circular dependency detected');
     }
 
-    this.dependencies.get(taskId).add(dependencyId);
+    this.config.get(taskId).add(dependencyId);
     this.dependents.get(dependencyId).add(taskId);
     
     this._markDirty();
@@ -354,7 +354,7 @@ class TaskTracker {
    * @returns {Promise<void>}
    */
   async removeDependency(taskId, dependencyId) {
-    this.dependencies.get(taskId)?.delete(dependencyId);
+    this.config.get(taskId)?.delete(dependencyId);
     this.dependents.get(dependencyId)?.delete(taskId);
     
     this._markDirty();
@@ -367,7 +367,7 @@ class TaskTracker {
    * @returns {Promise<Array>} Dependency IDs
    */
   async getDependencies(taskId) {
-    const deps = this.dependencies.get(taskId);
+    const deps = this.config.get(taskId);
     return deps ? Array.from(deps) : [];
   }
 
@@ -381,7 +381,7 @@ class TaskTracker {
     
     for (const task of this.tasks.values()) {
       if (task.status === 'pending') {
-        const dependencies = this.dependencies.get(task.id);
+        const dependencies = this.config.get(task.id);
         const allDependenciesComplete = Array.from(dependencies).every(depId => {
           const depTask = this.tasks.get(depId);
           return depTask && depTask.status === 'completed';
@@ -619,7 +619,7 @@ class TaskTracker {
     try {
       const data = {
         tasks: Array.from(this.tasks.entries()),
-        dependencies: Array.from(this.dependencies.entries()).map(([id, deps]) => [id, Array.from(deps)]),
+        dependencies: Array.from(this.config.entries()).map(([id, deps]) => [id, Array.from(deps)]),
         dependents: Array.from(this.dependents.entries()).map(([id, deps]) => [id, Array.from(deps)]),
         lastSaveTime: Date.now()
       };
@@ -654,7 +654,7 @@ class TaskTracker {
       this.tasks = new Map(data.tasks);
       
       // Restore dependencies
-      this.dependencies = new Map(data.dependencies.map(([id, deps]) => [id, new Set(deps)]));
+      this.config = new Map(data.dependencies.map(([id, deps]) => [id, new Set(deps)]));
       this.dependents = new Map(data.dependents.map(([id, deps]) => [id, new Set(deps)]));
       
       this.lastSaveTime = data.lastSaveTime;
@@ -662,7 +662,7 @@ class TaskTracker {
     } catch (error) {
       // File doesn't exist or is invalid, start fresh
       this.tasks = new Map();
-      this.dependencies = new Map();
+      this.config = new Map();
       this.dependents = new Map();
     }
   }
@@ -674,7 +674,7 @@ class TaskTracker {
    */
   async clear() {
     this.tasks.clear();
-    this.dependencies.clear();
+    this.config.clear();
     this.dependents.clear();
     this._markDirty();
     
@@ -742,7 +742,7 @@ class TaskTracker {
       }
       
       visited.add(currentId);
-      const deps = this.dependencies.get(currentId);
+      const deps = this.config.get(currentId);
       if (deps) {
         stack.push(...Array.from(deps));
       }

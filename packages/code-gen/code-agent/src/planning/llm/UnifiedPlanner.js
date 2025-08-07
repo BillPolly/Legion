@@ -6,7 +6,7 @@
  */
 
 import { GenericPlanner } from '@legion/llm-planner';
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 
 // Planning domain configurations
 import { RequirementAnalyzerConfig } from './configs/RequirementAnalyzerConfig.js';
@@ -54,7 +54,7 @@ class UnifiedPlanner {
         await this.resourceManager.initialize();
         
         // Get LLM client from ResourceManager
-        this.llmClient = this.resourceManager.get('llm-client');
+        this.llmClient = this.resourceManager.llm-client;
         if (!this.llmClient) {
           throw new Error('LLM client not available from ResourceManager');
         }

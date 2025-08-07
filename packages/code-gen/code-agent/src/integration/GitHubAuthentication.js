@@ -22,7 +22,7 @@ class GitHubAuthentication {
   async initialize() {
     // Get token from Resource Manager
     try {
-      this.token = this.resourceManager.get('GITHUB_PAT');
+      this.token = this.resourceManager.GITHUB_PAT;
     } catch (error) {
       if (error.message.includes('not found')) {
         throw new Error('GitHub PAT not found in environment variables');

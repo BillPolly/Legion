@@ -10,7 +10,7 @@ import { ExecutionStatusTool } from './ExecutionStatusTool.js';
 import { StepExecutorTool } from './StepExecutorTool.js';
 import { DebugExecutorTool } from './DebugExecutorTool.js';
 import { PlanExecutor, ExecutionContext } from '@legion/plan-executor';
-import { ModuleLoader } from '@legion/module-loader';
+import { ModuleLoader } from '@legion/tool-system';
 
 export class PlanExecutorToolsModule {
   static dependencies = ['resourceManager', 'moduleFactory'];

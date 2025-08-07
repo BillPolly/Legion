@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
-import { ResourceManager, ModuleFactory } from '@legion/module-loader';
+import { ResourceManager, ModuleFactory } from '@legion/tool-system';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';

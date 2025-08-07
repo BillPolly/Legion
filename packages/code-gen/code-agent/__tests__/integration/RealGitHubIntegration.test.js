@@ -16,7 +16,7 @@
 
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
 import { EnhancedCodeAgent } from '../../src/agent/EnhancedCodeAgent.js';
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import { promises as fs } from 'fs';
 import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
@@ -40,7 +40,7 @@ describe('Real GitHub Integration Test', () => {
     // Try to get GitHub PAT from ResourceManager (it uses .env)
     let githubPat;
     try {
-      githubPat = resourceManager.get('GITHUB_PAT');
+      githubPat = resourceManager.GITHUB_PAT;
     } catch (error) {
       // If not in ResourceManager, check if we have it in environment
       githubPat = process.env.GITHUB_PAT;
@@ -56,12 +56,12 @@ describe('Real GitHub Integration Test', () => {
     
     // Also try to get LLM API keys
     try {
-      const openaiKey = resourceManager.get('OPENAI_API_KEY');
+      const openaiKey = resourceManager.OPENAI_API_KEY;
       if (openaiKey) process.env.OPENAI_API_KEY = openaiKey;
     } catch {}
     
     try {
-      const anthropicKey = resourceManager.get('ANTHROPIC_API_KEY');
+      const anthropicKey = resourceManager.ANTHROPIC_API_KEY;
       if (anthropicKey) process.env.ANTHROPIC_API_KEY = anthropicKey;
     } catch {}
     

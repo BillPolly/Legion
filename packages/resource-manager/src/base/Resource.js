@@ -20,7 +20,7 @@ class Resource {
 
     this.name = name;
     this.config = config;
-    this.dependencies = dependencies;
+    this.config = dependencies;
     this.status = 'stopped';
     this.lastHealthCheck = null;
     this.metadata = {
@@ -123,8 +123,8 @@ class Resource {
   resolveTemplateString(template) {
     return template.replace(/\$\{([^}]+)\}/g, (match, varName) => {
       // Check dependencies first
-      if (this.dependencies[varName] !== undefined) {
-        return this.dependencies[varName];
+      if (this.config[varName] !== undefined) {
+        return this.config[varName];
       }
       
       // Check environment variables with env. prefix

@@ -1,4 +1,4 @@
-import { Module } from '@legion/module-loader';
+import { Module } from '@legion/tool-system';
 import { OpenAIVoiceProvider } from './providers/OpenAIVoiceProvider.js';
 import { TranscribeAudioTool } from './tools/TranscribeAudioTool.js';
 import { GenerateVoiceTool } from './tools/GenerateVoiceTool.js';
@@ -33,7 +33,7 @@ export class VoiceModule extends Module {
    */
   static async create(resourceManager) {
     // Get OpenAI API key from ResourceManager
-    const apiKey = resourceManager.get('env.OPENAI_API_KEY');
+    const apiKey = resourceManager.env.OPENAI_API_KEY;
     if (!apiKey) {
       throw new Error('OPENAI_API_KEY environment variable is required for voice module');
     }

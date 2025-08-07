@@ -14,7 +14,6 @@ export { ResourceManager } from './ResourceManager.js';
 
 // Module loading system
 export { ModuleLoader } from './ModuleLoader.js';
-export { default as ModuleLoader } from './ModuleLoader.js';
 export { ModuleFactory } from './ModuleFactory.js';
 
 // Compatibility exports for migration from module-loader

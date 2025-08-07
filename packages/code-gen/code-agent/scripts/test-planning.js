@@ -4,7 +4,7 @@
  * Test CodeAgent planning with real LLM
  */
 
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import { CodeAgent } from '../src/agent/CodeAgent.js';
 import { LLMClient } from '@legion/llm';
 
@@ -14,7 +14,7 @@ async function test() {
   
   // Register LLM factory
   resourceManager.registerFactory('llmClient', async (config, rm) => {
-    const apiKey = rm.get('env.ANTHROPIC_API_KEY');
+    const apiKey = rm.env.ANTHROPIC_API_KEY;
     if (!apiKey) throw new Error('ANTHROPIC_API_KEY not found');
     
     return new LLMClient({

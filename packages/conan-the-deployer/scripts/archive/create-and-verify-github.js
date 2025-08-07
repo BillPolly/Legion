@@ -17,9 +17,9 @@ const resourceManager = new ResourceManager();
 await resourceManager.initialize();
 
 // Register GitHub resources
-resourceManager.register('GITHUB_PAT', resourceManager.get('env.GITHUB_PAT'));
-resourceManager.register('GITHUB_ORG', resourceManager.get('env.GITHUB_ORG') || 'Bill234');
-resourceManager.register('GITHUB_USER', resourceManager.get('env.GITHUB_USER') || 'Bill234');
+resourceManager.register('GITHUB_PAT', resourceManager.env.GITHUB_PAT);
+resourceManager.register('GITHUB_ORG', resourceManager.env.GITHUB_ORG || 'Bill234');
+resourceManager.register('GITHUB_USER', resourceManager.env.GITHUB_USER || 'Bill234');
 
 // Create module using ModuleFactory
 const moduleFactory = new ModuleFactory(resourceManager);
@@ -29,7 +29,7 @@ const githubModule = moduleFactory.createModule(GitHubModule);
 const tools = githubModule.getTools();
 const githubTool = tools.find(tool => tool.name === 'github');
 
-const GITHUB_PAT = resourceManager.get('env.GITHUB_PAT');
+const GITHUB_PAT = resourceManager.env.GITHUB_PAT;
 const repoName = 'test-express-railway';
 const workDir = path.join(__dirname, 'github-test-output');
 

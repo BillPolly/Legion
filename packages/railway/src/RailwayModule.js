@@ -1,4 +1,4 @@
-import { Module } from '@legion/module-loader';
+import { Module } from '@legion/tool-system';
 import RailwayDeployTool from './tools/RailwayDeployTool.js';
 import RailwayStatusTool from './tools/RailwayStatusTool.js';
 import RailwayLogsTool from './tools/RailwayLogsTool.js';
@@ -13,7 +13,7 @@ class RailwayModule extends Module {
     this.name = 'railway';
     this.displayName = 'Railway Deployment Module';
     this.description = 'Deploy and manage applications on Railway cloud platform';
-    this.dependencies = dependencies;
+    this.config = dependencies;
     this.provider = dependencies.railwayProvider;
     this.resourceManager = dependencies.resourceManager;
   }
@@ -23,9 +23,9 @@ class RailwayModule extends Module {
    */
   static async create(resourceManager) {
     // Get Railway API key from environment
-    const apiKey = resourceManager.get('env.RAILWAY_API_KEY') || 
-                   resourceManager.get('env.RAILWAY_API_TOKEN') ||
-                   resourceManager.get('env.RAILWAY');
+    const apiKey = resourceManager.env.RAILWAY_API_KEY || 
+                   resourceManager.env.RAILWAY_API_TOKEN ||
+                   resourceManager.env.RAILWAY;
     
     if (!apiKey) {
       throw new Error('Railway API key not found. Set RAILWAY_API_KEY, RAILWAY_API_TOKEN, or RAILWAY environment variable.');

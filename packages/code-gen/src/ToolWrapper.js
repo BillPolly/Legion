@@ -5,7 +5,7 @@
  * to work with Legion's invoke/ToolResult pattern.
  */
 
-import { Tool as LegionTool, ToolResult } from '@legion/module-loader';
+import { Tool as LegionTool, ToolResult } from '@legion/tool-system';
 
 export class ToolWrapper extends LegionTool {
   constructor(wrappedTool) {

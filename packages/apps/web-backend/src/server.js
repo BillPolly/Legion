@@ -5,7 +5,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { WebSocketHandler } from './websocket-handler.js';
-import { ResourceManager, ModuleFactory } from '@legion/module-loader';
+import { ResourceManager, ModuleFactory } from '@legion/tool-system';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -128,12 +128,12 @@ class ChatServer {
         this.resourceManager.register('permissions', 0o755);
         
         // Register GitHub resources (get from env if available)
-        this.resourceManager.register('GITHUB_PAT', this.resourceManager.has('env.GITHUB_PAT') ? this.resourceManager.get('env.GITHUB_PAT') : '');
-        this.resourceManager.register('GITHUB_ORG', this.resourceManager.has('env.GITHUB_ORG') ? this.resourceManager.get('env.GITHUB_ORG') : '');
-        this.resourceManager.register('GITHUB_USER', this.resourceManager.has('env.GITHUB_USER') ? this.resourceManager.get('env.GITHUB_USER') : '');
+        this.resourceManager.register('GITHUB_PAT', this.resourceManager.has('env.GITHUB_PAT') ? this.resourceManager.env.GITHUB_PAT : '');
+        this.resourceManager.register('GITHUB_ORG', this.resourceManager.has('env.GITHUB_ORG') ? this.resourceManager.env.GITHUB_ORG : '');
+        this.resourceManager.register('GITHUB_USER', this.resourceManager.has('env.GITHUB_USER') ? this.resourceManager.env.GITHUB_USER : '');
         
         // Update port from env if available
-        this.port = this.resourceManager.has('env.PORT') ? this.resourceManager.get('env.PORT') : 3000;
+        this.port = this.resourceManager.has('env.PORT') ? this.resourceManager.env.PORT : 3000;
     }
     
     /**

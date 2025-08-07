@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterEach, beforeEach } from '@jest/globals';
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import GitIntegrationManager from '../../../src/integration/GitIntegrationManager.js';
 import GitConfigValidator from '../../../src/config/GitConfigValidator.js';
 import { promises as fs } from 'fs';
@@ -22,13 +22,13 @@ describe('GitIntegrationManager Base Structure', () => {
     
     // Register GitHub environment variables
     if (resourceManager.has('env.GITHUB_PAT')) {
-      resourceManager.register('GITHUB_PAT', resourceManager.get('env.GITHUB_PAT'));
+      resourceManager.register('GITHUB_PAT', resourceManager.env.GITHUB_PAT);
     }
     if (resourceManager.has('env.GITHUB_AGENT_ORG')) {
-      resourceManager.register('GITHUB_AGENT_ORG', resourceManager.get('env.GITHUB_AGENT_ORG'));
+      resourceManager.register('GITHUB_AGENT_ORG', resourceManager.env.GITHUB_AGENT_ORG);
     }
     if (resourceManager.has('env.GITHUB_USER')) {
-      resourceManager.register('GITHUB_USER', resourceManager.get('env.GITHUB_USER'));
+      resourceManager.register('GITHUB_USER', resourceManager.env.GITHUB_USER);
     }
     
     // Register a mock LLM client for CommitOrchestrator

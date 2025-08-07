@@ -142,8 +142,8 @@ export class JsonModuleLoader {
     return this.createFromDefinition(definition);
   }
 
-  createFromDefinition(definition) {
-    const { Module } = require('./compatibility.js');
+  async createFromDefinition(definition) {
+    const { Module } = await import('./compatibility.js');
     
     class JsonModule extends Module {
       constructor() {

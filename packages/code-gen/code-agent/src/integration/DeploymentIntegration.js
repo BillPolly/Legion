@@ -415,8 +415,8 @@ class DeploymentIntegration {
 
     // Check resource availability
     if (requirements.provider === 'railway') {
-      const hasApiKey = await this.resourceManager.get('RAILWAY_API_TOKEN') || 
-                       await this.resourceManager.get('RAILWAY_API_KEY');
+      const hasApiKey = await this.resourceManager.RAILWAY_API_TOKEN || 
+                       await this.resourceManager.RAILWAY_API_KEY;
       if (!hasApiKey) {
         errors.push('Railway API key not found in environment');
       }

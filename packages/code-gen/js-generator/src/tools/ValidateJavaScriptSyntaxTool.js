@@ -2,7 +2,7 @@
  * ValidateJavaScriptSyntaxTool - Validate JavaScript code syntax
  */
 
-import { Tool } from '@legion/module-loader';
+import { Tool } from '@legion/tool-system';
 import { z } from 'zod';
 
 export class ValidateJavaScriptSyntaxTool extends Tool {

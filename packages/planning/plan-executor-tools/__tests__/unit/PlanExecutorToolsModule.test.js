@@ -3,7 +3,7 @@
  */
 
 import { PlanExecutorToolsModule } from '../../src/PlanExecutorToolsModule.js';
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 
 describe('PlanExecutorToolsModule', () => {
   let resourceManager;

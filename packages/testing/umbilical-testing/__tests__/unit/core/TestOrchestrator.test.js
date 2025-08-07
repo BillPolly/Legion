@@ -23,8 +23,8 @@ describe('TestOrchestrator', () => {
         setState: function(key, value) { this.state.set(key, value); },
         getState: function(key) { return this.state.get(key); },
         emit: function(event, payload) {
-          if (this.dependencies.eventSystem) {
-            this.dependencies.eventSystem.dispatchEvent(event, payload);
+          if (this.config.eventSystem) {
+            this.config.eventSystem.dispatchEvent(event, payload);
           }
         },
         created: true

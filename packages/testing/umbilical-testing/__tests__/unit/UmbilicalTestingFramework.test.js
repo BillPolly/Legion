@@ -35,19 +35,19 @@ describe('UmbilicalTestingFramework', () => {
         state: new Map([['value', ''], ['count', 0]]),
         setState: function(key, value) { 
           this.state.set(key, value);
-          if (this.dependencies.eventSystem) {
-            this.dependencies.eventSystem.dispatchEvent('stateChange', { property: key, value });
+          if (this.config.eventSystem) {
+            this.config.eventSystem.dispatchEvent('stateChange', { property: key, value });
           }
         },
         getState: function(key) { return this.state.get(key); },
         emit: function(event, payload) {
-          if (this.dependencies.eventSystem) {
-            this.dependencies.eventSystem.dispatchEvent(event, payload);
+          if (this.config.eventSystem) {
+            this.config.eventSystem.dispatchEvent(event, payload);
           }
         },
         render: function() {
-          if (this.dependencies.dom) {
-            const element = this.dependencies.dom.createElement('div');
+          if (this.config.dom) {
+            const element = this.config.dom.createElement('div');
             element.innerHTML = `<input type="text" value="${this.getState('value')}"><button>Submit</button>`;
             return element;
           }

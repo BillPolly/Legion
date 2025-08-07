@@ -5,7 +5,7 @@
  * that automatically include required tools and domain-specific context prompts.
  */
 
-import { Module } from '@legion/module-loader';
+import { Module } from '@legion/tool-system';
 import { ProfilePlannerTool } from './tools/ProfilePlannerTool.js';
 import { ProfileTool } from './tools/ProfileTool.js';
 import { ProfileManager } from './ProfileManager.js';
@@ -14,7 +14,7 @@ export class ProfilePlannerModule extends Module {
   constructor(dependencies = {}) {
     super(); // Base Module constructor doesn't take dependencies
     this.name = 'ProfilePlannerModule';
-    this.dependencies = dependencies; // Store dependencies ourselves
+    this.config = dependencies; // Store dependencies ourselves
     this.description = 'Profile-based planning for simplified domain-specific task planning';
     this.initialized = false;
   }
@@ -41,11 +41,11 @@ export class ProfilePlannerModule extends Module {
     if (this.initialized) return;
     
     // Initialize profile manager
-    this.profileManager = new ProfileManager(this.dependencies.resourceManager);
+    this.profileManager = new ProfileManager(this.config.resourceManager);
     await this.profileManager.initialize();
     
     // Initialize the meta tool (for listing profiles, etc.)
-    this.profilePlannerTool = new ProfilePlannerTool(this.dependencies);
+    this.profilePlannerTool = new ProfilePlannerTool(this.config);
     await this.profilePlannerTool.initialize();
     
     // Create a tool for each profile
@@ -54,7 +54,7 @@ export class ProfilePlannerModule extends Module {
     
     for (const profileInfo of profiles) {
       const profile = this.profileManager.getProfile(profileInfo.name);
-      const profileTool = new ProfileTool(profile, this.profileManager, this.dependencies.resourceManager);
+      const profileTool = new ProfileTool(profile, this.profileManager, this.config.resourceManager);
       this.profileTools.push(profileTool);
       console.log(`Created tool: ${profile.toolName} for ${profile.name} profile`);
     }

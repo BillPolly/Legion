@@ -15,7 +15,7 @@ const __dirname = path.dirname(__filename);
 const resourceManager = new ResourceManager();
 await resourceManager.initialize();
 
-const GITHUB_PAT = resourceManager.get('env.GITHUB_PAT');
+const GITHUB_PAT = resourceManager.env.GITHUB_PAT;
 const repoName = 'test-express-railway';
 const orgName = 'AgentResults';
 const workDir = path.join(__dirname, 'agentresults-output');

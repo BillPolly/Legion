@@ -4,7 +4,7 @@
  * Each profile becomes its own tool with a simplified interface
  */
 
-import { Tool, ToolResult } from '@legion/module-loader';
+import { Tool, ToolResult } from '@legion/tool-system';
 import { GenericPlanner } from '@legion/llm-planner';
 import { LLMClient } from '@legion/llm';
 
@@ -148,7 +148,7 @@ export class ProfileTool extends Tool {
   async _createLLMClient() {
     // Try to get existing LLM client from resource manager
     try {
-      const existingClient = this.resourceManager.get('llmClient');
+      const existingClient = this.resourceManager.llmClient;
       if (existingClient) {
         return existingClient;
       }
@@ -157,7 +157,7 @@ export class ProfileTool extends Tool {
     }
 
     // Create new LLM client
-    const anthropicKey = this.resourceManager.get('env.ANTHROPIC_API_KEY');
+    const anthropicKey = this.resourceManager.env.ANTHROPIC_API_KEY;
     if (!anthropicKey) {
       throw new Error('ANTHROPIC_API_KEY not found in environment variables. Please set it in your .env file.');
     }
@@ -182,7 +182,7 @@ export class ProfileTool extends Tool {
   async _getOrCreateModuleLoader() {
     // Try to get existing ModuleLoader from resource manager
     try {
-      const existingLoader = this.resourceManager.get('moduleLoader');
+      const existingLoader = this.resourceManager.moduleLoader;
       if (existingLoader) {
         return existingLoader;
       }

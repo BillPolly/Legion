@@ -4,7 +4,7 @@
  * Debug script to test GenericPlanner with simple actions
  */
 
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import { LLMClientManager } from '../src/integration/LLMClientManager.js';
 import { GenericPlanner } from '../../llm-planner/src/GenericPlanner.js';
 
@@ -17,7 +17,7 @@ async function debugSimpleGenericPlanner() {
     await resourceManager.initialize();
     
     // Get API key
-    const apiKey = resourceManager.get('env.ANTHROPIC_API_KEY');
+    const apiKey = resourceManager.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       throw new Error('ANTHROPIC_API_KEY not found in environment');
     }

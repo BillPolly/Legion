@@ -5,7 +5,7 @@
  * It uses PlanInspectorTool internally for comprehensive validation.
  */
 
-import { Tool } from '@legion/module-loader';
+import { Tool } from '@legion/tool-system';
 import { z } from 'zod';
 import { PlanInspectorTool } from './PlanInspectorTool.js';
 

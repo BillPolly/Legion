@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@legion/module-loader';
+import { Tool, ToolResult } from '@legion/tool-system';
 import MonitoringSystem from '../MonitoringSystem.js';
 import DeploymentManager from '../DeploymentManager.js';
 import ResourceManager from '../core/ResourceManager.js';
@@ -457,8 +457,8 @@ class MonitorDeploymentTool extends Tool {
       const resourceManager = new ResourceManager();
       await resourceManager.initialize();
       
-      let monitoringSystem = resourceManager.get('monitoring-system');
-      let deploymentManager = resourceManager.get('deployment-manager');
+      let monitoringSystem = resourceManager.monitoring-system;
+      let deploymentManager = resourceManager.deployment-manager;
       
       if (!monitoringSystem) {
         monitoringSystem = new MonitoringSystem(resourceManager);

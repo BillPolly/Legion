@@ -5,7 +5,7 @@
  * intelligent analytics, TDD support, and test history tracking.
  */
 
-import { Module, Tool, ToolResult } from '@legion/module-loader';
+import { Module, Tool, ToolResult } from '@legion/tool-system';
 import { wrapTool } from '../../src/ToolWrapper.js';
 import { JestAgentWrapper } from './core/JestAgentWrapper.js';
 import { AgentTDDHelper } from './agents/AgentTDDHelper.js';
@@ -343,7 +343,7 @@ export class JesterModule extends Module {
   constructor(dependencies = {}) {
     super();
     this.name = 'JesterModule';
-    this.dependencies = dependencies;
+    this.config = dependencies;
     this.description = 'Advanced Jest testing with intelligent analytics and TDD support';
     this.version = '1.0.0';
     this.jestWrapper = null;

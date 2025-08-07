@@ -2,7 +2,7 @@
  * DebugExecutorTool - Interactive debugging tool with breakpoint and inspection capabilities
  */
 
-import { Tool } from '@legion/module-loader';
+import { Tool } from '@legion/tool-system';
 import { z } from 'zod';
 
 export class DebugExecutorTool extends Tool {

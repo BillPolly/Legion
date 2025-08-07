@@ -127,7 +127,7 @@ export const BuggySearchComponent = {
       
       // Render method showing how bugs affect output
       render: function() {
-        const dom = this.dependencies.dom;
+        const dom = this.config.dom;
         if (!dom) return null;
         
         const container = dom.createElement('div');

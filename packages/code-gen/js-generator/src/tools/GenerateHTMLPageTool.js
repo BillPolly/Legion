@@ -4,7 +4,7 @@
  * Similar to GenerateJavaScriptModuleTool but for HTML pages
  */
 
-import { Tool } from '@legion/module-loader';
+import { Tool } from '@legion/tool-system';
 import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';

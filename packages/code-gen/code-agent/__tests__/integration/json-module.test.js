@@ -6,7 +6,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import { ModuleFactory } from '@legion/module-loader';
+import { ModuleFactory } from '@legion/tool-system';
 import ResourceManager from '@legion/module-loader/src/resources/ResourceManager.js';
 import path from 'path';
 import fs from 'fs/promises';

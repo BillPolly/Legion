@@ -4,7 +4,7 @@
  * Simple Railway deployment test using only existing tools
  */
 
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import { CodeAgent } from '../src/index.js';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -18,8 +18,8 @@ async function main() {
   await resourceManager.initialize();
   
   // Check credentials
-  const githubToken = resourceManager.get('env.GITHUB_PAT');
-  const railwayToken = resourceManager.get('env.RAILWAY_API_TOKEN');
+  const githubToken = resourceManager.env.GITHUB_PAT;
+  const railwayToken = resourceManager.env.RAILWAY_API_TOKEN;
   
   if (!githubToken || !railwayToken) {
     console.error('❌ Missing GITHUB_PAT or RAILWAY_API_TOKEN in .env file');

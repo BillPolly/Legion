@@ -68,7 +68,7 @@
   "author": "Legion Team",
   "license": "MIT",
   "dependencies": {
-    "@legion/module-loader": "*"
+    "@legion/tool-system": "^1.0.0"
   },
   "peerDependencies": {
     "@jest/globals": "^29.7.0",

@@ -1,4 +1,4 @@
-import { Tool } from '@legion/module-loader';
+import { Tool } from '@legion/tool-system';
 import puppeteer from 'puppeteer';
 import { z } from 'zod';
 

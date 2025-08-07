@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@legion/module-loader';
+import { Tool, ToolResult } from '@legion/tool-system';
 import DeploymentManager from '../DeploymentManager.js';
 import ResourceManager from '../core/ResourceManager.js';
 
@@ -429,7 +429,7 @@ class ListDeploymentsTool extends Tool {
       const resourceManager = new ResourceManager();
       await resourceManager.initialize();
       
-      let deploymentManager = resourceManager.get('deployment-manager');
+      let deploymentManager = resourceManager.deployment-manager;
       
       if (!deploymentManager) {
         deploymentManager = new DeploymentManager(resourceManager);

@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import GitHubOperations from '../../src/integration/GitHubOperations.js';
 import GitHubAuthentication from '../../src/integration/GitHubAuthentication.js';
 import GitConfigValidator from '../../src/config/GitConfigValidator.js';
@@ -21,10 +21,10 @@ describe('Live GitHub Repository Operations', () => {
     
     // Register GitHub environment variables
     if (resourceManager.has('env.GITHUB_PAT')) {
-      resourceManager.register('GITHUB_PAT', resourceManager.get('env.GITHUB_PAT'));
+      resourceManager.register('GITHUB_PAT', resourceManager.env.GITHUB_PAT);
     }
     if (resourceManager.has('env.GITHUB_AGENT_ORG')) {
-      resourceManager.register('GITHUB_AGENT_ORG', resourceManager.get('env.GITHUB_AGENT_ORG'));
+      resourceManager.register('GITHUB_AGENT_ORG', resourceManager.env.GITHUB_AGENT_ORG);
     }
     
     // Initialize GitHub authentication

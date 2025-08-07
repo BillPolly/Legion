@@ -8,7 +8,7 @@
  */
 
 import { jest } from '@jest/globals';
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import AIGenerationModule from '../../AIGenerationModule.js';
 import fs from 'fs/promises';
 import path from 'path';
@@ -32,7 +32,7 @@ describe('AIGenerationModule - Live Integration Tests', () => {
     
     // Check if we have the API key
     try {
-      const apiKey = resourceManager.get('env.OPENAI_API_KEY');
+      const apiKey = resourceManager.env.OPENAI_API_KEY;
       if (!apiKey) {
         console.log('⚠️  Skipping live tests: OPENAI_API_KEY not found in .env file');
         return;
@@ -52,7 +52,7 @@ describe('AIGenerationModule - Live Integration Tests', () => {
   beforeEach(async () => {
     // Skip if no API key
     try {
-      resourceManager.get('env.OPENAI_API_KEY');
+      resourceManager.env.OPENAI_API_KEY;
     } catch {
       return;
     }
@@ -74,7 +74,7 @@ describe('AIGenerationModule - Live Integration Tests', () => {
     test('should create module with real API key', async () => {
       // Skip if no API key
       try {
-        resourceManager.get('env.OPENAI_API_KEY');
+        resourceManager.env.OPENAI_API_KEY;
       } catch {
         console.log('Skipping: No API key');
         return;
@@ -90,7 +90,7 @@ describe('AIGenerationModule - Live Integration Tests', () => {
     test('should generate a simple image with base64 response', async () => {
       // Skip if no API key
       try {
-        resourceManager.get('env.OPENAI_API_KEY');
+        resourceManager.env.OPENAI_API_KEY;
       } catch {
         console.log('Skipping: No API key');
         return;
@@ -130,7 +130,7 @@ describe('AIGenerationModule - Live Integration Tests', () => {
     test('should generate an artistic image with natural style', async () => {
       // Skip if no API key
       try {
-        resourceManager.get('env.OPENAI_API_KEY');
+        resourceManager.env.OPENAI_API_KEY;
       } catch {
         console.log('Skipping: No API key');
         return;
@@ -161,7 +161,7 @@ describe('AIGenerationModule - Live Integration Tests', () => {
     test('should generate image with URL response format', async () => {
       // Skip if no API key
       try {
-        resourceManager.get('env.OPENAI_API_KEY');
+        resourceManager.env.OPENAI_API_KEY;
       } catch {
         console.log('Skipping: No API key');
         return;
@@ -187,7 +187,7 @@ describe('AIGenerationModule - Live Integration Tests', () => {
     test('should handle wide aspect ratio image', async () => {
       // Skip if no API key
       try {
-        resourceManager.get('env.OPENAI_API_KEY');
+        resourceManager.env.OPENAI_API_KEY;
       } catch {
         console.log('Skipping: No API key');
         return;
@@ -216,7 +216,7 @@ describe('AIGenerationModule - Live Integration Tests', () => {
     test('should handle tall aspect ratio image', async () => {
       // Skip if no API key
       try {
-        resourceManager.get('env.OPENAI_API_KEY');
+        resourceManager.env.OPENAI_API_KEY;
       } catch {
         console.log('Skipping: No API key');
         return;
@@ -247,7 +247,7 @@ describe('AIGenerationModule - Live Integration Tests', () => {
     test('should handle invalid prompt gracefully', async () => {
       // Skip if no API key
       try {
-        resourceManager.get('env.OPENAI_API_KEY');
+        resourceManager.env.OPENAI_API_KEY;
       } catch {
         console.log('Skipping: No API key');
         return;
@@ -268,7 +268,7 @@ describe('AIGenerationModule - Live Integration Tests', () => {
     test('should handle invalid size parameter', async () => {
       // Skip if no API key
       try {
-        resourceManager.get('env.OPENAI_API_KEY');
+        resourceManager.env.OPENAI_API_KEY;
       } catch {
         console.log('Skipping: No API key');
         return;
@@ -293,7 +293,7 @@ describe('AIGenerationModule - Live Integration Tests', () => {
     test('should return artifact-compatible structure', async () => {
       // Skip if no API key
       try {
-        resourceManager.get('env.OPENAI_API_KEY');
+        resourceManager.env.OPENAI_API_KEY;
       } catch {
         console.log('Skipping: No API key');
         return;

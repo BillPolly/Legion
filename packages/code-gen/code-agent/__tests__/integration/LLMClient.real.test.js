@@ -4,7 +4,7 @@
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import { LLMClientManager } from '../../src/integration/LLMClientManager.js';
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 
 describe('LLMClient Real Integration Tests', () => {
   let resourceManager;
@@ -13,7 +13,7 @@ describe('LLMClient Real Integration Tests', () => {
   beforeAll(async () => {
     resourceManager = new ResourceManager();
     await resourceManager.initialize();
-    apiKey = resourceManager.get('env.ANTHROPIC_API_KEY');
+    apiKey = resourceManager.env.ANTHROPIC_API_KEY;
     
     if (!apiKey) {
       throw new Error('ANTHROPIC_API_KEY not found in ResourceManager');

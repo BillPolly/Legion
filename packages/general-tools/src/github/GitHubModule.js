@@ -1,4 +1,4 @@
-import { Module } from '@legion/module-loader';
+import { Module } from '@legion/tool-system';
 import GitHub from './index.js';
 import PolyRepoManager from './PolyRepoManager.js';
 

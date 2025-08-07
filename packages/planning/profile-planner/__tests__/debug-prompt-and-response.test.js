@@ -4,7 +4,7 @@
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import { ProfilePlannerModule } from '../src/ProfilePlannerModule.js';
-import { ResourceManager, ModuleLoader } from '@legion/module-loader';
+import { ResourceManager, ModuleLoader } from '@legion/tool-system';
 
 describe('DEBUG Prompt and Response', () => {
   let profilePlannerModule;
@@ -46,7 +46,7 @@ describe('DEBUG Prompt and Response', () => {
     
     // Create LLM client manually 
     const resourceManager = profilePlannerModule.profileManager.resourceManager;
-    const anthropicKey = resourceManager.get('env.ANTHROPIC_API_KEY');
+    const anthropicKey = resourceManager.env.ANTHROPIC_API_KEY;
     const { LLMClient } = await import('@legion/llm');
     const llmClient = new LLMClient({
       provider: 'anthropic',
@@ -58,7 +58,7 @@ describe('DEBUG Prompt and Response', () => {
     const { GenericPlanner } = await import('@legion/llm-planner');
     const planner = new GenericPlanner({
       llmClient: llmClient,
-      moduleLoader: resourceManager.get('moduleLoader'),
+      moduleLoader: resourceManager.moduleLoader,
       maxSteps: planningContext.maxSteps
     });
     

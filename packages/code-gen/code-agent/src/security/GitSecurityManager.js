@@ -107,7 +107,7 @@ class GitSecurityManager extends EventEmitter {
    * Validate GitHub token
    */
   async validateGitHubToken() {
-    const token = this.resourceManager.get('GITHUB_PAT');
+    const token = this.resourceManager.GITHUB_PAT;
     
     if (!token) {
       throw new Error('GitHub token not found in resource manager');
@@ -229,7 +229,7 @@ class GitSecurityManager extends EventEmitter {
       await this.validateGitHubToken();
     }
     
-    const organization = this.resourceManager.get('GITHUB_AGENT_ORG') || 'AgentResults';
+    const organization = this.resourceManager.GITHUB_AGENT_ORG || 'AgentResults';
     
     try {
       const permissions = await this.getOrganizationPermissions(organization);
@@ -261,7 +261,7 @@ class GitSecurityManager extends EventEmitter {
    */
   async getOrganizationPermissions(organization) {
     const fetch = (await import('node-fetch')).default;
-    const token = this.resourceManager.get('GITHUB_PAT');
+    const token = this.resourceManager.GITHUB_PAT;
     
     const response = await fetch(`https://api.github.com/orgs/${organization}/members/${this.tokenInfo.user}`, {
       headers: {

@@ -6,7 +6,7 @@
  */
 
 import { describe, test, expect, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import { ProfilePlannerModule } from '../../src/ProfilePlannerModule.js';
 
 describe('ProfilePlannerModule Live LLM Tests', () => {
@@ -20,7 +20,7 @@ describe('ProfilePlannerModule Live LLM Tests', () => {
 
     // Verify API key is available - FAIL if not (don't skip!)
     try {
-      const apiKey = resourceManager.get('env.ANTHROPIC_API_KEY');
+      const apiKey = resourceManager.env.ANTHROPIC_API_KEY;
       
       if (!apiKey || apiKey === 'test-key') {
         throw new Error('ANTHROPIC_API_KEY is missing or set to test value. Live tests require real API key in .env file!');

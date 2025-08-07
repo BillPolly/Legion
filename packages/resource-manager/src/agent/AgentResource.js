@@ -66,7 +66,7 @@ class AgentResource extends Resource {
     try {
       // Get LLM module from dependencies
       const llmModuleName = this.config.llm.module;
-      this.llmModule = this.dependencies.serviceModules?.get(llmModuleName);
+      this.llmModule = this.config.serviceModules?.get(llmModuleName);
       
       if (!this.llmModule) {
         throw new Error(`LLM module '${llmModuleName}' not found in dependencies`);
@@ -107,7 +107,7 @@ class AgentResource extends Resource {
     const toolNames = Array.isArray(this.config.tools) ? this.config.tools : [this.config.tools];
     
     for (const toolName of toolNames) {
-      const toolModule = this.dependencies.serviceModules?.get(toolName);
+      const toolModule = this.config.serviceModules?.get(toolName);
       if (toolModule) {
         this.toolModules.set(toolName, toolModule);
       } else {

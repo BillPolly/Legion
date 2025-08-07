@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@legion/module-loader';
+import { Tool, ToolResult } from '@legion/tool-system';
 import puppeteer from 'puppeteer';
 
 class WebPageToMarkdown extends Tool {

@@ -138,7 +138,7 @@ class ProfileManager {
 
     // Load required modules if they're specified
     if (profile.requiredModules && profile.requiredModules.length > 0) {
-      const moduleLoader = this.resourceManager.get('moduleLoader');
+      const moduleLoader = this.resourceManager.moduleLoader;
       if (moduleLoader) {
         console.log(`[ProfileManager] Loading required modules for ${profileName}:`, profile.requiredModules);
         
@@ -378,7 +378,7 @@ class ProfileManager {
    */
   async _loadToolSchemas(toolNames) {
     // Get ModuleLoader from ResourceManager
-    const moduleLoader = this.resourceManager.get('moduleLoader');
+    const moduleLoader = this.resourceManager.moduleLoader;
     if (!moduleLoader) {
       console.warn('ModuleLoader not available - cannot load tool schemas dynamically');
       return [];
@@ -505,7 +505,7 @@ class ProfileManager {
    */
   async _validateAndFixActionTypes(actions) {
     // Get ModuleLoader from ResourceManager
-    const moduleLoader = this.resourceManager.get('moduleLoader');
+    const moduleLoader = this.resourceManager.moduleLoader;
     if (!moduleLoader) {
       console.warn('[ProfileManager] ModuleLoader not available, skipping tool validation');
       return actions;

@@ -3,14 +3,14 @@
  */
 
 import { describe, test, expect } from '@jest/globals';
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 
 describe('ResourceManager Environment Loading', () => {
   test('should load ANTHROPIC_API_KEY from .env file', async () => {
     const resourceManager = new ResourceManager();
     await resourceManager.initialize();
     
-    const apiKey = resourceManager.get('env.ANTHROPIC_API_KEY');
+    const apiKey = resourceManager.env.ANTHROPIC_API_KEY;
     
     expect(apiKey).toBeDefined();
     expect(apiKey).not.toBe('');

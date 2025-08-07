@@ -2,7 +2,7 @@
  * PlanToMarkdownTool - Convert plan JSON to readable markdown documentation
  */
 
-import { Tool } from '@legion/module-loader';
+import { Tool } from '@legion/tool-system';
 import { z } from 'zod';
 
 export class PlanToMarkdownTool extends Tool {

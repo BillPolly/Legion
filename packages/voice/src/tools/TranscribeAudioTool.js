@@ -1,4 +1,4 @@
-import { Tool } from '@legion/module-loader';
+import { Tool } from '@legion/tool-system';
 import { z } from 'zod';
 import fs from 'fs/promises';
 

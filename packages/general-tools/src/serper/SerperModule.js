@@ -1,4 +1,4 @@
-import { Module } from '@legion/module-loader';
+import { Module } from '@legion/tool-system';
 import { Serper } from './Serper.js';
 
 /**
@@ -9,7 +9,7 @@ export default class SerperModule extends Module {
     super();
     this.name = 'SerperModule';
     this.description = 'Google search using Serper API';
-    this.dependencies = dependencies;
+    this.config = dependencies;
   }
 
   /**
@@ -17,7 +17,7 @@ export default class SerperModule extends Module {
    */
   static async create(resourceManager) {
     // Get SERPER API key from environment
-    const serperKey = resourceManager.get('env.SERPER_API_KEY');
+    const serperKey = resourceManager.env.SERPER_API_KEY;
     if (!serperKey) {
       // Create module without API key - tool will fail at runtime
       console.warn('SERPER_API_KEY environment variable not found - tool will require initialization');
@@ -38,8 +38,8 @@ export default class SerperModule extends Module {
     
     // Set API key if available but don't call initialize
     // The tool will check for apiKey when invoke is called
-    if (this.dependencies.SERPER) {
-      this.serperTool.apiKey = this.dependencies.SERPER;
+    if (this.config.SERPER) {
+      this.serperTool.apiKey = this.config.SERPER;
     }
   }
 

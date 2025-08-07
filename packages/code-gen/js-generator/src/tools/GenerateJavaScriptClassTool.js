@@ -5,7 +5,7 @@
  * and JSDoc documentation following modern ES6+ patterns.
  */
 
-import { Tool, ToolResult } from '@legion/module-loader';
+import { Tool, ToolResult } from '@legion/tool-system';
 import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';

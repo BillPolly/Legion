@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@legion/module-loader';
+import { Tool, ToolResult } from '@legion/tool-system';
 import { YoutubeTranscript as YTTranscript } from 'youtube-transcript';
 
 class YoutubeTranscript extends Tool {

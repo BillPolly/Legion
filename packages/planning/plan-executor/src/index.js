@@ -13,7 +13,7 @@
  * @example
  * ```javascript
  * import { PlanExecutor } from '@legion/plan-executor';
- * import { ResourceManager } from '@legion/module-loader';
+ * import { ResourceManager } from '@legion/tool-system';
  * 
  * // Create using async factory pattern
  * const resourceManager = new ResourceManager();

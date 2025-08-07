@@ -375,8 +375,8 @@ export class ActorTestGenerator {
       messageHistory: [],
       
       send: function(actorId, messageType, payload) {
-        if (this.dependencies.actorSpace) {
-          return this.dependencies.actorSpace.sendMessage(actorId, messageType, payload);
+        if (this.config.actorSpace) {
+          return this.config.actorSpace.sendMessage(actorId, messageType, payload);
         }
         throw new Error('No actor space available');
       },
@@ -396,8 +396,8 @@ export class ActorTestGenerator {
       },
       
       registerWithActorSpace: function() {
-        if (this.dependencies.actorSpace) {
-          this.dependencies.actorSpace.registerActor(this.actorId, this);
+        if (this.config.actorSpace) {
+          this.config.actorSpace.registerActor(this.actorId, this);
         }
       },
       

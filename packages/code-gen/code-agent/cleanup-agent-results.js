@@ -9,7 +9,7 @@
  * and includes multiple safety checks.
  */
 
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 import GitIntegrationManager from './src/integration/GitIntegrationManager.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -49,7 +49,7 @@ async function main() {
   // Get GitHub PAT
   let githubPat;
   try {
-    githubPat = resourceManager.get('GITHUB_PAT');
+    githubPat = resourceManager.GITHUB_PAT;
     process.env.GITHUB_PAT = githubPat;
   } catch {
     githubPat = process.env.GITHUB_PAT;

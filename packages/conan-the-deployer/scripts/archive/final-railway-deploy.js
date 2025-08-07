@@ -5,7 +5,7 @@ import { ResourceManager } from '../../../module-loader/src/index.js';
 
 const resourceManager = new ResourceManager();
 await resourceManager.initialize();
-const RAILWAY_API_TOKEN = resourceManager.get('env.RAILWAY_API_TOKEN');
+const RAILWAY_API_TOKEN = resourceManager.env.RAILWAY_API_TOKEN;
 
 const railwayProvider = new RailwayProvider(RAILWAY_API_TOKEN);
 

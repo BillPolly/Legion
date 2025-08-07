@@ -1,4 +1,4 @@
-import { Tool } from '@legion/module-loader';
+import { Tool } from '@legion/tool-system';
 import { z } from 'zod';
 
 const inputSchema = z.object({
@@ -29,7 +29,7 @@ class RailwayDeployTool extends Tool {
       // Get provider from resourceManager or module's provider
       let provider;
       if (this.resourceManager && typeof this.resourceManager.get === 'function') {
-        provider = this.resourceManager.get('railwayProvider');
+        provider = this.resourceManager.railwayProvider;
       }
       
       if (!provider) {

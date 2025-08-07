@@ -426,7 +426,7 @@ class RepositoryManager extends EventEmitter {
       
       // Set default configuration if not present
       if (!this.gitConfig.userName) {
-        const defaultName = this.resourceManager.get('GITHUB_USER') || 'CodeAgent';
+        const defaultName = this.resourceManager.GITHUB_USER || 'CodeAgent';
         await this.configureRepository({ userName: defaultName });
       }
       

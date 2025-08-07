@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '@legion/tool-system';
 
 console.log('🚂 COMPREHENSIVE RAILWAY RESOURCES CHECK\n');
 
@@ -36,8 +36,8 @@ async function checkAllRailwayResources() {
   const resourceManager = new ResourceManager();
   await resourceManager.initialize();
   
-  const apiKey = resourceManager.get('env.RAILWAY_API_TOKEN') || 
-                 resourceManager.get('env.RAILWAY');
+  const apiKey = resourceManager.env.RAILWAY_API_TOKEN || 
+                 resourceManager.env.RAILWAY;
   
   if (!apiKey) {
     console.error('❌ No Railway API key found! Set RAILWAY_API_TOKEN or RAILWAY environment variable.');

@@ -408,7 +408,7 @@ class GitIntegrationManager extends EventEmitter {
       if (this.auditCompliance) {
         this.auditCompliance.recordOperation({
           type: operationType,
-          user: this.resourceManager.get('GITHUB_USER') || 'unknown',
+          user: this.resourceManager.GITHUB_USER || 'unknown',
           timestamp: new Date(),
           details: operationData
         });
@@ -476,7 +476,7 @@ class GitIntegrationManager extends EventEmitter {
     if (this.auditCompliance) {
       this.auditCompliance.recordOperation({
         type: 'phase-start',
-        user: this.resourceManager.get('GITHUB_USER') || 'system',
+        user: this.resourceManager.GITHUB_USER || 'system',
         timestamp: new Date(),
         details: { phase: phaseName, ...metadata }
       });
@@ -499,7 +499,7 @@ class GitIntegrationManager extends EventEmitter {
     if (this.auditCompliance) {
       this.auditCompliance.recordOperation({
         type: 'phase-commit',
-        user: this.resourceManager.get('GITHUB_USER') || 'system',
+        user: this.resourceManager.GITHUB_USER || 'system',
         timestamp: new Date(),
         details: { phase: phaseName, files, message, ...metadata }
       });
@@ -520,7 +520,7 @@ class GitIntegrationManager extends EventEmitter {
     if (this.auditCompliance) {
       this.auditCompliance.recordOperation({
         type: 'phase-complete',
-        user: this.resourceManager.get('GITHUB_USER') || 'system',
+        user: this.resourceManager.GITHUB_USER || 'system',
         timestamp: new Date(),
         details: { phase: phaseName, ...metadata }
       });

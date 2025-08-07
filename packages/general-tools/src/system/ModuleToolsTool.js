@@ -1,4 +1,4 @@
-import { Tool } from '@legion/module-loader';
+import { Tool } from '@legion/tool-system';
 import { z } from 'zod';
 
 export class ModuleToolsTool extends Tool {
@@ -10,11 +10,11 @@ export class ModuleToolsTool extends Tool {
         module: z.string().describe('Name of the module to inspect')
       })
     });
-    this.dependencies = dependencies;
+    this.config = dependencies;
   }
 
   async execute(args) {
-    const moduleLoader = this.dependencies.moduleLoader;
+    const moduleLoader = this.config.moduleLoader;
     if (!moduleLoader) {
       return {
         success: false,
