@@ -4,7 +4,7 @@
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import { ProfilePlannerModule } from '../src/ProfilePlannerModule.js';
-import { ResourceManager, ModuleLoader } from '@legion/tool-system';
+import { ResourceManager, ModuleLoader } from '@legion/tool-core';
 
 describe('DEBUG Prompt and Response', () => {
   let profilePlannerModule;

@@ -3,7 +3,7 @@
  */
 
 import { PlanExecutor } from '../../src/core/PlanExecutor.js';
-import { ResourceManager } from '@legion/tool-system';
+import { ResourceManager } from '@legion/tool-core';
 import { FileModule } from '../../../../general-tools/src/file/FileModule.js';
 import { promises as fs } from 'fs';
 import path from 'path';

@@ -4,7 +4,7 @@
 
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
 import { ProfilePlannerModule } from '../../src/ProfilePlannerModule.js';
-import { ResourceManager, ModuleLoader } from '@legion/tool-system';
+import { ResourceManager, ModuleLoader } from '@legion/tool-core';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { fileURLToPath } from 'url';

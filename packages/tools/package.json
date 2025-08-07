@@ -1,5 +1,5 @@
 {
-  "name": "@legion/tool-system",
+  "name": "@legion/tool-core",
   "version": "1.0.0",
   "description": "Tool wrapper architecture for Legion framework",
   "type": "module",

@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@legion/tool-system';
+import { Tool, ToolResult } from '@legion/tool-core';
 
 /**
  * ResourceTool provides a Tool interface for invoking methods on managed resources

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { ResourceManager, ModuleLoader } from '@legion/tool-system';
+import { ResourceManager, ModuleLoader } from '@legion/tool-core';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises';

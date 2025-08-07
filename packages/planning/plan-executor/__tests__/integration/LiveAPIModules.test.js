@@ -5,7 +5,7 @@
  */
 
 import { PlanExecutor } from '../../src/core/PlanExecutor.js';
-import { ResourceManager } from '@legion/tool-system';
+import { ResourceManager } from '@legion/tool-core';
 
 describe('Live API Modules Integration with New Input/Output System', () => {
   let executor;

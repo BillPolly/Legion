@@ -6,7 +6,7 @@
  */
 
 import { describe, test, expect, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
-import { ResourceManager } from '@legion/tool-system';
+import { ResourceManager } from '@legion/tool-core';
 import { ProfilePlannerModule } from '../../src/ProfilePlannerModule.js';
 
 describe('ProfilePlannerModule Live LLM Tests', () => {

@@ -3,7 +3,7 @@
  */
 
 import { describe, test } from '@jest/globals';
-import { ResourceManager, ModuleLoader } from '@legion/tool-system';
+import { ResourceManager, ModuleLoader } from '@legion/tool-core';
 
 describe('ISOLATED LLM DEBUG', () => {
   test('JUST THE LLM CALL - NOTHING ELSE', async () => {

@@ -1,4 +1,4 @@
-import { Tool } from '@legion/tool-system';
+import { Tool } from '@legion/tool-core';
 import { z } from 'zod';
 
 const inputSchema = z.object({
