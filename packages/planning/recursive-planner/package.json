@@ -27,6 +27,8 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",
+    "@legion/behavior-tree": "^1.0.0",
+    "@legion/tool-architecture": "^1.0.0",
     "axios": "^1.11.0",
     "glob": "^11.0.3",
     "node-fetch": "^3.3.2",

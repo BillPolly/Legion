@@ -7,7 +7,7 @@ import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
 import { BehaviorTreeExecutor } from '../../src/core/BehaviorTreeExecutor.js';
 import { BehaviorTreeTool } from '../../src/integration/BehaviorTreeTool.js';
 import { NodeStatus } from '../../src/core/BehaviorTreeNode.js';
-import { RealDevTools } from '../../tools/dev-tools.js';
+import { RealDevTools } from '../../src/tools/dev-tools.js';
 import fs from 'fs/promises';
 import path from 'path';
 

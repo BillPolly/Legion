@@ -117,11 +117,11 @@ export class BehaviorTreeLoader {
    */
   async registerBehaviorTreeTool(btTool) {
     try {
-      // Use the ModuleProvider from the main tools directory
-      const toolsPath = '../../../tools/src/integration/ToolRegistry.js';
-      const { ModuleProvider } = await import(toolsPath);
-      const provider = new ModuleProvider(btTool.asModuleProvider());
-      await this.toolRegistry.registerProvider(provider);
+      // Register the BT tool directly with the registry
+      // TODO: This should use proper ModuleProvider when available from tool-architecture
+      if (this.toolRegistry && this.toolRegistry.registerTool) {
+        this.toolRegistry.registerTool(btTool.config.name, btTool);
+      }
     } catch (error) {
       throw new Error(`Failed to register BT tool ${btTool.config.name}: ${error.message}`);
     }

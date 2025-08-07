@@ -3,7 +3,7 @@
  * Tests browser automation, screenshots, interactions, and performance testing
  */
 
-import { PuppeteerTools } from '../../tools/puppeteer-tools.js';
+import { PuppeteerTools } from '../../src/tools/puppeteer-tools.js';
 import fs from 'fs/promises';
 import path from 'path';
 

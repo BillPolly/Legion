@@ -4,10 +4,10 @@
  */
 
 import { BehaviorTreeExecutor } from '../../src/core/BehaviorTreeExecutor.js';
-import { ToolRegistry } from '../../tools/ToolRegistry.js';
-import { WebAppTools } from '../../tools/webapp-tools.js';
-import { BuildTools } from '../../tools/build-tools.js';
-import { PuppeteerTools } from '../../tools/puppeteer-tools.js';
+import { ToolRegistry } from '../../src/tools/ToolRegistry.js';
+import { WebAppTools } from '../../src/tools/webapp-tools.js';
+import { BuildTools } from '../../src/tools/build-tools.js';
+import { PuppeteerTools } from '../../src/tools/puppeteer-tools.js';
 import fs from 'fs/promises';
 import path from 'path';
 
