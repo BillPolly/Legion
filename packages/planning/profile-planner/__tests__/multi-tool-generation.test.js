@@ -3,7 +3,7 @@
  */
 
 import { jest } from '@jest/globals';
-import { ResourceManager } from '@legion/tool-core';
+import { ResourceManager } from '@legion/tools';
 import { ProfilePlannerModule } from '../src/ProfilePlannerModule.js';
 
 describe('ProfilePlannerModule Multi-Tool Generation', () => {

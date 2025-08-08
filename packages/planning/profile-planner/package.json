@@ -24,7 +24,7 @@
     "@legion/unified-planner": "^0.0.1",
     "@legion/bt-validator": "^0.0.1",
     "zod": "^3.22.4",
-    "@legion/tool-core": "^1.0.0"
+    "@legion/tools": "^1.0.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

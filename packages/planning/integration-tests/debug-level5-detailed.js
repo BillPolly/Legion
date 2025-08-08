@@ -4,7 +4,7 @@
  * Debug Level 5 with detailed BT inspection
  */
 
-import { ResourceManager } from '@legion/tool-core';
+import { ResourceManager } from '@legion/tools';
 import { ProfilePlannerModule } from '@legion/profile-planner';
 import { BehaviorTreeExecutor } from '@legion/actor-BT';
 import fs from 'fs/promises';

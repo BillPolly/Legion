@@ -5,7 +5,7 @@
 
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
 import { ProfilePlannerModule } from '../../src/ProfilePlannerModule.js';
-import { ResourceManager, ModuleLoader } from '@legion/tool-core';
+import { ResourceManager, ModuleLoader } from '@legion/tools';
 import { ValidatePlanTool } from '@legion/plan-executor-tools';
 
 // Only run if we have actual API key

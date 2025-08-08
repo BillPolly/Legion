@@ -40,7 +40,7 @@ jest.mock('../../src/core/BTAgentBase.js', () => ({
   }
 }));
 
-jest.mock('@legion/tool-core', () => ({
+jest.mock('@legion/tools', () => ({
   Tool: class {
     constructor(config) {
       this.name = config.name;

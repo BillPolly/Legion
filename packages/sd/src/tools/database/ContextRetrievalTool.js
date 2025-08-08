@@ -2,7 +2,7 @@
  * ContextRetrievalTool - Retrieves context from design database
  */
 
-import { Tool, ToolResult } from '@legion/tool-core';
+import { Tool, ToolResult } from '@legion/tools';
 import { z } from 'zod';
 
 export class ContextRetrievalTool extends Tool {

@@ -1,4 +1,4 @@
-import { Module } from '@legion/tool-core';
+import { Module } from '@legion/tools';
 import RailwayDeployTool from './tools/RailwayDeployTool.js';
 import RailwayStatusTool from './tools/RailwayStatusTool.js';
 import RailwayLogsTool from './tools/RailwayLogsTool.js';

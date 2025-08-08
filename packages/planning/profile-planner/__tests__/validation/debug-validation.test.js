@@ -4,7 +4,7 @@
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import { ValidatePlanTool } from '@legion/plan-executor-tools';
-import { ModuleLoader } from '@legion/tool-core';
+import { ModuleLoader } from '@legion/tools';
 
 describe('Debug Validation', () => {
   let validatePlanTool;

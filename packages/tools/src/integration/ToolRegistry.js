@@ -1,6 +1,7 @@
 /**
  * Tool Registry
  * Central registry for tool modules and discovery
+ * Enhanced with MCP server support for automatic tool discovery and integration
  */
 
 /**
@@ -38,13 +39,296 @@ export class ModuleProvider {
  * ToolRegistry - Central registry for tools
  */
 export class ToolRegistry {
-  constructor() {
+  constructor(options = {}) {
     this.providers = new Map();
     this.instances = new Map();
     this.metadata = new Map();
     this.usageStats = new Map();
     this.toolIndex = null;
     this.capabilityMap = null;
+    
+    // MCP Integration
+    this.mcpServerRegistry = options.mcpServerRegistry;
+    this.enableMCPIntegration = options.enableMCPIntegration !== false;
+    this.mcpToolPrefix = options.mcpToolPrefix || 'mcp';
+    
+    // Enhanced search capabilities
+    this.semanticSearch = options.semanticSearch;
+    this.enableSemanticSearch = options.enableSemanticSearch !== false;
+    
+    // Initialize MCP integration if enabled
+    if (this.enableMCPIntegration) {
+      this.initializeMCPIntegration();
+    }
+  }
+
+  /**
+   * Initialize MCP integration
+   */
+  async initializeMCPIntegration() {
+    if (!this.mcpServerRegistry) return;
+    
+    try {
+      // Set up event listeners for MCP server events
+      this.mcpServerRegistry.on('server-registered', async (info) => {
+        await this.handleMCPServerRegistered(info);
+      });
+      
+      this.mcpServerRegistry.on('server-unregistered', (info) => {
+        this.handleMCPServerUnregistered(info);
+      });
+      
+      this.mcpServerRegistry.on('tools-changed', async (info) => {
+        await this.handleMCPToolsChanged(info);
+      });
+      
+      // Register existing MCP servers
+      const existingServers = this.mcpServerRegistry.getMCPServersStatus();
+      for (const server of existingServers) {
+        if (server.status === 'running') {
+          await this.handleMCPServerRegistered({
+            serverId: server.serverId,
+            toolCount: server.toolCount
+          });
+        }
+      }
+      
+    } catch (error) {
+      console.error('Failed to initialize MCP integration:', error);
+    }
+  }
+  
+  /**
+   * Handle MCP server registration
+   */
+  async handleMCPServerRegistered(info) {
+    const { serverId } = info;
+    
+    try {
+      // The MCPServerRegistry has already created the provider
+      // We just need to ensure it's available for tool discovery
+      this.invalidateCaches();
+      
+      console.log(`MCP server ${serverId} tools integrated into ToolRegistry`);
+      
+    } catch (error) {
+      console.error(`Failed to handle MCP server registration for ${serverId}:`, error);
+    }
+  }
+  
+  /**
+   * Handle MCP server unregistration
+   */
+  handleMCPServerUnregistered(info) {
+    const { serverId } = info;
+    
+    // Clean up any MCP-specific caches
+    this.invalidateCaches();
+    
+    console.log(`MCP server ${serverId} tools removed from ToolRegistry`);
+  }
+  
+  /**
+   * Handle MCP tools changed
+   */
+  async handleMCPToolsChanged(info) {
+    const { serverId, toolsAdded, toolsRemoved } = info;
+    
+    // Invalidate caches to reflect tool changes
+    this.invalidateCaches();
+    
+    console.log(`MCP server ${serverId} tools changed: +${toolsAdded.length} -${toolsRemoved.length}`);
+  }
+  
+  /**
+   * Search tools including MCP tools
+   */
+  async searchToolsWithMCP(query, options = {}) {
+    // First, search regular tools
+    const regularResults = await this.searchTools(query);
+    
+    // If MCP integration is enabled, also search MCP tools
+    if (this.enableMCPIntegration && this.mcpServerRegistry) {
+      try {
+        const mcpResults = await this.mcpServerRegistry.searchMCPTools(query, {
+          limit: options.mcpLimit || 10,
+          categories: options.mcpCategories,
+          ...options
+        });
+        
+        // Combine and deduplicate results
+        const combinedResults = [...regularResults];
+        
+        for (const mcpResult of mcpResults) {
+          // Avoid duplicates
+          if (!combinedResults.find(r => r.name === mcpResult.name)) {
+            combinedResults.push({
+              ...mcpResult,
+              source: 'mcp',
+              serverId: mcpResult.serverId
+            });
+          }
+        }
+        
+        // Sort by relevance
+        combinedResults.sort((a, b) => 
+          (b.relevanceScore || 0) - (a.relevanceScore || 0)
+        );
+        
+        return combinedResults;
+        
+      } catch (error) {
+        console.warn('MCP tool search failed, returning regular results:', error);
+        return regularResults;
+      }
+    }
+    
+    return regularResults;
+  }
+  
+  /**
+   * Get tool with MCP fallback
+   */
+  async getToolWithMCP(toolName) {
+    // First try regular tool lookup
+    const regularTool = await this.getTool(toolName);
+    if (regularTool) {
+      return regularTool;
+    }
+    
+    // Try MCP tools if integration is enabled
+    if (this.enableMCPIntegration && this.mcpServerRegistry) {
+      try {
+        return await this.mcpServerRegistry.executeMCPTool(toolName, {}, {
+          returnProxy: true // Return the proxy instead of executing
+        });
+      } catch (error) {
+        // Tool not found in MCP either
+        return null;
+      }
+    }
+    
+    return null;
+  }
+  
+  /**
+   * List all tools including MCP tools
+   */
+  async listToolsWithMCP() {
+    const regularTools = await this.listTools();
+    
+    if (this.enableMCPIntegration && this.mcpServerRegistry) {
+      try {
+        const mcpTools = this.mcpServerRegistry.getAvailableMCPTools()
+          .map(tool => `${this.mcpToolPrefix}.${tool.name}`);
+        
+        return [...regularTools, ...mcpTools];
+      } catch (error) {
+        console.warn('Failed to list MCP tools:', error);
+        return regularTools;
+      }
+    }
+    
+    return regularTools;
+  }
+  
+  /**
+   * Get smart tool recommendations (includes MCP auto-install suggestions)
+   */
+  async getSmartToolRecommendations(taskDescription, options = {}) {
+    const recommendations = {
+      availableTools: [],
+      installableServers: [],
+      suggestions: []
+    };
+    
+    // Search available tools (regular + MCP)
+    const availableTools = await this.searchToolsWithMCP(taskDescription, {
+      limit: options.maxTools || 10
+    });
+    recommendations.availableTools = availableTools;
+    
+    // If MCP integration is enabled and we have few results, suggest installable servers
+    if (this.enableMCPIntegration && this.mcpServerRegistry && availableTools.length < 3) {
+      try {
+        const installableServers = await this.mcpServerRegistry.packageManager
+          .getRecommendations(taskDescription, {
+            maxRecommendations: options.maxServers || 5,
+            includeInstalled: false
+          });
+        
+        recommendations.installableServers = installableServers;
+        
+        // Create actionable suggestions
+        if (installableServers.length > 0) {
+          recommendations.suggestions.push({
+            type: 'install-server',
+            message: `Install ${installableServers[0].name} to get tools for: ${taskDescription}`,
+            action: {
+              type: 'install-mcp-server',
+              serverId: installableServers[0].id,
+              serverName: installableServers[0].name
+            }
+          });
+        }
+      } catch (error) {
+        console.warn('Failed to get MCP server recommendations:', error);
+      }
+    }
+    
+    return recommendations;
+  }
+  
+  /**
+   * Execute tool with MCP fallback and auto-install
+   */
+  async executeToolSmart(toolName, arguments_, options = {}) {
+    try {
+      // Try regular tool execution first
+      const tool = await this.getTool(toolName);
+      if (tool) {
+        return await tool.execute(arguments_);
+      }
+      
+      // Try MCP tool execution
+      if (this.enableMCPIntegration && this.mcpServerRegistry) {
+        return await this.mcpServerRegistry.executeMCPTool(toolName, arguments_, {
+          autoInstall: options.autoInstall,
+          retry: options.retry
+        });
+      }
+      
+      throw new Error(`Tool '${toolName}' not found`);
+      
+    } catch (error) {
+      if (error.message.includes('not found') && options.autoInstall) {
+        // Try to suggest and potentially auto-install
+        const recommendations = await this.getSmartToolRecommendations(toolName);
+        
+        if (recommendations.installableServers.length > 0) {
+          throw new Error(
+            `Tool '${toolName}' not found. Try installing: ${
+              recommendations.installableServers.map(s => s.name).join(', ')
+            }`
+          );
+        }
+      }
+      
+      throw error;
+    }
+  }
+  
+  /**
+   * Invalidate caches (enhanced to handle MCP caches)
+   */
+  invalidateCaches() {
+    this.toolIndex = null;
+    this.capabilityMap = null;
+    
+    // Also invalidate MCP-related caches if applicable
+    if (this.mcpServerRegistry && this.mcpServerRegistry.metadataExtractor) {
+      this.mcpServerRegistry.metadataExtractor.clearCache();
+    }
   }
 
   /**

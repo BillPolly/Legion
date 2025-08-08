@@ -3,7 +3,7 @@
  * Handles API key validation, LLM client setup, and common test scenarios
  */
 
-import { ResourceManager } from '@legion/tool-core';
+import { ResourceManager } from '@legion/tools';
 import { LLMClient } from '@legion/llm';
 
 export class LiveLLMTestSetup {

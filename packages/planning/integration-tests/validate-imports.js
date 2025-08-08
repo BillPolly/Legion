@@ -27,7 +27,7 @@ const main = async () => {
     ['@legion/profile-planner', 'ProfilePlannerModule'],
     ['@legion/actor-bt', 'BehaviorTreeExecutor'],
     ['@legion/llm', 'LLMClient'],
-    ['@legion/tool-core', 'ResourceManager'],
+    ['@legion/tools', 'ResourceManager'],
     ['zod']
   ];
   

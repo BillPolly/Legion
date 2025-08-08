@@ -8,8 +8,8 @@ import { jest } from '@jest/globals';
 const mockSuccess = jest.fn((data) => ({ success: true, data }));
 const mockFailure = jest.fn((message) => ({ success: false, error: message }));
 
-// Mock @legion/tool-core BEFORE importing
-jest.mock('@legion/tool-core', () => {
+// Mock @legion/tools BEFORE importing
+jest.mock('@legion/tools', () => {
   return {
     Tool: class {
       constructor(config) {

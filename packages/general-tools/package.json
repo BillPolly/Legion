@@ -1,5 +1,5 @@
 {
-  "name": "@legion/tools",
+  "name": "@legion/general-tools",
   "version": "0.0.1",
   "description": "Collection of tools for jsEnvoy - AI agent tools for various tasks",
   "type": "module",

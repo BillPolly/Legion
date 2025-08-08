@@ -20,7 +20,7 @@ This development plan creates specialized BT Actors and Tools that extend Legion
 
 **Legion Components We're Building On:**
 - **BTAgentBase** (`@legion/actor-BT`) - Base class for all SD agents
-- **Tool** (`@legion/tool-core`) - Base class for all SD tools
+- **Tool** (`@legion/tools`) - Base class for all SD tools
 - **BehaviorTreeExecutor** (`@legion/actor-BT`) - Executes agent workflows
 - **PlannerEngine** (`@legion/unified-planner`) - Generates BT plans
 - **ProfilePlanner** (`@legion/profile-planner`) - Domain-specific profiles
@@ -57,7 +57,7 @@ Legion Infrastructure        SD Extensions
 |-----------------|---------|------------------|----------------|
 | **BTAgentBase** | `@legion/actor-BT` | BT Actor base class with workflow execution | All SD agents extend this class |
 | **BehaviorTreeExecutor** | `@legion/actor-BT` | Executes BT workflows with node plugins | Runs SD agent workflows |
-| **Tool** | `@legion/tool-core` | Base tool class with validation and events | All SD tools extend this |
+| **Tool** | `@legion/tools` | Base tool class with validation and events | All SD tools extend this |
 | **PlannerEngine** | `@legion/unified-planner` | Orchestrates planning strategies | Generates SD workflow plans |
 | **LLMStrategy** | `@legion/unified-planner` | LLM-based BT generation | Creates SD agent workflows |
 | **ProfilePlanner** | `@legion/profile-planner` | Profile-based planning | SD extends with dev profiles |
@@ -207,7 +207,7 @@ Tool (Legion base)
 - ✅ Test end-to-end planning with SD profile
 
 ### 1.1 SD Module Creation (Standard Legion Module)
-- ✅ Create package.json with Legion dependencies (@legion/actor-BT, @legion/tool-core, @legion/llm, etc.)
+- ✅ Create package.json with Legion dependencies (@legion/actor-BT, @legion/tools, @legion/llm, etc.)
 - ✅ Create SDModule.js extending Legion's Module class
 - ✅ Create module.json for ModuleLoader registration with LLM dependencies
 - ✅ Write tests for module initialization with ResourceManager
@@ -870,7 +870,7 @@ Legion Framework (Existing)
 ├── @legion/actor-BT
 │   ├── BTAgentBase ← SDAgentBase ← [All SD Agents]
 │   └── BehaviorTreeExecutor (executes SD workflows)
-├── @legion/tool-core
+├── @legion/tools
 │   └── Tool ← [All SD Tools]
 ├── @legion/unified-planner
 │   └── PlannerEngine (generates SD plans)

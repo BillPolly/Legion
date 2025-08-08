@@ -501,7 +501,7 @@ There are three ways to use the SD system:
 ### 1. As a Legion Module (Tool Discovery)
 
 ```javascript
-import { ModuleLoader } from '@legion/tool-core';
+import { ModuleLoader } from '@legion/tools';
 import SDModule from '@legion/sd';
 
 const loader = new ModuleLoader();

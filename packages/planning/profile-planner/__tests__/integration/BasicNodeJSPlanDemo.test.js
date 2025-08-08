@@ -5,7 +5,7 @@
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import { ProfilePlannerModule } from '../../src/ProfilePlannerModule.js';
-import { ResourceManager, ModuleLoader } from '@legion/tool-core';
+import { ResourceManager, ModuleLoader } from '@legion/tools';
 
 describe('Basic Node.js Server Plan Demo', () => {
   let profilePlannerModule;

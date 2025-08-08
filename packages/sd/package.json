@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@legion/actor-BT": "workspace:*",
-    "@legion/tool-core": "workspace:*",
+    "@legion/tools": "workspace:*",
     "@legion/llm": "workspace:*",
     "@legion/unified-planner": "workspace:*",
     "@legion/profile-planner": "workspace:*",

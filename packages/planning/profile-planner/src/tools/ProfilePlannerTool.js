@@ -5,7 +5,7 @@
  * that provide domain-specific context and allowable actions
  */
 
-import { Tool, ToolResult } from '@legion/tool-core';
+import { Tool, ToolResult } from '@legion/tools';
 import { PlanningRequest, createLLMPlanner } from '@legion/unified-planner';
 import { LLMClient } from '@legion/llm';
 import { ProfileManager } from '../ProfileManager.js';
@@ -351,7 +351,7 @@ export class ProfilePlannerTool extends Tool {
     }
 
     // Create new ModuleLoader
-    const { ModuleLoader } = await import('@legion/tool-core');
+    const { ModuleLoader } = await import('@legion/tools');
     const moduleLoader = new ModuleLoader();
     await moduleLoader.initialize();
 

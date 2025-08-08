@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
-import { ResourceManager, ModuleLoader } from '@legion/tool-core';
+import { ResourceManager, ModuleLoader } from '@legion/tools';
 import { PlanExecutor } from '@legion/plan-executor/src/core/PlanExecutor.js';
 import { ProfilePlannerModule } from '../../src/ProfilePlannerModule.js';
 import fs from 'fs/promises';

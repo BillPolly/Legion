@@ -4,12 +4,12 @@
  * Extracted and adapted from code-agent JSGenerator for Legion framework
  */
 
-import { Tool } from '@legion/tools';
+import { EventEmitter } from 'events';
 import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';
 
-export class GenerateJavaScriptModuleTool extends Tool {
+export class GenerateJavaScriptModuleTool extends EventEmitter {
   constructor() {
     super();
     this.name = 'generate_javascript_module';

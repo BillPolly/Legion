@@ -4,7 +4,7 @@
  * Each profile becomes its own tool with a simplified interface
  */
 
-import { Tool, ToolResult } from '@legion/tool-core';
+import { Tool, ToolResult } from '@legion/tools';
 import { PlannerEngine } from '@legion/unified-planner';
 import { LLMClient } from '@legion/llm';
 

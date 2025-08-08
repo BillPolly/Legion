@@ -2,7 +2,7 @@
  * InterfaceDesignTool - Designs interfaces for boundaries
  */
 
-import { Tool, ToolResult } from '@legion/tool-core';
+import { Tool, ToolResult } from '@legion/tools';
 import { z } from 'zod';
 
 export class InterfaceDesignTool extends Tool {

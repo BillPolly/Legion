@@ -3,6 +3,7 @@
  * 
  * This service helps LLM agents find the most relevant tools for their tasks
  * by performing semantic search and intelligent ranking based on task descriptions.
+ * Enhanced with MCP server integration for automatic tool discovery and suggestions.
  */
 
 import { ToolIndexer } from './ToolIndexer.js';
@@ -14,6 +15,12 @@ export class SemanticToolDiscovery {
     this.toolRegistry = dependencies.toolRegistry;
     this.collectionName = dependencies.collectionName || 'legion_tools';
     
+    // MCP Integration
+    this.mcpServerRegistry = dependencies.mcpServerRegistry;
+    this.mcpPackageManager = dependencies.mcpPackageManager;
+    this.enableMCPIntegration = dependencies.enableMCPIntegration !== false;
+    this.mcpCollectionName = dependencies.mcpCollectionName || 'mcp_tools';
+    
     // Discovery configuration
     this.config = {
       defaultLimit: 20,
@@ -21,19 +28,30 @@ export class SemanticToolDiscovery {
       includeRelatedTools: true,
       includeDependencies: true,
       boostFrequentlyUsedTogether: true,
+      
+      // MCP-specific configuration
+      includeMCPTools: this.enableMCPIntegration,
+      mcpSearchWeight: 0.8, // Weight for MCP tools in combined results
+      mcpAutoSuggest: true, // Suggest installable MCP servers
+      maxMCPSuggestions: 3,
       ...dependencies.config
     };
 
     // Cache for frequently requested queries
     this.queryCache = new Map();
     this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
+    
+    // MCP-specific cache
+    this.mcpQueryCache = new Map();
+    this.mcpRecommendationCache = new Map();
   }
 
   /**
    * Find relevant tools for a given task description
+   * Enhanced with MCP integration for comprehensive tool discovery
    * @param {string} taskDescription - Natural language description of the task
    * @param {Object} options - Discovery options
-   * @returns {Promise<Array>} Array of relevant tools with scores
+   * @returns {Promise<Array>} Array of relevant tools with scores and installation suggestions
    */
   async findRelevantTools(taskDescription, options = {}) {
     const {
@@ -42,7 +60,9 @@ export class SemanticToolDiscovery {
       categories = null,
       excludeTools = [],
       includeMetadata = true,
-      useCache = true
+      useCache = true,
+      includeMCPTools = this.config.includeMCPTools,
+      includeSuggestions = this.config.mcpAutoSuggest
     } = options;
 
     // Check cache
@@ -57,8 +77,8 @@ export class SemanticToolDiscovery {
     // Enhance task description for better semantic matching
     const enhancedQuery = this.enhanceTaskDescription(taskDescription);
 
-    // Perform semantic search
-    const searchResults = await this.semanticSearchProvider.semanticSearch(
+    // Search Legion tools
+    const legionSearchResults = await this.semanticSearchProvider.semanticSearch(
       this.collectionName,
       enhancedQuery,
       {
@@ -69,8 +89,27 @@ export class SemanticToolDiscovery {
       }
     );
 
-    // Process and rank results
-    let relevantTools = this.processSearchResults(searchResults, taskDescription);
+    // Process Legion tools
+    let relevantTools = this.processSearchResults(legionSearchResults, taskDescription);
+
+    // Search MCP tools if enabled
+    let mcpTools = [];
+    let installableSuggestions = [];
+    
+    if (includeMCPTools && this.enableMCPIntegration) {
+      const mcpResults = await this.searchMCPTools(taskDescription, {
+        limit: Math.ceil(limit / 2),
+        minScore,
+        categories,
+        excludeTools
+      });
+      
+      mcpTools = mcpResults.availableTools;
+      installableSuggestions = mcpResults.installableSuggestions;
+    }
+
+    // Combine and deduplicate results
+    relevantTools = this.combineToolResults(relevantTools, mcpTools, taskDescription);
 
     // Add related tools if configured
     if (this.config.includeRelatedTools) {
@@ -93,15 +132,28 @@ export class SemanticToolDiscovery {
       relevantTools = await this.enrichWithToolInstances(relevantTools);
     }
 
+    // Prepare final result with suggestions
+    const result = {
+      tools: relevantTools,
+      suggestions: includeSuggestions ? installableSuggestions : [],
+      metadata: {
+        totalFound: relevantTools.length,
+        legionTools: relevantTools.filter(t => t.source !== 'mcp').length,
+        mcpTools: relevantTools.filter(t => t.source === 'mcp').length,
+        installableSuggestions: installableSuggestions.length,
+        searchQuery: enhancedQuery
+      }
+    };
+
     // Cache results
     if (useCache) {
       this.queryCache.set(cacheKey, {
-        results: relevantTools,
+        results: result,
         timestamp: Date.now()
       });
     }
 
-    return relevantTools;
+    return result;
   }
 
   /**
@@ -200,9 +252,10 @@ export class SemanticToolDiscovery {
 
   /**
    * Get tool recommendations based on usage patterns
+   * Enhanced with MCP server suggestions
    * @param {Array} recentlyUsedTools - Tools used recently
    * @param {string} context - Current context/task
-   * @returns {Promise<Array>} Recommended tools
+   * @returns {Promise<Array>} Recommended tools with installation suggestions
    */
   async getToolRecommendations(recentlyUsedTools, context = '') {
     const recommendations = new Map();
@@ -235,11 +288,14 @@ export class SemanticToolDiscovery {
 
     // If context provided, find contextually relevant tools
     if (context) {
-      const contextTools = await this.findRelevantTools(context, {
+      const contextResults = await this.findRelevantTools(context, {
         limit: 10,
         excludeTools: recentlyUsedTools
       });
 
+      // Handle both old format (array) and new format (object)
+      const contextTools = contextResults.tools || contextResults;
+      
       for (const tool of contextTools) {
         const currentScore = recommendations.get(tool.name) || 0;
         recommendations.set(tool.name, currentScore + tool.relevanceScore * 0.5);
@@ -252,7 +308,184 @@ export class SemanticToolDiscovery {
       .sort((a, b) => b.recommendationScore - a.recommendationScore);
 
     // Enrich with tool information
-    return this.enrichWithToolInstances(recommendedTools.slice(0, 10));
+    const enrichedTools = await this.enrichWithToolInstances(recommendedTools.slice(0, 10));
+    
+    // Get MCP suggestions if context is provided
+    let mcpSuggestions = [];
+    if (context && this.enableMCPIntegration && this.mcpPackageManager) {
+      mcpSuggestions = await this.getMCPServerSuggestions(context, {
+        limit: this.config.maxMCPSuggestions
+      });
+    }
+    
+    return {
+      tools: enrichedTools,
+      mcpSuggestions,
+      context
+    };
+  }
+
+  /**
+   * Search MCP tools and get installation suggestions
+   * @param {string} taskDescription - Task description
+   * @param {Object} options - Search options
+   * @returns {Promise<Object>} Available tools and installable suggestions
+   */
+  async searchMCPTools(taskDescription, options = {}) {
+    if (!this.enableMCPIntegration || !this.mcpServerRegistry) {
+      return { availableTools: [], installableSuggestions: [] };
+    }
+    
+    const cacheKey = `mcp:${taskDescription}:${JSON.stringify(options)}`;
+    
+    // Check MCP cache
+    if (this.mcpQueryCache.has(cacheKey)) {
+      const cached = this.mcpQueryCache.get(cacheKey);
+      if (Date.now() - cached.timestamp < this.cacheTimeout) {
+        return cached.results;
+      }
+    }
+    
+    try {
+      // Search available MCP tools
+      const availableTools = await this.mcpServerRegistry.searchMCPTools(taskDescription, {
+        limit: options.limit || 10,
+        categories: options.categories,
+        minRelevance: options.minScore || 0.6
+      });
+      
+      // Get installable server suggestions if we have few results
+      let installableSuggestions = [];
+      if (availableTools.length < 3 && this.mcpPackageManager) {
+        installableSuggestions = await this.mcpPackageManager.getRecommendations(taskDescription, {
+          maxRecommendations: this.config.maxMCPSuggestions,
+          includeInstalled: false
+        });
+      }
+      
+      const results = {
+        availableTools: availableTools.map(tool => ({
+          ...tool,
+          source: 'mcp',
+          available: true,
+          installationRequired: false
+        })),
+        installableSuggestions: installableSuggestions.map(suggestion => ({
+          ...suggestion,
+          source: 'mcp',
+          available: false,
+          installationRequired: true,
+          installCommand: `npm install ${suggestion.packageName || suggestion.name}`
+        }))
+      };
+      
+      // Cache results
+      this.mcpQueryCache.set(cacheKey, {
+        results,
+        timestamp: Date.now()
+      });
+      
+      return results;
+      
+    } catch (error) {
+      console.warn('MCP tool search failed:', error.message);
+      return { availableTools: [], installableSuggestions: [] };
+    }
+  }
+
+  /**
+   * Combine Legion and MCP tool results intelligently
+   * @param {Array} legionTools - Legion tools
+   * @param {Array} mcpTools - MCP tools  
+   * @param {string} taskDescription - Original task description
+   * @returns {Array} Combined and ranked results
+   */
+  combineToolResults(legionTools, mcpTools, taskDescription) {
+    // Create a map to handle duplicates
+    const combinedMap = new Map();
+    
+    // Add Legion tools (higher priority)
+    for (const tool of legionTools) {
+      combinedMap.set(tool.name, {
+        ...tool,
+        source: tool.source || 'legion',
+        priority: 1.0
+      });
+    }
+    
+    // Add MCP tools (slightly lower priority to avoid duplicates)
+    for (const tool of mcpTools) {
+      const key = tool.name;
+      
+      // Skip if we already have a similar tool
+      if (!combinedMap.has(key)) {
+        combinedMap.set(key, {
+          ...tool,
+          source: 'mcp',
+          priority: this.config.mcpSearchWeight,
+          relevanceScore: (tool.relevanceScore || 0) * this.config.mcpSearchWeight
+        });
+      }
+    }
+    
+    // Convert back to array and sort by combined score
+    return Array.from(combinedMap.values())
+      .sort((a, b) => {
+        const scoreA = (a.relevanceScore || 0) * a.priority;
+        const scoreB = (b.relevanceScore || 0) * b.priority;
+        return scoreB - scoreA;
+      });
+  }
+
+  /**
+   * Get MCP server installation suggestions for a task
+   * @param {string} taskDescription - Task description
+   * @param {Object} options - Options
+   * @returns {Promise<Array>} Server suggestions
+   */
+  async getMCPServerSuggestions(taskDescription, options = {}) {
+    if (!this.mcpPackageManager) return [];
+    
+    const cacheKey = `mcp-suggestions:${taskDescription}`;
+    
+    // Check cache
+    if (this.mcpRecommendationCache.has(cacheKey)) {
+      const cached = this.mcpRecommendationCache.get(cacheKey);
+      if (Date.now() - cached.timestamp < this.cacheTimeout) {
+        return cached.results;
+      }
+    }
+    
+    try {
+      const suggestions = await this.mcpPackageManager.getRecommendations(taskDescription, {
+        maxRecommendations: options.limit || 3,
+        includeInstalled: false
+      });
+      
+      const formattedSuggestions = suggestions.map(suggestion => ({
+        type: 'install-mcp-server',
+        message: `Install ${suggestion.name} for ${taskDescription}`,
+        serverId: suggestion.id,
+        serverName: suggestion.name,
+        description: suggestion.description,
+        toolCount: suggestion.toolCount || 0,
+        category: suggestion.category,
+        installCommand: `npm install ${suggestion.packageName || suggestion.name}`,
+        relevanceScore: suggestion.relevanceScore || 0.5
+      }));
+      
+      // Cache results
+      this.mcpRecommendationCache.set(cacheKey, {
+        results: formattedSuggestions,
+        timestamp: Date.now()
+      });
+      
+      return formattedSuggestions;
+      
+    } catch (error) {
+      console.warn('Failed to get MCP server suggestions:', error.message);
+      return [];
+    }
   }
 
   /**
@@ -701,20 +934,43 @@ export class SemanticToolDiscovery {
   }
 
   /**
-   * Clear query cache
+   * Clear query cache (including MCP caches)
    */
-  clearCache() {
-    this.queryCache.clear();
+  clearCache(cacheType = 'all') {
+    switch (cacheType) {
+      case 'all':
+        this.queryCache.clear();
+        this.mcpQueryCache.clear();
+        this.mcpRecommendationCache.clear();
+        break;
+      case 'legion':
+        this.queryCache.clear();
+        break;
+      case 'mcp':
+        this.mcpQueryCache.clear();
+        this.mcpRecommendationCache.clear();
+        break;
+      default:
+        this.queryCache.clear();
+    }
   }
 
   /**
-   * Get discovery statistics
+   * Get discovery statistics (including MCP integration stats)
    */
   getStatistics() {
     return {
       cacheSize: this.queryCache.size,
+      mcpCacheSize: this.mcpQueryCache.size,
+      mcpRecommendationCacheSize: this.mcpRecommendationCache.size,
       indexStatistics: this.toolIndexer.getStatistics(),
-      config: this.config
+      config: this.config,
+      mcpIntegration: {
+        enabled: this.enableMCPIntegration,
+        hasServerRegistry: !!this.mcpServerRegistry,
+        hasPackageManager: !!this.mcpPackageManager,
+        collectionName: this.mcpCollectionName
+      }
     };
   }
 }

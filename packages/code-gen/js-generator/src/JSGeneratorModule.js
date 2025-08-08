@@ -6,7 +6,6 @@
  */
 
 import { Module } from '@legion/tools';
-import { wrapTool } from '../../src/ToolWrapper.js';
 import { GenerateJavaScriptModuleTool } from './tools/GenerateJavaScriptModuleTool.js';
 import { GenerateJavaScriptFunctionTool } from './tools/GenerateJavaScriptFunctionTool.js';
 import { GenerateJavaScriptClassTool } from './tools/GenerateJavaScriptClassTool.js';
@@ -44,16 +43,16 @@ export class JSGeneratorModule extends Module {
   async initialize() {
     if (this.initialized) return;
 
-    // Initialize tools and wrap them for Legion compatibility
+    // Initialize tools directly without wrapping
     this.tools = [
-      wrapTool(new GenerateJavaScriptModuleTool()),
-      wrapTool(new GenerateJavaScriptFunctionTool()),
-      wrapTool(new GenerateJavaScriptClassTool()),
-      wrapTool(new GenerateApiEndpointTool()),
-      wrapTool(new GenerateEventHandlerTool()),
-      wrapTool(new GenerateUnitTestsTool()),
-      wrapTool(new ValidateJavaScriptSyntaxTool()),
-      wrapTool(new GenerateHTMLPageTool())
+      new GenerateJavaScriptModuleTool(),
+      new GenerateJavaScriptFunctionTool(),
+      new GenerateJavaScriptClassTool(),
+      new GenerateApiEndpointTool(),
+      new GenerateEventHandlerTool(),
+      new GenerateUnitTestsTool(),
+      new ValidateJavaScriptSyntaxTool(),
+      new GenerateHTMLPageTool()
     ];
 
     this.initialized = true;

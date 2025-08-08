@@ -2,7 +2,7 @@
  * AggregateDesignTool - Designs aggregates and aggregate roots using LLM
  */
 
-import { Tool, ToolResult } from '@legion/tool-core';
+import { Tool, ToolResult } from '@legion/tools';
 import { z } from 'zod';
 
 export class AggregateDesignTool extends Tool {

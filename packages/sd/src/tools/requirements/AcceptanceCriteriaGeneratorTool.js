@@ -2,7 +2,7 @@
  * AcceptanceCriteriaGeneratorTool - Generates acceptance criteria for user stories
  */
 
-import { Tool, ToolResult } from '@legion/tool-core';
+import { Tool, ToolResult } from '@legion/tools';
 import { z } from 'zod';
 
 export class AcceptanceCriteriaGeneratorTool extends Tool {

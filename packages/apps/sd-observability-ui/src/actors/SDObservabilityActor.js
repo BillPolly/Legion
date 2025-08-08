@@ -5,7 +5,7 @@
  * chat interactions, and visual diagram generation.
  */
 
-import { Actor } from '/Legion/shared/actors/src/Actor.js';
+import { Actor } from '/shared/actors/src/Actor.js';
 
 export class SDObservabilityActor extends Actor {
   constructor(config = {}) {

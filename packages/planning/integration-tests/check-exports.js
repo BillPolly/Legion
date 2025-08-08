@@ -29,7 +29,7 @@ const main = async () => {
     '@legion/profile-planner',
     '@legion/actor-bt',
     '@legion/llm',
-    '@legion/tool-core'
+    '@legion/tools'
   ];
   
   for (const pkg of packages) {

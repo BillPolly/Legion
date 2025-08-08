@@ -2,7 +2,7 @@
  * ArtifactStorageTool - Stores artifacts in the design database
  */
 
-import { Tool, ToolResult } from '@legion/tool-core';
+import { Tool, ToolResult } from '@legion/tools';
 import { z } from 'zod';
 
 export class ArtifactStorageTool extends Tool {

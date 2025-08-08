@@ -2,7 +2,7 @@
  * Debug script to test ProfilePlannerTool execution step by step
  */
 
-import { ResourceManager } from '@legion/tool-core';
+import { ResourceManager } from '@legion/tools';
 import { ProfilePlannerModule } from '@legion/profile-planner';
 
 async function debugProfilePlanner() {

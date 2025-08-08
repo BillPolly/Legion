@@ -2,7 +2,7 @@
  * Compatibility layer for migration from module-loader
  * 
  * This file provides backward compatibility with @legion/module-loader API
- * to enable gradual migration to @legion/tool-core
+ * to enable gradual migration to @legion/tools
  */
 
 import { ModuleInstance } from './modules/ModuleInstance.js';

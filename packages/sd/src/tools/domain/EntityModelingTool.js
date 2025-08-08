@@ -2,7 +2,7 @@
  * EntityModelingTool - Models domain entities with DDD principles using LLM
  */
 
-import { Tool, ToolResult } from '@legion/tool-core';
+import { Tool, ToolResult } from '@legion/tools';
 import { z } from 'zod';
 
 export class EntityModelingTool extends Tool {
