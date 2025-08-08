@@ -122,7 +122,7 @@ Return JSON:
 }`;
 
     try {
-      const result = await this.makeLLMDecision(prompt);
+      const result = await this.makeLLMDecision(prompt, {});
       
       return {
         type: 'coherence',
@@ -191,7 +191,7 @@ Return JSON:
 }`;
 
     try {
-      const result = await this.makeLLMDecision(prompt, context);
+      const result = await this.makeLLMDecision(prompt, context || {});
       
       return {
         type: 'completeness',
@@ -251,7 +251,7 @@ Return JSON:
 }`;
 
     try {
-      const result = await this.makeLLMDecision(prompt);
+      const result = await this.makeLLMDecision(prompt, {});
       
       return {
         type: 'testability',

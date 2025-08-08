@@ -191,7 +191,12 @@ export class QdrantVectorStore {
     // Simple filter implementation for in-memory
     return coll.vectors.filter(v => {
       for (const [key, value] of Object.entries(filter)) {
-        if (v.payload[key] !== value) return false;
+        // Check both the vector ID and payload fields
+        if (key === 'id') {
+          if (v.id !== value) return false;
+        } else if (v.payload[key] !== value) {
+          return false;
+        }
       }
       return true;
     }).map(v => v.payload);

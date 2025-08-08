@@ -19,6 +19,16 @@ export class ErrorClassificationSystem {
       ['missing_implementation', { agent: 'CodeFixingAgent', method: 'addMissingImplementation', priority: 'high' }],
       ['incorrect_implementation', { agent: 'CodeFixingAgent', method: 'correctBusinessLogic', priority: 'high' }],
       
+      // Runtime errors (from LiveTestingAgent)
+      ['runtime_error', { agent: 'CodeFixingAgent', method: 'fixSyntaxErrors', priority: 'critical' }],
+      ['uncaught_exception', { agent: 'CodeFixingAgent', method: 'correctBusinessLogic', priority: 'critical' }],
+      ['unhandled_rejection', { agent: 'CodeFixingAgent', method: 'correctBusinessLogic', priority: 'critical' }],
+      ['page_error', { agent: 'CodeFixingAgent', method: 'correctBusinessLogic', priority: 'high' }],
+      ['connection_error', { agent: 'CodeFixingAgent', method: 'addMissingImplementation', priority: 'high' }],
+      ['http_error', { agent: 'CodeFixingAgent', method: 'correctBusinessLogic', priority: 'high' }],
+      ['performance_issue', { agent: 'CodeFixingAgent', method: 'refactorForCleanCode', priority: 'medium' }],
+      ['memory_leak', { agent: 'CodeFixingAgent', method: 'refactorForCleanCode', priority: 'medium' }],
+      
       // Requirements issues -> RequirementsFixingAgent (specialized for resolving conflicts)
       ['contradiction', { agent: 'RequirementsFixingAgent', method: 'resolveContradictions', priority: 'critical' }],
       ['redundancy', { agent: 'RequirementsFixingAgent', method: 'eliminateRedundancy', priority: 'medium' }],

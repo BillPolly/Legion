@@ -84,7 +84,7 @@ INSTRUCTIONS:
 
 Return the corrected code:`;
 
-      const fixedCode = await this.makeLLMDecision(prompt);
+      const fixedCode = await this.makeLLMDecision(prompt, {});
 
       // Write the fixed code back to the file
       await fs.writeFile(filePath, fixedCode, 'utf-8');
@@ -151,7 +151,7 @@ INSTRUCTIONS:
 
 Return the corrected code:`;
 
-        const fixedCode = await this.makeLLMDecision(prompt);
+        const fixedCode = await this.makeLLMDecision(prompt, {});
         
         await fs.writeFile(filePath, fixedCode, 'utf-8');
         fixes.push({ file, fixed: true });
@@ -202,7 +202,7 @@ INSTRUCTIONS:
 
 Provide the implementation plan and code changes needed:`;
 
-      const implementationPlan = await this.makeLLMDecision(prompt);
+      const implementationPlan = await this.makeLLMDecision(prompt, {});
       
       // Execute the implementation plan
       const result = await this.executeImplementationPlan(implementationPlan, context);
@@ -263,7 +263,7 @@ INSTRUCTIONS:
 
 Return the corrected code:`;
 
-        const correctedCode = await this.makeLLMDecision(prompt);
+        const correctedCode = await this.makeLLMDecision(prompt, {});
         
         await fs.writeFile(filePath, correctedCode, 'utf-8');
         fixes.push({ file, corrected: true });
@@ -328,7 +328,7 @@ INSTRUCTIONS:
 
 Return the refactored code:`;
 
-      const refactoredCode = await this.makeLLMDecision(prompt);
+      const refactoredCode = await this.makeLLMDecision(prompt, {});
       
       await fs.writeFile(filePath, refactoredCode, 'utf-8');
 
@@ -374,7 +374,7 @@ Return JSON:
 }`;
 
     try {
-      const analysis = await this.makeLLMDecision(prompt);
+      const analysis = await this.makeLLMDecision(prompt, {});
       return typeof analysis === 'string' ? JSON.parse(analysis) : analysis;
     } catch (error) {
       // Fallback analysis

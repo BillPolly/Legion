@@ -566,16 +566,203 @@ export class ToolRegistry {
    * @private
    */
   _generateMetadata(tool) {
+    // Extract semantic metadata for better discovery
+    const semanticMetadata = this._extractSemanticMetadata(tool);
+    
     return {
       name: tool.name,
       description: tool.description || '',
-      category: tool.category || 'general',
-      tags: tool.tags || [],
+      category: tool.category || this._inferCategory(tool),
+      tags: tool.tags || this._generateTags(tool),
       author: tool.author || null,
       version: tool.version || null,
       registeredAt: new Date(),
+      // Semantic search fields
+      capabilities: semanticMetadata.capabilities,
+      inputTypes: semanticMetadata.inputTypes,
+      outputTypes: semanticMetadata.outputTypes,
+      usageExamples: tool.examples || [],
+      relatedConcepts: semanticMetadata.relatedConcepts,
       ...tool.metadata
     };
+  }
+
+  /**
+   * Extract semantic metadata from tool for better search
+   * @private
+   */
+  _extractSemanticMetadata(tool) {
+    const metadata = {
+      capabilities: [],
+      inputTypes: [],
+      outputTypes: [],
+      relatedConcepts: []
+    };
+
+    // Extract capabilities from name and description
+    const text = `${tool.name} ${tool.description || ''}`.toLowerCase();
+    
+    // Capability patterns
+    const capabilityPatterns = {
+      'create': ['creation', 'generation', 'initialization'],
+      'read': ['reading', 'fetching', 'retrieval'],
+      'update': ['modification', 'editing', 'changing'],
+      'delete': ['removal', 'deletion', 'cleanup'],
+      'validate': ['validation', 'verification', 'checking'],
+      'transform': ['transformation', 'conversion', 'processing'],
+      'analyze': ['analysis', 'inspection', 'examination'],
+      'execute': ['execution', 'running', 'invocation'],
+      'deploy': ['deployment', 'release', 'publishing'],
+      'test': ['testing', 'assertion', 'verification'],
+      'debug': ['debugging', 'troubleshooting', 'diagnosis'],
+      'monitor': ['monitoring', 'observability', 'tracking'],
+      'optimize': ['optimization', 'improvement', 'enhancement']
+    };
+
+    for (const [key, values] of Object.entries(capabilityPatterns)) {
+      if (text.includes(key)) {
+        metadata.capabilities.push(...values);
+      }
+    }
+
+    // Extract input/output types from schema
+    if (tool.inputSchema || tool.schema) {
+      metadata.inputTypes = this._extractSchemaTypes(tool.inputSchema || tool.schema);
+    }
+    if (tool.outputSchema) {
+      metadata.outputTypes = this._extractSchemaTypes(tool.outputSchema);
+    }
+
+    // Extract related concepts
+    const conceptPatterns = {
+      'file': ['filesystem', 'directory', 'path'],
+      'api': ['REST', 'HTTP', 'endpoint'],
+      'database': ['SQL', 'query', 'schema'],
+      'cloud': ['AWS', 'Azure', 'GCP', 'deployment'],
+      'container': ['Docker', 'Kubernetes', 'containerization'],
+      'frontend': ['React', 'Vue', 'UI', 'component'],
+      'backend': ['server', 'Node.js', 'Express'],
+      'data': ['processing', 'transformation', 'pipeline'],
+      'security': ['authentication', 'authorization', 'encryption'],
+      'performance': ['optimization', 'caching', 'scaling']
+    };
+
+    for (const [key, concepts] of Object.entries(conceptPatterns)) {
+      if (text.includes(key)) {
+        metadata.relatedConcepts.push(...concepts);
+      }
+    }
+
+    return metadata;
+  }
+
+  /**
+   * Extract types from schema for semantic search
+   * @private
+   */
+  _extractSchemaTypes(schema) {
+    const types = [];
+    
+    if (!schema) return types;
+
+    // Handle Zod schemas
+    if (schema._def) {
+      if (schema._def.typeName) {
+        types.push(schema._def.typeName.replace('Zod', '').toLowerCase());
+      }
+      if (schema._def.shape) {
+        const shape = schema._def.shape();
+        types.push(...Object.keys(shape));
+      }
+    }
+
+    // Handle JSON schemas
+    if (schema.type) {
+      types.push(schema.type);
+    }
+    if (schema.properties) {
+      types.push(...Object.keys(schema.properties));
+    }
+
+    // Handle OpenAI function schemas
+    if (schema.parameters) {
+      return this._extractSchemaTypes(schema.parameters);
+    }
+
+    return types;
+  }
+
+  /**
+   * Infer category from tool name and description
+   * @private
+   */
+  _inferCategory(tool) {
+    const text = `${tool.name} ${tool.description || ''}`.toLowerCase();
+    
+    const categoryPatterns = {
+      'file': /file|directory|folder|path|fs/,
+      'api': /api|rest|http|endpoint|request/,
+      'database': /database|db|sql|query|mongo/,
+      'testing': /test|spec|assert|verify|mock/,
+      'deployment': /deploy|release|publish|ci|cd/,
+      'development': /build|compile|transpile|bundle/,
+      'security': /auth|encrypt|secure|permission/,
+      'monitoring': /monitor|log|trace|metric|observe/,
+      'data': /data|transform|process|parse|convert/,
+      'ai': /ai|ml|llm|embedding|neural|model/
+    };
+
+    for (const [category, pattern] of Object.entries(categoryPatterns)) {
+      if (pattern.test(text)) {
+        return category;
+      }
+    }
+
+    return 'general';
+  }
+
+  /**
+   * Generate tags from tool properties
+   * @private
+   */
+  _generateTags(tool) {
+    const tags = new Set();
+    const text = `${tool.name} ${tool.description || ''}`.toLowerCase();
+
+    // Technology tags
+    const techPatterns = {
+      'javascript': /javascript|js|node/,
+      'typescript': /typescript|ts/,
+      'python': /python|py/,
+      'react': /react/,
+      'vue': /vue/,
+      'docker': /docker|container/,
+      'kubernetes': /kubernetes|k8s/,
+      'aws': /aws|amazon/,
+      'git': /git|github|gitlab/,
+      'npm': /npm|package/,
+      'json': /json/,
+      'yaml': /yaml|yml/,
+      'markdown': /markdown|md/,
+      'html': /html/,
+      'css': /css|style/
+    };
+
+    for (const [tag, pattern] of Object.entries(techPatterns)) {
+      if (pattern.test(text)) {
+        tags.add(tag);
+      }
+    }
+
+    // Action tags
+    if (/create|new|generate/.test(text)) tags.add('create');
+    if (/read|get|fetch/.test(text)) tags.add('read');
+    if (/update|edit|modify/.test(text)) tags.add('update');
+    if (/delete|remove/.test(text)) tags.add('delete');
+    if (/async|promise|await/.test(text)) tags.add('async');
+    if (/sync/.test(text) && !/async/.test(text)) tags.add('sync');
+
+    return Array.from(tags);
   }
 
   /**

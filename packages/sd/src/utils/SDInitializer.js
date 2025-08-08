@@ -51,17 +51,17 @@ export class SDInitializer {
     }
 
     // Register LLM client in ResourceManager for global access
-    resourceManager.register('llmClient', this.llmClient);
+    resourceManager.set('llmClient', this.llmClient);
     
     // Register SDModule-like object for backward compatibility
-    resourceManager.register('sdModule', {
+    resourceManager.set('sdModule', {
       llmClient: this.llmClient
     });
 
     // Initialize database service
     this.dbService = new DesignDatabaseService(resourceManager);
     await this.dbService.initialize();
-    resourceManager.register('dbService', this.dbService);
+    resourceManager.set('dbService', this.dbService);
 
     this.isInitialized = true;
     
@@ -191,6 +191,27 @@ export class SDInitializer {
       hasDB: !!this.dbService,
       hasResourceManager: !!this.resourceManager
     };
+  }
+
+  /**
+   * Initialize for live testing with minimal ResourceManager
+   */
+  async initializeForLiveTest() {
+    if (this.isInitialized) {
+      return this.resourceManager;
+    }
+
+    // Create ResourceManager - it automatically loads .env file
+    const { ResourceManager } = await import('@legion/tool-core');
+    this.resourceManager = new ResourceManager();
+    
+    // Initialize ResourceManager (it loads .env automatically)
+    await this.resourceManager.initialize();
+
+    // Initialize with the ResourceManager
+    await this.initializeWithResourceManager(this.resourceManager);
+    
+    return this.resourceManager;
   }
 }
 

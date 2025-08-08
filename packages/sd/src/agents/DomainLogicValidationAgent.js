@@ -115,7 +115,7 @@ Return JSON:
 }`;
 
     try {
-      const result = await this.makeLLMDecision(prompt);
+      const result = await this.makeLLMDecision(prompt, {});
       
       return {
         type: 'relationships',
@@ -187,7 +187,7 @@ Return JSON:
 }`;
 
     try {
-      const result = await this.makeLLMDecision(prompt);
+      const result = await this.makeLLMDecision(prompt, {});
       
       return {
         type: 'business_logic',
@@ -258,7 +258,7 @@ Return JSON:
 }`;
 
     try {
-      const result = await this.makeLLMDecision(prompt);
+      const result = await this.makeLLMDecision(prompt, {});
       
       return {
         type: 'bounded_contexts',
@@ -318,7 +318,7 @@ Return JSON:
 }`;
 
     try {
-      const result = await this.makeLLMDecision(prompt);
+      const result = await this.makeLLMDecision(prompt, {});
       
       return {
         type: 'ddd_compliance',

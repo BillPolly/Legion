@@ -31,6 +31,9 @@ export class ResourceManager {
     // Internal storage
     this._resources = new Map();
     
+    // Flag to track initialization status
+    this.initialized = false;
+    
     // Load initial resources if provided
     if (initialResources) {
       this.load(initialResources);
@@ -167,9 +170,14 @@ export class ResourceManager {
         }
         this._resources.set('env', envObj);
       }
+      
+      // Mark as initialized
+      this.initialized = true;
     } catch (error) {
       // dotenv is optional, don't fail if not available
       console.warn('ResourceManager: dotenv not available, environment variables not loaded');
+      // Still mark as initialized even if dotenv fails
+      this.initialized = true;
     }
   }
   

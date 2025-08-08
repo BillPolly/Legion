@@ -88,7 +88,7 @@ Return the resolved requirements in this format:
   "rationale": "business justification for the resolution"
 }`;
 
-      const resolution = await this.makeLLMDecision(prompt);
+      const resolution = await this.makeLLMDecision(prompt, {});
 
       // Update the requirements artifacts
       const updatedRequirements = this.applyRequirementsChanges(
@@ -154,7 +154,7 @@ Return the consolidation plan:
   "rationale": "why this consolidation preserves all necessary functionality"
 }`;
 
-      const consolidation = await this.makeLLMDecision(prompt);
+      const consolidation = await this.makeLLMDecision(prompt, {});
 
       // Apply the consolidation
       const updatedRequirements = this.applyConsolidation(
@@ -222,7 +222,7 @@ Return the consistency resolution:
   "rationale": "business justification for the alignment"
 }`;
 
-      const alignment = await this.makeLLMDecision(prompt);
+      const alignment = await this.makeLLMDecision(prompt, {});
 
       // Apply the alignment
       const updatedRequirements = this.applyAlignment(
@@ -295,7 +295,7 @@ Return the missing requirements:
   "integration": "how these requirements integrate with existing ones"
 }`;
 
-      const gapFilling = await this.makeLLMDecision(prompt);
+      const gapFilling = await this.makeLLMDecision(prompt, {});
 
       // Add the new requirements
       const updatedRequirements = this.addNewRequirements(
@@ -366,7 +366,7 @@ Return the improved requirement:
   "improvements": "what was changed to make it testable"
 }`;
 
-      const improvement = await this.makeLLMDecision(prompt);
+      const improvement = await this.makeLLMDecision(prompt, {});
 
       // Update the requirement
       const updatedRequirements = this.updateRequirement(

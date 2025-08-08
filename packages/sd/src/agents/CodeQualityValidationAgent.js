@@ -264,7 +264,7 @@ Return JSON:
 }`;
 
     try {
-      const result = await this.makeLLMDecision(prompt);
+      const result = await this.makeLLMDecision(prompt, {});
       
       return {
         type: 'architecture',
@@ -321,7 +321,7 @@ Return JSON:
 }`;
 
     try {
-      const result = await this.makeLLMDecision(prompt);
+      const result = await this.makeLLMDecision(prompt, {});
       
       return {
         type: 'clean_code',
@@ -385,7 +385,7 @@ Return JSON:
 }`;
 
     try {
-      const result = await this.makeLLMDecision(prompt);
+      const result = await this.makeLLMDecision(prompt, {});
       
       return {
         type: 'business_logic',

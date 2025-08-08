@@ -6,6 +6,7 @@
  * - Robust JSON parsing and error handling
  * - BT structure generation instead of linear plans
  * - Clean separation from execution logic
+ * - Intelligent tool discovery via semantic search
  */
 
 import { BTValidator } from '@legion/bt-validator';
@@ -21,7 +22,9 @@ export class PlanningRequest {
     allowableActions = [],
     maxSteps = 20,
     initialInputData = {},
-    context = {}
+    context = {},
+    useSemanticToolDiscovery = false,
+    toolDiscoveryOptions = {}
   }) {
     this.description = description;
     this.inputs = inputs;
@@ -30,6 +33,8 @@ export class PlanningRequest {
     this.maxSteps = maxSteps;
     this.initialInputData = initialInputData;
     this.context = context;
+    this.useSemanticToolDiscovery = useSemanticToolDiscovery;
+    this.toolDiscoveryOptions = toolDiscoveryOptions;
   }
 
   validate() {
@@ -37,8 +42,9 @@ export class PlanningRequest {
       throw new Error('Planning request must have a description');
     }
     
-    if (!this.allowableActions || this.allowableActions.length === 0) {
-      throw new Error('Planning request must have allowable actions');
+    // Allow empty allowableActions if using semantic discovery
+    if (!this.useSemanticToolDiscovery && (!this.allowableActions || this.allowableActions.length === 0)) {
+      throw new Error('Planning request must have allowable actions or use semantic tool discovery');
     }
   }
 }
@@ -83,6 +89,8 @@ export class PlannerEngine {
     });
     this.maxRetries = options.maxRetries || 3;
     this.debugMode = options.debugMode || false;
+    this.toolDiscoveryService = options.toolDiscoveryService || null;
+    this.toolRegistry = options.toolRegistry || null;
   }
 
   /**
@@ -134,6 +142,12 @@ export class PlannerEngine {
     if (!(request instanceof PlanningRequest)) {
       throw new Error('Request must be a PlanningRequest instance');
     }
+    
+    // Enhance request with semantic tool discovery if enabled
+    if (request.useSemanticToolDiscovery && this.toolDiscoveryService) {
+      request = await this.enhanceRequestWithDiscoveredTools(request);
+    }
+    
     request.validate();
 
     const strategy = this.getStrategy(strategyName);
@@ -302,6 +316,120 @@ export class PlannerEngine {
   }
 
   /**
+   * Enhance planning request with semantically discovered tools
+   * @param {PlanningRequest} request - Original planning request
+   * @returns {Promise<PlanningRequest>} Enhanced request with discovered tools
+   */
+  async enhanceRequestWithDiscoveredTools(request) {
+    if (!this.toolDiscoveryService) {
+      console.warn('[PlannerEngine] Tool discovery service not configured');
+      return request;
+    }
+
+    try {
+      if (this.debugMode) {
+        console.log(`[PlannerEngine] Discovering tools for: ${request.description}`);
+      }
+
+      // Find relevant tools based on task description
+      const discoveredTools = await this.toolDiscoveryService.findRelevantTools(
+        request.description,
+        {
+          limit: request.toolDiscoveryOptions.limit || 20,
+          minScore: request.toolDiscoveryOptions.minScore || 0.7,
+          categories: request.toolDiscoveryOptions.categories,
+          excludeTools: request.toolDiscoveryOptions.excludeTools,
+          includeMetadata: true
+        }
+      );
+
+      if (this.debugMode) {
+        console.log(`[PlannerEngine] Discovered ${discoveredTools.length} relevant tools`);
+        console.log(`[PlannerEngine] Top tools:`, discoveredTools.slice(0, 5).map(t => ({
+          name: t.name,
+          score: t.relevanceScore.toFixed(2)
+        })));
+      }
+
+      // Convert discovered tools to allowable actions format
+      const allowableActions = discoveredTools.map(tool => {
+        // If we have the actual tool instance, use its schema
+        if (tool.instance) {
+          return {
+            type: tool.name,
+            description: tool.description || tool.instance.description,
+            inputSchema: tool.instance.inputSchema || tool.instance.schema,
+            outputSchema: tool.instance.outputSchema,
+            metadata: {
+              category: tool.category,
+              relevanceScore: tool.relevanceScore,
+              capabilities: tool.capabilities
+            }
+          };
+        }
+        
+        // Otherwise use discovered metadata
+        return {
+          type: tool.name,
+          description: tool.description,
+          metadata: {
+            category: tool.category,
+            relevanceScore: tool.relevanceScore,
+            capabilities: tool.capabilities,
+            available: false
+          }
+        };
+      });
+
+      // Merge with existing allowable actions (if any)
+      const enhancedRequest = new PlanningRequest({
+        ...request,
+        allowableActions: [...request.allowableActions, ...allowableActions],
+        context: {
+          ...request.context,
+          toolDiscovery: {
+            performed: true,
+            toolCount: discoveredTools.length,
+            topTools: discoveredTools.slice(0, 5).map(t => t.name)
+          }
+        }
+      });
+
+      return enhancedRequest;
+
+    } catch (error) {
+      console.error('[PlannerEngine] Tool discovery failed:', error);
+      
+      // Fall back to original request
+      if (request.allowableActions.length > 0) {
+        return request;
+      }
+      
+      // If no fallback tools, throw error
+      throw new Error(`Tool discovery failed and no fallback tools provided: ${error.message}`);
+    }
+  }
+
+  /**
+   * Create planning request with semantic tool discovery
+   * @param {string} taskDescription - Natural language task description
+   * @param {Object} options - Planning options
+   * @returns {Promise<PlanningRequest>} Planning request with discovered tools
+   */
+  async createSemanticPlanningRequest(taskDescription, options = {}) {
+    const request = new PlanningRequest({
+      description: taskDescription,
+      useSemanticToolDiscovery: true,
+      toolDiscoveryOptions: options.toolDiscovery || {},
+      maxSteps: options.maxSteps || 20,
+      context: options.context || {}
+    });
+
+    // Discover and add tools
+    return await this.enhanceRequestWithDiscoveredTools(request);
+  }
+
+  /**
    * Get engine statistics
    * @returns {Object} Engine statistics
    */
@@ -315,7 +443,9 @@ export class PlannerEngine {
         applyDefaults: this.validator.applyDefaults
       },
       maxRetries: this.maxRetries,
-      debugMode: this.debugMode
+      debugMode: this.debugMode,
+      toolDiscoveryEnabled: !!this.toolDiscoveryService,
+      toolRegistryEnabled: !!this.toolRegistry
     };
   }
 }
