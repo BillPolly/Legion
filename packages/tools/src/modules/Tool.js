@@ -16,9 +16,10 @@ try {
 }
 
 export class Tool extends EventEmitter {
-  constructor({ name, execute, getMetadata, schema, inputSchema }) {
+  constructor({ name, description, execute, getMetadata, schema, inputSchema }) {
     super();
     this.name = name;
+    this.description = description || 'No description available';
     this._execute = execute;
     this._getMetadata = getMetadata;
     

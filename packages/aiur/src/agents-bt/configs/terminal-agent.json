@@ -8,7 +8,7 @@
     "session_create": {
       "type": "sequence",
       "name": "create_session_workflow",
-      "description": "Create new session and send initial tools",
+      "description": "Create new session with clean response",
       "children": [
         {
           "type": "session_manager",
@@ -17,11 +17,11 @@
           "description": "Create a new session"
         },
         {
-          "type": "tools_list",
-          "name": "send_initial_tools",
-          "action": "send_initial_tools",
-          "includeSystemTools": true,
-          "description": "Send initial tools list to client"
+          "type": "response_sender",
+          "name": "send_session_created",
+          "responseType": "session_created",
+          "content": "Session {{sessionId}} created successfully. Use 'tools' command to see available tools.",
+          "description": "Confirm session creation"
         }
       ]
     },
@@ -29,7 +29,7 @@
     "session_attach": {
       "type": "sequence",
       "name": "attach_session_workflow",
-      "description": "Attach to existing session and send tools",
+      "description": "Attach to existing session with clean response",
       "children": [
         {
           "type": "session_manager",
@@ -39,11 +39,11 @@
           "description": "Attach to existing session"
         },
         {
-          "type": "tools_list",
-          "name": "send_current_tools",
-          "action": "send_initial_tools",
-          "includeSystemTools": true,
-          "description": "Send current tools list to client"
+          "type": "response_sender",
+          "name": "send_session_attached",
+          "responseType": "session_attached",
+          "content": "Attached to session {{sessionId}}. Use 'tools' command to see available tools.",
+          "description": "Confirm session attachment"
         }
       ]
     },
@@ -126,7 +126,7 @@
         {
           "type": "module_manager",
           "name": "get_modules_list",
-          "action": "list_modules",
+          "action": "list",
           "includeLoaded": true,
           "includeAvailable": true,
           "description": "Get loaded and available modules"

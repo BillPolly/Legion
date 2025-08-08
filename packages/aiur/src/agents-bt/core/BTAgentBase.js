@@ -136,28 +136,33 @@ export class BTAgentBase extends Actor {
   }
   
   /**
-   * Get tool registry from moduleLoader or create a mock one
+   * Get tool registry wrapper for BT executor
+   * Uses the ModuleLoader's tools Map
    */
   getToolRegistry() {
-    if (this.moduleLoader && this.moduleLoader.toolRegistry) {
-      return this.moduleLoader.toolRegistry;
+    if (!this.moduleLoader) {
+      // Return empty registry if no module loader
+      return {
+        getTool: async (name) => null,
+        hasTool: (name) => false
+      };
     }
     
-    // Create a minimal tool registry wrapper
+    // Create a wrapper around ModuleLoader's tools Map
     return {
       getTool: async (name) => {
-        if (this.moduleLoader) {
-          return this.moduleLoader.getTool ? 
-            await this.moduleLoader.getTool(name) : null;
-        }
-        return null;
+        // ModuleLoader.getTool returns the tool directly from the Map
+        return this.moduleLoader.getTool(name);
       },
       hasTool: (name) => {
-        if (this.moduleLoader) {
-          return this.moduleLoader.hasTool ? 
-            this.moduleLoader.hasTool(name) : false;
-        }
-        return false;
+        // Check if tool exists in ModuleLoader's tools Map
+        return this.moduleLoader.tools ? 
+          this.moduleLoader.tools.has(name) : false;
+      },
+      getAllTools: async () => {
+        // Get all tools from ModuleLoader
+        return this.moduleLoader.getAllTools ? 
+          await this.moduleLoader.getAllTools() : [];
       }
     };
   }
@@ -289,7 +294,15 @@ export class BTAgentBase extends Actor {
         nodeResult => nodeResult.data?.responseSent === true
       )) ||
       (result.data?.stepResults && result.data.stepResults.some(
-        step => step.childId?.includes('response_sender') && step.data?.responseSent === true
+        step => (step.childId?.includes('response_sender') || 
+                 step.name?.includes('response_sender') ||
+                 step.childId?.includes('send_session_created') ||
+                 step.childId?.includes('send_session_attached')) && 
+                step.data?.responseSent === true
+      )) ||
+      // Also check if any step has responseSent in its data
+      (result.data?.stepResults && result.data.stepResults.some(
+        step => step.data?.responseSent === true
       ));
     
     if (wasResponseSent) {

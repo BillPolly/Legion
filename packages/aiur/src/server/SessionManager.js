@@ -12,7 +12,6 @@
 import { HandleRegistry } from '../handles/HandleRegistry.js';
 import { HandleResolver } from '../handles/HandleResolver.js';
 import { ContextManager } from '../core/ContextManager.js';
-import { ToolRegistry } from '../tools/ToolRegistry.js';
 
 /**
  * SessionToolProvider - Provides tools from the central ModuleLoader
@@ -208,7 +207,6 @@ export class SessionManager {
     // Create per-session components
     const handleRegistry = new HandleRegistry();
     const handleResolver = new HandleResolver(handleRegistry);
-    const toolRegistry = new ToolRegistry(handleRegistry);
     
     // Create session-specific context manager
     const contextManager = new ContextManager(handleRegistry, handleResolver);
@@ -222,7 +220,6 @@ export class SessionManager {
       handleResolver: handleResolver,
       context: contextManager,
       toolProvider: null, // Will be set after creation
-      toolRegistry: toolRegistry,
       metadata: {
         requestCount: 0,
         toolCalls: 0,

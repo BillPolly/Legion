@@ -29,7 +29,7 @@ export class TerminalBTAgent extends BTAgentBase {
   async initializeAgent() {
     // Terminal agent is simpler, just ensure module loader is ready
     if (this.moduleLoader) {
-      console.log(`TerminalBTAgent: Module loader available with ${this.moduleLoader.toolRegistry?.size || 0} tools`);
+      console.log(`TerminalBTAgent: Module loader available with ${this.moduleLoader.tools?.size || 0} tools`);
     }
     
     console.log(`TerminalBTAgent ${this.agentId} initialized`);
@@ -145,7 +145,7 @@ export class TerminalBTAgent extends BTAgentBase {
     if (this.remoteActor) {
       const tools = await this.getAvailableTools();
       this.remoteActor.receive({
-        type: 'tool_list',
+        type: 'tools_list',
         tools: tools,
         sessionId: this.sessionId,
         timestamp: Date.now()

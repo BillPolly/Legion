@@ -141,7 +141,7 @@ export class TerminalActor extends Actor {
           break;
           
         case 'tools_list':
-          // Alternative tools list response from BT agents
+          // Tools list from TerminalBTAgent
           this.handleToolsListResponse(payload);
           break;
         
@@ -207,7 +207,8 @@ export class TerminalActor extends Actor {
    */
   handleToolsListResponse(payload) {
     console.log('TerminalActor: Tools list response:', payload);
-    this.handleToolsList(payload.tools || []);
+    // Store tools silently - don't display them automatically
+    this.updateToolDefinitions(payload.tools || []);
   }
   
   /**
@@ -1250,12 +1251,9 @@ export class TerminalActor extends Actor {
     });
     
     actorSpace.on('session_ready', async ({ sessionId }) => {
-      if (this.terminal) {
-        this.terminal.addOutput(`Session created: ${sessionId}`, 'success');
-        this.terminal.addOutput('Type .help to see available commands', 'info');
-      } else {
-        console.log(`TerminalActor: Session created: ${sessionId} (terminal not yet attached)`);
-      }
+      // Session creation is already handled by handleSessionCreated
+      // Don't output duplicate messages
+      console.log(`TerminalActor: Session ready event for ${sessionId}`);
       
       // Load tool schemas so we know how to parse arguments
       try {

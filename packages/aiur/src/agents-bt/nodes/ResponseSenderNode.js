@@ -25,9 +25,15 @@ export class ResponseSenderNode extends BehaviorTreeNode {
     try {
       if (!context.remoteActor) {
         console.warn('ResponseSenderNode: No remote actor to send response to');
+        // Still mark that we tried to send a response to prevent duplicate processing
+        context.responseSent = true;
         return {
           status: NodeStatus.SUCCESS,
-          data: { message: 'No remote actor available' }
+          data: { 
+            message: 'No remote actor available',
+            responseSent: true,
+            responseType: this.responseType
+          }
         };
       }
       

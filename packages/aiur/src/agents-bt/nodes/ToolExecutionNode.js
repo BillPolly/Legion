@@ -24,10 +24,15 @@ export class ToolExecutionNode extends BehaviorTreeNode {
 
   async executeNode(context) {
     try {
-      // Determine which tool to execute
-      const toolName = this.toolName || context.toolName || context.message?.tool;
+      // Determine which tool to execute - resolve templates first
+      let toolName = this.toolName || context.toolName || context.message?.tool;
       if (!toolName) {
         return this.createFailureResult('No tool name specified');
+      }
+      
+      // Resolve template placeholders in tool name
+      if (typeof toolName === 'string' && toolName.includes('{{') && toolName.includes('}}')) {
+        toolName = this.substitutePlaceholders(toolName, context);
       }
       
       // Get tool arguments
@@ -123,7 +128,8 @@ export class ToolExecutionNode extends BehaviorTreeNode {
     
     // Execute through module loader
     if (context.moduleLoader) {
-      if (context.moduleLoader.hasTool && !context.moduleLoader.hasTool(toolName)) {
+      // Check if tool exists using ModuleLoader's tools Map
+      if (context.moduleLoader.tools && !context.moduleLoader.tools.has(toolName)) {
         return {
           success: false,
           error: `Tool '${toolName}' not found`,
@@ -320,8 +326,8 @@ export class ToolExecutionNode extends BehaviorTreeNode {
   async getAvailableToolNames(context) {
     const toolNames = [];
     
-    if (context.moduleLoader && context.moduleLoader.toolRegistry) {
-      toolNames.push(...Array.from(context.moduleLoader.toolRegistry.keys()));
+    if (context.moduleLoader && context.moduleLoader.tools) {
+      toolNames.push(...Array.from(context.moduleLoader.tools.keys()));
     }
     
     return toolNames;

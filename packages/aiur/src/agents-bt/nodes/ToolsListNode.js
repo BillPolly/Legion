@@ -71,28 +71,15 @@ export class ToolsListNode extends BehaviorTreeNode {
     const tools = [];
     
     try {
-      // Get tools from module loader
-      if (moduleLoader.getAllTools) {
+      // Get ALL tools from the module loader - this is the ONLY source of tools
+      if (moduleLoader && moduleLoader.getAllTools) {
         const moduleTools = await moduleLoader.getAllTools();
         tools.push(...moduleTools.map(tool => this.formatTool(tool)));
+      } else {
+        console.warn('ToolsListNode: ModuleLoader not available or has no getAllTools method');
       }
-      
-      // Get tools from tool registry if available
-      if (this.toolRegistry && this.toolRegistry.getAllTools) {
-        const registryTools = await this.toolRegistry.getAllTools();
-        registryTools.forEach(tool => {
-          // Avoid duplicates
-          if (!tools.some(t => t.name === tool.name)) {
-            tools.push(this.formatTool(tool));
-          }
-        });
-      }
-
-      // Add built-in tools
-      this.addBuiltinTools(tools);
-
     } catch (error) {
-      console.warn('Error getting tools:', error.message);
+      console.warn('ToolsListNode: Error getting tools:', error.message);
     }
 
     return tools;
@@ -121,37 +108,6 @@ export class ToolsListNode extends BehaviorTreeNode {
     return formatted;
   }
 
-  /**
-   * Add built-in tools that are always available
-   */
-  addBuiltinTools(tools) {
-    const builtinTools = [
-      {
-        name: 'module_list',
-        description: 'List available and loaded modules',
-        module: 'builtin',
-        category: 'system'
-      },
-      {
-        name: 'module_load',
-        description: 'Load a module to make its tools available',
-        module: 'builtin', 
-        category: 'system'
-      },
-      {
-        name: 'module_unload',
-        description: 'Unload a module and remove its tools',
-        module: 'builtin',
-        category: 'system'
-      }
-    ];
-
-    builtinTools.forEach(tool => {
-      if (!tools.some(t => t.name === tool.name)) {
-        tools.push(this.formatTool(tool));
-      }
-    });
-  }
 
   /**
    * Infer tool category from name
