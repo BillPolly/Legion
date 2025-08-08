@@ -1,6 +1,5 @@
 import { Actor } from '../../../../shared/actors/src/Actor.js';
 import { UserInteractionHandler } from './UserInteractionHandler.js';
-import { PlanExecution } from './PlanExecution.js';
 import { PlanExecutionEngine } from './PlanExecutionEngine.js';
 
 /**
@@ -25,9 +24,8 @@ export class TaskOrchestrator extends Actor {
     // Reference to ChatAgent for sending updates
     this.chatAgent = config.chatAgent || null;
     
-    // Resource access
-    this.resourceManager = config.resourceManager || null;
-    this.moduleLoader = config.moduleLoader || null;
+    // Tool access
+    this.toolRegistry = config.toolRegistry || null;
     this.artifactManager = config.artifactManager || null;
     
     // LLM access (will come from ChatAgent)
@@ -35,7 +33,6 @@ export class TaskOrchestrator extends Actor {
     
     // Internal components
     this.interactionHandler = new UserInteractionHandler(this);
-    this.planExecution = new PlanExecution(this);
     this.planExecutionEngine = new PlanExecutionEngine(this);
     
     // Task state
@@ -48,21 +45,7 @@ export class TaskOrchestrator extends Actor {
    * Initialize the orchestrator
    */
   async initialize() {
-    // Get LLM client from ResourceManager
-    if (this.resourceManager) {
-      try {
-        this.llmClient = await this.resourceManager.createLLMClient({
-          provider: 'anthropic',
-          model: 'claude-3-5-sonnet-20241022',
-          maxRetries: 3
-        });
-        console.log('TaskOrchestrator: LLM client initialized');
-      } catch (error) {
-        console.error('TaskOrchestrator: Failed to initialize LLM client:', error);
-      }
-    }
-    
-    console.log('TaskOrchestrator: Initialized');
+    console.log('TaskOrchestrator: Initialized with ToolRegistry');
   }
   
   /**
@@ -102,7 +85,7 @@ export class TaskOrchestrator extends Actor {
    * Start working on a complex task
    */
   async startTask(payload) {
-    if (this.planExecution.state !== 'idle') {
+    if (this.planExecutionEngine.state !== 'idle') {
       // Use agentContext if available, otherwise fall back to old method
       if (payload.agentContext) {
         payload.agentContext.emit('message', {
@@ -130,8 +113,8 @@ export class TaskOrchestrator extends Actor {
       conversationHistory: this.agentContext?.conversationHistory || []
     };
     
-    // Skip the interaction handler and go straight to planning
-    await this.planExecution.start(this.currentTask.description, this.currentTask.context);
+    // Use proper profile planning and execution
+    await this.createAndExecutePlan(this.currentTask.description);
   }
   
   /**
@@ -234,7 +217,7 @@ export class TaskOrchestrator extends Actor {
       
     } else if (this.chatAgent) {
       // Fallback to old method
-      const isActive = this.planExecution.state !== 'idle';
+      const isActive = this.planExecutionEngine.state !== 'idle';
       
       this.chatAgent.handleOrchestratorMessage({
         ...message,
@@ -268,10 +251,109 @@ export class TaskOrchestrator extends Actor {
   }
   
   /**
+   * Create and execute a plan using ProfilePlanner
+   */
+  async createAndExecutePlan(description) {
+    try {
+      this.sendToChatAgent({
+        type: 'orchestrator_status',
+        message: `🧠 Analyzing task and creating plan...\n\n📋 Task: ${description}\n\nDetermining best approach...`,
+        progress: 5
+      });
+
+      // Import ProfilePlanner directly  
+      const { ProfilePlannerTool } = await import('../../../../planning/profile-planner/src/tools/ProfilePlannerTool.js');
+      
+      // Create planner instance (yes, it's called "Tool" but it's really a planner)
+      const planner = new ProfilePlannerTool();
+      await planner.initialize();
+      
+      this.sendToChatAgent({
+        type: 'orchestrator_update', 
+        message: 'Using javascript-development profile for planning...',
+        progress: 15
+      });
+      
+      // Create plan using javascript-development profile
+      const planResult = await planner.execute({
+        function: {
+          name: 'plan_with_profile',
+          arguments: JSON.stringify({
+            profile: 'javascript-development',
+            task: description
+          })
+        }
+      });
+      
+      if (!planResult.success) {
+        throw new Error(`Planning failed: ${planResult.error}`);
+      }
+      
+      this.sendToChatAgent({
+        type: 'orchestrator_update',
+        message: `✅ Plan created successfully!\n\n📋 Profile: ${planResult.data.profile}\n• ${planResult.data.behaviorTree?.nodes?.length || 0} execution steps\n• Ready for execution...`,
+        progress: 25
+      });
+      
+      // Convert BT plan to standard plan format for execution
+      const standardPlan = this.convertBTToStandardPlan(planResult.data.behaviorTree);
+      standardPlan.status = 'validated';
+      
+      // Execute the plan
+      await this.planExecutionEngine.executePlan(standardPlan, {
+        workspaceDir: process.cwd(),
+        retries: 2
+      });
+      
+    } catch (error) {
+      console.error('TaskOrchestrator: Planning/execution error:', error);
+      this.sendToChatAgent({
+        type: 'orchestrator_error',
+        message: `Failed to create or execute plan: ${error.message}`
+      });
+    }
+  }
+  
+  /**
+   * Convert BT format to standard plan format
+   */
+  convertBTToStandardPlan(behaviorTree) {
+    if (!behaviorTree || !behaviorTree.nodes) {
+      throw new Error('Invalid behavior tree structure');
+    }
+    
+    const plan = {
+      id: behaviorTree.id || `plan_${Date.now()}`,
+      name: behaviorTree.name || 'Generated Plan',
+      description: behaviorTree.description || 'Profile-generated plan',
+      steps: [],
+      metadata: {
+        profile: 'javascript-development',
+        createdAt: new Date().toISOString()
+      }
+    };
+    
+    // Convert BT nodes to plan steps
+    behaviorTree.nodes.forEach((node, index) => {
+      if (node.type === 'action') {
+        plan.steps.push({
+          id: node.id || `step_${index}`,
+          name: node.name || `Step ${index + 1}`,
+          actions: [{
+            type: node.actionType || node.toolName,
+            inputs: node.parameters || node.inputs || {}
+          }]
+        });
+      }
+    });
+    
+    return plan;
+  }
+
+  /**
    * Clean up resources
    */
   destroy() {
-    this.planExecution.clearTimers();
     this.planExecutionEngine.clearResources();
     this.currentTask = null;
     this.chatAgent = null;

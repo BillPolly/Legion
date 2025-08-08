@@ -1,7 +1,7 @@
 /**
  * Tool Architecture Framework - Main Entry Point
  * 
- * Complete replacement for @legion/module-loader
+ * Complete tools package with both tool modules and core infrastructure
  */
 
 // Core module components
@@ -9,8 +9,9 @@ export { ModuleDefinition } from './modules/ModuleDefinition.js';
 export { ModuleInstance } from './modules/ModuleInstance.js';
 export { Tool } from './modules/Tool.js';
 
-// Resource management
+// Resource management  
 export { ResourceManager } from './ResourceManager.js';
+export { default as ResourceManagerDefault } from './ResourceManager.js';
 
 // Module loading system
 export { ModuleLoader } from './ModuleLoader.js';
@@ -59,3 +60,9 @@ export { NodeModuleWrapper, NPMPackageWrapper } from './utils/LibraryIntegration
 export { wrapMethod, wrapAsyncMethod } from './utils/MethodWrapper.js';
 export { createToolFromMethod, createToolFromFunction } from './utils/ToolFactory.js';
 export { ValidationError, validateParameter } from './utils/Validation.js';
+
+// Tool modules are available in their respective directories and can be imported directly:
+// import CalculatorModule from '@legion/tools/calculator'
+// import FileModule from '@legion/tools/file' 
+// import GitHubModule from '@legion/tools/github'
+// etc.

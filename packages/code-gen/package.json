@@ -29,6 +29,6 @@
   "dependencies": {
     "zod": "^3.22.0",
     "semver": "^7.5.0",
-    "@legion/tool-system": "^1.0.0"
+    "@legion/tools": "^1.0.0"
   }
 }

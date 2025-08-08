@@ -1,7 +1,7 @@
 {
   "name": "@legion/tools",
   "version": "1.0.0",
-  "description": "Core tools and MCP integration for the Legion AI agent framework",
+  "description": "Collection of AI agent tools and core tool infrastructure",
   "type": "module",
   "main": "src/index.js",
   "bin": {
@@ -39,8 +39,6 @@
   },
   "dependencies": {
     "@legion/schema": "^0.0.1",
-    "@legion/module-loader": "workspace:*",
-    "@legion/shared": "workspace:*",
     "commander": "^12.0.0",
     "chalk": "^5.3.0",
     "cli-table3": "^0.6.3",

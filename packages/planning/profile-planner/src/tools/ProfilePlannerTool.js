@@ -5,10 +5,11 @@
  * that provide domain-specific context and allowable actions
  */
 
-import { Tool, ToolResult } from '@legion/tools';
-import { PlanningRequest, createLLMPlanner } from '@legion/unified-planner';
-import { LLMClient } from '@legion/llm';
+import { Tool, ToolResult, ResourceManager } from '@legion/tools';
 import { ProfileManager } from '../ProfileManager.js';
+// Note: Using unified planner components
+import { createLLMPlanner, PlanningRequest } from '../../../unified-planner/src/index.js';
+import { LLMClient } from '@legion/llm';
 
 export class ProfilePlannerTool extends Tool {
   constructor(dependencies = {}) {

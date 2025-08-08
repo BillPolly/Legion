@@ -8,7 +8,7 @@
 
 import { Actor } from '../../../../../shared/actors/src/Actor.js';
 import { TaskOrchestrator } from '../TaskOrchestrator.js';
-import { ResourceManager, ModuleLoader } from '@legion/module-loader';
+import { ResourceManager } from '../../../../tools/src/ResourceManager.js';
 import { EventEmitter } from 'events';
 
 export class TaskOrchestratorTestActor extends Actor {
@@ -16,7 +16,6 @@ export class TaskOrchestratorTestActor extends Actor {
     super();
     this.options = options;
     this.resourceManager = null;
-    this.moduleLoader = null;
     this.taskOrchestrator = null;
     this.mockChatAgent = null;
     this.messages = [];
@@ -32,9 +31,8 @@ export class TaskOrchestratorTestActor extends Actor {
     if (this.initialized) return;
     
     try {
-      // Create ResourceManager and ModuleLoader
+      // Create ResourceManager
       await this.createResourceManager();
-      await this.createModuleLoader();
       
       // Create mock chat agent
       this.mockChatAgent = this.createMockChatAgent();
@@ -47,7 +45,6 @@ export class TaskOrchestratorTestActor extends Actor {
         sessionId: 'test-session-001',
         chatAgent: this.mockChatAgent,
         resourceManager: this.resourceManager,
-        moduleLoader: this.moduleLoader,
         artifactManager: mockArtifactManager
       });
       
@@ -74,30 +71,6 @@ export class TaskOrchestratorTestActor extends Actor {
     console.log('TaskOrchestratorTestActor: ResourceManager created');
   }
   
-  /**
-   * Create ModuleLoader and load essential modules
-   */
-  async createModuleLoader() {
-    this.moduleLoader = new ModuleLoader(this.resourceManager);
-    await this.moduleLoader.initialize();
-    
-    // Load essential modules for testing
-    const registryResult = await this.moduleLoader.loadAllFromRegistry();
-    console.log(`TaskOrchestratorTestActor: Loaded ${registryResult.successful.length} modules from registry`);
-    
-    // Load ProfilePlannerModule for plan generation
-    try {
-      const { ProfilePlannerModule } = await import('@legion/profile-planner');
-      const profilePlannerModule = await ProfilePlannerModule.create(this.resourceManager);
-      
-      // Register the module and its tools directly
-      this.moduleLoader.loadedModules.set('profile-planner', profilePlannerModule);
-      await this.moduleLoader._registerModuleTools(profilePlannerModule, 'profile-planner');
-      console.log('TaskOrchestratorTestActor: ProfilePlannerModule loaded');
-    } catch (error) {
-      console.warn('TaskOrchestratorTestActor: Failed to load ProfilePlannerModule:', error.message);
-    }
-  }
   
   /**
    * Create mock ChatAgent for testing
@@ -360,7 +333,6 @@ export class TaskOrchestratorTestActor extends Actor {
     }
     
     this.resourceManager = null;
-    this.moduleLoader = null;
     this.taskOrchestrator = null;
     this.mockChatAgent = null;
     this.initialized = false;

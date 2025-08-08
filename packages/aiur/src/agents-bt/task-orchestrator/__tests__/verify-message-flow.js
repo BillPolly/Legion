@@ -5,7 +5,7 @@
  */
 
 import { TaskOrchestrator } from '../TaskOrchestrator.js';
-import { ResourceManager } from '@legion/module-loader';
+import { ResourceManager } from '../../../../tools/src/ResourceManager.js';
 
 // Create a mock ChatAgent that logs all messages
 class MockChatAgent {

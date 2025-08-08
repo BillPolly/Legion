@@ -59,14 +59,14 @@ export class PlanExecutionEngine {
       // Set up event listeners for real-time progress
       this.setupExecutionEventListeners();
       
-      // Execute the plan
+      // Execute the behavior tree plan
       this.orchestrator.sendToChatAgent({
         type: 'orchestrator_update',
-        message: 'Executing plan steps...',
+        message: 'Executing behavior tree plan...',
         progress: 10
       });
       
-      const result = await this.planExecutor.executePlan(plan, executionOptions);
+      const result = await this.planExecutor.executeTree(plan, executionOptions);
       this.executionResult = result;
       
       // Handle execution completion
@@ -88,16 +88,12 @@ export class PlanExecutionEngine {
    * Load required modules based on plan metadata
    */
   async loadRequiredModules(plan) {
-    // Check if we have module loader
-    const moduleLoader = this.orchestrator.moduleLoader;
-    if (!moduleLoader) {
-      this.orchestrator.sendToChatAgent({
-        type: 'orchestrator_update',
-        message: 'Warning: No module loader available. Some tools may not work.',
-        progress: 5
-      });
-      return;
-    }
+    // Note: Module loading will be handled by PlanExecutor directly
+    this.orchestrator.sendToChatAgent({
+      type: 'orchestrator_update',
+      message: 'Loading required modules for execution...',
+      progress: 5
+    });
     
     // Get required modules from plan metadata or profile
     let requiredModules = [];
@@ -211,7 +207,7 @@ export class PlanExecutionEngine {
   }
   
   /**
-   * Ensure PlanExecutor is created and ready
+   * Ensure BehaviorTreeExecutor is created and ready
    */
   async ensurePlanExecutor() {
     if (this.planExecutor) {
@@ -219,27 +215,32 @@ export class PlanExecutionEngine {
     }
     
     try {
-      // Import PlanExecutor
-      const { PlanExecutor } = await import('@legion/plan-executor');
+      // Import required classes
+      const { BehaviorTreeExecutor } = await import('@legion/actor-bt');
+      const { ToolRegistry } = await import('@legion/tools');
       
-      // Use the existing moduleLoader from orchestrator instead of creating a new one
-      // This ensures tools loaded in ChatAgent are available to PlanExecutor
-      if (this.orchestrator.moduleLoader) {
-        console.log('PlanExecutionEngine: Using existing moduleLoader from orchestrator');
-        this.planExecutor = new PlanExecutor({
-          moduleLoader: this.orchestrator.moduleLoader
-        });
-      } else {
-        // Fallback: Create executor using ResourceManager (creates new ModuleLoader)
-        console.warn('PlanExecutionEngine: No moduleLoader in orchestrator, creating new one');
-        this.planExecutor = await PlanExecutor.create(this.orchestrator.resourceManager);
+      // Create tool registry and load modules
+      const toolRegistry = new ToolRegistry();
+      
+      // Import general tools and register them
+      const generalTools = await import('@legion/tools');
+      
+      // Register modules with the tool registry
+      const moduleKeys = ['FileModule', 'CalculatorModule', 'CommandExecutorModule', 'AIGenerationModule'];
+      for (const key of moduleKeys) {
+        if (generalTools[key]) {
+          console.log(`PlanExecutionEngine: Loading module ${key}`);
+          await toolRegistry.registerModule(key.toLowerCase(), generalTools[key]);
+        }
       }
       
-      console.log('PlanExecutionEngine: PlanExecutor created successfully');
+      this.planExecutor = new BehaviorTreeExecutor(toolRegistry);
+      
+      console.log('PlanExecutionEngine: BehaviorTreeExecutor created with ToolRegistry');
       
     } catch (error) {
-      console.error('PlanExecutionEngine: Failed to create PlanExecutor:', error);
-      throw new Error(`Failed to initialize plan executor: ${error.message}`);
+      console.error('PlanExecutionEngine: Failed to create BehaviorTreeExecutor:', error);
+      throw new Error(`Failed to initialize behavior tree executor: ${error.message}`);
     }
   }
   
