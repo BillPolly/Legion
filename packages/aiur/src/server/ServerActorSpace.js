@@ -9,7 +9,7 @@ import { ConfigurableActorSpace } from '../../../shared/actors/src/ConfigurableA
 import { ChatBTAgent } from '../agents-bt/agents/ChatBTAgent.js';
 import { TerminalBTAgent } from '../agents-bt/agents/TerminalBTAgent.js';
 import { ArtifactBTAgent } from '../agents-bt/agents/ArtifactBTAgent.js';
-import { ArtifactActor } from '../agents/ArtifactActor.js';
+// ArtifactActor removed - not needed
 import { LogCaptureBTAgent } from '../agents-bt/agents/LogCaptureBTAgent.js';
 
 // Actor configuration with interface declarations
@@ -38,14 +38,6 @@ const actorConfig = {
       interface: 'artifacts',
       provides: ['artifact_created', 'artifact_updated', 'artifacts_list'],
       requires: ['get_artifacts', 'clear_artifacts']
-    },
-    { 
-      name: 'artifactProcessor',
-      frontend: 'ArtifactProcessorActor', 
-      backend: 'ArtifactActor',
-      interface: 'artifactProcessing',
-      provides: ['artifacts_processed', 'artifact_detected'],
-      requires: ['process_tool_result']
     },
     { 
       name: 'logCapture',
@@ -107,7 +99,6 @@ export class ServerActorSpace extends ConfigurableActorSpace {
           this.chatAgent = this.getActor('chat');
           this.terminalAgent = this.getActor('terminal');
           this.artifactAgent = this.getActor('artifactDebug');
-          this.artifactActor = this.getActor('artifactProcessor');
           
           // Wire actor references after all actors are created
           this.wireActorReferences();
@@ -135,25 +126,8 @@ export class ServerActorSpace extends ConfigurableActorSpace {
    * Wire actor references after all actors are created
    */
   wireActorReferences() {
-    // Give ChatAgent reference to ArtifactActor
-    if (this.chatAgent && this.artifactActor) {
-      this.chatAgent.setArtifactActor(this.artifactActor);
-    }
-    
-    // Give ChatAgent reference to ArtifactAgent for direct notifications
-    if (this.chatAgent && this.artifactAgent) {
-      this.chatAgent.setArtifactAgent(this.artifactAgent);
-    }
-    
-    // Give ArtifactActor reference to ArtifactAgent
-    if (this.artifactActor && this.artifactAgent) {
-      this.artifactActor.setArtifactAgent(this.artifactAgent);
-    }
-    
-    // Give ArtifactAgent reference to ChatAgent (for backwards compatibility)
-    if (this.artifactAgent && this.chatAgent) {
-      this.artifactAgent.setChatAgent(this.chatAgent);
-    }
+    // Currently no special wiring needed
+    // All actors communicate through the actor protocol
   }
   
   /**
@@ -210,9 +184,6 @@ export class ServerActorSpace extends ConfigurableActorSpace {
         await this.artifactAgent.initialize();
         return this.artifactAgent;
         
-      case 'ArtifactActor':
-        this.artifactActor = new ArtifactActor(config);
-        return this.artifactActor;
         
       case 'LogCaptureAgent':
         this.logCaptureAgent = new LogCaptureBTAgent(config);

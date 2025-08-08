@@ -482,6 +482,10 @@ class FileOperationsTool extends Tool {
       else if (params.operation === 'current') {
         return await this.getCurrentDirectory();
       }
+      // Check if this is a list operation without dirpath (list current directory)
+      else if (params.operation === 'list') {
+        return await this.listDirectory(process.cwd());
+      }
       // If we can't determine the operation, return an error
       else {
         return ToolResult.failure(

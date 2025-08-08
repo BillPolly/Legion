@@ -125,6 +125,11 @@ export class ChatActor extends Actor {
         console.log('ChatActor: Server completed processing');
         break;
         
+      case 'chat_response':
+        // Handle the assistant's response
+        this.handleChatResponse(payload);
+        break;
+        
       case 'chat_history':
         this.handleChatHistory(payload);
         break;

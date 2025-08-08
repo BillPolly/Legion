@@ -231,28 +231,26 @@ export class ChatViewModel {
     // Stop loading
     this.model.setLoading(false);
     
-    // If this is a complete response, add or update the assistant message
-    if (response.isComplete) {
-      if (this.streamingMessageId) {
-        // Update the streaming message to complete
-        this.model.updateMessage(this.streamingMessageId, {
-          content: response.content,
-          artifacts: response.artifacts || [],
-          isComplete: true
-        });
-        this.streamingMessageId = null;
-      } else {
-        // Add new assistant message
-        this.model.addMessage(response.content, 'assistant', {
-          artifacts: response.artifacts || [],
-          isComplete: true
-        });
-      }
-      
-      // Hide thoughts display if visible
-      if (this.thoughtsDisplay) {
-        // Let it fade out naturally after completion
-      }
+    // Always add the response - if we got a response, it's complete
+    if (this.streamingMessageId) {
+      // Update the streaming message to complete
+      this.model.updateMessage(this.streamingMessageId, {
+        content: response.content,
+        artifacts: response.artifacts || [],
+        isComplete: true
+      });
+      this.streamingMessageId = null;
+    } else {
+      // Add new assistant message
+      this.model.addMessage(response.content, 'assistant', {
+        artifacts: response.artifacts || [],
+        isComplete: true
+      });
+    }
+    
+    // Hide thoughts display if visible
+    if (this.thoughtsDisplay) {
+      // Let it fade out naturally after completion
     }
   }
   
