@@ -35,10 +35,7 @@ export class BehaviorTreeNode extends Actor {
     this.context = {};
     this.isRunning = false;
     
-    // Initialize children if provided
-    if (config.children) {
-      this.initializeChildren(config.children);
-    }
+    // Note: Children will be initialized by BehaviorTreeExecutor after node creation
   }
 
   /**
@@ -207,9 +204,9 @@ export class BehaviorTreeNode extends Actor {
    * Initialize children from configuration
    * @param {Array} childConfigs - Array of child configurations
    */
-  initializeChildren(childConfigs) {
+  async initializeChildren(childConfigs) {
     for (const childConfig of childConfigs) {
-      const child = this.createChild(childConfig);
+      const child = await this.createChild(childConfig);
       this.addChild(child);
     }
   }
@@ -217,10 +214,10 @@ export class BehaviorTreeNode extends Actor {
   /**
    * Create child node from configuration
    * @param {Object} config - Child node configuration
-   * @returns {BehaviorTreeNode} Created child node
+   * @returns {Promise<BehaviorTreeNode>} Created child node
    */
-  createChild(config) {
-    const child = this.executor.createNode(config);
+  async createChild(config) {
+    const child = await this.executor.createNode(config);
     child.parent = this;
     return child;
   }

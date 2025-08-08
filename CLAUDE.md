@@ -227,9 +227,12 @@ if (!process.env.RAILWAY_API_TOKEN) { // WRONG!
 - ❌ **NEVER** leave scripts in root directory - use `scripts/[purpose]/`
 - ❌ **NEVER** access `process.env` directly - always use ResourceManager
 - ❌ **NEVER** create new files when you should edit existing ones
+- ❌ **NEVER** use mock tools in tests - ALWAYS use real Legion tools from actual modules
+- ❌ **NEVER** create fake/mock tool registries - use the real ToolRegistry with real tools
 - ✅ **ALWAYS** prefer editing over creating files
 - ✅ **ALWAYS** use temporary directories (`scratch/`, `/tmp/`) for generated artifacts
 - ✅ **ALWAYS** follow existing patterns in live test examples
+- ✅ **ALWAYS** use real tools from Legion modules (FileModule, CalculatorModule, etc.)
 
 ## Technical Requirements
 

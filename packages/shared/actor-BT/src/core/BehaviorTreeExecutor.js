@@ -49,7 +49,22 @@ export class BehaviorTreeExecutor extends EventEmitter {
       });
       
       // Create root node from configuration
-      const rootNode = this.createNode(treeConfig);
+      console.log('[BT] Creating root node from config:', treeConfig.type || 'inferred', 'id:', treeConfig.id);
+      const rootNode = await this.createNode(treeConfig);
+      console.log('[BT] Root node created successfully:', rootNode.constructor.name);
+      
+      // DEBUG: Check if children were created
+      console.log('[BT] Root node children count:', rootNode.children.length);
+      if (rootNode.children.length > 0) {
+        console.log('[BT] First child:', {
+          type: rootNode.children[0].constructor.name,
+          id: rootNode.children[0].id,
+          hasChildren: rootNode.children[0].children.length
+        });
+      } else {
+        console.error('[BT] ❌ ROOT NODE HAS NO CHILDREN! This is why execution reports 0 nodes!');
+        console.error('[BT] Config children:', treeConfig.children ? `Array with ${treeConfig.children.length} items` : 'UNDEFINED');
+      }
       
       // Set up execution context
       const executionContext = {
@@ -65,7 +80,15 @@ export class BehaviorTreeExecutor extends EventEmitter {
       }
 
       // Execute the tree
+      console.log('[BT] Starting tree execution...');
       const result = await rootNode.execute(executionContext);
+      console.log('[BT] Tree execution completed. Result:', {
+        status: result.status,
+        hasData: !!result.data,
+        dataKeys: result.data ? Object.keys(result.data) : [],
+        hasNodeResults: !!result.nodeResults
+      });
+      
       const executionTime = Date.now() - startTime;
       
       // Emit completion event
@@ -189,8 +212,16 @@ export class BehaviorTreeExecutor extends EventEmitter {
    * @param {Object} config - Node configuration
    * @returns {BehaviorTreeNode} Created node instance
    */
-  createNode(config) {
+  async createNode(config) {
     let nodeType = config.type;
+    
+    console.log('[BT] createNode called with config:', {
+      id: config.id,
+      type: config.type,
+      hasChildren: !!(config.children && config.children.length > 0),
+      hasTool: !!config.tool,
+      hasChild: !!config.child
+    });
     
     // Apply default node type logic
     if (!nodeType) {
@@ -198,18 +229,23 @@ export class BehaviorTreeExecutor extends EventEmitter {
       if (config.children && config.children.length > 0) {
         // Has children -> default to sequence
         nodeType = 'sequence';
+        console.log('[BT] Inferred node type as sequence (has children)');
       } else if (config.tool) {
         // Has tool -> default to action (leaf node)
         nodeType = 'action';
+        console.log('[BT] Inferred node type as action (has tool)');
       } else {
+        console.error('[BT] Cannot infer node type for config:', config);
         throw new Error('Node configuration must specify type or have children/tool');
       }
+    } else {
+      console.log('[BT] Using explicit node type:', nodeType);
     }
 
     // For action nodes, bind the tool instance immediately
     if (nodeType === 'action' && config.tool) {
       // Look up the tool from registry and attach it to config
-      const tool = this.toolRegistry ? this.toolRegistry.getTool(config.tool) : null;
+      const tool = this.toolRegistry ? await this.toolRegistry.getTool(config.tool) : null;
       if (!tool) {
         throw new Error(`Tool '${config.tool}' not found in registry`);
       }
@@ -221,7 +257,22 @@ export class BehaviorTreeExecutor extends EventEmitter {
       throw new Error(`Unknown node type: ${nodeType}. Available types: ${Array.from(this.nodeTypes.keys()).join(', ')}`);
     }
 
-    return new NodeClass(config, this.toolRegistry, this);
+    const node = new NodeClass(config, this.toolRegistry, this);
+    
+    // Initialize children if provided
+    if (config.children && config.children.length > 0) {
+      console.log(`[BT] Initializing ${config.children.length} children for node ${config.id}`);
+      await node.initializeChildren(config.children);
+      console.log(`[BT] Children initialized for node ${config.id}, children count: ${node.children.length}`);
+    } else if (config.child) {
+      // For retry nodes with single child
+      console.log(`[BT] Initializing single child for node ${config.id}`);
+      const child = await node.createChild(config.child);
+      node.addChild(child);
+      console.log(`[BT] Single child initialized for node ${config.id}, children count: ${node.children.length}`);
+    }
+
+    return node;
   }
 
   /**
@@ -462,10 +513,8 @@ export class BehaviorTreeExecutor extends EventEmitter {
       if (!nodeConfig.tool) {
         errors.push('Action nodes must specify tool');
       } else {
-        // Check if tool exists in registry
-        if (this.toolRegistry && !this.toolRegistry.hasTool(nodeConfig.tool)) {
-          errors.push(`Tool '${nodeConfig.tool}' not found in registry`);
-        }
+        // Check if tool exists in registry (skip check for async registry)
+        // Tool availability will be checked during execution
       }
     }
 

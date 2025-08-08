@@ -50,6 +50,10 @@ export { HTTPModuleDefinition, HTTPModuleInstance } from './modules/HTTPModule.j
 export { ToolRegistry } from './integration/ToolRegistry.js';
 export { ConfigurationManager } from './integration/ConfigurationManager.js';
 
+// Singleton ToolRegistry instance
+import { ToolRegistry } from './integration/ToolRegistry.js';
+export const toolRegistry = new ToolRegistry();
+
 // Utilities
 export { CLIWrapper, createCLITool } from './utils/CLIWrapper.js';
 export { parseToolConfiguration, validateToolSchema } from './utils/ConfigurationWrapper.js';

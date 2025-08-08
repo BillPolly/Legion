@@ -4,11 +4,8 @@
   "description": "Comprehensive JavaScript development planner with file operations, command execution, GitHub integration, and deployment",
   "requiredModules": [
     "file",
-    "command-executor",
-    "node-runner",
-    "jester",
-    "js-generator",
-    "code-analysis"
+    "command-executor", 
+    "server-starter"
   ],
   "defaultInputs": [
     "user_request",
@@ -32,24 +29,15 @@
   ],
   "allowedTools": [
     "directory_create",
-    "directory_list",
+    "directory_list", 
     "directory_current",
     "directory_change",
     "file_write",
     "file_read",
-    "command_executor", 
-    "install_dependencies",
-    "run_npm_script",
-    "start_dev_server",
-    "start_web_server",
-    "run_tests",
-    "analyze_failures",
-    "get_slowest_tests",
-    "get_common_errors",
-    "generate_javascript_module",
-    "generate_javascript_function",
-    "generate_javascript_class",
-    "validate_javascript_syntax"
+    "command_executor",
+    "server_start",
+    "server_stop", 
+    "server_read_output"
   ],
   "templates": {
     "package_json": "{\n  \"name\": \"{{project_name}}\",\n  \"version\": \"1.0.0\",\n  \"description\": \"{{description}}\",\n  \"main\": \"index.js\",\n  \"scripts\": {\n    \"start\": \"node index.js\",\n    \"dev\": \"nodemon index.js\",\n    \"test\": \"jest\",\n    \"test:watch\": \"jest --watch\",\n    \"test:coverage\": \"jest --coverage\"\n  },\n  \"keywords\": [],\n  \"author\": \"\",\n  \"license\": \"MIT\",\n  \"devDependencies\": {\n    \"jest\": \"^29.0.0\",\n    \"nodemon\": \"^3.0.0\"\n  }\n}",

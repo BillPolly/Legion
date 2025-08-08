@@ -16,6 +16,8 @@ export class SequenceNode extends BehaviorTreeNode {
   }
 
   async executeNode(context) {
+    console.log(`[SequenceNode:${this.id}] Starting execution with ${this.children.length} children`);
+    
     const results = [];
     const sequenceData = {
       totalSteps: this.children.length,
@@ -46,7 +48,13 @@ export class SequenceNode extends BehaviorTreeNode {
 
         // Execute child with potentially modified context
         const childContext = this.prepareChildContext(context, i);
+        console.log(`[SequenceNode:${this.id}] Executing child ${i}: ${child.constructor.name} (${child.id})`);
         const result = await child.execute(childContext);
+        console.log(`[SequenceNode:${this.id}] Child ${i} execution result:`, {
+          status: result.status,
+          hasData: !!result.data,
+          error: result.error
+        });
         
         results.push(result);
         sequenceData.stepResults.push({

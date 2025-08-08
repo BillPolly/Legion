@@ -1,6 +1,6 @@
 import { Actor } from '../../../../shared/actors/src/Actor.js';
 import { UserInteractionHandler } from './UserInteractionHandler.js';
-import { PlanExecutionEngine } from './PlanExecutionEngine.js';
+import { BehaviorTreeExecutor } from '../../../../shared/actor-BT/src/core/BehaviorTreeExecutor.js';
 
 /**
  * TaskOrchestrator - Backend agent that handles complex, multi-step tasks
@@ -11,7 +11,7 @@ import { PlanExecutionEngine } from './PlanExecutionEngine.js';
  * 
  * Architecture:
  * - UserInteractionHandler: Manages all user interactions and controls execution
- * - PlanExecutionEngine: Handles planning and execution (can replan during execution)
+ * - BehaviorTreeExecutor: Directly executes behavior tree plans
  */
 export class TaskOrchestrator extends Actor {
   constructor(config = {}) {
@@ -33,10 +33,11 @@ export class TaskOrchestrator extends Actor {
     
     // Internal components
     this.interactionHandler = new UserInteractionHandler(this);
-    this.planExecutionEngine = new PlanExecutionEngine(this);
+    this.behaviorTreeExecutor = null; // Created lazily when needed
     
     // Task state
     this.currentTask = null;
+    this.executionState = 'idle'; // 'idle', 'executing', 'paused', 'complete', 'failed'
     
     console.log(`TaskOrchestrator ${this.id} initialized for session ${this.sessionId}`);
   }
@@ -85,7 +86,7 @@ export class TaskOrchestrator extends Actor {
    * Start working on a complex task
    */
   async startTask(payload) {
-    if (this.planExecutionEngine.state !== 'idle') {
+    if (this.executionState !== 'idle') {
       // Use agentContext if available, otherwise fall back to old method
       if (payload.agentContext) {
         payload.agentContext.emit('message', {
@@ -121,7 +122,7 @@ export class TaskOrchestrator extends Actor {
    * Execute a validated plan
    */
   async executePlan(payload) {
-    if (this.planExecutionEngine.state !== 'idle') {
+    if (this.executionState !== 'idle') {
       // Use agentContext if available, otherwise fall back to old method
       if (payload.agentContext) {
         payload.agentContext.emit('message', {
@@ -134,7 +135,7 @@ export class TaskOrchestrator extends Actor {
         this.sendToChatAgent({
           type: 'orchestrator_error',
           message: 'I\'m already executing a plan. Please wait for it to complete or cancel it first.',
-          currentState: this.planExecutionEngine.state
+          currentState: this.executionState
         });
       }
       return;
@@ -154,8 +155,8 @@ export class TaskOrchestrator extends Actor {
       return;
     }
     
-    // Execute the plan
-    await this.planExecutionEngine.executePlan(plan, options);
+    // Execute the plan directly with BehaviorTreeExecutor
+    await this.executeBehaviorTree(plan, options);
   }
   
   /**
@@ -196,6 +197,7 @@ export class TaskOrchestrator extends Actor {
             this.chatAgent.orchestratorActive = false;
           }
           this.currentTask = null;
+          this.executionState = 'idle';
           break;
           
         case 'orchestrator_error':
@@ -217,7 +219,7 @@ export class TaskOrchestrator extends Actor {
       
     } else if (this.chatAgent) {
       // Fallback to old method
-      const isActive = this.planExecutionEngine.state !== 'idle';
+      const isActive = this.executionState !== 'idle';
       
       this.chatAgent.handleOrchestratorMessage({
         ...message,
@@ -230,6 +232,7 @@ export class TaskOrchestrator extends Actor {
       if (message.type === 'orchestrator_complete' && message.wasActive) {
         this.chatAgent.orchestratorActive = false;
         this.currentTask = null;
+        this.executionState = 'idle';
       }
     } else {
       console.warn('TaskOrchestrator: No way to send message');
@@ -251,10 +254,12 @@ export class TaskOrchestrator extends Actor {
   }
   
   /**
-   * Create and execute a plan using ProfilePlanner
+   * Create and execute a plan using ProfilePlanner and BehaviorTreeExecutor
    */
   async createAndExecutePlan(description) {
     try {
+      this.executionState = 'executing';
+      
       this.sendToChatAgent({
         type: 'orchestrator_status',
         message: `🧠 Analyzing task and creating plan...\n\n📋 Task: ${description}\n\nDetermining best approach...`,
@@ -295,8 +300,29 @@ export class TaskOrchestrator extends Actor {
         progress: 25
       });
       
-      // Execute the BT directly using BehaviorTreeExecutor
-      const behaviorTreeData = planResult.data.behaviorTree;
+      // Execute the behavior tree directly
+      await this.executeBehaviorTree(planResult.data.behaviorTree, {
+        workspaceDir: process.cwd(),
+        sessionId: this.sessionId
+      });
+      
+    } catch (error) {
+      console.error('TaskOrchestrator: Planning/execution error:', error);
+      this.executionState = 'failed';
+      this.sendToChatAgent({
+        type: 'orchestrator_error',
+        message: `Failed to create or execute plan: ${error.message}`
+      });
+      this.executionState = 'idle';
+    }
+  }
+  
+  /**
+   * Execute a behavior tree using BehaviorTreeExecutor
+   */
+  async executeBehaviorTree(behaviorTreeData, options = {}) {
+    try {
+      this.executionState = 'executing';
       
       this.sendToChatAgent({
         type: 'orchestrator_update',
@@ -304,42 +330,13 @@ export class TaskOrchestrator extends Actor {
         progress: 30
       });
       
-      // Import and create BehaviorTreeExecutor directly
-      const { BehaviorTreeExecutor } = await import('../../../../shared/actor-BT/src/core/BehaviorTreeExecutor.js');
-      
-      // Use the existing toolRegistry
-      const toolRegistry = this.toolRegistry;
-      
-      const btExecutor = new BehaviorTreeExecutor(toolRegistry);
+      // Create BehaviorTreeExecutor if not already created
+      if (!this.behaviorTreeExecutor) {
+        this.behaviorTreeExecutor = new BehaviorTreeExecutor(this.toolRegistry);
+      }
       
       // Set up event listeners for progress tracking
-      btExecutor.on('tree:start', (data) => {
-        this.sendToChatAgent({
-          type: 'orchestrator_update',
-          message: `🚀 Executing behavior tree: ${data.treeName}\n• Total nodes: ${data.nodeCount}\n• Starting execution...`,
-          progress: 40
-        });
-      });
-      
-      btExecutor.on('tree:complete', (data) => {
-        this.sendToChatAgent({
-          type: 'orchestrator_complete',
-          message: `✅ Task completed successfully!\n\nBehavior tree executed:\n• Status: ${data.success ? 'SUCCESS' : 'FAILED'}\n• Execution time: ${Math.round(data.executionTime / 1000)}s\n• Total nodes: ${data.nodeResults ? Object.keys(data.nodeResults).length : 0}`,
-          taskSummary: {
-            success: data.success,
-            status: data.status,
-            executionTime: data.executionTime,
-            nodeCount: data.nodeResults ? Object.keys(data.nodeResults).length : 0
-          }
-        });
-      });
-      
-      btExecutor.on('tree:error', (data) => {
-        this.sendToChatAgent({
-          type: 'orchestrator_error',
-          message: `❌ Behavior tree execution failed:\n${data.error}\n\nExecution time: ${Math.round(data.executionTime / 1000)}s`
-        });
-      });
+      this.setupBTEventListeners();
       
       this.sendToChatAgent({
         type: 'orchestrator_update',
@@ -348,64 +345,159 @@ export class TaskOrchestrator extends Actor {
       });
       
       // Execute the behavior tree with context
-      const result = await btExecutor.executeTree(behaviorTreeData, {
-        workspaceDir: process.cwd(),
-        sessionId: this.sessionId
+      const result = await this.behaviorTreeExecutor.executeTree(behaviorTreeData, {
+        workspaceDir: options.workspaceDir || process.cwd(),
+        sessionId: this.sessionId,
+        artifactActor: this.agentContext?.artifactActor,
+        ...options
       });
       
+      // Handle completion
+      if (result.success) {
+        this.executionState = 'complete';
+        this.sendToChatAgent({
+          type: 'orchestrator_complete',
+          message: `✅ Task completed successfully!\n\nBehavior tree executed:\n• Status: ${result.status}\n• Execution time: ${Math.round(result.executionTime / 1000)}s\n• Total nodes: ${Object.keys(result.nodeResults).length}`,
+          success: true,
+          wasActive: true,
+          taskSummary: {
+            success: result.success,
+            status: result.status,
+            executionTime: result.executionTime,
+            nodeCount: Object.keys(result.nodeResults).length
+          }
+        });
+      } else {
+        this.executionState = 'failed';
+        this.sendToChatAgent({
+          type: 'orchestrator_complete',
+          message: `❌ Task failed:\n\nBehavior tree execution:\n• Status: ${result.status}\n• Error: ${result.error}\n• Execution time: ${Math.round(result.executionTime / 1000)}s`,
+          success: false,
+          wasActive: true,
+          taskSummary: {
+            success: result.success,
+            status: result.status,
+            executionTime: result.executionTime,
+            error: result.error
+          }
+        });
+      }
+      
+      this.executionState = 'idle';
+      
     } catch (error) {
-      console.error('TaskOrchestrator: Planning/execution error:', error);
+      console.error('TaskOrchestrator: BT execution error:', error);
+      this.executionState = 'failed';
       this.sendToChatAgent({
         type: 'orchestrator_error',
-        message: `Failed to create or execute plan: ${error.message}`
+        message: `Behavior tree execution failed: ${error.message}`
+      });
+      this.executionState = 'idle';
+    }
+  }
+  
+  /**
+   * Set up event listeners for BehaviorTreeExecutor
+   */
+  setupBTEventListeners() {
+    if (!this.behaviorTreeExecutor) return;
+    
+    // Remove any existing listeners to avoid duplicates
+    this.behaviorTreeExecutor.removeAllListeners('tree:start');
+    this.behaviorTreeExecutor.removeAllListeners('tree:complete');
+    this.behaviorTreeExecutor.removeAllListeners('tree:error');
+    
+    this.behaviorTreeExecutor.on('tree:start', (data) => {
+      this.sendToChatAgent({
+        type: 'orchestrator_update',
+        message: `🚀 Executing behavior tree: ${data.treeName}\n• Total nodes: ${data.nodeCount}\n• Starting execution...`,
+        progress: 40
+      });
+    });
+    
+    this.behaviorTreeExecutor.on('tree:complete', (data) => {
+      // Note: Final completion message is sent by executeBehaviorTree method
+      this.sendThoughtToUser(`✅ Behavior tree execution completed: ${data.success ? 'SUCCESS' : 'FAILED'}`);
+    });
+    
+    this.behaviorTreeExecutor.on('tree:error', (data) => {
+      this.sendThoughtToUser(`❌ Behavior tree execution error: ${data.error}`);
+    });
+  }
+  
+  /**
+   * Get current execution status
+   */
+  getStatus() {
+    switch (this.executionState) {
+      case 'idle':
+        return 'Ready to execute tasks';
+      case 'executing':
+        return 'Executing behavior tree...';
+      case 'paused':
+        return 'Execution paused';
+      case 'complete':
+        return 'Last execution completed successfully';
+      case 'failed':
+        return 'Last execution failed';
+      default:
+        return `Unknown state: ${this.executionState}`;
+    }
+  }
+  
+  /**
+   * Pause execution (if possible)
+   */
+  pause() {
+    if (this.executionState === 'executing') {
+      this.executionState = 'paused';
+      this.sendToChatAgent({
+        type: 'orchestrator_status',
+        message: 'Execution pause requested (will pause after current step completes)'
       });
     }
   }
   
   /**
-   * Convert BT format to standard plan format
+   * Resume execution
    */
-  convertBTToStandardPlan(behaviorTree) {
-    if (!behaviorTree || !behaviorTree.nodes) {
-      throw new Error('Invalid behavior tree structure');
+  resume() {
+    if (this.executionState === 'paused') {
+      this.executionState = 'executing';
+      this.sendToChatAgent({
+        type: 'orchestrator_status',
+        message: 'Resuming execution...'
+      });
     }
-    
-    const plan = {
-      id: behaviorTree.id || `plan_${Date.now()}`,
-      name: behaviorTree.name || 'Generated Plan',
-      description: behaviorTree.description || 'Profile-generated plan',
-      steps: [],
-      metadata: {
-        profile: 'javascript-development',
-        createdAt: new Date().toISOString()
-      }
-    };
-    
-    // Convert BT nodes to plan steps
-    behaviorTree.nodes.forEach((node, index) => {
-      if (node.type === 'action') {
-        plan.steps.push({
-          id: node.id || `step_${index}`,
-          name: node.name || `Step ${index + 1}`,
-          actions: [{
-            type: node.actionType || node.toolName,
-            inputs: node.parameters || node.inputs || {}
-          }]
-        });
-      }
-    });
-    
-    return plan;
+  }
+  
+  /**
+   * Cancel execution
+   */
+  cancel() {
+    if (this.executionState === 'executing' || this.executionState === 'paused') {
+      this.executionState = 'idle';
+      this.currentTask = null;
+      
+      this.sendToChatAgent({
+        type: 'orchestrator_status',
+        message: 'Task execution cancelled'
+      });
+    }
   }
 
 
   /**
    * Clean up resources
    */
-  destroy() {
-    this.planExecutionEngine.clearResources();
+  async destroy() {
+    if (this.behaviorTreeExecutor) {
+      await this.behaviorTreeExecutor.shutdown();
+      this.behaviorTreeExecutor = null;
+    }
     this.currentTask = null;
     this.chatAgent = null;
+    this.executionState = 'idle';
     console.log(`TaskOrchestrator ${this.id} destroyed`);
   }
 }

@@ -131,21 +131,24 @@ export class ResourceManager {
    */
   async initialize() {
     try {
-      // Try to load dotenv for environment variables
+      // Load dotenv for environment variables
       const dotenv = await import('dotenv');
-      
-      // Look for .env file starting from current directory and going up to find Legion root  
-      const { existsSync } = await import('fs');
+      const fs = await import('fs');
       const path = await import('path');
       
+      // Find Legion project root by looking for 'legion' in path
       let currentDir = process.cwd();
-      let envPath = null;
+      let legionRoot = null;
       
-      // Search up to 5 levels for Legion directory or .env file
-      for (let i = 0; i < 5; i++) {
-        const envFile = path.join(currentDir, '.env');
-        if (existsSync(envFile)) {
-          envPath = envFile;
+      console.log(`ResourceManager: Starting search from ${currentDir}`);
+      
+      while (currentDir !== '/') {
+        console.log(`ResourceManager: Checking directory ${currentDir}`);
+        
+        // Check if this directory contains 'legion' in the name (case insensitive)
+        if (path.basename(currentDir).toLowerCase().includes('legion')) {
+          console.log(`ResourceManager: Found Legion directory: ${currentDir}`);
+          legionRoot = currentDir;
           break;
         }
         
@@ -154,30 +157,38 @@ export class ResourceManager {
         currentDir = parentDir;
       }
       
-      if (envPath) {
-        console.log(`ResourceManager: Loading .env from ${envPath}`);
-        dotenv.config({ path: envPath });
-      } else {
-        console.log('ResourceManager: Using default .env lookup');
-        dotenv.config(); // fallback to default behavior
+      if (!legionRoot) {
+        throw new Error('ResourceManager: Could not find Legion project root directory');
       }
       
-      // Load all environment variables as env.* resources
-      if (process.env) {
-        const envObj = {};
-        for (const [key, value] of Object.entries(process.env)) {
-          envObj[key] = value;
+      // Load .env file from Legion root
+      const envPath = path.join(legionRoot, '.env');
+      if (!fs.existsSync(envPath)) {
+        throw new Error(`ResourceManager: .env file not found at ${envPath}`);
+      }
+      
+      console.log(`ResourceManager: Loading .env from ${envPath}`);
+      const result = dotenv.config({ path: envPath });
+      
+      if (result.error) {
+        throw new Error(`ResourceManager: Failed to load .env file: ${result.error.message}`);
+      }
+      
+      console.log(`ResourceManager: Successfully loaded ${Object.keys(result.parsed || {}).length} environment variables`);
+      
+      // Store environment variables directly (not under 'env' key)
+      if (result.parsed) {
+        for (const [key, value] of Object.entries(result.parsed)) {
+          this._resources.set(key, value);
+          console.log(`ResourceManager: Loaded env var: ${key}`);
         }
-        this._resources.set('env', envObj);
       }
       
       // Mark as initialized
       this.initialized = true;
     } catch (error) {
-      // dotenv is optional, don't fail if not available
-      console.warn('ResourceManager: dotenv not available, environment variables not loaded');
-      // Still mark as initialized even if dotenv fails
-      this.initialized = true;
+      console.error('ResourceManager initialization failed:', error.message);
+      throw error;
     }
   }
   

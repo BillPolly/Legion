@@ -18,7 +18,6 @@ export class ChatBTAgent extends Actor {
     
     // Aiur infrastructure dependencies
     this.sessionManager = config.sessionManager || null;
-    this.moduleLoader = config.moduleLoader || null;
     this.resourceManager = config.resourceManager || null;
     this.remoteActor = config.remoteActor || null;
     
@@ -100,14 +99,78 @@ export class ChatBTAgent extends Actor {
   }
   
   /**
+   * Register basic tools with the toolRegistry
+   */
+  async registerBasicTools(toolRegistry) {
+    const fs = await import('fs/promises');
+    const path = await import('path');
+    
+    // Simple module with 3 basic file tools
+    const fileTools = {
+      getTools: () => [
+        {
+          name: 'directory_list',
+          description: 'List contents of a directory',
+          execute: async (args) => {
+            try {
+              const dirPath = args.path || process.cwd();
+              const items = await fs.readdir(dirPath, { withFileTypes: true });
+              const contents = items.map(item => ({
+                name: item.name,
+                type: item.isDirectory() ? 'directory' : 'file'
+              }));
+              return { success: true, data: contents, path: dirPath };
+            } catch (error) {
+              return { success: false, error: error.message };
+            }
+          }
+        },
+        {
+          name: 'file_read',
+          description: 'Read contents of a file',
+          execute: async (args) => {
+            try {
+              const content = await fs.readFile(args.path, 'utf-8');
+              return { success: true, data: content, path: args.path };
+            } catch (error) {
+              return { success: false, error: error.message };
+            }
+          }
+        },
+        {
+          name: 'directory_change',
+          description: 'Change current working directory',
+          execute: async (args) => {
+            try {
+              process.chdir(args.path);
+              return { success: true, data: process.cwd() };
+            } catch (error) {
+              return { success: false, error: error.message };
+            }
+          }
+        }
+      ]
+    };
+    
+    // Register as a simple module
+    await toolRegistry.registerModule(fileTools, 'basic_file_tools');
+  }
+  
+  /**
    * Initialize TaskOrchestrator
    */
   async initializeTaskOrchestrator() {
     try {
+      // Import the singleton toolRegistry
+      const { toolRegistry } = await import('@legion/tools');
+      
+      // Register the 3 basic tools directly
+      await this.registerBasicTools(toolRegistry);
+      
       this.taskOrchestrator = new TaskOrchestrator({
         sessionId: this.sessionId,
         chatAgent: this,
-        toolRegistry: this.moduleLoader  // TaskOrchestrator expects toolRegistry
+        toolRegistry: toolRegistry  // Use the singleton toolRegistry
       });
       
       await this.taskOrchestrator.initialize();
@@ -159,8 +222,6 @@ export class ChatBTAgent extends Actor {
       llmConfig: this.llmConfig,
       systemPrompt: this.systemPrompt,
       
-      // Module loader for tools
-      moduleLoader: this.moduleLoader,
       
       // Helper functions
       emit: this.emit.bind(this),

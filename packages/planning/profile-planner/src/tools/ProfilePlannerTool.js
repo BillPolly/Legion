@@ -391,8 +391,11 @@ export class ProfilePlannerTool extends Tool {
     }
 
     // ResourceManager automatically loads ALL env vars from .env file
-    // Access API key using dot notation (now supported by ResourceManager)
-    const anthropicKey = this.resourceManager.get('env.ANTHROPIC_API_KEY');
+    // Access API key directly by name
+    console.log('🔍 Debug: Available keys in ResourceManager:', Object.keys(this.resourceManager.resources || {}));
+    console.log('🔍 Debug: Looking for ANTHROPIC_API_KEY...');
+    const anthropicKey = this.resourceManager.get('ANTHROPIC_API_KEY');
+    console.log('🔍 Debug: anthropicKey found:', !!anthropicKey, typeof anthropicKey);
     
     if (!anthropicKey) {
       throw new Error('ANTHROPIC_API_KEY not found in environment variables. Please set it in your .env file.');

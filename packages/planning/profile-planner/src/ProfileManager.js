@@ -379,12 +379,28 @@ class ProfileManager {
     const actions = [];
     const missingTools = [];
 
+    console.log(`[ProfileManager] Loading schemas for ${toolNames.length} tools...`);
+
     for (const toolName of toolNames) {
       try {
         // CRITICAL: Only include tools that actually exist in the registry
         // For toolRegistry, just use getTool
-        const tool = moduleLoader.getTool ? moduleLoader.getTool(toolName) : null;
+        const tool = await moduleLoader.getTool(toolName);
+        
         if (!tool) {
+          console.warn(`[ProfileManager] Tool '${toolName}' not found in registry`);
+          missingTools.push(toolName);
+          continue; // CRITICAL: Skip missing tools completely
+        }
+
+        // CRITICAL: Verify tool has name and description before creating action
+        if (!tool.name || !tool.description) {
+          console.warn(`[ProfileManager] Tool '${toolName}' has invalid metadata:`, {
+            hasName: !!tool.name,
+            hasDescription: !!tool.description,
+            actualName: tool.name,
+            actualDesc: tool.description
+          });
           missingTools.push(toolName);
           continue;
         }
@@ -393,12 +409,14 @@ class ProfileManager {
         const action = {
           name: tool.name,  // CRITICAL: BTValidator needs this property
           type: tool.name,
-          description: tool.description || `Execute ${tool.name}`,
+          description: tool.description,
           inputs: [],
           outputs: [],
           inputSchema: {},
           outputSchema: {}
         };
+
+        console.log(`[ProfileManager] ✅ Creating action for tool: ${tool.name} - ${tool.description}`);
 
         // Extract schema information
         if (tool.inputSchema) {
@@ -478,16 +496,19 @@ class ProfileManager {
         }
 
         actions.push(action);
-        console.log(`Loaded tool schema for: ${toolName}`);
+        console.log(`[ProfileManager] ✅ Added action: ${action.name} (${action.inputs.length} inputs)`);
       } catch (error) {
-        console.warn(`Failed to load tool ${toolName}: ${error.message}`);
+        console.error(`[ProfileManager] Failed to load tool ${toolName}: ${error.message}`);
         missingTools.push(toolName);
       }
     }
 
     if (missingTools.length > 0) {
-      console.warn(`Missing tools: ${missingTools.join(', ')}`);
+      console.warn(`[ProfileManager] ⚠️  Missing tools (${missingTools.length}): ${missingTools.join(', ')}`);
+      console.warn('[ProfileManager] Only actions for existing tools will be available for planning');
     }
+
+    console.log(`[ProfileManager] ✅ Successfully loaded ${actions.length} actions from ${toolNames.length} requested tools`);
 
     return actions;
   }

@@ -190,13 +190,22 @@ export class StorageBrowserViewModel {
         this.model.getState().connection.provider
       );
       
+      console.log('[ViewModel] Raw collections from server:', collections);
+      
+      // Ensure all standard collections are included
+      const standardCollections = ['tasks', 'projects', 'users', 'sessions'];
+      const allCollections = new Set([...collections, ...standardCollections]);
+      
+      console.log('[ViewModel] All collections to load:', Array.from(allCollections));
+      
       // Fetch count for each collection
       const collectionsWithCount = await Promise.all(
-        collections.map(async (name) => {
+        Array.from(allCollections).map(async (name) => {
           try {
             const count = await this.actorClient.count(name, {}, {
               provider: this.model.getState().connection.provider
             });
+            console.log(`[ViewModel] Collection ${name} has ${count} documents`);
             return { name, count };
           } catch (error) {
             console.error(`Error getting count for ${name}:`, error);
@@ -205,8 +214,10 @@ export class StorageBrowserViewModel {
         })
       );
       
+      console.log('[ViewModel] Final collections with counts:', collectionsWithCount);
       this.model.setCollections(collectionsWithCount);
     } catch (error) {
+      console.error('[ViewModel] Error loading collections:', error);
       this.model.setCollectionsLoading(false);
       throw error;
     }

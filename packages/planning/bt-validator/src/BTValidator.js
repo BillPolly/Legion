@@ -238,8 +238,21 @@ export class BTValidator {
         node.id, { validTypes, path });
     }
 
+    // Determine effective node type (matching BehaviorTreeExecutor logic)
+    let effectiveType = node.type;
+    if (!effectiveType) {
+      if (node.children && node.children.length > 0) {
+        effectiveType = 'sequence';
+      } else if (node.tool) {
+        effectiveType = 'action';
+      } else {
+        result.addError('INVALID_NODE', 'Node must have type, children, or tool field', node.id, { path });
+        return;
+      }
+    }
+    
     // Validate type-specific requirements
-    switch (node.type) {
+    switch (effectiveType) {
       case 'action':
         if (!node.tool) {
           result.addError('MISSING_TOOL', 'Action nodes must specify a tool', node.id, { path });

@@ -39,6 +39,32 @@ export class JSONOnlyLLMStrategy extends PlanningStrategy {
         // Use a very specific system message
         const systemMessage = this.buildSystemMessage(attempt, lastError);
         
+        // LOG THE ACTUAL PROMPT BEING SENT TO FILE
+        const fs = await import('fs/promises');
+        const debugLog = `
+============ LLM PROMPT DEBUG (Attempt ${attempt}) ============
+AVAILABLE ACTIONS COUNT: ${request.allowableActions?.length || 0}
+
+FIRST 5 AVAILABLE ACTIONS:
+${request.allowableActions ? request.allowableActions.slice(0, 5).map((action, i) => 
+  `  ${i+1}. ${action.type || action.name || 'UNNAMED'}: ${action.description || 'NO DESCRIPTION'}`
+).join('\n') : 'NO ACTIONS'}
+
+SYSTEM MESSAGE:
+${systemMessage}
+
+FULL USER PROMPT:
+${prompt}
+============ END PROMPT DEBUG ============
+`;
+        
+        try {
+          await fs.writeFile('/tmp/llm-prompt-debug.log', debugLog);
+          console.log(`[DEBUG] Prompt logged to /tmp/llm-prompt-debug.log`);
+        } catch (e) {
+          console.log('[DEBUG] Could not write prompt to file:', e.message);
+        }
+        
         // Call LLM with strict JSON instructions
         const response = await this.llmClient.complete(prompt, {
           model: this.model,
@@ -46,6 +72,21 @@ export class JSONOnlyLLMStrategy extends PlanningStrategy {
           maxTokens: this.maxTokens,
           system: systemMessage
         });
+        
+        // LOG THE ACTUAL RESPONSE TO FILE
+        const responseLog = `
+============ LLM RESPONSE DEBUG (Attempt ${attempt}) ============
+RAW RESPONSE:
+${response}
+============ END RESPONSE DEBUG ============
+`;
+        
+        try {
+          await fs.appendFile('/tmp/llm-prompt-debug.log', responseLog);
+          console.log(`[DEBUG] Response logged to /tmp/llm-prompt-debug.log`);
+        } catch (e) {
+          console.log('[DEBUG] Could not append response to file:', e.message);
+        }
         
         // Parse with robust extraction
         const bt = this.extractAndParseJSON(response);
@@ -92,6 +133,13 @@ Please fix the issue and provide valid JSON only.`;
   buildJSONOnlyPrompt(request, context = {}, attempt = 1, lastError = null) {
     const actions = this.formatActionsAsJSON(request.allowableActions);
     
+    // LOG THE FORMATTED ACTIONS
+    console.log('\n=== FORMATTED ACTIONS DEBUG ===');
+    console.log('Raw allowableActions:', JSON.stringify(request.allowableActions?.slice(0, 2), null, 2));
+    console.log('Formatted actions string:');
+    console.log(actions);
+    console.log('=== END ACTIONS DEBUG ===\n');
+    
     return `TASK: Generate a Behavior Tree for: ${request.description}
 
 AVAILABLE ACTIONS (use exact names in "tool" field):
@@ -137,10 +185,11 @@ OUTPUT FORMAT: You must return ONLY a JSON object with this exact structure:
 
 RULES:
 1. Use ONLY tools from AVAILABLE ACTIONS list
-2. Each action must have: type, id, tool, description, params
-3. Composite nodes (sequence/parallel) have children array
-4. ALL file content goes in params.content field as a string
-5. NO markdown, NO explanations, ONLY the JSON object
+2. MANDATORY: Each action node must have these fields: type: "action", id: "unique-id", tool: "exact_tool_name", description: "text", params: {}
+3. The "tool" field is REQUIRED and must exactly match a tool name from AVAILABLE ACTIONS
+4. Composite nodes (sequence/parallel) have children array
+5. ALL file content goes in params.content field as a string
+6. NO markdown, NO explanations, ONLY the JSON object
 
 RESILIENCE PATTERNS (MANDATORY):
 6. ALWAYS wrap critical actions with retry nodes (maxAttempts: 3)

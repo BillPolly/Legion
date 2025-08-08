@@ -217,10 +217,8 @@ export class PlanExecutionEngine {
     try {
       // Import required classes
       const { BehaviorTreeExecutor } = await import('@legion/actor-bt');
-      const { ToolRegistry } = await import('@legion/tools');
-      
-      // Create tool registry and load modules
-      const toolRegistry = new ToolRegistry();
+      // Import singleton toolRegistry
+      const { toolRegistry } = await import('@legion/tools');
       
       // Import general tools and register them
       const generalTools = await import('@legion/tools');

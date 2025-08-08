@@ -4,6 +4,8 @@
  * Enhanced with MCP server support for automatic tool discovery and integration
  */
 
+import fs from 'fs/promises';
+
 /**
  * ModuleProvider - Provides module instances
  */
@@ -46,6 +48,10 @@ export class ToolRegistry {
     this.usageStats = new Map();
     this.toolIndex = null;
     this.capabilityMap = null;
+    this.initialized = false;
+    this.toolsDatabase = null;
+    this.moduleCache = new Map(); // Cache for loaded module instances
+    this.toolCache = new Map(); // Cache for individual tools
     
     // MCP Integration
     this.mcpServerRegistry = options.mcpServerRegistry;
@@ -60,6 +66,124 @@ export class ToolRegistry {
     if (this.enableMCPIntegration) {
       this.initializeMCPIntegration();
     }
+  }
+
+  /**
+   * Initialize ToolRegistry by auto-discovering existing modules
+   */
+  async initialize() {
+    if (this.initialized) return;
+    
+    try {
+      // Auto-register commonly available modules
+      await this.autoRegisterKnownModules();
+      
+      this.initialized = true;
+      console.log(`✅ ToolRegistry initialized with ${this.metadata.size} modules`);
+      
+    } catch (error) {
+      console.error('Failed to initialize ToolRegistry:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Auto-register modules from the tools database
+   */
+  async autoRegisterKnownModules() {
+    // Load modules from the comprehensive tools database
+    try {
+      const toolsDbPath = new URL('./tools-database.json', import.meta.url).pathname;
+      const toolsDb = JSON.parse(await fs.readFile(toolsDbPath, 'utf-8'));
+      
+      // Convert database entries to module list, prioritizing working modules
+      const workingModules = [
+        { name: 'file', path: '../file/index.js', type: 'class' },
+        { name: 'calculator', path: '../calculator/index.js', type: 'class' },
+        { name: 'json', path: '../json/index.js', type: 'class' },
+        { name: 'command-executor', path: '../command-executor/module.json', type: 'module.json' },
+        { name: 'server-starter', path: '../server-starter/module.json', type: 'module.json' },
+      ];
+
+      console.log(`Loading ${workingModules.length} modules from tools database...`);
+      
+      for (const module of workingModules) {
+        try {
+          if (module.type === 'class') {
+            await this.loadClassModule(module);
+          } else if (module.type === 'module.json') {
+            await this.loadJsonModule(module);
+          }
+        } catch (error) {
+          console.warn(`⚠️  Could not load module ${module.name}:`, error.message);
+        }
+      }
+    } catch (error) {
+      console.warn('Could not load tools database, falling back to hardcoded modules');
+      // Fallback to original hardcoded list
+      const knownModules = [
+        { name: 'file', path: '../file/index.js', type: 'class' },
+        { name: 'calculator', path: '../calculator/index.js', type: 'class' },
+        { name: 'json', path: '../json/index.js', type: 'class' }
+      ];
+    
+      for (const module of knownModules) {
+        try {
+          await this.loadClassModule(module);
+        } catch (error) {
+          console.warn(`⚠️  Could not load fallback module ${module.name}:`, error.message);
+        }
+      }
+    }
+  }
+
+  /**
+   * Load a class-based module
+   */
+  async loadClassModule(module) {
+    const ModuleClass = await import(module.path);
+    const moduleInstance = new (ModuleClass.default || ModuleClass)();
+    
+    // Get tools from module
+    let tools = {};
+    if (moduleInstance.getTools) {
+      const toolArray = moduleInstance.getTools();
+      for (const tool of toolArray) {
+        tools[tool.name] = {
+          name: tool.name,
+          description: tool.description || 'No description available'
+        };
+      }
+    }
+    
+    // Register metadata
+    this.metadata.set(module.name, {
+      name: module.name,
+      description: `${module.name} module`,
+      tools: tools
+    });
+    
+    // Cache the instance
+    this.moduleCache.set(module.name, moduleInstance);
+    
+    console.log(`📦 Registered class module: ${module.name} with ${Object.keys(tools).length} tools`);
+  }
+
+  /**
+   * Load a JSON-based module
+   */
+  async loadJsonModule(module) {
+    // For now, just register the metadata from the database
+    // The actual JSON module loading would require ModuleFactory integration
+    console.log(`📋 Registered JSON module: ${module.name} (loading deferred to ModuleFactory)`);
+    
+    // Register basic metadata for now
+    this.metadata.set(module.name, {
+      name: module.name,
+      description: `${module.name} module (JSON-based)`,
+      tools: {},
+      type: 'json'
+    });
   }
 
   /**
@@ -332,6 +456,38 @@ export class ToolRegistry {
   }
 
   /**
+   * Register a module with its tools
+   */
+  async registerModule(module, moduleName) {
+    // Create metadata with tools
+    const metadata = {
+      name: moduleName,
+      tools: {}
+    };
+    
+    // Get tools from module and add to metadata
+    if (module.getTools) {
+      const tools = module.getTools();
+      for (const tool of tools) {
+        metadata.tools[tool.name] = {
+          name: tool.name,
+          description: tool.description
+        };
+      }
+    }
+    
+    // Create a simple provider for the module
+    const provider = {
+      name: moduleName,
+      getMetadata: () => metadata,
+      getInstance: async () => module,
+      lazy: false
+    };
+    
+    return this.registerProvider(provider);
+  }
+
+  /**
    * Register a module provider
    */
   async registerProvider(provider) {
@@ -453,35 +609,94 @@ export class ToolRegistry {
   }
 
   /**
-   * Get a specific tool
+   * Get a specific tool by simple name or full name
    */
-  async getTool(fullName) {
-    const [moduleName, toolName] = fullName.split('.');
+  async getTool(name) {
+    // Auto-initialize if not done yet
+    if (!this.initialized) {
+      await this.initialize();
+    }
+    
+    // Check if name is valid
+    if (!name || typeof name !== 'string') {
+      return null;
+    }
+    
+    // Check tool cache first
+    if (this.toolCache.has(name)) {
+      this.trackUsage(name);
+      return this.toolCache.get(name);
+    }
+    
+    // Try to find tool across all registered modules
+    if (!name.includes('.')) {
+      for (const [moduleName, metadata] of this.metadata) {
+        if (metadata.tools && metadata.tools[name]) {
+          const tool = await this.loadToolFromModule(moduleName, name);
+          if (tool) {
+            this.toolCache.set(name, tool); // Cache the tool
+            this.trackUsage(name);
+            return tool;
+          }
+        }
+      }
+      return null;
+    }
+    
+    // Full module.tool name
+    const [moduleName, toolName] = name.split('.');
     
     if (!moduleName || !toolName) {
       return null;
     }
 
-    const instance = await this.getInstance(moduleName);
-    if (!instance) {
-      return null;
+    const tool = await this.loadToolFromModule(moduleName, toolName);
+    if (tool) {
+      this.toolCache.set(name, tool); // Cache the tool
+      this.trackUsage(name);
+      return tool;
     }
 
-    const tool = instance.getTool(toolName);
-    
-    // Track usage
-    if (tool) {
-      this.trackUsage(fullName);
-      
-      // Wrap execute to track stats
-      const originalExecute = tool.execute.bind(tool);
-      tool.execute = async (input) => {
-        this.trackUsage(fullName);
-        return originalExecute(input);
-      };
-    }
-    
     return tool;
+  }
+
+  /**
+   * Load a specific tool from a module with caching
+   */
+  async loadToolFromModule(moduleName, toolName) {
+    try {
+      // Check if module is cached
+      let instance;
+      if (this.moduleCache.has(moduleName)) {
+        instance = this.moduleCache.get(moduleName);
+      } else {
+        // Lazy load the module
+        instance = await this.getInstance(moduleName);
+        if (instance) {
+          this.moduleCache.set(moduleName, instance);
+        }
+      }
+
+      if (!instance) {
+        return null;
+      }
+
+      let tool = null;
+      
+      // Try getTool method first
+      if (instance.getTool) {
+        tool = instance.getTool(toolName);
+      } else if (instance.getTools) {
+        // Fallback: search through getTools() array
+        const tools = instance.getTools();
+        tool = tools.find(t => t.name === toolName) || null;
+      }
+
+      return tool;
+    } catch (error) {
+      console.warn(`Failed to load tool ${toolName} from module ${moduleName}:`, error);
+      return null;
+    }
   }
 
   /**
