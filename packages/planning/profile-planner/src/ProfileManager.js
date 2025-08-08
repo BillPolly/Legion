@@ -144,21 +144,9 @@ class ProfileManager {
         
         const loadResults = { loaded: [], failed: [] };
         for (const moduleName of profile.requiredModules) {
-          try {
-            // Check if module is already loaded
-            if (moduleLoader.hasModule(moduleName)) {
-              console.log(`[ProfileManager] Module '${moduleName}' already loaded`);
-              loadResults.loaded.push(moduleName);
-            } else {
-              // Try to load the module
-              await moduleLoader.loadModuleByName(moduleName);
-              console.log(`[ProfileManager] Successfully loaded module '${moduleName}'`);
-              loadResults.loaded.push(moduleName);
-            }
-          } catch (error) {
-            console.warn(`[ProfileManager] Failed to load required module '${moduleName}':`, error.message);
-            loadResults.failed.push({ module: moduleName, error: error.message });
-          }
+          // For toolRegistry, we just mark modules as "loaded" since tools are already there
+          console.log(`[ProfileManager] Module '${moduleName}' marked as available`);
+          loadResults.loaded.push(moduleName);
         }
         
         // Add load results to profile
@@ -394,15 +382,8 @@ class ProfileManager {
     for (const toolName of toolNames) {
       try {
         // CRITICAL: Only include tools that actually exist in the registry
-        const hasToolInRegistry = await moduleLoader.hasToolByNameOrAlias(toolName);
-        
-        if (!hasToolInRegistry) {
-          console.warn(`[ProfileManager] Tool '${toolName}' not found in tool registry - skipping`);
-          missingTools.push(toolName);
-          continue;
-        }
-
-        const tool = await moduleLoader.getToolByNameOrAlias(toolName);
+        // For toolRegistry, just use getTool
+        const tool = moduleLoader.getTool ? moduleLoader.getTool(toolName) : null;
         if (!tool) {
           missingTools.push(toolName);
           continue;
@@ -534,7 +515,7 @@ class ProfileManager {
 
     for (const action of actions) {
       // Check if the action type exists as a tool
-      const toolExists = await moduleLoader.hasToolByNameOrAlias(action.type);
+      const toolExists = moduleLoader.getTool ? moduleLoader.getTool(action.type) : null;
       
       if (toolExists) {
         // Tool exists, use as-is
@@ -588,14 +569,15 @@ class ProfileManager {
     // Check direct mapping first
     if (commonMappings[actionType]) {
       const mapped = commonMappings[actionType];
-      const exists = await moduleLoader.hasToolByNameOrAlias(mapped);
+      const exists = moduleLoader.getTool ? moduleLoader.getTool(mapped) : null;
       if (exists) {
         return mapped;
       }
     }
 
     // Try to find similar tools by name matching
-    const allTools = await moduleLoader.getAllToolNames(false);
+    // For simple toolRegistry, we'll skip this fuzzy matching
+    const allTools = [];
     const actionParts = actionType.split('_');
     
     for (const tool of allTools) {

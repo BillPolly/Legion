@@ -6,8 +6,10 @@
  * - Tree execution with message-passing coordination  
  * - Integration with ToolRegistry for tool access
  * - Built-in coordination patterns (sequence, parallel, selector)
+ * - EventEmitter interface for progress tracking and status updates
  */
 
+import { EventEmitter } from 'events';
 import { MessageBus } from './MessageBus.js';
 import { BehaviorTreeNode, NodeStatus } from './BehaviorTreeNode.js';
 import { ActionNode } from '../nodes/ActionNode.js';
@@ -16,8 +18,9 @@ import { SelectorNode } from '../nodes/SelectorNode.js';
 import { RetryNode } from '../nodes/RetryNode.js';
 import { ConditionNode } from '../nodes/ConditionNode.js';
 
-export class BehaviorTreeExecutor {
+export class BehaviorTreeExecutor extends EventEmitter {
   constructor(toolRegistry) {
+    super();
     this.toolRegistry = toolRegistry;
     this.messageBus = new MessageBus();
     this.nodeTypes = new Map();
@@ -34,14 +37,24 @@ export class BehaviorTreeExecutor {
    * @returns {Promise<Object>} Execution result
    */
   async executeTree(treeConfig, context = {}) {
+    const startTime = Date.now();
+    
     try {
+      // Emit start event
+      this.emit('tree:start', {
+        treeId: treeConfig.id || 'unknown',
+        treeName: treeConfig.name || 'Behavior Tree',
+        nodeCount: this.countNodes(treeConfig),
+        startTime
+      });
+      
       // Create root node from configuration
       const rootNode = this.createNode(treeConfig);
       
       // Set up execution context
       const executionContext = {
         ...context,
-        startTime: Date.now(),
+        startTime,
         treeConfig,
         artifacts: context.artifacts || {}
       };
@@ -53,25 +66,65 @@ export class BehaviorTreeExecutor {
 
       // Execute the tree
       const result = await rootNode.execute(executionContext);
+      const executionTime = Date.now() - startTime;
+      
+      // Emit completion event
+      this.emit('tree:complete', {
+        treeId: treeConfig.id || 'unknown',
+        success: result.status === NodeStatus.SUCCESS,
+        status: result.status,
+        executionTime,
+        nodeResults: result.nodeResults || {}
+      });
       
       return {
         success: result.status === NodeStatus.SUCCESS,
         status: result.status,
         data: result.data,
         context: executionContext,
-        executionTime: Date.now() - executionContext.startTime,
+        executionTime,
         nodeResults: result.nodeResults || {}
       };
     } catch (error) {
+      const executionTime = Date.now() - startTime;
+      
+      // Emit error event
+      this.emit('tree:error', {
+        treeId: treeConfig.id || 'unknown',
+        error: error.message,
+        executionTime,
+        stackTrace: error.stack
+      });
+      
       return {
         success: false,
         status: NodeStatus.FAILURE,
         error: error.message,
         data: { errorMessage: error.message, stackTrace: error.stack },
         context,
-        executionTime: Date.now() - (context.startTime || Date.now())
+        executionTime
       };
     }
+  }
+
+  /**
+   * Count total nodes in a tree configuration (for progress tracking)
+   * @param {Object} treeConfig - Tree configuration
+   * @returns {number} Total node count
+   */
+  countNodes(treeConfig) {
+    if (!treeConfig) return 0;
+    
+    let count = 1; // Count the current node
+    
+    // Count children recursively
+    if (treeConfig.children && Array.isArray(treeConfig.children)) {
+      for (const child of treeConfig.children) {
+        count += this.countNodes(child);
+      }
+    }
+    
+    return count;
   }
 
   /**
@@ -137,10 +190,30 @@ export class BehaviorTreeExecutor {
    * @returns {BehaviorTreeNode} Created node instance
    */
   createNode(config) {
-    const nodeType = config.type;
+    let nodeType = config.type;
     
+    // Apply default node type logic
     if (!nodeType) {
-      throw new Error('Node configuration must specify type');
+      // If no type specified, infer from structure
+      if (config.children && config.children.length > 0) {
+        // Has children -> default to sequence
+        nodeType = 'sequence';
+      } else if (config.tool) {
+        // Has tool -> default to action (leaf node)
+        nodeType = 'action';
+      } else {
+        throw new Error('Node configuration must specify type or have children/tool');
+      }
+    }
+
+    // For action nodes, bind the tool instance immediately
+    if (nodeType === 'action' && config.tool) {
+      // Look up the tool from registry and attach it to config
+      const tool = this.toolRegistry ? this.toolRegistry.getTool(config.tool) : null;
+      if (!tool) {
+        throw new Error(`Tool '${config.tool}' not found in registry`);
+      }
+      config.toolInstance = tool;
     }
 
     const NodeClass = this.nodeTypes.get(nodeType);

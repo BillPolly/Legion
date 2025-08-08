@@ -107,8 +107,7 @@ export class ChatBTAgent extends Actor {
       this.taskOrchestrator = new TaskOrchestrator({
         sessionId: this.sessionId,
         chatAgent: this,
-        resourceManager: this.resourceManager,
-        moduleLoader: this.moduleLoader
+        toolRegistry: this.moduleLoader  // TaskOrchestrator expects toolRegistry
       });
       
       await this.taskOrchestrator.initialize();

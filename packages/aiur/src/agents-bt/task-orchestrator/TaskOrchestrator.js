@@ -264,8 +264,8 @@ export class TaskOrchestrator extends Actor {
       // Import ProfilePlanner directly  
       const { ProfilePlannerTool } = await import('../../../../planning/profile-planner/src/tools/ProfilePlannerTool.js');
       
-      // Create planner instance (yes, it's called "Tool" but it's really a planner)
-      const planner = new ProfilePlannerTool();
+      // Create planner instance with our toolRegistry
+      const planner = new ProfilePlannerTool({ toolRegistry: this.toolRegistry });
       await planner.initialize();
       
       this.sendToChatAgent({
@@ -291,18 +291,66 @@ export class TaskOrchestrator extends Actor {
       
       this.sendToChatAgent({
         type: 'orchestrator_update',
-        message: `✅ Plan created successfully!\n\n📋 Profile: ${planResult.data.profile}\n• ${planResult.data.behaviorTree?.nodes?.length || 0} execution steps\n• Ready for execution...`,
+        message: `✅ Plan created successfully!\n\n📋 Profile: ${planResult.data.profile}\n• ${planResult.data.behaviorTree?.children?.length || 0} execution steps\n• Ready for execution...`,
         progress: 25
       });
       
-      // Convert BT plan to standard plan format for execution
-      const standardPlan = this.convertBTToStandardPlan(planResult.data.behaviorTree);
-      standardPlan.status = 'validated';
+      // Execute the BT directly using BehaviorTreeExecutor
+      const behaviorTreeData = planResult.data.behaviorTree;
       
-      // Execute the plan
-      await this.planExecutionEngine.executePlan(standardPlan, {
+      this.sendToChatAgent({
+        type: 'orchestrator_update',
+        message: `🤖 Creating behavior tree executor with ${behaviorTreeData.children?.length || 0} nodes...`,
+        progress: 30
+      });
+      
+      // Import and create BehaviorTreeExecutor directly
+      const { BehaviorTreeExecutor } = await import('../../../../shared/actor-BT/src/core/BehaviorTreeExecutor.js');
+      
+      // Use the existing toolRegistry
+      const toolRegistry = this.toolRegistry;
+      
+      const btExecutor = new BehaviorTreeExecutor(toolRegistry);
+      
+      // Set up event listeners for progress tracking
+      btExecutor.on('tree:start', (data) => {
+        this.sendToChatAgent({
+          type: 'orchestrator_update',
+          message: `🚀 Executing behavior tree: ${data.treeName}\n• Total nodes: ${data.nodeCount}\n• Starting execution...`,
+          progress: 40
+        });
+      });
+      
+      btExecutor.on('tree:complete', (data) => {
+        this.sendToChatAgent({
+          type: 'orchestrator_complete',
+          message: `✅ Task completed successfully!\n\nBehavior tree executed:\n• Status: ${data.success ? 'SUCCESS' : 'FAILED'}\n• Execution time: ${Math.round(data.executionTime / 1000)}s\n• Total nodes: ${data.nodeResults ? Object.keys(data.nodeResults).length : 0}`,
+          taskSummary: {
+            success: data.success,
+            status: data.status,
+            executionTime: data.executionTime,
+            nodeCount: data.nodeResults ? Object.keys(data.nodeResults).length : 0
+          }
+        });
+      });
+      
+      btExecutor.on('tree:error', (data) => {
+        this.sendToChatAgent({
+          type: 'orchestrator_error',
+          message: `❌ Behavior tree execution failed:\n${data.error}\n\nExecution time: ${Math.round(data.executionTime / 1000)}s`
+        });
+      });
+      
+      this.sendToChatAgent({
+        type: 'orchestrator_update',
+        message: `⚡ Starting behavior tree execution...`,
+        progress: 50
+      });
+      
+      // Execute the behavior tree with context
+      const result = await btExecutor.executeTree(behaviorTreeData, {
         workspaceDir: process.cwd(),
-        retries: 2
+        sessionId: this.sessionId
       });
       
     } catch (error) {
@@ -349,6 +397,7 @@ export class TaskOrchestrator extends Actor {
     
     return plan;
   }
+
 
   /**
    * Clean up resources

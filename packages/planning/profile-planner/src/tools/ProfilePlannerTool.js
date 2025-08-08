@@ -38,7 +38,8 @@ export class ProfilePlannerTool extends Tool {
       }
     });
     this.description = 'Profile-based planning for simplified domain-specific task planning';
-    this.resourceManager = dependencies.resourceManager || dependencies;
+    this.toolRegistry = dependencies.toolRegistry || null; // Use the passed-in tool registry
+    this.resourceManager = null; // Will be created during initialization
     this.profileManager = null;
     this.initialized = false;
     
@@ -52,9 +53,83 @@ export class ProfilePlannerTool extends Tool {
   async initialize() {
     if (this.initialized) return;
 
+    // Create our own ResourceManager instance (this automatically loads .env)
+    this.resourceManager = new ResourceManager();
+    await this.resourceManager.initialize();
+
+    // Use the passed-in toolRegistry if available, otherwise create a basic one for standalone use
+    const toolRegistry = this.toolRegistry || await this.createBasicToolRegistry();
+    this.resourceManager.set('toolRegistry', toolRegistry);
+    
+    // Also register it as moduleLoader for ProfileManager compatibility
+    this.resourceManager.set('moduleLoader', toolRegistry);
+
     this.profileManager = new ProfileManager(this.resourceManager);
     await this.profileManager.initialize();
     this.initialized = true;
+  }
+
+  /**
+   * Create a basic tool registry with essential tools for planning
+   * @returns {Object} Basic tool registry
+   */
+  async createBasicToolRegistry() {
+    const toolRegistry = {
+      tools: new Map(),
+      modules: new Set(),
+      
+      // Method to check if tool exists (ProfileManager compatibility)
+      hasToolByNameOrAlias: function(name) {
+        return this.tools.has(name);
+      },
+      
+      // Method to get tool by name
+      getToolByNameOrAlias: function(name) {
+        return this.tools.get(name);
+      },
+      
+      // Method to register a tool
+      register: function(name, tool) {
+        this.tools.set(name, tool);
+      },
+      
+      // ModuleLoader compatibility methods
+      hasModule: function(name) {
+        return this.modules.has(name);
+      },
+      
+      loadModuleByName: async function(name) {
+        // Mock module loading - just mark as loaded
+        console.log(`Mock loading module: ${name}`);
+        this.modules.add(name);
+        return { name, loaded: true };
+      }
+    };
+    
+    // Create basic mock tools for all the tools the profile needs
+    const basicTools = [
+      'file_write', 'file_read', 'directory_create', 'directory_list', 
+      'directory_current', 'directory_change', 'command_executor',
+      'install_dependencies', 'run_npm_script', 'start_dev_server',
+      'start_web_server', 'run_tests', 'analyze_failures', 
+      'get_slowest_tests', 'get_common_errors', 'generate_javascript_module',
+      'generate_javascript_function', 'generate_javascript_class',
+      'validate_javascript_syntax'
+    ];
+    
+    for (const toolName of basicTools) {
+      toolRegistry.register(toolName, {
+        name: toolName,
+        description: `Basic ${toolName} operation for planning`,
+        execute: async (args) => ({ 
+          success: true, 
+          message: `Would execute ${toolName}`,
+          output: args ? `Args: ${JSON.stringify(args)}` : 'No args'
+        })
+      });
+    }
+    
+    return toolRegistry;
   }
 
   /**

@@ -24,18 +24,19 @@ export class ActionNode extends BehaviorTreeNode {
     }
     
     this.toolName = config.tool;
-    this.toolInstance = null; // Cached tool instance
+    // Tool instance is pre-bound by BehaviorTreeExecutor
+    this.toolInstance = config.toolInstance || null;
   }
 
   async executeNode(context) {
     try {
-      // Get tool instance
-      const tool = await this.getTool();
+      // Use pre-bound tool instance
+      const tool = this.toolInstance;
       if (!tool) {
         return {
           status: NodeStatus.FAILURE,
           data: {
-            error: `Tool not found: ${this.toolName}`,
+            error: `Tool not bound: ${this.toolName}. Tool should have been bound at tree creation time.`,
             toolName: this.toolName
           }
         };
@@ -66,33 +67,14 @@ export class ActionNode extends BehaviorTreeNode {
       }
 
       // Execute the tool
-      const startTime = Date.now();
       const toolResult = await tool.execute(toolParams);
-      const executionTime = Date.now() - startTime;
 
-      // Transform tool result to BT result format with schema validation
-      const btResult = this.transformToolResultToBTResult(toolResult, executionTime, toolMeta.output);
-      
-      // Handle tool execution result
-      if (btResult.status === NodeStatus.SUCCESS) {
-        // Notify parent of successful execution
-        this.sendToParent({
-          type: 'ACTION_COMPLETED',
-          toolName: this.toolName,
-          result: btResult.data,
-          executionTime
-        });
-      } else {
-        // Report failure to parent
-        this.sendToParent({
-          type: 'ACTION_FAILED',
-          toolName: this.toolName,
-          error: btResult.data.error,
-          executionTime
-        });
+      // Emit the tool result
+      if (this.executor && this.executor.emit) {
+        this.executor.emit('action:result', toolResult);
       }
 
-      return btResult;
+      return toolResult;
     } catch (error) {
       return {
         status: NodeStatus.FAILURE,
@@ -105,24 +87,6 @@ export class ActionNode extends BehaviorTreeNode {
     }
   }
 
-  /**
-   * Get tool instance with caching
-   * @returns {Promise<Object|null>} Tool instance or null if not found
-   */
-  async getTool() {
-    // Use cached instance if available
-    if (this.toolInstance) {
-      return this.toolInstance;
-    }
-
-    try {
-      this.toolInstance = await this.toolRegistry.getTool(this.toolName);
-      return this.toolInstance;
-    } catch (error) {
-      console.warn(`[ActionNode] Failed to get tool '${this.toolName}':`, error.message);
-      return null;
-    }
-  }
 
   /**
    * Prepare tool parameters from configuration and context
@@ -453,16 +417,12 @@ export class ActionNode extends BehaviorTreeNode {
     const dependencies = [this.toolName];
     
     // Get tool metadata to find additional dependencies
-    try {
-      const tool = await this.getTool();
-      if (tool && tool.getMetadata) {
-        const metadata = tool.getMetadata();
-        if (metadata.dependencies) {
-          dependencies.push(...metadata.dependencies);
-        }
+    const tool = this.toolInstance;
+    if (tool && tool.getMetadata) {
+      const metadata = tool.getMetadata();
+      if (metadata.dependencies) {
+        dependencies.push(...metadata.dependencies);
       }
-    } catch (error) {
-      console.warn(`[ActionNode] Failed to get tool dependencies for ${this.toolName}:`, error.message);
     }
 
     return dependencies;
@@ -473,12 +433,7 @@ export class ActionNode extends BehaviorTreeNode {
    * @returns {Promise<boolean>} True if tool is available
    */
   async isToolAvailable() {
-    try {
-      const tool = await this.getTool();
-      return tool !== null;
-    } catch (error) {
-      return false;
-    }
+    return this.toolInstance !== null;
   }
 
   /**
