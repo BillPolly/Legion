@@ -51,7 +51,7 @@ export class LogCaptureAgent extends BTAgentBase {
           type: 'condition',
           name: 'validate_log_batch',
           description: 'Validate incoming log batch structure',
-          condition: 'context.message.type === "log_batch" && Array.isArray(context.message.entries)'
+          check: 'context.message.type === "log_batch" && Array.isArray(context.message.entries)'
         },
         {
           type: 'action',
@@ -69,14 +69,14 @@ export class LogCaptureAgent extends BTAgentBase {
               name: 'error_analysis',
               description: 'Analyze errors and exceptions',
               tool: 'analyze_errors',
-              condition: 'context.processingConfig.errorAnalysisEnabled'
+              check: 'context.processingConfig.errorAnalysisEnabled'
             },
             {
               type: 'action',
               name: 'performance_analysis',
               description: 'Analyze performance metrics',
               tool: 'analyze_performance',
-              condition: 'context.processingConfig.performanceAnalysisEnabled'
+              check: 'context.processingConfig.performanceAnalysisEnabled'
             },
             {
               type: 'action',

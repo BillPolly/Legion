@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@legion/tools';
+import { Tool, ToolResult } from '../../../tools/src/index.js';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 

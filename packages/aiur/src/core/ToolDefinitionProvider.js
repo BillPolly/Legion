@@ -6,7 +6,8 @@
  */
 
 import { ContextManager } from './ContextManager.js';
-import { ModuleManager, ModuleFactory } from '@legion/module-loader';
+import { ModuleFactory } from '../../../tools/src/ModuleFactory.js';
+// ModuleManager is not needed here
 import { ModuleHandler } from './ModuleHandler.js';
 import { ModuleOperationTools } from '../tools/ModuleOperationTools.js';
 import path from 'path';

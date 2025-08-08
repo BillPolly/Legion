@@ -207,6 +207,8 @@ export class ServerActorSpace extends ConfigurableActorSpace {
         
       case 'LogCaptureAgent':
         this.logCaptureAgent = new LogCaptureAgent(config);
+        // Initialize the BT agent to set up the executor
+        await this.logCaptureAgent.initialize();
         return this.logCaptureAgent;
         
       default:

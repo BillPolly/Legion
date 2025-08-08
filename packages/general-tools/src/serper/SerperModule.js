@@ -1,4 +1,4 @@
-import { Module } from '@legion/tools';
+import { Module } from '../../../tools/src/index.js';
 import { Serper } from './Serper.js';
 
 /**

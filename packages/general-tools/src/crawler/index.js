@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@legion/tools';
+import { Tool, ToolResult } from '../../../tools/src/index.js';
 import puppeteer from 'puppeteer';
 
 class Crawler extends Tool {

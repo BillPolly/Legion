@@ -94,19 +94,35 @@ export class RequirementParserTool extends Tool {
    * Get LLM client from dependencies
    */
   async getLLMClient() {
+    // Priority 1: Direct injection
     if (this.llmClient) {
       return this.llmClient;
     }
     
-    // Try to get from ResourceManager
+    // Priority 2: Try from ResourceManager
     if (this.resourceManager) {
-      this.llmClient = this.resourceManager.get('llmClient');
-      if (this.llmClient) {
-        return this.llmClient;
+      try {
+        this.llmClient = this.resourceManager.get('llmClient');
+        if (this.llmClient) {
+          return this.llmClient;
+        }
+      } catch (error) {
+        // Continue to next option
+      }
+
+      // Try from sdModule
+      try {
+        const sdModule = this.resourceManager.get('sdModule');
+        if (sdModule && sdModule.llmClient) {
+          this.llmClient = sdModule.llmClient;
+          return this.llmClient;
+        }
+      } catch (error) {
+        // Continue
       }
     }
     
-    throw new Error('LLM client not available');
+    throw new Error('LLM client not available - ensure tool is initialized with llmClient or resourceManager');
   }
 
   /**

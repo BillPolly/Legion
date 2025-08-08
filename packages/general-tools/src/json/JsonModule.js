@@ -1,4 +1,4 @@
-import { Tool, Module } from '@legion/tools';
+import { Tool, Module } from '../../../tools/src/index.js';
 import { z } from 'zod';
 
 /**

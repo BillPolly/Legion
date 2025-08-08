@@ -1,4 +1,4 @@
-import { Tool, ToolResult, Module } from '@legion/tools';
+import { Tool, ToolResult, Module } from '../../../tools/src/index.js';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { z } from 'zod';

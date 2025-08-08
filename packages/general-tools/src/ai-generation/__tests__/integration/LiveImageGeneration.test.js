@@ -8,7 +8,7 @@
  */
 
 import { jest } from '@jest/globals';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '../../../tools/src/index.js';
 import AIGenerationModule from '../../AIGenerationModule.js';
 import fs from 'fs/promises';
 import path from 'path';

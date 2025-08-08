@@ -117,7 +117,7 @@ export class AiurServer {
     // });
     
     // Create THE singleton ModuleLoader
-    const { ModuleLoader } = await import('@legion/module-loader');
+    const { ModuleLoader } = await import('../../../tools/src/ModuleLoader.js');
     this.moduleLoader = new ModuleLoader(); // Creates its own ResourceManager internally
     await this.moduleLoader.initialize();
     

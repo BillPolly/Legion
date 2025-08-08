@@ -1,4 +1,4 @@
-import { Tool } from '@legion/tools';
+import { Tool } from '../../../tools/src/index.js';
 import puppeteer from 'puppeteer';
 import { z } from 'zod';
 

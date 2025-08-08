@@ -1,4 +1,4 @@
-import { Tool } from '@legion/tools';
+import { Tool } from '../../../tools/src/index.js';
 import { z } from 'zod';
 import { readFileSync } from 'fs';
 import { resolve, dirname } from 'path';

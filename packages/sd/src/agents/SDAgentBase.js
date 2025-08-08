@@ -15,9 +15,10 @@ export class SDAgentBase extends BTAgentBase {
     // SD-specific properties
     this.designDatabase = config.designDatabase;
     this.methodologyRules = config.methodologyRules || {};
-    this.llmClient = null;
+    this.llmClient = config.llmClient || null; // Accept direct injection
     this.contextBuilder = new ContextBuilder(this.designDatabase);
-    this.databaseService = null;
+    this.databaseService = config.dbService || null; // Accept direct injection
+    this.resourceManager = config.resourceManager || null; // Store for later use
   }
 
   /**
@@ -41,32 +42,57 @@ export class SDAgentBase extends BTAgentBase {
    * @returns {LLMClient} LLM client instance
    */
   async getLLMClient() {
+    // Priority 1: Direct injection
     if (this.llmClient) {
       return this.llmClient;
     }
 
-    // Access through ResourceManager (inherited from BTAgentBase)
-    const resourceManager = this.getResourceManager();
-    
-    // Try to get existing client
+    // Priority 2: Try from stored resourceManager
+    if (this.resourceManager) {
+      try {
+        const existingClient = this.resourceManager.get('llmClient');
+        if (existingClient) {
+          this.llmClient = existingClient;
+          return existingClient;
+        }
+      } catch (error) {
+        // Continue to next option
+      }
+
+      // Try from sdModule
+      try {
+        const sdModule = this.resourceManager.get('sdModule');
+        if (sdModule && sdModule.llmClient) {
+          this.llmClient = sdModule.llmClient;
+          return this.llmClient;
+        }
+      } catch (error) {
+        // Continue to next option
+      }
+    }
+
+    // Priority 3: Try inherited getResourceManager (from BTAgentBase)
     try {
-      const existingClient = resourceManager.get('llmClient');
-      if (existingClient) {
-        this.llmClient = existingClient;
-        return existingClient;
+      const resourceManager = this.getResourceManager();
+      if (resourceManager) {
+        const existingClient = resourceManager.get('llmClient');
+        if (existingClient) {
+          this.llmClient = existingClient;
+          return existingClient;
+        }
+
+        // Try from sdModule
+        const sdModule = resourceManager.get('sdModule');
+        if (sdModule && sdModule.llmClient) {
+          this.llmClient = sdModule.llmClient;
+          return this.llmClient;
+        }
       }
     } catch (error) {
-      // Client doesn't exist, will be created by SDModule
+      // No resourceManager available
     }
 
-    // Get from module's initialization
-    const sdModule = resourceManager.get('sdModule');
-    if (sdModule && sdModule.llmClient) {
-      this.llmClient = sdModule.llmClient;
-      return this.llmClient;
-    }
-
-    throw new Error('LLM client not available. Ensure SDModule is initialized.');
+    throw new Error('LLM client not available. Ensure agent is initialized with llmClient in config or SDInitializer is used.');
   }
 
   /**
@@ -174,13 +200,39 @@ export class SDAgentBase extends BTAgentBase {
    * @returns {Object} Parsed decision
    */
   parseDecision(response) {
-    try {
-      // Try to parse as JSON first
-      if (response.trim().startsWith('{')) {
-        return JSON.parse(response);
+    if (!response) {
+      return {
+        decision: null,
+        reasoning: 'No response received',
+        confidence: 0
+      };
+    }
+
+    // If response is already an object
+    if (typeof response === 'object' && !Array.isArray(response)) {
+      return response;
+    }
+
+    // If response is a string
+    if (typeof response === 'string') {
+      // Try to extract JSON from markdown code blocks
+      const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) {
+        try {
+          return JSON.parse(jsonMatch[1]);
+        } catch (error) {
+          // Continue to try direct parse
+        }
       }
-    } catch (error) {
-      // Not JSON, parse as text
+
+      // Try direct JSON parse
+      try {
+        if (response.trim().startsWith('{') || response.trim().startsWith('[')) {
+          return JSON.parse(response);
+        }
+      } catch (error) {
+        // Not valid JSON
+      }
     }
     
     return {

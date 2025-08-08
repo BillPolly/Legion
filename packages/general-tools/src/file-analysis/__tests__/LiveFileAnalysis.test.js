@@ -1,5 +1,5 @@
 import { LLMClient } from '@legion/llm';
-import { ResourceManager, ModuleLoader } from '@legion/tools';
+import { ResourceManager, ModuleLoader } from '../../../tools/src/index.js';
 import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';

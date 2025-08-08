@@ -172,6 +172,22 @@ export class ModuleLoader {
   getTools() {
     return this.tools;
   }
+  
+  /**
+   * Get all tools as array (alias for compatibility)
+   * @returns {Tool[]} Array of all tools
+   */
+  async getAllTools() {
+    return Array.from(this.tools.values());
+  }
+  
+  /**
+   * Get names of all loaded modules
+   * @returns {string[]} Module names
+   */
+  getLoadedModuleNames() {
+    return Array.from(this.modules.keys());
+  }
 
   /**
    * Get all tool names
