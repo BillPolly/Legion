@@ -3,12 +3,16 @@
  * 
  * Integrates the BehaviorTreeExecutor with Aiur's Actor system to create
  * configurable, composable agents that can be defined through JSON workflows.
+ * 
+ * AUTOMATICALLY INSTRUMENTED FOR OBSERVABILITY - No changes needed in subclasses!
  */
 
 import { Actor } from '../../../../shared/actors/src/Actor.js';
 import { BehaviorTreeExecutor } from '../../../../shared/actor-BT/src/core/BehaviorTreeExecutor.js';
 import { AgentNodeRegistry } from './AgentNodeRegistry.js';
 import { AgentConfigurator } from './AgentConfigurator.js';
+import { ObservabilityContext } from '../../observability/ObservabilityContext.js';
+import { getTraceCollector } from '../../observability/TraceCollector.js';
 
 export class BTAgentBase extends Actor {
   constructor(config = {}) {
@@ -160,34 +164,81 @@ export class BTAgentBase extends Actor {
   
   /**
    * Main Actor receive method - routes messages to BT workflows
+   * AUTOMATICALLY TRACED - Creates spans for all agent execution
    */
   async receive(payload, envelope) {
-    if (!this.initialized) {
-      await this.initialize();
-    }
+    // Create observability context for this agent execution
+    const context = ObservabilityContext.create(`agent:${this.agentType}`, {
+      'agent.id': this.agentId,
+      'agent.type': this.agentType,
+      'agent.session': this.sessionId,
+      'message.type': payload?.type,
+      'message.requestId': payload?.requestId
+    });
     
-    if (this.debugMode) {
-      console.log(`BTAgent ${this.agentId} received message:`, payload?.type);
-    }
-    
-    try {
-      // Create execution context from the message
-      const context = this.createExecutionContext(payload, envelope);
+    return context.run(async () => {
+      if (!this.initialized) {
+        context.addEvent('agent:initializing');
+        await this.initialize();
+        context.addEvent('agent:initialized');
+      }
       
-      // Execute the agent's workflow using the BT
-      const result = await this.btExecutor.executeTree(this.agentConfig, context);
+      if (this.debugMode) {
+        console.log(`BTAgent ${this.agentId} received message:`, payload?.type);
+      }
       
-      // Handle the execution result
-      const response = await this.handleExecutionResult(result, payload);
-      
-      // Return the response for Actor protocol
-      return response;
-      
-    } catch (error) {
-      console.error(`BTAgent ${this.agentId} execution error:`, error);
-      const errorResponse = await this.handleExecutionError(error, payload);
-      return errorResponse;
-    }
+      try {
+        // Create execution context from the message
+        const executionContext = this.createExecutionContext(payload, envelope);
+        
+        // Add observability context to execution context
+        executionContext.observabilityContext = context;
+        
+        context.addEvent('bt:execution:start', {
+          workflow: this.agentConfig?.name || 'default'
+        });
+        
+        // Execute the agent's workflow using the BT
+        const result = await this.btExecutor.executeTree(this.agentConfig, executionContext);
+        
+        context.addEvent('bt:execution:complete', {
+          success: result.success,
+          status: result.status,
+          nodeResults: Object.keys(result.nodeResults || {}).length
+        });
+        
+        // Handle the execution result
+        const response = await this.handleExecutionResult(result, payload);
+        
+        // End context with success
+        context.end({
+          'agent.response.type': response?.type,
+          'agent.response.success': response?.success !== false
+        });
+        
+        // Return the response for Actor protocol
+        return response;
+        
+      } catch (error) {
+        console.error(`BTAgent ${this.agentId} execution error:`, error);
+        
+        // Record error in context
+        context.recordError(error, {
+          agent: this.agentId,
+          workflow: this.agentConfig?.name
+        });
+        
+        const errorResponse = await this.handleExecutionError(error, payload);
+        
+        // End context with error
+        context.end({
+          'agent.error': error.message,
+          'agent.response.type': 'error'
+        });
+        
+        return errorResponse;
+      }
+    });
   }
   
   /**

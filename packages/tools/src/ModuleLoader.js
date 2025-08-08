@@ -1,6 +1,8 @@
 /**
  * Simplified ModuleLoader for tool-system
  * Provides backward compatibility with module-loader's ModuleLoader
+ * 
+ * AUTOMATICALLY INSTRUMENTS ALL TOOLS FOR OBSERVABILITY
  */
 
 import { ResourceManager } from './ResourceManager.js';
@@ -16,6 +18,13 @@ export class ModuleLoader {
     this.modules = new Map();
     this.tools = new Map();
     this.initialized = false;
+    
+    // Observability configuration
+    this.enableObservability = options.enableObservability !== false;
+    this.tracedToolProxy = null;
+    
+    // Store TracedToolProxy class if available
+    this.TracedToolProxy = options.TracedToolProxy || null;
   }
 
   /**
@@ -114,17 +123,42 @@ export class ModuleLoader {
   }
 
   /**
-   * Register a tool
+   * Register a tool (automatically wrapped with tracing if observability is enabled)
    * @param {string} name - Tool name
    * @param {Tool} tool - Tool instance
    */
   registerTool(name, tool) {
-    this.tools.set(name, tool);
+    // Wrap tool with tracing if observability is enabled
+    let registeredTool = tool;
+    
+    if (this.enableObservability && this.TracedToolProxy) {
+      registeredTool = this.TracedToolProxy.create(tool, {
+        category: this.getModuleNameForTool(name)
+      });
+    }
+    
+    this.tools.set(name, registeredTool);
     
     // Also register by tool's own name if different
     if (tool.name && tool.name !== name) {
-      this.tools.set(tool.name, tool);
+      this.tools.set(tool.name, registeredTool);
     }
+  }
+  
+  /**
+   * Get module name for a tool (for categorization)
+   */
+  getModuleNameForTool(toolName) {
+    // Find which module contains this tool
+    for (const [moduleName, module] of this.modules) {
+      if (module.getTools) {
+        const tools = module.getTools();
+        if (tools.some(t => t.name === toolName || t.constructor.name === toolName)) {
+          return moduleName;
+        }
+      }
+    }
+    return 'unknown';
   }
 
   /**

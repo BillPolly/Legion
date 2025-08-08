@@ -46,6 +46,11 @@ export class BehaviorTreeExecutor {
         artifacts: context.artifacts || {}
       };
 
+      // If we have an observability context, add node execution tracking
+      if (executionContext.observabilityContext) {
+        this.attachObservabilityToNode(rootNode, executionContext.observabilityContext);
+      }
+
       // Execute the tree
       const result = await rootNode.execute(executionContext);
       
@@ -66,6 +71,63 @@ export class BehaviorTreeExecutor {
         context,
         executionTime: Date.now() - (context.startTime || Date.now())
       };
+    }
+  }
+
+  /**
+   * Attach observability to a node and its children
+   * @param {BehaviorTreeNode} node - Node to instrument
+   * @param {ObservabilityContext} obsContext - Observability context
+   */
+  attachObservabilityToNode(node, obsContext) {
+    if (!node || !obsContext) return;
+
+    // Wrap the node's execute method
+    const originalExecute = node.execute.bind(node);
+    
+    node.execute = async (context) => {
+      const nodeType = node.config?.type || 'unknown';
+      const nodeName = node.config?.name || nodeType;
+      
+      // Add event for node start
+      obsContext.addEvent('bt:node:start', {
+        type: nodeType,
+        name: nodeName,
+        hasChildren: node.children?.length > 0
+      });
+      
+      const startTime = Date.now();
+      
+      try {
+        const result = await originalExecute(context);
+        
+        // Add event for node completion
+        obsContext.addEvent('bt:node:complete', {
+          type: nodeType,
+          name: nodeName,
+          status: result.status,
+          duration: Date.now() - startTime
+        });
+        
+        return result;
+      } catch (error) {
+        // Add event for node error
+        obsContext.addEvent('bt:node:error', {
+          type: nodeType,
+          name: nodeName,
+          error: error.message,
+          duration: Date.now() - startTime
+        });
+        
+        throw error;
+      }
+    };
+
+    // Recursively attach to children
+    if (node.children && Array.isArray(node.children)) {
+      for (const child of node.children) {
+        this.attachObservabilityToNode(child, obsContext);
+      }
     }
   }
 
