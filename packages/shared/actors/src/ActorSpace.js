@@ -100,6 +100,20 @@ export class ActorSpace {
             console.error(`ActorSpace ${this.spaceId}: Received message for unknown local target GUID: ${targetGuid}. Payload:`, payload);
         }
     }
+    
+    /**
+     * Clean up the ActorSpace
+     */
+    destroy() {
+        // Clear all mappings
+        this.guidToObject.clear();
+        this.objectToGuid.clear();
+        
+        // Clear channel if exists
+        if (this._channel) {
+            this._channel = null;
+        }
+    }
 }
 
 export function makeActor(fn,state=null) {

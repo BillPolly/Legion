@@ -12,7 +12,8 @@ export class TerminalBTAgent extends BTAgentBase {
     super({
       ...config,
       agentType: 'terminal',
-      configPath: config.configPath || 'terminal-agent.json'
+      configPath: config.configPath || 'terminal-agent.json',
+      debugMode: true  // Enable debug to see what's happening
     });
     
     // Terminal-specific state
@@ -38,28 +39,28 @@ export class TerminalBTAgent extends BTAgentBase {
    * Override receive to handle ping/pong directly
    */
   async receive(payload, envelope) {
+    console.log(`TerminalBTAgent: Received message type: ${payload?.type}`);
+    
     // Handle ping/pong directly for testing
     if (payload?.type === 'ping') {
-      return {
+      console.log('TerminalBTAgent: Handling ping, returning pong');
+      const pongResponse = {
         type: 'pong',
         content: 'pong',
         agentId: this.agentId,
         timestamp: Date.now()
       };
+      
+      // Send to remote actor if available
+      if (this.remoteActor) {
+        console.log('TerminalBTAgent: Sending pong to remote actor');
+        this.remoteActor.receive(pongResponse);
+      }
+      
+      return pongResponse;
     }
     
-    // Handle list_tools request
-    if (payload?.type === 'list_tools') {
-      const tools = await this.getAvailableTools();
-      return {
-        type: 'tools_list',
-        tools: tools,
-        agentId: this.agentId,
-        timestamp: Date.now()
-      };
-    }
-    
-    // Otherwise use parent implementation
+    // Otherwise use parent implementation - let BT handle all other messages
     return super.receive(payload, envelope);
   }
   
@@ -135,6 +136,22 @@ export class TerminalBTAgent extends BTAgentBase {
     }
     
     return tools;
+  }
+  
+  /**
+   * Send initial tools list to the frontend
+   */
+  async sendInitialTools() {
+    if (this.remoteActor) {
+      const tools = await this.getAvailableTools();
+      this.remoteActor.receive({
+        type: 'tool_list',
+        tools: tools,
+        sessionId: this.sessionId,
+        timestamp: Date.now()
+      });
+      console.log(`TerminalBTAgent: Sent initial tools list (${tools.length} tools)`);
+    }
   }
   
   /**

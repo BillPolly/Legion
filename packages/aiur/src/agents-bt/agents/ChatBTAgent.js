@@ -111,14 +111,13 @@ export class ChatBTAgent extends BTAgentBase {
     if (!this.moduleLoader) return;
     
     try {
-      await this.moduleLoader.loadModuleByName('ai-generation');
-      await this.moduleLoader.loadModuleByName('file-analysis');
+      // Only try to load modules that actually exist
+      const availableModules = ['file', 'command-executor'];
       
-      // Preload development modules
-      const devModules = ['file', 'command-executor', 'node-runner', 'jester', 'js-generator', 'code-analysis'];
-      for (const moduleName of devModules) {
+      for (const moduleName of availableModules) {
         try {
           await this.moduleLoader.loadModuleByName(moduleName);
+          console.log(`ChatBTAgent: Loaded ${moduleName}`);
         } catch (error) {
           console.warn(`ChatBTAgent: Failed to load ${moduleName}:`, error.message);
         }
@@ -136,16 +135,18 @@ export class ChatBTAgent extends BTAgentBase {
    */
   async loadVoiceModule() {
     try {
-      const VoiceModule = (await import('../../../voice/src/VoiceModule.js')).default;
+      const VoiceModule = (await import('../../../../voice/src/VoiceModule.js')).default;
       const voiceModule = await VoiceModule.create(this.resourceManager);
       
-      // Register with module loader
-      this.moduleLoader.loadedModules.set('voice', voiceModule);
+      // Register with module loader if available
+      if (this.moduleLoader && this.moduleLoader.loadedModules) {
+        this.moduleLoader.loadedModules.set('voice', voiceModule);
+      }
       
       // Register voice tools
       const voiceTools = voiceModule.getTools();
       for (const tool of voiceTools) {
-        if (tool && tool.name) {
+        if (tool && tool.name && this.moduleLoader && this.moduleLoader.toolRegistry) {
           this.moduleLoader.toolRegistry.set(tool.name, tool);
         }
       }
@@ -247,6 +248,13 @@ export class ChatBTAgent extends BTAgentBase {
     if (this.artifactActor && this.artifactManager) {
       this.artifactActor.artifactManager = this.artifactManager;
     }
+  }
+  
+  /**
+   * Set the ArtifactAgent for internal communication
+   */
+  setArtifactAgent(artifactAgent) {
+    this.artifactAgent = artifactAgent;
   }
   
   /**

@@ -1,14 +1,14 @@
 /**
- * LogCaptureAgent - BT Agent for processing frontend logs and errors
+ * LogCaptureBTAgent - BT Agent for processing frontend logs and errors
  * 
  * This BT agent processes incoming log batches from frontend LogCaptureActor,
  * analyzes them using behavior trees, and forwards structured events to the
  * semantic search system for intelligent debugging and analysis.
  */
 
-import { BTAgentBase } from '../agents-bt/core/BTAgentBase.js';
+import { BTAgentBase } from '../core/BTAgentBase.js';
 
-export class LogCaptureAgent extends BTAgentBase {
+export class LogCaptureBTAgent extends BTAgentBase {
   constructor(config = {}) {
     super({
       ...config,
@@ -35,7 +35,7 @@ export class LogCaptureAgent extends BTAgentBase {
     this.errorPatterns = new Map(); // pattern -> count
     this.performanceMetrics = new Map(); // sessionId -> metrics
     
-    console.log(`LogCaptureAgent ${this.agentId} initialized for session ${this.sessionId}`);
+    console.log(`LogCaptureBTAgent ${this.agentId} initialized for session ${this.sessionId}`);
   }
   
   /**

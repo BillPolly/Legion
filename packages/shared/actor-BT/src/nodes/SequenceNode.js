@@ -155,7 +155,9 @@ export class SequenceNode extends BehaviorTreeNode {
    * @returns {Object} Modified context for child
    */
   prepareChildContext(parentContext, childIndex) {
-    const childContext = { ...parentContext };
+    // Use the same context object so modifications are visible to subsequent children
+    // This is critical for data flow in sequences
+    const childContext = parentContext;
 
     // Add sequence-specific context
     childContext.sequenceInfo = {

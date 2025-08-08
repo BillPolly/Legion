@@ -116,6 +116,10 @@ export class AgentNodeRegistry {
       const { ToolsListNode } = await import('../nodes/ToolsListNode.js');
       terminalNodes.set('tools_list', ToolsListNode);
       
+      // Response handling (needed for sending responses)
+      const { ResponseSenderNode } = await import('../nodes/ResponseSenderNode.js');
+      terminalNodes.set('response_sender', ResponseSenderNode);
+      
     } catch (error) {
       console.warn('AgentNodeRegistry: Some terminal nodes failed to load:', error.message);
     }
@@ -145,6 +149,10 @@ export class AgentNodeRegistry {
       // Artifact synchronization
       const { ArtifactSyncNode } = await import('../nodes/ArtifactSyncNode.js');
       artifactNodes.set('artifact_sync', ArtifactSyncNode);
+      
+      // Response handling (needed for sending responses)
+      const { ResponseSenderNode } = await import('../nodes/ResponseSenderNode.js');
+      artifactNodes.set('response_sender', ResponseSenderNode);
       
     } catch (error) {
       console.warn('AgentNodeRegistry: Some artifact nodes failed to load:', error.message);

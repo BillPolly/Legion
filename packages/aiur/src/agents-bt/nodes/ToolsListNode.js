@@ -42,6 +42,10 @@ export class ToolsListNode extends BehaviorTreeNode {
       // Apply limit
       const limitedTools = this.applyLimit(sortedTools);
 
+      // Store tools in context for next nodes to access
+      context.tools = limitedTools;
+      context.toolsList = limitedTools;
+      
       return this.createSuccessResult({
         tools: limitedTools,
         totalCount: tools.length,

@@ -136,10 +136,30 @@ export class TerminalActor extends Actor {
           console.log('TerminalActor: Received pong');
           break;
           
+        case 'terminal_response':
+          this.handleTerminalResponse(payload);
+          break;
+          
+        case 'tools_list':
+          // Alternative tools list response from BT agents
+          this.handleToolsListResponse(payload);
+          break;
+        
+        case 'response_sender':
+          // Response from BT agent response_sender node
+          this.handleBTResponse(payload);
+          break;
+          
         default:
           console.log('TerminalActor: Unknown message type:', payload.type);
           if (this.terminal) {
-            this.terminal.addOutput(JSON.stringify(payload, null, 2), 'info');
+            // Only show the raw JSON for truly unknown types
+            this.terminal.addOutput(`Unknown response type: ${payload.type}`, 'warning');
+            if (payload.error) {
+              this.terminal.addOutput(`Error: ${payload.error}`, 'error');
+            } else if (payload.data) {
+              this.terminal.addOutput(JSON.stringify(payload.data, null, 2), 'info');
+            }
           }
       }
     }
@@ -263,6 +283,109 @@ export class TerminalActor extends Actor {
       this.terminal.addOutput(`Module error: ${payload.error}`, 'error');
       if (payload.moduleName) {
         this.terminal.addOutput(`Module: ${payload.moduleName}`, 'error');
+      }
+    }
+  }
+  
+  /**
+   * Handle terminal response from BT agents
+   */
+  handleTerminalResponse(payload) {
+    console.log('TerminalActor: Terminal response:', payload);
+    
+    if (this.terminal) {
+      // Check for errors first
+      if (payload.success === false || payload.data?.error) {
+        const errorMsg = payload.data?.error || payload.error || 'Unknown error';
+        this.terminal.addOutput(`Error: ${errorMsg}`, 'error');
+        
+        // Show additional context if available
+        if (payload.data?.route) {
+          this.terminal.addOutput('Failed route configuration:', 'error');
+          this.terminal.addOutput(JSON.stringify(payload.data.route, null, 2), 'error');
+        }
+      } 
+      // Handle successful responses
+      else if (payload.data) {
+        // Tools list
+        if (payload.data.tools) {
+          this.handleToolsList(payload.data.tools);
+        }
+        // Module list
+        else if (payload.data.modules) {
+          this.handleModulesList(payload.data.modules);
+        }
+        // Generic result
+        else if (payload.data.result) {
+          this.handleToolResult(payload.data.result);
+        }
+        // Raw data
+        else {
+          this.terminal.addOutput(JSON.stringify(payload.data, null, 2), 'info');
+        }
+      }
+      // Handle simple success
+      else if (payload.success) {
+        this.terminal.addOutput('Operation completed successfully', 'success');
+      }
+      // Fallback for other responses
+      else {
+        this.terminal.addOutput(JSON.stringify(payload, null, 2), 'info');
+      }
+    }
+  }
+  
+  /**
+   * Handle BT agent response_sender node responses
+   */
+  handleBTResponse(payload) {
+    console.log('TerminalActor: BT response:', payload);
+    
+    if (this.terminal) {
+      // Extract the actual data from the BT response
+      if (payload.stepResults && Array.isArray(payload.stepResults)) {
+        // Find the tools list step result
+        const toolsStep = payload.stepResults.find(step => 
+          step.data?.toolsListing || step.data?.tools
+        );
+        
+        if (toolsStep && toolsStep.data?.tools) {
+          // Handle as tools list
+          this.handleToolsList(toolsStep.data.tools);
+          return;
+        }
+        
+        // Find module list step result
+        const modulesStep = payload.stepResults.find(step => 
+          step.data?.modules
+        );
+        
+        if (modulesStep && modulesStep.data?.modules) {
+          // Handle as modules list
+          this.handleModulesList(modulesStep.data.modules);
+          return;
+        }
+      }
+      
+      // Check if there's a routing success/failure
+      if (payload.routing) {
+        if (payload.routing.success === false) {
+          this.terminal.addOutput(`Operation failed: ${payload.routing.messageType}`, 'error');
+          if (payload.routing.error) {
+            this.terminal.addOutput(`Error: ${payload.routing.error}`, 'error');
+          }
+        } else if (payload.sequenceComplete) {
+          // Just log that it completed, the actual data was already handled above
+          console.log('BT sequence completed successfully');
+        }
+      }
+      
+      // Fallback: if we couldn't extract specific data, check for generic results
+      if (payload.results && payload.results.length > 0) {
+        const firstResult = payload.results[0];
+        if (firstResult.data && firstResult.data !== '[Circular]') {
+          this.terminal.addOutput(JSON.stringify(firstResult.data, null, 2), 'info');
+        }
       }
     }
   }

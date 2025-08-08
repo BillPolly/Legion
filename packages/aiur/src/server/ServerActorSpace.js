@@ -6,11 +6,11 @@
  */
 
 import { ConfigurableActorSpace } from '../../../shared/actors/src/ConfigurableActorSpace.js';
-import { ChatAgent } from '../agents/ChatAgent.js';
-import { TerminalAgent } from '../agents/TerminalAgent.js';
-import { ArtifactAgent } from '../agents/ArtifactAgent.js';
+import { ChatBTAgent } from '../agents-bt/agents/ChatBTAgent.js';
+import { TerminalBTAgent } from '../agents-bt/agents/TerminalBTAgent.js';
+import { ArtifactBTAgent } from '../agents-bt/agents/ArtifactBTAgent.js';
 import { ArtifactActor } from '../agents/ArtifactActor.js';
-import { LogCaptureAgent } from '../agents/LogCaptureAgent.js';
+import { LogCaptureBTAgent } from '../agents-bt/agents/LogCaptureBTAgent.js';
 
 // Actor configuration with interface declarations
 const actorConfig = {
@@ -188,17 +188,26 @@ export class ServerActorSpace extends ConfigurableActorSpace {
     
     switch (className) {
       case 'ChatAgent':
-        this.chatAgent = new ChatAgent(config);
+        this.chatAgent = new ChatBTAgent(config);
+        // Initialize the BT agent
+        await this.chatAgent.initialize();
         return this.chatAgent;
         
       case 'TerminalAgent':
-        return new TerminalAgent({
+        this.terminalAgent = new TerminalBTAgent({
+          sessionId: this.spaceId,
           sessionManager: this.dependencies.sessionManager,
-          moduleLoader: this.dependencies.moduleLoader
+          moduleLoader: this.dependencies.moduleLoader,
+          resourceManager: this.dependencies.resourceManager
         });
+        // Initialize the BT agent
+        await this.terminalAgent.initialize();
+        return this.terminalAgent;
         
       case 'ArtifactAgent':
-        this.artifactAgent = new ArtifactAgent(config);
+        this.artifactAgent = new ArtifactBTAgent(config);
+        // Initialize the BT agent
+        await this.artifactAgent.initialize();
         return this.artifactAgent;
         
       case 'ArtifactActor':
@@ -206,7 +215,7 @@ export class ServerActorSpace extends ConfigurableActorSpace {
         return this.artifactActor;
         
       case 'LogCaptureAgent':
-        this.logCaptureAgent = new LogCaptureAgent(config);
+        this.logCaptureAgent = new LogCaptureBTAgent(config);
         // Initialize the BT agent to set up the executor
         await this.logCaptureAgent.initialize();
         return this.logCaptureAgent;

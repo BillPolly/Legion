@@ -15,7 +15,8 @@ export class ResponseSenderNode extends BehaviorTreeNode {
   constructor(config, toolRegistry, executor) {
     super(config, toolRegistry, executor);
     
-    this.responseType = config.type || 'chat_response';
+    // Use responseType from config, NOT type (which is the node type)
+    this.responseType = config.responseType || config.type || 'chat_response';
     this.content = config.content || null;
     this.includeContext = config.includeContext !== false;
   }
@@ -35,6 +36,10 @@ export class ResponseSenderNode extends BehaviorTreeNode {
       
       // Send response
       context.remoteActor.receive(response);
+      
+      // Mark that response was already sent to prevent duplicate sending
+      context.responseSent = true;
+      context.sentResponse = response;
       
       return {
         status: NodeStatus.SUCCESS,
@@ -77,6 +82,16 @@ export class ResponseSenderNode extends BehaviorTreeNode {
         return this.buildChatResponse(baseResponse, context);
       case 'tool_response':
         return this.buildToolResponse(baseResponse, context);
+      case 'tools_list_response':
+      case 'tools_list':
+        return this.buildToolsListResponse(baseResponse, context);
+      case 'module_list_response':
+        return this.buildModuleListResponse(baseResponse, context);
+      case 'module_loaded':
+      case 'module_unloaded':
+        return this.buildModuleResponse(baseResponse, context);
+      case 'pong':
+        return this.buildPongResponse(baseResponse, context);
       case 'error':
         return this.buildErrorResponse(baseResponse, context);
       case 'status':
@@ -187,6 +202,113 @@ export class ResponseSenderNode extends BehaviorTreeNode {
     // Add progress if available
     if (context.progress !== undefined) {
       response.progress = context.progress;
+    }
+    
+    return response;
+  }
+  
+  /**
+   * Build tools list response
+   */
+  buildToolsListResponse(baseResponse, context) {
+    const response = { 
+      ...baseResponse,
+      type: 'tools_list'  // Ensure correct type for frontend
+    };
+    
+    
+    // The tools list should be in the execution context from previous node results
+    // Check the parent execution result for ToolsListNode data
+    let tools = null;
+    
+    // First check if tools are directly in context
+    if (context.tools) {
+      tools = context.tools;
+    } else if (context.toolsList) {
+      tools = context.toolsList;
+    } else if (context.data?.tools) {
+      tools = context.data.tools;
+    } else {
+      // Look for tools in the execution result from previous steps
+      // The BT executor should have the results from the ToolsListNode
+      if (context.previousNodeResult?.data?.tools) {
+        tools = context.previousNodeResult.data.tools;
+      } else if (context.executionResult?.data?.tools) {
+        tools = context.executionResult.data.tools;
+      }
+    }
+    
+    response.tools = tools || [];
+    
+    return response;
+  }
+  
+  /**
+   * Build module list response
+   */
+  buildModuleListResponse(baseResponse, context) {
+    const response = { 
+      ...baseResponse,
+      type: 'module_list_response'
+    };
+    
+    // Find modules data in context
+    if (context.modules) {
+      response.modules = context.modules;
+    } else if (context.modulesList) {
+      response.modules = context.modulesList;
+    } else if (context.data?.modules) {
+      response.modules = context.data.modules;
+    } else {
+      // Fallback: empty modules list
+      response.modules = { loaded: [], available: [] };
+    }
+    
+    return response;
+  }
+  
+  /**
+   * Build module loaded/unloaded response
+   */
+  buildModuleResponse(baseResponse, context) {
+    const response = { ...baseResponse };
+    
+    // Add module name
+    if (context.moduleName) {
+      response.moduleName = context.moduleName;
+    } else if (context.message?.moduleName) {
+      response.moduleName = context.message.moduleName;
+    }
+    
+    // Add message
+    if (this.content) {
+      response.message = this.substitutePlaceholders(this.content, context);
+    } else {
+      response.message = `Module ${response.moduleName} ${this.responseType === 'module_loaded' ? 'loaded' : 'unloaded'} successfully`;
+    }
+    
+    // Add loaded tools for module_loaded
+    if (this.responseType === 'module_loaded' && context.loadedTools) {
+      response.toolsLoaded = context.loadedTools;
+    }
+    
+    return response;
+  }
+  
+  /**
+   * Build pong response
+   */
+  buildPongResponse(baseResponse, context) {
+    const response = { 
+      ...baseResponse,
+      type: 'pong'
+    };
+    
+    // Add content
+    if (this.content) {
+      response.content = this.substitutePlaceholders(this.content, context);
+    } else {
+      response.content = 'pong';
     }
     
     return response;

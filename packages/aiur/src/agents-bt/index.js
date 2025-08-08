@@ -14,8 +14,9 @@ export { AgentConfigurator } from './core/AgentConfigurator.js';
 import { ChatBTAgent } from './agents/ChatBTAgent.js';
 import { TerminalBTAgent } from './agents/TerminalBTAgent.js'; 
 import { ArtifactBTAgent } from './agents/ArtifactBTAgent.js';
+import { LogCaptureBTAgent } from './agents/LogCaptureBTAgent.js';
 
-export { ChatBTAgent, TerminalBTAgent, ArtifactBTAgent };
+export { ChatBTAgent, TerminalBTAgent, ArtifactBTAgent, LogCaptureBTAgent };
 
 // Core agent nodes
 export { MessageHandlerNode } from './nodes/MessageHandlerNode.js';

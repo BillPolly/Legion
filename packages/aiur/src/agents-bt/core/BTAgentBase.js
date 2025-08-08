@@ -217,6 +217,7 @@ export class BTAgentBase extends Actor {
         });
         
         // Return the response for Actor protocol
+        // The response will be undefined if ResponseSenderNode already sent it
         return response;
         
       } catch (error) {
@@ -280,6 +281,26 @@ export class BTAgentBase extends Actor {
         { success: result.success, status: result.status });
     }
     
+    // Check if response was already sent by ResponseSenderNode
+    // Check multiple places where responseSent might be set
+    const wasResponseSent = 
+      result.context?.responseSent ||
+      (result.nodeResults && Object.values(result.nodeResults).some(
+        nodeResult => nodeResult.data?.responseSent === true
+      )) ||
+      (result.data?.stepResults && result.data.stepResults.some(
+        step => step.childId?.includes('response_sender') && step.data?.responseSent === true
+      ));
+    
+    if (wasResponseSent) {
+      // Response was already sent by ResponseSenderNode, don't send another one
+      // Just handle agent-specific result processing
+      await this.processAgentResult(result, originalMessage);
+      
+      // Return undefined to indicate no response should be sent
+      return undefined;
+    }
+    
     // Extract response from result context
     let response = result.context?.response || result.data?.response;
     
@@ -294,7 +315,7 @@ export class BTAgentBase extends Actor {
       };
     }
     
-    // If the workflow produced a response, send it to the remote actor
+    // Send the response to the remote actor
     if (this.remoteActor) {
       await this.sendToRemote(response);
     }
