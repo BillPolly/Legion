@@ -12,9 +12,55 @@
  * Phase 4: Quality Assurance (15-30 min)
  */
 
-import { ResourceManager } from '@legion/tools';
 import { LLMClient } from '@legion/llm';
 import { DesignDatabaseService } from '../src/services/DesignDatabaseService.js';
+
+// Minimal ResourceManager that doesn't trigger auto-loading
+class MinimalResourceManager {
+  constructor() {
+    this.resources = new Map();
+  }
+  
+  async initialize() {
+    // Load .env file manually
+    const fs = await import('fs/promises');
+    const path = await import('path');
+    
+    try {
+      const envPath = path.resolve(process.cwd(), '../../.env');
+      const envContent = await fs.readFile(envPath, 'utf-8');
+      
+      const envObj = {};
+      for (const line of envContent.split('\n')) {
+        const trimmed = line.trim();
+        if (trimmed && !trimmed.startsWith('#')) {
+          const [key, ...valueParts] = trimmed.split('=');
+          if (key && valueParts.length > 0) {
+            envObj[key] = valueParts.join('=');
+          }
+        }
+      }
+      
+      this.resources.set('env', envObj);
+      console.log('✅ Environment variables loaded');
+    } catch (error) {
+      console.warn('⚠️  Could not load .env file:', error.message);
+    }
+  }
+  
+  get(key) {
+    if (key.startsWith('env.')) {
+      const envKey = key.replace('env.', '');
+      const env = this.resources.get('env');
+      return env ? env[envKey] : undefined;
+    }
+    return this.resources.get(key);
+  }
+  
+  register(name, value) {
+    this.resources.set(name, value);
+  }
+}
 
 // Import all 9 SD Agents  
 import { RequirementsAgent } from '../src/agents/RequirementsAgent.js';
@@ -53,6 +99,12 @@ class AutonomousAppBuilder {
       throw new Error(`Database unhealthy: ${health.error}`);
     }
     console.log('✅ Database service initialized');
+    
+    // Register SDModule-like object with LLM client for agents
+    this.resourceManager.register('sdModule', {
+      llmClient: this.llmClient
+    });
+    console.log('✅ LLM client registered');
     
     // Initialize all 8 agents
     const agentConfig = { resourceManager: this.resourceManager };
@@ -194,7 +246,7 @@ class AutonomousAppBuilder {
     // Step 1.3: Domain Model Design
     console.log('\n🏛️  Step 1.3: Domain Model Design...');
     const domainInput = {
-      type: 'design_domain',
+      type: 'model_domain',
       payload: {
         requirements: requirementsResult.data,
         architecture: architectureResult.data,
@@ -249,7 +301,7 @@ class AutonomousAppBuilder {
     // Step 2.2: Flux Architecture
     console.log('\n🌊 Step 2.2: Flux Architecture Design...');
     const fluxInput = {
-      type: 'design_flux',
+      type: 'implement_flux',
       payload: {
         architecture: this.phaseResults.phase1.architecture,
         domain: this.phaseResults.phase1.domain,
@@ -347,7 +399,7 @@ class AutonomousAppBuilder {
     // Step 4.1: Quality Analysis
     console.log('\n🔍 Step 4.1: Quality Assurance...');
     const qualityInput = {
-      type: 'analyze_quality',
+      type: 'quality_assurance',
       payload: {
         generatedCode: this.phaseResults.phase3.generatedCode,
         tests: this.phaseResults.phase3.tests,
@@ -468,8 +520,8 @@ async function runAutonomousAppBuilder() {
   let builder;
   
   try {
-    // Initialize ResourceManager
-    const resourceManager = new ResourceManager();
+    // Initialize MinimalResourceManager (avoids auto-loading)
+    const resourceManager = new MinimalResourceManager();
     await resourceManager.initialize();
     
     // Check required environment variables

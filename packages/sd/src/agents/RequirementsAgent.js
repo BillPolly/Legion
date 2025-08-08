@@ -184,31 +184,97 @@ export class RequirementsAgent extends SDAgentBase {
    * @returns {Object} Execution result
    */
   async executeBTWorkflow(workflow, context) {
-    // In production, this would use BehaviorTreeExecutor
-    // For now, return placeholder result
-    console.log(`[RequirementsAgent] Executing workflow:`, workflow.id);
+    // LIVE IMPLEMENTATION: Use actual tools instead of placeholders
+    console.log(`[RequirementsAgent] Executing LIVE workflow:`, workflow.id);
     
-    return {
-      success: true,
-      data: {
-        workflowId: workflow.id,
-        executionTime: Date.now(),
-        results: {
-          'parse-requirements': {
-            parsedRequirements: {
-              functional: [],
-              nonFunctional: []
+    try {
+      // Import and use the actual RequirementParserTool
+      const { RequirementParserTool } = await import('../tools/requirements/RequirementParserTool.js');
+      const { UserStoryGeneratorTool } = await import('../tools/requirements/UserStoryGeneratorTool.js');
+      const { AcceptanceCriteriaGeneratorTool } = await import('../tools/requirements/AcceptanceCriteriaGeneratorTool.js');
+      
+      // Step 1: Parse requirements using real tool
+      const parserTool = new RequirementParserTool({
+        llmClient: this.llmClient,
+        resourceManager: this.getResourceManager()
+      });
+      
+      console.log('[RequirementsAgent] Executing REAL parse_requirements tool...');
+      const parseResult = await parserTool.execute({
+        requirementsText: context.input.requirementsText,
+        projectId: context.input.projectId,
+        analysisDepth: 'comprehensive'
+      });
+      
+      if (!parseResult.success) {
+        throw new Error(`Requirements parsing failed: ${parseResult.error}`);
+      }
+      
+      console.log(`[RequirementsAgent] ✅ Parsed ${parseResult.data.parsedRequirements.functional.length} functional and ${parseResult.data.parsedRequirements.nonFunctional.length} non-functional requirements`);
+      
+      // Step 2: Generate user stories using real tool
+      const storyTool = new UserStoryGeneratorTool({
+        llmClient: this.llmClient,
+        resourceManager: this.getResourceManager()
+      });
+      
+      console.log('[RequirementsAgent] Executing REAL generate_user_stories tool...');
+      const storyResult = await storyTool.execute({
+        parsedRequirements: parseResult.data.parsedRequirements,
+        projectId: context.input.projectId
+      });
+      
+      if (!storyResult.success) {
+        throw new Error(`User story generation failed: ${storyResult.error}`);
+      }
+      
+      console.log(`[RequirementsAgent] ✅ Generated ${storyResult.data.userStories.length} user stories`);
+      
+      // Step 3: Generate acceptance criteria using real tool
+      const criteriaTool = new AcceptanceCriteriaGeneratorTool({
+        llmClient: this.llmClient,
+        resourceManager: this.getResourceManager()
+      });
+      
+      console.log('[RequirementsAgent] Executing REAL generate_acceptance_criteria tool...');
+      const criteriaResult = await criteriaTool.execute({
+        userStories: storyResult.data.userStories,
+        projectId: context.input.projectId
+      });
+      
+      if (!criteriaResult.success) {
+        throw new Error(`Acceptance criteria generation failed: ${criteriaResult.error}`);
+      }
+      
+      console.log(`[RequirementsAgent] ✅ Generated acceptance criteria for ${Object.keys(criteriaResult.data.acceptanceCriteria).length} user stories`);
+      
+      // Return real results
+      return {
+        success: true,
+        data: {
+          workflowId: workflow.id,
+          executionTime: Date.now(),
+          results: {
+            'parse-requirements': {
+              parsedRequirements: parseResult.data.parsedRequirements
+            },
+            'generate-user-stories': {
+              userStories: storyResult.data.userStories
+            },
+            'generate-acceptance-criteria': {
+              acceptanceCriteria: criteriaResult.data.acceptanceCriteria
             }
-          },
-          'generate-user-stories': {
-            userStories: []
-          },
-          'generate-acceptance-criteria': {
-            acceptanceCriteria: {}
           }
         }
-      }
-    };
+      };
+      
+    } catch (error) {
+      console.error(`[RequirementsAgent] LIVE workflow failed:`, error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
   }
 
   /**

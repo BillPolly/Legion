@@ -10,6 +10,7 @@ import { ChatAgent } from '../agents/ChatAgent.js';
 import { TerminalAgent } from '../agents/TerminalAgent.js';
 import { ArtifactAgent } from '../agents/ArtifactAgent.js';
 import { ArtifactActor } from '../agents/ArtifactActor.js';
+import { LogCaptureAgent } from '../agents/LogCaptureAgent.js';
 
 // Actor configuration with interface declarations
 const actorConfig = {
@@ -45,6 +46,14 @@ const actorConfig = {
       interface: 'artifactProcessing',
       provides: ['artifacts_processed', 'artifact_detected'],
       requires: ['process_tool_result']
+    },
+    { 
+      name: 'logCapture',
+      frontend: 'LogCaptureActor', 
+      backend: 'LogCaptureAgent',
+      interface: 'logging',
+      provides: ['log_batch_processed', 'frontend_alert'],
+      requires: ['log_batch', 'session_metadata', 'log_capture_config']
     }
   ]
 };
@@ -195,6 +204,10 @@ export class ServerActorSpace extends ConfigurableActorSpace {
       case 'ArtifactActor':
         this.artifactActor = new ArtifactActor(config);
         return this.artifactActor;
+        
+      case 'LogCaptureAgent':
+        this.logCaptureAgent = new LogCaptureAgent(config);
+        return this.logCaptureAgent;
         
       default:
         throw new Error(`Unknown backend actor class: ${className}`);
