@@ -76,6 +76,28 @@ export class ActionNode extends BehaviorTreeNode {
         this.executor.emit('action:result', toolResult);
       }
 
+      // CRITICAL: Store result in artifacts if outputVariable is specified
+      // This enables condition nodes to check the result via context.artifacts[varName]
+      if (this.config.outputVariable && toolResult.success !== undefined) {
+        if (!context.artifacts) {
+          context.artifacts = {};
+        }
+        
+        // Store the complete result in artifacts under the variable name
+        context.artifacts[this.config.outputVariable] = {
+          success: toolResult.success,
+          ...toolResult.data,
+          message: toolResult.message,
+          toolName: this.toolName,
+          nodeId: this.id,
+          timestamp: Date.now()
+        };
+        
+        if (this.config.debugMode) {
+          console.log(`[ActionNode:${this.id}] Stored result to artifacts['${this.config.outputVariable}']`);
+        }
+      }
+
       // Transform tool result to BT format
       return this.transformToolResult(toolResult, executionTime);
     } catch (error) {

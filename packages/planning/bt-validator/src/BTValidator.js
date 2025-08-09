@@ -111,6 +111,9 @@ export class BTValidator {
       // Tree integrity validation
       this.validateTreeIntegrity(normalizedBT, result);
 
+      // Variable reference validation
+      this.validateVariableReferences(normalizedBT, result);
+
     } catch (error) {
       result.addError('VALIDATION_ERROR', `Validation failed: ${error.message}`, null, { 
         error: error.message,
@@ -409,6 +412,116 @@ export class BTValidator {
         result.addError('CIRCULAR_REFERENCE', 'BT structure contains circular references');
       }
     }
+  }
+
+  /**
+   * Validate variable references in conditions match outputs
+   * @param {Object} bt - BT structure
+   * @param {ValidationResult} result - Validation result to update
+   */
+  validateVariableReferences(bt, result) {
+    const variablesWritten = new Map(); // Map of variable name to node that writes it
+    const variableReads = [];
+    
+    // First pass: collect all variable outputs and reads
+    this.traverseNodesSync(bt, (node) => {
+      // Check for action nodes that write variables
+      if (node.type === 'action') {
+        // Check for outputVariable or storeResult
+        if (node.outputVariable) {
+          variablesWritten.set(node.outputVariable, node.id);
+        } else if (node.storeResult) {
+          variablesWritten.set(node.storeResult, node.id);
+        }
+        // Note: Actions without outputVariable are stored in context[node.id] but NOT in artifacts
+      }
+      
+      // Check for condition nodes that read variables
+      if (node.type === 'condition') {
+        const condition = node.check || node.condition;
+        if (condition) {
+          // Extract artifact references
+          const artifactMatches = [...(condition.matchAll(/artifacts\['([^']+)'\]/g) || [])];
+          const contextArtifactMatches = [...(condition.matchAll(/context\.artifacts\['([^']+)'\]/g) || [])];
+          
+          artifactMatches.forEach(match => {
+            variableReads.push({
+              nodeId: node.id,
+              variable: match[1],
+              expression: match[0],
+              condition: condition
+            });
+          });
+          
+          contextArtifactMatches.forEach(match => {
+            variableReads.push({
+              nodeId: node.id,
+              variable: match[1],
+              expression: match[0],
+              condition: condition
+            });
+          });
+        }
+      }
+    });
+    
+    // Second pass: validate all reads have corresponding writes
+    variableReads.forEach(read => {
+      // Check if variable is written
+      if (variablesWritten.has(read.variable)) {
+        // Variable is properly written to artifacts
+        return;
+      }
+      
+      // Check if it's referencing an action node ID directly
+      let foundActionNode = false;
+      this.traverseNodesSync(bt, (node) => {
+        if (node.id === read.variable && node.type === 'action') {
+          foundActionNode = true;
+        }
+      });
+      
+      if (foundActionNode) {
+        // This is the error: condition is trying to read from artifacts but action doesn't write there
+        result.addError(
+          'INVALID_ARTIFACT_REFERENCE',
+          `Condition '${read.nodeId}' references artifacts['${read.variable}'] but action '${read.variable}' does not store its result in artifacts. ` +
+          `Either: 1) Add outputVariable:'${read.variable}' to the action node, or 2) Change condition to check context['${read.variable}'].status === 'SUCCESS'`,
+          read.nodeId,
+          {
+            condition: read.condition,
+            referencedVariable: read.variable,
+            suggestion: `context['${read.variable}'].status === 'SUCCESS'`
+          }
+        );
+      } else if (!variablesWritten.has(read.variable)) {
+        // Variable is not written at all
+        result.addError(
+          'UNDEFINED_VARIABLE',
+          `Condition '${read.nodeId}' references undefined variable '${read.variable}'`,
+          read.nodeId,
+          {
+            condition: read.condition,
+            referencedVariable: read.variable
+          }
+        );
+      }
+    });
+    
+    // Also warn about unused variable writes
+    variablesWritten.forEach((writerId, variable) => {
+      const isUsed = variableReads.some(read => read.variable === variable);
+      if (!isUsed) {
+        result.addWarning(
+          'UNUSED_VARIABLE',
+          `Variable '${variable}' is written by '${writerId}' but never read`,
+          writerId,
+          {
+            variable: variable
+          }
+        );
+      }
+    });
   }
 
   /**

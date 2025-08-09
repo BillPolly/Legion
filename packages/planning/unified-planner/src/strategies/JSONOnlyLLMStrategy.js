@@ -166,6 +166,7 @@ OUTPUT FORMAT: You must return ONLY a JSON object with this exact structure:
             "id": "unique-id-1",
             "tool": "exact_tool_name_from_available_actions",
             "description": "What this action does",
+            "outputVariable": "action1Result",
             "params": {
               "param1": "value1",
               "param2": "value2"
@@ -174,7 +175,7 @@ OUTPUT FORMAT: You must return ONLY a JSON object with this exact structure:
           {
             "type": "condition",
             "id": "check-action-1-result",
-            "check": "context.artifacts['unique-id-1'].success === true",
+            "check": "context.artifacts['action1Result'].success === true",
             "description": "Validate action completed successfully"
           }
         ]
@@ -194,8 +195,11 @@ RULES:
 RESILIENCE PATTERNS (MANDATORY):
 6. ALWAYS wrap critical actions with retry nodes (maxAttempts: 3)
 7. ALWAYS follow actions with condition nodes to validate success
-8. Use check expressions like: "context.artifacts['action-id'].success === true"
-9. For file operations, also check: "context.artifacts['action-id'].filepath !== undefined"
+8. IMPORTANT: Actions must store results to artifacts using outputVariable:
+   - Add "outputVariable": "varname" to action nodes that produce outputs
+   - Then check with: "context.artifacts['varname'].success === true"
+   - Alternative: Check action result directly with "context['action-id'].status === 'SUCCESS'"
+9. For file operations with outputVariable, also check: "context.artifacts['varname'].filepath !== undefined"
 10. Critical actions include: file_write, npm_install, create_database_connection, build_project
 
 DEPENDENCY & BUILD GUIDELINES:
