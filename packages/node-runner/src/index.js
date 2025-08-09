@@ -1,7 +1,5 @@
 /**
- * @legion/node-runner
- * Node.js execution runner for Legion framework
+ * @fileoverview Node Runner Module Entry Point
  */
 
-export { NodeRunner } from './NodeRunner.js';
 export { NodeRunnerModule } from './NodeRunnerModule.js';
