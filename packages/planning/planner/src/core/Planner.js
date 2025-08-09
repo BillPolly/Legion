@@ -7,7 +7,7 @@
 
 import { BTValidator } from '@legion/bt-validator';
 import { Prompt } from './Prompt.js';
-import { extractJSON } from './utils/json-parser.js';
+import { extractJSON } from '../utils/json-parser.js';
 
 export class Planner {
   /**

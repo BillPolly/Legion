@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { Planner } from '../../src/Planner.js';
+import { Planner } from '../src/core/Planner.js';
 
 describe('Planner', () => {
   let mockLLMClient;

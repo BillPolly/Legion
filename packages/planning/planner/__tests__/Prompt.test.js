@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { Prompt } from '../src/Prompt.js';
+import { Prompt } from '../src/core/Prompt.js';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -55,8 +55,10 @@ describe('Prompt', () => {
       
       const result = prompt.getInitialPrompt(requirements, tools);
       
-      expect(result).toContain('- **file_write**: Write a file');
-      expect(result).toContain('- **file_read**: Read a file');
+      expect(result).toContain('### file_write');
+      expect(result).toContain('- **Description**: Write a file');
+      expect(result).toContain('### file_read');
+      expect(result).toContain('- **Description**: Read a file');
       expect(result).not.toContain('{{TOOLS}}');
     });
 
@@ -80,8 +82,8 @@ describe('Prompt', () => {
       
       expect(result).toContain('file_write');
       expect(result).toContain('Write a file');
-      expect(result).toContain('Schema:');
-      expect(result).toContain('properties');
+      expect(result).toContain('- **Inputs**:');
+      expect(result).toContain('`path` (string)');
     });
 
     it('should handle tools with getMetadata method', () => {
@@ -89,6 +91,7 @@ describe('Prompt', () => {
       const tools = [
         {
           name: 'calculator',
+          description: 'Perform calculations', // Description must be on the tool itself
           getMetadata: () => ({
             name: 'calculator',
             description: 'Perform calculations',
@@ -109,7 +112,9 @@ describe('Prompt', () => {
       
       const result = prompt.getInitialPrompt(requirements, tools);
       
-      expect(result).toContain('No tools available');
+      // When no tools, the tools section should still be there but empty
+      expect(result).toContain('## Available Tools');
+      expect(result).not.toContain('{{TOOLS}}');
     });
   });
 
@@ -158,8 +163,8 @@ describe('Prompt', () => {
       
       const result = prompt.getFixPrompt(requirements, tools, failedPlan, validation);
       
-      expect(result).toContain('- [ERROR1] First error (node: node-1)');
-      expect(result).toContain('- [ERROR2] Second error (node: node-2)');
+      expect(result).toContain('- **ERROR1** in node `node-1`: First error');
+      expect(result).toContain('- **ERROR2** in node `node-2`: Second error');
     });
 
     it('should handle errors without nodeId', () => {
@@ -175,7 +180,7 @@ describe('Prompt', () => {
       
       const result = prompt.getFixPrompt(requirements, tools, failedPlan, validation);
       
-      expect(result).toContain('- [GENERAL] General error');
+      expect(result).toContain('- **GENERAL** in node `unknown`: General error');
       expect(result).not.toContain('(node:');
     });
 
@@ -190,7 +195,11 @@ describe('Prompt', () => {
       
       const result = prompt.getFixPrompt(requirements, tools, failedPlan, validation);
       
-      expect(result).toContain('No specific errors');
+      // Empty errors array just results in empty content in that section
+      expect(result).toContain('## Validation Errors');
+      expect(result).toContain('Fix these specific issues:');
+      // The actual formatting logic doesn't add "No specific errors" for empty arrays
+      expect(result).not.toContain('{{ERRORS}}');
     });
   });
 

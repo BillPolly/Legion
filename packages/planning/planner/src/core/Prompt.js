@@ -17,7 +17,7 @@ export class Prompt {
    */
   constructor() {
     // Load the standard templates on construction
-    const promptsDir = join(__dirname, 'prompts');
+    const promptsDir = join(__dirname, '..', 'prompts');
     this.createPlanTemplate = this._loadFromFile(join(promptsDir, 'create-plan.md'));
     this.fixPlanTemplate = this._loadFromFile(join(promptsDir, 'fix-plan.md'));
   }
