@@ -68,8 +68,7 @@ export class LocalEmbeddingService {
           'sentence-transformers/all-MiniLM-L6-v2'
         );
       } catch (error) {
-        console.warn('Transformers tokenizer not available, using fallback');
-        this.tokenizer = this.createFallbackTokenizer();
+        throw new Error(`Tokenizer initialization failed: ${error.message}. Install @xenova/transformers`);
       }
 
       this.initialized = true;
@@ -199,22 +198,21 @@ export class LocalEmbeddingService {
    * Tokenize text
    */
   async tokenize(text) {
-    if (this.tokenizer && this.tokenizer.encode && ort) {
-      const encoded = await this.tokenizer(text, {
-        padding: true,
-        truncation: true,
-        max_length: this.config.maxLength,
-        return_tensors: false
-      });
-      
-      return {
-        input_ids: new ort.Tensor('int64', encoded.input_ids.data, [1, encoded.input_ids.dims[1]]),
-        attention_mask: new ort.Tensor('int64', encoded.attention_mask.data, [1, encoded.attention_mask.dims[1]])
-      };
-    } else {
-      // Fallback tokenizer
-      return this.fallbackTokenize(text);
+    if (!this.tokenizer || !this.tokenizer.encode || !ort) {
+      throw new Error('Tokenizer or ONNX runtime not properly initialized');
     }
+    
+    const encoded = await this.tokenizer(text, {
+      padding: true,
+      truncation: true,
+      max_length: this.config.maxLength,
+      return_tensors: false
+    });
+    
+    return {
+      input_ids: new ort.Tensor('int64', encoded.input_ids.data, [1, encoded.input_ids.dims[1]]),
+      attention_mask: new ort.Tensor('int64', encoded.attention_mask.data, [1, encoded.attention_mask.dims[1]])
+    };
   }
 
   /**

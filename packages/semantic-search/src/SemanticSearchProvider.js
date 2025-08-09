@@ -111,8 +111,8 @@ export class SemanticSearchProvider {
       try {
         await embeddingService.initialize();
       } catch (error) {
-        console.warn('⚠️  Local embedding service initialization failed, falling back to mock embeddings');
-        // Don't throw - let it fall back to mock embeddings in LocalEmbeddingService
+        console.error('❌ Local embedding service initialization failed:', error.message);
+        throw new Error(`Local embeddings required but failed to initialize: ${error.message}`);
       }
     } else {
       console.log('🔧 Using OpenAI embeddings');

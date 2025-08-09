@@ -80,8 +80,12 @@ export class StorageProvider {
     // Auto-configure MongoDB if connection string is available
     if (mongoUrl) {
       const { MongoDBProvider } = await import('./providers/mongodb/MongoDBProvider.js');
+      // Get the tools database name from ResourceManager
+      const toolsDbName = this.resourceManager.get('env.TOOLS_DATABASE_NAME') || 
+                         this.resourceManager.get('env.MONGODB_DATABASE');
       await this.addProvider('mongodb', new MongoDBProvider({
         connectionString: mongoUrl,
+        database: toolsDbName,  // Use TOOLS_DATABASE_NAME from ResourceManager
         ...this._getProviderConfig('mongodb')
       }));
     }

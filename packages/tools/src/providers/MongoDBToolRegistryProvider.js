@@ -781,14 +781,59 @@ export class MongoDBToolRegistryProvider extends IToolRegistryProvider {
             const moduleTools = moduleInstance.getTools();
             
             for (const tool of moduleTools) {
+              // Extract schema from tool - it might be in different places
+              let inputSchema = null;
+              let outputSchema = null;
+              
+              // Check for inputSchema in various locations
+              if (tool.inputSchema) {
+                // Direct property (FileModule style)
+                inputSchema = tool.inputSchema;
+              } else if (tool.validator) {
+                // From validator (JsonModule style)
+                if (tool.validator.jsonSchema) {
+                  inputSchema = tool.validator.jsonSchema;
+                } else if (tool.validator.zodSchema) {
+                  // Convert Zod schema to JSON schema representation
+                  inputSchema = { 
+                    type: 'object',
+                    zodSchema: true,
+                    description: 'Zod schema (needs conversion)'
+                  };
+                } else if (tool.validator.schema) {
+                  inputSchema = tool.validator.schema;
+                }
+              } else if (tool._validator && tool._validator.schema) {
+                // Private validator
+                inputSchema = tool._validator.schema;
+              } else if (tool.schema) {
+                // Direct schema property
+                inputSchema = tool.schema;
+              }
+              
+              // Check for outputSchema
+              if (tool.outputSchema) {
+                outputSchema = tool.outputSchema;
+              }
+              
+              // Try to get examples
+              let examples = tool.examples || [];
+              if (examples.length === 0 && tool.getExamples) {
+                try {
+                  examples = tool.getExamples();
+                } catch (e) {
+                  // Ignore if method doesn't exist
+                }
+              }
+              
               const toolData = {
                 name: tool.name,
                 moduleName: moduleData.name,
                 description: tool.description,
                 summary: tool.description?.substring(0, 200) || `${tool.name} tool`,
-                inputSchema: tool.inputSchema,
-                outputSchema: tool.outputSchema,
-                examples: tool.examples || [],
+                inputSchema: inputSchema,
+                outputSchema: outputSchema,
+                examples: examples,
                 tags: this.inferToolTags(tool.name, tool.description),
                 category: this.inferToolCategory(tool.name),
                 complexity: tool.complexity || 'simple',
