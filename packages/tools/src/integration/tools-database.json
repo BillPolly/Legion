@@ -275,6 +275,64 @@
           "description": "Check if a string or value is a valid date"
         }
       }
+    },
+    "http": {
+      "name": "http", 
+      "description": "HTTP client for making web requests",
+      "path": "../modules/HTTPModule.js",
+      "className": "HTTPModuleDefinition",
+      "type": "definition",
+      "tools": {
+        "get": {
+          "name": "get",
+          "description": "Perform GET request"
+        },
+        "post": {
+          "name": "post",
+          "description": "Perform POST request"
+        },
+        "put": {
+          "name": "put",
+          "description": "Perform PUT request"
+        },
+        "delete": {
+          "name": "delete",
+          "description": "Perform DELETE request"
+        },
+        "patch": {
+          "name": "patch",
+          "description": "Perform PATCH request"
+        },
+        "head": {
+          "name": "head",
+          "description": "Perform HEAD request"
+        },
+        "options": {
+          "name": "options",
+          "description": "Perform OPTIONS request"
+        }
+      }
+    },
+    "utility": {
+      "name": "utility",
+      "description": "General utility functions including expression evaluation and data validation",
+      "path": "../modules/UtilityModule.js",
+      "className": "UtilityModuleDefinition", 
+      "type": "definition",
+      "tools": {
+        "expression_evaluator": {
+          "name": "expression_evaluator",
+          "description": "Evaluate mathematical and logical expressions with variables"
+        },
+        "data_validator": {
+          "name": "data_validator",
+          "description": "Validate data against expected criteria"
+        },
+        "curl": {
+          "name": "curl",
+          "description": "Make HTTP GET requests like curl command - perfect for testing APIs"
+        }
+      }
     }
   },
   "toolIndex": {
@@ -315,6 +373,16 @@
     "math_sum": "lodash",
     "format_date": "moment",
     "add_time": "moment",
-    "is_valid_date": "moment"
+    "is_valid_date": "moment",
+    "get": "http",
+    "post": "http", 
+    "put": "http",
+    "delete": "http",
+    "patch": "http",
+    "head": "http",
+    "options": "http",
+    "expression_evaluator": "utility",
+    "data_validator": "utility",
+    "curl": "utility"
   }
 }

@@ -6,9 +6,10 @@ const execAsync = promisify(exec);
 
 class CommandExecutor extends Tool {
   constructor() {
-    super();
-    this.name = 'command_executor';
-    this.description = 'Executes bash commands in the terminal';
+    super({
+      name: 'command_executor',
+      description: 'Executes bash commands in the terminal'
+    });
   }
 
   /**

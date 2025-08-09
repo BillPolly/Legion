@@ -104,6 +104,8 @@ export class ToolRegistry {
         { name: 'json', path: '../json/index.js', type: 'class' },
         { name: 'command-executor', path: '../command-executor/module.json', type: 'module.json' },
         { name: 'server-starter', path: '../server-starter/module.json', type: 'module.json' },
+        { name: 'http', path: './modules/HTTPModule.js', type: 'definition', className: 'HTTPModuleDefinition' },
+        { name: 'utility', path: './modules/UtilityModule.js', type: 'definition', className: 'UtilityModuleDefinition' },
       ];
 
       console.log(`Loading ${workingModules.length} modules from tools database...`);
@@ -114,6 +116,8 @@ export class ToolRegistry {
             await this.loadClassModule(module);
           } else if (module.type === 'module.json') {
             await this.loadJsonModule(module);
+          } else if (module.type === 'definition') {
+            await this.loadDefinitionModule(module);
           }
         } catch (error) {
           console.warn(`⚠️  Could not load module ${module.name}:`, error.message);
@@ -225,7 +229,13 @@ export class ToolRegistry {
             }
             
             createJSONTool(toolDef) {
-              // Create a simple tool wrapper that matches the JSON module definition
+              // Load the actual tool implementation based on the tool name
+              if (toolDef.name === 'command_executor') {
+                // Load the real CommandExecutor
+                return this.createRealCommandExecutor();
+              }
+              
+              // For other JSON tools, create a simple wrapper that matches the definition
               return {
                 name: toolDef.name,
                 description: toolDef.description,
@@ -239,6 +249,42 @@ export class ToolRegistry {
                     message: `JSON tool ${toolDef.name} executed successfully`,
                     data: { toolName: toolDef.name, params }
                   };
+                }
+              };
+            }
+            
+            createRealCommandExecutor() {
+              // Create a wrapper that uses the real CommandExecutor
+              return {
+                name: 'command_executor',
+                description: 'Execute a bash command in the terminal and return the output',
+                schema: {
+                  type: 'object',
+                  properties: {
+                    command: { type: 'string', description: 'The bash command to execute' },
+                    timeout: { type: 'number', description: 'Optional timeout in milliseconds' }
+                  },
+                  required: ['command']
+                },
+                execute: async (params) => {
+                  // Import and use the real CommandExecutor
+                  const { CommandExecutor } = await import('../command-executor/index.js');
+                  const executor = new CommandExecutor();
+                  
+                  try {
+                    const result = await executor.execute(params.command, params.timeout);
+                    return {
+                      success: true,
+                      message: 'Command executed successfully',
+                      data: result
+                    };
+                  } catch (error) {
+                    return {
+                      success: false,
+                      message: error.message,
+                      error: error.message
+                    };
+                  }
                 }
               };
             }
@@ -269,6 +315,58 @@ export class ToolRegistry {
         description: `${module.name} module (JSON-based)`,
         tools: {},
         type: 'json'
+      });
+    }
+  }
+
+  /**
+   * Load a ModuleDefinition-based module
+   */
+  async loadDefinitionModule(module) {
+    console.log(`🏗️  Loading definition module: ${module.name}`);
+    
+    try {
+      // Import the module definition class
+      const ModuleExports = await import(module.path);
+      const DefinitionClass = ModuleExports[module.className];
+      
+      if (!DefinitionClass) {
+        throw new Error(`Definition class ${module.className} not found in ${module.path}`);
+      }
+      
+      // Create a provider for the module
+      const provider = new ModuleProvider({
+        name: module.name,
+        definition: DefinitionClass,
+        config: {},
+        lazy: true
+      });
+      
+      this.providers.set(module.name, provider);
+      
+      // Get metadata from the definition
+      const metadata = DefinitionClass.getMetadata();
+      
+      // Register metadata
+      this.metadata.set(module.name, {
+        name: module.name,
+        description: metadata.description,
+        tools: metadata.tools,
+        type: 'definition',
+        version: metadata.version
+      });
+      
+      console.log(`✅ Registered definition module: ${module.name} with ${Object.keys(metadata.tools).length} tools`);
+      
+    } catch (error) {
+      console.warn(`Failed to load definition module ${module.name}:`, error.message);
+      
+      // Fallback to basic registration
+      this.metadata.set(module.name, {
+        name: module.name,
+        description: `${module.name} module (definition-based)`,
+        tools: {},
+        type: 'definition'
       });
     }
   }

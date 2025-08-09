@@ -52,9 +52,11 @@ export default {
   // Test timeout - increased for integration tests
   testTimeout: 30000,
   
-  // Module name mapping for workspace packages
+  // Module name mapping for @legion packages
   moduleNameMapper: {
-    '^@legion/(.*)$': '<rootDir>/../$1/src/index.js'
+    '^@legion/tools$': '<rootDir>/../tools/src/index.js',
+    '^@legion/actors$': '<rootDir>/../shared/actors/src/index.js', 
+    '^@legion/bt-validator$': '<rootDir>/../planning/bt-validator/src/index.js'
   },
   
   // Transform ignore patterns - don't transform node_modules except @legion packages

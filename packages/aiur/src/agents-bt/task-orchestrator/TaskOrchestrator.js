@@ -266,29 +266,46 @@ export class TaskOrchestrator extends Actor {
         progress: 5
       });
 
-      // Import ProfilePlanner directly  
-      const { ProfilePlannerTool } = await import('../../../../planning/profile-planner/src/tools/ProfilePlannerTool.js');
+      // Import new clean Planner  
+      const { Planner } = await import('../../../../planning/planner/src/core/Planner.js');
+      const { ResourceManager } = await import('@legion/tools');
+      const { Anthropic } = await import('@anthropic-ai/sdk');
       
-      // Create planner instance with our toolRegistry
-      const planner = new ProfilePlannerTool({ toolRegistry: this.toolRegistry });
-      await planner.initialize();
+      // Initialize ResourceManager to get API key
+      const resourceManager = new ResourceManager();
+      await resourceManager.initialize();
+      const apiKey = resourceManager.get('ANTHROPIC_API_KEY');
+      
+      if (!apiKey) {
+        throw new Error('ANTHROPIC_API_KEY not found for planning');
+      }
+      
+      // Create LLM client for planner
+      const anthropic = new Anthropic({ apiKey });
+      const llmClient = {
+        complete: async (prompt, options = {}) => {
+          const response = await anthropic.messages.create({
+            model: options.model || 'claude-3-5-sonnet-20241022',
+            max_tokens: options.maxTokens || 4000,
+            temperature: options.temperature || 0.2,
+            system: options.system || '',
+            messages: [{ role: 'user', content: prompt }]
+          });
+          return response.content[0].text;
+        }
+      };
+      
+      // Create planner instance with LLM client - it will get tools as needed
+      const planner = new Planner({ llmClient });
       
       this.sendToChatAgent({
         type: 'orchestrator_update', 
-        message: 'Using javascript-development profile for planning...',
+        message: 'Using clean planner with available tool registry...',
         progress: 15
       });
       
-      // Create plan using javascript-development profile
-      const planResult = await planner.execute({
-        function: {
-          name: 'plan_with_profile',
-          arguments: JSON.stringify({
-            profile: 'javascript-development',
-            task: description
-          })
-        }
-      });
+      // Create plan using simple API
+      const planResult = await planner.makePlan(description);
       
       if (!planResult.success) {
         throw new Error(`Planning failed: ${planResult.error}`);
@@ -296,12 +313,12 @@ export class TaskOrchestrator extends Actor {
       
       this.sendToChatAgent({
         type: 'orchestrator_update',
-        message: `✅ Plan created successfully!\n\n📋 Profile: ${planResult.data.profile}\n• ${planResult.data.behaviorTree?.children?.length || 0} execution steps\n• Ready for execution...`,
+        message: `✅ Plan created successfully!\n\n📊 Plan Details:\n• ${planResult.data.nodeCount} total nodes\n• ${planResult.data.attempts} attempt(s)\n• Ready for execution...`,
         progress: 25
       });
       
       // Execute the behavior tree directly
-      await this.executeBehaviorTree(planResult.data.behaviorTree, {
+      await this.executeBehaviorTree(planResult.data.plan, {
         workspaceDir: process.cwd(),
         sessionId: this.sessionId
       });
