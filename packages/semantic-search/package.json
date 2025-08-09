@@ -21,7 +21,9 @@
     "@qdrant/js-client-rest": "^1.8.2",
     "openai": "^4.28.4",
     "uuid": "^9.0.1",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "onnxruntime-node": "^1.18.0",
+    "@xenova/transformers": "^2.17.1"
   },
   "devDependencies": {
     "jest": "^29.7.0",

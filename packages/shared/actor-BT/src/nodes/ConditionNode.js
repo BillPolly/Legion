@@ -28,9 +28,15 @@ export class ConditionNode extends BehaviorTreeNode {
   }
 
   async executeNode(context) {
+    console.log(`[ConditionNode:${this.config.id}] Evaluating condition: "${this.checkExpression}"`);
+    console.log(`[ConditionNode:${this.config.id}] Context keys:`, Object.keys(context));
+    console.log(`[ConditionNode:${this.config.id}] Artifacts:`, JSON.stringify(context.artifacts || {}, null, 2));
+    
     try {
       const result = this.evaluateCondition(context);
       const finalResult = this.negated ? !result : result;
+      
+      console.log(`[ConditionNode:${this.config.id}] Evaluation result: ${result}, Final result: ${finalResult} (negated: ${this.negated})`);
       
       return {
         status: finalResult ? NodeStatus.SUCCESS : NodeStatus.FAILURE,
@@ -39,11 +45,13 @@ export class ConditionNode extends BehaviorTreeNode {
           result: result,
           negated: this.negated,
           finalResult: finalResult,
-          contextKeys: Object.keys(context)
+          contextKeys: Object.keys(context),
+          artifacts: context.artifacts
         }
       };
       
     } catch (error) {
+      console.error(`[ConditionNode:${this.config.id}] Evaluation error:`, error.message);
       // Condition evaluation error = FAILURE
       return {
         status: NodeStatus.FAILURE,
@@ -106,24 +114,36 @@ export class ConditionNode extends BehaviorTreeNode {
   evaluateArtifactCondition(evalContext) {
     const { context, artifacts } = evalContext;
     
+    console.log(`[ConditionNode:${this.config.id}] Evaluating artifact condition`);
+    
     // Extract artifact ID from common patterns
     const artifactMatch = this.checkExpression.match(/artifacts\['([^']+)'\]/);
     if (artifactMatch) {
       const artifactId = artifactMatch[1];
       const artifact = artifacts[artifactId];
       
+      console.log(`[ConditionNode:${this.config.id}] Looking for artifact: ${artifactId}`);
+      console.log(`[ConditionNode:${this.config.id}] Artifact found:`, artifact ? 'yes' : 'no');
+      
       if (this.checkExpression.includes('.success')) {
-        return artifact && artifact.success === true;
+        const result = artifact && artifact.success === true;
+        console.log(`[ConditionNode:${this.config.id}] Checking .success:`, result);
+        return result;
       }
       
       if (this.checkExpression.includes('.filepath')) {
-        return artifact && artifact.filepath !== undefined;
+        const result = artifact && artifact.filepath !== undefined;
+        console.log(`[ConditionNode:${this.config.id}] Checking .filepath:`, result);
+        return result;
       }
       
       // General artifact existence
-      return artifact !== undefined;
+      const result = artifact !== undefined;
+      console.log(`[ConditionNode:${this.config.id}] Checking existence:`, result);
+      return result;
     }
     
+    console.log(`[ConditionNode:${this.config.id}] No artifact pattern matched`);
     return false;
   }
 

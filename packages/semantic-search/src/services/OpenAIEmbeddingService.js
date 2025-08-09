@@ -47,9 +47,9 @@ export class OpenAIEmbeddingService {
   async generateEmbeddings(texts, options = {}) {
     const { model = this.config.model } = options;
     
-    // If no client, return mock embeddings for testing
+    // If no client, throw error - no mock embeddings
     if (!this.client) {
-      return texts.map(() => new Array(1536).fill(0).map(() => Math.random()));
+      throw new Error('OpenAI client not initialized. API key required for OpenAI embeddings');
     }
     
     const embeddings = [];

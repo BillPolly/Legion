@@ -45,6 +45,7 @@ export { ModuleInstance as BaseModule } from './modules/ModuleInstance.js';
 export { FileSystemModuleDefinition, FileSystemModuleInstance } from './modules/FileSystemModule.js';
 export { GitModuleDefinition, GitModuleInstance } from './modules/GitModule.js';
 export { HTTPModuleDefinition, HTTPModuleInstance } from './modules/HTTPModule.js';
+export { UtilityModuleDefinition, UtilityModuleInstance } from './modules/UtilityModule.js';
 
 // Integration components
 export { ToolRegistry } from './integration/ToolRegistry.js';

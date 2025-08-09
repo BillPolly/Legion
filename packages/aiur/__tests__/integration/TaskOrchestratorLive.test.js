@@ -1,5 +1,6 @@
-import { ProfilePlannerTool } from '@legion/profile-planner';
+import { Planner } from '../../../planning/planner/src/core/Planner.js';
 import { ResourceManager, ToolRegistry, ModuleLoader } from '@legion/tools';
+import { Anthropic } from '@anthropic-ai/sdk';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -36,197 +37,94 @@ describe('ProfilePlanner and Plan Validation', () => {
     }
   });
 
-  test('should create a plan with ProfilePlannerTool', async () => {
-    console.log('\n========== TEST: Direct Plan Creation ==========');
+  test('should create and execute plan for Node server with addition API', async () => {
+    console.log('\n========== TEST: Direct Plan Creation and Execution ==========');
     
-    const planner = new ProfilePlannerTool({ toolRegistry });
-    await planner.initialize();
-    console.log('✅ ProfilePlannerTool initialized');
+    // Initialize ResourceManager to get API key
+    const resourceManager = new ResourceManager();
+    await resourceManager.initialize();
+    const apiKey = resourceManager.get('ANTHROPIC_API_KEY');
     
-    // Create a plan
-    console.log('\n📋 Creating plan for: Create a simple hello.js file with a greeting function');
-    const planResult = await planner.execute({
-      function: {
-        name: 'plan_with_profile',
-        arguments: JSON.stringify({
-          profile: 'javascript-development',
-          task: 'Create a simple hello.js file with a greeting function'
-        })
+    if (!apiKey) {
+      throw new Error('ANTHROPIC_API_KEY not found for planning');
+    }
+    
+    // Create LLM client for planner
+    const anthropic = new Anthropic({ apiKey });
+    const llmClient = {
+      complete: async (prompt, options = {}) => {
+        const response = await anthropic.messages.create({
+          model: options.model || 'claude-3-5-sonnet-20241022',
+          max_tokens: options.maxTokens || 4000,
+          temperature: options.temperature || 0.2,
+          system: options.system || '',
+          messages: [{ role: 'user', content: prompt }]
+        });
+        return response.content[0].text;
       }
-    });
+    };
+    
+    // Get the specific tools needed for Node.js Express server plan
+    const requiredToolNames = [
+      'file_write',
+      'command_executor',
+      'directory_create', 
+      'server_start',
+      'server_stop',
+      'server_read_output',
+      'curl', 
+      'expression_evaluator'
+    ];
+    
+    const availableTools = [];
+    for (const toolName of requiredToolNames) {
+      const tool = await toolRegistry.getTool(toolName);
+      if (tool) {
+        availableTools.push(tool);
+        console.log(`✅ Found tool: ${toolName}`);
+      } else {
+        console.warn(`⚠️ Missing tool: ${toolName}`);
+      }
+    }
+    
+    console.log(`\n🔧 Using ${availableTools.length}/${requiredToolNames.length} required tools`);
+    
+    // Create planner instance
+    const planner = new Planner({ llmClient });
+    console.log('✅ Planner initialized');
+    
+    // Create a plan with specific tools
+    console.log('\n📋 Creating plan for: Complete Node.js server with testing');
+    const planResult = await planner.makePlan(`Create a Node.js Express server with an /add API endpoint that takes two numbers and returns their sum. The server should listen on port 3000. After creating the files, use server_start to start the server, then use curl to test the API by making a GET request to "http://localhost:3000/add?a=5&b=3", and finally use expression_evaluator to verify the response body equals 8.`, availableTools);
     
     console.log('\n📊 Plan Result:', {
       success: planResult.success,
       hasData: !!planResult.data,
-      hasBehaviorTree: !!planResult.data?.behaviorTree
+      hasPlan: !!planResult.data?.plan,
+      nodeCount: planResult.data?.nodeCount,
+      attempts: planResult.data?.attempts
     });
     
     expect(planResult.success).toBe(true);
     expect(planResult.data).toBeDefined();
-    expect(planResult.data.behaviorTree).toBeDefined();
+    expect(planResult.data.plan).toBeDefined();
     
-    const behaviorTree = planResult.data.behaviorTree;
+    const plan = planResult.data.plan;
     console.log('\n✅ Plan created successfully!');
-    console.log('  Plan type:', behaviorTree.type);
-    console.log('  Plan id:', behaviorTree.id);
-    console.log('  Number of children:', behaviorTree.children?.length || 0);
+    console.log('  Plan type:', plan.type);
+    console.log('  Plan id:', plan.id);
+    console.log('  Node count:', planResult.data.nodeCount);
+    console.log('  Attempts:', planResult.data.attempts);
     
-    if (behaviorTree.children && behaviorTree.children.length > 0) {
-      console.log('  First few children:');
-      behaviorTree.children.slice(0, 3).forEach((child, i) => {
-        console.log(`    ${i + 1}. Type: ${child.type}, Tool: ${child.tool || 'N/A'}`);
-      });
-    }
-    
-    expect(behaviorTree.children).toBeDefined();
-    expect(behaviorTree.children.length).toBeGreaterThan(0);
-  }, 60000);
-
-  test('should create, validate and execute Node server with addition API', async () => {
-    console.log('\n========== TEST: Complete Node Server Orchestration ==========');
-    
-    const planner = new ProfilePlannerTool({ toolRegistry });
-    await planner.initialize();
-    console.log('✅ ProfilePlannerTool initialized');
-    
-    // STEP 1: Create the plan
-    console.log('\n🚀 STEP 1: Creating plan for Node server with addition API...');
-    const task = 'Create a Node.js Express server with an API endpoint that adds 2 numbers. Include proper testing and validation.';
-    
-    const planResult = await planner.execute({
-      function: {
-        name: 'plan_with_profile',
-        arguments: JSON.stringify({
-          profile: 'javascript-development',
-          task: task
-        })
-      }
-    });
-    
-    console.log('\n📊 Plan Creation Result:', {
-      success: planResult.success,
-      hasData: !!planResult.data,
-      hasBehaviorTree: !!planResult.data?.behaviorTree,
-      error: planResult.error
-    });
-    
-    expect(planResult.success).toBe(true);
-    expect(planResult.data).toBeDefined();
-    expect(planResult.data.behaviorTree).toBeDefined();
-    
-    const behaviorTree = planResult.data.behaviorTree;
-    console.log('\n✅ Plan created successfully!');
-    console.log('  Plan type:', behaviorTree.type);
-    console.log('  Plan id:', behaviorTree.id);
-    console.log('  Number of children:', behaviorTree.children?.length || 0);
-    
-    // STEP 2: Validate the plan structure
-    console.log('\n🔍 STEP 2: Validating plan structure...');
-    
-    // Collect all action nodes for validation
-    function collectActionNodes(node, actions = []) {
-      if (node.type === 'action' && node.tool) {
-        actions.push({
-          id: node.id,
-          tool: node.tool,
-          description: node.description,
-          params: node.params
-        });
-      }
-      
-      if (node.children) {
-        node.children.forEach(child => collectActionNodes(child, actions));
-      }
-      
-      if (node.child) {
-        collectActionNodes(node.child, actions);
-      }
-      
-      return actions;
-    }
-    
-    const actionNodes = collectActionNodes(behaviorTree);
-    console.log(`\n📋 Found ${actionNodes.length} action nodes in the plan:`);
-    actionNodes.forEach((action, i) => {
-      console.log(`  ${i + 1}. ${action.tool}: ${action.description}`);
-    });
-    
-    // Validate that all tools exist
-    console.log('\n✅ STEP 2.1: Validating tool availability...');
-    const missingTools = [];
-    for (const action of actionNodes) {
-      const tool = await toolRegistry.getTool(action.tool);
-      if (!tool) {
-        missingTools.push(action.tool);
-      }
-    }
-    
-    if (missingTools.length > 0) {
-      console.error('❌ Missing tools:', missingTools);
-      throw new Error(`Missing tools: ${missingTools.join(', ')}`);
-    }
-    
-    console.log('✅ All tools are available in the registry!');
-    
-    // STEP 3: Execute the plan with tool result capture
-    console.log('\n⚡ STEP 3: Executing the plan with tool result capture...');
-    
+    // Execute the plan with BehaviorTreeExecutor
+    console.log('\n⚡ Executing the plan...');
     const { BehaviorTreeExecutor } = await import('../../../shared/actor-BT/src/core/BehaviorTreeExecutor.js');
     
-    // Use the singleton ToolRegistry directly
     const executor = new BehaviorTreeExecutor(toolRegistry);
-    
-    // Capture execution results
-    const toolResults = [];
-    const nodeResults = [];
-    
-    executor.on('action:start', (data) => {
-      console.log(`🔧 Starting action: ${data.tool} (${data.id})`);
+    const executionResult = await executor.executeTree(plan, {
+      workspaceDir: testDir,
+      timeout: 120000
     });
-    
-    executor.on('action:result', (result) => {
-      console.log(`📊 Tool result: ${result.success ? '✅ SUCCESS' : '❌ FAILURE'}`);
-      if (result.output) {
-        console.log(`   Output: ${result.output.substring(0, 100)}${result.output.length > 100 ? '...' : ''}`);
-      }
-      if (result.error) {
-        console.log(`   Error: ${result.error}`);
-      }
-      
-      toolResults.push({
-        tool: result.tool || 'unknown',
-        success: result.success,
-        output: result.output,
-        error: result.error,
-        timestamp: new Date().toISOString()
-      });
-    });
-    
-    executor.on('node:complete', (result) => {
-      nodeResults.push({
-        id: result.id,
-        type: result.type,
-        status: result.status,
-        timestamp: new Date().toISOString()
-      });
-    });
-    
-    // Execute the behavior tree
-    console.log('\n🚀 Executing behavior tree...');
-    console.log('Tree config:', JSON.stringify(behaviorTree, null, 2).substring(0, 500) + '...');
-    
-    let executionResult;
-    try {
-      executionResult = await executor.executeTree(behaviorTree, {
-        workspaceDir: testDir,
-        timeout: 120000 // 2 minutes timeout
-      });
-      console.log('\n✅ Execution completed without throwing');
-    } catch (error) {
-      console.error('\n❌ Execution threw error:', error.message);
-      console.error('Stack:', error.stack);
-      throw error;
-    }
     
     console.log('\n📊 Execution Result:', {
       success: executionResult.success,
@@ -235,60 +133,34 @@ describe('ProfilePlanner and Plan Validation', () => {
       nodeCount: Object.keys(executionResult.nodeResults || {}).length
     });
     
-    // STEP 4: Analyze and report results
-    console.log('\n📈 STEP 4: Analyzing execution results...');
+    expect(executionResult.success).toBe(true);
     
-    console.log(`\n🔧 Tool Execution Summary (${toolResults.length} tools executed):`);
-    toolResults.forEach((result, i) => {
-      const status = result.success ? '✅' : '❌';
-      console.log(`  ${i + 1}. ${status} ${result.tool}`);
-      if (result.error) {
-        console.log(`     Error: ${result.error}`);
-      }
-    });
+    // Verify files were created
+    const files = await fs.readdir(testDir);
+    console.log('\n📁 Created files:', files);
     
-    console.log(`\n📋 Node Execution Summary (${nodeResults.length} nodes executed):`);
-    const nodeStats = nodeResults.reduce((stats, node) => {
-      stats[node.status] = (stats[node.status] || 0) + 1;
-      return stats;
-    }, {});
+    // Check for Node.js server files
+    const hasServerFile = files.some(f => 
+      f.includes('server') || f.includes('app') || f.includes('index')
+    );
+    const hasPackageJson = files.includes('package.json');
     
-    Object.entries(nodeStats).forEach(([status, count]) => {
-      console.log(`  ${status}: ${count} nodes`);
-    });
-    
-    // STEP 5: Validate the created files
-    console.log('\n📁 STEP 5: Validating created files...');
-    
-    try {
-      const files = await fs.readdir(testDir);
-      console.log('Created files:', files);
+    if (hasServerFile) {
+      console.log('  ✅ Server file created');
+    }
+    if (hasPackageJson) {
+      console.log('  ✅ package.json created');
       
-      // Check for essential files
-      const expectedFiles = ['package.json', 'server.js', 'app.js', 'index.js'];
-      const foundFiles = expectedFiles.filter(file => files.includes(file));
-      console.log('Expected files found:', foundFiles);
-      
-      // Validate package.json if created
-      if (files.includes('package.json')) {
-        const packageContent = await fs.readFile(path.join(testDir, 'package.json'), 'utf-8');
-        const packageJson = JSON.parse(packageContent);
-        console.log('✅ package.json is valid JSON');
-        console.log('  Dependencies:', Object.keys(packageJson.dependencies || {}));
-      }
-      
-    } catch (error) {
-      console.warn('⚠️  File validation error:', error.message);
+      // Validate package.json
+      const packageContent = await fs.readFile(path.join(testDir, 'package.json'), 'utf-8');
+      const packageJson = JSON.parse(packageContent);
+      console.log('  Dependencies:', Object.keys(packageJson.dependencies || {}));
     }
     
-    // Final assertions
-    expect(executionResult.success).toBe(true);
-    expect(toolResults.length).toBeGreaterThan(0);
-    expect(toolResults.filter(r => r.success).length).toBeGreaterThan(0);
+    console.log('\n🎉 Plan Creation and Execution Test PASSED!');
     
-    console.log('\n🎉 Complete Node Server Orchestration Test PASSED!');
-    
-  }, 180000); // 3 minutes timeout
+  }, 180000);
+
 
   test('should orchestrate task execution using TaskOrchestrator with BehaviorTreeExecutor', async () => {
     console.log('\n========== TEST: TaskOrchestrator Integration ==========');

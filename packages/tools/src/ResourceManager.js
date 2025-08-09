@@ -176,12 +176,15 @@ export class ResourceManager {
       
       console.log(`ResourceManager: Successfully loaded ${Object.keys(result.parsed || {}).length} environment variables`);
       
-      // Store environment variables directly (not under 'env' key)
+      // Store environment variables under 'env' namespace for dot notation access
       if (result.parsed) {
+        // Create env object to store all environment variables
+        const envVars = {};
         for (const [key, value] of Object.entries(result.parsed)) {
-          this._resources.set(key, value);
+          envVars[key] = value;
           console.log(`ResourceManager: Loaded env var: ${key}`);
         }
+        this._resources.set('env', envVars);
       }
       
       // Mark as initialized
