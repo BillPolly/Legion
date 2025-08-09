@@ -1,0 +1,16 @@
+{
+  "name": "log-manager-demo",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Live demo of log correlation between frontend and backend",
+  "scripts": {
+    "start": "node backend-app.js",
+    "dev": "node --watch backend-app.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "node-fetch": "^3.3.2",
+    "ws": "^8.14.2"
+  }
+}
