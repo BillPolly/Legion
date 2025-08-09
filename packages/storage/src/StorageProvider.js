@@ -40,11 +40,17 @@ export class StorageProvider {
     }
 
     // 🚨 ALL configuration comes from ResourceManager (.env loaded automatically)
-    const config = resourceManager.has('env.STORAGE_CONFIG') ? resourceManager.env.STORAGE_CONFIG : {};
-    const mongoUrl = resourceManager.has('env.MONGODB_URL') ? resourceManager.env.MONGODB_URL : null;
-    const postgresUrl = resourceManager.has('env.POSTGRESQL_URL') ? resourceManager.env.POSTGRESQL_URL : null;
-    const redisUrl = resourceManager.has('env.REDIS_URL') ? resourceManager.env.REDIS_URL : null;
-    const sqliteFile = resourceManager.has('env.SQLITE_FILE') ? resourceManager.env.SQLITE_FILE : null;
+    const config = resourceManager.get('env.STORAGE_CONFIG') || {};
+    const mongoUrl = resourceManager.get('env.MONGODB_URL') || null;
+    const postgresUrl = resourceManager.get('env.POSTGRESQL_URL') || null;
+    const redisUrl = resourceManager.get('env.REDIS_URL') || null;
+    const sqliteFile = resourceManager.get('env.SQLITE_FILE') || null;
+
+    console.log('🔍 StorageProvider configuration:');
+    console.log('  MongoDB URL:', mongoUrl ? 'configured' : 'not found');
+    console.log('  PostgreSQL URL:', postgresUrl ? 'configured' : 'not found');
+    console.log('  Redis URL:', redisUrl ? 'configured' : 'not found');
+    console.log('  SQLite File:', sqliteFile ? 'configured' : 'not found');
 
     const provider = new StorageProvider(resourceManager, config);
 

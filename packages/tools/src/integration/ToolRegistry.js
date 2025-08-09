@@ -54,6 +54,9 @@ export class ToolRegistry {
     this.moduleCache = new Map(); // Cache for loaded module instances
     this.toolCache = new Map(); // Cache for individual tools
     
+    // Database provider (for database operations like populateDatabase)
+    this.provider = options.provider || null;
+    
     // MCP Integration
     this.mcpServerRegistry = options.mcpServerRegistry;
     this.enableMCPIntegration = options.enableMCPIntegration !== false;
@@ -1391,6 +1394,29 @@ export class ToolRegistry {
       visit(tool);
     }
 
+    return result;
+  }
+
+  /**
+   * Populate database with all tools found in the repository
+   * This method delegates to the provider's populateDatabase method
+   */
+  async populateDatabase(options = {}) {
+    if (!this.provider) {
+      throw new Error('No provider configured for database population');
+    }
+
+    if (typeof this.provider.populateDatabase !== 'function') {
+      throw new Error('Provider does not support database population');
+    }
+
+    console.log('🔄 Starting database population...');
+    const result = await this.provider.populateDatabase(options);
+    
+    // Invalidate caches after population
+    this.invalidateCaches();
+    
+    console.log('✅ Database population completed');
     return result;
   }
 

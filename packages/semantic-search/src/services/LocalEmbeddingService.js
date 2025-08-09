@@ -5,7 +5,8 @@
  * locally without API costs. Optimized for log and event processing.
  */
 
-import * as ort from 'onnxruntime-node';
+// Dynamic import to handle missing dependency gracefully
+let ort = null;
 
 export class LocalEmbeddingService {
   constructor(config = {}) {
@@ -38,6 +39,15 @@ export class LocalEmbeddingService {
 
     try {
       console.log('Loading local embedding model...');
+      
+      // Try to load ONNX Runtime
+      if (!ort) {
+        try {
+          ort = await import('onnxruntime-node');
+        } catch (error) {
+          throw new Error('onnxruntime-node is required for local embeddings. Install with: npm install onnxruntime-node');
+        }
+      }
       
       // Initialize ONNX Runtime session
       this.session = await ort.InferenceSession.create(
@@ -83,6 +93,11 @@ export class LocalEmbeddingService {
     const startTime = Date.now();
     
     try {
+      // If no ONNX session available, raise error
+      if (!this.session) {
+        throw new Error('ONNX session not initialized. Local embedding model may be missing or corrupt.');
+      }
+      
       // Tokenize the text
       const tokens = await this.tokenize(text);
       
@@ -132,6 +147,19 @@ export class LocalEmbeddingService {
   }
 
   /**
+   * Generate embeddings - interface compatibility with OpenAIEmbeddingService
+   */
+  async generateEmbeddings(texts, options = {}) {
+    if (!texts || texts.length === 0) return [];
+    
+    // Ensure texts is an array
+    const textArray = Array.isArray(texts) ? texts : [texts];
+    
+    // Use batch processing
+    return await this.embedBatch(textArray);
+  }
+
+  /**
    * Specialized embedding for log/event text
    */
   async embedLogEvent(event) {
@@ -171,7 +199,7 @@ export class LocalEmbeddingService {
    * Tokenize text
    */
   async tokenize(text) {
-    if (this.tokenizer && this.tokenizer.encode) {
+    if (this.tokenizer && this.tokenizer.encode && ort) {
       const encoded = await this.tokenizer(text, {
         padding: true,
         truncation: true,
@@ -204,10 +232,18 @@ export class LocalEmbeddingService {
       mask.push(0);
     }
     
-    return {
-      input_ids: new ort.Tensor('int64', new BigInt64Array(ids.map(id => BigInt(id))), [1, ids.length]),
-      attention_mask: new ort.Tensor('int64', new BigInt64Array(mask.map(m => BigInt(m))), [1, mask.length])
-    };
+    if (ort) {
+      return {
+        input_ids: new ort.Tensor('int64', new BigInt64Array(ids.map(id => BigInt(id))), [1, ids.length]),
+        attention_mask: new ort.Tensor('int64', new BigInt64Array(mask.map(m => BigInt(m))), [1, mask.length])
+      };
+    } else {
+      // Return plain arrays when ONNX is not available
+      return {
+        input_ids: { data: ids },
+        attention_mask: { data: mask }
+      };
+    }
   }
 
   /**
@@ -303,6 +339,7 @@ export class LocalEmbeddingService {
       model: this.config.modelPath
     };
   }
+
 
   /**
    * Cleanup resources

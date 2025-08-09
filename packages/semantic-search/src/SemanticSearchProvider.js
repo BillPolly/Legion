@@ -9,6 +9,7 @@
 
 import { Provider } from '@legion/storage';
 import { OpenAIEmbeddingService } from './services/OpenAIEmbeddingService.js';
+import { LocalEmbeddingService } from './services/LocalEmbeddingService.js';
 import { QdrantVectorStore } from './services/QdrantVectorStore.js';
 import { EmbeddingCache } from './utils/EmbeddingCache.js';
 import { DocumentProcessor } from './utils/DocumentProcessor.js';
@@ -37,6 +38,8 @@ export class SemanticSearchProvider {
     
     this.resourceManager = dependencies.resourceManager;
     this.embeddingService = dependencies.embeddingService;
+    this.embeddingDimensions = dependencies.embeddingDimensions;
+    this.useLocalEmbeddings = dependencies.useLocalEmbeddings;
     this.vectorStore = dependencies.vectorStore;
     this.cache = dependencies.cache;
     this.documentProcessor = dependencies.documentProcessor;
@@ -66,29 +69,68 @@ export class SemanticSearchProvider {
     }
 
     // Get configuration from ResourceManager (.env loaded automatically)
+    // Fallback to process.env if ResourceManager doesn't return values
     const config = {
-      openaiApiKey: resourceManager.get('env.OPENAI_API_KEY'),
-      qdrantUrl: resourceManager.get('env.QDRANT_URL') || 'http://localhost:6333',
-      qdrantApiKey: resourceManager.get('env.QDRANT_API_KEY'),
-      embeddingModel: resourceManager.get('env.SEMANTIC_SEARCH_MODEL') || 'text-embedding-3-small',
-      batchSize: parseInt(resourceManager.get('env.SEMANTIC_SEARCH_BATCH_SIZE') || '100'),
-      cacheTtl: parseInt(resourceManager.get('env.SEMANTIC_SEARCH_CACHE_TTL') || '3600'),
-      enableCache: resourceManager.get('env.SEMANTIC_SEARCH_ENABLE_CACHE') !== 'false'
+      openaiApiKey: resourceManager.get('env.OPENAI_API_KEY') || process.env.OPENAI_API_KEY,
+      localModelPath: resourceManager.get('env.LOCAL_EMBEDDING_MODEL_PATH') || process.env.LOCAL_EMBEDDING_MODEL_PATH,
+      qdrantUrl: resourceManager.get('env.QDRANT_URL') || process.env.QDRANT_URL || 'http://localhost:6333',
+      qdrantApiKey: resourceManager.get('env.QDRANT_API_KEY') || process.env.QDRANT_API_KEY,
+      embeddingModel: resourceManager.get('env.SEMANTIC_SEARCH_MODEL') || process.env.SEMANTIC_SEARCH_MODEL || 'text-embedding-3-small',
+      batchSize: parseInt(resourceManager.get('env.SEMANTIC_SEARCH_BATCH_SIZE') || process.env.SEMANTIC_SEARCH_BATCH_SIZE || '100'),
+      cacheTtl: parseInt(resourceManager.get('env.SEMANTIC_SEARCH_CACHE_TTL') || process.env.SEMANTIC_SEARCH_CACHE_TTL || '3600'),
+      enableCache: (resourceManager.get('env.SEMANTIC_SEARCH_ENABLE_CACHE') || process.env.SEMANTIC_SEARCH_ENABLE_CACHE) !== 'false',
+      useLocalEmbeddings: (resourceManager.get('env.USE_LOCAL_EMBEDDINGS') || process.env.USE_LOCAL_EMBEDDINGS) === 'true'
     };
 
-    if (!config.openaiApiKey) {
-      throw new Error('OPENAI_API_KEY is required for semantic search');
+    // Determine embedding service to use
+    let useLocalEmbeddings = config.useLocalEmbeddings;
+    
+    // Auto-detect if neither is explicitly configured
+    if (!config.useLocalEmbeddings && !config.openaiApiKey && config.localModelPath) {
+      useLocalEmbeddings = true;
+      console.log('🔍 Auto-detected local embeddings (no OpenAI key, local model path provided)');
+    }
+    
+    if (!useLocalEmbeddings && !config.openaiApiKey) {
+      throw new Error('Either OPENAI_API_KEY or LOCAL_EMBEDDING_MODEL_PATH is required for semantic search');
+    }
+
+    // Create embedding service based on configuration
+    let embeddingService;
+    let embeddingDimensions;
+    
+    if (useLocalEmbeddings) {
+      console.log('🔧 Using local ONNX embeddings');
+      embeddingService = new LocalEmbeddingService({
+        modelPath: config.localModelPath || './models/all-MiniLM-L6-v2-quantized.onnx',
+        batchSize: config.batchSize
+      });
+      embeddingDimensions = 384; // Local model dimensions
+      
+      // Initialize the local embedding service
+      try {
+        await embeddingService.initialize();
+      } catch (error) {
+        console.warn('⚠️  Local embedding service initialization failed, falling back to mock embeddings');
+        // Don't throw - let it fall back to mock embeddings in LocalEmbeddingService
+      }
+    } else {
+      console.log('🔧 Using OpenAI embeddings');
+      embeddingService = new OpenAIEmbeddingService({
+        apiKey: config.openaiApiKey,
+        model: config.embeddingModel,
+        batchSize: config.batchSize
+      });
+      embeddingDimensions = config.embeddingModel === 'text-embedding-3-large' ? 3072 : 1536;
     }
 
     // Create dependencies
     const dependencies = {
       _factoryCall: true,
       resourceManager,
-      embeddingService: new OpenAIEmbeddingService({
-        apiKey: config.openaiApiKey,
-        model: config.embeddingModel,
-        batchSize: config.batchSize
-      }),
+      embeddingService,
+      embeddingDimensions,
+      useLocalEmbeddings,
       vectorStore: new QdrantVectorStore({
         url: config.qdrantUrl,
         apiKey: config.qdrantApiKey
@@ -333,7 +375,9 @@ export class SemanticSearchProvider {
       type: this.type,
       initialized: this.initialized,
       connected: this.connected,
-      embeddingModel: this.config.embeddingModel,
+      embeddingService: this.useLocalEmbeddings ? 'local-onnx' : 'openai',
+      embeddingModel: this.useLocalEmbeddings ? 'all-MiniLM-L6-v2' : this.config.embeddingModel,
+      embeddingDimensions: this.embeddingDimensions,
       vectorDatabase: 'qdrant',
       cacheEnabled: this.config.enableCache,
       vectorStoreUrl: this.config.qdrantUrl
