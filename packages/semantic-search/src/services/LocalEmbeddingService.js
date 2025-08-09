@@ -8,13 +8,20 @@
 // Dynamic import to handle missing dependency gracefully
 let ort = null;
 
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 export class LocalEmbeddingService {
   constructor(config = {}) {
+    // Resolve model path to absolute path
+    const defaultModelPath = path.resolve(__dirname, '../../../../models/all-MiniLM-L6-v2-quantized.onnx');
+    
     this.config = {
-      modelPath: config.modelPath || './models/all-MiniLM-L6-v2-quantized.onnx',
+      modelPath: config.modelPath || defaultModelPath,
       executionProviders: config.executionProviders || [
-        'CoreMLExecutionProvider',  // Use M4's Neural Engine
-        'CPUExecutionProvider'
+        'cpu'  // Use CPU provider which is always available
       ],
       pooling: config.pooling || 'mean',
       normalize: config.normalize || true,
@@ -43,23 +50,17 @@ export class LocalEmbeddingService {
       // Try to load ONNX Runtime
       if (!ort) {
         try {
-          ort = await import('onnxruntime-node');
+          const ortModule = await import('onnxruntime-node');
+          // In v1.14.0, the actual ort object is in the default export
+          ort = ortModule.default || ortModule;
         } catch (error) {
           throw new Error('onnxruntime-node is required for local embeddings. Install with: npm install onnxruntime-node');
         }
       }
       
       // Initialize ONNX Runtime session
-      this.session = await ort.InferenceSession.create(
-        this.config.modelPath,
-        {
-          executionProviders: this.config.executionProviders,
-          graphOptimizationLevel: 'all',
-          executionMode: 'parallel',
-          interOpNumThreads: 4,  // Use M4's performance cores
-          intraOpNumThreads: 2
-        }
-      );
+      // Use default settings - let ONNX Runtime pick the best provider
+      this.session = await ort.InferenceSession.create(this.config.modelPath);
 
       // Initialize tokenizer (using dynamic import to avoid hard dependency)
       try {
@@ -68,7 +69,8 @@ export class LocalEmbeddingService {
           'sentence-transformers/all-MiniLM-L6-v2'
         );
       } catch (error) {
-        throw new Error(`Tokenizer initialization failed: ${error.message}. Install @xenova/transformers`);
+        console.log('Warning: Transformers tokenizer not available, using fallback tokenizer');
+        this.tokenizer = this.createFallbackTokenizer();
       }
 
       this.initialized = true;
@@ -103,13 +105,16 @@ export class LocalEmbeddingService {
       // Run inference
       const results = await this.session.run({
         input_ids: tokens.input_ids,
-        attention_mask: tokens.attention_mask
+        attention_mask: tokens.attention_mask,
+        token_type_ids: tokens.token_type_ids
       });
       
       // Apply pooling and normalization
+      // The attention_mask is a Tensor with BigInt64Array data
+      const maskData = tokens.attention_mask.data || tokens.attention_mask.cpuData;
       const embedding = this.poolAndNormalize(
         results.last_hidden_state.data,
-        tokens.attention_mask.data,
+        maskData,
         results.last_hidden_state.dims
       );
       
@@ -198,7 +203,7 @@ export class LocalEmbeddingService {
    * Tokenize text
    */
   async tokenize(text) {
-    if (!this.tokenizer || !this.tokenizer.encode || !ort) {
+    if (!this.tokenizer || !ort) {
       throw new Error('Tokenizer or ONNX runtime not properly initialized');
     }
     
@@ -209,10 +214,34 @@ export class LocalEmbeddingService {
       return_tensors: false
     });
     
-    return {
-      input_ids: new ort.Tensor('int64', encoded.input_ids.data, [1, encoded.input_ids.dims[1]]),
-      attention_mask: new ort.Tensor('int64', encoded.attention_mask.data, [1, encoded.attention_mask.dims[1]])
-    };
+    // @xenova/transformers returns Tensor objects with .data property containing BigInt64Array
+    let inputIds, attentionMask, tokenTypeIds;
+    
+    if (encoded.input_ids && encoded.input_ids.data) {
+      // The .data property contains the actual BigInt64Array
+      inputIds = encoded.input_ids.data;
+      attentionMask = encoded.attention_mask.data;
+      tokenTypeIds = encoded.token_type_ids ? encoded.token_type_ids.data : null;
+      
+      // If data is already BigInt64Array, use directly
+      if (inputIds instanceof BigInt64Array) {
+        const seqLength = inputIds.length;
+        
+        // Create token_type_ids if not provided
+        if (!tokenTypeIds) {
+          tokenTypeIds = new BigInt64Array(seqLength).fill(0n);
+        }
+        
+        return {
+          input_ids: new ort.Tensor('int64', inputIds, [1, seqLength]),
+          attention_mask: new ort.Tensor('int64', attentionMask, [1, seqLength]),
+          token_type_ids: new ort.Tensor('int64', tokenTypeIds, [1, seqLength])
+        };
+      }
+    }
+    
+    // Fallback for other formats
+    throw new Error('Unexpected tokenizer output format. Expected Tensor with BigInt64Array data.');
   }
 
   /**
@@ -231,15 +260,18 @@ export class LocalEmbeddingService {
     }
     
     if (ort) {
+      const tokenTypeIds = new BigInt64Array(ids.length).fill(0n);
       return {
         input_ids: new ort.Tensor('int64', new BigInt64Array(ids.map(id => BigInt(id))), [1, ids.length]),
-        attention_mask: new ort.Tensor('int64', new BigInt64Array(mask.map(m => BigInt(m))), [1, mask.length])
+        attention_mask: new ort.Tensor('int64', new BigInt64Array(mask.map(m => BigInt(m))), [1, mask.length]),
+        token_type_ids: new ort.Tensor('int64', tokenTypeIds, [1, ids.length])
       };
     } else {
       // Return plain arrays when ONNX is not available
       return {
         input_ids: { data: ids },
-        attention_mask: { data: mask }
+        attention_mask: { data: mask },
+        token_type_ids: { data: new Array(ids.length).fill(0) }
       };
     }
   }
@@ -261,8 +293,14 @@ export class LocalEmbeddingService {
    * Create fallback tokenizer
    */
   createFallbackTokenizer() {
-    return {
-      encode: (text) => this.fallbackTokenize(text)
+    return async (text, options) => {
+      // Simple tokenization for testing
+      const result = this.fallbackTokenize(text);
+      return {
+        input_ids: result.input_ids,
+        attention_mask: result.attention_mask,
+        token_type_ids: result.token_type_ids
+      };
     };
   }
 
@@ -275,9 +313,12 @@ export class LocalEmbeddingService {
     
     let validTokens = 0;
     
+    // The mask is a BigInt64Array, so we need to check for 1n
     // Mean pooling with attention mask
     for (let i = 0; i < seqLength; i++) {
-      if (mask[i] === 1) {
+      // Check if mask value is 1 (for BigInt or regular number)
+      const maskValue = typeof mask[i] === 'bigint' ? mask[i] : BigInt(mask[i]);
+      if (maskValue === 1n) {
         validTokens++;
         for (let j = 0; j < hiddenSize; j++) {
           embeddings[j] += tensor[i * hiddenSize + j];
@@ -336,6 +377,26 @@ export class LocalEmbeddingService {
       initialized: this.initialized,
       model: this.config.modelPath
     };
+  }
+
+  /**
+   * Get model information
+   */
+  getModelInfo() {
+    return {
+      name: 'Local ONNX Embedding Model',
+      type: 'local',
+      dimensions: this.config.dimensions,
+      model: this.config.modelPath,
+      provider: 'ONNX Runtime'
+    };
+  }
+
+  /**
+   * Generate embedding for a single text - alias for embed
+   */
+  async generateEmbedding(text) {
+    return await this.embed(text);
   }
 
 

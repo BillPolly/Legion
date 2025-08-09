@@ -385,6 +385,52 @@ export class SemanticSearchProvider {
   }
 
   /**
+   * Create a collection in the vector store
+   * @param {string} name - Collection name
+   * @param {Object} options - Collection options
+   */
+  async createCollection(name, options = {}) {
+    if (!this.connected) {
+      throw new Error('Provider not connected');
+    }
+
+    const { dimension = this.embeddingDimensions, description = '' } = options;
+    
+    try {
+      await this.vectorStore.createCollection(name, {
+        dimension,
+        description,
+        distance: 'cosine'
+      });
+      console.log(`✅ Created collection: ${name} (${dimension}D)`);
+    } catch (error) {
+      // Collection might already exist
+      if (!error.message.includes('already exists')) {
+        throw error;
+      }
+      console.log(`📋 Collection already exists: ${name}`);
+    }
+  }
+
+  /**
+   * Count documents in a collection
+   * @param {string} collection - Collection name
+   * @returns {Promise<number>} - Document count
+   */
+  async count(collection) {
+    if (!this.connected) {
+      throw new Error('Provider not connected');
+    }
+
+    try {
+      return await this.vectorStore.count(collection);
+    } catch (error) {
+      console.warn(`Failed to count collection ${collection}:`, error.message);
+      return 0;
+    }
+  }
+
+  /**
    * Get provider capabilities
    */
   getCapabilities() {
@@ -395,7 +441,8 @@ export class SemanticSearchProvider {
       'vectorSearch',
       'embeddingGeneration',
       'batchProcessing',
-      'caching'
+      'caching',
+      'collectionManagement'
     ];
   }
 

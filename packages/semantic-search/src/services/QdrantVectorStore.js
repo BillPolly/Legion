@@ -79,6 +79,32 @@ export class QdrantVectorStore {
       }
     }
   }
+
+  async createCollection(name, options = {}) {
+    const { dimension = 1536, distance = 'cosine', description = '' } = options;
+    await this.ensureCollection(name, dimension, { distance: distance.charAt(0).toUpperCase() + distance.slice(1), description });
+  }
+
+  async count(collection) {
+    const coll = this._collections.get(collection);
+    if (!coll) {
+      await this.ensureCollection(collection);
+      return 0;
+    }
+    
+    if (this.client) {
+      try {
+        const result = await this.client.count(collection);
+        return result.count;
+      } catch (error) {
+        // Fallback to in-memory count
+        const fallbackColl = this._collections.get(collection);
+        return fallbackColl ? fallbackColl.vectors.length : 0;
+      }
+    } else {
+      return coll.vectors.length;
+    }
+  }
   
   async upsert(collection, vectors) {
     await this.ensureCollection(collection);

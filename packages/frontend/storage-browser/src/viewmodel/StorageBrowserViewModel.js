@@ -192,9 +192,8 @@ export class StorageBrowserViewModel {
       
       console.log('[ViewModel] Raw collections from server:', collections);
       
-      // Ensure all standard collections are included
-      const standardCollections = ['tasks', 'projects', 'users', 'sessions'];
-      const allCollections = new Set([...collections, ...standardCollections]);
+      // Ensure tasks collection is always available since that's what the separate entity.listTasks call is trying to access
+      const allCollections = new Set([...collections, 'tasks']);
       
       console.log('[ViewModel] All collections to load:', Array.from(allCollections));
       

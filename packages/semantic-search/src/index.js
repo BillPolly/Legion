@@ -7,15 +7,11 @@
 
 // Core provider
 export { SemanticSearchProvider } from './SemanticSearchProvider.js';
-export { UniversalEventCollector } from './UniversalEventCollector.js';
 
 // Services
 export { OpenAIEmbeddingService } from './services/OpenAIEmbeddingService.js';
+export { LocalEmbeddingService } from './services/LocalEmbeddingService.js';
 export { QdrantVectorStore } from './services/QdrantVectorStore.js';
-
-// Tool Discovery
-export { ToolIndexer } from './tools/ToolIndexer.js';
-export { SemanticToolDiscovery } from './tools/SemanticToolDiscovery.js';
 
 // Utilities
 export { EmbeddingCache } from './utils/EmbeddingCache.js';

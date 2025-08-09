@@ -45,7 +45,7 @@
     "@babel/traverse": "^7.23.6",
     "@legion/conan-the-deployer": "*",
     "@legion/jester": "file:../jester",
-    "@legion/unified-planner": "*",
+    "@legion/planner": "*",
     "@legion/playwright": "*",
     "dotenv": "^17.2.0",
     "eslint": "^8.56.0",

@@ -12,8 +12,8 @@
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch"
   },
   "dependencies": {
-    "@legion/bt-validator": "workspace:*",
-    "@legion/llm": "workspace:*",
+    "@legion/bt-validator": "file:../../planning/bt-validator",
+    "@legion/llm": "file:../../llm",
     "json5": "^2.2.3"
   },
   "devDependencies": {

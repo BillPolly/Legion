@@ -526,8 +526,10 @@ export class ToolRegistryDatabaseService {
   async cleanup() {
     console.log('🔌 Cleaning up Tool Registry Database Service...');
     
-    if (this.storageProvider) {
+    if (this.storageProvider && typeof this.storageProvider.disconnect === 'function') {
       await this.storageProvider.disconnect();
+    } else if (this.mongoProvider && typeof this.mongoProvider.disconnect === 'function') {
+      await this.mongoProvider.disconnect();
     }
 
     this.initialized = false;

@@ -25,7 +25,7 @@ export class SemanticToolSearch {
     // Configuration
     this.config = {
       embeddingBatchSize: 50,
-      similarityThreshold: 0.7,
+      similarityThreshold: 0.3, // Lower threshold for ONNX local embeddings
       maxResults: 20,
       enableCaching: true,
       ...dependencies.config
@@ -214,7 +214,7 @@ export class SemanticToolSearch {
             const results = await this.semanticSearch.semanticSearch(
               this.TOOLS_COLLECTION,
               doc.content,
-              { limit: 1, filters: { id: doc.id } }
+              { limit: 1, filter: { id: doc.id } }
             );
 
             if (results.length > 0 && results[0]._vector) {
@@ -316,11 +316,27 @@ export class SemanticToolSearch {
       const tools = [];
       for (const result of results) {
         try {
+          // Extract result metadata from the appropriate location
+          
+          // Try to extract tool info from different possible locations
+          let toolName, moduleName;
+          
+          if (result.metadata?.toolName) {
+            toolName = result.metadata.toolName;
+            moduleName = result.metadata.moduleName;
+          } else if (result.document?.metadata?.toolName) {
+            toolName = result.document.metadata.toolName;
+            moduleName = result.document.metadata.moduleName;
+          } else if (result.payload?.metadata?.toolName) {
+            toolName = result.payload.metadata.toolName;
+            moduleName = result.payload.metadata.moduleName;
+          } else {
+            console.warn('Could not extract tool info from result:', Object.keys(result));
+            continue;
+          }
+          
           // Get full tool data from provider
-          const toolData = await this.provider.getTool(
-            result.metadata.toolName,
-            result.metadata.moduleName
-          );
+          const toolData = await this.provider.getTool(toolName, moduleName);
 
           if (toolData) {
             tools.push({
@@ -330,7 +346,7 @@ export class SemanticToolSearch {
             });
           }
         } catch (error) {
-          console.warn(`Failed to get tool data for ${result.metadata.toolName}:`, error.message);
+          console.warn(`Failed to get tool data:`, error.message);
         }
       }
 
@@ -348,7 +364,7 @@ export class SemanticToolSearch {
   async findSimilarTools(toolName, moduleName, options = {}) {
     const searchOptions = {
       limit: options.limit || 10,
-      threshold: options.threshold || 0.6,
+      threshold: options.threshold || 0.3,
       ...options
     };
 
@@ -376,7 +392,7 @@ export class SemanticToolSearch {
   async recommendToolsForTask(taskDescription, options = {}) {
     const searchOptions = {
       limit: options.limit || 15,
-      threshold: options.threshold || 0.6,
+      threshold: options.threshold || 0.3,
       ...options
     };
 
