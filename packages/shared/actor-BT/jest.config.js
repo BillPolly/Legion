@@ -2,8 +2,7 @@ export default {
   // Use Node.js environment for testing
   testEnvironment: 'node',
   
-  // Enable ES modules support
-  extensionsToTreatAsEsm: ['.js'],
+  // Enable ES modules support (removed .js as it's inferred from package.json)
   
   // Transform configuration for ES modules
   transform: {},
@@ -30,8 +29,8 @@ export default {
   // Test timeout for integration tests
   testTimeout: 30000,
   
-  // Module path mapping for Legion packages
-  moduleNameMapping: {
+  // Module name mapping for Legion packages
+  moduleNameMapper: {
     '^@legion/tools$': '<rootDir>/../../tools/src/index.js'
   },
   

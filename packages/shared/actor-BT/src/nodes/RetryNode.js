@@ -28,16 +28,10 @@ export class RetryNode extends BehaviorTreeNode {
       throw new Error('RetryNode maxAttempts must be at least 1');
     }
 
-    // Ensure we have exactly one child
-    if (config.child) {
-      // Single child configuration
-      this.children = [this.createChild(config.child)];
-    } else if (config.children && config.children.length === 1) {
-      // Children array with single child
-      this.children = config.children.map(childConfig => this.createChild(childConfig));
-    } else if (!config.children || config.children.length === 0) {
+    // Child validation - actual creation will happen in async initialization
+    if (!config.child && (!config.children || config.children.length === 0)) {
       throw new Error('RetryNode must have exactly one child');
-    } else if (config.children.length > 1) {
+    } else if (config.children && config.children.length > 1) {
       throw new Error('RetryNode can only have one child. Use a sequence or selector as the child for multiple operations.');
     }
   }

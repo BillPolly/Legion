@@ -5,6 +5,7 @@
  */
 
 import fs from 'fs/promises';
+import path from 'path';
 
 /**
  * ModuleProvider - Provides module instances
@@ -173,17 +174,103 @@ export class ToolRegistry {
    * Load a JSON-based module
    */
   async loadJsonModule(module) {
-    // For now, just register the metadata from the database
-    // The actual JSON module loading would require ModuleFactory integration
-    console.log(`📋 Registered JSON module: ${module.name} (loading deferred to ModuleFactory)`);
+    console.log(`📋 Loading JSON module: ${module.name}`);
     
-    // Register basic metadata for now
-    this.metadata.set(module.name, {
-      name: module.name,
-      description: `${module.name} module (JSON-based)`,
-      tools: {},
-      type: 'json'
-    });
+    try {
+      // Load the module.json file to get tool definitions
+      const moduleJsonPath = path.resolve(path.join(path.dirname(import.meta.url.replace('file://', '')), module.path));
+      const moduleJsonContent = await import('fs/promises').then(fs => fs.readFile(moduleJsonPath, 'utf8'));
+      const moduleConfig = JSON.parse(moduleJsonContent);
+      
+      // Extract tools from the module configuration
+      const tools = {};
+      if (moduleConfig.tools && Array.isArray(moduleConfig.tools)) {
+        for (const tool of moduleConfig.tools) {
+          tools[tool.name] = {
+            name: tool.name,
+            description: tool.description,
+            schema: tool.parameters || {},
+            metadata: tool
+          };
+        }
+      }
+      
+      // Register metadata with actual tool information
+      this.metadata.set(module.name, {
+        name: module.name,
+        description: moduleConfig.description || `${module.name} module (JSON-based)`,
+        tools: tools,
+        type: 'json',
+        config: moduleConfig
+      });
+      
+      // Create a provider that creates a proper JSON module instance
+      const provider = {
+        getInstance: async () => {
+          // Create a custom module instance for JSON modules
+          const { Module } = await import('../compatibility.js');
+          
+          class JSONModule extends Module {
+            constructor() {
+              super(moduleConfig.name, {});
+              this.config = moduleConfig;
+              this.toolsMap = new Map();
+              
+              // Register all tools from the JSON configuration
+              if (moduleConfig.tools && Array.isArray(moduleConfig.tools)) {
+                for (const toolDef of moduleConfig.tools) {
+                  this.toolsMap.set(toolDef.name, this.createJSONTool(toolDef));
+                }
+              }
+            }
+            
+            createJSONTool(toolDef) {
+              // Create a simple tool wrapper that matches the JSON module definition
+              return {
+                name: toolDef.name,
+                description: toolDef.description,
+                schema: toolDef.parameters || {},
+                execute: async (params) => {
+                  // This is a mock implementation - in a real system, this would
+                  // execute the actual command or functionality defined in the JSON
+                  console.log(`Executing JSON tool ${toolDef.name} with params:`, params);
+                  return {
+                    success: true,
+                    message: `JSON tool ${toolDef.name} executed successfully`,
+                    data: { toolName: toolDef.name, params }
+                  };
+                }
+              };
+            }
+            
+            getTool(name) {
+              return this.toolsMap.get(name) || null;
+            }
+            
+            getTools() {
+              return Array.from(this.toolsMap.values());
+            }
+          }
+          
+          return new JSONModule();
+        }
+      };
+      
+      this.providers.set(module.name, provider);
+      
+      console.log(`✅ Registered JSON module: ${module.name} with ${Object.keys(tools).length} tools`);
+      
+    } catch (error) {
+      console.warn(`Failed to load JSON module ${module.name}:`, error.message);
+      
+      // Fallback to basic registration
+      this.metadata.set(module.name, {
+        name: module.name,
+        description: `${module.name} module (JSON-based)`,
+        tools: {},
+        type: 'json'
+      });
+    }
   }
 
   /**

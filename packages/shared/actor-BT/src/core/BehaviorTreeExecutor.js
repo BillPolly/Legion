@@ -100,7 +100,7 @@ export class BehaviorTreeExecutor extends EventEmitter {
         nodeResults: result.nodeResults || {}
       });
       
-      return {
+      const finalResult = {
         success: result.status === NodeStatus.SUCCESS,
         status: result.status,
         data: result.data,
@@ -108,12 +108,19 @@ export class BehaviorTreeExecutor extends EventEmitter {
         executionTime,
         nodeResults: result.nodeResults || {}
       };
+      
+      // Propagate error field if present
+      if (result.error) {
+        finalResult.error = result.error;
+      }
+      
+      return finalResult;
     } catch (error) {
       const executionTime = Date.now() - startTime;
       
       // Emit error event
       this.emit('tree:error', {
-        treeId: treeConfig.id || 'unknown',
+        treeId: treeConfig?.id || 'unknown',
         error: error.message,
         executionTime,
         stackTrace: error.stack
@@ -124,7 +131,7 @@ export class BehaviorTreeExecutor extends EventEmitter {
         status: NodeStatus.FAILURE,
         error: error.message,
         data: { errorMessage: error.message, stackTrace: error.stack },
-        context,
+        context: context || {},
         executionTime
       };
     }

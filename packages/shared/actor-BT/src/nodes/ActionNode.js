@@ -67,17 +67,22 @@ export class ActionNode extends BehaviorTreeNode {
       }
 
       // Execute the tool
+      const startTime = Date.now();
       const toolResult = await tool.execute(toolParams);
+      const executionTime = Date.now() - startTime;
 
       // Emit the tool result
       if (this.executor && this.executor.emit) {
         this.executor.emit('action:result', toolResult);
       }
 
-      return toolResult;
+      // Transform tool result to BT format
+      return this.transformToolResult(toolResult, executionTime);
     } catch (error) {
+      // Handle unexpected errors (should be rare with Legion tools)
       return {
         status: NodeStatus.FAILURE,
+        error: error.message,
         data: {
           error: error.message,
           toolName: this.toolName,
@@ -276,7 +281,7 @@ export class ActionNode extends BehaviorTreeNode {
     // Handle different tool result formats
     if (toolResult.success !== undefined) {
       // Standard tool result format
-      return {
+      const result = {
         status: toolResult.success ? NodeStatus.SUCCESS : NodeStatus.FAILURE,
         data: {
           ...toolResult.data,
@@ -286,6 +291,13 @@ export class ActionNode extends BehaviorTreeNode {
         },
         toolResult: toolResult // Keep original for reference
       };
+      
+      // Add error field for failed tools
+      if (!toolResult.success && toolResult.message) {
+        result.error = toolResult.message;
+      }
+      
+      return result;
     } else if (toolResult.status) {
       // Tool returns status directly
       return {

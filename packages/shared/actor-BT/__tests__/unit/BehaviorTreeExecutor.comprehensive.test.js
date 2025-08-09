@@ -121,7 +121,12 @@ describe('BehaviorTreeExecutor - Comprehensive Tests', () => {
     });
 
     test('should handle action node failure', async () => {
-      mockTool.execute.mockRejectedValue(new Error('Tool execution failed'));
+      // Tools return failure with success=false, not exceptions
+      mockTool.execute.mockResolvedValue({ 
+        success: false, 
+        message: 'Tool execution failed',
+        data: { errorDetails: 'Something went wrong' }
+      });
 
       const treeConfig = {
         type: 'action',
@@ -423,13 +428,11 @@ describe('BehaviorTreeExecutor - Comprehensive Tests', () => {
       );
     });
 
-    test('should emit error events on failure', async () => {
-      mockTool.execute.mockRejectedValue(new Error('Test error'));
-
+    test('should emit error events on structural failures', async () => {
+      // Test with malformed tree structure to trigger tree:error
       const treeConfig = {
-        type: 'action',
-        id: 'error-test',
-        tool: 'test_tool'
+        type: 'nonexistent_type',
+        id: 'error-test'
       };
 
       await executor.executeTree(treeConfig);
@@ -437,7 +440,27 @@ describe('BehaviorTreeExecutor - Comprehensive Tests', () => {
       expect(eventsSpy['tree:error']).toHaveBeenCalledWith(
         expect.objectContaining({
           treeId: 'error-test',
-          error: expect.stringContaining('Test error'),
+          error: expect.stringContaining('Unknown node type'),
+          executionTime: expect.any(Number)
+        })
+      );
+    });
+
+    test('should emit complete event with success=false on tool failures', async () => {
+      mockTool.execute.mockRejectedValue(new Error('Tool failed'));
+
+      const treeConfig = {
+        type: 'action',
+        id: 'tool-failure-test',
+        tool: 'test_tool'
+      };
+
+      await executor.executeTree(treeConfig);
+
+      expect(eventsSpy['tree:complete']).toHaveBeenCalledWith(
+        expect.objectContaining({
+          treeId: 'tool-failure-test',
+          success: false,
           executionTime: expect.any(Number)
         })
       );
