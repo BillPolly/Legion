@@ -65,45 +65,86 @@ Tasks are classified as either **SIMPLE** or **COMPLEX** based on clear guidelin
   - "Create a data analysis dashboard"
   - "Implement user management system"
 
-### 2. Recursive Descent
+### 2. Recursive Descent with I/O Hints
 
-The system recursively decomposes complex tasks until all leaf nodes are simple:
+The system recursively decomposes complex tasks until all leaf nodes are simple, with informal input/output hints at each level:
 
 ```
-"Build task management app"
+"Build task management app" 
+  Outputs: [working_app, deployment_config]
 ├── "Set up database" [COMPLEX]
+│     Inputs: [requirements]
+│     Outputs: [db_connection, schema]
 │   ├── "Create database schema" [SIMPLE]
+│   │     Inputs: [data_requirements]
+│   │     Outputs: [schema_definition, models]
 │   ├── "Set up connection pool" [SIMPLE]
+│   │     Inputs: [db_url, credentials]
+│   │     Outputs: [connection_pool, db_client]
 │   └── "Create migration scripts" [SIMPLE]
+│         Inputs: [schema_definition]
+│         Outputs: [migration_files, seed_data]
 ├── "Create API endpoints" [COMPLEX]
+│     Inputs: [db_connection, schema]
+│     Outputs: [api_endpoints, api_docs]
 │   ├── "Set up Express server" [SIMPLE]
+│   │     Inputs: [port_config]
+│   │     Outputs: [express_app, server_config]
 │   ├── "Create task CRUD routes" [SIMPLE]
+│   │     Inputs: [express_app, db_client, models]
+│   │     Outputs: [task_endpoints, route_handlers]
 │   └── "Add authentication middleware" [SIMPLE]
+│         Inputs: [express_app, user_model]
+│         Outputs: [auth_middleware, jwt_config]
 └── "Build frontend" [COMPLEX]
+      Inputs: [api_endpoints, api_docs]
+      Outputs: [frontend_app, ui_components]
     ├── "Create React app structure" [SIMPLE]
+    │     Inputs: [design_requirements]
+    │     Outputs: [react_app, component_structure]
     ├── "Build task components" [SIMPLE]
+    │     Inputs: [component_structure, api_docs]
+    │     Outputs: [task_ui, state_management]
     └── "Connect to API" [SIMPLE]
+          Inputs: [api_endpoints, task_ui]
+          Outputs: [connected_app, api_client]
 ```
 
-### 3. Context Management
+These I/O hints help:
+- **Guide decomposition**: Complex tasks know what outputs their subtasks need to produce
+- **Show dependencies**: Clear data flow between sibling and parent-child tasks
+- **Inform the planner**: Hints get formalized into the artifact system
 
-Context flows through the hierarchy via the **artifact system**:
+### 3. Context Management (Handled by Planner)
 
-- **Input Artifacts**: Available context from parent/sibling tasks
-- **Output Artifacts**: Results produced by this task
-- **Artifact Propagation**: 
-  - Parent → Child: Parent artifacts available to children
-  - Sibling → Sibling: Through shared parent artifact space
-  - Child → Parent: Child outputs become parent artifacts
+The existing **planner already provides complete context management** through its artifact system:
 
-Each behavior tree node can:
-- Store results via `outputVariable`
-- Reference previous results via `context.artifacts['variableName']`
-- Validate dependencies via condition nodes
+- **Input/Output Variables**: Each action can store results via `outputVariable`
+- **Artifact References**: Subsequent actions reference via `context.artifacts['variableName']`
+- **Validation**: Condition nodes ensure dependencies are met
+- **Automatic Flow**: The planner handles all artifact propagation and validation
+
+The decent-planner doesn't need to manage context rigorously - it can optionally provide hints about relationships between tasks, but the planner's existing system handles all the actual context flow:
+
+```javascript
+// The planner already does this:
+{
+  "type": "action",
+  "tool": "database_create",
+  "outputVariable": "dbSchema",  // Stores result
+},
+{
+  "type": "action", 
+  "tool": "api_create",
+  "params": {
+    "schema": "{{context.artifacts['dbSchema']}}"  // Uses previous result
+  }
+}
+```
 
 ## System Components
 
-### 1. DescentPlanner (Main Orchestrator)
+### 1. DecentPlanner (Main Orchestrator)
 
 **Responsibilities:**
 - Coordinates the entire planning process
@@ -113,7 +154,7 @@ Each behavior tree node can:
 
 **Key Methods:**
 ```javascript
-class DescentPlanner {
+class DecentPlanner {
   async plan(goal, options = {})
   async decompose(task, context = {})
   async discoverTools(simpleTask)
@@ -138,13 +179,21 @@ Domain: [WEB_DEV|DATA_ANALYSIS|SYSTEM_ADMIN]
 
 Break this down into subtasks. For each subtask:
 1. Provide a clear description
-2. Classify as SIMPLE or COMPLEX
-3. Explain your reasoning
+2. Suggest what inputs it might need (informal, natural language)
+3. Suggest what outputs it should produce (informal, natural language)
+4. Classify as SIMPLE or COMPLEX
+5. Explain your reasoning
 
 SIMPLE = Can be accomplished with specific tools in a focused plan
 COMPLEX = Needs further breakdown into smaller subtasks
 
-Return as structured JSON with subtasks and complexity labels.
+The input/output suggestions should:
+- Help clarify what the task actually does
+- Show dependencies between tasks
+- Guide further decomposition for complex tasks
+- Provide hints to the planner (but planner makes final decisions)
+
+Return as structured JSON with subtasks, I/O hints, and complexity labels.
 ```
 
 **Response Format:**
@@ -156,41 +205,66 @@ Return as structured JSON with subtasks and complexity labels.
       "id": "subtask-1",
       "description": "Set up database connection",
       "complexity": "SIMPLE",
-      "reasoning": "Direct configuration with connection tools"
+      "reasoning": "Direct configuration with connection tools",
+      "suggestedInputs": ["database_url", "credentials"],
+      "suggestedOutputs": ["db_connection", "connection_pool"]
     },
     {
       "id": "subtask-2", 
       "description": "Build authentication system",
       "complexity": "COMPLEX",
-      "reasoning": "Requires JWT setup, middleware, routes, validation - multiple subsystems"
+      "reasoning": "Requires JWT setup, middleware, routes, validation - multiple subsystems",
+      "suggestedInputs": ["user_model", "db_connection"],
+      "suggestedOutputs": ["auth_middleware", "jwt_config", "auth_routes"]
     }
   ]
 }
 ```
 
-### 3. ContextManager
+The suggested inputs/outputs serve two purposes:
+1. **Guide further decomposition** - Complex tasks can use these to understand what their subtasks need to produce
+2. **Inform the planner** - When a simple task reaches the planner, these suggestions help it create the rigorous artifact flow
 
-**Responsibilities:**
-- Tracks artifacts at each hierarchy level
-- Manages artifact inheritance
-- Validates artifact references
-- Handles artifact conflicts
+### 3. Informal to Formal Context Flow
 
-**Artifact Flow:**
+The decent-planner provides **informal suggestions** about inputs/outputs during decomposition, which eventually feed into the planner's **formal artifact system**.
+
+**Two-Layer Context System:**
+
+1. **Informal (Decomposition Layer)**
+   - Suggested inputs/outputs in natural language
+   - Non-rigorous but helpful for understanding dependencies
+   - Guides both further decomposition and final planning
+   - Example: "needs database_connection, produces api_endpoints"
+
+2. **Formal (Planner Layer)**
+   - Rigorous artifact management via outputVariable
+   - Validated dependencies through condition nodes
+   - Actual execution context with `context.artifacts['variableName']`
+   - The planner converts informal suggestions into formal artifact flow
+
+**Flow from Informal to Formal:**
 ```javascript
+// Decomposition suggests (informal):
 {
-  level: 2,
-  taskId: "create-api",
-  inputArtifacts: {
-    "databaseSchema": { /* from sibling */ },
-    "projectConfig": { /* from parent */ }
+  "task": "Create user API",
+  "suggestedInputs": ["database_schema", "auth_config"],
+  "suggestedOutputs": ["user_endpoints", "api_docs"]
+}
+
+// Planner creates (formal):
+{
+  "type": "action",
+  "tool": "generate_api_endpoints",
+  "params": {
+    "schema": "{{context.artifacts['dbSchema']}}",  // Formal reference
+    "auth": "{{context.artifacts['authConfig']}}"
   },
-  outputArtifacts: {
-    "apiEndpoints": { /* produced by this task */ },
-    "apiDocs": { /* produced by this task */ }
-  }
+  "outputVariable": "userEndpoints"  // Formal output
 }
 ```
+
+This two-layer approach provides flexibility during decomposition while ensuring rigorous execution through the planner's proven artifact system.
 
 ### 4. ToolDiscoveryBridge
 
@@ -236,31 +310,43 @@ User Goal
     ↓
 TaskDecomposer.decompose(goal)
     ↓
-Returns subtasks with complexity labels
+Returns subtasks with:
+  - Description (clarified by I/O)
+  - Suggested inputs (informal)
+  - Suggested outputs (informal)
+  - Complexity label (SIMPLE/COMPLEX)
     ↓
 For each subtask:
     if COMPLEX → Recursive decompose()
+                  (using parent outputs as child inputs)
     if SIMPLE → Add to simple task list
+                (with I/O hints for planner)
     ↓
-Hierarchy of simple tasks
+Hierarchy of simple tasks with I/O hints
 ```
 
 ### 2. Planning Phase
 
 ```
-Simple Task + Context
+Simple Task + I/O Hints + Context
     ↓
-ToolDiscoveryBridge.discoverTools(task, context)
+ToolDiscoveryBridge.discoverTools(task, hints)
     ↓
-SemanticSearch.searchTools(query)
+SemanticSearch.searchTools(enhanced_query)
+    (Query enhanced with I/O hints for better tool matching)
     ↓
 Relevant Tools Collection
     ↓
-Planner.makePlan(requirements, tools, context)
+Planner.makePlan(requirements, tools, context_with_hints)
+    (I/O hints help planner understand data flow)
+    ↓
+Planner converts informal I/O to formal artifacts:
+  - suggestedInputs → context.artifacts references
+  - suggestedOutputs → outputVariable assignments
     ↓
 BTValidator.validate(behaviorTree, tools)
     ↓
-Validated Behavior Tree
+Validated Behavior Tree with rigorous artifact flow
 ```
 
 ### 3. Context Propagation
@@ -284,7 +370,7 @@ Parent Level Artifacts
 
 ### 1. With Existing Planner
 
-The descent-planner wraps the existing planner at each level:
+The decent-planner wraps the existing planner at each level:
 
 ```javascript
 // For each simple task
@@ -350,33 +436,75 @@ const validation = await btValidator.validate(
 
 **Initial Goal:** "Create a REST API for task management with authentication"
 
-**Decomposition:**
+**Decomposition with I/O Hints:**
 ```
 Level 0: Create REST API [COMPLEX]
+  Outputs: [api_server, api_documentation, auth_system]
 ├── Level 1: Set up project structure [SIMPLE]
+│     Inputs: [project_name, requirements]
+│     Outputs: [project_dir, package_json, folder_structure]
 ├── Level 1: Implement data layer [COMPLEX]
+│     Inputs: [project_dir, data_requirements]
+│     Outputs: [db_connection, models, repositories]
 │   ├── Level 2: Define schemas [SIMPLE]
+│   │     Inputs: [data_requirements]
+│   │     Outputs: [task_schema, user_schema, db_models]
 │   ├── Level 2: Create database connection [SIMPLE]
+│   │     Inputs: [db_config, connection_string]
+│   │     Outputs: [db_client, connection_pool]
 │   └── Level 2: Implement repositories [SIMPLE]
+│         Inputs: [db_client, db_models]
+│         Outputs: [task_repository, user_repository]
 ├── Level 1: Create API endpoints [COMPLEX]
+│     Inputs: [repositories, models, project_dir]
+│     Outputs: [api_routes, express_app, api_docs]
 │   ├── Level 2: Set up Express server [SIMPLE]
+│   │     Inputs: [project_dir, port_config]
+│   │     Outputs: [express_app, middleware_stack]
 │   ├── Level 2: Implement CRUD routes [SIMPLE]
+│   │     Inputs: [express_app, task_repository]
+│   │     Outputs: [task_routes, crud_handlers]
 │   └── Level 2: Add validation middleware [SIMPLE]
+│         Inputs: [express_app, schemas]
+│         Outputs: [validation_middleware, error_handlers]
 └── Level 1: Add authentication [COMPLEX]
+      Inputs: [express_app, user_repository]
+      Outputs: [auth_middleware, jwt_config, protected_routes]
     ├── Level 2: Set up JWT [SIMPLE]
+    │     Inputs: [secret_key, token_config]
+    │     Outputs: [jwt_service, token_generator]
     ├── Level 2: Create auth routes [SIMPLE]
+    │     Inputs: [express_app, jwt_service, user_repository]
+    │     Outputs: [login_route, register_route, refresh_route]
     └── Level 2: Protect endpoints [SIMPLE]
+          Inputs: [express_app, jwt_service, task_routes]
+          Outputs: [protected_api, auth_middleware]
 ```
 
-**Tool Discovery (for "Set up Express server"):**
+Notice how I/O hints:
+- **Clarify task purpose**: "Set up Express server" produces `express_app` and `middleware_stack`
+- **Show dependencies**: "Implement CRUD routes" needs `task_repository` from data layer
+- **Guide tool selection**: Knowing outputs helps find the right tools
+
+**Tool Discovery Enhanced by I/O Hints:**
 ```javascript
-Semantic Search: "Set up Express server"
+// Task with I/O hints
+{
+  description: "Set up Express server",
+  suggestedInputs: ["project_dir", "port_config"],
+  suggestedOutputs: ["express_app", "middleware_stack"]
+}
+
+// Enhanced semantic search query
+Semantic Search: "Set up Express server create express_app middleware_stack using project_dir port_config"
+
+// Better tool matches due to I/O context
 Found Tools: [
-  "npm_init",
-  "npm_install",
-  "file_write",
-  "directory_create",
-  "generate_express_app"
+  "generate_express_app",   // Best match - creates express app
+  "file_write",             // For server.js file
+  "npm_install",            // For dependencies
+  "configure_middleware",   // For middleware stack
+  "set_port_config"        // For port configuration
 ]
 ```
 
@@ -478,10 +606,10 @@ Level 0: Analyze and visualize sales data [COMPLEX]
 ### Public API
 
 ```javascript
-import { DescentPlanner } from '@legion/descent-planner';
+import { DecentPlanner } from '@legion/decent-planner';
 
 // Initialize with dependencies
-const planner = await DescentPlanner.create(resourceManager);
+const planner = await DecentPlanner.create(resourceManager);
 
 // Plan a complex task
 const result = await planner.plan(
@@ -510,10 +638,10 @@ const result = await planner.plan(
 ```javascript
 // With existing Legion tools
 import { TaskOrchestrator } from '@legion/aiur';
-import { DescentPlanner } from '@legion/descent-planner';
+import { DecentPlanner } from '@legion/decent-planner';
 
 const orchestrator = new TaskOrchestrator();
-const planner = new DescentPlanner();
+const planner = new DecentPlanner();
 
 // Generate hierarchical plan
 const plan = await planner.plan(userGoal);

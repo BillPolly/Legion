@@ -1,5 +1,5 @@
 /**
- * Type definitions for descent-planner
+ * Type definitions for decent-planner
  */
 
 /**

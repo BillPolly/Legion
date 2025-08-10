@@ -1,5 +1,5 @@
 {
-  "name": "@legion/descent-planner",
+  "name": "@legion/decent-planner",
   "version": "0.1.0",
   "description": "Hierarchical task decomposition and planning system for complex goal achievement",
   "type": "module",

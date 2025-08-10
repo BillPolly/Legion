@@ -6,7 +6,8 @@
  * ONNX embeddings and natural language search
  */
 
-import { SemanticToolSearch, ToolRegistry } from '@legion/tools';
+import { ToolRegistry } from '@legion/tools';
+import { SemanticToolSearch } from '@legion/tools/src/semantic/SemanticToolSearch.js';
 
 export class ToolDiscoveryBridge {
   constructor(resourceManager, toolRegistryProvider) {
