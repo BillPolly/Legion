@@ -15,11 +15,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export class LocalEmbeddingService {
   constructor(config = {}) {
-    // Resolve model path to absolute path
-    const defaultModelPath = path.resolve(__dirname, '../../../../models/all-MiniLM-L6-v2-quantized.onnx');
+    // Model path is ALWAYS resolved relative to this module's location
+    // This makes it completely independent of CWD
+    const modelPath = path.resolve(__dirname, '../../../../models/all-MiniLM-L6-v2-quantized.onnx');
     
     this.config = {
-      modelPath: config.modelPath || defaultModelPath,
+      modelPath,  // This is the ONLY model we use
       executionProviders: config.executionProviders || [
         'cpu'  // Use CPU provider which is always available
       ],

@@ -102,8 +102,8 @@ export class SemanticSearchProvider {
     if (useLocalEmbeddings) {
       console.log('🔧 Using local ONNX embeddings');
       embeddingService = new LocalEmbeddingService({
-        modelPath: config.localModelPath || './models/all-MiniLM-L6-v2-quantized.onnx',
         batchSize: config.batchSize
+        // LocalEmbeddingService handles its own model management
       });
       embeddingDimensions = 384; // Local model dimensions
       

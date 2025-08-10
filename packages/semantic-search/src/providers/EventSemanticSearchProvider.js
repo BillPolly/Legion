@@ -25,7 +25,6 @@ export class EventSemanticSearchProvider extends SemanticSearchProvider {
     // Enhanced config for event processing
     const eventConfig = {
       useLocalEmbeddings: config.useLocalEmbeddings !== false, // Default to true
-      localModelPath: config.localModelPath || './models/all-MiniLM-L6-v2-quantized.onnx',
       embeddingDimensions: config.embeddingDimensions || 384,
       eventBufferSize: config.eventBufferSize || 1000,
       embeddingBatchSize: config.embeddingBatchSize || 100,
