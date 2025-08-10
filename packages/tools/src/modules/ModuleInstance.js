@@ -81,6 +81,14 @@ export class ModuleInstance extends EventEmitter {
   listTools() {
     return Object.keys(this.tools);
   }
+
+  /**
+   * Get all tools as an array
+   * @returns {Tool[]} Array of tool objects
+   */
+  getTools() {
+    return Object.values(this.tools);
+  }
   
   /**
    * Emit a progress event
