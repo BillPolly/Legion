@@ -5,12 +5,12 @@
  * Provides MCP (Model Context Protocol) interface to fullstack monitoring capabilities
  */
 
-import { StandaloneSessionManager } from './handlers/StandaloneSessionManager.js';
+import { SessionManager } from './handlers/SessionManager.js';
 import { SimplifiedToolHandler } from './handlers/SimplifiedToolHandler.js';
 
 class MCPFullStackMonitorServer {
   constructor() {
-    this.sessionManager = new StandaloneSessionManager();
+    this.sessionManager = new SessionManager();
     this.toolHandler = new SimplifiedToolHandler(this.sessionManager);
     
     // MCP Protocol state

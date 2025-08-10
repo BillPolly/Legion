@@ -11,8 +11,8 @@
     "demo": "node demo/demo.js"
   },
   "dependencies": {
-    "@legion/log-manager": "workspace:*",
-    "@legion/browser-monitor": "workspace:*",
+    "@legion/log-manager": "file:../log-manager",
+    "@legion/browser-monitor": "file:../browser-monitor",
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "ws": "^8.14.2"

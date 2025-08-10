@@ -10,9 +10,9 @@
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
   },
   "dependencies": {
-    "@legion/planner": "workspace:*",
-    "@legion/bt-validator": "workspace:*",
-    "@legion/tools": "workspace:*",
+    "@legion/planner": "file:../planner",
+    "@legion/bt-validator": "file:../bt-validator", 
+    "@legion/tools": "file:../../tools",
     "zod": "^3.22.4"
   },
   "devDependencies": {

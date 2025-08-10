@@ -126,6 +126,96 @@ export class SimplifiedTools {
           type: 'object',
           properties: {}
         }
+      },
+      
+      {
+        name: 'take_screenshot',
+        description: 'Take a screenshot of the current page under test. If path is provided, saves to file. If path is omitted, returns image as base64 data URI.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            session_id: {
+              type: 'string',
+              default: 'default',
+              description: 'Session ID'
+            },
+            format: {
+              type: 'string',
+              enum: ['png', 'jpeg', 'webp'],
+              default: 'png',
+              description: 'Image format: png (lossless), jpeg (lossy with quality setting), webp (lossy with quality setting)'
+            },
+            quality: {
+              type: 'number',
+              minimum: 0,
+              maximum: 100,
+              default: 90,
+              description: 'Quality for JPEG/WebP formats (0-100). Ignored for PNG format as it is lossless.'
+            },
+            fullPage: {
+              type: 'boolean',
+              default: true,
+              description: 'Capture the full scrollable page'
+            },
+            path: {
+              type: 'string',
+              description: 'Optional file path to save screenshot. If omitted, screenshot is returned as base64 data URI in the response.'
+            },
+            clip: {
+              type: 'object',
+              properties: {
+                x: { type: 'number' },
+                y: { type: 'number' },
+                width: { type: 'number' },
+                height: { type: 'number' }
+              },
+              description: 'Optional clipping rectangle'
+            }
+          }
+        }
+      },
+      
+      {
+        name: 'record_video',
+        description: 'Start or stop video recording of browser interactions',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            action: {
+              type: 'string',
+              enum: ['start', 'stop', 'status'],
+              description: 'Recording action to perform'
+            },
+            session_id: {
+              type: 'string',
+              default: 'default',
+              description: 'Session ID'
+            },
+            path: {
+              type: 'string',
+              description: 'Output file path for video (for start action)'
+            },
+            format: {
+              type: 'string',
+              enum: ['mp4', 'webm'],
+              default: 'mp4',
+              description: 'Video format'
+            },
+            fps: {
+              type: 'number',
+              minimum: 1,
+              maximum: 60,
+              default: 30,
+              description: 'Frames per second'
+            },
+            duration: {
+              type: 'number',
+              minimum: 1,
+              description: 'Maximum recording duration in seconds (optional)'
+            }
+          },
+          required: ['action']
+        }
       }
     ];
   }
@@ -145,6 +235,10 @@ export class SimplifiedTools {
         return await this.stopApp(args);
       case 'list_sessions':
         return await this.listSessions(args);
+      case 'take_screenshot':
+        return await this.takeScreenshot(args);
+      case 'record_video':
+        return await this.recordVideo(args);
       default:
         throw new Error(`Unknown tool: ${toolName}`);
     }
@@ -229,26 +323,54 @@ export class SimplifiedTools {
       // Get both application logs and Sidewinder events
       const results = [];
       
-      // Search application logs
+      // Get application logs
       if (monitor.logManager) {
-        const appLogs = await monitor.logManager.searchLogs({
-          query: query || '',
-          limit
-        });
+        let appLogs;
         
-        if (appLogs.success && appLogs.matches) {
-          appLogs.matches.forEach(log => {
-            // Filter by log level
-            if (this.shouldIncludeLogLevel(log.level || 'info', level)) {
-              results.push({
-                timestamp: log.timestamp,
-                type: 'app',
-                level: log.level || 'info',
-                message: log.message,
-                source: log.source || 'console'
-              });
-            }
+        // Use different methods based on whether we have a query
+        if (query && query.trim()) {
+          // Use searchLogs for queries
+          appLogs = await monitor.logManager.searchLogs({
+            query: query.trim(),
+            limit
           });
+          
+          if (appLogs.success && appLogs.matches) {
+            appLogs.matches.forEach(log => {
+              if (this.shouldIncludeLogLevel(log.level || 'info', level)) {
+                results.push({
+                  timestamp: log.timestamp,
+                  type: 'app',
+                  level: log.level || 'info',
+                  message: log.message,
+                  source: log.source || 'console'
+                });
+              }
+            });
+          }
+        } else {
+          // Use getSessionLogs for general log retrieval
+          const sessions = await monitor.logManager.listSessions();
+          if (sessions.success && sessions.sessions && sessions.sessions.length > 0) {
+            // Get logs from all sessions in this monitor
+            for (const session of sessions.sessions) {
+              const sessionLogs = await monitor.logManager.getSessionLogs(session.sessionId, { limit });
+              
+              if (sessionLogs.success && sessionLogs.logs) {
+                sessionLogs.logs.forEach(log => {
+                  if (this.shouldIncludeLogLevel(log.level || 'info', level)) {
+                    results.push({
+                      timestamp: log.timestamp,
+                      type: 'app',
+                      level: log.level || 'info',
+                      message: log.message,
+                      source: log.source || 'console'
+                    });
+                  }
+                });
+              }
+            }
+          }
         }
       }
       
@@ -411,6 +533,251 @@ export class SimplifiedTools {
         content: [{
           type: 'text',
           text: `❌ Failed to list sessions: ${error.message}`
+        }],
+        isError: true
+      };
+    }
+  }
+  
+  /**
+   * Take screenshot of current page
+   */
+  async takeScreenshot(args) {
+    try {
+      const { 
+        session_id = 'default',
+        format = 'png',
+        quality = 90,
+        fullPage = true,
+        path,
+        clip
+      } = args;
+      
+      const monitor = this.sessionManager.getCurrentMonitor(session_id);
+      
+      // Get the active browser page
+      if (!monitor || !monitor.activeBrowsers || monitor.activeBrowsers.size === 0) {
+        return {
+          content: [{
+            type: 'text',
+            text: '❌ No active browser found. Start an app first with start_app.'
+          }],
+          isError: true
+        };
+      }
+      
+      // Get the first active browser page
+      const browserEntry = Array.from(monitor.activeBrowsers.values())[0];
+      const page = browserEntry.page;
+      
+      // Build screenshot options
+      const screenshotOptions = {
+        type: format,
+        fullPage,
+        ...(format !== 'png' && { quality }),
+        ...(clip && { clip }),
+        ...(path && { path })
+      };
+      
+      // Take screenshot
+      const screenshot = await page.screenshot(screenshotOptions);
+      
+      // Generate filename if not provided
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = path || `screenshot-${timestamp}.${format}`;
+      
+      if (path) {
+        return {
+          content: [{
+            type: 'text',
+            text: `✅ Screenshot saved to: ${path}\n` +
+                  `📐 Format: ${format.toUpperCase()}\n` +
+                  `📄 Full page: ${fullPage}\n` +
+                  (format !== 'png' ? `🎨 Quality: ${quality}%\n` : '') +
+                  (clip ? `✂️  Clipped: ${clip.width}x${clip.height} at (${clip.x}, ${clip.y})\n` : '') +
+                  `📊 Session: ${session_id}`
+          }]
+        };
+      } else {
+        // Return as base64
+        const base64 = screenshot.toString('base64');
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `✅ Screenshot captured\n` +
+                    `📐 Format: ${format.toUpperCase()}\n` +
+                    `📄 Full page: ${fullPage}\n` +
+                    (format !== 'png' ? `🎨 Quality: ${quality}%\n` : '') +
+                    (clip ? `✂️  Clipped: ${clip.width}x${clip.height} at (${clip.x}, ${clip.y})\n` : '') +
+                    `📊 Session: ${session_id}\n` +
+                    `💾 Size: ${Math.round(base64.length / 1024)} KB`
+            },
+            {
+              type: 'image',
+              data: `data:image/${format};base64,${base64}`,
+              mimeType: `image/${format}`
+            }
+          ]
+        };
+      }
+      
+    } catch (error) {
+      return {
+        content: [{
+          type: 'text',
+          text: `❌ Screenshot failed: ${error.message}`
+        }],
+        isError: true
+      };
+    }
+  }
+  
+  /**
+   * Record video of browser interactions
+   */
+  async recordVideo(args) {
+    try {
+      const { 
+        action,
+        session_id = 'default',
+        path,
+        format = 'mp4',
+        fps = 30,
+        duration
+      } = args;
+      
+      const monitor = this.sessionManager.getCurrentMonitor(session_id);
+      
+      // Get the active browser page
+      if (!monitor || !monitor.activeBrowsers || monitor.activeBrowsers.size === 0) {
+        return {
+          content: [{
+            type: 'text',
+            text: '❌ No active browser found. Start an app first with start_app.'
+          }],
+          isError: true
+        };
+      }
+      
+      // Get the first active browser page
+      const browserEntry = Array.from(monitor.activeBrowsers.values())[0];
+      const page = browserEntry.page;
+      
+      switch (action) {
+        case 'start':
+          if (page.isRecording && page.isRecording()) {
+            return {
+              content: [{
+                type: 'text',
+                text: '⚠️  Recording is already in progress. Stop current recording first.'
+              }],
+              isError: true
+            };
+          }
+          
+          // Generate filename if not provided
+          const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+          const videoPath = path || `recording-${timestamp}.${format}`;
+          
+          const result = await page.startRecording({
+            path: videoPath,
+            format,
+            fps
+          });
+          
+          // Set up auto-stop if duration is specified
+          if (duration) {
+            setTimeout(async () => {
+              try {
+                if (page.isRecording && page.isRecording()) {
+                  await page.stopRecording();
+                  console.log(`Auto-stopped recording after ${duration} seconds`);
+                }
+              } catch (error) {
+                console.error('Error auto-stopping recording:', error);
+              }
+            }, duration * 1000);
+          }
+          
+          return {
+            content: [{
+              type: 'text',
+              text: `🎬 Recording started!\n` +
+                    `📹 Output: ${videoPath}\n` +
+                    `📐 Format: ${format.toUpperCase()}\n` +
+                    `🎭 FPS: ${fps}\n` +
+                    (duration ? `⏱️  Auto-stop: ${duration} seconds\n` : '') +
+                    `📊 Session: ${session_id}\n\n` +
+                    `Use record_video with action='stop' to stop recording.`
+            }]
+          };
+          
+        case 'stop':
+          if (!page.isRecording || !page.isRecording()) {
+            return {
+              content: [{
+                type: 'text',
+                text: '⚠️  No recording in progress.'
+              }],
+              isError: true
+            };
+          }
+          
+          const stopResult = await page.stopRecording();
+          const durationMs = stopResult.duration;
+          const durationSec = Math.round(durationMs / 1000 * 100) / 100;
+          
+          return {
+            content: [{
+              type: 'text',
+              text: `🛑 Recording stopped!\n` +
+                    `📹 Saved to: ${stopResult.path}\n` +
+                    `⏱️  Duration: ${durationSec} seconds\n` +
+                    `📊 Session: ${session_id}\n` +
+                    `🎬 Started: ${stopResult.startTime.toISOString()}\n` +
+                    `🏁 Ended: ${stopResult.endTime.toISOString()}`
+            }]
+          };
+          
+        case 'status':
+          const isRecording = page.isRecording && page.isRecording();
+          
+          if (isRecording) {
+            return {
+              content: [{
+                type: 'text',
+                text: `🎬 Recording is active\n` +
+                      `📊 Session: ${session_id}\n` +
+                      `⏱️  Status: Recording in progress...`
+              }]
+            };
+          } else {
+            return {
+              content: [{
+                type: 'text',
+                text: `⏹️  No active recording\n` +
+                      `📊 Session: ${session_id}\n` +
+                      `💡 Use record_video with action='start' to begin recording.`
+              }]
+            };
+          }
+          
+        default:
+          return {
+            content: [{
+              type: 'text',
+              text: `❌ Unknown action: ${action}. Use 'start', 'stop', or 'status'.`
+            }],
+            isError: true
+          };
+      }
+      
+    } catch (error) {
+      return {
+        content: [{
+          type: 'text',
+          text: `❌ Video recording failed: ${error.message}`
         }],
         isError: true
       };

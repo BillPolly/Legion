@@ -255,6 +255,77 @@ export class BrowserMonitor extends EventEmitter {
         return screenshot;
       },
       
+      startRecording: async (options = {}) => {
+        const { path, format = 'mp4', fps = 30 } = options;
+        
+        if (monitoredPage._recording) {
+          throw new Error('Recording already in progress');
+        }
+        
+        // Use native Puppeteer screencast if available (Puppeteer 21+)
+        if (page.screencast) {
+          const recordingOptions = {
+            path,
+            format,
+            fps
+          };
+          
+          monitoredPage._recording = {
+            path,
+            startTime: new Date(),
+            options: recordingOptions
+          };
+          
+          await page.screencast(recordingOptions);
+          
+          this.emit('recording-started', {
+            pageId,
+            sessionId,
+            timestamp: new Date(),
+            path,
+            options: recordingOptions
+          });
+          
+          return { path, startTime: monitoredPage._recording.startTime };
+        } else {
+          throw new Error('Video recording not supported in this Puppeteer version');
+        }
+      },
+      
+      stopRecording: async () => {
+        if (!monitoredPage._recording) {
+          throw new Error('No recording in progress');
+        }
+        
+        if (page.screencast) {
+          await page.screencast({ path: null }); // Stop recording
+        }
+        
+        const recording = monitoredPage._recording;
+        const duration = new Date() - recording.startTime;
+        
+        delete monitoredPage._recording;
+        
+        this.emit('recording-stopped', {
+          pageId,
+          sessionId,
+          timestamp: new Date(),
+          path: recording.path,
+          duration
+        });
+        
+        return {
+          path: recording.path,
+          duration,
+          startTime: recording.startTime,
+          endTime: new Date()
+        };
+      },
+      
+      isRecording: () => {
+        return !!monitoredPage._recording;
+      },
+      
       click: async (selector) => {
         await page.click(selector);
         this.emit('element-clicked', {

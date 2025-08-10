@@ -1,0 +1,7 @@
+scratch/
+*.png
+*.jpg
+*.jpeg
+*.mp4
+*.webm
+mock-mcp-server.js

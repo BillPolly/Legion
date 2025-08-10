@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Comprehensive log capture, aggregation, and analysis for jsEnvoy AI agents",
   "type": "module",
-  "main": "src/LogManager.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",

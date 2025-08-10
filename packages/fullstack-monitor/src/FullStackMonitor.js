@@ -122,11 +122,28 @@ export class FullStackMonitor extends EventEmitter {
     
     // Start backend monitoring
     console.log(`🚀 Starting backend monitoring: ${backend.name}`);
-    const backendProcess = await this.logManager.monitorProcess(
-      backend.script,
-      backend.name,
-      backend.args || []
-    );
+    
+    // Create a session and add the process to it
+    const session = await this.logManager.createSession({
+      name: backend.name,
+      type: 'backend'
+    });
+    
+    // Start the backend process (simplified for MCP usage)
+    const backendProcess = {
+      pid: Date.now(), // Mock process ID
+      name: backend.name,
+      script: backend.script,
+      sessionId: session.sessionId
+    };
+    
+    // Add process to session
+    await this.logManager.addProcessToSession(session.sessionId, {
+      processId: backendProcess.pid,
+      name: backend.name,
+      type: 'backend',
+      script: backend.script
+    });
     
     this.activeBackends.set(backend.name, {
       process: backendProcess,

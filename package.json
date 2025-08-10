@@ -10,7 +10,8 @@
     "packages/code-gen/*",
     "packages/frontend/*",
     "packages/planning/*",
-    "packages/shared/*"
+    "packages/shared/*",
+    "packages/mcps/*"
   ],
   "scripts": {
     "test": "npm run test --workspaces",

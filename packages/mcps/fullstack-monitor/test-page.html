@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Page for Screenshots and Video</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .button {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+        }
+        .button:hover {
+            background: #ee5a5a;
+        }
+        .status {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .animation {
+            width: 100px;
+            height: 100px;
+            background: #4ecdc4;
+            margin: 20px auto;
+            animation: spin 2s linear infinite;
+            border-radius: 50%;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .moving-box {
+            width: 50px;
+            height: 50px;
+            background: #45b7d1;
+            position: relative;
+            margin: 20px 0;
+            animation: move 3s ease-in-out infinite;
+        }
+        @keyframes move {
+            0%, 100% { left: 0px; }
+            50% { left: 200px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Screenshot & Video Test Page</h1>
+        
+        <div class="status">
+            <h3>Status: <span id="status">Ready for testing</span></h3>
+            <p>Time: <span id="time"></span></p>
+        </div>
+
+        <div style="text-align: center;">
+            <button class="button" onclick="changeColor()">Change Color</button>
+            <button class="button" onclick="addElement()">Add Element</button>
+            <button class="button" onclick="showAlert()">Show Alert</button>
+        </div>
+
+        <div class="animation"></div>
+        <div class="moving-box"></div>
+
+        <div id="dynamic-content">
+            <p>This is dynamic content that changes during interactions.</p>
+        </div>
+    </div>
+
+    <script>
+        let counter = 0;
+        
+        // Update time every second
+        function updateTime() {
+            document.getElementById('time').textContent = new Date().toLocaleTimeString();
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        function changeColor() {
+            const container = document.querySelector('.container');
+            const colors = [
+                'rgba(255, 107, 107, 0.1)',
+                'rgba(78, 205, 196, 0.1)', 
+                'rgba(69, 183, 209, 0.1)',
+                'rgba(255, 206, 84, 0.1)'
+            ];
+            container.style.background = colors[counter % colors.length];
+            document.getElementById('status').textContent = `Color changed ${++counter} times`;
+        }
+
+        function addElement() {
+            const content = document.getElementById('dynamic-content');
+            const p = document.createElement('p');
+            p.textContent = `New element #${++counter} added at ${new Date().toLocaleTimeString()}`;
+            p.style.background = 'rgba(255, 255, 255, 0.1)';
+            p.style.padding = '10px';
+            p.style.margin = '5px 0';
+            p.style.borderRadius = '5px';
+            content.appendChild(p);
+            document.getElementById('status').textContent = `${counter} elements added`;
+        }
+
+        function showAlert() {
+            alert(`Alert #${++counter}: This is a test alert!`);
+            document.getElementById('status').textContent = `${counter} alerts shown`;
+        }
+
+        // Add some dynamic behavior
+        setTimeout(() => {
+            document.querySelector('h1').textContent += ' ✨ (Auto-updated after 5s)';
+        }, 5000);
+    </script>
+</body>
+</html>

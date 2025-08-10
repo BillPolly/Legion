@@ -20,8 +20,47 @@ export class SessionManager {
    * Create a default ResourceManager for standalone usage
    */
   createDefaultResourceManager() {
+    // Create a StorageProvider that supports LegionLogManager requirements
+    class MockStorageProvider {
+      constructor() {
+        this.collections = new Map();
+      }
+      
+      // Basic methods
+      async get(key) { return null; }
+      async set(key, value) { return true; }
+      async delete(key) { return true; }
+      async list(prefix) { return []; }
+      
+      // LegionLogManager required methods
+      async store(collection, document) {
+        if (!this.collections.has(collection)) {
+          this.collections.set(collection, []);
+        }
+        const docs = this.collections.get(collection);
+        docs.push(document);
+        return document;
+      }
+      
+      async query(collection, criteria = {}) {
+        const docs = this.collections.get(collection) || [];
+        
+        // Simple filtering by criteria
+        if (!criteria || Object.keys(criteria).length === 0) {
+          return docs;
+        }
+        
+        return docs.filter(doc => {
+          return Object.entries(criteria).every(([key, value]) => {
+            return doc[key] === value;
+          });
+        });
+      }
+    }
+
     return {
       resources: new Map([
+        ['StorageProvider', new MockStorageProvider()],
         ['BROWSER_TYPE', process.env.BROWSER_TYPE || 'puppeteer'],
         ['BROWSER_HEADLESS', process.env.BROWSER_HEADLESS !== 'false'],
         ['LOG_LEVEL', process.env.LOG_LEVEL || 'info']
