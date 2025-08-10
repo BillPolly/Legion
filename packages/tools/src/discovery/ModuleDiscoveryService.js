@@ -388,6 +388,24 @@ export class ModuleDiscoveryService {
         return null;
       }
       
+      // Validate the module.json against schema before processing
+      const { ModuleJsonSchemaValidator } = await import('../validation/ModuleJsonSchemaValidator.js');
+      const validator = new ModuleJsonSchemaValidator();
+      const validation = validator.validate(moduleConfig);
+      
+      if (!validation.valid) {
+        const errorMessages = validation.errors.map(err => `  ${err.path}: ${err.message}`);
+        throw new Error(`Invalid module.json at ${filePath}:\n${errorMessages.join('\n')}`);
+      }
+      
+      // Log warnings if verbose mode is enabled
+      if (validation.warnings && validation.warnings.length > 0 && this.options.verbose) {
+        console.warn(`⚠️  Module '${moduleConfig.name}' warnings:`);
+        validation.warnings.forEach(warning => {
+          console.warn(`  ${warning.path}: ${warning.message}`);
+        });
+      }
+      
       // Find the implementation file
       let implementationPath = null;
       if (moduleConfig.package) {

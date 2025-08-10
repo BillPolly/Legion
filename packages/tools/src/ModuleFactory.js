@@ -87,45 +87,46 @@ export class ModuleFactory {
    * Create module from JSON definition
    * @param {Object} definition - Module definition
    * @param {Object} config - Configuration
-   * @returns {Module} Module instance
+   * @returns {JsonModule} Module instance
    */
   async createFromDefinition(definition, config) {
-    // Import Module from compatibility layer
-    const { Module } = await import('./compatibility.js');
-    
-    // Create a dynamic module class
-    class DynamicModule extends Module {
-      constructor() {
-        super(definition.name, config);
-        
-        // Add tools from definition
-        if (definition.tools) {
-          for (const toolDef of definition.tools) {
-            this.registerTool(this.createToolFromDefinition(toolDef));
-          }
-        }
-      }
+    // Validate the module definition using schema-based validator
+    const { ModuleJsonSchemaValidator } = await import('./validation/ModuleJsonSchemaValidator.js');
+    const validator = new ModuleJsonSchemaValidator();
+    const validation = validator.validate(definition);
 
-      async createToolFromDefinition(toolDef) {
-        const { Tool } = await import('./modules/Tool.js');
-        
-        return new Tool({
-          name: toolDef.name,
-          description: toolDef.description,
-          inputSchema: toolDef.inputSchema,
-          execute: async (input) => {
-            // Simple execution based on definition
-            // This is a simplified version - real implementation would be more complex
-            return {
-              success: true,
-              data: input
-            };
-          }
-        });
-      }
+    if (!validation.valid) {
+      const errorMessages = validation.errors.map(err => `${err.path}: ${err.message}`);
+      throw new Error(`Invalid module.json definition:\n${errorMessages.join('\n')}`);
     }
 
-    return new DynamicModule();
+    // Log warnings if present
+    if (validation.warnings && validation.warnings.length > 0) {
+      console.warn(`Module '${definition.name}' validation warnings:`);
+      validation.warnings.forEach(warning => {
+        console.warn(`  ${warning.path}: ${warning.message}`);
+        if (warning.suggestion) {
+          console.warn(`    Suggestion: ${warning.suggestion}`);
+        }
+      });
+    }
+    
+    // Import JsonModule for dynamic module creation
+    const { JsonModule } = await import('./modules/JsonModule.js');
+    
+    // Add base path to definition for relative imports
+    if (!definition.basePath && definition.package) {
+      // Try to infer base path from current working directory or module path
+      definition.basePath = process.cwd();
+    }
+    
+    // Create JsonModule instance
+    const module = new JsonModule(definition, config, this.resourceManager);
+    
+    // Initialize the module (loads implementation and creates tools)
+    await module.initialize();
+    
+    return module;
   }
 
   /**

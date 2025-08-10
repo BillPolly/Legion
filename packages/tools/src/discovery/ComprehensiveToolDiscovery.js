@@ -208,6 +208,26 @@ export class ComprehensiveToolDiscovery {
   async processModule(moduleData, mode, verbose) {
     const result = { action: null };
     
+    // Validate module data if it's a JSON module before saving to database
+    if (moduleData.type === 'module.json' || moduleData.type === 'json') {
+      const { ModuleJsonSchemaValidator } = await import('../validation/ModuleJsonSchemaValidator.js');
+      const validator = new ModuleJsonSchemaValidator();
+      const validation = validator.validateForDatabase(moduleData);
+      
+      if (!validation.valid) {
+        const errorMessages = validation.errors.map(err => `  ${err.path}: ${err.message}`);
+        console.error(`❌ Invalid module data for ${moduleData.name}:\n${errorMessages.join('\n')}`);
+        result.action = 'failed';
+        result.error = 'Validation failed';
+        return result;
+      }
+      
+      // Use sanitized data for database
+      if (validation.sanitized) {
+        moduleData = validation.sanitized;
+      }
+    }
+    
     if (mode === 'update') {
       // Check if module exists
       const existingModule = await this.provider.getModule(moduleData.name);
