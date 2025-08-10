@@ -19,9 +19,10 @@ export class ProcessManager {
    * @param {string[]} options.args - Command arguments
    * @param {string} options.workingDir - Working directory
    * @param {string} options.sessionId - Session ID for logging
+   * @param {Object} options.instrumentation - Sidewinder instrumentation options
    * @returns {Promise<{processId: string, process: ChildProcess}>}
    */
-  async start({ command, args = [], workingDir, sessionId }) {
+  async start({ command, args = [], workingDir, sessionId, instrumentation }) {
     // Validate inputs
     if (!command || typeof command !== 'string' || command.trim() === '') {
       throw new Error('Command is required');
@@ -33,12 +34,52 @@ export class ProcessManager {
 
     const processId = generateId();
     const startTime = new Date();
+    
+    // Prepare environment and args for instrumentation
+    let processEnv = { ...process.env };
+    let processArgs = [...args];
+    
+    // Add Sidewinder instrumentation if configured
+    if (instrumentation && instrumentation.enabled) {
+      // Check if this is a Node.js process
+      if (command === 'node' || command.endsWith('/node')) {
+        try {
+          const { Sidewinder } = await import('@legion/sidewinder');
+          
+          const sidewinder = new Sidewinder({
+            wsPort: instrumentation.wsPort || process.env.SIDEWINDER_WS_PORT || 9898,
+            wsHost: instrumentation.wsHost || 'localhost',
+            sessionId: sessionId || processId,
+            profile: instrumentation.profile || 'standard',
+            hooks: instrumentation.hooks,
+            debug: instrumentation.debug || false,
+            ...instrumentation
+          });
+          
+          // Prepare injection script
+          const injectPath = await sidewinder.prepare();
+          
+          // Add --require flag before the script
+          const scriptIndex = processArgs.findIndex(arg => !arg.startsWith('-'));
+          if (scriptIndex >= 0) {
+            processArgs.splice(scriptIndex, 0, '--require', injectPath);
+          } else {
+            processArgs.unshift('--require', injectPath);
+          }
+          
+          console.log(`[ProcessManager] Sidewinder instrumentation enabled for ${sessionId}`);
+        } catch (err) {
+          console.error('[ProcessManager] Failed to setup Sidewinder:', err);
+          // Continue without instrumentation
+        }
+      }
+    }
 
     // Spawn the process
-    const childProcess = spawn(command, args, {
+    const childProcess = spawn(command, processArgs, {
       cwd: workingDir,
       stdio: 'pipe',
-      env: { ...process.env }
+      env: processEnv
     });
 
     // Store process info

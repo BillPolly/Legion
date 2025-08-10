@@ -21,6 +21,7 @@
   "author": "jsEnvoy Team",
   "license": "MIT",
   "dependencies": {
+    "@legion/sidewinder": "^1.0.0",
     "cross-spawn": "^7.0.3",
     "ws": "^8.14.2",
     "detect-port": "^1.5.1",

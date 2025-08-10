@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sample Frontend - FullStack Monitor Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 2rem;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        }
+        
+        .btn-warning {
+            background: #ed8936;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #dd6b20;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(237, 137, 54, 0.4);
+        }
+        
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #e53e3e;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 101, 101, 0.4);
+        }
+        
+        .output {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 1rem;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 4px;
+            border-radius: 3px;
+        }
+        
+        .log-info {
+            color: #2b6cb0;
+        }
+        
+        .log-success {
+            color: #2f855a;
+            background: #f0fff4;
+        }
+        
+        .log-warning {
+            color: #c05621;
+            background: #fffaf0;
+        }
+        
+        .log-error {
+            color: #c53030;
+            background: #fff5f5;
+        }
+        
+        .correlation-id {
+            color: #805ad5;
+            font-weight: bold;
+        }
+        
+        .status {
+            text-align: center;
+            margin-top: 1rem;
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .status.connected {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .status.disconnected {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 FullStack Monitor Demo</h1>
+        
+        <div class="button-group">
+            <button class="btn-primary" onclick="checkHealth()">Check Health</button>
+            <button class="btn-success" onclick="fetchData()">Fetch Data</button>
+            <button class="btn-warning" onclick="performAction()">Perform Action</button>
+            <button class="btn-danger" onclick="triggerError()">Trigger Error</button>
+        </div>
+        
+        <div class="output" id="output">
+            <div class="log-entry log-info">Click buttons to test API calls with correlation tracking...</div>
+        </div>
+        
+        <div class="status disconnected" id="status">
+            Backend Status: Checking...
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:4002';
+        const output = document.getElementById('output');
+        const status = document.getElementById('status');
+        
+        // Generate correlation IDs
+        function generateCorrelationId() {
+            return `correlation-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        }
+        
+        // Log to output
+        function log(message, type = 'info', correlationId = null) {
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            let html = `[${timestamp}] `;
+            
+            if (correlationId) {
+                html += `<span class="correlation-id">[${correlationId}]</span> `;
+            }
+            
+            html += message;
+            entry.innerHTML = html;
+            
+            output.insertBefore(entry, output.firstChild);
+            
+            // Also log to console
+            console.log(`[${correlationId || 'no-correlation'}] ${message}`);
+            
+            // Keep only last 50 entries
+            while (output.children.length > 50) {
+                output.removeChild(output.lastChild);
+            }
+        }
+        
+        // Make API request with correlation tracking
+        async function makeRequest(endpoint, options = {}) {
+            const correlationId = generateCorrelationId();
+            
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Correlation-ID': correlationId
+                }
+            };
+            
+            const finalOptions = {
+                ...defaultOptions,
+                ...options,
+                headers: {
+                    ...defaultOptions.headers,
+                    ...(options.headers || {})
+                }
+            };
+            
+            log(`Sending ${options.method || 'GET'} request to ${endpoint}`, 'info', correlationId);
+            
+            try {
+                const response = await fetch(`${API_URL}${endpoint}`, finalOptions);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`Response received: ${JSON.stringify(data)}`, 'success', correlationId);
+                } else {
+                    log(`Error response: ${data.error || 'Unknown error'}`, 'error', correlationId);
+                }
+                
+                return { response, data, correlationId };
+            } catch (error) {
+                log(`Request failed: ${error.message}`, 'error', correlationId);
+                console.error(`[${correlationId}] Full error:`, error);
+                throw error;
+            }
+        }
+        
+        // API Actions
+        async function checkHealth() {
+            log('Checking backend health...', 'info');
+            const result = await makeRequest('/api/health');
+            
+            if (result.response.ok) {
+                status.textContent = 'Backend Status: Healthy ✅';
+                status.className = 'status connected';
+            }
+        }
+        
+        async function fetchData() {
+            log('Fetching data from backend...', 'info');
+            const result = await makeRequest('/api/data');
+            
+            if (result.response.ok && result.data.data) {
+                log(`Received ${result.data.data.length} items`, 'success', result.correlationId);
+            }
+        }
+        
+        async function performAction() {
+            log('Performing action...', 'info');
+            const result = await makeRequest('/api/action', {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'test-action',
+                    data: { timestamp: new Date() }
+                })
+            });
+            
+            if (result.response.ok) {
+                log('Action completed successfully', 'success', result.correlationId);
+            }
+        }
+        
+        async function triggerError() {
+            log('Triggering intentional error...', 'warning');
+            const result = await makeRequest('/api/action', {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'error-test',
+                    data: { intentional: true }
+                })
+            });
+            
+            // Error is expected here
+            log('Error test completed', 'warning', result.correlationId);
+        }
+        
+        // Check backend status on load
+        window.addEventListener('load', () => {
+            log('Page loaded, checking backend status...', 'info');
+            checkHealth();
+        });
+        
+        // Log all console messages
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            log(`Console Error: ${args.join(' ')}`, 'error');
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            log(`Console Warning: ${args.join(' ')}`, 'warning');
+        };
+        
+        // Handle unhandled errors
+        window.addEventListener('error', (event) => {
+            log(`Unhandled Error: ${event.message}`, 'error');
+        });
+        
+        window.addEventListener('unhandledrejection', (event) => {
+            log(`Unhandled Promise Rejection: ${event.reason}`, 'error');
+        });
+    </script>
+</body>
+</html>
