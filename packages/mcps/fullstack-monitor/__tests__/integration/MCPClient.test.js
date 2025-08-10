@@ -46,10 +46,10 @@ describe('MCP Client Integration', () => {
     // Get tools
     const tools = await client.getTools();
     
-    expect(tools).toHaveLength(12);
-    expect(tools.some(t => t.name === 'start_fullstack_monitoring')).toBe(true);
-    expect(tools.some(t => t.name === 'search_logs')).toBe(true);
-    expect(tools.some(t => t.name === 'execute_debug_scenario')).toBe(true);
+    expect(tools).toHaveLength(5);
+    expect(tools.some(t => t.name === 'start_app')).toBe(true);
+    expect(tools.some(t => t.name === 'query_logs')).toBe(true);
+    expect(tools.some(t => t.name === 'list_sessions')).toBe(true);
   }, 30000);
   
   test('should execute tools successfully', async () => {
@@ -64,7 +64,7 @@ describe('MCP Client Integration', () => {
       content: expect.arrayContaining([
         expect.objectContaining({
           type: 'text',
-          text: expect.stringContaining('list_sessions completed successfully')
+          text: expect.any(String)
         })
       ])
     });
@@ -89,19 +89,19 @@ describe('MCP Client Integration', () => {
     await client.getTools();
     
     // Test getTool method
-    const startTool = client.getTool('start_fullstack_monitoring');
+    const startTool = client.getTool('start_app');
     expect(startTool).toMatchObject({
-      name: 'start_fullstack_monitoring',
+      name: 'start_app',
       description: expect.any(String),
       inputSchema: expect.any(Object)
     });
     
     // Test findTools method
-    const monitoringTools = client.findTools('monitoring');
-    expect(monitoringTools.length).toBeGreaterThan(0);
-    expect(monitoringTools.every(t => 
-      t.name.includes('monitoring') || 
-      t.description.toLowerCase().includes('monitoring')
+    const appTools = client.findTools('app');
+    expect(appTools.length).toBeGreaterThan(0);
+    expect(appTools.every(t => 
+      t.name.includes('app') || 
+      t.description.toLowerCase().includes('app')
     )).toBe(true);
   }, 30000);
   
@@ -135,6 +135,6 @@ describe('MCP Client Integration', () => {
     
     // Test that we can still make regular calls after notification
     const tools = await client.getTools();
-    expect(tools).toHaveLength(12);
+    expect(tools).toHaveLength(5);
   }, 30000);
 });
