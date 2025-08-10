@@ -1,0 +1,34 @@
+{
+  "name": "@legion/fullstack-monitor",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Full-stack monitoring orchestrator combining browser and backend observability",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
+    "demo": "node demo/demo.js"
+  },
+  "dependencies": {
+    "@legion/log-manager": "workspace:*",
+    "@legion/browser-monitor": "workspace:*",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "@jest/globals": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "transform": {},
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ]
+  }
+}

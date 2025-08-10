@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Correlation Demo - Frontend</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .panel h2 {
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button.error {
+            background: #e53e3e;
+        }
+        
+        button.error:hover {
+            background: #c53030;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .status.connected {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+        
+        .status.disconnected {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+        
+        .log-container {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            padding: 10px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            background: #f7fafc;
+        }
+        
+        .log-entry {
+            padding: 5px;
+            margin: 2px 0;
+            border-radius: 3px;
+            word-wrap: break-word;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .log-entry.frontend {
+            background: #bee3f8;
+            border-left: 3px solid #2b6cb1;
+        }
+        
+        .log-entry.backend {
+            background: #d6f5d6;
+            border-left: 3px solid #38a169;
+        }
+        
+        .log-entry.error {
+            background: #fed7d7;
+            border-left: 3px solid #e53e3e;
+        }
+        
+        .log-entry.warn {
+            background: #feebc8;
+            border-left: 3px solid #dd6b20;
+        }
+        
+        .log-entry.debug {
+            background: #e2e8f0;
+            border-left: 3px solid #718096;
+            opacity: 0.8;
+        }
+        
+        .request-id {
+            color: #5a67d8;
+            font-weight: bold;
+        }
+        
+        .timestamp {
+            color: #718096;
+            font-size: 10px;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .search-box select {
+            padding: 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .stat-card {
+            background: #f7fafc;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 5px;
+        }
+        
+        .correlation-line {
+            background: #faf5ff;
+            border: 2px dashed #9f7aea;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        
+        .filter-buttons {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .filter-btn {
+            padding: 5px 10px;
+            font-size: 12px;
+            background: #edf2f7;
+            color: #4a5568;
+            border: 1px solid #cbd5e0;
+        }
+        
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Real-Time Log Correlation Demo</h1>
+        
+        <div class="dashboard">
+            <!-- Frontend Panel -->
+            <div class="panel">
+                <h2>📱 Frontend Client</h2>
+                <div class="status disconnected" id="ws-status">
+                    WebSocket: Disconnected
+                </div>
+                
+                <div class="controls">
+                    <button onclick="connectWebSocket()">Connect WS</button>
+                    <button onclick="sendHealthCheck()">Health Check</button>
+                    <button onclick="sendAction('test-action')">Test Action</button>
+                    <button onclick="sendAction('process-data')">Process Data</button>
+                    <button class="error" onclick="sendAction('error-test')">Trigger Error</button>
+                </div>
+                
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="toggleFilter('all')">All</button>
+                    <button class="filter-btn" onclick="toggleFilter('info')">Info</button>
+                    <button class="filter-btn" onclick="toggleFilter('error')">Errors</button>
+                    <button class="filter-btn" onclick="toggleFilter('warn')">Warnings</button>
+                    <button class="filter-btn" onclick="toggleFilter('debug')">Debug</button>
+                </div>
+                
+                <div class="log-container" id="frontend-logs"></div>
+            </div>
+            
+            <!-- Backend Panel -->
+            <div class="panel">
+                <h2>🖥️ Backend Server</h2>
+                <div class="search-box">
+                    <input type="text" id="search-query" placeholder="Search logs..." />
+                    <select id="search-mode">
+                        <option value="keyword">Keyword</option>
+                        <option value="regex">Regex</option>
+                        <option value="hybrid">Hybrid</option>
+                    </select>
+                    <button onclick="searchLogs()">Search</button>
+                </div>
+                
+                <div class="log-container" id="backend-logs"></div>
+            </div>
+        </div>
+        
+        <!-- Correlated Logs Panel -->
+        <div class="panel">
+            <h2>🔗 Correlated Request/Response Pairs</h2>
+            <div class="log-container" id="correlated-logs"></div>
+        </div>
+        
+        <!-- Statistics -->
+        <div class="panel">
+            <h2>📊 Statistics</h2>
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-logs">0</div>
+                    <div class="stat-label">Total Logs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="frontend-count">0</div>
+                    <div class="stat-label">Frontend Logs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="backend-count">0</div>
+                    <div class="stat-label">Backend Logs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="error-count">0</div>
+                    <div class="stat-label">Errors</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="request-count">0</div>
+                    <div class="stat-label">API Requests</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="correlation-count">0</div>
+                    <div class="stat-label">Correlated Pairs</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let sessionId = null;
+        let wsUrl = null;
+        let requestCounter = 0;
+        let activeFilter = 'all';
+        const correlations = new Map();
+        
+        // Statistics
+        const stats = {
+            totalLogs: 0,
+            frontendLogs: 0,
+            backendLogs: 0,
+            errors: 0,
+            requests: 0,
+            correlations: 0
+        };
+        
+        // Initialize the app
+        async function init() {
+            // Get session info from backend
+            try {
+                const response = await fetch('http://localhost:3333/api/session');
+                const data = await response.json();
+                sessionId = data.sessionId;
+                wsUrl = data.wsUrl;
+                
+                logFrontend('info', `Session ID: ${sessionId}`);
+                logFrontend('info', `WebSocket URL: ${wsUrl}`);
+                
+                // Auto-connect WebSocket
+                connectWebSocket();
+            } catch (error) {
+                logFrontend('error', `Failed to get session info: ${error.message}`);
+            }
+        }
+        
+        // Connect to WebSocket server
+        function connectWebSocket() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                logFrontend('warn', 'WebSocket already connected');
+                return;
+            }
+            
+            logFrontend('info', 'Connecting to WebSocket server...');
+            
+            ws = new WebSocket(wsUrl || 'ws://localhost:8080');
+            
+            ws.onopen = () => {
+                document.getElementById('ws-status').textContent = 'WebSocket: Connected';
+                document.getElementById('ws-status').className = 'status connected';
+                logFrontend('info', 'WebSocket connected successfully');
+                
+                // Subscribe to session logs
+                ws.send(JSON.stringify({
+                    type: 'subscribe',
+                    sessionId: sessionId,
+                    levels: ['error', 'warn', 'info', 'debug']
+                }));
+            };
+            
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                handleWebSocketMessage(message);
+            };
+            
+            ws.onerror = (error) => {
+                logFrontend('error', `WebSocket error: ${error.message || 'Connection failed'}`);
+            };
+            
+            ws.onclose = () => {
+                document.getElementById('ws-status').textContent = 'WebSocket: Disconnected';
+                document.getElementById('ws-status').className = 'status disconnected';
+                logFrontend('warn', 'WebSocket disconnected');
+            };
+        }
+        
+        // Handle incoming WebSocket messages
+        function handleWebSocketMessage(message) {
+            if (message.type === 'log') {
+                const log = message.data;
+                
+                // Display backend log
+                displayBackendLog(log);
+                
+                // Check for correlation
+                checkCorrelation(log);
+                
+                // Update stats
+                stats.backendLogs++;
+                if (log.level === 'error') stats.errors++;
+                updateStats();
+            } else if (message.type === 'subscription-confirmed') {
+                logFrontend('info', `Subscribed to logs for session: ${message.data.sessionId}`);
+            }
+        }
+        
+        // Log to frontend panel
+        function logFrontend(level, message, requestId = null) {
+            const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry frontend ${level}`;
+            logEntry.dataset.level = level;
+            
+            const requestIdText = requestId ? `<span class="request-id">[${requestId}]</span> ` : '';
+            logEntry.innerHTML = `
+                <span class="timestamp">${timestamp}</span> 
+                ${requestIdText}
+                [${level.toUpperCase()}] ${message}
+            `;
+            
+            document.getElementById('frontend-logs').prepend(logEntry);
+            
+            // Update stats
+            stats.frontendLogs++;
+            stats.totalLogs++;
+            if (level === 'error') stats.errors++;
+            updateStats();
+            
+            // Store for correlation if has requestId
+            if (requestId) {
+                if (!correlations.has(requestId)) {
+                    correlations.set(requestId, { frontend: [], backend: [] });
+                }
+                correlations.get(requestId).frontend.push({
+                    timestamp,
+                    level,
+                    message
+                });
+            }
+        }
+        
+        // Display backend log
+        function displayBackendLog(log) {
+            if (activeFilter !== 'all' && log.level !== activeFilter) {
+                return;
+            }
+            
+            const timestamp = new Date(log.timestamp).toISOString().split('T')[1].split('.')[0];
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry backend ${log.level}`;
+            logEntry.dataset.level = log.level;
+            
+            // Extract request ID if present
+            const requestIdMatch = log.message.match(/\[req-[\d-]+\]/);
+            const requestId = requestIdMatch ? requestIdMatch[0].slice(1, -1) : null;
+            
+            const requestIdText = requestId ? `<span class="request-id">[${requestId}]</span> ` : '';
+            logEntry.innerHTML = `
+                <span class="timestamp">${timestamp}</span> 
+                ${requestIdText}
+                [${log.level.toUpperCase()}] [${log.processId}] ${log.message}
+            `;
+            
+            document.getElementById('backend-logs').prepend(logEntry);
+            
+            stats.totalLogs++;
+            updateStats();
+        }
+        
+        // Check for request/response correlation
+        function checkCorrelation(log) {
+            const requestIdMatch = log.message.match(/\[req-[\d-]+\]/);
+            if (requestIdMatch) {
+                const requestId = requestIdMatch[0].slice(1, -1);
+                
+                if (!correlations.has(requestId)) {
+                    correlations.set(requestId, { frontend: [], backend: [] });
+                }
+                
+                correlations.get(requestId).backend.push({
+                    timestamp: new Date(log.timestamp).toISOString().split('T')[1].split('.')[0],
+                    level: log.level,
+                    message: log.message,
+                    processId: log.processId
+                });
+                
+                // Display correlation if we have both frontend and backend logs
+                if (correlations.get(requestId).frontend.length > 0 && 
+                    correlations.get(requestId).backend.length > 0) {
+                    displayCorrelation(requestId);
+                }
+            }
+        }
+        
+        // Display correlated logs
+        function displayCorrelation(requestId) {
+            const correlation = correlations.get(requestId);
+            const correlationEntry = document.createElement('div');
+            correlationEntry.className = 'correlation-line';
+            
+            let html = `<strong class="request-id">Request ID: ${requestId}</strong><br>`;
+            html += '<strong>Frontend:</strong><br>';
+            correlation.frontend.forEach(log => {
+                html += `&nbsp;&nbsp;${log.timestamp} [${log.level.toUpperCase()}] ${log.message}<br>`;
+            });
+            html += '<strong>Backend:</strong><br>';
+            correlation.backend.forEach(log => {
+                html += `&nbsp;&nbsp;${log.timestamp} [${log.level.toUpperCase()}] ${log.message}<br>`;
+            });
+            
+            correlationEntry.innerHTML = html;
+            document.getElementById('correlated-logs').prepend(correlationEntry);
+            
+            stats.correlations++;
+            updateStats();
+        }
+        
+        // Send health check request
+        async function sendHealthCheck() {
+            const requestId = generateRequestId();
+            logFrontend('info', 'Sending health check request', requestId);
+            
+            try {
+                const response = await fetch('http://localhost:3333/api/health');
+                const data = await response.json();
+                logFrontend('info', `Health check response: ${JSON.stringify(data)}`, requestId);
+                stats.requests++;
+                updateStats();
+            } catch (error) {
+                logFrontend('error', `Health check failed: ${error.message}`, requestId);
+            }
+        }
+        
+        // Send action request
+        async function sendAction(action) {
+            const requestId = generateRequestId();
+            logFrontend('info', `Sending action: ${action}`, requestId);
+            
+            try {
+                const response = await fetch('http://localhost:3333/api/action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        action, 
+                        data: { 
+                            timestamp: new Date(), 
+                            clientId: 'web-client-1' 
+                        } 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    logFrontend('info', `Action response: ${JSON.stringify(data)}`, requestId);
+                } else {
+                    logFrontend('error', `Action failed: ${data.error}`, requestId);
+                }
+                
+                stats.requests++;
+                updateStats();
+            } catch (error) {
+                logFrontend('error', `Action request failed: ${error.message}`, requestId);
+            }
+        }
+        
+        // Search logs
+        async function searchLogs() {
+            const query = document.getElementById('search-query').value;
+            const mode = document.getElementById('search-mode').value;
+            
+            if (!query) {
+                logFrontend('warn', 'Please enter a search query');
+                return;
+            }
+            
+            const requestId = generateRequestId();
+            logFrontend('info', `Searching logs: "${query}" (mode: ${mode})`, requestId);
+            
+            try {
+                const response = await fetch(`http://localhost:3333/api/search-logs?query=${encodeURIComponent(query)}&mode=${mode}`);
+                const data = await response.json();
+                
+                logFrontend('info', `Search returned ${data.totalMatches} results`, requestId);
+                
+                // Clear and display search results
+                document.getElementById('backend-logs').innerHTML = '<div style="padding: 10px; background: #edf2f7; margin-bottom: 10px;">Search Results:</div>';
+                
+                if (data.matches && data.matches.length > 0) {
+                    data.matches.forEach(log => displayBackendLog(log));
+                } else {
+                    document.getElementById('backend-logs').innerHTML += '<div style="padding: 10px; color: #718096;">No matches found</div>';
+                }
+                
+                stats.requests++;
+                updateStats();
+            } catch (error) {
+                logFrontend('error', `Search failed: ${error.message}`, requestId);
+            }
+        }
+        
+        // Toggle log filter
+        function toggleFilter(filter) {
+            activeFilter = filter;
+            
+            // Update button states
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Show/hide logs based on filter
+            const backendLogs = document.querySelectorAll('#backend-logs .log-entry');
+            backendLogs.forEach(log => {
+                if (filter === 'all' || log.dataset.level === filter) {
+                    log.style.display = 'block';
+                } else {
+                    log.style.display = 'none';
+                }
+            });
+        }
+        
+        // Generate request ID
+        function generateRequestId() {
+            return `req-${Date.now()}-${++requestCounter}`;
+        }
+        
+        // Update statistics display
+        function updateStats() {
+            document.getElementById('total-logs').textContent = stats.totalLogs;
+            document.getElementById('frontend-count').textContent = stats.frontendLogs;
+            document.getElementById('backend-count').textContent = stats.backendLogs;
+            document.getElementById('error-count').textContent = stats.errors;
+            document.getElementById('request-count').textContent = stats.requests;
+            document.getElementById('correlation-count').textContent = stats.correlations;
+        }
+        
+        // Initialize on page load
+        window.onload = init;
+    </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "log-monitoring-server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Server that monitors external applications and provides log dashboard",
+  "scripts": {
+    "start": "node monitoring-server.js",
+    "start-with-samples": "node monitoring-server.js --with-samples"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.14.2"
+  }
+}

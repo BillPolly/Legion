@@ -1,0 +1,17 @@
+{
+  "name": "sample-monitored-apps",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Sample applications for demonstrating log monitoring",
+  "scripts": {
+    "server": "node web-server.js",
+    "worker": "node worker.js",
+    "client": "node client.js",
+    "all": "npm run server & npm run worker & sleep 2 && npm run client"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "node-fetch": "^3.3.2"
+  }
+}

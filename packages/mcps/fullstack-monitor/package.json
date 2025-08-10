@@ -1,0 +1,22 @@
+{
+  "name": "@legion/mcp-fullstack-monitor",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "MCP server for fullstack monitoring capabilities",
+  "main": "mcp-server.js",
+  "bin": {
+    "mcp-fullstack-monitor": "./mcp-server.js"
+  },
+  "scripts": {
+    "start": "node mcp-server.js",
+    "demo": "NODE_OPTIONS='--experimental-vm-modules' node mcp-client.js",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --no-coverage --testTimeout=30000",
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/unit/ --no-coverage --testTimeout=30000",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/integration/ --no-coverage --testTimeout=60000",
+    "test:server": "node test-server.js"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
