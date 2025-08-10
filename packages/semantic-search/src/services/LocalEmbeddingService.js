@@ -103,18 +103,49 @@ export class LocalEmbeddingService {
       // Tokenize the text
       const tokens = await this.tokenize(text);
       
+      // Ensure tensors have the correct format
+      const feeds = {};
+      
+      // Handle input_ids
+      if (tokens.input_ids.data) {
+        feeds.input_ids = tokens.input_ids;
+      } else {
+        feeds.input_ids = tokens.input_ids;
+      }
+      
+      // Handle attention_mask
+      if (tokens.attention_mask.data) {
+        feeds.attention_mask = tokens.attention_mask;
+      } else {
+        feeds.attention_mask = tokens.attention_mask;
+      }
+      
+      // Handle token_type_ids
+      if (tokens.token_type_ids.data) {
+        feeds.token_type_ids = tokens.token_type_ids;
+      } else {
+        feeds.token_type_ids = tokens.token_type_ids;
+      }
+      
       // Run inference
-      const results = await this.session.run({
-        input_ids: tokens.input_ids,
-        attention_mask: tokens.attention_mask,
-        token_type_ids: tokens.token_type_ids
-      });
+      const results = await this.session.run(feeds);
       
       // Apply pooling and normalization
-      // The attention_mask is a Tensor with BigInt64Array data
+      // Get the raw data from the tensor
+      const outputData = results.last_hidden_state.data || results.last_hidden_state.cpuData;
       const maskData = tokens.attention_mask.data || tokens.attention_mask.cpuData;
+      
+      // Ensure we have Float32Array for the output
+      let floatData;
+      if (outputData instanceof Float32Array) {
+        floatData = outputData;
+      } else {
+        // Convert to Float32Array if needed
+        floatData = new Float32Array(outputData);
+      }
+      
       const embedding = this.poolAndNormalize(
-        results.last_hidden_state.data,
+        floatData,
         maskData,
         results.last_hidden_state.dims
       );

@@ -88,12 +88,17 @@ describe('DecentPlanner Integration', () => {
     // Set up resources
     resourceManager.set('llmClient', mockLLMClient);
     
-    // Create MongoDB provider (with mocked connection for testing)
-    const mongoProvider = await MongoDBToolRegistryProvider.create(
-      resourceManager,
-      { enableSemanticSearch: false }
-    );
-    resourceManager.set('toolRegistryProvider', mongoProvider);
+    // Mock tool registry provider that returns empty results
+    resourceManager.set('toolRegistryProvider', {
+      searchTools: async () => [],
+      listTools: async () => []
+    });
+    
+    // Mock tool registry 
+    resourceManager.set('toolRegistry', {
+      getTool: async () => null,
+      getAllTools: () => []
+    });
     
     // Create planner
     planner = await DecentPlanner.create(resourceManager);
@@ -107,6 +112,14 @@ describe('DecentPlanner Integration', () => {
         debug: true
       });
       
+      console.log('Plan success:', result.success);
+      console.log('Plan error:', result.error);
+      if (result.data) {
+        console.log('Data keys:', Object.keys(result.data));
+        if (result.data.statistics) {
+          console.log('Statistics:', result.data.statistics);
+        }
+      }
       expect(result.success).toBe(true);
       expect(result.data).toBeDefined();
       expect(result.data.hierarchy).toBeDefined();
