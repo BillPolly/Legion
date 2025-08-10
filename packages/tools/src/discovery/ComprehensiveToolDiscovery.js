@@ -1,17 +1,16 @@
 /**
  * Comprehensive Tool Discovery
  * 
- * Single-object solution for discovering and populating all modules and tools
- * in the Legion framework. Supports both clear (full refresh) and update (incremental)
- * modes for database population.
+ * Discovers and populates all modules and tools from the known modules list.
+ * Uses the MONOREPO_ROOT environment variable to locate modules.
  */
 
 import { ResourceManager } from '@legion/tools';
 import { MongoDBToolRegistryProvider } from '../providers/MongoDBToolRegistryProvider.js';
-import { DirectModuleDiscovery } from './DirectModuleDiscovery.js';
 import { ModuleInstantiator } from './ModuleInstantiator.js';
 import { ToolExtractor } from './ToolExtractor.js';
 import { ToolAdapter } from './ToolAdapter.js';
+import { getKnownModules, getModuleFullPath } from './KnownModules.js';
 import path from 'path';
 import fs from 'fs';
 
@@ -20,18 +19,13 @@ export class ComprehensiveToolDiscovery {
     // ResourceManager is a singleton - just create/get it
     this.resourceManager = new ResourceManager();
     
-    // Create discovery component - use direct discovery for speed and accuracy
-    this.discoveryService = new DirectModuleDiscovery({
-      verbose: false,
-      includeDisabled: false
-    });
-    
     this.instantiator = null; // Created after ResourceManager init
     this.extractor = new ToolExtractor({ verbose: false });
     this.adapter = new ToolAdapter({ verbose: false });
     
     this.provider = null;
     this.initialized = false;
+    this.monorepoRoot = null;
   }
 
   /**
@@ -39,15 +33,16 @@ export class ComprehensiveToolDiscovery {
    * @param {Object} options - Population options
    * @param {string} options.mode - 'clear' (default) or 'update'
    * @param {boolean} options.verbose - Show progress (default true)
-   * @param {string} options.rootPath - Root path to search (defaults to Legion root)
+   * @param {boolean} options.includeEmbeddings - Generate embeddings (default false)
+   * @param {string} options.moduleFilter - Filter to specific module name
    * @returns {Promise<Object>} Statistics about the population
    */
   async populateDatabase(options = {}) {
     const {
       mode = 'clear',  // 'clear' or 'update'
       verbose = true,
-      rootPath = null,
-      includeEmbeddings = false
+      includeEmbeddings = false,
+      moduleFilter = null  // Filter to specific module name
     } = options;
     
     const startTime = Date.now();
@@ -57,12 +52,12 @@ export class ComprehensiveToolDiscovery {
       await this.initialize();
     }
     
-    // Determine root path
-    const searchPath = rootPath || await this.findLegionRoot();
+    // Get monorepo root from ResourceManager or find it
+    this.monorepoRoot = await this.findMonorepoRoot();
     
     if (verbose) {
       console.log('🚀 Comprehensive Tool Discovery');
-      console.log(`📍 Root path: ${searchPath}`);
+      console.log(`📍 Monorepo root: ${this.monorepoRoot}`);
       console.log(`🔄 Mode: ${mode.toUpperCase()}`);
       console.log('');
     }
@@ -92,31 +87,43 @@ export class ComprehensiveToolDiscovery {
         if (verbose) console.log('✅ Database cleared\n');
       }
       
-      // Discover all modules
-      if (verbose) console.log('🔍 Discovering modules...');
-      const modules = await this.discoveryService.discoverModules(searchPath);
+      // Get modules from the known modules list
+      let modules = getKnownModules();
+      
+      // Filter to specific module if requested
+      if (moduleFilter) {
+        const originalCount = modules.length;
+        modules = modules.filter(m => 
+          m.name.toLowerCase() === moduleFilter.toLowerCase() ||
+          m.name.toLowerCase().includes(moduleFilter.toLowerCase()) ||
+          (m.className && m.className.toLowerCase().includes(moduleFilter.toLowerCase()))
+        );
+        if (verbose) {
+          console.log(`🎯 Filtered from ${originalCount} to ${modules.length} modules matching '${moduleFilter}'`);
+        }
+      }
+      
       stats.modulesDiscovered = modules.length;
       
       if (verbose) {
-        console.log(`✅ Found ${modules.length} modules`);
-        const stats = this.discoveryService.getStats();
-        if (stats.byType) {
-          const byType = stats.byType;
-          console.log(`   Class: ${byType.class || 0}, JSON: ${byType.json || 0}, Definition: ${byType.definition || 0}\n`);
-        } else {
-          console.log(`   All modules are class-based\n`);
-        }
+        console.log(`✅ Found ${modules.length} modules from known list`);
+        const byType = { class: 0, json: 0 };
+        modules.forEach(m => byType[m.type]++);
+        console.log(`   Class: ${byType.class}, JSON: ${byType.json}\n`);
       }
       
       // Process each module
       for (const moduleData of modules) {
         try {
           if (verbose) {
-            console.log(`📦 Processing: ${moduleData.name}`);
+            console.log(`📦 Processing: ${moduleData.name} (${moduleData.type})`);
           }
           
+          // Convert known module format to discovery format
+          const discoveryModule = this.convertToDiscoveryFormat(moduleData);
+          
           // Handle module based on mode
-          const moduleResult = await this.processModule(moduleData, mode, verbose);
+          const moduleResult = await this.processModule(discoveryModule, mode, verbose);
           
           // Update statistics
           if (moduleResult.action === 'added') {
@@ -130,7 +137,7 @@ export class ComprehensiveToolDiscovery {
           }
           
           // Extract and process tools
-          const toolResults = await this.processModuleTools(moduleData, mode, verbose);
+          const toolResults = await this.processModuleTools(discoveryModule, mode, verbose);
           stats.toolsDiscovered += toolResults.discovered;
           stats.toolsAdded += toolResults.added;
           stats.toolsUpdated += toolResults.updated;
@@ -172,6 +179,24 @@ export class ComprehensiveToolDiscovery {
     }
     
     return stats;
+  }
+
+  /**
+   * Convert known module format to discovery format
+   */
+  convertToDiscoveryFormat(knownModule) {
+    const fullPath = getModuleFullPath(knownModule, this.monorepoRoot);
+    
+    return {
+      name: knownModule.name,
+      type: knownModule.type === 'json' ? 'module.json' : 'class',
+      path: fullPath,
+      className: knownModule.className,
+      package: knownModule.package,
+      description: knownModule.description,
+      // For JSON modules, set the module.json path
+      moduleJsonPath: knownModule.type === 'json' ? fullPath : undefined
+    };
   }
 
   /**
@@ -441,9 +466,37 @@ export class ComprehensiveToolDiscovery {
   }
 
   /**
-   * Find the Legion root directory
+   * Find the monorepo root directory
+   * First checks ResourceManager for MONOREPO_ROOT env var,
+   * then searches the filesystem for the Legion directory
    */
-  async findLegionRoot() {
+  async findMonorepoRoot() {
+    // First check if MONOREPO_ROOT is set in environment
+    const monorepoName = this.resourceManager.get('env.MONOREPO_ROOT');
+    if (monorepoName) {
+      // Search for a directory with this name in the path
+      let currentDir = process.cwd();
+      
+      while (currentDir !== path.dirname(currentDir)) {
+        const baseName = path.basename(currentDir);
+        if (baseName === monorepoName) {
+          return currentDir;
+        }
+        
+        // Also check if this directory contains the expected monorepo structure
+        const packagesDir = path.join(currentDir, 'packages');
+        if (fs.existsSync(packagesDir)) {
+          const parentName = path.basename(currentDir);
+          if (parentName === monorepoName) {
+            return currentDir;
+          }
+        }
+        
+        currentDir = path.dirname(currentDir);
+      }
+    }
+    
+    // Fallback: search for Legion directory or monorepo structure
     let currentDir = process.cwd();
     
     while (currentDir !== path.dirname(currentDir)) {
@@ -475,7 +528,7 @@ export class ComprehensiveToolDiscovery {
       currentDir = path.dirname(currentDir);
     }
     
-    // Fallback to current directory
+    // Last resort: return current directory
     return process.cwd();
   }
 

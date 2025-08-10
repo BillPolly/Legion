@@ -206,6 +206,13 @@ export class ToolRegistry {
    * Load module by name using known mappings
    */
   async #loadModuleByName(moduleName) {
+    // First check if this is a JSON module by looking for module metadata with type 'json'
+    const moduleMetadata = await this.provider.getModule(moduleName);
+    if (moduleMetadata && moduleMetadata.type === 'json') {
+      // This is a JSON-based dynamic module
+      return await this.#loadJsonModule(moduleName, moduleMetadata);
+    }
+
     // Map database module names to their actual file paths  
     const moduleMap = {
       'File': '../../../tools-collection/src/file/index.js',
@@ -230,6 +237,26 @@ export class ToolRegistry {
       return moduleInstance;
     } catch (error) {
       console.warn(`Failed to load module ${moduleName} from ${modulePath}:`, error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Load a JSON-based dynamic module
+   */
+  async #loadJsonModule(moduleName, moduleMetadata) {
+    try {
+      // For JSON modules, we need to load the module.json file and create a dynamic wrapper
+      const { DynamicJsonModule } = await import('../modules/DynamicJsonModule.js');
+      
+      // The moduleMetadata should contain the JSON definition
+      // For now, we'll create a simple wrapper that can execute the inline functions
+      const moduleInstance = new DynamicJsonModule(moduleName, moduleMetadata);
+      await moduleInstance.initialize();
+      
+      return moduleInstance;
+    } catch (error) {
+      console.warn(`Failed to load JSON module ${moduleName}:`, error.message);
       return null;
     }
   }
