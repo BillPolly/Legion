@@ -156,8 +156,8 @@ npm run test:server
 ```
 
 **Test Coverage:**
-- **36 total tests** across 4 test suites
-- **Unit Tests**: StandaloneSessionManager (13 tests), ToolHandler (14 tests)
+- **Tests** across multiple test suites
+- **Unit Tests**: SessionManager, ToolHandler
 - **Integration Tests**: Full workflow (7 tests), End-to-end MCP protocol (2 tests)
 
 ## Key Features
@@ -201,8 +201,15 @@ The server includes robust error handling:
 ```
 mcp-server.js                 # Main MCP server implementation
 handlers/
-  ├── StandaloneSessionManager.js  # Session and monitor management
+  ├── SessionManager.js            # Session and monitor management
   └── ToolHandler.js               # Tool routing and formatting
+actors/                            # Actor-based architecture
+  ├── MonitorActorSpace.js         # Central actor management
+  ├── BrowserMonitorActor.js       # Browser event handling
+  ├── SidewinderActor.js           # Node.js instrumentation
+  ├── LogManagerActor.js           # Log persistence
+  ├── SessionActor.js              # Session lifecycle
+  └── CorrelationActor.js          # Request correlation
 tools/
   ├── MonitoringTools.js           # Core monitoring operations
   ├── DebugTools.js                # Debug scenarios and screenshots

@@ -46,10 +46,12 @@ describe('MCP Client Integration', () => {
     // Get tools
     const tools = await client.getTools();
     
-    expect(tools).toHaveLength(5);
+    expect(tools).toHaveLength(7);
     expect(tools.some(t => t.name === 'start_app')).toBe(true);
     expect(tools.some(t => t.name === 'query_logs')).toBe(true);
     expect(tools.some(t => t.name === 'list_sessions')).toBe(true);
+    expect(tools.some(t => t.name === 'take_screenshot')).toBe(true);
+    expect(tools.some(t => t.name === 'record_video')).toBe(true);
   }, 30000);
   
   test('should execute tools successfully', async () => {
@@ -135,6 +137,6 @@ describe('MCP Client Integration', () => {
     
     // Test that we can still make regular calls after notification
     const tools = await client.getTools();
-    expect(tools).toHaveLength(5);
+    expect(tools).toHaveLength(7); // 7 tools in SimplifiedTools
   }, 30000);
 });

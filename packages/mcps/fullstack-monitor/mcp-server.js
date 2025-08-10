@@ -6,12 +6,12 @@
  */
 
 import { SessionManager } from './handlers/SessionManager.js';
-import { SimplifiedToolHandler } from './handlers/SimplifiedToolHandler.js';
+import { ToolHandler } from './handlers/ToolHandler.js';
 
 class MCPFullStackMonitorServer {
   constructor() {
     this.sessionManager = new SessionManager();
-    this.toolHandler = new SimplifiedToolHandler(this.sessionManager);
+    this.toolHandler = new ToolHandler(this.sessionManager);
     
     // MCP Protocol state
     this.capabilities = {

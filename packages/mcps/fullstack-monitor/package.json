@@ -15,7 +15,9 @@
     "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/integration/ --no-coverage --testTimeout=60000",
     "test:server": "node test-server.js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@legion/shared": "file:../../shared"
+  },
   "engines": {
     "node": ">=18.0.0"
   }
