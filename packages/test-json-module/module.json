@@ -1,0 +1,40 @@
+{
+  "name": "test-json-module",
+  "version": "1.0.0",
+  "description": "Simple test module for JSON-based dynamic module creation",
+  "tools": [
+    {
+      "name": "greet",
+      "description": "Generate a greeting message for a given name",
+      "function": "async function greet(params) { const { name = 'World' } = params; return { success: true, message: `Hello, ${name}!`, timestamp: new Date().toISOString() }; }",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name to greet (defaults to 'World')"
+          }
+        }
+      }
+    },
+    {
+      "name": "add_numbers",
+      "description": "Add two numbers together",
+      "function": "async function addNumbers(params) { const { a, b } = params; if (typeof a !== 'number' || typeof b !== 'number') { return { success: false, error: 'Both a and b must be numbers' }; } const result = a + b; return { success: true, result, operation: 'addition', operands: [a, b] }; }",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "a": {
+            "type": "number",
+            "description": "First number"
+          },
+          "b": {
+            "type": "number",
+            "description": "Second number"
+          }
+        },
+        "required": ["a", "b"]
+      }
+    }
+  ]
+}

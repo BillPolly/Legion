@@ -17,11 +17,15 @@ export class VoiceModule extends Module {
     this.provider = this.initializeProvider(config);
     
     // Create tool instances
-    this.transcribeTool = new TranscribeAudioTool(this.provider);
-    this.generateTool = new GenerateVoiceTool(this.provider);
+    // Initialize tools dictionary
+    this.tools = {};
     
-    // Store tools array for getTools()
-    this.tools = [this.transcribeTool, this.generateTool];
+    // Create and register tools
+    const transcribeTool = new TranscribeAudioTool(this.provider);
+    const generateTool = new GenerateVoiceTool(this.provider);
+    
+    this.registerTool(transcribeTool.name, transcribeTool);
+    this.registerTool(generateTool.name, generateTool);
     
     console.log(`VoiceModule initialized with ${config.provider || 'openai'} provider`);
   }
@@ -93,9 +97,6 @@ export class VoiceModule extends Module {
   /**
    * Get all tools provided by this module
    */
-  getTools() {
-    return this.tools;
-  }
 
   /**
    * Transcribe audio to text

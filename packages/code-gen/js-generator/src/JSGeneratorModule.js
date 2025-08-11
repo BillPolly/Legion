@@ -43,8 +43,11 @@ export class JSGeneratorModule extends Module {
   async initialize() {
     if (this.initialized) return;
 
-    // Initialize tools directly without wrapping
-    this.tools = [
+    // Initialize tools dictionary
+    this.tools = {};
+    
+    // Create and register tools
+    const tools = [
       new GenerateJavaScriptModuleTool(),
       new GenerateJavaScriptFunctionTool(),
       new GenerateJavaScriptClassTool(),
@@ -54,6 +57,10 @@ export class JSGeneratorModule extends Module {
       new ValidateJavaScriptSyntaxTool(),
       new GenerateHTMLPageTool()
     ];
+    
+    for (const tool of tools) {
+      this.registerTool(tool.name, tool);
+    }
 
     this.initialized = true;
     await super.initialize();
@@ -74,7 +81,7 @@ export class JSGeneratorModule extends Module {
    * Get tool by name
    */
   getTool(name) {
-    return this.tools.find(tool => tool.name === name);
+    return this.tools[name];
   }
 
   /**
@@ -156,7 +163,7 @@ export class JSGeneratorModule extends Module {
    * Cleanup the module
    */
   async cleanup() {
-    this.tools = [];
+    this.tools = {};
     await super.cleanup();
   }
 

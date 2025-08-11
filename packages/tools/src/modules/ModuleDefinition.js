@@ -11,9 +11,9 @@ export class ModuleDefinition {
   }
 
   /**
-   * Create a configured ModuleInstance
+   * Create a configured Module
    * @param {Object} config - Configuration (API keys, endpoints, etc.)
-   * @returns {Promise<ModuleInstance>} Configured module instance
+   * @returns {Promise<Module>} Configured module instance
    */
   static async create(config) {
     throw new Error('Must be implemented by subclass');

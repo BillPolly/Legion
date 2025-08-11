@@ -3,3 +3,4 @@
  */
 
 export { NodeRunnerModule } from './NodeRunnerModule.js';
+export { NodeRunnerModule as default } from './NodeRunnerModule.js';

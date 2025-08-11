@@ -16,6 +16,9 @@ class RailwayModule extends Module {
     this.config = dependencies;
     this.provider = dependencies.railwayProvider;
     this.resourceManager = dependencies.resourceManager;
+    
+    // Initialize tools immediately in constructor
+    this.tools = {};
   }
 
   /**
@@ -35,17 +38,26 @@ class RailwayModule extends Module {
     const provider = new RailwayProvider(apiKey);
     
     // Register provider with resource manager for other modules to use
-    resourceManager.register('railwayProvider', provider);
+    resourceManager.set('railwayProvider', provider);
     
     // Create module instance with dependencies
-    return new RailwayModule({
+    const module = new RailwayModule({
       railwayProvider: provider,
       resourceManager: resourceManager
     });
+    
+    // Initialize the module (which will call initializeTools)
+    await module.initialize();
+    
+    return module;
   }
   
-  getTools() {
-    return [
+  initializeTools() {
+    // Initialize tools dictionary
+    this.tools = {};
+    
+    // Create and register all Railway tools
+    const tools = [
       new RailwayDeployTool(this.resourceManager),
       new RailwayStatusTool(this.resourceManager),
       new RailwayLogsTool(this.resourceManager),
@@ -53,9 +65,16 @@ class RailwayModule extends Module {
       new RailwayRemoveTool(this.resourceManager),
       new RailwayListProjectsTool(this.resourceManager)
     ];
+    
+    for (const tool of tools) {
+      this.registerTool(tool.name, tool);
+    }
   }
   
   async initialize() {
+    // Initialize tools
+    this.initializeTools();
+    
     // Verify API key works by making a simple request
     try {
       if (this.provider && this.provider.getAccountOverview) {

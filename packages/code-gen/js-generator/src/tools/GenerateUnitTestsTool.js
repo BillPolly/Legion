@@ -12,9 +12,10 @@ import path from 'path';
 
 export class GenerateUnitTestsTool extends Tool {
   constructor() {
-    super();
-    this.name = 'generate_unit_tests';
-    this.description = 'Generate Jest unit tests for JavaScript code';
+    super({
+      name: 'generate_unit_tests',
+      description: 'Generate Jest unit tests for JavaScript code'
+    });
     this.inputSchema = z.object({
         target_file: z.string().describe('Path to the JavaScript file to test (relative to test file)'),
         module_name: z.string().optional().describe('Name of the module being tested'),

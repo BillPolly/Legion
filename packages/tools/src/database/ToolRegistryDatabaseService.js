@@ -194,9 +194,6 @@ export class ToolRegistryDatabaseService {
         // Delete all tools for this module
         await this.mongoProvider.delete('tools', { moduleId: objectId }, { session });
         
-        // Delete usage records for this module
-        await this.mongoProvider.delete('tool_usage', { moduleId: objectId }, { session });
-        
         // Delete the module
         await this.mongoProvider.delete('modules', { _id: objectId }, { session });
       });
@@ -373,105 +370,6 @@ export class ToolRegistryDatabaseService {
     );
   }
 
-  // ============================================================================
-  // USAGE TRACKING OPERATIONS
-  // ============================================================================
-
-  /**
-   * Record tool usage
-   */
-  async recordToolUsage(usageData) {
-    // Ensure toolId is ObjectId
-    if (usageData.toolId && typeof usageData.toolId === 'string') {
-      usageData.toolId = new ObjectId(usageData.toolId);
-    }
-
-    const document = {
-      ...usageData,
-      timestamp: usageData.timestamp || new Date()
-    };
-
-    return await this.mongoProvider.insert('tool_usage', document);
-  }
-
-  /**
-   * Get usage statistics for a tool
-   */
-  async getToolUsageStats(toolId, options = {}) {
-    const objectId = typeof toolId === 'string' ? new ObjectId(toolId) : toolId;
-    
-    const pipeline = [
-      { $match: { toolId: objectId } },
-      {
-        $group: {
-          _id: null,
-          totalUsage: { $sum: 1 },
-          successfulUsage: { $sum: { $cond: ['$success', 1, 0] } },
-          averageExecutionTime: { $avg: '$executionTime' },
-          lastUsed: { $max: '$timestamp' }
-        }
-      }
-    ];
-
-    const results = await this.mongoProvider.aggregate('tool_usage', pipeline);
-    return results[0] || {
-      totalUsage: 0,
-      successfulUsage: 0,
-      averageExecutionTime: null,
-      lastUsed: null
-    };
-  }
-
-  /**
-   * Get usage statistics for all tools
-   */
-  async getAllToolsUsageStats(options = {}) {
-    const pipeline = [
-      {
-        $group: {
-          _id: '$toolId',
-          toolName: { $first: '$toolName' },
-          moduleName: { $first: '$moduleName' },
-          totalUsage: { $sum: 1 },
-          successfulUsage: { $sum: { $cond: ['$success', 1, 0] } },
-          averageExecutionTime: { $avg: '$executionTime' },
-          lastUsed: { $max: '$timestamp' }
-        }
-      },
-      { $sort: { totalUsage: -1 } }
-    ];
-
-    if (options.limit) {
-      pipeline.push({ $limit: options.limit });
-    }
-
-    return await this.mongoProvider.aggregate('tool_usage', pipeline);
-  }
-
-  /**
-   * Get trending tools (most used in recent period)
-   */
-  async getTrendingTools(options = {}) {
-    const hoursBack = options.hours || 24;
-    const since = new Date(Date.now() - hoursBack * 60 * 60 * 1000);
-
-    const pipeline = [
-      { $match: { timestamp: { $gte: since } } },
-      {
-        $group: {
-          _id: '$toolId',
-          toolName: { $first: '$toolName' },
-          moduleName: { $first: '$moduleName' },
-          recentUsage: { $sum: 1 },
-          successRate: { $avg: { $cond: ['$success', 1, 0] } }
-        }
-      },
-      { $sort: { recentUsage: -1 } },
-      { $limit: options.limit || 20 }
-    ];
-
-    return await this.mongoProvider.aggregate('tool_usage', pipeline);
-  }
 
   // ============================================================================
   // UTILITY OPERATIONS
@@ -481,16 +379,14 @@ export class ToolRegistryDatabaseService {
    * Get database statistics
    */
   async getDatabaseStats() {
-    const [moduleCount, toolCount, usageCount] = await Promise.all([
+    const [moduleCount, toolCount] = await Promise.all([
       this.mongoProvider.count('modules'),
-      this.mongoProvider.count('tools'),
-      this.mongoProvider.count('tool_usage')
+      this.mongoProvider.count('tools')
     ]);
 
     return {
       modules: moduleCount,
       tools: toolCount,
-      usageRecords: usageCount,
       collections: Object.keys(this.schemaManager.constructor.ToolRegistryCollections || {}).length
     };
   }

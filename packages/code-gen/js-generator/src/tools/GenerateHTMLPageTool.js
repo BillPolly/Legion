@@ -11,9 +11,10 @@ import path from 'path';
 
 export class GenerateHTMLPageTool extends Tool {
   constructor() {
-    super();
-    this.name = 'generate_html_page';
-    this.description = 'Generate a complete HTML page with CSS styling and JavaScript functionality';
+    super({
+      name: 'generate_html_page',
+      description: 'Generate a complete HTML page with CSS styling and JavaScript functionality'
+    });
     this.inputSchema = z.object({
       title: z.string().describe('Page title'),
       description: z.string().optional().describe('Page description for meta tag'),

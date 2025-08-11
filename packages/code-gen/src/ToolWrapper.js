@@ -9,10 +9,11 @@ import { Tool as LegionTool, ToolResult } from '@legion/tools';
 
 export class ToolWrapper extends LegionTool {
   constructor(wrappedTool) {
-    super();
+    super({
+      name: wrappedTool.name,
+      description: wrappedTool.description
+    });
     this.wrappedTool = wrappedTool;
-    this.name = wrappedTool.name;
-    this.description = wrappedTool.description;
     
     // Store events emitted during execution
     this.events = [];

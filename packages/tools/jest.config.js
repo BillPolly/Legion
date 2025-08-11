@@ -1,20 +1,36 @@
+/**
+ * Jest Configuration for ToolRegistry Tests
+ * 
+ * Configured for ES modules.
+ */
+
 export default {
   testEnvironment: 'node',
+  
+  // Don't transform anything (pure ES modules)
   transform: {},
+  
+  // Test patterns
   testMatch: [
-    '**/__tests__/**/*.test.js',
-    '**/__tests__/**/*.spec.js'
+    '**/__tests__/**/*.test.js'
   ],
-  testPathIgnorePatterns: [
-    '/node_modules/',
-    '/__tests__/utils/',
-    '/__tests__/fixtures/',
-    '\\.skip\\.'
-  ],
+  
+  // Coverage settings
   collectCoverageFrom: [
     'src/**/*.js',
     '!src/**/*.test.js',
-    '!src/**/*.spec.js'
+    '!src/**/test*.js'
   ],
-  testTimeout: 10000
+  
+  // Setup and teardown
+  setupFilesAfterEnv: ['<rootDir>/__tests__/jest.setup.js'],
+  
+  // Timeouts
+  testTimeout: 30000, // 30 seconds for database operations
+  
+  // Verbose output for integration tests
+  verbose: true,
+  
+  // Run tests in sequence for database tests
+  maxWorkers: 1
 };

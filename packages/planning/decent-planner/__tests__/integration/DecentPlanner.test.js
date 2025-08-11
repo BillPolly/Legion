@@ -6,8 +6,7 @@
 
 import { describe, it, expect, beforeAll, jest } from '@jest/globals';
 import { DecentPlanner } from '../../src/index.js';
-import { ResourceManager } from '@legion/tools';
-import { MongoDBToolRegistryProvider } from '@legion/tools/src/providers/MongoDBToolRegistryProvider.js';
+import { ResourceManager, ToolRegistry } from '@legion/tools';
 
 describe('DecentPlanner Integration', () => {
   let resourceManager;
@@ -88,16 +87,36 @@ describe('DecentPlanner Integration', () => {
     // Set up resources
     resourceManager.set('llmClient', mockLLMClient);
     
-    // Mock tool registry provider that returns empty results
-    resourceManager.set('toolRegistryProvider', {
-      searchTools: async () => [],
-      listTools: async () => []
-    });
+    // Create real ToolRegistry singleton with actual tools
+    const toolRegistry = new ToolRegistry();
+    await toolRegistry.initialize();
     
-    // Mock tool registry 
-    resourceManager.set('toolRegistry', {
-      getTool: async () => null,
-      getAllTools: () => []
+    // The ToolRegistry automatically loads modules during initialization
+    const availableTools = await toolRegistry.listTools();
+    console.log('Available tools:', availableTools.map(t => t.name));
+    
+    // Set up the real tool registry
+    resourceManager.set('toolRegistry', toolRegistry);
+    
+    // Create a simple tool registry provider that uses the real registry
+    resourceManager.set('toolRegistryProvider', {
+      searchTools: async (query, options = {}) => {
+        // Simple keyword matching for testing
+        const allTools = await toolRegistry.listTools();
+        const results = allTools.filter(tool => 
+          tool.name.toLowerCase().includes(query.toLowerCase()) ||
+          tool.description.toLowerCase().includes(query.toLowerCase())
+        ).slice(0, options.limit || 10);
+        
+        return results.map(tool => ({ name: tool.name, description: tool.description }));
+      },
+      listTools: async (options = {}) => {
+        const allTools = await toolRegistry.listTools();
+        return allTools.slice(0, options.limit || 100).map(tool => ({ 
+          name: tool.name, 
+          description: tool.description 
+        }));
+      }
     });
     
     // Create planner

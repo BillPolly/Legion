@@ -85,7 +85,7 @@ export default class SDModule extends Module {
     });
 
     // Store for reuse
-    this.resourceManager.register('llmClient', llmClient);
+    this.resourceManager.set('llmClient', llmClient);
     
     return llmClient;
   }

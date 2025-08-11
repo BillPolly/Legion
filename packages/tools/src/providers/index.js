@@ -9,7 +9,3 @@ export { IToolRegistryProvider, PROVIDER_CAPABILITIES } from './IToolRegistryPro
 
 // Concrete provider implementations
 export { MongoDBToolRegistryProvider } from './MongoDBToolRegistryProvider.js';
-export { JSONFileToolRegistryProvider } from './JSONFileToolRegistryProvider.js';
-
-// Provider factory utility
-export { ToolRegistryProviderFactory } from './ToolRegistryProviderFactory.js';

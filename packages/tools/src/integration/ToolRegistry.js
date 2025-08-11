@@ -1,1603 +1,422 @@
 /**
- * Tool Registry
- * Central registry for tool modules and discovery
- * Enhanced with MCP server support for automatic tool discovery and integration
+ * Clean ToolRegistry - MongoDB-focused with simple public API
+ * 
+ * Public API:
+ * - getTool(name) - Get executable tool
+ * - listTools(options) - List available tools
+ * - searchTools(query) - Search for tools
  */
 
-import fs from 'fs/promises';
-import path from 'path';
+import { MongoDBToolRegistryProvider } from '../providers/MongoDBToolRegistryProvider.js';
+import { ResourceManager } from '../ResourceManager.js';
 
-/**
- * ModuleProvider - Provides module instances
- */
-export class ModuleProvider {
-  constructor(config) {
-    this.name = config.name;
-    this.definition = config.definition;
-    this.config = config.config || {};
-    this.lazy = config.lazy || false;
-    this.instance = null;
-  }
-
-  async getInstance() {
-    if (!this.instance) {
-      this.instance = await this.definition.create(this.config);
-    }
-    return this.instance;
-  }
-
-  async destroy() {
-    if (this.instance && this.instance.cleanup) {
-      await this.instance.cleanup();
-    }
-    this.instance = null;
-  }
-
-  getMetadata() {
-    return this.definition.getMetadata();
-  }
-}
-
-/**
- * ToolRegistry - Central registry for tools
- */
 export class ToolRegistry {
   constructor(options = {}) {
-    this.providers = new Map();
-    this.instances = new Map();
-    this.metadata = new Map();
-    this.usageStats = new Map();
-    this.toolIndex = null;
-    this.capabilityMap = null;
-    this.initialized = false;
-    this.toolsDatabase = null;
-    this.moduleCache = new Map(); // Cache for loaded module instances
-    this.toolCache = new Map(); // Cache for individual tools
-    
-    // Database provider (for database operations like populateDatabase)
+    // Default to MongoDB provider if none specified
     this.provider = options.provider || null;
+    this.resourceManager = options.resourceManager || null;
     
-    // MCP Integration
-    this.mcpServerRegistry = options.mcpServerRegistry;
-    this.enableMCPIntegration = options.enableMCPIntegration !== false;
-    this.mcpToolPrefix = options.mcpToolPrefix || 'mcp';
+    // Caching
+    this.toolCache = new Map();
+    this.moduleCache = new Map();
     
-    // Enhanced search capabilities
-    this.semanticSearch = options.semanticSearch;
-    this.enableSemanticSearch = options.enableSemanticSearch !== false;
-    
-    // Initialize MCP integration if enabled
-    if (this.enableMCPIntegration) {
-      this.initializeMCPIntegration();
-    }
+    // State
+    this.initialized = false;
+    this.usageStats = new Map();
   }
 
   /**
-   * Initialize ToolRegistry by auto-discovering existing modules
+   * Initialize the registry
    */
   async initialize() {
     if (this.initialized) return;
     
-    try {
-      // Auto-register commonly available modules
-      await this.autoRegisterKnownModules();
-      
-      this.initialized = true;
-      console.log(`✅ ToolRegistry initialized with ${this.metadata.size} modules`);
-      
-    } catch (error) {
-      console.error('Failed to initialize ToolRegistry:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Auto-register modules from the tools database
-   */
-  async autoRegisterKnownModules() {
-    // Load modules from the comprehensive tools database
-    try {
-      const toolsDbPath = new URL('./tools-database.json', import.meta.url).pathname;
-      const toolsDb = JSON.parse(await fs.readFile(toolsDbPath, 'utf-8'));
-      
-      // Convert database entries to module list, prioritizing working modules
-      const workingModules = [
-        { name: 'file', path: '../file/index.js', type: 'class' },
-        { name: 'calculator', path: '../calculator/index.js', type: 'class' },
-        { name: 'json', path: '../json/index.js', type: 'class' },
-        { name: 'command-executor', path: '../command-executor/module.json', type: 'module.json' },
-        { name: 'server-starter', path: '../server-starter/module.json', type: 'module.json' },
-        { name: 'http', path: './modules/HTTPModule.js', type: 'definition', className: 'HTTPModuleDefinition' },
-        { name: 'utility', path: './modules/UtilityModule.js', type: 'definition', className: 'UtilityModuleDefinition' },
-      ];
-
-      console.log(`Loading ${workingModules.length} modules from tools database...`);
-      
-      for (const module of workingModules) {
-        try {
-          if (module.type === 'class') {
-            await this.loadClassModule(module);
-          } else if (module.type === 'module.json') {
-            await this.loadJsonModule(module);
-          } else if (module.type === 'definition') {
-            await this.loadDefinitionModule(module);
-          }
-        } catch (error) {
-          console.warn(`⚠️  Could not load module ${module.name}:`, error.message);
-        }
-      }
-    } catch (error) {
-      console.warn('Could not load tools database, falling back to hardcoded modules');
-      // Fallback to original hardcoded list
-      const knownModules = [
-        { name: 'file', path: '../file/index.js', type: 'class' },
-        { name: 'calculator', path: '../calculator/index.js', type: 'class' },
-        { name: 'json', path: '../json/index.js', type: 'class' }
-      ];
-    
-      for (const module of knownModules) {
-        try {
-          await this.loadClassModule(module);
-        } catch (error) {
-          console.warn(`⚠️  Could not load fallback module ${module.name}:`, error.message);
-        }
-      }
-    }
-  }
-
-  /**
-   * Load a class-based module
-   */
-  async loadClassModule(module) {
-    const ModuleClass = await import(module.path);
-    const moduleInstance = new (ModuleClass.default || ModuleClass)();
-    
-    // Get tools from module
-    let tools = {};
-    if (moduleInstance.getTools) {
-      const toolArray = moduleInstance.getTools();
-      for (const tool of toolArray) {
-        tools[tool.name] = {
-          name: tool.name,
-          description: tool.description || 'No description available'
-        };
-      }
+    // Create default ResourceManager if not provided
+    if (!this.resourceManager) {
+      this.resourceManager = new ResourceManager();
+      await this.resourceManager.initialize();
     }
     
-    // Register metadata
-    this.metadata.set(module.name, {
-      name: module.name,
-      description: `${module.name} module`,
-      tools: tools
-    });
-    
-    // Cache the instance
-    this.moduleCache.set(module.name, moduleInstance);
-    
-    console.log(`📦 Registered class module: ${module.name} with ${Object.keys(tools).length} tools`);
-  }
-
-  /**
-   * Load a JSON-based module
-   */
-  async loadJsonModule(module) {
-    console.log(`📋 Loading JSON module: ${module.name}`);
-    
-    try {
-      // Load the module.json file to get tool definitions
-      const moduleJsonPath = path.resolve(path.join(path.dirname(import.meta.url.replace('file://', '')), module.path));
-      const moduleJsonContent = await import('fs/promises').then(fs => fs.readFile(moduleJsonPath, 'utf8'));
-      const moduleConfig = JSON.parse(moduleJsonContent);
-      
-      // Extract tools from the module configuration
-      const tools = {};
-      if (moduleConfig.tools && Array.isArray(moduleConfig.tools)) {
-        for (const tool of moduleConfig.tools) {
-          tools[tool.name] = {
-            name: tool.name,
-            description: tool.description,
-            schema: tool.parameters || {},
-            metadata: tool
-          };
-        }
-      }
-      
-      // Register metadata with actual tool information
-      this.metadata.set(module.name, {
-        name: module.name,
-        description: moduleConfig.description || `${module.name} module (JSON-based)`,
-        tools: tools,
-        type: 'json',
-        config: moduleConfig
-      });
-      
-      // Create a provider that creates a proper JSON module instance
-      const provider = {
-        getInstance: async () => {
-          // Create a custom module instance for JSON modules
-          const { Module } = await import('../compatibility.js');
-          
-          class JSONModule extends Module {
-            constructor() {
-              super(moduleConfig.name, {});
-              this.config = moduleConfig;
-              this.toolsMap = new Map();
-              
-              // Register all tools from the JSON configuration
-              if (moduleConfig.tools && Array.isArray(moduleConfig.tools)) {
-                for (const toolDef of moduleConfig.tools) {
-                  this.toolsMap.set(toolDef.name, this.createJSONTool(toolDef));
-                }
-              }
-            }
-            
-            createJSONTool(toolDef) {
-              // Load the actual tool implementation based on the tool name
-              if (toolDef.name === 'command_executor') {
-                // Load the real CommandExecutor
-                return this.createRealCommandExecutor();
-              }
-              
-              // For other JSON tools, create a simple wrapper that matches the definition
-              return {
-                name: toolDef.name,
-                description: toolDef.description,
-                schema: toolDef.parameters || {},
-                execute: async (params) => {
-                  // This is a mock implementation - in a real system, this would
-                  // execute the actual command or functionality defined in the JSON
-                  console.log(`Executing JSON tool ${toolDef.name} with params:`, params);
-                  return {
-                    success: true,
-                    message: `JSON tool ${toolDef.name} executed successfully`,
-                    data: { toolName: toolDef.name, params }
-                  };
-                }
-              };
-            }
-            
-            createRealCommandExecutor() {
-              // Create a wrapper that uses the real CommandExecutor
-              return {
-                name: 'command_executor',
-                description: 'Execute a bash command in the terminal and return the output',
-                schema: {
-                  type: 'object',
-                  properties: {
-                    command: { type: 'string', description: 'The bash command to execute' },
-                    timeout: { type: 'number', description: 'Optional timeout in milliseconds' }
-                  },
-                  required: ['command']
-                },
-                execute: async (params) => {
-                  // Import and use the real CommandExecutor
-                  const { CommandExecutor } = await import('../command-executor/index.js');
-                  const executor = new CommandExecutor();
-                  
-                  try {
-                    const result = await executor.execute(params.command, params.timeout);
-                    return {
-                      success: true,
-                      message: 'Command executed successfully',
-                      data: result
-                    };
-                  } catch (error) {
-                    return {
-                      success: false,
-                      message: error.message,
-                      error: error.message
-                    };
-                  }
-                }
-              };
-            }
-            
-            getTool(name) {
-              return this.toolsMap.get(name) || null;
-            }
-            
-            getTools() {
-              return Array.from(this.toolsMap.values());
-            }
-          }
-          
-          return new JSONModule();
-        }
-      };
-      
-      this.providers.set(module.name, provider);
-      
-      console.log(`✅ Registered JSON module: ${module.name} with ${Object.keys(tools).length} tools`);
-      
-    } catch (error) {
-      console.warn(`Failed to load JSON module ${module.name}:`, error.message);
-      
-      // Fallback to basic registration
-      this.metadata.set(module.name, {
-        name: module.name,
-        description: `${module.name} module (JSON-based)`,
-        tools: {},
-        type: 'json'
+    // Create default MongoDB provider if not provided
+    if (!this.provider) {
+      this.provider = await MongoDBToolRegistryProvider.create(this.resourceManager, {
+        enableSemanticSearch: false
       });
     }
+    
+    this.initialized = true;
   }
 
-  /**
-   * Load a ModuleDefinition-based module
-   */
-  async loadDefinitionModule(module) {
-    console.log(`🏗️  Loading definition module: ${module.name}`);
-    
-    try {
-      // Import the module definition class
-      const ModuleExports = await import(module.path);
-      const DefinitionClass = ModuleExports[module.className];
-      
-      if (!DefinitionClass) {
-        throw new Error(`Definition class ${module.className} not found in ${module.path}`);
-      }
-      
-      // Create a provider for the module
-      const provider = new ModuleProvider({
-        name: module.name,
-        definition: DefinitionClass,
-        config: {},
-        lazy: true
-      });
-      
-      this.providers.set(module.name, provider);
-      
-      // Get metadata from the definition
-      const metadata = DefinitionClass.getMetadata();
-      
-      // Register metadata
-      this.metadata.set(module.name, {
-        name: module.name,
-        description: metadata.description,
-        tools: metadata.tools,
-        type: 'definition',
-        version: metadata.version
-      });
-      
-      console.log(`✅ Registered definition module: ${module.name} with ${Object.keys(metadata.tools).length} tools`);
-      
-    } catch (error) {
-      console.warn(`Failed to load definition module ${module.name}:`, error.message);
-      
-      // Fallback to basic registration
-      this.metadata.set(module.name, {
-        name: module.name,
-        description: `${module.name} module (definition-based)`,
-        tools: {},
-        type: 'definition'
-      });
-    }
-  }
+  // ============================================================================
+  // PUBLIC API - Only these 3 methods should be exposed
+  // ============================================================================
 
   /**
-   * Initialize MCP integration
-   */
-  async initializeMCPIntegration() {
-    if (!this.mcpServerRegistry) return;
-    
-    try {
-      // Set up event listeners for MCP server events
-      this.mcpServerRegistry.on('server-registered', async (info) => {
-        await this.handleMCPServerRegistered(info);
-      });
-      
-      this.mcpServerRegistry.on('server-unregistered', (info) => {
-        this.handleMCPServerUnregistered(info);
-      });
-      
-      this.mcpServerRegistry.on('tools-changed', async (info) => {
-        await this.handleMCPToolsChanged(info);
-      });
-      
-      // Register existing MCP servers
-      const existingServers = this.mcpServerRegistry.getMCPServersStatus();
-      for (const server of existingServers) {
-        if (server.status === 'running') {
-          await this.handleMCPServerRegistered({
-            serverId: server.serverId,
-            toolCount: server.toolCount
-          });
-        }
-      }
-      
-    } catch (error) {
-      console.error('Failed to initialize MCP integration:', error);
-    }
-  }
-  
-  /**
-   * Handle MCP server registration
-   */
-  async handleMCPServerRegistered(info) {
-    const { serverId } = info;
-    
-    try {
-      // The MCPServerRegistry has already created the provider
-      // We just need to ensure it's available for tool discovery
-      this.invalidateCaches();
-      
-      console.log(`MCP server ${serverId} tools integrated into ToolRegistry`);
-      
-    } catch (error) {
-      console.error(`Failed to handle MCP server registration for ${serverId}:`, error);
-    }
-  }
-  
-  /**
-   * Handle MCP server unregistration
-   */
-  handleMCPServerUnregistered(info) {
-    const { serverId } = info;
-    
-    // Clean up any MCP-specific caches
-    this.invalidateCaches();
-    
-    console.log(`MCP server ${serverId} tools removed from ToolRegistry`);
-  }
-  
-  /**
-   * Handle MCP tools changed
-   */
-  async handleMCPToolsChanged(info) {
-    const { serverId, toolsAdded, toolsRemoved } = info;
-    
-    // Invalidate caches to reflect tool changes
-    this.invalidateCaches();
-    
-    console.log(`MCP server ${serverId} tools changed: +${toolsAdded.length} -${toolsRemoved.length}`);
-  }
-  
-  /**
-   * Search tools including MCP tools
-   */
-  async searchToolsWithMCP(query, options = {}) {
-    // First, search regular tools
-    const regularResults = await this.searchTools(query);
-    
-    // If MCP integration is enabled, also search MCP tools
-    if (this.enableMCPIntegration && this.mcpServerRegistry) {
-      try {
-        const mcpResults = await this.mcpServerRegistry.searchMCPTools(query, {
-          limit: options.mcpLimit || 10,
-          categories: options.mcpCategories,
-          ...options
-        });
-        
-        // Combine and deduplicate results
-        const combinedResults = [...regularResults];
-        
-        for (const mcpResult of mcpResults) {
-          // Avoid duplicates
-          if (!combinedResults.find(r => r.name === mcpResult.name)) {
-            combinedResults.push({
-              ...mcpResult,
-              source: 'mcp',
-              serverId: mcpResult.serverId
-            });
-          }
-        }
-        
-        // Sort by relevance
-        combinedResults.sort((a, b) => 
-          (b.relevanceScore || 0) - (a.relevanceScore || 0)
-        );
-        
-        return combinedResults;
-        
-      } catch (error) {
-        console.warn('MCP tool search failed, returning regular results:', error);
-        return regularResults;
-      }
-    }
-    
-    return regularResults;
-  }
-  
-  /**
-   * Get tool with MCP fallback
-   */
-  async getToolWithMCP(toolName) {
-    // First try regular tool lookup
-    const regularTool = await this.getTool(toolName);
-    if (regularTool) {
-      return regularTool;
-    }
-    
-    // Try MCP tools if integration is enabled
-    if (this.enableMCPIntegration && this.mcpServerRegistry) {
-      try {
-        return await this.mcpServerRegistry.executeMCPTool(toolName, {}, {
-          returnProxy: true // Return the proxy instead of executing
-        });
-      } catch (error) {
-        // Tool not found in MCP either
-        return null;
-      }
-    }
-    
-    return null;
-  }
-  
-  /**
-   * List all tools including MCP tools
-   */
-  async listToolsWithMCP() {
-    const regularTools = await this.listTools();
-    
-    if (this.enableMCPIntegration && this.mcpServerRegistry) {
-      try {
-        const mcpTools = this.mcpServerRegistry.getAvailableMCPTools()
-          .map(tool => `${this.mcpToolPrefix}.${tool.name}`);
-        
-        return [...regularTools, ...mcpTools];
-      } catch (error) {
-        console.warn('Failed to list MCP tools:', error);
-        return regularTools;
-      }
-    }
-    
-    return regularTools;
-  }
-  
-  /**
-   * Get smart tool recommendations (includes MCP auto-install suggestions)
-   */
-  async getSmartToolRecommendations(taskDescription, options = {}) {
-    const recommendations = {
-      availableTools: [],
-      installableServers: [],
-      suggestions: []
-    };
-    
-    // Search available tools (regular + MCP)
-    const availableTools = await this.searchToolsWithMCP(taskDescription, {
-      limit: options.maxTools || 10
-    });
-    recommendations.availableTools = availableTools;
-    
-    // If MCP integration is enabled and we have few results, suggest installable servers
-    if (this.enableMCPIntegration && this.mcpServerRegistry && availableTools.length < 3) {
-      try {
-        const installableServers = await this.mcpServerRegistry.packageManager
-          .getRecommendations(taskDescription, {
-            maxRecommendations: options.maxServers || 5,
-            includeInstalled: false
-          });
-        
-        recommendations.installableServers = installableServers;
-        
-        // Create actionable suggestions
-        if (installableServers.length > 0) {
-          recommendations.suggestions.push({
-            type: 'install-server',
-            message: `Install ${installableServers[0].name} to get tools for: ${taskDescription}`,
-            action: {
-              type: 'install-mcp-server',
-              serverId: installableServers[0].id,
-              serverName: installableServers[0].name
-            }
-          });
-        }
-      } catch (error) {
-        console.warn('Failed to get MCP server recommendations:', error);
-      }
-    }
-    
-    return recommendations;
-  }
-  
-  /**
-   * Execute tool with MCP fallback and auto-install
-   */
-  async executeToolSmart(toolName, arguments_, options = {}) {
-    try {
-      // Try regular tool execution first
-      const tool = await this.getTool(toolName);
-      if (tool) {
-        return await tool.execute(arguments_);
-      }
-      
-      // Try MCP tool execution
-      if (this.enableMCPIntegration && this.mcpServerRegistry) {
-        return await this.mcpServerRegistry.executeMCPTool(toolName, arguments_, {
-          autoInstall: options.autoInstall,
-          retry: options.retry
-        });
-      }
-      
-      throw new Error(`Tool '${toolName}' not found`);
-      
-    } catch (error) {
-      if (error.message.includes('not found') && options.autoInstall) {
-        // Try to suggest and potentially auto-install
-        const recommendations = await this.getSmartToolRecommendations(toolName);
-        
-        if (recommendations.installableServers.length > 0) {
-          throw new Error(
-            `Tool '${toolName}' not found. Try installing: ${
-              recommendations.installableServers.map(s => s.name).join(', ')
-            }`
-          );
-        }
-      }
-      
-      throw error;
-    }
-  }
-  
-  /**
-   * Invalidate caches (enhanced to handle MCP caches)
-   */
-  invalidateCaches() {
-    this.toolIndex = null;
-    this.capabilityMap = null;
-    
-    // Also invalidate MCP-related caches if applicable
-    if (this.mcpServerRegistry && this.mcpServerRegistry.metadataExtractor) {
-      this.mcpServerRegistry.metadataExtractor.clearCache();
-    }
-  }
-
-  /**
-   * Register a module with its tools
-   */
-  async registerModule(module, moduleName) {
-    // Create metadata with tools
-    const metadata = {
-      name: moduleName,
-      tools: {}
-    };
-    
-    // Get tools from module and add to metadata
-    if (module.getTools) {
-      const tools = module.getTools();
-      for (const tool of tools) {
-        metadata.tools[tool.name] = {
-          name: tool.name,
-          description: tool.description
-        };
-      }
-    }
-    
-    // Create a simple provider for the module
-    const provider = {
-      name: moduleName,
-      getMetadata: () => metadata,
-      getInstance: async () => module,
-      lazy: false
-    };
-    
-    return this.registerProvider(provider);
-  }
-
-  /**
-   * Register a module provider
-   */
-  async registerProvider(provider) {
-    if (this.providers.has(provider.name)) {
-      throw new Error(`Provider ${provider.name} already registered`);
-    }
-
-    // Validate provider by attempting to get metadata
-    const metadata = provider.getMetadata();
-    if (!metadata || !metadata.name) {
-      throw new Error('Invalid provider metadata');
-    }
-
-    this.providers.set(provider.name, provider);
-    this.metadata.set(provider.name, metadata);
-
-    // Create instance immediately if not lazy
-    if (!provider.lazy) {
-      try {
-        const instance = await provider.getInstance();
-        this.instances.set(provider.name, instance);
-      } catch (error) {
-        // Rollback registration on failure
-        this.providers.delete(provider.name);
-        this.metadata.delete(provider.name);
-        throw error;
-      }
-    }
-
-    // Invalidate caches
-    this.toolIndex = null;
-    this.capabilityMap = null;
-  }
-
-  /**
-   * Unregister a provider
-   */
-  async unregisterProvider(name) {
-    const provider = this.providers.get(name);
-    if (!provider) return;
-
-    // Destroy instance if exists
-    if (this.instances.has(name)) {
-      await this.destroyInstance(name);
-    }
-
-    this.providers.delete(name);
-    this.metadata.delete(name);
-    
-    // Invalidate caches
-    this.toolIndex = null;
-    this.capabilityMap = null;
-  }
-
-  /**
-   * Check if provider exists
-   */
-  hasProvider(name) {
-    return this.providers.has(name);
-  }
-
-  /**
-   * List all provider names
-   */
-  listProviders() {
-    return Array.from(this.providers.keys());
-  }
-
-  /**
-   * Get module instance
-   */
-  async getInstance(moduleName) {
-    if (!this.providers.has(moduleName)) {
-      return null;
-    }
-
-    if (!this.instances.has(moduleName)) {
-      const provider = this.providers.get(moduleName);
-      const instance = await provider.getInstance();
-      this.instances.set(moduleName, instance);
-    }
-
-    return this.instances.get(moduleName);
-  }
-
-  /**
-   * Check if instance exists
-   */
-  hasInstance(moduleName) {
-    return this.instances.has(moduleName);
-  }
-
-  /**
-   * Destroy module instance
-   */
-  async destroyInstance(moduleName) {
-    const instance = this.instances.get(moduleName);
-    if (instance && instance.cleanup) {
-      await instance.cleanup();
-    }
-    this.instances.delete(moduleName);
-  }
-
-  /**
-   * List all available tools
-   */
-  async listTools() {
-    const tools = [];
-    
-    for (const [moduleName, metadata] of this.metadata) {
-      if (metadata.tools) {
-        for (const toolName of Object.keys(metadata.tools)) {
-          tools.push(`${moduleName}.${toolName}`);
-        }
-      }
-    }
-    
-    return tools;
-  }
-
-  /**
-   * Get a specific tool by simple name or full name
+   * Get executable tool by name
    */
   async getTool(name) {
-    // Auto-initialize if not done yet
-    if (!this.initialized) {
-      await this.initialize();
-    }
+    await this.#ensureInitialized();
     
-    // Check if name is valid
     if (!name || typeof name !== 'string') {
       return null;
     }
     
-    // Check tool cache first
+    // 1. Check cache first
     if (this.toolCache.has(name)) {
-      this.trackUsage(name);
+      this.#trackUsage(name);
       return this.toolCache.get(name);
     }
     
-    // Try to find tool across all registered modules
-    if (!name.includes('.')) {
-      for (const [moduleName, metadata] of this.metadata) {
-        if (metadata.tools && metadata.tools[name]) {
-          const tool = await this.loadToolFromModule(moduleName, name);
-          if (tool) {
-            this.toolCache.set(name, tool); // Cache the tool
-            this.trackUsage(name);
-            return tool;
-          }
-        }
-      }
-      return null;
+    // 2. Get executable tool from MongoDB
+    const executableTool = await this.#getExecutableToolFromMongoDB(name);
+    
+    // 3. Cache and return
+    if (executableTool) {
+      this.toolCache.set(name, executableTool);
+      this.#trackUsage(name);
     }
     
-    // Full module.tool name
-    const [moduleName, toolName] = name.split('.');
-    
-    if (!moduleName || !toolName) {
-      return null;
-    }
-
-    const tool = await this.loadToolFromModule(moduleName, toolName);
-    if (tool) {
-      this.toolCache.set(name, tool); // Cache the tool
-      this.trackUsage(name);
-      return tool;
-    }
-
-    return tool;
+    return executableTool;
   }
 
   /**
-   * Load a specific tool from a module with caching
+   * List available tools
    */
-  async loadToolFromModule(moduleName, toolName) {
+  async listTools(options = {}) {
+    await this.#ensureInitialized();
+    
+    return await this.provider.listTools(options);
+  }
+
+  /**
+   * Search for tools
+   */
+  async searchTools(query, options = {}) {
+    await this.#ensureInitialized();
+    
+    if (this.provider.searchTools) {
+      return await this.provider.searchTools(query, options);
+    }
+    
+    // Fallback: search in tool names/descriptions
+    const allTools = await this.provider.listTools();
+    const queryLower = query.toLowerCase();
+    
+    return allTools.filter(tool => 
+      tool.name.toLowerCase().includes(queryLower) ||
+      (tool.description && tool.description.toLowerCase().includes(queryLower))
+    );
+  }
+
+  // ============================================================================
+  // PRIVATE IMPLEMENTATION - All MongoDB-specific logic
+  // ============================================================================
+
+  /**
+   * Ensure registry is initialized
+   */
+  async #ensureInitialized() {
+    if (!this.initialized) {
+      await this.initialize();
+    }
+  }
+
+  /**
+   * Get executable tool from MongoDB
+   */
+  async #getExecutableToolFromMongoDB(name) {
     try {
-      // Check if module is cached
-      let instance;
-      if (this.moduleCache.has(moduleName)) {
-        instance = this.moduleCache.get(moduleName);
+      // 1. Get tool metadata from database
+      let toolMetadata;
+      if (name.includes('.')) {
+        const [moduleName, toolName] = name.split('.');
+        toolMetadata = await this.provider.getTool(toolName, moduleName);
       } else {
-        // Lazy load the module
-        instance = await this.getInstance(moduleName);
-        if (instance) {
-          this.moduleCache.set(moduleName, instance);
-        }
+        toolMetadata = await this.provider.getTool(name);
       }
 
-      if (!instance) {
+      if (!toolMetadata) {
         return null;
       }
 
-      let tool = null;
-      
-      // Try getTool method first
-      if (instance.getTool) {
-        tool = instance.getTool(toolName);
-      } else if (instance.getTools) {
-        // Fallback: search through getTools() array
-        const tools = instance.getTools();
-        tool = tools.find(t => t.name === toolName) || null;
+      // 2. Get module name from tool metadata
+      const moduleName = toolMetadata.moduleName || toolMetadata.module;
+      if (!moduleName) {
+        console.warn(`Tool ${name} has no module reference in database`);
+        return null;
       }
 
-      return tool;
+      // 3. Load module instance
+      const moduleInstance = await this.#loadModuleFromMongoDB(moduleName);
+      if (!moduleInstance) {
+        console.warn(`Could not load module ${moduleName} for tool ${name}`);
+        return null;
+      }
+
+      // 4. Get executable tool from module
+      const executableTool = this.#extractToolFromModule(moduleInstance, toolMetadata.name);
+      
+      if (!executableTool) {
+        console.warn(`Failed to get tool ${toolMetadata.name} from module ${moduleName}`);
+        return null;
+      }
+
+      return executableTool;
+      
     } catch (error) {
-      console.warn(`Failed to load tool ${toolName} from module ${moduleName}:`, error);
+      console.warn(`Failed to get tool ${name} from database:`, error.message);
       return null;
     }
   }
 
   /**
-   * Search tools by criteria
+   * Load module from MongoDB metadata
    */
-  async searchTools(criteria) {
-    const allTools = await this.listTools();
-    const results = [];
-
-    for (const toolName of allTools) {
-      const [moduleName, tool] = toolName.split('.');
+  async #loadModuleFromMongoDB(moduleName) {
+    try {
+      console.log(`[DEBUG] Loading module '${moduleName}' from MongoDB`);
       
-      // Search by module
-      if (criteria.module && moduleName === criteria.module) {
-        results.push(toolName);
-        continue;
+      // Check module cache first
+      if (this.moduleCache.has(moduleName)) {
+        console.log(`[DEBUG] Module '${moduleName}' found in cache`);
+        return this.moduleCache.get(moduleName);
       }
 
-      // Search by capability (simple text match)
-      if (criteria.capability) {
-        const metadata = await this.getToolMetadata(toolName);
-        if (metadata && metadata.description) {
-          const desc = metadata.description.toLowerCase();
-          if (desc.includes(criteria.capability.toLowerCase())) {
-            results.push(toolName);
-          }
-        }
+      // Get module metadata from database
+      const moduleMetadata = await this.provider.getModule(moduleName);
+      if (!moduleMetadata) {
+        console.warn(`Module ${moduleName} not found in database`);
+        return null;
+      }
+      
+      console.log(`[DEBUG] Module metadata found: type=${moduleMetadata.type}, path=${moduleMetadata.path}`);
+
+      // Load module using hardcoded mappings (for reliability)
+      const moduleInstance = await this.#loadModuleByName(moduleName);
+      
+      if (moduleInstance) {
+        console.log(`[DEBUG] Module '${moduleName}' loaded successfully`);
+        console.log(`[DEBUG] Module instance type: ${typeof moduleInstance}`);
+        console.log(`[DEBUG] Module instance constructor: ${moduleInstance?.constructor?.name}`);
+        this.moduleCache.set(moduleName, moduleInstance);
+        return moduleInstance;
       }
 
-      // Search by tags
-      if (criteria.tags) {
-        const metadata = await this.getToolMetadata(toolName);
-        if (metadata && metadata.tags) {
-          const hasTag = criteria.tags.some(tag => 
-            metadata.tags.includes(tag)
-          );
-          if (hasTag) {
-            results.push(toolName);
-          }
-        }
-      }
-    }
-
-    return results;
-  }
-
-  /**
-   * Get tool metadata
-   */
-  async getToolMetadata(fullName) {
-    const [moduleName, toolName] = fullName.split('.');
-    
-    const moduleMetadata = this.metadata.get(moduleName);
-    if (!moduleMetadata || !moduleMetadata.tools) {
+      console.log(`[DEBUG] Module '${moduleName}' failed to load`);
+      return null;
+      
+    } catch (error) {
+      console.warn(`Failed to load module ${moduleName} from database:`, error.message);
       return null;
     }
-
-    return moduleMetadata.tools[toolName];
   }
 
   /**
-   * Get module metadata
+   * Load module by name using the ModuleLoader system
    */
-  async getModuleMetadata(moduleName) {
-    return this.metadata.get(moduleName);
-  }
+  async #loadModuleByName(moduleName) {
+    try {
+      // Get module metadata from database
+      const moduleMetadata = await this.provider.getModule(moduleName);
+      if (!moduleMetadata) {
+        console.warn(`Module metadata not found for: ${moduleName}`);
+        return null;
+      }
 
-  /**
-   * Get all metadata
-   */
-  async getAllMetadata() {
-    const modules = [];
-    let totalTools = 0;
-    const capabilities = new Set();
+      // Handle JSON modules
+      if (moduleMetadata.type === 'json') {
+        return await this.#loadJsonModule(moduleName, moduleMetadata);
+      }
 
-    for (const [name, metadata] of this.metadata) {
-      modules.push({
-        name,
-        ...metadata
+      // Handle class modules - use ModuleLoader approach
+      const { ModuleLoader } = await import('../loading/ModuleLoader.js');
+      const loader = new ModuleLoader({ 
+        verbose: false,
+        resourceManager: this.resourceManager 
       });
+      await loader.initialize();
+      
+      // Load single module by creating a temporary registry entry
+      const moduleConfig = {
+        name: moduleMetadata.name,
+        type: moduleMetadata.type,
+        path: moduleMetadata.path,
+        className: moduleMetadata.className,
+        description: moduleMetadata.description
+      };
 
-      if (metadata.tools) {
-        totalTools += Object.keys(metadata.tools).length;
-        
-        // Extract capabilities from descriptions
-        for (const tool of Object.values(metadata.tools)) {
-          if (tool.description) {
-            const words = tool.description.toLowerCase().split(/\s+/);
-            words.forEach(word => {
-              if (word.length > 3) capabilities.add(word);
-            });
-          }
-        }
+      // Use the module loader to load this specific module
+      const moduleInstance = await loader.loadModule(moduleConfig);
+      if (moduleInstance) {
+        return moduleInstance;
       }
-    }
 
-    return {
-      modules,
-      totalTools,
-      capabilities: Array.from(capabilities)
-    };
+      // Fallback: direct loading based on known module locations
+      const fallbackInstance = await this.#loadModuleDirectly(moduleMetadata);
+      return fallbackInstance;
+
+    } catch (error) {
+      console.warn(`Failed to load module ${moduleName}:`, error.message);
+      return null;
+    }
   }
 
   /**
-   * Get tool index
+   * Load module directly from filesystem
    */
-  async getToolIndex() {
-    if (this.toolIndex) {
-      return this.toolIndex;
-    }
+  async #loadModuleDirectly(moduleMetadata) {
+    try {
+      const path = await import('path');
+      const fs = await import('fs');
 
-    const index = {
-      byModule: {},
-      byOperation: {}
-    };
-
-    for (const [moduleName, metadata] of this.metadata) {
-      if (metadata.tools) {
-        index.byModule[moduleName] = Object.keys(metadata.tools);
-        
-        for (const [toolName, toolMeta] of Object.entries(metadata.tools)) {
-          // Extract operation from tool name or description
-          const operation = this.extractOperation(toolName, toolMeta.description);
-          if (!index.byOperation[operation]) {
-            index.byOperation[operation] = [];
-          }
-          index.byOperation[operation].push(`${moduleName}.${toolName}`);
-        }
+      // Build the module path from Legion root
+      let modulePath;
+      const basePath = moduleMetadata.path;
+      
+      // Determine the actual file path
+      if (basePath.includes('tools-collection')) {
+        // Tools collection modules
+        modulePath = path.resolve('../../' + basePath + '/index.js');
+      } else {
+        // Package modules  
+        modulePath = path.resolve('../../' + basePath + '/index.js');
       }
-    }
 
-    this.toolIndex = index;
-    return index;
+      // Check if the file exists
+      if (!fs.existsSync(modulePath)) {
+        console.warn(`Module file not found: ${modulePath}`);
+        return null;
+      }
+
+      // Import and instantiate the module
+      const ModuleClass = await import(modulePath);
+      const ActualClass = ModuleClass.default || ModuleClass[moduleMetadata.className];
+      
+      if (!ActualClass) {
+        console.warn(`Module class ${moduleMetadata.className} not found in ${modulePath}`);
+        return null;
+      }
+
+      // Try factory pattern first
+      if (ActualClass.create && typeof ActualClass.create === 'function') {
+        return await ActualClass.create(this.resourceManager);
+      }
+
+      // Direct instantiation
+      return new ActualClass();
+
+    } catch (error) {
+      console.warn(`Direct module loading failed: ${error.message}`);
+      return null;
+    }
   }
 
   /**
-   * Get capability map
+   * Load a JSON-based dynamic module
    */
-  async getCapabilityMap() {
-    if (this.capabilityMap) {
-      return this.capabilityMap;
+  async #loadJsonModule(moduleName, moduleMetadata) {
+    try {
+      // For JSON modules, we need to load the module.json file and create a dynamic wrapper
+      const { DynamicJsonModule } = await import('../loading/DynamicJsonModule.js');
+      
+      // The moduleMetadata should contain the JSON definition
+      // For now, we'll create a simple wrapper that can execute the inline functions
+      const moduleInstance = new DynamicJsonModule(moduleName, moduleMetadata);
+      await moduleInstance.initialize();
+      
+      return moduleInstance;
+    } catch (error) {
+      console.warn(`Failed to load JSON module ${moduleName}:`, error.message);
+      return null;
     }
+  }
 
-    const map = {};
-
-    for (const [moduleName, metadata] of this.metadata) {
-      if (metadata.tools) {
-        for (const [toolName, toolMeta] of Object.entries(metadata.tools)) {
-          // Generate capability keys
-          const capabilities = this.extractCapabilities(
-            moduleName,
-            toolName,
-            toolMeta
-          );
-          
-          for (const capability of capabilities) {
-            if (!map[capability]) {
-              map[capability] = [];
-            }
-            map[capability].push(`${moduleName}.${toolName}`);
+  /**
+   * Extract tool from module instance
+   * Enforces that modules MUST use dictionary pattern for tools storage
+   */
+  #extractToolFromModule(moduleInstance, toolName) {
+    try {
+      // Verify module has tools property and it's a dictionary
+      if (!moduleInstance.tools) {
+        throw new Error(`Module does not have a 'tools' property. Modules must store tools in a dictionary.`);
+      }
+      
+      if (Array.isArray(moduleInstance.tools)) {
+        throw new Error(`Module stores tools as an array. Modules MUST store tools as a dictionary/object keyed by tool name.`);
+      }
+      
+      if (typeof moduleInstance.tools !== 'object') {
+        throw new Error(`Module 'tools' property is not an object. Expected dictionary/object, got ${typeof moduleInstance.tools}`);
+      }
+      
+      // Use the base Module class's getTool method (which looks up this.tools[name])
+      if (moduleInstance.getTool && typeof moduleInstance.getTool === 'function') {
+        try {
+          const tool = moduleInstance.getTool(toolName);
+          if (tool) {
+            return tool;
           }
+        } catch (getToolError) {
+          // Tool not found in dictionary
+          console.warn(`Tool '${toolName}' not found in module. Error: ${getToolError.message}`);
         }
       }
+      
+      // Direct dictionary lookup as fallback
+      const tool = moduleInstance.tools[toolName];
+      if (tool) {
+        return tool;
+      }
+      
+      // Tool not found - list available tools for debugging
+      const availableTools = Object.keys(moduleInstance.tools);
+      console.warn(`Tool '${toolName}' not found in module. Available tools: [${availableTools.join(', ')}]`);
+      return null;
+      
+    } catch (error) {
+      console.error(`Failed to extract tool ${toolName} from module:`, error.message);
+      throw error; // Re-throw to enforce the contract
     }
-
-    this.capabilityMap = map;
-    return map;
   }
 
   /**
    * Track tool usage
    */
-  trackUsage(toolName) {
-    if (!this.usageStats.has(toolName)) {
-      this.usageStats.set(toolName, {
-        count: 0,
-        firstUsed: Date.now(),
-        lastUsed: null
-      });
-    }
-
-    const stats = this.usageStats.get(toolName);
-    stats.count++;
-    stats.lastUsed = Date.now();
+  #trackUsage(toolName) {
+    const count = this.usageStats.get(toolName) || 0;
+    this.usageStats.set(toolName, count + 1);
   }
 
   /**
    * Get usage statistics
    */
-  async getUsageStats() {
-    const stats = {};
-    for (const [tool, data] of this.usageStats) {
-      stats[tool] = { ...data };
-    }
-    return stats;
+  getUsageStats() {
+    return Object.fromEntries(this.usageStats);
   }
 
   /**
-   * Domain-based tool filtering - Simple keyword-based approach
+   * Clear caches
    */
-  
-  // Domain mappings - predefined sets of tools for common domains
-  static DOMAIN_MAPPINGS = {
-    // File and content operations
-    'files': [
-      'FileSystemModule.readFile', 
-      'FileSystemModule.writeFile', 
-      'FileSystemModule.appendFile', 
-      'FileSystemModule.deleteFile', 
-      'FileSystemModule.exists', 
-      'FileSystemModule.mkdir',
-      'FileSystemModule.rmdir',
-      'FileSystemModule.listFiles',
-      'FileSystemModule.copyFile',
-      'FileSystemModule.moveFile'
-    ],
-    
-    // Web and frontend development
-    'web': [
-      'FileSystemModule.writeFile', 
-      'FileSystemModule.readFile', 
-      'FileSystemModule.mkdir',
-      'HTTPModule.get', 
-      'HTTPModule.post',
-      'APIGenerator.APIGenerator'
-    ],
-    'frontend': [
-      'FileSystemModule.writeFile', 
-      'FileSystemModule.readFile', 
-      'FileSystemModule.mkdir',
-      'FileSystemModule.copyFile'
-    ],
-    'website': [
-      'FileSystemModule.writeFile', 
-      'FileSystemModule.readFile', 
-      'FileSystemModule.mkdir',
-      'HTTPModule.get'
-    ],
-    
-    // API and HTTP operations  
-    'api': [
-      'HTTPModule.get', 
-      'HTTPModule.post', 
-      'HTTPModule.put', 
-      'HTTPModule.delete', 
-      'HTTPModule.patch',
-      'APIGenerator.APIGenerator'
-    ],
-    'http': [
-      'HTTPModule.get', 
-      'HTTPModule.post', 
-      'HTTPModule.put', 
-      'HTTPModule.delete',
-      'HTTPModule.uploadFile',
-      'HTTPModule.downloadFile'
-    ],
-    
-    // Version control
-    'git': [
-      'GitModule.clone', 
-      'GitModule.commit', 
-      'GitModule.push', 
-      'GitModule.pull', 
-      'GitModule.status',
-      'GitModule.branch',
-      'GitModule.merge',
-      'GitModule.add'
-    ],
-    'deploy': [
-      'GitModule.push', 
-      'HTTPModule.post', 
-      'FileSystemModule.readFile',
-      'GitModule.status'
-    ],
-    'deployment': [
-      'GitModule.push', 
-      'HTTPModule.post', 
-      'HTTPModule.put',
-      'FileSystemModule.readFile'
-    ],
-    
-    // Development workflows
-    'development': [
-      'FileSystemModule.writeFile', 
-      'FileSystemModule.readFile', 
-      'FileSystemModule.mkdir',
-      'GitModule.commit', 
-      'GitModule.push',
-      'GitModule.add',
-      'ClassGenerator.ClassGenerator',
-      'APIGenerator.APIGenerator'
-    ],
-    'project': [
-      'FileSystemModule.mkdir', 
-      'FileSystemModule.writeFile', 
-      'FileSystemModule.readFile',
-      'GitModule.init'
-    ],
-    
-    // Code generation and development
-    'code': [
-      'FileSystemModule.writeFile',
-      'FileSystemModule.readFile', 
-      'ClassGenerator.ClassGenerator',
-      'TestSuiteGenerator.TestSuiteGenerator'
-    ],
-    'testing': [
-      'TestSuiteGenerator.TestSuiteGenerator'
-    ],
-    
-    // Content creation
-    'content': [
-      'FileSystemModule.writeFile',
-      'FileSystemModule.readFile',
-      'FileSystemModule.appendFile'
-    ],
-    'document': [
-      'FileSystemModule.writeFile',
-      'FileSystemModule.readFile',
-      'FileSystemModule.appendFile'
-    ]
-  };
-
-  // Goal keyword mappings to domains
-  static GOAL_KEYWORDS = {
-    'web': ['website', 'web', 'html', 'css', 'frontend', 'page', 'site'],
-    'api': ['api', 'request', 'endpoint', 'service', 'rest'],
-    'files': ['file', 'document', 'content', 'write', 'read', 'create'],
-    'git': ['repository', 'repo', 'commit', 'git', 'version', 'branch'],
-    'deploy': ['deploy', 'deployment', 'production', 'server', 'publish'],
-    'development': ['project', 'code', 'develop', 'build', 'setup', 'system'],
-    'frontend': ['frontend', 'ui', 'interface', 'client'],
-    'website': ['website', 'site', 'webpage', 'portal'],
-    'content': ['content', 'article', 'text', 'documentation'],
-    'document': ['document', 'doc', 'report', 'readme'],
-    'code': ['class', 'function', 'method', 'code', 'generate', 'create', 'user'],
-    'testing': ['test', 'testing', 'coverage', 'spec', 'suite']
-  };
-
-  /**
-   * Get tools for specific domains
-   * @param {Array<string>} domains - Array of domain names
-   * @returns {Promise<Array<string>>} Array of tool names (without duplicates)
-   */
-  async getToolsForDomains(domains) {
-    const toolSet = new Set();
-    
-    for (const domain of domains) {
-      const domainTools = ToolRegistry.DOMAIN_MAPPINGS[domain.toLowerCase()];
-      if (domainTools) {
-        domainTools.forEach(tool => toolSet.add(tool));
-      }
-    }
-    
-    // Filter to only include tools that are actually available in the registry
-    const allAvailableTools = await this.listTools();
-    const availableToolSet = new Set(allAvailableTools);
-    
-    const filteredTools = Array.from(toolSet).filter(tool => 
-      availableToolSet.has(tool)
-    );
-    
-    return filteredTools;
+  clearCache() {
+    this.toolCache.clear();
+    this.moduleCache.clear();
+    this.usageStats.clear();
   }
 
   /**
-   * Extract domains from a goal using simple keyword matching
-   * @param {string} goal - The user's goal text
-   * @returns {Array<string>} Array of detected domain names
-   */
-  extractDomainsFromGoal(goal) {
-    const goalLower = goal.toLowerCase();
-    const detectedDomains = new Set();
-    
-    // Check each domain's keywords against the goal
-    for (const [domain, keywords] of Object.entries(ToolRegistry.GOAL_KEYWORDS)) {
-      for (const keyword of keywords) {
-        if (goalLower.includes(keyword)) {
-          detectedDomains.add(domain);
-          break; // Found a match for this domain, move to next
-        }
-      }
-    }
-    
-    // Default fallback: if no specific domains detected, include files as it's most common
-    if (detectedDomains.size === 0) {
-      detectedDomains.add('files');
-    }
-    
-    return Array.from(detectedDomains);
-  }
-
-  /**
-   * Get relevant tools for a goal using domain-based filtering
-   * @param {string} goal - The user's goal
-   * @param {Object} context - Additional context (optional)
-   * @returns {Promise<Array>} Array of actual tool objects
-   */
-  async getRelevantToolsForGoal(goal, context = {}) {
-    // 1. Extract domains from the goal
-    const domains = this.extractDomainsFromGoal(goal);
-    
-    console.log(`[ToolRegistry] Detected domains for goal "${goal.substring(0, 50)}...": ${domains.join(', ')}`);
-    
-    // 2. Get tool names for those domains
-    const toolNames = await this.getToolsForDomains(domains);
-    
-    console.log(`[ToolRegistry] Selected ${toolNames.length} tools: ${toolNames.join(', ')}`);
-    
-    // 3. Get actual tool objects
-    const tools = [];
-    for (const toolName of toolNames) {
-      try {
-        const tool = await this.getTool(toolName);
-        if (tool) {
-          tools.push(tool);
-        }
-      } catch (error) {
-        console.warn(`[ToolRegistry] Could not load tool ${toolName}:`, error.message);
-      }
-    }
-    
-    return tools;
-  }
-
-  /**
-   * Get available domains
-   * @returns {Array<string>} List of available domain names
-   */
-  getAvailableDomains() {
-    return Object.keys(ToolRegistry.DOMAIN_MAPPINGS);
-  }
-
-  /**
-   * Get domain information including keywords and tools
-   * @param {string} domain - Domain name
-   * @returns {Object|null} Domain information or null if not found
-   */
-  getDomainInfo(domain) {
-    const domainLower = domain.toLowerCase();
-    
-    return {
-      name: domainLower,
-      keywords: ToolRegistry.GOAL_KEYWORDS[domainLower] || [],
-      tools: ToolRegistry.DOMAIN_MAPPINGS[domainLower] || [],
-      available: (ToolRegistry.DOMAIN_MAPPINGS[domainLower] || []).length > 0
-    };
-  }
-
-  /**
-   * Get tool dependencies
-   */
-  async getToolDependencies(toolName) {
-    // This is a simplified implementation
-    // Real implementation would analyze tool requirements
-    const dependencies = {
-      'git.push': ['git.commit'],
-      'git.commit': ['git.add'],
-      'git.merge': ['git.fetch']
-    };
-
-    return dependencies[toolName] || [];
-  }
-
-  /**
-   * Get module dependencies
-   */
-  async getModuleDependencies(moduleName) {
-    // This would be defined in module metadata
-    const dependencies = {
-      'deployment': ['git', 'filesystem'],
-      'backup': ['filesystem', 'http']
-    };
-
-    return dependencies[moduleName] || [];
-  }
-
-  /**
-   * Order tools by dependency
-   */
-  async orderByDependency(tools) {
-    // Simple topological sort
-    const graph = {};
-    const visited = new Set();
-    const result = [];
-
-    // Build dependency graph
-    for (const tool of tools) {
-      const deps = await this.getToolDependencies(tool);
-      graph[tool] = deps.filter(d => tools.includes(d));
-    }
-
-    // DFS topological sort
-    const visit = (node) => {
-      if (visited.has(node)) return;
-      visited.add(node);
-      
-      const deps = graph[node] || [];
-      for (const dep of deps) {
-        visit(dep);
-      }
-      
-      result.push(node);
-    };
-
-    for (const tool of tools) {
-      visit(tool);
-    }
-
-    return result;
-  }
-
-  /**
-   * Populate database with all tools found in the repository
-   * This method delegates to the provider's populateDatabase method
+   * Populate database (convenience method)
    */
   async populateDatabase(options = {}) {
-    if (!this.provider) {
-      throw new Error('No provider configured for database population');
-    }
-
-    if (typeof this.provider.populateDatabase !== 'function') {
-      throw new Error('Provider does not support database population');
-    }
-
-    console.log('🔄 Starting database population...');
-    const result = await this.provider.populateDatabase(options);
+    await this.#ensureInitialized();
     
-    // Invalidate caches after population
-    this.invalidateCaches();
+    const { ComprehensiveToolDiscovery } = await import('../discovery/ComprehensiveToolDiscovery.js');
+    const discovery = new ComprehensiveToolDiscovery();
     
-    console.log('✅ Database population completed');
-    return result;
-  }
-
-  /**
-   * Shutdown registry
-   */
-  async shutdown() {
-    // Clean up all instances
-    for (const [name, instance] of this.instances) {
-      if (instance && instance.cleanup) {
-        await instance.cleanup();
-      }
-    }
-    
-    this.instances.clear();
-    this.providers.clear();
-    this.metadata.clear();
-    this.usageStats.clear();
-    this.toolIndex = null;
-    this.capabilityMap = null;
-  }
-
-  /**
-   * Extract operation from tool name/description
-   */
-  extractOperation(toolName, description) {
-    // Common operations
-    const operations = ['read', 'write', 'get', 'post', 'delete', 'create', 'update'];
-    
-    const nameLower = toolName.toLowerCase();
-    for (const op of operations) {
-      if (nameLower.includes(op)) {
-        return op;
-      }
-    }
-
-    if (description) {
-      const descLower = description.toLowerCase();
-      for (const op of operations) {
-        if (descLower.includes(op)) {
-          return op;
-        }
-      }
-    }
-
-    return 'other';
-  }
-
-  /**
-   * Extract capabilities from tool metadata
-   */
-  extractCapabilities(moduleName, toolName, metadata) {
-    const capabilities = [];
-    
-    // Module-based capability
-    capabilities.push(`${moduleName}:${toolName}`);
-    
-    // Operation-based capability
-    const operation = this.extractOperation(toolName, metadata.description);
-    capabilities.push(`${moduleName}:${operation}`);
-    
-    // Generic operation capability
-    if (operation !== 'other') {
-      capabilities.push(operation);
-    }
-
-    return capabilities;
-  }
-}
-
-/**
- * ToolResolver - Resolves tools based on requirements
- */
-export class ToolResolver {
-  constructor(registry) {
-    this.registry = registry;
-  }
-
-  /**
-   * Resolve tool by exact name
-   */
-  async resolve(toolName) {
-    return await this.registry.getTool(toolName);
-  }
-
-  /**
-   * Resolve tool by capability description
-   */
-  async resolveByCapability(description) {
-    // First try exact capability search
-    let tools = await this.registry.searchTools({
-      capability: description
+    return await discovery.populateDatabase({
+      mode: options.mode || 'clear',
+      verbose: options.verbose || false,
+      includeEmbeddings: false
     });
-
-    // If no exact match, try searching for key words
-    if (tools.length === 0) {
-      const keywords = description.toLowerCase().split(/\s+/);
-      for (const keyword of keywords) {
-        tools = await this.registry.searchTools({
-          capability: keyword
-        });
-        if (tools.length > 0) break;
-      }
-    }
-
-    if (tools.length === 0) {
-      return null;
-    }
-
-    // Return first match (could be improved with ranking)
-    const tool = await this.registry.getTool(tools[0]);
-    return tool;
-  }
-
-  /**
-   * Resolve multiple tools for a capability
-   */
-  async resolveMultiple(description) {
-    const toolNames = await this.registry.searchTools({
-      capability: description.split(' ')[0] // Simple keyword extraction
-    });
-
-    const tools = [];
-    for (const name of toolNames) {
-      const tool = await this.registry.getTool(name);
-      if (tool) tools.push(tool);
-    }
-
-    return tools;
-  }
-
-  /**
-   * Rank tools by relevance to description
-   */
-  async rankTools(description, toolNames) {
-    const scores = new Map();
-    const keywords = description.toLowerCase().split(/\s+/);
-
-    for (const toolName of toolNames) {
-      let score = 0;
-      
-      // Check tool name match
-      const nameLower = toolName.toLowerCase();
-      for (const keyword of keywords) {
-        if (nameLower.includes(keyword)) {
-          score += 10;
-        }
-      }
-
-      // Check metadata match
-      const metadata = await this.registry.getToolMetadata(toolName);
-      if (metadata && metadata.description) {
-        const descLower = metadata.description.toLowerCase();
-        for (const keyword of keywords) {
-          if (descLower.includes(keyword)) {
-            score += 5;
-          }
-        }
-      }
-
-      scores.set(toolName, score);
-    }
-
-    // Sort by score
-    return toolNames.sort((a, b) => {
-      return (scores.get(b) || 0) - (scores.get(a) || 0);
-    });
-  }
-
-  /**
-   * Suggest alternative tools
-   */
-  async suggestAlternatives(toolName) {
-    const [moduleName] = toolName.split('.');
-    
-    // Get all tools from the same module
-    const sameModule = await this.registry.searchTools({
-      module: moduleName
-    });
-
-    // Filter out the original tool
-    return sameModule.filter(t => t !== toolName);
   }
 }
