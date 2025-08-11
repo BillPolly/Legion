@@ -452,8 +452,8 @@ export class SimplifiedTools {
       console.log(`[SimplifiedTools] Opening browser for URL: ${finalUrl}`);
       
       try {
-        // Launch browser
-        const browser = await puppeteer.launch({
+        // Launch browser - try to use system Chrome if available on macOS
+        const browserOptions = {
           headless,
           defaultViewport: viewport,
           args: [
@@ -463,7 +463,24 @@ export class SimplifiedTools {
             '--disable-features=IsolateOrigins',
             '--disable-site-isolation-trials'
           ]
-        });
+        };
+        
+        // Try to use system Chrome on macOS if available
+        const possibleChromes = [
+          '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+          '/Applications/Chromium.app/Contents/MacOS/Chromium',
+          '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser'
+        ];
+        
+        for (const chromePath of possibleChromes) {
+          if (existsSync(chromePath)) {
+            console.log(`[SimplifiedTools] Using system browser at: ${chromePath}`);
+            browserOptions.executablePath = chromePath;
+            break;
+          }
+        }
+        
+        const browser = await puppeteer.launch(browserOptions);
         
         // Create page
         const page = await browser.newPage();

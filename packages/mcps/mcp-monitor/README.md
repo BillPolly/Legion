@@ -324,6 +324,20 @@ npx jest __tests__/integration/EnhancedStarterComprehensive.test.js --verbose
 - ✅ **Resource cleanup**: All sessions properly cleaned up
 - ✅ **Error handling**: Missing files, invalid configs, duplicate sessions
 
+## Known Issues
+
+### Browser Launch on macOS
+
+On macOS, Puppeteer's bundled "Chrome for Testing" may fail to launch with a "socket hang up" error. This is due to macOS Gatekeeper blocking the unsigned binary. The tool automatically falls back to using your system's Chrome installation at `/Applications/Google Chrome.app`.
+
+**Why this happens:**
+- Puppeteer downloads an unsigned "Chrome for Testing" binary
+- macOS Gatekeeper blocks unsigned applications from running programmatically
+- The WebSocket connection fails, causing the "socket hang up" error
+
+**Solution (already implemented):**
+The tool automatically detects and uses your system's Chrome, Chromium, or Brave browser if available. This provides better compatibility and performance on macOS.
+
 ## Error Handling
 
 The server provides helpful error messages with troubleshooting guidance:
