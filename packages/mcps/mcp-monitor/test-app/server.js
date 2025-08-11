@@ -30,9 +30,8 @@ const server = http.createServer((req, res) => {
   }
 });
 
-const port = process.env.PORT || 3007;
-server.listen(port, () => {
-  console.log(`Demo server listening on port ${port}`);
+server.listen(3007, () => {
+  console.log('Demo server listening on port 3007');
 });
 
 // Graceful shutdown

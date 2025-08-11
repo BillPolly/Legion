@@ -292,19 +292,17 @@ class MCPClientDemo {
     // Create a simple test app
     this.createTestApp();
     
-    // Start monitoring
-    await this.client.callTool('start_fullstack_monitoring', {
-      backend_script: './test-app/server.js',
-      backend_name: 'demo-api',
-      backend_port: 3007,
-      frontend_url: 'file://' + process.cwd() + '/test-app/index.html',
-      headless: true,
-      session_id: 'demo-session'
+    // Start monitoring with simplified interface
+    await this.client.callTool('start_app', {
+      script: './test-app/server.js',
+      session_id: 'demo-session',
+      log_level: 'info'
     });
     
-    // Get monitoring stats
-    await this.client.callTool('get_monitoring_stats', {
-      session_id: 'demo-session'
+    // Set log level
+    await this.client.callTool('set_log_level', {
+      session_id: 'demo-session',
+      level: 'debug'
     });
     
     // List active sessions
@@ -319,29 +317,24 @@ class MCPClientDemo {
   async scenario2_DebuggingWorkflow() {
     console.log('🎬 Scenario 2: Debugging Workflow');
     
-    // Execute a debug scenario
-    await this.client.callTool('execute_debug_scenario', {
-      steps: [
-        { action: 'screenshot', options: { fullPage: true } },
-        { action: 'click', selector: '#test-button' },
-        { action: 'waitFor', selector: '#result' },
-        { action: 'screenshot', options: { fullPage: true } }
-      ],
-      session_id: 'demo-session'
+    // Query logs for debugging
+    await this.client.callTool('query_logs', {
+      session_id: 'demo-session',
+      limit: 10
     });
     
-    // Take a standalone screenshot
+    // Try to take a screenshot (may fail if no browser is running)
     await this.client.callTool('take_screenshot', {
+      session_id: 'demo-session',
       path: './test-screenshot.png',
-      full_page: true,
-      session_id: 'demo-session'
+      fullPage: true
     });
     
-    // Debug a user flow from natural language
-    await this.client.callTool('debug_user_flow', {
-      description: 'Click the test button and verify the API response appears',
-      url: 'file://' + process.cwd() + '/test-app/index.html',
-      session_id: 'demo-session'
+    // Try video recording
+    await this.client.callTool('record_video', {
+      session_id: 'demo-session',
+      action: 'start',
+      path: './test-video.mp4'
     });
     
     console.log('✅ Scenario 2 completed\n');
@@ -353,42 +346,31 @@ class MCPClientDemo {
   async scenario3_ErrorAnalysis() {
     console.log('🎬 Scenario 3: Error Analysis');
     
-    // Search logs
-    await this.client.callTool('search_logs', {
-      query: 'server',
-      mode: 'keyword',
-      source: 'all',
-      limit: 20,
+    // Search logs with query_logs tool
+    await this.client.callTool('query_logs', {
+      search: 'server',
+      limit: 10,
       session_id: 'demo-session'
     });
     
-    // Analyze a specific error
-    await this.client.callTool('analyze_error', {
-      error_message: 'Connection failed',
-      time_range: '5m',
+    // Query logs by level
+    await this.client.callTool('query_logs', {
+      level: 'error',
+      limit: 5,
       session_id: 'demo-session'
     });
     
-    // Get recent errors
-    await this.client.callTool('get_recent_errors', {
-      minutes: 10,
-      session_id: 'demo-session'
+    // List active sessions
+    await this.client.callTool('list_sessions');
+    
+    // Set log level for better debugging  
+    await this.client.callTool('set_log_level', {
+      session_id: 'demo-session',
+      level: 'trace'
     });
     
-    // Get correlations for a correlation ID
-    await this.client.callTool('get_correlations', {
-      correlation_id: 'test-correlation-123',
-      session_id: 'demo-session'
-    });
-    
-    // Trace a request
-    await this.client.callTool('trace_request', {
-      request_id: 'req-456-789',
-      session_id: 'demo-session'
-    });
-    
-    // Stop monitoring
-    await this.client.callTool('stop_monitoring', {
+    // Stop the app
+    await this.client.callTool('stop_app', {
       session_id: 'demo-session'
     });
     
