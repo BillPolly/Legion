@@ -1,257 +1,360 @@
 # MCP FullStack Monitor
 
-A Model Context Protocol (MCP) server that provides comprehensive full-stack monitoring capabilities for AI agents. This server enables AI agents to monitor, debug, and analyze both backend processes and frontend browser applications in real-time.
+A Model Context Protocol (MCP) server that provides comprehensive monitoring for Node.js and TypeScript applications with browser automation capabilities. This server enables AI agents to start, monitor, and debug full-stack applications with automatic Sidewinder instrumentation.
 
 ## Overview
 
-The MCP FullStack Monitor server exposes 12 tools via the MCP protocol, allowing AI agents to:
+The MCP FullStack Monitor provides **8 focused tools** via the MCP protocol, allowing AI agents to:
 
-- Start and stop full-stack monitoring sessions
-- Execute automated debugging scenarios
-- Search and analyze logs from both backend and frontend
-- Track request correlations across the entire system
-- Perform error analysis with intelligent recommendations
-- Take screenshots and debug browser interactions
+- ✅ **Start Node.js or TypeScript servers** with automatic monitoring injection
+- ✅ **Support package.json scripts** or direct script execution
+- ✅ **Open and control browser sessions** for frontend monitoring
+- ✅ **Query logs with correlation tracking** across backend and frontend
+- ✅ **Take screenshots and record video** for debugging
+- ✅ **Manage multiple monitoring sessions** simultaneously
 
-## Architecture
+## Key Features
 
-```
-AI Agent (Claude, etc.)
-    ↓ MCP Protocol (JSON-RPC over stdio)
-MCP Server
-    ├── SessionManager (manages monitoring instances)
-    ├── ToolHandler (routes and formats tool calls)
-    └── Tool Modules
-        ├── MonitoringTools (start/stop monitoring)
-        ├── DebugTools (scenarios, screenshots)
-        └── AnalysisTools (log search, error analysis)
-```
+### 🚀 Universal Server Support
+- **Node.js servers**: Direct script execution with `--require` Sidewinder injection
+- **TypeScript servers**: Automatic detection and `NODE_OPTIONS` injection for ts-node/tsx
+- **Package.json scripts**: Run any npm script (start, dev, test, etc.) with monitoring
+- **Flexible parameters**: Support script path OR package.json directory + script name
+
+### 🔍 Advanced Monitoring
+- **Sidewinder instrumentation**: Automatic request correlation and performance tracking
+- **Real-time log capture**: All stdout/stderr with timestamps and correlation IDs
+- **Browser automation**: Puppeteer-based frontend monitoring with screenshots/video
+- **Multi-session support**: Run multiple applications simultaneously with isolated sessions
+
+### 🛠️ AI-Agent Optimized
+- **MCP Protocol compliance**: Full JSON-RPC 2.0 implementation
+- **Rich error handling**: Descriptive error messages with troubleshooting hints
+- **Flexible workflows**: Works with direct scripts, npm scripts, or complex setups
+- **Resource management**: Automatic cleanup and session isolation
 
 ## Available Tools
 
-### Monitoring Tools (4)
-- **`start_fullstack_monitoring`** - Start monitoring backend + frontend
-- **`stop_monitoring`** - Clean up monitoring session
-- **`get_monitoring_stats`** - Get session statistics
-- **`list_sessions`** - List all active sessions
+### 1. `start_server` - Launch Application Server
+Start any Node.js or TypeScript server with automatic Sidewinder monitoring injection.
 
-### Debug Tools (3)
-- **`execute_debug_scenario`** - Run multi-step debugging scenarios
-- **`debug_user_flow`** - Debug from natural language description
-- **`take_screenshot`** - Capture page screenshots
+**Options:**
+- **Direct script**: `{ "script": "./server.js" }`
+- **Package.json script**: `{ "package_path": "./", "start_script": "dev" }`
+- **TypeScript support**: Automatically detects .ts files and uses appropriate loader
+- **Environment variables**: `{ "env": { "NODE_ENV": "development" } }`
+- **Port waiting**: `{ "wait_for_port": 3000 }` - waits for server to be ready
 
-### Analysis Tools (5)
-- **`search_logs`** - Search backend and frontend logs
-- **`get_correlations`** - Get logs by correlation ID
-- **`analyze_error`** - Deep analysis of specific errors
-- **`get_recent_errors`** - Get recent errors with grouping
-- **`trace_request`** - Trace requests through the system
+**Examples:**
+```json
+// Start Node.js server directly
+{
+  "script": "./src/server.js",
+  "wait_for_port": 3000,
+  "session_id": "backend-session",
+  "log_level": "info"
+}
+
+// Start via package.json script
+{
+  "package_path": "./backend",
+  "start_script": "dev",
+  "wait_for_port": 8080,
+  "session_id": "api-server"
+}
+
+// Start TypeScript server
+{
+  "script": "./src/app.ts",
+  "wait_for_port": 4000,
+  "env": { "NODE_ENV": "development" }
+}
+```
+
+### 2. `open_page` - Browser Automation
+Open a browser page for frontend monitoring and interaction.
+
+```json
+{
+  "url": "http://localhost:3000",
+  "session_id": "backend-session",
+  "headless": false,
+  "viewport": { "width": 1280, "height": 720 }
+}
+```
+
+### 3. `query_logs` - Search Application Logs
+Query logs with filtering and correlation tracking.
+
+```json
+{
+  "query": "error",
+  "limit": 50,
+  "last": "5m",
+  "level": "error",
+  "session_id": "backend-session",
+  "include_system": true
+}
+```
+
+### 4. `take_screenshot` - Capture Page Screenshots
+Take screenshots for debugging or documentation.
+
+```json
+{
+  "path": "./debug-screenshot.png",
+  "fullPage": true,
+  "session_id": "backend-session"
+}
+```
+
+### 5. `record_video` - Record Browser Interactions
+Record video of browser interactions for debugging.
+
+```json
+{
+  "action": "start",
+  "path": "./debug-recording.mp4",
+  "duration": 60,
+  "session_id": "backend-session"
+}
+```
+
+### 6. `set_log_level` - Adjust Logging Verbosity
+```json
+{
+  "level": "debug",
+  "session_id": "backend-session"
+}
+```
+
+### 7. `list_sessions` - Show Active Sessions
+```json
+{}
+```
+
+### 8. `stop_app` - Clean Shutdown
+```json
+{
+  "session_id": "backend-session"
+}
+```
 
 ## Installation
 
 ```bash
-# Clone the repository
-git clone <repo-url>
-cd packages/mcps/fullstack-monitor
+# Clone and navigate to the package
+cd packages/mcps/mcp-monitor
 
-# Install dependencies (none required - standalone)
+# Install dependencies
 npm install
 
-# Make executable
+# Make executable (optional)
 chmod +x mcp-server.js
 ```
 
 ## Usage
 
-### Starting the MCP Server
-
+### As MCP Server (Recommended)
 ```bash
-# Direct execution
+# Start MCP server (communicates over stdio)
 node mcp-server.js
 
-# Or via npm
-npm start
+# The server will wait for MCP initialization handshake
+# and respond to tool calls via JSON-RPC 2.0
 ```
 
-The server communicates over stdio using JSON-RPC 2.0 protocol.
+### For Testing/Development
+```bash
+# Run comprehensive tests
+npm test
 
-### Example Tool Usage
+# Test individual components
+npm run test:unit          # Unit tests
+npm run test:integration   # Integration tests
 
-#### Start Monitoring
+# Demo MCP client
+npm run demo
+```
+
+## Common Workflows
+
+### 1. Monitor Node.js Application
 ```json
+// 1. Start server with monitoring
 {
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "tools/call",
-  "params": {
-    "name": "start_fullstack_monitoring",
-    "arguments": {
-      "backend_script": "./server.js",
-      "backend_name": "my-api",
-      "backend_port": 3001,
-      "frontend_url": "http://localhost:3000",
-      "headless": true,
-      "session_id": "debug-session-1"
-    }
+  "name": "start_server",
+  "arguments": {
+    "script": "./app.js",
+    "wait_for_port": 3000,
+    "session_id": "my-app",
+    "log_level": "info"
+  }
+}
+
+// 2. Open browser to test
+{
+  "name": "open_page",
+  "arguments": {
+    "url": "http://localhost:3000",
+    "session_id": "my-app",
+    "headless": false
+  }
+}
+
+// 3. Monitor logs in real-time
+{
+  "name": "query_logs",
+  "arguments": {
+    "session_id": "my-app",
+    "last": "1m",
+    "include_system": true
   }
 }
 ```
 
-#### Execute Debug Scenario
+### 2. Monitor TypeScript Application
 ```json
+// Automatically detects TypeScript and uses ts-node
 {
-  "jsonrpc": "2.0",
-  "id": 2,
-  "method": "tools/call",
-  "params": {
-    "name": "execute_debug_scenario",
-    "arguments": {
-      "steps": [
-        { "action": "screenshot" },
-        { "action": "click", "selector": "#login-btn" },
-        { "action": "type", "selector": "#username", "text": "test@example.com" },
-        { "action": "click", "selector": "#submit" }
-      ],
-      "session_id": "debug-session-1"
-    }
+  "name": "start_server",
+  "arguments": {
+    "script": "./src/server.ts",
+    "wait_for_port": 8080,
+    "session_id": "ts-app"
   }
 }
 ```
 
-#### Search Logs
+### 3. Monitor via Package.json Scripts
 ```json
+// Uses existing npm scripts with monitoring injection
 {
-  "jsonrpc": "2.0",
-  "id": 3,
-  "method": "tools/call",
-  "params": {
-    "name": "search_logs",
-    "arguments": {
-      "query": "error",
-      "mode": "keyword",
-      "source": "all",
-      "limit": 50,
-      "session_id": "debug-session-1"
-    }
+  "name": "start_server",
+  "arguments": {
+    "package_path": "./backend",
+    "start_script": "dev",
+    "wait_for_port": 4000,
+    "session_id": "dev-server"
   }
 }
 ```
+
+### 4. Debug Frontend Issues
+```json
+// 1. Start backend
+{ "name": "start_server", "arguments": { "script": "./api.js", "wait_for_port": 3001 } }
+
+// 2. Open frontend
+{ "name": "open_page", "arguments": { "url": "http://localhost:3000" } }
+
+// 3. Take screenshot of issue
+{ "name": "take_screenshot", "arguments": { "path": "./issue.png", "fullPage": true } }
+
+// 4. Check for errors
+{ "name": "query_logs", "arguments": { "level": "error", "last": "5m" } }
+```
+
+## Architecture
+
+```
+AI Agent (Claude Code, etc.)
+    ↓ MCP Protocol (JSON-RPC over stdio)
+MCP Server
+    ├── EnhancedServerStarter (Node.js/TypeScript process management)
+    ├── SessionManager (resource lifecycle)  
+    ├── PortManager (port allocation)
+    └── SimplifiedTools (8 focused tools)
+        ├── start_server (universal app launching)
+        ├── open_page (browser automation)
+        ├── query_logs (log analysis)
+        ├── take_screenshot (debugging)
+        ├── record_video (interaction recording)
+        ├── set_log_level (runtime configuration)
+        ├── list_sessions (session management)  
+        └── stop_app (cleanup)
+```
+
+## What Makes This Special
+
+### 🎯 **Universal Compatibility**
+- Works with **any Node.js or TypeScript** application
+- Supports **direct scripts, npm scripts, ts-node, tsx, nodemon**
+- **Automatic detection** of project type and tooling
+- **No configuration required** - just point and monitor
+
+### ⚡ **Automatic Instrumentation** 
+- **Sidewinder injection** happens automatically during startup
+- **Zero code changes** required in your application
+- **Request correlation tracking** across your entire stack
+- **Performance monitoring** with detailed metrics
+
+### 🔧 **AI Agent Optimized**
+- **Rich error messages** with actionable suggestions
+- **Flexible parameter handling** (script OR package.json)
+- **Session isolation** for multiple concurrent projects
+- **Clean resource management** with automatic cleanup
+
+### 🚀 **Production Ready**
+- **Comprehensive test coverage** (8 test scenarios)
+- **Process lifecycle management** with graceful shutdown
+- **Port conflict resolution** with automatic allocation
+- **Memory leak prevention** with proper resource cleanup
 
 ## Testing
 
-The MCP server includes comprehensive test coverage:
+The server includes extensive test coverage:
 
 ```bash
-# Run all tests
+# Run all tests (recommended)
 npm test
 
-# Run only unit tests
-npm run test:unit
+# Specific test suites
+npm run test:unit                                    # Component tests
+npm run test:integration                             # End-to-end workflows
 
-# Run only integration tests
-npm run test:integration
-
-# Test server startup
-npm run test:server
+# Individual test files
+npx jest __tests__/integration/EnhancedStarterComprehensive.test.js --verbose
 ```
 
 **Test Coverage:**
-- **Tests** across multiple test suites
-- **Unit Tests**: SessionManager, ToolHandler
-- **Integration Tests**: Full workflow (7 tests), End-to-end MCP protocol (2 tests)
-
-## Key Features
-
-### 1. Session Management
-- Supports multiple concurrent monitoring sessions
-- Automatic session limits and cleanup
-- Session timeout handling
-- Resource leak prevention
-
-### 2. Real-time Monitoring
-- Backend process monitoring with stdout/stderr capture
-- Frontend browser automation and event capture
-- Cross-system correlation ID tracking
-- Real-time log streaming and analysis
-
-### 3. Intelligent Analysis
-- Error pattern recognition and grouping
-- Performance bottleneck identification
-- Request flow tracing across frontend and backend
-- Automated recommendations for issue resolution
-
-### 4. Rich Response Formatting
-- Markdown-formatted responses with emojis and structure
-- Context-aware error messages and suggestions
-- Detailed debug scenario results with step-by-step analysis
-- Comprehensive statistics and monitoring insights
+- ✅ **8 comprehensive scenarios**: Node.js direct, TypeScript direct, package.json scripts, error handling, multi-server
+- ✅ **Sidewinder verification**: Every test confirms monitoring injection works
+- ✅ **Correlation tracking**: Request correlation IDs verified in all scenarios  
+- ✅ **Resource cleanup**: All sessions properly cleaned up
+- ✅ **Error handling**: Missing files, invalid configs, duplicate sessions
 
 ## Error Handling
 
-The server includes robust error handling:
+The server provides helpful error messages with troubleshooting guidance:
 
-- **Tool Validation**: Schema validation for all tool parameters
-- **Session Recovery**: Graceful handling of failed monitoring sessions
-- **Resource Cleanup**: Automatic cleanup on errors and timeouts
-- **Protocol Compliance**: Full JSON-RPC 2.0 error response formatting
+```bash
+❌ Failed to start server: Script file not found at /path/to/server.js
 
-## Development
-
-### Project Structure
-```
-mcp-server.js                 # Main MCP server implementation
-handlers/
-  ├── SessionManager.js            # Session and monitor management
-  └── ToolHandler.js               # Tool routing and formatting
-actors/                            # Actor-based architecture
-  ├── MonitorActorSpace.js         # Central actor management
-  ├── BrowserMonitorActor.js       # Browser event handling
-  ├── SidewinderActor.js           # Node.js instrumentation
-  ├── LogManagerActor.js           # Log persistence
-  ├── SessionActor.js              # Session lifecycle
-  └── CorrelationActor.js          # Request correlation
-tools/
-  ├── MonitoringTools.js           # Core monitoring operations
-  ├── DebugTools.js                # Debug scenarios and screenshots
-  └── AnalysisTools.js             # Log analysis and correlation
-__tests__/
-  ├── unit/                        # Unit tests for components
-  └── integration/                 # End-to-end workflow tests
+💡 Troubleshooting:
+- Check that the script path is correct
+- Ensure the file exists and is readable
+- Try using package.json approach instead: {"package_path": "./", "start_script": "start"}
 ```
 
-### Dependencies
-- **Zero Dependencies**: Fully standalone implementation
-- **Node.js**: Requires Node.js 18+ for ES modules
-- **Mock Implementation**: Uses mock monitors for testing without Legion dependencies
+## Requirements
 
-### Contributing
-
-1. All changes must include tests
-2. Maintain 100% test pass rate
-3. Follow existing code patterns and naming conventions
-4. Update documentation for API changes
-
-## Protocol Compliance
-
-This server implements MCP Protocol version 2024-11-05:
-
-- **Transport**: JSON-RPC 2.0 over stdio
-- **Methods**: `initialize`, `tools/list`, `tools/call`, `notifications/initialized`
-- **Capabilities**: Tools execution with schema validation
-- **Error Codes**: Standard JSON-RPC error codes (-32600 to -32603)
+- **Node.js 18+** (for ES modules and advanced features)
+- **npm or yarn** (if using package.json scripts)
+- **TypeScript tooling** (ts-node, tsx) if monitoring TypeScript apps
 
 ## Integration with AI Agents
 
-This MCP server is designed to work seamlessly with AI agents like Claude:
+This MCP server is designed for seamless integration with AI coding assistants:
 
-1. **Agent starts MCP server** as a subprocess
-2. **Handshake** via initialize/tools-list protocol
-3. **Tool execution** for monitoring and debugging tasks
-4. **Rich responses** provide actionable insights to the agent
-5. **Session cleanup** when agent completes tasks
+1. **Agent starts** the MCP server process
+2. **Handshake** via MCP protocol initialization  
+3. **Tool calls** for application monitoring and debugging
+4. **Rich responses** provide actionable insights
+5. **Session cleanup** when debugging is complete
 
-The server provides everything needed for an AI agent to become a full-stack debugging expert, with the ability to monitor applications, identify issues, and provide detailed analysis and recommendations.
+The server handles all the complexity of process management, monitoring injection, and resource cleanup, allowing AI agents to focus on high-level debugging and analysis tasks.
 
 ## License
 
-Part of the Legion AI Agent Framework - see main repository for license information.
+Part of the Legion AI Agent Framework - MIT License

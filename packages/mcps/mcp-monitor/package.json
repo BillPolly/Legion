@@ -2,7 +2,7 @@
   "name": "@legion/mcp-monitor",
   "version": "1.0.0",
   "type": "module",
-  "description": "MCP server for fullstack monitoring capabilities",
+  "description": "MCP server for Node.js/TypeScript app monitoring with Sidewinder instrumentation. Supports direct scripts and package.json workflows with browser automation.",
   "main": "mcp-server.js",
   "bin": {
     "mcp-monitor": "mcp-server.js"

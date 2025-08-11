@@ -61,7 +61,7 @@ describe('Full MCP Workflow Integration', () => {
       // Test missing required arguments for start_server
       const missingServerResult = await toolHandler.executeTool('start_server', {});
       expect(missingServerResult.isError).toBe(true);
-      expect(missingServerResult.content[0].text).toContain('Missing required parameter "script"');
+      expect(missingServerResult.content[0].text).toContain('Either script path, startScript name, or packagePath must be provided');
       
       // Test invalid script path for start_server
       const invalidServerResult = await toolHandler.executeTool('start_server', {
@@ -105,8 +105,10 @@ describe('Full MCP Workflow Integration', () => {
       
       // Verify new tool schemas
       const startServerTool = tools.find(t => t.name === 'start_server');
-      expect(startServerTool.inputSchema.required).toContain('script');
+      // Enhanced start_server has flexible parameters (script OR package_path/start_script)
       expect(startServerTool.inputSchema.properties.script).toBeDefined();
+      expect(startServerTool.inputSchema.properties.package_path).toBeDefined();
+      expect(startServerTool.inputSchema.properties.start_script).toBeDefined();
       expect(startServerTool.inputSchema.properties.session_id).toBeDefined();
       expect(startServerTool.inputSchema.properties.log_level).toBeDefined();
       

@@ -10,10 +10,12 @@ import net from 'net';
 import { Sidewinder } from '@legion/sidewinder';
 import puppeteer from 'puppeteer';
 import { portManager } from '../utils/PortManager.js';
+import { EnhancedServerStarter } from './EnhancedServerStarter.js';
 
 export class SimplifiedTools {
   constructor(sessionManager) {
     this.sessionManager = sessionManager;
+    this.enhancedStarter = new EnhancedServerStarter(sessionManager);
     // Process management now handled by SessionManager
   }
   
@@ -25,13 +27,21 @@ export class SimplifiedTools {
       // NEW: Focused server startup tool
       {
         name: 'start_server',
-        description: 'Start a Node.js server with automatic monitoring via Sidewinder injection',
+        description: 'Start a Node.js server with automatic monitoring via Sidewinder injection. Works with TypeScript, package.json scripts, and various Node.js loaders.',
         inputSchema: {
           type: 'object',
           properties: {
             script: { 
               type: 'string', 
-              description: 'Path to your Node.js server script (e.g., server.js)' 
+              description: 'Path to your Node.js server script (e.g., server.js, src/server.ts)' 
+            },
+            package_path: {
+              type: 'string',
+              description: 'Path to directory containing package.json. If provided, can use start_script parameter.'
+            },
+            start_script: {
+              type: 'string', 
+              description: 'Name of npm script to run from package.json (e.g., "start", "dev", "server"). Defaults to "start" if package_path is provided.'
             },
             wait_for_port: { 
               type: 'number', 
@@ -47,9 +57,12 @@ export class SimplifiedTools {
               type: 'string',
               description: 'Optional session ID',
               default: 'default'
+            },
+            env: {
+              type: 'object',
+              description: 'Additional environment variables to pass to the server process'
             }
-          },
-          required: ['script']
+          }
         }
       },
 
@@ -291,46 +304,19 @@ export class SimplifiedTools {
   }
   
   /**
-   * Start a server with Sidewinder monitoring (new focused approach)
+   * Start a server with enhanced script handling and Sidewinder monitoring
    */
   async startServer(args) {
     try {
       const { 
         script, 
+        package_path,
+        start_script,
         wait_for_port, 
         log_level = 'info', 
-        session_id = 'default'
+        session_id = 'default',
+        env = {}
       } = args;
-      
-      // Validate required script parameter
-      if (!script) {
-        return {
-          content: [{
-            type: 'text',
-            text: '❌ Failed to start server: Missing required parameter "script"'
-          }],
-          isError: true
-        };
-      }
-      
-      // Validate script file exists
-      const __dirname = path.dirname(fileURLToPath(import.meta.url));
-      const scriptPath = path.isAbsolute(script) 
-        ? script 
-        : path.join(__dirname, '..', script);
-      
-      if (!existsSync(scriptPath)) {
-        return {
-          content: [{
-            type: 'text',
-            text: `❌ Failed to start server: Script file not found: ${scriptPath}`
-          }],
-          isError: true
-        };
-      }
-      
-      // Get or create monitor for session
-      const monitor = await this.sessionManager.getOrCreateMonitor(session_id);
       
       // Check if process already exists for this session
       if (this.sessionManager.getProcess(session_id)) {
@@ -343,85 +329,60 @@ export class SimplifiedTools {
         };
       }
       
-      // Reserve ports for this session
-      const appPort = wait_for_port || await portManager.reservePort(session_id, 'app');
+      // Get or create monitor for session
+      const monitor = await this.sessionManager.getOrCreateMonitor(session_id);
       
-      const sidewinderServer = await this.sessionManager.initializeSidewinderServer();
-      const sidewinderPort = sidewinderServer.port;
-      
-      console.log(`[SimplifiedTools] Starting server on port ${appPort}, Sidewinder on ${sidewinderPort}`);
-      
-      // Configure Sidewinder based on log level
-      const sidewinderProfile = this.mapLogLevelToProfile(log_level);
-      
-      // Prepare Sidewinder injection
-      const sidewinder = new Sidewinder({
-        wsPort: sidewinderPort,
-        wsHost: 'localhost',
-        sessionId: session_id,
-        profile: sidewinderProfile,
-        debug: log_level === 'trace'
-      });
-      
-      const injectPath = await sidewinder.prepare();
-      
-      // Spawn the actual backend process with Sidewinder injection and assigned port
-      const appProcess = spawn('node', [
-        '--import', injectPath,  // Inject Sidewinder (use --import for ES6 modules)
-        scriptPath
-      ], {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        env: {
-          ...process.env,
-          PORT: appPort.toString(), // Pass assigned port to app
-          NODE_OPTIONS: '--experimental-vm-modules'
-        }
-      });
-      
-      // Log any immediate errors from the process
-      appProcess.on('error', (error) => {
-        console.error(`[SimplifiedTools] Process error for ${session_id}:`, error);
-      });
-      
-      // Register process with SessionManager
-      this.sessionManager.registerProcess(session_id, {
-        process: appProcess,
-        pid: appProcess.pid,
-        port: appPort,
-        startTime: new Date()
+      // Use enhanced starter to handle various script types
+      const result = await this.enhancedStarter.startServer({
+        script,
+        packagePath: package_path,
+        startScript: start_script,
+        wait_for_port,
+        log_level,
+        session_id,
+        env
       });
       
       // Store log level for session
       this.sessionManager.setLogLevel(session_id, log_level);
       
       // Wait for server to be ready
-      const serverReady = await this.waitForServerReady(appProcess, appPort, 15000);
+      const serverReady = await this.waitForServerReady(result.process, result.port, 15000);
       
       // Capture logs from process stdout/stderr AFTER server is ready
-      await this.setupLogCapture(appProcess, session_id, monitor);
+      await this.setupLogCapture(result.process, session_id, monitor);
       
       // Handle process exit - SessionManager will handle cleanup
-      appProcess.on('exit', (code) => {
+      result.process.on('exit', (code) => {
         console.log(`Process exited with code ${code} for session ${session_id}`);
       });
       
       if (!serverReady) {
         // Clean up failed process
-        appProcess.kill('SIGTERM');
+        result.process.kill('SIGTERM');
         await this.sessionManager.killProcess(session_id);
-        throw new Error(`Server failed to start on port ${appPort} within 15 seconds`);
+        throw new Error(`Server failed to start on port ${result.port} within 15 seconds`);
+      }
+      
+      // Construct status message
+      let commandDesc = script || 'package.json script';
+      if (start_script) {
+        commandDesc = `npm run ${start_script}`;
+      } else if (package_path && !script) {
+        commandDesc = 'npm start';
       }
       
       return {
         content: [{
           type: 'text',
-          text: `✅ Started server: ${script}\n` +
+          text: `✅ Started server: ${commandDesc}\n` +
                 `📊 Session: ${session_id}\n` +
                 `📝 Log level: ${log_level}\n` +
-                `🔌 Port: ${appPort}\n` +
-                `🔍 Sidewinder monitoring enabled\n` +
-                `🌐 Server URL: http://localhost:${appPort}\n\n` +
-                `💡 Tip: Use 'open_page' to open a browser, or access http://localhost:${appPort}/index.html directly`
+                `🔌 Port: ${result.port}\n` +
+                `🏠 Working directory: ${result.workingDir}\n` +
+                `🔍 Sidewinder monitoring enabled (port ${result.sidewinderPort})\n` +
+                `🌐 Server URL: http://localhost:${result.port}\n\n` +
+                `💡 Tip: Use 'open_page' to open a browser, or access http://localhost:${result.port} directly`
         }]
       };
     } catch (error) {
