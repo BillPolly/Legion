@@ -12,7 +12,7 @@ export class MonitorActorSpace extends ActorSpace {
     super(spaceId);
     
     this.sessionId = sessionId || spaceId;
-    this.actors = new Map();
+    this.monitorActors = new Map();
     this.browserConnections = new Map(); // pageId -> Channel
     this.nodeConnections = new Map();    // processId -> Channel
     
@@ -25,7 +25,7 @@ export class MonitorActorSpace extends ActorSpace {
   registerMonitorActor(actor, actorType) {
     const guid = `${this.spaceId}-${actorType}`;
     this.register(actor, guid);
-    this.actors.set(actorType, { actor, guid });
+    this.monitorActors.set(actorType, { actor, guid });
     
     console.log(`[MonitorActorSpace] Registered ${actorType} actor with GUID: ${guid}`);
     return guid;
@@ -35,7 +35,7 @@ export class MonitorActorSpace extends ActorSpace {
    * Get a monitoring actor by type
    */
   getMonitorActor(actorType) {
-    const entry = this.actors.get(actorType);
+    const entry = this.monitorActors.get(actorType);
     return entry ? entry.actor : null;
   }
   

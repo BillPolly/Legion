@@ -357,7 +357,7 @@ export class SessionManager {
           id: sessionId,
           startTime: session.startTime.toISOString(),
           active: session.active,
-          hasProcess: this.processes.has(sessionId),
+          hasProcess: this.activeProcesses.has(sessionId),
           hasMonitor: this.monitors.has(sessionId)
         });
       }
