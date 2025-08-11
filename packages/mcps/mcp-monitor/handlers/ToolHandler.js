@@ -84,6 +84,11 @@ export class ToolHandler {
    */
   async cleanup() {
     try {
+      // Clean up any spawned processes in tools
+      if (this.tools && this.tools.cleanup) {
+        await this.tools.cleanup();
+      }
+      
       await this.sessionManager.endAllSessions();
       await this.sessionManager.cleanupSidewinder();
     } catch (error) {

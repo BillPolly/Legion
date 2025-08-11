@@ -4,7 +4,6 @@
 
 import { SessionManager } from '../../handlers/SessionManager.js';
 import { SimplifiedTools } from '../../tools/SimplifiedTools.js';
-import { writeFileSync, mkdirSync, rmSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -14,81 +13,14 @@ const __dirname = path.dirname(__filename);
 describe('Actor Implementation with SimplifiedTools', () => {
   let sessionManager;
   let tools;
-  let testAppDir;
+  let webAppPath;
   
   beforeAll(() => {
     // Ensure Actor protocol is enabled
     process.env.USE_ACTOR_PROTOCOL = 'true';
     
-    // Create test app directory
-    testAppDir = path.join(__dirname, 'test-actor-app');
-    mkdirSync(testAppDir, { recursive: true });
-    
-    // Create a simple test server
-    const serverScript = path.join(testAppDir, 'server.js');
-    writeFileSync(serverScript, `
-      const http = require('http');
-      const port = 3010;
-      
-      console.log('Starting test server...');
-      
-      const server = http.createServer((req, res) => {
-        console.log(\`[\${new Date().toISOString()}] \${req.method} \${req.url}\`);
-        
-        if (req.url === '/api/test') {
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ message: 'Test response' }));
-        } else if (req.url === '/error') {
-          console.error('Simulated error occurred');
-          res.writeHead(500);
-          res.end('Internal Server Error');
-        } else {
-          res.writeHead(200);
-          res.end('OK');
-        }
-      });
-      
-      server.listen(port, () => {
-        console.log(\`Server running on port \${port}\`);
-      });
-      
-      // Simulate some activity
-      setTimeout(() => {
-        console.log('Server is active');
-        console.warn('This is a warning');
-      }, 100);
-      
-      setTimeout(() => {
-        console.error('Test error message');
-      }, 200);
-    `);
-    
-    // Create test HTML page
-    const htmlFile = path.join(testAppDir, 'index.html');
-    writeFileSync(htmlFile, `
-      <!DOCTYPE html>
-      <html>
-      <head><title>Test Page</title></head>
-      <body>
-        <h1>Test Page</h1>
-        <button id="test-button">Test Button</button>
-        <div id="result"></div>
-        <script>
-          console.log('Page loaded');
-          document.getElementById('test-button').addEventListener('click', () => {
-            console.log('Button clicked');
-            fetch('/api/test')
-              .then(r => r.json())
-              .then(data => {
-                console.log('Received:', data);
-                document.getElementById('result').textContent = data.message;
-              })
-              .catch(err => console.error('Fetch error:', err));
-          });
-        </script>
-      </body>
-      </html>
-    `);
+    // Use the existing reliable test app
+    webAppPath = path.join(__dirname, 'test-apps/web-app/server.js');
   });
   
   beforeEach(() => {
@@ -105,8 +37,7 @@ describe('Actor Implementation with SimplifiedTools', () => {
   });
   
   afterAll(() => {
-    // Clean up test directory
-    rmSync(testAppDir, { recursive: true, force: true });
+    // No cleanup needed for shared test app
   });
   
   describe('Actor Architecture Setup', () => {
@@ -139,7 +70,7 @@ describe('Actor Implementation with SimplifiedTools', () => {
   describe('Tool: start_app', () => {
     test('should start app monitoring with Actor architecture', async () => {
       const result = await tools.execute('start_app', {
-        script: path.join(testAppDir, 'server.js'),
+        script: webAppPath,
         session_id: 'start-test',
         log_level: 'info'
       });
@@ -156,7 +87,7 @@ describe('Actor Implementation with SimplifiedTools', () => {
     
     test('should configure log level correctly', async () => {
       await tools.execute('start_app', {
-        script: path.join(testAppDir, 'server.js'),
+        script: webAppPath,
         session_id: 'log-level-test',
         log_level: 'debug'
       });
@@ -169,7 +100,7 @@ describe('Actor Implementation with SimplifiedTools', () => {
     test('should query logs through LogManagerActor', async () => {
       // First start monitoring
       await tools.execute('start_app', {
-        script: path.join(testAppDir, 'server.js'),
+        script: webAppPath,
         session_id: 'query-test'
       });
       
@@ -228,7 +159,7 @@ describe('Actor Implementation with SimplifiedTools', () => {
     
     test('should filter logs by level', async () => {
       await tools.execute('start_app', {
-        script: path.join(testAppDir, 'server.js'),
+        script: webAppPath,
         session_id: 'filter-test'
       });
       
@@ -288,7 +219,7 @@ describe('Actor Implementation with SimplifiedTools', () => {
   describe('Tool: set_log_level', () => {
     test('should set log level through actors', async () => {
       await tools.execute('start_app', {
-        script: path.join(testAppDir, 'server.js'),
+        script: webAppPath,
         session_id: 'level-test'
       });
       
@@ -306,12 +237,12 @@ describe('Actor Implementation with SimplifiedTools', () => {
     test('should list active sessions with Actor architecture', async () => {
       // Start multiple sessions
       await tools.execute('start_app', {
-        script: path.join(testAppDir, 'server.js'),
+        script: webAppPath,
         session_id: 'session-1'
       });
       
       await tools.execute('start_app', {
-        script: path.join(testAppDir, 'server.js'),
+        script: webAppPath,
         session_id: 'session-2'
       });
       
@@ -325,7 +256,7 @@ describe('Actor Implementation with SimplifiedTools', () => {
   describe('Tool: stop_app', () => {
     test('should stop app and clean up ActorSpace', async () => {
       await tools.execute('start_app', {
-        script: path.join(testAppDir, 'server.js'),
+        script: webAppPath,
         session_id: 'stop-test'
       });
       

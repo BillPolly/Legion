@@ -1,11 +1,11 @@
 {
-  "name": "@legion/mcp-fullstack-monitor",
+  "name": "@legion/mcp-monitor",
   "version": "1.0.0",
   "type": "module",
   "description": "MCP server for fullstack monitoring capabilities",
   "main": "mcp-server.js",
   "bin": {
-    "mcp-fullstack-monitor": "./mcp-server.js"
+    "mcp-monitor": "mcp-server.js"
   },
   "scripts": {
     "start": "node mcp-server.js",
@@ -16,9 +16,15 @@
     "test:server": "node test-server.js"
   },
   "dependencies": {
-    "@legion/shared": "file:../../shared"
+    "@legion/shared": "file:../../shared",
+    "@legion/sidewinder": "file:../../sidewinder",
+    "express": "^4.21.2",
+    "puppeteer": "^21.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

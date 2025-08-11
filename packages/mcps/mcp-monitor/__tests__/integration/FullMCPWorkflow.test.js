@@ -18,42 +18,8 @@ describe('Full MCP Workflow Integration', () => {
   let backendScript;
   
   beforeAll(() => {
-    // Create test application files
-    testAppDir = path.join(__dirname, 'test-workflow-app');
-    try {
-      mkdirSync(testAppDir, { recursive: true });
-    } catch (err) {
-      // Directory already exists
-    }
-    
-    // Create backend test server
-    backendScript = path.join(testAppDir, 'server.js');
-    writeFileSync(backendScript, `
-const http = require('http');
-
-const server = http.createServer((req, res) => {
-  console.log(\`[\${new Date().toISOString()}] \${req.method} \${req.url}\`);
-  
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  
-  if (req.url === '/api/test') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ message: 'Test successful' }));
-  } else if (req.url === '/error') {
-    console.error('Test error');
-    res.writeHead(500);
-    res.end('Test error');
-  } else {
-    res.writeHead(200);
-    res.end('OK');
-  }
-});
-
-server.listen(3006, () => {
-  console.log('Test server listening on port 3006');
-});
-`);
+    // Use the existing browser test app instead of creating a new one
+    backendScript = path.join(__dirname, 'test-apps/web-app/server.js');
   });
   
   beforeEach(() => {
@@ -178,14 +144,15 @@ server.listen(3006, () => {
     });
     
     test('should validate tool arguments properly', async () => {
-      // Test missing required arguments (start_app actually handles undefined gracefully)
+      // Test missing required arguments
       const missingResult = await toolHandler.executeTool('start_app', {
         // Missing required 'script' argument
         session_id: 'test'
       });
       
-      // start_app tool handles missing script gracefully, so check for successful response
-      expect(missingResult.content[0].text).toContain('Started app');
+      // Should return error for missing script
+      expect(missingResult.isError).toBe(true);
+      expect(missingResult.content[0].text).toContain('Missing required parameter "script"');
       
       // Test unknown tool
       const unknownResult = await toolHandler.executeTool('unknown_tool', {});

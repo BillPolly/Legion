@@ -12,12 +12,14 @@ import { SidewinderActor } from '../actors/SidewinderActor.js';
 import { LogManagerActor } from '../actors/LogManagerActor.js';
 import { SessionActor } from '../actors/SessionActor.js';
 import { CorrelationActor } from '../actors/CorrelationActor.js';
+import { portManager } from '../utils/PortManager.js';
 
 export class SessionManager {
   constructor() {
     this.sessions = new Map();
     this.monitors = new Map();
     this.actorSpaces = new Map(); // sessionId -> MonitorActorSpace
+    this.activeProcesses = new Map(); // sessionId -> { process, pid, port, startTime }
     this.maxSessions = 3;
     this.defaultResourceManager = this.createDefaultResourceManager();
     this.sidewinderServer = null;
@@ -239,16 +241,6 @@ export class SessionManager {
     return this.monitors.has(sessionId);
   }
   
-  /**
-   * Get all active sessions
-   */
-  getActiveSessions() {
-    return Array.from(this.sessions.values()).map(session => ({
-      id: session.id,
-      startTime: session.startTime,
-      active: session.active
-    }));
-  }
   
   /**
    * End a specific session
@@ -280,14 +272,97 @@ export class SessionManager {
   }
   
   /**
+   * Register a process for a session
+   */
+  registerProcess(sessionId, processInfo) {
+    this.activeProcesses.set(sessionId, processInfo);
+    console.log(`[SessionManager] Registered process ${processInfo.pid} for session: ${sessionId}`);
+  }
+
+  /**
+   * Get process info for a session
+   */
+  getProcess(sessionId) {
+    return this.activeProcesses.get(sessionId);
+  }
+
+  /**
+   * Kill and cleanup process for a session
+   */
+  async killProcess(sessionId) {
+    const processInfo = this.activeProcesses.get(sessionId);
+    if (processInfo && processInfo.process) {
+      try {
+        processInfo.process.kill('SIGTERM');
+        console.log(`[SessionManager] Killed process ${processInfo.pid} for session: ${sessionId}`);
+        
+        // Wait a bit for graceful shutdown, then force kill if needed
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        if (!processInfo.process.killed) {
+          processInfo.process.kill('SIGKILL');
+          console.log(`[SessionManager] Force killed process ${processInfo.pid} for session: ${sessionId}`);
+        }
+      } catch (error) {
+        console.error(`[SessionManager] Error killing process for session ${sessionId}:`, error);
+      }
+      
+      this.activeProcesses.delete(sessionId);
+      
+      // Release ports for this session
+      portManager.releaseSessionPorts(sessionId);
+    }
+  }
+
+  /**
+   * Get all active processes
+   */
+  getActiveProcesses() {
+    const processes = {};
+    for (const [sessionId, processInfo] of this.activeProcesses.entries()) {
+      processes[sessionId] = {
+        pid: processInfo.pid,
+        port: processInfo.port,
+        startTime: processInfo.startTime,
+        running: processInfo.process && !processInfo.process.killed
+      };
+    }
+    return processes;
+  }
+
+  /**
    * End all sessions (for cleanup)
    */
   async endAllSessions() {
     const sessionIds = Array.from(this.monitors.keys());
     
+    // Kill all processes first
+    for (const sessionId of sessionIds) {
+      await this.killProcess(sessionId);
+    }
+    
     for (const sessionId of sessionIds) {
       await this.endSession(sessionId);
     }
+  }
+  
+  /**
+   * Get active sessions
+   */
+  getActiveSessions() {
+    const sessions = [];
+    for (const [sessionId, session] of this.sessions.entries()) {
+      if (session.active) {
+        sessions.push({
+          id: sessionId,
+          startTime: session.startTime.toISOString(),
+          active: session.active,
+          hasProcess: this.processes.has(sessionId),
+          hasMonitor: this.monitors.has(sessionId)
+        });
+      }
+    }
+    return sessions;
   }
   
   /**
@@ -334,16 +409,25 @@ export class SessionManager {
   /**
    * Initialize Sidewinder server
    */
-  async initializeSidewinderServer(port = 9898) {
+  async initializeSidewinderServer() {
     if (!this.sidewinderServer) {
-      this.sidewinderServer = new SidewinderServer(port);
-      await this.sidewinderServer.start();
-      
-      // Listen for Sidewinder events
-      this.sidewinderServer.on('event', ({ sessionId, event }) => {
-        // Could emit events or process them here
-        // For now, they're stored in the SidewinderServer
-      });
+      try {
+        // Reserve a port for Sidewinder WebSocket server
+        const port = await portManager.reservePort('sidewinder-global', 'websocket');
+        this.sidewinderServer = new SidewinderServer(port);
+        await this.sidewinderServer.start();
+        
+        // Listen for Sidewinder events
+        this.sidewinderServer.on('event', ({ sessionId, event }) => {
+          // Could emit events or process them here
+          // For now, they're stored in the SidewinderServer
+        });
+        
+        console.log(`[SessionManager] Started Sidewinder server on port ${port}`);
+      } catch (error) {
+        console.error('[SessionManager] Failed to start Sidewinder server:', error);
+        throw error;
+      }
     }
     return this.sidewinderServer;
   }
