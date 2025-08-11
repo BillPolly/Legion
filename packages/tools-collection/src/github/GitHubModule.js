@@ -1,5 +1,5 @@
 import { Module } from '@legion/tools';
-import GitHub from './index.js';
+import GitHubTool from './GitHubTool.js';
 
 /**
  * GitHubModule - Module that provides GitHub-related tools
@@ -31,15 +31,13 @@ class GitHubModule extends Module {
 
     // Store configuration for tools
     this.config = { token, org, user, apiBase };
-  }
-
-  /**
-   * Get all tools provided by this module
-   */
-  getTools() {
-    return [
-      new GitHub(this.config)
-    ];
+    
+    // Initialize tools dictionary
+    this.tools = {};
+    
+    // Create and register GitHub tool
+    const githubTool = new GitHubTool(this.config);
+    this.registerTool(githubTool.name, githubTool);
   }
 
 }

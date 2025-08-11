@@ -67,6 +67,9 @@ export default class AIGenerationModule extends Module {
     if (!this.llmClient.supportsImageGeneration()) {
       throw new Error('OpenAI provider should support image generation but check failed');
     }
+    
+    // Initialize tools after LLMClient is ready
+    this.initializeTools();
   }
 
   /**
@@ -268,14 +271,17 @@ export default class AIGenerationModule extends Module {
   }
 
   /**
-   * Get tools provided by this module
+   * Initialize tools for this module
    */
-  getTools() {
-    return [
-      new ImageGenerationTool({
-        ...this.config,
-        module: this  // Pass reference to this module instance
-      })
-    ];
+  initializeTools() {
+    // Initialize tools dictionary
+    this.tools = {};
+    
+    // Create and register the image generation tool
+    const imageGenTool = new ImageGenerationTool({
+      ...this.config,
+      module: this  // Pass reference to this module instance
+    });
+    this.registerTool(imageGenTool.name, imageGenTool);
   }
 }

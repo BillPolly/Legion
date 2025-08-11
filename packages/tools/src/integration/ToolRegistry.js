@@ -174,8 +174,11 @@ export class ToolRegistry {
    */
   async #loadModuleFromMongoDB(moduleName) {
     try {
+      console.log(`[DEBUG] Loading module '${moduleName}' from MongoDB`);
+      
       // Check module cache first
       if (this.moduleCache.has(moduleName)) {
+        console.log(`[DEBUG] Module '${moduleName}' found in cache`);
         return this.moduleCache.get(moduleName);
       }
 
@@ -185,15 +188,21 @@ export class ToolRegistry {
         console.warn(`Module ${moduleName} not found in database`);
         return null;
       }
+      
+      console.log(`[DEBUG] Module metadata found: type=${moduleMetadata.type}, path=${moduleMetadata.path}`);
 
       // Load module using hardcoded mappings (for reliability)
       const moduleInstance = await this.#loadModuleByName(moduleName);
       
       if (moduleInstance) {
+        console.log(`[DEBUG] Module '${moduleName}' loaded successfully`);
+        console.log(`[DEBUG] Module instance type: ${typeof moduleInstance}`);
+        console.log(`[DEBUG] Module instance constructor: ${moduleInstance?.constructor?.name}`);
         this.moduleCache.set(moduleName, moduleInstance);
         return moduleInstance;
       }
 
+      console.log(`[DEBUG] Module '${moduleName}' failed to load`);
       return null;
       
     } catch (error) {
@@ -203,40 +212,101 @@ export class ToolRegistry {
   }
 
   /**
-   * Load module by name using known mappings
+   * Load module by name using the ModuleLoader system
    */
   async #loadModuleByName(moduleName) {
-    // First check if this is a JSON module by looking for module metadata with type 'json'
-    const moduleMetadata = await this.provider.getModule(moduleName);
-    if (moduleMetadata && moduleMetadata.type === 'json') {
-      // This is a JSON-based dynamic module
-      return await this.#loadJsonModule(moduleName, moduleMetadata);
-    }
+    try {
+      // Get module metadata from database
+      const moduleMetadata = await this.provider.getModule(moduleName);
+      if (!moduleMetadata) {
+        console.warn(`Module metadata not found for: ${moduleName}`);
+        return null;
+      }
 
-    // Map database module names to their actual file paths  
-    const moduleMap = {
-      'File': '../../../tools-collection/src/file/index.js',
-      'Calculator': '../../../tools-collection/src/calculator/index.js', 
-      'Json': '../../../tools-collection/src/json/index.js',
-      'CommandExecutor': '../../../tools-collection/src/command-executor/index.js',
-      'System': '../../../tools-collection/src/system/index.js',
-      'AIGeneration': '../../../tools-collection/src/ai-generation/index.js',
-      'Github': '../../../tools-collection/src/github/index.js',
-      'Serper': '../../../tools-collection/src/serper/index.js'
-    };
+      // Handle JSON modules
+      if (moduleMetadata.type === 'json') {
+        return await this.#loadJsonModule(moduleName, moduleMetadata);
+      }
 
-    const modulePath = moduleMap[moduleName];
-    if (!modulePath) {
-      console.warn(`No known path for module: ${moduleName}`);
+      // Handle class modules - use ModuleLoader approach
+      const { ModuleLoader } = await import('../loading/ModuleLoader.js');
+      const loader = new ModuleLoader({ 
+        verbose: false,
+        resourceManager: this.resourceManager 
+      });
+      await loader.initialize();
+      
+      // Load single module by creating a temporary registry entry
+      const moduleConfig = {
+        name: moduleMetadata.name,
+        type: moduleMetadata.type,
+        path: moduleMetadata.path,
+        className: moduleMetadata.className,
+        description: moduleMetadata.description
+      };
+
+      // Use the module loader to load this specific module
+      const moduleInstance = await loader.loadModule(moduleConfig);
+      if (moduleInstance) {
+        return moduleInstance;
+      }
+
+      // Fallback: direct loading based on known module locations
+      const fallbackInstance = await this.#loadModuleDirectly(moduleMetadata);
+      return fallbackInstance;
+
+    } catch (error) {
+      console.warn(`Failed to load module ${moduleName}:`, error.message);
       return null;
     }
+  }
 
+  /**
+   * Load module directly from filesystem
+   */
+  async #loadModuleDirectly(moduleMetadata) {
     try {
+      const path = await import('path');
+      const fs = await import('fs');
+
+      // Build the module path from Legion root
+      let modulePath;
+      const basePath = moduleMetadata.path;
+      
+      // Determine the actual file path
+      if (basePath.includes('tools-collection')) {
+        // Tools collection modules
+        modulePath = path.resolve('../../' + basePath + '/index.js');
+      } else {
+        // Package modules  
+        modulePath = path.resolve('../../' + basePath + '/index.js');
+      }
+
+      // Check if the file exists
+      if (!fs.existsSync(modulePath)) {
+        console.warn(`Module file not found: ${modulePath}`);
+        return null;
+      }
+
+      // Import and instantiate the module
       const ModuleClass = await import(modulePath);
-      const moduleInstance = new (ModuleClass.default || ModuleClass)();
-      return moduleInstance;
+      const ActualClass = ModuleClass.default || ModuleClass[moduleMetadata.className];
+      
+      if (!ActualClass) {
+        console.warn(`Module class ${moduleMetadata.className} not found in ${modulePath}`);
+        return null;
+      }
+
+      // Try factory pattern first
+      if (ActualClass.create && typeof ActualClass.create === 'function') {
+        return await ActualClass.create(this.resourceManager);
+      }
+
+      // Direct instantiation
+      return new ActualClass();
+
     } catch (error) {
-      console.warn(`Failed to load module ${moduleName} from ${modulePath}:`, error.message);
+      console.warn(`Direct module loading failed: ${error.message}`);
       return null;
     }
   }
@@ -247,7 +317,7 @@ export class ToolRegistry {
   async #loadJsonModule(moduleName, moduleMetadata) {
     try {
       // For JSON modules, we need to load the module.json file and create a dynamic wrapper
-      const { DynamicJsonModule } = await import('../modules/DynamicJsonModule.js');
+      const { DynamicJsonModule } = await import('../loading/DynamicJsonModule.js');
       
       // The moduleMetadata should contain the JSON definition
       // For now, we'll create a simple wrapper that can execute the inline functions
@@ -263,29 +333,50 @@ export class ToolRegistry {
 
   /**
    * Extract tool from module instance
+   * Enforces that modules MUST use dictionary pattern for tools storage
    */
   #extractToolFromModule(moduleInstance, toolName) {
     try {
-      // Try getTool method first
-      if (moduleInstance.getTool && typeof moduleInstance.getTool === 'function') {
-        const tool = moduleInstance.getTool(toolName);
-        if (tool) return tool;
+      // Verify module has tools property and it's a dictionary
+      if (!moduleInstance.tools) {
+        throw new Error(`Module does not have a 'tools' property. Modules must store tools in a dictionary.`);
       }
       
-      // Try getTools method
-      if (moduleInstance.getTools && typeof moduleInstance.getTools === 'function') {
-        const tools = moduleInstance.getTools();
-        if (Array.isArray(tools)) {
-          const tool = tools.find(t => t.name === toolName);
-          if (tool) return tool;
+      if (Array.isArray(moduleInstance.tools)) {
+        throw new Error(`Module stores tools as an array. Modules MUST store tools as a dictionary/object keyed by tool name.`);
+      }
+      
+      if (typeof moduleInstance.tools !== 'object') {
+        throw new Error(`Module 'tools' property is not an object. Expected dictionary/object, got ${typeof moduleInstance.tools}`);
+      }
+      
+      // Use the base Module class's getTool method (which looks up this.tools[name])
+      if (moduleInstance.getTool && typeof moduleInstance.getTool === 'function') {
+        try {
+          const tool = moduleInstance.getTool(toolName);
+          if (tool) {
+            return tool;
+          }
+        } catch (getToolError) {
+          // Tool not found in dictionary
+          console.warn(`Tool '${toolName}' not found in module. Error: ${getToolError.message}`);
         }
       }
-
+      
+      // Direct dictionary lookup as fallback
+      const tool = moduleInstance.tools[toolName];
+      if (tool) {
+        return tool;
+      }
+      
+      // Tool not found - list available tools for debugging
+      const availableTools = Object.keys(moduleInstance.tools);
+      console.warn(`Tool '${toolName}' not found in module. Available tools: [${availableTools.join(', ')}]`);
       return null;
       
     } catch (error) {
-      console.warn(`Failed to extract tool ${toolName} from module:`, error.message);
-      return null;
+      console.error(`Failed to extract tool ${toolName} from module:`, error.message);
+      throw error; // Re-throw to enforce the contract
     }
   }
 

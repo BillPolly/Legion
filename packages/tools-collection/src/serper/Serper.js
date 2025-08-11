@@ -3,9 +3,10 @@ import https from 'https';
 
 export class Serper extends Tool {
   constructor(config = {}) {
-    super();
-    this.name = 'google_search';
-    this.description = 'Performs Google searches using the Serper API';
+    super({
+      name: 'google_search',
+      description: 'Performs Google searches using the Serper API'
+    });
     this.apiKey = config.apiKey || null;
     this.baseUrl = 'https://google.serper.dev/search';
   }

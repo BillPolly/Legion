@@ -243,20 +243,19 @@ class JsonModule extends Module {
     this.name = 'json';
     this.description = 'JSON manipulation and validation tools for parsing, stringifying, and extracting data from JSON structures';
     
-    // Register all JSON tools
-    this.tools = [
-      new JsonParseTool(),
-      new JsonStringifyTool(),
-      new JsonValidateTool(),
-      new JsonExtractTool()
-    ];
-  }
-
-  /**
-   * Get all tools provided by this module
-   */
-  getTools() {
-    return this.tools;
+    // Initialize tools dictionary
+    this.tools = {};
+    
+    // Create and register all JSON tools
+    const jsonParseTool = new JsonParseTool();
+    const jsonStringifyTool = new JsonStringifyTool();
+    const jsonValidateTool = new JsonValidateTool();
+    const jsonExtractTool = new JsonExtractTool();
+    
+    this.registerTool(jsonParseTool.name, jsonParseTool);
+    this.registerTool(jsonStringifyTool.name, jsonStringifyTool);
+    this.registerTool(jsonValidateTool.name, jsonValidateTool);
+    this.registerTool(jsonExtractTool.name, jsonExtractTool);
   }
 }
 

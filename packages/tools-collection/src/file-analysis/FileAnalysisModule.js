@@ -57,6 +57,9 @@ export default class FileAnalysisModule extends Module {
         apiKey: this.config.openaiKey
       });
     }
+    
+    // Initialize tools dictionary
+    this.initializeTools();
   }
 
   /**
@@ -149,11 +152,12 @@ export default class FileAnalysisModule extends Module {
   }
 
   /**
-   * Get tools provided by this module
+   * Initialize tools for this module  
    */
-  getTools() {
-    // Tools are created from module.json configuration
-    // This is handled by GenericModule when using ModuleFactory
-    return [];
+  initializeTools() {
+    // Initialize tools dictionary - no tools by default
+    // Tools are supposed to be created from module.json configuration
+    // but we'll ensure the dictionary exists
+    this.tools = {};
   }
 }

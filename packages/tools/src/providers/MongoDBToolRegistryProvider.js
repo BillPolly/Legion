@@ -279,84 +279,6 @@ export class MongoDBToolRegistryProvider extends IToolRegistryProvider {
     return await this.databaseService.getToolsWithoutEmbeddings(limit);
   }
 
-  // ============================================================================
-  // USAGE TRACKING
-  // ============================================================================
-
-  /**
-   * Record tool usage
-   */
-  async recordUsage(usageData) {
-    if (!this.connected) await this.connect();
-    if (!this.hasCapability(PROVIDER_CAPABILITIES.USAGE_TRACKING)) {
-      return;
-    }
-    
-    // Get tool ID if not provided
-    if (!usageData.toolId && usageData.toolName && usageData.moduleName) {
-      const tool = await this.getTool(usageData.toolName, usageData.moduleName);
-      if (tool) {
-        usageData.toolId = tool._id;
-      }
-    }
-    
-    const processedData = {
-      toolId: usageData.toolId,
-      toolName: usageData.toolName,
-      moduleName: usageData.moduleName,
-      sessionId: usageData.sessionId || 'system',
-      userId: usageData.userId,
-      timestamp: usageData.timestamp || new Date(),
-      executionTime: usageData.executionTime,
-      success: usageData.success !== false,
-      errorType: usageData.errorType,
-      inputSize: usageData.inputSize,
-      outputSize: usageData.outputSize,
-      context: usageData.context,
-      feedback: usageData.feedback
-    };
-    
-    await this.databaseService.recordToolUsage(processedData);
-  }
-
-  /**
-   * Get usage statistics for a tool
-   */
-  async getUsageStats(toolName, moduleName, options = {}) {
-    if (!this.connected) await this.connect();
-    if (!this.hasCapability(PROVIDER_CAPABILITIES.USAGE_TRACKING)) {
-      return {
-        totalUsage: 0,
-        successfulUsage: 0,
-        averageExecutionTime: null,
-        lastUsed: null
-      };
-    }
-    
-    const tool = await this.getTool(toolName, moduleName);
-    if (!tool) {
-      return {
-        totalUsage: 0,
-        successfulUsage: 0,
-        averageExecutionTime: null,
-        lastUsed: null
-      };
-    }
-    
-    return await this.databaseService.getToolUsageStats(tool._id, options);
-  }
-
-  /**
-   * Get trending tools
-   */
-  async getTrendingTools(options = {}) {
-    if (!this.connected) await this.connect();
-    if (!this.hasCapability(PROVIDER_CAPABILITIES.USAGE_TRACKING)) {
-      return [];
-    }
-    
-    return await this.databaseService.getTrendingTools(options);
-  }
 
   // ============================================================================
   // BULK OPERATIONS
@@ -449,7 +371,6 @@ export class MongoDBToolRegistryProvider extends IToolRegistryProvider {
       PROVIDER_CAPABILITIES.MODULES,
       PROVIDER_CAPABILITIES.TOOLS,
       PROVIDER_CAPABILITIES.SEARCH,
-      PROVIDER_CAPABILITIES.USAGE_TRACKING,
       PROVIDER_CAPABILITIES.TRANSACTIONS
     ];
 
@@ -557,7 +478,6 @@ export class MongoDBToolRegistryProvider extends IToolRegistryProvider {
         if (verbose) console.log('🗑️ Clearing existing database collections...');
         await this.databaseService.mongoProvider.delete('modules', {});
         await this.databaseService.mongoProvider.delete('tools', {});
-        await this.databaseService.mongoProvider.delete('tool_usage', {});
         if (verbose) console.log('✅ Database cleared');
       }
 

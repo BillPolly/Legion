@@ -10,10 +10,10 @@ import fs from 'fs/promises';
  */
 export class TranscribeAudioTool extends Tool {
   constructor(provider) {
-    super();
-    
-    this.name = 'transcribe_audio';
-    this.description = 'Convert audio to text using speech recognition';
+    super({
+      name: 'transcribe_audio',
+      description: 'Convert audio to text using speech recognition'
+    });
     
     this.inputSchema = z.object({
       audio: z.string().describe('Base64 encoded audio data or file path'),

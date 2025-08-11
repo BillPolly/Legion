@@ -18,15 +18,21 @@ export default class SystemModule extends Module {
   constructor(dependencies = {}) {
     super('SystemModule', dependencies);
     this.description = 'System-level tools for module and tool management';
-  }
-
-  getTools() {
-    return [
-      new ModuleLoadTool(this.config),
-      new ModuleUnloadTool(this.config),
-      new ModuleListTool(this.config),
-      new ModuleInfoTool(this.config),
-      new ModuleToolsTool(this.config)
-    ];
+    
+    // Initialize tools dictionary
+    this.tools = {};
+    
+    // Create and register all system tools
+    const moduleLoadTool = new ModuleLoadTool(this.config);
+    const moduleUnloadTool = new ModuleUnloadTool(this.config);
+    const moduleListTool = new ModuleListTool(this.config);
+    const moduleInfoTool = new ModuleInfoTool(this.config);
+    const moduleToolsTool = new ModuleToolsTool(this.config);
+    
+    this.registerTool(moduleLoadTool.name, moduleLoadTool);
+    this.registerTool(moduleUnloadTool.name, moduleUnloadTool);
+    this.registerTool(moduleListTool.name, moduleListTool);
+    this.registerTool(moduleInfoTool.name, moduleInfoTool);
+    this.registerTool(moduleToolsTool.name, moduleToolsTool);
   }
 }

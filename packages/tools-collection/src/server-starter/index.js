@@ -1,13 +1,14 @@
-import { Tool } from '../modules/Tool.js'; import { ToolResult } from '../compatibility.js';
+import { Tool, ToolResult } from '@legion/tools';
 import { spawn } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
 
 class ServerStarter extends Tool {
   constructor() {
-    super();
-    this.name = 'server_starter';
-    this.description = 'Starts and manages npm servers';
+    super({
+      name: 'server_starter',
+      description: 'Starts and manages npm servers'
+    });
     this.serverProcess = null;
     this.serverOutput = [];
     this.maxOutputLines = 1000;

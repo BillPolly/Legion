@@ -11,10 +11,10 @@ import path from 'path';
  */
 export class GenerateVoiceTool extends Tool {
   constructor(provider) {
-    super();
-    
-    this.name = 'generate_voice';
-    this.description = 'Convert text to speech audio';
+    super({
+      name: 'generate_voice',
+      description: 'Convert text to speech audio'
+    });
     
     this.inputSchema = z.object({
       text: z.string()

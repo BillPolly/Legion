@@ -32,19 +32,20 @@ export default class SerperModule extends Module {
   async initialize() {
     await super.initialize();
     
+    // Initialize tools dictionary
+    this.tools = {};
+    
     // Create the Serper tool
     // Don't initialize it - let it initialize at runtime or fail gracefully
-    this.serperTool = new Serper();
+    const serperTool = new Serper();
     
     // Set API key if available but don't call initialize
     // The tool will check for apiKey when invoke is called
     if (this.config.SERPER) {
-      this.serperTool.apiKey = this.config.SERPER;
+      serperTool.apiKey = this.config.SERPER;
     }
-  }
-
-  getTools() {
-    // Always return the tool, even if no API key
-    return this.serperTool ? [this.serperTool] : [];
+    
+    // Register the tool
+    this.registerTool(serperTool.name, serperTool);
   }
 }

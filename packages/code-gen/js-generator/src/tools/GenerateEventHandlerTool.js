@@ -10,9 +10,10 @@ import { z } from 'zod';
 
 export class GenerateEventHandlerTool extends Tool {
   constructor() {
-    super();
-    this.name = 'generate_event_handler';
-    this.description = 'Generate DOM event handler with preventDefault and stopPropagation options';
+    super({
+      name: 'generate_event_handler',
+      description: 'Generate DOM event handler with preventDefault and stopPropagation options'
+    });
     this.inputSchema = z.object({
         handlerName: z.string().optional().describe('Custom handler function name'),
         element: z.string().optional().describe('Target element selector or variable name'),

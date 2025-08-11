@@ -36,11 +36,13 @@ export class CodeAnalysisModule extends Module {
   async initialize() {
     if (this.initialized) return;
 
-    // Initialize tools and wrap them for Legion compatibility
-    this.tools = [
-      wrapTool(new ValidateJavaScriptTool())
-      // TODO: Add remaining tools (security analysis, performance analysis, CSS validation, etc.)
-    ];
+    // Initialize tools dictionary
+    this.tools = {};
+    
+    // Create and register wrapped tool
+    const validateJsTool = wrapTool(new ValidateJavaScriptTool());
+    this.registerTool(validateJsTool.name, validateJsTool);
+    // TODO: Add remaining tools (security analysis, performance analysis, CSS validation, etc.)
 
     this.initialized = true;
     await super.initialize();
@@ -61,7 +63,7 @@ export class CodeAnalysisModule extends Module {
    * Get tool by name
    */
   getTool(name) {
-    return this.tools.find(tool => tool.name === name);
+    return this.tools[name];
   }
 
   /**
@@ -179,7 +181,7 @@ export class CodeAnalysisModule extends Module {
    * Cleanup the module
    */
   async cleanup() {
-    this.tools = [];
+    this.tools = {};
     await super.cleanup();
   }
 

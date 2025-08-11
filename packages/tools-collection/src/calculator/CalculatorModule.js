@@ -77,17 +77,10 @@ class CalculatorModule extends Module {
     this.name = 'calculator';
     this.description = 'Mathematical calculation tools for evaluating expressions and performing computations';
     
-    // Create the calculator tool
-    this.tools = [
-      new CalculatorTool()
-    ];
-  }
-
-  /**
-   * Get all tools provided by this module
-   */
-  getTools() {
-    return this.tools;
+    // Create and register the calculator tool
+    this.tools = {};
+    const calculatorTool = new CalculatorTool();
+    this.registerTool(calculatorTool.name, calculatorTool);
   }
 }
 

@@ -1,11 +1,11 @@
 /**
- * ModuleInstance base class
- * Base class for module instances that hold and provide tools
+ * Module base class
+ * Base class for modules that hold and provide tools
  */
 
 import { EventEmitter } from 'events';
 
-export class ModuleInstance extends EventEmitter {
+export class Module extends EventEmitter {
   constructor(moduleDefinition, config) {
     super();
     this.moduleDefinition = moduleDefinition;

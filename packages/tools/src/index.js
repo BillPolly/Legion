@@ -6,8 +6,9 @@
 
 // Core module components
 export { ModuleDefinition } from './modules/ModuleDefinition.js';
-export { ModuleInstance } from './modules/ModuleInstance.js';
+export { Module } from './modules/Module.js';
 export { Tool } from './modules/Tool.js';
+export { ToolResult } from './modules/ToolResult.js';
 
 // Resource management  
 export { ResourceManager } from './ResourceManager.js';

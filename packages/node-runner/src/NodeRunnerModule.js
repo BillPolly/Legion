@@ -2,7 +2,7 @@
  * @fileoverview NodeRunnerModule - Main module for Node.js process management and logging
  */
 
-import { Module } from './base/Module.js';
+import { Module } from '@legion/tools';
 import { ProcessManager } from './managers/ProcessManager.js';
 import { SessionManager } from './managers/SessionManager.js';
 import { ServerManager } from './managers/ServerManager.js';
@@ -26,6 +26,9 @@ export class NodeRunnerModule extends Module {
     this.sessionManager = dependencies.sessionManager;
     this.frontendInjector = dependencies.frontendInjector;
     this.webSocketServer = dependencies.webSocketServer;
+    
+    // Initialize tools
+    this.initializeTools();
   }
 
   static async create(resourceManager) {
@@ -55,13 +58,21 @@ export class NodeRunnerModule extends Module {
     return new NodeRunnerModule(dependencies);
   }
 
-  getTools() {
-    return [
+  initializeTools() {
+    // Initialize tools dictionary
+    this.tools = {};
+    
+    // Create and register all NodeRunner tools
+    const tools = [
       new RunNodeTool(this),
       new StopNodeTool(this),
       new SearchLogsTool(this),
       new ListSessionsTool(this),
       new ServerHealthTool(this)
     ];
+    
+    for (const tool of tools) {
+      this.registerTool(tool.name, tool);
+    }
   }
 }

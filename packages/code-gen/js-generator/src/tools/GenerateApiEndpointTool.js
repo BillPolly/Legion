@@ -10,9 +10,10 @@ import { z } from 'zod';
 
 export class GenerateApiEndpointTool extends Tool {
   constructor() {
-    super();
-    this.name = 'generate_api_endpoint';
-    this.description = 'Generate Express.js API endpoint handler with validation and error handling';
+    super({
+      name: 'generate_api_endpoint',
+      description: 'Generate Express.js API endpoint handler with validation and error handling'
+    });
     this.inputSchema = z.object({
         method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH']).default('GET').describe('HTTP method'),
         path: z.string().describe('API endpoint path (e.g., "/users/:id")'),

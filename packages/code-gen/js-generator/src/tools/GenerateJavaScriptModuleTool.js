@@ -4,16 +4,17 @@
  * Extracted and adapted from code-agent JSGenerator for Legion framework
  */
 
-import { EventEmitter } from 'events';
+import { Tool } from '@legion/tools';
 import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';
 
-export class GenerateJavaScriptModuleTool extends EventEmitter {
+export class GenerateJavaScriptModuleTool extends Tool {
   constructor() {
-    super();
-    this.name = 'generate_javascript_module';
-    this.description = 'Generate a complete JavaScript module with imports, exports, functions, and classes';
+    super({
+      name: 'generate_javascript_module',
+      description: 'Generate a complete JavaScript module with imports, exports, functions, and classes'
+    });
     this.inputSchema = z.object({
         name: z.string().describe('Name of the module'),
         description: z.string().optional().describe('Module description for header comment'),
