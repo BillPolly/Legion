@@ -6,26 +6,28 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
-import { ModuleFactory } from '../../src/ModuleFactory.js';
-import { ResourceManager } from '../../src/ResourceManager.js';
+import { ModuleLoader } from '../../src/loading/ModuleLoader.js';
+import { DynamicJsonModule } from '../../src/loading/DynamicJsonModule.js';
+import { ResourceManager } from '@legion/tools';
 import { ModuleJsonSchemaValidator } from '../../src/validation/ModuleJsonSchemaValidator.js';
 import fs from 'fs/promises';
 import path from 'path';
 
 describe('JSON Module Loading System', () => {
-  let moduleFactory;
+  let moduleLoader;
   let resourceManager;
   
   beforeEach(async () => {
     resourceManager = new ResourceManager();
     await resourceManager.initialize();
-    moduleFactory = new ModuleFactory(resourceManager);
+    moduleLoader = new ModuleLoader({ 
+      resourceManager,
+      verbose: false 
+    });
   });
 
   afterEach(async () => {
-    if (moduleFactory) {
-      moduleFactory.clearCache();
-    }
+    // ModuleLoader doesn't have clearCache, cleanup if needed
   });
 
   describe('ModuleJsonSchemaValidator', () => {

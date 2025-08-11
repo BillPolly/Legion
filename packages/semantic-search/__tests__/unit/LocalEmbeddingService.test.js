@@ -55,7 +55,9 @@ describe('LocalEmbeddingService', () => {
       let importError;
       
       try {
-        ort = await import('onnxruntime-node');
+        const ortModule = await import('onnxruntime-node');
+        // In v1.14.0, the actual ort object is in the default export
+        ort = ortModule.default || ortModule;
       } catch (error) {
         importError = error;
       }

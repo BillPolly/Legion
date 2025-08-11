@@ -51,9 +51,11 @@ export class SemanticSearchProvider {
    * Async factory method following Legion ResourceManager pattern
    * 🚨 ResourceManager provides ALL configuration automatically from .env
    * @param {ResourceManager} resourceManager - Initialized ResourceManager instance
+   * @param {Object} options - Additional options for creation
+   * @param {boolean} options.skipConnection - Skip automatic connection for testing
    * @returns {Promise<SemanticSearchProvider>}
    */
-  static async create(resourceManager) {
+  static async create(resourceManager, options = {}) {
     if (!resourceManager) {
       throw new Error('ResourceManager is required');
     }
@@ -73,7 +75,11 @@ export class SemanticSearchProvider {
     const config = {
       openaiApiKey: resourceManager.get('env.OPENAI_API_KEY') || process.env.OPENAI_API_KEY,
       localModelPath: resourceManager.get('env.LOCAL_EMBEDDING_MODEL_PATH') || process.env.LOCAL_EMBEDDING_MODEL_PATH,
-      qdrantUrl: resourceManager.get('env.QDRANT_URL') || process.env.QDRANT_URL || 'http://localhost:6333',
+      // Build Qdrant URL from host and port if not directly provided
+      qdrantUrl: resourceManager.get('env.QDRANT_URL') || process.env.QDRANT_URL || 
+                 (resourceManager.get('env.QDRANT_HOST') && resourceManager.get('env.QDRANT_PORT') ? 
+                  `http://${resourceManager.get('env.QDRANT_HOST')}:${resourceManager.get('env.QDRANT_PORT')}` : 
+                  'http://localhost:6333'),
       qdrantApiKey: resourceManager.get('env.QDRANT_API_KEY') || process.env.QDRANT_API_KEY,
       embeddingModel: resourceManager.get('env.SEMANTIC_SEARCH_MODEL') || process.env.SEMANTIC_SEARCH_MODEL || 'text-embedding-3-small',
       batchSize: parseInt(resourceManager.get('env.SEMANTIC_SEARCH_BATCH_SIZE') || process.env.SEMANTIC_SEARCH_BATCH_SIZE || '100'),
@@ -143,6 +149,11 @@ export class SemanticSearchProvider {
     };
 
     const provider = new SemanticSearchProvider(config, dependencies);
+    
+    // Connect to vector store unless skipConnection is true
+    if (!options.skipConnection) {
+      await provider.connect();
+    }
     
     // Register with ResourceManager if it supports registration
     if (resourceManager.register) {

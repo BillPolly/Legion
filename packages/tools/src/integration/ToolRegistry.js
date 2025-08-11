@@ -9,6 +9,7 @@
 
 import { MongoDBToolRegistryProvider } from '../providers/MongoDBToolRegistryProvider.js';
 import { ResourceManager } from '../ResourceManager.js';
+import { SemanticToolDiscovery } from '../search/SemanticToolDiscovery.js';
 
 export class ToolRegistry {
   constructor(options = {}) {
@@ -19,6 +20,9 @@ export class ToolRegistry {
     // Caching
     this.toolCache = new Map();
     this.moduleCache = new Map();
+    
+    // Semantic search
+    this.semanticDiscovery = null;
     
     // State
     this.initialized = false;
@@ -42,6 +46,21 @@ export class ToolRegistry {
       this.provider = await MongoDBToolRegistryProvider.create(this.resourceManager, {
         enableSemanticSearch: false
       });
+    }
+    
+    // Initialize semantic tool discovery
+    try {
+      this.semanticDiscovery = await SemanticToolDiscovery.createForTools(
+        this.resourceManager,
+        {
+          collectionName: 'legion_tools',  // Use the correct Qdrant collection name
+          toolRegistry: this
+        }
+      );
+      console.log('✅ Semantic tool search initialized');
+    } catch (error) {
+      console.warn('⚠️ Semantic tool search not available:', error.message);
+      // Continue without semantic search
     }
     
     this.initialized = true;
@@ -89,7 +108,7 @@ export class ToolRegistry {
   }
 
   /**
-   * Search for tools
+   * Search for tools (text-based search)
    */
   async searchTools(query, options = {}) {
     await this.#ensureInitialized();
@@ -106,6 +125,81 @@ export class ToolRegistry {
       tool.name.toLowerCase().includes(queryLower) ||
       (tool.description && tool.description.toLowerCase().includes(queryLower))
     );
+  }
+
+  /**
+   * Semantic tool search - Find tools using natural language queries
+   * Returns tools with confidence scores based on semantic similarity
+   * 
+   * @param {string} query - Natural language description of what you want to do
+   * @param {Object} options - Search options
+   * @param {number} options.limit - Maximum number of results (default: 10)
+   * @param {number} options.minConfidence - Minimum confidence score 0-1 (default: 0.5)
+   * @param {boolean} options.includeExecutable - Include executable tool instances (default: true)
+   * @returns {Promise<Object>} Search results with tools and confidence scores
+   */
+  async semanticToolSearch(query, options = {}) {
+    await this.#ensureInitialized();
+    
+    const {
+      limit = 10,
+      minConfidence = 0.5,
+      includeExecutable = true
+    } = options;
+    
+    // Check if semantic search is available - no fallbacks, raise error
+    if (!this.semanticDiscovery) {
+      throw new Error('Semantic search not available - semantic discovery service not initialized');
+    }
+    
+    // Perform semantic search - no fallbacks, let errors propagate
+    const searchResult = await this.semanticDiscovery.findRelevantTools(query, {
+      limit: limit * 2, // Get more for filtering
+      minScore: minConfidence,
+      useCache: true
+    });
+    
+    // Process results
+    const tools = [];
+    for (const toolResult of searchResult.tools.slice(0, limit)) {
+      const toolData = {
+        name: toolResult.name,
+        description: toolResult.description,
+        confidence: toolResult.relevanceScore || toolResult.similarityScore || 0,
+        category: toolResult.category,
+        tags: toolResult.tags,
+        source: 'semantic-search',
+        executable: null
+      };
+      
+      // Get executable tool if requested
+      if (includeExecutable) {
+        try {
+          const executableTool = await this.getTool(toolResult.name);
+          if (executableTool) {
+            toolData.executable = executableTool;
+            toolData.available = true;
+          } else {
+            toolData.available = false;
+          }
+        } catch (error) {
+          console.warn(`Failed to get executable for ${toolResult.name}:`, error.message);
+          toolData.available = false;
+        }
+      }
+      
+      tools.push(toolData);
+    }
+    
+    return {
+      tools,
+      metadata: {
+        query,
+        searchType: 'semantic',
+        totalFound: searchResult.metadata?.totalFound || tools.length,
+        searchQuery: searchResult.metadata?.searchQuery || query
+      }
+    };
   }
 
   // ============================================================================
@@ -405,18 +499,41 @@ export class ToolRegistry {
   }
 
   /**
-   * Populate database (convenience method)
+   * Populate database using LoadingManager
+   * 
+   * @param {Object} options - Population options
+   * @param {string} options.module - Optional module filter
+   * @param {string} options.mode - 'clear' (default) or 'append'
+   * @param {boolean} options.verbose - Show detailed output
+   * @param {boolean} options.includePerspectives - Generate perspectives (default: true)
+   * @param {boolean} options.includeVectors - Index vectors (default: false)
    */
   async populateDatabase(options = {}) {
     await this.#ensureInitialized();
     
-    const { ComprehensiveToolDiscovery } = await import('../discovery/ComprehensiveToolDiscovery.js');
-    const discovery = new ComprehensiveToolDiscovery();
-    
-    return await discovery.populateDatabase({
-      mode: options.mode || 'clear',
+    const { LoadingManager } = await import('../loading/LoadingManager.js');
+    const loadingManager = new LoadingManager({
       verbose: options.verbose || false,
-      includeEmbeddings: false
+      resourceManager: this.resourceManager
     });
+    
+    const result = await loadingManager.fullPipeline({
+      moduleFilter: options.module || null,
+      clearFirst: (options.mode || 'clear') === 'clear',
+      includePerspectives: options.includePerspectives !== false, // Default true
+      includeVectors: options.includeVectors || false // Default false
+    });
+    
+    // Clean up
+    await loadingManager.close();
+    
+    return {
+      modulesAdded: result.loadResult?.modulesLoaded || 0,
+      toolsAdded: result.loadResult?.toolsAdded || 0,
+      perspectivesGenerated: result.perspectiveResult?.perspectivesGenerated || 0,
+      vectorsIndexed: result.vectorResult?.perspectivesIndexed || 0,
+      totalTime: result.totalTime,
+      success: result.success
+    };
   }
 }

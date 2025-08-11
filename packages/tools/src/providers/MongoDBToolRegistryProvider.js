@@ -938,17 +938,37 @@ export class MongoDBToolRegistryProvider extends IToolRegistryProvider {
 
   /**
    * Generate embeddings for all tools
+   * CRITICAL: Uses ONLY local ONNX embeddings for tool semantic search
    * @private
    */
   async _generateToolEmbeddings() {
     const results = { generated: 0, errors: [] };
     
     try {
-      // Get the semantic search provider for embedding generation
-      const semanticProvider = this.resourceManager.get('semanticSearchProvider');
-      if (!semanticProvider) {
-        throw new Error('Semantic search provider not available');
+      // ENFORCE: Create SemanticSearchProvider with ONLY local ONNX embeddings for tools
+      console.log('🔧 Creating SemanticSearchProvider with enforced local ONNX embeddings for tools');
+      
+      // Force local ONNX embeddings for tool search by setting environment override
+      const originalEnvValue = this.resourceManager.get('env.USE_LOCAL_EMBEDDINGS');
+      this.resourceManager.set('env.USE_LOCAL_EMBEDDINGS', 'true');
+      
+      // Import SemanticSearchProvider class
+      const { SemanticSearchProvider } = await import('../../../semantic-search/src/SemanticSearchProvider.js');
+      
+      // Create provider with forced local embeddings
+      const toolSemanticProvider = await SemanticSearchProvider.create(this.resourceManager);
+      
+      // Restore original environment value
+      if (originalEnvValue) {
+        this.resourceManager.set('env.USE_LOCAL_EMBEDDINGS', originalEnvValue);
       }
+      
+      // Verify it's using local ONNX embeddings
+      if (!toolSemanticProvider.useLocalEmbeddings) {
+        throw new Error('Tool semantic search MUST use local ONNX embeddings only');
+      }
+      
+      console.log('✅ Tool semantic search provider configured with local ONNX embeddings');
 
       // Get all tools that need embeddings
       const toolsWithoutEmbeddings = await this.getToolsWithoutEmbeddings(1000);
@@ -958,14 +978,14 @@ export class MongoDBToolRegistryProvider extends IToolRegistryProvider {
           // Create searchable text from tool data
           const searchText = `${tool.name} ${tool.description || ''} ${tool.summary || ''}`.trim();
           
-          // Generate embedding
-          const embeddings = await semanticProvider.embeddingService.generateEmbeddings([searchText]);
+          // Generate embedding using LOCAL ONNX only
+          const embeddings = await toolSemanticProvider.embeddingService.generateEmbeddings([searchText]);
           
           if (embeddings && embeddings.length > 0) {
             await this.updateToolEmbedding(
               tool._id, 
               embeddings[0], 
-              semanticProvider.useLocalEmbeddings ? 'local-onnx' : 'openai'
+              'local-onnx'  // Always local-onnx for tools
             );
             results.generated++;
           }

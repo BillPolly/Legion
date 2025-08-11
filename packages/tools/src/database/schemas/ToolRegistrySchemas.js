@@ -120,6 +120,86 @@ export const ModulesCollectionSchema = {
 };
 
 /**
+ * Tool Perspectives Collection Schema
+ * Stores generated glosses/perspectives for semantic search with different textual representations
+ */
+export const ToolPerspectivesCollectionSchema = {
+  name: 'tool_perspectives',
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['toolId', 'toolName', 'perspectiveType', 'perspectiveText'],
+      properties: {
+        toolId: {
+          bsonType: 'objectId',
+          description: 'Reference to the parent tool in tools collection'
+        },
+        toolName: {
+          bsonType: 'string',
+          minLength: 1,
+          maxLength: 100,
+          description: 'Denormalized tool name for efficient queries'
+        },
+        perspectiveType: {
+          bsonType: 'string',
+          enum: [
+            'name', 'description', 'task', 'capabilities', 'capability_single',
+            'examples', 'category', 'inputs', 'gloss', 'synonyms'
+          ],
+          description: 'Type of perspective/gloss generated'
+        },
+        perspectiveText: {
+          bsonType: 'string',
+          minLength: 1,
+          maxLength: 1000,
+          description: 'The actual text content of this perspective'
+        },
+        embeddingId: {
+          bsonType: 'string',
+          description: 'Unique identifier linking to vector database embedding'
+        },
+        embedding: {
+          bsonType: 'array',
+          items: {
+            bsonType: 'double'
+          },
+          description: 'Semantic embedding vector for this perspective text'
+        },
+        embeddingModel: {
+          bsonType: 'string',
+          description: 'Model used to generate the embedding (e.g., all-MiniLM-L6-v2)'
+        },
+        generatedAt: {
+          bsonType: 'date',
+          description: 'When this perspective was generated'
+        },
+        generationMethod: {
+          bsonType: 'string',
+          enum: ['automatic', 'llm-enhanced', 'manual'],
+          description: 'How this perspective was generated'
+        },
+        metadata: {
+          bsonType: 'object',
+          description: 'Additional metadata about perspective generation'
+        }
+      }
+    }
+  },
+  indexes: [
+    { toolId: 1 },
+    { toolName: 1 },
+    { perspectiveType: 1 },
+    { embeddingId: 1 },
+    { toolId: 1, perspectiveType: 1 }, // Compound index for tool+type queries
+    { generatedAt: -1 },
+    { 'perspectiveText': 'text' } // Full-text search on perspective content
+  ],
+  uniqueIndexes: [
+    { embeddingId: 1 } // Ensure embedding IDs are unique
+  ]
+};
+
+/**
  * Tools Collection Schema
  * Stores individual tool definitions with schemas, examples, and semantic embeddings
  */
@@ -263,7 +343,8 @@ export const ToolsCollectionSchema = {
  */
 export const ToolRegistryCollections = {
   modules: ModulesCollectionSchema,
-  tools: ToolsCollectionSchema
+  tools: ToolsCollectionSchema,
+  tool_perspectives: ToolPerspectivesCollectionSchema
 };
 
 /**

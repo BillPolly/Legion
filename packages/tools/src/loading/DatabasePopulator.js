@@ -69,23 +69,28 @@ export class DatabasePopulator {
       try {
         // Save module to database
         const moduleData = {
-          name: config.name,
+          name: instance.name || config.name,  // Use module instance name first, fallback to config
           type: config.type,
           path: config.path,
           className: config.className,
-          description: config.description,
+          description: instance.description || config.description,  // Use instance description if available
           package: this.getPackageName(config.path),
           status: 'active',
           createdAt: new Date(),
           updatedAt: new Date()
         };
         
-        await this.provider.saveModule(moduleData);
+        const savedModule = await this.provider.saveModule(moduleData);
         stats.modules.saved++;
         
         if (this.verbose) {
-          console.log(`\n📦 Module: ${config.name}`);
+          const displayName = instance.name || config.name;
+          console.log(`\n📦 Module: ${displayName}`);
           console.log(`   Type: ${config.type}`);
+          console.log(`   Module ID: ${savedModule._id}`);
+          if (instance.name && instance.name !== config.name) {
+            console.log(`   Registry name: ${config.name} → Instance name: ${instance.name}`);
+          }
         }
         
         // Extract and save tools
@@ -94,13 +99,15 @@ export class DatabasePopulator {
           
           for (const tool of tools) {
             try {
+              const moduleName = instance.name || config.name;  // Use consistent module name
               const toolData = {
                 name: tool.name,
-                moduleName: config.name,
+                moduleId: savedModule._id,  // Link to the module's _id
+                moduleName: moduleName,  // Keep for backwards compatibility
                 description: tool.description || '',
                 inputSchema: tool.inputSchema || tool.parameters || {},
                 outputSchema: tool.outputSchema || null,
-                category: this.inferCategory(tool.name, config.name),
+                category: this.inferCategory(tool.name, moduleName),
                 status: 'active',
                 createdAt: new Date(),
                 updatedAt: new Date()

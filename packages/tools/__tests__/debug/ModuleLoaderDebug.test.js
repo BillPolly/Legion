@@ -32,7 +32,7 @@ describe('ModuleLoader Debug', () => {
     }
 
     // Read registry and check first module path
-    const registryContent = await fs.readFile('src/loading/module-registry.json', 'utf-8');
+    const registryContent = await fs.readFile(registryPath, 'utf-8');
     const modules = JSON.parse(registryContent);
     const firstModule = modules[0];
     console.log('First module config:', firstModule);

@@ -12,8 +12,7 @@
  *   node populate.js --module Calculator # Load specific module
  */
 
-import { ModuleLoader } from './ModuleLoader.js';
-import { DatabasePopulator } from './DatabasePopulator.js';
+import { LoadingManager } from './LoadingManager.js';
 
 async function main() {
   // Parse command line arguments
@@ -21,7 +20,9 @@ async function main() {
   const options = {
     clear: !args.includes('--no-clear'),  // Default to clear unless --no-clear is specified
     verbose: args.includes('--verbose') || args.includes('-v'),
-    module: null
+    module: null,
+    perspectives: args.includes('--perspectives'),
+    vectors: args.includes('--vectors')
   };
   
   // Check for module filter
@@ -42,12 +43,15 @@ Options:
   --no-clear        Skip clearing existing data (default clears all data)
   --verbose, -v     Show detailed output
   --module <name>   Load only specific module
+  --perspectives    Generate perspectives for tools
+  --vectors         Index vectors to Qdrant (requires perspectives)
   --help, -h        Show this help message
 
 Examples:
   node populate.js --verbose
   node populate.js --module Calculator
   node populate.js --no-clear
+  node populate.js --module json --perspectives --vectors
 `);
     process.exit(0);
   }
@@ -65,58 +69,55 @@ Examples:
     console.log(`Filter: ${options.module}`);
   }
   
+  if (options.perspectives) {
+    console.log('Include: Perspectives generation');
+  }
+  
+  if (options.vectors) {
+    console.log('Include: Vector indexing');
+  }
+  
   console.log('');
   
   try {
-    // Create module loader
-    const loader = new ModuleLoader({
+    // Create loading manager
+    const loadingManager = new LoadingManager({
       verbose: options.verbose
     });
     
-    // Load modules
-    console.log('📦 Loading modules...');
-    const startLoadTime = Date.now();
-    const loadResult = await loader.loadModules(options.module);
-    const loadTime = Date.now() - startLoadTime;
+    // Execute full pipeline
+    console.log('📦 Starting loading pipeline...');
+    const startTime = Date.now();
     
-    console.log(`✅ Loaded ${loadResult.summary.loaded} modules in ${(loadTime / 1000).toFixed(2)}s`);
-    
-    if (loadResult.summary.failed > 0) {
-      console.log(`⚠️  ${loadResult.summary.failed} modules failed to load`);
-      if (options.verbose) {
-        console.log('\nFailed modules:');
-        for (const failed of loadResult.failed) {
-          console.log(`  - ${failed.config.name}: ${failed.error}`);
-        }
-      }
-    }
-    
-    // Populate database
-    console.log('\n🗄️ Populating database...');
-    const startPopTime = Date.now();
-    
-    const populator = new DatabasePopulator({
-      verbose: options.verbose
+    const result = await loadingManager.fullPipeline({
+      moduleFilter: options.module,
+      clearFirst: options.clear,
+      includePerspectives: options.perspectives,
+      includeVectors: options.vectors
     });
     
-    const popResult = await populator.populate(loadResult.loaded, {
-      clearExisting: options.clear
-    });
+    const totalTime = Date.now() - startTime;
     
-    const popTime = Date.now() - startPopTime;
-    
-    // Close database connection
-    await populator.close();
+    // Close connections
+    await loadingManager.close();
     
     // Final summary
     console.log('\n' + '═'.repeat(50));
     console.log('✅ Population Complete!');
-    console.log(`   Total time: ${((loadTime + popTime) / 1000).toFixed(2)}s`);
-    console.log(`   Modules saved: ${popResult.modules.saved}`);
-    console.log(`   Tools saved: ${popResult.tools.saved}`);
+    console.log(`   Total time: ${(totalTime / 1000).toFixed(2)}s`);
+    console.log(`   Modules loaded: ${result.loadResult?.modulesLoaded || 0}`);
+    console.log(`   Tools added: ${result.loadResult?.toolsAdded || 0}`);
     
-    if (popResult.modules.failed > 0 || popResult.tools.failed > 0) {
-      console.log(`   ⚠️ Failures: ${popResult.modules.failed} modules, ${popResult.tools.failed} tools`);
+    if (options.perspectives && result.perspectiveResult) {
+      console.log(`   Perspectives generated: ${result.perspectiveResult.perspectivesGenerated}`);
+    }
+    
+    if (options.vectors && result.vectorResult) {
+      console.log(`   Vectors indexed: ${result.vectorResult.perspectivesIndexed}`);
+    }
+    
+    if (result.clearResult) {
+      console.log(`   Records cleared: ${result.clearResult.totalCleared}`);
     }
     
     process.exit(0);

@@ -7,19 +7,7 @@
 
 import { jest } from '@jest/globals';
 
-// Mock OpenAI client to avoid real API calls in tests
-jest.unstable_mockModule('openai', () => ({
-  default: jest.fn().mockImplementation(() => ({
-    embeddings: {
-      create: jest.fn().mockResolvedValue({
-        data: [
-          { index: 0, embedding: new Array(1536).fill(0.1) }
-        ],
-        usage: { total_tokens: 10 }
-      })
-    }
-  }))
-}));
+// Only use local ONNX embeddings - no OpenAI mocking needed
 
 // Mock Qdrant client
 jest.unstable_mockModule('@qdrant/js-client-rest', () => ({
@@ -27,7 +15,7 @@ jest.unstable_mockModule('@qdrant/js-client-rest', () => ({
     getClusterInfo: jest.fn().mockResolvedValue({ status: 'green' }),
     getCollections: jest.fn().mockResolvedValue({ collections: [] }),
     createCollection: jest.fn().mockResolvedValue({ operation_id: 1 }),
-    getCollection: jest.fn().mockResolvedValue({ config: { params: { vectors: { size: 1536 } } } }),
+    getCollection: jest.fn().mockResolvedValue({ config: { params: { vectors: { size: 384 } } } }), // Local ONNX dimensions
     upsert: jest.fn().mockResolvedValue({ operation_id: 1, status: 'completed' }),
     search: jest.fn().mockResolvedValue([]),
     scroll: jest.fn().mockResolvedValue({ points: [] }),
@@ -83,10 +71,10 @@ export const TestUtils = {
       initialized: true,
       get: jest.fn().mockImplementation(key => {
         const defaults = {
-          'env.OPENAI_API_KEY': 'test-openai-key',
+          // Only local embeddings - no OpenAI key
+          'env.USE_LOCAL_EMBEDDINGS': 'true',
           'env.QDRANT_URL': 'http://localhost:6333',
           'env.QDRANT_API_KEY': 'test-qdrant-key',
-          'env.SEMANTIC_SEARCH_MODEL': 'text-embedding-3-small',
           'env.SEMANTIC_SEARCH_BATCH_SIZE': '100',
           'env.SEMANTIC_SEARCH_CACHE_TTL': '3600',
           'env.SEMANTIC_SEARCH_ENABLE_CACHE': 'true',
@@ -137,7 +125,7 @@ export const TestUtils = {
   /**
    * Create mock embeddings
    */
-  createMockEmbeddings(count = 1, dimension = 1536) {
+  createMockEmbeddings(count = 1, dimension = 384) { // Local ONNX model uses 384 dimensions
     const embeddings = [];
     for (let i = 0; i < count; i++) {
       embeddings.push(new Array(dimension).fill(0).map(() => Math.random()));

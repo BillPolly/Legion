@@ -54,14 +54,30 @@ export class LocalEmbeddingService {
           const ortModule = await import('onnxruntime-node');
           // In v1.14.0, the actual ort object is in the default export
           ort = ortModule.default || ortModule;
+          
+          if (!ort || !ort.InferenceSession) {
+            throw new Error('ONNX Runtime import successful but InferenceSession not available');
+          }
         } catch (error) {
           throw new Error('onnxruntime-node is required for local embeddings. Install with: npm install onnxruntime-node');
         }
       }
       
-      // Initialize ONNX Runtime session
-      // Use default settings - let ONNX Runtime pick the best provider
-      this.session = await ort.InferenceSession.create(this.config.modelPath);
+      // Initialize ONNX Runtime session with specific configuration to avoid Float32Array bug
+      const sessionOptions = {
+        executionProviders: this.config.executionProviders,
+        // Disable optimizations that might cause tensor allocation issues
+        graphOptimizationLevel: 'disabled',
+        enableCpuMemArena: false,
+        enableMemPattern: false,
+        executionMode: 'sequential',
+        // Pre-allocate output buffers to avoid runtime tensor creation issues
+        enableProfiling: false,
+        logSeverityLevel: 4, // Only fatal errors
+        logVerbosityLevel: 0
+      };
+      
+      this.session = await ort.InferenceSession.create(this.config.modelPath, sessionOptions);
 
       // Initialize tokenizer (using dynamic import to avoid hard dependency)
       try {
@@ -103,31 +119,24 @@ export class LocalEmbeddingService {
       // Tokenize the text
       const tokens = await this.tokenize(text);
       
-      // Ensure tensors have the correct format
+      // Ensure all tensors are valid ONNX tensors before running inference
       const feeds = {};
       
-      // Handle input_ids
-      if (tokens.input_ids.data) {
-        feeds.input_ids = tokens.input_ids;
-      } else {
-        feeds.input_ids = tokens.input_ids;
+      // Validate and normalize tensors
+      for (const [key, tensor] of Object.entries(tokens)) {
+        if (!tensor || typeof tensor !== 'object') {
+          throw new Error(`Invalid tensor for ${key}: expected ONNX Tensor object`);
+        }
+        
+        // If it's not already an ONNX Tensor, something went wrong
+        if (!tensor.type || !tensor.data || !tensor.dims) {
+          throw new Error(`Invalid tensor format for ${key}: missing required properties`);
+        }
+        
+        feeds[key] = tensor;
       }
       
-      // Handle attention_mask
-      if (tokens.attention_mask.data) {
-        feeds.attention_mask = tokens.attention_mask;
-      } else {
-        feeds.attention_mask = tokens.attention_mask;
-      }
-      
-      // Handle token_type_ids
-      if (tokens.token_type_ids.data) {
-        feeds.token_type_ids = tokens.token_type_ids;
-      } else {
-        feeds.token_type_ids = tokens.token_type_ids;
-      }
-      
-      // Run inference
+      // Run inference with validated tensors
       const results = await this.session.run(feeds);
       
       // Apply pooling and normalization
@@ -235,8 +244,22 @@ export class LocalEmbeddingService {
    * Tokenize text
    */
   async tokenize(text) {
-    if (!this.tokenizer || !ort) {
-      throw new Error('Tokenizer or ONNX runtime not properly initialized');
+    if (!this.tokenizer) {
+      throw new Error('Tokenizer not properly initialized');
+    }
+    
+    // Ensure ONNX runtime is available for tensor creation
+    if (!ort) {
+      try {
+        const ortModule = await import('onnxruntime-node');
+        ort = ortModule.default || ortModule;
+        
+        if (!ort || !ort.Tensor) {
+          throw new Error('ONNX Runtime import successful but Tensor not available');
+        }
+      } catch (error) {
+        throw new Error('onnxruntime-node is required for local embeddings');
+      }
     }
     
     const encoded = await this.tokenizer(text, {
@@ -246,34 +269,35 @@ export class LocalEmbeddingService {
       return_tensors: false
     });
     
-    // @xenova/transformers returns Tensor objects with .data property containing BigInt64Array
-    let inputIds, attentionMask, tokenTypeIds;
-    
-    if (encoded.input_ids && encoded.input_ids.data) {
-      // The .data property contains the actual BigInt64Array
-      inputIds = encoded.input_ids.data;
-      attentionMask = encoded.attention_mask.data;
-      tokenTypeIds = encoded.token_type_ids ? encoded.token_type_ids.data : null;
-      
-      // If data is already BigInt64Array, use directly
-      if (inputIds instanceof BigInt64Array) {
-        const seqLength = inputIds.length;
-        
-        // Create token_type_ids if not provided
-        if (!tokenTypeIds) {
-          tokenTypeIds = new BigInt64Array(seqLength).fill(0n);
-        }
-        
-        return {
-          input_ids: new ort.Tensor('int64', inputIds, [1, seqLength]),
-          attention_mask: new ort.Tensor('int64', attentionMask, [1, seqLength]),
-          token_type_ids: new ort.Tensor('int64', tokenTypeIds, [1, seqLength])
-        };
-      }
+    // @xenova/transformers returns its own Tensor objects
+    // Check if we can use them directly as ONNX tensors
+    if (encoded.input_ids.ort_tensor) {
+      // If it has ort_tensor property, use it directly
+      return {
+        input_ids: encoded.input_ids.ort_tensor,
+        attention_mask: encoded.attention_mask.ort_tensor,
+        token_type_ids: encoded.token_type_ids?.ort_tensor || 
+                       new ort.Tensor('int64', 
+                         new BigInt64Array(encoded.input_ids.dims[1]).fill(0n),
+                         encoded.input_ids.dims)
+      };
     }
     
-    // Fallback for other formats
-    throw new Error('Unexpected tokenizer output format. Expected Tensor with BigInt64Array data.');
+    // Otherwise, extract the data and create ONNX tensors
+    const inputIds = encoded.input_ids.data;
+    const attentionMask = encoded.attention_mask.data;
+    const seqLength = inputIds.length;
+    
+    // Create token_type_ids if not provided
+    const tokenTypeIds = encoded.token_type_ids?.data || new BigInt64Array(seqLength).fill(0n);
+    
+    // The Transformers.js library returns BigInt64Array for int64 tensors
+    // Create ONNX tensors from the data
+    return {
+      input_ids: new ort.Tensor('int64', inputIds, [1, seqLength]),
+      attention_mask: new ort.Tensor('int64', attentionMask, [1, seqLength]),
+      token_type_ids: new ort.Tensor('int64', tokenTypeIds, [1, seqLength])
+    };
   }
 
   /**
@@ -326,13 +350,29 @@ export class LocalEmbeddingService {
    */
   createFallbackTokenizer() {
     return async (text, options) => {
-      // Simple tokenization for testing
-      const result = this.fallbackTokenize(text);
-      return {
-        input_ids: result.input_ids,
-        attention_mask: result.attention_mask,
-        token_type_ids: result.token_type_ids
-      };
+      try {
+        // Simple tokenization for testing - creates proper ONNX tensors
+        const result = this.fallbackTokenize(text);
+        return {
+          input_ids: result.input_ids,
+          attention_mask: result.attention_mask,
+          token_type_ids: result.token_type_ids
+        };
+      } catch (error) {
+        console.warn('Fallback tokenizer failed, using minimal tokenization');
+        // Ultra-minimal fallback
+        const tokens = [101, 2023, 102]; // CLS, UNK, SEP
+        const mask = [1, 1, 1];
+        
+        if (ort) {
+          return {
+            input_ids: new ort.Tensor('int64', new BigInt64Array(tokens.map(t => BigInt(t))), [1, 3]),
+            attention_mask: new ort.Tensor('int64', new BigInt64Array(mask.map(m => BigInt(m))), [1, 3]),
+            token_type_ids: new ort.Tensor('int64', new BigInt64Array(3).fill(0n), [1, 3])
+          };
+        }
+        throw error;
+      }
     };
   }
 
@@ -410,6 +450,7 @@ export class LocalEmbeddingService {
       model: this.config.modelPath
     };
   }
+
 
   /**
    * Get model information

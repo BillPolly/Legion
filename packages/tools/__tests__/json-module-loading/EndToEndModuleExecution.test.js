@@ -9,25 +9,27 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
-import { ModuleFactory } from '../../src/ModuleFactory.js';
-import { ResourceManager } from '../../src/ResourceManager.js';
+import { ModuleLoader } from '../../src/loading/ModuleLoader.js';
+import { DynamicJsonModule } from '../../src/loading/DynamicJsonModule.js';
+import { ResourceManager } from '@legion/tools';
 import fs from 'fs/promises';
 import path from 'path';
 
 describe('End-to-End JSON Module Loading', () => {
-  let moduleFactory;
+  let moduleLoader;
   let resourceManager;
   
   beforeEach(async () => {
     resourceManager = new ResourceManager();
     await resourceManager.initialize();
-    moduleFactory = new ModuleFactory(resourceManager);
+    moduleLoader = new ModuleLoader({ 
+      resourceManager,
+      verbose: false 
+    });
   });
 
   afterEach(async () => {
-    if (moduleFactory) {
-      moduleFactory.clearCache();
-    }
+    // Cleanup if needed
   });
 
   test('should create and execute a simple JSON module with actual implementation', async () => {

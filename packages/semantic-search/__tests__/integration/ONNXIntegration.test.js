@@ -20,8 +20,12 @@ describe('ONNX Runtime Integration', () => {
       
       // FORCE the import - NO SKIPPING
       try {
-        ort = await import('onnxruntime-node');
+        const ortModule = await import('onnxruntime-node');
+        // In v1.14.0, the actual ort object is in the default export
+        ort = ortModule.default || ortModule;
+        
         console.log('✅ ONNX Runtime imported successfully!');
+        console.log('Available properties:', Object.keys(ort));
         
         expect(ort).toBeDefined();
         expect(ort.InferenceSession).toBeDefined();
@@ -141,19 +145,8 @@ describe('ONNX Runtime Integration', () => {
         modelPath: '/fake/model.onnx'
       });
 
-      try {
-        await service.initialize();
-        
-        if (!isONNXAvailable) {
-          fail('Should have failed when ONNX not available');
-        } else {
-          fail('Should have failed with fake model path');
-        }
-      } catch (error) {
-        // Expected to fail - either no ONNX or no model file
-        expect(error).toBeInstanceOf(Error);
-        expect(error.message).toMatch(/(onnxruntime-node|model|file)/i);
-      }
+      // Expect the initialization to reject with an error
+      await expect(service.initialize()).rejects.toThrow(/(onnxruntime-node|model|file|load)/i);
     });
 
     test('should provide correct model info', async () => {

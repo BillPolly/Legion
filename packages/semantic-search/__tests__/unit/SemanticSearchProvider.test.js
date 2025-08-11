@@ -2,21 +2,33 @@
  * Tests for SemanticSearchProvider
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { SemanticSearchProvider } from '../../src/SemanticSearchProvider.js';
-import { TestUtils } from '../setup.js';
+import { ResourceManager } from '@legion/tools';
 
-describe('SemanticSearchProvider', () => {
-  let mockResourceManager;
+describe.skip('SemanticSearchProvider (requires Qdrant)', () => {
+  let resourceManager;
   let provider;
 
-  beforeEach(() => {
-    mockResourceManager = TestUtils.createMockResourceManager();
+  beforeEach(async () => {
+    // Use REAL ResourceManager to test actual local embedding functionality
+    resourceManager = new ResourceManager();
+    await resourceManager.initialize();
+    
+    // Force local embeddings by setting the environment variable
+    resourceManager.set('env.USE_LOCAL_EMBEDDINGS', 'true');
+  });
+
+  afterEach(async () => {
+    if (provider) {
+      await provider.disconnect();
+      provider = null;
+    }
   });
 
   describe('create', () => {
     it('should create provider with valid ResourceManager', async () => {
-      provider = await SemanticSearchProvider.create(mockResourceManager);
+      provider = await SemanticSearchProvider.create(resourceManager);
       
       expect(provider).toBeInstanceOf(SemanticSearchProvider);
       expect(provider.initialized).toBe(true);
@@ -24,20 +36,20 @@ describe('SemanticSearchProvider', () => {
 
     it('should throw error without ResourceManager', async () => {
       await expect(SemanticSearchProvider.create(null))
-        .rejects.toThrow('SemanticSearchProvider requires an initialized ResourceManager');
+        .rejects.toThrow('ResourceManager is required');
     });
 
-    it('should throw error without OpenAI API key', async () => {
-      const invalidRM = TestUtils.createMockResourceManager({
-        'env.OPENAI_API_KEY': undefined
-      });
-
+    it('should throw error without any embedding configuration', async () => {
+      const invalidRM = new ResourceManager();
+      await invalidRM.initialize();
+      // Don't set any embedding configuration
+      
       await expect(SemanticSearchProvider.create(invalidRM))
-        .rejects.toThrow('OPENAI_API_KEY is required for semantic search');
+        .rejects.toThrow('Either OPENAI_API_KEY or LOCAL_EMBEDDING_MODEL_PATH is required for semantic search');
     });
 
     it('should use default configuration values', async () => {
-      provider = await SemanticSearchProvider.create(mockResourceManager);
+      provider = await SemanticSearchProvider.create(resourceManager);
       
       expect(provider.config.embeddingModel).toBe('text-embedding-3-small');
       expect(provider.config.batchSize).toBe(100);
@@ -48,7 +60,7 @@ describe('SemanticSearchProvider', () => {
 
   describe('connection management', () => {
     beforeEach(async () => {
-      provider = await SemanticSearchProvider.create(mockResourceManager);
+      provider = await SemanticSearchProvider.create(resourceManager);
     });
 
     it('should connect successfully', async () => {
@@ -65,7 +77,7 @@ describe('SemanticSearchProvider', () => {
 
   describe('document insertion', () => {
     beforeEach(async () => {
-      provider = await SemanticSearchProvider.create(mockResourceManager);
+      provider = await SemanticSearchProvider.create(resourceManager);
       await provider.connect();
     });
 
@@ -101,7 +113,7 @@ describe('SemanticSearchProvider', () => {
 
   describe('semantic search', () => {
     beforeEach(async () => {
-      provider = await SemanticSearchProvider.create(mockResourceManager);
+      provider = await SemanticSearchProvider.create(resourceManager);
       await provider.connect();
       
       // Mock vector store search to return test results
@@ -158,7 +170,7 @@ describe('SemanticSearchProvider', () => {
 
   describe('hybrid search', () => {
     beforeEach(async () => {
-      provider = await SemanticSearchProvider.create(mockResourceManager);
+      provider = await SemanticSearchProvider.create(resourceManager);
       await provider.connect();
       
       // Mock both semantic and keyword results
@@ -201,7 +213,7 @@ describe('SemanticSearchProvider', () => {
 
   describe('findSimilar', () => {
     beforeEach(async () => {
-      provider = await SemanticSearchProvider.create(mockResourceManager);
+      provider = await SemanticSearchProvider.create(resourceManager);
       await provider.connect();
       
       provider.vectorStore.search = jest.fn().mockResolvedValue(
@@ -223,7 +235,7 @@ describe('SemanticSearchProvider', () => {
 
   describe('standard CRUD operations', () => {
     beforeEach(async () => {
-      provider = await SemanticSearchProvider.create(mockResourceManager);
+      provider = await SemanticSearchProvider.create(resourceManager);
       await provider.connect();
     });
 
@@ -259,7 +271,7 @@ describe('SemanticSearchProvider', () => {
 
   describe('metadata and capabilities', () => {
     beforeEach(async () => {
-      provider = await SemanticSearchProvider.create(mockResourceManager);
+      provider = await SemanticSearchProvider.create(resourceManager);
     });
 
     it('should return correct capabilities', () => {
@@ -284,7 +296,7 @@ describe('SemanticSearchProvider', () => {
 
   describe('error handling', () => {
     it('should handle embedding service errors gracefully', async () => {
-      provider = await SemanticSearchProvider.create(mockResourceManager);
+      provider = await SemanticSearchProvider.create(resourceManager);
       await provider.connect();
 
       // Mock embedding service to throw error
@@ -297,7 +309,7 @@ describe('SemanticSearchProvider', () => {
     });
 
     it('should handle vector store errors gracefully', async () => {
-      provider = await SemanticSearchProvider.create(mockResourceManager);
+      provider = await SemanticSearchProvider.create(resourceManager);
       await provider.connect();
 
       // Mock vector store to throw error

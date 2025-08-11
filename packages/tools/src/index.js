@@ -17,6 +17,15 @@ export { ResourceManager } from './ResourceManager.js';
 // Integration components
 export { ToolRegistry } from './integration/ToolRegistry.js';
 
+// Search and discovery services
+export { 
+  ToolIndexer, 
+  SemanticToolDiscovery, 
+  DocumentProcessor,
+  createToolIndexer,
+  createSemanticToolDiscovery
+} from './search/index.js';
+
 // Tool modules are available in their respective directories and can be imported directly:
 // import CalculatorModule from '@legion/tools/calculator'
 // import FileModule from '@legion/tools/file' 

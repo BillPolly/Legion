@@ -12,9 +12,7 @@ export class QdrantVectorStore {
     
     this.client = null;
     this.connected = false;
-    this._collections = new Map(); // In-memory storage for testing
-    
-    this._initializeClient();
+    this._initPromise = null; // Store initialization promise
   }
   
   async _initializeClient() {
@@ -35,17 +33,24 @@ export class QdrantVectorStore {
   }
   
   async connect() {
-    if (this.client) {
-      try {
-        await this.client.getClusterInfo();
-        this.connected = true;
-      } catch (error) {
-        // Fallback to in-memory mode
-        this.connected = true;
-      }
-    } else {
-      // Use in-memory mode for testing
+    // Ensure client is initialized
+    if (!this._initPromise) {
+      this._initPromise = this._initializeClient();
+    }
+    await this._initPromise;
+    
+    if (!this.client) {
+      throw new Error('Failed to initialize Qdrant client - @qdrant/js-client-rest may not be installed');
+    }
+    
+    try {
+      // Use getCollections() to test connection - it's a simpler API call
+      await this.client.getCollections();
       this.connected = true;
+      console.log('✅ Connected to Qdrant at', this.config.url);
+    } catch (error) {
+      this.connected = false;
+      throw new Error(`Failed to connect to Qdrant at ${this.config.url}: ${error.message}`);
     }
   }
   
@@ -54,215 +59,234 @@ export class QdrantVectorStore {
   }
   
   async ensureCollection(name, vectorSize = 1536, options = {}) {
-    if (!this._collections.has(name)) {
-      this._collections.set(name, {
-        vectors: [],
-        config: { vectorSize, ...options }
-      });
+    if (!this.client) {
+      throw new Error('Qdrant client not initialized');
     }
     
-    if (this.client) {
-      try {
-        const collections = await this.client.getCollections();
-        const exists = collections.collections.some(c => c.name === name);
-        
-        if (!exists) {
-          await this.client.createCollection(name, {
-            vectors: {
-              size: vectorSize,
-              distance: options.distance || 'Cosine'
-            }
-          });
+    const collections = await this.client.getCollections();
+    const exists = collections.collections.some(c => c.name === name);
+    
+    if (!exists) {
+      console.log(`📝 Creating Qdrant collection: ${name} with ${vectorSize} dimensions`);
+      await this.client.createCollection(name, {
+        vectors: {
+          size: vectorSize,
+          distance: options.distance || 'Cosine'
         }
-      } catch (error) {
-        // Fallback to in-memory
-      }
+      });
+      console.log(`✅ Created Qdrant collection: ${name} (${vectorSize}D)`);
+    } else {
+      console.log(`📋 Collection ${name} already exists`);
     }
   }
 
   async createCollection(name, options = {}) {
     const { dimension = 1536, distance = 'cosine', description = '' } = options;
+    
+    // Always delete existing collection first to avoid dimension conflicts
+    try {
+      await this.deleteCollection(name);
+    } catch (error) {
+      // Collection might not exist, which is fine
+    }
+    
     await this.ensureCollection(name, dimension, { distance: distance.charAt(0).toUpperCase() + distance.slice(1), description });
   }
 
   async count(collection) {
-    const coll = this._collections.get(collection);
-    if (!coll) {
-      await this.ensureCollection(collection);
-      return 0;
+    if (!this.client) {
+      throw new Error('Qdrant client not initialized');
     }
     
-    if (this.client) {
-      try {
-        const result = await this.client.count(collection);
-        return result.count;
-      } catch (error) {
-        // Fallback to in-memory count
-        const fallbackColl = this._collections.get(collection);
-        return fallbackColl ? fallbackColl.vectors.length : 0;
+    try {
+      const result = await this.client.count(collection);
+      return result.count;
+    } catch (error) {
+      // Collection might not exist
+      if (error.message.includes('Not found')) {
+        return 0;
       }
-    } else {
-      return coll.vectors.length;
+      throw error;
     }
   }
   
   async upsert(collection, vectors) {
-    await this.ensureCollection(collection);
-    
-    if (this.client) {
-      try {
-        await this.client.upsert(collection, {
-          wait: true,
-          points: vectors.map(v => ({
-            id: v.id || crypto.randomUUID(),
-            vector: v.vector,
-            payload: v.payload || {}
-          }))
-        });
-      } catch (error) {
-        // Fallback to in-memory
-        this._upsertInMemory(collection, vectors);
-      }
-    } else {
-      this._upsertInMemory(collection, vectors);
+    if (!this.client) {
+      throw new Error('Qdrant client not initialized');
     }
-  }
-  
-  _upsertInMemory(collection, vectors) {
-    const coll = this._collections.get(collection);
-    if (!coll) return;
     
-    vectors.forEach(v => {
-      const existing = coll.vectors.findIndex(vec => vec.id === v.id);
-      if (existing >= 0) {
-        coll.vectors[existing] = v;
-      } else {
-        coll.vectors.push(v);
+    if (!vectors || vectors.length === 0) {
+      return { success: true, message: 'No vectors to upsert' };
+    }
+    
+    // Detect vector dimensions from first vector
+    const vectorSize = vectors[0].vector.length;
+    await this.ensureCollection(collection, vectorSize);
+    
+    // Generate numeric IDs - Qdrant prefers numeric IDs for better performance
+    const points = vectors.map((v, idx) => {
+      let id = v.id;
+      
+      // If ID is already a number, use it
+      if (typeof id === 'number') {
+        // Keep as is
+      } 
+      // If ID is a string that looks like a number, convert it
+      else if (typeof id === 'string' && /^\d+$/.test(id)) {
+        id = parseInt(id, 10);
       }
+      // Generate a numeric ID based on timestamp and index
+      else {
+        // Use timestamp + index to create a unique numeric ID
+        id = Date.now() * 1000 + idx;
+      }
+      
+      return {
+        id: id,
+        vector: v.vector,
+        payload: v.payload || {}
+      };
     });
+    
+    // Only log for large batches or in verbose mode
+    if (points.length > 10 || process.env.DEBUG_QDRANT === 'true') {
+      console.log(`📝 Upserting ${points.length} vectors to Qdrant collection: ${collection} (${vectorSize}D)`);
+    }
+    
+    try {
+      const result = await this.client.upsert(collection, {
+        wait: true,
+        points: points
+      });
+      return result;
+    } catch (error) {
+      console.error('❌ Upsert error:', error.message);
+      if (error.response) {
+        const text = await error.response.text();
+        console.error('   Response body:', text);
+      }
+      throw error;
+    }
   }
   
   async search(collection, queryVector, options = {}) {
+    if (!this.client) {
+      throw new Error('Qdrant client not initialized');
+    }
+    
     const { limit = 10, threshold = 0, filter = {} } = options;
     
-    if (this.client) {
-      try {
-        const results = await this.client.search(collection, {
-          vector: queryVector,
-          limit,
-          score_threshold: threshold,
-          filter: Object.keys(filter).length > 0 ? filter : undefined,
-          with_payload: true,
-          with_vector: options.includeVectors
-        });
-        
-        return results.map(r => ({
-          id: r.id,
-          score: r.score,
-          payload: r.payload,
-          vector: r.vector
-        }));
-      } catch (error) {
-        // Fallback to in-memory
-        return this._searchInMemory(collection, queryVector, options);
-      }
-    } else {
-      return this._searchInMemory(collection, queryVector, options);
-    }
-  }
-  
-  _searchInMemory(collection, queryVector, options) {
-    const coll = this._collections.get(collection);
-    if (!coll) return [];
+    const results = await this.client.search(collection, {
+      vector: queryVector,
+      limit,
+      score_threshold: threshold,
+      filter: Object.keys(filter).length > 0 ? filter : undefined,
+      with_payload: true,
+      with_vector: options.includeVectors
+    });
     
-    const { limit = 10, threshold = 0 } = options;
-    
-    // Calculate cosine similarity for each vector
-    const results = coll.vectors.map(v => ({
-      id: v.id,
-      score: this._cosineSimilarity(queryVector, v.vector),
-      payload: v.payload,
-      document: v.payload,
-      vector: options.includeVectors ? v.vector : undefined
+    return results.map(r => ({
+      id: r.id,
+      score: r.score,
+      payload: r.payload,
+      vector: r.vector
     }));
-    
-    // Filter by threshold and sort by score
-    return results
-      .filter(r => r.score >= threshold)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit);
-  }
-  
-  _cosineSimilarity(a, b) {
-    if (!a || !b || a.length !== b.length) return 0;
-    
-    let dotProduct = 0;
-    let normA = 0;
-    let normB = 0;
-    
-    for (let i = 0; i < a.length; i++) {
-      dotProduct += a[i] * b[i];
-      normA += a[i] * a[i];
-      normB += b[i] * b[i];
-    }
-    
-    if (normA === 0 || normB === 0) return 0;
-    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
   }
   
   async find(collection, filter = {}, options = {}) {
-    const coll = this._collections.get(collection);
-    if (!coll) return [];
+    if (!this.client) {
+      throw new Error('Qdrant client not initialized');
+    }
     
-    // Simple filter implementation for in-memory
-    return coll.vectors.filter(v => {
-      for (const [key, value] of Object.entries(filter)) {
-        // Check both the vector ID and payload fields
-        if (key === 'id') {
-          if (v.id !== value) return false;
-        } else if (v.payload[key] !== value) {
-          return false;
-        }
+    // Qdrant doesn't have a direct "find" - use scroll with filter
+    const { limit = 100 } = options;
+    
+    try {
+      const result = await this.client.scroll(collection, {
+        filter: Object.keys(filter).length > 0 ? filter : undefined,
+        limit,
+        with_payload: true
+      });
+      
+      return result.points.map(p => p.payload);
+    } catch (error) {
+      if (error.message.includes('Not found')) {
+        return [];
       }
-      return true;
-    }).map(v => v.payload);
+      throw error;
+    }
   }
   
   async update(collection, filter, update) {
-    const coll = this._collections.get(collection);
-    if (!coll) return { modifiedCount: 0 };
+    if (!this.client) {
+      throw new Error('Qdrant client not initialized');
+    }
     
-    let modifiedCount = 0;
-    coll.vectors.forEach(v => {
-      let matches = true;
-      for (const [key, value] of Object.entries(filter)) {
-        if (v.payload[key] !== value) {
-          matches = false;
-          break;
-        }
-      }
-      
-      if (matches) {
-        Object.assign(v.payload, update);
-        modifiedCount++;
-      }
-    });
-    
-    return { modifiedCount };
+    // Qdrant doesn't have direct update by filter - need to find and update points
+    throw new Error('Update by filter not implemented for Qdrant - use upsert with specific IDs');
   }
   
   async delete(collection, filter) {
-    const coll = this._collections.get(collection);
-    if (!coll) return { deletedCount: 0 };
+    if (!this.client) {
+      throw new Error('Qdrant client not initialized');
+    }
     
-    const before = coll.vectors.length;
-    coll.vectors = coll.vectors.filter(v => {
-      for (const [key, value] of Object.entries(filter)) {
-        if (v.payload[key] === value) return false;
-      }
-      return true;
+    // Build Qdrant filter format
+    const qdrantFilter = {
+      must: Object.entries(filter).map(([key, value]) => ({
+        key: key,
+        match: { value: value }
+      }))
+    };
+    
+    const result = await this.client.delete(collection, {
+      filter: qdrantFilter,
+      wait: true
     });
     
-    return { deletedCount: before - coll.vectors.length };
+    return { deletedCount: result.operation_id ? 1 : 0 };
+  }
+  
+  /**
+   * Delete entire collection (for complete index clearing)
+   */
+  async deleteCollection(collectionName) {
+    if (!this.client) {
+      throw new Error('Qdrant client not initialized');
+    }
+    
+    try {
+      await this.client.deleteCollection(collectionName);
+      return { success: true, message: `Collection ${collectionName} deleted` };
+    } catch (error) {
+      if (error.message.includes('Not found')) {
+        return { success: true, message: `Collection ${collectionName} did not exist` };
+      }
+      throw error;
+    }
+  }
+  
+  /**
+   * Delete vectors by filter (for selective module clearing)
+   */
+  async deleteByFilter(collection, filter) {
+    if (!this.client) {
+      throw new Error('Qdrant client not initialized');
+    }
+    
+    // Build Qdrant filter format
+    const qdrantFilter = {
+      must: Object.entries(filter).map(([key, value]) => ({
+        key: key,
+        match: { value: value }
+      }))
+    };
+    
+    const result = await this.client.delete(collection, {
+      filter: qdrantFilter,
+      wait: true
+    });
+    
+    return { deletedCount: result.operation_id ? 1 : 0 };
   }
 }
