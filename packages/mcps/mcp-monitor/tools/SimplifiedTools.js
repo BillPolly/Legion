@@ -100,6 +100,30 @@ export class SimplifiedTools {
       },
       
       {
+        name: 'browser_execute',
+        description: 'Execute Puppeteer page commands directly. Supports all Puppeteer page methods like click, type, goto, evaluate, etc. See https://pptr.dev/api/puppeteer.page for full API reference.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            command: {
+              type: 'string',
+              description: 'Puppeteer page method to execute (e.g., "click", "type", "goto", "evaluate", "screenshot", "title", "url", "content", "waitForSelector")'
+            },
+            args: {
+              type: 'array',
+              description: 'Arguments to pass to the command. For example: ["#button"] for click, ["#input", "text"] for type, ["https://example.com"] for goto'
+            },
+            session_id: {
+              type: 'string',
+              default: 'default',
+              description: 'Session ID with active browser'
+            }
+          },
+          required: ['command']
+        }
+      },
+      
+      {
         name: 'query_logs',
         description: 'Search and filter application logs and system events',
         inputSchema: {
@@ -286,6 +310,8 @@ export class SimplifiedTools {
         return await this.startServer(args);
       case 'open_page':
         return await this.openPage(args);
+      case 'browser_execute':
+        return await this.browserExecute(args);
       case 'query_logs':
         return await this.queryLogs(args);
       case 'set_log_level':
@@ -572,6 +598,175 @@ export class SimplifiedTools {
     }
   }
 
+  /**
+   * Execute Puppeteer commands directly on the browser page
+   */
+  async browserExecute(args) {
+    try {
+      const { 
+        command,
+        args: commandArgs = [],
+        session_id = 'default'
+      } = args;
+      
+      // Validate command is provided
+      if (!command) {
+        return {
+          content: [{
+            type: 'text',
+            text: `❌ No command provided. Specify a Puppeteer page method like "click", "type", "goto", etc.`
+          }],
+          isError: true
+        };
+      }
+      
+      // Get the monitor for the session
+      let monitor;
+      try {
+        monitor = this.sessionManager.getCurrentMonitor(session_id);
+      } catch (error) {
+        return {
+          content: [{
+            type: 'text',
+            text: `❌ No active session: ${session_id}. Start a server and open a page first.`
+          }],
+          isError: true
+        };
+      }
+      
+      // Check if browser exists
+      if (!monitor.activeBrowsers || monitor.activeBrowsers.size === 0) {
+        return {
+          content: [{
+            type: 'text',
+            text: `❌ No browser open for session: ${session_id}. Use 'open_page' to open a browser first.`
+          }],
+          isError: true
+        };
+      }
+      
+      // Get the page object
+      const browserEntry = Array.from(monitor.activeBrowsers.values())[0];
+      const page = browserEntry.page;
+      
+      // Check if the command exists on the page object
+      if (typeof page[command] !== 'function') {
+        return {
+          content: [{
+            type: 'text',
+            text: `❌ Invalid command: "${command}" is not a valid Puppeteer page method.\n` +
+                  `💡 Common commands: click, type, goto, evaluate, screenshot, title, url, content, waitForSelector\n` +
+                  `📚 See https://pptr.dev/api/puppeteer.page for full API reference.`
+          }],
+          isError: true
+        };
+      }
+      
+      console.log(`[browserExecute] Executing: page.${command}(${commandArgs.map(a => JSON.stringify(a)).join(', ')})`);
+      
+      // Execute the command
+      let result;
+      const startTime = Date.now();
+      
+      try {
+        // Special handling for certain commands that need specific processing
+        if (command === 'evaluate' || command === 'evaluateHandle') {
+          // For evaluate, the first arg should be a function string or actual function
+          // If it's a string, we need to convert it to a function
+          if (commandArgs.length > 0 && typeof commandArgs[0] === 'string') {
+            // Create a function from the string
+            const funcStr = commandArgs[0];
+            const func = new Function('return ' + funcStr)();
+            result = await page[command](func, ...commandArgs.slice(1));
+          } else {
+            result = await page[command](...commandArgs);
+          }
+        } else {
+          // Execute the command normally
+          result = await page[command](...commandArgs);
+        }
+        
+        const duration = Date.now() - startTime;
+        
+        // Format the result based on type
+        let resultText = '';
+        
+        if (result === undefined) {
+          resultText = 'Command executed successfully (no return value)';
+        } else if (result === null) {
+          resultText = 'Command returned: null';
+        } else if (typeof result === 'boolean') {
+          resultText = `Command returned: ${result}`;
+        } else if (typeof result === 'string') {
+          resultText = `Command returned: "${result}"`;
+        } else if (typeof result === 'number') {
+          resultText = `Command returned: ${result}`;
+        } else if (Buffer.isBuffer(result)) {
+          // For screenshot/pdf commands that return buffers
+          resultText = `Command returned: Buffer (${result.length} bytes)`;
+        } else if (Array.isArray(result)) {
+          resultText = `Command returned array with ${result.length} items:\n${JSON.stringify(result, null, 2)}`;
+        } else if (typeof result === 'object') {
+          // Try to stringify the object
+          try {
+            const formatted = JSON.stringify(result, null, 2);
+            if (formatted.length > 1000) {
+              resultText = `Command returned object:\n${formatted.substring(0, 1000)}...\n(truncated)`;
+            } else {
+              resultText = `Command returned object:\n${formatted}`;
+            }
+          } catch (e) {
+            resultText = `Command returned: [Complex Object]`;
+          }
+        } else {
+          resultText = `Command returned: ${String(result)}`;
+        }
+        
+        return {
+          content: [{
+            type: 'text',
+            text: `✅ Executed: page.${command}(${commandArgs.map(a => JSON.stringify(a)).join(', ')})\n` +
+                  `⏱️  Duration: ${duration}ms\n` +
+                  `📊 Session: ${session_id}\n` +
+                  `📋 Result: ${resultText}`
+          }]
+        };
+        
+      } catch (error) {
+        // Provide helpful error messages
+        let errorHelp = '';
+        
+        if (error.message.includes('No element found for selector')) {
+          errorHelp = '\n💡 Tip: Make sure the selector exists on the page. Try using page.content() to see the HTML.';
+        } else if (error.message.includes('Timeout') || error.message.includes('waiting')) {
+          errorHelp = '\n💡 Tip: The element might not be visible yet. Try waitForSelector first or increase timeout.';
+        } else if (error.message.includes('Navigation')) {
+          errorHelp = '\n💡 Tip: For navigation, use goto with waitUntil options like "networkidle2".';
+        } else if (error.message.includes('Evaluation failed')) {
+          errorHelp = '\n💡 Tip: Check your evaluate function syntax. It should be a valid JavaScript function.';
+        }
+        
+        return {
+          content: [{
+            type: 'text',
+            text: `❌ Command failed: page.${command}(${commandArgs.map(a => JSON.stringify(a)).join(', ')})\n` +
+                  `🔴 Error: ${error.message}${errorHelp}\n` +
+                  `📊 Session: ${session_id}`
+          }],
+          isError: true
+        };
+      }
+      
+    } catch (error) {
+      return {
+        content: [{
+          type: 'text',
+          text: `❌ Browser execute failed: ${error.message}`
+        }],
+        isError: true
+      };
+    }
+  }
   
   /**
    * Query logs with Sidewinder events

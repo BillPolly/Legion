@@ -4,11 +4,12 @@ A Model Context Protocol (MCP) server that provides comprehensive monitoring for
 
 ## Overview
 
-The MCP FullStack Monitor provides **8 focused tools** via the MCP protocol, allowing AI agents to:
+The MCP FullStack Monitor provides **9 focused tools** via the MCP protocol, allowing AI agents to:
 
 - ✅ **Start Node.js or TypeScript servers** with automatic monitoring injection
 - ✅ **Support package.json scripts** or direct script execution
 - ✅ **Open and control browser sessions** for frontend monitoring
+- ✅ **Execute Puppeteer commands directly** for complete browser automation
 - ✅ **Query logs with correlation tracking** across backend and frontend
 - ✅ **Take screenshots and record video** for debugging
 - ✅ **Manage multiple monitoring sessions** simultaneously
@@ -83,7 +84,63 @@ Open a browser page for frontend monitoring and interaction.
 }
 ```
 
-### 3. `query_logs` - Search Application Logs
+### 3. `browser_execute` - Direct Puppeteer Control
+Execute Puppeteer page commands directly for complete browser automation control.
+
+**Supported Commands:**
+- **Navigation**: `goto`, `reload`, `goBack`, `goForward`
+- **Interaction**: `click`, `type`, `select`, `focus`, `hover`
+- **Evaluation**: `evaluate`, `evaluateHandle`, `title`, `url`, `content`
+- **Waiting**: `waitForSelector`, `waitForNavigation`, `waitForTimeout`
+- **Screenshots**: `screenshot`, `pdf`
+- **And many more**: See [Puppeteer Page API](https://pptr.dev/api/puppeteer.page)
+
+**Examples:**
+```json
+// Click a button
+{
+  "command": "click",
+  "args": ["#submit-button"],
+  "session_id": "backend-session"
+}
+
+// Type into an input field
+{
+  "command": "type",
+  "args": ["#email-input", "user@example.com"],
+  "session_id": "backend-session"
+}
+
+// Navigate to a URL
+{
+  "command": "goto",
+  "args": ["https://example.com", {"waitUntil": "networkidle2"}],
+  "session_id": "backend-session"
+}
+
+// Evaluate JavaScript on the page
+{
+  "command": "evaluate",
+  "args": ["() => document.title"],
+  "session_id": "backend-session"
+}
+
+// Wait for an element
+{
+  "command": "waitForSelector",
+  "args": [".loading-complete", {"timeout": 10000}],
+  "session_id": "backend-session"
+}
+
+// Take a screenshot
+{
+  "command": "screenshot",
+  "args": [{"path": "page.png", "fullPage": true}],
+  "session_id": "backend-session"
+}
+```
+
+### 4. `query_logs` - Search Application Logs
 Query logs with filtering and correlation tracking.
 
 ```json
@@ -97,7 +154,7 @@ Query logs with filtering and correlation tracking.
 }
 ```
 
-### 4. `take_screenshot` - Capture Page Screenshots
+### 5. `take_screenshot` - Capture Page Screenshots
 Take screenshots for debugging or documentation.
 
 ```json
@@ -108,7 +165,7 @@ Take screenshots for debugging or documentation.
 }
 ```
 
-### 5. `record_video` - Record Browser Interactions
+### 6. `record_video` - Record Browser Interactions
 Record video of browser interactions for debugging.
 
 ```json
@@ -120,7 +177,7 @@ Record video of browser interactions for debugging.
 }
 ```
 
-### 6. `set_log_level` - Adjust Logging Verbosity
+### 7. `set_log_level` - Adjust Logging Verbosity
 ```json
 {
   "level": "debug",
@@ -128,12 +185,12 @@ Record video of browser interactions for debugging.
 }
 ```
 
-### 7. `list_sessions` - Show Active Sessions
+### 8. `list_sessions` - Show Active Sessions
 ```json
 {}
 ```
 
-### 8. `stop_app` - Clean Shutdown
+### 9. `stop_app` - Clean Shutdown
 ```json
 {
   "session_id": "backend-session"
@@ -264,9 +321,10 @@ MCP Server
     ├── EnhancedServerStarter (Node.js/TypeScript process management)
     ├── SessionManager (resource lifecycle)  
     ├── PortManager (port allocation)
-    └── SimplifiedTools (8 focused tools)
+    └── SimplifiedTools (9 focused tools)
         ├── start_server (universal app launching)
         ├── open_page (browser automation)
+        ├── browser_execute (direct Puppeteer control)
         ├── query_logs (log analysis)
         ├── take_screenshot (debugging)
         ├── record_video (interaction recording)

@@ -115,10 +115,15 @@ app.get('/', (req, res) => {
         </div>
 
         <h2>🧪 Test Interactions</h2>
-        <button onclick="fetchHealth()">Check Health</button>
+        <button id="test-btn" onclick="fetchHealth()">Check Health</button>
         <button onclick="fetchData()">Fetch Data</button>
         <button onclick="processData()">Process Data</button>
-        <button onclick="triggerError()">Trigger Error</button>
+        <button id="error-btn" onclick="triggerError()">Trigger Error</button>
+        
+        <div style="margin: 20px 0;">
+          <label for="name-input">Name:</label>
+          <input type="text" id="name-input" placeholder="Enter your name" style="padding: 8px; margin-left: 10px; border-radius: 4px; border: 1px solid #ccc;">
+        </div>
         
         <div id="response"></div>
       </div>
@@ -169,6 +174,12 @@ app.get('/', (req, res) => {
     </body>
     </html>
   `);
+});
+
+// Test endpoint
+app.get('/test', (req, res) => {
+  console.log(`[${req.correlationId}] Test endpoint accessed`);
+  res.send('Test endpoint reached');
 });
 
 // Health check endpoint
