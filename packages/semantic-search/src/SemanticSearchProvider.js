@@ -52,7 +52,6 @@ export class SemanticSearchProvider {
    * 🚨 ResourceManager provides ALL configuration automatically from .env
    * @param {ResourceManager} resourceManager - Initialized ResourceManager instance
    * @param {Object} options - Additional options for creation
-   * @param {boolean} options.skipConnection - Skip automatic connection for testing
    * @returns {Promise<SemanticSearchProvider>}
    */
   static async create(resourceManager, options = {}) {
@@ -81,53 +80,26 @@ export class SemanticSearchProvider {
                   `http://${resourceManager.get('env.QDRANT_HOST')}:${resourceManager.get('env.QDRANT_PORT')}` : 
                   'http://localhost:6333'),
       qdrantApiKey: resourceManager.get('env.QDRANT_API_KEY') || process.env.QDRANT_API_KEY,
-      embeddingModel: resourceManager.get('env.SEMANTIC_SEARCH_MODEL') || process.env.SEMANTIC_SEARCH_MODEL || 'text-embedding-3-small',
       batchSize: parseInt(resourceManager.get('env.SEMANTIC_SEARCH_BATCH_SIZE') || process.env.SEMANTIC_SEARCH_BATCH_SIZE || '100'),
       cacheTtl: parseInt(resourceManager.get('env.SEMANTIC_SEARCH_CACHE_TTL') || process.env.SEMANTIC_SEARCH_CACHE_TTL || '3600'),
-      enableCache: (resourceManager.get('env.SEMANTIC_SEARCH_ENABLE_CACHE') || process.env.SEMANTIC_SEARCH_ENABLE_CACHE) !== 'false',
-      useLocalEmbeddings: (resourceManager.get('env.USE_LOCAL_EMBEDDINGS') || process.env.USE_LOCAL_EMBEDDINGS) === 'true'
+      enableCache: (resourceManager.get('env.SEMANTIC_SEARCH_ENABLE_CACHE') || process.env.SEMANTIC_SEARCH_ENABLE_CACHE) !== 'false'
     };
 
-    // Determine embedding service to use
-    let useLocalEmbeddings = config.useLocalEmbeddings;
+    // ALWAYS use local ONNX embeddings - no options
+    console.log('🔧 Using local ONNX embeddings');
+    const embeddingService = new LocalEmbeddingService({
+      batchSize: config.batchSize
+      // LocalEmbeddingService handles its own model management
+    });
+    const embeddingDimensions = 384; // Local ONNX model dimensions
+    const useLocalEmbeddings = true; // Always true
     
-    // Auto-detect if neither is explicitly configured
-    if (!config.useLocalEmbeddings && !config.openaiApiKey && config.localModelPath) {
-      useLocalEmbeddings = true;
-      console.log('🔍 Auto-detected local embeddings (no OpenAI key, local model path provided)');
-    }
-    
-    if (!useLocalEmbeddings && !config.openaiApiKey) {
-      throw new Error('Either OPENAI_API_KEY or LOCAL_EMBEDDING_MODEL_PATH is required for semantic search');
-    }
-
-    // Create embedding service based on configuration
-    let embeddingService;
-    let embeddingDimensions;
-    
-    if (useLocalEmbeddings) {
-      console.log('🔧 Using local ONNX embeddings');
-      embeddingService = new LocalEmbeddingService({
-        batchSize: config.batchSize
-        // LocalEmbeddingService handles its own model management
-      });
-      embeddingDimensions = 384; // Local model dimensions
-      
-      // Initialize the local embedding service
-      try {
-        await embeddingService.initialize();
-      } catch (error) {
-        console.error('❌ Local embedding service initialization failed:', error.message);
-        throw new Error(`Local embeddings required but failed to initialize: ${error.message}`);
-      }
-    } else {
-      console.log('🔧 Using OpenAI embeddings');
-      embeddingService = new OpenAIEmbeddingService({
-        apiKey: config.openaiApiKey,
-        model: config.embeddingModel,
-        batchSize: config.batchSize
-      });
-      embeddingDimensions = config.embeddingModel === 'text-embedding-3-large' ? 3072 : 1536;
+    // Initialize the local embedding service
+    try {
+      await embeddingService.initialize();
+    } catch (error) {
+      console.error('❌ Local embedding service initialization failed:', error.message);
+      throw new Error(`Local embeddings failed to initialize: ${error.message}`);
     }
 
     // Create dependencies
@@ -150,10 +122,8 @@ export class SemanticSearchProvider {
 
     const provider = new SemanticSearchProvider(config, dependencies);
     
-    // Connect to vector store unless skipConnection is true
-    if (!options.skipConnection) {
-      await provider.connect();
-    }
+    // Always connect to vector store - no mocks or skips
+    await provider.connect();
     
     // Register with ResourceManager if it supports registration
     if (resourceManager.register) {

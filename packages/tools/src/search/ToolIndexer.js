@@ -26,45 +26,28 @@ export class ToolIndexer {
    * @returns {Promise<ToolIndexer>} ToolIndexer instance with local ONNX embeddings
    */
   static async createForTools(resourceManager, options = {}) {
-    console.log('🔧 Creating ToolIndexer with enforced local ONNX embeddings for tools');
+    console.log('🔧 Creating ToolIndexer with local ONNX embeddings for tools');
     
-    // Force local ONNX embeddings by temporarily overriding environment
-    const originalEnvValue = resourceManager.get('env.USE_LOCAL_EMBEDDINGS');
-    resourceManager.set('env.USE_LOCAL_EMBEDDINGS', 'true');
+    // Import SemanticSearchProvider to get embedding service
+    const { SemanticSearchProvider } = await import('../../../semantic-search/src/SemanticSearchProvider.js');
+    const toolSemanticProvider = await SemanticSearchProvider.create(resourceManager);
     
-    try {
-      // Import SemanticSearchProvider to get embedding service
-      const { SemanticSearchProvider } = await import('../../../semantic-search/src/SemanticSearchProvider.js');
-      const toolSemanticProvider = await SemanticSearchProvider.create(resourceManager);
-      
-      // Verify it's using local ONNX embeddings
-      if (!toolSemanticProvider.useLocalEmbeddings) {
-        throw new Error('Tool indexing MUST use local ONNX embeddings only');
-      }
-      
-      console.log('✅ ToolIndexer configured with local ONNX embedding service');
-      
-      // Get MongoDB provider from ResourceManager for perspectives storage
-      const { StorageProvider } = await import('@legion/storage');
-      const storageProvider = await StorageProvider.create(resourceManager);
-      const mongoProvider = storageProvider.getProvider('mongodb');
-      
-      // Create ToolIndexer with local embedding service + MongoDB
-      return new ToolIndexer({
-        embeddingService: toolSemanticProvider.embeddingService,
-        vectorStore: toolSemanticProvider.vectorStore,
-        documentProcessor: toolSemanticProvider.documentProcessor,
-        mongoProvider: mongoProvider,
-        collectionName: options.collectionName || 'legion_tools',
-        batchSize: options.batchSize || 50
-      });
-      
-    } finally {
-      // Restore original environment value
-      if (originalEnvValue) {
-        resourceManager.set('env.USE_LOCAL_EMBEDDINGS', originalEnvValue);
-      }
-    }
+    console.log('✅ ToolIndexer configured with local ONNX embedding service');
+    
+    // Get MongoDB provider from ResourceManager for perspectives storage
+    const { StorageProvider } = await import('@legion/storage');
+    const storageProvider = await StorageProvider.create(resourceManager);
+    const mongoProvider = storageProvider.getProvider('mongodb');
+    
+    // Create ToolIndexer with local embedding service + MongoDB
+    return new ToolIndexer({
+      embeddingService: toolSemanticProvider.embeddingService,
+      vectorStore: toolSemanticProvider.vectorStore,
+      documentProcessor: toolSemanticProvider.documentProcessor,
+      mongoProvider: mongoProvider,
+      collectionName: options.collectionName || 'legion_tools',
+      batchSize: options.batchSize || 50
+    });
   }
 
   /**

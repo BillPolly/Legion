@@ -46,7 +46,7 @@ describe('LoadingManager Integration', () => {
     // Create fresh LoadingManager for each test
     loadingManager = new LoadingManager({ 
       verbose: false,
-      resourceManager 
+      resourceManager
     });
   });
 

@@ -57,8 +57,7 @@ export class LoadingManager {
       await this.resourceManager.initialize();
     }
 
-    // Force local ONNX embeddings for tools
-    this.resourceManager.set('env.USE_LOCAL_EMBEDDINGS', 'true');
+    // SemanticSearchProvider always uses local ONNX embeddings
 
     // Initialize components
     this.moduleLoader = new ModuleLoader({
