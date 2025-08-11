@@ -398,6 +398,11 @@ export class FullStackMonitor extends EventEmitter {
    * Track a correlation between frontend and backend
    */
   async trackCorrelation(correlationId, data) {
+    // Handle null/undefined/empty correlation ID
+    if (!correlationId || correlationId.trim() === '') {
+      return;
+    }
+    
     if (!this.correlations.has(correlationId)) {
       this.correlations.set(correlationId, {
         id: correlationId,
@@ -409,11 +414,12 @@ export class FullStackMonitor extends EventEmitter {
     
     const correlation = this.correlations.get(correlationId);
     
-    if (data.frontend) {
+    // Handle null/undefined data
+    if (data && data.frontend) {
       correlation.frontend = data.frontend;
     }
     
-    if (data.backend) {
+    if (data && data.backend) {
       if (!correlation.backend) {
         correlation.backend = [];
       }
@@ -567,11 +573,11 @@ export class FullStackMonitor extends EventEmitter {
   /**
    * Get aggregated statistics
    */
-  getStatistics() {
-    const backendStats = this.logManager.getStatistics ? 
-      this.logManager.getStatistics() : {};
+  async getStatistics() {
+    const backendStats = (this.logManager && typeof this.logManager.getStatistics === 'function') ? 
+      await this.logManager.getStatistics() : {};
     
-    const frontendStats = this.browserMonitor.getStatistics ? 
+    const frontendStats = (this.browserMonitor && typeof this.browserMonitor.getStatistics === 'function') ? 
       this.browserMonitor.getStatistics() : {};
     
     return {
@@ -611,7 +617,11 @@ export class FullStackMonitor extends EventEmitter {
     
     // End session
     if (this.session && this.logManager.endSession) {
-      await this.logManager.endSession(this.session.id);
+      try {
+        await this.logManager.endSession(this.session.id);
+      } catch (error) {
+        console.warn('  Warning: Failed to end session:', error.message);
+      }
     }
     
     // Clear data

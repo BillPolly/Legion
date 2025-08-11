@@ -50,9 +50,10 @@ describe('ToolHandler', () => {
       expect(Array.isArray(tools)).toBe(true);
       expect(tools.length).toBeGreaterThan(0);
       
-      // Check for core tools
+      // Check for core tools (new focused tools)
       const toolNames = tools.map(t => t.name);
-      expect(toolNames).toContain('start_app');
+      expect(toolNames).toContain('start_server');
+      expect(toolNames).toContain('open_page');
       expect(toolNames).toContain('query_logs');
       expect(toolNames).toContain('list_sessions');
       expect(toolNames).toContain('stop_app');
@@ -72,6 +73,20 @@ describe('ToolHandler', () => {
         expect(tool.inputSchema.type).toBe('object');
         expect(tool.inputSchema.properties).toBeDefined();
       }
+    });
+
+    test('should include new focused tools with correct descriptions', () => {
+      const tools = toolHandler.getAllTools();
+      
+      const startServerTool = tools.find(t => t.name === 'start_server');
+      const openPageTool = tools.find(t => t.name === 'open_page');
+      
+      expect(startServerTool).toBeDefined();
+      expect(startServerTool.description).toContain('Start a Node.js server with automatic monitoring');
+      
+      expect(openPageTool).toBeDefined();
+      expect(openPageTool.description).toContain('Open a browser page for monitoring');
+      expect(openPageTool.description).toContain('index.html');
     });
   });
   

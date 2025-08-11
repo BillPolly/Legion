@@ -46,8 +46,9 @@ describe('MCP Client Integration', () => {
     // Get tools
     const tools = await client.getTools();
     
-    expect(tools).toHaveLength(7);
-    expect(tools.some(t => t.name === 'start_app')).toBe(true);
+    expect(tools).toHaveLength(8);
+    expect(tools.some(t => t.name === 'start_server')).toBe(true);
+    expect(tools.some(t => t.name === 'open_page')).toBe(true);
     expect(tools.some(t => t.name === 'query_logs')).toBe(true);
     expect(tools.some(t => t.name === 'list_sessions')).toBe(true);
     expect(tools.some(t => t.name === 'take_screenshot')).toBe(true);
@@ -91,9 +92,9 @@ describe('MCP Client Integration', () => {
     await client.getTools();
     
     // Test getTool method
-    const startTool = client.getTool('start_app');
+    const startTool = client.getTool('start_server');
     expect(startTool).toMatchObject({
-      name: 'start_app',
+      name: 'start_server',
       description: expect.any(String),
       inputSchema: expect.any(Object)
     });
@@ -137,6 +138,6 @@ describe('MCP Client Integration', () => {
     
     // Test that we can still make regular calls after notification
     const tools = await client.getTools();
-    expect(tools).toHaveLength(7); // 7 tools in SimplifiedTools
+    expect(tools).toHaveLength(8); // 8 tools: start_server, open_page, query_logs, set_log_level, stop_app, list_sessions, take_screenshot, record_video
   }, 30000);
 });

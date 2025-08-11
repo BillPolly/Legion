@@ -142,7 +142,21 @@ describe('MCP Server End-to-End', () => {
     });
     
     expect(listResponse.result.tools.length).toBeGreaterThan(0);
-    expect(listResponse.result.tools.some(t => t.name === 'start_app')).toBe(true);
+    
+    // Check for new focused tools
+    expect(listResponse.result.tools.some(t => t.name === 'start_server')).toBe(true);
+    expect(listResponse.result.tools.some(t => t.name === 'open_page')).toBe(true);
+    
+    // Should NOT have legacy tool
+    expect(listResponse.result.tools.some(t => t.name === 'start_app')).toBe(false);
+    
+    // Verify new tool descriptions
+    const startServerTool = listResponse.result.tools.find(t => t.name === 'start_server');
+    const openPageTool = listResponse.result.tools.find(t => t.name === 'open_page');
+    
+    expect(startServerTool.description).toContain('Start a Node.js server');
+    expect(openPageTool.description).toContain('Open a browser page');
+    expect(openPageTool.description).toContain('index.html');
     
     // Send a tool call
     const toolCall = {

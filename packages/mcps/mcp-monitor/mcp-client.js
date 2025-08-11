@@ -284,19 +284,25 @@ class MCPClientDemo {
   }
 
   /**
-   * Scenario 1: Basic monitoring setup
+   * Scenario 1: New focused monitoring setup
    */
   async scenario1_BasicMonitoring() {
-    console.log('🎬 Scenario 1: Basic Monitoring Setup');
+    console.log('🎬 Scenario 1: New Focused Monitoring Setup');
     
     // Create a simple test app
     this.createTestApp();
     
-    // Start monitoring with simplified interface
-    await this.client.callTool('start_app', {
+    // NEW: Start server only (focused approach)
+    await this.client.callTool('start_server', {
       script: './test-app/server.js',
       session_id: 'demo-session',
       log_level: 'info'
+    });
+    
+    // NEW: Open browser page (defaults to index.html)
+    await this.client.callTool('open_page', {
+      session_id: 'demo-session',
+      headless: false  // Visible browser for demo
     });
     
     // Set log level
@@ -376,6 +382,7 @@ class MCPClientDemo {
     
     console.log('✅ Scenario 3 completed\n');
   }
+
 
   /**
    * Create test application files

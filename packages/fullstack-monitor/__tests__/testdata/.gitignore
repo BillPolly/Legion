@@ -1,0 +1,12 @@
+# Test data directory - ignore generated test files
+*.js
+*.html
+*.json
+*.log
+*.png
+*.mp4
+temp-*
+test-*
+demo-*
+perf-*
+faulty-*

@@ -22,19 +22,20 @@ export class SimplifiedTools {
    */
   getToolDefinitions() {
     return [
+      // NEW: Focused server startup tool
       {
-        name: 'start_app',
-        description: 'Start a Node.js application with automatic monitoring and optional browser',
+        name: 'start_server',
+        description: 'Start a Node.js server with automatic monitoring via Sidewinder injection',
         inputSchema: {
           type: 'object',
           properties: {
             script: { 
               type: 'string', 
-              description: 'Path to your Node.js app (e.g., server.js)' 
+              description: 'Path to your Node.js server script (e.g., server.js)' 
             },
             wait_for_port: { 
               type: 'number', 
-              description: 'Port to wait for before considering app ready' 
+              description: 'Port to wait for before considering server ready' 
             },
             log_level: {
               type: 'string',
@@ -46,17 +47,34 @@ export class SimplifiedTools {
               type: 'string',
               description: 'Optional session ID',
               default: 'default'
-            },
-            browser_url: {
+            }
+          },
+          required: ['script']
+        }
+      },
+
+      // NEW: Focused browser/page opening tool
+      {
+        name: 'open_page',
+        description: 'Open a browser page for monitoring. Defaults to index.html on the server from the active session.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            url: {
               type: 'string',
-              description: 'URL to open in browser (enables browser monitoring)'
+              description: 'URL to open. If not provided, defaults to http://localhost:{server_port}/index.html'
             },
-            browser_headless: {
+            session_id: {
+              type: 'string',
+              default: 'default',
+              description: 'Session ID to use (must have active server)'
+            },
+            headless: {
               type: 'boolean',
-              default: true,
-              description: 'Run browser in headless mode'
+              default: false,
+              description: 'Run browser in headless mode (false = visible browser for better UX)'
             },
-            browser_viewport: {
+            viewport: {
               type: 'object',
               properties: {
                 width: { type: 'number', default: 1280 },
@@ -64,8 +82,7 @@ export class SimplifiedTools {
               },
               description: 'Browser viewport size'
             }
-          },
-          required: ['script']
+          }
         }
       },
       
@@ -252,8 +269,10 @@ export class SimplifiedTools {
    */
   async execute(toolName, args) {
     switch (toolName) {
-      case 'start_app':
-        return await this.startApp(args);
+      case 'start_server':
+        return await this.startServer(args);
+      case 'open_page':
+        return await this.openPage(args);
       case 'query_logs':
         return await this.queryLogs(args);
       case 'set_log_level':
@@ -272,18 +291,15 @@ export class SimplifiedTools {
   }
   
   /**
-   * Start an application with monitoring
+   * Start a server with Sidewinder monitoring (new focused approach)
    */
-  async startApp(args) {
+  async startServer(args) {
     try {
       const { 
         script, 
         wait_for_port, 
         log_level = 'info', 
-        session_id = 'default',
-        browser_url,
-        browser_headless = true,
-        browser_viewport = { width: 1280, height: 720 }
+        session_id = 'default'
       } = args;
       
       // Validate required script parameter
@@ -291,7 +307,7 @@ export class SimplifiedTools {
         return {
           content: [{
             type: 'text',
-            text: '❌ Failed to start app: Missing required parameter "script"'
+            text: '❌ Failed to start server: Missing required parameter "script"'
           }],
           isError: true
         };
@@ -307,40 +323,33 @@ export class SimplifiedTools {
         return {
           content: [{
             type: 'text',
-            text: `❌ Failed to start app: Script file not found: ${scriptPath}`
+            text: `❌ Failed to start server: Script file not found: ${scriptPath}`
           }],
           isError: true
         };
       }
       
-      console.log('[SimplifiedTools] DEBUG: Getting monitor');
-      
       // Get or create monitor for session
       const monitor = await this.sessionManager.getOrCreateMonitor(session_id);
-      console.log('[SimplifiedTools] DEBUG: Got monitor');
       
       // Check if process already exists for this session
       if (this.sessionManager.getProcess(session_id)) {
         return {
           content: [{
             type: 'text',
-            text: `⚠️ App already running for session: ${session_id}`
+            text: `⚠️ Server already running for session: ${session_id}`
           }],
           isError: true
         };
       }
       
-      console.log('[SimplifiedTools] DEBUG: About to reserve ports');
-      
       // Reserve ports for this session
       const appPort = wait_for_port || await portManager.reservePort(session_id, 'app');
-      console.log(`[SimplifiedTools] DEBUG: Reserved app port ${appPort}`);
       
       const sidewinderServer = await this.sessionManager.initializeSidewinderServer();
       const sidewinderPort = sidewinderServer.port;
-      console.log(`[SimplifiedTools] DEBUG: Sidewinder port ${sidewinderPort}`);
       
-      console.log(`[SimplifiedTools] Starting app on port ${appPort}, Sidewinder on ${sidewinderPort}`);
+      console.log(`[SimplifiedTools] Starting server on port ${appPort}, Sidewinder on ${sidewinderPort}`);
       
       // Configure Sidewinder based on log level
       const sidewinderProfile = this.mapLogLevelToProfile(log_level);
@@ -385,8 +394,7 @@ export class SimplifiedTools {
       // Store log level for session
       this.sessionManager.setLogLevel(session_id, log_level);
       
-      // NEW: Wait for "server listening" message in stdout, not port check
-      // This must be done BEFORE setupLogCapture to ensure we catch the startup message
+      // Wait for server to be ready
       const serverReady = await this.waitForServerReady(appProcess, appPort, 15000);
       
       // Capture logs from process stdout/stderr AFTER server is ready
@@ -395,111 +403,25 @@ export class SimplifiedTools {
       // Handle process exit - SessionManager will handle cleanup
       appProcess.on('exit', (code) => {
         console.log(`Process exited with code ${code} for session ${session_id}`);
-        // SessionManager handles process cleanup and port release
       });
+      
       if (!serverReady) {
         // Clean up failed process
         appProcess.kill('SIGTERM');
-        // SessionManager handles process cleanup
         await this.sessionManager.killProcess(session_id);
         throw new Error(`Server failed to start on port ${appPort} within 15 seconds`);
-      }
-      
-      // Launch browser if URL is provided (now we know server is ready)
-      let browserInfo = '';
-      if (browser_url) {
-        try {
-          // Replace port in URL with actual assigned port
-          const finalUrl = browser_url.replace(/localhost:\d+/, `localhost:${appPort}`);
-          console.log(`[SimplifiedTools] Launching browser for URL: ${finalUrl}`);
-          
-          // Launch browser
-          const browser = await puppeteer.launch({
-            headless: browser_headless,
-            defaultViewport: browser_viewport,
-            args: [
-              '--no-sandbox',
-              '--disable-setuid-sandbox',
-              '--disable-web-security',
-              '--disable-features=IsolateOrigins',
-              '--disable-site-isolation-trials'
-            ]
-          });
-          
-          // Create page
-          const page = await browser.newPage();
-          
-          // Set up console logging
-          page.on('console', msg => {
-            const logManagerActor = this.sessionManager.actorSpaces?.get(session_id)?.actors?.logManager;
-            if (logManagerActor) {
-              logManagerActor.receive({
-                type: 'log',
-                data: {
-                  level: msg.type() === 'error' ? 'error' : msg.type() === 'warning' ? 'warn' : 'info',
-                  message: `[Browser Console] ${msg.text()}`,
-                  timestamp: new Date().toISOString(),
-                  source: 'browser'
-                },
-                source: 'browser-console'
-              }).catch(err => console.error('[SimplifiedTools] Failed to log browser console:', err));
-            }
-          });
-          
-          // Set up error logging
-          page.on('pageerror', error => {
-            const logManagerActor = this.sessionManager.actorSpaces?.get(session_id)?.actors?.logManager;
-            if (logManagerActor) {
-              logManagerActor.receive({
-                type: 'log',
-                data: {
-                  level: 'error',
-                  message: `[Browser Error] ${error.message}`,
-                  timestamp: new Date().toISOString(),
-                  source: 'browser'
-                },
-                source: 'browser-error'
-              }).catch(err => console.error('[SimplifiedTools] Failed to log browser error:', err));
-            }
-          });
-          
-          // Navigate to URL
-          await page.goto(finalUrl, { waitUntil: 'networkidle2' });
-          
-          // Store browser and page references
-          if (!monitor.activeBrowsers) {
-            monitor.activeBrowsers = new Map();
-          }
-          
-          const browserId = `browser-${session_id}`;
-          monitor.activeBrowsers.set(browserId, {
-            browser,
-            page,
-            url: finalUrl,
-            startTime: new Date()
-          });
-          
-          console.log(`[SimplifiedTools] Browser launched and page loaded for session ${session_id}`);
-          browserInfo = `\n🌐 Browser: ${browser_headless ? 'Headless' : 'Visible'}\n` +
-                       `📄 URL: ${finalUrl}\n` +
-                       `📐 Viewport: ${browser_viewport.width}x${browser_viewport.height}`;
-        } catch (error) {
-          console.error(`[SimplifiedTools] Failed to launch browser:`, error);
-          browserInfo = `\n⚠️ Browser launch failed: ${error.message}`;
-        }
       }
       
       return {
         content: [{
           type: 'text',
-          text: `✅ MODIFIED Started app: ${script}\n` +
+          text: `✅ Started server: ${script}\n` +
                 `📊 Session: ${session_id}\n` +
                 `📝 Log level: ${log_level}\n` +
-                `🔌 Port: ${appPort || 'ERROR: undefined'}\n` +
-                `🔍 Monitoring enabled` +
-                (browserInfo || '') + '\n\n' +
-                `DEBUG: typeof appPort=${typeof appPort}\n` +
-                `Use query_logs to search logs and see HTTP requests.`
+                `🔌 Port: ${appPort}\n` +
+                `🔍 Sidewinder monitoring enabled\n` +
+                `🌐 Server URL: http://localhost:${appPort}\n\n` +
+                `💡 Tip: Use 'open_page' to open a browser, or access http://localhost:${appPort}/index.html directly`
         }]
       };
     } catch (error) {
@@ -509,12 +431,169 @@ export class SimplifiedTools {
       return {
         content: [{
           type: 'text',
-          text: `❌ Failed to start app: ${error.message}`
+          text: `❌ Failed to start server: ${error.message}`
         }],
         isError: true
       };
     }
   }
+
+  /**
+   * Open a browser page for monitoring (new focused approach)
+   */
+  async openPage(args) {
+    try {
+      const { 
+        url,
+        session_id = 'default',
+        headless = false,  // Default to visible browser for better UX
+        viewport = { width: 1280, height: 720 }
+      } = args;
+      
+      // Check if there's an active server for this session
+      const sessionInfo = this.sessionManager.getProcess(session_id);
+      if (!sessionInfo) {
+        return {
+          content: [{
+            type: 'text',
+            text: `❌ No active server found for session: ${session_id}. Start a server first with 'start_server'.`
+          }],
+          isError: true
+        };
+      }
+      
+      // Get or create monitor for session
+      const monitor = await this.sessionManager.getOrCreateMonitor(session_id);
+      
+      // Check if browser already exists
+      if (monitor.activeBrowsers && monitor.activeBrowsers.size > 0) {
+        return {
+          content: [{
+            type: 'text',
+            text: `⚠️ Browser already open for session: ${session_id}. Close it first or use a different session.`
+          }],
+          isError: true
+        };
+      }
+      
+      // Auto-detect server URL if not provided
+      let finalUrl = url;
+      if (!finalUrl) {
+        const serverPort = sessionInfo.port;
+        finalUrl = `http://localhost:${serverPort}/index.html`;
+        console.log(`[SimplifiedTools] No URL provided, using default: ${finalUrl}`);
+      } else {
+        // Replace port in provided URL with actual assigned port if needed
+        const serverPort = sessionInfo.port;
+        finalUrl = finalUrl.replace(/localhost:\d+/, `localhost:${serverPort}`);
+      }
+      
+      console.log(`[SimplifiedTools] Opening browser for URL: ${finalUrl}`);
+      
+      try {
+        // Launch browser
+        const browser = await puppeteer.launch({
+          headless,
+          defaultViewport: viewport,
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-web-security',
+            '--disable-features=IsolateOrigins',
+            '--disable-site-isolation-trials'
+          ]
+        });
+        
+        // Create page
+        const page = await browser.newPage();
+        
+        // Set up console logging
+        page.on('console', msg => {
+          const logManagerActor = this.sessionManager.actorSpaces?.get(session_id)?.actors?.logManager;
+          if (logManagerActor) {
+            logManagerActor.receive({
+              type: 'log',
+              data: {
+                level: msg.type() === 'error' ? 'error' : msg.type() === 'warning' ? 'warn' : 'info',
+                message: `[Browser Console] ${msg.text()}`,
+                timestamp: new Date().toISOString(),
+                source: 'browser'
+              },
+              source: 'browser-console'
+            }).catch(err => console.error('[SimplifiedTools] Failed to log browser console:', err));
+          }
+        });
+        
+        // Set up error logging
+        page.on('pageerror', error => {
+          const logManagerActor = this.sessionManager.actorSpaces?.get(session_id)?.actors?.logManager;
+          if (logManagerActor) {
+            logManagerActor.receive({
+              type: 'log',
+              data: {
+                level: 'error',
+                message: `[Browser Error] ${error.message}`,
+                timestamp: new Date().toISOString(),
+                source: 'browser'
+              },
+              source: 'browser-error'
+            }).catch(err => console.error('[SimplifiedTools] Failed to log browser error:', err));
+          }
+        });
+        
+        // Navigate to URL
+        await page.goto(finalUrl, { waitUntil: 'networkidle2' });
+        
+        // Store browser and page references
+        if (!monitor.activeBrowsers) {
+          monitor.activeBrowsers = new Map();
+        }
+        
+        const browserId = `browser-${session_id}`;
+        monitor.activeBrowsers.set(browserId, {
+          browser,
+          page,
+          url: finalUrl,
+          startTime: new Date()
+        });
+        
+        console.log(`[SimplifiedTools] Browser opened and page loaded for session ${session_id}`);
+        
+        return {
+          content: [{
+            type: 'text',
+            text: `✅ Browser opened successfully!\n` +
+                  `📊 Session: ${session_id}\n` +
+                  `🌐 URL: ${finalUrl}\n` +
+                  `👁️  Mode: ${headless ? 'Headless' : 'Visible'}\n` +
+                  `📐 Viewport: ${viewport.width}x${viewport.height}\n` +
+                  `🔍 Console & error monitoring enabled\n\n` +
+                  `💡 You can now take screenshots, record videos, or interact with the page.`
+          }]
+        };
+        
+      } catch (error) {
+        console.error(`[SimplifiedTools] Failed to open browser:`, error);
+        return {
+          content: [{
+            type: 'text',
+            text: `❌ Browser launch failed: ${error.message}`
+          }],
+          isError: true
+        };
+      }
+      
+    } catch (error) {
+      return {
+        content: [{
+          type: 'text',
+          text: `❌ Failed to open page: ${error.message}`
+        }],
+        isError: true
+      };
+    }
+  }
+
   
   /**
    * Query logs with Sidewinder events
