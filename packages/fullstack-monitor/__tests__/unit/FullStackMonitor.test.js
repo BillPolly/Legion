@@ -7,12 +7,15 @@ import { FullStackMonitor } from '../../src/FullStackMonitor.js';
 import { TestResourceManager } from '../utils/TestResourceManager.js';
 import { MockSidewinderAgent } from '../utils/MockSidewinderAgent.js';
 import { MockBrowserAgent } from '../utils/MockBrowserAgent.js';
+import { killPort } from '../utils/killPort.js';
 
 describe('FullStackMonitor Core', () => {
   let resourceManager;
   let monitor;
   
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Ensure port is free before each test
+    await killPort(9901);
     resourceManager = new TestResourceManager();
   });
   
@@ -20,6 +23,8 @@ describe('FullStackMonitor Core', () => {
     if (monitor) {
       await monitor.cleanup();
       monitor = null;
+      // Give time for cleanup to complete
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
   });
   

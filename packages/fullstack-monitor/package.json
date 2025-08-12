@@ -24,12 +24,14 @@
   },
   "jest": {
     "testEnvironment": "node",
+    "setupFilesAfterEnv": ["<rootDir>/jest.setup.js"],
     "moduleNameMapper": {
       "^(\\.{1,2}/.*)\\.js$": "$1"
     },
     "transform": {},
     "testMatch": [
       "**/__tests__/**/*.test.js"
-    ]
+    ],
+    "testTimeout": 10000
   }
 }

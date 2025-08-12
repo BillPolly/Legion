@@ -187,23 +187,26 @@ describe('Agent Injection', () => {
       const env = monitor.getSidewinderEnv();
       
       expect(env).toBeDefined();
-      expect(env.SIDEWINDER_WS_URL).toBe('ws://localhost:9901/sidewinder');
+      expect(env.SIDEWINDER_WS_PORT).toBe('9901');
+      expect(env.SIDEWINDER_WS_HOST).toBe('localhost');
       expect(env.SIDEWINDER_SESSION_ID).toBeDefined();
     });
     
     it('should allow custom port configuration', () => {
       const env = monitor.getSidewinderEnv({ port: 8888 });
       
-      expect(env.SIDEWINDER_WS_URL).toBe('ws://localhost:8888/sidewinder');
+      expect(env.SIDEWINDER_WS_PORT).toBe('8888');
     });
     
-    it('should generate unique session IDs', () => {
+    it('should use monitor session ID', () => {
       const env1 = monitor.getSidewinderEnv();
       const env2 = monitor.getSidewinderEnv();
       
       expect(env1.SIDEWINDER_SESSION_ID).toBeDefined();
       expect(env2.SIDEWINDER_SESSION_ID).toBeDefined();
-      expect(env1.SIDEWINDER_SESSION_ID).not.toBe(env2.SIDEWINDER_SESSION_ID);
+      // Should use the same session ID from the monitor
+      expect(env1.SIDEWINDER_SESSION_ID).toBe(env2.SIDEWINDER_SESSION_ID);
+      expect(env1.SIDEWINDER_SESSION_ID).toBe(monitor.session.id);
     });
     
     it('should provide injection helper documentation', () => {
@@ -223,7 +226,8 @@ describe('Agent Injection', () => {
       const env = monitor.getSidewinderEnv();
       const agentPath = monitor.getSidewinderAgentPath();
       
-      expect(env.SIDEWINDER_WS_URL).toBeDefined();
+      expect(env.SIDEWINDER_WS_PORT).toBeDefined();
+      expect(env.SIDEWINDER_WS_HOST).toBeDefined();
       expect(env.SIDEWINDER_SESSION_ID).toBeDefined();
       expect(agentPath).toContain('sidewinder-agent.cjs');
     });
@@ -236,7 +240,7 @@ describe('Agent Injection', () => {
       
       expect(expectedNodeOptions).toContain('--require');
       expect(expectedNodeOptions).toContain('sidewinder-agent.cjs');
-      expect(env.SIDEWINDER_WS_URL).toMatch(/^ws:\/\/localhost:\d+\/sidewinder$/);
+      expect(env.SIDEWINDER_WS_PORT).toMatch(/^\d+$/);
     });
   });
 });

@@ -46,6 +46,9 @@ export class FullStackMonitor extends EventEmitter {
       totalStepsExecuted: 0,
       startTime: new Date()
     };
+    
+    // Cleanup flag
+    this.isCleaningUp = false;
   }
   
   /**
@@ -96,6 +99,12 @@ export class FullStackMonitor extends EventEmitter {
    * Start WebSocket server for both Sidewinder and Browser agents
    */
   async startAgentServer(port = 9901) {
+    // Check if server is already running
+    if (this.agentServer) {
+      console.log('Agent server already running');
+      return;
+    }
+    
     return new Promise((resolve, reject) => {
       try {
         // Create server without path restriction - we'll handle routing ourselves
@@ -122,7 +131,9 @@ export class FullStackMonitor extends EventEmitter {
             
             ws.on('close', () => {
               this.sidewinderClients.delete(clientId);
-              console.log(`🔌 Sidewinder agent disconnected: ${clientId}`);
+              if (!this.isCleaningUp) {
+                console.log(`🔌 Sidewinder agent disconnected: ${clientId}`);
+              }
             });
             
           } else if (path === '/browser') {
@@ -142,7 +153,9 @@ export class FullStackMonitor extends EventEmitter {
             
             ws.on('close', () => {
               this.browserClients.delete(clientId);
-              console.log(`🌐 Browser agent disconnected: ${clientId}`);
+              if (!this.isCleaningUp) {
+                console.log(`🌐 Browser agent disconnected: ${clientId}`);
+              }
             });
             
           } else {
@@ -1057,8 +1070,9 @@ export class FullStackMonitor extends EventEmitter {
   getSidewinderEnv(options = {}) {
     const { port = 9901 } = options;
     return {
-      SIDEWINDER_WS_URL: `ws://localhost:${port}/sidewinder`,
-      SIDEWINDER_SESSION_ID: `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      SIDEWINDER_WS_PORT: String(port),
+      SIDEWINDER_WS_HOST: 'localhost',
+      SIDEWINDER_SESSION_ID: this.session.id || `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     };
   }
   
@@ -1118,21 +1132,12 @@ export class FullStackMonitor extends EventEmitter {
       }
     };
     
-    return new Promise((resolve, reject) => {
-      const child = spawn(command, args, spawnOptions);
-      
-      child.on('error', reject);
-      child.on('exit', (code) => {
-        if (code === 0) {
-          resolve(child);
-        } else {
-          reject(new Error(`Process exited with code ${code}`));
-        }
-      });
-      
-      // For immediate return of process handle
-      setTimeout(() => resolve(child), 0);
-    });
+    const child = spawn(command, args, spawnOptions);
+    
+    // Give Sidewinder agent time to connect (100ms)
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    return child;
   }
   
   /**
@@ -1170,25 +1175,57 @@ ENVIRONMENT VARIABLES:
   async cleanup() {
     console.log('🧹 Cleaning up FullStackMonitor...');
     
+    // Set cleanup flag to prevent logging after cleanup
+    this.isCleaningUp = true;
+    
     // Stop Agent WebSocket server
     if (this.agentServer) {
       try {
-        // Close all Sidewinder client connections
+        // Remove all event listeners from clients first
         for (const [clientId, ws] of this.sidewinderClients.entries()) {
-          ws.close();
+          try {
+            ws.removeAllListeners();
+            ws.terminate(); // Force close immediately
+          } catch (e) {
+            // Ignore errors during cleanup
+          }
         }
         this.sidewinderClients.clear();
         
-        // Close all Browser client connections
+        // Remove all event listeners from browser clients
         for (const [clientId, ws] of this.browserClients.entries()) {
-          ws.close();
+          try {
+            ws.removeAllListeners();
+            ws.terminate(); // Force close immediately
+          } catch (e) {
+            // Ignore errors during cleanup
+          }
         }
         this.browserClients.clear();
         
-        // Close the server
-        await new Promise((resolve) => {
-          this.agentServer.close(resolve);
+        // Force close all connections on the server
+        this.agentServer.clients.forEach(ws => {
+          try {
+            ws.terminate();
+          } catch (e) {
+            // Ignore
+          }
         });
+        
+        // Close the server with shorter timeout
+        await new Promise((resolve) => {
+          const timeout = setTimeout(() => {
+            resolve();
+          }, 500); // Shorter timeout
+          
+          this.agentServer.close((err) => {
+            clearTimeout(timeout);
+            resolve();
+          });
+        });
+        
+        // Null out the reference
+        this.agentServer = null;
         console.log('  Agent server stopped');
       } catch (error) {
         console.warn('  Warning: Failed to stop agent server:', error.message);

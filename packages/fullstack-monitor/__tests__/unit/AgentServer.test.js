@@ -8,12 +8,17 @@ import { TestResourceManager } from '../utils/TestResourceManager.js';
 import { MockSidewinderAgent } from '../utils/MockSidewinderAgent.js';
 import { MockBrowserAgent } from '../utils/MockBrowserAgent.js';
 import { WebSocket } from 'ws';
+import { killPort } from '../utils/killPort.js';
 
 describe('Agent WebSocket Server', () => {
   let resourceManager;
   let monitor;
   
   beforeEach(async () => {
+    // Kill any existing process on port 9901
+    await killPort(9901);
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
     resourceManager = new TestResourceManager();
     monitor = await FullStackMonitor.create(resourceManager);
   });
@@ -21,7 +26,10 @@ describe('Agent WebSocket Server', () => {
   afterEach(async () => {
     if (monitor) {
       await monitor.cleanup();
+      monitor = null;
     }
+    // Ensure cleanup completes
+    await new Promise(resolve => setTimeout(resolve, 200));
   });
   
   describe('WebSocket Server Configuration', () => {

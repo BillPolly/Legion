@@ -75,9 +75,11 @@ describe('Basic End-to-End Test', () => {
     
     it('should provide environment variables for Sidewinder', () => {
       const env = monitor.getSidewinderEnv();
-      expect(env.SIDEWINDER_WS_URL).toBeDefined();
+      expect(env.SIDEWINDER_WS_PORT).toBeDefined();
+      expect(env.SIDEWINDER_WS_HOST).toBeDefined();
       expect(env.SIDEWINDER_SESSION_ID).toBeDefined();
-      expect(env.SIDEWINDER_WS_URL).toContain('ws://localhost:9901/sidewinder');
+      expect(env.SIDEWINDER_WS_PORT).toBe('9901');
+      expect(env.SIDEWINDER_WS_HOST).toBe('localhost');
     });
     
     it('should track correlation data', async () => {
