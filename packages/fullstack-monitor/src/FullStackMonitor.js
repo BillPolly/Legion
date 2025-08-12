@@ -5,7 +5,6 @@
 
 import { EventEmitter } from 'events';
 import { LogStore } from './log-store/index.js';
-import { BrowserMonitor } from '@legion/browser-monitor';
 import { WebSocketServer } from 'ws';
 import net from 'net';
 import { spawn } from 'child_process';
@@ -13,6 +12,14 @@ import { promises as fs } from 'fs';
 import * as fsSync from 'fs';
 import path from 'path';
 import * as url from 'url';
+
+// Dynamic import for Puppeteer to handle missing dependencies
+let puppeteer;
+try {
+  puppeteer = (await import('puppeteer')).default;
+} catch (e) {
+  console.warn('⚠️  Puppeteer not available - browser features will be disabled');
+}
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,8 +30,12 @@ export class FullStackMonitor extends EventEmitter {
     
     this.resourceManager = config.resourceManager;
     this.logStore = config.logStore;
-    this.browserMonitor = config.browserMonitor;
     this.session = config.session;
+    
+    // Integrated browser functionality
+    this.browser = null;
+    this.browserPages = new Map(); // pageId -> page info
+    this.sessionPages = new Map(); // sessionId -> pageId[]
     
     // Agent WebSocket server (handles both Sidewinder and Browser agents)
     this.agentServer = null;
@@ -59,9 +70,8 @@ export class FullStackMonitor extends EventEmitter {
       throw new Error('ResourceManager is required');
     }
     
-    // Initialize both monitors
+    // Initialize log store
     const logStore = await LogStore.create(resourceManager);
-    const browserMonitor = await BrowserMonitor.create(resourceManager);
     
     // Create unified session
     const session = await logStore.createSession('fullstack-monitoring', {
@@ -73,7 +83,6 @@ export class FullStackMonitor extends EventEmitter {
     const monitor = new FullStackMonitor({
       resourceManager,
       logStore,
-      browserMonitor,
       session: {
         id: session.id,
         type: 'fullstack',
@@ -385,27 +394,7 @@ export class FullStackMonitor extends EventEmitter {
    * Initialize the full-stack monitor
    */
   async initialize() {
-    // Set up event forwarding from browser monitor
-    this.browserMonitor.on('console-message', async (data) => {
-      await this.handleBrowserConsole(data);
-      this.emit('browser-console', data);
-    });
-    
-    this.browserMonitor.on('network-request', (data) => {
-      this.handleNetworkRequest(data);
-      this.emit('browser-request', data);
-    });
-    
-    this.browserMonitor.on('network-response', (data) => {
-      this.handleNetworkResponse(data);
-      this.emit('browser-response', data);
-    });
-    
-    this.browserMonitor.on('page-error', (data) => {
-      this.emit('browser-error', data);
-    });
-    
-    // LogStore does not emit log events to prevent infinite loops
+    // Monitor is now ready with integrated browser functionality
     
     // Log agent server status
     if (this.agentServer) {
@@ -413,6 +402,8 @@ export class FullStackMonitor extends EventEmitter {
     } else {
       console.warn('⚠️  No agent server available - agents cannot connect');
     }
+    
+    console.log('✅ FullStackMonitor initialized with integrated browser functionality');
     
     this.emit('initialized', {
       sessionId: this.session.id,
@@ -478,16 +469,29 @@ export class FullStackMonitor extends EventEmitter {
     const { backend, frontend } = config;
     
     // Start backend monitoring with Sidewinder injection
-    if (backend && backend.script) {
+    if (backend && (backend.script || backend.packagePath)) {
       console.log(`🚀 Starting backend monitoring: ${backend.name}`);
       
-      // Start the backend process with Sidewinder agent
-      const backendProcess = await this.injectSidewinderAgent(backend.script, {
-        sessionId: this.session.id,
-        wsPort: '9901',
-        debug: backend.debug || false,
-        stdio: backend.stdio || 'inherit'
-      });
+      let backendProcess;
+      
+      if (backend.script) {
+        // Direct script execution
+        backendProcess = await this.injectSidewinderAgent(backend.script, {
+          sessionId: this.session.id,
+          wsPort: '9901',
+          debug: backend.debug || false,
+          stdio: backend.stdio || 'inherit'
+        });
+      } else if (backend.packagePath) {
+        // Package.json based execution (npm/yarn)
+        backendProcess = await this.injectNpmCommand(backend.packagePath, backend.startScript || 'start', {
+          sessionId: this.session.id,
+          wsPort: '9901',
+          debug: backend.debug || false,
+          stdio: backend.stdio || 'inherit',
+          env: backend.env
+        });
+      }
       
       // Track the process
       this.activeBackends.set(backend.name, {
@@ -1115,27 +1119,67 @@ export class FullStackMonitor extends EventEmitter {
   }
   
   /**
-   * Spawn process with Sidewinder agent
+   * Legacy wrapper for spawnWithAgent - delegates to monitorFullStackApp
+   * @deprecated Use monitorFullStackApp instead
    */
   async spawnWithAgent(command, args = [], options = {}) {
-    const { spawn } = await import('child_process');
-    const agentEnv = this.getSidewinderEnv();
-    const agentPath = this.getSidewinderAgentPath();
+    console.warn('spawnWithAgent is deprecated, use monitorFullStackApp instead');
     
-    const spawnOptions = {
-      ...options,
-      env: {
-        ...process.env,
-        ...options.env,
-        ...agentEnv,
-        NODE_OPTIONS: `${process.env.NODE_OPTIONS || ''} --require "${agentPath}"`.trim()
+    // Extract script from args
+    let script = null;
+    if (command === 'node' && args.length > 0) {
+      script = args[0];
+    }
+    
+    if (!script) {
+      throw new Error('spawnWithAgent: Unable to determine script from arguments');
+    }
+    
+    // Create config for monitorFullStackApp
+    const config = {
+      backend: {
+        script,
+        name: 'legacy-spawn',
+        debug: false,
+        stdio: options.stdio || 'inherit'
       }
     };
     
-    const child = spawn(command, args, spawnOptions);
+    const app = await this.monitorFullStackApp(config);
     
-    // Give Sidewinder agent time to connect (100ms)
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Return the backend process for compatibility
+    const backend = this.activeBackends.get('legacy-spawn');
+    return backend ? backend.process : null;
+  }
+
+  /**
+   * Inject Sidewinder agent into npm/yarn command
+   */
+  async injectNpmCommand(packagePath, scriptName, options = {}) {
+    const { spawn } = await import('child_process');
+    const agentPath = path.join(__dirname, 'sidewinder-agent.cjs');
+    
+    // Verify agent file exists
+    try {
+      await fs.access(agentPath);
+    } catch (error) {
+      throw new Error(`Sidewinder agent not found at ${agentPath}`);
+    }
+    
+    // Start npm/yarn process with agent injection
+    const child = spawn('npm', ['run', scriptName], {
+      cwd: packagePath,
+      stdio: options.stdio || 'inherit',
+      env: {
+        ...process.env,
+        ...options.env,
+        SIDEWINDER_SESSION_ID: options.sessionId || this.session.id,
+        SIDEWINDER_WS_PORT: options.wsPort || '9901',
+        SIDEWINDER_WS_HOST: options.wsHost || 'localhost',
+        SIDEWINDER_DEBUG: options.debug ? 'true' : 'false',
+        NODE_OPTIONS: `${process.env.NODE_OPTIONS || ''} --require "${agentPath}"`.trim()
+      }
+    });
     
     return child;
   }
@@ -1167,6 +1211,316 @@ ENVIRONMENT VARIABLES:
 - SIDEWINDER_WS_URL: WebSocket URL for backend agent
 - SIDEWINDER_SESSION_ID: Unique session identifier
 `;
+  }
+
+  // ========================================
+  // INTEGRATED BROWSER FUNCTIONALITY
+  // ========================================
+
+  /**
+   * Launch browser instance
+   */
+  async launch(options = {}) {
+    if (!puppeteer) {
+      throw new Error('Puppeteer not available - install puppeteer to use browser features');
+    }
+
+    try {
+      // For macOS, we need to handle browser permissions properly
+      const isHeadless = options.headless !== undefined ? options.headless : false;
+      
+      const launchOptions = {
+        headless: isHeadless ? 'new' : false, // Use new headless mode or visible
+        devtools: options.devtools || false,
+        defaultViewport: options.viewport || { width: 1280, height: 720 },
+        ignoreDefaultArgs: false,
+        pipe: isHeadless, // Use pipe for headless, WebSocket for visible
+        args: options.args || [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-extensions',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-renderer-backgrounding',
+          '--no-first-run',
+          '--disable-default-apps',
+          '--disable-gpu',
+          '--disable-features=TranslateUI',
+          '--disable-ipc-flooding-protection',
+          ...(isHeadless ? ['--remote-debugging-port=0'] : []), // Only for headless
+          ...(process.platform === 'darwin' && isHeadless ? [
+            '--enable-features=UseOzonePlatform',
+            '--ozone-platform=headless'
+          ] : [])
+        ],
+        ...options
+      };
+
+      // For visible browser on macOS, try to use system Chrome
+      if (!isHeadless && process.platform === 'darwin') {
+        const systemChromePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+        try {
+          await fs.access(systemChromePath);
+          launchOptions.executablePath = systemChromePath;
+          console.log('🍎 Using system Chrome for visible browser');
+        } catch (e) {
+          console.log('⚠️  System Chrome not found, using bundled Chrome');
+        }
+      }
+
+      // Remove pipe option if explicitly set to false
+      if (options.pipe === false) {
+        delete launchOptions.pipe;
+      }
+
+      console.log('🚀 Launching browser with options:', { 
+        headless: launchOptions.headless,
+        pipe: launchOptions.pipe,
+        platform: process.platform,
+        argsCount: launchOptions.args?.length 
+      });
+
+      this.browser = await puppeteer.launch(launchOptions);
+      
+      // Add error handler for the browser
+      this.browser.on('disconnected', () => {
+        console.log('⚠️  Browser disconnected');
+        this.browser = null;
+      });
+
+      // Test browser connection
+      const version = await this.browser.version();
+      console.log(`📦 Browser version: ${version}`);
+
+      this.emit('browser-launched', {
+        browser: this.browser,
+        options: launchOptions,
+        timestamp: new Date()
+      });
+
+      console.log(`🌐 Browser launched successfully (headless: ${launchOptions.headless})`);
+      return this.browser;
+
+    } catch (error) {
+      console.error('❌ Failed to launch browser:', error.message);
+      
+      // If visible browser failed, try headless as fallback
+      if (options.headless === false && !options._fallbackAttempt) {
+        console.log('🔄 Visible browser failed, trying headless fallback...');
+        return this.launch({ ...options, headless: true, _fallbackAttempt: true });
+      }
+      
+      throw error;
+    }
+  }
+
+  /**
+   * Monitor a page for a session
+   */
+  async monitorPage(url, sessionId) {
+    try {
+      if (!this.browser) {
+        await this.launch(); // Launch with default options
+      }
+
+      console.log(`📄 Creating new page for session: ${sessionId}`);
+      const page = await this.browser.newPage();
+      const pageId = `page-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+      // Set up event handlers
+      page.on('console', (msg) => {
+        this.emit('console-message', {
+          pageId,
+          sessionId,
+          type: msg.type(),
+          text: msg.text(),
+          timestamp: new Date()
+        });
+      });
+
+      page.on('pageerror', (error) => {
+        this.emit('page-error', {
+          pageId,
+          sessionId,
+          message: error.message,
+          stack: error.stack,
+          timestamp: new Date()
+        });
+      });
+
+      // Navigate to URL with shorter timeout for data URLs
+      const isDataUrl = url.startsWith('data:');
+      console.log(`🔗 Navigating to: ${isDataUrl ? 'data URL' : url}`);
+      
+      await page.goto(url, {
+        waitUntil: isDataUrl ? 'domcontentloaded' : 'networkidle2',
+        timeout: 15000
+      });
+
+      // Store page info
+      const pageInfo = {
+        id: pageId,
+        page,
+        url,
+        sessionId,
+        createdAt: new Date()
+      };
+
+      this.browserPages.set(pageId, pageInfo);
+      
+      // Track pages by session
+      if (!this.sessionPages.has(sessionId)) {
+        this.sessionPages.set(sessionId, []);
+      }
+      this.sessionPages.get(sessionId).push(pageId);
+
+      this.emit('page-created', {
+        pageId,
+        url,
+        sessionId,
+        timestamp: new Date()
+      });
+
+      console.log(`✅ Page opened successfully: ${pageId}`);
+      return pageInfo;
+      
+    } catch (error) {
+      console.error(`❌ Failed to monitor page: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Get pages for a session
+   */
+  getSessionPages(sessionId) {
+    const pageIds = this.sessionPages.get(sessionId) || [];
+    return pageIds.map(pageId => this.browserPages.get(pageId)).filter(Boolean);
+  }
+
+  /**
+   * Close a page
+   */
+  async closePage(pageId) {
+    const pageInfo = this.browserPages.get(pageId);
+    if (pageInfo) {
+      await pageInfo.page.close();
+      this.browserPages.delete(pageId);
+      
+      // Remove from session tracking
+      for (const [sessionId, pageIds] of this.sessionPages.entries()) {
+        const index = pageIds.indexOf(pageId);
+        if (index > -1) {
+          pageIds.splice(index, 1);
+          if (pageIds.length === 0) {
+            this.sessionPages.delete(sessionId);
+          }
+          break;
+        }
+      }
+
+      this.emit('page-closed', {
+        pageId,
+        sessionId: pageInfo.sessionId,
+        timestamp: new Date()
+      });
+
+      console.log(`📄 Page closed: ${pageId}`);
+    }
+  }
+
+  /**
+   * Close browser
+   */
+  async closeBrowser() {
+    if (this.browser) {
+      // Close all pages first
+      for (const [pageId] of this.browserPages) {
+        await this.closePage(pageId);
+      }
+
+      await this.browser.close();
+      this.browser = null;
+
+      this.emit('browser-closed', {
+        timestamp: new Date()
+      });
+
+      console.log('🌐 Browser closed');
+    }
+  }
+
+  /**
+   * Take screenshot of a page
+   */
+  async takeScreenshot(sessionId, options = {}) {
+    const pages = this.getSessionPages(sessionId);
+    if (!pages || pages.length === 0) {
+      throw new Error('No page open for this session. Use monitorPage first.');
+    }
+
+    const pageInfo = pages[0]; // Use first page
+    const page = pageInfo.page;
+
+    const screenshotOptions = {
+      fullPage: options.fullPage || false,
+      ...(options.format && { type: options.format }),
+      ...(options.quality && { quality: options.quality })
+    };
+
+    if (options.path) {
+      screenshotOptions.path = options.path;
+      await page.screenshot(screenshotOptions);
+      console.log(`📷 Screenshot saved: ${options.path}`);
+      return { path: options.path };
+    } else {
+      screenshotOptions.encoding = 'base64';
+      const screenshot = await page.screenshot(screenshotOptions);
+      console.log(`📷 Screenshot captured (${screenshot.length} chars)`);
+      return { base64: screenshot };
+    }
+  }
+
+  /**
+   * Execute browser command on a page
+   */
+  async executeBrowserCommand(sessionId, command, args = []) {
+    const pages = this.getSessionPages(sessionId);
+    if (!pages || pages.length === 0) {
+      throw new Error('No page open for this session. Use monitorPage first.');
+    }
+
+    const pageInfo = pages[0];
+    const page = pageInfo.page;
+
+    switch (command) {
+      case 'click':
+        if (!args[0]) throw new Error('Click command requires selector argument');
+        await page.click(args[0]);
+        return `Clicked element: ${args[0]}`;
+
+      case 'type':
+        if (args.length < 2) throw new Error('Type command requires selector and text arguments');
+        await page.type(args[0], args[1]);
+        return `Typed "${args[1]}" into ${args[0]}`;
+
+      case 'evaluate':
+        if (!args[0]) throw new Error('Evaluate command requires JavaScript code argument');
+        const evalResult = await page.evaluate(args[0]);
+        return `Evaluation result: ${JSON.stringify(evalResult)}`;
+
+      case 'title':
+        const title = await page.title();
+        return `Page title: ${title}`;
+
+      case 'url':
+        const url = page.url();
+        return `Page URL: ${url}`;
+
+      default:
+        throw new Error(`Unknown browser command: ${command}`);
+    }
   }
 
   /**
@@ -1232,15 +1586,8 @@ ENVIRONMENT VARIABLES:
       }
     }
     
-    // Close all browser pages
-    for (const [pageId, entry] of this.activeBrowsers.entries()) {
-      await this.browserMonitor.closePage(pageId);
-    }
-    
-    // Close browser
-    if (this.browserMonitor.browser) {
-      await this.browserMonitor.close();
-    }
+    // Close integrated browser
+    await this.closeBrowser();
     
     // Stop backend processes
     for (const [name, entry] of this.activeBackends.entries()) {
