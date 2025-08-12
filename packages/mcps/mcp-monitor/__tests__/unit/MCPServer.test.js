@@ -55,25 +55,25 @@ describe('MCPFullStackMonitorServer', () => {
   let mockStdin;
   let mockStdout;
   let mockStderr;
-  let originalStdin;
-  let originalStdout;
-  let originalStderr;
+  let originalWrite;
+  let originalStderrWrite;
   
   beforeEach(() => {
-    // Save original process streams
-    originalStdin = process.stdin;
-    originalStdout = process.stdout;
-    originalStderr = process.stderr;
-    
     // Create mocks
     mockStdin = new MockStdin();
     mockStdout = new MockStdout();
-    mockStderr = { write: jest.fn() };
     
-    // Replace process streams
-    process.stdin = mockStdin;
-    process.stdout = mockStdout;
-    process.stderr = mockStderr;
+    // Mock console.error for stderr
+    mockStderr = { write: jest.fn() };
+    originalStderrWrite = process.stderr.write;
+    process.stderr.write = mockStderr.write;
+    
+    // Save and mock stdout.write
+    originalWrite = process.stdout.write;
+    process.stdout.write = jest.fn((data) => {
+      mockStdout.write(data);
+      return true;
+    });
     
     // Create server instance (don't start it yet)
     server = new MCPFullStackMonitorServer();
@@ -85,10 +85,9 @@ describe('MCPFullStackMonitorServer', () => {
       await server.sessionManager.endAllSessions();
     }
     
-    // Restore original streams
-    process.stdin = originalStdin;
-    process.stdout = originalStdout;
-    process.stderr = originalStderr;
+    // Restore original functions
+    process.stdout.write = originalWrite;
+    process.stderr.write = originalStderrWrite;
   });
   
   describe('Server Initialization', () => {
@@ -103,7 +102,15 @@ describe('MCPFullStackMonitorServer', () => {
     });
     
     it('should start server and setup stdio handling', async () => {
+      // Mock stdin event listeners
+      const stdinOn = jest.spyOn(process.stdin, 'on');
+      const stdinSetEncoding = jest.spyOn(process.stdin, 'setEncoding');
+      
       await server.start();
+      
+      expect(stdinSetEncoding).toHaveBeenCalledWith('utf8');
+      expect(stdinOn).toHaveBeenCalledWith('data', expect.any(Function));
+      expect(stdinOn).toHaveBeenCalledWith('end', expect.any(Function));
       
       expect(mockStderr.write).toHaveBeenCalledWith(
         expect.stringContaining('Starting FullStack Monitor MCP Server')
@@ -111,6 +118,9 @@ describe('MCPFullStackMonitorServer', () => {
       expect(mockStderr.write).toHaveBeenCalledWith(
         expect.stringContaining('MCP Server ready for connections')
       );
+      
+      stdinOn.mockRestore();
+      stdinSetEncoding.mockRestore();
     });
   });
   

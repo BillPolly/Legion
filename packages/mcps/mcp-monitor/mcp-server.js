@@ -255,9 +255,14 @@ class MCPFullStackMonitorServer {
   }
 }
 
-// Start the server
-const server = new MCPFullStackMonitorServer();
-server.start().catch(error => {
-  console.error('Failed to start MCP server:', error);
-  process.exit(1);
-});
+// Export for testing
+export { MCPFullStackMonitorServer };
+
+// Start the server if run directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const server = new MCPFullStackMonitorServer();
+  server.start().catch(error => {
+    console.error('Failed to start MCP server:', error);
+    process.exit(1);
+  });
+}
