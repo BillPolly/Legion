@@ -40,6 +40,11 @@ export class Actor {
         // delegate to the pluggable query engine that defaults to this
         return this;
     }
+
+    async query(payload, ...args) {
+        // delegate to the pluggable query engine that defaults to this
+        return this;
+    }
 }
 
 
