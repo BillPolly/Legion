@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Legion Tool Registry UI</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    #app {
+      width: 100%;
+      height: 100vh;
+    }
+    
+    .loading-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: #1a1a1a;
+    }
+    
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid #333;
+      border-top-color: #4caf50;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      margin-top: 20px;
+      color: #999;
+    }
+    
+    .error-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: #1a1a1a;
+      padding: 2rem;
+      text-align: center;
+    }
+    
+    .error-icon {
+      font-size: 48px;
+      color: #f44336;
+      margin-bottom: 20px;
+    }
+    
+    .error-message {
+      color: #e0e0e0;
+      margin-bottom: 20px;
+    }
+    
+    .retry-button {
+      padding: 10px 20px;
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    
+    .retry-button:hover {
+      background: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="loading-screen">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Initializing Tool Registry UI...</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { ToolRegistryUI } from '/index.js';
+    
+    // Configuration
+    const config = {
+      dom: document.getElementById('app'),
+      serverUrl: 'ws://localhost:8090',
+      theme: 'dark',
+      initialTab: 'tools',
+      
+      // Callbacks
+      onToolExecuted: (tool, params, result) => {
+        console.log('Tool executed:', tool, params, result);
+      },
+      
+      onSearchPerformed: (query, results) => {
+        console.log('Search performed:', query, results);
+      },
+      
+      onError: (error) => {
+        console.error('Application error:', error);
+        showError(error);
+      },
+      
+      onMount: (instance) => {
+        console.log('Tool Registry UI mounted', instance);
+        window.toolRegistryUI = instance;
+      },
+      
+      onDestroy: (instance) => {
+        console.log('Tool Registry UI destroyed');
+      }
+    };
+    
+    // Error handling
+    function showError(error) {
+      const app = document.getElementById('app');
+      app.innerHTML = `
+        <div class="error-screen">
+          <div class="error-icon">⚠️</div>
+          <h2>Connection Error</h2>
+          <div class="error-message">
+            ${error.message || 'Failed to connect to server'}
+          </div>
+          <button class="retry-button" onclick="location.reload()">
+            Retry Connection
+          </button>
+        </div>
+      `;
+    }
+    
+    // Initialize application
+    let instance = null;
+    
+    async function initializeApp() {
+      try {
+        // Clear loading screen
+        const app = document.getElementById('app');
+        app.innerHTML = '';
+        
+        // Create Tool Registry UI
+        instance = ToolRegistryUI.create(config);
+        
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+          // Ctrl/Cmd + K for search
+          if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            const searchInput = document.getElementById('tool-search');
+            if (searchInput) {
+              searchInput.focus();
+            }
+          }
+          
+          // Ctrl/Cmd + 1 for Tools tab
+          if ((e.ctrlKey || e.metaKey) && e.key === '1') {
+            e.preventDefault();
+            instance.switchTab('tools');
+          }
+          
+          // Ctrl/Cmd + 2 for Database tab
+          if ((e.ctrlKey || e.metaKey) && e.key === '2') {
+            e.preventDefault();
+            instance.switchTab('database');
+          }
+          
+          // Ctrl/Cmd + R to refresh
+          if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+            e.preventDefault();
+            instance.refresh();
+          }
+        });
+        
+        // Expose to console for debugging
+        window.toolRegistryUI = instance;
+        
+        console.log('✅ Tool Registry UI initialized');
+        console.log('Available commands:');
+        console.log('  toolRegistryUI.loadTools() - Reload tools');
+        console.log('  toolRegistryUI.executeTool(name, params) - Execute a tool');
+        console.log('  toolRegistryUI.searchTools(query) - Search tools');
+        console.log('  toolRegistryUI.performSemanticSearch(query) - Semantic search');
+        console.log('  toolRegistryUI.getState() - Get current state');
+        console.log('  toolRegistryUI.setTheme("light"|"dark") - Change theme');
+        
+      } catch (error) {
+        console.error('Failed to initialize:', error);
+        showError(error);
+      }
+    }
+    
+    // Start initialization
+    initializeApp();
+    
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+      if (instance) {
+        instance.destroy();
+      }
+    });
+  </script>
+</body>
+</html>

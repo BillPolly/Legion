@@ -1,0 +1,31 @@
+{
+  "name": "@legion/tool-registry-ui",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Comprehensive UI for Legion Tool Registry management with semantic search",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "NODE_ENV=development node server/server.js",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/unit",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/integration",
+    "test:e2e": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/e2e",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
+    "test:ui": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/unit/view __tests__/e2e",
+    "test:verbose": "NODE_OPTIONS='--experimental-vm-modules' jest --verbose"
+  },
+  "dependencies": {
+    "@legion/tools": "*",
+    "@legion/shared": "*",
+    "@legion/semantic-search": "*",
+    "@legion/storage": "*",
+    "express": "^4.18.2",
+    "ws": "^8.13.0",
+    "mongodb": "^6.3.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "@jest/globals": "^29.7.0"
+  }
+}
