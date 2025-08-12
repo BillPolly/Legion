@@ -10,6 +10,7 @@ export class SidewinderServer extends EventEmitter {
     super();
     this.port = port;
     this.wss = null;
+    this.isListening = false;
     this.clients = new Map(); // sessionId -> WebSocket
     this.events = new Map();   // sessionId -> events array
     this.maxEventsPerSession = 10000;
@@ -29,6 +30,7 @@ export class SidewinderServer extends EventEmitter {
         
         this.wss.on('listening', () => {
           console.log(`[SidewinderServer] Listening on port ${this.port}`);
+          this.isListening = true;
           resolve();
         });
         
@@ -57,13 +59,24 @@ export class SidewinderServer extends EventEmitter {
         // Handle identification
         if (message.type === 'identify') {
           sessionId = message.sessionId;
-          this.clients.set(sessionId, ws);
+          
+          // Store both the WebSocket and client metadata
+          this.clients.set(sessionId, {
+            ws: ws,
+            pid: message.pid,
+            profile: message.profile,
+            hooks: message.hooks,
+            sessionId: sessionId
+          });
           
           if (!this.events.has(sessionId)) {
             this.events.set(sessionId, []);
           }
           
           console.log(`[SidewinderServer] Client identified: ${sessionId} (PID: ${message.pid})`);
+          
+          // Emit client event for tracking
+          this.emit('client-event', message);
           
           // Send acknowledgment
           ws.send(JSON.stringify({
@@ -161,9 +174,9 @@ export class SidewinderServer extends EventEmitter {
    * Send command to connected client
    */
   sendCommand(sessionId, command) {
-    const ws = this.clients.get(sessionId);
-    if (ws && ws.readyState === 1) { // WebSocket.OPEN
-      ws.send(JSON.stringify(command));
+    const client = this.clients.get(sessionId);
+    if (client && client.ws && client.ws.readyState === 1) { // WebSocket.OPEN
+      client.ws.send(JSON.stringify(command));
       return true;
     }
     return false;
@@ -173,9 +186,9 @@ export class SidewinderServer extends EventEmitter {
    * Broadcast command to all clients
    */
   broadcast(command) {
-    this.clients.forEach((ws, sessionId) => {
-      if (ws.readyState === 1) {
-        ws.send(JSON.stringify(command));
+    this.clients.forEach((client, sessionId) => {
+      if (client.ws && client.ws.readyState === 1) {
+        client.ws.send(JSON.stringify(command));
       }
     });
   }
@@ -194,12 +207,15 @@ export class SidewinderServer extends EventEmitter {
     return new Promise((resolve) => {
       if (this.wss) {
         // Close all connections
-        this.clients.forEach(ws => {
-          ws.close();
+        this.clients.forEach(client => {
+          if (client.ws) {
+            client.ws.close();
+          }
         });
         
         this.wss.close(() => {
           console.log('[SidewinderServer] Server stopped');
+          this.isListening = false;
           resolve();
         });
       } else {

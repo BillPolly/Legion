@@ -129,7 +129,7 @@ export class FullStackMonitor extends EventEmitter {
       type: 'backend'
     });
     
-    // Start the backend process (simplified for MCP usage)
+    // Start the backend process (simplified for monitoring usage)
     const backendProcess = {
       pid: Date.now(), // Mock process ID
       name: backend.name,

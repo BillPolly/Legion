@@ -2,15 +2,18 @@
  * SimplifiedTools - Streamlined MCP tools focused on app debugging
  */
 
-import { spawn } from 'child_process';
+import { spawn, exec } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync } from 'fs';
 import net from 'net';
+import { promisify } from 'util';
 import { Sidewinder } from '@legion/sidewinder';
 import puppeteer from 'puppeteer';
 import { portManager } from '../utils/PortManager.js';
 import { EnhancedServerStarter } from './EnhancedServerStarter.js';
+
+const execAsync = promisify(exec);
 
 export class SimplifiedTools {
   constructor(sessionManager) {
@@ -61,6 +64,11 @@ export class SimplifiedTools {
             env: {
               type: 'object',
               description: 'Additional environment variables to pass to the server process'
+            },
+            kill_conflicting_ports: {
+              type: 'boolean',
+              default: true,
+              description: 'Kill any process using the target port before starting (default: true)'
             }
           }
         }
@@ -341,7 +349,8 @@ export class SimplifiedTools {
         wait_for_port, 
         log_level = 'info', 
         session_id = 'default',
-        env = {}
+        env = {},
+        kill_conflicting_ports = true
       } = args;
       
       // Check if process already exists for this session
@@ -353,6 +362,11 @@ export class SimplifiedTools {
           }],
           isError: true
         };
+      }
+      
+      // Kill any process using the target port if requested
+      if (kill_conflicting_ports && wait_for_port) {
+        await this.killProcessOnPort(wait_for_port);
       }
       
       // Get or create monitor for session
@@ -372,8 +386,8 @@ export class SimplifiedTools {
       // Store log level for session
       this.sessionManager.setLogLevel(session_id, log_level);
       
-      // Wait for server to be ready
-      const serverReady = await this.waitForServerReady(result.process, result.port, 15000);
+      // Wait for server to be ready using intelligent detection
+      const serverReady = await this.waitForServerReady(result.process, result.port, session_id, 30000);
       
       // Capture logs from process stdout/stderr AFTER server is ready
       await this.setupLogCapture(result.process, session_id, monitor);
@@ -425,6 +439,89 @@ export class SimplifiedTools {
     }
   }
 
+  /**
+   * Kill any process using a specific port
+   */
+  async killProcessOnPort(port) {
+    try {
+      // Check if port is in use
+      const isInUse = await portManager.isPortListening(port);
+      if (!isInUse) {
+        return; // Port is free, nothing to kill
+      }
+      
+      console.log(`[SimplifiedTools] Port ${port} is in use, attempting to kill process...`);
+      
+      const platform = process.platform;
+      
+      if (platform === 'darwin' || platform === 'linux') {
+        // Unix-like systems: use lsof to find the process
+        try {
+          const { stdout } = await execAsync(`lsof -ti:${port}`);
+          const pids = stdout.trim().split('\n').filter(Boolean);
+          
+          if (pids.length > 0) {
+            for (const pid of pids) {
+              try {
+                await execAsync(`kill -9 ${pid}`);
+                console.log(`[SimplifiedTools] Killed process ${pid} on port ${port}`);
+              } catch (killError) {
+                console.warn(`[SimplifiedTools] Failed to kill process ${pid}: ${killError.message}`);
+              }
+            }
+            
+            // Wait a moment for the port to be released
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+        } catch (lsofError) {
+          // lsof might fail if no process is found, which is fine
+          console.log(`[SimplifiedTools] No process found on port ${port}`);
+        }
+      } else if (platform === 'win32') {
+        // Windows: use netstat and taskkill
+        try {
+          const { stdout } = await execAsync(`netstat -ano | findstr :${port}`);
+          const lines = stdout.trim().split('\n');
+          const pids = new Set();
+          
+          for (const line of lines) {
+            const parts = line.trim().split(/\s+/);
+            const pid = parts[parts.length - 1];
+            if (pid && pid !== '0') {
+              pids.add(pid);
+            }
+          }
+          
+          for (const pid of pids) {
+            try {
+              await execAsync(`taskkill /F /PID ${pid}`);
+              console.log(`[SimplifiedTools] Killed process ${pid} on port ${port}`);
+            } catch (killError) {
+              console.warn(`[SimplifiedTools] Failed to kill process ${pid}: ${killError.message}`);
+            }
+          }
+          
+          // Wait a moment for the port to be released
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (netstatError) {
+          // netstat might fail if no process is found, which is fine
+          console.log(`[SimplifiedTools] No process found on port ${port}`);
+        }
+      }
+      
+      // Verify the port is now free
+      const stillInUse = await portManager.isPortListening(port);
+      if (stillInUse) {
+        console.warn(`[SimplifiedTools] Port ${port} is still in use after kill attempt`);
+      } else {
+        console.log(`[SimplifiedTools] Port ${port} is now free`);
+      }
+    } catch (error) {
+      console.error(`[SimplifiedTools] Error killing process on port ${port}: ${error.message}`);
+      // Don't throw - we'll try to start the server anyway
+    }
+  }
+  
   /**
    * Open a browser page for monitoring (new focused approach)
    */
@@ -1414,64 +1511,279 @@ export class SimplifiedTools {
   }
   
   /**
-   * Wait for server to be ready by parsing stdout for "listening" message
+   * Intelligent server startup detection using multiple signals
+   * Uses Sidewinder lifecycle events, process monitoring, and port checking
    */
-  async waitForServerReady(process, expectedPort, timeout = 15000) {
+  async waitForServerReady(process, expectedPort, session_id, timeout = 30000) {
     return new Promise((resolve) => {
       let resolved = false;
       const startTime = Date.now();
       let collectedOutput = '';
       let collectedErrors = '';
       
-      // Set up timeout
-      const timeoutId = setTimeout(() => {
+      // Detection state
+      const state = {
+        processRunning: true,
+        sidewinderConnected: false,
+        serverCreated: false,
+        serverListening: false,
+        portVerified: false,
+        hasError: false,
+        errorMessage: null
+      };
+      
+      // Declare interval variables before cleanup function
+      let timeoutId;
+      let sidewinderTimeoutId;
+      let portCheckInterval;
+      
+      let cleanup = () => {
+        if (timeoutId) clearTimeout(timeoutId);
+        if (sidewinderTimeoutId) clearTimeout(sidewinderTimeoutId);
+        if (portCheckInterval) clearInterval(portCheckInterval);
+        process.stdout?.removeListener('data', onStdout);
+        process.stderr?.removeListener('data', onStderr);
+      };
+      
+      const resolveWith = (success, reason) => {
+        if (resolved) return;
+        resolved = true;
+        cleanup();
+        console.log(`[SimplifiedTools] Server startup ${success ? 'succeeded' : 'failed'}: ${reason}`);
+        resolve(success);
+      };
+      
+      // Phase 1: Process and Sidewinder connection (0-5s)
+      sidewinderTimeoutId = setTimeout(() => {
+        if (!state.sidewinderConnected && !resolved) {
+          console.warn(`[SimplifiedTools] Sidewinder not connected after 5s, proceeding with basic detection`);
+        }
+      }, 5000);
+      
+      // Phase 2: Overall timeout
+      timeoutId = setTimeout(() => {
         if (!resolved) {
-          console.error(`[SimplifiedTools] Server startup timeout. Collected output:\n`, collectedOutput);
-          console.error(`[SimplifiedTools] Server startup errors:\n`, collectedErrors);
-          resolved = true;
-          resolve(false);
+          const diagnostic = this.generateStartupDiagnostic(state, collectedOutput, collectedErrors);
+          resolveWith(false, `Timeout after ${timeout}ms. ${diagnostic}`);
         }
       }, timeout);
       
-      // Listen for stdout data
-      const onData = (data) => {
+      // Monitor process exit
+      const onProcessExit = (code, signal) => {
+        state.processRunning = false;
+        const reason = signal ? `Process killed with signal ${signal}` : `Process exited with code ${code}`;
+        resolveWith(false, reason);
+      };
+      process.once('exit', onProcessExit);
+      process.once('error', (err) => {
+        state.hasError = true;
+        state.errorMessage = err.message;
+        resolveWith(false, `Process error: ${err.message}`);
+      });
+      
+      // Monitor stdout for application logs and error patterns
+      const onStdout = (data) => {
         const output = data.toString();
         collectedOutput += output;
         
-        // Look for "listening", "started", or "ready" with port number
+        // Look for common error patterns
+        if (this.containsStartupError(output)) {
+          state.hasError = true;
+          state.errorMessage = output.trim();
+          resolveWith(false, `Application error detected: ${output.trim()}`);
+          return;
+        }
+        
+        // Look for traditional "listening" patterns as fallback
         const listeningRegex = /(?:listening|started|ready).*(?:port|:)\s*(\d+)/i;
         const match = output.match(listeningRegex);
-        
         if (match && parseInt(match[1]) === expectedPort) {
-          if (!resolved) {
-            resolved = true;
-            clearTimeout(timeoutId);
-            process.stdout.removeListener('data', onData);
-            process.stderr.removeListener('data', onError);
-            resolve(true);
+          state.serverListening = true;
+          this.checkFinalReadiness(state, expectedPort, resolveWith);
+        }
+      };
+      
+      const onStderr = (data) => {
+        const errorOutput = data.toString();
+        collectedErrors += errorOutput;
+        
+        // Check for binding errors specifically
+        if (errorOutput.includes('EADDRINUSE') || errorOutput.includes('address already in use')) {
+          resolveWith(false, `Port ${expectedPort} already in use`);
+        } else if (errorOutput.includes('EACCES') || errorOutput.includes('permission denied')) {
+          resolveWith(false, `Permission denied binding to port ${expectedPort}`);
+        }
+      };
+      
+      process.stdout?.on('data', onStdout);
+      process.stderr?.on('data', onStderr);
+      
+      // Monitor Sidewinder events if available
+      const monitor = this.sessionManager.getCurrentMonitor(session_id);
+      const actorSpace = this.sessionManager.actorSpaces?.get(session_id);
+      
+      if (actorSpace && actorSpace.actors?.logManager) {
+        // Set up Sidewinder event listener
+        const logManager = actorSpace.actors.logManager;
+        
+        const sidewinderEventHandler = (message) => {
+          if (message.type === 'sidewinder-event') {
+            this.handleSidewinderLifecycleEvent(message.data, state, expectedPort, resolveWith);
           }
+        };
+        
+        // Listen for Sidewinder events
+        logManager.on?.('sidewinder-event', sidewinderEventHandler);
+        
+        // Cleanup function should remove this listener too
+        const originalCleanup = cleanup;
+        cleanup = () => {
+          originalCleanup();
+          logManager.off?.('sidewinder-event', sidewinderEventHandler);
+        };
+      }
+      
+      // Periodic port checking as final verification
+      let portCheckAttempts = 0;
+      const maxPortCheckAttempts = 10;
+      portCheckInterval = setInterval(async () => {
+        portCheckAttempts++;
+        
+        try {
+          const isListening = await portManager.isPortListening(expectedPort);
+          if (isListening) {
+            state.portVerified = true;
+            this.checkFinalReadiness(state, expectedPort, resolveWith);
+          } else if (portCheckAttempts >= maxPortCheckAttempts) {
+            if (!state.hasError && !resolved) {
+              resolveWith(false, `Port ${expectedPort} not listening after ${maxPortCheckAttempts} checks`);
+            }
+          }
+        } catch (err) {
+          console.warn(`[SimplifiedTools] Port check failed: ${err.message}`);
         }
-      };
-      
-      // Listen for stderr data to capture errors
-      const onError = (data) => {
-        collectedErrors += data.toString();
-      };
-      
-      process.stdout.on('data', onData);
-      process.stderr.on('data', onError);
-      
-      // Fallback to port check after some delay
-      setTimeout(async () => {
-        if (!resolved && await portManager.isPortListening(expectedPort)) {
-          resolved = true;
-          clearTimeout(timeoutId);
-          process.stdout.removeListener('data', onData);
-          process.stderr.removeListener('data', onError);
-          resolve(true);
-        }
-      }, 2000);
+      }, 1000);
     });
+  }
+  
+  /**
+   * Handle Sidewinder lifecycle events to update detection state
+   */
+  handleSidewinderLifecycleEvent(event, state, expectedPort, resolveWith) {
+    console.log(`[SimplifiedTools] Sidewinder event: ${event.type}/${event.event}`);
+    
+    switch (event.type) {
+      case 'processStart':
+        state.sidewinderConnected = true;
+        console.log('[SimplifiedTools] ✅ Sidewinder connected - monitoring active');
+        break;
+        
+      case 'server-lifecycle':
+        switch (event.event) {
+          case 'http-server-created':
+          case 'https-server-created':
+            state.serverCreated = true;
+            console.log('[SimplifiedTools] ✅ Server created');
+            break;
+            
+          case 'server-listening':
+            if (event.port === expectedPort) {
+              state.serverListening = true;
+              console.log(`[SimplifiedTools] ✅ Server listening on port ${expectedPort}`);
+              this.checkFinalReadiness(state, expectedPort, resolveWith);
+            }
+            break;
+            
+          case 'server-error':
+          case 'server-creation-error':
+          case 'server-listen-error':
+            state.hasError = true;
+            state.errorMessage = event.error?.message || 'Unknown server error';
+            resolveWith(false, `Server lifecycle error: ${state.errorMessage}`);
+            break;
+        }
+        break;
+        
+      case 'sidewinder-init-error':
+        console.warn('[SimplifiedTools] ⚠️ Sidewinder init error, falling back to basic detection');
+        break;
+        
+      case 'uncaughtException':
+      case 'unhandledRejection':
+        state.hasError = true;
+        state.errorMessage = event.error?.message || event.reason || 'Application error';
+        resolveWith(false, `Application error: ${state.errorMessage}`);
+        break;
+    }
+  }
+  
+  /**
+   * Check if all conditions are met for server readiness
+   */
+  checkFinalReadiness(state, expectedPort, resolveWith) {
+    // Require either Sidewinder confirmation OR port verification + logs
+    const sidewinderConfirmed = state.sidewinderConnected && state.serverListening;
+    const basicConfirmed = state.portVerified;
+    
+    if (sidewinderConfirmed) {
+      resolveWith(true, 'Server confirmed ready via Sidewinder lifecycle events');
+    } else if (basicConfirmed) {
+      resolveWith(true, `Port ${expectedPort} verified listening`);
+    }
+    // Otherwise keep waiting for more signals
+  }
+  
+  /**
+   * Check if output contains startup error patterns
+   */
+  containsStartupError(output) {
+    const errorPatterns = [
+      /Error:/,
+      /Cannot find module/,
+      /SyntaxError:/,
+      /ReferenceError:/,
+      /TypeError:.*at startup/,
+      /ENOENT.*no such file/,
+      /MODULE_NOT_FOUND/,
+      /Failed to start/i,
+      /Startup failed/i,
+      /Unable to start/i
+    ];
+    
+    return errorPatterns.some(pattern => pattern.test(output));
+  }
+  
+  /**
+   * Generate diagnostic information for failed startups
+   */
+  generateStartupDiagnostic(state, stdout, stderr) {
+    const diagnostics = [];
+    
+    if (!state.processRunning) {
+      diagnostics.push('Process exited early');
+    }
+    
+    if (!state.sidewinderConnected) {
+      diagnostics.push('Sidewinder not connected (monitoring may be disabled)');
+    }
+    
+    if (state.hasError) {
+      diagnostics.push(`Error detected: ${state.errorMessage}`);
+    }
+    
+    if (!state.serverCreated && state.sidewinderConnected) {
+      diagnostics.push('No server creation detected');
+    }
+    
+    if (stdout.trim()) {
+      diagnostics.push(`Stdout: ${stdout.trim().substring(0, 200)}...`);
+    }
+    
+    if (stderr.trim()) {
+      diagnostics.push(`Stderr: ${stderr.trim().substring(0, 200)}...`);
+    }
+    
+    return diagnostics.join('; ');
   }
 
   /**

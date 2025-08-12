@@ -241,10 +241,191 @@ process.on('unhandledRejection', (reason, promise) => {
   });
 });
 
+// Server lifecycle monitoring
+function wrapServerCreation() {
+  const http = require('http');
+  const https = require('https');
+  
+  // Wrap HTTP server creation
+  const originalCreateServer = http.createServer;
+  http.createServer = function wrappedCreateServer(...args) {
+    debug('HTTP server being created');
+    try {
+      const server = originalCreateServer.apply(this, args);
+      
+      // Send server creation signal
+      client.send({
+        type: 'server-lifecycle',
+        event: 'http-server-created',
+        timestamp: Date.now()
+      });
+      
+      // Wrap the listen method
+      const originalListen = server.listen;
+      server.listen = function wrappedListen(...listenArgs) {
+        debug('HTTP server starting to listen');
+        
+        try {
+          const result = originalListen.apply(this, listenArgs);
+          
+          // Extract port from arguments
+          let port = listenArgs[0];
+          if (typeof port === 'object' && port !== null) {
+            port = port.port;
+          }
+          
+          // Send listening event after successful bind
+          this.once('listening', () => {
+            const address = this.address();
+            debug(`Server listening on port ${address?.port || port}`);
+            
+            client.send({
+              type: 'server-lifecycle',
+              event: 'server-listening',
+              port: address?.port || port,
+              address: address,
+              timestamp: Date.now()
+            });
+          });
+          
+          // Send error event if binding fails
+          this.once('error', (err) => {
+            debug(`Server error: ${err.message}`);
+            
+            client.send({
+              type: 'server-lifecycle',  
+              event: 'server-error',
+              error: {
+                message: err.message,
+                code: err.code,
+                port: port
+              },
+              timestamp: Date.now()
+            });
+          });
+          
+          return result;
+        } catch (err) {
+          debug(`Server listen error: ${err.message}`);
+          client.send({
+            type: 'server-lifecycle',
+            event: 'server-listen-error',
+            error: {
+              message: err.message,
+              stack: err.stack
+            },
+            timestamp: Date.now()
+          });
+          throw err;
+        }
+      };
+      
+      return server;
+    } catch (err) {
+      debug(`Server creation error: ${err.message}`);
+      client.send({
+        type: 'server-lifecycle',
+        event: 'server-creation-error',
+        error: {
+          message: err.message,
+          stack: err.stack
+        },
+        timestamp: Date.now()
+      });
+      throw err;
+    }
+  };
+  
+  // Wrap HTTPS server creation similarly
+  const originalCreateSecureServer = https.createServer;
+  https.createServer = function wrappedCreateSecureServer(...args) {
+    debug('HTTPS server being created');
+    try {
+      const server = originalCreateSecureServer.apply(this, args);
+      
+      client.send({
+        type: 'server-lifecycle',
+        event: 'https-server-created',
+        timestamp: Date.now()
+      });
+      
+      // Wrap listen method for HTTPS too
+      const originalListen = server.listen;
+      server.listen = function wrappedListen(...listenArgs) {
+        try {
+          const result = originalListen.apply(this, listenArgs);
+          
+          let port = listenArgs[0];
+          if (typeof port === 'object' && port !== null) {
+            port = port.port;
+          }
+          
+          this.once('listening', () => {
+            const address = this.address();
+            client.send({
+              type: 'server-lifecycle',
+              event: 'server-listening',
+              port: address?.port || port,
+              address: address,
+              https: true,
+              timestamp: Date.now()
+            });
+          });
+          
+          this.once('error', (err) => {
+            client.send({
+              type: 'server-lifecycle',
+              event: 'server-error',
+              error: {
+                message: err.message,
+                code: err.code,
+                port: port
+              },
+              https: true,
+              timestamp: Date.now()
+            });
+          });
+          
+          return result;
+        } catch (err) {
+          client.send({
+            type: 'server-lifecycle',
+            event: 'server-listen-error',
+            error: {
+              message: err.message,
+              stack: err.stack
+            },
+            https: true,
+            timestamp: Date.now()
+          });
+          throw err;
+        }
+      };
+      
+      return server;
+    } catch (err) {
+      client.send({
+        type: 'server-lifecycle',
+        event: 'server-creation-error',
+        error: {
+          message: err.message,
+          stack: err.stack
+        },
+        https: true,
+        timestamp: Date.now()
+      });
+      throw err;
+    }
+  };
+}
+
 // Start instrumentation
 try {
   // Connect to monitoring server
   client.connect();
+  
+  // Wrap server creation BEFORE loading hooks
+  wrapServerCreation();
   
   // Load and install hooks
   loadHooks();
@@ -259,9 +440,21 @@ try {
     arch: process.arch
   });
   
-  debug('Sidewinder instrumentation active');
+  debug('Sidewinder instrumentation active with server lifecycle monitoring');
 } catch (err) {
   console.error('[Sidewinder] Failed to initialize:', err);
+  
+  // Send initialization error
+  if (client) {
+    client.send({
+      type: 'sidewinder-init-error',
+      error: {
+        message: err.message,
+        stack: err.stack
+      },
+      timestamp: Date.now()
+    });
+  }
 }
 
 // Export for use by hooks
