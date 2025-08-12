@@ -3,8 +3,8 @@
  * NO storage provider, NO actors, NO complexity - just FullStackMonitor!
  */
 
-import { FullStackMonitor } from '../../../fullstack-monitor/src/FullStackMonitor.js';
-import { TestResourceManager } from '../../../fullstack-monitor/__tests__/utils/TestResourceManager.js';
+import { FullStackMonitor } from '@legion/fullstack-monitor';
+import { ResourceManager } from '@legion/tools';
 
 export class SimpleSessionManager {
   constructor() {
@@ -17,7 +17,8 @@ export class SimpleSessionManager {
   async getMonitor(sessionId = 'default') {
     if (!this.monitors.has(sessionId)) {
       // Create a new FullStackMonitor instance - it handles EVERYTHING
-      const resourceManager = new TestResourceManager();
+      const resourceManager = new ResourceManager();
+      await resourceManager.initialize();
       const monitor = await FullStackMonitor.create(resourceManager);
       this.monitors.set(sessionId, monitor);
     }

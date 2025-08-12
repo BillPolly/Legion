@@ -32,6 +32,29 @@ export class FullStackMonitor extends EventEmitter {
     this.logStore = config.logStore;
     this.session = config.session;
     
+    // Set up event listeners to forward browser events to LogStore
+    this.on('console-message', (data) => {
+      this.logStore.logBrowserMessage({
+        type: 'console',
+        level: data.type,
+        text: data.text,
+        sessionId: data.sessionId,
+        pageId: data.pageId,
+        source: 'browser-console'
+      });
+    });
+    
+    this.on('page-error', (data) => {
+      this.logStore.logBrowserMessage({
+        type: 'error',
+        level: 'error',
+        message: data.message,
+        sessionId: data.sessionId,
+        pageId: data.pageId,
+        source: 'browser-error'
+      });
+    });
+    
     // Integrated browser functionality
     this.browser = null;
     this.browserPages = new Map(); // pageId -> page info

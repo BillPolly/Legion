@@ -141,8 +141,15 @@ function send(message) {
       timestamp: Date.now()
     });
     
-    // Call original method
-    return original.apply(console, args);
+    // Call original method safely
+    try {
+      return original.apply(console, args);
+    } catch (error) {
+      // Ignore EPIPE errors when stdout/stderr is redirected
+      if (error.code !== 'EPIPE') {
+        throw error;
+      }
+    }
   };
 });
 
