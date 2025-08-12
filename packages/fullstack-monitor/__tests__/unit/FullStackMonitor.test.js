@@ -3,594 +3,297 @@
  */
 
 import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { EventEmitter } from 'events';
+import { FullStackMonitor } from '../../src/FullStackMonitor.js';
+import { TestResourceManager } from '../utils/TestResourceManager.js';
+import { MockSidewinderAgent } from '../utils/MockSidewinderAgent.js';
+import { MockBrowserAgent } from '../utils/MockBrowserAgent.js';
 
-// Mock implementations
-class MockLogManager extends EventEmitter {
-  constructor() {
-    super();
-    this.sessions = new Map();
-    this.monitoredProcesses = new Map();
-  }
-
-  static async create(resourceManager) {
-    const manager = new MockLogManager();
-    manager.resourceManager = resourceManager;
-    await manager.initialize();
-    return manager;
-  }
-
-  async initialize() {
-    this.emit('initialized');
-  }
-
-  async createSession(config) {
-    const session = {
-      sessionId: `session-${Date.now()}`,
-      name: config.name,
-      metadata: config.metadata || {}
-    };
-    this.sessions.set(session.sessionId, session);
-    return session;
-  }
-
-  async monitorProcess(script, name) {
-    const process = {
-      pid: Math.floor(Math.random() * 10000),
-      name,
-      script,
-      status: 'running'
-    };
-    this.monitoredProcesses.set(name, process);
-    this.emit('process-started', process);
-    return process;
-  }
-
-  async searchLogs(query) {
-    return {
-      success: true,
-      matches: [],
-      totalMatches: 0
-    };
-  }
-
-  async getCorrelation(correlationId) {
-    return [];
-  }
-}
-
-class MockBrowserMonitor extends EventEmitter {
-  constructor() {
-    super();
-    this.pages = new Map();
-    this.sessions = new Map();
-    this.browser = null;
-  }
-
-  static async create(resourceManager) {
-    const monitor = new MockBrowserMonitor();
-    monitor.resourceManager = resourceManager;
-    await monitor.initialize();
-    return monitor;
-  }
-
-  async initialize() {
-    this.emit('initialized');
-  }
-
-  async launch(options = {}) {
-    this.browser = { isConnected: true };
-    this.emit('browser-launched', { browser: this.browser });
-    return this.browser;
-  }
-
-  async monitorPage(url, sessionId) {
-    const page = {
-      id: `page-${Date.now()}`,
-      url,
-      sessionId,
-      navigate: jest.fn(),
-      click: jest.fn(),
-      type: jest.fn(),
-      screenshot: jest.fn()
-    };
-    this.pages.set(page.id, page);
-    this.emit('page-created', { pageId: page.id, url, sessionId });
-    return page;
-  }
-
-  async close() {
-    this.browser = null;
-    this.emit('browser-closed');
-  }
-
-  getSessionLogs(sessionId) {
-    return [];
-  }
-
-  getSessionRequests(sessionId) {
-    return [];
-  }
-}
-
-class MockResourceManager {
-  constructor() {
-    this.resources = new Map();
-  }
-
-  get(key) {
-    return this.resources.get(key);
-  }
-
-  set(key, value) {
-    this.resources.set(key, value);
-  }
-}
-
-// Import the actual FullStackMonitor once it's created
-// For now, we'll define expected behavior
-
-describe('FullStackMonitor', () => {
+describe('FullStackMonitor Core', () => {
   let resourceManager;
   let monitor;
-
+  
   beforeEach(() => {
-    resourceManager = new MockResourceManager();
+    resourceManager = new TestResourceManager();
   });
-
+  
   afterEach(async () => {
     if (monitor) {
       await monitor.cleanup();
+      monitor = null;
     }
-    jest.clearAllMocks();
   });
-
-  describe('initialization', () => {
-    it('should create instance with async factory pattern', async () => {
-      const FullStackMonitor = getMockFullStackMonitor();
+  
+  describe('Factory Pattern Creation', () => {
+    it('should create instance via async factory with ResourceManager', async () => {
       monitor = await FullStackMonitor.create(resourceManager);
       
       expect(monitor).toBeDefined();
-      expect(monitor.logManager).toBeDefined();
-      expect(monitor.browserMonitor).toBeDefined();
+      expect(monitor).toBeInstanceOf(FullStackMonitor);
+      expect(monitor.resourceManager).toBe(resourceManager);
     });
-
-    it('should throw if resourceManager is not provided', async () => {
-      const FullStackMonitor = getMockFullStackMonitor();
+    
+    it('should throw error if ResourceManager is not provided', async () => {
       await expect(FullStackMonitor.create()).rejects.toThrow('ResourceManager is required');
     });
-
-    it('should initialize both managers', async () => {
-      const FullStackMonitor = getMockFullStackMonitor();
+    
+    it('should start unified agent server on port 9901', async () => {
       monitor = await FullStackMonitor.create(resourceManager);
       
-      expect(monitor.logManager).toBeInstanceOf(MockLogManager);
-      expect(monitor.browserMonitor).toBeInstanceOf(MockBrowserMonitor);
+      expect(monitor.agentServer).toBeDefined();
+      expect(monitor.agentServer.options.port).toBe(9901);
     });
-
-    it('should create unified session', async () => {
-      const FullStackMonitor = getMockFullStackMonitor();
+    
+    it('should handle agent server startup failure gracefully', async () => {
+      // Create first monitor to occupy port
+      const monitor1 = await FullStackMonitor.create(resourceManager);
+      
+      // Try to create second monitor on same port - should warn but not throw
+      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
       monitor = await FullStackMonitor.create(resourceManager);
       
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to start agent server')
+      );
+      
+      consoleWarnSpy.mockRestore();
+      await monitor1.cleanup();
+    });
+    
+    it('should create session in LogManager during initialization', async () => {
+      monitor = await FullStackMonitor.create(resourceManager);
+      
+      // Check that monitor has session created
       expect(monitor.session).toBeDefined();
       expect(monitor.session.id).toBeDefined();
       expect(monitor.session.type).toBe('fullstack');
     });
-  });
-
-  describe('full-stack monitoring', () => {
-    beforeEach(async () => {
-      const FullStackMonitor = getMockFullStackMonitor();
+    
+    it('should initialize both LogStore and BrowserMonitor', async () => {
       monitor = await FullStackMonitor.create(resourceManager);
-    });
-
-    it('should monitor full-stack application', async () => {
-      const config = {
-        backend: {
-          script: 'server.js',
-          name: 'backend-server',
-          port: 3001
-        },
-        frontend: {
-          url: 'http://localhost:3000'
-        }
-      };
       
-      const result = await monitor.monitorFullStackApp(config);
-      
-      expect(result).toHaveProperty('backend');
-      expect(result).toHaveProperty('browser');
-      expect(result).toHaveProperty('session');
-      expect(result.backend.name).toBe('backend-server');
-      expect(result.browser.url).toBe('http://localhost:3000');
-    });
-
-    it('should wait for backend to be ready before launching browser', async () => {
-      const config = {
-        backend: {
-          script: 'server.js',
-          name: 'backend',
-          port: 3001
-        },
-        frontend: {
-          url: 'http://localhost:3000'
-        }
-      };
-      
-      // Mock waitForPort
-      monitor.waitForPort = jest.fn().mockResolvedValue(true);
-      
-      await monitor.monitorFullStackApp(config);
-      
-      expect(monitor.waitForPort).toHaveBeenCalledWith(3001);
-    });
-
-    it('should link correlations between backend and frontend', async () => {
-      const config = {
-        backend: {
-          script: 'server.js',
-          name: 'backend',
-          port: 3001
-        },
-        frontend: {
-          url: 'http://localhost:3000'
-        }
-      };
-      
-      const result = await monitor.monitorFullStackApp(config);
-      
-      // Verify correlation linking is set up
-      expect(monitor.correlations).toBeDefined();
+      expect(monitor.logStore).toBeDefined();
+      expect(monitor.browserMonitor).toBeDefined();
+      expect(monitor.session).toBeDefined();
+      expect(monitor.session.id).toBeDefined();
     });
   });
-
-  describe('debugging scenarios', () => {
+  
+  describe('Agent Client Management', () => {
     beforeEach(async () => {
-      const FullStackMonitor = getMockFullStackMonitor();
       monitor = await FullStackMonitor.create(resourceManager);
     });
-
-    it('should execute debug scenario steps', async () => {
-      const steps = [
-        { action: 'navigate', url: 'http://localhost:3000/login' },
-        { action: 'type', selector: '#username', text: 'test' },
-        { action: 'click', selector: '#submit' }
-      ];
-      
-      const results = await monitor.debugScenario(steps);
-      
-      expect(results).toHaveLength(3);
-      results.forEach(result => {
-        expect(result).toHaveProperty('step');
-        expect(result).toHaveProperty('success');
-      });
+    
+    it('should maintain separate client maps for each agent type', () => {
+      expect(monitor.sidewinderClients).toBeDefined();
+      expect(monitor.browserClients).toBeDefined();
+      expect(monitor.sidewinderClients).toBeInstanceOf(Map);
+      expect(monitor.browserClients).toBeInstanceOf(Map);
+      expect(monitor.sidewinderClients).not.toBe(monitor.browserClients);
     });
-
-    it('should collect correlated logs for each step', async () => {
-      const steps = [
-        { action: 'click', selector: '#api-button', correlationId: 'test-123' }
-      ];
+    
+    it('should track Sidewinder client connections', async () => {
+      const agent = new MockSidewinderAgent();
+      await agent.connect();
       
-      // Mock correlation methods
-      monitor.logManager.getCorrelation = jest.fn().mockResolvedValue([
-        { message: 'Backend log 1' },
-        { message: 'Backend log 2' }
-      ]);
+      // Give time for connection to register
+      await new Promise(resolve => setTimeout(resolve, 100));
       
-      monitor.browserMonitor.getSessionLogs = jest.fn().mockReturnValue([
-        { text: 'Frontend log 1' }
-      ]);
+      expect(monitor.sidewinderClients.size).toBe(1);
       
-      const results = await monitor.debugScenario(steps);
+      await agent.disconnect();
+      await new Promise(resolve => setTimeout(resolve, 100));
       
-      expect(results[0].backendLogs).toHaveLength(2);
-      expect(results[0].frontendLogs).toHaveLength(1);
+      expect(monitor.sidewinderClients.size).toBe(0);
     });
-
-    it('should analyze results and provide insights', async () => {
-      const steps = [
-        { action: 'click', selector: '#submit' }
-      ];
+    
+    it('should track Browser client connections', async () => {
+      const agent = new MockBrowserAgent();
+      await agent.connect();
       
-      const results = await monitor.debugScenario(steps);
-      const analysis = results[0].analysis;
+      // Give time for connection to register
+      await new Promise(resolve => setTimeout(resolve, 100));
       
-      expect(analysis).toBeDefined();
-      expect(analysis).toHaveProperty('summary');
+      expect(monitor.browserClients.size).toBe(1);
+      
+      await agent.disconnect();
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      expect(monitor.browserClients.size).toBe(0);
     });
   });
-
-  describe('correlation tracking', () => {
+  
+  describe('Correlation Tracking', () => {
     beforeEach(async () => {
-      const FullStackMonitor = getMockFullStackMonitor();
       monitor = await FullStackMonitor.create(resourceManager);
     });
-
-    it('should track correlations across frontend and backend', async () => {
-      const correlationId = 'correlation-123';
+    
+    it('should track correlations between backend and frontend', async () => {
+      const correlationId = 'test-correlation-123';
       
       await monitor.trackCorrelation(correlationId, {
-        frontend: { url: '/api/users', method: 'GET' },
-        backend: { endpoint: '/users', status: 200 }
+        backend: { message: 'Backend log', timestamp: Date.now() }
+      });
+      
+      await monitor.trackCorrelation(correlationId, {
+        frontend: { message: 'Frontend log', timestamp: Date.now() }
       });
       
       const correlation = monitor.getCorrelation(correlationId);
-      
       expect(correlation).toBeDefined();
-      expect(correlation.frontend).toBeDefined();
       expect(correlation.backend).toBeDefined();
+      expect(correlation.frontend).toBeDefined();
     });
-
-    it('should find all logs for a correlation ID', async () => {
-      const correlationId = 'correlation-456';
+    
+    it('should handle multiple backend events for same correlation', async () => {
+      const correlationId = 'test-correlation-456';
       
-      // Mock log retrieval
-      monitor.logManager.searchLogs = jest.fn().mockResolvedValue({
-        matches: [{ message: 'Backend log' }]
+      await monitor.trackCorrelation(correlationId, {
+        backend: { message: 'Backend log 1' }
       });
       
-      monitor.browserMonitor.getSessionLogs = jest.fn().mockReturnValue([
-        { text: 'Frontend log', correlationId }
-      ]);
+      await monitor.trackCorrelation(correlationId, {
+        backend: { message: 'Backend log 2' }
+      });
       
-      const logs = await monitor.getCorrelatedLogs(correlationId);
-      
-      expect(logs).toHaveProperty('backend');
-      expect(logs).toHaveProperty('frontend');
-      expect(logs.backend).toHaveLength(1);
-      expect(logs.frontend).toHaveLength(1);
+      const correlation = monitor.getCorrelation(correlationId);
+      expect(correlation.backend).toBeInstanceOf(Array);
+      expect(correlation.backend.length).toBe(2);
     });
-  });
-
-  describe('real-time events', () => {
-    beforeEach(async () => {
-      const FullStackMonitor = getMockFullStackMonitor();
-      monitor = await FullStackMonitor.create(resourceManager);
+    
+    it('should retrieve correlation by ID', () => {
+      const correlationId = 'test-correlation-789';
+      
+      monitor.trackCorrelation(correlationId, {
+        frontend: { url: '/api/test' }
+      });
+      
+      const correlation = monitor.getCorrelation(correlationId);
+      expect(correlation).toBeDefined();
+      expect(correlation.id).toBe(correlationId);
+      expect(correlation.frontend.url).toBe('/api/test');
     });
-
-    it('should forward browser events', async () => {
-      const listener = jest.fn();
-      monitor.on('browser-console', listener);
+    
+    it('should increment correlationsDetected counter', async () => {
+      const initialCount = monitor.stats.correlationsDetected;
       
-      monitor.browserMonitor.emit('console-message', {
-        type: 'error',
-        text: 'Test error'
-      });
+      await monitor.trackCorrelation('corr-1', { backend: {} });
+      await monitor.trackCorrelation('corr-2', { frontend: {} });
       
-      expect(listener).toHaveBeenCalledWith({
-        type: 'error',
-        text: 'Test error'
-      });
+      expect(monitor.stats.correlationsDetected).toBe(initialCount + 2);
     });
-
-    it('should forward backend log events', async () => {
-      const listener = jest.fn();
-      monitor.on('backend-log', listener);
+    
+    it('should handle null/undefined correlation IDs gracefully', async () => {
+      await expect(monitor.trackCorrelation(null, {})).resolves.not.toThrow();
+      await expect(monitor.trackCorrelation(undefined, {})).resolves.not.toThrow();
+      await expect(monitor.trackCorrelation('', {})).resolves.not.toThrow();
       
-      monitor.logManager.emit('log', {
-        level: 'error',
-        message: 'Server error'
-      });
-      
-      expect(listener).toHaveBeenCalledWith({
-        level: 'error',
-        message: 'Server error'
-      });
-    });
-
-    it('should emit correlation detected event', async () => {
-      const listener = jest.fn();
-      monitor.on('correlation-detected', listener);
-      
-      await monitor.trackCorrelation('cor-789', {
-        frontend: { url: '/api/test' },
-        backend: { endpoint: '/test' }
-      });
-      
-      expect(listener).toHaveBeenCalledWith({
-        correlationId: 'cor-789',
-        frontend: { url: '/api/test' },
-        backend: { endpoint: '/test' }
-      });
+      // Should not create correlations for invalid IDs
+      expect(monitor.correlations.has(null)).toBe(false);
+      expect(monitor.correlations.has(undefined)).toBe(false);
+      expect(monitor.correlations.has('')).toBe(false);
     });
   });
-
-  describe('statistics', () => {
+  
+  describe('Statistics', () => {
     beforeEach(async () => {
-      const FullStackMonitor = getMockFullStackMonitor();
       monitor = await FullStackMonitor.create(resourceManager);
     });
-
-    it('should aggregate statistics from both monitors', async () => {
-      monitor.logManager.getStatistics = jest.fn().mockReturnValue({
-        totalLogs: 100,
-        processes: 2
+    
+    it('should track debug scenarios run', () => {
+      expect(monitor.stats.debugScenariosRun).toBe(0);
+    });
+    
+    it('should track total steps executed', () => {
+      expect(monitor.stats.totalStepsExecuted).toBe(0);
+    });
+    
+    it('should provide aggregated statistics', async () => {
+      const stats = await monitor.getStatistics();
+      
+      expect(stats).toBeDefined();
+      expect(stats.correlations).toBe(0);
+      expect(stats.correlationsDetected).toBe(0);
+      expect(stats.debugScenariosRun).toBe(0);
+      expect(stats.totalStepsExecuted).toBe(0);
+      expect(stats.activeBackends).toBe(0);
+      expect(stats.activeBrowsers).toBe(0);
+      expect(stats.uptime).toBeGreaterThanOrEqual(0);
+    });
+    
+    it('should track active backends and browsers', async () => {
+      // Simulate adding backends and browsers with proper process mock
+      monitor.activeBackends.set('backend1', { 
+        process: { 
+          killed: false,
+          kill: jest.fn()
+        } 
       });
+      monitor.activeBrowsers.set('browser1', { page: {} });
       
-      monitor.browserMonitor.getStatistics = jest.fn().mockReturnValue({
-        totalConsoleMessages: 50,
-        totalNetworkRequests: 30
-      });
-      
-      const stats = monitor.getStatistics();
-      
-      expect(stats).toHaveProperty('backend');
-      expect(stats).toHaveProperty('frontend');
-      expect(stats).toHaveProperty('correlations');
-      expect(stats.backend.totalLogs).toBe(100);
-      expect(stats.frontend.totalConsoleMessages).toBe(50);
+      const stats = await monitor.getStatistics();
+      expect(stats.activeBackends).toBe(1);
+      expect(stats.activeBrowsers).toBe(1);
     });
   });
-
-  describe('cleanup', () => {
+  
+  describe('Resource Cleanup', () => {
     beforeEach(async () => {
-      const FullStackMonitor = getMockFullStackMonitor();
       monitor = await FullStackMonitor.create(resourceManager);
     });
-
-    it('should cleanup all resources', async () => {
-      const backend = await monitor.logManager.monitorProcess('server.js', 'backend');
-      const browser = await monitor.browserMonitor.launch();
-      const page = await monitor.browserMonitor.monitorPage('http://localhost:3000', monitor.session.id);
+    
+    it('should close agent WebSocket server', async () => {
+      const serverCloseSpy = jest.spyOn(monitor.agentServer, 'close');
       
       await monitor.cleanup();
       
-      expect(monitor.browserMonitor.browser).toBeNull();
+      expect(serverCloseSpy).toHaveBeenCalled();
     });
-
-    it('should emit cleanup event', async () => {
-      const listener = jest.fn();
-      monitor.on('cleanup', listener);
+    
+    it('should close all client connections before server shutdown', async () => {
+      // Connect agents
+      const sidewinderAgent = new MockSidewinderAgent();
+      const browserAgent = new MockBrowserAgent();
+      
+      await sidewinderAgent.connect();
+      await browserAgent.connect();
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      expect(monitor.sidewinderClients.size).toBe(1);
+      expect(monitor.browserClients.size).toBe(1);
       
       await monitor.cleanup();
       
-      expect(listener).toHaveBeenCalled();
+      expect(monitor.sidewinderClients.size).toBe(0);
+      expect(monitor.browserClients.size).toBe(0);
+    });
+    
+    it('should clear correlation maps', async () => {
+      monitor.correlations.set('test-1', {});
+      monitor.correlations.set('test-2', {});
+      
+      expect(monitor.correlations.size).toBe(2);
+      
+      await monitor.cleanup();
+      
+      expect(monitor.correlations.size).toBe(0);
+    });
+    
+    it('should handle cleanup errors gracefully', async () => {
+      // Force an error in cleanup by making the close method throw
+      monitor.agentServer.close = jest.fn(() => {
+        throw new Error('Test error');
+      });
+      
+      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      
+      await expect(monitor.cleanup()).resolves.not.toThrow();
+      
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Warning: Failed to stop agent server:'),
+        expect.stringContaining('Test error')
+      );
+      
+      consoleWarnSpy.mockRestore();
     });
   });
 });
-
-// Temporary mock implementation for testing
-function getMockFullStackMonitor() {
-  class FullStackMonitor extends EventEmitter {
-    constructor(config) {
-      super();
-      this.logManager = config.logManager;
-      this.browserMonitor = config.browserMonitor;
-      this.session = config.session;
-      this.correlations = new Map();
-    }
-
-    static async create(resourceManager) {
-      if (!resourceManager) {
-        throw new Error('ResourceManager is required');
-      }
-
-      const logManager = await MockLogManager.create(resourceManager);
-      const browserMonitor = await MockBrowserMonitor.create(resourceManager);
-      
-      const session = await logManager.createSession({
-        name: 'fullstack-monitoring',
-        type: 'fullstack'
-      });
-
-      const monitor = new FullStackMonitor({
-        logManager,
-        browserMonitor,
-        session: {
-          id: session.sessionId,
-          type: 'fullstack',
-          ...session
-        }
-      });
-
-      await monitor.initialize();
-      return monitor;
-    }
-
-    async initialize() {
-      // Set up event forwarding
-      this.browserMonitor.on('console-message', (data) => {
-        this.emit('browser-console', data);
-      });
-
-      this.logManager.on('log', (data) => {
-        this.emit('backend-log', data);
-      });
-    }
-
-    async monitorFullStackApp(config) {
-      const backend = await this.logManager.monitorProcess(
-        config.backend.script,
-        config.backend.name
-      );
-
-      if (this.waitForPort) {
-        await this.waitForPort(config.backend.port);
-      }
-
-      const browser = await this.browserMonitor.launch();
-      const page = await this.browserMonitor.monitorPage(
-        config.frontend.url,
-        this.session.id
-      );
-
-      return {
-        backend,
-        browser: page,
-        session: this.session
-      };
-    }
-
-    async debugScenario(steps) {
-      const results = [];
-      
-      for (const step of steps) {
-        const result = {
-          step,
-          success: true,
-          analysis: {
-            summary: 'Step completed successfully'
-          }
-        };
-
-        if (step.correlationId) {
-          result.backendLogs = await this.logManager.getCorrelation(step.correlationId);
-          result.frontendLogs = this.browserMonitor.getSessionLogs(this.session.id);
-        }
-
-        results.push(result);
-      }
-
-      return results;
-    }
-
-    async trackCorrelation(correlationId, data) {
-      this.correlations.set(correlationId, data);
-      this.emit('correlation-detected', {
-        correlationId,
-        ...data
-      });
-    }
-
-    getCorrelation(correlationId) {
-      return this.correlations.get(correlationId);
-    }
-
-    async getCorrelatedLogs(correlationId) {
-      const backendResult = await this.logManager.searchLogs({
-        query: correlationId
-      });
-
-      const frontendLogs = this.browserMonitor.getSessionLogs(this.session.id)
-        .filter(log => log.correlationId === correlationId);
-
-      return {
-        backend: backendResult.matches || [],
-        frontend: frontendLogs
-      };
-    }
-
-    getStatistics() {
-      const backendStats = this.logManager.getStatistics ? 
-        this.logManager.getStatistics() : {};
-      
-      const frontendStats = this.browserMonitor.getStatistics ? 
-        this.browserMonitor.getStatistics() : {};
-
-      return {
-        backend: backendStats,
-        frontend: frontendStats,
-        correlations: this.correlations.size
-      };
-    }
-
-    async cleanup() {
-      if (this.browserMonitor.browser) {
-        await this.browserMonitor.close();
-      }
-      this.emit('cleanup');
-    }
-  }
-
-  return FullStackMonitor;
-}
