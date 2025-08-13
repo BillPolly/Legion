@@ -447,8 +447,35 @@ export class FullStackMonitor extends EventEmitter {
       throw new Error(`Sidewinder agent not found at ${agentPath}`);
     }
     
+    // Determine the working directory
+    let cwd = options.cwd;
+    
+    if (!cwd) {
+      // Look for package.json in the script's directory and parent directories
+      const scriptDir = path.dirname(path.resolve(scriptPath));
+      let currentDir = scriptDir;
+      
+      while (currentDir !== path.dirname(currentDir)) {
+        try {
+          await fs.access(path.join(currentDir, 'package.json'));
+          cwd = currentDir;
+          break;
+        } catch {
+          currentDir = path.dirname(currentDir);
+        }
+      }
+      
+      // If no package.json found, use script's directory
+      if (!cwd) {
+        cwd = scriptDir;
+      }
+    }
+    
+    console.log(`📂 Working directory set to: ${cwd}`);
+    
     // Start process with agent injection
     const child = spawn('node', ['-r', agentPath, scriptPath], {
+      cwd: cwd,  // Set the working directory
       stdio: options.stdio || 'inherit',
       env: {
         ...process.env,
