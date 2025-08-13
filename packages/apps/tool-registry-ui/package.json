@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@legion/tools": "*",
-    "@legion/shared": "*",
+    "@legion/actors": "*",
     "@legion/semantic-search": "*",
     "@legion/storage": "*",
     "express": "^4.18.2",
@@ -27,5 +27,9 @@
   "devDependencies": {
     "jest": "^29.7.0",
     "@jest/globals": "^29.7.0"
-  }
+  },
+  "main": "jest.config.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

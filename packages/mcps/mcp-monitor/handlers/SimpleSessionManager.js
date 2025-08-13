@@ -16,9 +16,9 @@ export class SimpleSessionManager {
    */
   async getMonitor(sessionId = 'default') {
     if (!this.monitors.has(sessionId)) {
-      // Create a new FullStackMonitor instance - it handles EVERYTHING
-      const resourceManager = new ResourceManager();
-      await resourceManager.initialize();
+      // Use the singleton ResourceManager instance from @legion/tools
+      const resourceManager = ResourceManager.getInstance();
+      
       const monitor = await FullStackMonitor.create(resourceManager);
       this.monitors.set(sessionId, monitor);
     }

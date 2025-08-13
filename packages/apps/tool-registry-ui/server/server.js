@@ -7,10 +7,9 @@ import express from 'express';
 import { WebSocketServer } from 'ws';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { ActorSpace } from '@legion/shared';
-import { ResourceManager, ToolRegistry, MongoDBToolRegistryProvider } from '@legion/tools';
+import { ActorSpace } from '@legion/actors';
+import { ToolRegistry } from '@legion/tools';
 import { SemanticSearchProvider } from '@legion/semantic-search';
-import { StorageProvider } from '@legion/storage';
 
 // Server actors
 import { ServerToolRegistryActor } from './actors/ServerToolRegistryActor.js';
@@ -26,6 +25,9 @@ const PORT = process.env.PORT || 8090;
 // Serve static files
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(express.static(path.join(__dirname, '../src')));
+
+// Serve shared packages
+app.use('/lib/shared/actors', express.static(path.join(__dirname, '../../shared/actors/src')));
 
 // Serve demo HTML
 app.get('/', (req, res) => {
@@ -47,39 +49,25 @@ const server = app.listen(PORT, () => {
 });
 
 // Create WebSocket server
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ 
+  server,
+  path: '/ws'
+});
 
 // Initialize services
-let resourceManager = null;
 let toolRegistry = null;
-let mongoProvider = null;
 let semanticProvider = null;
-let storageProvider = null;
 
 async function initializeServices() {
   try {
     console.log('Initializing services...');
     
-    // Initialize ResourceManager
-    resourceManager = new ResourceManager();
-    await resourceManager.initialize();
-    
-    // Initialize MongoDB provider for tool registry
-    mongoProvider = await MongoDBToolRegistryProvider.create(resourceManager, {
-      enableSemanticSearch: true
-    });
-    
-    // Initialize ToolRegistry with database provider
-    toolRegistry = new ToolRegistry({ provider: mongoProvider });
+    // Initialize ToolRegistry - it will create its own ResourceManager and MongoDB provider
+    toolRegistry = new ToolRegistry();
     await toolRegistry.initialize();
     
-    // Initialize SemanticSearchProvider (uses local ONNX)
-    semanticProvider = await SemanticSearchProvider.create(resourceManager, {
-      useLocalEmbeddings: true
-    });
-    
-    // Initialize StorageProvider for database access
-    storageProvider = await StorageProvider.create(resourceManager);
+    // Initialize SemanticSearchProvider if needed separately
+    // The ToolRegistry already has semantic search capabilities
     
     console.log('✅ All services initialized successfully');
   } catch (error) {
@@ -98,10 +86,10 @@ wss.on('connection', (ws) => {
   // Create ActorSpace for this connection
   const actorSpace = new ActorSpace('server-' + Date.now());
   
-  // Create server actors
-  const toolActor = new ServerToolRegistryActor(toolRegistry, mongoProvider);
-  const dbActor = new ServerDatabaseActor(storageProvider, mongoProvider);
-  const searchActor = new ServerSemanticSearchActor(semanticProvider, mongoProvider);
+  // Create server actors - they only need the toolRegistry
+  const toolActor = new ServerToolRegistryActor(toolRegistry);
+  const dbActor = new ServerDatabaseActor(toolRegistry);
+  const searchActor = new ServerSemanticSearchActor(toolRegistry);
   
   // Register actors with unique GUIDs
   const actorGuids = {

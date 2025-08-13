@@ -136,39 +136,11 @@ export class ResourceManager {
       const fs = await import('fs');
       const path = await import('path');
       
-      // Find Legion project root by looking for 'legion' in path
-      let currentDir = process.cwd();
-      let legionRoot = null;
-      
-      console.log(`ResourceManager: Starting search from ${currentDir}`);
-      
-      while (currentDir !== '/') {
-        console.log(`ResourceManager: Checking directory ${currentDir}`);
-        
-        // Check if this directory contains 'legion' in the name (case insensitive)
-        if (path.basename(currentDir).toLowerCase().includes('legion')) {
-          console.log(`ResourceManager: Found Legion directory: ${currentDir}`);
-          legionRoot = currentDir;
-          break;
-        }
-        
-        const parentDir = path.dirname(currentDir);
-        if (parentDir === currentDir) break; // reached root
-        currentDir = parentDir;
-      }
-      
-      if (!legionRoot) {
-        throw new Error('ResourceManager: Could not find Legion project root directory');
-      }
-      
-      // Load .env file from Legion root
-      const envPath = path.join(legionRoot, '.env');
-      if (!fs.existsSync(envPath)) {
-        throw new Error(`ResourceManager: .env file not found at ${envPath}`);
-      }
+      // Find project root with .env file
+      const { envPath, envResult } = this._findProjectEnv(dotenv, fs, path);
       
       console.log(`ResourceManager: Loading .env from ${envPath}`);
-      const result = dotenv.config({ path: envPath });
+      const result = envResult;
       
       if (result.error) {
         throw new Error(`ResourceManager: Failed to load .env file: ${result.error.message}`);
@@ -193,6 +165,41 @@ export class ResourceManager {
       console.error('ResourceManager initialization failed:', error.message);
       throw error;
     }
+  }
+  
+  /**
+   * Find project .env file by walking up directory tree
+   * @param {Object} dotenv - dotenv module
+   * @param {Object} fs - fs module
+   * @param {Object} path - path module
+   * @returns {Object} { envPath, envResult }
+   */
+  _findProjectEnv(dotenv, fs, path) {
+    let currentDir = process.cwd();
+    
+    // Walk up directory tree looking for .env with MONOREPO_ROOT
+    while (currentDir !== '/') {
+      const envPath = path.join(currentDir, '.env');
+      
+      if (fs.existsSync(envPath)) {
+        const envResult = dotenv.config({ path: envPath });
+        
+        if (envResult.parsed?.MONOREPO_ROOT) {
+          const monorepoRoot = envResult.parsed.MONOREPO_ROOT;
+          const dirName = path.basename(currentDir);
+          
+          if (dirName === monorepoRoot) {
+            return { envPath, envResult };
+          }
+        }
+      }
+      
+      const parentDir = path.dirname(currentDir);
+      if (parentDir === currentDir) break;
+      currentDir = parentDir;
+    }
+    
+    throw new Error('ResourceManager: Could not find .env file with matching MONOREPO_ROOT');
   }
   
   /**

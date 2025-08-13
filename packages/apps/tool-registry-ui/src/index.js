@@ -118,7 +118,7 @@ export const ToolRegistryUI = {
     const connectToServer = async () => {
       try {
         // Import actor dependencies dynamically
-        const { ActorSpace } = await import('/lib/shared/actors');
+        const { ActorSpace } = await import('/lib/shared/actors/index.js');
         
         // Create ActorSpace
         actorSpace = new ActorSpace('tool-registry-ui-' + Date.now());
