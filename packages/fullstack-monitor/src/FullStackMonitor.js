@@ -1939,7 +1939,15 @@ ENVIRONMENT VARIABLES:
 
       case 'evaluate':
         if (!args[0]) throw new Error('Evaluate command requires JavaScript code argument');
-        const evalResult = await page.evaluate(args[0]);
+        // If the argument is a string containing a function, eval it to get the actual function
+        let evalFunc;
+        if (typeof args[0] === 'string') {
+          // Use Function constructor to safely create a function from the string
+          evalFunc = eval(`(${args[0]})`);
+        } else {
+          evalFunc = args[0];
+        }
+        const evalResult = await page.evaluate(evalFunc);
         return `Evaluation result: ${JSON.stringify(evalResult)}`;
 
       case 'title':
