@@ -32,6 +32,7 @@ export class FullStackMonitor extends EventEmitter {
     this.resourceManager = config.resourceManager;
     this.logStore = config.logStore;
     this.session = config.session;
+    this.wsAgentPort = config.wsAgentPort || 9901;  // Store WebSocket port for agents
     
     // Initialize ScriptAnalyzer with correct agent path
     const agentPath = path.join(__dirname, 'sidewinder-agent.cjs');
@@ -93,7 +94,7 @@ export class FullStackMonitor extends EventEmitter {
   /**
    * Create FullStackMonitor instance using async factory pattern
    */
-  static async create(resourceManager) {
+  static async create(resourceManager, options = {}) {
     if (!resourceManager) {
       throw new Error('ResourceManager is required');
     }
@@ -104,6 +105,7 @@ export class FullStackMonitor extends EventEmitter {
     // Create unified session
     const session = await logStore.createSession('fullstack-monitoring', {
       type: 'fullstack',
+      wsAgentPort: options.wsAgentPort,  // Include port in session metadata
       startTime: new Date(),
       monitors: ['log-store', 'browser-monitor']
     });
@@ -115,13 +117,16 @@ export class FullStackMonitor extends EventEmitter {
         id: session.id,
         type: 'fullstack',
         ...session
-      }
+      },
+      wsAgentPort: options.wsAgentPort  // Store the port
     });
     
     // Start Agent WebSocket server for both Sidewinder and Browser agents
     try {
-      await monitor.startAgentServer(9901);
-      console.log('✅ Agent WebSocket server started on ws://localhost:9901');
+      // Use provided port or default to 9901
+      const port = options.wsAgentPort || 9901;
+      await monitor.startAgentServer(port);
+      console.log(`✅ Agent WebSocket server started on ws://localhost:${port}`);
       console.log('   - Backend agents connect to: /sidewinder');
       console.log('   - Browser agents connect to: /browser');
     } catch (error) {
@@ -143,8 +148,8 @@ export class FullStackMonitor extends EventEmitter {
       return;
     }
     
-    // Kill any process on the agent server port first
-    await this.killProcessOnPort(port);
+    // Don't kill anything on our own WebSocket port - we manage that now
+    // The port is already chosen to be available by the MCP server
     
     return new Promise((resolve, reject) => {
       try {
@@ -490,7 +495,7 @@ export class FullStackMonitor extends EventEmitter {
       env: {
         ...process.env,
         SIDEWINDER_SESSION_ID: options.sessionId || this.session.id,
-        SIDEWINDER_WS_PORT: options.wsPort || '9901',
+        SIDEWINDER_WS_PORT: options.wsAgentPort || String(this.wsAgentPort),
         SIDEWINDER_WS_HOST: options.wsHost || 'localhost',
         SIDEWINDER_DEBUG: options.debug ? 'true' : 'false'
       }
@@ -510,7 +515,7 @@ export class FullStackMonitor extends EventEmitter {
     
     // Inject configuration variables before the agent code
     const configScript = `
-      window.__BROWSER_AGENT_PORT__ = '${options.wsPort || '9901'}';
+      window.__BROWSER_AGENT_PORT__ = '${options.wsAgentPort || this.wsAgentPort}';
       window.__BROWSER_AGENT_HOST__ = '${options.wsHost || 'localhost'}';
       window.__BROWSER_AGENT_SESSION__ = '${options.sessionId || this.session.id}';
       window.__BROWSER_AGENT_PAGE_ID__ = '${options.pageId || 'page-' + Date.now()}';
@@ -529,8 +534,8 @@ export class FullStackMonitor extends EventEmitter {
     try {
       // Use ScriptAnalyzer to figure out how to run it
       const strategy = await this.scriptAnalyzer.analyze(scriptPath, {
-        sessionId: this.session.id,
-        wsPort: '9901',
+        sessionId: options.session_id || this.session.id,
+        wsAgentPort: String(this.wsAgentPort),
         debug: options.debug || false
       });
       
@@ -545,7 +550,8 @@ export class FullStackMonitor extends EventEmitter {
           executionStrategy: strategy,
           port: options.wait_for_port || strategy.metadata?.detectsPort,
           name: path.basename(scriptPath),
-          debug: options.debug || false
+          debug: options.debug || false,
+          sessionId: options.session_id || this.session.id
         }
       });
       
@@ -593,7 +599,7 @@ export class FullStackMonitor extends EventEmitter {
       await this.injectBrowserAgent(page, {
         sessionId: sessionId,
         pageId: pageId,
-        wsPort: '9901',
+        wsAgentPort: String(this.wsAgentPort),
         trackInteractions: options.trackInteractions || false,
         trackMutations: options.trackMutations || false
       });
@@ -680,7 +686,34 @@ export class FullStackMonitor extends EventEmitter {
    */
   async stopApp() {
     try {
-      await this.cleanup();
+      // Only stop the app processes, NOT the agent WebSocket server!
+      // The WebSocket server must stay alive for the lifetime of the FullStackMonitor
+      
+      // Stop all backend processes
+      for (const [name, backend] of this.activeBackends) {
+        try {
+          if (backend.process && !backend.process.killed) {
+            backend.process.kill('SIGTERM');
+            console.log(`Stopped backend: ${name}`);
+          }
+        } catch (error) {
+          console.error(`Error stopping backend ${name}:`, error);
+        }
+      }
+      this.activeBackends.clear();
+      
+      // Close all browser pages (but keep browser instance)
+      for (const [pageId, pageInfo] of this.browserPages) {
+        try {
+          await pageInfo.page.close();
+          console.log(`Closed page: ${pageId}`);
+        } catch (error) {
+          console.error(`Error closing page ${pageId}:`, error);
+        }
+      }
+      this.browserPages.clear();
+      this.sessionPages.clear();
+      
       return { content: [{ type: 'text', text: '✅ Stopped' }] };
     } catch (error) {
       console.error('Error stopping app:', error);
@@ -717,8 +750,8 @@ export class FullStackMonitor extends EventEmitter {
           env: {
             ...process.env,
             ...strategy.env,
-            SIDEWINDER_SESSION_ID: this.session.id,
-            SIDEWINDER_WS_PORT: '9901',
+            SIDEWINDER_SESSION_ID: backend.sessionId || this.session.id,
+            SIDEWINDER_WS_PORT: String(this.wsAgentPort),
             SIDEWINDER_WS_HOST: 'localhost',
             SIDEWINDER_DEBUG: backend.debug ? 'true' : 'false'
           }
@@ -730,16 +763,16 @@ export class FullStackMonitor extends EventEmitter {
       } else if (backend.script) {
         // Direct script execution (legacy)
         backendProcess = await this.injectSidewinderAgent(backend.script, {
-          sessionId: this.session.id,
-          wsPort: '9901',
+          sessionId: backend.sessionId || this.session.id,
+          wsAgentPort: String(this.wsAgentPort),
           debug: backend.debug || false,
           stdio: backend.stdio || 'inherit'
         });
       } else if (backend.packagePath) {
         // Package.json based execution (npm/yarn)
         backendProcess = await this.injectNpmCommand(backend.packagePath, backend.startScript || 'start', {
-          sessionId: this.session.id,
-          wsPort: '9901',
+          sessionId: backend.sessionId || this.session.id,
+          wsAgentPort: String(this.wsAgentPort),
           debug: backend.debug || false,
           stdio: backend.stdio || 'inherit',
           env: backend.env
@@ -795,7 +828,7 @@ export class FullStackMonitor extends EventEmitter {
       await this.injectBrowserAgent(page.page || page, {
         sessionId: this.session.id,
         pageId: page.id || page.pageId,
-        wsPort: '9901',
+        wsAgentPort: String(this.wsAgentPort),
         trackInteractions: frontend.trackInteractions || false,
         trackMutations: frontend.trackMutations || false
       });
@@ -1232,12 +1265,6 @@ export class FullStackMonitor extends EventEmitter {
           const pids = stdout.trim().split('\n').filter(Boolean);
           
           for (const pid of pids) {
-            // DON'T KILL OURSELVES! Check if it's our own process
-            if (parseInt(pid) === process.pid) {
-              console.log(`  ⚠️  Skipping our own process ${pid} on port ${port}`);
-              continue;
-            }
-            
             try {
               await execAsync(`kill -9 ${pid}`);
               console.log(`  ✅ Killed process ${pid}`);
@@ -1434,9 +1461,9 @@ export class FullStackMonitor extends EventEmitter {
    * Get environment variables for Sidewinder agent
    */
   getSidewinderEnv(options = {}) {
-    const { port = 9901 } = options;
+    const { port = this.wsAgentPort } = options;
     return {
-      SIDEWINDER_WS_PORT: String(port),
+      SIDEWINDER_WS_PORT: String(this.wsAgentPort),
       SIDEWINDER_WS_HOST: 'localhost',
       SIDEWINDER_SESSION_ID: this.session.id || `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     };
@@ -1446,7 +1473,7 @@ export class FullStackMonitor extends EventEmitter {
    * Get browser agent script content
    */
   getBrowserAgentScript(options = {}) {
-    const { wsUrl = 'ws://localhost:9901/browser', sessionId = '' } = options;
+    const { wsUrl = `ws://localhost:${this.wsAgentPort}/browser`, sessionId = '' } = options;
     const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
     const agentPath = path.join(__dirname, 'browser-agent.js');
     
@@ -1454,6 +1481,7 @@ export class FullStackMonitor extends EventEmitter {
       let script = fsSync.readFileSync(agentPath, 'utf8');
       // Replace WebSocket URL in the script
       script = script.replace('ws://localhost:9901/browser', wsUrl);
+      script = script.replace("'9901'", `'${this.wsAgentPort}'`);
       if (sessionId) {
         script = script.replace("sessionId: window.__BROWSER_AGENT_SESSION__ || 'default'", `sessionId: '${sessionId}'`);
       }
@@ -1559,7 +1587,7 @@ export class FullStackMonitor extends EventEmitter {
             ...process.env,
             ...options.env,
             SIDEWINDER_SESSION_ID: options.sessionId || this.session.id,
-            SIDEWINDER_WS_PORT: options.wsPort || '9901',
+            SIDEWINDER_WS_PORT: options.wsAgentPort || String(this.wsAgentPort),
             SIDEWINDER_WS_HOST: options.wsHost || 'localhost',
             SIDEWINDER_DEBUG: 'true' // Enable debug for ts-node projects
           }
@@ -1578,7 +1606,7 @@ export class FullStackMonitor extends EventEmitter {
         ...process.env,
         ...options.env,
         SIDEWINDER_SESSION_ID: options.sessionId || this.session.id,
-        SIDEWINDER_WS_PORT: options.wsPort || '9901',
+        SIDEWINDER_WS_PORT: options.wsAgentPort || String(this.wsAgentPort),
         SIDEWINDER_WS_HOST: options.wsHost || 'localhost',
         SIDEWINDER_DEBUG: options.debug ? 'true' : 'false',
         NODE_OPTIONS: `${process.env.NODE_OPTIONS || ''} --require "${agentPath}"`.trim()

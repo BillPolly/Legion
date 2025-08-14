@@ -7,23 +7,41 @@ import { FullStackMonitor } from '@legion/fullstack-monitor';
 import { ResourceManager } from '@legion/tools';
 
 export class SimpleSessionManager {
-  constructor() {
-    this.monitors = new Map(); // sessionId -> FullStackMonitor instance
+  constructor(wsAgentPort = 9901) {
+    this.wsAgentPort = wsAgentPort;  // Store the WebSocket port
+    this.monitor = null;  // Single monitor instance
+    this.activeSessions = new Set(); // Track active session IDs for listing
   }
   
   /**
-   * Get or create a FullStackMonitor for a session
+   * Get the single FullStackMonitor instance (create if needed)
    */
-  async getMonitor(sessionId = 'default') {
-    if (!this.monitors.has(sessionId)) {
+  async getMonitor() {
+    if (!this.monitor) {
       // Use the singleton ResourceManager instance from @legion/tools
       const resourceManager = ResourceManager.getInstance();
       
-      const monitor = await FullStackMonitor.create(resourceManager);
-      this.monitors.set(sessionId, monitor);
+      // Pass the wsAgentPort to FullStackMonitor
+      this.monitor = await FullStackMonitor.create(resourceManager, {
+        wsAgentPort: this.wsAgentPort
+      });
     }
     
-    return this.monitors.get(sessionId);
+    return this.monitor;
+  }
+  
+  /**
+   * Track a session as active (called when starting an app or opening a page)
+   */
+  addSession(sessionId) {
+    this.activeSessions.add(sessionId);
+  }
+  
+  /**
+   * Remove a session from tracking
+   */
+  removeSession(sessionId) {
+    this.activeSessions.delete(sessionId);
   }
   
   /**

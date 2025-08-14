@@ -2,12 +2,39 @@
 
 import { SimpleSessionManager } from './handlers/SimpleSessionManager.js';
 import { SimpleToolHandler } from './handlers/SimpleToolHandler.js';
-import logger from './logger.js';
+import { findAvailablePortSync } from './utils/portFinder.js';
+import FileLogger from './logger.js';
 
 class MCPServer {
   constructor() {
-    this.sessionManager = new SimpleSessionManager();
-    this.toolHandler = new SimpleToolHandler(this.sessionManager);
+    // Find available port first
+    this.wsAgentPort = findAvailablePortSync(9901);
+    
+    // Initialize logger with port
+    this.logger = new FileLogger(this.wsAgentPort);
+    
+    // Pass port to session manager
+    this.sessionManager = new SimpleSessionManager(this.wsAgentPort);
+    this.toolHandler = new SimpleToolHandler(this.sessionManager, this.logger);
+    
+    // Log startup info
+    this.logger.info(`MCP Server starting with WebSocket port: ${this.wsAgentPort}`);
+    
+    // Create the monitor ONCE at startup
+    this.initializeMonitor();
+  }
+  
+  async initializeMonitor() {
+    try {
+      // Create the single monitor instance for this MCP server
+      const monitor = await this.sessionManager.getMonitor('mcp-server');
+      this.logger.info(`Monitor initialized with WebSocket port: ${this.wsAgentPort}`);
+    } catch (error) {
+      this.logger.error('Failed to initialize monitor', { 
+        error: error.message, 
+        stack: error.stack 
+      });
+    }
   }
   
   async start() {
@@ -34,7 +61,7 @@ class MCPServer {
   async handleMessage(messageStr) {
     try {
       const message = JSON.parse(messageStr);
-      logger.info(`Received message: ${message.method || 'unknown'}`, { 
+      this.logger.info(`Received message: ${message.method || 'unknown'}`, { 
         method: message.method, 
         params: message.params 
       });
@@ -42,14 +69,14 @@ class MCPServer {
       const response = await this.processMessage(message);
       if (response) {
         process.stdout.write(JSON.stringify(response) + '\n');
-        logger.debug('Sent response', { 
+        this.logger.debug('Sent response', { 
           method: message.method,
           hasResult: !!response.result,
           hasError: !!response.error 
         });
       }
     } catch (error) {
-      logger.error('Error handling message', { 
+      this.logger.error('Error handling message', { 
         error: error.message, 
         stack: error.stack,
         message: messageStr 
@@ -65,7 +92,7 @@ class MCPServer {
           }) + '\n');
         }
       } catch (parseError) {
-        logger.error('Failed to parse message for error response', { 
+        this.logger.error('Failed to parse message for error response', { 
           error: parseError.message 
         });
       }
@@ -114,5 +141,26 @@ class MCPServer {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  new MCPServer().start();
+  const server = new MCPServer();
+  
+  // Handle clean shutdown
+  process.on('SIGINT', () => {
+    server.logger.info('MCP Server received SIGINT');
+    server.logger.close();
+    process.exit(0);
+  });
+  
+  process.on('SIGTERM', () => {
+    server.logger.info('MCP Server received SIGTERM');
+    server.logger.close();
+    process.exit(0);
+  });
+  
+  process.on('uncaughtException', (err) => {
+    server.logger.error('Uncaught exception', { error: err.message, stack: err.stack });
+    server.logger.close();
+    process.exit(1);
+  });
+  
+  server.start();
 }

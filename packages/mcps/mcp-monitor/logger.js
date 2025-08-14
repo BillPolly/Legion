@@ -5,7 +5,8 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 class FileLogger {
-  constructor() {
+  constructor(port = null) {
+    this.port = port || 9901;  // Store the port
     this.logDir = path.join(__dirname, 'logs');
     this.backupDir = path.join(this.logDir, 'backup');
     this.maxFileSize = 10 * 1024 * 1024; // 10MB
@@ -23,7 +24,7 @@ class FileLogger {
       fs.mkdirSync(this.backupDir, { recursive: true });
     }
     
-    // Move all existing logs to backup before starting
+    // Move only logs with same port to backup before starting
     this.moveAllLogsToBackup();
     
     this.initLogFile();
@@ -33,7 +34,7 @@ class FileLogger {
     const now = new Date();
     const date = now.toISOString().split('T')[0];
     const time = now.toTimeString().split(' ')[0].replace(/:/g, '-').substring(0, 5); // HH-MM
-    this.currentLogFile = path.join(this.logDir, `mcp-server-${date}-${time}.log`);
+    this.currentLogFile = path.join(this.logDir, `mcp-server-${date}-${time}-${this.port}.log`);
     
     // Create new file (not append) for each server start
     this.stream = fs.createWriteStream(this.currentLogFile, { flags: 'w' });
@@ -103,9 +104,9 @@ class FileLogger {
   
   moveAllLogsToBackup() {
     try {
-      // Move ALL existing log files to backup when server starts
+      // Move only logs with matching port to backup when server starts
       const files = fs.readdirSync(this.logDir)
-        .filter(f => f.startsWith('mcp-server-') && f.endsWith('.log'));
+        .filter(f => f.startsWith('mcp-server-') && f.endsWith(`.log`) && f.includes(`-${this.port}.log`));
       
       files.forEach(f => {
         try {
@@ -179,30 +180,14 @@ class FileLogger {
   
   close() {
     if (this.stream) {
-      this.stream.end();
+      try {
+        this.stream.end();
+      } catch (err) {
+        console.error('[Logger] Error closing stream:', err.message);
+      }
     }
   }
 }
 
-// Create singleton instance
-const logger = new FileLogger();
-
-// Handle process exit
-process.on('exit', () => {
-  logger.info('MCP Server shutting down');
-  logger.close();
-});
-
-process.on('SIGINT', () => {
-  logger.info('MCP Server received SIGINT');
-  logger.close();
-  process.exit(0);
-});
-
-process.on('uncaughtException', (err) => {
-  logger.error('Uncaught exception', { error: err.message, stack: err.stack });
-  logger.close();
-  process.exit(1);
-});
-
-export default logger;
+// Export the class, not a singleton
+export default FileLogger;

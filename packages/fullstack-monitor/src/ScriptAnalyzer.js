@@ -16,7 +16,7 @@ export class ScriptAnalyzer {
   /**
    * Analyzes a given path and returns execution strategy
    * @param {string} targetPath - File or directory path
-   * @param {object} options - Additional options (sessionId, wsPort, etc.)
+   * @param {object} options - Additional options (sessionId, wsAgentPort, etc.)
    * @returns {ExecutionStrategy} - How to run the target with monitoring
    */
   async analyze(targetPath, options = {}) {
@@ -457,7 +457,7 @@ export class ScriptAnalyzer {
   buildEnvironment(options) {
     return {
       SIDEWINDER_SESSION_ID: options.sessionId || 'default',
-      SIDEWINDER_WS_PORT: options.wsPort || '9901',
+      SIDEWINDER_WS_PORT: options.wsAgentPort || '9901',
       SIDEWINDER_WS_HOST: options.wsHost || 'localhost',
       SIDEWINDER_DEBUG: options.debug ? 'true' : 'false'
     };

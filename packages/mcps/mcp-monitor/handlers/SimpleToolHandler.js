@@ -1,8 +1,7 @@
-import logger from '../logger.js';
-
 export class SimpleToolHandler {
-  constructor(sessionManager) {
+  constructor(sessionManager, logger = null) {
     this.sessionManager = sessionManager;
+    this.logger = logger || console;  // Use provided logger or console
   }
   
   getAllTools() {
@@ -19,12 +18,12 @@ export class SimpleToolHandler {
   
   async executeTool(toolName, args) {
     try {
-      logger.info(`Executing tool: ${toolName}`, { tool: toolName, args });
+      this.logger.info(`Executing tool: ${toolName}`, { tool: toolName, args });
       
-      const sessionId = args.session_id || 'default';
-      const monitor = await this.sessionManager.getMonitor(sessionId);
+      // Get THE single monitor instance (created at startup)
+      const monitor = await this.sessionManager.getMonitor();
       
-      logger.debug(`Got monitor for session: ${sessionId}`);
+      this.logger.debug(`Got monitor instance`);
       
       switch (toolName) {
         case 'start_app':
@@ -33,17 +32,17 @@ export class SimpleToolHandler {
           
         case 'open_page':
           // Just call the simple method on the monitor
-          return await monitor.openPage(args.url, sessionId, args);
+          return await monitor.openPage(args.url, args.session_id || 'default', args);
           
         case 'query_logs':
           // Just call the simple method on the monitor
           return await monitor.getLogs(args.limit);
           
         case 'take_screenshot':
-          return await monitor.screenshot(sessionId, args);
+          return await monitor.screenshot(args.session_id || 'default', args);
           
         case 'browser_execute':
-          return await monitor.browserCommand(sessionId, args.command, args.args);
+          return await monitor.browserCommand(args.session_id || 'default', args.command, args.args);
           
         case 'stop_app':
           return await monitor.stopApp();
@@ -56,7 +55,7 @@ export class SimpleToolHandler {
           throw new Error(`Unknown tool: ${toolName}`);
       }
     } catch (error) {
-      logger.error(`Error executing tool ${toolName}`, { 
+      this.logger.error(`Error executing tool ${toolName}`, { 
         tool: toolName,
         error: error.message,
         stack: error.stack 
