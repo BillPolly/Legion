@@ -12,6 +12,8 @@
   },
   "scripts": {
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:onnx": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.config.onnx.js",
+    "test:non-onnx": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathIgnorePatterns='ONNX|LocalEmbedding'",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
     "lint": "eslint src/**/*.js",

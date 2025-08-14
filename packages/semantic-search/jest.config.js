@@ -46,5 +46,8 @@ export default {
     }
   },
   testTimeout: 10000,
-  verbose: true
+  verbose: true,
+  // Run tests sequentially to avoid ONNX Runtime singleton conflicts
+  maxWorkers: 1,
+  maxConcurrency: 1
 };

@@ -24,7 +24,7 @@ const PORT = process.env.PORT || 8090;
 
 // Serve static files
 app.use(express.static(path.join(__dirname, '../public')));
-app.use(express.static(path.join(__dirname, '../src')));
+app.use('/src', express.static(path.join(__dirname, '../src')));
 
 // Serve shared packages
 app.use('/lib/shared/actors', express.static(path.join(__dirname, '../../shared/actors/src')));

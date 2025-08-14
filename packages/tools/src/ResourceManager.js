@@ -186,9 +186,9 @@ export class ResourceManager {
         
         if (envResult.parsed?.MONOREPO_ROOT) {
           const monorepoRoot = envResult.parsed.MONOREPO_ROOT;
-          const dirName = path.basename(currentDir);
           
-          if (dirName === monorepoRoot) {
+          // Check if the current directory is the monorepo root or a subdirectory of it
+          if (currentDir === monorepoRoot || currentDir.startsWith(monorepoRoot + path.sep)) {
             return { envPath, envResult };
           }
         }

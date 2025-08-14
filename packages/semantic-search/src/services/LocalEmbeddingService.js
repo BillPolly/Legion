@@ -63,17 +63,18 @@ export class LocalEmbeddingService {
         }
       }
       
-      // Initialize ONNX Runtime session with specific configuration to avoid Float32Array bug
+      // Initialize ONNX Runtime session with specific configuration
+      // Use only CPU provider to ensure compatibility across all systems
       const sessionOptions = {
-        executionProviders: this.config.executionProviders,
-        // Disable optimizations that might cause tensor allocation issues
-        graphOptimizationLevel: 'disabled',
-        enableCpuMemArena: false,
-        enableMemPattern: false,
+        executionProviders: ['cpu'], // Force CPU-only to avoid device issues
+        // Enable basic optimizations for better performance
+        graphOptimizationLevel: 'basic',
+        enableCpuMemArena: true,
+        enableMemPattern: true,
         executionMode: 'sequential',
-        // Pre-allocate output buffers to avoid runtime tensor creation issues
+        // Logging configuration
         enableProfiling: false,
-        logSeverityLevel: 4, // Only fatal errors
+        logSeverityLevel: 3, // Warnings and errors
         logVerbosityLevel: 0
       };
       
@@ -81,12 +82,24 @@ export class LocalEmbeddingService {
 
       // Initialize tokenizer (using dynamic import to avoid hard dependency)
       try {
-        const { AutoTokenizer } = await import('@xenova/transformers');
-        this.tokenizer = await AutoTokenizer.from_pretrained(
-          'sentence-transformers/all-MiniLM-L6-v2'
-        );
+        const transformers = await import('@xenova/transformers');
+        
+        // Configure transformers to not load ONNX models (we handle that separately)
+        transformers.env.allowLocalModels = false;
+        transformers.env.allowRemoteModels = false;
+        
+        // For now, skip transformers tokenizer to avoid ONNX conflicts
+        // The transformers library uses its own ONNX runtime which conflicts with ours
+        console.log('Using fallback tokenizer to avoid ONNX conflicts');
+        this.tokenizer = this.createFallbackTokenizer();
+        
+        // Original code commented out to avoid conflicts:
+        // const { AutoTokenizer } = transformers;
+        // this.tokenizer = await AutoTokenizer.from_pretrained(
+        //   'sentence-transformers/all-MiniLM-L6-v2'
+        // );
       } catch (error) {
-        console.log('Warning: Transformers tokenizer not available, using fallback tokenizer');
+        console.log('Warning: Transformers not available, using fallback tokenizer');
         this.tokenizer = this.createFallbackTokenizer();
       }
 
@@ -478,7 +491,13 @@ export class LocalEmbeddingService {
    */
   async cleanup() {
     if (this.session) {
-      // ONNX Runtime sessions don't need explicit cleanup in Node.js
+      // Properly release ONNX session to avoid singleton issues
+      try {
+        await this.session.release();
+      } catch (error) {
+        // Session might already be released, ignore
+        console.log('Session release warning:', error.message);
+      }
       this.session = null;
     }
     this.tokenizer = null;

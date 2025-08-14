@@ -28,8 +28,25 @@ export class Tool extends EventEmitter {
       // If schema is already a validator object (has validate method)
       this.validator = schema;
     } else if (inputSchema && createValidator) {
-      // If inputSchema is provided as JSON schema, create validator
-      this.validator = createValidator(inputSchema);
+      // Check if inputSchema is a Zod schema (has _def property)
+      if (inputSchema && typeof inputSchema === 'object' && inputSchema._def) {
+        // This is a Zod schema - store it directly and create a custom validator
+        this.validator = {
+          zodSchema: inputSchema,
+          jsonSchema: inputSchema, // Keep original Zod schema
+          validate: (data) => {
+            const result = inputSchema.safeParse(data);
+            if (result.success) {
+              return { valid: true, data: result.data, errors: null };
+            } else {
+              return { valid: false, data: null, errors: result.error.errors };
+            }
+          }
+        };
+      } else {
+        // If inputSchema is provided as JSON schema, create validator
+        this.validator = createValidator(inputSchema);
+      }
     } else {
       this.validator = null;
     }
