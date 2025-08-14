@@ -121,8 +121,9 @@ function send(message) {
 // Hook console methods
 ['log', 'error', 'warn', 'info', 'debug'].forEach(method => {
   const original = console[method];
+  debug(`Hooking console.${method}`);
   console[method] = function(...args) {
-    // Send to FullStackMonitor
+    // Send to FullStackMonitor FIRST (before any potential errors)
     send({
       type: 'console',
       method: method,
@@ -141,7 +142,7 @@ function send(message) {
       timestamp: Date.now()
     });
     
-    // Call original method safely
+    // Then call original method
     try {
       return original.apply(console, args);
     } catch (error) {

@@ -2,6 +2,7 @@
 
 import { SimpleSessionManager } from './handlers/SimpleSessionManager.js';
 import { SimpleToolHandler } from './handlers/SimpleToolHandler.js';
+import logger from './logger.js';
 
 class MCPServer {
   constructor() {
@@ -33,18 +34,40 @@ class MCPServer {
   async handleMessage(messageStr) {
     try {
       const message = JSON.parse(messageStr);
+      logger.info(`Received message: ${message.method || 'unknown'}`, { 
+        method: message.method, 
+        params: message.params 
+      });
+      
       const response = await this.processMessage(message);
       if (response) {
         process.stdout.write(JSON.stringify(response) + '\n');
+        logger.debug('Sent response', { 
+          method: message.method,
+          hasResult: !!response.result,
+          hasError: !!response.error 
+        });
       }
     } catch (error) {
-      const parsed = JSON.parse(messageStr);
-      if (parsed.id) {
-        process.stdout.write(JSON.stringify({
-          jsonrpc: '2.0',
-          id: parsed.id,
-          error: { code: -32603, message: error.message }
-        }) + '\n');
+      logger.error('Error handling message', { 
+        error: error.message, 
+        stack: error.stack,
+        message: messageStr 
+      });
+      
+      try {
+        const parsed = JSON.parse(messageStr);
+        if (parsed.id) {
+          process.stdout.write(JSON.stringify({
+            jsonrpc: '2.0',
+            id: parsed.id,
+            error: { code: -32603, message: error.message }
+          }) + '\n');
+        }
+      } catch (parseError) {
+        logger.error('Failed to parse message for error response', { 
+          error: parseError.message 
+        });
       }
     }
   }

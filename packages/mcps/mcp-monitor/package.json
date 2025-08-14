@@ -19,7 +19,9 @@
     "@legion/shared": "file:../../shared",
     "@legion/sidewinder": "file:../../sidewinder",
     "express": "^4.21.2",
-    "puppeteer": "^21.0.0"
+    "puppeteer": "^21.0.0",
+    "winston": "^3.11.0",
+    "winston-daily-rotate-file": "^4.7.1"
   },
   "engines": {
     "node": ">=18.0.0"

@@ -5,6 +5,7 @@
 
 import { EventEmitter } from 'events';
 import { LogStore } from './log-store/index.js';
+import { ScriptAnalyzer } from './ScriptAnalyzer.js';
 import { WebSocketServer } from 'ws';
 import net from 'net';
 import { spawn } from 'child_process';
@@ -31,6 +32,10 @@ export class FullStackMonitor extends EventEmitter {
     this.resourceManager = config.resourceManager;
     this.logStore = config.logStore;
     this.session = config.session;
+    
+    // Initialize ScriptAnalyzer with correct agent path
+    const agentPath = path.join(__dirname, 'sidewinder-agent.cjs');
+    this.scriptAnalyzer = new ScriptAnalyzer({ agentPath });
     
     // Set up event listeners to forward browser events to LogStore
     this.on('console-message', (data) => {
@@ -120,7 +125,8 @@ export class FullStackMonitor extends EventEmitter {
       console.log('   - Backend agents connect to: /sidewinder');
       console.log('   - Browser agents connect to: /browser');
     } catch (error) {
-      console.warn(`⚠️  Failed to start agent server: ${error.message}`);
+      console.error(`❌ Failed to start agent server: ${error.message}`);
+      throw error; // Re-throw to prevent partial initialization
     }
     
     await monitor.initialize();
@@ -136,6 +142,9 @@ export class FullStackMonitor extends EventEmitter {
       console.log('Agent server already running');
       return;
     }
+    
+    // Kill any process on the agent server port first
+    await this.killProcessOnPort(port);
     
     return new Promise((resolve, reject) => {
       try {
@@ -155,6 +164,7 @@ export class FullStackMonitor extends EventEmitter {
             ws.on('message', async (data) => {
               try {
                 const message = JSON.parse(data.toString());
+                console.log(`📨 Sidewinder message received: ${message.type}`);
                 await this.handleSidewinderMessage(message, clientId);
               } catch (error) {
                 console.error('Failed to process Sidewinder message:', error);
@@ -513,19 +523,212 @@ export class FullStackMonitor extends EventEmitter {
   }
   
   /**
+   * Simple API: Start monitoring an app from a script path
+   */
+  async startApp(scriptPath, options = {}) {
+    try {
+      // Use ScriptAnalyzer to figure out how to run it
+      const strategy = await this.scriptAnalyzer.analyze(scriptPath, {
+        sessionId: this.session.id,
+        wsPort: '9901',
+        debug: options.debug || false
+      });
+      
+      // Kill port if specified
+      if (options.wait_for_port) {
+        await this.killProcessOnPort(options.wait_for_port);
+      }
+      
+      // Start monitoring with the strategy
+      await this.monitorFullStackApp({
+        backend: {
+          executionStrategy: strategy,
+          port: options.wait_for_port || strategy.metadata?.detectsPort,
+          name: path.basename(scriptPath),
+          debug: options.debug || false
+        }
+      });
+      
+      return { content: [{ type: 'text', text: '✅ App started' }] };
+    } catch (error) {
+      console.error('Error starting app:', error);
+      return { content: [{ type: 'text', text: `❌ Failed to start app: ${error.message}` }] };
+    }
+  }
+  
+  /**
+   * Simple API: Get logs
+   */
+  async getLogs(limit = 25) {
+    const sidewinderLogs = await this.logStore.getRecentAgentLogs('sidewinder', limit);
+    const browserLogs = await this.logStore.getRecentAgentLogs('browser', limit);
+    const allLogs = [...sidewinderLogs, ...browserLogs];
+    allLogs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    
+    if (allLogs.length > 0) {
+      const logText = allLogs.map(log => 
+        `[${log.timestamp}] [${log.agentType}] ${log.level}: ${log.message}`
+      ).join('\n');
+      return { content: [{ type: 'text', text: `Found ${allLogs.length} logs:\n\n${logText}` }] };
+    } else {
+      return { content: [{ type: 'text', text: `Found 0 logs` }] };
+    }
+  }
+  
+  /**
+   * Simple API: Open and monitor a webpage
+   */
+  async openPage(url, sessionId, options = {}) {
+    try {
+      // Launch browser if not already launched
+      if (!this.browser) {
+        await this.launch({ headless: options.headless || false });
+      }
+      
+      // Create a new page
+      const page = await this.browser.newPage();
+      const pageId = `page-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Inject browser agent BEFORE navigating
+      await this.injectBrowserAgent(page, {
+        sessionId: sessionId,
+        pageId: pageId,
+        wsPort: '9901',
+        trackInteractions: options.trackInteractions || false,
+        trackMutations: options.trackMutations || false
+      });
+      
+      // Set up event handlers
+      page.on('console', (msg) => {
+        this.emit('console-message', {
+          pageId,
+          sessionId,
+          type: msg.type(),
+          text: msg.text(),
+          timestamp: new Date()
+        });
+      });
+      
+      page.on('pageerror', (error) => {
+        this.emit('page-error', {
+          pageId,
+          sessionId,
+          message: error.message,
+          stack: error.stack,
+          timestamp: new Date()
+        });
+      });
+      
+      // Now navigate to the URL
+      await page.goto(url, {
+        waitUntil: url.startsWith('data:') ? 'domcontentloaded' : 'networkidle2',
+        timeout: 15000
+      });
+      
+      // Store page info
+      const pageInfo = {
+        id: pageId,
+        page,
+        url,
+        sessionId,
+        createdAt: new Date()
+      };
+      
+      this.browserPages.set(pageId, pageInfo);
+      
+      // Ensure sessionPages tracking
+      if (!this.sessionPages.has(sessionId)) {
+        this.sessionPages.set(sessionId, []);
+      }
+      this.sessionPages.get(sessionId).push(pageId); // Store pageId, not pageInfo
+      
+      return { content: [{ type: 'text', text: `✅ Page opened: ${url}` }] };
+    } catch (error) {
+      console.error('Error opening page:', error);
+      return { content: [{ type: 'text', text: `❌ Failed to open page: ${error.message}` }] };
+    }
+  }
+  
+  /**
+   * Simple API: Take screenshot
+   */
+  async screenshot(sessionId, options = {}) {
+    try {
+      const result = await this.takeScreenshot(sessionId, options);
+      return { content: [{ type: 'text', text: '✅ Screenshot taken' }] };
+    } catch (error) {
+      console.error('Error taking screenshot:', error);
+      return { content: [{ type: 'text', text: `❌ Failed to take screenshot: ${error.message}` }] };
+    }
+  }
+  
+  /**
+   * Simple API: Execute browser command
+   */
+  async browserCommand(sessionId, command, args = []) {
+    try {
+      const result = await this.executeBrowserCommand(sessionId, command, args);
+      return { content: [{ type: 'text', text: `✅ ${result}` }] };
+    } catch (error) {
+      console.error('Error executing browser command:', error);
+      return { content: [{ type: 'text', text: `❌ Failed to execute command: ${error.message}` }] };
+    }
+  }
+  
+  /**
+   * Simple API: Stop monitoring
+   */
+  async stopApp() {
+    try {
+      await this.cleanup();
+      return { content: [{ type: 'text', text: '✅ Stopped' }] };
+    } catch (error) {
+      console.error('Error stopping app:', error);
+      return { content: [{ type: 'text', text: `❌ Error during cleanup: ${error.message}` }] };
+    }
+  }
+  
+  /**
    * Monitor a full-stack application
    */
   async monitorFullStackApp(config) {
     const { backend, frontend } = config;
     
     // Start backend monitoring with Sidewinder injection
-    if (backend && (backend.script || backend.packagePath)) {
+    if (backend) {
       console.log(`🚀 Starting backend monitoring: ${backend.name}`);
+      
+      // Auto-kill any process on the target port if specified
+      if (backend.port) {
+        await this.killProcessOnPort(backend.port);
+      }
       
       let backendProcess;
       
-      if (backend.script) {
-        // Direct script execution
+      // New: Support execution strategy from ScriptAnalyzer
+      if (backend.executionStrategy) {
+        const strategy = backend.executionStrategy;
+        const { spawn } = await import('child_process');
+        
+        // Spawn the process using the strategy
+        backendProcess = spawn(strategy.command, strategy.args, {
+          cwd: strategy.cwd,
+          stdio: backend.stdio || 'inherit',
+          env: {
+            ...process.env,
+            ...strategy.env,
+            SIDEWINDER_SESSION_ID: this.session.id,
+            SIDEWINDER_WS_PORT: '9901',
+            SIDEWINDER_WS_HOST: 'localhost',
+            SIDEWINDER_DEBUG: backend.debug ? 'true' : 'false'
+          }
+        });
+        
+        console.log(`  Executing: ${strategy.command} ${strategy.args.join(' ')}`);
+        console.log(`  Working directory: ${strategy.cwd}`);
+        
+      } else if (backend.script) {
+        // Direct script execution (legacy)
         backendProcess = await this.injectSidewinderAgent(backend.script, {
           sessionId: this.session.id,
           wsPort: '9901',
@@ -541,6 +744,8 @@ export class FullStackMonitor extends EventEmitter {
           stdio: backend.stdio || 'inherit',
           env: backend.env
         });
+      } else {
+        throw new Error('Backend config must specify executionStrategy, script, or packagePath');
       }
       
       // Track the process
@@ -1008,6 +1213,113 @@ export class FullStackMonitor extends EventEmitter {
   }
   
   /**
+   * Kill any process running on a specific port
+   */
+  async killProcessOnPort(port) {
+    const { exec } = await import('child_process');
+    const { promisify } = await import('util');
+    const execAsync = promisify(exec);
+    
+    try {
+      console.log(`🔍 Checking port ${port}...`);
+      
+      // Find and kill the process
+      if (process.platform === 'darwin' || process.platform === 'linux') {
+        // macOS/Linux: Use lsof to find the process
+        // Don't check isPortInUse first - just try to kill anything on the port
+        try {
+          const { stdout } = await execAsync(`lsof -t -i:${port}`);
+          const pids = stdout.trim().split('\n').filter(Boolean);
+          
+          for (const pid of pids) {
+            // DON'T KILL OURSELVES! Check if it's our own process
+            if (parseInt(pid) === process.pid) {
+              console.log(`  ⚠️  Skipping our own process ${pid} on port ${port}`);
+              continue;
+            }
+            
+            try {
+              await execAsync(`kill -9 ${pid}`);
+              console.log(`  ✅ Killed process ${pid}`);
+            } catch (error) {
+              console.warn(`  ⚠️  Failed to kill process ${pid}: ${error.message}`);
+            }
+          }
+        } catch (error) {
+          // lsof returns error if no process found, which is fine
+          if (!error.message.includes('No such process')) {
+            console.warn(`  ⚠️  Error finding process on port ${port}: ${error.message}`);
+          }
+        }
+      } else if (process.platform === 'win32') {
+        // Windows: Use netstat and taskkill
+        try {
+          const { stdout } = await execAsync(`netstat -ano | findstr :${port}`);
+          const lines = stdout.trim().split('\n');
+          const pids = new Set();
+          
+          for (const line of lines) {
+            const parts = line.trim().split(/\s+/);
+            const pid = parts[parts.length - 1];
+            if (pid && pid !== '0') {
+              pids.add(pid);
+            }
+          }
+          
+          for (const pid of pids) {
+            try {
+              await execAsync(`taskkill /F /PID ${pid}`);
+              console.log(`  ✅ Killed process ${pid}`);
+            } catch (error) {
+              console.warn(`  ⚠️  Failed to kill process ${pid}: ${error.message}`);
+            }
+          }
+        } catch (error) {
+          console.warn(`  ⚠️  Error finding process on port ${port}: ${error.message}`);
+        }
+      }
+      
+      // Wait a moment for the port to be released
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Verify the port is now free
+      const stillInUse = await this.isPortInUse(port);
+      if (stillInUse) {
+        console.warn(`  ⚠️  Port ${port} still in use after kill attempt`);
+      } else {
+        console.log(`  ✅ Port ${port} is now free`);
+      }
+      
+    } catch (error) {
+      console.error(`Failed to kill process on port ${port}:`, error);
+    }
+  }
+
+  /**
+   * Check if a port is in use
+   */
+  async isPortInUse(port) {
+    return new Promise((resolve) => {
+      const server = net.createServer();
+      
+      server.once('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+          resolve(true); // Port is in use
+        } else {
+          resolve(false);
+        }
+      });
+      
+      server.once('listening', () => {
+        server.close();
+        resolve(false); // Port is free
+      });
+      
+      server.listen(port, '127.0.0.1');
+    });
+  }
+
+  /**
    * Wait for a port to become available
    */
   async waitForPort(port, timeout = 30000) {
@@ -1155,7 +1467,7 @@ export class FullStackMonitor extends EventEmitter {
   /**
    * Inject browser agent script into HTML
    */
-  injectBrowserAgent(html, options = {}) {
+  injectBrowserAgentIntoHTML(html, options = {}) {
     const script = this.getBrowserAgentScript(options);
     const scriptTag = `<script>\n${script}\n</script>\n`;
     
@@ -1216,7 +1528,49 @@ export class FullStackMonitor extends EventEmitter {
       throw new Error(`Sidewinder agent not found at ${agentPath}`);
     }
     
-    // Start npm/yarn process with agent injection
+    // Read package.json to understand the start script
+    let startCommand = null;
+    try {
+      const packageJsonPath = path.join(packagePath, 'package.json');
+      const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf-8'));
+      startCommand = packageJson.scripts?.[scriptName];
+    } catch (error) {
+      console.warn(`Could not read package.json: ${error.message}`);
+    }
+    
+    // If we have a ts-node script, run it directly with node and our agent
+    if (startCommand && startCommand.includes('ts-node')) {
+      console.log(`🔬 Detected ts-node script, using direct injection`);
+      
+      // Extract the actual script file from the ts-node command
+      const scriptMatch = startCommand.match(/ts-node(?:\/register)?\s+(.+?)(?:\s|$)/);
+      if (scriptMatch && scriptMatch[1]) {
+        const scriptFile = path.join(packagePath, scriptMatch[1]);
+        
+        // Run directly with node, using both our agent and ts-node/register
+        const child = spawn('node', [
+          '--require', agentPath,
+          '--require', 'ts-node/register',
+          scriptFile
+        ], {
+          cwd: packagePath,
+          stdio: options.stdio || 'inherit',
+          env: {
+            ...process.env,
+            ...options.env,
+            SIDEWINDER_SESSION_ID: options.sessionId || this.session.id,
+            SIDEWINDER_WS_PORT: options.wsPort || '9901',
+            SIDEWINDER_WS_HOST: options.wsHost || 'localhost',
+            SIDEWINDER_DEBUG: 'true' // Enable debug for ts-node projects
+          }
+        });
+        
+        return child;
+      }
+    }
+    
+    // Fallback to standard npm injection for non-ts-node scripts
+    console.log(`📦 Using standard npm injection for script: ${scriptName}`);
     const child = spawn('npm', ['run', scriptName], {
       cwd: packagePath,
       stdio: options.stdio || 'inherit',
