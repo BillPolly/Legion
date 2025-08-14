@@ -59,11 +59,11 @@ export class SimpleToolHandler {
       },
       { 
         name: 'browser_execute', 
-        description: 'Execute Puppeteer command formats on an active page. Available commands: "title" (get page title), "url" (get current URL), "click" (click element, args: [selector]), "type" (type text, args: [selector, text]), "evaluate" (run JavaScript, args: [function_string]). Requires active browser page from open_page.', 
+        description: 'Execute Puppeteer command formats on an active page. All standard Puppeteer page methods are available. Common examples: "title" (get page title), "url" (get current URL), "click" (click element, args: [selector]), "type" (type text, args: [selector, text]), "evaluate" (run JavaScript, args: [function_string]). Requires active browser page from open_page.', 
         inputSchema: { 
           type: 'object', 
           properties: { 
-            command: { type: 'string', description: 'Browser command: title, url, click, type, or evaluate' }, 
+            command: { type: 'string', description: 'Any standard Puppeteer page method (e.g., title, url, click, type, evaluate, waitForSelector, etc.)' }, 
             args: { type: 'array', description: 'Command arguments: [] for title/url, [selector] for click, [selector, text] for type, [js_code] for evaluate' }, 
             session_id: { type: 'string', description: 'Session ID with an active browser page' } 
           },
