@@ -8,7 +8,7 @@
 import { ToolRegistry } from '../../src/integration/ToolRegistry.js';
 import { MongoDBToolRegistryProvider } from '../../src/providers/MongoDBToolRegistryProvider.js';
 import { ModuleLoader } from '../../src/loading/ModuleLoader.js';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/core';
 
 describe('ToolRegistry Isolated Test', () => {
   let resourceManager;
@@ -16,8 +16,8 @@ describe('ToolRegistry Isolated Test', () => {
   let toolRegistry;
 
   beforeAll(async () => {
-    resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    resourceManager = ResourceManager.getInstance();
+    if (!resourceManager.initialized) { await resourceManager.initialize(); }
 
     provider = await MongoDBToolRegistryProvider.create(resourceManager, {
       enableSemanticSearch: false

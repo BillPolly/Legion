@@ -50,7 +50,7 @@ npm install @legion/semantic-search
 ### 1. Basic Document Search
 
 ```javascript
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/tools-registry';
 import { SemanticSearchProvider } from '@legion/semantic-search';
 
 // Initialize (loads .env automatically)

@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
-import { ResourceManager, ModuleFactory } from '@legion/tools';
+import { ResourceManager, ModuleFactory } from '@legion/tools-registry';
 import { CodeAnalysisModule } from '../../code-analysis/src/CodeAnalysisModule.js';
 import { fileURLToPath } from 'url';
 import path from 'path';

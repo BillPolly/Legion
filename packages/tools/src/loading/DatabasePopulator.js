@@ -6,7 +6,7 @@
  */
 
 import { MongoDBToolRegistryProvider } from '../providers/MongoDBToolRegistryProvider.js';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/core';
 
 export class DatabasePopulator {
   constructor(options = {}) {
@@ -24,7 +24,7 @@ export class DatabasePopulator {
     
     // Initialize ResourceManager if not provided
     if (!this.resourceManager) {
-      this.resourceManager = new ResourceManager();
+      this.resourceManager = ResourceManager.getInstance();
       await this.resourceManager.initialize();
     }
     
@@ -166,10 +166,10 @@ export class DatabasePopulator {
    */
   getPackageName(modulePath) {
     if (modulePath.includes('packages/tools-collection')) {
-      return '@legion/tools-collection';
+      return '@legion/tools-registry-collection';
     }
     if (modulePath.includes('packages/tools/')) {
-      return '@legion/tools';
+      return '@legion/tools-registry';
     }
     if (modulePath.includes('packages/')) {
       const match = modulePath.match(/packages\/([^/]+)/);

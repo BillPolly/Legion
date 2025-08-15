@@ -19,7 +19,7 @@ Feature-complete CLI providing:
 - 📊 **Multiple Formats**: Text, JSON, and colored output
 - ⚡ **Optimized**: Caching and lazy loading for performance
 
-### [@legion/tools](packages/tools) - AI Agent Tools
+### [@legion/tools-registry](packages/tools) - AI Agent Tools
 Comprehensive tool collection:
 - 🧮 **Calculator**: Mathematical expression evaluation
 - 📁 **File Operations**: Read, write, and manage files

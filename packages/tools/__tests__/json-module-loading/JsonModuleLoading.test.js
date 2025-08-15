@@ -8,7 +8,7 @@
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModuleLoader } from '../../src/loading/ModuleLoader.js';
 import { DynamicJsonModule } from '../../src/loading/DynamicJsonModule.js';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/core';
 import { ModuleJsonSchemaValidator } from '../../src/validation/ModuleJsonSchemaValidator.js';
 import fs from 'fs/promises';
 import path from 'path';
@@ -18,8 +18,8 @@ describe('JSON Module Loading System', () => {
   let resourceManager;
   
   beforeEach(async () => {
-    resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    resourceManager = ResourceManager.getInstance();
+    if (!resourceManager.initialized) { await resourceManager.initialize(); }
     moduleLoader = new ModuleLoader({ 
       resourceManager,
       verbose: false 

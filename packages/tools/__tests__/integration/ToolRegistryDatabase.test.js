@@ -16,8 +16,8 @@ describe('ToolRegistry Database Integration Tests', () => {
 
   beforeAll(async () => {
     // Initialize ResourceManager (loads environment variables)
-    resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    resourceManager = ResourceManager.getInstance();
+    if (!resourceManager.initialized) { await resourceManager.initialize(); }
 
     // Create ToolRegistry with real MongoDB provider
     registry = new ToolRegistry();

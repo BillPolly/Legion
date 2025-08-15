@@ -12,7 +12,7 @@
 import { ToolRegistry } from '../../src/integration/ToolRegistry.js';
 import { MongoDBToolRegistryProvider } from '../../src/providers/MongoDBToolRegistryProvider.js';
 import { ModuleLoader } from '../../src/loading/ModuleLoader.js';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/core';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -25,8 +25,8 @@ describe('ToolRegistry Diagnostics', () => {
 
   beforeAll(async () => {
     // Initialize ResourceManager
-    resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    resourceManager = ResourceManager.getInstance();
+    if (!resourceManager.initialized) { await resourceManager.initialize(); }
 
     // Create database provider
     provider = await MongoDBToolRegistryProvider.create(resourceManager, {

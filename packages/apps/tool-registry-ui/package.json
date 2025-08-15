@@ -16,7 +16,7 @@
     "test:verbose": "NODE_OPTIONS='--experimental-vm-modules' jest --verbose"
   },
   "dependencies": {
-    "@legion/tools": "*",
+    "@legion/tools-registry": "*",
     "@legion/actors": "*",
     "@legion/semantic-search": "*",
     "@legion/storage": "*",

@@ -8,7 +8,7 @@
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import { DirectModuleDiscovery } from '../../src/discovery/DirectModuleDiscovery.js';
 import { ModuleInstantiator } from '../../src/discovery/ModuleInstantiator.js';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/core';
 import path from 'path';
 
 describe('ResourceManager Instance Debug', () => {
@@ -18,8 +18,8 @@ describe('ResourceManager Instance Debug', () => {
 
   beforeAll(async () => {
     // Initialize ResourceManager
-    resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    resourceManager = ResourceManager.getInstance();
+    if (!resourceManager.initialized) { await resourceManager.initialize(); }
 
     // Create ModuleInstantiator with ResourceManager
     moduleInstantiator = new ModuleInstantiator({

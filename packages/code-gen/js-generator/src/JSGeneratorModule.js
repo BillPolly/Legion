@@ -5,7 +5,7 @@
  * event handlers, and validating JavaScript syntax.
  */
 
-import { Module } from '@legion/tools';
+import { Module } from '@legion/tools-registry';
 import { GenerateJavaScriptModuleTool } from './tools/GenerateJavaScriptModuleTool.js';
 import { GenerateJavaScriptFunctionTool } from './tools/GenerateJavaScriptFunctionTool.js';
 import { GenerateJavaScriptClassTool } from './tools/GenerateJavaScriptClassTool.js';

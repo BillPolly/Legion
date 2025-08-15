@@ -6,7 +6,7 @@
  */
 
 import { Agent } from '@legion/agent';
-import { ModuleFactory } from '@legion/tools';
+import { ModuleFactory } from '@legion/tools-registry';
 import ResourceManager from '@legion/module-loader/src/resources/ResourceManager.js';
 import path from 'path';
 import { fileURLToPath } from 'url';

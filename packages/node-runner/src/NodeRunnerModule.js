@@ -2,7 +2,7 @@
  * @fileoverview NodeRunnerModule - Main module for Node.js process management and logging
  */
 
-import { Module } from '@legion/tools';
+import { Module } from '@legion/tools-registry';
 import { ProcessManager } from './managers/ProcessManager.js';
 import { SessionManager } from './managers/SessionManager.js';
 import { ServerManager } from './managers/ServerManager.js';

@@ -2,7 +2,7 @@
  * DomainEventExtractorTool - Extracts domain events from entities
  */
 
-import { Tool, ToolResult } from '@legion/tools';
+import { Tool, ToolResult } from '@legion/tools-registry';
 import { z } from 'zod';
 
 export class DomainEventExtractorTool extends Tool {

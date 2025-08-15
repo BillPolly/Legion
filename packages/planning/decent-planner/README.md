@@ -33,7 +33,7 @@ npm install @legion/decent-planner
 
 ```javascript
 import { DecentPlanner } from '@legion/decent-planner';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/tools-registry';
 
 // Initialize ResourceManager with dependencies
 const resourceManager = new ResourceManager();
@@ -184,7 +184,7 @@ const plan = await planner.makePlan(
 
 ### With Semantic Search
 
-Uses `@legion/tools` for tool discovery:
+Uses `@legion/tools-registry` for tool discovery:
 
 ```javascript
 // Internally uses:
@@ -211,7 +211,7 @@ npm run build
 
 - `@legion/planner`: Behavior tree generation
 - `@legion/bt-validator`: Plan validation
-- `@legion/tools`: Semantic tool search
+- `@legion/tools-registry`: Semantic tool search
 - `@legion/ai-agent-core`: LLM integration
 
 ## License

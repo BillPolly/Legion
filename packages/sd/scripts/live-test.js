@@ -7,7 +7,7 @@
  * Run with: node scripts/live-test.js
  */
 
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/tools-registry';
 import { DesignDatabaseService } from '../src/services/DesignDatabaseService.js';
 import { RequirementParserTool } from '../src/tools/requirements/RequirementParserTool.js';
 import SDModule from '../src/SDModule.js';

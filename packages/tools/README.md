@@ -1,6 +1,6 @@
-# @legion/tools - MCP Integration and Tool Management
+# @legion/tools-registry - Tool Registry and Management Infrastructure
 
-Comprehensive Model Context Protocol (MCP) integration for the Legion AI agent framework. Provides seamless discovery, installation, and management of MCP servers with advanced tool registry and semantic search capabilities.
+Tool registry and management infrastructure for Legion AI agents. Provides comprehensive tool discovery, execution, and management capabilities with advanced semantic search and MongoDB integration.
 
 ## Features
 
@@ -34,16 +34,16 @@ Comprehensive Model Context Protocol (MCP) integration for the Legion AI agent f
 
 ```bash
 # Install the tools package
-npm install @legion/tools
+npm install @legion/tools-registry
 
 # Make CLI available globally
-npm link @legion/tools
+npm link @legion/tools-registry
 ```
 
 ### Basic Usage
 
 ```javascript
-import { MCPServerManager, ToolRegistry, SemanticToolDiscovery } from '@legion/tools';
+import { MCPServerManager, ToolRegistry, SemanticToolDiscovery } from '@legion/tools-registry';
 
 // Initialize MCP integration
 const serverManager = new MCPServerManager();

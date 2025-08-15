@@ -5,7 +5,8 @@
  * Converts JSON tool definitions to executable functions with minimal complexity.
  */
 
-import { Module, Tool } from '@legion/tools';
+import { Module } from '../modules/Module.js';
+import { Tool } from '../modules/Tool.js';
 import fs from 'fs/promises';
 import path from 'path';
 

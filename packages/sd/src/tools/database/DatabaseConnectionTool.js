@@ -2,7 +2,7 @@
  * DatabaseConnectionTool - Manages MongoDB connection for design database
  */
 
-import { Tool, ToolResult } from '@legion/tools';
+import { Tool, ToolResult } from '@legion/tools-registry';
 import { z } from 'zod';
 import { MongoClient } from 'mongodb';
 

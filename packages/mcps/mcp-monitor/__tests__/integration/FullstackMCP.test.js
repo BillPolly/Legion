@@ -4,7 +4,7 @@
  */
 
 import { FullStackMonitor } from '@legion/fullstack-monitor';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/tools-registry';
 import path from 'path';
 import { fileURLToPath } from 'url';
 

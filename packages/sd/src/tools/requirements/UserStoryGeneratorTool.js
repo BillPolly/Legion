@@ -2,7 +2,7 @@
  * UserStoryGeneratorTool - Generates user stories from parsed requirements
  */
 
-import { Tool, ToolResult } from '@legion/tools';
+import { Tool, ToolResult } from '@legion/tools-registry';
 import { z } from 'zod';
 
 export class UserStoryGeneratorTool extends Tool {

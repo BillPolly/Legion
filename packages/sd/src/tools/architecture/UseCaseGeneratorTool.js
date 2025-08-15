@@ -2,7 +2,7 @@
  * UseCaseGeneratorTool - Generates use cases from requirements
  */
 
-import { Tool, ToolResult } from '@legion/tools';
+import { Tool, ToolResult } from '@legion/tools-registry';
 import { z } from 'zod';
 
 export class UseCaseGeneratorTool extends Tool {

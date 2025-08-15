@@ -466,7 +466,7 @@ This development plan follows a Test-Driven Development approach (without refact
 ### Required Legion Packages
 - `@legion/storage` - Database operations
 - `@legion/semantic-search` - Embedding and vector search
-- `@legion/tools` - Module and Tool base classes
+- `@legion/tools-registry` - Module and Tool base classes
 - `@legion/shared` - Common utilities and types
 
 ### External Dependencies

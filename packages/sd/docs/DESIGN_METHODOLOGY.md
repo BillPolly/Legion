@@ -37,7 +37,7 @@ The Software Design (SD) package extends the existing Legion framework's BT Acto
 
 **Key Foundation Components from Legion:**
 - **BTAgentBase** - All SD agents extend this base class from `@legion/actor-BT`
-- **Tool Class** - All SD tools extend Legion's Tool class from `@legion/tools`
+- **Tool Class** - All SD tools extend Legion's Tool class from `@legion/tools-registry`
 - **PlannerEngine** - SD uses the existing planner from `@legion/unified-planner`
 - **ProfilePlanner** - SD extends profiles from `@legion/profile-planner`
 - **ResourceManager** - Singleton resource management with automatic .env loading
@@ -98,7 +98,7 @@ SDAgentBase (SD package base)
 
 #### 2. Tool Infrastructure
 ```
-Legion Tool (base class from @legion/tools)
+Legion Tool (base class from @legion/tools-registry)
     ↓
 [RequirementParserTool, EntityModelingTool, CodeGeneratorTool, etc.]
 ```
@@ -2488,8 +2488,8 @@ const requirementValidator = {
 ```javascript
 // SD agents are specialized BTAgentBase instances
 import { BTAgentBase } from '@legion/actor-BT';
-import { Tool } from '@legion/tools';
-import { ResourceManager } from '@legion/tools';
+import { Tool } from '@legion/tools-registry';
+import { ResourceManager } from '@legion/tools-registry';
 
 class SDAgentBase extends BTAgentBase {
   constructor(config) {

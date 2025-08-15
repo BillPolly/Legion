@@ -4,7 +4,7 @@
  */
 
 import { FullStackMonitor } from '@legion/fullstack-monitor';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/tools-registry';
 import { promises as fs } from 'fs';
 import path from 'path';
 

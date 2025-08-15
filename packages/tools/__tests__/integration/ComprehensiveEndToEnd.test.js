@@ -6,7 +6,7 @@
  */
 
 import { ToolRegistry } from '../../src/integration/ToolRegistry.js';
-import { ResourceManager } from '../../src/ResourceManager.js';
+import { ResourceManager } from '@legion/core';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -15,9 +15,11 @@ describe('ToolRegistry End-to-End Tests', () => {
   let resourceManager;
 
   beforeAll(async () => {
-    // Initialize with real dependencies
-    resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    // Use ResourceManager singleton
+    resourceManager = ResourceManager.getInstance();
+    if (!resourceManager.initialized) {
+      await resourceManager.initialize();
+    }
     
     registry = new ToolRegistry();
     await registry.initialize();

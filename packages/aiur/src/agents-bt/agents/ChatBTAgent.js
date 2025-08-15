@@ -162,7 +162,7 @@ export class ChatBTAgent extends Actor {
   async initializeTaskOrchestrator() {
     try {
       // Import the singleton toolRegistry
-      const { toolRegistry } = await import('@legion/tools');
+      const { toolRegistry } = await import('@legion/tools-registry');
       
       // Register the 3 basic tools directly
       await this.registerBasicTools(toolRegistry);

@@ -924,11 +924,11 @@ export class MongoDBToolRegistryProvider extends IToolRegistryProvider {
     // Handle known built-in modules
     switch (moduleData.name) {
       case 'FileModule':
-        const { FileModule } = await import('@legion/tools');
+        const { FileModule } = await import('@legion/tools-registry');
         return new FileModule();
       
       case 'CalculatorModule':
-        const { CalculatorModule } = await import('@legion/tools');
+        const { CalculatorModule } = await import('@legion/tools-registry');
         return new CalculatorModule();
       
       default:

@@ -269,15 +269,15 @@ This two-layer approach provides flexibility during decomposition while ensuring
 ### 4. ToolDiscoveryBridge
 
 **Responsibilities:**
-- Interfaces with `@legion/tools` SemanticToolSearch
+- Interfaces with `@legion/tools-registry` SemanticToolSearch
 - Maps simple tasks to relevant tools using existing semantic search
 - Manages tool registry connection
 - Handles tool availability and metadata
 
-**Integration with @legion/tools:**
+**Integration with @legion/tools-registry:**
 ```javascript
-import { SemanticToolSearch } from '@legion/tools';
-import { ToolRegistry } from '@legion/tools';
+import { SemanticToolSearch } from '@legion/tools-registry';
+import { ToolRegistry } from '@legion/tools-registry';
 
 // Use the existing semantic search infrastructure
 const toolSearch = await SemanticToolSearch.create(resourceManager, provider);
@@ -386,12 +386,12 @@ const plan = await planner.makePlan(
 );
 ```
 
-### 2. With @legion/tools SemanticToolSearch
+### 2. With @legion/tools-registry SemanticToolSearch
 
 Tool discovery for each simple task using the existing infrastructure:
 
 ```javascript
-import { SemanticToolSearch, ToolRegistry } from '@legion/tools';
+import { SemanticToolSearch, ToolRegistry } from '@legion/tools-registry';
 
 // Initialize with existing tool registry
 const toolRegistry = new ToolRegistry({ provider: mongoProvider });

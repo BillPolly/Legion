@@ -7,7 +7,7 @@
  * and adds a simple Node.js server.
  */
 
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/tools-registry';
 import GitIntegrationManager from './src/integration/GitIntegrationManager.js';
 import { promises as fs } from 'fs';
 import { fileURLToPath } from 'url';

@@ -8,7 +8,7 @@
  */
 
 import { EnhancedCodeAgent } from './src/agent/EnhancedCodeAgent.js';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/tools-registry';
 import { promises as fs } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';

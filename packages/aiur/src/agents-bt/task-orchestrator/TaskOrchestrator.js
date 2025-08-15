@@ -268,7 +268,7 @@ export class TaskOrchestrator extends Actor {
 
       // Import new clean Planner  
       const { Planner } = await import('../../../../planning/planner/src/core/Planner.js');
-      const { ResourceManager } = await import('@legion/tools');
+      const { ResourceManager } = await import('@legion/tools-registry');
       const { Anthropic } = await import('@anthropic-ai/sdk');
       
       // Initialize ResourceManager to get API key

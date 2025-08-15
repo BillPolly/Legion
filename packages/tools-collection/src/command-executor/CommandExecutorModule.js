@@ -4,7 +4,7 @@
  * Provides a tool for executing bash commands in the terminal
  */
 
-import { Module } from '@legion/tools';
+import { Module } from '@legion/tools-registry';
 import { CommandExecutor } from './CommandExecutorTool.js';
 
 export class CommandExecutorModule extends Module {

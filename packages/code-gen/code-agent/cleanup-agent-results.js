@@ -9,7 +9,7 @@
  * and includes multiple safety checks.
  */
 
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/tools-registry';
 import GitIntegrationManager from './src/integration/GitIntegrationManager.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';

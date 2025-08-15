@@ -7,7 +7,7 @@ export default {
   ],
   transform: {},
   moduleNameMapper: {
-    '^@legion/tools$': '<rootDir>/../../tools/src/index.js',
+    '^@legion/tools-registry$': '<rootDir>/../../tools/src/index.js',
     '^@legion/shared$': '<rootDir>/../../shared/src/index.js',
     '^@legion/semantic-search$': '<rootDir>/../../semantic-search/src/index.js',
     '^@legion/storage$': '<rootDir>/../../storage/src/index.js',

@@ -2,7 +2,7 @@
  * GenerateJavaScriptFunctionTool - Generate individual JavaScript functions
  */
 
-import { Tool } from '@legion/tools';
+import { Tool } from '@legion/tools-registry';
 import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';

@@ -11,7 +11,7 @@
  */
 
 import { jest } from '@jest/globals';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/tools-registry';
 import SDModule from '../../src/SDModule.js';
 import { RequirementsAgent } from '../../src/agents/RequirementsAgent.js';
 import { RequirementParserTool } from '../../src/tools/requirements/RequirementParserTool.js';

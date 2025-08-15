@@ -1,4 +1,4 @@
-import { ModuleFactory } from '@legion/tools';
+import { ModuleFactory } from '@legion/tools-registry';
 import ProcessResource from '../process/ProcessResource.js';
 import AgentResource from '../agent/AgentResource.js';
 import ProcessOrchestrator from '../process/ProcessOrchestrator.js';

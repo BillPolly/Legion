@@ -11,7 +11,7 @@
  *   details <id>      - Get project details
  */
 
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/tools-registry';
 import { RailwayProvider } from '../src/index.js';
 
 const args = process.argv.slice(2);

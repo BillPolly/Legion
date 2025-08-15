@@ -1,5 +1,5 @@
 import { Planner } from '../../../planning/planner/src/core/Planner.js';
-import { ResourceManager, ToolRegistry, ModuleLoader } from '@legion/tools';
+import { ResourceManager, ToolRegistry, ModuleLoader } from '@legion/tools-registry';
 import { Anthropic } from '@anthropic-ai/sdk';
 import fs from 'fs/promises';
 import path from 'path';

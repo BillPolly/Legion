@@ -4,7 +4,7 @@
 
 import { MongoDBToolRegistryProvider } from '../../src/providers/MongoDBToolRegistryProvider.js';
 import { createToolIndexer } from '../../src/search/index.js';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/core';
 
 describe('Qdrant Error Detail Debug', () => {
   let resourceManager;
@@ -13,8 +13,8 @@ describe('Qdrant Error Detail Debug', () => {
   let loadingManager;
 
   beforeAll(async () => {
-    resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    resourceManager = ResourceManager.getInstance();
+    if (!resourceManager.initialized) { await resourceManager.initialize(); }
 
     mongoProvider = await MongoDBToolRegistryProvider.create(resourceManager, {
       enableSemanticSearch: false

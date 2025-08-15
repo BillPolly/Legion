@@ -19,8 +19,8 @@ describe('Tool Discovery and Module Integrity', () => {
   
   beforeAll(async () => {
     // Initialize ResourceManager
-    resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    resourceManager = ResourceManager.getInstance();
+    if (!resourceManager.initialized) { await resourceManager.initialize(); }
     
     // Create discovery components
     discovery = new ComprehensiveToolDiscovery();

@@ -33,7 +33,7 @@
     "CHANGELOG.md"
   ],
   "dependencies": {
-    "@legion/tools": "^1.0.0"
+    "@legion/tools-registry": "^1.0.0"
   },
   "devDependencies": {
     "jest": "^29.7.0"

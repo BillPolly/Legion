@@ -7,7 +7,7 @@
 
 import { LoadingManager } from '../../src/loading/LoadingManager.js';
 import { MongoDBToolRegistryProvider } from '../../src/providers/MongoDBToolRegistryProvider.js';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/core';
 
 describe('Perspective Generation via LoadingManager', () => {
   let loadingManager;
@@ -16,8 +16,8 @@ describe('Perspective Generation via LoadingManager', () => {
 
   beforeAll(async () => {
     // Initialize ResourceManager with forced local embeddings
-    resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    resourceManager = ResourceManager.getInstance();
+    if (!resourceManager.initialized) { await resourceManager.initialize(); }
     resourceManager.set('env.USE_LOCAL_EMBEDDINGS', 'true');
 
     // Create providers for direct database inspection

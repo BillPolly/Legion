@@ -4,7 +4,7 @@
  * Extracted and adapted from code-agent JSGenerator for Legion framework
  */
 
-import { Tool } from '@legion/tools';
+import { Tool } from '@legion/tools-registry';
 import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';

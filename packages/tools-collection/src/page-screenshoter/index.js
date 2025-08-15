@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@legion/tools';
+import { Tool, ToolResult } from '@legion/tools-registry';
 import puppeteer from 'puppeteer';
 import { z } from 'zod';
 

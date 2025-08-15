@@ -3,15 +3,15 @@
  */
 
 import { createToolIndexer } from '../../src/search/index.js';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/core';
 
 describe('Collection Dimensions Test', () => {
   let resourceManager;
   let toolIndexer;
 
   beforeAll(async () => {
-    resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    resourceManager = ResourceManager.getInstance();
+    if (!resourceManager.initialized) { await resourceManager.initialize(); }
     toolIndexer = await createToolIndexer(resourceManager);
   });
 

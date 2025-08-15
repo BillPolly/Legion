@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/tools-registry';
 import GitHubOperations from '../../src/integration/GitHubOperations.js';
 import GitHubAuthentication from '../../src/integration/GitHubAuthentication.js';
 import GitConfigValidator from '../../src/config/GitConfigValidator.js';

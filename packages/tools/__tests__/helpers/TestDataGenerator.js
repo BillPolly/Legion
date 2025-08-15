@@ -7,7 +7,7 @@
 
 import { LoadingManager } from '../../src/loading/LoadingManager.js';
 import { MongoDBToolRegistryProvider } from '../../src/providers/MongoDBToolRegistryProvider.js';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/core';
 
 export class TestDataGenerator {
   constructor(options = {}) {
@@ -22,7 +22,7 @@ export class TestDataGenerator {
    */
   async initialize() {
     if (!this.resourceManager) {
-      this.resourceManager = new ResourceManager();
+      this.resourceManager = ResourceManager.getInstance();
       await this.resourceManager.initialize();
     }
 

@@ -186,7 +186,7 @@ Aiur dynamically loads Legion modules to provide tools:
 #### Module Loading
 ```javascript
 // Modules specified in environment
-AIUR_MODULES=@legion/tools/file,@legion/tools/github
+AIUR_MODULES=@legion/tools-registry/file,@legion/tools-registry/github
 
 // Or dynamically loaded based on context
 ```
@@ -363,7 +363,7 @@ AIUR_LOG_DIRECTORY=./logs
 AIUR_LOG_RETENTION_DAYS=7
 
 # Module Configuration
-AIUR_MODULES=@legion/tools/file,@legion/tools/github
+AIUR_MODULES=@legion/tools-registry/file,@legion/tools-registry/github
 
 # Verbosity
 AIUR_VERBOSE=true

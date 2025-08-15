@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeAll } from '@jest/globals';
 import { Planner } from '../../src/core/Planner.js';
-import { ResourceManager, ToolRegistry } from '@legion/tools';
+import { ResourceManager, ToolRegistry } from '@legion/tools-registry';
 import { Anthropic } from '@anthropic-ai/sdk';
 
 describe('Planner Integration', () => {

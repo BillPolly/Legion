@@ -13,7 +13,7 @@
 
 import { ToolIndexer } from '../src/search/ToolIndexer.js';
 import { MongoDBToolRegistryProvider } from '../src/providers/MongoDBToolRegistryProvider.js';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/core';
 
 async function main() {
   // Parse command line arguments
@@ -76,8 +76,8 @@ Examples:
     const startTime = Date.now();
     
     // Initialize ResourceManager
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = ResourceManager.getInstance();
+    if (!resourceManager.initialized) { await resourceManager.initialize(); }
     console.log('✅ ResourceManager initialized');
     
     // Create MongoDB provider

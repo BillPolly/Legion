@@ -1,4 +1,4 @@
-import { Module } from '@legion/tools';
+import { Module } from '@legion/tools-registry';
 import GitHubTool from './GitHubTool.js';
 
 /**

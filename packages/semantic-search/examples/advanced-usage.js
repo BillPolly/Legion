@@ -2,7 +2,7 @@
  * Advanced usage examples for @legion/semantic-search
  */
 
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/tools-registry';
 import { SemanticSearchProvider } from '@legion/semantic-search';
 
 async function advancedExamples() {

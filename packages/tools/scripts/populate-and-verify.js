@@ -4,7 +4,7 @@
  * Script to populate database with all modules/tools and verify counts
  */
 
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/core';
 import { MongoDBToolRegistryProvider } from '../src/providers/MongoDBToolRegistryProvider.js';
 import { ToolRegistry } from '../src/integration/ToolRegistry.js';
 import { ModuleLoader } from '../src/loading/ModuleLoader.js';
@@ -30,7 +30,7 @@ class DatabasePopulator {
     console.log(chalk.blue('🔧 Initializing ResourceManager and providers...\n'));
     
     // Initialize ResourceManager
-    this.resourceManager = new ResourceManager();
+    this.resourceManager = ResourceManager.getInstance();
     await this.resourceManager.initialize();
     
     // Initialize MongoDB provider

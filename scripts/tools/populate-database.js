@@ -10,7 +10,7 @@
 import { ComprehensiveToolDiscovery } from '../../packages/tools/src/discovery/ComprehensiveToolDiscovery.js';
 import { MongoDBToolRegistryProvider } from '../../packages/tools/src/providers/MongoDBToolRegistryProvider.js';
 import { ToolRegistry } from '../../packages/tools/src/integration/ToolRegistry.js';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/tools-registry';
 
 // Parse command line arguments
 const args = process.argv.slice(2);

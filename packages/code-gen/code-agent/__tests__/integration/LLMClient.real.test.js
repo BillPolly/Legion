@@ -4,7 +4,7 @@
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import { LLMClientManager } from '../../src/integration/LLMClientManager.js';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/tools-registry';
 
 describe('LLMClient Real Integration Tests', () => {
   let resourceManager;

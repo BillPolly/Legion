@@ -7,7 +7,7 @@
  * - Search and retrieve them
  */
 
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/core';
 import { MongoDBToolRegistryProvider } from '../src/providers/MongoDBToolRegistryProvider.js';
 import { SemanticSearchProvider } from '../../semantic-search/src/SemanticSearchProvider.js';
 import { execSync } from 'child_process';
@@ -18,8 +18,8 @@ async function main() {
   
   try {
     // Initialize
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = ResourceManager.getInstance();
+    if (!resourceManager.initialized) { await resourceManager.initialize(); }
     resourceManager.set('env.USE_LOCAL_EMBEDDINGS', 'true');
     
     const mongoProvider = await MongoDBToolRegistryProvider.create(resourceManager, {

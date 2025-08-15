@@ -12,7 +12,7 @@
 
 import { LoadingManager } from '../../src/loading/LoadingManager.js';
 import { MongoDBToolRegistryProvider } from '../../src/providers/MongoDBToolRegistryProvider.js';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/core';
 
 describe('LoadingManager Integration', () => {
   let loadingManager;
@@ -21,8 +21,8 @@ describe('LoadingManager Integration', () => {
 
   beforeAll(async () => {
     // Initialize ResourceManager
-    resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    resourceManager = ResourceManager.getInstance();
+    if (!resourceManager.initialized) { await resourceManager.initialize(); }
     
     // Force local embeddings for tests
     resourceManager.set('env.USE_LOCAL_EMBEDDINGS', 'true');

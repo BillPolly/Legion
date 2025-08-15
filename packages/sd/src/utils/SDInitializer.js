@@ -202,7 +202,7 @@ export class SDInitializer {
     }
 
     // Create ResourceManager - it automatically loads .env file
-    const { ResourceManager } = await import('@legion/tools');
+    const { ResourceManager } = await import('@legion/tools-registry');
     this.resourceManager = new ResourceManager();
     
     // Initialize ResourceManager (it loads .env automatically)

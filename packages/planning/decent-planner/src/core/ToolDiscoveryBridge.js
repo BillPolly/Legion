@@ -1,13 +1,13 @@
 /**
- * ToolDiscoveryBridge - Interface to @legion/tools semantic search
+ * ToolDiscoveryBridge - Interface to @legion/tools-registry semantic search
  * 
  * Maps simple tasks to relevant tools using the existing SemanticToolSearch
  * from the tools package, which provides MongoDB-backed tool registry with
  * ONNX embeddings and natural language search
  */
 
-import { ToolRegistry } from '@legion/tools';
-import { SemanticToolSearch } from '@legion/tools/src/semantic/SemanticToolSearch.js';
+import { ToolRegistry } from '@legion/tools-registry';
+import { SemanticToolSearch } from '@legion/tools-registry/src/semantic/SemanticToolSearch.js';
 
 export class ToolDiscoveryBridge {
   constructor(resourceManager, toolRegistryProvider) {

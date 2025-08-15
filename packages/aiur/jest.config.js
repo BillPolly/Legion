@@ -54,7 +54,7 @@ export default {
   
   // Module name mapping for @legion packages
   moduleNameMapper: {
-    '^@legion/tools$': '<rootDir>/../tools/src/index.js',
+    '^@legion/tools-registry$': '<rootDir>/../tools/src/index.js',
     '^@legion/actors$': '<rootDir>/../shared/actors/src/index.js', 
     '^@legion/bt-validator$': '<rootDir>/../planning/bt-validator/src/index.js'
   },

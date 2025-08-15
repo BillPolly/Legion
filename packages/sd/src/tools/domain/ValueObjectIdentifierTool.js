@@ -2,7 +2,7 @@
  * ValueObjectIdentifierTool - Identifies value objects in domain model using LLM
  */
 
-import { Tool, ToolResult } from '@legion/tools';
+import { Tool, ToolResult } from '@legion/tools-registry';
 import { z } from 'zod';
 
 export class ValueObjectIdentifierTool extends Tool {

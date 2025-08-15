@@ -9,7 +9,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import fsSync from 'fs';
 import { DynamicJsonModule } from './DynamicJsonModule.js';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/core';
 
 export class ModuleLoader {
   constructor(options = {}) {
@@ -24,7 +24,7 @@ export class ModuleLoader {
   async initialize() {
     // Initialize ResourceManager if not provided
     if (!this.resourceManager) {
-      this.resourceManager = new ResourceManager();
+      this.resourceManager = ResourceManager.getInstance();
       await this.resourceManager.initialize();
     }
   }

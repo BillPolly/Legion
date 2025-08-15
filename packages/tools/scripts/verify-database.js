@@ -12,7 +12,7 @@
  */
 
 import { MongoDBToolRegistryProvider } from '../src/providers/MongoDBToolRegistryProvider.js';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/core';
 
 async function main() {
   // Parse command line arguments
@@ -56,8 +56,8 @@ Examples:
   
   try {
     console.log('🔧 Connecting to database...');
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = ResourceManager.getInstance();
+    if (!resourceManager.initialized) { await resourceManager.initialize(); }
     
     const provider = await MongoDBToolRegistryProvider.create(resourceManager, {
       enableSemanticSearch: false

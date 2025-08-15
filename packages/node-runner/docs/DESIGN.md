@@ -1037,7 +1037,7 @@ setInterval(async () => {
 - `detect-port`: Port availability detection
 - `@legion/storage`: Database operations via Legion
 - `@legion/semantic-search`: Semantic search capabilities
-- `@legion/tools`: Legion module and tool base classes
+- `@legion/tools-registry`: Legion module and tool base classes
 - `zod`: Schema validation for tool inputs
 
 ## Implementation Assessment

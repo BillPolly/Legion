@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeAll, beforeEach } from '@jest/globals';
 import { TaskDecomposer } from '../../src/core/TaskDecomposer.js';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/tools-registry';
 import { Anthropic } from '@anthropic-ai/sdk';
 
 const runLiveTests = process.env.LIVE_TESTS === 'true' || process.env.RUN_LIVE_TESTS === 'true';

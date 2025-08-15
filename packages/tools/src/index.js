@@ -10,8 +10,8 @@ export { Module } from './modules/Module.js';
 export { Tool } from './modules/Tool.js';
 export { ToolResult } from './modules/ToolResult.js';
 
-// Resource management  
-export { ResourceManager } from './ResourceManager.js';
+// Resource management moved to @legion/core - import from there
+// export { ResourceManager } from './ResourceManager.js';
 
 
 // Integration components
@@ -27,7 +27,7 @@ export {
 } from './search/index.js';
 
 // Tool modules are available in their respective directories and can be imported directly:
-// import CalculatorModule from '@legion/tools/calculator'
-// import FileModule from '@legion/tools/file' 
-// import GitHubModule from '@legion/tools/github'
+// import CalculatorModule from '@legion/tools-registry/calculator'
+// import FileModule from '@legion/tools-registry/file' 
+// import GitHubModule from '@legion/tools-registry/github'
 // etc.

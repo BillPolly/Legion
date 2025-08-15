@@ -5,8 +5,8 @@
  */
 
 import { DecentPlanner } from '../src/index.js';
-import { ResourceManager, ToolRegistry } from '@legion/tools';
-import { MongoDBToolRegistryProvider } from '@legion/tools/src/providers/MongoDBToolRegistryProvider.js';
+import { ResourceManager, ToolRegistry } from '@legion/tools-registry';
+import { MongoDBToolRegistryProvider } from '@legion/tools-registry/src/providers/MongoDBToolRegistryProvider.js';
 
 async function main() {
   console.log('🚀 DecentPlanner Example\n');

@@ -2,7 +2,7 @@
  * BoundedContextGeneratorTool - Generates bounded contexts using DDD with LLM
  */
 
-import { Tool, ToolResult } from '@legion/tools';
+import { Tool, ToolResult } from '@legion/tools-registry';
 import { z } from 'zod';
 
 export class BoundedContextGeneratorTool extends Tool {

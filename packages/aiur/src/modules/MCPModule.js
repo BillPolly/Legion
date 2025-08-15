@@ -11,7 +11,7 @@ import {
   MCPPackageManager,
   MCPToolProvider,
   MCPServerRegistry
-} from '@legion/tools/mcp';
+} from '@legion/tools-registry/mcp';
 import { EventEmitter } from 'events';
 
 export default class MCPModule extends Module {

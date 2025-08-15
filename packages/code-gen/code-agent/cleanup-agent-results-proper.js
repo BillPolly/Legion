@@ -4,13 +4,13 @@
  * Cleanup AgentResults Organization - Using jsEnvoy GitHub Tool
  * 
  * This script deletes ALL repositories in the AgentResults organization
- * using the proper GitHub tool from @legion/tools.
+ * using the proper GitHub tool from @legion/tools-registry.
  * 
  * SAFETY: This script will ONLY work on the AgentResults organization
  * and includes multiple safety checks.
  */
 
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/tools-registry';
 import GitHubModule from '../../general-tools/src/github/GitHubModule.js';
 import readline from 'readline';
 

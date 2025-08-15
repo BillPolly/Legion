@@ -4,7 +4,7 @@
 
 import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach } from '@jest/globals';
 import PlaywrightWrapper from '../../src/PlaywrightWrapper.js';
-import { ModuleFactory, ResourceManager } from '@legion/tools';
+import { ModuleFactory, ResourceManager } from '@legion/tools-registry';
 import path from 'path';
 import { fileURLToPath } from 'url';
 

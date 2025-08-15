@@ -19,8 +19,8 @@ async function testFileModuleDatabaseFlow() {
   try {
     // Step 1: Initialize ResourceManager and MongoDB provider
     console.log('1️⃣  Initializing ResourceManager and MongoDB provider...');
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = ResourceManager.getInstance();
+    if (!resourceManager.initialized) { await resourceManager.initialize(); }
     
     const provider = await MongoDBToolRegistryProvider.create(resourceManager, {
       enableSemanticSearch: false

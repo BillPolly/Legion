@@ -21,6 +21,6 @@
     "node": ">=18.0.0"
   },
   "peerDependencies": {
-    "@legion/tools": "*"
+    "@legion/tools-registry": "*"
   }
 }

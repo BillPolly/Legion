@@ -5,7 +5,7 @@
  * structured information using LLM for intelligent analysis
  */
 
-import { Tool, ToolResult } from '@legion/tools';
+import { Tool, ToolResult } from '@legion/tools-registry';
 import { z } from 'zod';
 
 export class RequirementParserTool extends Tool {

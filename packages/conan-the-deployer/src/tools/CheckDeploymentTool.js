@@ -1,4 +1,4 @@
-import { Tool } from '@legion/tools';
+import { Tool } from '@legion/tools-registry';
 
 /**
  * CheckDeploymentTool - Verifies deployment status and tests endpoints

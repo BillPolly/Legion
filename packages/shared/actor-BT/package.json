@@ -21,7 +21,7 @@
   "license": "MIT",
   "dependencies": {
     "@legion/actors": "^1.0.0",
-    "@legion/tools": "^1.0.0"
+    "@legion/tools-registry": "^1.0.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

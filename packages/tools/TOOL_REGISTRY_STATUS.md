@@ -87,7 +87,7 @@ Database Verification:
 
 ### 1. Initialize Registry
 ```javascript
-import { ToolRegistry } from '@legion/tools';
+import { ToolRegistry } from '@legion/tools-registry';
 
 const registry = new ToolRegistry();
 await registry.initialize();

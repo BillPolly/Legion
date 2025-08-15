@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
-import { ResourceManager, ModuleFactory } from '@legion/tools';
+import { ResourceManager, ModuleFactory } from '@legion/tools-registry';
 import { JSGeneratorModule } from '../../js-generator/src/JSGeneratorModule.js';
 import fs from 'fs/promises';
 import path from 'path';

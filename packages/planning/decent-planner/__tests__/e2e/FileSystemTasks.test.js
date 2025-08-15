@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
 import { DecentPlanner } from '../../src/index.js';
-import { ResourceManager, ToolRegistry } from '@legion/tools';
+import { ResourceManager, ToolRegistry } from '@legion/tools-registry';
 import { BehaviorTreeExecutor } from '@legion/actor-bt';
 import fs from 'fs/promises';
 import path from 'path';

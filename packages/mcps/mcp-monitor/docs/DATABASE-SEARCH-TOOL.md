@@ -45,7 +45,7 @@ The MongoDBProvider is fully configured from .env automatically. No additional s
 
 ```javascript
 // packages/mcps/mcp-monitor/tools/DatabaseSearchTool.js
-import { Tool } from '@legion/tools';
+import { Tool } from '@legion/tools-registry';
 
 const inputSchema = {
   type: 'object',

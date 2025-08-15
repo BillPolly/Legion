@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@legion/actor-bt": "*",
-    "@legion/tools": "*",
+    "@legion/tools-registry": "*",
     "@legion/llm": "*",
     "@legion/planner": "*",
     "@legion/schema": "*",

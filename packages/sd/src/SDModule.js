@@ -5,7 +5,7 @@
  * for the Software Development autonomous agent system
  */
 
-import { Module } from '@legion/tools';
+import { Module } from '@legion/tools-registry';
 import { SDPlanningProfile } from './profiles/SDPlanningProfile.js';
 
 // Import tools (to be implemented)

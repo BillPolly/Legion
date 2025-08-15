@@ -7,7 +7,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterEach, beforeEach, jest } from '@jest/globals';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/tools-registry';
 import { CodeAgent } from '../../src/agent/CodeAgent.js';
 import { EnhancedCodeAgent } from '../../src/agent/EnhancedCodeAgent.js';
 import GitConfigValidator from '../../src/config/GitConfigValidator.js';

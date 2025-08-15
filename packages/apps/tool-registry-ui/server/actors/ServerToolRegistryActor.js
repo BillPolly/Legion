@@ -172,7 +172,7 @@ export class ServerToolRegistryActor {
       console.log('🔧 Loading all modules from file system using ModuleLoader...');
       
       // Import ModuleLoader directly from the loading module
-      const moduleLoaderModule = await import('@legion/tools/src/loading/ModuleLoader.js');
+      const moduleLoaderModule = await import('@legion/tools-registry/src/loading/ModuleLoader.js');
       const ModuleLoader = moduleLoaderModule.ModuleLoader || moduleLoaderModule.default;
       
       // Create ModuleLoader with ToolRegistry's ResourceManager
@@ -342,7 +342,7 @@ export class ServerToolRegistryActor {
       }
       
       // Import LoadingManager
-      const { LoadingManager } = await import('@legion/tools/src/loading/LoadingManager.js');
+      const { LoadingManager } = await import('@legion/tools-registry/src/loading/LoadingManager.js');
       
       // Create LoadingManager with ToolRegistry's ResourceManager
       const loadingManager = new LoadingManager({
@@ -524,7 +524,7 @@ export class ServerToolRegistryActor {
       console.log(`📦 Loading single module: ${moduleName}`);
       
       // Import ModuleLoader and fs
-      const moduleLoaderModule = await import('@legion/tools/src/loading/ModuleLoader.js');
+      const moduleLoaderModule = await import('@legion/tools-registry/src/loading/ModuleLoader.js');
       const ModuleLoader = moduleLoaderModule.ModuleLoader || moduleLoaderModule.default;
       const fs = await import('fs/promises');
       const path = await import('path');

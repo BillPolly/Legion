@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
-import { ResourceManager, ModuleFactory } from '@legion/tools';
+import { ResourceManager, ModuleFactory } from '@legion/tools-registry';
 import { JesterModule } from '../../jester/src/JesterModule.js';
 import fs from 'fs/promises';
 import path from 'path';

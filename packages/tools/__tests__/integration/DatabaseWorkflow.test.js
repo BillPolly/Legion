@@ -11,7 +11,7 @@
 import { ToolRegistry } from '../../src/integration/ToolRegistry.js';
 import { MongoDBToolRegistryProvider } from '../../src/providers/MongoDBToolRegistryProvider.js';
 import { SemanticSearchProvider } from '../../../semantic-search/src/SemanticSearchProvider.js';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/core';
 import { clearAllDatabases } from '../../scripts/clear-database.js';
 
 describe('Database Workflow Integration', () => {
@@ -22,8 +22,8 @@ describe('Database Workflow Integration', () => {
 
   beforeAll(async () => {
     // Initialize providers
-    resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    resourceManager = ResourceManager.getInstance();
+    if (!resourceManager.initialized) { await resourceManager.initialize(); }
     resourceManager.set('env.USE_LOCAL_EMBEDDINGS', 'true');
 
     mongoProvider = await MongoDBToolRegistryProvider.create(resourceManager, {

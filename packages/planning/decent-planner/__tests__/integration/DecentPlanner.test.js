@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeAll, jest } from '@jest/globals';
 import { DecentPlanner } from '../../src/index.js';
-import { ResourceManager, ToolRegistry } from '@legion/tools';
+import { ResourceManager, ToolRegistry } from '@legion/tools-registry';
 
 describe('DecentPlanner Integration', () => {
   let resourceManager;

@@ -1,4 +1,4 @@
-import { Tool } from '@legion/tools';
+import { Tool } from '@legion/tools-registry';
 import https from 'https';
 
 export class Serper extends Tool {

@@ -3,7 +3,7 @@
  * Simple Test - Just test ResourceManager and basic imports
  */
 
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/tools-registry';
 
 async function simpleTest() {
   console.log('🧪 Simple Test - ResourceManager only...\n');

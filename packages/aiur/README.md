@@ -112,7 +112,7 @@ AIUR_ENABLE_FILE_LOGGING=true
 AIUR_LOG_DIRECTORY=./logs
 
 # Modules to load
-AIUR_MODULES=@legion/tools/file,@legion/tools/github
+AIUR_MODULES=@legion/tools-registry/file,@legion/tools-registry/github
 ```
 
 ## Available Tools

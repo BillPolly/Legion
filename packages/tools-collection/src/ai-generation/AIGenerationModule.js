@@ -1,4 +1,4 @@
-import { Module } from '@legion/tools';
+import { Module } from '@legion/tools-registry';
 import { LLMClient } from '@legion/llm';
 import { ImageGenerationTool } from './ImageGenerationTool.js';
 

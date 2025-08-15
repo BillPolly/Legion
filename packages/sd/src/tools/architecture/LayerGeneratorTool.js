@@ -2,7 +2,7 @@
  * LayerGeneratorTool - Generates clean architecture layers
  */
 
-import { Tool, ToolResult } from '@legion/tools';
+import { Tool, ToolResult } from '@legion/tools-registry';
 import { z } from 'zod';
 
 export class LayerGeneratorTool extends Tool {

@@ -31,7 +31,7 @@ export default {
   
   // Module name mapping for Legion packages
   moduleNameMapper: {
-    '^@legion/tools$': '<rootDir>/../../tools/src/index.js'
+    '^@legion/tools-registry$': '<rootDir>/../../tools/src/index.js'
   },
   
   // Verbose output for debugging

@@ -15,7 +15,7 @@ import { DatabasePopulator } from './DatabasePopulator.js';
 import { MongoDBToolRegistryProvider } from '../providers/MongoDBToolRegistryProvider.js';
 import { SemanticSearchProvider } from '../../../semantic-search/src/SemanticSearchProvider.js';
 import { createToolIndexer } from '../search/index.js';
-import { ResourceManager } from '../ResourceManager.js';
+import { ResourceManager } from '@legion/core';
 
 export class LoadingManager {
   constructor(options = {}) {
@@ -53,7 +53,7 @@ export class LoadingManager {
 
     // Create ResourceManager if not provided
     if (!this.resourceManager) {
-      this.resourceManager = new ResourceManager();
+      this.resourceManager = ResourceManager.getInstance();
       await this.resourceManager.initialize();
     }
 

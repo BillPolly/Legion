@@ -4,7 +4,7 @@
  * Generate a webapp and save it to the generated directory
  */
 
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/tools-registry';
 import { CodeAgent } from '../src/agent/CodeAgent.js';
 import { promises as fs } from 'fs';
 import path from 'path';

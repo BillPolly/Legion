@@ -8,14 +8,15 @@
  */
 
 import { MongoDBToolRegistryProvider } from '../providers/MongoDBToolRegistryProvider.js';
-import { ResourceManager } from '../ResourceManager.js';
+import { ResourceManager } from '@legion/core';
 import { SemanticToolDiscovery } from '../search/SemanticToolDiscovery.js';
 
 export class ToolRegistry {
   constructor(options = {}) {
     // Default to MongoDB provider if none specified
     this.provider = options.provider || null;
-    this.resourceManager = options.resourceManager || null;
+    // Always use ResourceManager singleton - no option to override
+    this.resourceManager = null;
     
     // Caching
     this.toolCache = new Map();
@@ -35,9 +36,9 @@ export class ToolRegistry {
   async initialize() {
     if (this.initialized) return;
     
-    // Create default ResourceManager if not provided
-    if (!this.resourceManager) {
-      this.resourceManager = new ResourceManager();
+    // Always use ResourceManager singleton
+    this.resourceManager = ResourceManager.getInstance();
+    if (!this.resourceManager.initialized) {
       await this.resourceManager.initialize();
     }
     

@@ -1,5 +1,5 @@
 import { BehaviorTreeExecutor } from '../../src/core/BehaviorTreeExecutor.js';
-import { ToolRegistry } from '@legion/tools';
+import { ToolRegistry } from '@legion/tools-registry';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';

@@ -3,7 +3,7 @@
  * Tests the complete pipeline: indexing -> storage -> retrieval
  */
 
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/core';
 import { ToolIndexer, SemanticToolDiscovery } from '../../src/search/index.js';
 import { MongoDBToolRegistryProvider } from '../../src/providers/MongoDBToolRegistryProvider.js';
 import { StorageProvider } from '@legion/storage';
@@ -19,8 +19,8 @@ describe('3-Collection Architecture Integration', () => {
 
   beforeAll(async () => {
     // Initialize ResourceManager
-    resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    resourceManager = ResourceManager.getInstance();
+    if (!resourceManager.initialized) { await resourceManager.initialize(); }
 
     // Create MongoDB provider
     provider = await MongoDBToolRegistryProvider.create(resourceManager, { 
