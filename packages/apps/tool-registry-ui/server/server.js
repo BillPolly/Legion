@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url';
 import { ActorSpace } from '@legion/actors';
 import { ToolRegistry } from '@legion/tools';
 import { SemanticSearchProvider } from '@legion/semantic-search';
+import { isContainerRunning, startDocker, startQdrantContainer, waitForQdrant, QDRANT_CONTAINER_NAME } from '../../../../scripts/docker/start-qdrant.js';
 
 // Server actors
 import { ServerToolRegistryActor } from './actors/ServerToolRegistryActor.js';
