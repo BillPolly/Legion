@@ -21,25 +21,25 @@ describe('Collection Dimensions Test', () => {
     // Get collection info
     const collectionInfo = await client.getCollection('legion_tools');
     console.log('Collection dimensions:', collectionInfo.config.params.vectors.size);
-    console.log('Expected dimensions: 384 (ONNX)');
+    console.log('Expected dimensions: 768 (Nomic)');
     
-    expect(collectionInfo.config.params.vectors.size).toBe(384);
+    expect(collectionInfo.config.params.vectors.size).toBe(768);
   });
 
-  test('should test vector upsert with 384D vector', async () => {
+  test('should test vector upsert with 768D vector', async () => {
     const testVector = {
       id: Date.now(),
-      vector: new Array(384).fill(0.1), // 384 dimensions
+      vector: new Array(768).fill(0.1), // 768 dimensions
       payload: { test: 'value' }
     };
 
-    console.log('Testing 384D vector upsert...');
+    console.log('Testing 768D vector upsert...');
     
     try {
       await toolIndexer.vectorStore.upsert('legion_tools', [testVector]);
-      console.log('✅ 384D vector upsert successful!');
+      console.log('✅ 768D vector upsert successful!');
     } catch (error) {
-      console.error('❌ 384D vector upsert failed:', error.message);
+      console.error('❌ 768D vector upsert failed:', error.message);
       throw error;
     }
   });

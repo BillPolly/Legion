@@ -40,21 +40,21 @@ describe('Recreate Collection Test', () => {
     const collectionInfo = await client.getCollection(collectionName);
     console.log('Collection dimensions:', collectionInfo.config.params.vectors.size);
     
-    expect(collectionInfo.config.params.vectors.size).toBe(384);
+    expect(collectionInfo.config.params.vectors.size).toBe(768);
   });
 
-  test('should test vector upsert with 384D vector after recreation', async () => {
+  test('should test vector upsert with 768D vector after recreation', async () => {
     const testVector = {
       id: Date.now(),
-      vector: new Array(384).fill(0.1), // 384 dimensions
+      vector: new Array(768).fill(0.1), // 768 dimensions
       payload: { test: 'recreated' }
     };
 
-    console.log('Testing 384D vector upsert on recreated collection...');
+    console.log('Testing 768D vector upsert on recreated collection...');
     
     try {
       await toolIndexer.vectorStore.upsert('legion_tools', [testVector]);
-      console.log('✅ 384D vector upsert successful on recreated collection!');
+      console.log('✅ 768D vector upsert successful on recreated collection!');
       
       // Verify the vector was stored
       const count = await toolIndexer.vectorStore.count('legion_tools');

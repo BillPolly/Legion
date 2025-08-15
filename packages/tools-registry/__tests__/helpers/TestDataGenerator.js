@@ -26,8 +26,7 @@ export class TestDataGenerator {
       await this.resourceManager.initialize();
     }
 
-    // Force local embeddings for tests
-    this.resourceManager.set('env.USE_LOCAL_EMBEDDINGS', 'true');
+    // No need to set embedding type - always uses Nomic
 
     this.loadingManager = new LoadingManager({
       verbose: this.verbose,

@@ -157,7 +157,9 @@ module.exports = TestModule;`;
       moduleDefinition.basePath = testModuleDir;
 
       // Create module from definition
-      const module = await moduleFactory.createFromDefinition(moduleDefinition);
+      // First write the module.json file
+      await fs.writeFile(path.join(testModuleDir, 'module.json'), JSON.stringify(moduleDefinition, null, 2));
+      const module = await DynamicJsonModule.createFromJson(path.join(testModuleDir, 'module.json'), testModuleDir);
 
       expect(module).toBeDefined();
       expect(module.definition.name).toBe('test-calculation-module');
@@ -251,7 +253,11 @@ module.exports = TestModule;`;
     };
 
     // This should create the module but tools will fail when executed
-    const module = await moduleFactory.createFromDefinition(moduleDefinition);
+    const testDir = '/tmp/test-definition-only-' + Date.now();
+    await fs.mkdir(testDir, { recursive: true });
+    await fs.writeFile(path.join(testDir, 'module.json'), JSON.stringify(moduleDefinition, null, 2));
+    const module = await DynamicJsonModule.createFromJson(path.join(testDir, 'module.json'), testDir);
+    await fs.rm(testDir, { recursive: true, force: true });
 
     expect(module).toBeDefined();
     expect(module.definition.name).toBe('definition-only-module');
@@ -286,9 +292,15 @@ module.exports = TestModule;`;
     };
 
     // This should fail during module creation
-    await expect(moduleFactory.createFromDefinition(moduleDefinition))
+    const testDir = '/tmp/test-invalid-' + Date.now();
+    await fs.mkdir(testDir, { recursive: true });
+    await fs.writeFile(path.join(testDir, 'module.json'), JSON.stringify(moduleDefinition, null, 2));
+    
+    await expect(DynamicJsonModule.createFromJson(path.join(testDir, 'module.json'), testDir))
       .rejects
       .toThrow();
+    
+    await fs.rm(testDir, { recursive: true, force: true });
   });
 
   test('should validate environment variable resolution in real module execution', async () => {
@@ -375,7 +387,8 @@ module.exports = EnvTestModule;`;
         ]
       };
 
-      const module = await moduleFactory.createFromDefinition(moduleDefinition);
+      await fs.writeFile(path.join(testModuleDir, 'module.json'), JSON.stringify(moduleDefinition, null, 2));
+      const module = await DynamicJsonModule.createFromJson(path.join(testModuleDir, 'module.json'), testModuleDir);
 
       // Test configuration resolution
       const configTool = module.getTool('get_config');

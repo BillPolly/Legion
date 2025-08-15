@@ -26,11 +26,14 @@ export default {
   setupFilesAfterEnv: ['<rootDir>/__tests__/jest.setup.js'],
   
   // Timeouts
-  testTimeout: 30000, // 30 seconds for database operations
+  testTimeout: 60000, // 60 seconds for database operations
   
   // Verbose output for integration tests
   verbose: true,
   
   // Run tests in sequence for database tests
-  maxWorkers: 1
+  maxWorkers: 1,
+  
+  // Disable parallelization
+  maxConcurrency: 1
 };

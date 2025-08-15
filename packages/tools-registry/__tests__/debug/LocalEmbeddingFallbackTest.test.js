@@ -30,7 +30,7 @@ describe('LocalEmbedding Fallback Test', () => {
         // Verify embedding properties
         expect(embedding).toBeDefined();
         expect(Array.isArray(embedding)).toBe(true);
-        expect(embedding.length).toBe(384);
+        expect(embedding.length).toBe(768);
         
         // Check normalization
         const norm = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
@@ -104,7 +104,7 @@ describe('LocalEmbedding Fallback Test', () => {
 
     expect(embeddings).toHaveLength(3);
     embeddings.forEach((embedding, i) => {
-      expect(embedding).toHaveLength(384);
+      expect(embedding).toHaveLength(768);
       const norm = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
       expect(norm).toBeCloseTo(1.0, 5);
       console.log(`  Batch ${i + 1}: norm = ${norm.toFixed(6)}`);
@@ -118,9 +118,9 @@ describe('LocalEmbedding Fallback Test', () => {
 
     const info = service.getModelInfo();
     
-    expect(info.name).toContain('Local ONNX Embedding Model');
+    expect(info.name).toContain('Nomic Embed');
     expect(info.type).toBe('local');
-    expect(info.dimensions).toBe(384);
+    expect(info.dimensions).toBe(768);
     expect(info.provider).toBeDefined();
 
     console.log('Model info:', info);

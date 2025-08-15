@@ -46,7 +46,7 @@ export class CommandExecutorModule extends Module {
    * Get all tools provided by this module
    */
   getTools() {
-    return this.tools;
+    return Object.values(this.tools);
   }
 
   /**

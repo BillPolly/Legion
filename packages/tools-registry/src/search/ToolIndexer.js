@@ -26,13 +26,13 @@ export class ToolIndexer {
    * @returns {Promise<ToolIndexer>} ToolIndexer instance with local ONNX embeddings
    */
   static async createForTools(resourceManager, options = {}) {
-    console.log('🔧 Creating ToolIndexer with local ONNX embeddings for tools');
+    console.log('🔧 Creating ToolIndexer with Nomic embeddings for tools');
     
     // Import SemanticSearchProvider to get embedding service
     const { SemanticSearchProvider } = await import('../../../semantic-search/src/SemanticSearchProvider.js');
     const toolSemanticProvider = await SemanticSearchProvider.create(resourceManager);
     
-    console.log('✅ ToolIndexer configured with local ONNX embedding service');
+    console.log('✅ ToolIndexer configured with Nomic embedding service');
     
     // Get MongoDB provider from ResourceManager for perspectives storage
     const { StorageProvider } = await import('@legion/storage');

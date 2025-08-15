@@ -21,7 +21,7 @@ describe('ToolRegistry End-to-End Tests', () => {
       await resourceManager.initialize();
     }
     
-    registry = new ToolRegistry();
+    registry = new ToolRegistry({ enableSemanticSearch: false });
     await registry.initialize();
   }, 30000);
 
@@ -37,7 +37,9 @@ describe('ToolRegistry End-to-End Tests', () => {
       console.log('Step 1: Populating database...');
       const populationResult = await registry.populateDatabase({
         mode: 'clear',
-        verbose: false
+        verbose: false,
+        includePerspectives: false,
+        includeVectors: false
       });
 
       expect(populationResult.modulesAdded).toBeGreaterThan(0);

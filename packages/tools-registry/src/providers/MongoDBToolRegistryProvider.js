@@ -945,30 +945,16 @@ export class MongoDBToolRegistryProvider extends IToolRegistryProvider {
     const results = { generated: 0, errors: [] };
     
     try {
-      // ENFORCE: Create SemanticSearchProvider with ONLY local ONNX embeddings for tools
-      console.log('🔧 Creating SemanticSearchProvider with enforced local ONNX embeddings for tools');
-      
-      // Force local ONNX embeddings for tool search by setting environment override
-      const originalEnvValue = this.resourceManager.get('env.USE_LOCAL_EMBEDDINGS');
-      this.resourceManager.set('env.USE_LOCAL_EMBEDDINGS', 'true');
+      // Create SemanticSearchProvider with Nomic embeddings for tools
+      console.log('🔧 Creating SemanticSearchProvider with Nomic embeddings for tools');
       
       // Import SemanticSearchProvider class
       const { SemanticSearchProvider } = await import('../../../semantic-search/src/SemanticSearchProvider.js');
       
-      // Create provider with forced local embeddings
+      // Create provider with Nomic embeddings
       const toolSemanticProvider = await SemanticSearchProvider.create(this.resourceManager);
       
-      // Restore original environment value
-      if (originalEnvValue) {
-        this.resourceManager.set('env.USE_LOCAL_EMBEDDINGS', originalEnvValue);
-      }
-      
-      // Verify it's using local ONNX embeddings
-      if (!toolSemanticProvider.useLocalEmbeddings) {
-        throw new Error('Tool semantic search MUST use local ONNX embeddings only');
-      }
-      
-      console.log('✅ Tool semantic search provider configured with local ONNX embeddings');
+      console.log('✅ Tool semantic search provider configured with Nomic embeddings');
 
       // Get all tools that need embeddings
       const toolsWithoutEmbeddings = await this.getToolsWithoutEmbeddings(1000);

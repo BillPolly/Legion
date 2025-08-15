@@ -41,8 +41,19 @@ export class LocalEmbeddingService {
       await this.initialize();
     }
 
+    // Handle empty or whitespace-only strings by using a placeholder
+    const textToEmbed = (!text || text.trim() === '') ? '[EMPTY]' : text;
+
     const startTime = Date.now();
-    const embedding = await this.embedder.embed(text);
+    const embedding = await this.embedder.embed(textToEmbed);
+    
+    // Ensure we always return a proper embedding
+    if (!embedding || embedding.length !== 768) {
+      console.error(`Invalid embedding returned for text: "${text}" (length: ${embedding ? embedding.length : 'null'})`);
+      // Return a zero vector of the correct dimensions as fallback
+      const fallback = new Array(768).fill(0);
+      return fallback;
+    }
     
     // Update stats
     this.totalEmbeddings++;

@@ -24,6 +24,7 @@ export class ToolRegistry {
     
     // Semantic search
     this.semanticDiscovery = null;
+    this.enableSemanticSearch = options.enableSemanticSearch !== false; // Default to true
     
     // State
     this.initialized = false;
@@ -49,19 +50,21 @@ export class ToolRegistry {
       });
     }
     
-    // Initialize semantic tool discovery
-    try {
-      this.semanticDiscovery = await SemanticToolDiscovery.createForTools(
-        this.resourceManager,
-        {
-          collectionName: 'legion_tools',  // Use the correct Qdrant collection name
-          toolRegistry: this
-        }
-      );
-      console.log('✅ Semantic tool search initialized');
-    } catch (error) {
-      console.warn('⚠️ Semantic tool search not available:', error.message);
-      // Continue without semantic search
+    // Initialize semantic tool discovery if enabled
+    if (this.enableSemanticSearch) {
+      try {
+        this.semanticDiscovery = await SemanticToolDiscovery.createForTools(
+          this.resourceManager,
+          {
+            collectionName: 'legion_tools',  // Use the correct Qdrant collection name
+            toolRegistry: this
+          }
+        );
+        console.log('✅ Semantic tool search initialized');
+      } catch (error) {
+        console.warn('⚠️ Semantic tool search not available:', error.message);
+        // Continue without semantic search
+      }
     }
     
     this.initialized = true;
@@ -413,11 +416,14 @@ export class ToolRegistry {
     try {
       // For JSON modules, we need to load the module.json file and create a dynamic wrapper
       const { DynamicJsonModule } = await import('../loading/DynamicJsonModule.js');
+      const path = await import('path');
       
-      // The moduleMetadata should contain the JSON definition
-      // For now, we'll create a simple wrapper that can execute the inline functions
-      const moduleInstance = new DynamicJsonModule(moduleName, moduleMetadata);
-      await moduleInstance.initialize();
+      // Build the path to the module.json file
+      const monorepoRoot = path.resolve('../..');
+      const jsonPath = moduleMetadata.path; // e.g., "packages/test-json-module"
+      
+      // Use the static factory method to properly load the JSON module
+      const moduleInstance = await DynamicJsonModule.createFromJson(jsonPath, monorepoRoot);
       
       return moduleInstance;
     } catch (error) {
@@ -519,7 +525,7 @@ export class ToolRegistry {
     });
     
     const result = await loadingManager.fullPipeline({
-      moduleFilter: options.module || null,
+      module: options.module || null,
       clearFirst: (options.mode || 'clear') === 'clear',
       includePerspectives: options.includePerspectives !== false, // Default true
       includeVectors: options.includeVectors || false // Default false

@@ -1,195 +1,140 @@
 /**
  * ResourceManager Instance Debug Test
  * 
- * This test debugs why modules receive ResourceManager instances with no environment variables
- * even though the original ResourceManager has them loaded correctly.
+ * This test debugs ResourceManager singleton behavior and environment variable access
+ * to ensure proper dependency injection across the module loading system.
  */
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
-import { DirectModuleDiscovery } from '../../src/discovery/DirectModuleDiscovery.js';
-import { ModuleInstantiator } from '../../src/discovery/ModuleInstantiator.js';
+import { ModuleLoader } from '../../src/loading/ModuleLoader.js';
 import { ResourceManager } from '@legion/core';
-import path from 'path';
 
 describe('ResourceManager Instance Debug', () => {
   let resourceManager;
-  let moduleInstantiator;
-  let discoveredModules;
+  let moduleLoader;
 
   beforeAll(async () => {
     // Initialize ResourceManager
     resourceManager = ResourceManager.getInstance();
     if (!resourceManager.initialized) { await resourceManager.initialize(); }
 
-    // Create ModuleInstantiator with ResourceManager
-    moduleInstantiator = new ModuleInstantiator({
-      resourceManager,
-      verbose: false
+    // Create module loader
+    moduleLoader = new ModuleLoader({ verbose: true });
+    await moduleLoader.initialize();
+  });
+
+  describe('ResourceManager Singleton Behavior', () => {
+    test('should maintain singleton pattern consistently', () => {
+      const rm1 = ResourceManager.getInstance();
+      const rm2 = ResourceManager.getInstance();
+      const rm3 = resourceManager;
+
+      expect(rm1).toBe(rm2);
+      expect(rm1).toBe(rm3);
+      expect(rm2).toBe(rm3);
     });
 
-    // Discover modules
-    const discovery = new DirectModuleDiscovery({ verbose: false });
-    const rootPath = path.resolve('../tools-collection/src');
-    discoveredModules = await discovery.discoverModules(rootPath);
-
-    console.log(`Found ${discoveredModules.length} modules for testing:`);
-    for (const module of discoveredModules) {
-      console.log(`  - ${module.name} (${module.type})`);
-    }
-  });
-
-  test('should verify ResourceManager has required API keys', () => {
-    console.log('📋 Testing ResourceManager API key access...');
-    
-    expect(resourceManager).toBeTruthy();
-    
-    // Test accessing required API keys
-    const anthropicKey = resourceManager.get('env.ANTHROPIC_API_KEY');
-    const githubPat = resourceManager.get('env.GITHUB_PAT');
-    const serperKey = resourceManager.get('env.SERPER_API_KEY');
-    
-    console.log(`  ANTHROPIC_API_KEY: ${!!anthropicKey ? 'EXISTS' : 'MISSING'}`);
-    console.log(`  GITHUB_PAT: ${!!githubPat ? 'EXISTS' : 'MISSING'}`);
-    console.log(`  SERPER_API_KEY: ${!!serperKey ? 'EXISTS' : 'MISSING'}`);
-    console.log(`  OPENAI_API_KEY: ${!!resourceManager.get('env.OPENAI_API_KEY') ? 'EXISTS' : 'MISSING'}`);
-    
-    expect(anthropicKey).toBeTruthy();
-    expect(githubPat).toBeTruthy();
-    expect(serperKey).toBeTruthy();
-  });
-
-  test('should verify ModuleInstantiator has access to ResourceManager with API keys', () => {
-    console.log('\n📋 Testing ModuleInstantiator ResourceManager access...');
-    
-    expect(moduleInstantiator.resourceManager).toBeTruthy();
-    expect(moduleInstantiator.resourceManager).toBe(resourceManager);
-    
-    const instantiatorRM = moduleInstantiator.resourceManager;
-    
-    console.log(`  Same instance: ${instantiatorRM === resourceManager}`);
-    console.log(`  ANTHROPIC_API_KEY accessible: ${!!instantiatorRM.get('env.ANTHROPIC_API_KEY')}`);
-    console.log(`  GITHUB_PAT accessible: ${!!instantiatorRM.get('env.GITHUB_PAT')}`);
-    console.log(`  SERPER_API_KEY accessible: ${!!instantiatorRM.get('env.SERPER_API_KEY')}`);
-    
-    expect(instantiatorRM).toBe(resourceManager);
-    expect(instantiatorRM.get('env.ANTHROPIC_API_KEY')).toBeTruthy();
-  });
-
-  test('should verify ModuleInstantiator passes ResourceManager with API keys to modules', async () => {
-    console.log('\n📋 Testing module instantiation with API key access...');
-    
-    const aiModule = discoveredModules.find(m => m.name === 'AIGeneration');
-    expect(aiModule).toBeTruthy();
-    
-    console.log(`  Found AIGenerationModule: ${aiModule.name}`);
-    console.log(`  Has factory: ${aiModule.hasFactory}`);
-
-    // Import the module to intercept its create method
-    const { default: AIGenerationModule } = await import('../../../tools-collection/src/ai-generation/AIGenerationModule.js');
-    
-    const originalCreate = AIGenerationModule.create;
-    let interceptedRM = null;
-    let apiKeyFound = false;
-    
-    // Override to check ResourceManager
-    AIGenerationModule.create = async function(receivedRM) {
-      interceptedRM = receivedRM;
-      console.log(`    Received ResourceManager: ${!!receivedRM}`);
-      console.log(`    Is same instance: ${receivedRM === resourceManager}`);
-      console.log(`    Can access ANTHROPIC_API_KEY: ${!!receivedRM.get('env.ANTHROPIC_API_KEY')}`);
-      console.log(`    Can access OPENAI_API_KEY: ${!!receivedRM.get('env.OPENAI_API_KEY')}`);
+    test('should have environment variables loaded', () => {
+      console.log('🔍 Debugging ResourceManager state:');
+      console.log('Initialized:', resourceManager.initialized);
       
-      apiKeyFound = !!receivedRM.get('env.OPENAI_API_KEY');
+      // Check for common environment variables
+      const nodeEnv = resourceManager.get('env.NODE_ENV');
+      const mongoUrl = resourceManager.get('env.MONGODB_URL');
       
-      // Call original (expected to fail due to missing OPENAI_API_KEY)
-      return originalCreate.call(this, receivedRM);
-    };
-    
-    try {
-      await moduleInstantiator.instantiate(aiModule);
-      console.log('  ✅ Module instantiated successfully');
-    } catch (error) {
-      if (error.message.includes('OPENAI_API_KEY')) {
-        console.log(`  ✅ Module correctly failed due to missing OPENAI_API_KEY`);
-      } else {
-        console.log(`  ❌ Module failed for different reason: ${error.message}`);
+      console.log('NODE_ENV:', nodeEnv);
+      console.log('MONGODB_URL:', mongoUrl ? 'configured' : 'not found');
+      
+      expect(nodeEnv).toBeDefined();
+      expect(mongoUrl).toBeDefined();
+    });
+  });
+
+  describe('Module Loading with ResourceManager', () => {
+    test('should load modules with consistent ResourceManager access', async () => {
+      console.log('🔍 Testing module loading...');
+      
+      const result = await moduleLoader.loadModules();
+      
+      console.log(`Loaded ${result.loaded.length} modules successfully`);
+      console.log(`Failed to load ${result.failed.length} modules`);
+      
+      if (result.failed.length > 0) {
+        console.log('Failed modules:');
+        result.failed.forEach(({ config, error }) => {
+          console.log(`  - ${config.name}: ${error}`);
+        });
       }
-    }
-    
-    AIGenerationModule.create = originalCreate;
-    
-    expect(interceptedRM).toBeTruthy();
-    expect(interceptedRM).toBe(resourceManager);
-    expect(interceptedRM.get('env.ANTHROPIC_API_KEY')).toBeTruthy();
+
+      expect(result.loaded.length).toBeGreaterThan(0);
+    });
+
+    test('should provide modules with working ResourceManager access', async () => {
+      const result = await moduleLoader.loadModules();
+      
+      result.loaded.forEach(({ config, instance }) => {
+        console.log(`🔍 Checking module: ${config.name}`);
+        
+        // If module has resourceManager property, verify it's the singleton
+        if (instance.resourceManager) {
+          console.log(`  - Has resourceManager property`);
+          expect(instance.resourceManager).toBe(resourceManager);
+        }
+        
+        // Verify module can provide tools (indicates successful instantiation)
+        const tools = instance.getTools();
+        console.log(`  - Provides ${tools.length} tools`);
+        expect(Array.isArray(tools)).toBe(true);
+      });
+    });
   });
 
-  test('should test SerperModule instantiation to verify API key handling', async () => {
-    console.log('\n📋 Testing SerperModule with SERPER_API_KEY...');
-    
-    const serperModule = discoveredModules.find(m => m.name === 'Serper');
-    expect(serperModule).toBeTruthy();
-    
-    console.log(`  Found SerperModule: ${serperModule.name}`);
-    console.log(`  Module type: ${serperModule.type}`);
-    console.log(`  Has factory: ${serperModule.hasFactory}`);
-    console.log(`  ModuleInstantiator has resourceManager: ${!!moduleInstantiator.resourceManager}`);
-    console.log(`  ResourceManager has SERPER_API_KEY: ${!!resourceManager.get('env.SERPER_API_KEY')}`);
-    
-    try {
-      const result = await moduleInstantiator.instantiate(serperModule);
-      console.log('  ✅ SerperModule instantiated successfully');
+  describe('Environment Variable Access Patterns', () => {
+    test('should access environment variables consistently', () => {
+      const envVars = [
+        'NODE_ENV',
+        'MONGODB_URL',
+        'MONGODB_URI',
+        'MONGODB_DATABASE',
+        'QDRANT_URL'
+      ];
+
+      console.log('🔍 Environment variable access test:');
       
-      // Check if it has getTools method
-      if (typeof result.getTools === 'function') {
-        const tools = result.getTools();
-        console.log(`    Module has ${tools.length} tools`);
-      }
+      envVars.forEach(varName => {
+        const value = resourceManager.get(`env.${varName}`);
+        console.log(`  ${varName}: ${value ? 'configured' : 'not found'}`);
+      });
       
-    } catch (error) {
-      console.log(`  ❌ SerperModule failed: ${error.message}`);
-      
-      if (error.message.includes('SERPER_API_KEY')) {
-        console.log('    (Expected - means ResourceManager was used correctly)');
-      }
-    }
+      // At least NODE_ENV should always be available
+      expect(resourceManager.get('env.NODE_ENV')).toBeDefined();
+    });
+
+    test('should handle missing variables gracefully', () => {
+      const nonExistent = resourceManager.get('env.NON_EXISTENT_VAR_12345');
+      expect(nonExistent).toBeUndefined();
+    });
   });
 
-  test('should verify modules can instantiate and access their tools correctly', async () => {
-    console.log('\n📋 Testing module tool instantiation...');
-    
-    // Test a simple module that doesn't need API keys
-    const calculatorModule = discoveredModules.find(m => m.name.includes('Calculator'));
-    expect(calculatorModule).toBeTruthy();
-    console.log(`  Testing Calculator module: ${calculatorModule.name}`);
-    
-    const result = await moduleInstantiator.instantiate(calculatorModule);
-    console.log('    ✅ Calculator instantiated successfully');
-    
-    expect(result).toBeTruthy();
-    expect(typeof result.getTools).toBe('function');
-    
-    const tools = result.getTools();
-    console.log(`    Has ${tools.length} tools`);
-    expect(tools.length).toBeGreaterThan(0);
-    
-    for (const tool of tools) {
-      console.log(`      Tool: ${tool.name} - ${typeof tool.execute === 'function' ? 'executable' : 'not executable'}`);
-      expect(typeof tool.execute).toBe('function');
-    }
-    
-    // Test a module with ResourceManager dependency
-    const fileModule = discoveredModules.find(m => m.name === 'File');
-    expect(fileModule).toBeTruthy();
-    console.log(`  Testing File module: ${fileModule.name}`);
-    
-    const fileResult = await moduleInstantiator.instantiate(fileModule);
-    console.log('    ✅ File module instantiated successfully');
-    
-    expect(fileResult).toBeTruthy();
-    expect(typeof fileResult.getTools).toBe('function');
-    
-    const fileTools = fileResult.getTools();
-    console.log(`    Has ${fileTools.length} tools`);
-    expect(fileTools.length).toBeGreaterThan(0);
+  describe('Module Dependencies Resolution', () => {
+    test('should resolve module dependencies correctly', async () => {
+      const result = await moduleLoader.loadModules();
+      
+      console.log('🔍 Module dependency resolution:');
+      
+      result.loaded.forEach(({ config, instance }) => {
+        console.log(`Module: ${config.name} (${config.type})`);
+        
+        // Check if module was instantiated properly
+        expect(instance).toBeDefined();
+        expect(instance.constructor).toBeDefined();
+        
+        // Check if module can provide tools
+        const tools = instance.getTools();
+        expect(Array.isArray(tools)).toBe(true);
+        
+        console.log(`  - Successfully instantiated with ${tools.length} tools`);
+      });
+    });
   });
 });

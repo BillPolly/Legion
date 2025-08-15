@@ -20,7 +20,7 @@ async function main() {
     // Initialize
     const resourceManager = ResourceManager.getInstance();
     if (!resourceManager.initialized) { await resourceManager.initialize(); }
-    resourceManager.set('env.USE_LOCAL_EMBEDDINGS', 'true');
+    // No need to set embedding type - always uses Nomic
     
     const mongoProvider = await MongoDBToolRegistryProvider.create(resourceManager, {
       enableSemanticSearch: false

@@ -8,9 +8,9 @@
     "legion-mcp": "./src/cli/mcp-cli.js"
   },
   "scripts": {
-    "test": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest",
-    "test:watch": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --watch",
-    "test:coverage": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "test": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
+    "test:watch": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --watch --runInBand",
+    "test:coverage": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --coverage --runInBand",
     "test:modules": "NODE_OPTIONS='--experimental-vm-modules' node scripts/test-module-tools.js",
     "test:module": "NODE_OPTIONS='--experimental-vm-modules' node scripts/test-module-tools.js",
     "db:populate": "NODE_OPTIONS='--experimental-vm-modules' node scripts/populate-and-verify.js",

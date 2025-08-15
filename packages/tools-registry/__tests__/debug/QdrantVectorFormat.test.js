@@ -76,7 +76,7 @@ describe('Qdrant Vector Format Debug', () => {
 
     expect(perspective.embedding).toBeDefined();
     expect(Array.isArray(perspective.embedding)).toBe(true);
-    expect(perspective.embedding.length).toBe(384); // ONNX model output size
+    expect(perspective.embedding.length).toBe(768); // Nomic model output size
   });
 
   test('should examine vector format created by LoadingManager', async () => {
@@ -112,7 +112,7 @@ describe('Qdrant Vector Format Debug', () => {
     expect(firstVector.id).toBeDefined();
     expect(typeof firstVector.id).toBe('string');
     expect(Array.isArray(firstVector.vector)).toBe(true);
-    expect(firstVector.vector.length).toBe(384);
+    expect(firstVector.vector.length).toBe(768);
     expect(firstVector.vector.every(v => typeof v === 'number')).toBe(true);
     expect(firstVector.vector.every(v => isFinite(v))).toBe(true);
     expect(typeof firstVector.payload).toBe('object');

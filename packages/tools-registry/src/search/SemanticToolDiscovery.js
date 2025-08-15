@@ -54,50 +54,33 @@ export class SemanticToolDiscovery {
    * @returns {Promise<SemanticToolDiscovery>} Discovery instance with local ONNX embeddings
    */
   static async createForTools(resourceManager, options = {}) {
-    console.log('🔧 Creating SemanticToolDiscovery with enforced local ONNX embeddings for tools');
+    console.log('🔧 Creating SemanticToolDiscovery with Nomic embeddings for tools');
     
-    // Force local ONNX embeddings by temporarily overriding environment
-    const originalEnvValue = resourceManager.get('env.USE_LOCAL_EMBEDDINGS');
-    resourceManager.set('env.USE_LOCAL_EMBEDDINGS', 'true');
+    // Import SemanticSearchProvider to get embedding service
+    const { SemanticSearchProvider } = await import('../../../semantic-search/src/SemanticSearchProvider.js');
+    const toolSemanticProvider = await SemanticSearchProvider.create(resourceManager);
     
-    try {
-      // Import SemanticSearchProvider to get embedding service
-      const { SemanticSearchProvider } = await import('../../../semantic-search/src/SemanticSearchProvider.js');
-      const toolSemanticProvider = await SemanticSearchProvider.create(resourceManager);
-      
-      // Verify it's using local ONNX embeddings
-      if (!toolSemanticProvider.useLocalEmbeddings) {
-        throw new Error('Tool discovery MUST use local ONNX embeddings only');
-      }
-      
-      // Create ToolIndexer with local embeddings
-      const toolIndexer = await ToolIndexer.createForTools(resourceManager, {
-        collectionName: options.collectionName || 'legion_tools'
-      });
-      
-      console.log('✅ SemanticToolDiscovery configured with local ONNX embeddings');
-      
-      // Get MongoDB provider from ResourceManager for 3-collection architecture
-      const { StorageProvider } = await import('@legion/storage');
-      const storageProvider = await StorageProvider.create(resourceManager);
-      const mongoProvider = storageProvider.getProvider('mongodb');
-      
-      // Create SemanticToolDiscovery with local components
-      return new SemanticToolDiscovery({
-        semanticSearchProvider: toolSemanticProvider,
-        toolIndexer,
-        toolRegistry: options.toolRegistry,
-        mongoProvider: mongoProvider,
-        collectionName: options.collectionName || 'legion_tools',
-        ...options
-      });
-      
-    } finally {
-      // Restore original environment value
-      if (originalEnvValue) {
-        resourceManager.set('env.USE_LOCAL_EMBEDDINGS', originalEnvValue);
-      }
-    }
+    // Create ToolIndexer with Nomic embeddings
+    const toolIndexer = await ToolIndexer.createForTools(resourceManager, {
+      collectionName: options.collectionName || 'legion_tools'
+    });
+    
+    console.log('✅ SemanticToolDiscovery configured with Nomic embeddings');
+    
+    // Get MongoDB provider from ResourceManager for 3-collection architecture
+    const { StorageProvider } = await import('@legion/storage');
+    const storageProvider = await StorageProvider.create(resourceManager);
+    const mongoProvider = storageProvider.getProvider('mongodb');
+    
+    // Create SemanticToolDiscovery with components
+    return new SemanticToolDiscovery({
+      semanticSearchProvider: toolSemanticProvider,
+      toolIndexer,
+      toolRegistry: options.toolRegistry,
+      mongoProvider: mongoProvider,
+      collectionName: options.collectionName || 'legion_tools',
+      ...options
+    });
   }
 
   /**

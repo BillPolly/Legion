@@ -18,7 +18,7 @@ describe('Perspective Generation via LoadingManager', () => {
     // Initialize ResourceManager with forced local embeddings
     resourceManager = ResourceManager.getInstance();
     if (!resourceManager.initialized) { await resourceManager.initialize(); }
-    resourceManager.set('env.USE_LOCAL_EMBEDDINGS', 'true');
+    // No need to set embedding type - always uses Nomic
 
     // Create providers for direct database inspection
     mongoProvider = await MongoDBToolRegistryProvider.create(resourceManager, {

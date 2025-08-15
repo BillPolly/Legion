@@ -73,14 +73,26 @@ export class LoadingManager {
       enableSemanticSearch: false
     });
 
-    this.semanticSearchProvider = await SemanticSearchProvider.create(this.resourceManager);
-    
-    this.toolIndexer = await createToolIndexer(this.resourceManager);
+    // Don't initialize semantic search components until needed
+    // this.semanticSearchProvider = await SemanticSearchProvider.create(this.resourceManager);
+    // this.toolIndexer = await createToolIndexer(this.resourceManager);
 
     this.initialized = true;
 
     if (this.verbose) {
       console.log('✅ LoadingManager initialized with all components');
+    }
+  }
+
+  /**
+   * Ensure semantic search components are initialized
+   */
+  async #ensureSemanticSearchInitialized() {
+    if (!this.semanticSearchProvider) {
+      this.semanticSearchProvider = await SemanticSearchProvider.create(this.resourceManager);
+    }
+    if (!this.toolIndexer) {
+      this.toolIndexer = await createToolIndexer(this.resourceManager);
     }
   }
 
@@ -110,13 +122,14 @@ export class LoadingManager {
       }
     }
 
-    // Clear Qdrant collections and recreate with correct dimensions
-    const qdrantCollections = ['legion_tools'];
-    
-    for (const collectionName of qdrantCollections) {
-      try {
-        const countBefore = await this.semanticSearchProvider.count(collectionName);
-        if (countBefore > 0) {
+    // Clear Qdrant collections only if semantic search is initialized
+    if (this.semanticSearchProvider) {
+      const qdrantCollections = ['legion_tools'];
+      
+      for (const collectionName of qdrantCollections) {
+        try {
+          const countBefore = await this.semanticSearchProvider.count(collectionName);
+          if (countBefore > 0) {
           await this.semanticSearchProvider.vectorStore.deleteCollection(collectionName);
           if (this.verbose) {
             console.log(`  ✅ Deleted Qdrant collection '${collectionName}': ${countBefore} vectors removed`);
@@ -131,18 +144,19 @@ export class LoadingManager {
         }
       }
 
-      // Recreate collection with correct dimensions for local ONNX embeddings (384D)
-      try {
-        await this.semanticSearchProvider.vectorStore.createCollection(collectionName, {
-          dimension: 384, // Local ONNX all-MiniLM-L6-v2 model dimensions
-          distance: 'cosine'
-        });
-        if (this.verbose) {
-          console.log(`  ✅ Recreated '${collectionName}' with 384 dimensions (ONNX embeddings)`);
-        }
-      } catch (error) {
-        if (this.verbose) {
-          console.log(`  ⚠️ Could not recreate '${collectionName}': ${error.message}`);
+        // Recreate collection with correct dimensions for Nomic embeddings (768D)
+        try {
+          await this.semanticSearchProvider.vectorStore.createCollection(collectionName, {
+            dimension: 768, // Nomic embed model dimensions
+            distance: 'cosine'
+          });
+          if (this.verbose) {
+            console.log(`  ✅ Recreated '${collectionName}' with 768 dimensions (Nomic embeddings)`);
+          }
+        } catch (error) {
+          if (this.verbose) {
+            console.log(`  ⚠️ Could not recreate '${collectionName}': ${error.message}`);
+          }
         }
       }
     }
@@ -165,7 +179,7 @@ export class LoadingManager {
       errors: []
     };
 
-    return { totalCleared, mongoCollections, qdrantCollections };
+    return { totalCleared };
   }
 
   /**
@@ -273,6 +287,7 @@ export class LoadingManager {
    */
   async generatePerspectives(options = {}) {
     await this.#ensureInitialized();
+    await this.#ensureSemanticSearchInitialized();
 
     // Normalize options
     const opts = typeof options === 'string' 
@@ -404,6 +419,7 @@ export class LoadingManager {
    */
   async indexVectors(options = {}) {
     await this.#ensureInitialized();
+    await this.#ensureSemanticSearchInitialized();
 
     // Normalize options
     const opts = typeof options === 'string' 
@@ -477,7 +493,7 @@ export class LoadingManager {
     }
 
     if (this.verbose) {
-      console.log(`📝 Upserting ${perspectives.length} vectors to Qdrant collection: ${this.toolIndexer.collectionName} (384D)`);
+      console.log(`📝 Upserting ${perspectives.length} vectors to Qdrant collection: ${this.toolIndexer.collectionName} (768D)`);
     }
 
     // Transform perspectives to vectors using proper Qdrant format (matching ToolIndexer)

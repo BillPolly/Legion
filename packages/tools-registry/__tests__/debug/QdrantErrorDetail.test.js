@@ -58,7 +58,7 @@ describe('Qdrant Error Detail Debug', () => {
     // Create minimal test vector
     const testVector = {
       id: 12345, // Use simple numeric ID
-      vector: perspective.embedding.slice(0, 384), // Ensure exactly 384 dimensions
+      vector: perspective.embedding.slice(0, 768), // Ensure exactly 768 dimensions
       payload: {
         toolName: perspective.toolName
       }
@@ -157,7 +157,7 @@ describe('Qdrant Error Detail Debug', () => {
     try {
       await client.createCollection(testCollectionName, {
         vectors: {
-          size: 384,
+          size: 768,
           distance: 'Cosine'
         }
       });
@@ -166,7 +166,7 @@ describe('Qdrant Error Detail Debug', () => {
       // Try to insert a simple vector
       const simpleVector = {
         id: 999,
-        vector: new Array(384).fill(0.1),
+        vector: new Array(768).fill(0.1),
         payload: { test: 'value' }
       };
       

@@ -65,14 +65,14 @@
   {
     "name": "Encode",
     "type": "class",
-    "path": "packages/tools-collection/src/encode",
+    "path": "packages/tools-collection/src/encode/EncodeModule",
     "className": "EncodeModule",
     "description": "Encoding and decoding utilities"
   },
   {
     "name": "ServerStarter",
     "type": "class",
-    "path": "packages/tools-collection/src/server-starter",
+    "path": "packages/tools-collection/src/server-starter/ServerStarterModule",
     "className": "ServerStarterModule",
     "description": "Start and manage development servers"
   },
