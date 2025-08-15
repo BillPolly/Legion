@@ -1,0 +1,18 @@
+{
+  "name": "@legion/nomic",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Local semantic embeddings using nomic-embed-text model",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "download-model": "node scripts/download-model.js"
+  },
+  "dependencies": {
+    "node-llama-cpp": "^3.2.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

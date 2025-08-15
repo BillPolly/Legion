@@ -1,43 +1,64 @@
 /**
  * QdrantVectorStore - Handles vector storage and search using Qdrant
+ * 
+ * Now uses ResourceManager for singleton Qdrant client management.
  */
 
+import { ResourceManager } from '@legion/core';
+
 export class QdrantVectorStore {
-  constructor(config) {
+  constructor(config, resourceManager = null) {
     this.config = {
       url: config.url || 'http://localhost:6333',
       apiKey: config.apiKey,
       timeout: config.timeout || 30000
     };
     
+    // Use provided ResourceManager or get singleton
+    this.resourceManager = resourceManager || ResourceManager.getInstance();
     this.client = null;
     this.connected = false;
-    this._initPromise = null; // Store initialization promise
   }
   
-  async _initializeClient() {
-    try {
-      // Dynamic import to avoid hard dependency
-      const { QdrantClient } = await import('@qdrant/js-client-rest').catch(() => ({ QdrantClient: null }));
-      
-      if (QdrantClient) {
-        this.client = new QdrantClient({
+  async _ensureClient() {
+    if (this.client) return this.client;
+    
+    // Create unique key for this Qdrant connection (avoid dots as they trigger dot notation parsing)
+    const clientKey = `qdrant_client_${this.config.url.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    
+    // Use ResourceManager to get or create singleton Qdrant client
+    this.client = await this.resourceManager.getOrInitialize(clientKey, async () => {
+      try {
+        // Dynamic import to avoid hard dependency
+        const qdrantModule = await import('@qdrant/js-client-rest').catch((error) => {
+          console.error('❌ Failed to import @qdrant/js-client-rest:', error.message);
+          return { QdrantClient: null };
+        });
+        
+        const { QdrantClient } = qdrantModule;
+        
+        if (!QdrantClient) {
+          throw new Error('Qdrant client not available - @qdrant/js-client-rest may not be installed');
+        }
+        
+        console.log(`Creating new Qdrant client for ${this.config.url}`);
+        return new QdrantClient({
           url: this.config.url,
           apiKey: this.config.apiKey,
           timeout: this.config.timeout
         });
+      } catch (error) {
+        console.warn('Qdrant client initialization failed:', error.message);
+        throw error;
       }
-    } catch (error) {
-      console.warn('Qdrant client initialization failed:', error.message);
-    }
+    });
+    
+    return this.client;
   }
   
   async connect() {
-    // Ensure client is initialized
-    if (!this._initPromise) {
-      this._initPromise = this._initializeClient();
-    }
-    await this._initPromise;
+    // Ensure client is initialized through ResourceManager
+    await this._ensureClient();
     
     if (!this.client) {
       throw new Error('Failed to initialize Qdrant client - @qdrant/js-client-rest may not be installed');
@@ -59,6 +80,10 @@ export class QdrantVectorStore {
   }
   
   async ensureCollection(name, vectorSize = 1536, options = {}) {
+    if (!this.client) {
+      await this._ensureClient();
+    }
+    
     if (!this.client) {
       throw new Error('Qdrant client not initialized');
     }
@@ -95,6 +120,10 @@ export class QdrantVectorStore {
 
   async count(collection) {
     if (!this.client) {
+      await this._ensureClient();
+    }
+    
+    if (!this.client) {
       throw new Error('Qdrant client not initialized');
     }
     
@@ -111,6 +140,10 @@ export class QdrantVectorStore {
   }
   
   async upsert(collection, vectors) {
+    if (!this.client) {
+      await this._ensureClient();
+    }
+    
     if (!this.client) {
       throw new Error('Qdrant client not initialized');
     }
@@ -171,6 +204,10 @@ export class QdrantVectorStore {
   
   async search(collection, queryVector, options = {}) {
     if (!this.client) {
+      await this._ensureClient();
+    }
+    
+    if (!this.client) {
       throw new Error('Qdrant client not initialized');
     }
     
@@ -194,6 +231,10 @@ export class QdrantVectorStore {
   }
   
   async find(collection, filter = {}, options = {}) {
+    if (!this.client) {
+      await this._ensureClient();
+    }
+    
     if (!this.client) {
       throw new Error('Qdrant client not initialized');
     }
@@ -219,6 +260,10 @@ export class QdrantVectorStore {
   
   async update(collection, filter, update) {
     if (!this.client) {
+      await this._ensureClient();
+    }
+    
+    if (!this.client) {
       throw new Error('Qdrant client not initialized');
     }
     
@@ -227,6 +272,10 @@ export class QdrantVectorStore {
   }
   
   async delete(collection, filter) {
+    if (!this.client) {
+      await this._ensureClient();
+    }
+    
     if (!this.client) {
       throw new Error('Qdrant client not initialized');
     }
@@ -252,6 +301,10 @@ export class QdrantVectorStore {
    */
   async deleteCollection(collectionName) {
     if (!this.client) {
+      await this._ensureClient();
+    }
+    
+    if (!this.client) {
       throw new Error('Qdrant client not initialized');
     }
     
@@ -270,6 +323,10 @@ export class QdrantVectorStore {
    * Delete vectors by filter (for selective module clearing)
    */
   async deleteByFilter(collection, filter) {
+    if (!this.client) {
+      await this._ensureClient();
+    }
+    
     if (!this.client) {
       throw new Error('Qdrant client not initialized');
     }

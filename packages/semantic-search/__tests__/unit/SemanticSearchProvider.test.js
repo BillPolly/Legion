@@ -4,15 +4,21 @@
 
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { SemanticSearchProvider } from '../../src/SemanticSearchProvider.js';
-import { ResourceManager } from '@legion/tools';
+import { ResourceManager } from '@legion/core';
+import { TestDataGenerator } from '../utils/TestDataGenerator.js';
 
-describe.skip('SemanticSearchProvider (requires Qdrant)', () => {
+describe('SemanticSearchProvider (requires Qdrant)', () => {
   let resourceManager;
   let provider;
 
   beforeEach(async () => {
-    // Use REAL ResourceManager to test actual local embedding functionality
-    resourceManager = new ResourceManager();
+    // Use singleton ResourceManager instance
+    resourceManager = ResourceManager.getInstance();
+    
+    // Clear any existing resources for clean test state
+    resourceManager.clear();
+    
+    // Initialize ResourceManager to load .env
     await resourceManager.initialize();
     
     // Force local embeddings by setting the environment variable
@@ -39,13 +45,13 @@ describe.skip('SemanticSearchProvider (requires Qdrant)', () => {
         .rejects.toThrow('ResourceManager is required');
     });
 
-    it('should throw error without any embedding configuration', async () => {
-      const invalidRM = new ResourceManager();
-      await invalidRM.initialize();
-      // Don't set any embedding configuration
+    it('should work with local embeddings without OpenAI key', async () => {
+      // Local embeddings are always used now, no need for API key
+      provider = await SemanticSearchProvider.create(resourceManager);
       
-      await expect(SemanticSearchProvider.create(invalidRM))
-        .rejects.toThrow('Either OPENAI_API_KEY or LOCAL_EMBEDDING_MODEL_PATH is required for semantic search');
+      expect(provider).toBeInstanceOf(SemanticSearchProvider);
+      expect(provider.initialized).toBe(true);
+      expect(provider.getMetadata().embeddingService).toBe('local-onnx');
     });
 
     it('should use default configuration values', async () => {
@@ -92,7 +98,7 @@ describe.skip('SemanticSearchProvider (requires Qdrant)', () => {
     });
 
     it('should insert multiple documents', async () => {
-      const documents = TestUtils.createMockTools(3);
+      const documents = TestDataGenerator.generateDocuments(3);
       
       const result = await provider.insert('test_collection', documents);
       
@@ -117,9 +123,12 @@ describe.skip('SemanticSearchProvider (requires Qdrant)', () => {
       await provider.connect();
       
       // Mock vector store search to return test results
-      provider.vectorStore.search = jest.fn().mockResolvedValue(
-        TestUtils.createMockSearchResults(3)
-      );
+      const mockSearchResults = [
+        { document: { id: '1', content: 'test doc 1' }, _similarity: 0.9, _searchType: 'semantic', _id: '1' },
+        { document: { id: '2', content: 'test doc 2' }, _similarity: 0.8, _searchType: 'semantic', _id: '2' },
+        { document: { id: '3', content: 'test doc 3' }, _similarity: 0.7, _searchType: 'semantic', _id: '3' }
+      ];
+      provider.vectorStore.search = jest.fn().mockResolvedValue(mockSearchResults);
     });
 
     it('should perform semantic search with default options', async () => {
@@ -131,7 +140,8 @@ describe.skip('SemanticSearchProvider (requires Qdrant)', () => {
       expect(results.length).toBe(3);
       
       results.forEach(result => {
-        TestUtils.assertValidSearchResult(result);
+        expect(result).toHaveProperty('document');
+        expect(result).toHaveProperty('_similarity');
         expect(result._searchType).toBe('semantic');
       });
     });
@@ -174,12 +184,14 @@ describe.skip('SemanticSearchProvider (requires Qdrant)', () => {
       await provider.connect();
       
       // Mock both semantic and keyword results
-      provider.vectorStore.search = jest.fn().mockResolvedValue(
-        TestUtils.createMockSearchResults(2, 0.9)
-      );
-      provider.vectorStore.find = jest.fn().mockResolvedValue(
-        TestUtils.createMockTools(2)
-      );
+      const mockSemanticResults = [
+        { id: '1', content: 'semantic doc 1', _similarity: 0.9, _searchType: 'semantic', _id: '1' },
+        { id: '2', content: 'semantic doc 2', _similarity: 0.8, _searchType: 'semantic', _id: '2' }
+      ];
+      const mockKeywordResults = TestDataGenerator.generateDocuments(2);
+      
+      provider.semanticSearch = jest.fn().mockResolvedValue(mockSemanticResults);
+      provider.find = jest.fn().mockResolvedValue(mockKeywordResults);
     });
 
     it('should perform hybrid search', async () => {
@@ -189,7 +201,9 @@ describe.skip('SemanticSearchProvider (requires Qdrant)', () => {
       
       expect(Array.isArray(results)).toBe(true);
       results.forEach(result => {
-        TestUtils.assertValidHybridResult(result);
+        expect(result).toHaveProperty('_semanticScore');
+        expect(result).toHaveProperty('_keywordScore');
+        expect(result).toHaveProperty('_hybridScore');
         expect(result._searchType).toBe('hybrid');
       });
     });
@@ -216,9 +230,12 @@ describe.skip('SemanticSearchProvider (requires Qdrant)', () => {
       provider = await SemanticSearchProvider.create(resourceManager);
       await provider.connect();
       
-      provider.vectorStore.search = jest.fn().mockResolvedValue(
-        TestUtils.createMockSearchResults(3)
-      );
+      const mockSearchResults = [
+        { document: { id: '1', content: 'similar doc 1' }, _similarity: 0.9, _searchType: 'semantic', _id: '1' },
+        { document: { id: '2', content: 'similar doc 2' }, _similarity: 0.8, _searchType: 'semantic', _id: '2' },
+        { document: { id: '3', content: 'similar doc 3' }, _similarity: 0.7, _searchType: 'semantic', _id: '3' }
+      ];
+      provider.vectorStore.search = jest.fn().mockResolvedValue(mockSearchResults);
     });
 
     it('should find similar documents', async () => {
@@ -228,7 +245,8 @@ describe.skip('SemanticSearchProvider (requires Qdrant)', () => {
       
       expect(Array.isArray(results)).toBe(true);
       results.forEach(result => {
-        TestUtils.assertValidSearchResult(result);
+        expect(result).toHaveProperty('document');
+        expect(result).toHaveProperty('_similarity');
       });
     });
   });

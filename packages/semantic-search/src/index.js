@@ -1,7 +1,7 @@
 /**
  * @legion/semantic-search - Main exports
  * 
- * Semantic search provider for Legion framework using OpenAI embeddings
+ * Semantic search provider for Legion framework using local embeddings
  * and Qdrant vector database for natural language tool discovery.
  */
 
@@ -9,7 +9,6 @@
 export { SemanticSearchProvider } from './SemanticSearchProvider.js';
 
 // Services
-export { OpenAIEmbeddingService } from './services/OpenAIEmbeddingService.js';
 export { LocalEmbeddingService } from './services/LocalEmbeddingService.js';
 export { QdrantVectorStore } from './services/QdrantVectorStore.js';
 

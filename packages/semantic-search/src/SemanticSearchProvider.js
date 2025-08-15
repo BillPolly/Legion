@@ -2,13 +2,12 @@
  * SemanticSearchProvider - Semantic search provider for Legion
  * 
  * Extends the Legion Provider base class to provide semantic search capabilities
- * using OpenAI embeddings and Qdrant vector database.
+ * using local embeddings and Qdrant vector database.
  * 
  * Follows Legion's ResourceManager pattern for configuration and initialization.
  */
 
 import { Provider } from '@legion/storage';
-import { OpenAIEmbeddingService } from './services/OpenAIEmbeddingService.js';
 import { LocalEmbeddingService } from './services/LocalEmbeddingService.js';
 import { QdrantVectorStore } from './services/QdrantVectorStore.js';
 import { EmbeddingCache } from './utils/EmbeddingCache.js';
@@ -72,8 +71,6 @@ export class SemanticSearchProvider {
     // Get configuration from ResourceManager (.env loaded automatically)
     // Fallback to process.env if ResourceManager doesn't return values
     const config = {
-      openaiApiKey: resourceManager.get('env.OPENAI_API_KEY') || process.env.OPENAI_API_KEY,
-      localModelPath: resourceManager.get('env.LOCAL_EMBEDDING_MODEL_PATH') || process.env.LOCAL_EMBEDDING_MODEL_PATH,
       // Build Qdrant URL from host and port if not directly provided
       qdrantUrl: resourceManager.get('env.QDRANT_URL') || process.env.QDRANT_URL || 
                  (resourceManager.get('env.QDRANT_HOST') && resourceManager.get('env.QDRANT_PORT') ? 
@@ -85,23 +82,45 @@ export class SemanticSearchProvider {
       enableCache: (resourceManager.get('env.SEMANTIC_SEARCH_ENABLE_CACHE') || process.env.SEMANTIC_SEARCH_ENABLE_CACHE) !== 'false'
     };
 
-    // ALWAYS use local ONNX embeddings - no options
-    console.log('🔧 Using local ONNX embeddings');
-    const embeddingService = new LocalEmbeddingService({
-      batchSize: config.batchSize
-      // LocalEmbeddingService handles its own model management
-    });
-    const embeddingDimensions = 384; // Local ONNX model dimensions
-    const useLocalEmbeddings = true; // Always true
-    
-    // Initialize the local embedding service
-    try {
-      await embeddingService.initialize();
-    } catch (error) {
-      console.error('❌ Local embedding service initialization failed:', error.message);
-      throw new Error(`Local embeddings failed to initialize: ${error.message}`);
+    // Initialize ResourceManager if not already initialized
+    if (!resourceManager.initialized) {
+      await resourceManager.initialize();
     }
+    
+    // Get or create LocalEmbeddingService through ResourceManager
+    const embeddingService = await resourceManager.getOrInitialize('semantic_embeddingService', async () => {
+      console.log('🔧 Creating local hash-based embedding service');
+      const service = new LocalEmbeddingService();
+      // No initialization needed - it's always ready
+      return service;
+    });
+    
+    const embeddingDimensions = 768; // Nomic model dimensions
+    const useLocalEmbeddings = true; // Always true
 
+    // Get or create QdrantVectorStore through ResourceManager
+    const vectorStore = await resourceManager.getOrInitialize('semantic_vectorStore', async () => {
+      console.log('🔧 Creating Qdrant vector store');
+      return new QdrantVectorStore({
+        url: config.qdrantUrl,
+        apiKey: config.qdrantApiKey
+      }, resourceManager);
+    });
+    
+    // Get or create DocumentProcessor through ResourceManager
+    const documentProcessor = await resourceManager.getOrInitialize('semantic_documentProcessor', async () => {
+      return new DocumentProcessor(config);
+    });
+    
+    // Get or create cache if enabled
+    const cache = config.enableCache ? 
+      await resourceManager.getOrInitialize('semantic_cache', async () => {
+        return new EmbeddingCache({ 
+          ttl: config.cacheTtl,
+          resourceManager 
+        });
+      }) : null;
+    
     // Create dependencies
     const dependencies = {
       _factoryCall: true,
@@ -109,15 +128,9 @@ export class SemanticSearchProvider {
       embeddingService,
       embeddingDimensions,
       useLocalEmbeddings,
-      vectorStore: new QdrantVectorStore({
-        url: config.qdrantUrl,
-        apiKey: config.qdrantApiKey
-      }),
-      documentProcessor: new DocumentProcessor(config),
-      cache: config.enableCache ? new EmbeddingCache({ 
-        ttl: config.cacheTtl,
-        resourceManager 
-      }) : null
+      vectorStore,
+      documentProcessor,
+      cache
     };
 
     const provider = new SemanticSearchProvider(config, dependencies);
@@ -448,7 +461,8 @@ export class SemanticSearchProvider {
         ...result,
         _semanticScore: result._similarity || 0,
         _keywordScore: 0,
-        _hybridScore: (result._similarity || 0) * semanticWeight
+        _hybridScore: (result._similarity || 0) * semanticWeight,
+        _searchType: SEARCH_TYPES.HYBRID
       });
     });
 
@@ -461,6 +475,7 @@ export class SemanticSearchProvider {
         const existing = scoreMap.get(id);
         existing._keywordScore = keywordScore;
         existing._hybridScore = (existing._semanticScore * semanticWeight) + (keywordScore * keywordWeight);
+        existing._searchType = SEARCH_TYPES.HYBRID;
       } else {
         scoreMap.set(id, {
           ...result,

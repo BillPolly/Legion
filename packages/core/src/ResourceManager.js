@@ -331,6 +331,37 @@ export class ResourceManager {
   }
 
   /**
+   * Get or initialize a resource lazily
+   * This is the generic pattern for managing expensive/async resources
+   * @param {string} key - Resource key
+   * @param {Function} initFunction - Async function to initialize the resource
+   * @returns {Promise<*>} The resource
+   */
+  async getOrInitialize(key, initFunction) {
+    // Check if resource already exists
+    if (!this.has(key)) {
+      // Initialize the resource
+      const resource = await initFunction();
+      this.set(key, resource);
+    }
+    return this.get(key);
+  }
+  
+  /**
+   * Initialize a resource if not present, with dependency injection
+   * @param {string} key - Resource key
+   * @param {Function} initFunction - Async function that receives ResourceManager
+   * @returns {Promise<*>} The resource
+   */
+  async ensureResource(key, initFunction) {
+    if (!this.has(key)) {
+      const resource = await initFunction(this);
+      this.set(key, resource);
+    }
+    return this.get(key);
+  }
+
+  /**
    * Create LLM client using environment variables
    * @param {Object} config - LLM configuration
    * @returns {Promise<Object>} LLM client instance

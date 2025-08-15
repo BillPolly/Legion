@@ -1,211 +1,54 @@
 /**
- * LocalEmbeddingService - ONNX-based local embeddings for M4 Apple Silicon
+ * LocalEmbeddingService - Real semantic embeddings using Nomic model
  * 
- * Uses ONNX Runtime with CoreML acceleration to generate embeddings
- * locally without API costs. Optimized for log and event processing.
+ * Generates real 768-dimensional semantic embeddings using nomic-embed-text model.
+ * Zero configuration, completely self-contained with bundled model.
  */
 
-// Dynamic import to handle missing dependency gracefully
-let ort = null;
-
-// Global singleton tracking to prevent multiple ONNX sessions
-let globalONNXSession = null;
-let globalSessionPath = null;
-
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import { NomicEmbeddings } from '@legion/nomic';
 
 export class LocalEmbeddingService {
-  constructor(config = {}) {
-    // Model path is ALWAYS resolved relative to this module's location
-    // This makes it completely independent of CWD
-    const modelPath = path.resolve(__dirname, '../../../../models/all-MiniLM-L6-v2-quantized.onnx');
-    
-    this.config = {
-      modelPath,  // This is the ONLY model we use
-      executionProviders: config.executionProviders || [
-        'cpu'  // Use CPU provider which is always available
-      ],
-      pooling: config.pooling || 'mean',
-      normalize: config.normalize || true,
-      batchSize: config.batchSize || 100,
-      dimensions: config.dimensions || 384,
-      maxLength: config.maxLength || 256,
-      ...config
-    };
-    
-    this.session = null;
-    this.tokenizer = null;
+  constructor() {
+    this.dimensions = 768; // Nomic model dimensions
     this.initialized = false;
+    this.embedder = null;
     this.totalEmbeddings = 0;
     this.totalTime = 0;
   }
 
   /**
-   * Initialize the ONNX session and tokenizer
+   * Initialize the Nomic embeddings model
    */
   async initialize() {
     if (this.initialized) return;
-
+    
     try {
-      console.log('Loading local embedding model...');
-      
-      // Force CPU-only environment variables to prevent device selection issues
-      process.env.ORT_DISABLE_CUDA = '1';
-      process.env.ORT_DISABLE_COREML = '1';
-      process.env.ORT_DISABLE_DNNL = '1';
-      process.env.ORT_DISABLE_TRT = '1';
-      process.env.OMP_NUM_THREADS = '1';
-      
-      console.log('🔧 Forcing CPU-only execution with environment variables');
-      
-      // Try to load ONNX Runtime
-      if (!ort) {
-        try {
-          const ortModule = await import('onnxruntime-node');
-          // In v1.14.0, the actual ort object is in the default export
-          ort = ortModule.default || ortModule;
-          
-          if (!ort || !ort.InferenceSession) {
-            throw new Error('ONNX Runtime import successful but InferenceSession not available');
-          }
-        } catch (error) {
-          throw new Error('onnxruntime-node is required for local embeddings. Install with: npm install onnxruntime-node');
-        }
-      }
-      
-      // Initialize ONNX Runtime session with the simplest possible CPU-only configuration
-      // Use the same configuration that worked in our debug script
-      const sessionOptions = {
-        executionProviders: ['cpu']  // Simplest possible configuration
-      };
-      
-      // Use global singleton session to prevent device conflicts
-      if (globalONNXSession && globalSessionPath === this.config.modelPath) {
-        console.log('♻️ Reusing existing ONNX session to prevent device conflicts');
-        this.session = globalONNXSession;
-      } else {
-        if (globalONNXSession) {
-          console.log('🔄 Releasing previous ONNX session');
-          try {
-            await globalONNXSession.release();
-          } catch (e) {
-            console.log('⚠️ Previous session already released');
-          }
-        }
-        
-        console.log('🆕 Creating new ONNX session with CPU-only configuration');
-        this.session = await ort.InferenceSession.create(this.config.modelPath, sessionOptions);
-        
-        // Store as global singleton
-        globalONNXSession = this.session;
-        globalSessionPath = this.config.modelPath;
-      }
-
-      // Initialize tokenizer (using dynamic import to avoid hard dependency)
-      try {
-        const transformers = await import('@xenova/transformers');
-        
-        // Configure transformers to not load ONNX models (we handle that separately)
-        transformers.env.allowLocalModels = false;
-        transformers.env.allowRemoteModels = false;
-        
-        // For now, skip transformers tokenizer to avoid ONNX conflicts
-        // The transformers library uses its own ONNX runtime which conflicts with ours
-        console.log('Using fallback tokenizer to avoid ONNX conflicts');
-        this.tokenizer = this.createFallbackTokenizer();
-        
-        // Original code commented out to avoid conflicts:
-        // const { AutoTokenizer } = transformers;
-        // this.tokenizer = await AutoTokenizer.from_pretrained(
-        //   'sentence-transformers/all-MiniLM-L6-v2'
-        // );
-      } catch (error) {
-        console.log('Warning: Transformers not available, using fallback tokenizer');
-        this.tokenizer = this.createFallbackTokenizer();
-      }
-
+      this.embedder = new NomicEmbeddings();
+      await this.embedder.initialize();
       this.initialized = true;
-      console.log(`Local embedding service ready (${this.config.dimensions}d vectors)`);
-      console.log('Using providers:', this.session.inputNames);
-      
+      console.log('LocalEmbeddingService initialized with Nomic embeddings');
     } catch (error) {
-      console.error('Failed to initialize local embedding service:', error);
+      console.error('Failed to initialize LocalEmbeddingService:', error);
       throw error;
     }
   }
 
   /**
-   * Generate embedding for a single text
+   * Generate embedding for a single text using Nomic model
    */
   async embed(text) {
     if (!this.initialized) {
-      throw new Error('LocalEmbeddingService not initialized');
+      await this.initialize();
     }
 
     const startTime = Date.now();
+    const embedding = await this.embedder.embed(text);
     
-    try {
-      // If no ONNX session available, raise error
-      if (!this.session) {
-        throw new Error('ONNX session not initialized. Local embedding model may be missing or corrupt.');
-      }
-      
-      // Tokenize the text
-      const tokens = await this.tokenize(text);
-      
-      // Ensure all tensors are valid ONNX tensors before running inference
-      const feeds = {};
-      
-      // Validate and normalize tensors
-      for (const [key, tensor] of Object.entries(tokens)) {
-        if (!tensor || typeof tensor !== 'object') {
-          throw new Error(`Invalid tensor for ${key}: expected ONNX Tensor object`);
-        }
-        
-        // If it's not already an ONNX Tensor, something went wrong
-        if (!tensor.type || !tensor.data || !tensor.dims) {
-          throw new Error(`Invalid tensor format for ${key}: missing required properties`);
-        }
-        
-        feeds[key] = tensor;
-      }
-      
-      // Run inference with validated tensors
-      const results = await this.session.run(feeds);
-      
-      // Apply pooling and normalization
-      // Get the raw data from the tensor
-      const outputData = results.last_hidden_state.data || results.last_hidden_state.cpuData;
-      const maskData = tokens.attention_mask.data || tokens.attention_mask.cpuData;
-      
-      // Ensure we have Float32Array for the output
-      let floatData;
-      if (outputData instanceof Float32Array) {
-        floatData = outputData;
-      } else {
-        // Convert to Float32Array if needed
-        floatData = new Float32Array(outputData);
-      }
-      
-      const embedding = this.poolAndNormalize(
-        floatData,
-        maskData,
-        results.last_hidden_state.dims
-      );
-      
-      // Update stats
-      this.totalEmbeddings++;
-      this.totalTime += Date.now() - startTime;
-      
-      return embedding;
-      
-    } catch (error) {
-      console.error('Embedding generation failed:', error);
-      throw error;
-    }
+    // Update stats
+    this.totalEmbeddings++;
+    this.totalTime += Date.now() - startTime;
+    
+    return embedding;
   }
 
   /**
@@ -214,22 +57,40 @@ export class LocalEmbeddingService {
   async embedBatch(texts) {
     if (!texts || texts.length === 0) return [];
     
-    // Process in smaller batches to avoid memory issues
-    const batches = this.createBatches(texts, this.config.batchSize);
-    const results = [];
-    
-    for (const batch of batches) {
-      const batchResults = await Promise.all(
-        batch.map(text => this.embed(text))
-      );
-      results.push(...batchResults);
+    if (!this.initialized) {
+      await this.initialize();
     }
     
-    return results;
+    const startTime = Date.now();
+    const embeddings = await this.embedder.embedBatch(texts);
+    
+    // Update stats
+    this.totalEmbeddings += texts.length;
+    this.totalTime += Date.now() - startTime;
+    
+    return embeddings;
   }
 
   /**
-   * Generate embeddings - interface compatibility with OpenAIEmbeddingService
+   * Generate query embedding (optimized for search queries)
+   */
+  async embedQuery(text) {
+    if (!this.initialized) {
+      await this.initialize();
+    }
+
+    const startTime = Date.now();
+    const embedding = await this.embedder.embed(text);
+    
+    // Update stats
+    this.totalEmbeddings++;
+    this.totalTime += Date.now() - startTime;
+    
+    return embedding;
+  }
+
+  /**
+   * Generate embeddings - interface compatibility
    */
   async generateEmbeddings(texts, options = {}) {
     if (!texts || texts.length === 0) return [];
@@ -237,8 +98,14 @@ export class LocalEmbeddingService {
     // Ensure texts is an array
     const textArray = Array.isArray(texts) ? texts : [texts];
     
-    // Use batch processing
     return await this.embedBatch(textArray);
+  }
+
+  /**
+   * Generate embedding for a single text - alias for embed
+   */
+  async generateEmbedding(text) {
+    return await this.embed(text);
   }
 
   /**
@@ -278,197 +145,25 @@ export class LocalEmbeddingService {
   }
 
   /**
-   * Tokenize text
+   * Compute similarity between two embeddings
    */
-  async tokenize(text) {
-    if (!this.tokenizer) {
-      throw new Error('Tokenizer not properly initialized');
+  async similarity(embedding1, embedding2) {
+    if (!this.embedder) {
+      throw new Error('Service not initialized');
     }
     
-    // Ensure ONNX runtime is available for tensor creation
-    if (!ort) {
-      try {
-        const ortModule = await import('onnxruntime-node');
-        ort = ortModule.default || ortModule;
-        
-        if (!ort || !ort.Tensor) {
-          throw new Error('ONNX Runtime import successful but Tensor not available');
-        }
-      } catch (error) {
-        throw new Error('onnxruntime-node is required for local embeddings');
-      }
-    }
-    
-    const encoded = await this.tokenizer(text, {
-      padding: true,
-      truncation: true,
-      max_length: this.config.maxLength,
-      return_tensors: false
-    });
-    
-    // @xenova/transformers returns its own Tensor objects
-    // Check if we can use them directly as ONNX tensors
-    if (encoded.input_ids.ort_tensor) {
-      // If it has ort_tensor property, use it directly
-      return {
-        input_ids: encoded.input_ids.ort_tensor,
-        attention_mask: encoded.attention_mask.ort_tensor,
-        token_type_ids: encoded.token_type_ids?.ort_tensor || 
-                       new ort.Tensor('int64', 
-                         new BigInt64Array(encoded.input_ids.dims[1]).fill(0n),
-                         encoded.input_ids.dims)
-      };
-    }
-    
-    // Otherwise, extract the data and create ONNX tensors
-    const inputIds = encoded.input_ids.data;
-    const attentionMask = encoded.attention_mask.data;
-    const seqLength = inputIds.length;
-    
-    // Create token_type_ids if not provided
-    const tokenTypeIds = encoded.token_type_ids?.data || new BigInt64Array(seqLength).fill(0n);
-    
-    // The Transformers.js library returns BigInt64Array for int64 tensors
-    // Create ONNX tensors from the data
-    return {
-      input_ids: new ort.Tensor('int64', inputIds, [1, seqLength]),
-      attention_mask: new ort.Tensor('int64', attentionMask, [1, seqLength]),
-      token_type_ids: new ort.Tensor('int64', tokenTypeIds, [1, seqLength])
-    };
+    return await this.embedder.similarity(embedding1, embedding2);
   }
 
   /**
-   * Simple fallback tokenizer for when transformers is not available
+   * Find most similar embeddings
    */
-  fallbackTokenize(text) {
-    // Very basic tokenization - not production ready but allows testing
-    const words = text.toLowerCase().split(/\s+/).slice(0, this.config.maxLength);
-    const ids = words.map(word => this.simpleHash(word) % 30000 + 100);
-    const mask = new Array(ids.length).fill(1);
-    
-    // Pad to consistent length
-    while (ids.length < 64) {
-      ids.push(0);
-      mask.push(0);
+  async findSimilar(queryEmbedding, documentEmbeddings, topK = 5) {
+    if (!this.embedder) {
+      throw new Error('Service not initialized');
     }
     
-    if (ort) {
-      const tokenTypeIds = new BigInt64Array(ids.length).fill(0n);
-      return {
-        input_ids: new ort.Tensor('int64', new BigInt64Array(ids.map(id => BigInt(id))), [1, ids.length]),
-        attention_mask: new ort.Tensor('int64', new BigInt64Array(mask.map(m => BigInt(m))), [1, mask.length]),
-        token_type_ids: new ort.Tensor('int64', tokenTypeIds, [1, ids.length])
-      };
-    } else {
-      // Return plain arrays when ONNX is not available
-      return {
-        input_ids: { data: ids },
-        attention_mask: { data: mask },
-        token_type_ids: { data: new Array(ids.length).fill(0) }
-      };
-    }
-  }
-
-  /**
-   * Simple hash function for fallback tokenizer
-   */
-  simpleHash(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32-bit integer
-    }
-    return Math.abs(hash);
-  }
-
-  /**
-   * Create fallback tokenizer
-   */
-  createFallbackTokenizer() {
-    return async (text, options) => {
-      try {
-        // Simple tokenization for testing - creates proper ONNX tensors
-        const result = this.fallbackTokenize(text);
-        return {
-          input_ids: result.input_ids,
-          attention_mask: result.attention_mask,
-          token_type_ids: result.token_type_ids
-        };
-      } catch (error) {
-        console.warn('Fallback tokenizer failed, using minimal tokenization');
-        // Ultra-minimal fallback
-        const tokens = [101, 2023, 102]; // CLS, UNK, SEP
-        const mask = [1, 1, 1];
-        
-        if (ort) {
-          return {
-            input_ids: new ort.Tensor('int64', new BigInt64Array(tokens.map(t => BigInt(t))), [1, 3]),
-            attention_mask: new ort.Tensor('int64', new BigInt64Array(mask.map(m => BigInt(m))), [1, 3]),
-            token_type_ids: new ort.Tensor('int64', new BigInt64Array(3).fill(0n), [1, 3])
-          };
-        }
-        throw error;
-      }
-    };
-  }
-
-  /**
-   * Apply mean pooling and normalization
-   */
-  poolAndNormalize(tensor, mask, dims) {
-    const [batchSize, seqLength, hiddenSize] = dims;
-    const embeddings = new Float32Array(hiddenSize);
-    
-    let validTokens = 0;
-    
-    // The mask is a BigInt64Array, so we need to check for 1n
-    // Mean pooling with attention mask
-    for (let i = 0; i < seqLength; i++) {
-      // Check if mask value is 1 (for BigInt or regular number)
-      const maskValue = typeof mask[i] === 'bigint' ? mask[i] : BigInt(mask[i]);
-      if (maskValue === 1n) {
-        validTokens++;
-        for (let j = 0; j < hiddenSize; j++) {
-          embeddings[j] += tensor[i * hiddenSize + j];
-        }
-      }
-    }
-    
-    // Average the embeddings
-    if (validTokens > 0) {
-      for (let j = 0; j < hiddenSize; j++) {
-        embeddings[j] /= validTokens;
-      }
-    }
-    
-    // Normalize if requested
-    if (this.config.normalize) {
-      let norm = 0;
-      for (let i = 0; i < hiddenSize; i++) {
-        norm += embeddings[i] * embeddings[i];
-      }
-      norm = Math.sqrt(norm);
-      
-      if (norm > 0) {
-        for (let i = 0; i < hiddenSize; i++) {
-          embeddings[i] /= norm;
-        }
-      }
-    }
-    
-    return Array.from(embeddings);
-  }
-
-  /**
-   * Create batches from array
-   */
-  createBatches(items, batchSize) {
-    const batches = [];
-    for (let i = 0; i < items.length; i += batchSize) {
-      batches.push(items.slice(i, i + batchSize));
-    }
-    return batches;
+    return await this.embedder.findSimilar(queryEmbedding, documentEmbeddings, topK);
   }
 
   /**
@@ -482,61 +177,40 @@ export class LocalEmbeddingService {
       totalTime: this.totalTime,
       averageTime: avgTime,
       throughput: this.totalTime > 0 ? (this.totalEmbeddings / this.totalTime) * 1000 : 0,
-      dimensions: this.config.dimensions,
+      dimensions: this.dimensions,
       initialized: this.initialized,
-      model: this.config.modelPath
+      model: 'nomic-embed-text-v1.5'
     };
   }
-
 
   /**
    * Get model information
    */
   getModelInfo() {
     return {
-      name: 'Local ONNX Embedding Model',
-      type: 'local',
-      dimensions: this.config.dimensions,
-      model: this.config.modelPath,
-      provider: 'ONNX Runtime'
+      name: 'Nomic Embed Text v1.5',
+      type: 'transformer',
+      dimensions: this.dimensions,
+      model: 'nomic-embed-text-v1.5',
+      provider: 'Nomic AI (local)'
     };
   }
-
-  /**
-   * Generate embedding for a single text - alias for embed
-   */
-  async generateEmbedding(text) {
-    return await this.embed(text);
-  }
-
 
   /**
    * Cleanup resources
    */
   async cleanup() {
-    // Don't release the global session unless we're the last instance
-    // For now, just clear our reference but keep the global session alive
-    // This prevents device conflicts when multiple services are used
-    this.session = null;
-    this.tokenizer = null;
+    if (this.embedder) {
+      await this.embedder.close();
+      this.embedder = null;
+    }
     this.initialized = false;
-    
-    console.log('🧹 LocalEmbeddingService cleaned up (keeping global session alive)');
   }
 
   /**
-   * Force cleanup of global session - use only when completely shutting down
+   * Alias for cleanup
    */
-  static async forceCleanupGlobalSession() {
-    if (globalONNXSession) {
-      try {
-        await globalONNXSession.release();
-        console.log('🗑️ Global ONNX session released');
-      } catch (error) {
-        console.log('⚠️ Global session release warning:', error.message);
-      }
-      globalONNXSession = null;
-      globalSessionPath = null;
-    }
+  async close() {
+    await this.cleanup();
   }
 }

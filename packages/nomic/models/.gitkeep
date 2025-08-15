@@ -1,0 +1,2 @@
+# This directory contains the GGUF model files
+# Download with: node scripts/download-direct.js

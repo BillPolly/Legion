@@ -9,6 +9,7 @@ import { EmbeddingCache } from '../../src/utils/EmbeddingCache.js';
 
 describe('Semantic Search Basic Functionality', () => {
   it('should create provider with mock ResourceManager', async () => {
+    const stored = new Map();
     const mockResourceManager = {
       initialized: true,
       get: (key) => {
@@ -16,9 +17,16 @@ describe('Semantic Search Basic Functionality', () => {
           'env.OPENAI_API_KEY': 'test-key',
           'env.QDRANT_URL': 'http://localhost:6333'
         };
-        return values[key];
+        return stored.get(key) || values[key];
       },
-      register: () => {}
+      getOrInitialize: async (key, initFn) => {
+        if (!stored.has(key)) {
+          stored.set(key, await initFn());
+        }
+        return stored.get(key);
+      },
+      register: () => {},
+      initialize: async () => {}
     };
     
     const provider = await SemanticSearchProvider.create(mockResourceManager, { skipConnection: true });
@@ -90,14 +98,24 @@ describe('Semantic Search Basic Functionality', () => {
   });
   
   it('should report capabilities', async () => {
+    const stored = new Map();
     const mockResourceManager = {
       initialized: true,
       get: (key) => {
         const values = {
-          'env.OPENAI_API_KEY': 'test-key'
+          'env.OPENAI_API_KEY': 'test-key',
+          'env.QDRANT_URL': 'http://localhost:6333'
         };
-        return values[key];
-      }
+        return stored.get(key) || values[key];
+      },
+      getOrInitialize: async (key, initFn) => {
+        if (!stored.has(key)) {
+          stored.set(key, await initFn());
+        }
+        return stored.get(key);
+      },
+      register: () => {},
+      initialize: async () => {}
     };
     
     const provider = await SemanticSearchProvider.create(mockResourceManager, { skipConnection: true });

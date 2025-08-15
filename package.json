@@ -18,7 +18,6 @@
     "test:cli": "npm run test --workspace=@legion/cli",
     "test:tools": "npm run test --workspace=@legion/tools",
     "test:llm": "npm run test --workspace=@legion/llm",
-    "test:resource-manager": "npm run test --workspace=@legion/resource-manager",
     "test:playwright": "npm run test --workspace=@legion/playwright",
     "test:node-runner": "npm run test --workspace=@legion/node-runner",
     "test:log-manager": "npm run test --workspace=@legion/log-manager",

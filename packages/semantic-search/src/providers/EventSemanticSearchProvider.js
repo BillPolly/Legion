@@ -25,7 +25,7 @@ export class EventSemanticSearchProvider extends SemanticSearchProvider {
     // Enhanced config for event processing
     const eventConfig = {
       useLocalEmbeddings: config.useLocalEmbeddings !== false, // Default to true
-      embeddingDimensions: config.embeddingDimensions || 384,
+      embeddingDimensions: config.embeddingDimensions || 768,
       eventBufferSize: config.eventBufferSize || 1000,
       embeddingBatchSize: config.embeddingBatchSize || 100,
       enableAsyncEmbedding: config.enableAsyncEmbedding !== false,
