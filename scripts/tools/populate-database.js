@@ -7,10 +7,8 @@
  * in the Legion framework. Supports both clear and update modes.
  */
 
-import { ComprehensiveToolDiscovery } from '../../packages/tools/src/discovery/ComprehensiveToolDiscovery.js';
-import { MongoDBToolRegistryProvider } from '../../packages/tools/src/providers/MongoDBToolRegistryProvider.js';
-import { ToolRegistry } from '../../packages/tools/src/integration/ToolRegistry.js';
-import { ResourceManager } from '@legion/tools-registry';
+import { ComprehensiveToolDiscovery, MongoDBToolRegistryProvider, ToolRegistry } from '@legion/tools-registry';
+import { ResourceManager } from '@legion/core';
 
 // Parse command line arguments
 const args = process.argv.slice(2);

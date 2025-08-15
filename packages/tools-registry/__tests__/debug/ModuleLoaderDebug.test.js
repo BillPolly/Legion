@@ -23,7 +23,7 @@ describe('ModuleLoader Debug', () => {
     }
 
     // Check for registry file
-    const registryPath = path.join(loader.monorepoRoot, 'packages/tools/src/loading/module-registry.json');
+    const registryPath = path.join(loader.monorepoRoot, 'packages/tools-registry/src/loading/module-registry.json');
     try {
       await fs.access(registryPath);
       console.log('Registry file exists at expected location');

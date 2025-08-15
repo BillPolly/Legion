@@ -539,7 +539,7 @@ export class ServerToolRegistryActor {
       await moduleLoader.initialize();
       
       // Read the module registry to find the module config
-      const registryPath = path.join(moduleLoader.monorepoRoot, 'packages/tools/src/loading/module-registry.json');
+      const registryPath = path.join(moduleLoader.monorepoRoot, 'packages/tools-registry/src/loading/module-registry.json');
       const registryContent = await fs.readFile(registryPath, 'utf-8');
       const modules = JSON.parse(registryContent);
       

@@ -36,7 +36,7 @@ export class ModuleLoader {
     await this.initialize();
     
     // Read the module registry
-    const registryPath = path.join(this.monorepoRoot, 'packages/tools/src/loading/module-registry.json');
+    const registryPath = path.join(this.monorepoRoot, 'packages/tools-registry/src/loading/module-registry.json');
     const registryContent = await fs.readFile(registryPath, 'utf-8');
     let modules = JSON.parse(registryContent);
     

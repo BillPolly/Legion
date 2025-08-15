@@ -166,9 +166,9 @@ export class DatabasePopulator {
    */
   getPackageName(modulePath) {
     if (modulePath.includes('packages/tools-collection')) {
-      return '@legion/tools-registry-collection';
+      return '@legion/tools-collection';
     }
-    if (modulePath.includes('packages/tools/')) {
+    if (modulePath.includes('packages/tools-registry/')) {
       return '@legion/tools-registry';
     }
     if (modulePath.includes('packages/')) {
