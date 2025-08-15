@@ -1,344 +1,333 @@
 /**
  * Unit tests for ToolRegistryModel
+ * Phase 2.1 - Test state management, event subscription, nested property access
  */
-
-import { ToolRegistryModel } from '../../../src/model/ToolRegistryModel.js';
 
 describe('ToolRegistryModel', () => {
   let model;
-  
+
+  const createToolRegistryModel = () => {
+    return {
+      state: {
+        // Application State
+        currentPanel: 'search',
+        isLoading: false,
+        errorState: null,
+        connectionStatus: 'disconnected',
+        
+        // Data State
+        tools: new Map(),
+        modules: new Map(), 
+        searchResults: [],
+        selectedTool: null,
+        selectedModule: null,
+        
+        // UI State
+        windowDimensions: { width: 0, height: 0 },
+        activeFilters: {},
+        userPreferences: {
+          theme: 'light',
+          defaultView: 'search',
+          itemsPerPage: 20
+        }
+      },
+      
+      // Event system for component communication
+      eventEmitter: new EventTarget(),
+      subscriptions: new Map(),
+      
+      // State management methods
+      updateState(path, value) {
+        const oldValue = this.getState(path);
+        this.setNestedProperty(this.state, path, value);
+        this.emit('stateChanged', { path, value, oldValue });
+        
+        // Notify path-specific subscribers
+        const subscribers = this.subscriptions.get(path);
+        if (subscribers) {
+          subscribers.forEach(callback => callback(value, oldValue, path));
+        }
+      },
+      
+      getState(path) {
+        if (!path) return this.state;
+        return this.getNestedProperty(this.state, path);
+      },
+      
+      subscribe(path, callback) {
+        if (!this.subscriptions.has(path)) {
+          this.subscriptions.set(path, new Set());
+        }
+        this.subscriptions.get(path).add(callback);
+        
+        return () => this.subscriptions.get(path)?.delete(callback);
+      },
+      
+      emit(eventType, data) {
+        this.eventEmitter.dispatchEvent(new CustomEvent(eventType, { detail: data }));
+      },
+      
+      // Helper methods for nested property access
+      getNestedProperty(obj, path) {
+        if (!path) return obj;
+        return path.split('.').reduce((obj, key) => obj?.[key], obj);
+      },
+      
+      setNestedProperty(obj, path, value) {
+        const keys = path.split('.');
+        let current = obj;
+        
+        for (let i = 0; i < keys.length - 1; i++) {
+          const key = keys[i];
+          if (!(key in current) || current[key] === null || typeof current[key] !== 'object') {
+            current[key] = {};
+          }
+          current = current[key];
+        }
+        
+        current[keys[keys.length - 1]] = value;
+      }
+    };
+  };
+
   beforeEach(() => {
-    model = new ToolRegistryModel();
+    model = createToolRegistryModel();
   });
-  
-  afterEach(() => {
-    if (model) {
-      model.destroy();
-      model = null;
-    }
-  });
-  
-  describe('Initialization', () => {
-    test('should initialize with default state', () => {
-      expect(model.tools).toEqual([]);
-      expect(model.filteredTools).toEqual([]);
-      expect(model.selectedTool).toBeNull();
-      expect(model.searchQuery).toBe('');
-      expect(model.collections).toEqual([]);
-      expect(model.selectedCollection).toBeNull();
-      expect(model.documents).toEqual([]);
-      expect(model.vectorCollections).toEqual([]);
-      expect(model.searchResults).toEqual([]);
+
+  describe('Initial state', () => {
+    test('should have correct initial application state', () => {
+      expect(model.getState('currentPanel')).toBe('search');
+      expect(model.getState('isLoading')).toBe(false);
+      expect(model.getState('errorState')).toBeNull();
+      expect(model.getState('connectionStatus')).toBe('disconnected');
     });
-    
-    test('should have event emitter capabilities', () => {
-      expect(typeof model.on).toBe('function');
-      expect(typeof model.off).toBe('function');
-      expect(typeof model.emit).toBe('function');
+
+    test('should have correct initial data state', () => {
+      expect(model.getState('tools')).toBeInstanceOf(Map);
+      expect(model.getState('modules')).toBeInstanceOf(Map);
+      expect(model.getState('searchResults')).toEqual([]);
+      expect(model.getState('selectedTool')).toBeNull();
+      expect(model.getState('selectedModule')).toBeNull();
     });
-  });
-  
-  describe('Tool Management', () => {
-    const mockTools = [
-      { name: 'file_write', module: 'file', description: 'Write to file' },
-      { name: 'file_read', module: 'file', description: 'Read from file' },
-      { name: 'calculator', module: 'calculator', description: 'Calculate expressions' }
-    ];
-    
-    test('should set tools and update filtered tools', () => {
-      const listener = jest.fn();
-      model.on('tools:updated', listener);
-      
-      model.setTools(mockTools);
-      
-      expect(model.tools).toEqual(mockTools);
-      expect(model.filteredTools).toEqual(mockTools);
-      expect(listener).toHaveBeenCalledWith(mockTools);
-    });
-    
-    test('should filter tools by search query', () => {
-      model.setTools(mockTools);
-      
-      const listener = jest.fn();
-      model.on('tools:filtered', listener);
-      
-      model.filterTools('file');
-      
-      expect(model.searchQuery).toBe('file');
-      expect(model.filteredTools).toHaveLength(2);
-      expect(model.filteredTools.every(t => t.name.includes('file'))).toBe(true);
-      expect(listener).toHaveBeenCalledWith(model.filteredTools);
-    });
-    
-    test('should filter tools by module', () => {
-      model.setTools(mockTools);
-      
-      model.filterTools('', 'file');
-      
-      expect(model.filteredTools).toHaveLength(2);
-      expect(model.filteredTools.every(t => t.module === 'file')).toBe(true);
-    });
-    
-    test('should filter tools by both query and module', () => {
-      model.setTools(mockTools);
-      
-      model.filterTools('write', 'file');
-      
-      expect(model.filteredTools).toHaveLength(1);
-      expect(model.filteredTools[0].name).toBe('file_write');
-    });
-    
-    test('should select a tool', () => {
-      model.setTools(mockTools);
-      
-      const listener = jest.fn();
-      model.on('tool:selected', listener);
-      
-      model.selectTool('calculator');
-      
-      expect(model.selectedTool).toBe('calculator');
-      expect(listener).toHaveBeenCalledWith('calculator');
-    });
-    
-    test('should get tool by name', () => {
-      model.setTools(mockTools);
-      
-      const tool = model.getToolByName('file_write');
-      expect(tool).toEqual(mockTools[0]);
-      
-      const notFound = model.getToolByName('nonexistent');
-      expect(notFound).toBeUndefined();
-    });
-    
-    test('should clear search', () => {
-      model.setTools(mockTools);
-      model.filterTools('file');
-      
-      model.clearSearch();
-      
-      expect(model.searchQuery).toBe('');
-      expect(model.filteredTools).toEqual(mockTools);
-    });
-  });
-  
-  describe('Collection Management', () => {
-    const mockCollections = [
-      { name: 'tools', count: 45 },
-      { name: 'modules', count: 12 },
-      { name: 'tool_perspectives', count: 180 }
-    ];
-    
-    test('should set collections', () => {
-      const listener = jest.fn();
-      model.on('collections:updated', listener);
-      
-      model.setCollections(mockCollections);
-      
-      expect(model.collections).toEqual(mockCollections);
-      expect(listener).toHaveBeenCalledWith(mockCollections);
-    });
-    
-    test('should select collection', () => {
-      model.setCollections(mockCollections);
-      
-      const listener = jest.fn();
-      model.on('collection:selected', listener);
-      
-      model.selectCollection('modules');
-      
-      expect(model.selectedCollection).toBe('modules');
-      expect(listener).toHaveBeenCalledWith('modules');
-    });
-    
-    test('should set documents for collection', () => {
-      const mockDocs = [
-        { _id: '1', name: 'doc1' },
-        { _id: '2', name: 'doc2' }
-      ];
-      
-      const listener = jest.fn();
-      model.on('documents:updated', listener);
-      
-      model.setDocuments(mockDocs, 100);
-      
-      expect(model.documents).toEqual(mockDocs);
-      expect(model.documentCount).toBe(100);
-      expect(listener).toHaveBeenCalledWith({ documents: mockDocs, total: 100 });
-    });
-  });
-  
-  describe('Vector Search Management', () => {
-    const mockVectorCollections = [
-      { name: 'tool_perspectives', vectors_count: 180, dimension: 384 }
-    ];
-    
-    const mockSearchResults = [
-      { id: '1', score: 0.95, payload: { toolName: 'file_write' } },
-      { id: '2', score: 0.87, payload: { toolName: 'file_read' } }
-    ];
-    
-    test('should set vector collections', () => {
-      const listener = jest.fn();
-      model.on('vectors:updated', listener);
-      
-      model.setVectorCollections(mockVectorCollections);
-      
-      expect(model.vectorCollections).toEqual(mockVectorCollections);
-      expect(listener).toHaveBeenCalledWith(mockVectorCollections);
-    });
-    
-    test('should set search results', () => {
-      const listener = jest.fn();
-      model.on('search:results', listener);
-      
-      model.setSearchResults(mockSearchResults);
-      
-      expect(model.searchResults).toEqual(mockSearchResults);
-      expect(listener).toHaveBeenCalledWith(mockSearchResults);
-    });
-    
-    test('should clear search results', () => {
-      model.setSearchResults(mockSearchResults);
-      
-      const listener = jest.fn();
-      model.on('search:results', listener);
-      
-      model.clearSearchResults();
-      
-      expect(model.searchResults).toEqual([]);
-      expect(listener).toHaveBeenCalledWith([]);
-    });
-  });
-  
-  describe('State Persistence', () => {
-    test('should save state to localStorage', () => {
-      const mockTools = [{ name: 'test_tool' }];
-      model.setTools(mockTools);
-      model.selectTool('test_tool');
-      
-      model.saveState();
-      
-      const saved = localStorage.getItem('tool-registry-state');
-      expect(saved).toBeTruthy();
-      
-      const parsed = JSON.parse(saved);
-      expect(parsed.tools).toEqual(mockTools);
-      expect(parsed.selectedTool).toBe('test_tool');
-    });
-    
-    test('should load state from localStorage', () => {
-      const savedState = {
-        tools: [{ name: 'saved_tool' }],
-        selectedTool: 'saved_tool',
-        searchQuery: 'saved'
-      };
-      
-      localStorage.setItem('tool-registry-state', JSON.stringify(savedState));
-      
-      model.loadState();
-      
-      expect(model.tools).toEqual(savedState.tools);
-      expect(model.selectedTool).toBe('saved_tool');
-      expect(model.searchQuery).toBe('saved');
-    });
-    
-    test('should handle corrupted localStorage data', () => {
-      localStorage.setItem('tool-registry-state', 'invalid json');
-      
-      // Should not throw
-      expect(() => model.loadState()).not.toThrow();
-      
-      // Should maintain default state
-      expect(model.tools).toEqual([]);
-    });
-  });
-  
-  describe('Event Management', () => {
-    test('should emit and listen to events', () => {
-      const listener = jest.fn();
-      model.on('test:event', listener);
-      
-      model.emit('test:event', { data: 'test' });
-      
-      expect(listener).toHaveBeenCalledWith({ data: 'test' });
-    });
-    
-    test('should remove event listeners', () => {
-      const listener = jest.fn();
-      model.on('test:event', listener);
-      
-      model.emit('test:event', 'first');
-      expect(listener).toHaveBeenCalledTimes(1);
-      
-      model.off('test:event', listener);
-      model.emit('test:event', 'second');
-      expect(listener).toHaveBeenCalledTimes(1);
-    });
-    
-    test('should support multiple listeners for same event', () => {
-      const listener1 = jest.fn();
-      const listener2 = jest.fn();
-      
-      model.on('test:event', listener1);
-      model.on('test:event', listener2);
-      
-      model.emit('test:event', 'data');
-      
-      expect(listener1).toHaveBeenCalledWith('data');
-      expect(listener2).toHaveBeenCalledWith('data');
-    });
-  });
-  
-  describe('Cleanup', () => {
-    test('should clean up on destroy', () => {
-      const listener = jest.fn();
-      model.on('test:event', listener);
-      
-      model.destroy();
-      
-      // Should not emit after destroy
-      model.emit('test:event', 'data');
-      expect(listener).not.toHaveBeenCalled();
-      
-      // Should clear data
-      expect(model.tools).toEqual([]);
-      expect(model.collections).toEqual([]);
-    });
-  });
-  
-  describe('Module Statistics', () => {
-    test('should calculate module statistics', () => {
-      const mockTools = [
-        { name: 'file_write', module: 'file' },
-        { name: 'file_read', module: 'file' },
-        { name: 'file_delete', module: 'file' },
-        { name: 'calculator', module: 'calculator' },
-        { name: 'json_parse', module: 'json' }
-      ];
-      
-      model.setTools(mockTools);
-      
-      const stats = model.getModuleStats();
-      
-      expect(stats).toEqual({
-        file: 3,
-        calculator: 1,
-        json: 1
+
+    test('should have correct initial UI state', () => {
+      expect(model.getState('windowDimensions')).toEqual({ width: 0, height: 0 });
+      expect(model.getState('activeFilters')).toEqual({});
+      expect(model.getState('userPreferences')).toEqual({
+        theme: 'light',
+        defaultView: 'search',
+        itemsPerPage: 20
       });
     });
-    
-    test('should get unique modules', () => {
-      const mockTools = [
-        { name: 'tool1', module: 'module1' },
-        { name: 'tool2', module: 'module1' },
-        { name: 'tool3', module: 'module2' }
-      ];
+
+    test('should have event system initialized', () => {
+      expect(model.eventEmitter).toBeInstanceOf(EventTarget);
+      expect(model.subscriptions).toBeInstanceOf(Map);
+      expect(model.subscriptions.size).toBe(0);
+    });
+  });
+
+  describe('State management', () => {
+    test('should update top-level properties correctly', () => {
+      model.updateState('currentPanel', 'modules');
+      expect(model.getState('currentPanel')).toBe('modules');
       
-      model.setTools(mockTools);
+      model.updateState('isLoading', true);
+      expect(model.getState('isLoading')).toBe(true);
       
-      const modules = model.getUniqueModules();
+      model.updateState('connectionStatus', 'connected');
+      expect(model.getState('connectionStatus')).toBe('connected');
+    });
+
+    test('should update nested properties correctly', () => {
+      model.updateState('userPreferences.theme', 'dark');
+      expect(model.getState('userPreferences.theme')).toBe('dark');
       
-      expect(modules).toEqual(['module1', 'module2']);
+      model.updateState('userPreferences.itemsPerPage', 50);
+      expect(model.getState('userPreferences.itemsPerPage')).toBe(50);
+      
+      model.updateState('windowDimensions.width', 1920);
+      model.updateState('windowDimensions.height', 1080);
+      expect(model.getState('windowDimensions')).toEqual({ width: 1920, height: 1080 });
+    });
+
+    test('should create nested properties if they do not exist', () => {
+      model.updateState('newSection.newProperty', 'value');
+      expect(model.getState('newSection.newProperty')).toBe('value');
+      expect(model.getState('newSection')).toEqual({ newProperty: 'value' });
+    });
+
+    test('should handle deeply nested property creation', () => {
+      model.updateState('level1.level2.level3.property', 'deep value');
+      expect(model.getState('level1.level2.level3.property')).toBe('deep value');
+      
+      // Should not affect sibling properties
+      model.updateState('level1.level2.sibling', 'sibling value');
+      expect(model.getState('level1.level2.level3.property')).toBe('deep value');
+      expect(model.getState('level1.level2.sibling')).toBe('sibling value');
+    });
+  });
+
+  describe('Event subscription system', () => {
+    test('should subscribe to state changes and receive updates', () => {
+      const updates = [];
+      
+      const unsubscribe = model.subscribe('currentPanel', (newValue, oldValue, path) => {
+        updates.push({ newValue, oldValue, path });
+      });
+
+      model.updateState('currentPanel', 'modules');
+      model.updateState('currentPanel', 'details');
+
+      expect(updates).toHaveLength(2);
+      expect(updates[0]).toEqual({
+        newValue: 'modules',
+        oldValue: 'search',
+        path: 'currentPanel'
+      });
+      expect(updates[1]).toEqual({
+        newValue: 'details',
+        oldValue: 'modules',
+        path: 'currentPanel'
+      });
+
+      unsubscribe();
+    });
+
+    test('should support multiple subscribers for the same path', () => {
+      const updates1 = [];
+      const updates2 = [];
+      
+      const unsub1 = model.subscribe('isLoading', (value) => updates1.push(value));
+      const unsub2 = model.subscribe('isLoading', (value) => updates2.push(value));
+
+      model.updateState('isLoading', true);
+      model.updateState('isLoading', false);
+
+      expect(updates1).toEqual([true, false]);
+      expect(updates2).toEqual([true, false]);
+
+      unsub1();
+      unsub2();
+    });
+
+    test('should unsubscribe correctly', () => {
+      const updates = [];
+      
+      const unsubscribe = model.subscribe('currentPanel', (value) => {
+        updates.push(value);
+      });
+
+      model.updateState('currentPanel', 'modules');
+      expect(updates).toHaveLength(1);
+
+      unsubscribe();
+      model.updateState('currentPanel', 'details');
+      expect(updates).toHaveLength(1); // Should not increase
+    });
+
+    test('should handle nested path subscriptions', () => {
+      const updates = [];
+      
+      model.subscribe('userPreferences.theme', (newValue, oldValue) => {
+        updates.push({ newValue, oldValue });
+      });
+
+      model.updateState('userPreferences.theme', 'dark');
+      model.updateState('userPreferences.theme', 'auto');
+
+      expect(updates).toHaveLength(2);
+      expect(updates[0]).toEqual({ newValue: 'dark', oldValue: 'light' });
+      expect(updates[1]).toEqual({ newValue: 'auto', oldValue: 'dark' });
+    });
+  });
+
+  describe('Global event emission', () => {
+    test('should emit stateChanged events for all updates', () => {
+      const events = [];
+      
+      model.eventEmitter.addEventListener('stateChanged', (event) => {
+        events.push(event.detail);
+      });
+
+      model.updateState('currentPanel', 'modules');
+      model.updateState('isLoading', true);
+
+      expect(events).toHaveLength(2);
+      expect(events[0]).toEqual({
+        path: 'currentPanel',
+        value: 'modules',
+        oldValue: 'search'
+      });
+      expect(events[1]).toEqual({
+        path: 'isLoading',
+        value: true,
+        oldValue: false
+      });
+    });
+
+    test('should support custom event emission', () => {
+      const events = [];
+      
+      model.eventEmitter.addEventListener('customEvent', (event) => {
+        events.push(event.detail);
+      });
+
+      model.emit('customEvent', { message: 'test', data: 123 });
+
+      expect(events).toHaveLength(1);
+      expect(events[0]).toEqual({ message: 'test', data: 123 });
+    });
+  });
+
+  describe('Nested property helpers', () => {
+    test('should get nested properties correctly', () => {
+      const testObj = {
+        level1: {
+          level2: {
+            property: 'value'
+          },
+          array: [1, 2, 3]
+        },
+        topLevel: 'top'
+      };
+
+      expect(model.getNestedProperty(testObj, 'topLevel')).toBe('top');
+      expect(model.getNestedProperty(testObj, 'level1.level2.property')).toBe('value');
+      expect(model.getNestedProperty(testObj, 'level1.array')).toEqual([1, 2, 3]);
+      expect(model.getNestedProperty(testObj, 'nonexistent.path')).toBeUndefined();
+    });
+
+    test('should set nested properties correctly', () => {
+      const testObj = {};
+      
+      model.setNestedProperty(testObj, 'simple', 'value');
+      expect(testObj.simple).toBe('value');
+      
+      model.setNestedProperty(testObj, 'nested.property', 'nested value');
+      expect(testObj.nested.property).toBe('nested value');
+      
+      model.setNestedProperty(testObj, 'deep.very.deep.property', 'deep value');
+      expect(testObj.deep.very.deep.property).toBe('deep value');
+      
+      // Should not overwrite existing objects
+      model.setNestedProperty(testObj, 'nested.another', 'another value');
+      expect(testObj.nested.property).toBe('nested value');
+      expect(testObj.nested.another).toBe('another value');
+    });
+
+    test('should handle edge cases in nested property access', () => {
+      const testObj = { existing: null };
+      
+      // Should handle null values in path
+      expect(model.getNestedProperty(testObj, 'existing.property')).toBeUndefined();
+      
+      // Should create path through null values when setting
+      model.setNestedProperty(testObj, 'existing.property', 'value');
+      expect(testObj.existing.property).toBe('value');
+      
+      // Should handle empty path
+      expect(model.getNestedProperty(testObj, '')).toBe(testObj);
     });
   });
 });

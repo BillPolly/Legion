@@ -11,6 +11,40 @@
 
 import { UmbilicalUtils } from '../../umbilical/index.js';
 
+/**
+ * ID Management for Components
+ */
+class ComponentIdManager {
+  constructor() {
+    this.counters = new Map();
+  }
+  
+  generateId(componentName, customId = null) {
+    if (customId) return customId;
+    
+    const baseName = componentName.toLowerCase().replace(/component$/, '');
+    const count = (this.counters.get(baseName) || 0) + 1;
+    this.counters.set(baseName, count);
+    
+    return `${baseName}-${count}`;
+  }
+  
+  generateElementId(componentName, elementType, customId = null) {
+    if (customId) return customId;
+    
+    const baseName = componentName.toLowerCase().replace(/component$/, '');
+    const elementName = elementType.toLowerCase();
+    const key = `${baseName}-${elementName}`;
+    const count = (this.counters.get(key) || 0) + 1;
+    this.counters.set(key, count);
+    
+    return `${baseName}-${elementName}-${count}`;
+  }
+}
+
+// Global ID manager instance
+const idManager = new ComponentIdManager();
+
 export class BaseUmbilicalComponent {
   /**
    * Create a component following the umbilical protocol
@@ -190,5 +224,40 @@ export class BaseUmbilicalComponent {
         }
       }
     }
+  }
+  
+  /**
+   * Generate unique ID for component
+   * @param {string} componentName - Name of the component
+   * @param {string} customId - Custom ID if provided
+   * @returns {string} Generated unique ID
+   */
+  static generateId(componentName, customId = null) {
+    return idManager.generateId(componentName, customId);
+  }
+  
+  /**
+   * Generate unique ID for component elements
+   * @param {string} componentName - Name of the component
+   * @param {string} elementType - Type of element (button, input, etc)
+   * @param {string} customId - Custom ID if provided
+   * @returns {string} Generated unique element ID
+   */
+  static generateElementId(componentName, elementType, customId = null) {
+    return idManager.generateElementId(componentName, elementType, customId);
+  }
+  
+  /**
+   * Helper to set ID on DOM element
+   * @param {HTMLElement} element - DOM element
+   * @param {string} componentName - Name of the component
+   * @param {string} elementType - Type of element
+   * @param {string} customId - Custom ID if provided
+   * @returns {string} The assigned ID
+   */
+  static assignId(element, componentName, elementType, customId = null) {
+    const id = this.generateElementId(componentName, elementType, customId);
+    element.id = id;
+    return id;
   }
 }

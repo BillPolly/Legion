@@ -310,10 +310,13 @@ export class LoadingManager {
       });
       
       if (module) {
-        // Query tools by moduleId for proper relational lookup
-        query.moduleId = module._id;
+        // Query tools by BOTH moduleId AND moduleName to handle data inconsistencies
+        query.$or = [
+          { moduleId: module._id },
+          { moduleName: module.name }
+        ];
         if (this.verbose) {
-          console.log(`  Found module '${module.name}' with ID: ${module._id}`);
+          console.log(`  Found module '${module.name}' with ID: ${module._id}, querying by both moduleId and moduleName`);
         }
       } else {
         // Fallback to moduleName for backwards compatibility
@@ -329,7 +332,15 @@ export class LoadingManager {
       }
     }
 
-    const tools = await this.mongoProvider.listTools(query);
+    // Use direct MongoDB query for complex queries like $or
+    let tools;
+    if (query.$or || Object.keys(query).some(key => key.startsWith('$'))) {
+      // Complex MongoDB query - use direct database access
+      tools = await this.mongoProvider.databaseService.mongoProvider.find('tools', query);
+    } else {
+      // Simple query - use the higher-level listTools method
+      tools = await this.mongoProvider.listTools(query);
+    }
     
     if (tools.length === 0) {
       const context = opts.tool ? `tool: ${opts.tool}` : opts.module ? `module: ${opts.module}` : 'all modules';

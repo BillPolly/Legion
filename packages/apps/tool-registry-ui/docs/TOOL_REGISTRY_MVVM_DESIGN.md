@@ -85,7 +85,55 @@ element.className = 'responsive-container';
 - **Layout**: Flexbox and CSS Grid with fractional units
 - **Components**: Scale proportionally to viewport
 
-### 5. Umbilical Protocol Compliance
+### 5. Frontend Import Requirements
+**CRITICAL**: Frontend imports cannot use `@legion` namespace - must use `/legion/` paths served by Express:
+
+```javascript
+// ❌ FORBIDDEN - @legion imports don't work in frontend
+import { UmbilicalUtils } from '@legion/frontend-components/src/umbilical/index.js';
+
+// ✅ REQUIRED - /legion/ paths served by Express server
+import { UmbilicalUtils } from '/legion/shared/components/src/umbilical/index.js';
+import { ToolRegistry } from '/legion/tools/src/index.js';
+```
+
+**Server Configuration Required**: Express server must serve Legion packages at `/legion/` routes:
+```javascript
+// server.js must include:
+app.use('/legion/shared', express.static(path.join(__dirname, '../../shared')));
+app.use('/legion/tools', express.static(path.join(__dirname, '../../tools')));
+app.use('/legion/frontend-components', express.static(path.join(__dirname, '../../frontend/components')));
+```
+
+### 6. CSS Architecture Requirements
+**CSS Classes Only**: NEVER use inline styles - always use CSS classes with CSS variables for maximum flexibility:
+
+```javascript
+// ❌ FORBIDDEN - Any inline styles
+element.style.padding = '20px';
+element.setAttribute('style', 'color: red; margin: 10px;');
+
+// ✅ REQUIRED - CSS classes with variables
+element.className = 'component-container';
+// CSS: .component-container { 
+//   padding: var(--spacing-md); 
+//   color: var(--color-primary);
+//   margin: var(--spacing-sm);
+// }
+```
+
+**CSS Implementation Options**:
+1. **Dynamic CSS Injection** (View layer injects styles)
+2. **Static CSS Files** (separate .css files served by Express)
+3. **HTML Embedded CSS** (styles in `<style>` tags in HTML)
+
+**CSS Variables Mandate**: Use CSS custom properties extensively for:
+- All spacing: `var(--spacing-xs)` to `var(--spacing-xl)`
+- All typography: `var(--font-xs)` to `var(--font-xxl)`
+- All colors: `var(--color-primary)`, `var(--text-secondary)`, etc.
+- All responsive values: `var(--radius-sm)`, `var(--shadow-md)`, etc.
+
+### 7. Umbilical Protocol Compliance
 All components must support three operational modes:
 ```javascript
 // 1. Introspection Mode
@@ -663,7 +711,7 @@ export class ToolRegistryViewModel {
 #### Main Component Export
 ```javascript
 // /src/components/tool-registry/index.js
-import { UmbilicalUtils } from '../../umbilical/index.js';
+import { UmbilicalUtils } from '/legion/frontend-components/src/umbilical/index.js';
 import { ToolRegistryModel } from './model/ToolRegistryModel.js';
 import { ToolRegistryView } from './view/ToolRegistryView.js';
 import { ToolRegistryViewModel } from './viewmodel/ToolRegistryViewModel.js';
@@ -719,7 +767,7 @@ Displays application title, subtitle, and global controls like search and user m
 #### Complete Implementation
 ```javascript
 // /src/components/tool-registry/components/ApplicationHeader.js
-import { UmbilicalUtils } from '../../../umbilical/index.js';
+import { UmbilicalUtils } from '/legion/frontend-components/src/umbilical/index.js';
 
 class ApplicationHeaderModel {
   constructor(options = {}) {
@@ -1129,7 +1177,7 @@ Responsive tab navigation system that manages content panels and handles tab swi
 #### Complete Implementation
 ```javascript
 // /src/components/tool-registry/components/NavigationTabs.js
-import { UmbilicalUtils } from '../../../umbilical/index.js';
+import { UmbilicalUtils } from '/legion/frontend-components/src/umbilical/index.js';
 
 class NavigationTabsModel {
   constructor(options = {}) {

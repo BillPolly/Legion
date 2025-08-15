@@ -8,6 +8,10 @@
 // Dynamic import to handle missing dependency gracefully
 let ort = null;
 
+// Global singleton tracking to prevent multiple ONNX sessions
+let globalONNXSession = null;
+let globalSessionPath = null;
+
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -48,6 +52,15 @@ export class LocalEmbeddingService {
     try {
       console.log('Loading local embedding model...');
       
+      // Force CPU-only environment variables to prevent device selection issues
+      process.env.ORT_DISABLE_CUDA = '1';
+      process.env.ORT_DISABLE_COREML = '1';
+      process.env.ORT_DISABLE_DNNL = '1';
+      process.env.ORT_DISABLE_TRT = '1';
+      process.env.OMP_NUM_THREADS = '1';
+      
+      console.log('🔧 Forcing CPU-only execution with environment variables');
+      
       // Try to load ONNX Runtime
       if (!ort) {
         try {
@@ -63,22 +76,33 @@ export class LocalEmbeddingService {
         }
       }
       
-      // Initialize ONNX Runtime session with specific configuration
-      // Use only CPU provider to ensure compatibility across all systems
+      // Initialize ONNX Runtime session with the simplest possible CPU-only configuration
+      // Use the same configuration that worked in our debug script
       const sessionOptions = {
-        executionProviders: ['cpu'], // Force CPU-only to avoid device issues
-        // Enable basic optimizations for better performance
-        graphOptimizationLevel: 'basic',
-        enableCpuMemArena: true,
-        enableMemPattern: true,
-        executionMode: 'sequential',
-        // Logging configuration
-        enableProfiling: false,
-        logSeverityLevel: 3, // Warnings and errors
-        logVerbosityLevel: 0
+        executionProviders: ['cpu']  // Simplest possible configuration
       };
       
-      this.session = await ort.InferenceSession.create(this.config.modelPath, sessionOptions);
+      // Use global singleton session to prevent device conflicts
+      if (globalONNXSession && globalSessionPath === this.config.modelPath) {
+        console.log('♻️ Reusing existing ONNX session to prevent device conflicts');
+        this.session = globalONNXSession;
+      } else {
+        if (globalONNXSession) {
+          console.log('🔄 Releasing previous ONNX session');
+          try {
+            await globalONNXSession.release();
+          } catch (e) {
+            console.log('⚠️ Previous session already released');
+          }
+        }
+        
+        console.log('🆕 Creating new ONNX session with CPU-only configuration');
+        this.session = await ort.InferenceSession.create(this.config.modelPath, sessionOptions);
+        
+        // Store as global singleton
+        globalONNXSession = this.session;
+        globalSessionPath = this.config.modelPath;
+      }
 
       // Initialize tokenizer (using dynamic import to avoid hard dependency)
       try {
@@ -490,17 +514,29 @@ export class LocalEmbeddingService {
    * Cleanup resources
    */
   async cleanup() {
-    if (this.session) {
-      // Properly release ONNX session to avoid singleton issues
-      try {
-        await this.session.release();
-      } catch (error) {
-        // Session might already be released, ignore
-        console.log('Session release warning:', error.message);
-      }
-      this.session = null;
-    }
+    // Don't release the global session unless we're the last instance
+    // For now, just clear our reference but keep the global session alive
+    // This prevents device conflicts when multiple services are used
+    this.session = null;
     this.tokenizer = null;
     this.initialized = false;
+    
+    console.log('🧹 LocalEmbeddingService cleaned up (keeping global session alive)');
+  }
+
+  /**
+   * Force cleanup of global session - use only when completely shutting down
+   */
+  static async forceCleanupGlobalSession() {
+    if (globalONNXSession) {
+      try {
+        await globalONNXSession.release();
+        console.log('🗑️ Global ONNX session released');
+      } catch (error) {
+        console.log('⚠️ Global session release warning:', error.message);
+      }
+      globalONNXSession = null;
+      globalSessionPath = null;
+    }
   }
 }

@@ -6,12 +6,15 @@ export default {
     '**/test/**/*.test.js'
   ],
   transform: {},
-  extensionsToTreatAsEsm: ['.js'],
   moduleNameMapper: {
     '^@legion/tools$': '<rootDir>/../../tools/src/index.js',
     '^@legion/shared$': '<rootDir>/../../shared/src/index.js',
     '^@legion/semantic-search$': '<rootDir>/../../semantic-search/src/index.js',
-    '^@legion/storage$': '<rootDir>/../../storage/src/index.js'
+    '^@legion/storage$': '<rootDir>/../../storage/src/index.js',
+    '^/legion/frontend-components/(.*)$': '<rootDir>/../../frontend/components/$1',
+    '^/legion/tools/(.*)$': '<rootDir>/../../tools/$1',
+    '^/legion/shared/(.*)$': '<rootDir>/../../shared/$1',
+    '^/legion/actors/(.*)$': '<rootDir>/../../shared/actors/$1'
   },
   collectCoverageFrom: [
     'src/**/*.js',

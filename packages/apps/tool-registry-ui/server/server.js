@@ -26,7 +26,13 @@ const PORT = process.env.PORT || 8090;
 app.use(express.static(path.join(__dirname, '../public')));
 app.use('/src', express.static(path.join(__dirname, '../src')));
 
-// Serve shared packages
+// Serve Legion packages for frontend imports
+app.use('/legion/shared', express.static(path.join(__dirname, '../../../shared')));
+app.use('/legion/tools', express.static(path.join(__dirname, '../../../tools')));
+app.use('/legion/frontend-components', express.static(path.join(__dirname, '../../../frontend/components')));
+app.use('/legion/actors', express.static(path.join(__dirname, '../../../shared/actors')));
+
+// Legacy shared packages support
 app.use('/lib/shared/actors', express.static(path.join(__dirname, '../../shared/actors/src')));
 
 // Serve demo HTML
@@ -86,10 +92,10 @@ wss.on('connection', (ws) => {
   // Create ActorSpace for this connection
   const actorSpace = new ActorSpace('server-' + Date.now());
   
-  // Create server actors - they only need the toolRegistry
-  const toolActor = new ServerToolRegistryActor(toolRegistry);
-  const dbActor = new ServerDatabaseActor(toolRegistry);
-  const searchActor = new ServerSemanticSearchActor(toolRegistry);
+  // Create server actors - pass toolRegistry and mongoProvider
+  const toolActor = new ServerToolRegistryActor(toolRegistry, toolRegistry.provider);
+  const dbActor = new ServerDatabaseActor(toolRegistry, toolRegistry.provider);
+  const searchActor = new ServerSemanticSearchActor(toolRegistry, semanticProvider);
   
   // Register actors with unique GUIDs
   const actorGuids = {
