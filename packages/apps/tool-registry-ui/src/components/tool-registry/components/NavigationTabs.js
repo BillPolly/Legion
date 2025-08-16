@@ -675,6 +675,15 @@ class NavigationTabsViewModel {
           }
         };
         
+        // Provide semantic search callback
+        umbilicalConfig.onSemanticSearch = async (query) => {
+          console.log('🧠 Semantic search requested:', query);
+          if (this.umbilical.onSemanticSearch) {
+            return await this.umbilical.onSemanticSearch(query);
+          }
+          return null;
+        };
+        
         // Provide search callback
         umbilicalConfig.onSearch = (query, results) => {
           if (this.umbilical.onSearch) {

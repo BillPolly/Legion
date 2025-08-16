@@ -21,6 +21,7 @@ class ToolSearchPanelModel {
         module: 'all',
         sortBy: 'name'
       },
+      searchMode: 'text', // text, semantic, both
       viewMode: 'list' // list, grid, detailed
     };
   }
@@ -45,16 +46,55 @@ class ToolSearchPanelModel {
     return path.split('.').reduce((obj, key) => obj?.[key], this.state);
   }
   
+  calculateTextSearchScore(tool, query) {
+    if (!query) return 1;
+    
+    const lowerQuery = query.toLowerCase();
+    const name = (tool.name || '').toLowerCase();
+    const description = (tool.description || '').toLowerCase();
+    const module = (tool.moduleName || '').toLowerCase();
+    const category = (tool.category || '').toLowerCase();
+    const tags = (tool.tags || []).join(' ').toLowerCase();
+    
+    let score = 0;
+    
+    // Exact name match (highest priority)
+    if (name === lowerQuery) score += 10;
+    else if (name.includes(lowerQuery)) score += 5;
+    
+    // Description matches
+    if (description.includes(lowerQuery)) score += 3;
+    
+    // Module name matches
+    if (module.includes(lowerQuery)) score += 2;
+    
+    // Category/tag matches
+    if (category.includes(lowerQuery)) score += 1;
+    if (tags.includes(lowerQuery)) score += 1;
+    
+    // Bonus for word boundary matches
+    const wordBoundaryRegex = new RegExp(`\\b${lowerQuery}\\b`, 'i');
+    if (wordBoundaryRegex.test(name)) score += 2;
+    if (wordBoundaryRegex.test(description)) score += 1;
+    
+    return score;
+  }
+  
   updateFilteredTools() {
     const query = this.state.searchQuery.toLowerCase();
     const filters = this.state.filters;
     
     let filtered = this.state.tools.filter(tool => {
-      // Text search
-      const matchesQuery = !query || 
-        tool.name.toLowerCase().includes(query) ||
-        tool.description.toLowerCase().includes(query) ||
-        tool.module.toLowerCase().includes(query);
+      // Text search with confidence scoring
+      let matchesQuery = !query;
+      let searchScore = 0;
+      
+      if (query) {
+        searchScore = this.calculateTextSearchScore(tool, query);
+        matchesQuery = searchScore > 0;
+        // Add the score to the tool for sorting
+        tool._searchScore = searchScore;
+      }
       
       // Category filter
       const matchesCategory = filters.category === 'all' || 
@@ -62,18 +102,25 @@ class ToolSearchPanelModel {
       
       // Module filter
       const matchesModule = filters.module === 'all' || 
-        tool.module === filters.module;
+        tool.moduleName === filters.module;
       
       return matchesQuery && matchesCategory && matchesModule;
     });
     
     // Sort results
     filtered.sort((a, b) => {
+      // If we have search scores, sort by relevance first
+      if (query && a._searchScore !== undefined && b._searchScore !== undefined) {
+        const scoreDiff = b._searchScore - a._searchScore;
+        if (scoreDiff !== 0) return scoreDiff;
+      }
+      
+      // Then apply regular sorting
       switch (filters.sortBy) {
         case 'name':
           return a.name.localeCompare(b.name);
         case 'module':
-          return a.module.localeCompare(b.module);
+          return (a.moduleName || '').localeCompare(b.moduleName || '');
         case 'recent':
           return (b.lastUsed || 0) - (a.lastUsed || 0);
         default:
@@ -101,14 +148,22 @@ class ToolSearchPanelView {
   
   generateCSS() {
     return `
+      /* Global box-sizing for all search panel elements */
+      .tool-search-panel * {
+        box-sizing: border-box;
+      }
+      
       .tool-search-panel {
-        padding: 1.5rem;
+        padding: clamp(1rem, 3vw, 1.5rem);
         height: 100%;
+        width: 100%;
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: clamp(0.5rem, 2vw, 1rem);
         background: var(--surface-primary);
         overflow: hidden;
+        box-sizing: border-box;
+        max-width: 100vw;
       }
       
       .search-header {
@@ -116,6 +171,8 @@ class ToolSearchPanelView {
         flex-direction: column;
         gap: 1rem;
         flex-shrink: 0;
+        width: 100%;
+        box-sizing: border-box;
       }
       
       .search-title {
@@ -131,15 +188,20 @@ class ToolSearchPanelView {
       .search-input-container {
         position: relative;
         width: 100%;
+        max-width: 100%;
+        flex-shrink: 0;
+        box-sizing: border-box;
       }
       
       .search-input {
         width: 100%;
-        padding: 0.75rem 1rem;
-        padding-left: 3rem;
-        font-size: 1rem;
+        max-width: 100%;
+        padding: clamp(0.5rem, 2vw, 0.75rem) clamp(0.75rem, 2vw, 1rem);
+        padding-left: clamp(2.5rem, 6vw, 3rem);
+        font-size: clamp(0.875rem, 2.5vw, 1rem);
         border: 1px solid var(--border-subtle);
-        border-radius: 0.5rem;
+        border-radius: clamp(0.375rem, 1vw, 0.5rem);
+        box-sizing: border-box;
         background: var(--surface-secondary);
         color: var(--text-primary);
         transition: all 0.2s ease;
@@ -171,8 +233,11 @@ class ToolSearchPanelView {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 1rem;
+        gap: clamp(0.5rem, 2vw, 1rem);
         flex-wrap: wrap;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
       }
       
       .search-filters {
@@ -233,6 +298,25 @@ class ToolSearchPanelView {
         border-color: var(--border-medium);
       }
       
+      .show-all-button {
+        padding: clamp(0.5rem, 1.5vw, 0.75rem) clamp(0.75rem, 2vw, 1rem);
+        border: 0.125rem solid var(--color-secondary);
+        border-radius: var(--radius-sm);
+        background: var(--color-secondary);
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: var(--font-sm);
+        font-weight: 500;
+        margin-left: 0.5rem;
+      }
+      
+      .show-all-button:hover {
+        background: var(--color-secondary-dark, #0056b3);
+        border-color: var(--color-secondary-dark, #0056b3);
+        transform: translateY(-1px);
+      }
+      
       .search-results {
         flex: 1;
         display: flex;
@@ -270,14 +354,27 @@ class ToolSearchPanelView {
         border: 1px solid var(--border-subtle);
         border-radius: 0 0 0.375rem 0.375rem;
         background: var(--surface-primary);
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
       }
       
       .tool-item {
-        padding: 1rem;
+        padding: clamp(0.75rem, 2vw, 1rem);
         border-bottom: 1px solid var(--border-subtle);
         cursor: pointer;
         transition: all 0.2s ease;
         position: relative;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        display: flex;
+        flex-direction: column;
+        gap: clamp(0.25rem, 1vw, 0.5rem);
       }
       
       .tool-item:last-child {
@@ -363,6 +460,51 @@ class ToolSearchPanelView {
       
       .tool-item.selected .tool-usage-count {
         background: rgba(255, 255, 255, 0.15);
+      }
+      
+      .tool-params-detail, .tool-output-detail {
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        background: var(--surface-secondary);
+        border-radius: var(--radius-sm);
+        border-left: 3px solid var(--color-primary);
+      }
+      
+      .tool-item.selected .tool-params-detail,
+      .tool-item.selected .tool-output-detail {
+        background: rgba(255, 255, 255, 0.1);
+        border-left-color: rgba(255, 255, 255, 0.5);
+      }
+      
+      .params-header, .output-header {
+        font-weight: 600;
+        font-size: var(--font-xs);
+        color: var(--color-primary);
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      .tool-item.selected .params-header,
+      .tool-item.selected .output-header {
+        color: rgba(255, 255, 255, 0.9);
+      }
+      
+      .param-item, .output-item {
+        display: inline-block;
+        background: var(--surface-tertiary);
+        color: var(--text-secondary);
+        padding: 0.2rem 0.4rem;
+        margin: 0.1rem 0.2rem 0.1rem 0;
+        border-radius: var(--radius-xs);
+        font-size: var(--font-xs);
+        font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+      }
+      
+      .tool-item.selected .param-item,
+      .tool-item.selected .output-item {
+        background: rgba(255, 255, 255, 0.15);
+        color: rgba(255, 255, 255, 0.9);
       }
       
       .no-results {
@@ -455,6 +597,75 @@ class ToolSearchPanelView {
         0% { transform: translateX(-100%); }
         100% { transform: translateX(100%); }
       }
+      
+      /* Mobile and Tablet Responsive Design */
+      @media (max-width: 768px) {
+        .tool-search-panel {
+          padding: clamp(0.5rem, 3vw, 1rem);
+        }
+        
+        .search-controls {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 0.75rem;
+        }
+        
+        .search-filters {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 0.5rem;
+        }
+        
+        .view-controls {
+          justify-content: center;
+        }
+        
+        .filter-select {
+          min-width: auto;
+          width: 100%;
+        }
+        
+        .tool-item {
+          padding: 0.75rem;
+        }
+        
+        .search-input {
+          font-size: 16px; /* Prevent zoom on iOS */
+        }
+      }
+      
+      @media (max-width: 480px) {
+        .search-title {
+          font-size: 1.25rem;
+          flex-direction: column;
+          text-align: center;
+          gap: 0.25rem;
+        }
+        
+        .search-input-container {
+          width: 100%;
+        }
+        
+        .search-input {
+          padding: 0.625rem 0.75rem;
+          padding-left: 2.5rem;
+          font-size: 16px;
+        }
+        
+        .search-icon {
+          left: 0.75rem;
+          font-size: 0.875rem;
+        }
+        
+        .tool-item {
+          padding: 0.5rem;
+        }
+        
+        .param-item, .output-item {
+          font-size: 0.75rem;
+          padding: 0.15rem 0.3rem;
+        }
+      }
     `;
   }
   
@@ -512,14 +723,87 @@ class ToolSearchPanelView {
     inputContainer.appendChild(searchIcon);
     inputContainer.appendChild(searchInput);
     
+    // Search mode toggle
+    const searchModeContainer = this.createSearchModeToggle(modelData);
+    
     // Controls
     const controls = this.createSearchControls(modelData);
     
     header.appendChild(title);
     header.appendChild(inputContainer);
+    header.appendChild(searchModeContainer);
     header.appendChild(controls);
     
     return header;
+  }
+  
+  createSearchModeToggle(modelData) {
+    const container = document.createElement('div');
+    container.className = 'search-mode-container';
+    container.style.cssText = `
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      padding: 0.75rem;
+      background: var(--surface-tertiary);
+      border-radius: 0.5rem;
+      margin-bottom: 0.5rem;
+    `;
+    
+    const label = document.createElement('span');
+    label.className = 'search-mode-label';
+    label.textContent = 'Search Mode:';
+    label.style.cssText = 'font-weight: 600; color: var(--text-secondary);';
+    
+    const modes = ['text', 'semantic', 'both'];
+    const modeButtons = document.createElement('div');
+    modeButtons.className = 'search-mode-buttons';
+    modeButtons.style.cssText = 'display: flex; gap: 0.5rem;';
+    
+    modes.forEach(mode => {
+      const button = document.createElement('button');
+      button.className = `search-mode-button ${modelData.searchMode === mode ? 'active' : ''}`;
+      button.dataset.mode = mode;
+      button.style.cssText = `
+        padding: 0.5rem 1rem;
+        border: 2px solid var(--border-subtle);
+        border-radius: 0.375rem;
+        background: ${modelData.searchMode === mode ? 'var(--color-primary)' : 'var(--surface-secondary)'};
+        color: ${modelData.searchMode === mode ? 'white' : 'var(--text-primary)'};
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 500;
+        text-transform: capitalize;
+      `;
+      
+      const icons = {
+        text: '📝',
+        semantic: '🧠',
+        both: '🔀'
+      };
+      
+      button.innerHTML = `${icons[mode]} ${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+      modeButtons.appendChild(button);
+    });
+    
+    // Add info text
+    const infoText = document.createElement('span');
+    infoText.className = 'search-mode-info';
+    infoText.style.cssText = 'font-size: 0.875rem; color: var(--text-tertiary); margin-left: auto;';
+    
+    const infoMessages = {
+      text: 'Exact keyword matching',
+      semantic: 'AI-powered concept search',
+      both: 'Combined keyword + AI search'
+    };
+    
+    infoText.textContent = infoMessages[modelData.searchMode];
+    
+    container.appendChild(label);
+    container.appendChild(modeButtons);
+    container.appendChild(infoText);
+    
+    return container;
   }
   
   createSearchControls(modelData) {
@@ -600,8 +884,15 @@ class ToolSearchPanelView {
     gridButton.dataset.viewMode = 'grid';
     BaseUmbilicalComponent.assignId(gridButton, 'ToolSearchPanel', 'button');
     
+    const showAllButton = document.createElement('button');
+    showAllButton.className = 'show-all-button';
+    showAllButton.textContent = '📋 Show All Tools';
+    showAllButton.dataset.action = 'show-all';
+    BaseUmbilicalComponent.assignId(showAllButton, 'ToolSearchPanel', 'button');
+    
     viewControls.appendChild(listButton);
     viewControls.appendChild(gridButton);
+    viewControls.appendChild(showAllButton);
     
     controls.appendChild(filters);
     controls.appendChild(viewControls);
@@ -698,8 +989,8 @@ class ToolSearchPanelView {
     name.textContent = tool.name;
     
     const moduleBadge = document.createElement('span');
-    moduleBadge.className = 'tool-module-badge';
-    moduleBadge.textContent = tool.module;
+    moduleBadge.className = 'tool-module-badge module-badge';
+    moduleBadge.textContent = tool.moduleName || tool.module || 'Unknown';
     
     header.appendChild(name);
     header.appendChild(moduleBadge);
@@ -707,7 +998,7 @@ class ToolSearchPanelView {
     // Description
     const description = document.createElement('p');
     description.className = 'tool-description';
-    description.textContent = tool.description;
+    description.textContent = tool.description || tool.summary || 'No description available';
     
     // Meta information
     const meta = document.createElement('div');
@@ -715,11 +1006,56 @@ class ToolSearchPanelView {
     
     const schemaInfo = document.createElement('div');
     schemaInfo.className = 'tool-schema-info';
-    const paramCount = tool.schema?.properties ? Object.keys(tool.schema.properties).length : 0;
+    
+    // Calculate parameter count more robustly
+    let paramCount = 0;
+    if (tool.inputSchema && typeof tool.inputSchema === 'object') {
+      if (tool.inputSchema.properties && typeof tool.inputSchema.properties === 'object') {
+        paramCount = Object.keys(tool.inputSchema.properties).length;
+      }
+    }
+    
+    // Check for output schema
+    let hasOutput = false;
+    if (tool.outputSchema && typeof tool.outputSchema === 'object' && 
+        tool.outputSchema.properties && Object.keys(tool.outputSchema.properties).length > 0) {
+      hasOutput = true;
+    }
+    
     schemaInfo.innerHTML = `
-      <span>📝 ${paramCount} parameters</span>
-      <span>🏷️ ${tool.category || 'General'}</span>
+      <span>📝 ${paramCount} parameter${paramCount !== 1 ? 's' : ''}</span>
+      <span>🏷️ ${tool.category || 'general'}</span>
+      ${hasOutput ? '<span>📤 Returns data</span>' : '<span>📤 No return data</span>'}
     `;
+    
+    // Add detailed parameter information if available
+    if (paramCount > 0 && tool.inputSchema?.properties) {
+      const paramsDetail = document.createElement('div');
+      paramsDetail.className = 'tool-params-detail';
+      
+      const paramsList = Object.entries(tool.inputSchema.properties).map(([name, schema]) => {
+        const required = tool.inputSchema.required?.includes(name) ? '*' : '';
+        const type = schema.type || 'any';
+        return `<span class="param-item">${name}${required}: ${type}</span>`;
+      }).join('');
+      
+      paramsDetail.innerHTML = `<div class="params-header">Parameters:</div>${paramsList}`;
+      meta.appendChild(paramsDetail);
+    }
+    
+    // Add output information if available
+    if (hasOutput && tool.outputSchema?.properties) {
+      const outputDetail = document.createElement('div');
+      outputDetail.className = 'tool-output-detail';
+      
+      const outputList = Object.entries(tool.outputSchema.properties).map(([name, schema]) => {
+        const type = schema.type || 'any';
+        return `<span class="output-item">${name}: ${type}</span>`;
+      }).join('');
+      
+      outputDetail.innerHTML = `<div class="output-header">Returns:</div>${outputList}`;
+      meta.appendChild(outputDetail);
+    }
     
     const usageCount = document.createElement('span');
     usageCount.className = 'tool-usage-count';
@@ -809,11 +1145,12 @@ class ToolSearchPanelViewModel {
         this.view.showLoading();
         
         // Debounce search
-        this.searchTimeout = setTimeout(() => {
+        this.searchTimeout = setTimeout(async () => {
           this.model.updateState('searchQuery', query);
           this.model.addToSearchHistory(query);
-          this.render();
-          this.view.hideLoading();
+          
+          // Perform search based on mode
+          await this.performSearch();
           
           if (this.umbilical.onSearch) {
             this.umbilical.onSearch(query, this.model.getState('filteredTools'));
@@ -821,8 +1158,26 @@ class ToolSearchPanelViewModel {
         }, 300);
       };
       
+      // Handle Enter key
+      const handleKeyDown = (event) => {
+        if (event.key === 'Enter') {
+          console.log('⌨️ Enter key pressed, triggering immediate search');
+          clearTimeout(this.searchTimeout);
+          this.searchTimeout = setTimeout(async () => {
+            this.model.updateState('searchQuery', event.target.value);
+            this.model.addToSearchHistory(event.target.value);
+            await this.performSearch();
+            if (this.umbilical.onSearch) {
+              this.umbilical.onSearch(event.target.value, this.model.getState('filteredTools'));
+            }
+          }, 100);
+        }
+      };
+      
       searchInput.addEventListener('input', handleSearch);
+      searchInput.addEventListener('keydown', handleKeyDown);
       this.eventListeners.push(() => searchInput.removeEventListener('input', handleSearch));
+      this.eventListeners.push(() => searchInput.removeEventListener('keydown', handleKeyDown));
     }
     
     // Filter selects
@@ -838,6 +1193,51 @@ class ToolSearchPanelViewModel {
       this.eventListeners.push(() => select.removeEventListener('change', handleFilterChange));
     });
     
+    // Search mode buttons (use event delegation)
+    const handleModeChange = (event) => {
+      const button = event.target.closest('.search-mode-button');
+      if (!button) return;
+      
+      const mode = button.dataset.mode;
+      console.log('🔄 Search mode changed to:', mode);
+      this.model.updateState('searchMode', mode);
+      
+      // Update button states
+      const searchModeButtons = this.view.container.querySelectorAll('.search-mode-button');
+      searchModeButtons.forEach(btn => {
+        if (btn.dataset.mode === mode) {
+          btn.classList.add('active');
+          btn.style.background = 'var(--color-primary)';
+          btn.style.color = 'white';
+        } else {
+          btn.classList.remove('active');
+          btn.style.background = 'var(--surface-secondary)';
+          btn.style.color = 'var(--text-primary)';
+        }
+      });
+      
+      // Update info text
+      const infoText = this.view.container.querySelector('.search-mode-info');
+      if (infoText) {
+        const infoMessages = {
+          text: 'Exact keyword matching',
+          semantic: 'AI-powered concept search',
+          both: 'Combined keyword + AI search'
+        };
+        infoText.textContent = infoMessages[mode];
+      }
+      
+      // Trigger search if we have a query
+      const currentQuery = this.model.getState('searchQuery');
+      console.log('🔍 Current query:', currentQuery, 'Mode:', mode);
+      if (currentQuery) {
+        this.performSearch();
+      }
+    };
+    
+    this.view.container.addEventListener('click', handleModeChange);
+    this.eventListeners.push(() => this.view.container.removeEventListener('click', handleModeChange));
+    
     // View mode buttons
     const viewButtons = this.view.container.querySelectorAll('.view-button');
     viewButtons.forEach(button => {
@@ -850,6 +1250,26 @@ class ToolSearchPanelViewModel {
       button.addEventListener('click', handleViewChange);
       this.eventListeners.push(() => button.removeEventListener('click', handleViewChange));
     });
+    
+    // Show All Tools button
+    const showAllButton = this.view.container.querySelector('.show-all-button');
+    if (showAllButton) {
+      const handleShowAll = () => {
+        console.log('🔍 Show All Tools clicked');
+        // Clear search query
+        this.model.updateState('searchQuery', '');
+        // Clear search input
+        const searchInput = this.view.container.querySelector('.search-input');
+        if (searchInput) {
+          searchInput.value = '';
+        }
+        // Show all tools
+        this.showAllTools();
+      };
+      
+      showAllButton.addEventListener('click', handleShowAll);
+      this.eventListeners.push(() => showAllButton.removeEventListener('click', handleShowAll));
+    }
     
     // Tool selection
     const handleToolClick = (event) => {
@@ -886,6 +1306,125 @@ class ToolSearchPanelViewModel {
       this.view.container.removeEventListener('click', handleToolClick);
       this.view.container.removeEventListener('click', handleSuggestionClick);
     });
+  }
+  
+  async performSearch() {
+    const query = this.model.getState('searchQuery');
+    const mode = this.model.getState('searchMode');
+    
+    if (!query) {
+      this.model.updateFilteredTools();
+      this.view.updateToolsList(this.model.getState('filteredTools'), this.model.getState('selectedTool'));
+      return;
+    }
+    
+    this.view.showLoading();
+    
+    if (mode === 'text') {
+      // Text search only
+      this.model.updateFilteredTools();
+      this.view.updateToolsList(this.model.getState('filteredTools'), this.model.getState('selectedTool'));
+    } else if (mode === 'semantic' && this.umbilical.onSemanticSearch) {
+      // Semantic search only
+      const results = await this.umbilical.onSemanticSearch(query);
+      if (results) {
+        this.model.updateState('filteredTools', results);
+        this.view.updateToolsList(results, this.model.getState('selectedTool'));
+      }
+    } else if (mode === 'both' && this.umbilical.onSemanticSearch) {
+      // Combined search
+      const textResults = this.model.getState('filteredTools');
+      const semanticResults = await this.umbilical.onSemanticSearch(query) || [];
+      
+      // Merge results, combining scores
+      const mergedResults = this.mergeSearchResults(textResults, semanticResults);
+      this.model.updateState('filteredTools', mergedResults);
+      this.view.updateToolsList(mergedResults, this.model.getState('selectedTool'));
+    }
+    
+    // Update results count
+    const resultsCount = this.view.container.querySelector('.results-count');
+    if (resultsCount) {
+      resultsCount.textContent = `Found ${this.model.getState('filteredTools').length} tools`;
+    }
+    
+    const resultsQuery = this.view.container.querySelector('.results-query');
+    if (resultsQuery) {
+      resultsQuery.textContent = query ? `for "${query}"` : '';
+    }
+    
+    this.view.hideLoading();
+  }
+  
+  mergeSearchResults(textResults, semanticResults) {
+    const merged = new Map();
+    
+    // Add text results with their scores
+    textResults.forEach(tool => {
+      merged.set(tool.name, {
+        ...tool,
+        textScore: tool._searchScore || 0,
+        semanticScore: 0,
+        combinedScore: tool._searchScore || 0
+      });
+    });
+    
+    // Add/update with semantic results
+    semanticResults.forEach((tool, index) => {
+      const semanticScore = 10 - (index * 0.1); // Higher score for higher rank
+      
+      if (merged.has(tool.name)) {
+        const existing = merged.get(tool.name);
+        existing.semanticScore = semanticScore;
+        // Weighted combination: 40% text, 60% semantic
+        existing.combinedScore = (existing.textScore * 0.4) + (semanticScore * 0.6);
+      } else {
+        merged.set(tool.name, {
+          ...tool,
+          textScore: 0,
+          semanticScore: semanticScore,
+          combinedScore: semanticScore
+        });
+      }
+    });
+    
+    // Convert to array and sort by combined score
+    return Array.from(merged.values()).sort((a, b) => b.combinedScore - a.combinedScore);
+  }
+  
+  async showAllTools() {
+    console.log('🔍 Loading all tools...');
+    this.view.showLoading();
+    
+    try {
+      // Get all tools from the registry
+      const allTools = this.model.getState('allTools') || [];
+      console.log(`📋 Showing all ${allTools.length} tools`);
+      
+      // Update state with all tools as filtered results
+      this.model.updateState('filteredTools', allTools);
+      this.model.updateState('searchQuery', '');
+      this.model.updateState('searchMode', 'text');
+      
+      // Update UI
+      const resultsCount = this.view.container.querySelector('.results-count');
+      if (resultsCount) {
+        resultsCount.textContent = `Found ${allTools.length} tools`;
+      }
+      
+      const resultsQuery = this.view.container.querySelector('.results-query');
+      if (resultsQuery) {
+        resultsQuery.textContent = '(showing all available tools)';
+      }
+      
+      // Re-render the view
+      this.render();
+      
+    } catch (error) {
+      console.error('Error loading all tools:', error);
+    } finally {
+      this.view.hideLoading();
+    }
   }
   
   selectTool(tool) {

@@ -19,10 +19,15 @@ export class ToolRegistryView {
   generateCSS() {
     return `
       /* Reset and base styles */
+      * {
+        box-sizing: border-box;
+      }
+      
       html, body {
         margin: 0;
         padding: 0;
         height: 100%;
+        width: 100%;
         overflow: hidden;
       }
       
@@ -77,7 +82,7 @@ export class ToolRegistryView {
       
       /* Root Application Styles */
       .tool-registry-app {
-        width: 100vw;
+        width: 100%;
         height: 100vh;
         display: flex;
         flex-direction: column;
@@ -86,6 +91,7 @@ export class ToolRegistryView {
         color: var(--text-primary);
         line-height: 1.6;
         overflow: hidden;
+        box-sizing: border-box;
       }
       
       /* Header Section */
@@ -104,6 +110,8 @@ export class ToolRegistryView {
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        width: 100%;
+        box-sizing: border-box;
       }
       
       /* Navigation Tabs - fixed height */

@@ -3,8 +3,8 @@
  */
 
 export class ServerSemanticSearchActor {
-  constructor(semanticProvider, mongoProvider) {
-    this.semanticProvider = semanticProvider;
+  constructor(semanticDiscovery, mongoProvider) {
+    this.semanticDiscovery = semanticDiscovery;
     this.mongoProvider = mongoProvider;
     this.remoteActor = null;
   }
@@ -58,52 +58,66 @@ export class ServerSemanticSearchActor {
 
   async performSemanticSearch(options) {
     try {
-      const { query, limit = 10, threshold = 0.5, includeMetadata = false, collection = 'legion_tools' } = options;
+      const { query, limit = 10, threshold = 0, includeMetadata = true } = options;
       
-      // Generate embedding for query
-      const queryEmbedding = await this.semanticProvider.embeddingService.generateEmbedding(query);
+      console.log(`🔍 Performing semantic search for: "${query}"`);
       
-      // Search in Qdrant
-      const results = await this.semanticProvider.vectorStore.search(
-        queryEmbedding,
-        limit,
-        { collection }
-      );
-      
-      // Filter by threshold
-      const filteredResults = results.filter(r => r.score >= threshold);
-      
-      // Enhance results with metadata if requested
-      let enhancedResults = filteredResults;
-      if (includeMetadata) {
-        enhancedResults = await Promise.all(
-          filteredResults.map(async (result) => {
-            // Get tool metadata from database
-            const tool = await this.mongoProvider.getTool(result.toolName);
-            return {
-              ...result,
-              toolName: result.toolName || result.id,
-              perspectiveType: result.perspectiveType || 'unknown',
-              score: result.score,
-              metadata: {
-                description: tool?.description,
-                module: tool?.moduleName
-              }
-            };
-          })
-        );
+      // Use SemanticToolDiscovery to find relevant tools
+      if (!this.semanticDiscovery) {
+        console.error('❌ SemanticToolDiscovery not available');
+        if (this.remoteActor) {
+          this.remoteActor.receive({
+            type: 'search:results',
+            data: { results: [] }
+          });
+        }
+        return;
       }
+      
+      // Perform semantic search using SemanticToolDiscovery
+      const searchResult = await this.semanticDiscovery.findRelevantTools(query, {
+        limit,
+        minScore: threshold,
+        includeMetadata
+      });
+      
+      // Extract tools from the result (handle both old and new format)
+      const tools = searchResult.tools || searchResult;
+      
+      console.log(`✅ Found ${tools.length} tools via semantic search`);
+      
+      // Format results for client
+      const formattedResults = tools.map(tool => ({
+        name: tool.name,
+        description: tool.description,
+        moduleName: tool.moduleName || tool.module,
+        category: tool.category,
+        relevanceScore: tool.relevanceScore || tool.score || 0,
+        capabilities: tool.capabilities,
+        tags: tool.tags,
+        inputSchema: tool.inputSchema,
+        metadata: tool.metadata
+      }));
       
       // Send results to client
       if (this.remoteActor) {
         this.remoteActor.receive({
           type: 'search:results',
-          data: { results: enhancedResults }
+          data: { 
+            results: formattedResults,
+            query,
+            metadata: searchResult.metadata
+          }
         });
       }
     } catch (error) {
       console.error('Semantic search failed:', error);
-      throw error;
+      if (this.remoteActor) {
+        this.remoteActor.receive({
+          type: 'search:results',
+          data: { results: [], error: error.message }
+        });
+      }
     }
   }
 

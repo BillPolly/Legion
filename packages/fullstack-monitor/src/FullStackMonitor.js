@@ -595,6 +595,16 @@ export class FullStackMonitor extends EventEmitter {
       const page = await this.browser.newPage();
       const pageId = `page-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
+      // Set viewport - if not specified, don't set any viewport to allow responsive behavior
+      if (options.viewport) {
+        try {
+          await page.setViewport(options.viewport);
+        } catch (e) {
+          console.warn('⚠️ Failed to set viewport:', e.message);
+        }
+      }
+      // If no viewport specified, page remains responsive to window size
+      
       // Inject browser agent BEFORE navigating
       await this.injectBrowserAgent(page, {
         sessionId: sessionId,
@@ -1664,7 +1674,7 @@ ENVIRONMENT VARIABLES:
       const launchOptions = {
         headless: isHeadless ? 'new' : false, // Use new headless mode or visible
         devtools: options.devtools || false,
-        defaultViewport: options.viewport || { width: 1280, height: 720 },
+        defaultViewport: options.viewport !== undefined ? options.viewport : null,  // null = responsive viewport
         ignoreDefaultArgs: false,
         pipe: isHeadless, // Use pipe for headless, WebSocket for visible
         args: options.args || [
@@ -1759,6 +1769,8 @@ ENVIRONMENT VARIABLES:
       console.log(`📄 Creating new page for session: ${sessionId}`);
       const page = await this.browser.newPage();
       const pageId = `page-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+      // Don't set viewport by default to keep responsive behavior
 
       // Set up event handlers
       page.on('console', (msg) => {

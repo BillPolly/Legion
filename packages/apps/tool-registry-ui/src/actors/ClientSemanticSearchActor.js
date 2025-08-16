@@ -47,8 +47,14 @@ export class ClientSemanticSearchActor extends Actor {
     if (this.remoteActor) {
       console.log('🔍 Performing semantic search on server:', query);
       this.remoteActor.receive({
-        type: 'search:tools',
-        data: { query, options }
+        type: 'search:semantic',
+        data: { 
+          query, 
+          limit: options.limit || 10,
+          threshold: options.threshold || 0,
+          includeMetadata: options.includeMetadata !== false,
+          collection: 'tool_perspectives'
+        }
       });
     }
   }
@@ -67,9 +73,16 @@ export class ClientSemanticSearchActor extends Actor {
   async handleSearchResults(data) {
     console.log('🔍 Search results:', data);
     
-    const { query, results, metadata } = data;
+    const { results = [] } = data;
     
-    // Update the search panel with semantic search results
+    // If we have a resolver waiting for these results, call it
+    if (this.searchResultsResolver) {
+      console.log(`📊 Resolving semantic search with ${results.length} results`);
+      this.searchResultsResolver(results);
+      this.searchResultsResolver = null;
+    }
+    
+    // Also update the search panel directly if needed
     if (this.toolRegistryBrowser) {
       const navigation = this.toolRegistryBrowser.getComponent('navigation');
       if (navigation) {
@@ -77,7 +90,7 @@ export class ClientSemanticSearchActor extends Actor {
         if (searchComponent) {
           // If there's a semantic search method, use it
           if (searchComponent.setSemanticResults) {
-            searchComponent.setSemanticResults(results, query, metadata);
+            searchComponent.setSemanticResults(results, data.query, data.metadata);
           } else {
             // Otherwise, update the regular search with semantic results
             searchComponent.setTools?.(results);

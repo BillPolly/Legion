@@ -218,6 +218,38 @@ class ToolRegistryViewModel {
           onSearch: (query, results) => {
             console.log('🔍 Search performed:', query, 'Results:', results.length);
             this.model.updateState('globalSearchQuery', query);
+          },
+          
+          // Provide semantic search callback
+          onSemanticSearch: async (query) => {
+            console.log('🧠 Semantic search requested in main component:', query);
+            
+            // Use the semantic search actor if available
+            if (this.actorManager && this.actorManager.getSearchActor()) {
+              const searchActor = this.actorManager.getSearchActor();
+              
+              // Create a promise to wait for search results
+              return new Promise((resolve) => {
+                // Store the resolver for the search actor to call
+                searchActor.searchResultsResolver = resolve;
+                
+                // Perform the search
+                searchActor.searchTools(query, {
+                  limit: 20,
+                  threshold: 0,
+                  includeMetadata: true
+                });
+                
+                // Set a timeout in case results don't come back
+                setTimeout(() => {
+                  console.warn('⚠️ Semantic search timeout');
+                  resolve([]);
+                }, 5000);
+              });
+            }
+            
+            console.warn('⚠️ Semantic search actor not available');
+            return [];
           }
         });
         

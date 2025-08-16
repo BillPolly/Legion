@@ -25,7 +25,7 @@ export class SemanticToolDiscovery {
     // Discovery configuration
     this.config = {
       defaultLimit: 20,
-      minRelevanceScore: 0.7,
+      minRelevanceScore: 0.0,  // Set to 0 since our embeddings have low similarity scores
       includeRelatedTools: true,
       includeDependencies: true,
       boostFrequentlyUsedTogether: true,
@@ -114,9 +114,9 @@ export class SemanticToolDiscovery {
     // Enhance task description for better semantic matching
     const enhancedQuery = this.enhanceTaskDescription(taskDescription);
 
-    // Search Legion tools
+    // Search Legion tools - use tool_perspectives collection
     const legionSearchResults = await this.semanticSearchProvider.semanticSearch(
-      this.collectionName,
+      'tool_perspectives',  // Use the correct collection name for semantic search
       enhancedQuery,
       {
         limit: limit * 2, // Get more for filtering
@@ -578,18 +578,29 @@ export class SemanticToolDiscovery {
     
     // Process vector search results (minimal payloads)
     for (const result of searchResults) {
-      const vectorPayload = result.document || result.payload;
-      const toolId = vectorPayload.toolId;
-      const perspectiveId = vectorPayload.perspectiveId;
+      const vectorPayload = result.document || result.payload || result;
+      
+      // Get toolId - it might be in different places
+      const toolId = vectorPayload.toolId || vectorPayload.id || vectorPayload._id;
+      const toolName = vectorPayload.toolName; // We have toolName for sure
+      const perspectiveId = vectorPayload.perspectiveId || vectorPayload._id;
       const perspectiveType = vectorPayload.perspectiveType;
       const similarity = result._similarity || result.score || 0;
       
-      if (!toolGroups.has(toolId)) {
-        toolGroups.set(toolId, []);
+      // Use toolName as key if toolId is not available
+      const key = toolName || toolId;
+      if (!key) {
+        console.warn('No tool identifier found in search result:', vectorPayload);
+        continue;
       }
       
-      toolGroups.get(toolId).push({
+      if (!toolGroups.has(key)) {
+        toolGroups.set(key, []);
+      }
+      
+      toolGroups.get(key).push({
         toolId,
+        toolName,
         perspectiveId,
         perspectiveType,
         similarity,
@@ -608,10 +619,10 @@ export class SemanticToolDiscovery {
         // Use the highest scoring perspective
         const best = perspectives[0];
         
-        // Retrieve full tool data from MongoDB using toolId
-        const fullTool = await this.getFullToolData(toolId);
+        // Retrieve full tool data from MongoDB using toolId or toolName
+        const fullTool = await this.getFullToolData(toolId, best.toolName);
         if (!fullTool) {
-          console.warn(`Tool with ID ${toolId} not found in database`);
+          console.warn(`Tool ${best.toolName || toolId} not found in database`);
           continue;
         }
         
@@ -932,23 +943,36 @@ export class SemanticToolDiscovery {
    * Get full tool data from MongoDB by toolId (3-collection architecture)
    * @private
    */
-  async getFullToolData(toolId) {
+  async getFullToolData(toolId, toolName) {
     if (!this.mongoProvider) {
       console.warn('MongoDB provider not available for full tool data retrieval');
       return null;
     }
 
     try {
-      // Convert toolId string to ObjectId if needed
-      const { ObjectId } = await import('mongodb');
-      const objectId = typeof toolId === 'string' ? new ObjectId(toolId) : toolId;
+      // Try to find by toolId first if it's valid
+      if (toolId && toolId !== 'undefined' && toolId !== undefined) {
+        try {
+          const { ObjectId } = await import('mongodb');
+          const objectId = typeof toolId === 'string' ? new ObjectId(toolId) : toolId;
+          
+          // Get tool from MongoDB tools collection
+          const tool = await this.mongoProvider.findOne('tools', { _id: objectId });
+          if (tool) return tool;
+        } catch (e) {
+          // Invalid ObjectId, try by name
+        }
+      }
       
-      // Get tool from MongoDB tools collection
-      const tool = await this.mongoProvider.findOne('tools', { _id: objectId });
+      // Fall back to searching by name
+      if (toolName) {
+        const tool = await this.mongoProvider.findOne('tools', { name: toolName });
+        return tool;
+      }
       
-      return tool;
+      return null;
     } catch (error) {
-      console.error(`Failed to get full tool data for ${toolId}:`, error);
+      console.error(`Failed to get full tool data for ${toolName || toolId}:`, error);
       return null;
     }
   }

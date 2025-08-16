@@ -93,10 +93,11 @@ wss.on('connection', (ws) => {
   // Create ActorSpace for this connection
   const actorSpace = new ActorSpace('server-' + Date.now());
   
-  // Create server actors - pass toolRegistry and mongoProvider
+  // Create server actors - pass toolRegistry and its semantic provider
   const toolActor = new ServerToolRegistryActor(toolRegistry, toolRegistry.provider);
   const dbActor = new ServerDatabaseActor(toolRegistry, toolRegistry.provider);
-  const searchActor = new ServerSemanticSearchActor(toolRegistry, semanticProvider);
+  // Pass toolRegistry's semantic discovery for search
+  const searchActor = new ServerSemanticSearchActor(toolRegistry.semanticDiscovery, toolRegistry.provider);
   
   // Register actors with unique GUIDs
   const actorGuids = {
