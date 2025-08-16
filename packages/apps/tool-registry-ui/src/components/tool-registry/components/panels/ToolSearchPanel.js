@@ -507,9 +507,7 @@ class ToolSearchPanelView {
     searchInput.type = 'text';
     searchInput.placeholder = 'Search tools by name, description, module, or functionality...';
     searchInput.value = modelData.searchQuery || '';
-    
-    // Assign unique ID for testing
-    BaseUmbilicalComponent.assignId(searchInput, 'ToolSearchPanel', 'input');
+    searchInput.id = 'tool-search-input';
     
     inputContainer.appendChild(searchIcon);
     inputContainer.appendChild(searchInput);
@@ -689,6 +687,7 @@ class ToolSearchPanelView {
     const item = document.createElement('div');
     item.className = `tool-item${tool.name === selectedTool?.name ? ' selected' : ''}`;
     item.dataset.toolName = tool.name;
+    item.id = `tool-item-${tool.name.replace(/[^a-zA-Z0-9]/g, '-')}`;
     
     // Header
     const header = document.createElement('div');

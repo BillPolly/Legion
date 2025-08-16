@@ -253,6 +253,7 @@ class ApplicationHeaderView {
   createSearchControl(modelData) {
     const container = document.createElement('div');
     container.className = 'global-search-container';
+    container.id = 'global-search-container';
     
     const searchIcon = document.createElement('div');
     searchIcon.className = 'search-icon';
@@ -260,6 +261,7 @@ class ApplicationHeaderView {
     
     const input = document.createElement('input');
     input.className = 'global-search-input';
+    input.id = 'global-search-input';
     input.type = 'text';
     input.placeholder = 'Search tools, modules, or documentation...';
     input.value = modelData.searchQuery || '';

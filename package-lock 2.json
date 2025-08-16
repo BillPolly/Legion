@@ -2320,10 +2320,6 @@
       "resolved": "packages/frontend/storage-browser",
       "link": true
     },
-    "node_modules/@legion/tool-registry-server": {
-      "resolved": "packages/apps/tool-registry-server",
-      "link": true
-    },
     "node_modules/@legion/tool-registry-ui": {
       "resolved": "packages/apps/tool-registry-ui",
       "link": true
@@ -19261,28 +19257,6 @@
       },
       "devDependencies": {}
     },
-    "packages/apps/tool-registry-server": {
-      "name": "@legion/tool-registry-server",
-      "version": "1.0.0",
-      "license": "ISC",
-      "dependencies": {
-        "@legion/actors": "*",
-        "@legion/resource-manager": "*",
-        "@legion/semantic-search": "*",
-        "@legion/storage": "*",
-        "@legion/tools-registry": "*",
-        "cors": "^2.8.5",
-        "express": "^4.18.2",
-        "mongodb": "^6.3.0",
-        "ws": "^8.13.0"
-      },
-      "devDependencies": {
-        "@jest/globals": "^29.7.0",
-        "jest": "^29.7.0",
-        "supertest": "^6.3.3",
-        "ws": "^8.13.0"
-      }
-    },
     "packages/apps/tool-registry-ui": {
       "name": "@legion/tool-registry-ui",
       "version": "1.0.0",
@@ -20725,8 +20699,6 @@
       "version": "1.0.0",
       "license": "ISC",
       "dependencies": {
-        "@legion/fullstack-monitor": "file:../../fullstack-monitor",
-        "@legion/resource-manager": "file:../../resource-manager",
         "@legion/shared": "file:../../shared",
         "@legion/sidewinder": "file:../../sidewinder",
         "express": "^4.21.2",
@@ -20736,10 +20708,6 @@
       },
       "bin": {
         "mcp-monitor": "mcp-server.js"
-      },
-      "devDependencies": {
-        "@jest/globals": "^29.7.0",
-        "jest": "^29.7.0"
       },
       "engines": {
         "node": ">=18.0.0"
@@ -20888,14 +20856,16 @@
     },
     "packages/resource-manager": {
       "name": "@legion/resource-manager",
-      "version": "1.0.0",
+      "version": "0.0.1",
       "license": "MIT",
       "dependencies": {
-        "dotenv": "^16.3.1"
+        "@legion/tools-registry": "^1.0.0"
       },
       "devDependencies": {
-        "@jest/globals": "^29.7.0",
         "jest": "^29.7.0"
+      },
+      "engines": {
+        "node": ">=18.0.0"
       }
     },
     "packages/schema": {
@@ -21402,7 +21372,7 @@
       "version": "1.0.0",
       "license": "MIT",
       "dependencies": {
-        "@legion/resource-manager": "^1.0.0",
+        "@legion/core": "^1.0.0",
         "@legion/schema": "^0.0.1",
         "chalk": "^5.3.0",
         "cli-table3": "^0.6.3",

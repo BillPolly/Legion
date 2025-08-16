@@ -143,7 +143,7 @@ class ToolRegistryViewModel {
       const mainContainer = this.view.getElement('main');
       
       if (mainContainer) {
-        const tabsInstance = NavigationTabs.create({
+        const tabsInstance = await NavigationTabs.create({
           dom: mainContainer,
           tabs: [
             { 
@@ -486,10 +486,30 @@ class ToolRegistryViewModel {
         this.model.setTools(tools);
         this.model.updateState('isLoading', false);
         console.log(`🔄 UI updated with ${tools.length} real tools from server`);
+        
+        // Update the search panel with the new tools
+        const navigationTabs = this.components.get('navigation');
+        if (navigationTabs) {
+          const searchPanel = navigationTabs.getTabComponent('search');
+          if (searchPanel && searchPanel.setTools) {
+            console.log('🔄 Updating search panel with tools');
+            searchPanel.setTools(tools);
+          }
+        }
       },
       setModules: (modules) => {
         this.model.setModules(modules);
         console.log(`🔄 UI updated with ${modules.length} real modules from server`);
+        
+        // Update the modules panel with the new modules
+        const navigationTabs = this.components.get('navigation');
+        if (navigationTabs) {
+          const modulesPanel = navigationTabs.getTabComponent('modules');
+          if (modulesPanel && modulesPanel.setModules) {
+            console.log('🔄 Updating modules panel with modules');
+            modulesPanel.setModules(modules);
+          }
+        }
       },
       
       // Tool and module selection

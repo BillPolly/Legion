@@ -4,7 +4,7 @@
  */
 
 import { FullStackMonitor } from '@legion/fullstack-monitor';
-import { ResourceManager } from '@legion/tools-registry';
+import { ResourceManager } from '@legion/resource-manager';
 
 export class SimpleSessionManager {
   constructor(wsAgentPort = 9901) {
@@ -18,7 +18,7 @@ export class SimpleSessionManager {
    */
   async getMonitor() {
     if (!this.monitor) {
-      // Use the singleton ResourceManager instance from @legion/tools-registry
+      // Use the singleton ResourceManager instance from @legion/resource-manager
       const resourceManager = ResourceManager.getInstance();
       
       // Pass the wsAgentPort to FullStackMonitor
@@ -48,7 +48,7 @@ export class SimpleSessionManager {
    * List all active sessions
    */
   listSessions() {
-    const sessions = Array.from(this.monitors.keys());
+    const sessions = Array.from(this.activeSessions);
     return {
       active: sessions,
       count: sessions.length
@@ -59,10 +59,8 @@ export class SimpleSessionManager {
    * End a specific session
    */
   async endSession(sessionId) {
-    const monitor = this.monitors.get(sessionId);
-    if (monitor) {
-      await monitor.cleanup();
-      this.monitors.delete(sessionId);
+    if (this.activeSessions.has(sessionId)) {
+      this.activeSessions.delete(sessionId);
       return true;
     }
     return false;
@@ -72,19 +70,20 @@ export class SimpleSessionManager {
    * End all sessions
    */
   async endAllSessions() {
-    const promises = [];
-    for (const [sessionId, monitor] of this.monitors) {
-      promises.push(monitor.cleanup());
-    }
+    // Clear all active sessions
+    this.activeSessions.clear();
     
-    await Promise.all(promises);
-    this.monitors.clear();
+    // Cleanup the single monitor if it exists
+    if (this.monitor) {
+      await this.monitor.cleanup();
+      this.monitor = null;
+    }
   }
   
   /**
    * Check if session exists
    */
   hasSession(sessionId) {
-    return this.monitors.has(sessionId);
+    return this.activeSessions.has(sessionId);
   }
 }
