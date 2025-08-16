@@ -6,7 +6,7 @@
  */
 
 import { MongoDBToolRegistryProvider } from '../providers/MongoDBToolRegistryProvider.js';
-import { ResourceManager } from '@legion/core';
+import { ResourceManager } from '@legion/resource-manager';
 
 export class DatabasePopulator {
   constructor(options = {}) {

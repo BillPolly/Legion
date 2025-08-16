@@ -1,12 +1,12 @@
 /**
- * ResourceManager - Re-exported from @legion/core for backward compatibility
+ * ResourceManager - Re-exported from @legion/resource-manager for backward compatibility
  * 
- * @deprecated Import from @legion/core instead
+ * @deprecated Import from @legion/resource-manager instead
  */
 
-// Re-export everything from @legion/core
-export { ResourceManager, getResourceManager } from '@legion/core';
+// Re-export everything from @legion/resource-manager
+export { ResourceManager, getResourceManager } from '@legion/resource-manager';
 
 // Default export for backward compatibility
-import { ResourceManager } from '@legion/core';
+import { ResourceManager } from '@legion/resource-manager';
 export default ResourceManager;

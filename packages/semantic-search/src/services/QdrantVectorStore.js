@@ -4,7 +4,7 @@
  * Now uses ResourceManager for singleton Qdrant client management.
  */
 
-import { ResourceManager } from '@legion/core';
+import { ResourceManager } from '@legion/resource-manager';
 
 export class QdrantVectorStore {
   constructor(config, resourceManager = null) {

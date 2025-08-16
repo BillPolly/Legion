@@ -13,7 +13,7 @@
 
 import { MongoDBToolRegistryProvider } from '../src/providers/MongoDBToolRegistryProvider.js';
 import { SemanticSearchProvider } from '../../semantic-search/src/SemanticSearchProvider.js';
-import { ResourceManager } from '@legion/core';
+import { ResourceManager } from '@legion/resource-manager';
 import readline from 'readline';
 
 async function askConfirmation(message) {

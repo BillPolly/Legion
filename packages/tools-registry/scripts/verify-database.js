@@ -12,7 +12,7 @@
  */
 
 import { MongoDBToolRegistryProvider } from '../src/providers/MongoDBToolRegistryProvider.js';
-import { ResourceManager } from '@legion/core';
+import { ResourceManager } from '@legion/resource-manager';
 
 async function main() {
   // Parse command line arguments

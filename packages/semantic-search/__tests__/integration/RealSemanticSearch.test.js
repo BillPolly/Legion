@@ -6,7 +6,7 @@
 import { LocalEmbeddingService } from '../../src/services/LocalEmbeddingService.js';
 import { QdrantVectorStore } from '../../src/services/QdrantVectorStore.js';
 import { SemanticSearchProvider } from '../../src/SemanticSearchProvider.js';
-import { ResourceManager } from '@legion/core';
+import { ResourceManager } from '@legion/resource-manager';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';

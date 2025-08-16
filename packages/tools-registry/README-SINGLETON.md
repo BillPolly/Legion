@@ -2,7 +2,7 @@
 
 ## Zero-Configuration Usage
 
-The ToolRegistry is now a singleton that automatically configures itself using the ResourceManager from `@legion/core`. No initialization or configuration is required.
+The ToolRegistry is now a singleton that automatically configures itself using the ResourceManager from `@legion/resource-manager`. No initialization or configuration is required.
 
 ## Quick Start
 
@@ -90,7 +90,7 @@ await loader.fullPipeline({
 
 ### Before (Manual Configuration)
 ```javascript
-import { ResourceManager } from '@legion/core';
+import { ResourceManager } from '@legion/resource-manager';
 import { ToolRegistry } from '@legion/tools-registry';
 import { MongoDBToolRegistryProvider } from '@legion/tools-registry/providers';
 

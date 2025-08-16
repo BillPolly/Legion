@@ -1,7 +1,7 @@
 {
-  "name": "@legion/core",
+  "name": "@legion/resource-manager",
   "version": "1.0.0",
-  "description": "Core singleton ResourceManager - the foundation of Legion framework",
+  "description": "ResourceManager - singleton dependency injection container for Legion framework",
   "type": "module",
   "main": "src/index.js",
   "exports": {
@@ -20,7 +20,6 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "extensionsToTreatAsEsm": [".js"],
     "transform": {},
     "testMatch": [
       "**/__tests__/**/*.test.js"
@@ -28,7 +27,6 @@
   },
   "keywords": [
     "legion",
-    "core",
     "resource-manager",
     "dependency-injection",
     "singleton"

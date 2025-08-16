@@ -1,5 +1,5 @@
 /**
- * @legion/core - Core singleton ResourceManager
+ * @legion/resource-manager - ResourceManager singleton
  * 
  * This is the foundation of the Legion framework.
  * ResourceManager is a singleton that auto-initializes and provides

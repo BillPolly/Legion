@@ -8,7 +8,7 @@
  */
 
 import { ComprehensiveToolDiscovery, MongoDBToolRegistryProvider, ToolRegistry } from '@legion/tools-registry';
-import { ResourceManager } from '@legion/core';
+import { ResourceManager } from '@legion/resource-manager';
 
 // Parse command line arguments
 const args = process.argv.slice(2);

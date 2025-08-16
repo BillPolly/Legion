@@ -9,7 +9,7 @@
 
 console.log('🔍 SETUP: Loading global setup file...');
 
-import { ResourceManager } from '@legion/core';
+import { ResourceManager } from '@legion/resource-manager';
 import { MongoClient } from 'mongodb';
 import fetch from 'node-fetch';
 import chalk from 'chalk';

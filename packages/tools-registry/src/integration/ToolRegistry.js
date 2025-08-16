@@ -8,7 +8,7 @@
  */
 
 import { MongoDBToolRegistryProvider } from '../providers/MongoDBToolRegistryProvider.js';
-import { ResourceManager } from '@legion/core';
+import { ResourceManager } from '@legion/resource-manager';
 import { SemanticToolDiscovery } from '../search/SemanticToolDiscovery.js';
 
 export class ToolRegistry {

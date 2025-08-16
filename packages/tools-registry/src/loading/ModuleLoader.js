@@ -9,7 +9,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import fsSync from 'fs';
 import { DynamicJsonModule } from './DynamicJsonModule.js';
-import { ResourceManager } from '@legion/core';
+import { ResourceManager } from '@legion/resource-manager';
 
 export class ModuleLoader {
   constructor(options = {}) {

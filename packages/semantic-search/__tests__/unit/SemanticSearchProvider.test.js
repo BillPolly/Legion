@@ -4,7 +4,7 @@
 
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { SemanticSearchProvider } from '../../src/SemanticSearchProvider.js';
-import { ResourceManager } from '@legion/core';
+import { ResourceManager } from '@legion/resource-manager';
 import { TestDataGenerator } from '../utils/TestDataGenerator.js';
 
 describe('SemanticSearchProvider (requires Qdrant)', () => {

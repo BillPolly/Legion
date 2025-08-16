@@ -15,7 +15,7 @@ import { DatabasePopulator } from './DatabasePopulator.js';
 import { MongoDBToolRegistryProvider } from '../providers/MongoDBToolRegistryProvider.js';
 import { SemanticSearchProvider } from '../../../semantic-search/src/SemanticSearchProvider.js';
 import { createToolIndexer } from '../search/index.js';
-import { ResourceManager } from '@legion/core';
+import { ResourceManager } from '@legion/resource-manager';
 
 export class LoadingManager {
   constructor(options = {}) {

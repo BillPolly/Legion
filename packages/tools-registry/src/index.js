@@ -10,7 +10,7 @@ export { Module } from './modules/Module.js';
 export { Tool } from './modules/Tool.js';
 export { ToolResult } from './modules/ToolResult.js';
 
-// Resource management moved to @legion/core - import from there
+// Resource management moved to @legion/resource-manager - import from there
 // export { ResourceManager } from './ResourceManager.js';
 
 // Integration components

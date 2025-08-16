@@ -7,7 +7,7 @@
 
 import { MongoClient } from 'mongodb';
 import fetch from 'node-fetch';
-import { ResourceManager } from '@legion/core';
+import { ResourceManager } from '@legion/resource-manager';
 import toolRegistry from '../../src/index.js';
 import { ToolRegistry } from '../../src/integration/ToolRegistry.js';
 import path from 'path';

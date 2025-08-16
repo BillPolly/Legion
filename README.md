@@ -4,7 +4,7 @@ A modular framework for building AI agent tools with consistent interfaces. This
 
 ## Packages
 
-### [@legion/core](packages/core) - Lightweight Infrastructure
+### [@legion/resource-manager](packages/core) - Lightweight Infrastructure
 Core framework providing:
 - 🏗️ **ResourceManager**: Dependency injection system
 - 🏭 **ModuleFactory**: Module instantiation with automatic dependency resolution

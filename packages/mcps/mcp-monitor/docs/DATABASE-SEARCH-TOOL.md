@@ -177,7 +177,7 @@ export class DatabaseSearchTool extends Tool {
 ```javascript
 // In MCP server initialization - SIMPLE!
 
-import { getResourceManager } from '@legion/core';
+import { getResourceManager } from '@legion/resource-manager';
 
 // Get the singleton ResourceManager (auto-initializes)
 const resourceManager = await getResourceManager();
