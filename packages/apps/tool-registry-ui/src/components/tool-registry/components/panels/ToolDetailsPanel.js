@@ -754,8 +754,10 @@ class ToolDetailsPanelView {
     
     const paramContent = document.createElement('div');
     paramContent.className = 'overview-card-content';
-    const paramCount = modelData.selectedTool.schema?.properties ? 
-      Object.keys(modelData.selectedTool.schema.properties).length : 0;
+    // Check both inputSchema and schema for backward compatibility
+    const schema = modelData.selectedTool.inputSchema || modelData.selectedTool.schema;
+    const paramCount = schema?.properties ? 
+      Object.keys(schema.properties).length : 0;
     paramContent.innerHTML = `
       This tool accepts <span class="param-count">${paramCount}</span> parameter${paramCount !== 1 ? 's' : ''}.
       ${paramCount > 0 ? 'See the Schema tab for detailed parameter information.' : 'No parameters required.'}
@@ -882,12 +884,14 @@ class ToolDetailsPanelView {
     const visual = document.createElement('div');
     visual.className = 'schema-visual';
     
-    if (!tool.schema?.properties) {
+    // Check both inputSchema and schema for backward compatibility
+    const schema = tool.inputSchema || tool.schema;
+    if (!schema?.properties) {
       visual.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">No parameters defined for this tool.</p>';
       return visual;
     }
     
-    Object.entries(tool.schema.properties).forEach(([propName, propDef]) => {
+    Object.entries(schema.properties).forEach(([propName, propDef]) => {
       const property = document.createElement('div');
       property.className = 'schema-property';
       
@@ -921,7 +925,9 @@ class ToolDetailsPanelView {
   createRawSchema(tool) {
     const raw = document.createElement('div');
     raw.className = 'schema-raw';
-    raw.textContent = JSON.stringify(tool.schema || {}, null, 2);
+    // Check both inputSchema and schema for backward compatibility
+    const schema = tool.inputSchema || tool.schema || {};
+    raw.textContent = JSON.stringify(schema, null, 2);
     return raw;
   }
   

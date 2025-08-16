@@ -15,6 +15,8 @@
     "test:module": "NODE_OPTIONS='--experimental-vm-modules' node scripts/test-module-tools.js",
     "db:populate": "NODE_OPTIONS='--experimental-vm-modules' node scripts/populate-and-verify.js",
     "db:verify": "NODE_OPTIONS='--experimental-vm-modules' node scripts/populate-and-verify.js",
+    "validate-schemas": "NODE_OPTIONS='--experimental-vm-modules' node scripts/validate-and-fix-schemas.js",
+    "fix-schemas": "NODE_OPTIONS='--experimental-vm-modules' node scripts/validate-and-fix-schemas.js --fix",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "build": "echo 'No build step required for ES modules'",

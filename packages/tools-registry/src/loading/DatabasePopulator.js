@@ -100,13 +100,36 @@ export class DatabasePopulator {
           for (const tool of tools) {
             try {
               const moduleName = instance.name || config.name;  // Use consistent module name
+              
+              // Extract schemas from various possible locations
+              let inputSchema = {};
+              let outputSchema = null;
+              
+              // Try to get input schema from validator first (for tools using Zod)
+              if (tool.validator && tool.validator.zodSchema) {
+                inputSchema = this.extractSchema(tool.validator.zodSchema);
+              } else if (tool.validator && tool.validator.jsonSchema) {
+                inputSchema = this.extractSchema(tool.validator.jsonSchema);
+              } else if (tool.inputSchema) {
+                inputSchema = this.extractSchema(tool.inputSchema);
+              } else if (tool.parameters) {
+                inputSchema = this.extractSchema(tool.parameters);
+              }
+              
+              // Extract output schema
+              if (tool.outputSchema) {
+                outputSchema = this.extractSchema(tool.outputSchema);
+              } else if (tool.output) {
+                outputSchema = this.extractSchema(tool.output);
+              }
+              
               const toolData = {
                 name: tool.name,
                 moduleId: savedModule._id,  // Link to the module's _id
                 moduleName: moduleName,  // Keep for backwards compatibility
                 description: tool.description || '',
-                inputSchema: tool.inputSchema || tool.parameters || {},
-                outputSchema: tool.outputSchema || null,
+                inputSchema: inputSchema,
+                outputSchema: outputSchema,
                 category: this.inferCategory(tool.name, moduleName),
                 status: 'active',
                 createdAt: new Date(),
@@ -178,6 +201,194 @@ export class DatabasePopulator {
       }
     }
     return '@legion/unknown';
+  }
+
+  /**
+   * Extract schema from tool definition
+   * Handles both Zod schemas and JSON schemas
+   */
+  extractSchema(schema) {
+    if (!schema) return null;
+    
+    // If it's a Zod schema, convert to JSON Schema
+    if (schema._def && schema._def.typeName) {
+      return this.zodSchemaToJson(schema);
+    }
+    
+    // If it's already JSON Schema or plain object, return as is
+    return schema;
+  }
+
+  /**
+   * Convert Zod schema to JSON schema format
+   */
+  zodSchemaToJson(zodSchema) {
+    if (!zodSchema || !zodSchema._def) return {};
+    
+    const def = zodSchema._def;
+    const typeName = def.typeName;
+    
+    // Extract description from checks array
+    let description = def.description;
+    if (!description && def.checks) {
+      const descCheck = def.checks.find(c => c.kind === 'describe');
+      if (descCheck) description = descCheck.value;
+    }
+    
+    let schema = {};
+    
+    switch (typeName) {
+      case 'ZodString':
+        schema = { type: 'string' };
+        if (description) schema.description = description;
+        // Add string-specific validations
+        if (def.checks) {
+          for (const check of def.checks) {
+            if (check.kind === 'min') schema.minLength = check.value;
+            if (check.kind === 'max') schema.maxLength = check.value;
+            if (check.kind === 'regex') schema.pattern = check.regex.source;
+          }
+        }
+        break;
+        
+      case 'ZodNumber':
+        schema = { type: 'number' };
+        if (description) schema.description = description;
+        // Add number-specific validations
+        if (def.checks) {
+          for (const check of def.checks) {
+            if (check.kind === 'min') schema.minimum = check.value;
+            if (check.kind === 'max') schema.maximum = check.value;
+            if (check.kind === 'int') schema.type = 'integer';
+          }
+        }
+        break;
+        
+      case 'ZodBoolean':
+        schema = { type: 'boolean' };
+        if (description) schema.description = description;
+        break;
+        
+      case 'ZodArray':
+        schema = {
+          type: 'array',
+          items: this.zodSchemaToJson(def.type)
+        };
+        if (description) schema.description = description;
+        // Add array-specific validations
+        if (def.minLength) schema.minItems = def.minLength.value;
+        if (def.maxLength) schema.maxItems = def.maxLength.value;
+        break;
+        
+      case 'ZodObject':
+        const properties = {};
+        const required = [];
+        
+        if (def.shape) {
+          const shape = typeof def.shape === 'function' ? def.shape() : def.shape;
+          for (const [key, value] of Object.entries(shape)) {
+            properties[key] = this.zodSchemaToJson(value);
+            
+            // Check if required (not optional)
+            if (!value._def || value._def.typeName !== 'ZodOptional') {
+              required.push(key);
+            }
+          }
+        }
+        
+        schema = {
+          type: 'object',
+          properties
+        };
+        
+        if (required.length > 0) {
+          schema.required = required;
+        }
+        if (description) schema.description = description;
+        break;
+        
+      case 'ZodOptional':
+        schema = this.zodSchemaToJson(def.innerType);
+        // Don't mark as required - it's optional
+        break;
+        
+      case 'ZodDefault':
+        schema = this.zodSchemaToJson(def.innerType);
+        if (def.defaultValue) {
+          schema.default = def.defaultValue();
+        }
+        break;
+        
+      case 'ZodUnion':
+        schema = {
+          oneOf: def.options.map(opt => this.zodSchemaToJson(opt))
+        };
+        if (description) schema.description = description;
+        break;
+        
+      case 'ZodEnum':
+        const values = def.values;
+        schema = {
+          type: 'string',
+          enum: values
+        };
+        if (description) schema.description = description;
+        break;
+        
+      case 'ZodAny':
+        schema = {};  // Any type - no restrictions
+        if (description) schema.description = description;
+        break;
+        
+      case 'ZodUnknown':
+        schema = {};  // Unknown type - no restrictions
+        if (description) schema.description = description;
+        break;
+        
+      case 'ZodVoid':
+        schema = { type: 'null' };
+        if (description) schema.description = description;
+        break;
+        
+      case 'ZodNull':
+        schema = { type: 'null' };
+        if (description) schema.description = description;
+        break;
+        
+      case 'ZodUndefined':
+        schema = { type: 'undefined' };
+        if (description) schema.description = description;
+        break;
+        
+      case 'ZodEffects':
+        // ZodEffects wraps another schema with transformations/refinements
+        schema = this.zodSchemaToJson(def.schema);
+        if (description) schema.description = description;
+        break;
+        
+      case 'ZodRecord':
+        // ZodRecord is like { [key: string]: value }
+        schema = {
+          type: 'object',
+          additionalProperties: def.valueType ? this.zodSchemaToJson(def.valueType) : true
+        };
+        if (description) schema.description = description;
+        break;
+        
+      case 'ZodLiteral':
+        // Literal value
+        schema = { const: def.value };
+        if (description) schema.description = description;
+        break;
+        
+      default:
+        // Fallback for unknown Zod types
+        console.warn(`Unknown Zod type: ${typeName}`);
+        schema = {};
+        if (description) schema.description = description;
+    }
+    
+    return schema;
   }
 
   /**
