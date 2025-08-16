@@ -22,11 +22,11 @@ export class LoadingManager {
     this.verbose = options.verbose || false;
     this.resourceManager = options.resourceManager || null;
     
-    // Components
+    // Components - can be provided to share connections
     this.moduleLoader = null;
     this.databasePopulator = null;
-    this.mongoProvider = null;
-    this.semanticSearchProvider = null;
+    this.mongoProvider = options.mongoProvider || null;
+    this.semanticSearchProvider = options.semanticSearchProvider || null;
     this.toolIndexer = null;
     
     // State tracking
@@ -54,7 +54,9 @@ export class LoadingManager {
     // Create ResourceManager if not provided
     if (!this.resourceManager) {
       this.resourceManager = ResourceManager.getInstance();
-      await this.resourceManager.initialize();
+      if (!this.resourceManager.initialized) {
+        await this.resourceManager.initialize();
+      }
     }
 
     // SemanticSearchProvider always uses local ONNX embeddings
@@ -69,9 +71,12 @@ export class LoadingManager {
       verbose: this.verbose
     });
 
-    this.mongoProvider = await MongoDBToolRegistryProvider.create(this.resourceManager, {
-      enableSemanticSearch: false
-    });
+    // Only create MongoDB provider if not provided (allows sharing connections)
+    if (!this.mongoProvider) {
+      this.mongoProvider = await MongoDBToolRegistryProvider.create(this.resourceManager, {
+        enableSemanticSearch: false
+      });
+    }
 
     // Don't initialize semantic search components until needed
     // this.semanticSearchProvider = await SemanticSearchProvider.create(this.resourceManager);
@@ -88,6 +93,7 @@ export class LoadingManager {
    * Ensure semantic search components are initialized
    */
   async #ensureSemanticSearchInitialized() {
+    // Only create if not provided (allows sharing from ToolRegistry)
     if (!this.semanticSearchProvider) {
       this.semanticSearchProvider = await SemanticSearchProvider.create(this.resourceManager);
     }

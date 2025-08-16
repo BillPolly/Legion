@@ -22,8 +22,11 @@ export default {
     '!src/**/test*.js'
   ],
   
-  // Setup and teardown
-  setupFilesAfterEnv: ['<rootDir>/__tests__/jest.setup.js'],
+  // Global setup and teardown - DISABLED due to hanging issue
+  // globalSetup: '<rootDir>/__tests__/jest.setup.js',
+  
+  // Setup files that run before each test file
+  setupFilesAfterEnv: ['<rootDir>/__tests__/utils/testSetup.js'],
   
   // Timeouts
   testTimeout: 60000, // 60 seconds for database operations
@@ -31,9 +34,12 @@ export default {
   // Verbose output for integration tests
   verbose: true,
   
-  // Run tests in sequence for database tests
+  // CRITICAL: Run tests sequentially because ToolRegistry is a singleton
+  // Parallel tests would interfere with each other
   maxWorkers: 1,
   
-  // Disable parallelization
-  maxConcurrency: 1
+  // Disable parallelization within test files
+  maxConcurrency: 1,
+  
+  // Force sequential test execution (runInBand is a CLI flag, not config)
 };

@@ -10,17 +10,25 @@ class CalculatorTool extends Tool {
       name: 'calculator',
       description: 'Performs mathematical calculations',
       inputSchema: z.object({
-        expression: z.string().describe('JavaScript mathematical expression to evaluate (e.g., "784*566", "Math.sqrt(16)", "(10+5)*3/5")')
+        expression: z.union([z.string(), z.number()]).transform(val => String(val)).describe('JavaScript mathematical expression to evaluate (e.g., "784*566", "Math.sqrt(16)", "(10+5)*3/5")')
       })
     });
     this.shortName = 'calc';
+    
+    // Override _execute instead of execute to use base class error handling
+    this._execute = async (params) => this._executeCalculation(params);
   }
 
   /**
    * Execute the calculator with validated parameters
    */
-  async execute(params) {
+  async _executeCalculation(params) {
     const { expression } = params;
+    
+    // Validate expression before using it
+    if (!expression) {
+      throw new Error('Expression is required');
+    }
     
     // Emit progress event
     this.progress(`Evaluating expression: ${expression}`, 0);
@@ -43,6 +51,14 @@ class CalculatorTool extends Tool {
    */
   async evaluate(expression) {
     try {
+      // Validate expression exists and is a string
+      if (!expression) {
+        throw new Error('Expression is required');
+      }
+      if (typeof expression !== 'string') {
+        throw new Error('Expression must be a string');
+      }
+      
       // Check for potentially dangerous code
       const dangerous = ['import', 'require', 'process', 'fs', 'child_process', 'exec', 'spawn'];
       for (const keyword of dangerous) {

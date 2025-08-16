@@ -14,9 +14,12 @@ class JsonParseTool extends Tool {
         reviver: z.string().optional().describe('Optional reviver function code (advanced use)')
       })
     });
+    
+    // Override _execute instead of execute to use base class error handling
+    this._execute = async (params) => this._executeJsonParse(params);
   }
 
-  async execute(params) {
+  async _executeJsonParse(params) {
     const { json_string, reviver } = params;
 
     this.progress('Parsing JSON string', 50, {
@@ -54,9 +57,12 @@ class JsonStringifyTool extends Tool {
         sort_keys: z.boolean().optional().default(false).describe('Whether to sort object keys alphabetically')
       })
     });
+    
+    // Override _execute instead of execute to use base class error handling
+    this._execute = async (params) => this._executeJsonStringify(params);
   }
 
-  async execute(params) {
+  async _executeJsonStringify(params) {
     const { object, indent, sort_keys } = params;
 
     this.progress('Stringifying object to JSON', 50, {
@@ -106,9 +112,12 @@ class JsonValidateTool extends Tool {
         json_string: z.string().describe('The JSON string to validate')
       })
     });
+    
+    // Override _execute instead of execute to use base class error handling
+    this._execute = async (params) => this._executeJsonValidate(params);
   }
 
-  async execute(params) {
+  async _executeJsonValidate(params) {
     const { json_string } = params;
 
     this.progress('Validating JSON string', 50, {
@@ -182,9 +191,12 @@ class JsonExtractTool extends Tool {
         default_value: z.any().optional().describe('Default value if path not found')
       })
     });
+    
+    // Override _execute instead of execute to use base class error handling
+    this._execute = async (params) => this._executeJsonExtract(params);
   }
 
-  async execute(params) {
+  async _executeJsonExtract(params) {
     const { json_object, path, default_value } = params;
 
     this.progress(`Extracting value at path: ${path}`, 50, {

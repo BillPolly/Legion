@@ -74,9 +74,17 @@ export class Tool extends EventEmitter {
       // Call the provided execute function
       const result = await this._execute(input);
       
-      // For this implementation, we allow tools to return results directly
-      // The framework layer will handle success/error wrapping if needed
-      return result;
+      // Wrap result in ToolResult format if it's not already wrapped
+      if (result && typeof result === 'object' && 'success' in result) {
+        // Already in ToolResult format
+        return result;
+      }
+      
+      // Wrap in success format
+      return {
+        success: true,
+        data: result
+      };
       
     } catch (error) {
       // If the tool throws, wrap in standard error format

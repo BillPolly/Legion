@@ -91,6 +91,13 @@ export class MongoDBToolRegistryProvider extends IToolRegistryProvider {
     await this.databaseService.cleanup();
     this.connected = false;
   }
+  
+  /**
+   * Alias for disconnect to match expected cleanup pattern
+   */
+  async cleanup() {
+    return this.disconnect();
+  }
 
   // ============================================================================
   // MODULE OPERATIONS

@@ -1,0 +1,58 @@
+{
+  "name": "@legion/tool-registry-server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "WebSocket server for Legion Tool Registry with actor-based communication",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "NODE_ENV=development node src/server.js",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand --forceExit",
+    "test:watch": "npm test -- --watch",
+    "test:coverage": "npm test -- --coverage",
+    "test:unit": "npm test -- __tests__/unit",
+    "test:integration": "npm test -- __tests__/integration",
+    "test:e2e": "npm test -- __tests__/e2e",
+    "test:verbose": "npm test -- --verbose"
+  },
+  "dependencies": {
+    "@legion/tools-registry": "*",
+    "@legion/actors": "*",
+    "@legion/core": "*",
+    "@legion/storage": "*",
+    "@legion/semantic-search": "*",
+    "express": "^4.18.2",
+    "ws": "^8.13.0",
+    "cors": "^2.8.5",
+    "mongodb": "^6.3.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "@jest/globals": "^29.7.0",
+    "supertest": "^6.3.3",
+    "ws": "^8.13.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "transform": {},
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/**/*.test.js"
+    ]
+  },
+  "keywords": [
+    "tool-registry",
+    "websocket",
+    "server",
+    "actor-model",
+    "legion"
+  ],
+  "author": "",
+  "license": "ISC"
+}

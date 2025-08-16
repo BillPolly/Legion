@@ -13,9 +13,14 @@ export { ToolResult } from './modules/ToolResult.js';
 // Resource management moved to @legion/core - import from there
 // export { ResourceManager } from './ResourceManager.js';
 
-
 // Integration components
-export { ToolRegistry } from './integration/ToolRegistry.js';
+import { ToolRegistry } from './integration/ToolRegistry.js';
+export { ToolRegistry };
+
+// Export singleton instance directly
+// The singleton pattern is handled in the ToolRegistry class itself
+const toolRegistry = ToolRegistry.getInstance();
+export default toolRegistry;
 
 // Search and discovery services
 export { 

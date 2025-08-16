@@ -12,7 +12,14 @@ import { ResourceManager } from '@legion/core';
 import { SemanticToolDiscovery } from '../search/SemanticToolDiscovery.js';
 
 export class ToolRegistry {
+  static _instance = null;
+  
   constructor(options = {}) {
+    // Implement singleton pattern
+    if (ToolRegistry._instance && !options._forceNew) {
+      return ToolRegistry._instance;
+    }
+    
     // Default to MongoDB provider if none specified
     this.provider = options.provider || null;
     // Always use ResourceManager singleton - no option to override
@@ -26,9 +33,28 @@ export class ToolRegistry {
     this.semanticDiscovery = null;
     this.enableSemanticSearch = options.enableSemanticSearch !== false; // Default to true
     
+    // Loading manager for database operations
+    this._loader = null;
+    
     // State
     this.initialized = false;
     this.usageStats = new Map();
+    
+    // Set singleton instance if this is the first creation
+    if (!ToolRegistry._instance) {
+      ToolRegistry._instance = this;
+    }
+  }
+  
+  /**
+   * Get the singleton instance of ToolRegistry
+   * @returns {ToolRegistry} The singleton instance
+   */
+  static getInstance() {
+    if (!ToolRegistry._instance) {
+      ToolRegistry._instance = new ToolRegistry();
+    }
+    return ToolRegistry._instance;
   }
 
   /**
@@ -78,7 +104,7 @@ export class ToolRegistry {
    * Get executable tool by name
    */
   async getTool(name) {
-    await this.#ensureInitialized();
+    await this._ensureInitialized();
     
     if (!name || typeof name !== 'string') {
       return null;
@@ -106,7 +132,7 @@ export class ToolRegistry {
    * List available tools
    */
   async listTools(options = {}) {
-    await this.#ensureInitialized();
+    await this._ensureInitialized();
     
     return await this.provider.listTools(options);
   }
@@ -115,7 +141,7 @@ export class ToolRegistry {
    * Search for tools (text-based search)
    */
   async searchTools(query, options = {}) {
-    await this.#ensureInitialized();
+    await this._ensureInitialized();
     
     if (this.provider.searchTools) {
       return await this.provider.searchTools(query, options);
@@ -143,7 +169,7 @@ export class ToolRegistry {
    * @returns {Promise<Object>} Search results with tools and confidence scores
    */
   async semanticToolSearch(query, options = {}) {
-    await this.#ensureInitialized();
+    await this._ensureInitialized();
     
     const {
       limit = 10,
@@ -213,7 +239,7 @@ export class ToolRegistry {
   /**
    * Ensure registry is initialized
    */
-  async #ensureInitialized() {
+  async _ensureInitialized() {
     if (!this.initialized) {
       await this.initialize();
     }
@@ -252,7 +278,7 @@ export class ToolRegistry {
       }
 
       // 4. Get executable tool from module
-      const executableTool = this.#extractToolFromModule(moduleInstance, toolMetadata.name);
+      const executableTool = this._extractToolFromModule(moduleInstance, toolMetadata.name);
       
       if (!executableTool) {
         console.warn(`Failed to get tool ${toolMetadata.name} from module ${moduleName}`);
@@ -323,7 +349,7 @@ export class ToolRegistry {
 
       // Handle JSON modules
       if (moduleMetadata.type === 'json') {
-        return await this.#loadJsonModule(moduleName, moduleMetadata);
+        return await this._loadJsonModule(moduleName, moduleMetadata);
       }
 
       // Handle class modules - use ModuleLoader approach
@@ -412,7 +438,7 @@ export class ToolRegistry {
   /**
    * Load a JSON-based dynamic module
    */
-  async #loadJsonModule(moduleName, moduleMetadata) {
+  async _loadJsonModule(moduleName, moduleMetadata) {
     try {
       // For JSON modules, we need to load the module.json file and create a dynamic wrapper
       const { DynamicJsonModule } = await import('../loading/DynamicJsonModule.js');
@@ -436,7 +462,7 @@ export class ToolRegistry {
    * Extract tool from module instance
    * Enforces that modules MUST use dictionary pattern for tools storage
    */
-  #extractToolFromModule(moduleInstance, toolName) {
+  _extractToolFromModule(moduleInstance, toolName) {
     try {
       // Verify module has tools property and it's a dictionary
       if (!moduleInstance.tools) {
@@ -506,8 +532,33 @@ export class ToolRegistry {
   }
 
   /**
+   * Get the LoadingManager instance for database operations
+   * Creates and initializes it on first access
+   * 
+   * @returns {Promise<LoadingManager>} The loading manager instance
+   */
+  async getLoader() {
+    await this._ensureInitialized();
+    
+    if (!this._loader) {
+      const { LoadingManager } = await import('../loading/LoadingManager.js');
+      this._loader = new LoadingManager({
+        verbose: false,
+        resourceManager: this.resourceManager,
+        // Share the provider to reuse connections
+        mongoProvider: this.provider,
+        semanticSearchProvider: this.semanticDiscovery?.semanticProvider || null
+      });
+      await this._loader.initialize();
+    }
+    
+    return this._loader;
+  }
+
+  /**
    * Populate database using LoadingManager
    * 
+   * @deprecated Use getLoader() instead for more control
    * @param {Object} options - Population options
    * @param {string} options.module - Optional module filter
    * @param {string} options.mode - 'clear' (default) or 'append'
@@ -516,23 +567,23 @@ export class ToolRegistry {
    * @param {boolean} options.includeVectors - Index vectors (default: false)
    */
   async populateDatabase(options = {}) {
-    await this.#ensureInitialized();
+    await this._ensureInitialized();
     
-    const { LoadingManager } = await import('../loading/LoadingManager.js');
-    const loadingManager = new LoadingManager({
-      verbose: options.verbose || false,
-      resourceManager: this.resourceManager
-    });
+    const loader = await this.getLoader();
     
-    const result = await loadingManager.fullPipeline({
+    // Configure verbosity for this operation
+    const originalVerbose = loader.verbose;
+    loader.verbose = options.verbose || false;
+    
+    const result = await loader.fullPipeline({
       module: options.module || null,
       clearFirst: (options.mode || 'clear') === 'clear',
       includePerspectives: options.includePerspectives !== false, // Default true
       includeVectors: options.includeVectors || false // Default false
     });
     
-    // Clean up
-    await loadingManager.close();
+    // Restore original verbosity
+    loader.verbose = originalVerbose;
     
     return {
       modulesAdded: result.loadResult?.modulesLoaded || 0,
@@ -542,5 +593,36 @@ export class ToolRegistry {
       totalTime: result.totalTime,
       success: result.success
     };
+  }
+  
+  /**
+   * Clean up resources and close connections
+   * Used for testing and graceful shutdown
+   */
+  async cleanup() {
+    try {
+      // Close MongoDB connection if provider exists
+      if (this.provider && this.provider.cleanup) {
+        await this.provider.cleanup();
+      }
+      
+      // Close any loader connections
+      if (this._loader && this._loader.cleanup) {
+        await this._loader.cleanup();
+      }
+      
+      // Reset singleton instance for testing
+      if (process.env.NODE_ENV === 'test') {
+        ToolRegistry._instance = null;
+      }
+      
+      this.initialized = false;
+      this.provider = null;
+      this.semanticDiscovery = null;
+      this._loader = null;
+    } catch (error) {
+      console.error('Error during cleanup:', error);
+      throw error;
+    }
   }
 }
