@@ -6,6 +6,7 @@ import { findAvailablePortSync } from './utils/portFinder.js';
 import FileLogger from './logger.js';
 import { getResourceManager } from '../../resource-manager/src/index.js';
 import MongoQueryModule from '../../mongo-query/src/index.js';
+import { PictureAnalysisModule } from '../../picture-analysis/src/index.js';
 
 class MCPServer {
   constructor() {
@@ -24,8 +25,9 @@ class MCPServer {
     // Log startup info
     this.logger.info(`MCP Server starting with WebSocket port: ${this.wsAgentPort}`);
     
-    // Track if MongoDB is initialized
+    // Track if tools are initialized
     this.mongoInitialized = false;
+    this.pictureAnalysisInitialized = false;
     
     // Create the monitor ONCE at startup
     this.initializeMonitor();
@@ -36,6 +38,14 @@ class MCPServer {
       this.logger.info('MongoDB initialization completed, tool should be available');
     }).catch(err => {
       this.logger.error('MongoDB initialization failed', { error: err.message });
+    });
+    
+    // Initialize Picture Analysis in the background
+    this.initializePictureAnalysis().then(() => {
+      this.pictureAnalysisInitialized = true;
+      this.logger.info('Picture Analysis initialization completed, tool should be available');
+    }).catch(err => {
+      this.logger.error('Picture Analysis initialization failed', { error: err.message });
     });
   }
   
@@ -84,6 +94,47 @@ class MCPServer {
       });
       // Don't crash the server if MongoDB fails
       this.logger.warn('MongoDB tool will not be available');
+    }
+  }
+  
+  async initializePictureAnalysis() {
+    try {
+      this.logger.info('Starting Picture Analysis module initialization...');
+      
+      // Initialize Picture Analysis Module
+      const resourceManager = await getResourceManager();
+      this.logger.info('ResourceManager obtained for Picture Analysis');
+      
+      // Check if we have an API key for vision (Anthropic or OpenAI)
+      const anthropicKey = resourceManager.get('env.ANTHROPIC_API_KEY');
+      const openaiKey = resourceManager.get('env.OPENAI_API_KEY');
+      
+      if (!anthropicKey && !openaiKey) {
+        this.logger.warn('No vision API keys found (ANTHROPIC_API_KEY or OPENAI_API_KEY) - Picture Analysis tool will not be available');
+        return;
+      }
+      
+      // Determine which provider to use
+      const provider = anthropicKey ? 'anthropic' : 'openai';
+      const model = anthropicKey ? 'claude-3-5-sonnet-20241022' : 'gpt-4o';
+      
+      this.pictureAnalysisModule = await PictureAnalysisModule.create(resourceManager, { provider, model });
+      this.logger.info(`Picture Analysis module created with ${provider} provider`);
+      
+      this.pictureAnalysisTool = this.pictureAnalysisModule.getTool('analyse_picture');
+      this.logger.info('Picture Analysis tool retrieved from module', { toolName: this.pictureAnalysisTool?.name });
+      
+      // Update tool handler with picture analysis tool using setter
+      this.toolHandler.setPictureAnalysisTool(this.pictureAnalysisTool);
+      
+      this.logger.info('Picture Analysis Module initialized successfully - analyse_picture tool available');
+    } catch (error) {
+      this.logger.error('Failed to initialize Picture Analysis module', { 
+        error: error.message, 
+        stack: error.stack 
+      });
+      // Don't crash the server if Picture Analysis fails
+      this.logger.warn('Picture Analysis tool will not be available');
     }
   }
   

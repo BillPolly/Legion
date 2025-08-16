@@ -3,11 +3,17 @@ export class SimpleToolHandler {
     this.sessionManager = sessionManager;
     this.logger = logger || console;  // Use provided logger or console
     this.mongoTool = mongoTool;  // Legion MongoDB query tool
+    this.pictureAnalysisTool = null;  // Legion Picture Analysis tool
   }
   
   setMongoTool(mongoTool) {
     this.logger.info('Setting MongoDB tool in handler', { hasMongoTool: !!mongoTool });
     this.mongoTool = mongoTool;
+  }
+  
+  setPictureAnalysisTool(pictureAnalysisTool) {
+    this.logger.info('Setting Picture Analysis tool in handler', { hasPictureTool: !!pictureAnalysisTool });
+    this.pictureAnalysisTool = pictureAnalysisTool;
   }
   
   getAllTools() {
@@ -97,6 +103,52 @@ export class SimpleToolHandler {
       }
     ];
     
+    // Add Picture Analysis tool - availability is checked at execution time
+    tools.push({
+      name: 'analyse_picture',
+      description: `Analyze images using advanced AI vision models to extract detailed descriptions, identify objects, read text, and understand visual content.
+
+This tool provides powerful image analysis capabilities:
+• SUPPORTED FORMATS: PNG, JPG, JPEG, GIF, WebP - handles all common image formats
+• VISION CAPABILITIES: Object detection, scene understanding, text extraction (OCR), color analysis, spatial relationships, and detailed descriptions
+• FLEXIBLE PATHS: Accepts both absolute and relative file paths to images on the local filesystem
+• AI PROVIDERS: Uses Claude (Anthropic) or GPT-4 Vision (OpenAI) based on available API keys
+
+The tool processes images by:
+1. Reading the image file from disk
+2. Validating format and size (max 20MB)
+3. Encoding to base64
+4. Sending to vision AI model
+5. Returning detailed analysis
+
+Perfect for:
+- Understanding screenshot contents
+- Extracting text from images
+- Identifying UI elements in app screenshots
+- Analyzing diagrams and charts
+- Debugging visual issues
+- Documenting visual states
+
+Examples:
+- Describe screenshot: file_path="/tmp/screenshot.png", prompt="What errors or warnings do you see in this console output?"
+- Extract text: file_path="./diagram.jpg", prompt="What text and labels are visible in this diagram?"
+- Analyze UI: file_path="/Users/me/app-screenshot.png", prompt="Describe the layout and components visible in this UI"`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          file_path: {
+            type: 'string',
+            description: 'Path to the image file to analyze (absolute or relative)'
+          },
+          prompt: {
+            type: 'string',
+            description: 'Specific question or analysis request for the image (10-2000 characters)'
+          }
+        },
+        required: ['file_path', 'prompt']
+      }
+    });
+    
     // Always add MongoDB tool - availability is checked at execution time
     tools.push({
         name: 'db_query',
@@ -182,6 +234,52 @@ Database defaults to environment configuration but can be overridden per operati
         case 'list_sessions':
           const sessions = this.sessionManager.listSessions();
           return { content: [{ type: 'text', text: `${sessions.count} sessions` }] };
+          
+        case 'analyse_picture':
+          // Execute Picture Analysis using Legion tool
+          if (!this.pictureAnalysisTool) {
+            throw new Error('Picture Analysis tool not available - check if ANTHROPIC_API_KEY or OPENAI_API_KEY is set in environment');
+          }
+          
+          const pictureResult = await this.pictureAnalysisTool.execute({
+            file_path: args.file_path,
+            prompt: args.prompt
+          });
+          
+          // Format result for MCP response
+          if (pictureResult.success) {
+            const { analysis, file_path, prompt, processing_time_ms } = pictureResult.data;
+            
+            let responseText = `🖼️ Image Analysis Complete\n\n`;
+            responseText += `📁 File: ${file_path}\n`;
+            responseText += `❓ Question: ${prompt}\n`;
+            responseText += `⏱️ Processing time: ${processing_time_ms}ms\n\n`;
+            responseText += `📝 Analysis:\n${analysis}`;
+            
+            return { content: [{ type: 'text', text: responseText }] };
+          } else {
+            // Handle errors with specific guidance
+            const { errorCode, errorMessage, file_path } = pictureResult.data;
+            let responseText = `❌ Image analysis failed\n\n`;
+            responseText += `Error: ${errorMessage}\n`;
+            responseText += `Code: ${errorCode}\n`;
+            if (file_path) {
+              responseText += `File: ${file_path}\n`;
+            }
+            
+            // Add helpful suggestions based on error type
+            if (errorCode === 'FILE_NOT_FOUND') {
+              responseText += '\n💡 Tip: Check if the file path is correct and the file exists.';
+            } else if (errorCode === 'UNSUPPORTED_FORMAT') {
+              responseText += '\n💡 Tip: Supported formats are: PNG, JPG, JPEG, GIF, WebP';
+            } else if (errorCode === 'FILE_TOO_LARGE') {
+              responseText += '\n💡 Tip: Maximum file size is 20MB';
+            } else if (errorCode === 'VALIDATION_ERROR') {
+              responseText += '\n💡 Tip: Prompt must be between 10 and 2000 characters';
+            }
+            
+            return { content: [{ type: 'text', text: responseText }] };
+          }
           
         case 'db_query':
           // Execute MongoDB query using Legion tool
