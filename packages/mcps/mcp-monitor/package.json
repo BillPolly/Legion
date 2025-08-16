@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@legion/fullstack-monitor": "file:../../fullstack-monitor",
+    "@legion/mongo-query": "file:../../mongo-query",
     "@legion/resource-manager": "file:../../resource-manager",
     "@legion/shared": "file:../../shared",
     "@legion/sidewinder": "file:../../sidewinder",

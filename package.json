@@ -24,7 +24,6 @@
     "test:railway": "npm run test --workspace=@legion/railway",
     "test:aiur": "npm run test --workspace=@legion/aiur",
     "test:actor-bt": "npm run test --workspace=@legion/actor-bt",
-    "test:tools-registry": "npm run test --workspace=@legion/tools-registry",
     "test:tool-core": "npm run test --workspace=@legion/tools-registry",
     "test:kg": "npm run test --workspace=@legion/kg",
     "test:components": "npm run test --workspace=@legion/components",
@@ -82,5 +81,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/maxximus-dev/Legion.git"
+  },
+  "dependencies": {
+    "ajv-formats": "^3.0.1"
   }
 }
