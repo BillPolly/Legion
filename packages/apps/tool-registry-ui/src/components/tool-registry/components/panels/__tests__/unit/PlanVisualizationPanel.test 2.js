@@ -34,52 +34,6 @@ describe('PlanVisualizationPanel', () => {
       revokeObjectURL: jest.fn()
     };
 
-    // Mock canvas for PNG export
-    const mockCanvas = {
-      getContext: jest.fn(() => ({
-        drawImage: jest.fn()
-      })),
-      toDataURL: jest.fn(() => 'data:image/png;base64,mock'),
-      width: 0,
-      height: 0
-    };
-    
-    // Store original createElement
-    const originalCreateElement = document.createElement;
-    global.document.createElement = jest.fn((tagName) => {
-      if (tagName === 'canvas') {
-        return mockCanvas;
-      }
-      // Create element normally for other tags
-      const element = originalCreateElement.call(document, tagName);
-      // Add click mock to all elements
-      if (!element.click) {
-        element.click = jest.fn();
-      }
-      return element;
-    });
-
-    // Mock Image for PNG export
-    global.Image = jest.fn(() => {
-      const img = {
-        onload: null,
-        src: ''
-      };
-      // Automatically trigger onload when src is set
-      Object.defineProperty(img, 'src', {
-        set: function(value) {
-          this._src = value;
-          if (this.onload) {
-            setTimeout(() => this.onload(), 0);
-          }
-        },
-        get: function() {
-          return this._src;
-        }
-      });
-      return img;
-    });
-
     // Create mock umbilical  
     mockUmbilical = {
       dom: mockContainer,
@@ -146,7 +100,7 @@ describe('PlanVisualizationPanel', () => {
         }
       };
 
-      component.api.setPlan(plan);
+      component.setPlan(plan);
       
       component.api.setViewMode('graph');
       const graphLayout = component.api.getLayout();
@@ -161,8 +115,8 @@ describe('PlanVisualizationPanel', () => {
       const { PlanVisualizationPanel } = await import('../../PlanVisualizationPanel.js');
       component = await PlanVisualizationPanel.create(mockUmbilical);
 
-      component.api.setCompactMode(true);
-      expect(component.api.isCompactMode()).toBe(true);
+      component.setCompactMode(true);
+      expect(component.isCompactMode()).toBe(true);
       
       const container = mockContainer.querySelector('.visualization-container');
       expect(container.classList.contains('compact')).toBe(true);
@@ -195,7 +149,7 @@ describe('PlanVisualizationPanel', () => {
         }
       };
 
-      component.api.setPlan(plan);
+      component.setPlan(plan);
       
       const nodes = mockContainer.querySelectorAll('.node');
       expect(nodes.length).toBe(3);
@@ -217,7 +171,7 @@ describe('PlanVisualizationPanel', () => {
         }
       };
 
-      component.api.setPlan(plan);
+      component.setPlan(plan);
       
       const edges = mockContainer.querySelectorAll('.edge');
       expect(edges.length).toBe(2); // root->task1, root->task2
@@ -239,7 +193,7 @@ describe('PlanVisualizationPanel', () => {
         }
       };
 
-      component.api.setPlan(plan);
+      component.setPlan(plan);
       
       const complexNode = mockContainer.querySelector('.node.complex');
       const simpleNode = mockContainer.querySelector('.node.simple');
@@ -261,7 +215,7 @@ describe('PlanVisualizationPanel', () => {
         }
       };
 
-      component.api.setPlan(plan);
+      component.setPlan(plan);
       
       const label = mockContainer.querySelector('.node-label');
       expect(label).toBeTruthy();
@@ -272,7 +226,7 @@ describe('PlanVisualizationPanel', () => {
       const { PlanVisualizationPanel } = await import('../../PlanVisualizationPanel.js');
       component = await PlanVisualizationPanel.create(mockUmbilical);
 
-      component.api.setPlan(null);
+      component.setPlan(null);
       
       const emptyState = mockContainer.querySelector('.empty-visualization');
       expect(emptyState).toBeTruthy();
@@ -287,7 +241,7 @@ describe('PlanVisualizationPanel', () => {
         hierarchy: { root: { id: 'root' } }
       };
       
-      component.api.setPlan(plan1);
+      component.setPlan(plan1);
       expect(mockContainer.querySelectorAll('.node').length).toBe(1);
       
       const plan2 = {
@@ -299,7 +253,7 @@ describe('PlanVisualizationPanel', () => {
         }
       };
       
-      component.api.setPlan(plan2);
+      component.setPlan(plan2);
       expect(mockContainer.querySelectorAll('.node').length).toBe(3);
     });
   });
@@ -315,13 +269,15 @@ describe('PlanVisualizationPanel', () => {
         }
       };
 
-      component.api.setPlan(plan);
+      component.setPlan(plan);
       
-      // Test the node selection functionality directly through API
-      component.api.selectNode('root');
+      const node = mockContainer.querySelector('.node');
+      node.click();
       
-      // Verify node selection was handled correctly
-      expect(component.model.getState('selectedNodeId')).toBe('root');
+      expect(mockUmbilical.onNodeClick).toHaveBeenCalledWith({
+        id: 'root',
+        description: 'Task'
+      });
     });
 
     it('should highlight selected node', async () => {
@@ -334,8 +290,8 @@ describe('PlanVisualizationPanel', () => {
         }
       };
 
-      component.api.setPlan(plan);
-      component.api.selectNode('root');
+      component.setPlan(plan);
+      component.selectNode('root');
       
       const node = mockContainer.querySelector('[data-node-id="root"]');
       expect(node.classList.contains('selected')).toBe(true);
@@ -351,7 +307,7 @@ describe('PlanVisualizationPanel', () => {
         }
       };
 
-      component.api.setPlan(plan);
+      component.setPlan(plan);
       
       const node = mockContainer.querySelector('.node');
       node.dispatchEvent(new MouseEvent('mouseenter'));
@@ -376,7 +332,7 @@ describe('PlanVisualizationPanel', () => {
         }
       };
 
-      component.api.setPlan(plan);
+      component.setPlan(plan);
       
       const node = mockContainer.querySelector('.node');
       node.dispatchEvent(new MouseEvent('mouseenter'));
@@ -400,11 +356,10 @@ describe('PlanVisualizationPanel', () => {
         }
       };
 
-      component.api.setPlan(plan);
+      component.setPlan(plan);
       
-      // Test edge handling through viewModel directly since DOM interaction is complex in tests
-      const edgeData = { source: 'root', target: 'child' };
-      component.handleEdgeClick(edgeData);
+      const edge = mockContainer.querySelector('.edge');
+      edge.click();
       
       expect(mockUmbilical.onEdgeClick).toHaveBeenCalledWith({
         source: 'root',
@@ -428,17 +383,14 @@ describe('PlanVisualizationPanel', () => {
         }
       };
 
-      component.api.setPlan(plan);
-      component.api.selectNode('root');
+      component.setPlan(plan);
+      component.selectNode('root');
       
-      // Verify that the selected node ID is correctly stored in the model
-      expect(component.model.getState('selectedNodeId')).toBe('root');
+      const child1 = mockContainer.querySelector('[data-node-id="child1"]');
+      const child2 = mockContainer.querySelector('[data-node-id="child2"]');
       
-      // This test verifies the selection logic rather than DOM manipulation
-      // The actual DOM highlighting would be tested in integration tests
-      expect(component.api.getNodePositions()).toHaveProperty('root');
-      expect(component.api.getNodePositions()).toHaveProperty('child1');
-      expect(component.api.getNodePositions()).toHaveProperty('child2');
+      expect(child1.classList.contains('connected')).toBe(true);
+      expect(child2.classList.contains('connected')).toBe(true);
     });
   });
 
@@ -460,12 +412,12 @@ describe('PlanVisualizationPanel', () => {
       const { PlanVisualizationPanel } = await import('../../PlanVisualizationPanel.js');
       component = await PlanVisualizationPanel.create(mockUmbilical);
 
-      const initialZoom = component.api.getZoomLevel();
+      const initialZoom = component.getZoomLevel();
       
       const zoomIn = mockContainer.querySelector('.zoom-in');
       zoomIn.click();
       
-      expect(component.api.getZoomLevel()).toBeGreaterThan(initialZoom);
+      expect(component.getZoomLevel()).toBeGreaterThan(initialZoom);
       expect(mockUmbilical.onZoomChange).toHaveBeenCalled();
     });
 
@@ -473,12 +425,12 @@ describe('PlanVisualizationPanel', () => {
       const { PlanVisualizationPanel } = await import('../../PlanVisualizationPanel.js');
       component = await PlanVisualizationPanel.create(mockUmbilical);
 
-      const initialZoom = component.api.getZoomLevel();
+      const initialZoom = component.getZoomLevel();
       
       const zoomOut = mockContainer.querySelector('.zoom-out');
       zoomOut.click();
       
-      expect(component.api.getZoomLevel()).toBeLessThan(initialZoom);
+      expect(component.getZoomLevel()).toBeLessThan(initialZoom);
     });
 
     it('should reset zoom', async () => {
@@ -490,7 +442,7 @@ describe('PlanVisualizationPanel', () => {
       const zoomReset = mockContainer.querySelector('.zoom-reset');
       zoomReset.click();
       
-      expect(component.api.getZoomLevel()).toBe(1);
+      expect(component.getZoomLevel()).toBe(1);
     });
 
     it('should support mouse wheel zoom', async () => {
@@ -501,14 +453,14 @@ describe('PlanVisualizationPanel', () => {
       const wheelEvent = new WheelEvent('wheel', { deltaY: -100 });
       canvas.dispatchEvent(wheelEvent);
       
-      expect(component.api.getZoomLevel()).toBeGreaterThan(1);
+      expect(component.getZoomLevel()).toBeGreaterThan(1);
     });
 
     it('should support pan navigation', async () => {
       const { PlanVisualizationPanel } = await import('../../PlanVisualizationPanel.js');
       component = await PlanVisualizationPanel.create(mockUmbilical);
 
-      const initialPan = component.api.getPanPosition();
+      const initialPan = component.getPanPosition();
       
       const canvas = mockContainer.querySelector('.visualization-canvas');
       
@@ -517,7 +469,7 @@ describe('PlanVisualizationPanel', () => {
       canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: 150, clientY: 150 }));
       canvas.dispatchEvent(new MouseEvent('mouseup'));
       
-      const newPan = component.api.getPanPosition();
+      const newPan = component.getPanPosition();
       expect(newPan.x).not.toBe(initialPan.x);
       expect(newPan.y).not.toBe(initialPan.y);
     });
@@ -535,11 +487,11 @@ describe('PlanVisualizationPanel', () => {
         }
       };
 
-      component.api.setPlan(plan);
+      component.setPlan(plan);
       component.fitToView();
       
       // Should adjust zoom and pan to fit all nodes
-      const zoom = component.api.getZoomLevel();
+      const zoom = component.getZoomLevel();
       expect(zoom).toBeLessThanOrEqual(1);
     });
   });
@@ -549,7 +501,7 @@ describe('PlanVisualizationPanel', () => {
       const { PlanVisualizationPanel } = await import('../../PlanVisualizationPanel.js');
       component = await PlanVisualizationPanel.create(mockUmbilical);
 
-      const layouts = component.api.getAvailableLayouts();
+      const layouts = component.getAvailableLayouts();
       expect(layouts).toContain('hierarchical');
       expect(layouts).toContain('force-directed');
       expect(layouts).toContain('radial');
@@ -569,7 +521,7 @@ describe('PlanVisualizationPanel', () => {
         }
       };
 
-      component.api.setPlan(plan);
+      component.setPlan(plan);
       component.api.setLayout('hierarchical');
       
       const positions = component.api.getNodePositions();
@@ -599,7 +551,7 @@ describe('PlanVisualizationPanel', () => {
         }
       };
 
-      component.api.setPlan(plan);
+      component.setPlan(plan);
       component.api.setLayout('radial');
       
       const positions = component.api.getNodePositions();
@@ -639,7 +591,7 @@ describe('PlanVisualizationPanel', () => {
       const plan = {
         hierarchy: { root: { id: 'root' } }
       };
-      component.api.setPlan(plan);
+      component.setPlan(plan);
       
       const svgString = component.api.exportAsSVG();
       expect(svgString).toContain('<svg');
@@ -653,7 +605,7 @@ describe('PlanVisualizationPanel', () => {
       const plan = {
         hierarchy: { root: { id: 'root' } }
       };
-      component.api.setPlan(plan);
+      component.setPlan(plan);
       
       const dataUrl = await component.api.exportAsPNG();
       expect(dataUrl).toMatch(/^data:image\/png;base64,/);
@@ -666,7 +618,7 @@ describe('PlanVisualizationPanel', () => {
       const plan = {
         hierarchy: { root: { id: 'root' } }
       };
-      component.api.setPlan(plan);
+      component.setPlan(plan);
       
       const json = component.api.exportAsJSON();
       const parsed = JSON.parse(json);
@@ -695,7 +647,7 @@ describe('PlanVisualizationPanel', () => {
       };
 
       const startTime = Date.now();
-      component.api.setPlan(plan);
+      component.setPlan(plan);
       const renderTime = Date.now() - startTime;
       
       expect(renderTime).toBeLessThan(1000); // Should render in under 1 second
@@ -705,28 +657,7 @@ describe('PlanVisualizationPanel', () => {
       const { PlanVisualizationPanel } = await import('../../PlanVisualizationPanel.js');
       component = await PlanVisualizationPanel.create(mockUmbilical);
 
-      // Create a plan with more than 100 nodes to trigger virtualization
-      const createLargePlan = (nodeCount) => {
-        const children = Array.from({ length: nodeCount - 1 }, (_, i) => ({
-          id: `node-${i}`,
-          description: `Node ${i}`,
-          children: []
-        }));
-        
-        return {
-          hierarchy: {
-            root: {
-              id: 'root',
-              description: 'Large plan root',
-              children
-            }
-          }
-        };
-      };
-
-      const largePlan = createLargePlan(150); // 150 nodes total
-      component.api.setPlan(largePlan);
-      
+      component.api.setNodeCount(1000);
       expect(component.api.isVirtualizationEnabled()).toBe(true);
     });
 
