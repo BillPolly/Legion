@@ -23,75 +23,30 @@ describe('PlanVisualizationPanel', () => {
     
     container = dom.window.document.getElementById('container');
 
-    // Mock SVG elements and rendering methods to avoid JSDOM issues
+    // Mock SVG elements to avoid JSDOM appendChild issues
     const originalCreateElementNS = dom.window.document.createElementNS;
-    
-    // Create a mock SVG element that properly implements Node interface
-    const createMockSVGElement = (tagName) => {
-      const element = {
-        tagName,
-        children: [],
-        nodeType: 1, // Element node
-        nodeName: tagName.toUpperCase(),
-        parentNode: null,
-        firstChild: null,
-        lastChild: null,
-        nextSibling: null,
-        previousSibling: null,
-        ownerDocument: dom.window.document,
-        
-        appendChild: jest.fn((child) => {
-          if (child && typeof child === 'object') {
-            element.children.push(child);
-            child.parentNode = element;
-            if (element.children.length === 1) {
-              element.firstChild = child;
-            }
-            element.lastChild = child;
-            return child;
-          }
-          return child;
-        }),
-        
-        removeChild: jest.fn((child) => {
-          const index = element.children.indexOf(child);
-          if (index > -1) {
-            element.children.splice(index, 1);
-            child.parentNode = null;
-          }
-          return child;
-        }),
-        
-        setAttribute: jest.fn(),
-        setAttributeNS: jest.fn(),
-        getAttribute: jest.fn(() => ''),
-        getBBox: jest.fn(() => ({ x: 0, y: 0, width: 100, height: 100 })),
-        querySelector: jest.fn(),
-        querySelectorAll: jest.fn(() => []),
-        style: {},
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn(),
-        dispatchEvent: jest.fn(),
-        classList: {
-          add: jest.fn(),
-          remove: jest.fn(),
-          toggle: jest.fn(),
-          contains: jest.fn()
-        },
-        
-        // Make it look like a real Node to JSDOM
-        [Symbol.toStringTag]: 'SVGElement'
-      };
-      
-      // Add prototype chain to make it pass instanceof checks
-      Object.setPrototypeOf(element, dom.window.SVGElement?.prototype || {});
-      
-      return element;
-    };
-
     dom.window.document.createElementNS = jest.fn((namespace, tagName) => {
       if (namespace === 'http://www.w3.org/2000/svg') {
-        return createMockSVGElement(tagName);
+        const element = originalCreateElementNS.call(dom.window.document, namespace, tagName);
+        
+        // Mock appendChild to avoid JSDOM SVG issues
+        const originalAppendChild = element.appendChild;
+        element.appendChild = jest.fn((child) => {
+          if (child && typeof child === 'object') {
+            try {
+              return originalAppendChild.call(element, child);
+            } catch (error) {
+              // Mock successful append for SVG elements
+              if (element.children) {
+                element.children[element.children.length] = child;
+              }
+              return child;
+            }
+          }
+          return child;
+        });
+        
+        return element;
       }
       return originalCreateElementNS.call(dom.window.document, namespace, tagName);
     });
@@ -185,7 +140,7 @@ describe('PlanVisualizationPanel', () => {
     component = await PlanVisualizationPanel.create(mockUmbilical);
     
     const canvas = container.querySelector('.visualization-canvas');
-    const initialZoom = component.api.getZoomLevel();
+    const initialZoom = component.getZoomLevel();
     
     // Simulate wheel down (zoom out)
     const wheelEvent = new dom.window.WheelEvent('wheel', { deltaY: 100 });
@@ -203,7 +158,7 @@ describe('PlanVisualizationPanel', () => {
     component = await PlanVisualizationPanel.create(mockUmbilical);
     
     const canvas = container.querySelector('.visualization-canvas');
-    const initialPan = component.api.getPanPosition();
+    const initialPan = component.getPanPosition();
     
     // Start drag
     canvas.dispatchEvent(new dom.window.MouseEvent('mousedown', {
@@ -220,17 +175,13 @@ describe('PlanVisualizationPanel', () => {
     // End drag
     canvas.dispatchEvent(new dom.window.MouseEvent('mouseup'));
     
-    const finalPan = component.api.getPanPosition();
+    const finalPan = component.getPanPosition();
     expect(finalPan.x).not.toBe(initialPan.x);
     expect(finalPan.y).not.toBe(initialPan.y);
   });
 
   test('should handle plan data', async () => {
     component = await PlanVisualizationPanel.create(mockUmbilical);
-    
-    // Mock the renderPlan method to avoid SVG DOM issues
-    const originalRenderPlan = component.view.renderPlan;
-    component.view.renderPlan = jest.fn();
     
     const mockPlan = {
       id: 'test-plan',
@@ -251,18 +202,12 @@ describe('PlanVisualizationPanel', () => {
       }
     };
     
-    component.api.setPlan(mockPlan);
+    component.setPlan(mockPlan);
     
-    expect(component.api.getPlan()).toEqual(mockPlan);
-    expect(component.api.getNodePositions()).toBeDefined();
-    expect(Object.keys(component.api.getNodePositions())).toContain('root');
-    expect(Object.keys(component.api.getNodePositions())).toContain('child-1');
-    
-    // Verify renderPlan was called
-    expect(component.view.renderPlan).toHaveBeenCalled();
-    
-    // Restore original method
-    component.view.renderPlan = originalRenderPlan;
+    expect(component.getPlan()).toEqual(mockPlan);
+    expect(component.getNodePositions()).toBeDefined();
+    expect(Object.keys(component.getNodePositions())).toContain('root');
+    expect(Object.keys(component.getNodePositions())).toContain('child-1');
   });
 
   test('should show empty state when no plan', async () => {
@@ -274,16 +219,12 @@ describe('PlanVisualizationPanel', () => {
     expect(emptyDiv.style.display).toBe('none'); // Initially hidden
     
     // When no plan is set, should show empty state
-    component.api.setPlan(null);
+    component.setPlan(null);
     expect(container.querySelector('.empty-visualization')).toBeTruthy();
   });
 
   test('should handle node selection', async () => {
     component = await PlanVisualizationPanel.create(mockUmbilical);
-    
-    // Mock the renderPlan method to avoid SVG DOM issues
-    const originalRenderPlan = component.view.renderPlan;
-    component.view.renderPlan = jest.fn();
     
     const mockPlan = {
       hierarchy: {
@@ -295,24 +236,18 @@ describe('PlanVisualizationPanel', () => {
       }
     };
     
-    component.api.setPlan(mockPlan);
-    component.api.selectNode('root');
+    component.setPlan(mockPlan);
+    component.selectNode('root');
     
-    // Verify the node selection by checking model state
-    expect(component.model.getState('selectedNodeId')).toBe('root');
-    
-    // Restore original method
-    component.view.renderPlan = originalRenderPlan;
+    expect(mockUmbilical.onNodeClick).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'root' })
+    );
   });
 
   test('should handle different layout types', async () => {
     component = await PlanVisualizationPanel.create(mockUmbilical);
     
-    // Mock the renderPlan method to avoid SVG DOM issues
-    const originalRenderPlan = component.view.renderPlan;
-    component.view.renderPlan = jest.fn();
-    
-    const layouts = component.api.getAvailableLayouts();
+    const layouts = component.getAvailableLayouts();
     expect(layouts).toContain('hierarchical');
     expect(layouts).toContain('radial');
     expect(layouts).toContain('force-directed');
@@ -330,27 +265,20 @@ describe('PlanVisualizationPanel', () => {
       }
     };
     
-    component.api.setPlan(mockPlan);
+    component.setPlan(mockPlan);
     
     // Test different layouts
-    component.api.setLayout('radial');
-    expect(component.api.getLayout().type).toBe('radial');
+    component.setLayout('radial');
+    expect(component.getLayout().type).toBe('radial');
     expect(mockUmbilical.onLayoutChange).toHaveBeenCalledWith('radial');
     
-    component.api.setLayout('hierarchical');
-    expect(component.api.getLayout().type).toBe('hierarchical');
+    component.setLayout('hierarchical');
+    expect(component.getLayout().type).toBe('hierarchical');
     expect(mockUmbilical.onLayoutChange).toHaveBeenCalledWith('hierarchical');
-    
-    // Restore original method
-    component.view.renderPlan = originalRenderPlan;
   });
 
   test('should handle large plans with virtualization', async () => {
     component = await PlanVisualizationPanel.create(mockUmbilical);
-    
-    // Mock the renderPlan method to avoid SVG DOM issues
-    const originalRenderPlan = component.view.renderPlan;
-    component.view.renderPlan = jest.fn();
     
     // Create a large plan (>100 nodes)
     const createNodes = (count, prefix = 'node') => {
@@ -371,21 +299,14 @@ describe('PlanVisualizationPanel', () => {
       }
     };
     
-    component.api.setPlan(largePlan);
-    component.api.setNodeCount(111); // root + 110 children
+    component.setPlan(largePlan);
+    component.setNodeCount(111); // root + 110 children
     
-    expect(component.api.isVirtualizationEnabled()).toBe(true);
-    
-    // Restore original method
-    component.view.renderPlan = originalRenderPlan;
+    expect(component.isVirtualizationEnabled()).toBe(true);
   });
 
   test('should handle export functions', async () => {
     component = await PlanVisualizationPanel.create(mockUmbilical);
-    
-    // Mock the renderPlan method to avoid SVG DOM issues
-    const originalRenderPlan = component.view.renderPlan;
-    component.view.renderPlan = jest.fn();
     
     const mockPlan = {
       hierarchy: {
@@ -397,21 +318,18 @@ describe('PlanVisualizationPanel', () => {
       }
     };
     
-    component.api.setPlan(mockPlan);
+    component.setPlan(mockPlan);
     
     // Test SVG export
-    const svgString = component.api.exportAsSVG();
+    const svgString = component.exportAsSVG();
     expect(typeof svgString).toBe('string');
     expect(svgString).toContain('svg');
     
     // Test JSON export
-    const jsonString = component.api.exportAsJSON();
+    const jsonString = component.exportAsJSON();
     expect(typeof jsonString).toBe('string');
     const parsed = JSON.parse(jsonString);
     expect(parsed.hierarchy.root.id).toBe('root');
-    
-    // Restore original method
-    component.view.renderPlan = originalRenderPlan;
   });
 
   test('should handle export button clicks', async () => {
@@ -438,10 +356,6 @@ describe('PlanVisualizationPanel', () => {
   test('should handle fit to view', async () => {
     component = await PlanVisualizationPanel.create(mockUmbilical);
     
-    // Mock the renderPlan method to avoid SVG DOM issues
-    const originalRenderPlan = component.view.renderPlan;
-    component.view.renderPlan = jest.fn();
-    
     const mockPlan = {
       hierarchy: {
         root: {
@@ -455,37 +369,27 @@ describe('PlanVisualizationPanel', () => {
       }
     };
     
-    component.api.setPlan(mockPlan);
+    component.setPlan(mockPlan);
     
     const fitButton = container.querySelector('.fit-view');
     fitButton.click();
     
     // Should adjust zoom and pan to fit content
-    expect(component.api.getZoomLevel()).toBeLessThanOrEqual(1);
-    expect(component.api.getPanPosition()).toBeDefined();
-    
-    // Restore original method
-    component.view.renderPlan = originalRenderPlan;
+    expect(component.getZoomLevel()).toBeLessThanOrEqual(1);
+    expect(component.getPanPosition()).toBeDefined();
   });
 
   test('should handle animation settings', async () => {
     component = await PlanVisualizationPanel.create(mockUmbilical);
     
-    // Mock the renderPlan method to avoid SVG DOM issues
-    const originalRenderPlan = component.view.renderPlan;
-    component.view.renderPlan = jest.fn();
+    component.setAnimationEnabled(false);
+    component.setLayout('radial');
     
-    component.api.setAnimationEnabled(false);
-    component.api.setLayout('radial');
-    
-    component.api.setAnimationEnabled(true);
-    component.api.setLayout('hierarchical');
+    component.setAnimationEnabled(true);
+    component.setLayout('hierarchical');
     
     // Animation setting affects layout transitions
     expect(component.api.setAnimationEnabled).toBeDefined();
-    
-    // Restore original method
-    component.view.renderPlan = originalRenderPlan;
   });
 
   test('should validate required DOM capabilities', async () => {
@@ -511,10 +415,6 @@ describe('PlanVisualizationPanel', () => {
 
   test('should handle complex hierarchical layouts', async () => {
     component = await PlanVisualizationPanel.create(mockUmbilical);
-    
-    // Mock the renderPlan method to avoid SVG DOM issues
-    const originalRenderPlan = component.view.renderPlan;
-    component.view.renderPlan = jest.fn();
     
     const complexPlan = {
       hierarchy: {
@@ -542,9 +442,9 @@ describe('PlanVisualizationPanel', () => {
       }
     };
     
-    component.api.setPlan(complexPlan);
+    component.setPlan(complexPlan);
     
-    const positions = component.api.getNodePositions();
+    const positions = component.getNodePositions();
     expect(positions['root']).toBeDefined();
     expect(positions['branch1']).toBeDefined();
     expect(positions['branch2']).toBeDefined();
@@ -555,17 +455,10 @@ describe('PlanVisualizationPanel', () => {
     // Check hierarchical positioning
     expect(positions['branch1'].y).toBeGreaterThan(positions['root'].y);
     expect(positions['leaf1'].y).toBeGreaterThan(positions['branch1'].y);
-    
-    // Restore original method
-    component.view.renderPlan = originalRenderPlan;
   });
 
   test('should handle radial layout positioning', async () => {
     component = await PlanVisualizationPanel.create(mockUmbilical);
-    
-    // Mock the renderPlan method to avoid SVG DOM issues
-    const originalRenderPlan = component.view.renderPlan;
-    component.view.renderPlan = jest.fn();
     
     const mockPlan = {
       hierarchy: {
@@ -582,10 +475,10 @@ describe('PlanVisualizationPanel', () => {
       }
     };
     
-    component.api.setPlan(mockPlan);
-    component.api.setLayout('radial');
+    component.setPlan(mockPlan);
+    component.setLayout('radial');
     
-    const positions = component.api.getNodePositions();
+    const positions = component.getNodePositions();
     
     // Root should be at center
     expect(positions['root'].x).toBe(400);
@@ -601,45 +494,40 @@ describe('PlanVisualizationPanel', () => {
       );
       expect(distance).toBeGreaterThan(50); // Should be away from center
     });
-    
-    // Restore original method
-    component.view.renderPlan = originalRenderPlan;
   });
 
   test('should handle empty plan gracefully', async () => {
     component = await PlanVisualizationPanel.create(mockUmbilical);
     
     // Test with null plan
-    component.api.setPlan(null);
-    expect(component.api.getPlan()).toBeNull();
+    component.setPlan(null);
+    expect(component.getPlan()).toBeNull();
     
     // Test with empty hierarchy
-    component.api.setPlan({ hierarchy: null });
-    expect(component.api.getNodePositions()).toEqual({});
+    component.setPlan({ hierarchy: null });
+    expect(component.getNodePositions()).toEqual({});
     
     // Test with missing root
-    component.api.setPlan({ hierarchy: {} });
-    expect(component.api.getNodePositions()).toEqual({});
+    component.setPlan({ hierarchy: {} });
+    expect(component.getNodePositions()).toEqual({});
   });
 
   test('should throttle wheel events', async () => {
     component = await PlanVisualizationPanel.create(mockUmbilical);
     
     const canvas = container.querySelector('.visualization-canvas');
-    const initialZoom = component.api.getZoomLevel();
+    const initialZoom = component.getZoomLevel();
     
     // Create multiple wheel events quickly
-    let lastWheelEvent;
     for (let i = 0; i < 5; i++) {
       const wheelEvent = new dom.window.WheelEvent('wheel', { deltaY: -100 });
       Object.defineProperty(wheelEvent, 'preventDefault', {
         value: jest.fn()
       });
       canvas.dispatchEvent(wheelEvent);
-      lastWheelEvent = wheelEvent;
     }
     
     // Due to throttling, not all events should take effect immediately
-    expect(lastWheelEvent.preventDefault).toHaveBeenCalled();
+    expect(wheelEvent.preventDefault).toHaveBeenCalled();
   });
 });

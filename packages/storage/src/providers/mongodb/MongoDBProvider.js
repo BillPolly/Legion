@@ -241,6 +241,17 @@ export class MongoDBProvider extends Provider {
     return this.db.collection(collection).watch(pipeline, options);
   }
 
+  /**
+   * Get the MongoDB database instance
+   * @returns {Object} MongoDB database instance
+   */
+  getDatabase() {
+    if (!this.connected || !this.db) {
+      throw new Error('MongoDBProvider: Not connected to database');
+    }
+    return this.db;
+  }
+
   getCapabilities() {
     return [
       ...super.getCapabilities(),

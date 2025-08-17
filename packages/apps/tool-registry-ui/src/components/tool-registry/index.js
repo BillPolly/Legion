@@ -175,6 +175,20 @@ class ToolRegistryViewModel {
               component: 'ToolDetailsPanel'
             },
             { 
+              id: 'planning', 
+              title: '🧠 Planning Workspace', 
+              icon: '🧠',
+              label: 'Planning',
+              component: 'PlanningWorkspacePanel'
+            },
+            { 
+              id: 'visualization', 
+              title: '📊 Plan Visualization', 
+              icon: '📊',
+              label: 'Visualization',
+              component: 'PlanVisualizationPanel'
+            },
+            { 
               id: 'admin', 
               title: '⚙️ Administration', 
               icon: '⚙️',
@@ -250,6 +264,104 @@ class ToolRegistryViewModel {
             
             console.warn('⚠️ Semantic search actor not available');
             return [];
+          },
+          
+          // Actor references for planning and execution
+          planningActor: this.actorManager?.getPlanningActor(),
+          executionActor: this.actorManager?.getExecutionActor(),
+          toolRegistryActor: this.actorManager?.getToolRegistryActor(),
+          
+          // Planning-specific callbacks
+          onPlanCreate: async (goal) => {
+            console.log('🧠 Plan creation requested:', goal);
+            
+            // Use the planning actor if available
+            if (this.actorManager && this.actorManager.getPlanningActor()) {
+              const planningActor = this.actorManager.getPlanningActor();
+              
+              // Create a promise to wait for plan creation results
+              return new Promise((resolve, reject) => {
+                // Store the resolver for the planning actor to call
+                planningActor.planCreateResolver = resolve;
+                planningActor.planCreateRejecter = reject;
+                
+                // Create the plan
+                planningActor.createPlan(goal);
+                
+                // Set a timeout in case results don't come back
+                setTimeout(() => {
+                  console.warn('⚠️ Plan creation timeout');
+                  reject(new Error('Plan creation timeout'));
+                }, 30000);
+              });
+            }
+            
+            console.warn('⚠️ Planning actor not available');
+            throw new Error('Planning system not available');
+          },
+          
+          onPlanExecute: async (plan, executionOptions = {}) => {
+            console.log('🚀 Plan execution requested:', plan.name || plan.id);
+            
+            // Use the execution actor if available
+            if (this.actorManager && this.actorManager.getExecutionActor()) {
+              const executionActor = this.actorManager.getExecutionActor();
+              
+              // Create a promise to wait for execution start
+              return new Promise((resolve, reject) => {
+                // Store the resolver for the execution actor to call
+                executionActor.executionStartResolver = resolve;
+                executionActor.executionStartRejecter = reject;
+                
+                // Start execution
+                executionActor.executePlan(plan, executionOptions);
+                
+                // Set a timeout in case results don't come back
+                setTimeout(() => {
+                  console.warn('⚠️ Plan execution start timeout');
+                  reject(new Error('Plan execution start timeout'));
+                }, 10000);
+              });
+            }
+            
+            console.warn('⚠️ Execution actor not available');
+            throw new Error('Execution system not available');
+          },
+          
+          onPlanSave: async (plan) => {
+            console.log('💾 Plan save requested:', plan.name || plan.id);
+            
+            if (this.actorManager && this.actorManager.getPlanningActor()) {
+              const planningActor = this.actorManager.getPlanningActor();
+              planningActor.savePlan(plan);
+              return true;
+            }
+            
+            console.warn('⚠️ Planning actor not available for save');
+            return false;
+          },
+          
+          onPlanLoad: async (planId) => {
+            console.log('📁 Plan load requested:', planId);
+            
+            if (this.actorManager && this.actorManager.getPlanningActor()) {
+              const planningActor = this.actorManager.getPlanningActor();
+              
+              return new Promise((resolve, reject) => {
+                planningActor.planLoadResolver = resolve;
+                planningActor.planLoadRejecter = reject;
+                
+                planningActor.loadPlan(planId);
+                
+                setTimeout(() => {
+                  console.warn('⚠️ Plan load timeout');
+                  reject(new Error('Plan load timeout'));
+                }, 10000);
+              });
+            }
+            
+            console.warn('⚠️ Planning actor not available for load');
+            throw new Error('Planning system not available');
           }
         });
         

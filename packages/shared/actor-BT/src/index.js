@@ -6,6 +6,7 @@
 
 // Core components
 export { BehaviorTreeExecutor } from './core/BehaviorTreeExecutor.js';
+export { BehaviorTreeExecutor as BTExecutor } from './core/BehaviorTreeExecutor.js';
 export { BehaviorTreeNode, NodeStatus } from './core/BehaviorTreeNode.js';
 export { MessageBus } from './core/MessageBus.js';
 

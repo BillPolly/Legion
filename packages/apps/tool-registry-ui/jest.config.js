@@ -7,12 +7,13 @@ export default {
   ],
   transform: {},
   moduleNameMapper: {
-    '^@legion/tools-registry$': '<rootDir>/../../tools/src/index.js',
+    '^@legion/tools-registry$': '<rootDir>/../../tools-registry/src/index.js',
     '^@legion/shared$': '<rootDir>/../../shared/src/index.js',
     '^@legion/semantic-search$': '<rootDir>/../../semantic-search/src/index.js',
     '^@legion/storage$': '<rootDir>/../../storage/src/index.js',
+    '^@legion/mongodb-provider$': '<rootDir>/../../storage/src/providers/mongodb/index.js',
     '^/legion/frontend-components/(.*)$': '<rootDir>/../../frontend/components/$1',
-    '^/legion/tools/(.*)$': '<rootDir>/../../tools/$1',
+    '^/legion/tools/(.*)$': '<rootDir>/../../tools-registry/$1',
     '^/legion/shared/(.*)$': '<rootDir>/../../shared/$1',
     '^/legion/actors/(.*)$': '<rootDir>/../../shared/actors/$1'
   },

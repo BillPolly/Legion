@@ -651,7 +651,173 @@ class NavigationTabsViewModel {
       };
       
       // Add component-specific configurations
-      if (componentName === 'ToolDetailsPanel') {
+      if (componentName === 'PlanningWorkspacePanel') {
+        // Planning workspace configuration
+        umbilicalConfig.planningActor = this.umbilical.planningActor;
+        umbilicalConfig.executionActor = this.umbilical.executionActor;
+        umbilicalConfig.toolRegistryActor = this.umbilical.toolRegistryActor;
+        
+        // Planning callbacks
+        umbilicalConfig.onPlanCreate = (plan) => {
+          if (this.umbilical.onPlanCreate) {
+            this.umbilical.onPlanCreate(plan);
+          }
+        };
+        
+        umbilicalConfig.onPlanComplete = (plan) => {
+          if (this.umbilical.onPlanComplete) {
+            this.umbilical.onPlanComplete(plan);
+          }
+        };
+        
+        umbilicalConfig.onExecutionStart = (executionId) => {
+          if (this.umbilical.onExecutionStart) {
+            this.umbilical.onExecutionStart(executionId);
+          }
+        };
+        
+        umbilicalConfig.onDecompositionNode = (data) => {
+          // Forward to visualization panels if loaded
+          const visualizationPanel = this.panelComponents.get('visualization');
+          const progressPanel = this.panelComponents.get('progress');
+          
+          if (visualizationPanel && visualizationPanel.api) {
+            visualizationPanel.api.handleDecompositionNode(data);
+          }
+          
+          if (progressPanel && progressPanel.api) {
+            progressPanel.api.updateTaskProgress(data.node.id, {
+              status: 'pending',
+              progress: 0
+            });
+          }
+        };
+        
+      } else if (componentName === 'PlanVisualizationPanel') {
+        // Visualization panel configuration
+        umbilicalConfig.onViewChange = (mode) => {
+          console.log('📊 Visualization view mode changed:', mode);
+        };
+        
+        umbilicalConfig.onLayoutChange = (layout) => {
+          console.log('📊 Visualization layout changed:', layout);
+        };
+        
+        umbilicalConfig.onNodeClick = (node) => {
+          console.log('📊 Node clicked:', node.id);
+          if (this.umbilical.onNodeSelect) {
+            this.umbilical.onNodeSelect(node);
+          }
+        };
+        
+        umbilicalConfig.onNodeHover = (node) => {
+          if (this.umbilical.onNodeHover) {
+            this.umbilical.onNodeHover(node);
+          }
+        };
+        
+      } else if (componentName === 'ProgressOverlayPanel') {
+        // Progress overlay configuration
+        umbilicalConfig.onExecutionStart = (executionId) => {
+          if (this.umbilical.onExecutionStart) {
+            this.umbilical.onExecutionStart(executionId);
+          }
+        };
+        
+        umbilicalConfig.onExecutionComplete = (executionId) => {
+          if (this.umbilical.onExecutionComplete) {
+            this.umbilical.onExecutionComplete(executionId);
+          }
+        };
+        
+        umbilicalConfig.onTaskProgress = (taskId, progress) => {
+          // Forward to workspace panel
+          const workspacePanel = this.panelComponents.get('planning');
+          if (workspacePanel && workspacePanel.api) {
+            workspacePanel.api.handleTaskProgress(taskId, progress);
+          }
+        };
+        
+      } else if (componentName === 'ExecutionControlPanel') {
+        // Execution control configuration
+        umbilicalConfig.executionActor = this.umbilical.executionActor;
+        umbilicalConfig.planningActor = this.umbilical.planningActor;
+        
+        umbilicalConfig.onExecutionStart = (executionId) => {
+          // Notify progress overlay
+          const progressPanel = this.panelComponents.get('progress');
+          if (progressPanel && progressPanel.api) {
+            progressPanel.api.startExecution(executionId, []);
+          }
+          
+          if (this.umbilical.onExecutionStart) {
+            this.umbilical.onExecutionStart(executionId);
+          }
+        };
+        
+        umbilicalConfig.onExecutionComplete = (executionId) => {
+          const progressPanel = this.panelComponents.get('progress');
+          if (progressPanel && progressPanel.api) {
+            progressPanel.api.stopExecution();
+          }
+          
+          if (this.umbilical.onExecutionComplete) {
+            this.umbilical.onExecutionComplete(executionId);
+          }
+        };
+        
+      } else if (componentName === 'PlanLibraryPanel') {
+        // Plan library configuration
+        umbilicalConfig.planningActor = this.umbilical.planningActor;
+        
+        umbilicalConfig.onPlanLoad = (plan) => {
+          // Load plan into workspace
+          const workspacePanel = this.panelComponents.get('planning');
+          if (workspacePanel && workspacePanel.api) {
+            workspacePanel.api.setCurrentPlan(plan);
+          }
+          
+          // Load plan into visualization
+          const visualizationPanel = this.panelComponents.get('visualization');
+          if (visualizationPanel && visualizationPanel.api) {
+            visualizationPanel.api.setPlan(plan);
+          }
+          
+          // Load plan into execution control
+          const executionPanel = this.panelComponents.get('execution');
+          if (executionPanel && executionPanel.api) {
+            executionPanel.api.setPlan(plan);
+          }
+          
+          // Switch to planning workspace
+          this.switchTab('planning');
+          
+          if (this.umbilical.onPlanLoad) {
+            this.umbilical.onPlanLoad(plan);
+          }
+        };
+        
+        umbilicalConfig.onPlanEdit = (plan) => {
+          this.switchTab('planning');
+          if (this.umbilical.onPlanEdit) {
+            this.umbilical.onPlanEdit(plan);
+          }
+        };
+        
+        umbilicalConfig.onCreateNewPlan = () => {
+          this.switchTab('planning');
+          if (this.umbilical.onCreateNewPlan) {
+            this.umbilical.onCreateNewPlan();
+          }
+        };
+        
+        umbilicalConfig.onPlanImported = (plan) => {
+          if (this.umbilical.onPlanImported) {
+            this.umbilical.onPlanImported(plan);
+          }
+        };
+        
+      } else if (componentName === 'ToolDetailsPanel') {
         // Pass current global state to ToolDetailsPanel
         const selectedTool = this.umbilical.getSelectedTool ? this.umbilical.getSelectedTool() : null;
         umbilicalConfig.selectedTool = selectedTool;

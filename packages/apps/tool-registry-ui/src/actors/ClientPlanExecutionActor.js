@@ -35,7 +35,7 @@ export class ClientPlanExecutionActor {
     this.applicationContext.updateState?.('currentExecutionId', executionId);
 
     // Send execution start request
-    await this.remoteActor.send({
+    await this.remoteActor.receive({
       type: 'execution:start',
       data: {
         executionId,
@@ -56,7 +56,7 @@ export class ClientPlanExecutionActor {
       throw new Error('Execution actor not connected');
     }
 
-    await this.remoteActor.send({
+    await this.remoteActor.receive({
       type: 'execution:pause',
       data: { executionId }
     });
@@ -70,7 +70,7 @@ export class ClientPlanExecutionActor {
       throw new Error('Execution actor not connected');
     }
 
-    await this.remoteActor.send({
+    await this.remoteActor.receive({
       type: 'execution:resume',
       data: { executionId }
     });
@@ -84,7 +84,7 @@ export class ClientPlanExecutionActor {
       throw new Error('Execution actor not connected');
     }
 
-    await this.remoteActor.send({
+    await this.remoteActor.receive({
       type: 'execution:stop',
       data: { executionId }
     });
@@ -98,7 +98,7 @@ export class ClientPlanExecutionActor {
       throw new Error('Execution actor not connected');
     }
 
-    await this.remoteActor.send({
+    await this.remoteActor.receive({
       type: 'execution:step',
       data: { executionId }
     });
@@ -112,7 +112,7 @@ export class ClientPlanExecutionActor {
       throw new Error('Execution actor not connected');
     }
 
-    await this.remoteActor.send({
+    await this.remoteActor.receive({
       type: 'execution:status',
       data: { executionId }
     });
@@ -126,7 +126,7 @@ export class ClientPlanExecutionActor {
       throw new Error('Execution actor not connected');
     }
 
-    await this.remoteActor.send({
+    await this.remoteActor.receive({
       type: 'execution:list',
       data: {}
     });
@@ -140,7 +140,7 @@ export class ClientPlanExecutionActor {
       throw new Error('Execution actor not connected');
     }
 
-    await this.remoteActor.send({
+    await this.remoteActor.receive({
       type: 'execution:history',
       data: { limit }
     });
@@ -154,7 +154,7 @@ export class ClientPlanExecutionActor {
       throw new Error('Execution actor not connected');
     }
 
-    await this.remoteActor.send({
+    await this.remoteActor.receive({
       type: 'execution:breakpoint:set',
       data: { executionId, taskId }
     });
@@ -168,7 +168,7 @@ export class ClientPlanExecutionActor {
       throw new Error('Execution actor not connected');
     }
 
-    await this.remoteActor.send({
+    await this.remoteActor.receive({
       type: 'execution:breakpoint:remove',
       data: { executionId, taskId }
     });
