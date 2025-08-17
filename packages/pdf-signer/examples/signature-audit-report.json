@@ -1,0 +1,28 @@
+{
+  "documentId": "doc-1755467656753-6gy6z34ne",
+  "documentName": "multi-party-agreement.pdf",
+  "totalSignaturesRequired": 3,
+  "totalSignaturesCollected": 3,
+  "isComplete": true,
+  "signers": [
+    {
+      "name": "Alice Johnson",
+      "email": "alice.johnson@company.com",
+      "signedAt": "2025-08-17T21:54:16.756Z",
+      "ipAddress": "192.168.1.100"
+    },
+    {
+      "name": "Bob Smith",
+      "email": "bob.smith@company.com",
+      "signedAt": "2025-08-17T21:54:17.756Z",
+      "ipAddress": "192.168.1.101"
+    },
+    {
+      "name": "Carol Davis",
+      "email": "carol.davis@legal.com",
+      "signedAt": "2025-08-17T21:54:18.756Z",
+      "ipAddress": "192.168.1.102"
+    }
+  ],
+  "completedAt": "2025-08-17T21:54:16.780Z"
+}

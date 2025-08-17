@@ -1,0 +1,73 @@
+{
+  "documentId": "doc-1755467660934-ba06wp409",
+  "documentName": "form-with-fields.pdf",
+  "analysis": {
+    "totalFieldsDetected": 1,
+    "totalFieldsAdded": 3,
+    "detectionStrategies": [
+      "AcroForm field analysis",
+      "Text pattern recognition",
+      "Manual field placement"
+    ]
+  },
+  "fields": [
+    {
+      "id": "field-1755467660937-kw7n71aa5",
+      "label": "EmployeeSignature",
+      "position": {
+        "x": 180,
+        "y": 535,
+        "width": 220,
+        "height": 20
+      },
+      "required": false
+    },
+    {
+      "id": "manager-signature",
+      "label": "Manager Approval Signature",
+      "position": {
+        "x": 180,
+        "y": 495,
+        "width": 200,
+        "height": 50
+      },
+      "required": true
+    },
+    {
+      "id": "witness-signature",
+      "label": "Witness Signature",
+      "position": {
+        "x": 180,
+        "y": 320,
+        "width": 200,
+        "height": 50
+      },
+      "required": false
+    }
+  ],
+  "signatures": [
+    {
+      "fieldId": "manager-signature",
+      "signerName": "Jane Manager",
+      "email": "jane.manager@company.com",
+      "timestamp": "2025-08-17T21:54:20.939Z"
+    },
+    {
+      "fieldId": "witness-signature",
+      "signerName": "John Witness",
+      "email": "john.witness@company.com",
+      "timestamp": "2025-08-17T21:54:21.439Z"
+    },
+    {
+      "fieldId": "field-1755467660937-kw7n71aa5",
+      "signerName": "Auto Detected Signer",
+      "email": "auto@example.com",
+      "timestamp": "2025-08-17T21:54:21.939Z"
+    }
+  ],
+  "summary": {
+    "totalSignatures": 3,
+    "completionRate": "100%",
+    "generatedAt": "2025-08-17T21:54:20.955Z"
+  }
+}

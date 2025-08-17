@@ -1,0 +1,53 @@
+{
+  "name": "@legion/server-framework",
+  "version": "1.0.0",
+  "description": "Reusable server framework for Legion applications with actor spaces and plugin system",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+  },
+  "keywords": [
+    "legion",
+    "server",
+    "framework",
+    "actor-spaces",
+    "websocket",
+    "express",
+    "plugin-system"
+  ],
+  "author": "Legion Team",
+  "license": "MIT",
+  "dependencies": {
+    "@legion/resource-manager": "*",
+    "@legion/actors": "*",
+    "express": "^4.18.2",
+    "ws": "^8.13.0",
+    "cors": "^2.8.5",
+    "path": "^0.12.7",
+    "url": "^0.11.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "@jest/globals": "^29.7.0",
+    "eslint": "^8.57.0",
+    "jsdom": "^22.1.0",
+    "node-fetch": "^3.3.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "transform": {},
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/**/*.test.js"
+    ]
+  }
+}
