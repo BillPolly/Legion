@@ -512,6 +512,186 @@ this.plugins.forEach(plugin => {
 });
 ```
 
+## Actor Protocol and Initialization
+
+### Actor Protocol Overview
+
+The Legion Server Framework implements a sophisticated actor-based communication protocol that automatically establishes bidirectional communication between client and server actors. The protocol is built on top of WebSockets and the Legion ActorSpace system, providing transparent message passing between actors across the network boundary.
+
+### Initialization Sequence
+
+The actor initialization follows a carefully orchestrated sequence that ensures both client and server actors are properly created, registered, and connected:
+
+#### 1. Client Page Load
+When a user navigates to a registered route (e.g., `/counter`), the server generates an HTML page with embedded JavaScript that:
+- Imports the client actor module
+- Imports the ActorSpace library from `/legion/actors/ActorSpace.js`
+- Sets up WebSocket connection and actor initialization code
+
+#### 2. Client-Side Initialization
+```javascript
+// Generated HTML template initializes the client:
+1. Creates client actor instance: new ClientActor()
+2. Creates client ActorSpace: new ActorSpace('client')
+3. Registers actor: actorSpace.register(clientActor, 'client-root')
+4. Establishes WebSocket: new WebSocket('ws://localhost:8080/ws')
+5. On connection: creates channel via actorSpace.addChannel(ws)
+```
+
+#### 3. Server-Side Connection Handling
+When the WebSocket connection is established:
+```javascript
+// ActorSpaceManager handles the connection:
+1. Creates unique ActorSpace: new ActorSpace('server-timestamp-random')
+2. Stores connection info with route extracted from query params
+3. Sets up bidirectional ActorSpace channel immediately
+4. Waits for handshake or creates actor based on route
+```
+
+#### 4. Actor Creation and Pairing
+The framework supports two initialization modes:
+
+**Automatic Mode (New Protocol):**
+- Server creates actor immediately upon WebSocket connection
+- Uses route from query parameters to select the correct factory
+- Actor is registered in ActorSpace before any messages are exchanged
+- Channel is established for bidirectional communication
+
+**Handshake Mode (Legacy Compatibility):**
+- Client sends explicit handshake message with actor GUID
+- Server responds with acknowledgment containing server actor GUID
+- Both sides create remote references to each other
+
+### Actor Communication Protocol
+
+Once initialized, actors communicate using the ActorSpace protocol:
+
+#### Message Format
+```javascript
+// Actor-to-actor messages use the receive() method:
+actor.receive(messageType, data)
+
+// The ActorSpace handles serialization and transport:
+{
+  to: 'remote-actor-guid',
+  from: 'local-actor-guid',
+  type: 'actor_message',
+  messageType: 'increment',
+  data: { value: 1 }
+}
+```
+
+#### Key Protocol Features
+
+1. **Bidirectional Communication**: Both client and server actors can initiate messages
+2. **Transparent Serialization**: ActorSpace handles JSON serialization/deserialization
+3. **Remote References**: Actors hold references to remote actors as if they were local
+4. **Type-Safe Messages**: Messages include type information for proper handling
+5. **Error Propagation**: Errors in remote actors are propagated back to callers
+
+### Actor Lifecycle
+
+#### Creation
+- **Server Actor**: Created via factory function on each WebSocket connection
+- **Client Actor**: Created once when the page loads
+- **Isolation**: Each connection gets its own server actor instance
+
+#### Communication Methods
+Actors implement standard methods for communication:
+
+```javascript
+class ServerActor {
+  // Called by framework to set remote actor reference
+  setRemoteActor(remoteActor) {
+    this.remoteActor = remoteActor;
+  }
+  
+  // Primary message handler (ActorSpace protocol)
+  async receive(messageType, data) {
+    // Process message and optionally respond
+    const response = await this.processMessage(messageType, data);
+    
+    // Send response back through remote actor
+    if (this.remoteActor && response) {
+      this.remoteActor.receive(response.type, response);
+    }
+    
+    return response;
+  }
+  
+  // Alternative handler for compatibility
+  async handle(message) {
+    return this.receive(message.type, message.data);
+  }
+}
+```
+
+#### Cleanup
+When a WebSocket connection closes:
+1. ActorSpaceManager removes the connection from its registry
+2. ActorSpace is destroyed, cleaning up all registered actors
+3. Server actor instance is garbage collected
+4. Resources are freed
+
+### Implementation Details
+
+#### Server-Side Actor Factory Pattern
+The framework uses a factory pattern for server actors to ensure isolation:
+
+```javascript
+// Each connection gets a fresh actor instance
+function createServerActor(services) {
+  return {
+    // Actor state is connection-specific
+    state: { count: 0, users: [] },
+    
+    // Services are shared across all actors
+    services: services,
+    
+    // Standard actor protocol methods
+    receive(messageType, data) { /* ... */ },
+    setRemoteActor(remote) { /* ... */ }
+  };
+}
+```
+
+#### Client-Side Actor Pattern
+Client actors are ES6 modules that export a default class:
+
+```javascript
+export default class ClientActor {
+  constructor() {
+    // Initialize UI and state
+  }
+  
+  setRemoteActor(remoteActor) {
+    // Store reference and begin communication
+    this.remoteActor = remoteActor;
+    this.initialize();
+  }
+  
+  receive(messageType, data) {
+    // Handle server messages and update UI
+  }
+}
+```
+
+#### ActorSpace Channel Management
+The ActorSpace manages WebSocket channels transparently:
+
+1. **Channel Creation**: `actorSpace.addChannel(websocket)` creates bidirectional channel
+2. **Remote References**: `channel.makeRemote(actorGuid)` creates remote actor proxy
+3. **Message Routing**: ActorSpace routes messages based on actor GUIDs
+4. **Serialization**: Automatic JSON serialization for network transport
+
+### Protocol Advantages
+
+1. **Simplicity**: Developers only implement actor logic, not networking code
+2. **Type Safety**: Message types are preserved across network boundary
+3. **Isolation**: Each connection is completely isolated with its own actors
+4. **Scalability**: Factory pattern allows unlimited concurrent connections
+5. **Debugging**: Clean separation between actor logic and transport layer
+
 ## WebSocket Protocol
 
 ### Root Actor Handshake
