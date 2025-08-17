@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from '@jest/globals';
 import { TaskDecomposer } from '../../src/core/TaskDecomposer.js';
-import { ResourceManager } from '@legion/tools-registry';
+import { ResourceManager } from '@legion/resource-manager';
 import { Anthropic } from '@anthropic-ai/sdk';
 
 describe('Simple Decomposition Test', () => {

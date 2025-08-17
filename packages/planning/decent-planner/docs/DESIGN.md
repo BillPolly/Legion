@@ -10,7 +10,7 @@ The Descent-Planner is a hierarchical planning system that enables AI agents to 
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  Step 1: Recursive Decomposition with Classification         │
+│  Step 1: Recursive Decomposition with Classification        │
 ├─────────────────────────────────────────────────────────────┤
 │  Task → LLM Decomposes into subtasks with complexity labels  │
 │                      ↓                                       │

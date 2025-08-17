@@ -4,7 +4,8 @@
 
 import { describe, it, expect, beforeAll } from '@jest/globals';
 import { Planner } from '../../src/core/Planner.js';
-import { ResourceManager, ToolRegistry } from '@legion/tools-registry';
+import { ResourceManager } from '@legion/resource-manager';
+import { ToolRegistry } from '@legion/tools-registry';
 import { Anthropic } from '@anthropic-ai/sdk';
 
 describe('Planner Integration', () => {
@@ -17,7 +18,7 @@ describe('Planner Integration', () => {
     await resourceManager.initialize();
     
     // Get API key and create LLM client
-    const apiKey = resourceManager.get('ANTHROPIC_API_KEY');
+    const apiKey = resourceManager.get('env.ANTHROPIC_API_KEY');
     if (!apiKey) {
       throw new Error('ANTHROPIC_API_KEY not found in .env');
     }

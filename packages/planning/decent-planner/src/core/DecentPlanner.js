@@ -148,12 +148,13 @@ export class DecentPlanner {
       }
       
       // Step 2: Bottom-up synthesis and validation
-      const rootSubtree = await this.synthesizer.synthesize(this.hierarchy, planOptions);
+      const synthesisResult = await this.synthesizer.synthesize(this.hierarchy, planOptions);
+      const rootSubtree = synthesisResult.rootSubtree;
       
-      if (!rootSubtree.isValid) {
+      if (!rootSubtree || !rootSubtree._isValid) {
         return {
           success: false,
-          error: `Synthesis failed: ${rootSubtree.validation.errors?.join(', ')}`,
+          error: `Synthesis failed: ${rootSubtree?.validation?.errors?.join(', ') || 'Unknown error'}`,
           data: {
             hierarchy: this.hierarchy,
             validatedSubtree: rootSubtree,
@@ -174,6 +175,7 @@ export class DecentPlanner {
           hierarchy: this.hierarchy,
           validatedSubtree: rootSubtree,
           rootBehaviorTree: rootSubtree.behaviorTree,
+          behaviorTrees: synthesisResult.behaviorTrees,
           executionPlan: executionPlan,
           contract: contract,
           statistics: {
@@ -313,7 +315,8 @@ export class DecentPlanner {
       complexity: 'COMPLEX', // Parent is complex if it has subtasks
       suggestedInputs: context.parentOutputs,
       suggestedOutputs: [],
-      children: []
+      children: [],
+      subtasks: [] // For compatibility with synthesizer
     };
     
     // Process each subtask
@@ -340,6 +343,7 @@ export class DecentPlanner {
         
         this.simpleTasks.push(simpleNode);
         taskNode.children.push(simpleNode);
+        taskNode.subtasks.push(simpleNode); // For synthesizer compatibility
         
         // Collect outputs for parent
         taskNode.suggestedOutputs.push(...subtask.suggestedOutputs);
@@ -359,6 +363,7 @@ export class DecentPlanner {
         
         if (childDecomposition.success) {
           taskNode.children.push(childDecomposition.hierarchy);
+          taskNode.subtasks.push(childDecomposition.hierarchy); // For synthesizer compatibility
           // Bubble up outputs
           taskNode.suggestedOutputs.push(...(childDecomposition.hierarchy.suggestedOutputs || []));
         }
@@ -568,7 +573,7 @@ export class DecentPlanner {
    * @private
    */
   _countValidatedLevels(subtree) {
-    if (!subtree.isValid) return 0;
+    if (!subtree._isValid) return 0;
     
     if (subtree.complexity === 'SIMPLE') {
       return 1;

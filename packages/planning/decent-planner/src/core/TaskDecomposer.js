@@ -206,4 +206,107 @@ Return ONLY this JSON structure:
       throw new Error(`Failed to parse decomposition response: ${error.message}`);
     }
   }
+  
+  /**
+   * Recursively decompose a task to specified depth
+   * @param {string} task - Task description
+   * @param {Object} context - Available context/artifacts
+   * @param {number} currentDepth - Current depth in decomposition tree
+   * @returns {Promise<Object>} Hierarchical decomposition tree
+   */
+  async decomposeRecursively(task, context = {}, currentDepth = 0) {
+    // Check depth limit
+    if (currentDepth >= this.options.maxDepth) {
+      return {
+        id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        description: task,
+        complexity: 'SIMPLE', // Force simple at max depth
+        reasoning: 'Maximum decomposition depth reached',
+        suggestedInputs: context.suggestedInputs || [],
+        suggestedOutputs: context.suggestedOutputs || [],
+        depth: currentDepth
+      };
+    }
+    
+    // Decompose current task
+    const decomposition = await this.decompose(task, {
+      ...context,
+      level: currentDepth,
+      currentWidth: 0
+    });
+    
+    // If decomposition failed or no subtasks, treat as simple
+    if (!decomposition.success || decomposition.subtasks.length === 0) {
+      return {
+        id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        description: task,
+        complexity: 'SIMPLE',
+        reasoning: decomposition.error || 'No further decomposition needed',
+        suggestedInputs: context.suggestedInputs || [],
+        suggestedOutputs: context.suggestedOutputs || [],
+        depth: currentDepth,
+        error: decomposition.error
+      };
+    }
+    
+    // Build result node
+    const result = {
+      id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      description: task,
+      complexity: 'COMPLEX', // Has subtasks, so it's complex
+      reasoning: 'Decomposed into subtasks',
+      suggestedInputs: [],
+      suggestedOutputs: [],
+      depth: currentDepth,
+      subtasks: []
+    };
+    
+    // Collect inputs/outputs from subtasks
+    const allInputs = new Set();
+    const allOutputs = new Set();
+    
+    // Process each subtask
+    for (let i = 0; i < decomposition.subtasks.length; i++) {
+      const subtask = decomposition.subtasks[i];
+      
+      // Add to input/output sets
+      if (subtask.suggestedInputs) {
+        subtask.suggestedInputs.forEach(input => allInputs.add(input));
+      }
+      if (subtask.suggestedOutputs) {
+        subtask.suggestedOutputs.forEach(output => allOutputs.add(output));
+      }
+      
+      // If subtask is complex, recursively decompose
+      if (subtask.complexity === 'COMPLEX') {
+        const recursiveResult = await this.decomposeRecursively(
+          subtask.description,
+          {
+            ...context,
+            parentOutputs: [...(context.parentOutputs || []), ...Array.from(allOutputs)],
+            suggestedInputs: subtask.suggestedInputs,
+            suggestedOutputs: subtask.suggestedOutputs
+          },
+          currentDepth + 1
+        );
+        
+        result.subtasks.push({
+          ...recursiveResult,
+          id: subtask.id || recursiveResult.id
+        });
+      } else {
+        // Simple task, add as-is
+        result.subtasks.push({
+          ...subtask,
+          depth: currentDepth + 1
+        });
+      }
+    }
+    
+    // Set aggregated inputs/outputs
+    result.suggestedInputs = Array.from(allInputs);
+    result.suggestedOutputs = Array.from(allOutputs);
+    
+    return result;
+  }
 }

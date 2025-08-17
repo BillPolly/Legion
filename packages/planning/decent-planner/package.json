@@ -12,7 +12,7 @@
   "dependencies": {
     "@legion/planner": "file:../planner",
     "@legion/bt-validator": "file:../bt-validator", 
-    "@legion/tools-registry": "file:../../tools",
+    "@legion/tools-registry": "file:../../tools-registry",
     "zod": "^3.22.4"
   },
   "devDependencies": {

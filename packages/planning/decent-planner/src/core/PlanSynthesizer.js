@@ -36,7 +36,7 @@ export class PlanSynthesizer {
    * Synthesize a complete plan bottom-up from a decomposed hierarchy
    * @param {Object} hierarchy - Decomposed task hierarchy
    * @param {Object} options - Synthesis options
-   * @returns {Promise<ValidatedSubtree>} Root validated subtree
+   * @returns {Promise<Object>} Synthesis result with behaviorTrees for all nodes
    */
   async synthesize(hierarchy, options = {}) {
     const { debug = false } = options;
@@ -49,11 +49,29 @@ export class PlanSynthesizer {
     const rootSubtree = await this._synthesizeNode(hierarchy, options);
     
     if (debug) {
-      console.log(`[PlanSynthesizer] Synthesis complete. Valid: ${rootSubtree.isValid}`);
+      console.log(`[PlanSynthesizer] Synthesis complete. Valid: ${rootSubtree._isValid}`);
       console.log(`[PlanSynthesizer] Total tasks: ${rootSubtree.getTotalTasks()}`);
     }
     
-    return rootSubtree;
+    // Collect all behavior trees from the hierarchy
+    const behaviorTrees = {};
+    const collectBehaviorTrees = (subtree) => {
+      if (subtree.behaviorTree) {
+        behaviorTrees[subtree.id] = subtree.behaviorTree;
+      }
+      if (subtree.children) {
+        subtree.children.forEach(child => collectBehaviorTrees(child));
+      }
+    };
+    
+    collectBehaviorTrees(rootSubtree);
+    
+    return {
+      behaviorTrees,
+      rootSubtree,
+      validation: rootSubtree.validation,
+      artifacts: rootSubtree.getContract()
+    };
   }
   
   /**
@@ -107,12 +125,40 @@ export class PlanSynthesizer {
       // Discover relevant tools
       const tools = await this._discoverTools(node, options);
       
+      if (options.debug) {
+        console.log(`[PlanSynthesizer] Tools discovered for '${node.description}':`, tools?.map(t => t.name) || 'none');
+      }
+      
       if (!tools || tools.length === 0) {
         subtree.validation = {
           valid: false,
           errors: [`No tools found for task: ${node.description}`]
         };
-        subtree.isValid = false;
+        subtree._isValid = false;
+        return;
+      }
+      
+      // Judge if tools are sufficient for the task
+      const judgment = await this._judgeToolSufficiency(node, tools, hints);
+      if (!judgment.sufficient) {
+        subtree.validation = {
+          valid: false,
+          errors: [
+            `Insufficient tools for task: ${node.description}`,
+            `Judgment: ${judgment.reason}`,
+            `Missing capabilities: ${judgment.missing.join(', ')}`,
+            `Available tools: ${tools.map(t => t.name).join(', ')}`
+          ]
+        };
+        subtree._isValid = false;
+        
+        if (options.debug) {
+          console.log(`[PlanSynthesizer] Tool judgment failed:`);
+          console.log(`  Task: ${node.description}`);
+          console.log(`  Reason: ${judgment.reason}`);
+          console.log(`  Missing: ${judgment.missing.join(', ')}`);
+          console.log(`  Available: ${tools.map(t => t.name).join(', ')}`);
+        }
         return;
       }
       
@@ -135,7 +181,7 @@ export class PlanSynthesizer {
         );
         
         subtree.validation = validation;
-        subtree.isValid = validation.valid;
+        subtree._isValid = validation.valid;
         
         // Extract actual I/O from the validated tree
         this._extractActualIO(subtree, planResult.data.plan);
@@ -145,7 +191,7 @@ export class PlanSynthesizer {
           valid: false,
           errors: [`Planning failed: ${planResult.error}`]
         };
-        subtree.isValid = false;
+        subtree._isValid = false;
       }
       
     } catch (error) {
@@ -153,7 +199,7 @@ export class PlanSynthesizer {
         valid: false,
         errors: [`Synthesis error: ${error.message}`]
       };
-      subtree.isValid = false;
+      subtree._isValid = false;
     }
   }
   
@@ -169,22 +215,23 @@ export class PlanSynthesizer {
     }
     
     // Synthesize all children first (bottom-up)
-    if (!node.children || node.children.length === 0) {
+    const children = node.children || node.subtasks;
+    if (!children || children.length === 0) {
       subtree.validation = {
         valid: false,
         errors: ['Complex task has no children']
       };
-      subtree.isValid = false;
+      subtree._isValid = false;
       return;
     }
     
-    for (const childNode of node.children) {
+    for (const childNode of children) {
       const childSubtree = await this._synthesizeNode(childNode, options);
       subtree.addChild(childSubtree);
     }
     
     // Check if all children are valid
-    const invalidChildren = subtree.children.filter(child => !child.isValid);
+    const invalidChildren = subtree.children.filter(child => !child._isValid);
     if (invalidChildren.length > 0) {
       subtree.validation = {
         valid: false,
@@ -193,7 +240,7 @@ export class PlanSynthesizer {
           ...invalidChildren.map(child => `- ${child.description}: ${child.validation.errors?.join(', ')}`)
         ]
       };
-      subtree.isValid = false;
+      subtree._isValid = false;
       return;
     }
     
@@ -212,7 +259,7 @@ export class PlanSynthesizer {
     );
     
     subtree.validation = validation;
-    subtree.isValid = validation.valid;
+    subtree._isValid = validation.valid;
     
     // Verify I/O contracts match
     this._validateIOContracts(subtree);
@@ -390,9 +437,123 @@ export class PlanSynthesizer {
   }
   
   /**
+   * Judge if discovered tools are sufficient for the task
+   * @private
+   */
+  async _judgeToolSufficiency(node, tools, hints) {
+    // Create a prompt for the LLM to judge tool sufficiency
+    const toolList = tools.map(t => `- ${t.name}: ${t.description || 'No description'}`).join('\n');
+    
+    const prompt = `
+Task: ${node.description}
+
+Expected Inputs: ${hints.suggestedInputs?.join(', ') || 'None specified'}
+Expected Outputs: ${hints.suggestedOutputs?.join(', ') || 'None specified'}
+
+Available Tools:
+${toolList}
+
+Question: Are these tools sufficient to complete the task? 
+
+Analyze if the available tools can:
+1. Handle the required inputs
+2. Produce the expected outputs
+3. Perform the core operation described in the task
+
+Respond with JSON:
+{
+  "sufficient": true/false,
+  "reason": "Brief explanation",
+  "missing": ["capability1", "capability2"] // List what's missing if insufficient
+}
+`;
+    
+    try {
+      console.log('[DEBUG] Calling LLM for judgment');
+      const response = await this.llmClient.generateResponse({
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.1,
+        maxTokens: 500
+      });
+      
+      // Parse the response
+      const content = response.content || '{}';
+      const jsonMatch = content.match(/\{[^}]+\}/s);
+      if (jsonMatch) {
+        const judgment = JSON.parse(jsonMatch[0]);
+        return {
+          sufficient: judgment.sufficient || false,
+          reason: judgment.reason || 'No reason provided',
+          missing: judgment.missing || []
+        };
+      }
+    } catch (error) {
+      // If LLM fails, we cannot judge - return insufficient with explanation
+      console.warn('[PlanSynthesizer] LLM judgment failed:', error.message);
+      return {
+        sufficient: false,
+        reason: 'Could not determine tool sufficiency - LLM judgment failed',
+        missing: ['unable to determine - LLM unavailable']
+      };
+    }
+    
+    // Should never reach here if LLM is properly configured
+    return {
+      sufficient: false,
+      reason: 'Tool sufficiency judgment failed',
+      missing: ['unknown']
+    };
+  }
+  
+  /**
    * Clear the subtree cache
    */
   clearCache() {
     this.subtreeCache.clear();
+  }
+  
+  /**
+   * Synthesize a single simple task (for compatibility)
+   * @param {Object} task - Simple task to synthesize
+   * @returns {Promise<Object>} Synthesis result with behaviorTree, tools, artifacts
+   */
+  async synthesizeSimpleTask(task) {
+    // Add task to context hints if provided
+    if (task.suggestedInputs || task.suggestedOutputs) {
+      this.contextHints.addHints(task.id, {
+        suggestedInputs: task.suggestedInputs || [],
+        suggestedOutputs: task.suggestedOutputs || []
+      });
+    }
+    
+    // Create a simple hierarchy node
+    const node = {
+      id: task.id,
+      description: task.description,
+      complexity: 'SIMPLE',
+      suggestedInputs: task.suggestedInputs || [],
+      suggestedOutputs: task.suggestedOutputs || []
+    };
+    
+    // Synthesize using the main method
+    const subtree = await this._synthesizeNode(node, { debug: false });
+    
+    // Discover tools for this task
+    const tools = await this._discoverTools(node, {});
+    
+    // Extract artifacts from the behavior tree
+    const artifacts = {};
+    if (subtree.outputs && subtree.outputs.size > 0) {
+      subtree.outputs.forEach(output => {
+        artifacts[output] = { type: 'output', source: task.id };
+      });
+    }
+    
+    return {
+      behaviorTree: subtree.behaviorTree,
+      tools: tools,
+      artifacts: artifacts,
+      validation: subtree.validation
+    };
   }
 }
