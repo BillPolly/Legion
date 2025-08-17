@@ -20,3 +20,6 @@ No fallbacks in tests or skipping, just FAIL the test if resoruce are not there.
 
 In implementation code THERE MUST NEVER be any mock implementations or fallbacks, just fail fast.
 
+All tests must be under the __tests__ directories and all results and such should go under there as well, but they should be in directores and added to gitignore. 
+if a test is producing files and such it is better to clean up before rather than after as then the results can be viewed
+

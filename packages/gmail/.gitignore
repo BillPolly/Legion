@@ -1,0 +1,19 @@
+# Test results and artifacts
+__tests__/results/
+__tests__/artifacts/
+__tests__/downloads/
+
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Coverage reports
+coverage/
+*.lcov
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
