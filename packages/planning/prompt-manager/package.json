@@ -1,0 +1,29 @@
+{
+  "name": "@legion/prompt-manager",
+  "version": "1.0.0",
+  "description": "Template-based prompt management for Legion planning components",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "keywords": [
+    "legion",
+    "prompt",
+    "template",
+    "llm"
+  ],
+  "author": "Legion Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

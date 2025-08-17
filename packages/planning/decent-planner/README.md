@@ -4,14 +4,19 @@ Hierarchical task decomposition and planning system for AI agents. Enables compl
 
 ## Overview
 
-The Decent-Planner uses a two-step process with bottom-up synthesis:
+The Decent-Planner implements a two-phase planning approach:
 
-1. **Recursive Decomposition** (Top-Down): Breaks down complex tasks into subtasks, classifying each as SIMPLE or COMPLEX
-2. **Bottom-Up Synthesis & Validation**: 
-   - Plans and validates simple leaf tasks first
-   - Composes validated subtrees into parent behavior trees
-   - Each validated subtree becomes an atomic unit at higher levels
-   - Validation propagates up, ensuring correctness at every level
+1. **Informal Planning Phase**: 
+   - Recursively decomposes COMPLEX tasks into SIMPLE ones
+   - Discovers appropriate tools for each SIMPLE task via semantic search
+   - Validates structure, dependencies, completeness, and feasibility
+   - Generates comprehensive hierarchy with tool annotations
+
+2. **Formal Planning Phase** (Integration Ready):
+   - Synthesizes behavior trees from validated task hierarchy
+   - Uses @legion/planner for BT generation
+   - Validates with @legion/bt-validator
+   - Bottom-up composition of validated subtrees
 
 ## Key Features
 
@@ -33,29 +38,36 @@ npm install @legion/decent-planner
 
 ```javascript
 import { DecentPlanner } from '@legion/decent-planner';
-import { ResourceManager } from '@legion/tools-registry';
+import { ResourceManager } from '@legion/module-loader';
+import { ToolRegistry } from '@legion/tools-registry';
 
-// Initialize ResourceManager with dependencies
+// Initialize dependencies
 const resourceManager = new ResourceManager();
 await resourceManager.initialize();
 
+const toolRegistry = new ToolRegistry(resourceManager);
+const llmClient = /* your LLM client */;
+
 // Create planner
-const planner = await DecentPlanner.create(resourceManager);
+const planner = new DecentPlanner(llmClient, toolRegistry, {
+  maxDepth: 5,
+  confidenceThreshold: 0.7
+});
 
 // Plan a complex task
 const result = await planner.plan(
   "Build a task management web application",
-  {
-    domain: "web-development",
-    maxDepth: 5,
-    debug: true
-  }
+  { domain: "web-development" }
 );
 
 if (result.success) {
-  console.log('Hierarchy:', result.data.hierarchy);
-  console.log('Behavior Trees:', result.data.behaviorTrees);
-  console.log('Execution Plan:', result.data.executionPlan);
+  console.log('Hierarchy:', result.phases.informal.hierarchy);
+  console.log('Statistics:', result.phases.informal.statistics);
+  console.log('Validation:', result.phases.informal.validation);
+  
+  // Generate human-readable report
+  const report = planner.generateReport(result);
+  console.log(report);
 }
 ```
 
@@ -63,12 +75,22 @@ if (result.success) {
 
 ### Components
 
-1. **DecentPlanner**: Main orchestrator
-2. **TaskDecomposer**: LLM-based decomposition with classification
-3. **PlanSynthesizer**: Bottom-up behavior tree synthesis and validation
-4. **ValidatedSubtree**: Encapsulates validated components with I/O contracts
-5. **ContextHints**: Manages informal I/O suggestions
-6. **ToolDiscoveryBridge**: Interfaces with semantic tool search
+#### Core Orchestrators
+1. **DecentPlanner**: Main orchestrator for both planning phases
+2. **InformalPlanner**: Orchestrates the informal planning phase
+
+#### Informal Planning Components
+3. **ComplexityClassifier**: Classifies tasks as SIMPLE or COMPLEX using LLM
+4. **TaskDecomposer**: Recursively decomposes COMPLEX tasks with I/O hints
+5. **ToolFeasibilityChecker**: Discovers tools via semantic search on ToolRegistry
+6. **DecompositionValidator**: Validates structure, dependencies, completeness, and feasibility
+
+#### Data Structures
+7. **TaskNode**: Represents individual tasks with complexity, tools, and I/O hints
+8. **TaskHierarchy**: Tree structure with traversal and statistics methods
+
+#### Supporting Infrastructure
+9. **PromptManager** (@legion/prompt-manager): Template-based prompt management with markdown files
 
 ### Task Classification
 
@@ -120,18 +142,39 @@ const result = await planner.plan(goal, options);
 ```javascript
 {
   success: boolean,
-  data: {
-    hierarchy: TaskNode,        // Decomposed task tree
-    behaviorTrees: Object,      // BT for each simple task
-    artifacts: Object,          // Expected I/O artifacts
-    executionPlan: Array,       // Ordered task sequence
-    statistics: {
-      totalTasks: number,
-      decompositionLevels: number,
-      totalNodes: number
+  goal: string,
+  phases: {
+    informal: {
+      hierarchy: TaskNode,           // Decomposed task tree
+      validation: {                  // Comprehensive validation
+        valid: boolean,
+        structure: ValidationResult,
+        dependencies: ValidationResult,
+        completeness: ValidationResult,
+        feasibility: FeasibilityResult
+      },
+      statistics: {
+        totalTasks: number,
+        simpleTasks: number,
+        complexTasks: number,
+        feasibleTasks: number,
+        maxDepth: number,
+        uniqueToolsCount: number
+      },
+      metadata: {
+        timestamp: string,
+        processingTime: number,
+        plannerVersion: string
+      }
+    },
+    formal: {                        // When enabled
+      behaviorTrees: Array,
+      validation: ValidationResult,
+      status: string
     }
   },
-  error: string | null
+  processingTime: number,
+  summary: Object
 }
 ```
 
