@@ -521,7 +521,7 @@ export class ServerPlanExecutionActor {
 
   async sendMessage(type, data) {
     if (this.remoteActor) {
-      await this.remoteActor.send({ type, data });
+      await this.remoteActor.receive({ type, data });
     }
   }
 

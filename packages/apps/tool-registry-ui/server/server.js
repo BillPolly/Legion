@@ -11,10 +11,10 @@ import { ActorSpace } from '@legion/actors';
 import { ToolRegistry } from '@legion/tools-registry';
 import { SemanticSearchProvider } from '@legion/semantic-search';
 import { DecentPlanner } from '@legion/decent-planner';
-import { BTExecutor } from '@legion/bt-executor';
+import { BehaviorTreeExecutor as BTExecutor } from '@legion/actor-bt';
 import { LLMClient } from '@legion/llm';
 import { ResourceManager } from '@legion/resource-manager';
-import { MongoDBProvider } from '@legion/mongodb-provider';
+import { MongoDBProvider } from '@legion/storage';
 import { isContainerRunning, startDocker, startQdrantContainer, waitForQdrant, QDRANT_CONTAINER_NAME } from '../../../../scripts/docker/start-qdrant.js';
 import { initializeSchemas } from './schemas/MongoDBSchemas.js';
 
@@ -87,8 +87,12 @@ async function initializeServices() {
     resourceManager = new ResourceManager();
     await resourceManager.initialize();
     
-    // Initialize MongoDB provider
-    mongoProvider = new MongoDBProvider(resourceManager);
+    // Initialize MongoDB provider with correct config
+    const mongoConfig = {
+      connectionString: resourceManager.get('env.MONGODB_URL'),
+      database: resourceManager.get('env.MONGODB_DATABASE') || resourceManager.get('env.TOOLS_DATABASE_NAME')
+    };
+    mongoProvider = new MongoDBProvider(mongoConfig);
     await mongoProvider.connect();
     
     // Initialize MongoDB schemas
@@ -101,7 +105,7 @@ async function initializeServices() {
     await toolRegistry.initialize();
     
     // Initialize LLM Client for planning
-    llmClient = new LLMClient(resourceManager);
+    llmClient = await resourceManager.createLLMClient();
     
     // Initialize DecentPlanner
     decentPlanner = new DecentPlanner(llmClient, toolRegistry, {
@@ -178,11 +182,15 @@ wss.on('connection', (ws) => {
         const remoteToolActor = channel.makeRemote(message.clientActors.tools);
         const remoteDbActor = channel.makeRemote(message.clientActors.database);
         const remoteSearchActor = channel.makeRemote(message.clientActors.search);
+        const remotePlanningActor = channel.makeRemote(message.clientActors.planning);
+        const remoteExecutionActor = channel.makeRemote(message.clientActors.execution);
         
         // Give remote actors to server actors
         toolActor.setRemoteActor(remoteToolActor);
         dbActor.setRemoteActor(remoteDbActor);
         searchActor.setRemoteActor(remoteSearchActor);
+        planningActor.setRemoteActor(remotePlanningActor);
+        executionActor.setRemoteActor(remoteExecutionActor);
         
         console.log('Actor handshake completed');
       }

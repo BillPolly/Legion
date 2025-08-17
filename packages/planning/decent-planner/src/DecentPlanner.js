@@ -42,7 +42,7 @@ export class DecentPlanner {
     
     // Initialize formal planner (from @legion/planner package)
     if (this.options.enableFormalPlanning) {
-      this.formalPlanner = new Planner();
+      this.formalPlanner = new Planner({ llmClient });
       this.btValidator = new BTValidator();
     }
   }

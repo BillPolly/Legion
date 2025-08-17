@@ -7,6 +7,8 @@ import { ActorSpace, Channel } from '/legion/shared/actors/src/index.js';
 import { ClientToolRegistryActor } from './ClientToolRegistryActor.js';
 import { ClientDatabaseActor } from './ClientDatabaseActor.js';
 import { ClientSemanticSearchActor } from './ClientSemanticSearchActor.js';
+import { ClientPlanningActor } from './ClientPlanningActor.js';
+import { ClientPlanExecutionActor } from './ClientPlanExecutionActor.js';
 
 export class WebSocketActorManager {
   constructor(toolRegistryBrowser) {
@@ -43,18 +45,24 @@ export class WebSocketActorManager {
       this.actors.tools = new ClientToolRegistryActor(this.toolRegistryBrowser);
       this.actors.database = new ClientDatabaseActor(this.toolRegistryBrowser);
       this.actors.search = new ClientSemanticSearchActor(this.toolRegistryBrowser);
+      this.actors.planning = new ClientPlanningActor(this.toolRegistryBrowser);
+      this.actors.execution = new ClientPlanExecutionActor(this.toolRegistryBrowser);
       
       // Generate unique GUIDs for client actors
       const clientActorGuids = {
         tools: `${this.actorSpace.spaceId}-tools`,
         database: `${this.actorSpace.spaceId}-database`,
-        search: `${this.actorSpace.spaceId}-search`
+        search: `${this.actorSpace.spaceId}-search`,
+        planning: `${this.actorSpace.spaceId}-planning`,
+        execution: `${this.actorSpace.spaceId}-execution`
       };
       
       // Register actors in ActorSpace
       this.actorSpace.register(this.actors.tools, clientActorGuids.tools);
       this.actorSpace.register(this.actors.database, clientActorGuids.database);
       this.actorSpace.register(this.actors.search, clientActorGuids.search);
+      this.actorSpace.register(this.actors.planning, clientActorGuids.planning);
+      this.actorSpace.register(this.actors.execution, clientActorGuids.execution);
       
       // Wait for WebSocket to open
       await new Promise((resolve, reject) => {
@@ -155,11 +163,15 @@ export class WebSocketActorManager {
       this.remoteActors.tools = this.channel.makeRemote(serverActors.tools);
       this.remoteActors.database = this.channel.makeRemote(serverActors.database);
       this.remoteActors.search = this.channel.makeRemote(serverActors.search);
+      this.remoteActors.planning = this.channel.makeRemote(serverActors.planning);
+      this.remoteActors.execution = this.channel.makeRemote(serverActors.execution);
       
       // Connect client actors to their remote counterparts
       this.actors.tools.setRemoteActor(this.remoteActors.tools);
       this.actors.database.setRemoteActor(this.remoteActors.database);
       this.actors.search.setRemoteActor(this.remoteActors.search);
+      this.actors.planning.setRemoteActor(this.remoteActors.planning);
+      this.actors.execution.setRemoteActor(this.remoteActors.execution);
       
       // Mark as connected
       this.isConnected = true;
@@ -192,6 +204,14 @@ export class WebSocketActorManager {
 
   getSearchActor() {
     return this.actors.search;
+  }
+
+  getPlanningActor() {
+    return this.actors.planning;
+  }
+
+  getExecutionActor() {
+    return this.actors.execution;
   }
 
   isActorSystemConnected() {

@@ -40,7 +40,7 @@ export class ClientPlanningActor {
     this.applicationContext.updateState?.('currentGoal', goal);
 
     // Send plan creation request
-    await this.remoteActor.send({
+    await this.remoteActor.receive({
       type: 'plan:create',
       data: planRequest
     });
@@ -56,7 +56,7 @@ export class ClientPlanningActor {
       throw new Error('Planning actor not connected');
     }
 
-    await this.remoteActor.send({
+    await this.remoteActor.receive({
       type: 'plan:save',
       data: plan
     });
@@ -70,7 +70,7 @@ export class ClientPlanningActor {
       throw new Error('Planning actor not connected');
     }
 
-    await this.remoteActor.send({
+    await this.remoteActor.receive({
       type: 'plan:load',
       data: { planId }
     });
@@ -84,7 +84,7 @@ export class ClientPlanningActor {
       throw new Error('Planning actor not connected');
     }
 
-    await this.remoteActor.send({
+    await this.remoteActor.receive({
       type: 'plan:list',
       data: { filter }
     });
@@ -98,7 +98,7 @@ export class ClientPlanningActor {
       throw new Error('Planning actor not connected');
     }
 
-    await this.remoteActor.send({
+    await this.remoteActor.receive({
       type: 'plan:validate',
       data: { hierarchy }
     });
@@ -112,7 +112,7 @@ export class ClientPlanningActor {
       throw new Error('Planning actor not connected');
     }
 
-    await this.remoteActor.send({
+    await this.remoteActor.receive({
       type: 'plan:update',
       data: { planId, updates }
     });
@@ -126,7 +126,7 @@ export class ClientPlanningActor {
       throw new Error('Planning actor not connected');
     }
 
-    await this.remoteActor.send({
+    await this.remoteActor.receive({
       type: 'plan:delete',
       data: { planId }
     });
