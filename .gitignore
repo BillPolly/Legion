@@ -102,3 +102,7 @@ tmp/
 temp/
 /temp/
 **/temp/
+# Model files
+*.gguf
+**/models/
+models/
