@@ -23,6 +23,11 @@ packages/aiur/__tests__/integration/fixtures/test-dir/
 
 # Environment variables
 .env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
 
 # Debug files
 agentOut.txt
