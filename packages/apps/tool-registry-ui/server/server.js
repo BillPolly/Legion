@@ -10,12 +10,20 @@ import { fileURLToPath } from 'url';
 import { ActorSpace } from '@legion/actors';
 import { ToolRegistry } from '@legion/tools-registry';
 import { SemanticSearchProvider } from '@legion/semantic-search';
+import { DecentPlanner } from '@legion/decent-planner';
+import { BTExecutor } from '@legion/bt-executor';
+import { LLMClient } from '@legion/llm';
+import { ResourceManager } from '@legion/resource-manager';
+import { MongoDBProvider } from '@legion/mongodb-provider';
 import { isContainerRunning, startDocker, startQdrantContainer, waitForQdrant, QDRANT_CONTAINER_NAME } from '../../../../scripts/docker/start-qdrant.js';
+import { initializeSchemas } from './schemas/MongoDBSchemas.js';
 
 // Server actors
 import { ServerToolRegistryActor } from './actors/ServerToolRegistryActor.js';
 import { ServerDatabaseActor } from './actors/ServerDatabaseActor.js';
 import { ServerSemanticSearchActor } from './actors/ServerSemanticSearchActor.js';
+import { ServerPlanningActor } from './actors/ServerPlanningActor.js';
+import { ServerPlanExecutionActor } from './actors/ServerPlanExecutionActor.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -64,14 +72,48 @@ const wss = new WebSocketServer({
 // Initialize services
 let toolRegistry = null;
 let semanticProvider = null;
+let resourceManager = null;
+let mongoProvider = null;
+let decentPlanner = null;
+let btExecutor = null;
+let llmClient = null;
+let schemas = null;
 
 async function initializeServices() {
   try {
     console.log('Initializing services...');
     
+    // Initialize ResourceManager
+    resourceManager = new ResourceManager();
+    await resourceManager.initialize();
+    
+    // Initialize MongoDB provider
+    mongoProvider = new MongoDBProvider(resourceManager);
+    await mongoProvider.connect();
+    
+    // Initialize MongoDB schemas
+    const db = mongoProvider.getDatabase();
+    schemas = await initializeSchemas(db);
+    console.log('✅ MongoDB schemas initialized');
+    
     // Initialize ToolRegistry - it will create its own ResourceManager and MongoDB provider
     toolRegistry = new ToolRegistry();
     await toolRegistry.initialize();
+    
+    // Initialize LLM Client for planning
+    llmClient = new LLMClient(resourceManager);
+    
+    // Initialize DecentPlanner
+    decentPlanner = new DecentPlanner(llmClient, toolRegistry, {
+      maxDepth: 5,
+      enableFormalPlanning: true,
+      confidenceThreshold: 0.7
+    });
+    console.log('✅ DecentPlanner initialized');
+    
+    // Initialize BT Executor
+    btExecutor = new BTExecutor(toolRegistry);
+    console.log('✅ BT Executor initialized');
     
     // Initialize SemanticSearchProvider if needed separately
     // The ToolRegistry already has semantic search capabilities
@@ -98,17 +140,24 @@ wss.on('connection', (ws) => {
   const dbActor = new ServerDatabaseActor(toolRegistry, toolRegistry.provider);
   // Pass toolRegistry's semantic discovery for search
   const searchActor = new ServerSemanticSearchActor(toolRegistry.semanticDiscovery, toolRegistry.provider);
+  // Create planning actors
+  const planningActor = new ServerPlanningActor(decentPlanner, mongoProvider);
+  const executionActor = new ServerPlanExecutionActor(btExecutor, toolRegistry, mongoProvider);
   
   // Register actors with unique GUIDs
   const actorGuids = {
     tools: `${actorSpace.spaceId}-tools`,
     database: `${actorSpace.spaceId}-database`,
-    search: `${actorSpace.spaceId}-search`
+    search: `${actorSpace.spaceId}-search`,
+    planning: `${actorSpace.spaceId}-planning`,
+    execution: `${actorSpace.spaceId}-execution`
   };
   
   actorSpace.register(toolActor, actorGuids.tools);
   actorSpace.register(dbActor, actorGuids.database);
   actorSpace.register(searchActor, actorGuids.search);
+  actorSpace.register(planningActor, actorGuids.planning);
+  actorSpace.register(executionActor, actorGuids.execution);
   
   // Handle handshake
   ws.on('message', (data) => {
