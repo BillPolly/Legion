@@ -1,0 +1,122 @@
+/**
+ * Styles for Counter Application
+ */
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  max-width: 600px;
+  margin: 50px auto;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+.container {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+h1 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 40px;
+  font-size: 2.5em;
+}
+
+.counter-display {
+  text-align: center;
+  margin: 40px 0;
+}
+
+#count {
+  font-size: 4em;
+  font-weight: bold;
+  color: #667eea;
+  display: block;
+  margin: 20px 0;
+}
+
+.buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 30px 0;
+}
+
+button {
+  padding: 12px 30px;
+  font-size: 1.1em;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+#increment {
+  background: #48bb78;
+  color: white;
+}
+
+#increment:hover {
+  background: #38a169;
+}
+
+#decrement {
+  background: #f56565;
+  color: white;
+}
+
+#decrement:hover:not(:disabled) {
+  background: #e53e3e;
+}
+
+#reset {
+  background: #667eea;
+  color: white;
+}
+
+#reset:hover {
+  background: #5a67d8;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.status {
+  text-align: center;
+  margin-top: 30px;
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 0.95em;
+}
+
+.status.connected {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.status.disconnected {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+.info {
+  text-align: center;
+  margin-top: 20px;
+  color: #666;
+  font-size: 0.9em;
+}
