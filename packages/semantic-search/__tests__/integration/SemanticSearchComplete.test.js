@@ -1,184 +1,183 @@
 /**
- * Complete Semantic Search Integration Test with ONNX
- * Tests the full semantic search workflow with real ONNX embeddings
+ * Complete Semantic Search Integration Test with Nomic
+ * Tests the full semantic search workflow with real Nomic embeddings
  */
 
 import { jest } from '@jest/globals';
 import { SemanticSearchProvider } from '../../src/SemanticSearchProvider.js';
 import { LocalEmbeddingService } from '../../src/services/LocalEmbeddingService.js';
+import { ResourceManager } from '@legion/resource-manager';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-describe('Complete Semantic Search with ONNX', () => {
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+describe('Complete Semantic Search with Nomic', () => {
   let semanticProvider;
-  let isONNXAvailable = false;
+  let resourceManager;
+  let isNomicAvailable = false;
 
   beforeAll(async () => {
-    // Test if ONNX is available
+    // Initialize ResourceManager
+    resourceManager = new ResourceManager();
+    await resourceManager.initialize();
+    
+    // Test if Nomic model is available
     try {
-      const ort = await import('onnxruntime-node');
-      isONNXAvailable = true;
-      console.log('✅ ONNX Runtime available for semantic search tests');
+      const modelDir = path.join(__dirname, '../../../nomic/models');
+      const modelFiles = fs.existsSync(modelDir) ? 
+        fs.readdirSync(modelDir).filter(f => f.endsWith('.gguf')) : [];
+      
+      if (modelFiles.length > 0) {
+        isNomicAvailable = true;
+        console.log('✅ Nomic model available for semantic search tests');
+      } else {
+        console.log('⚠️ Nomic model not available, testing error handling');
+      }
     } catch (error) {
-      console.log('⚠️ ONNX Runtime not available, testing error handling');
+      console.log('⚠️ Error checking Nomic availability:', error.message);
     }
   });
 
   afterAll(async () => {
     if (semanticProvider) {
-      // Cleanup if needed
+      await semanticProvider.disconnect();
     }
   });
 
-  describe('SemanticSearchProvider with ONNX', () => {
-    test('should create SemanticSearchProvider', async () => {
-      // Mock ResourceManager for testing
-      const mockResourceManager = {
-        get: (key) => {
-          const config = {
-            'env.USE_LOCAL_EMBEDDINGS': 'true',
-            'env.LOCAL_EMBEDDING_MODEL_PATH': '/tmp/fake-model.onnx',
-            'env.ANTHROPIC_API_KEY': undefined
-          };
-          return config[key];
-        }
-      };
-
-      if (isONNXAvailable) {
+  describe('SemanticSearchProvider with Nomic', () => {
+    test('should create SemanticSearchProvider with Nomic', async () => {
+      if (isNomicAvailable) {
         try {
-          semanticProvider = await SemanticSearchProvider.create(mockResourceManager);
+          semanticProvider = await SemanticSearchProvider.create(resourceManager, {
+            collectionName: 'test-semantic-complete'
+          });
           
-          // If ONNX is available, this should fail due to fake model path
-          fail('Should have failed with fake model path');
+          expect(semanticProvider).toBeDefined();
+          expect(semanticProvider.useLocalEmbeddings).toBe(true);
+          expect(semanticProvider.embeddingDimensions).toBe(768);
           
+          const metadata = semanticProvider.getMetadata();
+          expect(metadata.embeddingService).toBe('local-nomic');
+          expect(metadata.embeddingDimensions).toBe(768);
+          
+          console.log('✅ SemanticSearchProvider created with Nomic embeddings');
         } catch (error) {
-          // Expected to fail with fake model path
-          expect(error.message).toMatch(/(model|file|path|initialize)/i);
-          console.log('✅ Correctly failed with fake model path');
+          console.error('Failed to create SemanticSearchProvider:', error.message);
+          throw error;
         }
       } else {
-        try {
-          semanticProvider = await SemanticSearchProvider.create(mockResourceManager);
-          fail('Should have failed without ONNX runtime');
-        } catch (error) {
-          expect(error.message).toMatch(/onnxruntime-node/i);
-          console.log('✅ Correctly failed without ONNX runtime');
-        }
+        console.log('Skipping: Nomic model not available');
       }
     });
 
-    test('should handle missing API keys and ONNX gracefully', async () => {
-      const mockResourceManager = {
-        initialized: true,
-        get: (key) => {
-          const config = {
-            'env.USE_LOCAL_EMBEDDINGS': 'false',
-            'env.ANTHROPIC_API_KEY': undefined,
-            'env.OPENAI_API_KEY': undefined
-          };
-          return config[key];
-        }
-      };
-
-      await expect(SemanticSearchProvider.create(mockResourceManager))
-        .rejects.toThrow(/Either OPENAI_API_KEY or LOCAL_EMBEDDING_MODEL_PATH/);
+    test('should validate ResourceManager initialization', async () => {
+      const uninitializedRM = new ResourceManager();
+      // Don't initialize it - set initialized flag to false explicitly
+      uninitializedRM.initialized = false;
+      
+      try {
+        await SemanticSearchProvider.create(uninitializedRM);
+        fail('Should have thrown an error for uninitialized ResourceManager');
+      } catch (error) {
+        expect(error.message).toMatch(/initialized ResourceManager/);
+        console.log('✅ Correctly validates ResourceManager initialization');
+      }
     });
   });
 
-  describe('LocalEmbeddingService ONNX Integration', () => {
+  describe('LocalEmbeddingService Nomic Integration', () => {
     test('should create LocalEmbeddingService correctly', () => {
-      const service = new LocalEmbeddingService({
-        modelPath: '/fake/model.onnx',
-        dimensions: 384,
-        batchSize: 10
-      });
+      const service = new LocalEmbeddingService();
 
       expect(service).toBeDefined();
-      expect(service.config.dimensions).toBe(384);
-      expect(service.config.batchSize).toBe(10);
+      expect(service.dimensions).toBe(768);
+      expect(service.initialized).toBe(false);
     });
 
-    test('should fail initialization with fake model path', async () => {
-      const service = new LocalEmbeddingService({
-        modelPath: '/definitely/does/not/exist.onnx'
-      });
-
-      await expect(service.initialize()).rejects.toThrow();
-    });
-
-    test('should provide correct model metadata', () => {
-      const service = new LocalEmbeddingService({
-        dimensions: 768
-      });
-
-      const info = service.getModelInfo();
-      
-      expect(info.type).toBe('local');
-      expect(info.dimensions).toBe(768);
-      expect(info.name).toContain('Local');
-    });
-  });
-
-  describe('Mock Embedding Generation', () => {
-    test('should simulate embedding generation workflow', async () => {
-      if (!isONNXAvailable) {
-        console.log('Skipping: ONNX runtime not available');
+    test('should initialize with Nomic model if available', async () => {
+      if (!isNomicAvailable) {
+        console.log('Skipping: Nomic model not available');
         return;
       }
 
-      console.log('🧪 Simulating embedding generation workflow...');
+      const service = new LocalEmbeddingService();
+      await service.initialize();
+      
+      expect(service.initialized).toBe(true);
+      
+      const info = service.getModelInfo();
+      expect(info.name).toContain('Nomic');
+      expect(info.dimensions).toBe(768);
+      expect(info.provider).toContain('local');
+    });
 
-      // Simulate what would happen with working ONNX model
-      const mockTexts = [
+    test('should provide correct model metadata', () => {
+      const service = new LocalEmbeddingService();
+      const info = service.getModelInfo();
+      
+      expect(info.type).toBe('transformer');
+      expect(info.dimensions).toBe(768);
+      expect(info.name).toContain('Nomic');
+      expect(info.model).toBe('nomic-embed-text-v1.5');
+    });
+  });
+
+  describe('Real Nomic Embedding Generation', () => {
+    test('should generate real embeddings with Nomic model', async () => {
+      if (!isNomicAvailable) {
+        console.log('Skipping: Nomic model not available');
+        return;
+      }
+
+      console.log('🧪 Testing real Nomic embedding generation...');
+
+      const service = new LocalEmbeddingService();
+      await service.initialize();
+
+      const testTexts = [
         'list directory contents',
-        'parse json data',
+        'parse json data', 
         'calculate mathematical operations',
         'read file from disk'
       ];
 
-      const mockEmbeddings = mockTexts.map(text => {
-        // Generate mock normalized embedding
-        const embedding = new Float32Array(384);
-        let norm = 0;
+      const embeddings = await service.embedBatch(testTexts);
+      
+      expect(embeddings).toHaveLength(testTexts.length);
+      
+      embeddings.forEach((embedding, index) => {
+        expect(embedding).toHaveLength(768);
+        expect(embedding.every(v => !isNaN(v))).toBe(true);
         
-        // Use text content to influence embedding values
-        const textHash = text.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        // Check if it's not a zero vector
+        const magnitude = Math.sqrt(embedding.reduce((sum, v) => sum + v * v, 0));
+        expect(magnitude).toBeGreaterThan(0.1);
         
-        for (let i = 0; i < 384; i++) {
-          embedding[i] = (Math.sin(i + textHash) + Math.cos(i * textHash)) * 0.1;
-          norm += embedding[i] * embedding[i];
-        }
-        
-        // Normalize
-        norm = Math.sqrt(norm);
-        for (let i = 0; i < 384; i++) {
-          embedding[i] /= norm;
-        }
-        
-        return embedding;
-      });
-
-      // Test embeddings are properly normalized
-      mockEmbeddings.forEach((embedding, index) => {
-        let norm = 0;
-        for (let i = 0; i < 384; i++) {
-          norm += embedding[i] * embedding[i];
-        }
-        const magnitude = Math.sqrt(norm);
-        
-        expect(Math.abs(magnitude - 1.0)).toBeLessThan(0.001);
-        console.log(`✅ Embedding ${index + 1} properly normalized (magnitude: ${magnitude.toFixed(6)})`);
+        console.log(`✅ Embedding ${index + 1}: ${testTexts[index]} (magnitude: ${magnitude.toFixed(6)})`);
       });
 
       // Test cosine similarity calculation
-      const similarity = cosineSimilarity(mockEmbeddings[0], mockEmbeddings[1]);
+      const similarity = await service.similarity(embeddings[0], embeddings[1]);
       expect(similarity).toBeGreaterThanOrEqual(-1);
       expect(similarity).toBeLessThanOrEqual(1);
-      console.log(`✅ Cosine similarity calculated: ${similarity.toFixed(4)}`);
+      console.log(`✅ Cosine similarity: ${similarity.toFixed(4)}`);
 
-      console.log('🎉 Mock embedding workflow test passed!');
+      await service.cleanup();
+      console.log('🎉 Real Nomic embedding workflow test passed!');
     });
 
-    test('should demonstrate semantic similarity ranking', async () => {
-      // Mock tool descriptions
+    test('should demonstrate real semantic similarity ranking', async () => {
+      if (!isNomicAvailable) {
+        console.log('Skipping: Nomic model not available');
+        return;
+      }
+
+      const service = new LocalEmbeddingService();
+      await service.initialize();
+
+      // Real tool descriptions
       const toolDescriptions = [
         { name: 'directory_list', description: 'List contents of a directory' },
         { name: 'file_read', description: 'Read the contents of a file from disk' },
@@ -188,22 +187,21 @@ describe('Complete Semantic Search with ONNX', () => {
 
       const queryText = 'show files in folder';
 
-      // Generate mock embeddings based on semantic content
-      const toolEmbeddings = toolDescriptions.map(tool => 
-        generateMockEmbedding(tool.description)
-      );
-      const queryEmbedding = generateMockEmbedding(queryText);
+      // Generate real embeddings using Nomic
+      const descriptions = toolDescriptions.map(tool => tool.description);
+      const toolEmbeddings = await service.embedBatch(descriptions);
+      const queryEmbedding = await service.embed(queryText);
 
-      // Calculate similarities
-      const similarities = toolEmbeddings.map((toolEmb, index) => ({
+      // Calculate similarities using real embeddings
+      const similarities = await Promise.all(toolEmbeddings.map(async (toolEmb, index) => ({
         tool: toolDescriptions[index],
-        similarity: cosineSimilarity(queryEmbedding, toolEmb)
-      }));
+        similarity: await service.similarity(queryEmbedding, toolEmb)
+      })));
 
       // Sort by similarity
       similarities.sort((a, b) => b.similarity - a.similarity);
 
-      console.log('🧪 Semantic similarity ranking:');
+      console.log('🧪 Real semantic similarity ranking:');
       similarities.forEach((item, index) => {
         console.log(`${index + 1}. ${item.tool.name}: ${item.similarity.toFixed(4)}`);
       });
@@ -212,57 +210,12 @@ describe('Complete Semantic Search with ONNX', () => {
       expect(similarities).toHaveLength(4);
       expect(similarities.every(item => typeof item.similarity === 'number')).toBe(true);
       expect(similarities.every(item => item.similarity >= -1 && item.similarity <= 1)).toBe(true);
-      console.log('✅ Semantic ranking working correctly');
+      
+      // Directory listing should be most similar to "show files in folder"
+      expect(similarities[0].tool.name).toBe('directory_list');
+      
+      await service.cleanup();
+      console.log('✅ Real semantic ranking working correctly');
     });
   });
-
-  // Helper function to generate mock embeddings
-  function generateMockEmbedding(text) {
-    const embedding = new Float32Array(384);
-    let norm = 0;
-    
-    // Use text content to create deterministic but varied embeddings
-    const textHash = text.toLowerCase().split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    
-    // Create embedding with semantic-like properties
-    const keywords = ['file', 'directory', 'json', 'calculate', 'read', 'list', 'parse', 'math'];
-    let keywordBoost = 0;
-    
-    keywords.forEach((keyword, keyIndex) => {
-      if (text.toLowerCase().includes(keyword)) {
-        keywordBoost += (keyIndex + 1) * 0.1;
-      }
-    });
-    
-    for (let i = 0; i < 384; i++) {
-      // Create varied embedding based on text content
-      embedding[i] = Math.sin(i + textHash + keywordBoost) * 0.1 + 
-                    Math.cos(i * textHash * 0.1) * 0.05 +
-                    keywordBoost * 0.01;
-      norm += embedding[i] * embedding[i];
-    }
-    
-    // Normalize
-    norm = Math.sqrt(norm);
-    for (let i = 0; i < 384; i++) {
-      embedding[i] /= norm;
-    }
-    
-    return embedding;
-  }
-
-  // Helper function to calculate cosine similarity
-  function cosineSimilarity(a, b) {
-    let dotProduct = 0;
-    let normA = 0;
-    let normB = 0;
-    
-    for (let i = 0; i < a.length; i++) {
-      dotProduct += a[i] * b[i];
-      normA += a[i] * a[i];
-      normB += b[i] * b[i];
-    }
-    
-    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-  }
 });
