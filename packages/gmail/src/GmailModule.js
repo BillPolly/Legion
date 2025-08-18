@@ -5,8 +5,8 @@ import { z } from 'zod';
 import { ResourceManager } from '@legion/resource-manager';
 
 const GmailConfigSchema = z.object({
-  user: z.string().email(),
-  password: z.string(),
+  user: z.string().email().optional(),
+  password: z.string().optional(),
   smtp: z.object({
     host: z.string().default('smtp.gmail.com'),
     port: z.number().default(587),

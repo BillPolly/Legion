@@ -4,11 +4,3 @@ node_modules/
 *.log
 .DS_Store
 coverage/
-dist/
-build/
-*.js
-*.js.map
-*.d.ts
-*.d.ts.map
-*.tsbuildinfo
-!jest.config.js
