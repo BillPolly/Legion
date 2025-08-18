@@ -105,7 +105,133 @@ export class LoadingManager {
   }
 
   /**
+   * Clear for reload - preserves discovered modules but resets their loading status
+   * @param {Object} options - Clear options
+   * @param {boolean} options.clearVectors - Whether to clear vector database (default: true)
+   * @param {boolean} options.clearModules - Whether to completely clear modules (default: false)
+   */
+  async clearForReload(options = {}) {
+    await this.#ensureInitialized();
+
+    const { 
+      clearVectors = true,
+      clearModules = false 
+    } = options;
+
+    if (this.verbose) {
+      console.log('🧹 Clearing for reload...');
+      console.log(`   Preserve modules: ${!clearModules}`);
+      console.log(`   Clear vectors: ${clearVectors}`);
+    }
+
+    let totalCleared = 0;
+
+    if (clearModules) {
+      // Complete clear of modules
+      const result = await this.mongoProvider.databaseService.mongoProvider.db.collection('modules').deleteMany({});
+      totalCleared += result.deletedCount;
+      if (this.verbose) {
+        console.log(`  ✅ Cleared modules: ${result.deletedCount} records deleted`);
+      }
+    } else {
+      // Reset module statuses but preserve discovery
+      const result = await this.mongoProvider.databaseService.mongoProvider.db.collection('modules').updateMany(
+        {},
+        {
+          $set: {
+            loadingStatus: 'pending',
+            indexingStatus: 'pending',
+            lastLoadedAt: null,
+            lastIndexedAt: null,
+            loadingError: null,
+            indexingError: null,
+            toolCount: 0,
+            perspectiveCount: 0
+          }
+        }
+      );
+      if (this.verbose) {
+        console.log(`  ✅ Reset ${result.modifiedCount} module statuses`);
+      }
+    }
+
+    // Always clear tools and perspectives
+    const toolResult = await this.mongoProvider.databaseService.mongoProvider.db.collection('tools').deleteMany({});
+    totalCleared += toolResult.deletedCount;
+    if (this.verbose) {
+      console.log(`  ✅ Cleared tools: ${toolResult.deletedCount} records deleted`);
+    }
+
+    const perspectiveResult = await this.mongoProvider.databaseService.mongoProvider.db.collection('tool_perspectives').deleteMany({});
+    totalCleared += perspectiveResult.deletedCount;
+    if (this.verbose) {
+      console.log(`  ✅ Cleared perspectives: ${perspectiveResult.deletedCount} records deleted`);
+    }
+
+    // Clear vectors if requested
+    if (clearVectors && this.semanticSearchProvider) {
+      await this.#ensureSemanticSearchInitialized();
+      const qdrantCollections = ['legion_tools'];
+      
+      for (const collectionName of qdrantCollections) {
+        try {
+          const countBefore = await this.semanticSearchProvider.count(collectionName);
+          if (countBefore > 0) {
+            await this.semanticSearchProvider.vectorStore.deleteCollection(collectionName);
+            if (this.verbose) {
+              console.log(`  ✅ Deleted Qdrant collection '${collectionName}': ${countBefore} vectors removed`);
+            }
+            totalCleared += countBefore;
+          }
+        } catch (error) {
+          if (!error.message.includes('Not found')) {
+            if (this.verbose) {
+              console.log(`  ⚠️ Could not clear '${collectionName}': ${error.message}`);
+            }
+          }
+        }
+
+        // Recreate collection with correct dimensions for Nomic embeddings (768D)
+        try {
+          await this.semanticSearchProvider.vectorStore.createCollection(collectionName, {
+            dimension: 768,
+            distance: 'cosine'
+          });
+          if (this.verbose) {
+            console.log(`  ✅ Recreated '${collectionName}' with 768 dimensions (Nomic embeddings)`);
+          }
+        } catch (error) {
+          if (this.verbose) {
+            console.log(`  ⚠️ Could not recreate '${collectionName}': ${error.message}`);
+          }
+        }
+      }
+    }
+
+    if (this.verbose) {
+      console.log(`✅ Clear for reload complete: ${totalCleared} records/vectors cleared`);
+    }
+
+    // Reset pipeline state
+    this.pipelineState = {
+      cleared: true,
+      modulesLoaded: false,
+      perspectivesGenerated: false,
+      vectorsIndexed: false,
+      lastModuleFilter: null,
+      moduleCount: 0,
+      toolCount: 0,
+      perspectiveCount: 0,
+      vectorCount: 0,
+      errors: []
+    };
+
+    return { totalCleared };
+  }
+
+  /**
    * Clear all databases (MongoDB collections + Qdrant vectors)
+   * @deprecated Use clearForReload() instead to preserve module discovery
    */
   async clearAll() {
     await this.#ensureInitialized();
@@ -378,6 +504,9 @@ export class LoadingManager {
     let perspectivesGenerated = 0;
     let toolsProcessed = 0;
     let toolsFailed = 0;
+    
+    // Track perspectives per module for status updates
+    const modulesPerspectives = {};
 
     for (const tool of tools) {
       try {
@@ -391,6 +520,12 @@ export class LoadingManager {
           perspectivesGenerated += result.perspectivesIndexed || 0;
           toolsProcessed++;
           
+          // Track perspectives per module
+          const moduleName = tool.moduleName || tool.module;
+          if (moduleName) {
+            modulesPerspectives[moduleName] = (modulesPerspectives[moduleName] || 0) + result.perspectivesIndexed;
+          }
+          
           if (this.verbose) {
             console.log(`  ✅ Generated ${result.perspectivesIndexed} perspectives for: ${tool.name}`);
           }
@@ -402,6 +537,22 @@ export class LoadingManager {
           console.log(`  ❌ Failed to generate perspectives for ${tool.name}: ${error.message}`);
         }
       }
+    }
+    
+    // Update module indexing status
+    for (const [moduleName, perspectiveCount] of Object.entries(modulesPerspectives)) {
+      await this.mongoProvider.databaseService.mongoProvider.update(
+        'modules',
+        { name: moduleName },
+        {
+          $set: {
+            indexingStatus: 'indexed',
+            lastIndexedAt: new Date(),
+            perspectiveCount: perspectiveCount,
+            indexingError: null
+          }
+        }
+      );
     }
 
     if (this.verbose) {

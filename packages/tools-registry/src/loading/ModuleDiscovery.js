@@ -298,20 +298,37 @@ export class ModuleDiscovery {
     
     for (const moduleInfo of modules) {
       try {
-        // Check if module already exists
+        // Check if module already exists - must match ALL fields to be considered duplicate
         const existing = await this.provider.databaseService.mongoProvider.findOne('modules', {
-          $or: [
-            { name: moduleInfo.name },
-            { className: moduleInfo.className },
-            { filePath: moduleInfo.filePath }
-          ]
+          name: moduleInfo.name,
+          className: moduleInfo.className,
+          filePath: moduleInfo.filePath
         });
         
         if (existing) {
-          // Update existing module
+          // Update existing module, preserving loading/indexing status
           const updates = {
             ...moduleInfo,
             updatedAt: new Date(),
+            
+            // Preserve existing discovery status
+            discoveryStatus: 'discovered',
+            discoveredAt: existing.discoveredAt || new Date(),
+            
+            // Preserve existing loading/indexing status
+            loadingStatus: existing.loadingStatus || 'pending',
+            lastLoadedAt: existing.lastLoadedAt,
+            loadingError: existing.loadingError,
+            
+            indexingStatus: existing.indexingStatus || 'pending',
+            lastIndexedAt: existing.lastIndexedAt,
+            indexingError: existing.indexingError,
+            
+            // Preserve counts
+            toolCount: existing.toolCount || 0,
+            perspectiveCount: existing.perspectiveCount || 0,
+            
+            // Preserve validation status
             validationStatus: existing.validationStatus || 'pending',
             loadable: existing.loadable !== false
           };
@@ -328,17 +345,38 @@ export class ModuleDiscovery {
             console.log(`   📝 Updated: ${moduleInfo.name}`);
           }
         } else {
-          // Create new module entry
+          // Create new module entry with status tracking
           const newModule = {
             ...moduleInfo,
+            // Discovery status
+            discoveryStatus: 'discovered',
+            discoveredAt: new Date(),
+            
+            // Loading status
+            loadingStatus: 'pending',
+            lastLoadedAt: null,
+            loadingError: null,
+            
+            // Indexing status
+            indexingStatus: 'pending',
+            lastIndexedAt: null,
+            indexingError: null,
+            
+            // Validation status (legacy, kept for compatibility)
             validationStatus: 'pending',
             validationErrors: [],
             validationDate: null,
+            
+            // Counts
+            toolCount: 0,
+            perspectiveCount: 0,
+            
+            // Flags
             loadable: true,
             executionStatus: 'untested',
             lastTestedDate: null,
-            toolCount: 0,
-            status: 'discovered',
+            
+            // Timestamps
             createdAt: new Date(),
             updatedAt: new Date()
           };

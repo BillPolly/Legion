@@ -78,17 +78,44 @@ export class ModuleLoader {
         
         const module = await this.loadModule(moduleConfig);
         if (module) {
+          // Update loading status to success
+          const tools = module.getTools ? module.getTools() : [];
+          await this.databaseProvider.databaseService.mongoProvider.update(
+            'modules',
+            { _id: moduleConfig._id },
+            {
+              $set: {
+                loadingStatus: 'loaded',
+                lastLoadedAt: new Date(),
+                loadingError: null,
+                toolCount: tools.length
+              }
+            }
+          );
+          
           loadedModules.push({
             config: moduleConfig,
             instance: module
           });
           
           if (this.verbose) {
-            const tools = module.getTools ? module.getTools() : [];
             console.log(`    ✅ Loaded with ${tools.length} tools`);
           }
         }
       } catch (error) {
+        // Update loading status to failed
+        await this.databaseProvider.databaseService.mongoProvider.update(
+          'modules',
+          { _id: moduleConfig._id },
+          {
+            $set: {
+              loadingStatus: 'failed',
+              loadingError: error.message,
+              lastLoadedAt: new Date()
+            }
+          }
+        );
+        
         failedModules.push({
           config: moduleConfig,
           error: error.message
