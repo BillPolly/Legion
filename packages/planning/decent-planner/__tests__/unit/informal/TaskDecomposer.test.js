@@ -16,14 +16,39 @@ describe('TaskDecomposer', () => {
     // Mock LLM client for unit tests
     mockLLMClient = {
       complete: async (prompt) => {
-        // Extract task from prompt
-        const taskMatch = prompt.match(/Task to decompose: ([^\n]+)/);
-        const task = taskMatch ? taskMatch[1].toLowerCase() : '';
+        // Extract task from markdown template
+        let task = '';
+        let originalTask = '';
+        
+        // Look for the task in the markdown format: "## Task to Decompose\n{taskDescription}"
+        const lines = prompt.split('\n');
+        let foundTaskSection = false;
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i] === '## Task to Decompose') {
+            foundTaskSection = true;
+          } else if (foundTaskSection && lines[i].trim() && !lines[i].startsWith('##') && !lines[i].startsWith('{{')) {
+            originalTask = lines[i];
+            task = lines[i].toLowerCase();
+            break;
+          }
+        }
+        
+        // Fallback to searching for other patterns
+        if (!task) {
+          const taskMatch = prompt.match(/Task to decompose: ([^\n]+)/);
+          if (taskMatch) {
+            originalTask = taskMatch[1];
+            task = taskMatch[1].toLowerCase();
+          } else {
+            originalTask = 'Unknown';
+            task = 'unknown';
+          }
+        }
         
         // Return different decompositions based on task
         if (task.includes('rest api')) {
           return JSON.stringify({
-            task: taskMatch[1],
+            task: originalTask,
             subtasks: [
               {
                 id: 'subtask-1',
@@ -52,7 +77,7 @@ describe('TaskDecomposer', () => {
         
         if (task.includes('authentication')) {
           return JSON.stringify({
-            task: taskMatch[1],
+            task: originalTask,
             subtasks: [
               {
                 id: 'auth-1',
@@ -74,7 +99,7 @@ describe('TaskDecomposer', () => {
         
         // Default simple decomposition
         return JSON.stringify({
-          task: taskMatch ? taskMatch[1] : 'Unknown',
+          task: originalTask,
           subtasks: [
             {
               id: 'default-1',

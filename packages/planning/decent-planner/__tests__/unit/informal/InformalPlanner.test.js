@@ -15,17 +15,44 @@ describe('InformalPlanner', () => {
     // Mock LLM client
     mockLLMClient = {
       complete: jest.fn(async (prompt) => {
-        // Simple mock responses based on prompt content
-        if (prompt.includes('Classify')) {
+        // Handle complexity classification prompts
+        if (prompt.includes('Task Complexity Classification') || prompt.includes('## Task to Classify')) {
+          // Extract task from markdown template
+          let task = '';
+          const lines = prompt.split('\n');
+          let foundTaskSection = false;
+          for (let i = 0; i < lines.length; i++) {
+            if (lines[i] === '## Task to Classify') {
+              foundTaskSection = true;
+            } else if (foundTaskSection && lines[i].trim() && !lines[i].startsWith('##') && !lines[i].startsWith('{{')) {
+              task = lines[i].toLowerCase();
+              break;
+            }
+          }
+          
           return JSON.stringify({
-            complexity: prompt.includes('Build') ? 'COMPLEX' : 'SIMPLE',
-            reasoning: 'Mock classification'
+            complexity: task.includes('build') ? 'COMPLEX' : 'SIMPLE',
+            reasoning: 'Mock classification based on task complexity'
           });
         }
         
-        if (prompt.includes('Decompose') || prompt.includes('decompose')) {
+        // Handle task decomposition prompts
+        if (prompt.includes('Task Decomposition') || prompt.includes('## Task to Decompose')) {
+          // Extract task from markdown template
+          let originalTask = 'Mock task';
+          const lines = prompt.split('\n');
+          let foundTaskSection = false;
+          for (let i = 0; i < lines.length; i++) {
+            if (lines[i] === '## Task to Decompose') {
+              foundTaskSection = true;
+            } else if (foundTaskSection && lines[i].trim() && !lines[i].startsWith('##') && !lines[i].startsWith('{{')) {
+              originalTask = lines[i];
+              break;
+            }
+          }
+          
           return JSON.stringify({
-            task: 'Mock task',
+            task: originalTask,
             subtasks: [
               {
                 id: 'sub-1',

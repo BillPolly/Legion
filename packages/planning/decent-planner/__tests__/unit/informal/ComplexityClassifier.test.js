@@ -13,29 +13,48 @@ describe('ComplexityClassifier', () => {
     // Mock LLM client for unit tests
     mockLLMClient = {
       complete: async (prompt) => {
-        // Extract the task from the prompt
-        const taskMatch = prompt.match(/Task: ([^\n]+)/);
-        const task = taskMatch ? taskMatch[1].toLowerCase() : '';
+        // The prompt contains a markdown template with the task description
+        // Extract the task from the markdown template
+        let task = '';
+        
+        // Look for the task in the markdown format: "## Task to Classify\n{taskDescription}"
+        const lines = prompt.split('\n');
+        let foundTaskSection = false;
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i] === '## Task to Classify') {
+            foundTaskSection = true;
+          } else if (foundTaskSection && lines[i].trim() && !lines[i].startsWith('##') && !lines[i].startsWith('{{')) {
+            task = lines[i].toLowerCase();
+            break;
+          }
+        }
+        
+        // Fallback to searching the entire prompt if we can't find it properly
+        if (!task) {
+          task = prompt.toLowerCase();
+        }
+        
+        // Check for COMPLEX tasks first (more specific)
+        if (task.includes('build') && 
+            (task.includes('application') || 
+             task.includes('system') || 
+             task.includes('api') ||
+             task.includes('authentication') ||
+             task.includes('web application'))) {
+          return JSON.stringify({
+            complexity: 'COMPLEX',
+            reasoning: 'Requires multiple subsystems and coordination'
+          });
+        }
         
         // Check for SIMPLE tasks
-        if (task.includes('write') && (task.includes('file') || task.includes('content')) ||
-            task.includes('create database table') ||
-            task.includes('parse json') ||
+        if ((task.includes('write') && (task.includes('file') || task.includes('content'))) ||
+            (task.includes('create') && task.includes('database') && task.includes('table')) ||
+            (task.includes('parse') && task.includes('json')) ||
             task.includes('install package')) {
           return JSON.stringify({
             complexity: 'SIMPLE',
             reasoning: 'Can be accomplished with available tools'
-          });
-        }
-        
-        // Check for COMPLEX tasks - look in the actual task line
-        if (task.includes('build') && 
-            (task.includes('application') || 
-             task.includes('system') || 
-             task.includes('api'))) {
-          return JSON.stringify({
-            complexity: 'COMPLEX',
-            reasoning: 'Requires multiple subsystems and coordination'
           });
         }
         
