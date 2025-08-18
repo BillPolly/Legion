@@ -6,10 +6,11 @@
 
 import { TaskDecomposer } from './TaskDecomposer.js';
 import { ContextHints } from './ContextHints.js';
-import { ToolDiscoveryBridge } from './ToolDiscoveryBridge.js';
+import { ToolDiscoveryAdapter } from './ToolDiscoveryAdapter.js';
 import { PlanSynthesizer } from './PlanSynthesizer.js';
 import { Planner } from '@legion/planner';
 import { BTValidator } from '@legion/bt-validator';
+import { createSemanticToolDiscovery } from '@legion/tools-registry';
 
 export class DecentPlanner {
   constructor(dependencies) {
@@ -21,10 +22,9 @@ export class DecentPlanner {
     // Initialize components
     this.decomposer = new TaskDecomposer(this.llmClient);
     this.contextHints = new ContextHints();
-    this.toolDiscovery = new ToolDiscoveryBridge(
-      this.resourceManager,
-      this.toolRegistryProvider
-    );
+    
+    // Will be initialized in async init method
+    this.toolDiscovery = null;
     
     // Initialize the bottom-up synthesizer
     this.synthesizer = new PlanSynthesizer({
@@ -49,6 +49,25 @@ export class DecentPlanner {
     this.hierarchy = null;
     this.simpleTasks = [];
     this.behaviorTrees = {};
+  }
+
+  /**
+   * Initialize async components
+   * Must be called before using the planner
+   */
+  async initialize() {
+    // Create real semantic tool discovery
+    const semanticDiscovery = await createSemanticToolDiscovery(this.resourceManager, {
+      toolRegistry: this.toolRegistryProvider
+    });
+    
+    // Wrap in adapter for interface compatibility
+    this.toolDiscovery = new ToolDiscoveryAdapter(semanticDiscovery, this.toolRegistryProvider);
+    
+    // Update synthesizer with real tool discovery
+    this.synthesizer.toolDiscovery = this.toolDiscovery;
+    
+    return this;
   }
 
   /**
@@ -79,8 +98,8 @@ export class DecentPlanner {
       resourceManager
     });
     
-    // Initialize tool discovery bridge
-    await planner.toolDiscovery.initialize();
+    // Initialize async components
+    await planner.initialize();
     
     return planner;
   }

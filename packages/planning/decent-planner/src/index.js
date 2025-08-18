@@ -22,7 +22,7 @@ export {
 export { DecentPlanner as DecentPlanner_Legacy } from './core/DecentPlanner.js';
 export { TaskDecomposer as TaskDecomposer_Legacy } from './core/TaskDecomposer.js';
 export { ContextHints } from './core/ContextHints.js';
-export { ToolDiscoveryBridge } from './core/ToolDiscoveryBridge.js';
+export { ToolDiscoveryAdapter } from './core/ToolDiscoveryAdapter.js';
 export { PlanSynthesizer } from './core/PlanSynthesizer.js';
 export { ValidatedSubtree } from './core/ValidatedSubtree.js';
 

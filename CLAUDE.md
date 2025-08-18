@@ -23,3 +23,5 @@ In implementation code THERE MUST NEVER be any mock implementations or fallbacks
 All tests must be under the __tests__ directories and all results and such should go under there as well, but they should be in directores and added to gitignore. 
 if a test is producing files and such it is better to clean up before rather than after as then the results can be viewed
 
+There must only every be one .env in the monorepo and it must only ever be accessed by the ResourceManager singleton
+

@@ -122,8 +122,10 @@ export class PlanSynthesizer {
       // Get I/O hints
       const hints = this.contextHints.getHints(node.id);
       
-      // Discover relevant tools
-      const tools = await this._discoverTools(node, options);
+      // Discover relevant tools - use breakdown method for better recall
+      const tools = options.useBreakdown !== false 
+        ? await this._discoverToolsWithBreakdown(node, options)
+        : await this._discoverTools(node, options);
       
       if (options.debug) {
         console.log(`[PlanSynthesizer] Tools discovered for '${node.description}':`, tools?.map(t => t.name) || 'none');
@@ -281,6 +283,132 @@ export class PlanSynthesizer {
         console.error(`[PlanSynthesizer] Tool discovery failed: ${error.message}`);
       }
       return [];
+    }
+  }
+  
+  /**
+   * Discover tools by breaking down task into elementary operations
+   * @private
+   * @param {Object} node - Task node with description
+   * @param {Object} options - Discovery options
+   * @returns {Promise<Array>} Array of unique tools discovered across all operations
+   */
+  async _discoverToolsWithBreakdown(node, options) {
+    try {
+      if (options.debug) {
+        console.log(`[PlanSynthesizer] Breaking down task for tool discovery: ${node.description}`);
+      }
+      
+      // Step 1: Break down the task into elementary operations
+      const operations = await this._breakdownToOperations(node.description);
+      
+      if (options.debug) {
+        console.log(`[PlanSynthesizer] Elementary operations: ${operations.join(', ')}`);
+      }
+      
+      // Step 2: Discover tools for each operation in parallel
+      const toolDiscoveryPromises = operations.map(async (operation) => {
+        try {
+          const tools = await this.toolDiscovery.discoverTools(
+            { description: operation },
+            {
+              maxTools: options.maxToolsPerOperation || 5,
+              threshold: options.threshold || 0.3
+            }
+          );
+          
+          if (options.debug) {
+            console.log(`[PlanSynthesizer] Tools for "${operation}": ${tools.map(t => t.name).join(', ')}`);
+          }
+          
+          return tools;
+        } catch (error) {
+          if (options.debug) {
+            console.warn(`[PlanSynthesizer] Tool discovery failed for operation "${operation}": ${error.message}`);
+          }
+          return [];
+        }
+      });
+      
+      const toolSets = await Promise.all(toolDiscoveryPromises);
+      
+      // Step 3: Union all tools, removing duplicates by name
+      const toolMap = new Map();
+      for (const tools of toolSets) {
+        for (const tool of tools) {
+          if (!toolMap.has(tool.name)) {
+            toolMap.set(tool.name, tool);
+          }
+        }
+      }
+      
+      const uniqueTools = Array.from(toolMap.values());
+      
+      if (options.debug) {
+        console.log(`[PlanSynthesizer] Total unique tools discovered: ${uniqueTools.map(t => t.name).join(', ')}`);
+      }
+      
+      // Limit total tools if specified
+      const maxTools = options.maxTools || 10;
+      return uniqueTools.slice(0, maxTools);
+      
+    } catch (error) {
+      if (options.debug) {
+        console.error(`[PlanSynthesizer] Tool discovery with breakdown failed: ${error.message}`);
+      }
+      // Fallback to regular discovery
+      return this._discoverTools(node, options);
+    }
+  }
+  
+  /**
+   * Break down a task description into elementary operations
+   * @private
+   * @param {string} taskDescription - The task to break down
+   * @returns {Promise<Array<string>>} Array of elementary operation descriptions
+   */
+  async _breakdownToOperations(taskDescription) {
+    const prompt = `Task: ${taskDescription}
+
+Break this task down into elementary operations that would each use a single tool.
+Each operation should be a simple action phrase that describes what needs to be done.
+Focus on the core actions needed to complete the task.
+
+For example:
+- "Read a JSON file and extract a field" → ["read file", "parse JSON", "extract field from object"]
+- "Download and save a file" → ["download from URL", "write file to disk"]
+- "Calculate sum from CSV" → ["read file", "parse CSV data", "calculate sum of numbers"]
+
+Respond with JSON:
+{
+  "operations": ["operation1", "operation2", ...]
+}`;
+    
+    try {
+      const response = await this.llmClient.generateResponse({
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.2,
+        maxTokens: 500
+      });
+      
+      // Parse the response
+      const content = response.content || '{}';
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const result = JSON.parse(jsonMatch[0]);
+        if (result.operations && Array.isArray(result.operations)) {
+          return result.operations;
+        }
+      }
+      
+      // Fallback: return the original task as a single operation
+      console.warn('[PlanSynthesizer] Could not parse operations, using original task');
+      return [taskDescription];
+      
+    } catch (error) {
+      console.warn(`[PlanSynthesizer] Failed to break down task: ${error.message}`);
+      // Fallback: return the original task as a single operation
+      return [taskDescription];
     }
   }
   

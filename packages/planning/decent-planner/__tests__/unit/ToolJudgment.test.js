@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeAll } from '@jest/globals';
 import { PlanSynthesizer } from '../../src/core/PlanSynthesizer.js';
-import { ToolDiscoveryBridge } from '../../src/core/ToolDiscoveryBridge.js';
+import { MockToolDiscovery } from '../mocks/MockToolDiscovery.js';
 import { ContextHints } from '../../src/core/ContextHints.js';
 
 describe('Tool Sufficiency Judgment', () => {
