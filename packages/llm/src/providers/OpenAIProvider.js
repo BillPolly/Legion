@@ -86,4 +86,30 @@ export class OpenAIProvider {
   isReady() {
     return !!this.client;
   }
+
+  async generateImage(params) {
+    const {
+      prompt,
+      model = 'dall-e-3',
+      n = 1,
+      size = '1024x1024',
+      quality = 'standard',
+      style = 'vivid',
+      response_format = 'b64_json',
+      user
+    } = params;
+
+    const response = await this.client.images.generate({
+      model,
+      prompt,
+      n,
+      size,
+      quality,
+      style,
+      response_format,
+      user
+    });
+
+    return response;
+  }
 }

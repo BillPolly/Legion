@@ -317,4 +317,26 @@ export class LLMClient extends EventEmitter {
   supportsEmbeddings() {
     return !!this.provider.generateEmbeddings;
   }
+
+  /**
+   * Check if the current provider supports image generation
+   */
+  supportsImageGeneration() {
+    // Currently only OpenAI provider supports image generation
+    return this.provider.getProviderName() === 'openai';
+  }
+
+  /**
+   * Generate an image using DALL-E (OpenAI only)
+   */
+  async generateImage(params) {
+    if (!this.supportsImageGeneration()) {
+      throw new Error(`Provider ${this.provider.getProviderName()} does not support image generation`);
+    }
+
+    // OpenAI-specific image generation
+    if (this.provider.getProviderName() === 'openai') {
+      return await this.provider.generateImage(params);
+    }
+  }
 }
