@@ -7,7 +7,7 @@
 
 import { jest } from '@jest/globals';
 
-// Only use local ONNX embeddings - no OpenAI mocking needed
+// Only use local Nomic embeddings - no OpenAI mocking needed
 
 // Mock Qdrant client
 jest.unstable_mockModule('@qdrant/js-client-rest', () => ({
@@ -15,7 +15,7 @@ jest.unstable_mockModule('@qdrant/js-client-rest', () => ({
     getClusterInfo: jest.fn().mockResolvedValue({ status: 'green' }),
     getCollections: jest.fn().mockResolvedValue({ collections: [] }),
     createCollection: jest.fn().mockResolvedValue({ operation_id: 1 }),
-    getCollection: jest.fn().mockResolvedValue({ config: { params: { vectors: { size: 768 } } } }), // Local ONNX dimensions
+    getCollection: jest.fn().mockResolvedValue({ config: { params: { vectors: { size: 768 } } } }), // Local Nomic dimensions
     upsert: jest.fn().mockResolvedValue({ operation_id: 1, status: 'completed' }),
     search: jest.fn().mockResolvedValue([]),
     scroll: jest.fn().mockResolvedValue({ points: [] }),
@@ -125,7 +125,7 @@ export const TestUtils = {
   /**
    * Create mock embeddings
    */
-  createMockEmbeddings(count = 1, dimension = 768) { // Local ONNX model uses 768 dimensions
+  createMockEmbeddings(count = 1, dimension = 768) { // Local Nomic model uses 768 dimensions
     const embeddings = [];
     for (let i = 0; i < count; i++) {
       embeddings.push(new Array(dimension).fill(0).map(() => Math.random()));

@@ -48,10 +48,10 @@ export class SemanticToolDiscovery {
   }
 
   /**
-   * Create SemanticToolDiscovery with enforced local ONNX embeddings
+   * Create SemanticToolDiscovery with enforced local Nomic embeddings
    * @param {ResourceManager} resourceManager - Initialized ResourceManager
    * @param {Object} options - Configuration options
-   * @returns {Promise<SemanticToolDiscovery>} Discovery instance with local ONNX embeddings
+   * @returns {Promise<SemanticToolDiscovery>} Discovery instance with local Nomic embeddings
    */
   static async createForTools(resourceManager, options = {}) {
     console.log('🔧 Creating SemanticToolDiscovery with Nomic embeddings for tools');

@@ -86,8 +86,8 @@ Examples:
     });
     console.log('✅ Database provider ready');
     
-    // Create ToolIndexer with forced local ONNX embeddings
-    console.log('🧠 Creating ToolIndexer with local ONNX embeddings...');
+    // Create ToolIndexer with forced local Nomic embeddings
+    console.log('🧠 Creating ToolIndexer with local Nomic embeddings...');
     const toolIndexer = await ToolIndexer.createForTools(resourceManager, { provider });
     console.log('✅ ToolIndexer ready\n');
     

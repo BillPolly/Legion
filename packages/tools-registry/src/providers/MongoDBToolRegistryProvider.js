@@ -945,7 +945,7 @@ export class MongoDBToolRegistryProvider extends IToolRegistryProvider {
 
   /**
    * Generate embeddings for all tools
-   * CRITICAL: Uses ONLY local ONNX embeddings for tool semantic search
+   * CRITICAL: Uses ONLY local Nomic embeddings for tool semantic search
    * @private
    */
   async _generateToolEmbeddings() {
@@ -978,7 +978,7 @@ export class MongoDBToolRegistryProvider extends IToolRegistryProvider {
             await this.updateToolEmbedding(
               tool._id, 
               embeddings[0], 
-              'local-onnx'  // Always local-onnx for tools
+              'local-nomic'  // Always local-nomic for tools
             );
             results.generated++;
           }

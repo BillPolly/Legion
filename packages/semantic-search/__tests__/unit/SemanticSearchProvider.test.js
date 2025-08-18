@@ -51,7 +51,7 @@ describe('SemanticSearchProvider (requires Qdrant)', () => {
       
       expect(provider).toBeInstanceOf(SemanticSearchProvider);
       expect(provider.initialized).toBe(true);
-      expect(provider.getMetadata().embeddingService).toBe('local-onnx');
+      expect(provider.getMetadata().embeddingService).toBe('local-nomic');
     });
 
     it('should use default configuration values', async () => {

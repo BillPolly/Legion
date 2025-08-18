@@ -20,10 +20,10 @@ export class ToolIndexer {
   }
 
   /**
-   * Create ToolIndexer with enforced local ONNX embeddings for tool indexing
+   * Create ToolIndexer with enforced local Nomic embeddings for tool indexing
    * @param {ResourceManager} resourceManager - Initialized ResourceManager
    * @param {Object} options - Configuration options
-   * @returns {Promise<ToolIndexer>} ToolIndexer instance with local ONNX embeddings
+   * @returns {Promise<ToolIndexer>} ToolIndexer instance with local Nomic embeddings
    */
   static async createForTools(resourceManager, options = {}) {
     console.log('🔧 Creating ToolIndexer with Nomic embeddings for tools');
@@ -116,7 +116,7 @@ export class ToolIndexer {
         perspectiveText: perspective.text,
         embeddingId: embeddingId,
         embedding: embedding, // Store the actual embedding vector
-        embeddingModel: 'all-MiniLM-L6-v2', // ONNX model used for embeddings
+        embeddingModel: 'nomic-embed-text-v1', // Nomic model used for embeddings
         generatedAt: new Date(),
         generationMethod: 'automatic',
         metadata: {
@@ -655,7 +655,7 @@ export class ToolIndexer {
       // Delete all vectors in collection
       await this.vectorStore.deleteCollection(this.collectionName);
       await this.vectorStore.createCollection(this.collectionName, {
-        vectorSize: 384 // ONNX all-MiniLM-L6-v2 embedding size
+        vectorSize: 768 // Nomic nomic-embed-text-v1 embedding size
       });
       
       this.indexedTools.clear();

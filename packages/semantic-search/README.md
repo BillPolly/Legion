@@ -1,6 +1,6 @@
 # @legion/semantic-search
 
-Intelligent semantic search system designed for AI agent debugging, with local ONNX embeddings and unified event capture. Enables natural language search across documents, logs, tests, and runtime events.
+Intelligent semantic search system designed for AI agent debugging, with local Nomic embeddings and unified event capture. Enables natural language search across documents, logs, tests, and runtime events.
 
 ## Features
 
@@ -19,7 +19,7 @@ Intelligent semantic search system designed for AI agent debugging, with local O
 - 🤖 **AI Agent Interface** - Natural language queries for intelligent debugging
 
 ### Local Embeddings
-- 💻 **ONNX Runtime** - Local embeddings with Apple M4 optimization (2-5ms per embedding)
+- 💻 **Nomic Embeddings** - Local embeddings with high-quality semantic understanding (2-5ms per embedding)
 - 💰 **Cost Effective** - No API costs, runs entirely offline
 - 🎯 **Event Optimized** - Specialized for log and event text processing
 - 📈 **High Throughput** - 200-500 embeddings/second on Apple Silicon
@@ -32,7 +32,7 @@ Jest Tests → UniversalEventCollector ← Production Logs
 Console Logs   Correlation ID          LogManager
      ↓         Tracking                      ↑
      ↓              ↓                   API/Runtime
-     └──────→ Local ONNX Embeddings ←──────┘
+     └──────→ Local Nomic Embeddings ←──────┘
                     ↓
             Vector Store (Qdrant)
                     ↓
@@ -95,7 +95,7 @@ logManager.setEventCollector(eventCollector);
 // Create event-aware search with local embeddings
 const searchProvider = await EventSemanticSearchProvider.create(resourceManager, {
   useLocalEmbeddings: true,
-  localModelPath: './models/all-MiniLM-L6-v2-quantized.onnx'
+  localModelPath: './models/nomic-embed-text-v1' # Bundled with @legion/nomic
 });
 
 // Create AI agent interface
@@ -179,7 +179,7 @@ The AgentEventAnalyzer supports these query patterns:
 ## Performance
 
 ### Local Embeddings (Apple M4)
-- **Model**: all-MiniLM-L6-v2 (384 dimensions)
+- **Model**: nomic-embed-text-v1 (768 dimensions)
 - **Performance**: 2-5ms per embedding
 - **Throughput**: 200-500 embeddings/second
 - **Memory**: ~500MB model + ~100MB working memory
@@ -204,7 +204,8 @@ SEMANTIC_SEARCH_CACHE_TTL=3600
 SEMANTIC_SEARCH_ENABLE_CACHE=true
 
 # Local Embeddings (optional - uses OpenAI if not configured)
-LOCAL_EMBEDDING_MODEL_PATH=./models/all-MiniLM-L6-v2-quantized.onnx
+# No model path needed - Nomic embeddings are bundled with @legion/nomic
+# LOCAL_EMBEDDING_MODEL_PATH=./models/nomic-embed-text-v1
 ```
 
 ## Testing

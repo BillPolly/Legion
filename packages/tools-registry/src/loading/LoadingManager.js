@@ -59,7 +59,7 @@ export class LoadingManager {
       }
     }
 
-    // SemanticSearchProvider always uses local ONNX embeddings
+    // SemanticSearchProvider always uses local Nomic embeddings
 
     // Initialize components
     this.moduleLoader = new ModuleLoader({
