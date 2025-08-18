@@ -24,4 +24,7 @@ All tests must be under the __tests__ directories and all results and such shoul
 if a test is producing files and such it is better to clean up before rather than after as then the results can be viewed
 
 There must only every be one .env in the monorepo and it must only ever be accessed by the ResourceManager singleton
+The resouorce manager should supply anything needed, nothing should be set on it or registered with it. 
+
+We are making an MVP we dont care about NFRs or future extensions we just need to get it working
 

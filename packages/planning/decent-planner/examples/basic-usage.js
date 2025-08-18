@@ -15,30 +15,40 @@ async function main() {
   const resourceManager = new ResourceManager();
   await resourceManager.initialize();
   
-  // Get LLM client from environment
-  const anthropicKey = resourceManager.get('env.ANTHROPIC_API_KEY');
-  if (!anthropicKey) {
-    console.error('❌ ANTHROPIC_API_KEY not found in environment');
-    process.exit(1);
-  }
+  // ResourceManager will supply all dependencies through getOrInitialize
+  // This ensures proper singleton pattern and lazy initialization
   
-  // Create LLM client
-  const { LLMClient } = await import('@legion/ai-agent-core');
-  const llmClient = new LLMClient({ apiKey: anthropicKey });
-  resourceManager.register('llmClient', llmClient);
+  // Ensure LLM client is available (created on first access)
+  const llmClient = await resourceManager.getOrInitialize('llmClient', async () => {
+    const anthropicKey = resourceManager.get('env.ANTHROPIC_API_KEY');
+    if (!anthropicKey) {
+      throw new Error('ANTHROPIC_API_KEY not found in environment');
+    }
+    const { LLMClient } = await import('@legion/ai-agent-core');
+    return new LLMClient({ apiKey: anthropicKey });
+  });
   
-  // Set up tool registry with MongoDB provider
+  // Ensure tool registry provider is available
   console.log('📚 Setting up tool registry...');
-  const mongoProvider = await MongoDBToolRegistryProvider.create(
-    resourceManager,
-    { enableSemanticSearch: true }
-  );
-  resourceManager.register('toolRegistryProvider', mongoProvider);
+  const toolRegistryProvider = await resourceManager.getOrInitialize('toolRegistryProvider', async () => {
+    return await MongoDBToolRegistryProvider.create(
+      resourceManager,
+      { enableSemanticSearch: true }
+    );
+  });
   
-  // Also create a ToolRegistry for executable tools
-  const toolRegistry = new ToolRegistry({ provider: mongoProvider });
-  await toolRegistry.initialize();
-  resourceManager.register('toolRegistry', toolRegistry);
+  // Ensure tool registry is available
+  const toolRegistry = await resourceManager.getOrInitialize('toolRegistry', async () => {
+    const provider = await resourceManager.getOrInitialize('toolRegistryProvider', async () => {
+      return await MongoDBToolRegistryProvider.create(
+        resourceManager,
+        { enableSemanticSearch: true }
+      );
+    });
+    const registry = new ToolRegistry({ provider });
+    await registry.initialize();
+    return registry;
+  });
   
   // Create DecentPlanner
   console.log('🧠 Creating DecentPlanner...\n');
