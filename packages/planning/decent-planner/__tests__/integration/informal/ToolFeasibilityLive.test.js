@@ -19,16 +19,29 @@ describe('ToolFeasibilityChecker Live Integration', () => {
     resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
 
-    // Get ToolRegistry singleton and initialize it
-    toolRegistry = ToolRegistry.getInstance();
-    await toolRegistry.initialize();
+    // Use ResourceManager to supply ToolRegistry with proper dependencies
+    toolRegistry = await resourceManager.getOrInitialize('toolRegistry', async () => {
+      // First ensure we have a tool registry provider
+      const provider = await resourceManager.getOrInitialize('toolRegistryProvider', async () => {
+        const { MongoDBToolRegistryProvider } = await import('@legion/tools-registry/src/providers/MongoDBToolRegistryProvider.js');
+        return await MongoDBToolRegistryProvider.create(
+          resourceManager,
+          { enableSemanticSearch: true }
+        );
+      });
+      
+      // Create and initialize the registry
+      const registry = new ToolRegistry({ provider });
+      await registry.initialize();
+      return registry;
+    });
     
     // Create checker with real registry
     checker = new ToolFeasibilityChecker(toolRegistry, {
       confidenceThreshold: 0.6  // Lower threshold for testing
     });
     
-    console.log('ToolRegistry initialized with semantic search:', toolRegistry.enableSemanticSearch);
+    console.log('ToolRegistry initialized with provider:', !!toolRegistry.provider);
   });
 
   describe('Real Tool Discovery', () => {

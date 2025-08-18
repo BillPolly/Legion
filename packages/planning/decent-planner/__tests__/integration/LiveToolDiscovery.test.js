@@ -7,7 +7,7 @@
  * NO MOCKS - This tests the actual tool discovery pipeline!
  */
 
-import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, it, expect, beforeAll, afterAll, jest } from '@jest/globals';
 import { PlanSynthesizer } from '../../src/core/PlanSynthesizer.js';
 import { ToolDiscoveryAdapter } from '../../src/core/ToolDiscoveryAdapter.js';
 import { ResourceManager } from '@legion/resource-manager';
@@ -31,11 +31,24 @@ describe('LIVE Tool Discovery Integration', () => {
       
       console.log('✅ ResourceManager initialized');
       
-      // Get the real ToolRegistry singleton
-      toolRegistry = ToolRegistry.getInstance();
-      await toolRegistry.initialize();
+      // Use ResourceManager to supply ToolRegistry with proper dependencies
+      toolRegistry = await resourceManager.getOrInitialize('toolRegistry', async () => {
+        // First ensure we have a tool registry provider
+        const provider = await resourceManager.getOrInitialize('toolRegistryProvider', async () => {
+          const { MongoDBToolRegistryProvider } = await import('@legion/tools-registry/src/providers/MongoDBToolRegistryProvider.js');
+          return await MongoDBToolRegistryProvider.create(
+            resourceManager,
+            { enableSemanticSearch: true }
+          );
+        });
+        
+        // Create and initialize the registry
+        const registry = new ToolRegistry({ provider });
+        await registry.initialize();
+        return registry;
+      });
       
-      console.log('✅ ToolRegistry initialized');
+      console.log('✅ ToolRegistry initialized with provider');
       
       // Create semantic tool discovery with live Nomic embeddings
       semanticDiscovery = await SemanticToolDiscovery.createForTools(resourceManager, {
