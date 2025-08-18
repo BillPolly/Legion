@@ -2,22 +2,43 @@
  * QdrantVectorStore - Handles vector storage and search using Qdrant
  * 
  * Now uses ResourceManager for singleton Qdrant client management.
+ * Includes automatic Qdrant startup when connection fails.
  */
 
 import { ResourceManager } from '@legion/resource-manager';
+import { QdrantAutoStarter } from '../utils/QdrantAutoStarter.js';
 
 export class QdrantVectorStore {
   constructor(config, resourceManager = null) {
     this.config = {
       url: config.url || 'http://localhost:6333',
       apiKey: config.apiKey,
-      timeout: config.timeout || 30000
+      timeout: config.timeout || 30000,
+      autoStart: config.autoStart !== false // Default true
     };
     
     // Use provided ResourceManager or get singleton
     this.resourceManager = resourceManager || ResourceManager.getInstance();
     this.client = null;
     this.connected = false;
+    
+    // Initialize auto-starter with config
+    // Extract port from URL (default to 6333 if not found)
+    let port = 6333;
+    try {
+      const urlParts = this.config.url.split(':');
+      if (urlParts.length > 2) {
+        port = parseInt(urlParts[2].replace(/\D/g, '')) || 6333;
+      }
+    } catch {
+      port = 6333;
+    }
+    
+    this.autoStarter = new QdrantAutoStarter({
+      port: port,
+      autoStart: this.config.autoStart,
+      verbose: config.verbose || process.env.QDRANT_VERBOSE === 'true'
+    });
   }
   
   async _ensureClient() {
@@ -70,8 +91,33 @@ export class QdrantVectorStore {
       this.connected = true;
       console.log('✅ Connected to Qdrant at', this.config.url);
     } catch (error) {
-      this.connected = false;
-      throw new Error(`Failed to connect to Qdrant at ${this.config.url}: ${error.message}`);
+      // If connection fails and auto-start is enabled, try to start Qdrant
+      // Check for various connection failure indicators
+      const isConnectionError = error.message.includes('ECONNREFUSED') || 
+                                error.message.includes('fetch failed') ||
+                                error.message.includes('connect ECONNREFUSED') ||
+                                error.message.includes('Unable to check client-server compatibility');
+      
+      if (this.config.autoStart && isConnectionError) {
+        console.log('⚠️ Qdrant connection failed, attempting auto-start...');
+        
+        try {
+          // Ensure Qdrant is running
+          await this.autoStarter.ensureQdrantRunning();
+          
+          // Retry connection after Qdrant starts
+          console.log('🔄 Retrying Qdrant connection...');
+          await this.client.getCollections();
+          this.connected = true;
+          console.log('✅ Connected to Qdrant at', this.config.url);
+        } catch (autoStartError) {
+          this.connected = false;
+          throw new Error(`Failed to auto-start Qdrant: ${autoStartError.message}`);
+        }
+      } else {
+        this.connected = false;
+        throw new Error(`Failed to connect to Qdrant at ${this.config.url}: ${error.message}`);
+      }
     }
   }
   

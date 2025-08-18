@@ -12,6 +12,8 @@
 
 import { ModuleLoader } from './ModuleLoader.js';
 import { DatabasePopulator } from './DatabasePopulator.js';
+import { ModuleDiscovery } from './ModuleDiscovery.js';
+import { ComprehensiveValidator } from '../validation/ComprehensiveValidator.js';
 import { MongoDBToolRegistryProvider } from '../providers/MongoDBToolRegistryProvider.js';
 import { SemanticSearchProvider } from '../../../semantic-search/src/SemanticSearchProvider.js';
 import { createToolIndexer } from '../search/index.js';
@@ -636,6 +638,199 @@ export class LoadingManager {
     if (this.mongoProvider) {
       await this.mongoProvider.disconnect();
     }
+  }
+
+  /**
+   * Discover all modules in the repository
+   * Uses ModuleDiscovery to scan filesystem and register in database
+   */
+  async discoverModules() {
+    await this.#ensureInitialized();
+    
+    if (this.verbose) {
+      console.log('🔍 Discovering modules in repository...');
+    }
+    
+    const discovery = new ModuleDiscovery({
+      resourceManager: this.resourceManager,
+      provider: this.mongoProvider,
+      verbose: this.verbose
+    });
+    
+    const result = await discovery.discover();
+    
+    if (this.verbose) {
+      console.log(`✅ Discovery complete: ${result.stats.discovered} modules found`);
+    }
+    
+    return result;
+  }
+
+  /**
+   * Load modules from database instead of JSON registry
+   * Gets the list of loadable modules from DB and loads them
+   */
+  async loadModulesFromDatabase(options = {}) {
+    await this.#ensureInitialized();
+    
+    const { 
+      onlyValidated = false,
+      includeWarnings = true 
+    } = options;
+    
+    // Build query for modules to load
+    const query = {
+      loadable: { $ne: false }
+    };
+    
+    if (onlyValidated) {
+      query.validationStatus = 'validated';
+    } else if (!includeWarnings) {
+      query.validationStatus = { $ne: 'failed' };
+    }
+    
+    // Get modules from database
+    const modules = await this.mongoProvider.databaseService.mongoProvider.find('modules', query);
+    
+    if (this.verbose) {
+      console.log(`📦 Loading ${modules.length} modules from database...`);
+    }
+    
+    // Convert database modules to format expected by ModuleLoader
+    const moduleConfigs = modules.map(m => ({
+      name: m.name,
+      type: m.type || 'class',
+      path: m.path,
+      className: m.className,
+      description: m.description
+    }));
+    
+    // Load each module
+    const loadedModules = [];
+    const failedModules = [];
+    
+    for (const config of moduleConfigs) {
+      try {
+        const module = await this.moduleLoader.loadModule(config);
+        if (module) {
+          loadedModules.push({ config, instance: module });
+        }
+      } catch (error) {
+        failedModules.push({ config, error: error.message });
+      }
+    }
+    
+    // Populate database with loaded modules
+    const popResult = await this.databasePopulator.populate(loadedModules, {
+      clearExisting: false
+    });
+    
+    return {
+      loaded: loadedModules,
+      failed: failedModules,
+      popResult,
+      summary: {
+        total: modules.length,
+        loaded: loadedModules.length,
+        failed: failedModules.length,
+        tools: popResult.tools.saved
+      }
+    };
+  }
+
+  /**
+   * Validate all modules and tools
+   * Updates database with validation status
+   */
+  async validateModules(options = {}) {
+    await this.#ensureInitialized();
+    
+    if (this.verbose) {
+      console.log('✅ Validating modules and tools...');
+    }
+    
+    const validator = new ComprehensiveValidator({
+      resourceManager: this.resourceManager,
+      provider: this.mongoProvider,
+      moduleLoader: this.moduleLoader,
+      verbose: this.verbose
+    });
+    
+    const result = await validator.validateAllModules();
+    
+    if (this.verbose) {
+      console.log(`✅ Validation complete: ${result.modules.validated}/${result.modules.total} validated`);
+    }
+    
+    return result;
+  }
+
+  /**
+   * Complete enhanced pipeline with discovery and validation
+   */
+  async enhancedPipeline(options = {}) {
+    const {
+      discover = true,
+      validate = true,
+      clearFirst = false,
+      includePerspectives = false,
+      includeVectors = false,
+      onlyValidated = false
+    } = options;
+    
+    const startTime = Date.now();
+    const results = {};
+    
+    if (this.verbose) {
+      console.log('🚀 Starting enhanced loading pipeline...');
+      console.log(`   Discover: ${discover}`);
+      console.log(`   Validate: ${validate}`);
+      console.log(`   Clear first: ${clearFirst}`);
+    }
+    
+    // Step 1: Clear if requested
+    if (clearFirst) {
+      results.clearResult = await this.clearAll();
+    }
+    
+    // Step 2: Discover modules
+    if (discover) {
+      results.discoveryResult = await this.discoverModules();
+    }
+    
+    // Step 3: Load modules from database
+    results.loadResult = await this.loadModules();
+    
+    // Step 4: Validate if requested
+    if (validate) {
+      results.validationResult = await this.validateModules();
+    }
+    
+    // Step 5: Generate perspectives if requested
+    if (includePerspectives) {
+      results.perspectiveResult = await this.generatePerspectives();
+    }
+    
+    // Step 6: Index vectors if requested
+    if (includeVectors) {
+      results.vectorResult = await this.indexVectors();
+    }
+    
+    const totalTime = Date.now() - startTime;
+    
+    if (this.verbose) {
+      console.log(`✅ Enhanced pipeline complete in ${(totalTime / 1000).toFixed(2)}s`);
+      console.log(`   Modules discovered: ${results.discoveryResult?.stats.discovered || 0}`);
+      console.log(`   Modules loaded: ${results.loadResult?.modulesLoaded || 0}`);
+      console.log(`   Modules validated: ${results.validationResult?.modules.validated || 0}`);
+      console.log(`   Tools added: ${results.loadResult?.toolsAdded || 0}`);
+    }
+    
+    return {
+      ...results,
+      totalTime,
+      success: true
+    };
   }
 
   /**

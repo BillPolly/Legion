@@ -16,6 +16,7 @@ export class ModuleLoader {
     this.monorepoRoot = options.monorepoRoot || this.findMonorepoRoot();
     this.resourceManager = options.resourceManager;
     this.verbose = options.verbose || false;
+    this.databaseProvider = null;
   }
 
   /**
@@ -30,21 +31,36 @@ export class ModuleLoader {
   }
 
   /**
-   * Load all modules from the registry
+   * Load all modules from the database (discovered modules)
    */
   async loadModules(filter = null) {
     await this.initialize();
     
-    // Read the module registry
-    const registryPath = path.join(this.monorepoRoot, 'packages/tools-registry/src/loading/module-registry.json');
-    const registryContent = await fs.readFile(registryPath, 'utf-8');
-    let modules = JSON.parse(registryContent);
+    // Get database provider - create if needed
+    if (!this.databaseProvider) {
+      const { MongoDBToolRegistryProvider } = await import('../providers/MongoDBToolRegistryProvider.js');
+      this.databaseProvider = await MongoDBToolRegistryProvider.create(this.resourceManager, {
+        enableSemanticSearch: false
+      });
+    }
+    
+    // Load modules from database where discovery put them
+    let query = { 
+      loadable: { $ne: false }  // Include all loadable modules
+    };
     
     // Apply filter if provided
     if (filter) {
-      modules = modules.filter(m => 
-        m.name.toLowerCase().includes(filter.toLowerCase())
-      );
+      query.$or = [
+        { name: { $regex: new RegExp(filter, 'i') } },
+        { className: { $regex: new RegExp(filter, 'i') } }
+      ];
+    }
+    
+    let modules = await this.databaseProvider.databaseService.mongoProvider.find('modules', query);
+    
+    if (this.verbose) {
+      console.log(`📋 Found ${modules.length} modules in database`);
     }
     
     if (this.verbose) {
