@@ -161,7 +161,10 @@ describe('NomicEmbeddings - Model Loading and Embedding Generation', () => {
     test('should handle text that exceeds context gracefully', async () => {
       const veryLongText = 'Very long text that exceeds model context. '.repeat(1000);
       
-      await expect(embeddings.embed(veryLongText)).rejects.toThrow(/context size/);
+      // Should not throw - should truncate and return embedding
+      const embedding = await embeddings.embed(veryLongText);
+      expect(embedding.length).toBe(768);
+      expect(embedding.every(v => !isNaN(v))).toBe(true);
     });
 
     test('should handle special characters', async () => {

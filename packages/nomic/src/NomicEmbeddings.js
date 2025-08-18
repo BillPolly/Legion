@@ -83,7 +83,17 @@ export class NomicEmbeddings {
     }
 
     try {
-      // Do exactly what worked - no prefixes, no bullshit
+      // Handle empty string - use a minimal placeholder
+      if (!text || text.trim() === '') {
+        text = '.'; // Use a single period as minimal meaningful text
+      }
+      
+      // Handle very long text by truncating to prevent context overflow
+      // Approximate max tokens - keep well below context size
+      if (text.length > 2000) {
+        text = text.substring(0, 2000);
+      }
+      
       const embedding = await this.context.getEmbeddingFor(text);
       return Array.from(embedding.vector);
     } catch (error) {
