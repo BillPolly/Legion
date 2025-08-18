@@ -657,7 +657,7 @@ export class LoadingManager {
 
     // Transform perspectives to vectors using proper Qdrant format (matching ToolIndexer)
     const vectors = perspectives.map((perspective, index) => ({
-      id: perspective.embeddingId || `tool_${perspective.toolName}_${perspective.perspectiveType}_${Date.now() + index}`,
+      id: perspective._id?.toString() || `tool_${perspective.toolName}_${perspective.perspectiveType}_${index}`,
       vector: Array.from(perspective.embedding), // Ensure it's a regular array
       payload: {
         perspectiveId: perspective._id?.toString(),

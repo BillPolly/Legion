@@ -17,6 +17,7 @@ export class ToolIndexer {
     this.mongoProvider = dependencies.mongoProvider; // For storing perspectives in MongoDB
     this.indexedTools = new Map();
     this.batchSize = dependencies.batchSize || 50;
+    this.perspectiveTypesCache = null;
   }
 
   /**
@@ -92,21 +93,18 @@ export class ToolIndexer {
     const document = this.createToolDocument(tool, metadata);
     
     // Generate multiple perspective entries for better retrieval
-    const perspectives = this.createMultiplePerspectives(document);
+    const perspectives = await this.createMultiplePerspectives(document);
     
     // Generate embeddings for all perspectives
     const searchTexts = perspectives.map(p => p.text);
     const embeddings = await this.embeddingService.generateEmbeddings(searchTexts);
     
-    const timestamp = Date.now();
     const perspectiveRecords = [];
-    const vectors = [];
 
-    // Create perspective records for MongoDB and vectors for vector DB
+    // Create perspective records for MongoDB
     for (let i = 0; i < perspectives.length; i++) {
       const perspective = perspectives[i];
       const embedding = embeddings[i];
-      const embeddingId = `tool_${tool.name}_${perspective.type}_${timestamp}`;
 
       // MongoDB perspective record (full context)
       const perspectiveRecord = {
@@ -114,7 +112,6 @@ export class ToolIndexer {
         toolName: tool.name,
         perspectiveType: perspective.type,
         perspectiveText: perspective.text,
-        embeddingId: embeddingId,
         embedding: embedding, // Store the actual embedding vector
         embeddingModel: 'nomic-embed-text-v1', // Nomic model used for embeddings
         generatedAt: new Date(),
@@ -125,35 +122,13 @@ export class ToolIndexer {
         }
       };
       perspectiveRecords.push(perspectiveRecord);
-
-      // Vector DB record (minimal payload for efficiency)
-      const vectorRecord = {
-        id: embeddingId,
-        vector: embedding,
-        payload: {
-          perspectiveId: null, // Will be filled after MongoDB insert
-          toolId: toolId.toString(),
-          toolName: tool.name,
-          perspectiveType: perspective.type
-        }
-      };
-      vectors.push(vectorRecord);
     }
 
-    // Store perspectives in MongoDB first
+    // Store perspectives in MongoDB first to get stable IDs
     const insertResults = [];
     for (const record of perspectiveRecords) {
       try {
         console.log(`[DEBUG] Inserting perspective: ${record.perspectiveType} for tool ${record.toolName}`);
-        console.log(`[DEBUG] Record structure:`, {
-          toolId: record.toolId.toString(),
-          toolIdType: typeof record.toolId,
-          toolName: record.toolName,
-          perspectiveType: record.perspectiveType,
-          perspectiveTextLength: record.perspectiveText.length,
-          hasEmbeddingId: !!record.embeddingId,
-          hasGeneratedAt: !!record.generatedAt
-        });
         
         const inserted = await this.mongoProvider.insert('tool_perspectives', record);
         insertResults.push(inserted);
@@ -166,10 +141,26 @@ export class ToolIndexer {
       }
     }
     
-    // Update vector payloads with MongoDB perspective IDs
-    for (let i = 0; i < vectors.length; i++) {
-      const insertedId = Object.values(insertResults[i].insertedIds)[0];
-      vectors[i].payload.perspectiveId = insertedId.toString();
+    // Create vectors using MongoDB perspective IDs
+    const vectors = [];
+    for (let i = 0; i < insertResults.length; i++) {
+      const insertResult = insertResults[i];
+      const perspective = perspectives[i];
+      const embedding = embeddings[i];
+      const perspectiveId = Object.values(insertResult.insertedIds)[0];
+
+      // Vector DB record using MongoDB _id as vector ID
+      const vectorRecord = {
+        id: perspectiveId.toString(),
+        vector: embedding,
+        payload: {
+          perspectiveId: perspectiveId.toString(),
+          toolId: toolId.toString(),
+          toolName: tool.name,
+          perspectiveType: perspective.type
+        }
+      };
+      vectors.push(vectorRecord);
     }
 
     // Store embeddings with minimal payloads in vector database
@@ -415,10 +406,164 @@ export class ToolIndexer {
   }
 
   /**
-   * Create multiple perspective entries for a tool
+   * Load perspective types from database
    * @private
    */
-  createMultiplePerspectives(document) {
+  async loadPerspectiveTypes() {
+    if (!this.mongoProvider) {
+      throw new Error('MongoDB provider is required to load perspective types');
+    }
+    
+    if (this.perspectiveTypesCache) {
+      return this.perspectiveTypesCache;
+    }
+    
+    const perspectiveTypes = await this.mongoProvider.find('perspective_types', 
+      { enabled: true }, 
+      { sort: { priority: 1 } }
+    );
+    
+    if (perspectiveTypes.length === 0) {
+      throw new Error('No enabled perspective types found in database. Run populate-perspective-types.js first.');
+    }
+    
+    this.perspectiveTypesCache = perspectiveTypes;
+    return perspectiveTypes;
+  }
+
+  /**
+   * Check if a condition is met for the given document
+   * @private
+   */
+  evaluateCondition(condition, document) {
+    switch (condition) {
+      case 'always':
+        return true;
+      case 'has_description':
+        return document.description && document.description.trim().length > 0;
+      case 'has_capabilities':
+        return document.capabilities && Array.isArray(document.capabilities) && document.capabilities.length > 0;
+      case 'has_examples':
+        return document.examples && Array.isArray(document.examples) && document.examples.length > 0;
+      case 'has_input_schema':
+        return document.inputSchema && document.inputSchema.properties && Object.keys(document.inputSchema.properties).length > 0;
+      case 'has_name_variations':
+        const nameVariations = this.generateNameVariations(document.name);
+        return nameVariations && nameVariations.length > 0;
+      default:
+        console.warn(`Unknown perspective condition: ${condition}`);
+        return false;
+    }
+  }
+
+  /**
+   * Apply template with document data
+   * @private
+   */
+  applyTemplate(template, document, extraData = {}) {
+    let result = template;
+    
+    // Replace basic placeholders
+    result = result.replace(/\${name}/g, document.name || '');
+    result = result.replace(/\${description}/g, document.description || '');
+    result = result.replace(/\${category}/g, document.category || '');
+    
+    // Handle array joins
+    if (document.capabilities && Array.isArray(document.capabilities)) {
+      result = result.replace(/\${capabilities\.join\('([^']*)'\)}/g, (match, separator) => {
+        return document.capabilities.join(separator);
+      });
+    }
+    
+    if (document.examples && Array.isArray(document.examples)) {
+      result = result.replace(/\${examples\.join\('([^']*)'\)}/g, (match, separator) => {
+        return document.examples.join(separator);
+      });
+    }
+    
+    if (document.tags && Array.isArray(document.tags)) {
+      result = result.replace(/\${tags\.join\('([^']*)'\)}/g, (match, separator) => {
+        return document.tags.join(separator);
+      });
+    } else {
+      result = result.replace(/\${tags\.join\('([^']*)'\)}/g, '');
+    }
+    
+    // Handle name variations
+    const nameVariations = this.generateNameVariations(document.name);
+    if (nameVariations && nameVariations.length > 0) {
+      result = result.replace(/\${nameVariations\.join\('([^']*)'\)}/g, (match, separator) => {
+        return nameVariations.join(separator);
+      });
+    }
+    
+    // Handle input schema
+    if (document.inputSchema && document.inputSchema.properties) {
+      const inputs = Object.keys(document.inputSchema.properties).join(' ');
+      result = result.replace(/\${inputs}/g, inputs);
+    }
+    
+    // Handle name.replace for snake_case to spaces
+    result = result.replace(/\${name\.replace\([^)]+\)}/g, document.name.replace(/_/g, ' '));
+    
+    // Handle optional description 
+    result = result.replace(/\${description \|\| ''}/g, document.description || '');
+    
+    // Handle extra data (like ${cap} for individual capabilities)
+    Object.keys(extraData).forEach(key => {
+      const regex = new RegExp(`\\$\\{${key}\\}`, 'g');
+      result = result.replace(regex, extraData[key] || '');
+    });
+    
+    return result.trim();
+  }
+
+  /**
+   * Create multiple perspective entries for a tool dynamically from database configuration
+   * @private
+   */
+  async createMultiplePerspectives(document) {
+    const perspectiveTypes = await this.loadPerspectiveTypes();
+    const perspectives = [];
+    
+    for (const perspectiveType of perspectiveTypes) {
+      // Check if condition is met
+      if (!this.evaluateCondition(perspectiveType.condition, document)) {
+        continue;
+      }
+      
+      // Special case for capability_single: create one perspective per capability
+      if (perspectiveType.type === 'capability_single' && document.capabilities) {
+        for (const cap of document.capabilities) {
+          const text = this.applyTemplate(perspectiveType.textTemplate, document, { cap });
+          if (text && text.length > 0) {
+            perspectives.push({
+              type: perspectiveType.type,
+              text: text
+            });
+          }
+        }
+      } else {
+        // Normal case: create one perspective
+        const text = this.applyTemplate(perspectiveType.textTemplate, document);
+        if (text && text.length > 0) {
+          perspectives.push({
+            type: perspectiveType.type,
+            text: text
+          });
+        }
+      }
+    }
+    
+    return perspectives;
+  }
+
+  /**
+   * Create multiple perspective entries for a tool (LEGACY - DEPRECATED)
+   * @deprecated Use the new database-driven createMultiplePerspectives method instead
+   * @private
+   */
+  createMultiplePerspectivesLegacy(document) {
     const perspectives = [];
     
     // 1. Name-focused perspective (short, direct)

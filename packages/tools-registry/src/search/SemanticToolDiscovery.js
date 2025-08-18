@@ -114,9 +114,9 @@ export class SemanticToolDiscovery {
     // Enhance task description for better semantic matching
     const enhancedQuery = this.enhanceTaskDescription(taskDescription);
 
-    // Search Legion tools - use tool_perspectives collection
+    // Search Legion tools - use Qdrant legion_tools collection
     const legionSearchResults = await this.semanticSearchProvider.semanticSearch(
-      'tool_perspectives',  // Use the correct collection name for semantic search
+      this.collectionName,  // Use the Qdrant collection name (legion_tools)
       enhancedQuery,
       {
         limit: limit * 2, // Get more for filtering

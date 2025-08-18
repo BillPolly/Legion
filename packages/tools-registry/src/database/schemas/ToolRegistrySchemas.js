@@ -120,6 +120,79 @@ export const ModulesCollectionSchema = {
 };
 
 /**
+ * Perspective Types Collection Schema
+ * Stores configurable perspective type definitions for dynamic perspective generation
+ */
+export const PerspectiveTypesCollectionSchema = {
+  name: 'perspective_types',
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['type', 'name', 'description', 'textTemplate', 'enabled'],
+      properties: {
+        type: {
+          bsonType: 'string',
+          minLength: 1,
+          maxLength: 50,
+          pattern: '^[a-z_]+$',
+          description: 'Unique identifier for perspective type (snake_case)'
+        },
+        name: {
+          bsonType: 'string',
+          minLength: 1,
+          maxLength: 100,
+          description: 'Human-readable name for this perspective type'
+        },
+        description: {
+          bsonType: 'string',
+          minLength: 10,
+          maxLength: 500,
+          description: 'Detailed description of what this perspective captures'
+        },
+        condition: {
+          bsonType: 'string',
+          enum: ['always', 'has_description', 'has_capabilities', 'has_examples', 'has_input_schema', 'has_name_variations'],
+          description: 'Condition that must be met for this perspective to be generated'
+        },
+        textTemplate: {
+          bsonType: 'string',
+          minLength: 1,
+          maxLength: 500,
+          description: 'Template string with placeholders like ${name}, ${description}, etc.'
+        },
+        priority: {
+          bsonType: 'int',
+          minimum: 1,
+          maximum: 100,
+          description: 'Generation priority (lower numbers = higher priority)'
+        },
+        enabled: {
+          bsonType: 'bool',
+          description: 'Whether this perspective type is currently enabled'
+        },
+        createdAt: {
+          bsonType: 'date',
+          description: 'When this perspective type was created'
+        },
+        updatedAt: {
+          bsonType: 'date',
+          description: 'When this perspective type was last modified'
+        }
+      }
+    }
+  },
+  indexes: [
+    { type: 1 },
+    { enabled: 1 },
+    { priority: 1 },
+    { condition: 1 }
+  ],
+  uniqueIndexes: [
+    { type: 1 } // Ensure perspective type identifiers are unique
+  ]
+};
+
+/**
  * Tool Perspectives Collection Schema
  * Stores generated glosses/perspectives for semantic search with different textual representations
  */
@@ -142,11 +215,9 @@ export const ToolPerspectivesCollectionSchema = {
         },
         perspectiveType: {
           bsonType: 'string',
-          enum: [
-            'name', 'description', 'task', 'capabilities', 'capability_single',
-            'examples', 'category', 'inputs', 'gloss', 'synonyms'
-          ],
-          description: 'Type of perspective/gloss generated'
+          minLength: 1,
+          maxLength: 50,
+          description: 'Type of perspective/gloss generated (references perspective_types.type)'
         },
         perspectiveText: {
           bsonType: 'string',
@@ -344,6 +415,7 @@ export const ToolsCollectionSchema = {
 export const ToolRegistryCollections = {
   modules: ModulesCollectionSchema,
   tools: ToolsCollectionSchema,
+  perspective_types: PerspectiveTypesCollectionSchema,
   tool_perspectives: ToolPerspectivesCollectionSchema
 };
 
