@@ -35,7 +35,7 @@ export class InformalPlanner {
     // Initialize components
     this.classifier = new ComplexityClassifier(llmClient);
     this.decomposer = new TaskDecomposer(llmClient, this.classifier);
-    this.feasibilityChecker = new ToolFeasibilityChecker(toolRegistry, {
+    this.feasibilityChecker = new ToolFeasibilityChecker(toolRegistry, llmClient, {
       confidenceThreshold: this.options.confidenceThreshold,
       maxTools: this.options.maxTools
     });

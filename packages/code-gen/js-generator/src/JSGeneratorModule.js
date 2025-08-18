@@ -68,13 +68,15 @@ export class JSGeneratorModule extends Module {
 
   /**
    * Get all tools provided by this module
+   * Returns an array of tool objects (new interface)
    */
   getTools() {
     if (!this.initialized) {
       throw new Error('JSGeneratorModule must be initialized before getting tools');
     }
 
-    return this.tools;
+    // Return tools as an array (new interface)
+    return Object.values(this.tools);
   }
 
   /**
@@ -176,7 +178,7 @@ export class JSGeneratorModule extends Module {
       description: this.description,
       version: this.version,
       author: 'Legion Team',
-      tools: this.getTools().length,
+      tools: Object.keys(this.tools).length,
       capabilities: [
         'JavaScript module generation',
         'Function generation with JSDoc',

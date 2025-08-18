@@ -220,7 +220,7 @@ describe('LIVE Informal Planner Integration Tests', () => {
     it('should discover tools for file operations', async () => {
       if (!isLive) return;
 
-      const checker = new ToolFeasibilityChecker(toolRegistry, {
+      const checker = new ToolFeasibilityChecker(toolRegistry, llmClient, {
         confidenceThreshold: 0.5
       });
       
@@ -256,7 +256,7 @@ describe('LIVE Informal Planner Integration Tests', () => {
     it('should check feasibility for a task hierarchy', async () => {
       if (!isLive) return;
 
-      const checker = new ToolFeasibilityChecker(toolRegistry, {
+      const checker = new ToolFeasibilityChecker(toolRegistry, llmClient, {
         confidenceThreshold: 0.5
       });
       
