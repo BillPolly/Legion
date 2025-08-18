@@ -18,6 +18,7 @@ import { MongoDBToolRegistryProvider } from '../providers/MongoDBToolRegistryPro
 import { SemanticSearchProvider } from '../../../semantic-search/src/SemanticSearchProvider.js';
 import { createToolIndexer } from '../search/index.js';
 import { ResourceManager } from '@legion/resource-manager';
+import { Verifier } from '../verification/Verifier.js';
 
 export class LoadingManager {
   constructor(options = {}) {
@@ -84,6 +85,9 @@ export class LoadingManager {
     // this.semanticSearchProvider = await SemanticSearchProvider.create(this.resourceManager);
     // this.toolIndexer = await createToolIndexer(this.resourceManager);
 
+    // Initialize verifier (will be properly configured when semantic search is initialized)
+    this.verifier = null;
+
     this.initialized = true;
 
     if (this.verbose) {
@@ -101,6 +105,17 @@ export class LoadingManager {
     }
     if (!this.toolIndexer) {
       this.toolIndexer = await createToolIndexer(this.resourceManager);
+    }
+    
+    // Always initialize verifier (semantic search provider can be null)
+    if (!this.verifier) {
+      if (this.verbose) {
+        console.log('🔍 Creating Verifier for clearing verification...');
+      }
+      this.verifier = new Verifier(this.mongoProvider, this.semanticSearchProvider, this.verbose);
+      if (this.verbose) {
+        console.log('✅ Verifier created successfully');
+      }
     }
   }
 
@@ -168,20 +183,32 @@ export class LoadingManager {
       console.log(`  ✅ Cleared perspectives: ${perspectiveResult.deletedCount} records deleted`);
     }
 
-    // Clear vectors if requested
-    if (clearVectors && this.semanticSearchProvider) {
+    // Clear vectors if requested - ALWAYS initialize semantic search for clearing
+    if (clearVectors) {
       await this.#ensureSemanticSearchInitialized();
       const qdrantCollections = ['legion_tools'];
+      
+      if (this.verbose) {
+        console.log('  🧹 Clearing Qdrant vectors...');
+      }
       
       for (const collectionName of qdrantCollections) {
         try {
           const countBefore = await this.semanticSearchProvider.count(collectionName);
+          if (this.verbose) {
+            console.log(`  📊 Found ${countBefore} vectors in '${collectionName}'`);
+          }
+          
           if (countBefore > 0) {
+            // Delete the entire collection
             await this.semanticSearchProvider.vectorStore.deleteCollection(collectionName);
             if (this.verbose) {
               console.log(`  ✅ Deleted Qdrant collection '${collectionName}': ${countBefore} vectors removed`);
             }
             totalCleared += countBefore;
+            
+            // Wait a moment for deletion to complete
+            await new Promise(resolve => setTimeout(resolve, 1000));
           }
         } catch (error) {
           if (!error.message.includes('Not found')) {
@@ -200,11 +227,45 @@ export class LoadingManager {
           if (this.verbose) {
             console.log(`  ✅ Recreated '${collectionName}' with 768 dimensions (Nomic embeddings)`);
           }
+          
+          // Verify the collection was created and is empty
+          const countAfter = await this.semanticSearchProvider.count(collectionName);
+          if (this.verbose) {
+            console.log(`  📊 Verified: ${countAfter} vectors in recreated collection`);
+          }
         } catch (error) {
           if (this.verbose) {
             console.log(`  ⚠️ Could not recreate '${collectionName}': ${error.message}`);
           }
+          throw new Error(`Failed to recreate Qdrant collection '${collectionName}': ${error.message}`);
         }
+      }
+    }
+
+    // Verify clearing actually worked
+    if (this.verifier) {
+      const clearingVerification = await this.verifier.verifyClearingWorked({
+        expectEmptyTools: true,
+        expectEmptyPerspectives: true,
+        expectEmptyVectors: clearVectors
+      });
+      
+      const moduleVerification = await this.verifier.verifyModulesUnloaded();
+      
+      if (!clearingVerification.success || !moduleVerification.success) {
+        const errors = [...clearingVerification.errors, ...moduleVerification.errors];
+        const errorMsg = `Clearing verification failed: ${errors.join(', ')}`;
+        if (this.verbose) {
+          console.log(`❌ ${errorMsg}`);
+        }
+        throw new Error(errorMsg);
+      } else if (this.verbose) {
+        console.log(`✅ Clearing verified:`);
+        console.log(`   Tools: ${clearingVerification.clearedCounts.tools}`);
+        console.log(`   Perspectives: ${clearingVerification.clearedCounts.perspectives}`);
+        console.log(`   Vectors: ${clearingVerification.clearedCounts.vectors}`);
+        console.log(`   Modules: ${clearingVerification.clearedCounts.modules} (preserved)`);
+        console.log(`   Module statuses: loaded=${moduleVerification.moduleStats.loaded}, unloaded=${moduleVerification.moduleStats.unloaded}`);
       }
     }
 
@@ -968,6 +1029,23 @@ export class LoadingManager {
     }
     
     const totalTime = Date.now() - startTime;
+    
+    // Final verification of the complete system
+    if (this.verifier) {
+      if (this.verbose) {
+        console.log('\n🔍 Running final system verification...');
+      }
+      const verification = await this.verifier.verifySystem();
+      results.verification = verification;
+      
+      if (this.verbose) {
+        this.verifier.logResults(verification);
+      }
+      
+      if (!verification.success) {
+        throw new Error(`Pipeline verification failed: ${verification.errors.join(', ')}`);
+      }
+    }
     
     if (this.verbose) {
       console.log(`✅ Enhanced pipeline complete in ${(totalTime / 1000).toFixed(2)}s`);

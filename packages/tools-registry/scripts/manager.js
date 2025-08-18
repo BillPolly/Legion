@@ -265,19 +265,15 @@ async function pipelineCommand(options) {
     console.log(chalk.green(`   Registered: ${discoveryResult.stats.registered}`));
     console.log(chalk.green(`   Updated: ${discoveryResult.stats.updated}\n`));
     
-    // Step 2: Clear (optional)
-    if (options.clear || options.clearVectors) {
-      console.log(chalk.blue.bold('🧹 Step 2: Clear Databases\n'));
-      const clearResult = await loadingManager.clearForReload({
-        clearVectors: true,
-        clearModules: options.clearModules
-      });
-      console.log(chalk.green(`✅ Cleared ${clearResult.totalCleared} records`));
-      if (!options.clearModules) {
-        console.log(chalk.green('   Module discovery preserved\n'));
-      }
-    } else {
-      console.log(chalk.yellow('⏭️ Step 2: Skipping clear (use --clear to clear databases)\n'));
+    // Step 2: Clear (default: always clear vectors for consistency)
+    console.log(chalk.blue.bold('🧹 Step 2: Clear Databases\n'));
+    const clearResult = await loadingManager.clearForReload({
+      clearVectors: true,  // Always clear vectors to prevent accumulation
+      clearModules: options.clearModules
+    });
+    console.log(chalk.green(`✅ Cleared ${clearResult.totalCleared} records`));
+    if (!options.clearModules) {
+      console.log(chalk.green('   Module discovery preserved\n'));
     }
     
     // Step 3: Load modules
