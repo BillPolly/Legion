@@ -1,0 +1,338 @@
+/**
+ * NotebookEditTool - Edit specific cells in Jupyter notebooks
+ */
+
+import { Tool } from '@legion/tools-registry';
+import { z } from 'zod';
+import { promises as fs } from 'fs';
+import { v4 as uuidv4 } from 'uuid';
+
+// Input schema for validation
+const notebookEditToolSchema = z.object({
+  notebook_path: z.string().min(1),
+  new_source: z.string(),
+  cell_id: z.string().optional(),
+  cell_type: z.enum(['code', 'markdown']).optional(),
+  edit_mode: z.enum(['replace', 'insert', 'delete']).optional().default('replace')
+});
+
+export class NotebookEditTool extends Tool {
+  constructor() {
+    super({
+      name: 'NotebookEdit',
+      description: 'Edit specific cells in Jupyter notebooks',
+      inputSchema: notebookEditToolSchema,
+      execute: async (input) => this.editNotebook(input),
+      getMetadata: () => this.getToolMetadata()
+    });
+  }
+
+  /**
+   * Edit a Jupyter notebook
+   */
+  async editNotebook(input) {
+    try {
+      const { 
+        notebook_path, 
+        new_source, 
+        cell_id, 
+        cell_type, 
+        edit_mode = 'replace' 
+      } = input;
+
+      // Read the notebook
+      let notebookContent;
+      let notebook;
+      try {
+        notebookContent = await fs.readFile(notebook_path, 'utf8');
+        notebook = JSON.parse(notebookContent);
+      } catch (error) {
+        if (error.code === 'ENOENT') {
+          return {
+            success: false,
+            error: {
+              code: 'RESOURCE_NOT_FOUND',
+              message: `Notebook not found: ${notebook_path}`,
+              path: notebook_path
+            }
+          };
+        }
+        if (error.code === 'EACCES') {
+          return {
+            success: false,
+            error: {
+              code: 'PERMISSION_DENIED',
+              message: `Permission denied: ${notebook_path}`,
+              path: notebook_path
+            }
+          };
+        }
+        if (error instanceof SyntaxError) {
+          return {
+            success: false,
+            error: {
+              code: 'INVALID_FORMAT',
+              message: `Invalid notebook format: ${notebook_path}`,
+              details: error.message
+            }
+          };
+        }
+        throw error;
+      }
+
+      // Validate notebook structure
+      if (!notebook.cells || !Array.isArray(notebook.cells)) {
+        return {
+          success: false,
+          error: {
+            code: 'INVALID_FORMAT',
+            message: 'Invalid notebook structure: missing cells array',
+            path: notebook_path
+          }
+        };
+      }
+
+      let modifiedCellId;
+      let operation = edit_mode;
+
+      if (edit_mode === 'delete') {
+        // Delete a cell
+        if (!cell_id) {
+          return {
+            success: false,
+            error: {
+              code: 'MISSING_PARAMETER',
+              message: 'cell_id is required for delete operation'
+            }
+          };
+        }
+
+        const cellIndex = this.findCellIndex(notebook.cells, cell_id);
+        if (cellIndex === -1) {
+          return {
+            success: false,
+            error: {
+              code: 'NOT_FOUND',
+              message: `Cell not found: ${cell_id}`,
+              details: { cell_id }
+            }
+          };
+        }
+
+        notebook.cells.splice(cellIndex, 1);
+        modifiedCellId = cell_id;
+
+      } else if (edit_mode === 'insert') {
+        // Insert a new cell
+        const newCell = this.createCell(new_source, cell_type || 'code');
+        
+        if (cell_id) {
+          // Insert after specified cell
+          const cellIndex = this.findCellIndex(notebook.cells, cell_id);
+          if (cellIndex === -1) {
+            return {
+              success: false,
+              error: {
+                code: 'NOT_FOUND',
+                message: `Reference cell not found: ${cell_id}`,
+                details: { cell_id }
+              }
+            };
+          }
+          notebook.cells.splice(cellIndex + 1, 0, newCell);
+        } else {
+          // Insert at the beginning
+          notebook.cells.unshift(newCell);
+        }
+        
+        modifiedCellId = newCell.id || 'new_cell';
+
+      } else {
+        // Replace mode (default)
+        if (!cell_id) {
+          // If no cell_id, replace the first cell
+          if (notebook.cells.length === 0) {
+            return {
+              success: false,
+              error: {
+                code: 'NOT_FOUND',
+                message: 'No cells in notebook to replace'
+              }
+            };
+          }
+          
+          const cell = notebook.cells[0];
+          cell.source = this.formatSource(new_source);
+          if (cell_type) {
+            cell.cell_type = cell_type;
+          }
+          modifiedCellId = cell.id || 'cell_0';
+        } else {
+          // Find and replace specific cell
+          const cellIndex = this.findCellIndex(notebook.cells, cell_id);
+          if (cellIndex === -1) {
+            return {
+              success: false,
+              error: {
+                code: 'NOT_FOUND',
+                message: `Cell not found: ${cell_id}`,
+                details: { cell_id }
+              }
+            };
+          }
+          
+          const cell = notebook.cells[cellIndex];
+          cell.source = this.formatSource(new_source);
+          if (cell_type) {
+            cell.cell_type = cell_type;
+          }
+          modifiedCellId = cell_id;
+        }
+      }
+
+      // Update notebook metadata
+      if (!notebook.metadata) {
+        notebook.metadata = {};
+      }
+      notebook.metadata.last_modified = new Date().toISOString();
+
+      // Write the notebook back
+      try {
+        const updatedContent = JSON.stringify(notebook, null, 2);
+        await fs.writeFile(notebook_path, updatedContent, 'utf8');
+      } catch (error) {
+        if (error.code === 'EACCES') {
+          return {
+            success: false,
+            error: {
+              code: 'PERMISSION_DENIED',
+              message: `Permission denied writing notebook: ${notebook_path}`,
+              path: notebook_path
+            }
+          };
+        }
+        throw error;
+      }
+
+      return {
+        success: true,
+        data: {
+          notebook_path,
+          cell_modified: modifiedCellId,
+          operation: operation,
+          notebook_metadata: notebook.metadata
+        }
+      };
+
+    } catch (error) {
+      return {
+        success: false,
+        error: {
+          code: 'EXECUTION_ERROR',
+          message: `Failed to edit notebook: ${error.message}`,
+          details: error.stack
+        }
+      };
+    }
+  }
+
+  /**
+   * Find cell index by ID
+   */
+  findCellIndex(cells, cellId) {
+    return cells.findIndex(cell => 
+      cell.id === cellId || 
+      (cell.metadata && cell.metadata.id === cellId)
+    );
+  }
+
+  /**
+   * Create a new cell
+   */
+  createCell(source, cellType) {
+    const cell = {
+      cell_type: cellType,
+      metadata: {
+        id: uuidv4()
+      },
+      source: this.formatSource(source)
+    };
+
+    if (cellType === 'code') {
+      cell.execution_count = null;
+      cell.outputs = [];
+    }
+
+    return cell;
+  }
+
+  /**
+   * Format source as array of strings (Jupyter format)
+   */
+  formatSource(source) {
+    if (Array.isArray(source)) {
+      return source;
+    }
+    
+    // Split by newlines but keep the newlines
+    const lines = source.split('\n');
+    return lines.map((line, index) => 
+      index === lines.length - 1 ? line : line + '\n'
+    );
+  }
+
+  /**
+   * Get tool metadata
+   */
+  getToolMetadata() {
+    return {
+      name: 'NotebookEdit',
+      description: 'Edit specific cells in Jupyter notebooks',
+      input: {
+        notebook_path: {
+          type: 'string',
+          required: true,
+          description: 'Path to the Jupyter notebook'
+        },
+        new_source: {
+          type: 'string',
+          required: true,
+          description: 'New source code for the cell'
+        },
+        cell_id: {
+          type: 'string',
+          required: false,
+          description: 'ID of the cell to edit'
+        },
+        cell_type: {
+          type: 'string',
+          required: false,
+          description: 'Type of cell (code or markdown)'
+        },
+        edit_mode: {
+          type: 'string',
+          required: false,
+          description: 'Edit mode (replace, insert, or delete)'
+        }
+      },
+      output: {
+        notebook_path: {
+          type: 'string',
+          description: 'Path of the edited notebook'
+        },
+        cell_modified: {
+          type: 'string',
+          description: 'ID of the modified cell'
+        },
+        operation: {
+          type: 'string',
+          description: 'Operation performed'
+        },
+        notebook_metadata: {
+          type: 'object',
+          description: 'Updated notebook metadata'
+        }
+      }
+    };
+  }
+}

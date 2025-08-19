@@ -1,0 +1,40 @@
+{
+  "name": "@legion/claude-tools",
+  "version": "1.0.0",
+  "description": "Claude Code tools implementation for the Legion framework",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+  },
+  "dependencies": {
+    "@legion/tools-registry": "file:../tools-registry",
+    "@legion/resource-manager": "file:../resource-manager",
+    "zod": "^3.22.0",
+    "fast-glob": "^3.3.0",
+    "ripgrep-js": "^1.0.0",
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12",
+    "marked": "^12.0.0",
+    "turndown": "^7.1.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "@shelf/jest-mongodb": "^4.1.0"
+  },
+  "keywords": [
+    "legion",
+    "tools",
+    "claude",
+    "file-operations",
+    "search",
+    "navigation",
+    "web",
+    "system"
+  ],
+  "author": "Legion Framework",
+  "license": "MIT"
+}

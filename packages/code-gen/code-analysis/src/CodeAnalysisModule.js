@@ -5,7 +5,6 @@
  */
 
 import { Module } from '@legion/tools-registry';
-import { wrapTool } from '../../src/ToolWrapper.js';
 import { ValidateJavaScriptTool } from './tools/ValidateJavaScriptTool.js';
 
 export class CodeAnalysisModule extends Module {
@@ -39,8 +38,8 @@ export class CodeAnalysisModule extends Module {
     // Initialize tools dictionary
     this.tools = {};
     
-    // Create and register wrapped tool
-    const validateJsTool = wrapTool(new ValidateJavaScriptTool());
+    // Create and register tool
+    const validateJsTool = new ValidateJavaScriptTool();
     this.registerTool(validateJsTool.name, validateJsTool);
     // TODO: Add remaining tools (security analysis, performance analysis, CSS validation, etc.)
 

@@ -28,16 +28,13 @@ export class Module extends EventEmitter {
   registerTool(name, tool) {
     this.tools[name] = tool;
     
-    // Forward tool events to module level
-    if (tool instanceof EventEmitter) {
-      // Forward all tool events with context
-      ['progress', 'error', 'info', 'warning'].forEach(eventType => {
-        tool.on(eventType, (data) => {
-          this.emit(eventType, {
-            ...data,
-            module: this.moduleDefinition?.name || 'unknown',
-            tool: name
-          });
+    // Subscribe to tool events and forward them to module level
+    if (tool.subscribe && typeof tool.subscribe === 'function') {
+      tool.subscribe((message) => {
+        // Forward to module level with context
+        this.emit(message.type || 'message', {
+          ...message,
+          module: this.moduleDefinition?.name || 'unknown'
         });
       });
     }

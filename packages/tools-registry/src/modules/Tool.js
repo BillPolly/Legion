@@ -3,8 +3,6 @@
  * Represents an individual tool that can be executed
  */
 
-import { EventEmitter } from 'events';
-
 // Lazy load schema package if available
 let createValidator;
 try {
@@ -15,13 +13,13 @@ try {
   createValidator = null;
 }
 
-export class Tool extends EventEmitter {
+export class Tool {
   constructor({ name, description, execute, getMetadata, schema, inputSchema }) {
-    super();
     this.name = name;
     this.description = description || 'No description available';
     this._execute = execute;
     this._getMetadata = getMetadata;
+    this.subscribers = new Set();  // Store subscribers
     
     // Support both direct validator object and JSON schema
     if (schema) {
@@ -115,13 +113,39 @@ export class Tool extends EventEmitter {
   }
   
   /**
-   * Emit a progress event
+   * Subscribe to tool events
+   * @param {Function} listener - Function to receive all tool events
+   * @returns {Function} Unsubscribe function
+   */
+  subscribe(listener) {
+    this.subscribers.add(listener);
+    // Return unsubscribe function
+    return () => this.subscribers.delete(listener);
+  }
+  
+  /**
+   * Internal method to notify all subscribers
+   * @param {Object} message - Event message to send to subscribers
+   */
+  _notify(message) {
+    this.subscribers.forEach(listener => {
+      try {
+        listener(message);
+      } catch (error) {
+        console.error('Subscriber error:', error);
+      }
+    });
+  }
+  
+  /**
+   * Send a progress event
    * @param {string} message - Progress message
    * @param {number} percentage - Progress percentage (0-100)
    * @param {Object} data - Additional data
    */
   progress(message, percentage = 0, data = {}) {
-    this.emit('progress', { 
+    this._notify({ 
+      type: 'progress',
       tool: this.name,
       message, 
       percentage, 
@@ -131,12 +155,13 @@ export class Tool extends EventEmitter {
   }
   
   /**
-   * Emit an error event
+   * Send an error event
    * @param {string} message - Error message
    * @param {Object} data - Additional error data
    */
   error(message, data = {}) {
-    this.emit('error', { 
+    this._notify({ 
+      type: 'error',
       tool: this.name,
       message, 
       timestamp: new Date().toISOString(),
@@ -145,12 +170,13 @@ export class Tool extends EventEmitter {
   }
   
   /**
-   * Emit an info event
+   * Send an info event
    * @param {string} message - Info message
    * @param {Object} data - Additional data
    */
   info(message, data = {}) {
-    this.emit('info', { 
+    this._notify({ 
+      type: 'info',
       tool: this.name,
       message, 
       timestamp: new Date().toISOString(),
@@ -159,12 +185,13 @@ export class Tool extends EventEmitter {
   }
   
   /**
-   * Emit a warning event
+   * Send a warning event
    * @param {string} message - Warning message
    * @param {Object} data - Additional data
    */
   warning(message, data = {}) {
-    this.emit('warning', { 
+    this._notify({ 
+      type: 'warning',
       tool: this.name,
       message, 
       timestamp: new Date().toISOString(),
@@ -178,5 +205,46 @@ export class Tool extends EventEmitter {
    */
   getMetadata() {
     return this._getMetadata();
+  }
+  
+  /**
+   * Invoke the tool with a tool call format
+   * @param {Object} toolCall - Tool call with name and arguments
+   * @returns {Promise<Object>} Tool result
+   */
+  async invoke(toolCall) {
+    try {
+      // Handle both formats: {name, arguments} and {function: {name, arguments}}
+      const funcCall = toolCall.function || toolCall;
+      
+      // Parse the arguments JSON string
+      let args;
+      try {
+        args = JSON.parse(funcCall.arguments);
+      } catch (error) {
+        return {
+          success: false,
+          data: {
+            errorMessage: `Invalid JSON in arguments: ${error.message}`,
+            code: 'PARSE_ERROR',
+            tool: this.name,
+            timestamp: Date.now()
+          }
+        };
+      }
+      
+      // Call the execute method
+      return await this.execute(args);
+    } catch (error) {
+      return {
+        success: false,
+        data: {
+          errorMessage: error.message || 'Tool invocation failed',
+          code: 'INVOKE_ERROR',
+          tool: this.name,
+          timestamp: Date.now()
+        }
+      };
+    }
   }
 }
