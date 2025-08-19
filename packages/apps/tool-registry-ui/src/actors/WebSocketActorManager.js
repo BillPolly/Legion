@@ -198,6 +198,10 @@ export class WebSocketActorManager {
     return this.actors.tools;
   }
 
+  getToolRegistryActor() {
+    return this.actors.tools;
+  }
+
   getDatabaseActor() {
     return this.actors.database;
   }

@@ -209,6 +209,22 @@ export class ClientPlanningActor {
     this.applicationContext.updateState?.('planningStatus', 'complete');
     this.applicationContext.updateState?.('currentPlan', data);
     this.applicationContext.onPlanComplete?.(data);
+    
+    // Resolve the task decomposition promise if it exists
+    if (this.taskDecomposeResolver) {
+      console.log('📋 Resolving task decomposition promise with hierarchy');
+      // Extract the decomposition data for the TaskBreakdownPanel
+      const decompositionResult = {
+        decomposition: this.formatHierarchyAsDecomposition(data.hierarchy),
+        complexity: data.hierarchy?.complexity,
+        tools: this.extractToolsFromHierarchy(data.hierarchy),
+        validation: data.validation
+      };
+      
+      this.taskDecomposeResolver(decompositionResult);
+      this.taskDecomposeResolver = null;
+      this.taskDecomposeRejecter = null;
+    }
   }
 
   handlePlanSaved(data) {
@@ -244,6 +260,29 @@ export class ClientPlanningActor {
     this.applicationContext.updateState?.('planningStatus', 'error');
     this.applicationContext.updateState?.('planningError', data.error);
     this.applicationContext.onPlanError?.(data);
+    
+    // Check if we have a partial hierarchy even though validation failed
+    if (this.taskDecomposeResolver && data.details?.phases?.informal?.hierarchy) {
+      console.log('📋 Plan validation failed but hierarchy was generated, returning partial result');
+      const decompositionResult = {
+        decomposition: this.formatHierarchyAsDecomposition(data.details.phases.informal.hierarchy),
+        complexity: data.details.phases.informal.hierarchy?.complexity,
+        tools: this.extractToolsFromHierarchy(data.details.phases.informal.hierarchy),
+        validation: data.details.phases.informal.validation,
+        error: data.error
+      };
+      
+      // Resolve with partial result instead of rejecting
+      this.taskDecomposeResolver(decompositionResult);
+      this.taskDecomposeResolver = null;
+      this.taskDecomposeRejecter = null;
+    } else if (this.taskDecomposeRejecter) {
+      // Only reject if we have no hierarchy at all
+      console.log('📋 Rejecting task decomposition promise with error');
+      this.taskDecomposeRejecter(new Error(data.error));
+      this.taskDecomposeResolver = null;
+      this.taskDecomposeRejecter = null;
+    }
   }
 
   /**
@@ -258,6 +297,58 @@ export class ClientPlanningActor {
    */
   getActivePlans() {
     return Array.from(this.activePlans.values());
+  }
+
+  /**
+   * Format hierarchy data as decomposition tree for TaskBreakdownPanel
+   */
+  formatHierarchyAsDecomposition(hierarchy) {
+    if (!hierarchy) return null;
+    
+    const convertNode = (node) => {
+      if (!node) return null;
+      
+      return {
+        id: node.id || `node-${Date.now()}-${Math.random()}`,
+        task: node.description || node.task,
+        description: node.description || node.task,
+        complexity: node.complexity || 'simple',
+        reasoning: node.reasoning,
+        inputs: node.expectedInputs || node.inputs || [],
+        outputs: node.expectedOutputs || node.outputs || [],
+        suggestedTools: node.suggestedTools || node.tools || [],
+        subtasks: node.subtasks ? node.subtasks.map(convertNode).filter(Boolean) : []
+      };
+    };
+    
+    return {
+      root: convertNode(hierarchy)
+    };
+  }
+  
+  /**
+   * Extract tools from hierarchy
+   */
+  extractToolsFromHierarchy(hierarchy) {
+    const tools = new Set();
+    
+    const extractFromNode = (node) => {
+      if (!node) return;
+      
+      if (node.suggestedTools) {
+        node.suggestedTools.forEach(tool => tools.add(tool));
+      }
+      if (node.tools) {
+        node.tools.forEach(tool => tools.add(tool));
+      }
+      
+      if (node.subtasks) {
+        node.subtasks.forEach(extractFromNode);
+      }
+    };
+    
+    extractFromNode(hierarchy);
+    return Array.from(tools);
   }
 
   /**
