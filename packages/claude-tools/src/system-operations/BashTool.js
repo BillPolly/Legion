@@ -3,28 +3,89 @@
  */
 
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 import { spawn } from 'child_process';
 import path from 'path';
-
-// Input schema for validation
-const bashToolSchema = z.object({
-  command: z.string().min(1),
-  description: z.string().optional(),
-  timeout: z.number().int().positive().max(600000).optional().default(120000),
-  working_directory: z.string().optional(),
-  environment_variables: z.record(z.string()).optional(),
-  capture_output: z.boolean().optional().default(true)
-});
 
 export class BashTool extends Tool {
   constructor() {
     super({
       name: 'Bash',
-      description: 'Execute bash commands with optional timeout and security controls',
-      inputSchema: bashToolSchema,
-      execute: async (input) => this.executeCommand(input),
-      getMetadata: () => this.getToolMetadata()
+      description: 'Executes bash commands in a persistent shell session with security measures and timeout controls',
+      schema: {
+        input: {
+          type: 'object',
+          properties: {
+            command: {
+              type: 'string',
+              minLength: 1,
+              description: 'The command to execute'
+            },
+            description: {
+              type: 'string',
+              description: 'Clear, concise description of what this command does in 5-10 words'
+            },
+            timeout: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 600000,
+              description: 'Optional timeout in milliseconds (max 600000ms / 10 minutes)',
+              default: 120000
+            },
+            working_directory: {
+              type: 'string',
+              description: 'Working directory for command execution (defaults to current directory)'
+            },
+            environment_variables: {
+              type: 'object',
+              additionalProperties: {
+                type: 'string'
+              },
+              description: 'Additional environment variables to set for the command'
+            },
+            capture_output: {
+              type: 'boolean',
+              description: 'Whether to capture stdout/stderr output',
+              default: true
+            }
+          },
+          required: ['command']
+        },
+        output: {
+          type: 'object',
+          properties: {
+            command: {
+              type: 'string',
+              description: 'The command that was executed'
+            },
+            exit_code: {
+              type: 'integer',
+              description: 'Process exit code (0 indicates success)'
+            },
+            stdout: {
+              type: 'string',
+              description: 'Standard output from the command (truncated if > 30000 characters)'
+            },
+            stderr: {
+              type: 'string',
+              description: 'Standard error output from the command (truncated if > 30000 characters)'
+            },
+            execution_time_ms: {
+              type: 'number',
+              description: 'Time taken to execute the command in milliseconds'
+            },
+            working_directory: {
+              type: 'string',
+              description: 'Directory where the command was executed'
+            },
+            timeout_occurred: {
+              type: 'boolean',
+              description: 'Whether the command was terminated due to timeout'
+            }
+          },
+          required: ['command', 'exit_code', 'stdout', 'stderr', 'execution_time_ms', 'working_directory', 'timeout_occurred']
+        }
+      },
+      execute: async (input) => this.executeCommand(input)
     });
   }
 
@@ -166,75 +227,4 @@ export class BashTool extends Tool {
     }
   }
 
-  /**
-   * Get tool metadata
-   */
-  getToolMetadata() {
-    return {
-      name: 'Bash',
-      description: 'Execute bash commands with optional timeout and security controls',
-      input: {
-        command: {
-          type: 'string',
-          required: true,
-          description: 'The bash command to execute'
-        },
-        description: {
-          type: 'string',
-          required: false,
-          description: 'Description of what the command does'
-        },
-        timeout: {
-          type: 'number',
-          required: false,
-          description: 'Timeout in milliseconds (max 600000)'
-        },
-        working_directory: {
-          type: 'string',
-          required: false,
-          description: 'Working directory for command execution'
-        },
-        environment_variables: {
-          type: 'object',
-          required: false,
-          description: 'Additional environment variables'
-        },
-        capture_output: {
-          type: 'boolean',
-          required: false,
-          description: 'Whether to capture stdout/stderr'
-        }
-      },
-      output: {
-        command: {
-          type: 'string',
-          description: 'The command that was executed'
-        },
-        exit_code: {
-          type: 'number',
-          description: 'Process exit code'
-        },
-        stdout: {
-          type: 'string',
-          description: 'Standard output'
-        },
-        stderr: {
-          type: 'string',
-          description: 'Standard error'
-        },
-        execution_time_ms: {
-          type: 'number',
-          description: 'Execution time in milliseconds'
-        },
-        working_directory: {
-          type: 'string',
-          description: 'Directory where command was executed'
-        },
-        timeout_occurred: {
-          type: 'boolean',
-          description: 'Whether timeout occurred'
-        }
-      }
-    };
-  }
 }

@@ -34,8 +34,9 @@
   "dependencies": {
     "@legion/actor-bt": "*",
     "@legion/tools-registry": "*",
+    "@legion/resource-manager": "*",
     "@legion/llm": "*",
-    "@legion/planner": "*",
+    "@legion/decent-planner": "*",
     "@legion/schema": "*",
     "@legion/storage": "*",
     "mongodb": "^6.0.0",

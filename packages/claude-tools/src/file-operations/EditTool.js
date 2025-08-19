@@ -3,25 +3,58 @@
  */
 
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 import { promises as fs } from 'fs';
-
-// Input schema for validation
-const editToolSchema = z.object({
-  file_path: z.string().min(1),
-  old_string: z.string(),
-  new_string: z.string(),
-  replace_all: z.boolean().optional().default(false)
-});
 
 export class EditTool extends Tool {
   constructor() {
     super({
       name: 'Edit',
       description: 'Make exact string replacements in files',
-      inputSchema: editToolSchema,
-      execute: async (input) => this.editFile(input),
-      getMetadata: () => this.getToolMetadata()
+      schema: {
+        input: {
+          type: 'object',
+          properties: {
+            file_path: {
+              type: 'string',
+              minLength: 1,
+              description: 'Absolute path to the file to edit'
+            },
+            old_string: {
+              type: 'string',
+              description: 'Exact text to replace'
+            },
+            new_string: {
+              type: 'string',
+              description: 'Replacement text'
+            },
+            replace_all: {
+              type: 'boolean',
+              description: 'Replace all occurrences (default: false)',
+              default: false
+            }
+          },
+          required: ['file_path', 'old_string', 'new_string']
+        },
+        output: {
+          type: 'object',
+          properties: {
+            file_path: {
+              type: 'string',
+              description: 'Path of the edited file'
+            },
+            replacements_made: {
+              type: 'number',
+              description: 'Number of replacements made'
+            },
+            preview: {
+              type: 'string',
+              description: 'Preview of changes made'
+            }
+          },
+          required: ['file_path', 'replacements_made', 'preview']
+        }
+      },
+      execute: async (input) => this.editFile(input)
     });
   }
 
@@ -170,49 +203,4 @@ export class EditTool extends Tool {
     return `...${before}[${oldString} → ${newString}]${after}...`;
   }
 
-  /**
-   * Get tool metadata
-   */
-  getToolMetadata() {
-    return {
-      name: 'Edit',
-      description: 'Make exact string replacements in files',
-      input: {
-        file_path: {
-          type: 'string',
-          required: true,
-          description: 'Path to the file to edit'
-        },
-        old_string: {
-          type: 'string',
-          required: true,
-          description: 'Exact text to replace'
-        },
-        new_string: {
-          type: 'string',
-          required: true,
-          description: 'Replacement text'
-        },
-        replace_all: {
-          type: 'boolean',
-          required: false,
-          description: 'Replace all occurrences (default: false)'
-        }
-      },
-      output: {
-        file_path: {
-          type: 'string',
-          description: 'Path of the edited file'
-        },
-        replacements_made: {
-          type: 'number',
-          description: 'Number of replacements made'
-        },
-        preview: {
-          type: 'string',
-          description: 'Preview of changes made'
-        }
-      }
-    };
-  }
 }

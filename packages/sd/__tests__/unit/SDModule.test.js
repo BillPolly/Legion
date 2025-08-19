@@ -31,8 +31,10 @@ describe('SDModule', () => {
       get: jest.fn((key) => {
         if (key === 'env.ANTHROPIC_API_KEY') return 'test-api-key';
         if (key === 'env.MONGODB_URI') return 'mongodb://localhost:27017/test';
+        if (key === 'env.MONGODB_URL') return 'mongodb://localhost:27017/test';
         return null;
       }),
+      set: jest.fn(), // Add missing set method
       register: jest.fn()
     };
   });
@@ -46,8 +48,9 @@ describe('SDModule', () => {
       module = new SDModule({ resourceManager: mockResourceManager });
       
       expect(module).toBeDefined();
-      expect(module.name).toBe('SDModule');
       expect(module.resourceManager).toBe(mockResourceManager);
+      expect(module.decentPlanner).toBeNull();
+      expect(module.tools).toBeInstanceOf(Map);
     });
   });
 
@@ -57,7 +60,9 @@ describe('SDModule', () => {
       await module.initialize();
       
       expect(module.llmClient).toBeDefined();
+      expect(module.decentPlanner).toBeDefined();
       expect(module.profileManager).toBeDefined();
+      expect(module.designDatabase).toBeDefined();
       expect(module.tools.size).toBeGreaterThan(0);
     });
 
@@ -176,6 +181,9 @@ describe('SDModule', () => {
       expect(metadata).toHaveProperty('version', '1.0.0');
       expect(metadata).toHaveProperty('toolCount');
       expect(metadata).toHaveProperty('profileCount');
+      expect(metadata).toHaveProperty('hasPlanner', true);
+      expect(metadata).toHaveProperty('databaseConnected', true);
+      expect(metadata.description).toContain('DecentPlanner integration');
       expect(metadata.toolCount).toBeGreaterThan(0);
       expect(metadata.profileCount).toBeGreaterThan(0);
     });

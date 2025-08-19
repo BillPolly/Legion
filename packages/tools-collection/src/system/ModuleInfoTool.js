@@ -1,19 +1,78 @@
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 
 export class ModuleInfoTool extends Tool {
   constructor(dependencies = {}) {
     super({
       name: 'module_info',
       description: 'Get detailed information about a module',
-      inputSchema: z.object({
-        name: z.string().describe('Module name')
-      })
+      schema: {
+        input: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              description: 'Module name'
+            }
+          },
+          required: ['name']
+        },
+        output: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              description: 'Whether the operation was successful'
+            },
+            module: {
+              type: 'object',
+              properties: {
+                name: {
+                  type: 'string',
+                  description: 'Module name'
+                },
+                description: {
+                  type: 'string',
+                  description: 'Module description'
+                },
+                toolCount: {
+                  type: 'number',
+                  description: 'Number of tools in the module'
+                },
+                tools: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      name: {
+                        type: 'string',
+                        description: 'Tool name'
+                      },
+                      description: {
+                        type: 'string',
+                        description: 'Tool description'
+                      }
+                    }
+                  },
+                  description: 'List of tools in the module'
+                }
+              },
+              description: 'Module information'
+            },
+            error: {
+              type: 'string',
+              description: 'Error message if operation failed'
+            }
+          },
+          required: ['success']
+        }
+      },
+      execute: async (args) => this.getModuleInfo(args)
     });
+
     this.config = dependencies;
   }
 
-  async execute(args) {
+  async getModuleInfo(args) {
     const moduleLoader = this.config.moduleLoader;
     if (!moduleLoader) {
       return {

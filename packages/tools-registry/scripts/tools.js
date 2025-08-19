@@ -606,9 +606,36 @@ async function infoCommand(options) {
       console.log(chalk.white(`   Type: ${typeof tool}`));
       console.log(chalk.white(`   Constructor: ${tool.constructor?.name || 'unknown'}`));
       
-      // Show parameters
-      if (tool.parameters) {
-        console.log(chalk.cyan('\n📝 Parameters:'));
+      // Show parameters from new descriptive schema format
+      if (tool.schema?.input?.properties) {
+        console.log(chalk.cyan('\n📝 Input Parameters:'));
+        
+        const required = tool.schema.input.required || [];
+        for (const [paramName, param] of Object.entries(tool.schema.input.properties)) {
+          const isRequired = required.includes(paramName) ? 'required' : 'optional';
+          const type = param.type || 'any';
+          
+          console.log(chalk.white(`   ${paramName}:`));
+          console.log(chalk.gray(`      Type: ${type}`));
+          console.log(chalk.gray(`      Required: ${isRequired}`));
+          
+          if (param.description) {
+            console.log(chalk.gray(`      Description: ${param.description}`));
+          }
+          
+          if (param.minLength !== undefined) {
+            console.log(chalk.gray(`      Min Length: ${param.minLength}`));
+          }
+          if (param.minimum !== undefined) {
+            console.log(chalk.gray(`      Minimum: ${param.minimum}`));
+          }
+          if (param.enum) {
+            console.log(chalk.gray(`      Valid Values: ${param.enum.join(', ')}`));
+          }
+        }
+      } else if (tool.parameters) {
+        // Fallback for legacy parameter format
+        console.log(chalk.cyan('\n📝 Parameters (Legacy):'));
         
         for (const [paramName, param] of Object.entries(tool.parameters)) {
           const required = param.required ? 'required' : 'optional';
@@ -621,13 +648,32 @@ async function infoCommand(options) {
           if (param.description) {
             console.log(chalk.gray(`      Description: ${param.description}`));
           }
-          
-          if (param.default !== undefined) {
-            console.log(chalk.gray(`      Default: ${JSON.stringify(param.default)}`));
-          }
         }
       } else {
         console.log(chalk.gray('\n   No parameter definitions found'));
+      }
+
+      // Show output schema from new descriptive format
+      if (tool.schema?.output?.properties) {
+        console.log(chalk.cyan('\n📤 Output Properties:'));
+        
+        const required = tool.schema.output.required || [];
+        for (const [propName, prop] of Object.entries(tool.schema.output.properties)) {
+          const isRequired = required.includes(propName) ? 'required' : 'optional';
+          const type = prop.type || 'any';
+          
+          console.log(chalk.white(`   ${propName}:`));
+          console.log(chalk.gray(`      Type: ${type}`));
+          console.log(chalk.gray(`      Required: ${isRequired}`));
+          
+          if (prop.description) {
+            console.log(chalk.gray(`      Description: ${prop.description}`));
+          }
+          
+          if (prop.enum) {
+            console.log(chalk.gray(`      Valid Values: ${prop.enum.join(', ')}`));
+          }
+        }
       }
       
       // Show methods and properties

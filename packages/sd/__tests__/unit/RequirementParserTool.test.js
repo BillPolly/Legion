@@ -16,9 +16,8 @@ jest.mock('@legion/tools-registry', () => {
         this.name = config.name;
         this.description = config.description;
         this.inputSchema = config.inputSchema;
-      }
-      emit(event, data) {
-        // Mock emit
+        // Ensure emit is properly bound
+        this.emit = jest.fn();
       }
     },
     ToolResult: {
@@ -70,7 +69,9 @@ describe('RequirementParserTool', () => {
 
     mockDependencies = {
       llmClient: mockLLMClient,
-      designDatabase: {},
+      designDatabase: {
+        storeArtifact: jest.fn().mockResolvedValue({ id: 'test-artifact-id' })
+      },
       resourceManager: {
         get: jest.fn().mockReturnValue(mockLLMClient)
       }
@@ -95,6 +96,9 @@ describe('RequirementParserTool', () => {
     it('should parse requirements successfully', async () => {
       tool = new RequirementParserTool(mockDependencies);
       
+      // Manually add emit method to fix mock issue
+      tool.emit = jest.fn();
+      
       const args = {
         requirementsText: 'The system should allow users to login and respond quickly',
         projectId: 'test-project',
@@ -102,6 +106,11 @@ describe('RequirementParserTool', () => {
       };
       
       const result = await tool.execute(args);
+      
+      // Debug: log result if test fails
+      if (result.success !== true) {
+        console.log('Test failed with result:', result);
+      }
       
       // Test the actual result instead of mocked function calls
       expect(result).toHaveProperty('success', true);
@@ -115,7 +124,7 @@ describe('RequirementParserTool', () => {
       expect(result.data.summary.nonFunctionalCount).toBeGreaterThanOrEqual(0);
     });
 
-    it('should handle LLM parsing errors gracefully', async () => {
+    it('should fail fast on LLM parsing errors (no fallbacks)', async () => {
       mockLLMClient.complete = jest.fn().mockResolvedValue('Invalid JSON response');
       
       tool = new RequirementParserTool(mockDependencies);
@@ -127,11 +136,9 @@ describe('RequirementParserTool', () => {
       
       const result = await tool.execute(args);
       
-      // Should still succeed with fallback parsing
-      expect(result).toHaveProperty('success', true);
-      expect(result.data.parsedRequirements).toHaveProperty('functional');
-      expect(Array.isArray(result.data.parsedRequirements.functional)).toBe(true);
-      expect(result.data.parsedRequirements.reasoning).toContain('Failed to parse');
+      // Should fail fast - no fallback parsing
+      expect(result).toHaveProperty('success', false);
+      expect(result.error).toContain('Failed to parse requirements');
     });
 
     it('should handle missing LLM client', async () => {
@@ -157,6 +164,9 @@ describe('RequirementParserTool', () => {
       }));
       
       tool = new RequirementParserTool(mockDependencies);
+      
+      // Manually add emit method to fix mock issue
+      tool.emit = jest.fn();
       
       const args = {
         requirementsText: 'Test requirements'
@@ -222,15 +232,12 @@ describe('RequirementParserTool', () => {
       expect(parsed).toHaveProperty('nonFunctional');
     });
 
-    it('should handle malformed JSON with fallback', () => {
+    it('should throw error on malformed JSON (fail-fast behavior)', () => {
       tool = new RequirementParserTool(mockDependencies);
       
       const badResponse = 'This is not JSON at all';
-      const parsed = tool.parseLLMResponse(badResponse);
       
-      expect(parsed).toHaveProperty('functional');
-      expect(parsed.functional).toHaveLength(1);
-      expect(parsed.reasoning).toContain('Failed to parse');
+      expect(() => tool.parseLLMResponse(badResponse)).toThrow('Failed to parse LLM response as JSON');
     });
   });
 

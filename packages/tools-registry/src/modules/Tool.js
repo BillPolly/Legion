@@ -21,11 +21,25 @@ export class Tool {
     this._getMetadata = getMetadata;
     this.subscribers = new Set();  // Store subscribers
     
-    // Support both direct validator object and JSON schema
-    if (schema) {
-      // If schema is already a validator object (has validate method)
+    // Handle new descriptive schema format
+    if (schema && typeof schema === 'object' && (schema.input || schema.output)) {
+      // New descriptive schema format
+      this.schema = schema;
+      
+      // Create validator from input schema if available
+      if (schema.input && createValidator) {
+        this.validator = createValidator(schema.input);
+      } else {
+        this.validator = null;
+      }
+    } else if (schema) {
+      // Legacy: schema is already a validator object (has validate method)
       this.validator = schema;
+      this.schema = null; // No descriptive schema available
     } else if (inputSchema && createValidator) {
+      // Legacy: inputSchema provided directly
+      this.schema = null; // No descriptive schema available
+      
       // Check if inputSchema is a Zod schema (has _def property)
       if (inputSchema && typeof inputSchema === 'object' && inputSchema._def) {
         // This is a Zod schema - store it directly and create a custom validator
@@ -47,6 +61,7 @@ export class Tool {
       }
     } else {
       this.validator = null;
+      this.schema = null;
     }
   }
   

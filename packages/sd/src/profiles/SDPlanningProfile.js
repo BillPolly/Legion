@@ -1,13 +1,15 @@
 /**
- * SDPlanningProfile - Software Development planning profile for Legion
+ * SDPlanningProfile - Software Development planning profile for Legion DecentPlanner
  * 
- * Extends ProfilePlanner to provide SD-specific BT generation for autonomous
- * software development using all six methodologies
+ * Provides SD-specific planning profiles and context hints for autonomous
+ * software development using all six methodologies integrated with Legion's formal planning
  */
 
 export class SDPlanningProfile {
-  constructor() {
+  constructor(decentPlanner = null) {
+    this.decentPlanner = decentPlanner;
     this.profiles = this.initializeProfiles();
+    this.contextHints = this.initializeContextHints();
   }
 
   initializeProfiles() {
@@ -24,9 +26,10 @@ export class SDPlanningProfile {
   createFullSDProfile() {
     return {
       name: 'sd-full',
-      description: 'Complete software development lifecycle using all six methodologies',
+      description: 'Complete software development lifecycle using all six methodologies with DecentPlanner integration',
       requiredModules: ['sd', 'file', 'ai-generation'],
-      maxSteps: 100,
+      maxDepth: 6, // For hierarchical decomposition
+      confidenceThreshold: 0.8,
       
       // Allowable actions for BT generation - maps to SD tools
       allowableActions: [
@@ -204,24 +207,17 @@ export class SDPlanningProfile {
       ],
       
       // Context prompts for LLM
-      contextPrompts: [
-        'You are building a software system using six integrated methodologies:',
-        '1. Domain-Driven Design (DDD) for domain modeling',
-        '2. Clean Architecture for system structure',
-        '3. Immutable Design for state management',
-        '4. Flux Architecture for unidirectional data flow',
-        '5. Test-Driven Development (TDD) for quality',
-        '6. Clean Code principles for maintainability',
-        '',
-        'Follow this top-down workflow:',
-        '1. Analyze requirements and generate user stories',
-        '2. Model the domain using DDD principles',
-        '3. Design clean architecture with proper layers',
-        '4. Design immutable state with Flux patterns',
-        '5. Generate comprehensive tests first (TDD)',
-        '6. Generate clean, maintainable code',
-        '7. Validate everything meets quality standards'
-      ].join('\n'),
+      contextHints: this.getSDMethodologyHints(),
+      
+      // Decomposition hints for Legion's DecentPlanner
+      decompositionStrategy: 'methodology-driven',
+      complexityFactors: [
+        'domain_complexity',
+        'architectural_layers',
+        'state_management_complexity',
+        'testing_requirements',
+        'code_quality_standards'
+      ],
       
       defaultInputs: ['requirementsText'],
       defaultOutputs: ['deployableProject']
@@ -266,7 +262,10 @@ export class SDPlanningProfile {
           outputs: ['storedArtifact']
         }
       ],
-      contextPrompts: 'Focus on understanding and structuring requirements clearly.',
+      contextHints: {
+        focus: 'requirements-analysis',
+        outputQuality: 'high-clarity-structured-requirements'
+      },
       defaultInputs: ['requirementsText'],
       defaultOutputs: ['userStories', 'acceptanceCriteria']
     };
@@ -328,7 +327,11 @@ export class SDPlanningProfile {
           outputs: ['storedArtifact']
         }
       ],
-      contextPrompts: 'Apply Domain-Driven Design principles to model the business domain accurately.',
+      contextHints: {
+        focus: 'domain-modeling',
+        methodology: 'DDD',
+        outputQuality: 'accurate-domain-representation'
+      },
       defaultInputs: ['requirementsContext'],
       defaultOutputs: ['entities', 'aggregates', 'domainEvents']
     };
@@ -384,7 +387,11 @@ export class SDPlanningProfile {
           outputs: ['storedArtifact']
         }
       ],
-      contextPrompts: 'Design a clean architecture with proper separation of concerns and dependency inversion.',
+      contextHints: {
+        focus: 'architecture-design', 
+        methodology: 'Clean Architecture',
+        outputQuality: 'proper-separation-of-concerns'
+      },
       defaultInputs: ['domainContext'],
       defaultOutputs: ['layers', 'useCases', 'interfaces']
     };
@@ -452,7 +459,11 @@ export class SDPlanningProfile {
           outputs: ['storedArtifact']
         }
       ],
-      contextPrompts: 'Generate clean, maintainable code following SOLID principles and clean code practices.',
+      contextHints: {
+        focus: 'code-generation',
+        methodology: 'Clean Code',
+        outputQuality: 'maintainable-solid-compliant-code'
+      },
       defaultInputs: ['projectContext'],
       defaultOutputs: ['deployableCode', 'documentation']
     };
@@ -514,7 +525,11 @@ export class SDPlanningProfile {
           outputs: ['storedArtifact']
         }
       ],
-      contextPrompts: 'Follow Test-Driven Development principles. Generate comprehensive tests before implementation.',
+      contextHints: {
+        focus: 'test-generation',
+        methodology: 'TDD',
+        outputQuality: 'comprehensive-test-coverage'
+      },
       defaultInputs: ['implementationContext'],
       defaultOutputs: ['testResults', 'coverageReport']
     };
@@ -524,11 +539,111 @@ export class SDPlanningProfile {
     return this.profiles[name];
   }
 
+  /**
+   * Get context hints for DecentPlanner
+   */
+  getSDMethodologyHints() {
+    return {
+      systemContext: 'Software development using six integrated methodologies',
+      methodologies: [
+        'Domain-Driven Design (DDD) for domain modeling',
+        'Clean Architecture for system structure', 
+        'Immutable Design for state management',
+        'Flux Architecture for unidirectional data flow',
+        'Test-Driven Development (TDD) for quality',
+        'Clean Code principles for maintainability'
+      ],
+      workflowPhases: [
+        'requirements_analysis',
+        'domain_modeling', 
+        'architecture_design',
+        'state_design',
+        'test_generation',
+        'code_generation',
+        'quality_validation'
+      ],
+      qualityGates: [
+        'Requirements completeness and clarity',
+        'Domain model consistency with DDD principles',
+        'Architecture compliance with Clean Architecture',
+        'State immutability and Flux pattern adherence',
+        'Test coverage and TDD compliance',
+        'Code quality and Clean Code principles'
+      ]
+    };
+  }
+
+  /**
+   * Initialize context hints for Legion's DecentPlanner
+   */
+  initializeContextHints() {
+    return {
+      'software-development': {
+        domainKeywords: [
+          'requirements', 'user stories', 'acceptance criteria',
+          'domain model', 'entities', 'aggregates', 'bounded contexts',
+          'architecture', 'layers', 'use cases', 'interfaces',
+          'state management', 'immutable', 'flux', 'actions', 'reducers',
+          'tests', 'tdd', 'unit tests', 'integration tests',
+          'code generation', 'clean code', 'refactoring'
+        ],
+        complexityIndicators: [
+          'multiple bounded contexts',
+          'complex domain rules',
+          'extensive state management',
+          'multiple architectural layers',
+          'high test coverage requirements',
+          'complex integration patterns'
+        ],
+        decompositionPatterns: [
+          'by-methodology-phase',
+          'by-domain-boundary', 
+          'by-architectural-layer',
+          'by-feature-slice'
+        ]
+      }
+    };
+  }
+
+  /**
+   * Plan using DecentPlanner integration
+   */
+  async planWithProfile(profileName, goal, context = {}) {
+    if (!this.decentPlanner) {
+      throw new Error('DecentPlanner not available. Ensure SDModule is properly initialized.');
+    }
+
+    const profile = this.getProfile(profileName);
+    if (!profile) {
+      throw new Error(`Profile '${profileName}' not found`);
+    }
+
+    // Enhance context with profile-specific information
+    const enhancedContext = {
+      ...context,
+      profile: profileName,
+      methodologies: this.getSDMethodologyHints().methodologies,
+      workflowPhases: this.getSDMethodologyHints().workflowPhases,
+      allowableActions: profile.allowableActions,
+      contextHints: this.contextHints['software-development']
+    };
+
+    return await this.decentPlanner.plan(goal, enhancedContext);
+  }
+
+  /**
+   * Get context hints for a specific domain
+   */
+  getContextHints(domain = 'software-development') {
+    return this.contextHints[domain] || this.contextHints['software-development'];
+  }
+
   listProfiles() {
     return Object.keys(this.profiles).map(key => ({
       name: key,
       description: this.profiles[key].description,
-      actionCount: this.profiles[key].allowableActions.length
+      actionCount: this.profiles[key].allowableActions.length,
+      hasDecentPlannerIntegration: !!this.decentPlanner
     }));
   }
 }

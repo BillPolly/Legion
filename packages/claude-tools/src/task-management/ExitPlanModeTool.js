@@ -4,21 +4,62 @@
  */
 
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
-
-// Input schema for validation
-const exitPlanModeToolSchema = z.object({
-  plan: z.string().min(1)
-});
 
 export class ExitPlanModeTool extends Tool {
   constructor() {
     super({
       name: 'ExitPlanMode',
-      description: 'Exit plan mode and present implementation plan to user for approval',
-      inputSchema: exitPlanModeToolSchema,
-      execute: async (input) => this.exitPlanMode(input),
-      getMetadata: () => this.getToolMetadata()
+      description: 'Use when finished presenting your plan and ready to code. This will prompt the user to exit plan mode.',
+      schema: {
+        input: {
+          type: 'object',
+          properties: {
+            plan: {
+              type: 'string',
+              minLength: 1,
+              description: 'The plan you came up with, that you want to run by the user for approval. Supports markdown. The plan should be pretty concise.'
+            }
+          },
+          required: ['plan']
+        },
+        output: {
+          type: 'object',
+          properties: {
+            plan: {
+              type: 'string',
+              description: 'Formatted plan with proper markdown headers and structure'
+            },
+            message: {
+              type: 'string',
+              description: 'Status message about exiting plan mode'
+            },
+            timestamp: {
+              type: 'string',
+              description: 'Exit timestamp (ISO string)'
+            },
+            metadata: {
+              type: 'object',
+              description: 'Plan metadata and analysis',
+              properties: {
+                plan_length: {
+                  type: 'integer',
+                  description: 'Length of the plan in characters'
+                },
+                line_count: {
+                  type: 'integer',
+                  description: 'Number of lines in the plan'
+                },
+                has_markdown: {
+                  type: 'boolean',
+                  description: 'Whether the plan contains markdown formatting'
+                }
+              }
+            }
+          },
+          required: ['plan', 'message', 'timestamp', 'metadata']
+        }
+      },
+      execute: async (input) => this.exitPlanMode(input)
     });
     
     // Track planning mode state
@@ -98,38 +139,4 @@ export class ExitPlanModeTool extends Tool {
     return this.isInPlanMode;
   }
 
-  /**
-   * Get tool metadata
-   */
-  getToolMetadata() {
-    return {
-      name: 'ExitPlanMode',
-      description: 'Exit plan mode and present implementation plan to user for approval',
-      input: {
-        plan: {
-          type: 'string',
-          required: true,
-          description: 'The plan to present to the user (supports markdown)'
-        }
-      },
-      output: {
-        plan: {
-          type: 'string',
-          description: 'Formatted plan'
-        },
-        message: {
-          type: 'string',
-          description: 'Status message'
-        },
-        timestamp: {
-          type: 'string',
-          description: 'Exit timestamp'
-        },
-        metadata: {
-          type: 'object',
-          description: 'Plan metadata'
-        }
-      }
-    };
-  }
 }

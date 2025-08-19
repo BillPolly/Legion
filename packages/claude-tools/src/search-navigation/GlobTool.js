@@ -3,26 +3,83 @@
  */
 
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 import fg from 'fast-glob';
 import path from 'path';
 import { promises as fs } from 'fs';
-
-// Input schema for validation
-const globToolSchema = z.object({
-  pattern: z.string().min(1),
-  path: z.string().optional(),
-  ignore: z.array(z.string()).optional()
-});
 
 export class GlobTool extends Tool {
   constructor() {
     super({
       name: 'Glob',
-      description: 'Find files by pattern matching (e.g., "**/*.js")',
-      inputSchema: globToolSchema,
-      execute: async (input) => this.findFiles(input),
-      getMetadata: () => this.getToolMetadata()
+      description: 'Fast file pattern matching tool that works with any codebase size',
+      schema: {
+        input: {
+          type: 'object',
+          properties: {
+            pattern: {
+              type: 'string',
+              minLength: 1,
+              description: 'Glob pattern to match files against (e.g., "**/*.js", "src/**/*.ts")'
+            },
+            path: {
+              type: 'string',
+              description: 'Directory to search in (defaults to current working directory)'
+            },
+            ignore: {
+              type: 'array',
+              items: {
+                type: 'string'
+              },
+              description: 'List of glob patterns to ignore'
+            }
+          },
+          required: ['pattern']
+        },
+        output: {
+          type: 'object',
+          properties: {
+            pattern: {
+              type: 'string',
+              description: 'The pattern that was searched'
+            },
+            matches: {
+              type: 'array',
+              description: 'Array of matching files with metadata, sorted by modification time',
+              items: {
+                type: 'object',
+                properties: {
+                  path: {
+                    type: 'string',
+                    description: 'Absolute path to the file'
+                  },
+                  relative_path: {
+                    type: 'string',
+                    description: 'Path relative to search directory'
+                  },
+                  size: {
+                    type: 'number',
+                    description: 'File size in bytes'
+                  },
+                  modified_time: {
+                    type: 'string',
+                    description: 'Last modification time (ISO string)'
+                  }
+                }
+              }
+            },
+            total_matches: {
+              type: 'number',
+              description: 'Total number of matching files'
+            },
+            search_time_ms: {
+              type: 'number',
+              description: 'Time taken to search in milliseconds'
+            }
+          },
+          required: ['pattern', 'matches', 'total_matches', 'search_time_ms']
+        }
+      },
+      execute: async (input) => this.findFiles(input)
     });
   }
 
@@ -111,48 +168,4 @@ export class GlobTool extends Tool {
     }
   }
 
-  /**
-   * Get tool metadata
-   */
-  getToolMetadata() {
-    return {
-      name: 'Glob',
-      description: 'Find files by pattern matching (e.g., "**/*.js")',
-      input: {
-        pattern: {
-          type: 'string',
-          required: true,
-          description: 'Glob pattern to match files'
-        },
-        path: {
-          type: 'string',
-          required: false,
-          description: 'Base directory to search (defaults to current directory)'
-        },
-        ignore: {
-          type: 'array',
-          required: false,
-          description: 'Patterns to ignore'
-        }
-      },
-      output: {
-        pattern: {
-          type: 'string',
-          description: 'The pattern that was searched'
-        },
-        matches: {
-          type: 'array',
-          description: 'Array of matching files with metadata'
-        },
-        total_matches: {
-          type: 'number',
-          description: 'Total number of matching files'
-        },
-        search_time_ms: {
-          type: 'number',
-          description: 'Time taken to search in milliseconds'
-        }
-      }
-    };
-  }
 }

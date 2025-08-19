@@ -3,27 +3,69 @@
  */
 
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 import { promises as fs } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-
-// Input schema for validation
-const notebookEditToolSchema = z.object({
-  notebook_path: z.string().min(1),
-  new_source: z.string(),
-  cell_id: z.string().optional(),
-  cell_type: z.enum(['code', 'markdown']).optional(),
-  edit_mode: z.enum(['replace', 'insert', 'delete']).optional().default('replace')
-});
 
 export class NotebookEditTool extends Tool {
   constructor() {
     super({
       name: 'NotebookEdit',
-      description: 'Edit specific cells in Jupyter notebooks',
-      inputSchema: notebookEditToolSchema,
-      execute: async (input) => this.editNotebook(input),
-      getMetadata: () => this.getToolMetadata()
+      description: 'Edit specific cells in Jupyter notebooks (.ipynb files)',
+      schema: {
+        input: {
+          type: 'object',
+          properties: {
+            notebook_path: {
+              type: 'string',
+              minLength: 1,
+              description: 'Absolute path to the Jupyter notebook file'
+            },
+            new_source: {
+              type: 'string',
+              description: 'New source code for the cell'
+            },
+            cell_id: {
+              type: 'string',
+              description: 'ID of the cell to edit (optional for replace mode)'
+            },
+            cell_type: {
+              type: 'string',
+              enum: ['code', 'markdown'],
+              description: 'Type of cell (required for insert mode)'
+            },
+            edit_mode: {
+              type: 'string',
+              enum: ['replace', 'insert', 'delete'],
+              description: 'Edit mode: replace (default), insert, or delete',
+              default: 'replace'
+            }
+          },
+          required: ['notebook_path', 'new_source']
+        },
+        output: {
+          type: 'object',
+          properties: {
+            notebook_path: {
+              type: 'string',
+              description: 'Path of the edited notebook'
+            },
+            cell_modified: {
+              type: 'string',
+              description: 'ID of the modified cell'
+            },
+            operation: {
+              type: 'string',
+              description: 'Operation performed (replace, insert, or delete)'
+            },
+            notebook_metadata: {
+              type: 'object',
+              description: 'Updated notebook metadata'
+            }
+          },
+          required: ['notebook_path', 'cell_modified', 'operation', 'notebook_metadata']
+        }
+      },
+      execute: async (input) => this.editNotebook(input)
     });
   }
 
@@ -281,58 +323,4 @@ export class NotebookEditTool extends Tool {
     );
   }
 
-  /**
-   * Get tool metadata
-   */
-  getToolMetadata() {
-    return {
-      name: 'NotebookEdit',
-      description: 'Edit specific cells in Jupyter notebooks',
-      input: {
-        notebook_path: {
-          type: 'string',
-          required: true,
-          description: 'Path to the Jupyter notebook'
-        },
-        new_source: {
-          type: 'string',
-          required: true,
-          description: 'New source code for the cell'
-        },
-        cell_id: {
-          type: 'string',
-          required: false,
-          description: 'ID of the cell to edit'
-        },
-        cell_type: {
-          type: 'string',
-          required: false,
-          description: 'Type of cell (code or markdown)'
-        },
-        edit_mode: {
-          type: 'string',
-          required: false,
-          description: 'Edit mode (replace, insert, or delete)'
-        }
-      },
-      output: {
-        notebook_path: {
-          type: 'string',
-          description: 'Path of the edited notebook'
-        },
-        cell_modified: {
-          type: 'string',
-          description: 'ID of the modified cell'
-        },
-        operation: {
-          type: 'string',
-          description: 'Operation performed'
-        },
-        notebook_metadata: {
-          type: 'object',
-          description: 'Updated notebook metadata'
-        }
-      }
-    };
-  }
 }

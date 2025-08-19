@@ -6,7 +6,9 @@
  */
 
 import { Module } from '@legion/tools-registry';
+import { DecentPlanner } from '@legion/decent-planner';
 import { SDPlanningProfile } from './profiles/SDPlanningProfile.js';
+import { DesignDatabaseService } from './services/DesignDatabaseService.js';
 
 // Import tools (to be implemented)
 import { RequirementParserTool } from './tools/requirements/RequirementParserTool.js';
@@ -32,6 +34,7 @@ export default class SDModule extends Module {
     this.resourceManager = dependencies.resourceManager || dependencies;
     this.profileManager = null;
     this.llmClient = null;
+    this.decentPlanner = null;
     this.designDatabase = null;
     this.tools = new Map();
   }
@@ -43,16 +46,24 @@ export default class SDModule extends Module {
     // Get LLM client from ResourceManager
     this.llmClient = await this.getLLMClient();
     
-    // Initialize planning profiles
-    this.profileManager = new SDPlanningProfile();
-    
     // Initialize design database connection
     await this.initializeDatabase();
     
-    // Register all tools
+    // Register all tools first (needed for planner)
     await this.registerTools();
     
-    console.log('[SDModule] Initialized with', this.tools.size, 'tools');
+    // Initialize Legion's DecentPlanner with tool registry
+    this.decentPlanner = new DecentPlanner(this.llmClient, this, {
+      maxDepth: 6, // SD workflows can be deep
+      confidenceThreshold: 0.8, // High confidence for software development
+      enableFormalPlanning: true,
+      validateBehaviorTrees: true
+    });
+    
+    // Initialize planning profiles
+    this.profileManager = new SDPlanningProfile(this.decentPlanner);
+    
+    console.log('[SDModule] Initialized with', this.tools.size, 'tools and DecentPlanner integration');
   }
 
   /**
@@ -94,14 +105,10 @@ export default class SDModule extends Module {
    * Initialize database connection
    */
   async initializeDatabase() {
-    const mongoUri = this.resourceManager.get('env.MONGODB_URI') || 
-                     'mongodb://localhost:27017/sd-design';
+    this.designDatabase = new DesignDatabaseService(this.resourceManager);
+    await this.designDatabase.initialize();
     
-    // Database initialization will be implemented with DatabaseConnectionTool
-    this.designDatabase = {
-      uri: mongoUri,
-      connected: false // Will be set to true when tools are implemented
-    };
+    console.log('[SDModule] Design database connected');
   }
 
   /**
@@ -182,6 +189,36 @@ export default class SDModule extends Module {
   }
 
   /**
+   * Plan a software development goal using Legion's DecentPlanner
+   * @param {string} goal - Development goal (e.g., "Build a user authentication system")
+   * @param {Object} context - Additional context for planning
+   * @returns {Promise<Object>} Planning result with decomposition and behavior trees
+   */
+  async planDevelopment(goal, context = {}) {
+    if (!this.decentPlanner) {
+      throw new Error('SDModule not initialized. Call initialize() first.');
+    }
+    
+    const sdContext = {
+      ...context,
+      methodology: 'SD-6-Methodology',
+      frameworks: ['DDD', 'Clean Architecture', 'Immutable Design', 'Flux', 'TDD', 'Clean Code'],
+      toolset: Array.from(this.tools.keys()),
+      databaseConnected: this.designDatabase?.connected || false
+    };
+    
+    return await this.decentPlanner.plan(goal, sdContext);
+  }
+
+  /**
+   * Get the DecentPlanner instance for direct access
+   * @returns {DecentPlanner} The planner instance
+   */
+  getPlanner() {
+    return this.decentPlanner;
+  }
+
+  /**
    * Create a Legion-compatible factory method
    * @param {ResourceManager} resourceManager - Resource manager instance
    * @returns {Promise<SDModule>} Initialized SD module
@@ -200,9 +237,11 @@ export default class SDModule extends Module {
     return {
       name: 'sd',
       version: '1.0.0',
-      description: 'Software Development autonomous agent system',
+      description: 'Software Development autonomous agent system with Legion DecentPlanner integration',
       toolCount: this.tools.size,
       profileCount: this.profileManager ? this.profileManager.listProfiles().length : 0,
+      hasPlanner: !!this.decentPlanner,
+      databaseConnected: this.designDatabase?.connected || false,
       requiredDependencies: ['ANTHROPIC_API_KEY'],
       optionalDependencies: ['MONGODB_URI']
     };

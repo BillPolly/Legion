@@ -4,35 +4,121 @@
  */
 
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 import { promises as fs } from 'fs';
 import path from 'path';
 import fg from 'fast-glob';
-
-// Input schema for validation
-const grepToolSchema = z.object({
-  pattern: z.string().min(1),
-  path: z.string().optional(),
-  glob: z.string().optional(),
-  type: z.string().optional(),
-  output_mode: z.enum(['content', 'files_with_matches', 'count']).optional().default('files_with_matches'),
-  case_insensitive: z.boolean().optional().default(false),
-  show_line_numbers: z.boolean().optional().default(false),
-  context_before: z.number().int().min(0).optional().default(0),
-  context_after: z.number().int().min(0).optional().default(0),
-  context_around: z.number().int().min(0).optional().default(0),
-  multiline: z.boolean().optional().default(false),
-  head_limit: z.number().int().positive().optional()
-});
 
 export class GrepTool extends Tool {
   constructor() {
     super({
       name: 'Grep',
-      description: 'Search file contents using regex patterns',
-      inputSchema: grepToolSchema,
-      execute: async (input) => this.searchContent(input),
-      getMetadata: () => this.getToolMetadata()
+      description: 'A powerful search tool for file contents with regex support and multiple output modes',
+      schema: {
+        input: {
+          type: 'object',
+          properties: {
+            pattern: {
+              type: 'string',
+              minLength: 1,
+              description: 'The regular expression pattern to search for in file contents'
+            },
+            path: {
+              type: 'string',
+              description: 'File or directory to search in (defaults to current working directory)'
+            },
+            glob: {
+              type: 'string',
+              description: 'Glob pattern to filter files (e.g. "*.js", "**/*.tsx")'
+            },
+            type: {
+              type: 'string',
+              description: 'File type to search (js, py, rust, go, java, ts, json, md, txt). More efficient than glob for standard file types.'
+            },
+            output_mode: {
+              type: 'string',
+              enum: ['content', 'files_with_matches', 'count'],
+              description: 'Output mode: "content" shows matching lines, "files_with_matches" shows file paths (default), "count" shows match counts',
+              default: 'files_with_matches'
+            },
+            case_insensitive: {
+              type: 'boolean',
+              description: 'Case insensitive search',
+              default: false
+            },
+            show_line_numbers: {
+              type: 'boolean',
+              description: 'Show line numbers in output (requires output_mode: "content")',
+              default: false
+            },
+            context_before: {
+              type: 'integer',
+              minimum: 0,
+              description: 'Number of lines to show before each match (requires output_mode: "content")',
+              default: 0
+            },
+            context_after: {
+              type: 'integer',
+              minimum: 0,
+              description: 'Number of lines to show after each match (requires output_mode: "content")',
+              default: 0
+            },
+            context_around: {
+              type: 'integer',
+              minimum: 0,
+              description: 'Number of lines to show before and after each match (requires output_mode: "content")',
+              default: 0
+            },
+            multiline: {
+              type: 'boolean',
+              description: 'Enable multiline mode where . matches newlines and patterns can span lines',
+              default: false
+            },
+            head_limit: {
+              type: 'integer',
+              minimum: 1,
+              description: 'Limit output to first N lines/entries/results. Works across all output modes.'
+            }
+          },
+          required: ['pattern']
+        },
+        output: {
+          type: 'object',
+          properties: {
+            pattern: {
+              type: 'string',
+              description: 'The pattern that was searched'
+            },
+            results: {
+              type: 'array',
+              description: 'Search results with file matches and line details'
+            },
+            files: {
+              type: 'array',
+              items: {
+                type: 'string'
+              },
+              description: 'List of files containing matches (files_with_matches mode)'
+            },
+            total_matches: {
+              type: 'number',
+              description: 'Total number of matches found'
+            },
+            total_files: {
+              type: 'number',
+              description: 'Total number of files searched'
+            },
+            files_with_matches: {
+              type: 'number',
+              description: 'Number of files containing matches'
+            },
+            search_time_ms: {
+              type: 'number',
+              description: 'Time taken to search in milliseconds'
+            }
+          }
+        }
+      },
+      execute: async (input) => this.searchContent(input)
     });
   }
 
@@ -187,63 +273,4 @@ export class GrepTool extends Tool {
     }
   }
 
-  /**
-   * Get tool metadata
-   */
-  getToolMetadata() {
-    return {
-      name: 'Grep',
-      description: 'Search file contents using regex patterns',
-      input: {
-        pattern: {
-          type: 'string',
-          required: true,
-          description: 'Regex pattern to search for'
-        },
-        path: {
-          type: 'string',
-          required: false,
-          description: 'Directory to search in'
-        },
-        glob: {
-          type: 'string',
-          required: false,
-          description: 'File pattern filter'
-        },
-        type: {
-          type: 'string',
-          required: false,
-          description: 'File type filter (js, py, rust, etc.)'
-        },
-        output_mode: {
-          type: 'string',
-          required: false,
-          description: 'Output format (content, files_with_matches, count)'
-        },
-        case_insensitive: {
-          type: 'boolean',
-          required: false,
-          description: 'Case insensitive search'
-        }
-      },
-      output: {
-        pattern: {
-          type: 'string',
-          description: 'The pattern that was searched'
-        },
-        results: {
-          type: 'array',
-          description: 'Search results'
-        },
-        total_matches: {
-          type: 'number',
-          description: 'Total number of matches'
-        },
-        search_time_ms: {
-          type: 'number',
-          description: 'Search time in milliseconds'
-        }
-      }
-    };
-  }
 }

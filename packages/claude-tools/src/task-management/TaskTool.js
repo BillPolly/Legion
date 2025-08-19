@@ -4,30 +4,99 @@
  */
 
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
-
-// Input schema for validation
-const taskToolSchema = z.object({
-  description: z.string().min(3).max(100),
-  prompt: z.string().min(1),
-  subagent_type: z.enum([
-    'general-purpose',
-    'context-fetcher',
-    'file-creator',
-    'git-workflow',
-    'test-runner'
-  ])
-});
 
 export class TaskTool extends Tool {
   constructor() {
     super({
       name: 'Task',
       description: 'Launch a new agent to handle complex, multi-step tasks autonomously',
-      inputSchema: taskToolSchema,
-      execute: async (input) => this.executeTask(input),
-      getMetadata: () => this.getToolMetadata()
+      schema: {
+        input: {
+          type: 'object',
+          properties: {
+            description: {
+              type: 'string',
+              minLength: 3,
+              maxLength: 100,
+              description: 'A short (3-5 word) description of the task'
+            },
+            prompt: {
+              type: 'string',
+              minLength: 1,
+              description: 'The task for the agent to perform'
+            },
+            subagent_type: {
+              type: 'string',
+              enum: [
+                'general-purpose',
+                'context-fetcher', 
+                'file-creator',
+                'git-workflow',
+                'test-runner'
+              ],
+              description: 'The type of specialized agent to use for this task'
+            }
+          },
+          required: ['description', 'prompt', 'subagent_type']
+        },
+        output: {
+          type: 'object',
+          properties: {
+            task_id: {
+              type: 'string',
+              description: 'Unique task identifier'
+            },
+            description: {
+              type: 'string',
+              description: 'Task description that was executed'
+            },
+            agent_type: {
+              type: 'string',
+              description: 'Type of agent that was used'
+            },
+            result: {
+              type: 'string',
+              description: 'Task execution result from the agent'
+            },
+            metadata: {
+              type: 'object',
+              description: 'Task execution metadata including timing and capabilities',
+              properties: {
+                task_id: {
+                  type: 'string',
+                  description: 'Task identifier'
+                },
+                agent_type: {
+                  type: 'string',
+                  description: 'Agent type used'
+                },
+                started_at: {
+                  type: 'string',
+                  description: 'Task start timestamp (ISO string)'
+                },
+                completed_at: {
+                  type: 'string', 
+                  description: 'Task completion timestamp (ISO string)'
+                },
+                execution_time_ms: {
+                  type: 'number',
+                  description: 'Execution time in milliseconds'
+                },
+                capabilities: {
+                  type: 'array',
+                  items: {
+                    type: 'string'
+                  },
+                  description: 'List of capabilities available to this agent type'
+                }
+              }
+            }
+          },
+          required: ['task_id', 'description', 'agent_type', 'result', 'metadata']
+        }
+      },
+      execute: async (input) => this.executeTask(input)
     });
   }
 
@@ -130,59 +199,4 @@ export class TaskTool extends Tool {
     }
   }
 
-  /**
-   * Get tool metadata
-   */
-  getToolMetadata() {
-    return {
-      name: 'Task',
-      description: 'Launch a new agent to handle complex, multi-step tasks autonomously',
-      input: {
-        description: {
-          type: 'string',
-          required: true,
-          description: 'A short (3-5 word) description of the task'
-        },
-        prompt: {
-          type: 'string',
-          required: true,
-          description: 'The task for the agent to perform'
-        },
-        subagent_type: {
-          type: 'string',
-          required: true,
-          description: 'The type of specialized agent to use',
-          enum: [
-            'general-purpose',
-            'context-fetcher',
-            'file-creator',
-            'git-workflow',
-            'test-runner'
-          ]
-        }
-      },
-      output: {
-        task_id: {
-          type: 'string',
-          description: 'Unique task identifier'
-        },
-        description: {
-          type: 'string',
-          description: 'Task description'
-        },
-        agent_type: {
-          type: 'string',
-          description: 'Type of agent used'
-        },
-        result: {
-          type: 'string',
-          description: 'Task execution result'
-        },
-        metadata: {
-          type: 'object',
-          description: 'Task execution metadata'
-        }
-      }
-    };
-  }
 }

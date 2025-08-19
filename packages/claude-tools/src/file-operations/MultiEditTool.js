@@ -3,29 +3,90 @@
  */
 
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 import { promises as fs } from 'fs';
-
-// Input schema for validation
-const editSchema = z.object({
-  old_string: z.string(),
-  new_string: z.string(),
-  replace_all: z.boolean().optional().default(false)
-});
-
-const multiEditToolSchema = z.object({
-  file_path: z.string().min(1),
-  edits: z.array(editSchema).min(1)
-});
 
 export class MultiEditTool extends Tool {
   constructor() {
     super({
       name: 'MultiEdit',
       description: 'Make multiple edits to a single file in one atomic operation',
-      inputSchema: multiEditToolSchema,
-      execute: async (input) => this.multiEditFile(input),
-      getMetadata: () => this.getToolMetadata()
+      schema: {
+        input: {
+          type: 'object',
+          properties: {
+            file_path: {
+              type: 'string',
+              minLength: 1,
+              description: 'Absolute path to the file to edit'
+            },
+            edits: {
+              type: 'array',
+              minItems: 1,
+              description: 'Array of edit operations to perform sequentially',
+              items: {
+                type: 'object',
+                properties: {
+                  old_string: {
+                    type: 'string',
+                    description: 'Text to replace'
+                  },
+                  new_string: {
+                    type: 'string',
+                    description: 'Replacement text'
+                  },
+                  replace_all: {
+                    type: 'boolean',
+                    description: 'Replace all occurrences (default: false)',
+                    default: false
+                  }
+                },
+                required: ['old_string', 'new_string']
+              }
+            }
+          },
+          required: ['file_path', 'edits']
+        },
+        output: {
+          type: 'object',
+          properties: {
+            file_path: {
+              type: 'string',
+              description: 'Path of the edited file'
+            },
+            total_edits: {
+              type: 'number',
+              description: 'Total number of edits requested'
+            },
+            successful_edits: {
+              type: 'number',
+              description: 'Number of successful edits'
+            },
+            edit_summary: {
+              type: 'array',
+              description: 'Summary of each edit operation',
+              items: {
+                type: 'object',
+                properties: {
+                  edit_index: {
+                    type: 'number',
+                    description: 'Index of the edit operation'
+                  },
+                  replacements_made: {
+                    type: 'number',
+                    description: 'Number of replacements made for this edit'
+                  },
+                  status: {
+                    type: 'string',
+                    description: 'Status of the edit operation'
+                  }
+                }
+              }
+            }
+          },
+          required: ['file_path', 'total_edits', 'successful_edits', 'edit_summary']
+        }
+      },
+      execute: async (input) => this.multiEditFile(input)
     });
   }
 
@@ -177,60 +238,4 @@ export class MultiEditTool extends Tool {
     }
   }
 
-  /**
-   * Get tool metadata
-   */
-  getToolMetadata() {
-    return {
-      name: 'MultiEdit',
-      description: 'Make multiple edits to a single file in one atomic operation',
-      input: {
-        file_path: {
-          type: 'string',
-          required: true,
-          description: 'Path to the file to edit'
-        },
-        edits: {
-          type: 'array',
-          required: true,
-          description: 'Array of edit operations',
-          items: {
-            old_string: {
-              type: 'string',
-              required: true,
-              description: 'Text to replace'
-            },
-            new_string: {
-              type: 'string',
-              required: true,
-              description: 'Replacement text'
-            },
-            replace_all: {
-              type: 'boolean',
-              required: false,
-              description: 'Replace all occurrences'
-            }
-          }
-        }
-      },
-      output: {
-        file_path: {
-          type: 'string',
-          description: 'Path of the edited file'
-        },
-        total_edits: {
-          type: 'number',
-          description: 'Total number of edits requested'
-        },
-        successful_edits: {
-          type: 'number',
-          description: 'Number of successful edits'
-        },
-        edit_summary: {
-          type: 'array',
-          description: 'Summary of each edit operation'
-        }
-      }
-    };
-  }
 }

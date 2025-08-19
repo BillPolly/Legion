@@ -216,6 +216,7 @@ Return ONLY the JSON object, no additional text.`;
 
   /**
    * Parse LLM response to extract structured requirements
+   * FAIL FAST - no fallbacks allowed
    */
   parseLLMResponse(response) {
     try {
@@ -233,20 +234,8 @@ Return ONLY the JSON object, no additional text.`;
       return JSON.parse(cleanedResponse);
       
     } catch (error) {
-      // Fallback: create basic structure from text
-      return {
-        functional: [{
-          id: 'FR-001',
-          description: response,
-          priority: 'medium',
-          category: 'general'
-        }],
-        nonFunctional: [],
-        constraints: [],
-        assumptions: [],
-        dependencies: [],
-        reasoning: 'Failed to parse structured response, created basic requirement'
-      };
+      // NO FALLBACKS - fail fast to expose real issues
+      throw new Error(`Failed to parse LLM response as JSON: ${error.message}. Response was: ${response.substring(0, 200)}...`);
     }
   }
 
@@ -282,8 +271,14 @@ Return ONLY the JSON object, no additional text.`;
 
   /**
    * Store parsed requirements in design database
+   * FAIL FAST - no fallbacks allowed
    */
   async storeRequirements(parsedRequirements, projectId) {
+    // NO FALLBACKS - require real database connection
+    if (!this.designDatabase || typeof this.designDatabase.storeArtifact !== 'function') {
+      throw new Error('Design database not available - RequirementParserTool requires real database connection');
+    }
+    
     const artifact = {
       type: 'parsed_requirements',
       projectId: projectId || `project_${Date.now()}`,
@@ -297,12 +292,11 @@ Return ONLY the JSON object, no additional text.`;
       llmReasoning: parsedRequirements.reasoning
     };
     
-    // Store artifact (placeholder - will use ArtifactStorageTool when implemented)
-    console.log('[RequirementParserTool] Storing artifact:', artifact.type);
-    
-    return {
-      ...artifact,
-      id: `artifact_${Date.now()}`
-    };
+    try {
+      return await this.designDatabase.storeArtifact(artifact);
+    } catch (error) {
+      // Fail fast - don't mask database errors
+      throw new Error(`Failed to store requirements artifact: ${error.message}`);
+    }
   }
 }

@@ -4,25 +4,72 @@
  */
 
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 import { promises as fs } from 'fs';
 import path from 'path';
-
-// Input schema for validation
-const readToolSchema = z.object({
-  file_path: z.string().min(1),
-  limit: z.number().positive().optional(),
-  offset: z.number().int().min(0).optional()
-});
 
 export class ReadTool extends Tool {
   constructor() {
     super({
       name: 'Read',
       description: 'Read files from the filesystem (supports text, images, PDFs, Jupyter notebooks)',
-      inputSchema: readToolSchema,
-      execute: async (input) => this.readFile(input),
-      getMetadata: () => this.getToolMetadata()
+      schema: {
+        input: {
+          type: 'object',
+          properties: {
+            file_path: {
+              type: 'string',
+              minLength: 1,
+              description: 'Absolute path to the file to read'
+            },
+            limit: {
+              type: 'number',
+              minimum: 1,
+              description: 'Number of lines to read (optional)'
+            },
+            offset: {
+              type: 'integer',
+              minimum: 0,
+              description: 'Line number to start reading from (optional, default: 0)'
+            }
+          },
+          required: ['file_path']
+        },
+        output: {
+          type: 'object',
+          properties: {
+            content: {
+              type: 'string',
+              description: 'File contents (text or base64-encoded for binary files)'
+            },
+            file_path: {
+              type: 'string',
+              description: 'Path of the file that was read'
+            },
+            size: {
+              type: 'number',
+              description: 'Size of the file content in bytes/characters'
+            },
+            encoding: {
+              type: 'string',
+              enum: ['utf8', 'base64'],
+              description: 'Encoding used for the content'
+            },
+            metadata: {
+              type: 'object',
+              properties: {
+                type: {
+                  type: 'string',
+                  enum: ['text', 'binary', 'notebook'],
+                  description: 'Detected file type'
+                }
+              },
+              description: 'Additional file metadata'
+            }
+          },
+          required: ['content', 'file_path', 'size', 'encoding', 'metadata']
+        }
+      },
+      execute: async (input) => this.readFile(input)
     });
   }
 
@@ -173,52 +220,4 @@ export class ReadTool extends Tool {
     return binaryExtensions.includes(ext);
   }
 
-  /**
-   * Get tool metadata
-   */
-  getToolMetadata() {
-    return {
-      name: 'Read',
-      description: 'Read files from the filesystem (supports text, images, PDFs, Jupyter notebooks)',
-      input: {
-        file_path: {
-          type: 'string',
-          required: true,
-          description: 'Absolute path to the file to read'
-        },
-        limit: {
-          type: 'number',
-          required: false,
-          description: 'Number of lines to read'
-        },
-        offset: {
-          type: 'number',
-          required: false,
-          description: 'Line number to start reading from'
-        }
-      },
-      output: {
-        content: {
-          type: 'string',
-          description: 'File contents (text or base64-encoded for binary)'
-        },
-        file_path: {
-          type: 'string',
-          description: 'Path of the file that was read'
-        },
-        size: {
-          type: 'number',
-          description: 'Size of the file in bytes'
-        },
-        encoding: {
-          type: 'string',
-          description: 'Encoding used (utf8 or base64)'
-        },
-        metadata: {
-          type: 'object',
-          description: 'Additional file metadata'
-        }
-      }
-    };
-  }
 }

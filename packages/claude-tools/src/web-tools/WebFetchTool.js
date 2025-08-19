@@ -4,26 +4,87 @@
  */
 
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-
-// Input schema for validation
-const webFetchToolSchema = z.object({
-  url: z.string().url(),
-  prompt: z.string().min(1),
-  headers: z.record(z.string()).optional(),
-  timeout: z.number().int().positive().max(30000).optional().default(10000)
-});
 
 export class WebFetchTool extends Tool {
   constructor() {
     super({
       name: 'WebFetch',
-      description: 'Fetch content from a URL and process it with a prompt',
-      inputSchema: webFetchToolSchema,
-      execute: async (input) => this.fetchAndProcess(input),
-      getMetadata: () => this.getToolMetadata()
+      description: 'Fetches content from a specified URL and processes it using an AI model',
+      schema: {
+        input: {
+          type: 'object',
+          properties: {
+            url: {
+              type: 'string',
+              format: 'uri',
+              description: 'The URL to fetch content from'
+            },
+            prompt: {
+              type: 'string',
+              minLength: 1,
+              description: 'The prompt to run on the fetched content'
+            },
+            headers: {
+              type: 'object',
+              additionalProperties: {
+                type: 'string'
+              },
+              description: 'Additional HTTP headers to include in the request'
+            },
+            timeout: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 30000,
+              description: 'Request timeout in milliseconds (max 30000)',
+              default: 10000
+            }
+          },
+          required: ['url', 'prompt']
+        },
+        output: {
+          type: 'object',
+          properties: {
+            prompt: {
+              type: 'string',
+              description: 'The prompt that was used to process the content'
+            },
+            content_summary: {
+              type: 'string',
+              description: 'Summary of the fetched content (first 500 characters)'
+            },
+            analysis: {
+              type: 'string',
+              description: 'AI model\'s response about the content based on the prompt'
+            },
+            metadata: {
+              type: 'object',
+              description: 'Metadata about the fetch operation',
+              properties: {
+                url: {
+                  type: 'string',
+                  description: 'The URL that was fetched'
+                },
+                content_type: {
+                  type: 'string',
+                  description: 'Content type of the fetched resource'
+                },
+                content_length: {
+                  type: 'number',
+                  description: 'Length of extracted content in characters'
+                },
+                status_code: {
+                  type: 'integer',
+                  description: 'HTTP status code of the response'
+                }
+              }
+            }
+          },
+          required: ['prompt', 'content_summary', 'analysis', 'metadata']
+        }
+      },
+      execute: async (input) => this.fetchAndProcess(input)
     });
   }
 
@@ -165,53 +226,4 @@ export class WebFetchTool extends Tool {
     }
   }
 
-  /**
-   * Get tool metadata
-   */
-  getToolMetadata() {
-    return {
-      name: 'WebFetch',
-      description: 'Fetch content from a URL and process it with a prompt',
-      input: {
-        url: {
-          type: 'string',
-          required: true,
-          description: 'The URL to fetch content from'
-        },
-        prompt: {
-          type: 'string',
-          required: true,
-          description: 'The prompt to process the content with'
-        },
-        headers: {
-          type: 'object',
-          required: false,
-          description: 'Additional HTTP headers'
-        },
-        timeout: {
-          type: 'number',
-          required: false,
-          description: 'Request timeout in milliseconds (max 30000)'
-        }
-      },
-      output: {
-        prompt: {
-          type: 'string',
-          description: 'The processing prompt'
-        },
-        content_summary: {
-          type: 'string',
-          description: 'Summary of fetched content'
-        },
-        analysis: {
-          type: 'string',
-          description: 'Analysis result'
-        },
-        metadata: {
-          type: 'object',
-          description: 'Fetch metadata'
-        }
-      }
-    };
-  }
 }

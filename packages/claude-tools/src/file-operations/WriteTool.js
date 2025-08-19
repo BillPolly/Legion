@@ -3,24 +3,50 @@
  */
 
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 import { promises as fs } from 'fs';
 import path from 'path';
-
-// Input schema for validation
-const writeToolSchema = z.object({
-  file_path: z.string().min(1),
-  content: z.union([z.string(), z.instanceof(Buffer)])
-});
 
 export class WriteTool extends Tool {
   constructor() {
     super({
       name: 'Write',
       description: 'Write new files to the filesystem',
-      inputSchema: writeToolSchema,
-      execute: async (input) => this.writeFile(input),
-      getMetadata: () => this.getToolMetadata()
+      schema: {
+        input: {
+          type: 'object',
+          properties: {
+            file_path: {
+              type: 'string',
+              minLength: 1,
+              description: 'Absolute path for the new file'
+            },
+            content: {
+              type: 'string',
+              description: 'Content to write to the file'
+            }
+          },
+          required: ['file_path', 'content']
+        },
+        output: {
+          type: 'object',
+          properties: {
+            file_path: {
+              type: 'string',
+              description: 'Path of the file that was written'
+            },
+            bytes_written: {
+              type: 'number',
+              description: 'Number of bytes written to the file'
+            },
+            created: {
+              type: 'boolean',
+              description: 'Whether the file was created (true) or overwritten (false)'
+            }
+          },
+          required: ['file_path', 'bytes_written', 'created']
+        }
+      },
+      execute: async (input) => this.writeFile(input)
     });
   }
 
@@ -146,39 +172,4 @@ export class WriteTool extends Tool {
     }
   }
 
-  /**
-   * Get tool metadata
-   */
-  getToolMetadata() {
-    return {
-      name: 'Write',
-      description: 'Write new files to the filesystem',
-      input: {
-        file_path: {
-          type: 'string',
-          required: true,
-          description: 'Absolute path for the new file'
-        },
-        content: {
-          type: 'string | Buffer',
-          required: true,
-          description: 'Content to write to the file'
-        }
-      },
-      output: {
-        file_path: {
-          type: 'string',
-          description: 'Path of the file that was written'
-        },
-        bytes_written: {
-          type: 'number',
-          description: 'Number of bytes written'
-        },
-        created: {
-          type: 'boolean',
-          description: 'True if a new file was created, false if overwritten'
-        }
-      }
-    };
-  }
 }

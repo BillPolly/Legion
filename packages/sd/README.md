@@ -1,6 +1,19 @@
 # SD - Software Design Methodology Package
 
-> **Database-Centric Design Methodology**: DDD + Clean Architecture + Immutable Design + Flux + TDD + Clean Code
+> **AI-Autonomous Software Development with Legion DecentPlanner Integration**
+
+**Database-Centric Design Methodology**: DDD + Clean Architecture + Immutable Design + Flux + TDD + Clean Code
+
+## 🤖 Legion DecentPlanner Integration
+
+The SD package is fully integrated with Legion's hierarchical task decomposition system, enabling autonomous software development from high-level goals to deployable applications.
+
+### Key Integration Features:
+- **Hierarchical Planning**: Uses DecentPlanner for intelligent task decomposition
+- **Methodology-Driven Decomposition**: Breaks down development goals using SD's six methodologies
+- **Behavior Tree Generation**: Creates executable development workflows
+- **Tool Integration**: All SD tools are available to the planner for autonomous execution
+- **Quality Gates**: Automated validation at each methodology phase
 
 ## 🎯 Overview
 
@@ -82,18 +95,26 @@ Requirements → Domain Model → Architecture → State Design → Tests → Im
 
 ```javascript
 import { SDModule } from '@legion/sd';
+import { ResourceManager } from '@legion/resource-manager';
 
-// Initialize the Software Design module
-const sd = await SDModule.create({
-  database: 'mongodb://localhost:27017/design-db',
-  aiProvider: 'anthropic'
-});
+// Initialize with Legion integration
+const resourceManager = ResourceManager.getInstance();
+const sd = await SDModule.create(resourceManager);
 
-// Run complete top-down workflow
-const result = await sd.executeWorkflow({
-  requirements: "Build a todo management system",
-  methodology: "ddd+clean+immutable+flux+tdd"
-});
+// Plan software development using DecentPlanner
+const planResult = await sd.planDevelopment(
+  "Build a scalable todo management system with user authentication",
+  {
+    requirements: "User registration, task CRUD, real-time updates",
+    constraints: ["Must use JWT tokens", "Must be scalable"]
+  }
+);
+
+// Execute the planned workflow
+if (planResult.success) {
+  console.log('Planning phases:', planResult.phases);
+  console.log('Behavior trees:', planResult.phases.formal?.behaviorTrees);
+}
 ```
 
 ### Database Collections
@@ -142,7 +163,63 @@ npm run test:watch
 
 ## 🎯 Usage Examples
 
-### 1. Requirements Analysis
+### 1. Autonomous Planning with DecentPlanner
+```javascript
+import { SDModule } from '@legion/sd';
+import { ResourceManager } from '@legion/resource-manager';
+
+// Initialize SD module with full Legion integration
+const resourceManager = ResourceManager.getInstance();
+const sdModule = await SDModule.create(resourceManager);
+
+// Plan a complex development goal
+const planResult = await sdModule.planDevelopment(
+  "Build a real-time chat application with user authentication and message history",
+  {
+    requirements: [
+      "User registration and login",
+      "Real-time messaging between users", 
+      "Message history persistence",
+      "Online user status",
+      "Group chat functionality"
+    ],
+    constraints: ["Must use WebSockets", "Must be scalable to 10k users"],
+    architecture: "clean-architecture",
+    methodology: "full-sd-6"
+  }
+);
+
+// Check planning results
+if (planResult.success) {
+  console.log('✅ Planning successful!');
+  console.log('📋 Decomposed into phases:', planResult.phases.informal.hierarchy);
+  console.log('🌳 Behavior trees generated:', planResult.phases.formal?.behaviorTrees?.length);
+  console.log('🛠️ Tools identified:', planResult.context.toolset);
+} else {
+  console.error('❌ Planning failed:', planResult.error);
+}
+```
+
+### 2. Profile-Specific Planning
+```javascript
+// Use specific methodology profiles for targeted planning
+const requirementsResult = await sdModule.profileManager.planWithProfile(
+  'sd-requirements',
+  "Analyze user authentication requirements for enterprise application"
+);
+
+const architectureResult = await sdModule.profileManager.planWithProfile(
+  'sd-architecture',
+  "Design clean architecture for microservices with event sourcing"
+);
+
+const implementationResult = await sdModule.profileManager.planWithProfile(
+  'sd-implementation', 
+  "Implement user service with TDD and clean code principles"
+);
+```
+
+### 3. Requirements Analysis
 ```javascript
 import { RequirementsAnalyzer } from '@legion/sd';
 
@@ -227,20 +304,33 @@ export default {
 
 ## 🤝 Integration
 
-### Legion AI Integration
+### Legion DecentPlanner Integration
 ```javascript
-import { ProfilePlannerModule } from '@legion/profile-planner';
 import { SDModule } from '@legion/sd';
+import { ResourceManager } from '@legion/resource-manager';
 
-// Enhanced planning with SD methodology
-const profilePlanner = await ProfilePlannerModule.create(resourceManager);
-const sdModule = await SDModule.create({ database: 'mongodb://localhost:27017/sd' });
+// Initialize SD module with full Legion integration
+const resourceManager = ResourceManager.getInstance();
+const sdModule = await SDModule.create(resourceManager);
 
-// AI-driven design with full methodology compliance
-const designPlan = await profilePlanner.plan({
-  requirements: "Build a microservice architecture",
-  methodology: sdModule
-});
+// Get the integrated DecentPlanner
+const planner = sdModule.getPlanner();
+
+// Plan with SD methodology context
+const planResult = await sdModule.planDevelopment(
+  "Build a microservice architecture with event sourcing",
+  {
+    architecture: 'microservices',
+    patterns: ['event-sourcing', 'cqrs'],
+    methodology: 'full-sd-6-methodology'
+  }
+);
+
+// Use specific planning profiles
+const requirementsResult = await sdModule.profileManager.planWithProfile(
+  'sd-requirements', 
+  "Analyze requirements for user management system"
+);
 ```
 
 ## 🎯 Benefits
@@ -267,19 +357,23 @@ const designPlan = await profilePlanner.plan({
 ## 📈 Roadmap
 
 ### Phase 1: Foundation ✅
-- Core database schema and collections
-- Basic AI tools for each methodology phase
-- Top-down workflow implementation
+- Core database schema and collections 
+- Legion DecentPlanner integration
+- All six methodology tools implemented
+- Hierarchical task decomposition
+- Behavior tree generation for development workflows
 
-### Phase 2: Advanced Features 🚧
-- Machine learning for pattern recognition
-- Advanced code generation and refactoring
-- Real-time collaboration features
+### Phase 2: Advanced Features ✅  
+- Real-time observability with chat intelligence
+- MongoDB change streams for live monitoring
+- Comprehensive artifact tracking and relationships
+- Automated quality validation at each phase
 
-### Phase 3: Enterprise Features 📅
-- Multi-team project management
-- Advanced analytics and reporting
-- Enterprise security and compliance
+### Phase 3: Autonomous Development 🚧
+- Full end-to-end autonomous code generation
+- Machine learning for pattern recognition and optimization
+- Multi-project architecture management
+- Enterprise-grade security and compliance
 
 ## 🤝 Contributing
 

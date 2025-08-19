@@ -1,4 +1,5 @@
-import { Tool } from '../modules/Tool.js'; import { ToolResult } from '../compatibility.js';
+import { Tool } from '../../../tools-registry/src/modules/Tool.js';
+import { ToolResult } from '../compatibility.js';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -7,27 +8,12 @@ import path from 'path';
  */
 class FileReaderTool extends Tool {
   constructor({ basePath, encoding = 'utf-8', maxFileSize = 10 * 1024 * 1024 }) {
-    super();
-    this.name = 'file_reader';
-    this.shortName = 'read';
-    this.description = 'Reads the contents of a file from the file system';
-
-    // Store dependencies
-    this.basePath = basePath;
-    this.encoding = encoding;
-    this.maxFileSize = maxFileSize;
-  }
-
-  /**
-   * Returns the tool description in standard function calling format
-   */
-  getToolDescription() {
-    return {
-      type: 'function',
-      function: {
-        name: 'file_reader',
-        description: 'Reads the contents of a file from the file system',
-        parameters: {
+    super({
+      name: 'file_reader',
+      shortName: 'read',
+      description: 'Reads the contents of a file from the file system',
+      schema: {
+        input: {
           type: 'object',
           properties: {
             filePath: {
@@ -72,8 +58,14 @@ class FileReaderTool extends Tool {
             required: ['filePath', 'errorType']
           }
         }
-      }
-    };
+      },
+      execute: async (args) => this.readFile(args)
+    });
+
+    // Store dependencies
+    this.basePath = basePath;
+    this.encoding = encoding;
+    this.maxFileSize = maxFileSize;
   }
 
   /**
@@ -81,13 +73,8 @@ class FileReaderTool extends Tool {
    * @param {Object} args - The arguments for reading the file
    * @returns {Promise<ToolResult>} The result of reading the file
    */
-  async execute(args) {
+  async readFile(args) {
     try {
-      // Validate required parameters
-      if (!args || !args.filePath) {
-        throw new Error('filePath is required');
-      }
-
       const { filePath } = args;
 
       // Validate input

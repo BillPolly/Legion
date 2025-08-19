@@ -1,4 +1,5 @@
-import { Tool } from '../modules/Tool.js'; import { ToolResult } from '../compatibility.js';
+import { Tool } from '../../../tools-registry/src/modules/Tool.js';
+import { ToolResult } from '../compatibility.js';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -7,26 +8,12 @@ import path from 'path';
  */
 class DirectoryCreatorTool extends Tool {
   constructor({ basePath, permissions = 0o755 }) {
-    super();
-    this.name = 'directory_creator';
-    this.shortName = 'mkdir';
-    this.description = 'Creates directories in the file system';
-
-    // Store dependencies
-    this.basePath = basePath;
-    this.permissions = permissions;
-  }
-
-  /**
-   * Returns the tool description in standard function calling format
-   */
-  getToolDescription() {
-    return {
-      type: 'function',
-      function: {
-        name: 'directory_creator',
-        description: 'Creates directories in the file system',
-        parameters: {
+    super({
+      name: 'directory_creator',
+      shortName: 'mkdir',
+      description: 'Creates directories in the file system',
+      schema: {
+        input: {
           type: 'object',
           properties: {
             directoryPath: {
@@ -76,8 +63,13 @@ class DirectoryCreatorTool extends Tool {
             required: ['directoryPath', 'errorType']
           }
         }
-      }
-    };
+      },
+      execute: async (args) => this.createDirectory(args)
+    });
+
+    // Store dependencies
+    this.basePath = basePath;
+    this.permissions = permissions;
   }
 
   /**
@@ -85,13 +77,8 @@ class DirectoryCreatorTool extends Tool {
    * @param {Object} args - The arguments for creating the directory
    * @returns {Promise<ToolResult>} The result of creating the directory
    */
-  async execute(args) {
+  async createDirectory(args) {
     try {
-      // Validate required parameters
-      if (!args || !args.directoryPath) {
-        throw new Error('directoryPath is required');
-      }
-
       const { directoryPath, recursive = true } = args;
 
       // Validate input

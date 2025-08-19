@@ -34,6 +34,16 @@ describe('SDAgentBase', () => {
       complete: jest.fn().mockResolvedValue('{"decision": "test", "reasoning": "test reasoning"}')
     };
     
+    // Mock database service for unit tests (mocks are allowed in unit tests)
+    const mockDatabaseService = {
+      storeArtifact: jest.fn().mockResolvedValue({ 
+        id: 'test-artifact-id', 
+        type: 'test', 
+        timestamp: new Date().toISOString() 
+      }),
+      retrieveArtifacts: jest.fn().mockResolvedValue([])
+    };
+    
     mockResourceManager = {
       get: jest.fn((key) => {
         if (key === 'llmClient') return mockLLMClient;
@@ -45,7 +55,8 @@ describe('SDAgentBase', () => {
     mockConfig = {
       designDatabase: { uri: 'mongodb://localhost:27017/test' },
       methodologyRules: { test: { rule1: () => true } },
-      resourceManager: mockResourceManager
+      resourceManager: mockResourceManager,
+      dbService: mockDatabaseService  // Add mock database service for unit tests
     };
   });
 

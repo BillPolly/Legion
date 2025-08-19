@@ -1,5 +1,4 @@
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 import { readFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -11,14 +10,87 @@ export class ModuleListTool extends Tool {
     super({
       name: 'module_list',
       description: 'List all loaded and available modules',
-      inputSchema: z.object({
-        filter: z.string().optional().describe('Filter modules by name')
-      })
+      schema: {
+        input: {
+          type: 'object',
+          properties: {
+            filter: {
+              type: 'string',
+              description: 'Filter modules by name'
+            }
+          }
+        },
+        output: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              description: 'Whether the operation was successful'
+            },
+            modules: {
+              type: 'object',
+              properties: {
+                loaded: {
+                  type: 'array',
+                  items: {
+                    type: 'string'
+                  },
+                  description: 'List of loaded module names'
+                },
+                available: {
+                  type: 'array',
+                  items: {
+                    type: 'string'
+                  },
+                  description: 'List of available but not loaded module names'
+                },
+                total: {
+                  type: 'number',
+                  description: 'Total number of modules'
+                },
+                details: {
+                  type: 'object',
+                  additionalProperties: {
+                    type: 'object',
+                    properties: {
+                      name: {
+                        type: 'string',
+                        description: 'Module name'
+                      },
+                      loaded: {
+                        type: 'boolean',
+                        description: 'Whether the module is loaded'
+                      },
+                      toolCount: {
+                        type: 'number',
+                        description: 'Number of tools in the module'
+                      }
+                    }
+                  },
+                  description: 'Detailed information about loaded modules'
+                }
+              },
+              description: 'Module listing information'
+            },
+            totalTools: {
+              type: 'number',
+              description: 'Total number of tools across all modules'
+            },
+            error: {
+              type: 'string',
+              description: 'Error message if operation failed'
+            }
+          },
+          required: ['success']
+        }
+      },
+      execute: async (args) => this.listModules(args)
     });
+
     this.config = dependencies;
   }
 
-  async execute(args) {
+  async listModules(args) {
     const moduleLoader = this.config.moduleLoader;
     if (!moduleLoader) {
       return {

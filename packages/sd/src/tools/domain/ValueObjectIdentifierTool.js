@@ -177,8 +177,8 @@ Focus on identifying true value objects that enhance the domain model. Return ON
       return JSON.parse(cleanedResponse).valueObjects || [];
       
     } catch (error) {
-      // Fallback: return empty array
-      return [];
+      // FAIL FAST - no fallbacks allowed
+      throw new Error(`Failed to parse LLM response as JSON: ${error.message}. Response was: ${response.substring(0, 200)}...`);
     }
   }
 

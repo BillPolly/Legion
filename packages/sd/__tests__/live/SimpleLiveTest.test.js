@@ -10,7 +10,7 @@
  */
 
 import { jest } from '@jest/globals';
-import { ResourceManager } from '@legion/tools-registry';
+import { ResourceManager } from '@legion/resource-manager';
 import { DesignDatabaseService } from '../../src/services/DesignDatabaseService.js';
 
 // Only run live tests if NODE_ENV=live

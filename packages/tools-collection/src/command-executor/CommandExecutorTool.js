@@ -8,20 +8,9 @@ export class CommandExecutor extends Tool {
   constructor() {
     super({
       name: 'command_executor',
-      description: 'Executes bash commands in the terminal'
-    });
-  }
-
-  /**
-   * Returns the tool description in standard function calling format
-   */
-  getToolDescription() {
-    return {
-      type: 'function',
-      function: {
-        name: 'command_executor_execute',
-        description: 'Execute a bash command in the terminal and return the output',
-        parameters: {
+      description: 'Execute a bash command in the terminal and return the output',
+      schema: {
+        input: {
           type: 'object',
           properties: {
             command: {
@@ -30,97 +19,54 @@ export class CommandExecutor extends Tool {
             },
             timeout: {
               type: 'number',
+              default: 30000,
               description: 'Optional timeout in milliseconds (default: 30000ms)'
             }
           },
           required: ['command']
         },
         output: {
-          success: {
-            type: 'object',
-            properties: {
-              stdout: {
-                type: 'string',
-                description: 'Standard output from the command'
-              },
-              stderr: {
-                type: 'string',
-                description: 'Standard error output from the command (may be empty)'
-              },
-              command: {
-                type: 'string',
-                description: 'The command that was executed'
-              },
-              exitCode: {
-                type: 'number',
-                description: 'Exit code of the command (0 for success)'
-              }
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              description: 'Whether the command executed successfully'
             },
-            required: ['stdout', 'stderr', 'command']
+            stdout: {
+              type: 'string',
+              description: 'Standard output from the command'
+            },
+            stderr: {
+              type: 'string',
+              description: 'Standard error output from the command'
+            },
+            command: {
+              type: 'string',
+              description: 'The command that was executed'
+            },
+            exitCode: {
+              type: 'number',
+              description: 'Exit code of the command'
+            },
+            errorType: {
+              type: 'string',
+              enum: ['timeout', 'exit_code', 'execution_error', 'dangerous_command'],
+              description: 'Type of error that occurred (if any)'
+            }
           },
-          failure: {
-            type: 'object',
-            properties: {
-              command: {
-                type: 'string',
-                description: 'The command that failed'
-              },
-              errorType: {
-                type: 'string',
-                enum: ['timeout', 'exit_code', 'execution_error', 'dangerous_command'],
-                description: 'Type of error that occurred'
-              },
-              exitCode: {
-                type: 'number',
-                description: 'Exit code if the command completed but failed'
-              },
-              stdout: {
-                type: 'string',
-                description: 'Any partial stdout before failure'
-              },
-              stderr: {
-                type: 'string',
-                description: 'Error output from the command'
-              }
-            },
-            required: ['command', 'errorType']
-          }
+          required: ['success', 'command']
         }
-      }
-    };
+      },
+      execute: async (args) => this.executeCommand(args.command, args.timeout)
+    });
   }
 
-  /**
-   * Invokes the command executor with the given tool call
-   */
-  async invoke(toolCall) {
-    try {
-      // Parse the arguments
-      const args = this.parseArguments(toolCall.function.arguments);
-      
-      // Validate required parameters
-      this.validateRequiredParameters(args, ['command']);
-      
-      // Execute the command
-      return await this.executeCommand(args.command, args.timeout);
-    } catch (error) {
-      // Handle parameter validation errors
-      return ToolResult.failure(
-        error.message,
-        { 
-          command: toolCall.function.arguments ? 
-            JSON.parse(toolCall.function.arguments).command : 'unknown',
-          errorType: 'execution_error'
-        }
-      );
-    }
-  }
 
   /**
    * Executes a bash command
    */
   async executeCommand(command, timeout = 30000) {
-    return new Promise((resolve) => {
+    try {
       console.log(`Executing command: ${command}`);
       
       // Security check for truly dangerous commands
@@ -138,68 +84,62 @@ export class CommandExecutor extends Tool {
       
       if (isDangerous) {
         console.warn('WARNING: Potentially dangerous command detected');
-        resolve(ToolResult.failure(
-          'Command blocked for safety reasons',
-          {
-            command: command,
-            errorType: 'dangerous_command'
-          }
-        ));
-        return;
+        return {
+          success: false,
+          command: command,
+          errorType: 'dangerous_command',
+          error: 'Command blocked for safety reasons'
+        };
       }
       
-      // Use exec with callback to get exit code
-      exec(command, {
-        timeout: timeout,
-        maxBuffer: 1024 * 1024 * 10, // 10MB buffer
-        shell: '/bin/bash'
-      }, (error, stdout, stderr) => {
-        if (error) {
-          let errorType = 'execution_error';
-          let errorMessage = `Failed to execute command: ${error.message}`;
-          let data = {
-            command: command,
-            errorType: errorType
-          };
-          
-          if (error.killed && error.signal === 'SIGTERM') {
-            errorType = 'timeout';
-            errorMessage = `Command timed out after ${timeout}ms`;
-          } else if (error.code !== undefined) {
-            errorType = 'exit_code';
-            errorMessage = `Command failed with exit code ${error.code}`;
-            data.exitCode = error.code;
-            data.stdout = stdout || '';
-            data.stderr = stderr || '';
+      // Use exec with promise wrapper
+      return new Promise((resolve) => {
+        exec(command, {
+          timeout: timeout,
+          maxBuffer: 1024 * 1024 * 10, // 10MB buffer
+          shell: '/bin/bash'
+        }, (error, stdout, stderr) => {
+          if (error) {
+            let errorType = 'execution_error';
+            
+            if (error.killed && error.signal === 'SIGTERM') {
+              errorType = 'timeout';
+            } else if (error.code !== undefined) {
+              errorType = 'exit_code';
+            }
+            
+            resolve({
+              success: false,
+              command: command,
+              errorType: errorType,
+              exitCode: error.code,
+              stdout: stdout || '',
+              stderr: stderr || '',
+              error: error.message
+            });
+          } else {
+            console.log('Command executed successfully');
+            
+            resolve({
+              success: true,
+              stdout: stdout || '',
+              stderr: stderr || '',
+              command: command,
+              exitCode: 0
+            });
           }
-          
-          data.errorType = errorType;
-          
-          resolve(ToolResult.failure(errorMessage, data));
-        } else {
-          console.log('Command executed successfully');
-          
-          resolve(ToolResult.success({
-            stdout: stdout || '',
-            stderr: stderr || '',
-            command: command,
-            exitCode: 0
-          }));
-        }
+        });
       });
-    });
+    } catch (error) {
+      return {
+        success: false,
+        command: command,
+        errorType: 'execution_error',
+        error: error.message
+      };
+    }
   }
 
-  /**
-   * Legacy execute method for CLI compatibility
-   */
-  async execute(command, timeout = 30000) {
-    const result = await this.executeCommand(command, timeout);
-    if (!result.success) {
-      throw new Error(result.error);
-    }
-    return result.data;
-  }
 }
 
 // Export the tool class

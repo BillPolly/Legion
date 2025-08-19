@@ -210,23 +210,8 @@ Focus on designing cohesive aggregates that protect business invariants. Return 
       return JSON.parse(cleanedResponse).aggregates || [];
       
     } catch (error) {
-      // Fallback: create basic aggregate
-      return [{
-        id: `agg-${contextId}-default`,
-        name: 'DefaultAggregate',
-        description: 'Default aggregate created due to parsing error',
-        boundedContext: contextId,
-        aggregateRoot: {
-          entityId: 'entity-default',
-          entityName: 'DefaultEntity',
-          responsibilities: []
-        },
-        entities: [],
-        valueObjects: [],
-        invariants: [],
-        commands: [],
-        events: []
-      }];
+      // FAIL FAST - no fallbacks allowed
+      throw new Error(`Failed to parse LLM response as JSON: ${error.message}. Response was: ${response.substring(0, 200)}...`);
     }
   }
 

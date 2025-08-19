@@ -332,47 +332,67 @@ export class DiagramGenerator {
   
   async getEntities(projectId) {
     if (!this.databaseService) {
-      return this.getMockEntities();
+      throw new Error('Database service not available - DiagramGenerator requires real database connection');
     }
     
-    const artifacts = await this.databaseService.retrieveArtifacts('entity', { projectId });
-    return artifacts.results || [];
+    try {
+      const artifacts = await this.databaseService.retrieveArtifacts('entity', { projectId });
+      return artifacts.results || [];
+    } catch (error) {
+      throw new Error(`Failed to retrieve entities: ${error.message}`);
+    }
   }
   
   async getAggregates(projectId) {
     if (!this.databaseService) {
-      return this.getMockAggregates();
+      throw new Error('Database service not available - DiagramGenerator requires real database connection');
     }
     
-    const artifacts = await this.databaseService.retrieveArtifacts('aggregate', { projectId });
-    return artifacts.results || [];
+    try {
+      const artifacts = await this.databaseService.retrieveArtifacts('aggregate', { projectId });
+      return artifacts.results || [];
+    } catch (error) {
+      throw new Error(`Failed to retrieve aggregates: ${error.message}`);
+    }
   }
   
   async getValueObjects(projectId) {
     if (!this.databaseService) {
-      return this.getMockValueObjects();
+      throw new Error('Database service not available - DiagramGenerator requires real database connection');
     }
     
-    const artifacts = await this.databaseService.retrieveArtifacts('value_object', { projectId });
-    return artifacts.results || [];
+    try {
+      const artifacts = await this.databaseService.retrieveArtifacts('value_object', { projectId });
+      return artifacts.results || [];
+    } catch (error) {
+      throw new Error(`Failed to retrieve value objects: ${error.message}`);
+    }
   }
   
   async getLayers(projectId) {
     if (!this.databaseService) {
-      return this.getMockLayers();
+      throw new Error('Database service not available - DiagramGenerator requires real database connection');
     }
     
-    const artifacts = await this.databaseService.retrieveArtifacts('layer', { projectId });
-    return artifacts.results || [];
+    try {
+      const artifacts = await this.databaseService.retrieveArtifacts('layer', { projectId });
+      return artifacts.results || [];
+    } catch (error) {
+      throw new Error(`Failed to retrieve layers: ${error.message}`);
+    }
   }
   
   async getUseCases(projectId) {
     if (!this.databaseService) {
-      return this.getMockUseCases();
+      throw new Error('Database service not available - DiagramGenerator requires real database connection');
     }
     
-    const artifacts = await this.databaseService.retrieveArtifacts('use_case', { projectId });
-    return artifacts.results || [];
+    try {
+      const artifacts = await this.databaseService.retrieveArtifacts('use_case', { projectId });
+      return artifacts.results || [];
+    } catch (error) {
+      throw new Error(`Failed to retrieve use cases: ${error.message}`);
+    }
   }
   
   async getInterfaces(projectId) {
@@ -446,107 +466,5 @@ export class DiagramGenerator {
     return colors[layerName] || '#f5f5f5';
   }
   
-  // Mock data methods for testing
-  
-  getMockEntities() {
-    return [
-      {
-        name: 'User',
-        properties: ['id', 'email', 'password', 'profile'],
-        methods: ['authenticate', 'updateProfile'],
-        relationships: [
-          { target: 'Task', type: 'oneToMany', label: 'owns' }
-        ]
-      },
-      {
-        name: 'Task',
-        properties: ['id', 'title', 'description', 'status', 'assigneeId'],
-        methods: ['complete', 'assign', 'updateStatus'],
-        relationships: [
-          { target: 'User', type: 'manyToOne', label: 'assignedTo' }
-        ]
-      },
-      {
-        name: 'Project',
-        properties: ['id', 'name', 'description', 'startDate'],
-        methods: ['addTask', 'addMember'],
-        relationships: [
-          { target: 'Task', type: 'oneToMany', label: 'contains' }
-        ]
-      }
-    ];
-  }
-  
-  getMockAggregates() {
-    return [
-      {
-        name: 'UserAggregate',
-        rootEntity: 'User'
-      },
-      {
-        name: 'ProjectAggregate',
-        rootEntity: 'Project'
-      }
-    ];
-  }
-  
-  getMockValueObjects() {
-    return [
-      {
-        name: 'Email',
-        properties: ['value'],
-        methods: ['validate']
-      },
-      {
-        name: 'TaskStatus',
-        properties: ['value'],
-        methods: ['canTransitionTo']
-      }
-    ];
-  }
-  
-  getMockLayers() {
-    return [
-      {
-        name: 'presentation',
-        components: ['Controllers', 'Views', 'ViewModels'],
-        dependencies: ['application']
-      },
-      {
-        name: 'application',
-        components: ['UseCases', 'Services', 'DTOs'],
-        dependencies: ['domain']
-      },
-      {
-        name: 'domain',
-        components: ['Entities', 'ValueObjects', 'DomainServices'],
-        dependencies: []
-      },
-      {
-        name: 'infrastructure',
-        components: ['Repositories', 'External Services', 'Database'],
-        dependencies: ['domain', 'application']
-      }
-    ];
-  }
-  
-  getMockUseCases() {
-    return [
-      {
-        name: 'CreateTaskUseCase',
-        input: ['title', 'description', 'projectId'],
-        output: 'Task'
-      },
-      {
-        name: 'CompleteTaskUseCase',
-        input: ['taskId', 'userId'],
-        output: 'Task'
-      },
-      {
-        name: 'AssignTaskUseCase',
-        input: ['taskId', 'assigneeId'],
-        output: 'Task'
-      }
-    ];
-  }
+  // NO MOCK IMPLEMENTATIONS - all getMock methods removed for fail-fast behavior
 }

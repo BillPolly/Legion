@@ -192,18 +192,8 @@ Focus on modeling rich domain entities that encapsulate business logic. Return O
       return JSON.parse(cleanedResponse).entities || [];
       
     } catch (error) {
-      // Fallback: create basic entity
-      return [{
-        id: `entity-${contextId}-default`,
-        name: 'DefaultEntity',
-        description: 'Default entity created due to parsing error',
-        boundedContext: contextId,
-        identity: { type: 'uuid', description: 'UUID identifier' },
-        properties: [],
-        behaviors: [],
-        invariants: [],
-        relationships: []
-      }];
+      // FAIL FAST - no fallbacks allowed
+      throw new Error(`Failed to parse LLM response as JSON: ${error.message}. Response was: ${response.substring(0, 200)}...`);
     }
   }
 

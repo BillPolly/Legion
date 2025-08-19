@@ -10,18 +10,19 @@ export class ArtifactIndexer {
 
   /**
    * Get all artifacts for a project
+   * FAIL FAST - no mock implementations
    */
   async getAllArtifacts(projectId) {
     if (!this.databaseService) {
-      return this.getMockArtifacts(projectId);
+      throw new Error('Database service not available - ArtifactIndexer requires real database connection');
     }
 
     try {
       const artifacts = await this.databaseService.retrieveArtifacts('all', { projectId });
       return artifacts.results || [];
     } catch (error) {
-      console.error('[ArtifactIndexer] Error retrieving artifacts:', error);
-      return [];
+      // Fail fast - don't mask database errors
+      throw new Error(`Failed to retrieve artifacts: ${error.message}`);
     }
   }
 
@@ -204,41 +205,5 @@ export class ArtifactIndexer {
     };
   }
 
-  /**
-   * Get mock artifacts for testing
-   */
-  getMockArtifacts(projectId) {
-    return [
-      {
-        id: 'artifact_001',
-        type: 'requirement',
-        name: 'User Authentication',
-        description: 'Users must be able to log in',
-        projectId,
-        timestamp: new Date(Date.now() - 3600000).toISOString(),
-        methodologyPhase: 'requirements',
-        agentType: 'RequirementsAgent'
-      },
-      {
-        id: 'artifact_002',
-        type: 'domain_entity',
-        name: 'User',
-        description: 'User entity with authentication',
-        projectId,
-        timestamp: new Date(Date.now() - 1800000).toISOString(),
-        methodologyPhase: 'domain-modeling',
-        agentType: 'DomainModelingAgent'
-      },
-      {
-        id: 'artifact_003',
-        type: 'use_case',
-        name: 'LoginUseCase',
-        description: 'Handles user login logic',
-        projectId,
-        timestamp: new Date().toISOString(),
-        methodologyPhase: 'architecture-design',
-        agentType: 'ArchitectureAgent'
-      }
-    ];
-  }
+  // NO MOCK IMPLEMENTATIONS - removed getMockArtifacts method
 }

@@ -11,251 +11,157 @@ class GitHub extends Tool {
   constructor(config = {}) {
     super({
       name: 'github',
-      description: 'Creates GitHub repositories and manages git operations'
+      description: 'Creates GitHub repositories and manages git operations',
+      schema: {
+        input: {
+          type: 'object',
+          properties: {
+            operation: {
+              type: 'string',
+              enum: [
+                'create_repo',
+                'push_to_repo', 
+                'create_and_push',
+                'list_repos',
+                'delete_repo',
+                'list_orgs',
+                'list_org_repos',
+                'get_file'
+              ],
+              description: 'The GitHub operation to perform'
+            },
+            repoName: {
+              type: 'string',
+              description: 'Name of the repository to create'
+            },
+            description: {
+              type: 'string',
+              description: 'Description of the repository'
+            },
+            private: {
+              type: 'boolean',
+              description: 'Whether the repository should be private (default: false)'
+            },
+            autoInit: {
+              type: 'boolean',
+              description: 'Whether to initialize with a README (default: false)'
+            },
+            repoUrl: {
+              type: 'string',
+              description: 'The GitHub repository URL (e.g., "https://github.com/username/repo.git")'
+            },
+            branch: {
+              type: 'string',
+              description: 'Branch name to push to (default: "main")'
+            },
+            force: {
+              type: 'boolean',
+              description: 'Whether to force push (default: false)'
+            },
+            type: {
+              type: 'string',
+              enum: ['all', 'owner', 'public', 'private', 'member', 'forks', 'sources'],
+              description: 'Type of repositories to list (default: "all")'
+            },
+            sort: {
+              type: 'string',
+              enum: ['created', 'updated', 'pushed', 'full_name'],
+              description: 'Sort repositories by (default: "created")'
+            },
+            per_page: {
+              type: 'number',
+              description: 'Number of repositories per page (default: 100)'
+            },
+            owner: {
+              type: 'string',
+              description: 'Repository owner (username or organization)'
+            },
+            repo: {
+              type: 'string',
+              description: 'Repository name'
+            },
+            org: {
+              type: 'string',
+              description: 'Organization name'
+            },
+            path: {
+              type: 'string',
+              description: 'Path to the file in the repository'
+            },
+            ref: {
+              type: 'string',
+              description: 'Branch, tag, or commit to get file from (default: default branch)'
+            }
+          },
+          required: ['operation']
+        },
+        output: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              description: 'Whether the operation was successful'
+            },
+            message: {
+              type: 'string',
+              description: 'Success or error message'
+            },
+            name: {
+              type: 'string',
+              description: 'Repository name'
+            },
+            url: {
+              type: 'string',
+              description: 'Repository URL'
+            },
+            cloneUrl: {
+              type: 'string',
+              description: 'Repository clone URL'
+            },
+            sshUrl: {
+              type: 'string',
+              description: 'Repository SSH URL'
+            },
+            repositories: {
+              type: 'array',
+              description: 'List of repositories'
+            },
+            organizations: {
+              type: 'array',
+              description: 'List of organizations'
+            },
+            file: {
+              type: 'object',
+              description: 'File information and content'
+            },
+            count: {
+              type: 'number',
+              description: 'Number of items returned'
+            }
+          },
+          required: ['success']
+        }
+      },
+      execute: async (args) => this.performOperation(args)
     });
+
     this.config = config;
     this.githubApiBase = config.apiBase || 'api.github.com';
     this.token = config.token;
     this.org = config.org;
   }
 
-  /**
-   * Returns all tool functions in standard function calling format
-   */
-  getAllToolDescriptions() {
-    return [
-      {
-        type: 'function',
-        function: {
-          name: 'github_create_repo',
-          description: 'Create a new GitHub repository',
-          parameters: {
-            type: 'object',
-            properties: {
-              repoName: {
-                type: 'string',
-                description: 'Name of the repository to create'
-              },
-              description: {
-                type: 'string',
-                description: 'Description of the repository'
-              },
-              private: {
-                type: 'boolean',
-                description: 'Whether the repository should be private (default: false)'
-              },
-              autoInit: {
-                type: 'boolean',
-                description: 'Whether to initialize with a README (default: false)'
-              }
-            },
-            required: ['repoName']
-          }
-        }
-      },
-      {
-        type: 'function',
-        function: {
-          name: 'github_push_to_repo',
-          description: 'Push current repository to a GitHub repository',
-          parameters: {
-            type: 'object',
-            properties: {
-              repoUrl: {
-                type: 'string',
-                description: 'The GitHub repository URL (e.g., "https://github.com/username/repo.git")'
-              },
-              branch: {
-                type: 'string',
-                description: 'Branch name to push to (default: "main")'
-              },
-              force: {
-                type: 'boolean',
-                description: 'Whether to force push (default: false)'
-              }
-            },
-            required: ['repoUrl']
-          }
-        }
-      },
-      {
-        type: 'function',
-        function: {
-          name: 'github_create_and_push',
-          description: 'Create a new GitHub repository and push the current code to it',
-          parameters: {
-            type: 'object',
-            properties: {
-              repoName: {
-                type: 'string',
-                description: 'Name of the repository to create'
-              },
-              description: {
-                type: 'string',
-                description: 'Description of the repository'
-              },
-              private: {
-                type: 'boolean',
-                description: 'Whether the repository should be private (default: false)'
-              },
-              branch: {
-                type: 'string',
-                description: 'Branch name to push to (default: "main")'
-              }
-            },
-            required: ['repoName']
-          }
-        }
-      },
-      {
-        type: 'function',
-        function: {
-          name: 'github_list_repos',
-          description: 'List repositories for the authenticated user',
-          parameters: {
-            type: 'object',
-            properties: {
-              type: {
-                type: 'string',
-                enum: ['all', 'owner', 'public', 'private', 'member'],
-                description: 'Type of repositories to list (default: "all")'
-              },
-              sort: {
-                type: 'string',
-                enum: ['created', 'updated', 'pushed', 'full_name'],
-                description: 'Sort repositories by (default: "created")'
-              },
-              per_page: {
-                type: 'number',
-                description: 'Number of repositories per page (default: 100)'
-              }
-            }
-          }
-        }
-      },
-      {
-        type: 'function',
-        function: {
-          name: 'github_delete_repo',
-          description: 'Delete a GitHub repository',
-          parameters: {
-            type: 'object',
-            properties: {
-              owner: {
-                type: 'string',
-                description: 'Repository owner (username or organization)'
-              },
-              repo: {
-                type: 'string',
-                description: 'Repository name to delete'
-              }
-            },
-            required: ['owner', 'repo']
-          }
-        }
-      },
-      {
-        type: 'function',
-        function: {
-          name: 'github_list_orgs',
-          description: 'List organizations for the authenticated user',
-          parameters: {
-            type: 'object',
-            properties: {
-              per_page: {
-                type: 'number',
-                description: 'Number of organizations per page (default: 100)'
-              }
-            }
-          }
-        }
-      },
-      {
-        type: 'function',
-        function: {
-          name: 'github_list_org_repos',
-          description: 'List repositories for a specific organization',
-          parameters: {
-            type: 'object',
-            properties: {
-              org: {
-                type: 'string',
-                description: 'Organization name'
-              },
-              type: {
-                type: 'string',
-                enum: ['all', 'public', 'private', 'forks', 'sources', 'member'],
-                description: 'Type of repositories to list (default: "all")'
-              },
-              sort: {
-                type: 'string',
-                enum: ['created', 'updated', 'pushed', 'full_name'],
-                description: 'Sort repositories by (default: "created")'
-              },
-              per_page: {
-                type: 'number',
-                description: 'Number of repositories per page (default: 100)'
-              }
-            },
-            required: ['org']
-          }
-        }
-      },
-      {
-        type: 'function',
-        function: {
-          name: 'github_get_file',
-          description: 'Get file contents from a GitHub repository',
-          parameters: {
-            type: 'object',
-            properties: {
-              owner: {
-                type: 'string',
-                description: 'Repository owner (username or organization)'
-              },
-              repo: {
-                type: 'string',
-                description: 'Repository name'
-              },
-              path: {
-                type: 'string',
-                description: 'Path to the file in the repository'
-              },
-              ref: {
-                type: 'string',
-                description: 'Branch, tag, or commit to get file from (default: default branch)'
-              }
-            },
-            required: ['owner', 'repo', 'path']
-          }
-        }
-      }
-    ];
-  }
-
-  /**
-   * Returns the primary tool function description
-   */
-  getToolDescription() {
-    return this.getAllToolDescriptions()[0];
-  }
-
-  /**
-   * Invokes the GitHub tool with the given tool call
-   */
-  async invoke(toolCall) {
+  async performOperation(args) {
     try {
-      const args = this.parseArguments(toolCall.function.arguments);
-      let result;
-
       // Emit progress event for operation start
-      this.emitProgress(`Starting GitHub operation: ${toolCall.function.name}`, {
-        operation: toolCall.function.name,
+      this.emitProgress(`Starting GitHub operation: ${args.operation}`, {
+        operation: args.operation,
         args: args
       });
 
-      switch (toolCall.function.name) {
-        case 'github_create_repo':
+      let result;
+      switch (args.operation) {
+        case 'create_repo':
           this.validateRequiredParameters(args, ['repoName']);
           result = await this.createRepo(
             args.repoName,
@@ -264,7 +170,7 @@ class GitHub extends Tool {
             args.autoInit
           );
           break;
-        case 'github_push_to_repo':
+        case 'push_to_repo':
           this.validateRequiredParameters(args, ['repoUrl']);
           result = await this.pushToRepo(
             args.repoUrl,
@@ -272,7 +178,7 @@ class GitHub extends Tool {
             args.force || false
           );
           break;
-        case 'github_create_and_push':
+        case 'create_and_push':
           this.validateRequiredParameters(args, ['repoName']);
           result = await this.createAndPush(
             args.repoName,
@@ -281,49 +187,43 @@ class GitHub extends Tool {
             args.branch || 'main'
           );
           break;
-        case 'github_list_repos':
+        case 'list_repos':
           result = await this.listRepos(args.type || 'all', args.sort || 'created', args.per_page || 100);
           break;
-        case 'github_delete_repo':
+        case 'delete_repo':
           this.validateRequiredParameters(args, ['owner', 'repo']);
           result = await this.deleteRepo(args.owner, args.repo);
           break;
-        case 'github_list_orgs':
+        case 'list_orgs':
           result = await this.listOrgs(args.per_page || 100);
           break;
-        case 'github_list_org_repos':
+        case 'list_org_repos':
           this.validateRequiredParameters(args, ['org']);
           result = await this.listOrgRepos(args.org, args.type || 'all', args.sort || 'created', args.per_page || 100);
           break;
-        case 'github_get_file':
+        case 'get_file':
           this.validateRequiredParameters(args, ['owner', 'repo', 'path']);
           result = await this.getFile(args.owner, args.repo, args.path, args.ref);
           break;
         default:
-          throw new Error(`Unknown function: ${toolCall.function.name}`);
+          throw new Error(`Unknown operation: ${args.operation}`);
       }
 
       // Emit success event
       this.emitInfo(`GitHub operation completed successfully`, {
-        operation: toolCall.function.name,
+        operation: args.operation,
         result: result
       });
 
-      return ToolResult.success(result);
+      return result;
     } catch (error) {
       // Emit error event
       this.emitError(`GitHub operation failed: ${error.message}`, {
-        operation: toolCall.function.name,
+        operation: args.operation,
         error: error.message
       });
 
-      return ToolResult.failure(
-        error.message || 'GitHub operation failed',
-        {
-          operation: toolCall.function.name,
-          errorType: 'execution_error'
-        }
-      );
+      throw error;
     }
   }
 

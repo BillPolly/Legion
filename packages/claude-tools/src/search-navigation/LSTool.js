@@ -3,25 +3,87 @@
  */
 
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 import { promises as fs } from 'fs';
 import path from 'path';
-import fg from 'fast-glob';
-
-// Input schema for validation
-const lsToolSchema = z.object({
-  path: z.string().min(1),
-  ignore: z.array(z.string()).optional()
-});
 
 export class LSTool extends Tool {
   constructor() {
     super({
       name: 'LS',
-      description: 'List files and directories in a given path',
-      inputSchema: lsToolSchema,
-      execute: async (input) => this.listDirectory(input),
-      getMetadata: () => this.getToolMetadata()
+      description: 'Lists files and directories in a given path with detailed metadata',
+      schema: {
+        input: {
+          type: 'object',
+          properties: {
+            path: {
+              type: 'string',
+              minLength: 1,
+              description: 'The absolute path to the directory to list'
+            },
+            ignore: {
+              type: 'array',
+              items: {
+                type: 'string'
+              },
+              description: 'List of glob patterns to ignore'
+            }
+          },
+          required: ['path']
+        },
+        output: {
+          type: 'object',
+          properties: {
+            path: {
+              type: 'string',
+              description: 'The absolute path that was listed'
+            },
+            entries: {
+              type: 'array',
+              description: 'Array of directory entries sorted by type (directories first) then alphabetically',
+              items: {
+                type: 'object',
+                properties: {
+                  name: {
+                    type: 'string',
+                    description: 'Name of the file or directory'
+                  },
+                  type: {
+                    type: 'string',
+                    enum: ['directory', 'file', 'symlink', 'unknown'],
+                    description: 'Type of the entry'
+                  },
+                  permissions: {
+                    type: 'string',
+                    description: 'File permissions in rwxrwxrwx format'
+                  },
+                  size: {
+                    type: 'number',
+                    description: 'Size in bytes (only for files)'
+                  },
+                  modified_time: {
+                    type: 'string',
+                    description: 'Last modification time (ISO string)'
+                  },
+                  created_time: {
+                    type: 'string',
+                    description: 'Creation time (ISO string)'
+                  },
+                  error: {
+                    type: 'string',
+                    description: 'Error message if entry could not be accessed'
+                  }
+                }
+              }
+            },
+            total_entries: {
+              type: 'number',
+              description: 'Total number of entries listed'
+            }
+          },
+          required: ['path', 'entries', 'total_entries']
+        }
+      },
+      execute: async (input) => this.listDirectory(input)
     });
   }
 
@@ -167,39 +229,4 @@ export class LSTool extends Tool {
     return permissions;
   }
 
-  /**
-   * Get tool metadata
-   */
-  getToolMetadata() {
-    return {
-      name: 'LS',
-      description: 'List files and directories in a given path',
-      input: {
-        path: {
-          type: 'string',
-          required: true,
-          description: 'Absolute path to list'
-        },
-        ignore: {
-          type: 'array',
-          required: false,
-          description: 'Glob patterns to ignore'
-        }
-      },
-      output: {
-        path: {
-          type: 'string',
-          description: 'The path that was listed'
-        },
-        entries: {
-          type: 'array',
-          description: 'Array of directory entries'
-        },
-        total_entries: {
-          type: 'number',
-          description: 'Total number of entries'
-        }
-      }
-    };
-  }
 }

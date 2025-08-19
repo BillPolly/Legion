@@ -1,4 +1,5 @@
-import { Tool } from '../modules/Tool.js'; import { ToolResult } from '../compatibility.js';
+import { Tool } from '../../../tools-registry/src/modules/Tool.js';
+import { ToolResult } from '../compatibility.js';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -7,27 +8,12 @@ import path from 'path';
  */
 class FileWriterTool extends Tool {
   constructor({ basePath, encoding = 'utf-8', createDirectories = false }) {
-    super();
-    this.name = 'file_writer';
-    this.shortName = 'write';
-    this.description = 'Writes content to a file in the file system';
-
-    // Store dependencies
-    this.basePath = basePath;
-    this.encoding = encoding;
-    this.createDirectories = createDirectories;
-  }
-
-  /**
-   * Returns the tool description in standard function calling format
-   */
-  getToolDescription() {
-    return {
-      type: 'function',
-      function: {
-        name: 'file_writer',
-        description: 'Writes content to a file in the file system',
-        parameters: {
+    super({
+      name: 'file_writer',
+      shortName: 'write',
+      description: 'Writes content to a file in the file system',
+      schema: {
+        input: {
           type: 'object',
           properties: {
             filePath: {
@@ -80,8 +66,14 @@ class FileWriterTool extends Tool {
             required: ['filePath', 'errorType']
           }
         }
-      }
-    };
+      },
+      execute: async (args) => this.writeFile(args)
+    });
+
+    // Store dependencies
+    this.basePath = basePath;
+    this.encoding = encoding;
+    this.createDirectories = createDirectories;
   }
 
   /**
@@ -89,13 +81,8 @@ class FileWriterTool extends Tool {
    * @param {Object} args - The arguments for writing the file
    * @returns {Promise<ToolResult>} The result of writing the file
    */
-  async execute(args) {
+  async writeFile(args) {
     try {
-      // Validate required parameters
-      if (!args || !args.filePath || args.content === undefined) {
-        throw new Error('filePath and content are required');
-      }
-
       let { filePath, content, append = false } = args;
       
       // Convert content to string if needed (handles objects like package.json)
@@ -110,7 +97,6 @@ class FileWriterTool extends Tool {
           errorType: 'invalid_path'
         });
       }
-
 
       if (filePath.trim() === '') {
         return ToolResult.failure('File path cannot be empty', {

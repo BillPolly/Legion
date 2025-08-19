@@ -4,23 +4,100 @@
  */
 
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
-
-// Input schema for validation
-const webSearchToolSchema = z.object({
-  query: z.string().min(2),
-  allowed_domains: z.array(z.string()).optional(),
-  blocked_domains: z.array(z.string()).optional()
-});
 
 export class WebSearchTool extends Tool {
   constructor() {
     super({
       name: 'WebSearch',
-      description: 'Search the web for current information',
-      inputSchema: webSearchToolSchema,
-      execute: async (input) => this.searchWeb(input),
-      getMetadata: () => this.getToolMetadata()
+      description: 'Search the web and use the results to provide up-to-date information beyond Claude\'s knowledge cutoff',
+      schema: {
+        input: {
+          type: 'object',
+          properties: {
+            query: {
+              type: 'string',
+              minLength: 2,
+              description: 'The search query to use'
+            },
+            allowed_domains: {
+              type: 'array',
+              items: {
+                type: 'string'
+              },
+              description: 'Only include search results from these domains'
+            },
+            blocked_domains: {
+              type: 'array',
+              items: {
+                type: 'string'
+              },
+              description: 'Never include search results from these domains'
+            }
+          },
+          required: ['query']
+        },
+        output: {
+          type: 'object',
+          properties: {
+            query: {
+              type: 'string',
+              description: 'The search query that was used'
+            },
+            results: {
+              type: 'array',
+              description: 'Search result information formatted as search result blocks',
+              items: {
+                type: 'object',
+                properties: {
+                  title: {
+                    type: 'string',
+                    description: 'Title of the search result'
+                  },
+                  url: {
+                    type: 'string',
+                    format: 'uri',
+                    description: 'URL of the search result'
+                  },
+                  snippet: {
+                    type: 'string',
+                    description: 'Brief excerpt or description from the page'
+                  },
+                  domain: {
+                    type: 'string',
+                    description: 'Domain name of the result'
+                  },
+                  relevance_score: {
+                    type: 'number',
+                    minimum: 0,
+                    maximum: 1,
+                    description: 'Relevance score (0-1)'
+                  }
+                }
+              }
+            },
+            search_metadata: {
+              type: 'object',
+              description: 'Metadata about the search operation',
+              properties: {
+                total_results: {
+                  type: 'integer',
+                  description: 'Total number of results returned'
+                },
+                search_time_ms: {
+                  type: 'number',
+                  description: 'Time taken for search in milliseconds'
+                },
+                search_engine: {
+                  type: 'string',
+                  description: 'Search engine used'
+                }
+              }
+            }
+          },
+          required: ['query', 'results', 'search_metadata']
+        }
+      },
+      execute: async (input) => this.searchWeb(input)
     });
   }
 
@@ -86,44 +163,4 @@ export class WebSearchTool extends Tool {
     }
   }
 
-  /**
-   * Get tool metadata
-   */
-  getToolMetadata() {
-    return {
-      name: 'WebSearch',
-      description: 'Search the web for current information',
-      input: {
-        query: {
-          type: 'string',
-          required: true,
-          description: 'Search query (min 2 characters)'
-        },
-        allowed_domains: {
-          type: 'array',
-          required: false,
-          description: 'Domain whitelist'
-        },
-        blocked_domains: {
-          type: 'array',
-          required: false,
-          description: 'Domain blacklist'
-        }
-      },
-      output: {
-        query: {
-          type: 'string',
-          description: 'The search query'
-        },
-        results: {
-          type: 'array',
-          description: 'Search results'
-        },
-        search_metadata: {
-          type: 'object',
-          description: 'Search metadata'
-        }
-      }
-    };
-  }
 }

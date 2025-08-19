@@ -4,26 +4,105 @@
  */
 
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
-
-// Input schema for validation
-const todoWriteToolSchema = z.object({
-  todos: z.array(z.object({
-    content: z.string().min(1),
-    status: z.enum(['pending', 'in_progress', 'completed']),
-    id: z.string()
-  }))
-});
 
 export class TodoWriteTool extends Tool {
   constructor() {
     super({
       name: 'TodoWrite',
-      description: 'Create and manage a structured task list for your current coding session',
-      inputSchema: todoWriteToolSchema,
-      execute: async (input) => this.manageTodos(input),
-      getMetadata: () => this.getToolMetadata()
+      description: 'Create and manage a structured task list to track progress and organize complex tasks',
+      schema: {
+        input: {
+          type: 'object',
+          properties: {
+            todos: {
+              type: 'array',
+              minItems: 1,
+              description: 'The updated todo list',
+              items: {
+                type: 'object',
+                properties: {
+                  content: {
+                    type: 'string',
+                    minLength: 1,
+                    description: 'Todo item content'
+                  },
+                  status: {
+                    type: 'string',
+                    enum: ['pending', 'in_progress', 'completed'],
+                    description: 'Todo status'
+                  },
+                  id: {
+                    type: 'string',
+                    description: 'Todo unique identifier'
+                  }
+                },
+                required: ['content', 'status', 'id']
+              }
+            }
+          },
+          required: ['todos']
+        },
+        output: {
+          type: 'object',
+          properties: {
+            todos: {
+              type: 'array',
+              description: 'Processed todo list with guaranteed unique IDs',
+              items: {
+                type: 'object',
+                properties: {
+                  content: {
+                    type: 'string',
+                    description: 'Todo item content'
+                  },
+                  status: {
+                    type: 'string',
+                    enum: ['pending', 'in_progress', 'completed'],
+                    description: 'Todo status'
+                  },
+                  id: {
+                    type: 'string',
+                    description: 'Todo unique identifier'
+                  }
+                }
+              }
+            },
+            summary: {
+              type: 'object',
+              description: 'Summary of todo statuses',
+              properties: {
+                total: {
+                  type: 'integer',
+                  description: 'Total number of todos'
+                },
+                pending: {
+                  type: 'integer',
+                  description: 'Number of pending todos'
+                },
+                in_progress: {
+                  type: 'integer',
+                  description: 'Number of in-progress todos'
+                },
+                completed: {
+                  type: 'integer',
+                  description: 'Number of completed todos'
+                }
+              }
+            },
+            message: {
+              type: 'string',
+              description: 'Status message describing the update'
+            },
+            timestamp: {
+              type: 'string',
+              description: 'Update timestamp (ISO string)'
+            }
+          },
+          required: ['todos', 'summary', 'message', 'timestamp']
+        }
+      },
+      execute: async (input) => this.manageTodos(input)
     });
     
     // In-memory storage for MVP
@@ -104,56 +183,4 @@ export class TodoWriteTool extends Tool {
     return Array.from(this.todoList.values());
   }
 
-  /**
-   * Get tool metadata
-   */
-  getToolMetadata() {
-    return {
-      name: 'TodoWrite',
-      description: 'Create and manage a structured task list for your current coding session',
-      input: {
-        todos: {
-          type: 'array',
-          required: true,
-          description: 'The updated todo list',
-          items: {
-            content: {
-              type: 'string',
-              required: true,
-              description: 'Todo item content'
-            },
-            status: {
-              type: 'string',
-              required: true,
-              description: 'Todo status',
-              enum: ['pending', 'in_progress', 'completed']
-            },
-            id: {
-              type: 'string',
-              required: true,
-              description: 'Todo unique identifier'
-            }
-          }
-        }
-      },
-      output: {
-        todos: {
-          type: 'array',
-          description: 'Processed todo list'
-        },
-        summary: {
-          type: 'object',
-          description: 'Summary of todo statuses'
-        },
-        message: {
-          type: 'string',
-          description: 'Status message'
-        },
-        timestamp: {
-          type: 'string',
-          description: 'Update timestamp'
-        }
-      }
-    };
-  }
 }

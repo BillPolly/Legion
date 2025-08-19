@@ -180,22 +180,8 @@ Focus on identifying natural boundaries in the domain. Return ONLY valid JSON.`;
       return JSON.parse(cleanedResponse);
       
     } catch (error) {
-      // Fallback: create basic context
-      return {
-        boundedContexts: [{
-          id: 'bc-main',
-          name: 'Main Domain',
-          description: 'Primary business domain',
-          isCore: true,
-          domainType: 'core',
-          boundaries: ['All business logic'],
-          responsibilities: ['Handle all operations'],
-          interfaces: [],
-          relationshipsWith: [],
-          ubiquitousLanguage: []
-        }],
-        reasoning: 'Failed to parse LLM response, created default context'
-      };
+      // FAIL FAST - no fallbacks allowed
+      throw new Error(`Failed to parse LLM response as JSON: ${error.message}. Response was: ${response.substring(0, 200)}...`);
     }
   }
 

@@ -260,12 +260,8 @@ export class SDAgentBase extends BTAgentBase {
       // Use real database service
       return await this.databaseService.storeArtifact(enrichedArtifact);
     } else {
-      // Fallback for tests
-      console.log(`[${this.constructor.name}] Storing artifact:`, enrichedArtifact.type);
-      return {
-        ...enrichedArtifact,
-        id: `artifact_${Date.now()}`
-      };
+      // FAIL FAST - no fallbacks allowed
+      throw new Error(`Database service not available - ${this.constructor.name} requires real database connection to store artifacts`);
     }
   }
 
@@ -285,13 +281,8 @@ export class SDAgentBase extends BTAgentBase {
         results: artifacts
       };
     } else {
-      // Fallback for tests
-      console.log(`[${this.constructor.name}] Retrieving ${type} with query:`, query);
-      return {
-        type,
-        query,
-        results: []
-      };
+      // FAIL FAST - no fallbacks allowed
+      throw new Error(`Database service not available - ${this.constructor.name} requires real database connection to retrieve artifacts`);
     }
   }
 

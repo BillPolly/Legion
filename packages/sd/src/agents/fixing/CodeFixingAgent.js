@@ -377,13 +377,8 @@ Return JSON:
       const analysis = await this.makeLLMDecision(prompt, {});
       return typeof analysis === 'string' ? JSON.parse(analysis) : analysis;
     } catch (error) {
-      // Fallback analysis
-      return {
-        failureType: 'unknown',
-        affectedFiles: ['src/domain/User.js', 'src/application/UserService.js'],
-        rootCause: 'Unable to parse test failure',
-        fixStrategy: 'Manual investigation required'
-      };
+      // FAIL FAST - no fallbacks allowed
+      throw new Error(`Failed to analyze test failure: ${error.message}. Unable to provide fallback analysis.`);
     }
   }
 
