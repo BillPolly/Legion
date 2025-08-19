@@ -49,7 +49,8 @@ export class StorageEngine {
         status TEXT,
         config TEXT,
         environment TEXT,
-        summary TEXT
+        summary TEXT,
+        metadata TEXT
       )`,
       
       `CREATE TABLE IF NOT EXISTS test_suites (
@@ -108,6 +109,7 @@ export class StorageEngine {
       
       `CREATE TABLE IF NOT EXISTS errors (
         id TEXT PRIMARY KEY,
+        session_id TEXT,
         test_id TEXT,
         timestamp DATETIME,
         type TEXT,
@@ -115,6 +117,7 @@ export class StorageEngine {
         stack_trace TEXT,
         location TEXT,
         suggestion TEXT,
+        FOREIGN KEY (session_id) REFERENCES sessions(id),
         FOREIGN KEY (test_id) REFERENCES test_cases(id)
       )`
     ];
@@ -142,8 +145,8 @@ export class StorageEngine {
     
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO sessions 
-      (id, start_time, end_time, status, config, environment, summary)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      (id, start_time, end_time, status, config, environment, summary, metadata)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
     
     stmt.run(
@@ -153,7 +156,8 @@ export class StorageEngine {
       session.status,
       JSON.stringify(session.jestConfig),
       JSON.stringify(session.environment),
-      JSON.stringify(session.summary)
+      JSON.stringify(session.summary),
+      JSON.stringify(session.metadata || {})
     );
   }
 
@@ -314,8 +318,81 @@ export class StorageEngine {
       status: row.status,
       jestConfig: JSON.parse(row.config || '{}'),
       environment: JSON.parse(row.environment || '{}'),
-      summary: JSON.parse(row.summary || '{}')
+      summary: JSON.parse(row.summary || '{}'),
+      metadata: JSON.parse(row.metadata || '{}')
     };
+  }
+
+  /**
+   * Get all sessions
+   */
+  async getAllSessions() {
+    await this.initialize();
+    
+    const stmt = this.db.prepare('SELECT * FROM sessions ORDER BY start_time DESC');
+    const rows = stmt.all();
+    
+    return rows.map(row => ({
+      id: row.id,
+      startTime: new Date(row.start_time),
+      endTime: row.end_time ? new Date(row.end_time) : null,
+      status: row.status,
+      jestConfig: JSON.parse(row.config || '{}'),
+      environment: JSON.parse(row.environment || '{}'),
+      summary: JSON.parse(row.summary || '{}'),
+      metadata: JSON.parse(row.metadata || '{}')
+    }));
+  }
+
+  /**
+   * Clear a specific session and all its related data
+   */
+  async clearSession(sessionId) {
+    await this.initialize();
+    
+    // Use transaction to ensure atomicity
+    const deleteSession = this.db.prepare('DELETE FROM sessions WHERE id = ?');
+    const deleteSuites = this.db.prepare('DELETE FROM test_suites WHERE session_id = ?');
+    const deleteTests = this.db.prepare('DELETE FROM test_cases WHERE session_id = ?');
+    const deleteLogs = this.db.prepare('DELETE FROM logs WHERE session_id = ?');
+    // Delete errors based on test_id from test_cases in this session
+    const deleteErrors = this.db.prepare(`
+      DELETE FROM errors WHERE test_id IN (
+        SELECT id FROM test_cases WHERE session_id = ?
+      )
+    `);
+    
+    const transaction = this.db.transaction((id) => {
+      // Delete in order of dependencies
+      deleteLogs.run(id);
+      deleteErrors.run(id);
+      deleteTests.run(id);
+      deleteSuites.run(id);
+      deleteSession.run(id);
+    });
+    
+    transaction(sessionId);
+    
+    console.log(`🗑️ Cleared session: ${sessionId}`);
+    return true;
+  }
+
+  /**
+   * Clear all sessions from the database
+   */
+  async clearAllSessions() {
+    await this.initialize();
+    
+    // Delete all data from all tables
+    this.db.exec('DELETE FROM logs');
+    this.db.exec('DELETE FROM assertions');
+    this.db.exec('DELETE FROM errors');
+    this.db.exec('DELETE FROM test_cases');
+    this.db.exec('DELETE FROM test_suites');
+    this.db.exec('DELETE FROM sessions');
+    
+    console.log('🗑️ Cleared all sessions from database');
+    return true;
   }
 
   /**

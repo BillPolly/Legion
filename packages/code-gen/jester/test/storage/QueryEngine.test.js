@@ -1,8 +1,9 @@
 /**
- * Query Engine Tests
- * Tests for database query operations and data retrieval
+ * Comprehensive tests for QueryEngine
+ * Tests database query operations, data retrieval, and complex query scenarios
  */
 
+import { describe, test, expect, beforeAll, beforeEach, afterEach } from '@jest/globals';
 import { QueryEngine } from '../../src/storage/QueryEngine.js';
 import { StorageEngine } from '../../src/storage/StorageEngine.js';
 import { promises as fs } from 'fs';
@@ -568,6 +569,338 @@ describe('QueryEngine', () => {
         file: '/path/file.js', line: 10, column: 5
       });
       expect(testCase.logs[0].metadata).toEqual({ error: true });
+    });
+  });
+
+  describe('Advanced Query Scenarios', () => {
+    beforeEach(async () => {
+      // Create additional test data for advanced scenarios
+      const session2 = {
+        id: 'test-session-2',
+        startTime: new Date('2023-01-02T10:00:00Z'),
+        endTime: new Date('2023-01-02T10:10:00Z'),
+        status: 'completed',
+        jestConfig: { testMatch: ['**/*.spec.js'] },
+        environment: { nodeVersion: 'v20.0.0' },
+        summary: { totalTests: 10, passed: 7, failed: 3 }
+      };
+      await storage.storeSession(session2);
+
+      const suite2 = {
+        id: 'test-suite-2',
+        sessionId: 'test-session-2',
+        path: '/path/to/advanced.spec.js',
+        name: 'advanced.spec.js',
+        startTime: new Date('2023-01-02T10:00:00Z'),
+        endTime: new Date('2023-01-02T10:05:00Z'),
+        status: 'completed',
+        setupDuration: 200,
+        teardownDuration: 100
+      };
+      await storage.storeSuite(suite2);
+
+      // Add tests with varying durations for performance analysis
+      const performanceTests = [
+        { id: 'perf-test-1', duration: 50, status: 'passed' },
+        { id: 'perf-test-2', duration: 500, status: 'passed' },
+        { id: 'perf-test-3', duration: 2000, status: 'failed' },
+        { id: 'perf-test-4', duration: 10000, status: 'passed' },
+        { id: 'perf-test-5', duration: 15000, status: 'failed' }
+      ];
+
+      for (const [index, test] of performanceTests.entries()) {
+        await storage.storeTestCase({
+          id: test.id,
+          sessionId: 'test-session-2',
+          suiteId: 'test-suite-2',
+          name: `performance test ${index + 1}`,
+          fullName: `Advanced Tests > performance test ${index + 1}`,
+          startTime: new Date(`2023-01-02T10:0${index}:00Z`),
+          endTime: new Date(`2023-01-02T10:0${index + 1}:00Z`),
+          status: test.status,
+          duration: test.duration,
+          assertions: [],
+          errors: [],
+          logs: []
+        });
+      }
+    });
+
+    test('should find tests across multiple sessions', async () => {
+      const allTests = await queryEngine.findTests();
+      
+      expect(allTests.length).toBeGreaterThanOrEqual(8); // 3 from session-1 + 5 from session-2
+      
+      const sessionIds = [...new Set(allTests.map(t => t.sessionId))];
+      expect(sessionIds).toContain('test-session-1');
+      expect(sessionIds).toContain('test-session-2');
+    });
+
+    test('should handle complex duration queries', async () => {
+      const slowTests = await queryEngine.findTests({ minDuration: 5000 });
+      
+      expect(slowTests.length).toBeGreaterThanOrEqual(2);
+      expect(slowTests.every(test => test.duration >= 5000)).toBe(true);
+    });
+
+    test('should support complex log searches with multiple criteria', async () => {
+      // Add more logs for testing
+      await storage.storeLog({
+        sessionId: 'test-session-2',
+        testId: 'perf-test-3',
+        timestamp: new Date('2023-01-02T10:02:30Z'),
+        level: 'error',
+        message: 'Performance test failed due to timeout',
+        source: 'test',
+        metadata: { timeout: true, duration: 2000 }
+      });
+
+      const complexLogs = await queryEngine.searchLogs({
+        level: 'error',
+        message: 'timeout',
+        since: new Date('2023-01-02T10:00:00Z')
+      });
+
+      expect(complexLogs).toHaveLength(1);
+      expect(complexLogs[0].message).toContain('timeout');
+      expect(complexLogs[0].level).toBe('error');
+    });
+
+    test('should handle performance analysis queries', async () => {
+      const slowestTests = await queryEngine.getSlowestTests(3);
+      
+      expect(slowestTests).toHaveLength(3);
+      expect(slowestTests[0].duration).toBeGreaterThanOrEqual(slowestTests[1].duration);
+      expect(slowestTests[1].duration).toBeGreaterThanOrEqual(slowestTests[2].duration);
+    });
+  });
+
+  describe('Error Handling and Edge Cases', () => {
+    test('should handle malformed JSON in error stack traces', async () => {
+      // Manually insert error with malformed JSON
+      const db = storage.db;
+      db.prepare(`
+        INSERT INTO errors (test_id, timestamp, type, message, stack_trace, location, suggestion)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run('test-1', new Date().toISOString(), 'malformed', 'Test error', 'invalid json', '{}', 'Fix it');
+
+      const errors = await queryEngine.getErrorsByType('malformed');
+      
+      // Should handle gracefully and return the error with null/default values
+      expect(errors).toHaveLength(1);
+      expect(errors[0].type).toBe('malformed');
+    });
+
+    test('should handle empty database gracefully', async () => {
+      // Clear all data - must delete in correct order due to foreign key constraints
+      const db = storage.db;
+      db.prepare('DELETE FROM errors').run();
+      db.prepare('DELETE FROM assertions').run();
+      db.prepare('DELETE FROM logs').run();
+      db.prepare('DELETE FROM test_cases').run();
+      db.prepare('DELETE FROM test_suites').run();
+      db.prepare('DELETE FROM sessions').run();
+
+      const tests = await queryEngine.findTests();
+      const summary = await queryEngine.getTestSummary();
+      const logs = await queryEngine.searchLogs();
+      const errors = await queryEngine.getErrorsByType('any');
+
+      expect(tests).toHaveLength(0);
+      expect(summary.total).toBe(0);
+      expect(logs).toHaveLength(0);
+      expect(errors).toHaveLength(0);
+    });
+
+    test('should handle null and undefined query parameters', async () => {
+      const tests = await queryEngine.findTests({
+        sessionId: null,
+        status: undefined,
+        name: '',
+        minDuration: null
+      });
+
+      // Should not crash and return all tests
+      expect(Array.isArray(tests)).toBe(true);
+    });
+
+    test('should handle invalid date parameters', async () => {
+      const logs = await queryEngine.searchLogs({
+        since: 'invalid-date',
+        until: new Date('invalid')
+      });
+
+      // Should handle gracefully and not crash
+      expect(Array.isArray(logs)).toBe(true);
+    });
+
+    test('should handle very large limit values', async () => {
+      const tests = await queryEngine.findTests({ limit: 999999 });
+      
+      // Should not crash and return reasonable results
+      expect(Array.isArray(tests)).toBe(true);
+      expect(tests.length).toBeLessThan(999999);
+    });
+
+    test('should handle SQL injection attempts in search queries', async () => {
+      const maliciousQuery = "'; DROP TABLE test_cases; --";
+      
+      const logs = await queryEngine.searchLogs({
+        message: maliciousQuery
+      });
+
+      // Should handle gracefully and not execute malicious SQL
+      expect(Array.isArray(logs)).toBe(true);
+      
+      // Verify tables still exist
+      const tableCheck = storage.db.prepare(`
+        SELECT name FROM sqlite_master 
+        WHERE type='table' AND name='test_cases'
+      `).get();
+      expect(tableCheck).toBeDefined();
+    });
+
+    test('should handle concurrent query operations', async () => {
+      const promises = [
+        queryEngine.findTests(),
+        queryEngine.getTestSummary(),
+        queryEngine.searchLogs(),
+        queryEngine.getSlowestTests(),
+        queryEngine.getFailedTests()
+      ];
+
+      const results = await Promise.all(promises);
+
+      expect(results).toHaveLength(5);
+      expect(Array.isArray(results[0])).toBe(true); // findTests
+      expect(typeof results[1]).toBe('object'); // getTestSummary
+      expect(Array.isArray(results[2])).toBe(true); // searchLogs
+      expect(Array.isArray(results[3])).toBe(true); // getSlowestTests
+      expect(Array.isArray(results[4])).toBe(true); // getFailedTests
+    });
+  });
+
+  describe('Complex Aggregation Queries', () => {
+    test('should calculate accurate test statistics across multiple sessions', async () => {
+      const summary = await queryEngine.getTestSummary();
+      
+      expect(summary.total).toBeGreaterThan(0);
+      expect(summary.passed + summary.failed + summary.skipped + summary.todo).toBe(summary.total);
+    });
+
+    test('should group errors by test and provide meaningful statistics', async () => {
+      const commonErrors = await queryEngine.getMostCommonErrors();
+      
+      expect(Array.isArray(commonErrors)).toBe(true);
+      if (commonErrors.length > 0) {
+        expect(commonErrors[0]).toHaveProperty('type');
+        expect(commonErrors[0]).toHaveProperty('count');
+        expect(typeof commonErrors[0].count).toBe('number');
+      }
+    });
+
+    test('should handle test history across multiple runs', async () => {
+      // First create the required parent session and suite
+      await storage.storeSession({
+        id: 'history-session-2',
+        startTime: new Date('2023-01-02T10:00:00Z'),
+        endTime: new Date('2023-01-02T10:10:00Z'),
+        status: 'completed',
+        jestConfig: {},
+        environment: {},
+        summary: {}
+      });
+      
+      await storage.storeSuite({
+        id: 'history-suite-2',
+        sessionId: 'history-session-2',
+        path: '/path/to/history.spec.js',
+        name: 'history.spec.js',
+        startTime: new Date('2023-01-02T10:00:00Z'),
+        endTime: new Date('2023-01-02T10:00:02Z'),
+        status: 'completed'
+      });
+      
+      // Add same test name in different sessions
+      await storage.storeTestCase({
+        id: 'history-test-1',
+        sessionId: 'history-session-2',
+        suiteId: 'history-suite-2',
+        name: 'should pass', // Same name as existing test
+        fullName: 'History Tests > should pass',
+        startTime: new Date('2023-01-02T10:00:00Z'),
+        endTime: new Date('2023-01-02T10:00:01Z'),
+        status: 'failed', // Different status
+        duration: 1500,
+        assertions: [],
+        errors: [],
+        logs: []
+      });
+
+      const history = await queryEngine.getTestHistory('should pass');
+      
+      expect(history.length).toBeGreaterThanOrEqual(2);
+      expect(history.some(h => h.status === 'passed')).toBe(true);
+      expect(history.some(h => h.status === 'failed')).toBe(true);
+    });
+  });
+
+  describe('JSON Deserialization Edge Cases', () => {
+    test('should handle nested objects in metadata correctly', async () => {
+      await storage.storeLog({
+        sessionId: 'test-session-1',
+        testId: 'test-1',
+        timestamp: new Date(),
+        level: 'info',
+        message: 'Complex metadata test',
+        source: 'test',
+        metadata: {
+          nested: {
+            deep: {
+              value: 'test',
+              array: [1, 2, 3],
+              nullValue: null,
+              boolValue: true
+            }
+          },
+          complexArray: [
+            { id: 1, name: 'item1' },
+            { id: 2, name: 'item2' }
+          ]
+        }
+      });
+
+      const logs = await queryEngine.searchLogs({
+        message: 'Complex metadata test'
+      });
+
+      expect(logs).toHaveLength(1);
+      const log = logs[0];
+      expect(log.metadata.nested.deep.value).toBe('test');
+      expect(log.metadata.nested.deep.array).toEqual([1, 2, 3]);
+      expect(log.metadata.complexArray).toHaveLength(2);
+    });
+
+    test('should handle circular reference prevention in stored objects', async () => {
+      // Test that circular references don't break JSON serialization
+      const session = {
+        id: 'circular-test',
+        startTime: new Date(),
+        endTime: null,
+        status: 'running',
+        jestConfig: {},
+        environment: {},
+        summary: {},
+        metadata: {
+          // This would typically be prevented at the storage layer
+          simpleObject: { value: 'test' }
+        }
+      };
+
+      await storage.storeSession(session);
+      const retrieved = await storage.getSession('circular-test');
+
+      expect(retrieved.metadata.simpleObject.value).toBe('test');
     });
   });
 });

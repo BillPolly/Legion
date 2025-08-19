@@ -66,6 +66,12 @@ describe('Memory Leak Tests', () => {
       // Verify listeners are cleaned up
       expect(jaw.listenerCount('testStart')).toBe(0);
       
+      // Verify no other event types have lingering listeners
+      const eventTypes = ['sessionStart', 'sessionEnd', 'testEnd', 'suiteStart', 'suiteEnd', 'assertion', 'log'];
+      eventTypes.forEach(eventType => {
+        expect(jaw.listenerCount(eventType)).toBe(0);
+      });
+      
       // Verify no memory leaks by checking that listeners array doesn't grow
       const initialLength = listeners.length;
       

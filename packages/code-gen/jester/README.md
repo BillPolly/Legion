@@ -1,91 +1,242 @@
-# Template Package
+# Jest Agent Wrapper (Jester)
 
-A ready-to-use template for creating new packages in this monorepo. This template provides a standardized structure and configuration that can be easily copied and customized for new packages.
+A sophisticated Jest testing framework wrapper that transforms console output into structured, queryable data for AI coding agents to excel at Test-Driven Development (TDD).
 
-## Purpose
+## Overview
 
-This package serves as a template to streamline the creation of new packages by providing:
-- Standard directory structure
-- Pre-configured Jest testing setup
-- Common dependencies and dev dependencies
-- Consistent package.json configuration
-- Documentation structure
+Jester makes Jest output agent-friendly by:
+- Converting unstructured console output into structured, timestamped data
+- Persisting test results in a queryable SQLite database
+- Providing real-time event streaming for test execution monitoring
+- Offering intelligent error pattern analysis and suggestions
+- Enabling historical test data analysis for pattern recognition
 
-## Structure
+## Features
 
-```
-packages/Template/
-├── README.md           # This file
-├── package.json        # Package configuration
-├── jest.config.js      # Jest testing configuration
-├── docs/              # Documentation directory
-│   └── Design.md      # Design documentation
-├── src/               # Source code directory
-│   └── index.js       # Main entry point
-├── test/              # Test directory
-└── scripts/           # Utility scripts
-```
+### 🎯 Core Capabilities
+- **Structured Test Data**: Transforms Jest's console output into typed, queryable objects
+- **Persistent Storage**: SQLite database for complete test history and analysis
+- **Real-time Events**: Stream test events as they happen for immediate feedback
+- **Error Intelligence**: Categorizes errors with automated fix suggestions
+- **Performance Tracking**: Monitor test duration trends and identify bottlenecks
+- **TDD Support**: Agent-specific helpers for red-green-refactor workflows
 
-## How to Use This Template
+### 📊 Data Collection
+- Test suite and case results with timing information
+- Console logs (log, warn, error, debug) with timestamps
+- Assertion details with actual vs expected values
+- Stack traces with file/line references
+- Coverage data integration
+- Performance metrics
 
-1. **Copy the Template Directory**
-   ```bash
-   cp -r packages/Template packages/YourNewPackage
-   ```
+### 🔍 Query Capabilities
+- Find failing tests by error type
+- Search test history for specific patterns
+- Analyze error trends over time
+- Identify slowest tests
+- Track test success rates
+- Generate comprehensive test reports
 
-2. **Update package.json**
-   - Change the `name` field to your package name (lowercase, kebab-case)
-   - Update the `description` field
-   - Modify dependencies as needed for your specific package
-   - Update the `author` field if different
-
-3. **Update Documentation**
-   - Replace this README.md with documentation specific to your package
-   - Update docs/Design.md with your package's design documentation
-
-4. **Implement Your Package**
-   - Replace src/index.js with your package's main implementation
-   - Add additional source files as needed
-   - Create appropriate test files in the test/ directory
-
-5. **Update Scripts**
-   - Add any package-specific scripts to the scripts/ directory
-   - Update package.json scripts section as needed
-
-## Included Dependencies
-
-### Runtime Dependencies
-- `@example/git-manager` - Git management utilities (workspace dependency)
-- `inquirer` - Interactive command line prompts
-- `chalk` - Terminal string styling
-- `open` - Open files and URLs
-- `dotenv` - Environment variable loading
-
-### Development Dependencies
-- `cross-env` - Cross-platform environment variables
-- `eslint` - JavaScript linting
-- `jest` - Testing framework
-
-## Testing
-
-The template includes Jest configuration for testing:
+## Installation
 
 ```bash
-npm run test
+npm install @legion/jester
 ```
 
-## Requirements
+## Usage
 
-- Node.js >= 18.0.0
-- This package uses ES modules (`"type": "module"`)
+### Basic Integration
+
+```javascript
+import { JestAgentWrapper } from '@legion/jester';
+
+// Create wrapper instance
+const jaw = new JestAgentWrapper({
+  dbPath: './test-results.db',
+  storage: 'sqlite',
+  collectConsole: true,
+  collectCoverage: true,
+  realTimeEvents: true
+});
+
+// Run tests with structured output
+const session = await jaw.runTests('src/**/*.test.js');
+
+// Query results
+const failedTests = await jaw.getFailedTests(session.id);
+const errors = await jaw.getErrorsByType('assertion');
+```
+
+### Jest Reporter Integration
+
+Configure Jest to use the Jester reporter:
+
+```javascript
+// jest.config.js
+module.exports = {
+  reporters: [
+    'default',
+    ['@legion/jester/reporter', {
+      dbPath: './test-results.db',
+      realTimeEvents: true
+    }]
+  ]
+};
+```
+
+### CLI Usage
+
+```bash
+# Run tests with Jester wrapper
+jester run src/**/*.test.js --storage sqlite --output test-results.db
+
+# Query previous results
+jester query --failed --since "1 hour ago"
+jester query --errors --type assertion
+jester query --slow --limit 10
+```
+
+### TDD Helper for AI Agents
+
+```javascript
+import { AgentTDDHelper } from '@legion/jester';
+
+const helper = new AgentTDDHelper(jaw);
+
+// Run TDD cycle with intelligent analysis
+const result = await helper.runTDDCycle('src/feature.test.js');
+
+if (result.status === 'red') {
+  console.log('Failures:', result.failures);
+  console.log('Suggestions:', result.suggestions);
+  console.log('Next actions:', result.nextActions);
+}
+
+// Analyze test history for patterns
+const history = await helper.analyzeTestHistory('test name');
+console.log('Success rate:', history.successRate);
+console.log('Common errors:', history.commonErrors);
+```
+
+## API Reference
+
+### JestAgentWrapper
+
+Main wrapper class for orchestrating test execution and data collection.
+
+```typescript
+class JestAgentWrapper {
+  constructor(config?: JestAgentWrapperConfig);
+  
+  // Session Management
+  async startSession(config?: JestConfig): Promise<TestSession>;
+  async runTests(pattern?: string): Promise<TestSession>;
+  async stopSession(): Promise<void>;
+  
+  // Real-time Monitoring
+  onTestStart(callback: (test: TestCase) => void): void;
+  onTestComplete(callback: (test: TestCase) => void): void;
+  onAssertion(callback: (assertion: Assertion) => void): void;
+  onLog(callback: (log: LogEntry) => void): void;
+  
+  // Query Interface
+  async getSession(id: string): Promise<TestSession>;
+  async getFailedTests(sessionId?: string): Promise<TestCase[]>;
+  async searchLogs(query: LogQuery): Promise<LogEntry[]>;
+  async getTestHistory(testName: string): Promise<TestCase[]>;
+}
+```
+
+### Configuration
+
+```typescript
+interface JestAgentWrapperConfig {
+  // Storage Configuration
+  storage: 'sqlite' | 'json' | 'memory';
+  dbPath?: string;
+  
+  // Event Collection
+  collectConsole: boolean;
+  collectCoverage: boolean;
+  collectPerformance: boolean;
+  collectStackTraces: boolean;
+  
+  // Real-time Features
+  realTimeEvents: boolean;
+  eventBufferSize: number;
+  
+  // Agent Features
+  enableSuggestions: boolean;
+  enablePatternRecognition: boolean;
+  enableTrendAnalysis: boolean;
+}
+```
+
+## Architecture
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Agent Code    │───▶│  JAW Wrapper    │───▶│  Storage Layer  │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                              │                        │
+                              ▼                        ▼
+                       ┌─────────────────┐    ┌─────────────────┐
+                       │  Jest Runtime   │    │  Query Engine   │
+                       └─────────────────┘    └─────────────────┘
+```
+
+## Components
+
+- **EventCollector**: Captures all Jest events and transforms them
+- **StorageEngine**: SQLite-based persistence layer
+- **QueryEngine**: Powerful query interface for test data
+- **JestAgentReporter**: Jest reporter integration
+- **AgentTDDHelper**: TDD workflow assistance for AI agents
+- **ErrorPatternAnalyzer**: Intelligent error analysis and suggestions
+- **PerformanceAnalyzer**: Test performance tracking and analysis
+
+## Development
+
+### Running Tests
+
+```bash
+npm test
+```
+
+### Project Structure
+
+```
+jester/
+├── src/
+│   ├── core/           # Core wrapper and event collection
+│   ├── storage/        # Database and query engines
+│   ├── reporter/       # Jest reporter integration
+│   ├── agents/         # AI agent helpers
+│   ├── analytics/      # Analysis and pattern recognition
+│   ├── cli/           # Command-line interface
+│   └── utils/         # Utility functions
+├── test/              # Comprehensive test suite
+└── docs/              # Documentation
+```
+
+## Benefits for AI Agents
+
+1. **Structured Data**: All test information in queryable, typed objects
+2. **Historical Context**: Complete test history for pattern recognition
+3. **Real-time Feedback**: Immediate structured feedback during test runs
+4. **Error Intelligence**: Categorized errors with suggested fixes
+5. **Performance Insights**: Test duration trends and bottlenecks
+6. **Coverage Awareness**: Detailed coverage data for informed development
+7. **Debugging Support**: Rich context for failure analysis
 
 ## License
 
 MIT
 
-## Notes
+## Contributing
 
-- This is a private package (`"private": true`) intended for internal use as a template
-- The package is configured for ES modules
-- Jest is configured with experimental VM modules support for ES module compatibility
-- Remember to update all placeholder content when creating a new package from this template
+Contributions are welcome! Please ensure all tests pass and maintain the existing code style.
+
+## Support
+
+For issues and questions, please open an issue in the repository.

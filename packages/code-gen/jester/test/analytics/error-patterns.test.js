@@ -1,8 +1,9 @@
 /**
- * Error Pattern Recognition Tests
- * Tests for the error pattern analysis and intelligent suggestion functionality
+ * Comprehensive tests for ErrorPatternAnalyzer
+ * Tests error pattern recognition, intelligent suggestions, and trend analysis
  */
 
+import { describe, test, expect, beforeAll, beforeEach, afterEach } from '@jest/globals';
 import { ErrorPatternAnalyzer } from '../../src/analytics/error-patterns.js';
 import { JestAgentWrapper } from '../../src/core/JestAgentWrapper.js';
 import { promises as fs } from 'fs';
@@ -17,7 +18,6 @@ describe('ErrorPatternAnalyzer', () => {
 
   let analyzer;
   let mockJaw;
-  let testDbPath;
 
   beforeEach(async () => {
     testDbPath = TestDbHelper.getTempDbPath('error-patterns');
@@ -721,6 +721,29 @@ describe('ErrorPatternAnalyzer', () => {
       expect(endTime - startTime).toBeLessThan(5000); // Should be reasonably fast
       expect(patterns.commonMessages).toBeDefined();
       expect(patterns.filePatterns).toBeDefined();
+    });
+  });
+
+  describe('Advanced Pattern Recognition', () => {
+    test('should detect semantic error patterns', () => {
+      const errors = [
+        { message: 'Cannot read property "length" of undefined' },
+        { message: 'Cannot read property "push" of undefined' },
+        { message: 'Cannot read property "map" of undefined' },
+        { message: 'TypeError: Cannot read property "filter" of null' },
+        { message: 'ReferenceError: variable is not defined' }
+      ];
+
+      const semanticGroups = analyzer.groupSimilarErrors(errors, 0.7);
+      
+      expect(Array.isArray(semanticGroups)).toBe(true);
+      // Should group property access errors together
+      if (semanticGroups.length > 0) {
+        const propertyErrorGroup = semanticGroups.find(group => 
+          group.pattern && group.pattern.includes('read property')
+        );
+        expect(propertyErrorGroup).toBeDefined();
+      }
     });
   });
 });

@@ -19,7 +19,6 @@ describe('Database Integration Tests', () => {
 
   let storage;
   let query;
-  let testDbPath;
   let tempDir;
 
   beforeEach(async () => {

@@ -19,7 +19,6 @@ describe('End-to-End Integration Tests (Simplified)', () => {
   });
 
   let jaw;
-  let testDbPath;
   let tempDir;
 
   beforeEach(async () => {

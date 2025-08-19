@@ -16,11 +16,9 @@ describe('Performance Load Tests', () => {
   });
 
   let jaw;
-  let testDbPath;
   let tempDir;
 
   beforeEach(async () => {
-    testDbPath = TestDbHelper.getTempDbPath('load');
     // Create temporary directory for test databases
     tempDir = path.join(process.cwd(), 'temp-performance-load');
     await fs.mkdir(tempDir, { recursive: true });

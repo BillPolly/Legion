@@ -8,6 +8,17 @@ export class QueryEngine {
   }
 
   /**
+   * Safely parse JSON with fallback
+   */
+  safeJsonParse(jsonString, fallback = null) {
+    try {
+      return JSON.parse(jsonString || (fallback === null ? 'null' : JSON.stringify(fallback)));
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  /**
    * Find tests matching criteria
    */
   async findTests(criteria = {}) {
@@ -190,17 +201,31 @@ export class QueryEngine {
     `);
     
     const rows = stmt.all(errorType);
-    return rows.map(row => ({
-      testId: row.test_id,
-      testName: row.test_name,
-      testFullName: row.full_name,
-      timestamp: new Date(row.timestamp),
-      type: row.type,
-      message: row.message,
-      stackTrace: JSON.parse(row.stack_trace || '[]'),
-      location: JSON.parse(row.location || '{}'),
-      suggestion: row.suggestion
-    }));
+    return rows.map(row => {
+      let stackTrace, location;
+      try {
+        stackTrace = JSON.parse(row.stack_trace || '[]');
+      } catch (e) {
+        stackTrace = [];
+      }
+      try {
+        location = JSON.parse(row.location || '{}');
+      } catch (e) {
+        location = {};
+      }
+      
+      return {
+        testId: row.test_id,
+        testName: row.test_name,
+        testFullName: row.full_name,
+        timestamp: new Date(row.timestamp),
+        type: row.type,
+        message: row.message,
+        stackTrace,
+        location,
+        suggestion: row.suggestion
+      };
+    });
   }
 
   /**
@@ -280,6 +305,94 @@ export class QueryEngine {
       return this.findTests({ name: testName });
     } catch (error) {
       // Return empty array if database is not available or query fails
+      return [];
+    }
+  }
+
+  /**
+   * Compare test results across multiple sessions
+   */
+  async compareSessions(sessionIds) {
+    try {
+      await this.storage.initialize();
+      
+      if (!this.storage.db || !sessionIds || sessionIds.length === 0) {
+        return [];
+      }
+      
+      const placeholders = sessionIds.map(() => '?').join(',');
+      const stmt = this.storage.db.prepare(`
+        SELECT 
+          s.id as session_id,
+          s.start_time,
+          s.metadata,
+          COUNT(DISTINCT tc.id) as total_tests,
+          SUM(CASE WHEN tc.status = 'passed' THEN 1 ELSE 0 END) as passed,
+          SUM(CASE WHEN tc.status = 'failed' THEN 1 ELSE 0 END) as failed,
+          SUM(CASE WHEN tc.status = 'skipped' THEN 1 ELSE 0 END) as skipped,
+          AVG(tc.duration) as avg_duration,
+          MAX(tc.duration) as max_duration
+        FROM sessions s
+        LEFT JOIN test_cases tc ON s.id = tc.session_id
+        WHERE s.id IN (${placeholders})
+        GROUP BY s.id
+        ORDER BY s.start_time DESC
+      `);
+      
+      const rows = stmt.all(...sessionIds);
+      return rows.map(row => ({
+        sessionId: row.session_id,
+        startTime: new Date(row.start_time),
+        metadata: JSON.parse(row.metadata || '{}'),
+        stats: {
+          total: row.total_tests || 0,
+          passed: row.passed || 0,
+          failed: row.failed || 0,
+          skipped: row.skipped || 0,
+          avgDuration: row.avg_duration || 0,
+          maxDuration: row.max_duration || 0,
+          passRate: row.total_tests > 0 ? (row.passed / row.total_tests) * 100 : 0
+        }
+      }));
+    } catch (error) {
+      return [];
+    }
+  }
+
+  /**
+   * Get test trends across sessions
+   */
+  async getTestTrends(testName, limit = 10) {
+    try {
+      await this.storage.initialize();
+      
+      if (!this.storage.db) {
+        return [];
+      }
+      
+      const stmt = this.storage.db.prepare(`
+        SELECT 
+          tc.session_id,
+          s.start_time,
+          s.metadata,
+          tc.status,
+          tc.duration
+        FROM test_cases tc
+        JOIN sessions s ON tc.session_id = s.id
+        WHERE tc.name = ? OR tc.full_name = ?
+        ORDER BY s.start_time DESC
+        LIMIT ?
+      `);
+      
+      const rows = stmt.all(testName, testName, limit);
+      return rows.map(row => ({
+        sessionId: row.session_id,
+        startTime: new Date(row.start_time),
+        metadata: JSON.parse(row.metadata || '{}'),
+        status: row.status,
+        duration: row.duration
+      }));
+    } catch (error) {
       return [];
     }
   }

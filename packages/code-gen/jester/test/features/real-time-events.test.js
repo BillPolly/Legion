@@ -3,6 +3,7 @@
  * Tests event emission, timing, payload completeness, and event management
  */
 
+import { describe, test, expect, beforeAll, beforeEach, afterEach } from '@jest/globals';
 import { JestAgentWrapper } from '../../src/core/JestAgentWrapper.js';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -16,12 +17,10 @@ describe('Real-time Event System Tests', () => {
   });
 
   let jaw;
-  let testDbPath;
   let tempDir;
   let eventLog;
 
   beforeEach(async () => {
-    testDbPath = TestDbHelper.getTempDbPath('real-time-events');
     // Create temporary directory for test databases
     tempDir = path.join(process.cwd(), 'temp-realtime-events');
     await fs.mkdir(tempDir, { recursive: true });

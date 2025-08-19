@@ -3,6 +3,7 @@
  * Tests data export/import functionality, integrity, and format versioning
  */
 
+import { describe, test, expect, beforeAll, beforeEach, afterEach } from '@jest/globals';
 import { JestAgentWrapper } from '../../src/core/JestAgentWrapper.js';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -16,7 +17,6 @@ describe('Export/Import Testing', () => {
   });
 
   let jaw;
-  let testDbPath;
   let tempDir;
   let exportPath;
 

@@ -14,10 +14,7 @@ import path from 'path';
 
 export class GenerateTestReportTool extends Tool {
   constructor(jestWrapper) {
-    super({
-      name: 'generate_test_report',
-      description: 'Generate comprehensive markdown test reports with analytics and insights',
-      inputSchema: z.object({
+    const inputSchema = z.object({
       sessionId: z.string().optional().describe('Specific session ID to report on (defaults to latest session)'),
       reportType: z.enum(['summary', 'detailed', 'performance', 'failure']).optional().default('summary').describe('Type of report to generate'),
       outputPath: z.string().optional().describe('File path to write the markdown report (optional)'),
@@ -26,9 +23,9 @@ export class GenerateTestReportTool extends Tool {
       includeCoverage: z.boolean().optional().default(true).describe('Include code coverage information'),
       includeRecommendations: z.boolean().optional().default(true).describe('Include actionable recommendations'),
       title: z.string().optional().describe('Custom title for the report')
-      })
     });
-    this.outputSchema = z.object({
+    
+    const outputSchema = z.object({
       reportContent: z.string().describe('Generated markdown report content'),
       filePath: z.string().optional().describe('Path to written report file (if outputPath provided)'),
       written: z.boolean().describe('Whether the report was written to file'),
@@ -40,62 +37,76 @@ export class GenerateTestReportTool extends Tool {
         sessionId: z.string()
       }).describe('Summary statistics from the report')
     });
+    
+    super({
+      name: 'generate_test_report',
+      description: 'Generate comprehensive markdown test reports with analytics and insights',
+      inputSchema: inputSchema,
+      execute: async (args) => {
+        const validatedArgs = inputSchema.parse(args);
+        
+        // Get session data
+        const sessionId = validatedArgs.sessionId || await this.getLatestSessionId();
+        if (!sessionId) {
+          throw new Error('No test sessions found. Run tests first to generate a report.');
+        }
+
+        // Gather all data needed for the report
+        const reportData = await this.gatherReportData(sessionId, validatedArgs);
+        
+        // Generate the markdown content based on report type
+        const reportContent = await this.generateMarkdownReport(reportData, validatedArgs);
+        
+        // Write to file if requested
+        let filePath = null;
+        let written = false;
+        
+        if (validatedArgs.outputPath) {
+          try {
+            const fullPath = path.isAbsolute(validatedArgs.outputPath) 
+              ? validatedArgs.outputPath 
+              : path.join(validatedArgs.projectPath, validatedArgs.outputPath);
+            
+            // Ensure directory exists
+            const dir = path.dirname(fullPath);
+            await fs.mkdir(dir, { recursive: true });
+            
+            // Write the report
+            await fs.writeFile(fullPath, reportContent, 'utf8');
+            filePath = fullPath;
+            written = true;
+          } catch (error) {
+            console.warn('Failed to write report file:', error.message);
+            // Don't throw - let the tool succeed with content generation
+          }
+        }
+
+        return {
+          reportContent,
+          filePath,
+          written,
+          summary: {
+            totalTests: reportData.summary.total,
+            passedTests: reportData.summary.passed,
+            failedTests: reportData.summary.failed,
+            duration: reportData.summary.duration,
+            sessionId: sessionId
+          }
+        };
+      },
+      getMetadata: () => ({
+        description: 'Generate comprehensive markdown test reports with analytics and insights',
+        input: inputSchema,
+        output: outputSchema
+      })
+    });
+    
     this.jestWrapper = jestWrapper;
+    // Keep properties for test compatibility
+    this.inputSchema = inputSchema;
+    this.outputSchema = outputSchema;
   }
 
-
-  async execute(args) {
-    const validatedArgs = this.inputSchema.parse(args);
-    
-    // Get session data
-    const sessionId = validatedArgs.sessionId || await this.getLatestSessionId();
-    if (!sessionId) {
-      throw new Error('No test sessions found. Run tests first to generate a report.');
-    }
-
-    // Gather all data needed for the report
-    const reportData = await this.gatherReportData(sessionId, validatedArgs);
-    
-    // Generate the markdown content based on report type
-    const reportContent = await this.generateMarkdownReport(reportData, validatedArgs);
-    
-    // Write to file if requested
-    let filePath = null;
-    let written = false;
-    
-    if (validatedArgs.outputPath) {
-      try {
-        const fullPath = path.isAbsolute(validatedArgs.outputPath) 
-          ? validatedArgs.outputPath 
-          : path.join(validatedArgs.projectPath, validatedArgs.outputPath);
-        
-        // Ensure directory exists
-        const dir = path.dirname(fullPath);
-        await fs.mkdir(dir, { recursive: true });
-        
-        // Write the report
-        await fs.writeFile(fullPath, reportContent, 'utf8');
-        filePath = fullPath;
-        written = true;
-      } catch (error) {
-        console.warn('Failed to write report file:', error.message);
-        // Don't throw - let the tool succeed with content generation
-      }
-    }
-
-    return {
-      reportContent,
-      filePath,
-      written,
-      summary: {
-        totalTests: reportData.summary.total,
-        passedTests: reportData.summary.passed,
-        failedTests: reportData.summary.failed,
-        duration: reportData.summary.duration,
-        sessionId: sessionId
-      }
-    };
-  }
 
   /**
    * Get the latest session ID by finding tests and extracting their session

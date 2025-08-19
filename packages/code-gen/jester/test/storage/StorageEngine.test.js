@@ -1,8 +1,9 @@
 /**
- * Storage Engine Tests
- * Tests for SQLite database operations and data persistence
+ * Comprehensive tests for StorageEngine
+ * Tests SQLite database operations, data persistence, and edge cases
  */
 
+import { describe, test, expect, beforeAll, beforeEach, afterEach } from '@jest/globals';
 import { StorageEngine } from '../../src/storage/StorageEngine.js';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -600,6 +601,306 @@ describe('StorageEngine', () => {
       const stored = storage.db.prepare('SELECT * FROM assertions WHERE test_id = ?').get(assertion.testId);
       expect(JSON.parse(stored.actual)).toBeNull();
       expect(JSON.parse(stored.expected)).toBeNull(); // JSON.stringify(undefined) becomes "null"
+    });
+  });
+
+  describe('Error Handling and Edge Cases', () => {
+    test('should handle invalid database path gracefully', async () => {
+      const invalidStorage = new StorageEngine('/invalid/path/that/does/not/exist/test.db');
+      
+      // Should not throw during construction
+      expect(invalidStorage).toBeDefined();
+      
+      // Should handle initialization error gracefully
+      await expect(invalidStorage.initialize()).rejects.toThrow();
+    });
+
+    test('should handle duplicate session ID insertion', async () => {
+      await storage.initialize();
+      
+      const session = {
+        id: 'duplicate-session',
+        startTime: new Date(),
+        endTime: null,
+        status: 'running',
+        jestConfig: {},
+        environment: {},
+        summary: {}
+      };
+
+      // First insertion should succeed
+      await storage.storeSession(session);
+
+      // Second insertion with same ID should update (INSERT OR REPLACE)
+      await storage.storeSession(session);
+      
+      // Verify the session was updated, not duplicated
+      const sessions = await storage.getAllSessions();
+      const duplicateSessions = sessions.filter(s => s.id === 'duplicate-session');
+      expect(duplicateSessions).toHaveLength(1);
+    });
+
+    test('should handle foreign key constraint violations', async () => {
+      // Create a fresh storage instance to ensure clean state
+      const freshDbPath = TestDbHelper.getTempDbPath('fk-test-' + Date.now());
+      const freshStorage = new StorageEngine(freshDbPath);
+      
+      try {
+        await freshStorage.initialize();
+        
+        // Ensure foreign keys are enabled
+        const fkStatus = freshStorage.db.prepare('PRAGMA foreign_keys').get();
+        expect(fkStatus.foreign_keys).toBe(1);
+        
+        // Try to manually insert a test case with a non-existent session_id using raw SQL
+        // This bypasses the StorageEngine's INSERT OR REPLACE logic
+        const testCaseId = 'orphan-test-' + Date.now();
+        const nonExistentSessionId = 'non-existent-session-' + Date.now();
+        const nonExistentSuiteId = 'non-existent-suite-' + Date.now();
+        
+        const insertStmt = freshStorage.db.prepare(`
+          INSERT INTO test_cases 
+          (id, session_id, suite_id, name, full_name, start_time, end_time, status, duration)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        // Should throw due to foreign key constraint
+        expect(() => {
+          insertStmt.run(
+            testCaseId,
+            nonExistentSessionId,
+            nonExistentSuiteId,
+            'orphan test',
+            'orphan test',
+            new Date().toISOString(),
+            new Date().toISOString(),
+            'passed',
+            100
+          );
+        }).toThrow(/FOREIGN KEY constraint failed/);
+      } finally {
+        // Clean up
+        await freshStorage.close();
+        await cleanupTestDb(freshDbPath);
+      }
+    });
+
+    test('should handle malformed JSON data', async () => {
+      await storage.initialize();
+      
+      // Create a session with valid data first
+      const session = {
+        id: 'json-test-session',
+        startTime: new Date(),
+        endTime: null,
+        status: 'running',
+        jestConfig: {},
+        environment: {},
+        summary: {}
+      };
+      await storage.storeSession(session);
+
+      // Manually corrupt JSON data in database
+      storage.db.prepare(`
+        UPDATE sessions 
+        SET config = 'invalid json' 
+        WHERE id = ?
+      `).run(session.id);
+
+      // Should handle gracefully when retrieving
+      await expect(storage.getSession(session.id)).rejects.toThrow();
+    });
+
+    test('should handle very large data objects', async () => {
+      await storage.initialize();
+      
+      // Create a large configuration object
+      const largeConfig = {
+        testMatch: Array(1000).fill('**/*.test.js'),
+        setupFiles: Array(100).fill('./setup.js'),
+        moduleNameMapping: {}
+      };
+      
+      // Fill with many mappings
+      for (let i = 0; i < 100; i++) {
+        largeConfig.moduleNameMapping[`^@alias${i}/(.*)$`] = `<rootDir>/src/module${i}/$1`;
+      }
+
+      const session = {
+        id: 'large-session',
+        startTime: new Date(),
+        endTime: null,
+        status: 'running',
+        jestConfig: largeConfig,
+        environment: { nodeVersion: 'v18.0.0' },
+        summary: {}
+      };
+
+      await storage.storeSession(session);
+      const retrieved = await storage.getSession(session.id);
+
+      expect(retrieved.jestConfig).toEqual(largeConfig);
+    });
+
+    test('should handle concurrent database operations', async () => {
+      await storage.initialize();
+      
+      // Create multiple sessions concurrently
+      const promises = [];
+      for (let i = 0; i < 10; i++) {
+        const session = {
+          id: `concurrent-session-${i}`,
+          startTime: new Date(),
+          endTime: null,
+          status: 'running',
+          jestConfig: {},
+          environment: {},
+          summary: {}
+        };
+        promises.push(storage.storeSession(session));
+      }
+
+      await Promise.all(promises);
+
+      // Verify all sessions were stored
+      for (let i = 0; i < 10; i++) {
+        const retrieved = await storage.getSession(`concurrent-session-${i}`);
+        expect(retrieved).toBeDefined();
+        expect(retrieved.id).toBe(`concurrent-session-${i}`);
+      }
+    });
+  });
+
+  describe('Database Schema Validation', () => {
+    test('should create all required tables with proper structure', async () => {
+      await storage.initialize();
+      
+      // Verify sessions table structure
+      const sessionsInfo = storage.db.prepare(`PRAGMA table_info(sessions)`).all();
+      const sessionColumns = sessionsInfo.map(col => col.name);
+      expect(sessionColumns).toContain('id');
+      expect(sessionColumns).toContain('start_time');
+      expect(sessionColumns).toContain('end_time');
+      expect(sessionColumns).toContain('status');
+      expect(sessionColumns).toContain('config');
+      expect(sessionColumns).toContain('environment');
+      expect(sessionColumns).toContain('summary');
+      expect(sessionColumns).toContain('metadata');
+
+      // Verify test_cases table structure
+      const testCasesInfo = storage.db.prepare(`PRAGMA table_info(test_cases)`).all();
+      const testCaseColumns = testCasesInfo.map(col => col.name);
+      expect(testCaseColumns).toContain('id');
+      expect(testCaseColumns).toContain('session_id');
+      expect(testCaseColumns).toContain('suite_id');
+      expect(testCaseColumns).toContain('name');
+      expect(testCaseColumns).toContain('full_name');
+      expect(testCaseColumns).toContain('start_time');
+      expect(testCaseColumns).toContain('end_time');
+      expect(testCaseColumns).toContain('status');
+      expect(testCaseColumns).toContain('duration');
+    });
+
+    test('should have proper foreign key constraints', async () => {
+      await storage.initialize();
+      
+      // Check foreign key constraints
+      const foreignKeys = storage.db.prepare(`PRAGMA foreign_key_list(test_cases)`).all();
+      expect(foreignKeys.length).toBeGreaterThan(0);
+      
+      const tableNames = foreignKeys.map(fk => fk.table);
+      expect(tableNames).toContain('sessions');
+      expect(tableNames).toContain('test_suites');
+    });
+  });
+
+  describe('Performance and Memory Management', () => {
+    test('should handle cleanup of large datasets efficiently', async () => {
+      await storage.initialize();
+      
+      // Create a large number of test records
+      const baseSession = {
+        id: 'perf-session',
+        startTime: new Date(),
+        endTime: new Date(),
+        status: 'completed',
+        jestConfig: {},
+        environment: {},
+        summary: {}
+      };
+      await storage.storeSession(baseSession);
+
+      const baseSuite = {
+        id: 'perf-suite',
+        sessionId: 'perf-session',
+        path: '/test/perf.test.js',
+        name: 'perf.test.js',
+        startTime: new Date(),
+        endTime: new Date(),
+        status: 'completed',
+        setupDuration: 100,
+        teardownDuration: 50
+      };
+      await storage.storeSuite(baseSuite);
+
+      // Create many test cases
+      const testCasePromises = [];
+      for (let i = 0; i < 100; i++) {
+        const testCase = {
+          id: `perf-test-${i}`,
+          sessionId: 'perf-session',
+          suiteId: 'perf-suite',
+          name: `performance test ${i}`,
+          fullName: `Performance Tests > performance test ${i}`,
+          startTime: new Date(),
+          endTime: new Date(),
+          status: i % 10 === 0 ? 'failed' : 'passed',
+          duration: Math.random() * 1000,
+          assertions: [],
+          errors: [],
+          logs: []
+        };
+        testCasePromises.push(storage.storeTestCase(testCase));
+      }
+
+      await Promise.all(testCasePromises);
+
+      // Verify data was stored
+      const count = storage.db.prepare(`SELECT COUNT(*) as count FROM test_cases WHERE session_id = ?`).get('perf-session');
+      expect(count.count).toBe(100);
+    });
+
+    test('should handle database vacuum operations', async () => {
+      await storage.initialize();
+      
+      // Get initial database size
+      const initialSize = storage.db.prepare(`PRAGMA page_count`).get().page_count;
+      
+      // Add and remove data to create fragmentation
+      for (let i = 0; i < 50; i++) {
+        const session = {
+          id: `temp-session-${i}`,
+          startTime: new Date(),
+          endTime: new Date(),
+          status: 'completed',
+          jestConfig: {},
+          environment: {},
+          summary: {}
+        };
+        await storage.storeSession(session);
+      }
+
+      // Delete half the sessions
+      for (let i = 0; i < 25; i++) {
+        storage.db.prepare(`DELETE FROM sessions WHERE id = ?`).run(`temp-session-${i}`);
+      }
+
+      // Run vacuum to reclaim space
+      storage.db.prepare(`VACUUM`).run();
+
+      // Database should still be functional
+      const remaining = storage.db.prepare(`SELECT COUNT(*) as count FROM sessions WHERE id LIKE 'temp-session-%'`).get();
+      expect(remaining.count).toBe(25);
     });
   });
 });

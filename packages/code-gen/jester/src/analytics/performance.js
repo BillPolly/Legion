@@ -44,7 +44,9 @@ export class PerformanceAnalyzer {
    * Calculate performance metrics
    */
   calculateMetrics(tests) {
-    const durations = tests.map(t => t.duration).filter(d => d > 0);
+    const durations = tests.map(t => t.duration).filter(d => 
+      typeof d === 'number' && d > 0 && isFinite(d)
+    );
     
     if (durations.length === 0) {
       return {
@@ -60,7 +62,17 @@ export class PerformanceAnalyzer {
     const sorted = durations.sort((a, b) => a - b);
     const total = durations.reduce((sum, d) => sum + d, 0);
     const average = total / durations.length;
-    const median = sorted[Math.floor(sorted.length / 2)];
+    
+    // Calculate median correctly for even and odd length arrays
+    let median;
+    const mid = Math.floor(sorted.length / 2);
+    if (sorted.length % 2 === 0) {
+      // Even number of elements - average of two middle values
+      median = (sorted[mid - 1] + sorted[mid]) / 2;
+    } else {
+      // Odd number of elements - middle value
+      median = sorted[mid];
+    }
     
     // Calculate standard deviation
     const variance = durations.reduce((sum, d) => sum + Math.pow(d - average, 2), 0) / durations.length;
@@ -80,7 +92,9 @@ export class PerformanceAnalyzer {
    * Identify performance bottlenecks
    */
   identifyBottlenecks(tests) {
-    const durations = tests.map(t => t.duration).filter(d => d > 0);
+    const durations = tests.map(t => t.duration).filter(d => 
+      typeof d === 'number' && d > 0 && isFinite(d)
+    );
     
     if (durations.length === 0) {
       return {
@@ -94,7 +108,7 @@ export class PerformanceAnalyzer {
     const threshold = average * 2; // Tests taking more than 2x average are slow
     
     const slowTests = tests
-      .filter(t => t.duration > threshold)
+      .filter(t => typeof t.duration === 'number' && t.duration > threshold && isFinite(t.duration))
       .sort((a, b) => b.duration - a.duration)
       .slice(0, 10)
       .map(t => ({
@@ -109,7 +123,7 @@ export class PerformanceAnalyzer {
     const outlierThreshold = average + (3 * stdDev);
     
     const outliers = tests
-      .filter(t => t.duration > outlierThreshold)
+      .filter(t => typeof t.duration === 'number' && t.duration > outlierThreshold && isFinite(t.duration))
       .map(t => ({
         name: t.fullName,
         duration: t.duration,
@@ -218,11 +232,20 @@ export class PerformanceAnalyzer {
           trend = 'improving';
         }
 
+        // Determine severity based on change percent
+        let severity = 'low';
+        if (Math.abs(changePercent) > 50) {
+          severity = 'high';
+        } else if (Math.abs(changePercent) > 30) {
+          severity = 'medium';
+        }
+        
         trends[testName] = {
           trend,
           changePercent: Math.round(changePercent),
           runs: testRuns.length,
-          averageDuration: Math.round((durations.reduce((sum, d) => sum + d, 0) / durations.length))
+          averageDuration: Math.round((durations.reduce((sum, d) => sum + d, 0) / durations.length)),
+          severity
         };
       }
     });
@@ -238,13 +261,26 @@ export class PerformanceAnalyzer {
 
     // Slow test recommendations
     if (bottlenecks.slowTests.length > 0) {
+      const potentialSavings = bottlenecks.slowTests.reduce((sum, t) => 
+        sum + (t.duration - metrics.averageDuration), 0);
+      
       recommendations.push({
         type: 'slow_tests',
         priority: 'high',
         title: 'Optimize Slow Tests',
         description: `${bottlenecks.slowTests.length} tests are significantly slower than average`,
         suggestion: 'Review test logic, mock external dependencies, and optimize database queries',
-        affectedTests: bottlenecks.slowTests.slice(0, 3).map(t => t.name)
+        suggestions: [
+          'database query optimization',
+          'mock external dependencies',
+          'parallelize independent operations',
+          'cache expensive computations'
+        ],
+        affectedTests: bottlenecks.slowTests.slice(0, 3).map(t => t.name),
+        estimatedImpact: {
+          timeSavings: Math.round(potentialSavings),
+          percentImprovement: Math.round((potentialSavings / metrics.totalDuration) * 100)
+        }
       });
     }
 
@@ -391,13 +427,28 @@ export class PerformanceAnalyzer {
 
     let trend = 'stable';
     let message = '';
+    let severity = 'none';
 
     if (avgChangePercent > 10) {
       trend = 'degraded';
       message = `Performance degraded by ${avgChangePercent}%`;
+      if (avgChangePercent >= 50) {
+        severity = 'significant';
+      } else if (avgChangePercent >= 30) {
+        severity = 'moderate';
+      } else {
+        severity = 'minor';
+      }
     } else if (avgChangePercent < -10) {
       trend = 'improved';
       message = `Performance improved by ${Math.abs(avgChangePercent)}%`;
+      if (Math.abs(avgChangePercent) >= 50) {
+        severity = 'significant';
+      } else if (Math.abs(avgChangePercent) >= 30) {
+        severity = 'moderate';
+      } else {
+        severity = 'minor';
+      }
     } else {
       message = 'Performance remained stable';
     }
@@ -405,7 +456,8 @@ export class PerformanceAnalyzer {
     return {
       trend,
       message,
-      avgChangePercent
+      avgChangePercent,
+      severity
     };
   }
 }

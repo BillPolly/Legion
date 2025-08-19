@@ -17,9 +17,10 @@ describe('JestAgentReporter', () => {
   let reporter;
   let mockGlobalConfig;
   let mockOptions;
-  let testDbPath;
 
   beforeEach(() => {
+    testDbPath = TestDbHelper.getTempDbPath('reporter-test');
+    
     mockGlobalConfig = {
       testMatch: ['**/*.test.js'],
       verbose: false,
@@ -63,7 +64,7 @@ describe('JestAgentReporter', () => {
       expect(defaultReporter.options).toEqual({
         collectConsole: true,
         collectCoverage: true,
-        dbPath: testDbPath,
+        dbPath: './test-results.db',  // Default path when none provided
         realTimeEvents: true
       });
       expect(defaultReporter.storage.dbPath).toBe('./test-results.db'); // Default path
@@ -124,11 +125,21 @@ describe('JestAgentReporter', () => {
         testResults: []
       };
 
+      // Capture the emitted suiteEnd event to verify the suite was completed correctly
+      let completedSuite = null;
+      reporter.collector.once('suiteEnd', (suite) => {
+        completedSuite = suite;
+      });
+      
       reporter.onTestSuiteEnd(mockTest, mockTestResults);
 
-      const suite = reporter.collector.currentSuites.get('/path/to/test.js');
-      expect(suite.status).toBe('passed');
-      expect(suite.endTime).toBeInstanceOf(Date);
+      // After onTestSuiteEnd, suite should be removed from currentSuites
+      expect(reporter.collector.currentSuites.has('/path/to/test.js')).toBe(false);
+      
+      // But we can verify it was completed correctly via the event
+      expect(completedSuite).not.toBeNull();
+      expect(completedSuite.status).toBe('passed');
+      expect(completedSuite.endTime).toBeInstanceOf(Date);
     });
 
     test('onTestStart creates test record', () => {
@@ -169,12 +180,22 @@ describe('JestAgentReporter', () => {
         failureMessages: []
       };
 
+      // Capture the emitted testEnd event to verify the test was completed correctly
+      let completedTest = null;
+      reporter.collector.once('testEnd', (test) => {
+        completedTest = test;
+      });
+      
       reporter.onTestEnd(mockTestCase, mockTestResults);
 
-      const testCase = reporter.collector.currentTests.get('MyComponent should work');
-      expect(testCase.status).toBe('passed');
-      expect(testCase.endTime).toBeInstanceOf(Date);
-      expect(testCase.duration).toBeGreaterThanOrEqual(0);
+      // After onTestEnd, test should be removed from currentTests
+      expect(reporter.collector.currentTests.has('MyComponent should work')).toBe(false);
+      
+      // But we can verify it was completed correctly via the event
+      expect(completedTest).not.toBeNull();
+      expect(completedTest.status).toBe('passed');
+      expect(completedTest.endTime).toBeInstanceOf(Date);
+      expect(completedTest.duration).toBeGreaterThanOrEqual(0);
     });
 
     test('onRunComplete ends session with summary', () => {

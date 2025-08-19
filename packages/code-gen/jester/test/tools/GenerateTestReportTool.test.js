@@ -88,10 +88,11 @@ describe('GenerateTestReportTool', () => {
         reportType: 'summary'
       });
 
-      expect(result.reportContent).toBeDefined();
-      expect(result.reportContent).toContain('Test Report');
-      expect(result.written).toBe(false);
-      expect(result.summary).toBeDefined();
+      expect(result.success).toBe(true);
+      expect(result.data.reportContent).toBeDefined();
+      expect(result.data.reportContent).toContain('Test Report');
+      expect(result.data.written).toBe(false);
+      expect(result.data.summary).toBeDefined();
     });
 
     test('should generate summary report', async () => {
@@ -100,10 +101,11 @@ describe('GenerateTestReportTool', () => {
         title: 'Custom Test Report'
       });
 
-      expect(result.reportContent).toContain('Custom Test Report');
-      expect(result.reportContent).toContain('📊 Test Summary');
-      expect(result.reportContent).toContain('Total Tests');
-      expect(result.reportContent).toContain('**Status**:');
+      expect(result.success).toBe(true);
+      expect(result.data.reportContent).toContain('Custom Test Report');
+      expect(result.data.reportContent).toContain('📊 Test Summary');
+      expect(result.data.reportContent).toContain('Total Tests');
+      expect(result.data.reportContent).toContain('**Status**:');
     });
 
     test('should generate detailed report', async () => {
@@ -113,9 +115,10 @@ describe('GenerateTestReportTool', () => {
         includeRecommendations: true
       });
 
-      expect(result.reportContent).toContain('Test Report');
-      expect(result.reportContent).toContain('📊 Test Summary');
-      expect(result.reportContent).toContain('💡 Recommendations');
+      expect(result.success).toBe(true);
+      expect(result.data.reportContent).toContain('Test Report');
+      expect(result.data.reportContent).toContain('📊 Test Summary');
+      expect(result.data.reportContent).toContain('💡 Recommendations');
     });
 
     test('should generate performance report', async () => {
@@ -123,8 +126,9 @@ describe('GenerateTestReportTool', () => {
         reportType: 'performance'
       });
 
-      expect(result.reportContent).toContain('🚀 Performance Overview');
-      expect(result.reportContent).toContain('Performance Recommendations');
+      expect(result.success).toBe(true);
+      expect(result.data.reportContent).toContain('🚀 Performance Overview');
+      expect(result.data.reportContent).toContain('Performance Recommendations');
     });
 
     test('should generate failure report', async () => {
@@ -132,8 +136,9 @@ describe('GenerateTestReportTool', () => {
         reportType: 'failure'
       });
 
-      expect(result.reportContent).toContain('🐛 Failure Analysis');
-      expect(result.reportContent).toContain('No test failures found');
+      expect(result.success).toBe(true);
+      expect(result.data.reportContent).toContain('🐛 Failure Analysis');
+      expect(result.data.reportContent).toContain('No test failures found');
     });
   });
 
@@ -148,8 +153,9 @@ describe('GenerateTestReportTool', () => {
         title: 'File Writing Test Report'
       });
 
-      expect(result.written).toBe(true);
-      expect(result.filePath).toContain('test-report.md');
+      expect(result.success).toBe(true);
+      expect(result.data.written).toBe(true);
+      expect(result.data.filePath).toContain('test-report.md');
       
       // Verify file was actually written
       const fileExists = await fs.stat(outputPath).then(() => true).catch(() => false);
@@ -172,9 +178,10 @@ describe('GenerateTestReportTool', () => {
       });
 
       // Should still succeed with content generation even if file writing fails
-      expect(result.reportContent).toBeDefined();
-      expect(result.written).toBe(false);
-      expect(result.filePath).toBeNull();
+      expect(result.success).toBe(true);
+      expect(result.data.reportContent).toBeDefined();
+      expect(result.data.written).toBe(false);
+      expect(result.data.filePath).toBeNull();
     });
   });
 
@@ -207,7 +214,7 @@ describe('GenerateTestReportTool', () => {
       const result = await tool.invoke(toolCall);
       
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Unexpected token');
+      expect(result.data.errorMessage).toContain('Unexpected token');
     });
 
     test('should handle tool execution errors', async () => {
@@ -224,7 +231,7 @@ describe('GenerateTestReportTool', () => {
       const result = await brokenTool.invoke(toolCall);
       
       expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
+      expect(result.data.errorMessage).toBeDefined();
     });
   });
 
@@ -272,8 +279,9 @@ describe('GenerateTestReportTool', () => {
         reportType: 'performance'
       });
 
-      expect(result.reportContent).toBeDefined();
-      expect(result.reportContent).toContain('🚀 Performance Overview');
+      expect(result.success).toBe(true);
+      expect(result.data.reportContent).toBeDefined();
+      expect(result.data.reportContent).toContain('🚀 Performance Overview');
     });
 
     test('should integrate with error analyzer when failures exist', async () => {
@@ -281,8 +289,9 @@ describe('GenerateTestReportTool', () => {
         reportType: 'failure'
       });
 
-      expect(result.reportContent).toBeDefined();
-      expect(result.reportContent).toContain('🐛 Failure Analysis');
+      expect(result.success).toBe(true);
+      expect(result.data.reportContent).toBeDefined();
+      expect(result.data.reportContent).toContain('🐛 Failure Analysis');
     });
   });
 });

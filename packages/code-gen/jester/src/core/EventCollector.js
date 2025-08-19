@@ -20,8 +20,11 @@ export class EventCollector extends EventEmitter {
    * Start a new test session
    */
   startSession(config = {}) {
+    // Use provided testRunId or generate one
+    const sessionId = config.testRunId || generateId('session');
+    
     this.currentSession = {
-      id: generateId('session'),
+      id: sessionId,
       startTime: new Date(),
       endTime: null,
       status: 'running',
@@ -29,9 +32,18 @@ export class EventCollector extends EventEmitter {
       environment: {
         nodeVersion: process.version,
         platform: process.platform,
-        cwd: process.cwd()
+        cwd: process.cwd(),
+        jestVersion: process.env.npm_package_devDependencies_jest || 'unknown'
       },
-      summary: {}
+      summary: {},
+      metadata: {
+        testRunId: config.testRunId || null,
+        name: config.name || null,
+        description: config.description || null,
+        tags: config.tags || [],
+        projectPath: process.cwd(),
+        testPattern: config.testMatch || config.testRegex || null
+      }
     };
 
     this.emit('sessionStart', this.currentSession);
@@ -85,12 +97,15 @@ export class EventCollector extends EventEmitter {
   /**
    * Handle test suite end
    */
-  onTestSuiteEnd(testPath, results) {
+  onTestSuiteEnd(testPath, results = {}) {
     const suite = this.currentSuites.get(testPath);
     if (!suite) return null;
 
     suite.endTime = new Date();
-    suite.status = results.numFailingTests > 0 ? 'failed' : 'passed';
+    suite.status = (results.numFailingTests && results.numFailingTests > 0) ? 'failed' : 'passed';
+    
+    // Remove from current suites
+    this.currentSuites.delete(testPath);
     
     this.emit('suiteEnd', suite);
     return suite;
@@ -156,6 +171,35 @@ export class EventCollector extends EventEmitter {
       log.testId === testCase.id || 
       (log.timestamp >= testCase.startTime && log.timestamp <= testCase.endTime)
     );
+
+    // Update session summary
+    if (this.currentSession) {
+      if (!this.currentSession.summary.total) {
+        this.currentSession.summary = {
+          total: 0,
+          passed: 0,
+          failed: 0,
+          skipped: 0,
+          todo: 0,
+          success: true
+        };
+      }
+      
+      this.currentSession.summary.total++;
+      if (results.status === 'passed') {
+        this.currentSession.summary.passed++;
+      } else if (results.status === 'failed') {
+        this.currentSession.summary.failed++;
+        this.currentSession.summary.success = false;
+      } else if (results.status === 'skipped') {
+        this.currentSession.summary.skipped++;
+      } else if (results.status === 'todo') {
+        this.currentSession.summary.todo++;
+      }
+    }
+
+    // Remove from current tests
+    this.currentTests.delete(test.fullName);
 
     this.emit('testEnd', testCase);
     return testCase;

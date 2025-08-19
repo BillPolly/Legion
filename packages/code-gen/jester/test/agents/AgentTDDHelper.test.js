@@ -17,7 +17,6 @@ describe('AgentTDDHelper', () => {
 
   let helper;
   let mockJaw;
-  let testDbPath;
 
   beforeEach(async () => {
     testDbPath = TestDbHelper.getTempDbPath('agenttddhelper');

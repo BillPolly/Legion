@@ -53,6 +53,16 @@ export class JestAgentCLI {
         case 'history':
           await this.showHistory(options);
           break;
+        case 'list':
+        case 'list-sessions':
+          await this.listSessions(options);
+          break;
+        case 'compare':
+          await this.compareSessions(options);
+          break;
+        case 'clear':
+          await this.clearSessions(options);
+          break;
         default:
           this.showHelp();
       }
@@ -68,10 +78,20 @@ export class JestAgentCLI {
   async runTests(pattern, options) {
     this.jaw = new JestAgentWrapper({
       dbPath: options.output || './test-results.db',
-      storage: options.storage || 'sqlite'
+      storage: options.storage || 'sqlite',
+      testRunId: options['run-id'] || options.runId,
+      clearPrevious: options['clear-previous'] || options.clearPrevious || false
     });
 
     console.log('🧪 Running tests with Jest Agent Wrapper...');
+    
+    if (options['run-id']) {
+      console.log(`🏷️  Run ID: ${options['run-id']}`);
+    }
+    
+    if (options['clear-previous']) {
+      console.log('🧹 Clearing previous test data...');
+    }
     
     const session = await this.jaw.runTests(pattern);
     console.log(`📊 Session ID: ${session.id}`);
@@ -136,6 +156,89 @@ export class JestAgentCLI {
   }
 
   /**
+   * List all test sessions
+   */
+  async listSessions(options) {
+    this.jaw = new JestAgentWrapper({
+      dbPath: options.output || './test-results.db'
+    });
+
+    const sessions = await this.jaw.getAllSessions();
+    
+    if (sessions.length === 0) {
+      console.log('📭 No test sessions found');
+    } else {
+      console.log(`📚 Found ${sessions.length} test sessions:\n`);
+      
+      sessions.forEach(session => {
+        const metadata = session.metadata || {};
+        const summary = session.summary || {};
+        const name = metadata.name || metadata.testRunId || session.id;
+        const status = session.status === 'completed' ? '✅' : '🔄';
+        
+        console.log(`${status} ${name}`);
+        console.log(`   ID: ${session.id}`);
+        console.log(`   Started: ${session.startTime.toLocaleString()}`);
+        
+        if (summary.total) {
+          const passRate = summary.total > 0 ? Math.round((summary.passed / summary.total) * 100) : 0;
+          console.log(`   Tests: ${summary.passed}/${summary.total} passed (${passRate}%)`);
+        }
+        
+        if (metadata.description) {
+          console.log(`   Description: ${metadata.description}`);
+        }
+        
+        console.log('');
+      });
+    }
+    
+    await this.jaw.close();
+  }
+
+  /**
+   * Compare multiple test sessions
+   */
+  async compareSessions(options) {
+    this.jaw = new JestAgentWrapper({
+      dbPath: options.output || './test-results.db'
+    });
+
+    const sessionIds = options.sessions ? options.sessions.split(',') : [];
+    
+    if (sessionIds.length < 2) {
+      console.log('❌ Please provide at least 2 session IDs to compare (--sessions=id1,id2,id3)');
+      await this.jaw.close();
+      return;
+    }
+
+    const comparison = await this.jaw.compareSessions(sessionIds);
+    
+    console.log('📊 Session Comparison:\n');
+    console.log('Session ID | Start Time | Total | Passed | Failed | Pass Rate | Avg Duration');
+    console.log('-----------|------------|-------|--------|--------|-----------|-------------');
+    
+    comparison.forEach(session => {
+      const stats = session.stats;
+      const passRate = stats.passRate.toFixed(1);
+      const avgDuration = stats.avgDuration.toFixed(0);
+      const name = session.metadata.testRunId || session.sessionId.substring(0, 8);
+      
+      console.log(
+        `${name.padEnd(10)} | ` +
+        `${session.startTime.toLocaleDateString().padEnd(10)} | ` +
+        `${stats.total.toString().padEnd(5)} | ` +
+        `${stats.passed.toString().padEnd(6)} | ` +
+        `${stats.failed.toString().padEnd(6)} | ` +
+        `${passRate.padStart(8)}% | ` +
+        `${avgDuration.padStart(10)}ms`
+      );
+    });
+    
+    await this.jaw.close();
+  }
+
+  /**
    * Show test history
    */
   async showHistory(options) {
@@ -162,6 +265,29 @@ export class JestAgentCLI {
   }
 
   /**
+   * Clear sessions from database
+   */
+  async clearSessions(options) {
+    this.jaw = new JestAgentWrapper({
+      dbPath: options.output || './test-results.db'
+    });
+
+    if (options.session) {
+      // Clear specific session
+      await this.jaw.clearSession(options.session);
+      console.log(`🗑️ Cleared session: ${options.session}`);
+    } else if (options.all) {
+      // Clear all sessions
+      await this.jaw.clearAllSessions();
+      console.log('🗑️ Cleared all test sessions');
+    } else {
+      console.log('Please specify --session=<id> to clear a specific session or --all to clear all sessions');
+    }
+    
+    await this.jaw.close();
+  }
+
+  /**
    * Show help
    */
   showHelp() {
@@ -169,22 +295,35 @@ export class JestAgentCLI {
 Jest Agent Wrapper CLI
 
 Usage:
-  jaw run [pattern] [options]     Run tests with JAW
-  jaw query [options]             Query test results
-  jaw summary [options]           Show test summary
-  jaw history --test=<name>       Show test history
+  jaw run [pattern] [options]        Run tests with JAW
+  jaw query [options]                Query test results
+  jaw summary [options]              Show test summary
+  jaw history --test=<name>          Show test history
+  jaw list [options]                 List all test sessions
+  jaw compare --sessions=<ids>       Compare multiple sessions
+  jaw clear [options]                Clear test data
 
 Options:
-  --output=<path>     Database output path (default: ./test-results.db)
-  --storage=<type>    Storage type (sqlite, json, memory)
-  --failed            Show failed tests
-  --errors            Show common errors  
-  --slow              Show slowest tests
-  --limit=<n>         Limit number of results
-  --session=<id>      Filter by session ID
+  --output=<path>          Database path (default: ./test-results.db)
+  --storage=<type>         Storage type (sqlite, json, memory)
+  --run-id=<id>           Specify test run ID (for run command)
+  --clear-previous        Clear previous data before running
+  --failed                Show failed tests
+  --errors                Show common errors  
+  --slow                  Show slowest tests
+  --limit=<n>             Limit number of results
+  --session=<id>          Filter/clear specific session
+  --sessions=<id1,id2>    Compare multiple sessions (comma-separated)
+  --all                   Clear all sessions (for clear command)
+  --test=<name>           Test name for history
 
 Examples:
-  jaw run src/**/*.test.js --output results.db
+  jaw run src/**/*.test.js --run-id="sprint-15" --output results.db
+  jaw run --clear-previous --run-id="fresh-start"
+  jaw list --output results.db
+  jaw compare --sessions="run1,run2,run3"
+  jaw clear --session="old-run-id"
+  jaw clear --all
   jaw query --failed --errors
   jaw summary --session abc123
   jaw history --test "should handle user login"

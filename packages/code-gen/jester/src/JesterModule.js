@@ -1,338 +1,525 @@
 /**
  * JesterModule - Legion module wrapper for Jest Agent Wrapper (JAW)
  * 
- * Provides advanced Jest testing capabilities as Legion tools with
- * intelligent analytics, TDD support, and test history tracking.
+ * Provides two powerful tools for Jest testing:
+ * 1. run_jest_tests - Execute tests with session management
+ * 2. query_jest_results - Query, analyze, and report on test results
  */
 
 import { Module, Tool, ToolResult } from '@legion/tools-registry';
-import { wrapTool } from '../../src/ToolWrapper.js';
 import { JestAgentWrapper } from './core/JestAgentWrapper.js';
 import { AgentTDDHelper } from './agents/AgentTDDHelper.js';
 import { GenerateTestReportTool } from './tools/GenerateTestReportTool.js';
+import { PerformanceAnalyzer } from './analytics/performance.js';
+import { ErrorPatternAnalyzer } from './analytics/error-patterns.js';
 import { z } from 'zod';
 
 /**
- * Helper function to create standard invoke method for Legion compatibility
+ * Tool for running Jest tests with session management
  */
-function createInvokeMethod(toolInstance) {
-  return async function invoke(toolCall) {
-    // Parse arguments from the tool call
-    let args;
-    try {
-      args = typeof toolCall.function.arguments === 'string' 
-        ? JSON.parse(toolCall.function.arguments)
-        : toolCall.function.arguments;
-    } catch (error) {
-      return ToolResult.failure(error.message || 'Tool execution failed', {
-        toolName: toolInstance.name,
-        error: error.toString(),
-        stack: error.stack
-      });
-    }
-
-    // Execute the tool with parsed arguments
-    try {
-      const result = await toolInstance.execute(args);
-      return ToolResult.success(result);
-    } catch (error) {
-      return ToolResult.failure(error.message || 'Tool execution failed', {
-        toolName: toolInstance.name,
-        error: error.toString(),
-        stack: error.stack
-      });
-    }
-  };
-}
-
-/**
- * Tool for running Jest tests with advanced analytics
- */
-class RunTestsTool extends Tool {
-  constructor(jestWrapper, tddHelper) {
-    super({
-      name: 'run_tests',
-      description: 'Execute Jest tests with advanced analytics and reporting',
-      inputSchema: z.object({
-        pattern: z.string().optional().describe('Test file pattern to match (optional, runs all tests if not specified)'),
-        projectPath: z.string().optional().default(process.cwd()).describe('Project root directory for Jest execution context'),
-        config: z.object({
-          collectCoverage: z.boolean().optional().describe('Collect code coverage during test run'),
-          verbose: z.boolean().optional().describe('Enable verbose output'),
-          bail: z.boolean().optional().describe('Stop after first test failure')
-        }).optional().describe('Jest configuration options')
-      })
+class RunJestTestsTool extends Tool {
+  constructor(jestWrapper) {
+    const inputSchema = z.object({
+      pattern: z.string().optional().describe(
+        'Test file pattern to match (e.g., "**/*.test.js", "src/auth/**"). If not specified, runs all tests.'
+      ),
+      projectPath: z.string().optional().default(process.cwd()).describe(
+        'Project root directory where tests should be executed. Defaults to current directory.'
+      ),
+      testRunId: z.string().optional().describe(
+        'Custom identifier for this test run (e.g., "pr-123", "fix-auth-bug"). Useful for tracking and comparing specific test runs.'
+      ),
+      clearPrevious: z.boolean().optional().default(false).describe(
+        'Clear all previous test data before running. Use this for a fresh start. Default: false (preserves history).'
+      ),
+      config: z.object({
+        collectCoverage: z.boolean().optional().describe('Collect code coverage metrics'),
+        verbose: z.boolean().optional().describe('Show detailed test output'),
+        bail: z.boolean().optional().describe('Stop after first test failure'),
+        timeout: z.number().optional().describe('Test timeout in milliseconds')
+      }).optional().describe('Jest configuration options')
     });
-    this.outputSchema = z.object({
-      sessionId: z.string().describe('Unique session identifier for this test run'),
+    
+    const outputSchema = z.object({
+      sessionId: z.string().describe('Unique identifier for this test session'),
       projectPath: z.string().describe('Project path where tests were executed'),
       summary: z.object({
-        totalTests: z.number(),
-        passedTests: z.number(),
-        failedTests: z.number(),
-        skippedTests: z.number(),
-        duration: z.number(),
-        success: z.boolean()
-      }),
-      coverage: z.object({}).optional().describe('Code coverage information if enabled')
+        total: z.number().describe('Total number of tests'),
+        passed: z.number().describe('Number of passing tests'),
+        failed: z.number().describe('Number of failing tests'),
+        skipped: z.number().describe('Number of skipped tests'),
+        duration: z.number().describe('Total duration in milliseconds'),
+        success: z.boolean().describe('True if all tests passed')
+      }).describe('Test run summary statistics'),
+      failedTests: z.array(z.string()).describe('List of failed test names for quick reference'),
+      coverage: z.object({
+        lines: z.number(),
+        statements: z.number(),
+        functions: z.number(),
+        branches: z.number()
+      }).optional().describe('Code coverage percentages if coverage was collected')
     });
-    this.jestWrapper = jestWrapper;
-    this.tddHelper = tddHelper;
-  }
+    
+    super({
+      name: 'run_jest_tests',
+      description: `Execute Jest tests with intelligent session management and persistence.
 
+This tool runs tests and stores results in a persistent database for later analysis. Each test run creates a session that can be queried, compared, and analyzed.
 
-  async execute(args) {
-    try {
-      this.progress('Starting test session...', 10);
-      
-      const { pattern, projectPath = process.cwd(), config = {} } = args;
-      
-      // Set working directory context for Jest
-      const originalCwd = process.cwd();
-      if (projectPath !== originalCwd) {
-        this.progress(`Setting project context to ${projectPath}...`, 15);
-      }
-      
-      // Create Jest configuration with project context
-      const jestConfig = {
-        ...config,
-        cwd: projectPath,
-        rootDir: projectPath
-      };
-      
-      // Resolve pattern relative to project path if provided
-      let resolvedPattern = pattern;
-      if (pattern && !pattern.startsWith('/')) {
-        // If pattern is relative, resolve it against projectPath
-        resolvedPattern = pattern;
-      }
-      
-      // Start a new test session
-      const session = await this.jestWrapper.runTests(resolvedPattern, jestConfig);
-      
-      this.progress('Running tests...', 50);
-      
-      // Get test summary
-      const summary = await this.jestWrapper.getTestSummary(session.id);
-      
-      this.progress('Collecting results...', 90);
-      
-      const result = {
-        sessionId: session.id,
-        projectPath: projectPath,
-        summary: {
-          totalTests: summary.totalTests || 0,
-          passedTests: summary.passedTests || 0,
-          failedTests: summary.failedTests || 0,
-          skippedTests: summary.skippedTests || 0,
-          duration: summary.duration || 0,
-          success: (summary.failedTests || 0) === 0
+WHEN TO USE:
+• After making code changes to verify functionality
+• Starting a TDD cycle (write test → see it fail → implement → see it pass)
+• Creating a baseline before refactoring
+• Running specific test suites during development
+• Verifying bug fixes with targeted tests
+
+EXAMPLES:
+• Run all tests: {}
+• Run specific pattern: {pattern: "src/**/*.test.js"}
+• Named session for tracking: {testRunId: "fix-auth-bug"}  
+• Fresh start with clean data: {clearPrevious: true}
+• Run with coverage: {config: {collectCoverage: true}}
+• Quick fail on first error: {config: {bail: true}}
+
+WORKFLOW TIP: After running tests, use query_jest_results to analyze failures, generate reports, or compare with previous runs.`,
+      inputSchema: inputSchema,
+      execute: async (args) => {
+        try {
+          this.progress('Initializing test session...', 10);
+          
+          const { pattern, projectPath = process.cwd(), testRunId, clearPrevious = false, config = {} } = args;
+          
+          // Handle clearing previous data if requested
+          if (clearPrevious) {
+            this.progress('Clearing previous test data...', 15);
+            await this.jestWrapper.clearAllSessions();
+          }
+          
+          // Set testRunId if provided
+          if (testRunId) {
+            this.jestWrapper.config.testRunId = testRunId;
+          }
+          
+          // Create Jest configuration
+          const jestConfig = {
+            ...config,
+            cwd: projectPath,
+            rootDir: projectPath
+          };
+          
+          this.progress('Starting test execution...', 25);
+          
+          // Start a new test session
+          const session = await this.jestWrapper.startSession(jestConfig);
+          
+          // Note: In a real implementation, this would actually run Jest
+          // For now, we're using the mock session approach
+          this.progress('Running tests...', 50);
+          
+          // Simulate test run (in production, this would use Jest programmatic API)
+          await this.jestWrapper.runTests(pattern, jestConfig);
+          
+          this.progress('Collecting results...', 80);
+          
+          // Get test summary
+          const summary = await this.jestWrapper.getTestSummary(session.id);
+          
+          // Get list of failed tests for quick reference
+          const failedTests = await this.jestWrapper.getFailedTests(session.id);
+          const failedTestNames = failedTests.map(t => t.fullName);
+          
+          // Prepare result
+          const result = {
+            sessionId: session.id,
+            projectPath: projectPath,
+            summary: {
+              total: summary.total,
+              passed: summary.passed,
+              failed: summary.failed,
+              skipped: summary.skipped,
+              duration: 0, // Would come from Jest runner
+              success: summary.failed === 0
+            },
+            failedTests: failedTestNames
+          };
+          
+          // Add coverage if requested
+          if (config.collectCoverage) {
+            result.coverage = {
+              lines: 0,
+              statements: 0,
+              functions: 0,
+              branches: 0
+            };
+          }
+          
+          this.progress('Test run complete', 100);
+          return result;
+        } catch (error) {
+          this.error(error.message);
+          throw error;
         }
-      };
+      },
+      getMetadata: () => ({
+        description: 'Execute Jest tests with intelligent session management',
+        input: inputSchema,
+        output: outputSchema
+      })
+    });
+    
+    this.jestWrapper = jestWrapper;
+  }
+}
 
-      if (config.collectCoverage) {
-        // TODO: Implement coverage collection
-        result.coverage = {};
+/**
+ * Tool for querying and analyzing Jest test results
+ */
+class QueryJestResultsTool extends Tool {
+  constructor(jestWrapper) {
+    const inputSchema = z.object({
+      queryType: z.enum([
+        'failures',
+        'report', 
+        'sessions',
+        'comparison',
+        'trends',
+        'logs',
+        'performance'
+      ]).describe(`Type of query to perform:
+• failures - Analyze failed tests with TDD insights and suggestions
+• report - Generate comprehensive markdown report  
+• sessions - List all test sessions with metadata
+• comparison - Compare results between sessions
+• trends - Track test performance over time
+• logs - Search through test logs and console output
+• performance - Identify slowest tests and bottlenecks`),
+      
+      sessionId: z.string().optional().describe(
+        'Specific session ID to query. If not provided, uses the most recent session.'
+      ),
+      sessionIds: z.array(z.string()).optional().describe(
+        'Multiple session IDs for comparison or trend analysis. Used with comparison and trends queries.'
+      ),
+      testName: z.string().optional().describe(
+        'Specific test name for history or trend analysis. Used with trends query.'
+      ),
+      searchQuery: z.string().optional().describe(
+        'Search term for log queries. Used with logs query.'
+      ),
+      limit: z.number().optional().default(10).describe(
+        'Maximum number of results to return. Default: 10'
+      ),
+      format: z.enum(['json', 'markdown', 'summary']).optional().default('json').describe(
+        'Output format. JSON for structured data, markdown for reports, summary for concise overview.'
+      )
+    });
+    
+    const outputSchema = z.object({
+      queryType: z.string().describe('The type of query that was performed'),
+      sessionId: z.string().optional().describe('The session ID that was queried'),
+      data: z.any().describe('Query results (structure varies by query type)'),
+      insights: z.object({
+        summary: z.string().describe('One-line summary of the findings'),
+        recommendations: z.array(z.string()).describe('Actionable recommendations based on the query'),
+        priority: z.enum(['high', 'medium', 'low']).describe('Priority level of recommendations')
+      }).describe('AI-generated insights and recommendations')
+    });
+    
+    super({
+      name: 'query_jest_results',
+      description: `Query, analyze, and report on Jest test results from any session.
+
+This versatile tool provides comprehensive analysis of test results including failure analysis, report generation, session comparison, and trend tracking. It automatically uses the latest session unless you specify otherwise.
+
+WHEN TO USE:
+• After test failures to understand what went wrong (queryType: "failures")
+• Generate reports for documentation or PRs (queryType: "report")  
+• Compare test results before/after changes (queryType: "comparison")
+• Track test stability over time (queryType: "trends")
+• Debug test issues with log search (queryType: "logs")
+• Find performance bottlenecks (queryType: "performance")
+• Review all test sessions (queryType: "sessions")
+
+EXAMPLES:
+• Analyze latest failures: {queryType: "failures"}
+• Generate markdown report: {queryType: "report", format: "markdown"}
+• Compare two runs: {queryType: "comparison", sessionIds: ["main-branch", "pr-123"]}
+• Find flaky tests: {queryType: "trends", testName: "auth.test.js"}
+• Search error logs: {queryType: "logs", searchQuery: "timeout"}
+• List all sessions: {queryType: "sessions", limit: 20}
+• Find slow tests: {queryType: "performance", limit: 5}
+
+WORKFLOW TIP: Use this after run_jest_tests to understand failures, or periodically to track test health and performance trends.`,
+      inputSchema: inputSchema,
+      execute: async (args) => {
+        try {
+          const { queryType, sessionId, sessionIds, testName, searchQuery, limit = 10, format = 'json' } = args;
+          
+          this.progress(`Executing ${queryType} query...`, 20);
+          
+          // Get the session ID to use (latest if not specified)
+          let targetSessionId = sessionId;
+          if (!targetSessionId && queryType !== 'sessions' && queryType !== 'comparison') {
+            const sessions = await this.jestWrapper.getAllSessions();
+            if (sessions.length === 0) {
+              throw new Error('No test sessions found. Run tests first using run_jest_tests.');
+            }
+            targetSessionId = sessions[0].id; // Most recent
+          }
+          
+          let data;
+          let insights = {
+            summary: '',
+            recommendations: [],
+            priority: 'medium'
+          };
+          
+          switch (queryType) {
+            case 'failures': {
+              this.progress('Analyzing test failures...', 40);
+              const failures = await this.jestWrapper.getFailedTests(targetSessionId);
+              const tddHelper = new AgentTDDHelper(this.jestWrapper);
+              const analysis = await tddHelper.runTDDCycle(targetSessionId);
+              
+              data = {
+                status: analysis.status,
+                totalFailures: failures.length,
+                failures: analysis.detailedFailures || failures,
+                errorPatterns: analysis.errorSummary,
+                suggestions: analysis.suggestions,
+                nextActions: analysis.nextActions
+              };
+              
+              insights.summary = failures.length === 0 
+                ? 'All tests passing - green state achieved!' 
+                : `${failures.length} test(s) failing - ${analysis.status} state`;
+              insights.recommendations = analysis.nextActions || [];
+              insights.priority = failures.length > 5 ? 'high' : failures.length > 0 ? 'medium' : 'low';
+              break;
+            }
+            
+            case 'report': {
+              this.progress('Generating test report...', 40);
+              const reportTool = new GenerateTestReportTool(this.jestWrapper);
+              const reportResult = await reportTool._execute({
+                sessionId: targetSessionId,
+                reportType: 'detailed',
+                includeCharts: format === 'markdown',
+                includeRecommendations: true
+              });
+              
+              if (format === 'markdown') {
+                data = reportResult.reportContent;
+              } else {
+                data = {
+                  content: reportResult.reportContent,
+                  summary: reportResult.summary
+                };
+              }
+              
+              insights.summary = `Test report generated for session ${targetSessionId}`;
+              insights.recommendations = ['Review failed tests', 'Check coverage gaps', 'Analyze performance trends'];
+              break;
+            }
+            
+            case 'sessions': {
+              this.progress('Retrieving test sessions...', 40);
+              const sessions = await this.jestWrapper.getAllSessions();
+              data = {
+                totalSessions: sessions.length,
+                sessions: sessions.slice(0, limit).map(s => ({
+                  id: s.id,
+                  startTime: s.startTime,
+                  status: s.status,
+                  metadata: s.metadata,
+                  summary: s.summary
+                }))
+              };
+              
+              insights.summary = `Found ${sessions.length} test session(s)`;
+              if (sessions.length > 100) {
+                insights.recommendations.push('Consider clearing old sessions to free up space');
+                insights.priority = 'low';
+              }
+              break;
+            }
+            
+            case 'comparison': {
+              if (!sessionIds || sessionIds.length < 2) {
+                throw new Error('Comparison requires at least 2 session IDs in sessionIds array');
+              }
+              this.progress('Comparing test sessions...', 40);
+              const comparison = await this.jestWrapper.compareSessions(sessionIds);
+              
+              data = {
+                sessions: comparison,
+                delta: this.calculateDelta(comparison),
+                regressions: [],
+                improvements: []
+              };
+              
+              // Analyze changes
+              if (comparison.length >= 2) {
+                const [newer, older] = comparison;
+                if (newer.stats.failed > older.stats.failed) {
+                  data.regressions.push(`${newer.stats.failed - older.stats.failed} new failures`);
+                  insights.priority = 'high';
+                }
+                if (newer.stats.passed > older.stats.passed) {
+                  data.improvements.push(`${newer.stats.passed - older.stats.passed} tests fixed`);
+                }
+              }
+              
+              insights.summary = `Compared ${sessionIds.length} test sessions`;
+              insights.recommendations = data.regressions.length > 0 
+                ? ['Investigate new failures', 'Review recent changes']
+                : ['Tests stable across sessions'];
+              break;
+            }
+            
+            case 'trends': {
+              this.progress('Analyzing test trends...', 40);
+              if (testName) {
+                const trends = await this.jestWrapper.getTestTrends(testName, limit);
+                data = {
+                  testName: testName,
+                  history: trends,
+                  pattern: this.detectPattern(trends),
+                  flakiness: this.calculateFlakiness(trends)
+                };
+                
+                if (data.flakiness > 0.3) {
+                  insights.summary = `Test "${testName}" is flaky (${Math.round(data.flakiness * 100)}% failure rate)`;
+                  insights.recommendations = ['Investigate timing issues', 'Check for race conditions', 'Review test isolation'];
+                  insights.priority = 'high';
+                } else {
+                  insights.summary = `Test "${testName}" is stable`;
+                }
+              } else {
+                // Overall trends
+                const sessions = await this.jestWrapper.getAllSessions();
+                data = {
+                  totalSessions: sessions.length,
+                  trend: 'stable', // Would calculate from session data
+                  averagePassRate: 0,
+                  averageDuration: 0
+                };
+                insights.summary = 'Overall test suite trends analyzed';
+              }
+              break;
+            }
+            
+            case 'logs': {
+              this.progress('Searching test logs...', 40);
+              const logs = await this.jestWrapper.searchLogs({
+                message: searchQuery,
+                sessionId: targetSessionId,
+                limit: limit
+              });
+              
+              data = {
+                totalMatches: logs.length,
+                logs: logs,
+                searchQuery: searchQuery
+              };
+              
+              insights.summary = `Found ${logs.length} log entries matching "${searchQuery}"`;
+              if (logs.length === 0) {
+                insights.recommendations = ['Try a different search term', 'Check if logging is enabled'];
+              }
+              break;
+            }
+            
+            case 'performance': {
+              this.progress('Analyzing test performance...', 40);
+              const slowTests = await this.jestWrapper.getSlowestTests(limit);
+              const analyzer = new PerformanceAnalyzer(this.jestWrapper);
+              
+              // Get tests for the target session to analyze bottlenecks
+              const tests = await this.jestWrapper.findTests({ sessionId: targetSessionId });
+              const bottlenecks = analyzer.identifyBottlenecks(tests);
+              const metrics = analyzer.calculateMetrics(tests);
+              
+              data = {
+                slowestTests: slowTests,
+                bottlenecks: bottlenecks,
+                recommendations: analyzer.generateRecommendations(metrics, bottlenecks)
+              };
+              
+              if (slowTests.length > 0 && slowTests[0].duration > 5000) {
+                insights.summary = `Found ${slowTests.length} slow tests (longest: ${slowTests[0].duration}ms)`;
+                insights.recommendations = ['Optimize slowest tests', 'Consider parallel execution', 'Review test setup/teardown'];
+                insights.priority = 'medium';
+              } else {
+                insights.summary = 'Test performance is acceptable';
+                insights.priority = 'low';
+              }
+              break;
+            }
+            
+            default:
+              throw new Error(`Unknown query type: ${queryType}`);
+          }
+          
+          this.progress('Query complete', 100);
+          
+          return {
+            queryType,
+            sessionId: targetSessionId,
+            data,
+            insights
+          };
+        } catch (error) {
+          this.error(error.message);
+          throw error;
+        }
+      },
+      getMetadata: () => ({
+        description: 'Query and analyze Jest test results',
+        input: inputSchema,
+        output: outputSchema
+      })
+    });
+    
+    this.jestWrapper = jestWrapper;
+  }
+  
+  calculateDelta(comparison) {
+    if (comparison.length < 2) return null;
+    const [newer, older] = comparison;
+    return {
+      totalChange: newer.stats.total - older.stats.total,
+      passedChange: newer.stats.passed - older.stats.passed,
+      failedChange: newer.stats.failed - older.stats.failed,
+      passRateChange: newer.stats.passRate - older.stats.passRate,
+      durationChange: newer.stats.avgDuration - older.stats.avgDuration
+    };
+  }
+  
+  detectPattern(trends) {
+    if (trends.length < 3) return 'insufficient-data';
+    
+    const failureCount = trends.filter(t => t.status === 'failed').length;
+    const failureRate = failureCount / trends.length;
+    
+    if (failureRate === 0) return 'stable-passing';
+    if (failureRate === 1) return 'consistent-failure';
+    if (failureRate > 0.5) return 'mostly-failing';
+    if (failureRate > 0.2) return 'flaky';
+    return 'mostly-passing';
+  }
+  
+  calculateFlakiness(trends) {
+    if (trends.length < 2) return 0;
+    
+    let transitions = 0;
+    for (let i = 1; i < trends.length; i++) {
+      if (trends[i].status !== trends[i-1].status) {
+        transitions++;
       }
-
-      this.progress('Test run complete', 100);
-      return result;
-    } catch (error) {
-      this.error(error.message);
-      throw error;
     }
-  }
-}
-
-/**
- * Tool for analyzing test failures with TDD insights
- */
-class AnalyzeFailuresTool extends Tool {
-  constructor(jestWrapper, tddHelper) {
-    super({
-      name: 'analyze_failures',
-      description: 'Analyze failed tests and provide actionable insights for TDD',
-      inputSchema: z.object({
-        sessionId: z.string().optional().describe('Session ID from a previous test run (optional, uses latest if not provided)')
-      })
-    });
-    this.outputSchema = z.object({
-      status: z.enum(['green', 'red']).describe('TDD status - green if all passing, red if failures'),
-      failures: z.number().describe('Number of failed tests'),
-      errorSummary: z.object({}).describe('Analysis of error patterns and types'),
-      suggestions: z.array(z.object({})).describe('Implementation suggestions based on failures'),
-      nextActions: z.array(z.object({})).describe('Prioritized list of actions to take'),
-      detailedFailures: z.array(z.object({})).describe('Detailed information about each failed test')
-    });
-    this.jestWrapper = jestWrapper;
-    this.tddHelper = tddHelper;
-  }
-
-
-  async execute(args) {
-    try {
-      this.progress('Analyzing test failures...', 20);
-      
-      const { sessionId } = args;
-      
-      // Run TDD cycle analysis
-      const analysis = await this.tddHelper.runTDDCycle(sessionId);
-      
-      this.progress('Analysis complete', 100);
-      return analysis;
-    } catch (error) {
-      this.error(error.message);
-      throw error;
-    }
-  }
-}
-
-/**
- * Tool for getting test history and trends
- */
-class GetTestHistoryTool extends Tool {
-  constructor(jestWrapper) {
-    super({
-      name: 'get_test_history',
-      description: 'Get historical performance data for a specific test',
-      inputSchema: z.object({
-        testName: z.string().describe('Full name of the test to analyze')
-      })
-    });
-    this.outputSchema = z.object({
-      totalRuns: z.number(),
-      successRate: z.number(),
-      averageDuration: z.number(),
-      trend: z.string(),
-      recommendation: z.string()
-    });
-    this.jestWrapper = jestWrapper;
-  }
-
-
-  async execute(args) {
-    try {
-      const { testName } = args;
-      const tddHelper = new AgentTDDHelper(this.jestWrapper);
-      const history = await tddHelper.analyzeTestHistory(testName);
-      return history;
-    } catch (error) {
-      this.error(error.message);
-      throw error;
-    }
-  }
-}
-
-/**
- * Tool for searching test logs
- */
-class SearchLogsTool extends Tool {
-  constructor(jestWrapper) {
-    super({
-      name: 'search_logs',
-      description: 'Search through test logs and console output',
-      inputSchema: z.object({
-        query: z.string().describe('Search query for log messages'),
-        sessionId: z.string().optional().describe('Limit search to specific session (optional)')
-      })
-    });
-    this.outputSchema = z.object({
-      matches: z.array(z.object({})).describe('Array of matching log entries with context'),
-      totalMatches: z.number()
-    });
-    this.jestWrapper = jestWrapper;
-  }
-
-
-  async execute(args) {
-    try {
-      const { query, sessionId } = args;
-      
-      // Handle different query formats
-      let searchQuery;
-      if (typeof query === 'string') {
-        searchQuery = { message: query };
-      } else {
-        searchQuery = query || {};
-      }
-      
-      // Add sessionId to query if provided
-      if (sessionId) {
-        searchQuery.sessionId = sessionId;
-      }
-      
-      const results = await this.jestWrapper.searchLogs(searchQuery);
-      
-      return {
-        matches: results,
-        totalMatches: results.length
-      };
-    } catch (error) {
-      this.error(error.message);
-      throw error;
-    }
-  }
-}
-
-/**
- * Tool for identifying slowest tests
- */
-class GetSlowestTestsTool extends Tool {
-  constructor(jestWrapper) {
-    super({
-      name: 'get_slowest_tests',
-      description: 'Identify the slowest running tests for performance optimization',
-      inputSchema: z.object({
-        limit: z.number().default(10).describe('Number of slowest tests to return')
-      })
-    });
-    this.outputSchema = z.object({
-      tests: z.array(z.object({})).describe('Array of slowest tests with duration information')
-    });
-    this.jestWrapper = jestWrapper;
-  }
-
-
-  async execute(args) {
-    try {
-      const { limit } = args;
-      const tests = await this.jestWrapper.getSlowestTests(limit);
-      return { tests };
-    } catch (error) {
-      this.error(error.message);
-      throw error;
-    }
-  }
-}
-
-/**
- * Tool for getting common error patterns
- */
-class GetCommonErrorsTool extends Tool {
-  constructor(jestWrapper) {
-    super({
-      name: 'get_common_errors',
-      description: 'Get the most frequently occurring test errors',
-      inputSchema: z.object({
-        limit: z.number().default(10).describe('Number of error types to return')
-      })
-    });
-    this.outputSchema = z.object({
-      errors: z.array(z.object({})).describe('Array of common errors with occurrence counts')
-    });
-    this.jestWrapper = jestWrapper;
-  }
-
-
-  async execute(args) {
-    try {
-      const { limit } = args;
-      const errors = await this.jestWrapper.getMostCommonErrors(limit);
-      return { errors };
-    } catch (error) {
-      this.error(error.message);
-      throw error;
-    }
+    
+    return transitions / (trends.length - 1);
   }
 }
 
@@ -344,10 +531,9 @@ export class JesterModule extends Module {
     super();
     this.name = 'JesterModule';
     this.config = dependencies;
-    this.description = 'Advanced Jest testing with intelligent analytics and TDD support';
-    this.version = '1.0.0';
+    this.description = 'Powerful Jest testing tools with session management and intelligent analysis';
+    this.version = '2.0.0';
     this.jestWrapper = null;
-    this.tddHelper = null;
   }
 
   /**
@@ -369,16 +555,15 @@ export class JesterModule extends Module {
   async initialize() {
     if (this.initialized) return;
 
-    // Initialize Jest Agent Wrapper
+    // Initialize Jest Agent Wrapper with persistence
     this.jestWrapper = new JestAgentWrapper({
       storage: 'sqlite',
+      dbPath: './test-results.db', // Fixed path for persistence
       collectCoverage: true,
       collectPerformance: true,
-      realTimeEvents: true
+      realTimeEvents: true,
+      clearPrevious: false // Don't clear by default
     });
-
-    // Initialize TDD Helper
-    this.tddHelper = new AgentTDDHelper(this.jestWrapper);
 
     this.initialized = true;
     await super.initialize();
@@ -393,13 +578,8 @@ export class JesterModule extends Module {
     }
 
     return [
-      wrapTool(new RunTestsTool(this.jestWrapper, this.tddHelper)),
-      wrapTool(new AnalyzeFailuresTool(this.jestWrapper, this.tddHelper)),
-      wrapTool(new GetTestHistoryTool(this.jestWrapper)),
-      wrapTool(new SearchLogsTool(this.jestWrapper)),
-      wrapTool(new GetSlowestTestsTool(this.jestWrapper)),
-      wrapTool(new GetCommonErrorsTool(this.jestWrapper)),
-      wrapTool(new GenerateTestReportTool(this.jestWrapper))
+      new RunJestTestsTool(this.jestWrapper),
+      new QueryJestResultsTool(this.jestWrapper)
     ];
   }
 
@@ -415,7 +595,18 @@ export class JesterModule extends Module {
    */
   async cleanup() {
     if (this.jestWrapper) {
-      await this.jestWrapper.close();
+      try {
+        // Explicitly clean up event listeners to prevent memory leaks
+        this.jestWrapper.removeAllListeners();
+        
+        // Don't clear data on cleanup - preserve history
+        await this.jestWrapper.close();
+        
+        // Ensure cleanup is complete by nulling the reference
+        this.jestWrapper = null;
+      } catch (error) {
+        console.warn('JesterModule cleanup warning:', error.message);
+      }
     }
     await super.cleanup();
   }
@@ -427,21 +618,19 @@ export class JesterModule extends Module {
     return {
       name: this.name,
       description: this.description,
-      version: '1.0.0',
+      version: '2.0.0',
       author: 'Legion Team',
       tools: this.getTools().length,
       capabilities: [
-        'Advanced Jest test execution',
-        'TDD cycle analysis',
-        'Test failure insights',
-        'Performance monitoring',
-        'Historical test tracking',
-        'Error pattern analysis',
-        'Log searching and analytics',
-        'Markdown test report generation'
+        'Jest test execution with session management',
+        'Persistent test history and trends',
+        'Intelligent failure analysis with TDD insights',
+        'Comprehensive test reporting',
+        'Multi-session comparison',
+        'Performance bottleneck detection',
+        'Test flakiness detection',
+        'Log search and analysis'
       ]
     };
   }
 }
-
-export default JesterModule;

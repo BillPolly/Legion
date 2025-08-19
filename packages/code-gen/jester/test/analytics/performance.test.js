@@ -1,8 +1,9 @@
 /**
- * Performance Analysis Tests
- * Tests for the performance analysis and bottleneck detection functionality
+ * Comprehensive tests for PerformanceAnalyzer
+ * Tests performance analysis, bottleneck detection, and trend analysis functionality
  */
 
+import { describe, test, expect, beforeAll, beforeEach, afterEach } from '@jest/globals';
 import { PerformanceAnalyzer } from '../../src/analytics/performance.js';
 import { JestAgentWrapper } from '../../src/core/JestAgentWrapper.js';
 import { promises as fs } from 'fs';
@@ -17,7 +18,6 @@ describe('PerformanceAnalyzer', () => {
 
   let analyzer;
   let mockJaw;
-  let testDbPath;
 
   beforeEach(async () => {
     testDbPath = TestDbHelper.getTempDbPath('performance');
@@ -670,6 +670,290 @@ describe('PerformanceAnalyzer', () => {
       expect(endTime - startTime).toBeLessThan(1000); // Should be very fast
       expect(metrics.totalDuration).toBeGreaterThan(0);
       expect(metrics.averageDuration).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Advanced Statistical Analysis', () => {
+    test('should calculate percentiles correctly', () => {
+      const tests = Array.from({ length: 100 }, (_, i) => ({
+        duration: (i + 1) * 10 // 10, 20, 30, ..., 1000
+      }));
+      
+      const metrics = analyzer.calculateMetrics(tests);
+      
+      expect(metrics.totalDuration).toBe(50500); // Sum of 10 to 1000
+      expect(metrics.averageDuration).toBe(505);
+      expect(metrics.medianDuration).toBe(505); // Middle value
+      expect(metrics.minDuration).toBe(10);
+      expect(metrics.maxDuration).toBe(1000);
+    });
+
+    test('should handle extreme outliers in statistical calculations', () => {
+      const tests = [
+        { duration: 100 },
+        { duration: 100 },
+        { duration: 100 },
+        { duration: 100 },
+        { duration: 100000 } // Extreme outlier
+      ];
+      
+      const metrics = analyzer.calculateMetrics(tests);
+      
+      expect(metrics.averageDuration).toBe(20080);
+      expect(metrics.medianDuration).toBe(100); // Not affected by outlier
+      expect(metrics.standardDeviation).toBeGreaterThan(0);
+    });
+
+    test('should identify performance regression patterns', async () => {
+      // Simulate gradual performance degradation
+      const tests = [
+        { fullName: 'Degrading Test', duration: 100, startTime: new Date('2023-01-01') },
+        { fullName: 'Degrading Test', duration: 120, startTime: new Date('2023-01-02') },
+        { fullName: 'Degrading Test', duration: 140, startTime: new Date('2023-01-03') },
+        { fullName: 'Degrading Test', duration: 180, startTime: new Date('2023-01-04') },
+        { fullName: 'Degrading Test', duration: 220, startTime: new Date('2023-01-05') }
+      ];
+      
+      const trends = await analyzer.analyzeTrends(tests);
+      
+      expect(trends['Degrading Test'].trend).toBe('degrading');
+      expect(trends['Degrading Test'].changePercent).toBeGreaterThan(50);
+      expect(trends['Degrading Test'].severity).toBeDefined();
+    });
+  });
+
+  describe('Memory and Resource Analysis', () => {
+    test('should handle memory-intensive test analysis', async () => {
+      // Create a very large dataset to test memory efficiency
+      const massiveTestSet = Array.from({ length: 100000 }, (_, i) => ({
+        fullName: `Memory Test ${i % 1000}`, // Reuse test names to test grouping
+        duration: Math.floor(Math.random() * 5000) + 50,
+        startTime: new Date(Date.now() - Math.random() * 86400000 * 30) // Random time in last 30 days
+      }));
+      
+      const originalFindTests = mockJaw.findTests;
+      mockJaw.findTests = async () => massiveTestSet;
+      
+      const startMemory = process.memoryUsage().heapUsed;
+      const result = await analyzer.analyzeSession('memory-test-session');
+      const endMemory = process.memoryUsage().heapUsed;
+      
+      // Memory should not increase by more than 100MB
+      const memoryIncrease = (endMemory - startMemory) / 1024 / 1024;
+      expect(memoryIncrease).toBeLessThan(100);
+      
+      expect(result.totalTests).toBe(100000);
+      expect(result.metrics).toBeDefined();
+      
+      // Restore original method
+      mockJaw.findTests = originalFindTests;
+    });
+
+    test('should efficiently process time-series data', async () => {
+      // Create tests with complex time patterns
+      const timeSeriesTests = [];
+      for (let day = 0; day < 30; day++) {
+        for (let hour = 0; hour < 24; hour++) {
+          timeSeriesTests.push({
+            fullName: 'Time Series Test',
+            duration: Math.floor(Math.random() * 1000) + 100,
+            startTime: new Date(2023, 0, day + 1, hour)
+          });
+        }
+      }
+      
+      const startTime = Date.now();
+      const trends = await analyzer.analyzeTrends(timeSeriesTests);
+      const endTime = Date.now();
+      
+      expect(endTime - startTime).toBeLessThan(2000); // Should be fast
+      expect(trends['Time Series Test']).toBeDefined();
+      expect(trends['Time Series Test'].runs).toBe(720); // 30 days * 24 hours
+    });
+  });
+
+  describe('Real-world Performance Scenarios', () => {
+    test('should analyze CI/CD pipeline performance patterns', async () => {
+      // Simulate typical CI pipeline with varying performance
+      const ciTests = [
+        // Unit tests - fast
+        ...Array.from({ length: 50 }, (_, i) => ({
+          fullName: `Unit Test ${i + 1}`,
+          duration: Math.floor(Math.random() * 100) + 10,
+          startTime: new Date('2023-01-01T10:00:00Z')
+        })),
+        // Integration tests - moderate
+        ...Array.from({ length: 20 }, (_, i) => ({
+          fullName: `Integration Test ${i + 1}`,
+          duration: Math.floor(Math.random() * 1000) + 200,
+          startTime: new Date('2023-01-01T10:00:00Z')
+        })),
+        // E2E tests - slow
+        ...Array.from({ length: 10 }, (_, i) => ({
+          fullName: `E2E Test ${i + 1}`,
+          duration: Math.floor(Math.random() * 5000) + 2000,
+          startTime: new Date('2023-01-01T10:00:00Z')
+        }))
+      ];
+
+      const originalFindTests = mockJaw.findTests;
+      mockJaw.findTests = async () => ciTests;
+      
+      const result = await analyzer.analyzeSession('ci-pipeline-session');
+      
+      expect(result.bottlenecks.categories.fast.count).toBeGreaterThan(0);
+      expect(result.bottlenecks.categories.moderate.count).toBeGreaterThan(0);
+      expect(result.bottlenecks.categories.slow.count).toBeGreaterThan(0);
+      
+      // Should identify E2E tests as bottlenecks
+      expect(result.bottlenecks.slowTests.length).toBeGreaterThan(0);
+      
+      // Restore original method
+      mockJaw.findTests = originalFindTests;
+    });
+
+    test('should detect flaky test performance patterns', async () => {
+      // Simulate a flaky test with highly variable performance
+      const flakyTests = Array.from({ length: 20 }, (_, i) => ({
+        fullName: 'Flaky Network Test',
+        duration: i % 3 === 0 ? 5000 : 100, // Sometimes very slow
+        startTime: new Date(Date.now() - i * 3600000) // 1 hour intervals
+      }));
+
+      const trends = await analyzer.analyzeTrends(flakyTests);
+      
+      expect(trends['Flaky Network Test']).toBeDefined();
+      // Check if the trend shows degradation or improvement
+      const trend = trends['Flaky Network Test'];
+      expect(trend.trend).toBeDefined();
+      expect(trend.averageDuration).toBeDefined();
+    });
+  });
+
+  describe('Performance Regression Detection', () => {
+    test('should detect gradual performance degradation', async () => {
+      const originalAnalyzeSession = analyzer.analyzeSession;
+      
+      // Mock progressive degradation over multiple sessions
+      const sessionData = {
+        'baseline': { 
+          metrics: { averageDuration: 100 },
+          bottlenecks: { slowTests: [], outliers: [] }
+        },
+        'session1': { 
+          metrics: { averageDuration: 110 },
+          bottlenecks: { slowTests: [], outliers: [] }
+        },
+        'session2': { 
+          metrics: { averageDuration: 125 },
+          bottlenecks: { slowTests: [], outliers: [] }
+        },
+        'session3': { 
+          metrics: { averageDuration: 150 },
+          bottlenecks: { slowTests: [], outliers: [] }
+        }
+      };
+      
+      analyzer.analyzeSession = async (sessionId) => sessionData[sessionId];
+      
+      const comparison = await analyzer.compareSessions('baseline', 'session3');
+      
+      expect(comparison.metrics.averageDuration.changePercent).toBe(50);
+      expect(comparison.summary.trend).toBe('degraded');
+      expect(comparison.summary.severity).toBe('significant');
+      
+      // Restore original method
+      analyzer.analyzeSession = originalAnalyzeSession;
+    });
+
+    test('should identify performance improvement opportunities', () => {
+      const tests = [
+        { fullName: 'Database Query Test', duration: 10000 },
+        { fullName: 'API Call Test', duration: 100 },
+        { fullName: 'File Processing Test', duration: 12000 },
+        { fullName: 'Network Request Test', duration: 150 }
+      ];
+      
+      const bottlenecks = analyzer.identifyBottlenecks(tests);
+      const metrics = analyzer.calculateMetrics(tests);
+      const recommendations = analyzer.generateRecommendations(metrics, bottlenecks);
+      
+      // Check that we have recommendations
+      expect(recommendations.length).toBeGreaterThan(0);
+      
+      // Find any recommendation about slow tests or high variance
+      const hasRelevantRecommendation = recommendations.some(r => 
+        r.type === 'slow_tests' || r.type === 'high_variance' || r.type === 'outliers'
+      );
+      expect(hasRelevantRecommendation).toBe(true);
+      
+      // If there's a slow_tests recommendation, check its structure
+      const optimizationRec = recommendations.find(r => r.type === 'slow_tests');
+      if (optimizationRec) {
+        expect(optimizationRec.suggestions).toContain('database query optimization');
+        expect(optimizationRec.estimatedImpact).toBeDefined();
+      }
+    });
+  });
+
+  describe('Error Resilience and Edge Cases', () => {
+    test('should handle corrupted duration data gracefully', () => {
+      const corruptedTests = [
+        { fullName: 'Valid Test', duration: 100 },
+        { fullName: 'Null Duration', duration: null },
+        { fullName: 'Undefined Duration', duration: undefined },
+        { fullName: 'String Duration', duration: 'invalid' },
+        { fullName: 'Negative Duration', duration: -100 },
+        { fullName: 'Infinity Duration', duration: Infinity },
+        { fullName: 'NaN Duration', duration: NaN }
+      ];
+      
+      const metrics = analyzer.calculateMetrics(corruptedTests);
+      
+      // Should only process valid durations
+      expect(metrics.totalDuration).toBe(100);
+      expect(metrics.averageDuration).toBe(100);
+      expect(isFinite(metrics.standardDeviation)).toBe(true);
+    });
+
+    test('should handle timezone and date format variations', async () => {
+      const timezoneTests = [
+        { fullName: 'Same Test', duration: 100, startTime: new Date('2023-01-01T12:00:00Z') },
+        { fullName: 'Same Test', duration: 110, startTime: new Date('2023-01-02T12:00:00') },
+        { fullName: 'Same Test', duration: 120, startTime: new Date('2023-01-03T12:00:00.000Z') }
+      ];
+      
+      const trends = await analyzer.analyzeTrends(timezoneTests);
+      
+      // Should handle different time formats without errors
+      expect(Object.keys(trends)).toHaveLength(1);
+      expect(trends['Same Test']).toBeDefined();
+      expect(trends['Same Test'].runs).toBe(3);
+    });
+
+    test('should handle concurrent analysis requests', async () => {
+      const originalFindTests = mockJaw.findTests;
+      mockJaw.findTests = async () => {
+        // Simulate database delay
+        await new Promise(resolve => setTimeout(resolve, 100));
+        return [{ fullName: 'Concurrent Test', duration: 100, startTime: new Date() }];
+      };
+      
+      // Run multiple analyses concurrently
+      const promises = Array.from({ length: 5 }, (_, i) => 
+        analyzer.analyzeSession(`concurrent-session-${i}`)
+      );
+      
+      const results = await Promise.all(promises);
+      
+      expect(results).toHaveLength(5);
+      results.forEach((result, i) => {
+        expect(result.sessionId).toBe(`concurrent-session-${i}`);
+        expect(result.metrics).toBeDefined();
+      });
+      
+      // Restore original method
+      mockJaw.findTests = originalFindTests;
     });
   });
 });

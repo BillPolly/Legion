@@ -21,7 +21,6 @@ describe('End-to-End Integration Tests', () => {
   });
 
   let jaw;
-  let testDbPath;
   let tempDir;
 
   beforeEach(async () => {
@@ -491,9 +490,9 @@ describe('End-to-End Integration Tests', () => {
 
   describe('Error Handling and Edge Cases', () => {
     test('handles database connection issues gracefully', async () => {
-      // Create JAW with invalid database path
+      // Create JAW with invalid database path that will cause an error
       const invalidJaw = new JestAgentWrapper({
-        dbPath: testDbPath,
+        dbPath: '/invalid/path/that/does/not/exist/test.db',
         storage: 'sqlite'
       });
 
