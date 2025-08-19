@@ -95,10 +95,31 @@ class ToolRegistryViewModel {
       
       console.log('✅ Actor system connected successfully');
       
+      // Update NavigationTabs with actor references now that they're available
+      this.updateNavigationTabsWithActors();
+      
     } catch (error) {
       console.warn('⚠️ Actor system connection failed, continuing without real-time data:', error.message);
       this.model.updateState('connectionStatus', 'offline');
       // Don't throw error - app should work offline
+    }
+  }
+  
+  updateNavigationTabsWithActors() {
+    try {
+      const navigationTabs = this.components.get('navigation');
+      if (navigationTabs && this.actorManager) {
+        console.log('🔄 Updating NavigationTabs with actor references');
+        
+        // Update the umbilical with actor references
+        navigationTabs.umbilical.planningActor = this.actorManager.getPlanningActor();
+        navigationTabs.umbilical.executionActor = this.actorManager.getExecutionActor();
+        navigationTabs.umbilical.toolRegistryActor = this.actorManager.getToolRegistryActor();
+        
+        console.log('✅ NavigationTabs updated with actors');
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to update NavigationTabs with actors:', error);
     }
   }
   

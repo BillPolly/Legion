@@ -2,9 +2,13 @@
  * PlanningWorkspacePanel Component
  * MVVM implementation for planning workspace with goal input, decomposition tree,
  * validation, and execution controls
+ * Now includes sub-tabs for decent planner visualization
  */
 
 import { UmbilicalUtils } from '/legion/frontend-components/src/umbilical/index.js';
+import { TaskBreakdownPanel } from './TaskBreakdownPanel.js';
+import { ToolDiscoveryPanel } from './ToolDiscoveryPanel.js';
+import { ValidationPanel } from './ValidationPanel.js';
 
 /**
  * Model - Manages planning workspace state
@@ -24,7 +28,8 @@ class PlanningWorkspacePanelModel {
       artifacts: {},
       executionLogs: [],
       collapsedNodes: new Set(),
-      breakpoints: new Set()
+      breakpoints: new Set(),
+      activeSubTab: 'overview' // overview, breakdown, discovery, validation, execution
     };
     
     this.listeners = new Set();
@@ -84,58 +89,285 @@ class PlanningWorkspacePanelView {
   render() {
     this.container.innerHTML = `
       <div class="planning-workspace-panel">
+        <style>
+          .planning-workspace-panel {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background: var(--surface-primary);
+          }
+          
+          .planning-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-subtle);
+          }
+          
+          .planning-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+          }
+          
+          .planning-sub-tabs {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0 1.5rem;
+            background: var(--surface-secondary);
+            border-bottom: 1px solid var(--border-subtle);
+          }
+          
+          .sub-tab-button {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: var(--text-secondary);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+          }
+          
+          .sub-tab-button:hover {
+            color: var(--text-primary);
+            background: var(--surface-primary);
+          }
+          
+          .sub-tab-button.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+            background: var(--surface-primary);
+          }
+          
+          .sub-tab-content {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+          }
+          
+          .sub-tab-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            overflow-y: auto;
+          }
+          
+          .sub-tab-panel.active {
+            display: block;
+          }
+          
+          /* Overview Panel Styles */
+          .overview-panel {
+            padding: 1.5rem;
+          }
+          
+          .goal-input-section {
+            background: var(--surface-secondary);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+          }
+          
+          .goal-input-section h3 {
+            margin-top: 0;
+            color: var(--text-primary);
+          }
+          
+          .goal-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-subtle);
+            border-radius: 0.375rem;
+            background: var(--surface-primary);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            resize: vertical;
+          }
+          
+          .goal-controls {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+          }
+          
+          .plan-button, .clear-button, .save-plan-button, .load-plan-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+          }
+          
+          .plan-button {
+            background: var(--color-primary);
+            color: white;
+            border: none;
+          }
+          
+          .plan-button:hover:not(:disabled) {
+            background: var(--color-primary-dark);
+          }
+          
+          .clear-button, .save-plan-button, .load-plan-button {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-subtle);
+          }
+          
+          .clear-button:hover, .save-plan-button:hover, .load-plan-button:hover {
+            background: var(--surface-secondary);
+          }
+          
+          button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+          
+          .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+          }
+          
+          .stat-card {
+            background: var(--surface-secondary);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+          }
+          
+          .stat-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--color-primary);
+          }
+          
+          .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+          }
+          
+          /* Fix panel height issues */
+          .panel-component {
+            min-height: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+          }
+          
+          .planning-workspace-panel {
+            min-height: 500px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+          }
+          
+          .sub-tab-content {
+            flex: 1;
+            min-height: 400px;
+            overflow-y: auto;
+            position: relative;
+          }
+          
+          .sub-tab-panel {
+            min-height: 100%;
+          }
+        </style>
+        
         <div class="planning-header">
-          <h2>Planning Workspace</h2>
+          <h2>🧠 Planning Workspace</h2>
           <div class="planning-status"></div>
         </div>
         
-        <div class="planning-content">
-          <!-- Goal Input Section -->
-          <div class="goal-input-section">
-            <h3>Goal Definition</h3>
-            <textarea 
-              class="goal-textarea" 
-              placeholder="Enter your goal or task description..."
-              rows="3"
-            ></textarea>
-            <div class="goal-controls">
-              <button class="plan-button">Create Plan</button>
-              <button class="clear-button">Clear</button>
+        <!-- Sub-tabs Navigation -->
+        <div class="planning-sub-tabs">
+          <button class="sub-tab-button active" data-tab="overview">
+            Overview
+          </button>
+          <button class="sub-tab-button" data-tab="breakdown">
+            Task Breakdown
+          </button>
+          <button class="sub-tab-button" data-tab="discovery">
+            Tool Discovery
+          </button>
+          <button class="sub-tab-button" data-tab="validation">
+            Validation
+          </button>
+          <button class="sub-tab-button" data-tab="execution">
+            Execution
+          </button>
+        </div>
+        
+        <!-- Sub-tab Content Area -->
+        <div class="sub-tab-content">
+          <!-- Overview Panel -->
+          <div class="sub-tab-panel overview-panel active" data-panel="overview">
+            <div class="goal-input-section">
+              <h3>Goal Definition</h3>
+              <textarea 
+                class="goal-textarea" 
+                placeholder="Enter your goal or task description..."
+                rows="3"
+              ></textarea>
+              <div class="goal-controls">
+                <button class="plan-button">Analyze with Decent Planner</button>
+                <button class="clear-button">Clear</button>
+                <button class="save-plan-button">Save Plan</button>
+                <button class="load-plan-button">Load Plan</button>
+              </div>
+            </div>
+            
+            <div class="quick-stats">
+              <div class="stat-card">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Total Tasks</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Tools Found</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">-</div>
+                <div class="stat-label">Feasibility</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">-</div>
+                <div class="stat-label">Status</div>
+              </div>
             </div>
           </div>
           
-          <!-- Decomposition Tree -->
-          <div class="decomposition-section">
-            <h3>Task Decomposition</h3>
-            <div class="decomposition-tree"></div>
-          </div>
+          <!-- Task Breakdown Panel Container -->
+          <div class="sub-tab-panel" data-panel="breakdown"></div>
           
-          <!-- Validation Panel -->
-          <div class="validation-panel">
-            <h3>Validation</h3>
-            <div class="validation-status"></div>
-            <div class="validation-details"></div>
-          </div>
+          <!-- Tool Discovery Panel Container -->
+          <div class="sub-tab-panel" data-panel="discovery"></div>
           
-          <!-- Execution Console -->
-          <div class="execution-section">
-            <h3>Execution</h3>
-            <div class="execution-controls">
-              <button class="execute-button" disabled>Execute Plan</button>
-              <button class="pause-button" disabled>Pause</button>
-              <button class="resume-button" disabled>Resume</button>
-              <button class="stop-button" disabled>Stop</button>
-              <button class="step-button" disabled>Step</button>
+          <!-- Validation Panel Container -->
+          <div class="sub-tab-panel" data-panel="validation"></div>
+          
+          <!-- Execution Panel -->
+          <div class="sub-tab-panel" data-panel="execution">
+            <div style="padding: 1.5rem;">
+              <h3>Execution Console</h3>
+              <div class="execution-controls">
+                <button class="execute-button" disabled>Execute Plan</button>
+                <button class="pause-button" disabled>Pause</button>
+                <button class="resume-button" disabled>Resume</button>
+                <button class="stop-button" disabled>Stop</button>
+                <button class="step-button" disabled>Step</button>
+              </div>
+              <div class="execution-console">
+                <div class="execution-logs"></div>
+              </div>
             </div>
-            <div class="execution-console">
-              <div class="execution-logs"></div>
-            </div>
-          </div>
-          
-          <!-- Plan Management -->
-          <div class="plan-management">
-            <button class="save-plan-button" disabled>Save Plan</button>
-            <button class="load-plan-button">Load Plan</button>
           </div>
         </div>
       </div>
@@ -145,6 +377,15 @@ class PlanningWorkspacePanelView {
   }
 
   bindEvents() {
+    // Sub-tab navigation
+    const tabButtons = this.container.querySelectorAll('.sub-tab-button');
+    tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const tabName = button.dataset.tab;
+        this.viewModel.switchSubTab(tabName);
+      });
+    });
+    
     // Goal input
     const goalTextarea = this.container.querySelector('.goal-textarea');
     goalTextarea.addEventListener('input', (e) => {
@@ -154,7 +395,7 @@ class PlanningWorkspacePanelView {
     // Planning controls
     const planButton = this.container.querySelector('.plan-button');
     planButton.addEventListener('click', () => {
-      this.viewModel.createPlan();
+      this.viewModel.analyzeWithDecentPlanner();
     });
     
     const clearButton = this.container.querySelector('.clear-button');
@@ -276,6 +517,38 @@ class PlanningWorkspacePanelView {
     }
   }
 
+  switchSubTab(tabName) {
+    // Update tab buttons
+    const tabButtons = this.container.querySelectorAll('.sub-tab-button');
+    tabButtons.forEach(button => {
+      if (button.dataset.tab === tabName) {
+        button.classList.add('active');
+      } else {
+        button.classList.remove('active');
+      }
+    });
+    
+    // Update panels
+    const panels = this.container.querySelectorAll('.sub-tab-panel');
+    panels.forEach(panel => {
+      if (panel.dataset.panel === tabName) {
+        panel.classList.add('active');
+      } else {
+        panel.classList.remove('active');
+      }
+    });
+  }
+  
+  updateQuickStats(stats) {
+    const statCards = this.container.querySelectorAll('.stat-card');
+    if (statCards.length >= 4) {
+      statCards[0].querySelector('.stat-value').textContent = stats.totalTasks || '0';
+      statCards[1].querySelector('.stat-value').textContent = stats.toolsFound || '0';
+      statCards[2].querySelector('.stat-value').textContent = stats.feasibility || '-';
+      statCards[3].querySelector('.stat-value').textContent = stats.status || '-';
+    }
+  }
+  
   renderDecompositionTree(tree) {
     const treeElement = this.container.querySelector('.decomposition-tree');
     if (!tree) {
@@ -377,11 +650,80 @@ class PlanningWorkspacePanelViewModel {
     this.view = view;
     this.umbilical = umbilical;
     
+    // Sub-panel instances
+    this.subPanels = {
+      breakdown: null,
+      discovery: null,
+      validation: null
+    };
+    
     // Listen to model changes
     this.model.addListener(this.onModelChange.bind(this));
     
+    // Initialize sub-panels
+    this.initializeSubPanels();
+    
     // Expose methods to umbilical
     this.exposeMethods();
+  }
+
+  async initializeSubPanels() {
+    // Wait for DOM to be ready
+    await new Promise(resolve => setTimeout(resolve, 0));
+    
+    // Get sub-panel containers
+    const breakdownContainer = this.view.container.querySelector('[data-panel="breakdown"]');
+    const discoveryContainer = this.view.container.querySelector('[data-panel="discovery"]');
+    const validationContainer = this.view.container.querySelector('[data-panel="validation"]');
+    
+    // Initialize TaskBreakdownPanel
+    if (breakdownContainer) {
+      const breakdownUmbilical = {
+        dom: breakdownContainer,
+        onAnalyzeTask: async (task) => {
+          return await this.analyzeTaskWithDecentPlanner(task);
+        },
+        onNodeSelect: (node) => {
+          console.log('Task node selected:', node);
+          // Update discovery panel with selected task
+          if (this.subPanels.discovery && this.subPanels.discovery.api && this.subPanels.discovery.api.selectTask) {
+            this.subPanels.discovery.api.selectTask(node.id);
+          }
+        }
+      };
+      
+      this.subPanels.breakdown = TaskBreakdownPanel.create(breakdownUmbilical);
+    }
+    
+    // Initialize ToolDiscoveryPanel
+    if (discoveryContainer) {
+      const discoveryUmbilical = {
+        dom: discoveryContainer,
+        onAnalyzeFeasibility: async (taskTree) => {
+          return await this.analyzeFeasibility(taskTree);
+        },
+        onTaskSelect: (taskId) => {
+          console.log('Discovery task selected:', taskId);
+        }
+      };
+      
+      this.subPanels.discovery = ToolDiscoveryPanel.create(discoveryUmbilical);
+    }
+    
+    // Initialize ValidationPanel
+    if (validationContainer) {
+      const validationUmbilical = {
+        dom: validationContainer,
+        onValidate: async (decomposition) => {
+          return await this.validateDecomposition(decomposition);
+        },
+        onIssueSelect: (issue) => {
+          console.log('Validation issue selected:', issue);
+        }
+      };
+      
+      this.subPanels.validation = ValidationPanel.create(validationUmbilical);
+    }
   }
 
   exposeMethods() {
@@ -404,7 +746,9 @@ class PlanningWorkspacePanelViewModel {
       setCurrentPlan: this.setCurrentPlan.bind(this),
       setDecompositionTree: this.setDecompositionTree.bind(this),
       getState: this.getState.bind(this),
-      updateState: this.updateState.bind(this)
+      updateState: this.updateState.bind(this),
+      switchSubTab: this.switchSubTab.bind(this),
+      analyzeWithDecentPlanner: this.analyzeWithDecentPlanner.bind(this)
     };
     
     // Store API reference
@@ -657,8 +1001,244 @@ class PlanningWorkspacePanelViewModel {
     this.model.updateState(key, value);
   }
 
+  // Sub-tab management
+  switchSubTab(tabName) {
+    this.model.updateState('activeSubTab', tabName);
+    this.view.switchSubTab(tabName);
+    
+    // Update quick stats based on current sub-tab
+    this.updateQuickStats();
+  }
+  
+  updateQuickStats() {
+    const decomposition = this.model.getState('decompositionTree');
+    const validation = this.model.getState('validationResult');
+    const discoveredTools = this.subPanels.discovery?.api?.getDiscoveredTools ? 
+      this.subPanels.discovery.api.getDiscoveredTools() : null;
+    
+    let totalTasks = 0;
+    let toolsFound = 0;
+    let feasibility = '-';
+    let status = 'Ready';
+    
+    if (decomposition) {
+      // Count tasks in decomposition tree
+      const countTasks = (node) => {
+        let count = 1;
+        if (node.subtasks) {
+          node.subtasks.forEach(child => count += countTasks(child));
+        }
+        return count;
+      };
+      
+      if (decomposition.root) {
+        totalTasks = countTasks(decomposition.root);
+      }
+    }
+    
+    if (discoveredTools) {
+      // Count total discovered tools
+      discoveredTools.forEach(tools => {
+        toolsFound += tools.length;
+      });
+    }
+    
+    if (validation) {
+      feasibility = validation.valid ? 'High' : 'Low';
+      status = validation.valid ? 'Valid' : 'Issues';
+    }
+    
+    this.view.updateQuickStats({
+      totalTasks,
+      toolsFound,
+      feasibility,
+      status
+    });
+  }
+  
+  // Decent Planner Integration
+  async analyzeWithDecentPlanner() {
+    const goal = this.model.getState('goal');
+    if (!goal) {
+      this.addExecutionLog('Please enter a goal first', 'error');
+      return;
+    }
+    
+    this.model.updateState('planningStatus', 'decomposing');
+    this.addExecutionLog(`Analyzing with Decent Planner: ${goal}`, 'info');
+    
+    try {
+      // Step 1: Analyze task breakdown
+      const breakdownResult = await this.analyzeTaskWithDecentPlanner(goal);
+      
+      if (breakdownResult && breakdownResult.decomposition) {
+        // Update breakdown panel
+        if (this.subPanels.breakdown) {
+          this.subPanels.breakdown.setTask(goal);
+          this.model.updateState('decompositionTree', breakdownResult.decomposition);
+        }
+        
+        // Switch to breakdown tab to show results
+        this.switchSubTab('breakdown');
+        
+        // Step 2: Analyze feasibility
+        const feasibilityResult = await this.analyzeFeasibility(breakdownResult.decomposition);
+        
+        if (feasibilityResult && this.subPanels.discovery) {
+          this.subPanels.discovery.setTaskTree(breakdownResult.decomposition);
+        }
+        
+        // Step 3: Validate decomposition
+        const validationResult = await this.validateDecomposition(breakdownResult.decomposition);
+        
+        if (validationResult && this.subPanels.validation) {
+          this.subPanels.validation.setDecomposition(breakdownResult.decomposition);
+        }
+        
+        this.model.updateState('planningStatus', 'complete');
+        this.addExecutionLog('Analysis complete', 'success');
+        this.updateQuickStats();
+      }
+    } catch (error) {
+      console.error('Decent Planner analysis failed:', error);
+      this.model.updateState('planningStatus', 'error');
+      this.addExecutionLog(`Analysis failed: ${error.message}`, 'error');
+    }
+  }
+  
+  async analyzeTaskWithDecentPlanner(task) {
+    // Use the decent planner through umbilical if available
+    if (this.umbilical.onAnalyzeTask) {
+      return await this.umbilical.onAnalyzeTask(task);
+    }
+    
+    // Fallback: Create mock decomposition
+    return {
+      decomposition: {
+        root: {
+          id: 'root',
+          task: task,
+          description: task,
+          complexity: 'complex',
+          reasoning: 'Complex task requiring decomposition',
+          inputs: ['Requirements'],
+          outputs: ['Implementation'],
+          subtasks: [
+            {
+              id: 'sub-1',
+              task: 'Initialize project',
+              description: 'Set up project structure',
+              complexity: 'simple',
+              inputs: ['Requirements'],
+              outputs: ['Project structure'],
+              suggestedTools: ['directory_create', 'file_write']
+            },
+            {
+              id: 'sub-2',
+              task: 'Implement functionality',
+              description: 'Build core features',
+              complexity: 'moderate',
+              inputs: ['Project structure'],
+              outputs: ['Code modules'],
+              suggestedTools: ['generate_javascript_function']
+            }
+          ]
+        }
+      },
+      complexity: {
+        overall: 'complex',
+        breakdown: {
+          simple: 1,
+          moderate: 1,
+          complex: 1
+        }
+      }
+    };
+  }
+  
+  async analyzeFeasibility(decomposition) {
+    // Use feasibility checker through umbilical if available
+    if (this.umbilical.onAnalyzeFeasibility) {
+      return await this.umbilical.onAnalyzeFeasibility(decomposition);
+    }
+    
+    // Fallback: Create mock feasibility
+    return {
+      feasibleTasks: ['sub-1', 'sub-2'],
+      infeasibleTasks: [],
+      totalConfidence: 0.85,
+      taskAnalysis: [
+        {
+          taskId: 'sub-1',
+          tools: [
+            {
+              name: 'directory_create',
+              confidence: 0.95,
+              description: 'Create directories'
+            },
+            {
+              name: 'file_write',
+              confidence: 0.90,
+              description: 'Write files'
+            }
+          ]
+        },
+        {
+          taskId: 'sub-2',
+          tools: [
+            {
+              name: 'generate_javascript_function',
+              confidence: 0.75,
+              description: 'Generate JavaScript functions'
+            }
+          ]
+        }
+      ]
+    };
+  }
+  
+  async validateDecomposition(decomposition) {
+    // Use validator through umbilical if available
+    if (this.umbilical.onValidateDecomposition) {
+      return await this.umbilical.onValidateDecomposition(decomposition);
+    }
+    
+    // Fallback: Create mock validation
+    return {
+      valid: true,
+      structure: {
+        valid: true,
+        errors: []
+      },
+      dependencies: {
+        valid: true,
+        count: 2,
+        graph: [
+          { from: 'sub-1', to: 'sub-2', type: 'data' }
+        ]
+      },
+      completeness: {
+        valid: true,
+        coverage: 1.0
+      },
+      warnings: [],
+      errors: []
+    };
+  }
+  
   // Cleanup
   destroy() {
+    // Destroy sub-panels
+    if (this.subPanels.breakdown) {
+      this.subPanels.breakdown.destroy();
+    }
+    if (this.subPanels.discovery) {
+      this.subPanels.discovery.destroy();
+    }
+    if (this.subPanels.validation) {
+      this.subPanels.validation.destroy();
+    }
+    
     if (this.umbilical.onDestroy) {
       this.umbilical.onDestroy();
     }

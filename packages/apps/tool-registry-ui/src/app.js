@@ -32,7 +32,7 @@ async function initializeApplication() {
     // This follows the exact pattern specified in the design document
     await ToolRegistryBrowser.create({
       dom: container,
-      websocketUrl: 'ws://localhost:8090',
+      websocketUrl: 'ws://localhost:8089',
       title: '🛠️ Legion Tool Registry',
       subtitle: 'Professional MVVM Architecture with Complete Responsive Design',
       userInfo: {

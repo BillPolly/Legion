@@ -657,6 +657,78 @@ class NavigationTabsViewModel {
         umbilicalConfig.executionActor = this.umbilical.executionActor;
         umbilicalConfig.toolRegistryActor = this.umbilical.toolRegistryActor;
         
+        // Decent Planner integration callbacks
+        umbilicalConfig.onAnalyzeTask = async (task) => {
+          // Use the planning actor to decompose the task
+          if (this.umbilical.planningActor) {
+            return new Promise((resolve, reject) => {
+              console.log('🔄 Starting task decomposition for:', task);
+              
+              // Store resolver for when we receive the response
+              this.umbilical.planningActor.taskDecomposeResolver = resolve;
+              this.umbilical.planningActor.taskDecomposeRejecter = reject;
+              
+              // Send decomposition request to server via createPlan
+              this.umbilical.planningActor.createPlan(task)
+                .then(requestId => {
+                  console.log('📋 Plan creation request sent with ID:', requestId);
+                })
+                .catch(error => {
+                  console.error('❌ Failed to send plan request:', error);
+                  reject(error);
+                });
+              
+              // Timeout after 30 seconds
+              setTimeout(() => {
+                if (this.umbilical.planningActor.taskDecomposeResolver) {
+                  this.umbilical.planningActor.taskDecomposeResolver = null;
+                  this.umbilical.planningActor.taskDecomposeRejecter = null;
+                  reject(new Error('Task decomposition timeout'));
+                }
+              }, 30000);
+            });
+          }
+          return null;
+        };
+        
+        umbilicalConfig.onAnalyzeFeasibility = async (decomposition) => {
+          // Use the planning actor to analyze feasibility
+          if (this.umbilical.planningActor) {
+            return new Promise((resolve) => {
+              this.umbilical.planningActor.feasibilityResolver = resolve;
+              
+              this.umbilical.planningActor.send({
+                type: 'plan:feasibility',
+                data: { decomposition }
+              });
+              
+              setTimeout(() => {
+                resolve(null);
+              }, 10000);
+            });
+          }
+          return null;
+        };
+        
+        umbilicalConfig.onValidateDecomposition = async (decomposition) => {
+          // Use the planning actor to validate
+          if (this.umbilical.planningActor) {
+            return new Promise((resolve) => {
+              this.umbilical.planningActor.validationResolver = resolve;
+              
+              this.umbilical.planningActor.send({
+                type: 'plan:validate',
+                data: { decomposition }
+              });
+              
+              setTimeout(() => {
+                resolve(null);
+              }, 10000);
+            });
+          }
+          return null;
+        };
+        
         // Planning callbacks
         umbilicalConfig.onPlanCreate = (plan) => {
           if (this.umbilical.onPlanCreate) {
