@@ -38,6 +38,7 @@ export async function ensureMongoDBAvailable() {
 export function useTestDatabase() {
   // Override the database name to use test database
   process.env.MONGODB_DATABASE = 'legion_tools_test';
+  process.env.TOOLS_DATABASE_NAME = 'legion_tools_test';
 }
 
 /**

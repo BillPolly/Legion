@@ -367,7 +367,8 @@ describe('ClearStage', () => {
     it('should require createCollection method on vector store', async () => {
       const limitedVectorStore = {
         deleteCollection: jest.fn(async () => ({ success: true })),
-        count: jest.fn(async () => 0)
+        count: jest.fn(async () => 0),
+        getCollection: jest.fn(async () => null)
         // No createCollection method - should cause error
       };
 
@@ -377,7 +378,7 @@ describe('ClearStage', () => {
         verifier: mockVerifier
       });
 
-      await expect(stage.execute({})).rejects.toThrow();
+      await expect(stage.execute({})).rejects.toThrow('createCollection');
     });
 
     it('should require vector store dependency', async () => {
@@ -388,7 +389,7 @@ describe('ClearStage', () => {
       });
 
       // Should crash when trying to use null vectorStore
-      await expect(stage.execute({})).rejects.toThrow();
+      await expect(stage.execute({})).rejects.toThrow(TypeError);
     });
 
     it('should require verifier dependency', async () => {

@@ -1550,4 +1550,34 @@ export class LoadingManager {
       await this.initialize();
     }
   }
+
+  /**
+   * Cleanup resources - close database connections
+   */
+  async cleanup() {
+    try {
+      // Close MongoDB connection if it exists
+      if (this.mongoProvider && this.mongoProvider.databaseService) {
+        if (this.mongoProvider.databaseService.cleanup) {
+          await this.mongoProvider.databaseService.cleanup();
+        } else if (this.mongoProvider.databaseService.disconnect) {
+          await this.mongoProvider.databaseService.disconnect();
+        }
+      }
+      
+      // Close vector store connection if it exists
+      if (this.vectorStore && this.vectorStore.disconnect) {
+        await this.vectorStore.disconnect();
+      }
+      
+      // Clear tool indexer if it exists
+      if (this.toolIndexer && this.toolIndexer.cleanup) {
+        await this.toolIndexer.cleanup();
+      }
+      
+      this.initialized = false;
+    } catch (error) {
+      console.warn('LoadingManager cleanup warning:', error.message);
+    }
+  }
 }

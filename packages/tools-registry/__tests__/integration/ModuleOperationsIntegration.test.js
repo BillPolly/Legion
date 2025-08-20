@@ -45,6 +45,7 @@ describe('Module Operations Integration Tests', () => {
     
     // Override database name for testing isolation
     process.env.MONGODB_DATABASE = testDbName;
+    process.env.TOOLS_DATABASE_NAME = testDbName;
     
     console.log(`🧪 Integration test using database: ${testDbName}`);
     console.log(`🔗 MongoDB: ${process.env.MONGODB_URL}`);
@@ -85,6 +86,14 @@ describe('Module Operations Integration Tests', () => {
         await toolRegistry.provider.databaseService.mongoProvider.db.dropDatabase();
         console.log(`🧹 Cleaned up test database: ${testDbName}`);
       }
+      
+      // Ensure all connections are closed
+      if (toolRegistry) {
+        await toolRegistry.cleanup();
+      }
+      
+      // Reset singleton
+      ToolRegistry._instance = null;
     } catch (error) {
       console.warn('Database cleanup warning:', error.message);
     }

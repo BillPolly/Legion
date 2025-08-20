@@ -28,7 +28,25 @@ describe('PipelineStateManager', () => {
           return false;
         }) || null;
       }),
-      update: jest.fn(async (collection, query, update) => {
+      update: jest.fn(async (collection, query, update, options = {}) => {
+        // Handle multi option
+        if (options.multi) {
+          const states = mockStateData.states.filter(s => {
+            if (query.active !== undefined) return s.active === query.active;
+            if (query._id) return s._id.toString() === query._id.toString();
+            return false;
+          });
+          
+          states.forEach(state => {
+            if (update.$set) {
+              Object.assign(state, update.$set);
+            }
+          });
+          
+          return { nModified: states.length };
+        }
+        
+        // Single update
         const state = mockStateData.states.find(s => {
           if (query.active !== undefined) return s.active === query.active;
           if (query._id) return s._id.toString() === query._id.toString();
@@ -148,10 +166,11 @@ describe('PipelineStateManager', () => {
       await stateManager.reset();
       
       // Check that a new active state was created
-      expect(mockMongoProvider.updateMany).toHaveBeenCalledWith(
+      expect(mockMongoProvider.update).toHaveBeenCalledWith(
         testCollectionName,
         { active: true },
-        { $set: { active: false } }
+        { $set: { active: false } },
+        { multi: true }
       );
       
       expect(mockMongoProvider.insert).toHaveBeenCalledWith(
@@ -177,10 +196,11 @@ describe('PipelineStateManager', () => {
       await stateManager.reset();
       
       // Check that existing states were deactivated
-      expect(mockMongoProvider.updateMany).toHaveBeenCalledWith(
+      expect(mockMongoProvider.update).toHaveBeenCalledWith(
         testCollectionName,
         { active: true },
-        { $set: { active: false } }
+        { $set: { active: false } },
+        { multi: true }
       );
       
       // Verify a new state was added to mock data

@@ -34,11 +34,21 @@ describe('Semantic Search Integration Tests', () => {
     
     // Load modules and tools
     console.log('Loading modules and tools...');
-    const loadResult = await loadingManager.loadAllModules();
-    console.log(`Loaded ${loadResult.loaded} modules with ${loadResult.tools.length} tools`);
+    const loadResult = await loadingManager.loadModules();
+    console.log(`Loaded ${loadResult.loaded ? loadResult.loaded.length : 0} modules`);
+    
+    // Extract and register tools from loaded modules
+    const tools = [];
+    if (loadResult.loaded) {
+      for (const module of loadResult.loaded) {
+        if (module.tools) {
+          tools.push(...module.tools);
+        }
+      }
+    }
     
     // Register tools
-    for (const tool of loadResult.tools) {
+    for (const tool of tools) {
       await toolRegistry.registerTool(tool);
     }
     
