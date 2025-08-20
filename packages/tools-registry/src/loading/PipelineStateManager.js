@@ -129,10 +129,11 @@ export class PipelineStateManager {
    */
   async reset() {
     // Mark any existing active states as inactive
-    await this.mongoProvider.updateMany(
+    await this.mongoProvider.update(
       this.stateCollection,
       { active: true },
-      { $set: { active: false } }
+      { $set: { active: false } },
+      { multi: true }
     );
 
     // Create fresh state
