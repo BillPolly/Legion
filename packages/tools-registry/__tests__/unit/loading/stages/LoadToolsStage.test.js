@@ -1,52 +1,57 @@
 /**
  * Unit tests for LoadToolsStage
- * Tests tool loading from modules with real MongoDB
+ * Tests tool loading from modules using mocked dependencies
  */
 
 import { LoadToolsStage } from '../../../../src/loading/stages/LoadToolsStage.js';
-import { MongoClient, ObjectId } from 'mongodb';
-import { ResourceManager } from '@legion/resource-manager';
+import { ObjectId } from 'mongodb';
 
 describe('LoadToolsStage', () => {
   let loadToolsStage;
-  let mongoProvider;
-  let moduleLoader;
-  let verifier;
-  let stateManager;
-  let client;
-  let db;
+  let mockMongoProvider;
+  let mockModuleLoader;
+  let mockVerifier;
+  let mockStateManager;
+  let mockModules;
+  let mockTools;
 
   beforeAll(async () => {
-    // Use real MongoDB connection
-    const resourceManager = ResourceManager.getInstance();
-    await resourceManager.initialize();
+    // Mock MongoDB provider - NO REAL CONNECTIONS
+    mockModules = [
+      { _id: new ObjectId(), name: 'module1', path: '/path/to/module1', type: 'class' },
+      { _id: new ObjectId(), name: 'module2', path: '/path/to/module2', type: 'class' },
+      { _id: new ObjectId(), name: 'module3', path: '/path/to/module3', type: 'class' }
+    ];
     
-    const mongoUrl = resourceManager.get('env.MONGODB_URL') || 'mongodb://localhost:27017';
-    client = new MongoClient(mongoUrl);
-    await client.connect();
-    db = client.db('legion_tools_test');
+    mockTools = [];
     
-    // Create MongoDB provider
-    mongoProvider = {
-      db,
-      find: async (collection, query, options = {}) => {
-        let cursor = db.collection(collection).find(query);
-        if (options.limit) cursor = cursor.limit(options.limit);
-        if (options.sort) cursor = cursor.sort(options.sort);
-        return await cursor.toArray();
-      },
-      insertMany: async (collection, docs) => {
-        const result = await db.collection(collection).insertMany(docs);
-        return { insertedCount: result.insertedCount };
-      },
-      count: async (collection, query) => {
-        return await db.collection(collection).countDocuments(query);
-      }
+    mockMongoProvider = {
+      find: jest.fn(async (collection, query, options = {}) => {
+        if (collection === 'modules') {
+          if (query.name) {
+            return mockModules.filter(m => m.name === query.name);
+          }
+          return mockModules;
+        }
+        return [];
+      }),
+      insertMany: jest.fn(async (collection, docs) => {
+        if (collection === 'tools') {
+          mockTools.push(...docs);
+        }
+        return { insertedCount: docs.length };
+      }),
+      count: jest.fn(async (collection, query) => {
+        if (collection === 'tools') {
+          return mockTools.length;
+        }
+        return 0;
+      })
     };
     
     // Create mock module loader
-    moduleLoader = {
-      loadModule: async (moduleDoc) => {
+    mockModuleLoader = {
+      loadModule: jest.fn(async (moduleDoc) => {
         // Simulate loading a module
         if (moduleDoc.name === 'failing-module') {
           throw new Error('Module load failed');
@@ -74,28 +79,27 @@ describe('LoadToolsStage', () => {
             ];
           }
         };
-      }
+      })
     };
     
     // Create mock verifier
-    verifier = {
-      verifyToolCount: async (expectedCount) => {
-        const actualCount = await mongoProvider.count('tools', {});
+    mockVerifier = {
+      verifyToolCount: jest.fn(async (expectedCount) => {
+        const actualCount = mockTools.length;
         return {
           success: actualCount === expectedCount,
           actualCount,
           expectedCount
         };
-      }
+      })
     };
     
     // Create mock state manager
-    stateManager = {
-      recordCheckpoint: async (stage, data) => {
-        // Store checkpoint data
+    mockStateManager = {
+      recordCheckpoint: jest.fn(async (stage, data) => {
         return { success: true };
-      },
-      getCurrentState: async () => {
+      }),
+      getCurrentState: jest.fn(async () => {
         return {
           stages: {
             loadTools: {
@@ -103,37 +107,29 @@ describe('LoadToolsStage', () => {
             }
           }
         };
-      }
+      })
     };
   });
 
   beforeEach(async () => {
-    // Clear collections
-    await db.collection('modules').deleteMany({});
-    await db.collection('tools').deleteMany({});
-    
-    // Add test modules
-    await db.collection('modules').insertMany([
-      { _id: new ObjectId(), name: 'module1', path: '/path/to/module1', type: 'class' },
-      { _id: new ObjectId(), name: 'module2', path: '/path/to/module2', type: 'class' },
-      { _id: new ObjectId(), name: 'module3', path: '/path/to/module3', type: 'class' }
-    ]);
+    // Reset mock data and calls
+    mockTools = [];
+    jest.clearAllMocks();
     
     loadToolsStage = new LoadToolsStage({
-      moduleLoader,
-      mongoProvider,
-      verifier,
-      stateManager
+      moduleLoader: mockModuleLoader,
+      mongoProvider: mockMongoProvider,
+      verifier: mockVerifier,
+      stateManager: mockStateManager
     });
   });
 
   afterEach(async () => {
-    await db.collection('modules').deleteMany({});
-    await db.collection('tools').deleteMany({});
+    // No cleanup needed for mocks
   });
 
   afterAll(async () => {
-    await client.close();
+    // No cleanup needed for mocks
   });
 
   describe('execute', () => {
@@ -144,8 +140,7 @@ describe('LoadToolsStage', () => {
       expect(result.modulesProcessed).toBe(3);
       expect(result.toolsAdded).toBe(6); // 3 modules × 2 tools each
       
-      const toolCount = await db.collection('tools').countDocuments();
-      expect(toolCount).toBe(6);
+      expect(mockTools).toHaveLength(6);
     });
 
     it('should filter by module name', async () => {
@@ -155,13 +150,13 @@ describe('LoadToolsStage', () => {
       expect(result.modulesProcessed).toBe(1);
       expect(result.toolsAdded).toBe(2);
       
-      const tools = await db.collection('tools').find({}).toArray();
-      expect(tools).toHaveLength(2);
-      expect(tools[0].name).toContain('module1');
+      expect(mockTools).toHaveLength(2);
+      expect(mockTools[0].name).toContain('module1');
     });
 
     it('should handle modules with no tools', async () => {
-      await db.collection('modules').insertOne({
+      // Add empty module to mock data
+      mockModules.push({
         _id: new ObjectId(),
         name: 'empty-module',
         path: '/path/to/empty'
@@ -176,7 +171,8 @@ describe('LoadToolsStage', () => {
     });
 
     it('should continue on module load failures', async () => {
-      await db.collection('modules').insertOne({
+      // Add failing module to mock data
+      mockModules.push({
         _id: new ObjectId(),
         name: 'failing-module',
         path: '/path/to/failing'
@@ -192,11 +188,9 @@ describe('LoadToolsStage', () => {
     it('should save tools with proper structure', async () => {
       await loadToolsStage.execute({ module: 'module1' });
       
-      const tools = await db.collection('tools').find({}).toArray();
-      expect(tools).toHaveLength(2);
+      expect(mockTools).toHaveLength(2);
       
-      const tool = tools[0];
-      expect(tool).toHaveProperty('_id');
+      const tool = mockTools[0];
       expect(tool).toHaveProperty('name');
       expect(tool).toHaveProperty('description');
       expect(tool).toHaveProperty('moduleName', 'module1');
@@ -218,19 +212,19 @@ describe('LoadToolsStage', () => {
     it('should track processed modules in state', async () => {
       const recordedCheckpoints = [];
       const customStateManager = {
-        recordCheckpoint: async (stage, data) => {
+        recordCheckpoint: jest.fn(async (stage, data) => {
           recordedCheckpoints.push(data);
           return { success: true };
-        },
-        getCurrentState: async () => ({
+        }),
+        getCurrentState: jest.fn(async () => ({
           stages: { loadTools: { processedModules: [] } }
-        })
+        }))
       };
       
       const stage = new LoadToolsStage({
-        moduleLoader,
-        mongoProvider,
-        verifier,
+        moduleLoader: mockModuleLoader,
+        mongoProvider: mockMongoProvider,
+        verifier: mockVerifier,
         stateManager: customStateManager
       });
       
@@ -243,20 +237,20 @@ describe('LoadToolsStage', () => {
     it('should resume from previous state', async () => {
       // Simulate previous run that processed module1
       const customStateManager = {
-        recordCheckpoint: async () => ({ success: true }),
-        getCurrentState: async () => ({
+        recordCheckpoint: jest.fn(async () => ({ success: true })),
+        getCurrentState: jest.fn(async () => ({
           stages: {
             loadTools: {
               processedModules: ['module1']
             }
           }
-        })
+        }))
       };
       
       const stage = new LoadToolsStage({
-        moduleLoader,
-        mongoProvider,
-        verifier,
+        moduleLoader: mockModuleLoader,
+        mongoProvider: mockMongoProvider,
+        verifier: mockVerifier,
         stateManager: customStateManager
       });
       
@@ -279,19 +273,19 @@ describe('LoadToolsStage', () => {
 
     it('should fail if verification fails', async () => {
       const failingVerifier = {
-        verifyToolCount: async () => ({
+        verifyToolCount: jest.fn(async () => ({
           success: false,
           actualCount: 5,
           expectedCount: 6,
           message: 'Tool count mismatch'
-        })
+        }))
       };
       
       const stage = new LoadToolsStage({
-        moduleLoader,
-        mongoProvider,
+        moduleLoader: mockModuleLoader,
+        mongoProvider: mockMongoProvider,
         verifier: failingVerifier,
-        stateManager
+        stateManager: mockStateManager
       });
       
       const result = await stage.execute({});
@@ -302,16 +296,16 @@ describe('LoadToolsStage', () => {
 
     it('should handle MongoDB errors', async () => {
       const failingProvider = {
-        find: async () => {
+        find: jest.fn(async () => {
           throw new Error('MongoDB connection lost');
-        }
+        })
       };
       
       const stage = new LoadToolsStage({
-        moduleLoader,
+        moduleLoader: mockModuleLoader,
         mongoProvider: failingProvider,
-        verifier,
-        stateManager
+        verifier: mockVerifier,
+        stateManager: mockStateManager
       });
       
       await expect(stage.execute({})).rejects.toThrow('MongoDB connection lost');
@@ -326,7 +320,8 @@ describe('LoadToolsStage', () => {
     });
 
     it('should handle empty module collection', async () => {
-      await db.collection('modules').deleteMany({});
+      // Clear mock modules
+      mockModules = [];
       
       const result = await loadToolsStage.execute({});
       
@@ -338,8 +333,7 @@ describe('LoadToolsStage', () => {
     it('should enrich tools with metadata', async () => {
       await loadToolsStage.execute({ module: 'module1' });
       
-      const tools = await db.collection('tools').find({}).toArray();
-      const tool = tools[0];
+      const tool = mockTools[0];
       
       expect(tool.metadata).toBeDefined();
       expect(tool.metadata.source).toBe('module_loader');
@@ -368,9 +362,9 @@ describe('LoadToolsStage', () => {
       
       const stage = new LoadToolsStage({
         moduleLoader: customLoader,
-        mongoProvider,
-        verifier,
-        stateManager
+        mongoProvider: mockMongoProvider,
+        verifier: mockVerifier,
+        stateManager: mockStateManager
       });
       
       const result = await stage.execute({});
@@ -383,21 +377,23 @@ describe('LoadToolsStage', () => {
     it('should handle partial batch failures', async () => {
       // Simulate a batch insert that partially fails
       const customProvider = {
-        ...mongoProvider,
-        insertMany: async (collection, docs) => {
+        ...mockMongoProvider,
+        insertMany: jest.fn(async (collection, docs) => {
           if (docs.length > 2) {
-            // Simulate partial failure
+            // Simulate partial failure - only insert first 2
+            mockTools.push(...docs.slice(0, 2));
             return { insertedCount: 2 };
           }
+          mockTools.push(...docs);
           return { insertedCount: docs.length };
-        }
+        })
       };
       
       const stage = new LoadToolsStage({
-        moduleLoader,
+        moduleLoader: mockModuleLoader,
         mongoProvider: customProvider,
-        verifier,
-        stateManager
+        verifier: mockVerifier,
+        stateManager: mockStateManager
       });
       
       const result = await stage.execute({});

@@ -596,6 +596,249 @@ export class ToolRegistry {
   }
 
   // ============================================================================
+  // MODULE-SPECIFIC OPERATIONS
+  // ============================================================================
+
+  /**
+   * Clear specific module only (tools, perspectives, vectors)
+   * Does NOT clear other modules - granular operation
+   * 
+   * @param {string} moduleName - Name of module to clear
+   * @param {Object} options - Clear options
+   * @param {boolean} options.verbose - Show detailed output (default: false)
+   * @returns {Promise<ClearResult>}
+   */
+  async clearModule(moduleName, options = {}) {
+    await this._ensureInitialized();
+
+    if (!moduleName || typeof moduleName !== 'string') {
+      throw new Error('Module name is required and must be a string');
+    }
+
+    const loader = await this.getLoader();
+    const originalVerbose = loader.verbose;
+    
+    try {
+      loader.verbose = options.verbose || false;
+
+      if (loader.verbose) {
+        console.log(`🧹 Clearing module: ${moduleName}`);
+      }
+
+      // Use LoadingManager's clearForReload with module filter
+      const result = await loader.clearForReload({
+        clearVectors: true,
+        clearModules: false, // Keep module discovery
+        moduleFilter: moduleName
+      });
+
+      return {
+        moduleName,
+        recordsCleared: result.totalCleared,
+        success: true
+      };
+    } finally {
+      loader.verbose = originalVerbose;
+    }
+  }
+
+  /**
+   * Clear all modules (more explicit version of populateDatabase clear mode)
+   * 
+   * @param {Object} options - Clear options
+   * @param {boolean} options.verbose - Show detailed output (default: false)
+   * @returns {Promise<ClearResult>}
+   */
+  async clearAllModules(options = {}) {
+    await this._ensureInitialized();
+
+    const loader = await this.getLoader();
+    const originalVerbose = loader.verbose;
+    
+    try {
+      loader.verbose = options.verbose || false;
+
+      if (loader.verbose) {
+        console.log('🧹 Clearing all modules');
+      }
+
+      const result = await loader.clearForReload({
+        clearVectors: true,
+        clearModules: false // Keep module discovery
+      });
+
+      return {
+        moduleName: 'all',
+        recordsCleared: result.totalCleared,
+        success: true
+      };
+    } finally {
+      loader.verbose = originalVerbose;
+    }
+  }
+
+  /**
+   * Load specific module only (without clearing first)
+   * Appends to existing data - use after clearModule() if needed
+   * 
+   * @param {string} moduleName - Name of module to load
+   * @param {Object} options - Load options
+   * @param {boolean} options.verbose - Show detailed output (default: false)
+   * @param {boolean} options.includePerspectives - Generate perspectives (default: true)
+   * @param {boolean} options.includeVectors - Index vectors (default: false)
+   * @returns {Promise<LoadResult>}
+   */
+  async loadModule(moduleName, options = {}) {
+    await this._ensureInitialized();
+
+    if (!moduleName || typeof moduleName !== 'string') {
+      throw new Error('Module name is required and must be a string');
+    }
+
+    const loader = await this.getLoader();
+    const originalVerbose = loader.verbose;
+    
+    try {
+      loader.verbose = options.verbose || false;
+
+      if (loader.verbose) {
+        console.log(`📦 Loading module: ${moduleName}`);
+      }
+
+      // Load modules (append mode - no clearing)
+      const loadResult = await loader.loadModules({ module: moduleName });
+
+      let perspectivesGenerated = 0;
+      let vectorsIndexed = 0;
+
+      // Generate perspectives if requested
+      if (options.includePerspectives !== false) {
+        if (loader.verbose) {
+          console.log(`📝 Generating perspectives for: ${moduleName}`);
+        }
+        const perspectiveResult = await loader.generatePerspectives({ module: moduleName });
+        perspectivesGenerated = perspectiveResult.perspectivesGenerated;
+      }
+
+      // Index vectors if requested
+      if (options.includeVectors) {
+        if (loader.verbose) {
+          console.log(`🚀 Indexing vectors for: ${moduleName}`);
+        }
+        const vectorResult = await loader.indexVectors({ module: moduleName });
+        vectorsIndexed = vectorResult.perspectivesIndexed;
+      }
+
+      return {
+        moduleName,
+        modulesLoaded: loadResult.modulesLoaded,
+        toolsAdded: loadResult.toolsAdded,
+        perspectivesGenerated,
+        vectorsIndexed,
+        success: true
+      };
+    } finally {
+      loader.verbose = originalVerbose;
+    }
+  }
+
+  /**
+   * Load all modules (without clearing first)
+   * Appends to existing data - use after clearAllModules() if needed
+   * 
+   * @param {Object} options - Load options
+   * @param {boolean} options.verbose - Show detailed output (default: false)
+   * @param {boolean} options.includePerspectives - Generate perspectives (default: true)
+   * @param {boolean} options.includeVectors - Index vectors (default: false)
+   * @returns {Promise<LoadResult>}
+   */
+  async loadAllModules(options = {}) {
+    await this._ensureInitialized();
+
+    const loader = await this.getLoader();
+    const originalVerbose = loader.verbose;
+    
+    try {
+      loader.verbose = options.verbose || false;
+
+      if (loader.verbose) {
+        console.log('📦 Loading all modules');
+      }
+
+      // Load modules (append mode - no clearing)
+      const loadResult = await loader.loadModules({});
+
+      let perspectivesGenerated = 0;
+      let vectorsIndexed = 0;
+
+      // Generate perspectives if requested
+      if (options.includePerspectives !== false) {
+        if (loader.verbose) {
+          console.log('📝 Generating perspectives for all modules');
+        }
+        const perspectiveResult = await loader.generatePerspectives({});
+        perspectivesGenerated = perspectiveResult.perspectivesGenerated;
+      }
+
+      // Index vectors if requested
+      if (options.includeVectors) {
+        if (loader.verbose) {
+          console.log('🚀 Indexing vectors for all modules');
+        }
+        const vectorResult = await loader.indexVectors({});
+        vectorsIndexed = vectorResult.perspectivesIndexed;
+      }
+
+      return {
+        moduleName: 'all',
+        modulesLoaded: loadResult.modulesLoaded,
+        toolsAdded: loadResult.toolsAdded,
+        perspectivesGenerated,
+        vectorsIndexed,
+        success: true
+      };
+    } finally {
+      loader.verbose = originalVerbose;
+    }
+  }
+
+  /**
+   * Verify specific module only
+   * Runs validation checks only for the specified module
+   * 
+   * @param {string} moduleName - Name of module to verify
+   * @param {Object} options - Verification options
+   * @param {boolean} options.verbose - Show detailed output (default: false)
+   * @returns {Promise<VerificationResult>}
+   */
+  async verifyModule(moduleName, options = {}) {
+    await this._ensureInitialized();
+
+    if (!moduleName || typeof moduleName !== 'string') {
+      throw new Error('Module name is required and must be a string');
+    }
+
+    const verifier = await this.getVerifier();
+    const originalVerbose = verifier.verbose;
+    
+    try {
+      verifier.verbose = options.verbose || false;
+      
+      // Run module-specific verification
+      const result = await verifier.verifyModule(moduleName);
+      
+      // Log results if requested
+      if (options.verbose) {
+        verifier.logResults(result);
+      }
+      
+      return result;
+    } finally {
+      verifier.verbose = originalVerbose;
+    }
+  }
+
+  // ============================================================================
   // CENTRALIZED VALIDATION & VERIFICATION METHODS
   // ============================================================================
 

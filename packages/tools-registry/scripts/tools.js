@@ -13,6 +13,8 @@
  *   node tools.js validate [--module <name>] [--verbose]       # Validate tool definitions
  *   node tools.js list [--module <name>] [--category <cat>]    # List available tools
  *   node tools.js info <tool> [--verbose]                      # Get tool information
+ *   node tools.js clear [--module <name>] [--verbose]          # Clear tools/perspectives/vectors
+ *   node tools.js load [--module <name>] [--verbose]           # Load tools and generate data
  */
 
 import { ToolRegistry } from '../src/integration/ToolRegistry.js';
@@ -91,6 +93,8 @@ function showHelp() {
   console.log(chalk.white('  validate                     Validate tool definitions'));
   console.log(chalk.white('  list                         List available tools'));
   console.log(chalk.white('  info <tool>                  Get detailed tool information'));
+  console.log(chalk.white('  clear                        Clear tools/perspectives/vectors'));
+  console.log(chalk.white('  load                         Load tools and generate data'));
   console.log(chalk.white('  help                         Show this help message\n'));
   
   console.log(chalk.cyan('Options:'));
@@ -106,6 +110,8 @@ function showHelp() {
   console.log(chalk.gray('  node tools.js execute calculator --args \'{"expression": "10 + 5"}\''));
   console.log(chalk.gray('  node tools.js validate --verbose'));
   console.log(chalk.gray('  node tools.js info file_read --verbose'));
+  console.log(chalk.gray('  node tools.js clear --module Calculator --verbose'));
+  console.log(chalk.gray('  node tools.js load --module Calculator --verbose'));
   console.log(chalk.gray('  node tools.js list --format json --limit 10\n'));
 }
 
@@ -740,6 +746,103 @@ async function infoCommand(options) {
 }
 
 /**
+ * Clear command - Clear tools/perspectives/vectors for module or all
+ */
+async function clearCommand(options) {
+  console.log(chalk.blue.bold('\n🧹 Clear Tools and Data\n'));
+  
+  const registry = await createToolRegistry(options);
+  
+  try {
+    let result;
+    
+    if (options.module) {
+      console.log(chalk.cyan(`Clearing module: ${options.module}`));
+      result = await registry.clearModule(options.module, {
+        verbose: options.verbose
+      });
+      
+      console.log(chalk.green(`✅ Module '${options.module}' cleared successfully`));
+      console.log(chalk.white(`   Records cleared: ${result.recordsCleared}`));
+    } else {
+      console.log(chalk.cyan('Clearing all modules'));
+      result = await registry.clearAllModules({
+        verbose: options.verbose
+      });
+      
+      console.log(chalk.green('✅ All modules cleared successfully'));
+      console.log(chalk.white(`   Records cleared: ${result.recordsCleared}`));
+    }
+    
+    console.log(chalk.blue.bold('\n📊 Clear Summary:'));
+    console.log('═'.repeat(60));
+    console.log(chalk.white(`Target: ${options.module || 'all modules'}`));
+    console.log(chalk.white(`Records cleared: ${result.recordsCleared}`));
+    console.log(chalk.white(`Success: ${result.success ? '✅ Yes' : '❌ No'}`));
+    
+  } catch (error) {
+    console.error(chalk.red('❌ Clear operation failed:'), error.message);
+    if (options.verbose) {
+      console.error(error.stack);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Load command - Load tools and generate data for module or all
+ */
+async function loadCommand(options) {
+  console.log(chalk.blue.bold('\n📦 Load Tools and Generate Data\n'));
+  
+  const registry = await createToolRegistry(options);
+  
+  try {
+    let result;
+    
+    if (options.module) {
+      console.log(chalk.cyan(`Loading module: ${options.module}`));
+      result = await registry.loadModule(options.module, {
+        verbose: options.verbose,
+        includePerspectives: true,
+        includeVectors: false // Default to false as vectors take time
+      });
+      
+      console.log(chalk.green(`✅ Module '${options.module}' loaded successfully`));
+    } else {
+      console.log(chalk.cyan('Loading all modules'));
+      result = await registry.loadAllModules({
+        verbose: options.verbose,
+        includePerspectives: true,
+        includeVectors: false // Default to false as vectors take time
+      });
+      
+      console.log(chalk.green('✅ All modules loaded successfully'));
+    }
+    
+    console.log(chalk.blue.bold('\n📊 Load Summary:'));
+    console.log('═'.repeat(60));
+    console.log(chalk.white(`Target: ${options.module || 'all modules'}`));
+    console.log(chalk.white(`Modules loaded: ${result.modulesLoaded}`));
+    console.log(chalk.white(`Tools added: ${result.toolsAdded}`));
+    console.log(chalk.white(`Perspectives generated: ${result.perspectivesGenerated}`));
+    console.log(chalk.white(`Vectors indexed: ${result.vectorsIndexed}`));
+    console.log(chalk.white(`Success: ${result.success ? '✅ Yes' : '❌ No'}`));
+    
+    if (result.vectorsIndexed === 0 && options.verbose) {
+      console.log(chalk.yellow('\n💡 Tip: Use --include-vectors to also index semantic vectors (takes longer)'));
+    }
+    
+  } catch (error) {
+    console.error(chalk.red('❌ Load operation failed:'), error.message);
+    if (options.verbose) {
+      console.error(error.stack);
+    }
+    throw error;
+  }
+}
+
+/**
  * Main function
  */
 async function main() {
@@ -761,6 +864,14 @@ async function main() {
         
       case 'info':
         await infoCommand(options);
+        break;
+        
+      case 'clear':
+        await clearCommand(options);
+        break;
+        
+      case 'load':
+        await loadCommand(options);
         break;
         
       case 'help':

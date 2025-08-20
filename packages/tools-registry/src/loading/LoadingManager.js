@@ -162,35 +162,44 @@ export class LoadingManager {
    * @param {Object} options - Clear options
    * @param {boolean} options.clearVectors - Whether to clear vector database (default: true)
    * @param {boolean} options.clearModules - Whether to completely clear modules (default: false)
+   * @param {string} options.moduleFilter - Only clear data for specific module (optional)
    */
   async clearForReload(options = {}) {
     await this.#ensureInitialized();
 
     const { 
       clearVectors = true,
-      clearModules = false 
+      clearModules = false,
+      moduleFilter = null
     } = options;
 
     if (this.verbose) {
       console.log('🧹 Clearing for reload...');
       console.log(`   Preserve modules: ${!clearModules}`);
       console.log(`   Clear vectors: ${clearVectors}`);
+      if (moduleFilter) {
+        console.log(`   Module filter: ${moduleFilter}`);
+      }
     }
 
     let totalCleared = 0;
 
+    // Build query filter for module-specific clearing
+    const moduleQuery = moduleFilter ? { name: moduleFilter } : {};
+    const toolQuery = moduleFilter ? { moduleName: moduleFilter } : {};
+
     if (clearModules) {
-      // Complete clear of modules
-      const result = await this.mongoProvider.databaseService.mongoProvider.db.collection('modules').deleteMany({});
+      // Complete clear of modules (with optional filter)
+      const result = await this.mongoProvider.databaseService.mongoProvider.db.collection('modules').deleteMany(moduleQuery);
       totalCleared += result.deletedCount;
       if (this.verbose) {
-        console.log(`  ✅ Cleared modules: ${result.deletedCount} records deleted`);
+        const target = moduleFilter ? ` for module '${moduleFilter}'` : '';
+        console.log(`  ✅ Cleared modules${target}: ${result.deletedCount} records deleted`);
       }
     } else {
-      // Reset module statuses but preserve discovery
-      // Only update fields that exist in the runtime modules schema
+      // Reset module statuses but preserve discovery (with optional filter)
       const result = await this.mongoProvider.databaseService.mongoProvider.db.collection('modules').updateMany(
-        {},
+        moduleQuery,
         {
           $set: {
             loadingStatus: 'pending',
@@ -199,21 +208,24 @@ export class LoadingManager {
         }
       );
       if (this.verbose) {
-        console.log(`  ✅ Reset ${result.modifiedCount} module statuses`);
+        const target = moduleFilter ? ` for module '${moduleFilter}'` : '';
+        console.log(`  ✅ Reset${target} ${result.modifiedCount} module statuses`);
       }
     }
 
-    // Always clear tools and perspectives
-    const toolResult = await this.mongoProvider.databaseService.mongoProvider.db.collection('tools').deleteMany({});
+    // Clear tools and perspectives (with optional filter)
+    const toolResult = await this.mongoProvider.databaseService.mongoProvider.db.collection('tools').deleteMany(toolQuery);
     totalCleared += toolResult.deletedCount;
     if (this.verbose) {
-      console.log(`  ✅ Cleared tools: ${toolResult.deletedCount} records deleted`);
+      const target = moduleFilter ? ` for module '${moduleFilter}'` : '';
+      console.log(`  ✅ Cleared tools${target}: ${toolResult.deletedCount} records deleted`);
     }
 
-    const perspectiveResult = await this.mongoProvider.databaseService.mongoProvider.db.collection('tool_perspectives').deleteMany({});
+    const perspectiveResult = await this.mongoProvider.databaseService.mongoProvider.db.collection('tool_perspectives').deleteMany(toolQuery);
     totalCleared += perspectiveResult.deletedCount;
     if (this.verbose) {
-      console.log(`  ✅ Cleared perspectives: ${perspectiveResult.deletedCount} records deleted`);
+      const target = moduleFilter ? ` for module '${moduleFilter}'` : '';
+      console.log(`  ✅ Cleared perspectives${target}: ${perspectiveResult.deletedCount} records deleted`);
     }
 
     // Clear vectors if requested - ALWAYS initialize semantic search for clearing
@@ -222,26 +234,56 @@ export class LoadingManager {
       const qdrantCollections = ['legion_tools'];
       
       if (this.verbose) {
-        console.log('  🧹 Clearing Qdrant vectors...');
+        const target = moduleFilter ? ` for module '${moduleFilter}'` : '';
+        console.log(`  🧹 Clearing Qdrant vectors${target}...`);
       }
       
       for (const collectionName of qdrantCollections) {
         try {
-          const countBefore = await this.semanticSearchProvider.count(collectionName);
-          if (this.verbose) {
-            console.log(`  📊 Found ${countBefore} vectors in '${collectionName}'`);
-          }
-          
-          if (countBefore > 0) {
-            // Delete the entire collection
-            await this.semanticSearchProvider.vectorStore.deleteCollection(collectionName);
-            if (this.verbose) {
-              console.log(`  ✅ Deleted Qdrant collection '${collectionName}': ${countBefore} vectors removed`);
-            }
-            totalCleared += countBefore;
+          if (moduleFilter) {
+            // Module-specific vector deletion
+            // Find vectors with the module name in their payload
+            const searchResult = await this.semanticSearchProvider.search(collectionName, 
+              Array(768).fill(0), // dummy vector for search
+              {
+                limit: 1000, // reasonable batch size
+                filter: {
+                  must: [
+                    { key: 'moduleName', match: { value: moduleFilter } }
+                  ]
+                }
+              }
+            );
             
-            // Wait a moment for deletion to complete
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            if (searchResult && searchResult.length > 0) {
+              const vectorIds = searchResult.map(result => result.id);
+              await this.semanticSearchProvider.vectorStore.delete(collectionName, vectorIds);
+              
+              if (this.verbose) {
+                console.log(`  ✅ Deleted ${vectorIds.length} vectors for module '${moduleFilter}' from '${collectionName}'`);
+              }
+              totalCleared += vectorIds.length;
+            } else if (this.verbose) {
+              console.log(`  ℹ️ No vectors found for module '${moduleFilter}' in '${collectionName}'`);
+            }
+          } else {
+            // Full collection deletion (original behavior)
+            const countBefore = await this.semanticSearchProvider.count(collectionName);
+            if (this.verbose) {
+              console.log(`  📊 Found ${countBefore} vectors in '${collectionName}'`);
+            }
+            
+            if (countBefore > 0) {
+              // Delete the entire collection
+              await this.semanticSearchProvider.vectorStore.deleteCollection(collectionName);
+              if (this.verbose) {
+                console.log(`  ✅ Deleted Qdrant collection '${collectionName}': ${countBefore} vectors removed`);
+              }
+              totalCleared += countBefore;
+              
+              // Wait a moment for deletion to complete
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
           }
         } catch (error) {
           if (!error.message.includes('Not found')) {

@@ -7,9 +7,10 @@
  * All verification logic is in src/verification/Verifier.js
  * 
  * Usage:
- *   node verify.js status [--verbose]       # Quick health check
- *   node verify.js health [--verbose]       # Full system verification
- *   node verify.js help                     # Show this help
+ *   node verify.js status [--module <name>] [--verbose]       # Quick health check
+ *   node verify.js health [--module <name>] [--verbose]       # Full system verification  
+ *   node verify.js module <name> [--verbose]                  # Verify specific module
+ *   node verify.js help                                       # Show this help
  */
 
 import { ToolRegistry } from '../src/integration/ToolRegistry.js';
@@ -21,13 +22,22 @@ import chalk from 'chalk';
 function parseArgs() {
   const args = process.argv.slice(2);
   const command = args[0] || 'help';
+  const target = args[1] || null; // module name for module command
   
   const options = {
     command,
+    target,
     verbose: args.includes('--verbose') || args.includes('-v'),
     dryRun: args.includes('--dry-run'),
-    repair: args.includes('--repair')
+    repair: args.includes('--repair'),
+    module: null
   };
+
+  // Extract module name
+  const moduleIndex = args.indexOf('--module');
+  if (moduleIndex !== -1 && args[moduleIndex + 1]) {
+    options.module = args[moduleIndex + 1];
+  }
 
   return options;
 }
@@ -43,6 +53,7 @@ function showHelp() {
   console.log(chalk.yellow('Commands:'));
   console.log('  status                       Quick health check and counts');
   console.log('  health                       Full system verification');
+  console.log('  module <name>                Verify specific module only');
   console.log('  inconsistencies              Comprehensive inconsistency detection');
   console.log('  validate                     Validate and optionally repair inconsistencies');
   console.log('  clearing                     Verify that database clearing worked correctly');
@@ -50,13 +61,16 @@ function showHelp() {
   console.log('  help                         Show this help message\n');
   
   console.log(chalk.yellow('Options:'));
+  console.log('  --module <name>              Filter verification to specific module');
   console.log('  --verbose, -v                Show detailed output');
   console.log('  --dry-run                    Only detect issues, don\'t repair (validate command)');
   console.log('  --repair                     Apply safe repairs (validate command)\n');
   
   console.log(chalk.yellow('Examples:'));
   console.log('  node verify.js status --verbose');
+  console.log('  node verify.js status --module Calculator --verbose');
   console.log('  node verify.js health --verbose');
+  console.log('  node verify.js module Calculator --verbose');
   console.log('  node verify.js inconsistencies --verbose');
   console.log('  node verify.js validate --dry-run --verbose');
   console.log('  node verify.js validate --repair --verbose');
@@ -69,13 +83,33 @@ function showHelp() {
  */
 async function statusCommand(options) {
   try {
-    console.log(chalk.blue.bold('📊 Quick Status Check\n'));
+    if (options.module) {
+      console.log(chalk.blue.bold(`📊 Quick Status Check: ${options.module}\n`));
+    } else {
+      console.log(chalk.blue.bold('📊 Quick Status Check\n'));
+    }
     
     const toolRegistry = ToolRegistry.getInstance();
     await toolRegistry.initialize();
     
     // Use centralized validation API instead of direct loader access
-    const health = await toolRegistry.quickHealthCheck();
+    let health;
+    if (options.module) {
+      // For module-specific status, use verifyModule
+      const moduleResult = await toolRegistry.verifyModule(options.module, { 
+        verbose: false 
+      });
+      
+      // Convert module result to health format
+      health = {
+        healthy: moduleResult.success,
+        counts: moduleResult.counts,
+        ratios: moduleResult.ratios,
+        issues: moduleResult.errors.concat(moduleResult.warnings)
+      };
+    } else {
+      health = await toolRegistry.quickHealthCheck();
+    }
     
     console.log(chalk.blue('📋 Counts:'));
     Object.entries(health.counts).forEach(([key, value]) => {
@@ -107,15 +141,26 @@ async function statusCommand(options) {
  */
 async function healthCommand(options) {
   try {
-    console.log(chalk.blue.bold('🏥 Full System Verification\n'));
+    if (options.module) {
+      console.log(chalk.blue.bold(`🏥 Full Module Verification: ${options.module}\n`));
+    } else {
+      console.log(chalk.blue.bold('🏥 Full System Verification\n'));
+    }
     
     const toolRegistry = ToolRegistry.getInstance();
     await toolRegistry.initialize();
     
     // Use centralized validation API instead of direct loader access
-    const verification = await toolRegistry.verifySystem({ 
-      verbose: options.verbose 
-    });
+    let verification;
+    if (options.module) {
+      verification = await toolRegistry.verifyModule(options.module, { 
+        verbose: options.verbose 
+      });
+    } else {
+      verification = await toolRegistry.verifySystem({ 
+        verbose: options.verbose 
+      });
+    }
     
     if (!options.verbose) {
       // Show summary only
@@ -145,6 +190,68 @@ async function healthCommand(options) {
     
   } catch (error) {
     console.error(chalk.red(`❌ Health check failed: ${error.message}`));
+    process.exit(1);
+  }
+}
+
+/**
+ * Module command - verify specific module only
+ */
+async function moduleCommand(options) {
+  if (!options.target) {
+    console.log(chalk.red('❌ Module name required for module command'));
+    console.log(chalk.gray('Usage: node verify.js module <name> [--verbose]'));
+    return;
+  }
+
+  try {
+    console.log(chalk.blue.bold(`🔍 Module Verification: ${options.target}\n`));
+    
+    const toolRegistry = ToolRegistry.getInstance();
+    await toolRegistry.initialize();
+    
+    // Run module-specific verification
+    const verification = await toolRegistry.verifyModule(options.target, { 
+      verbose: options.verbose 
+    });
+    
+    console.log(chalk.blue('📊 Module Summary:'));
+    console.log(`   Module: ${verification.moduleName}`);
+    console.log(`   Overall Status: ${verification.success ? chalk.green('✅ PASS') : chalk.red('❌ FAIL')}`);
+    console.log(`   Tools: ${verification.counts.tools}`);
+    console.log(`   Perspectives: ${verification.counts.perspectives}`);
+    console.log(`   Vectors: ${verification.counts.vectors}`);
+    
+    if (verification.ratios.perspectivesPerTool !== undefined) {
+      console.log(`   Perspectives per tool: ${verification.ratios.perspectivesPerTool.toFixed(2)}`);
+    }
+    
+    if (verification.errors.length > 0) {
+      console.log(chalk.red(`\n❌ Errors: ${verification.errors.length}`));
+      verification.errors.forEach(error => console.log(`   • ${error}`));
+    }
+    
+    if (verification.warnings.length > 0) {
+      console.log(chalk.yellow(`\n⚠️ Warnings: ${verification.warnings.length}`));
+      if (options.verbose) {
+        verification.warnings.forEach(warning => console.log(`   • ${warning}`));
+      } else {
+        console.log('   Use --verbose to see warning details');
+      }
+    }
+    
+    if (verification.success) {
+      console.log(chalk.green.bold(`\n✅ Module '${options.target}' verification passed!`));
+    } else {
+      console.log(chalk.red.bold(`\n❌ Module '${options.target}' has verification issues`));
+      process.exit(1);
+    }
+    
+  } catch (error) {
+    console.error(chalk.red(`❌ Module verification failed: ${error.message}`));
+    if (options.verbose) {
+      console.error(error.stack);
+    }
     process.exit(1);
   }
 }
@@ -356,6 +463,10 @@ async function main() {
         
       case 'health':
         await healthCommand(options);
+        break;
+        
+      case 'module':
+        await moduleCommand(options);
         break;
         
       case 'inconsistencies':

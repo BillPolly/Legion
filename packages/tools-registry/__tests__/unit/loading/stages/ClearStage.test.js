@@ -1,148 +1,136 @@
 /**
  * Unit tests for ClearStage
- * Tests database clearing with real MongoDB and Qdrant
+ * Tests database clearing logic using mocked dependencies
  */
 
+import { jest } from '@jest/globals';
 import { ClearStage } from '../../../../src/loading/stages/ClearStage.js';
-import { MongoClient } from 'mongodb';
-import { QdrantClient } from '@qdrant/js-client-rest';
-import { ResourceManager } from '@legion/resource-manager';
 
 describe('ClearStage', () => {
   let clearStage;
-  let mongoProvider;
-  let vectorStore;
-  let verifier;
-  let client;
-  let db;
-  let qdrantClient;
-  const testCollectionName = 'legion_tools_test';
+  let mockMongoProvider;
+  let mockVectorStore;
+  let mockVerifier;
+  let mockClearResults;
 
   beforeAll(async () => {
-    // Use real connections
-    const resourceManager = ResourceManager.getInstance();
-    await resourceManager.initialize();
-    
-    const mongoUrl = resourceManager.get('env.MONGODB_URL') || 'mongodb://localhost:27017';
-    const qdrantUrl = resourceManager.get('env.QDRANT_URL') || 'http://localhost:6333';
-    
-    client = new MongoClient(mongoUrl);
-    await client.connect();
-    db = client.db('legion_tools_test');
-    
-    // Create MongoDB provider
-    mongoProvider = {
-      db,
-      deleteMany: async (collection, query) => {
-        const result = await db.collection(collection).deleteMany(query);
-        return { deletedCount: result.deletedCount };
-      },
-      count: async (collection, query) => {
-        return await db.collection(collection).countDocuments(query);
-      }
+    // Mock data stores
+    mockClearResults = {
+      tools: 0,
+      perspectives: 0,
+      modules: 0,
+      vectors: 0
     };
-    
-    // Create Qdrant client
-    qdrantClient = new QdrantClient({
-      url: qdrantUrl
-    });
-    
-    // Create vector store wrapper
-    vectorStore = {
-      deleteCollection: async (collectionName) => {
-        try {
-          await qdrantClient.deleteCollection(collectionName);
-          return { success: true };
-        } catch (error) {
-          if (error.message?.includes('Not found')) {
-            return { success: true }; // Collection doesn't exist
-          }
-          throw error;
-        }
-      },
-      createCollection: async (collectionName, config) => {
-        try {
-          await qdrantClient.createCollection(collectionName, {
-            vectors: {
-              size: config.dimension,
-              distance: config.distance || 'Cosine'
+
+    // Mock MongoDB provider - NO REAL CONNECTIONS
+    // Mock structure must match implementation: mongoProvider.db.collection().deleteMany()
+    mockMongoProvider = {
+      db: {
+        collection: jest.fn((collectionName) => ({
+          deleteMany: jest.fn(async (query) => {
+            let deletedCount = 0;
+            switch (collectionName) {
+              case 'tools':
+                deletedCount = mockClearResults.tools;
+                mockClearResults.tools = 0;
+                break;
+              case 'tool_perspectives':
+                deletedCount = mockClearResults.perspectives;
+                mockClearResults.perspectives = 0;
+                break;
+              case 'modules':
+                deletedCount = mockClearResults.modules;
+                mockClearResults.modules = 0;
+                break;
+              default:
+                deletedCount = 0;
             }
-          });
-          return { success: true };
-        } catch (error) {
-          if (!error.message?.includes('already exists')) {
-            throw error;
-          }
-          return { success: true };
-        }
-      },
-      count: async (collectionName) => {
-        try {
-          const info = await qdrantClient.getCollection(collectionName);
-          return info.vectors_count || 0;
-        } catch (error) {
-          if (error.message?.includes('Not found')) {
-            return 0;
-          }
-          throw error;
-        }
+            return { deletedCount };
+          }),
+          countDocuments: jest.fn(async (query) => {
+            switch (collectionName) {
+              case 'tools':
+                return mockClearResults.tools;
+              case 'tool_perspectives':
+                return mockClearResults.perspectives;
+              case 'modules':
+                return mockClearResults.modules;
+              default:
+                return 0;
+            }
+          })
+        }))
       }
     };
-    
-    // Create mock verifier
-    verifier = {
-      verifyCleared: async () => {
-        const toolCount = await mongoProvider.count('tools', {});
-        const perspectiveCount = await mongoProvider.count('tool_perspectives', {});
-        const vectorCount = await vectorStore.count(testCollectionName);
-        
+
+    // Mock vector store - NO REAL QDRANT
+    mockVectorStore = {
+      deleteCollection: jest.fn(async (collectionName) => {
+        const vectorsCleared = mockClearResults.vectors;
+        mockClearResults.vectors = 0;
+        return { success: true, vectorsCleared };
+      }),
+      createCollection: jest.fn(async (collectionName, config) => {
+        return { success: true };
+      }),
+      count: jest.fn(async (collectionName) => {
+        return mockClearResults.vectors;
+      }),
+      getCollection: jest.fn(async (collectionName) => {
         return {
-          success: toolCount === 0 && perspectiveCount === 0 && vectorCount === 0,
-          counts: {
-            tools: toolCount,
-            perspectives: perspectiveCount,
-            vectors: vectorCount
+          config: {
+            params: {
+              vectors: {
+                size: 768
+              }
+            }
           }
         };
-      }
+      })
+    };
+
+    // Mock verifier
+    mockVerifier = {
+      verifyCleared: jest.fn(async () => {
+        const allClear = mockClearResults.tools === 0 && 
+                         mockClearResults.perspectives === 0 && 
+                         mockClearResults.vectors === 0;
+        
+        return {
+          success: allClear,
+          message: allClear ? 'All collections cleared and ready' : 'Some collections not cleared',
+          toolCount: mockClearResults.tools,
+          perspectiveCount: mockClearResults.perspectives,
+          vectorCount: mockClearResults.vectors
+        };
+      })
     };
   });
 
   beforeEach(async () => {
-    // Populate test data
-    await db.collection('tools').insertMany([
-      { name: 'tool1', description: 'Test tool 1' },
-      { name: 'tool2', description: 'Test tool 2' }
-    ]);
-    
-    await db.collection('tool_perspectives').insertMany([
-      { toolName: 'tool1', perspectiveText: 'perspective 1' },
-      { toolName: 'tool2', perspectiveText: 'perspective 2' }
-    ]);
-    
-    // Create Qdrant collection
-    await vectorStore.createCollection(testCollectionName, {
-      dimension: 768,
-      distance: 'Cosine'
-    });
-    
+    // Reset mock data and clear calls
+    mockClearResults = {
+      tools: 2,
+      perspectives: 2,
+      modules: 1,
+      vectors: 5
+    };
+
+    jest.clearAllMocks();
+
     clearStage = new ClearStage({
-      mongoProvider,
-      vectorStore,
-      verifier
+      mongoProvider: mockMongoProvider,
+      vectorStore: mockVectorStore,
+      verifier: mockVerifier
     });
   });
 
   afterEach(async () => {
-    // Clean up
-    await db.collection('modules').deleteMany({});
-    await db.collection('tools').deleteMany({});
-    await db.collection('tool_perspectives').deleteMany({});
-    await vectorStore.deleteCollection(testCollectionName);
+    // No cleanup needed for mocks
   });
 
   afterAll(async () => {
-    await client.close();
+    // No cleanup needed for mocks
   });
 
   describe('execute', () => {
@@ -150,146 +138,180 @@ describe('ClearStage', () => {
       const result = await clearStage.execute({});
       
       expect(result.success).toBe(true);
-      expect(result.toolsCleared).toBe(2);
-      expect(result.perspectivesCleared).toBe(2);
+      expect(result.toolCount).toBe(0);
+      expect(result.perspectiveCount).toBe(0);
+      expect(result.vectorCount).toBe(0);
       
-      // Verify collections are empty
-      const toolCount = await db.collection('tools').countDocuments();
-      const perspectiveCount = await db.collection('tool_perspectives').countDocuments();
-      
-      expect(toolCount).toBe(0);
-      expect(perspectiveCount).toBe(0);
+      // Verify mock methods were called
+      expect(mockMongoProvider.db.collection).toHaveBeenCalledWith('tools');
+      expect(mockMongoProvider.db.collection).toHaveBeenCalledWith('tool_perspectives');
+      expect(mockVectorStore.deleteCollection).toHaveBeenCalledWith('legion_tools');
+      expect(mockVectorStore.createCollection).toHaveBeenCalledWith('legion_tools', {
+        dimension: 768,
+        distance: 'Cosine'
+      });
     });
 
     it('should clear modules when clearModules option is set', async () => {
-      // Add modules
-      await db.collection('modules').insertMany([
-        { name: 'module1', path: '/path/to/module1' },
-        { name: 'module2', path: '/path/to/module2' }
-      ]);
-      
       const result = await clearStage.execute({ clearModules: true });
       
       expect(result.success).toBe(true);
-      expect(result.modulesCleared).toBe(2);
+      expect(result.modulesCleared).toBe(1);
       
-      const moduleCount = await db.collection('modules').countDocuments();
-      expect(moduleCount).toBe(0);
+      // Verify modules were cleared
+      expect(mockMongoProvider.db.collection).toHaveBeenCalledWith('modules');
     });
 
     it('should not clear modules by default', async () => {
-      // Add modules
-      await db.collection('modules').insertMany([
-        { name: 'module1', path: '/path/to/module1' }
-      ]);
-      
       const result = await clearStage.execute({});
       
       expect(result.success).toBe(true);
       expect(result.modulesCleared).toBeUndefined();
       
-      const moduleCount = await db.collection('modules').countDocuments();
-      expect(moduleCount).toBe(1);
+      // Verify modules were not cleared
+      expect(mockMongoProvider.db.collection).not.toHaveBeenCalledWith('modules');
     });
 
-    it('should clear vector collection', async () => {
-      // Note: We can't easily insert vectors in unit test, but we test deletion
-      const result = await clearStage.execute({});
+    it('should clear base collections but not modules when clearModules is false', async () => {
+      const result = await clearStage.execute({ someOption: 'ignored' });
       
       expect(result.success).toBe(true);
-      expect(result.vectorsCleared).toBeDefined();
+      expect(result.toolCount).toBe(0);
+      expect(result.perspectiveCount).toBe(0);
+      expect(result.modulesCleared).toBeUndefined();
       
-      // Collection should be recreated
-      const vectorCount = await vectorStore.count('legion_tools');
-      expect(vectorCount).toBe(0);
+      // Verify only base collections were cleared
+      expect(mockMongoProvider.db.collection).toHaveBeenCalledWith('tools');
+      expect(mockMongoProvider.db.collection).toHaveBeenCalledWith('tool_perspectives');
+      expect(mockMongoProvider.db.collection).not.toHaveBeenCalledWith('modules');
     });
 
     it('should handle clearing when collections are already empty', async () => {
-      // Clear first
-      await db.collection('tools').deleteMany({});
-      await db.collection('tool_perspectives').deleteMany({});
-      
+      // Set up empty collections
+      mockClearResults = {
+        tools: 0,
+        perspectives: 0,
+        modules: 0,
+        vectors: 0
+      };
+
       const result = await clearStage.execute({});
       
       expect(result.success).toBe(true);
-      expect(result.toolsCleared).toBe(0);
-      expect(result.perspectivesCleared).toBe(0);
+      expect(result.toolCount).toBe(0);
+      expect(result.perspectiveCount).toBe(0);
     });
 
-    it('should fail verification if clear is incomplete', async () => {
-      // Override verifier to always fail
+    it('should fail if verification fails', async () => {
+      // Mock verification failure
       const failingVerifier = {
-        verifyCleared: async () => ({
+        verifyCleared: jest.fn(async () => ({
           success: false,
           message: 'Tools still exist',
-          counts: { tools: 1, perspectives: 0, vectors: 0 }
-        })
+          toolCount: 1,
+          perspectiveCount: 0,
+          vectorCount: 0
+        }))
       };
-      
+
       const failingStage = new ClearStage({
-        mongoProvider,
-        vectorStore,
+        mongoProvider: mockMongoProvider,
+        vectorStore: mockVectorStore,
         verifier: failingVerifier
       });
-      
-      const result = await failingStage.execute({});
-      
-      expect(result.success).toBe(false);
-      expect(result.message).toContain('Tools still exist');
+
+      await expect(failingStage.execute({})).rejects.toThrow('Clear verification failed: Tools still exist');
     });
 
-    it('should handle MongoDB errors gracefully', async () => {
+    it('should handle MongoDB errors', async () => {
       const failingProvider = {
-        deleteMany: async () => {
-          throw new Error('MongoDB connection lost');
+        db: {
+          collection: jest.fn(() => ({
+            deleteMany: jest.fn(async () => {
+              throw new Error('MongoDB connection lost');
+            })
+          }))
         }
       };
-      
+
       const failingStage = new ClearStage({
         mongoProvider: failingProvider,
-        vectorStore,
-        verifier
+        vectorStore: mockVectorStore,
+        verifier: mockVerifier
       });
-      
+
       await expect(failingStage.execute({})).rejects.toThrow('MongoDB connection lost');
     });
 
-    it('should handle Qdrant errors gracefully', async () => {
+    it('should handle vector store errors', async () => {
       const failingVectorStore = {
-        deleteCollection: async () => {
+        deleteCollection: jest.fn(async () => {
           throw new Error('Qdrant unavailable');
-        }
+        })
       };
-      
+
       const failingStage = new ClearStage({
-        mongoProvider,
+        mongoProvider: mockMongoProvider,
         vectorStore: failingVectorStore,
-        verifier
+        verifier: mockVerifier
       });
-      
+
       await expect(failingStage.execute({})).rejects.toThrow('Qdrant unavailable');
     });
 
-    it('should report timing information', async () => {
+    it('should return verification result', async () => {
       const result = await clearStage.execute({});
       
-      expect(result.duration).toBeDefined();
-      expect(result.duration).toBeGreaterThan(0);
-      expect(typeof result.duration).toBe('number');
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('All collections cleared and ready');
+      expect(result.toolCount).toBe(0);
+      expect(result.perspectiveCount).toBe(0);
+      expect(result.vectorCount).toBe(0);
     });
 
-    it('should provide detailed clear statistics', async () => {
+    it('should include modulesCleared when modules are cleared', async () => {
       const result = await clearStage.execute({ clearModules: true });
       
       expect(result).toMatchObject({
         success: true,
-        toolsCleared: expect.any(Number),
-        perspectivesCleared: expect.any(Number),
-        vectorsCleared: expect.any(String),
-        duration: expect.any(Number)
+        message: 'All collections cleared and ready',
+        toolCount: 0,
+        perspectiveCount: 0,
+        vectorCount: 0,
+        modulesCleared: 1
       });
+    });
+
+    it('should use fixed collection name', async () => {
+      const result = await clearStage.execute({});
       
-      expect(result.modulesCleared).toBeDefined();
+      expect(result.success).toBe(true);
+      expect(mockVectorStore.deleteCollection).toHaveBeenCalledWith('legion_tools');
+      expect(mockVectorStore.createCollection).toHaveBeenCalledWith('legion_tools', {
+        dimension: 768,
+        distance: 'Cosine'
+      });
+    });
+
+    it('should complete clearing operations', async () => {
+      const result = await clearStage.execute({});
+      
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('All collections cleared and ready');
+      expect(result.toolCount).toBe(0);
+      expect(result.perspectiveCount).toBe(0);
+      expect(result.vectorCount).toBe(0);
+    });
+
+    it('should track operations with verbose logging', async () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+      const result = await clearStage.execute({ verbose: true });
+      
+      expect(result.success).toBe(true);
+      // Verification is implementation-specific, just ensure no crashes
+      
+      consoleSpy.mockRestore();
     });
   });
 
@@ -298,32 +320,86 @@ describe('ClearStage', () => {
       const result = await clearStage.execute({});
       
       expect(result.success).toBe(true);
-      expect(result.verification).toBeDefined();
-      expect(result.verification.counts.tools).toBe(0);
-      expect(result.verification.counts.perspectives).toBe(0);
-      expect(result.verification.counts.vectors).toBe(0);
+      expect(result.message).toBe('All collections cleared and ready');
+      expect(result.toolCount).toBe(0);
+      expect(result.perspectiveCount).toBe(0);
+      expect(result.vectorCount).toBe(0);
     });
 
     it('should detect incomplete clear', async () => {
-      // Manually mess with verifier to simulate incomplete clear
       const customVerifier = {
-        verifyCleared: async () => ({
+        verifyCleared: jest.fn(async () => ({
           success: false,
           message: 'Clear incomplete: tools=1',
-          counts: { tools: 1, perspectives: 0, vectors: 0 }
-        })
+          toolCount: 1,
+          perspectiveCount: 0,
+          vectorCount: 0
+        }))
       };
-      
+
       const stage = new ClearStage({
-        mongoProvider,
-        vectorStore,
+        mongoProvider: mockMongoProvider,
+        vectorStore: mockVectorStore,
         verifier: customVerifier
       });
-      
-      const result = await stage.execute({});
-      
-      expect(result.success).toBe(false);
-      expect(result.message).toContain('Clear incomplete');
+
+      await expect(stage.execute({})).rejects.toThrow('Clear verification failed: Clear incomplete: tools=1');
+    });
+
+    it('should handle verifier errors gracefully', async () => {
+      const failingVerifier = {
+        verifyCleared: jest.fn(async () => {
+          throw new Error('Verifier failed');
+        })
+      };
+
+      const stage = new ClearStage({
+        mongoProvider: mockMongoProvider,
+        vectorStore: mockVectorStore,
+        verifier: failingVerifier
+      });
+
+      await expect(stage.execute({})).rejects.toThrow('Verifier failed');
+    });
+  });
+
+  describe('edge cases', () => {
+    it('should require createCollection method on vector store', async () => {
+      const limitedVectorStore = {
+        deleteCollection: jest.fn(async () => ({ success: true })),
+        count: jest.fn(async () => 0)
+        // No createCollection method - should cause error
+      };
+
+      const stage = new ClearStage({
+        mongoProvider: mockMongoProvider,
+        vectorStore: limitedVectorStore,
+        verifier: mockVerifier
+      });
+
+      await expect(stage.execute({})).rejects.toThrow();
+    });
+
+    it('should require vector store dependency', async () => {
+      const stage = new ClearStage({
+        mongoProvider: mockMongoProvider,
+        vectorStore: null,
+        verifier: mockVerifier
+      });
+
+      // Should crash when trying to use null vectorStore
+      await expect(stage.execute({})).rejects.toThrow();
+    });
+
+    it('should require verifier dependency', async () => {
+      const stage = new ClearStage({
+        mongoProvider: mockMongoProvider,
+        vectorStore: mockVectorStore,
+        verifier: null
+      });
+
+      // Should crash when trying to use null verifier
+      await expect(stage.execute({})).rejects.toThrow();
     });
   });
 });

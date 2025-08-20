@@ -55,6 +55,52 @@ export class Verifier {
   }
 
   /**
+   * Comprehensive verification of specific module only
+   * Runs validation checks only for the specified module
+   * @param {string} moduleName - Name of module to verify
+   * @returns {Promise<VerificationResult>}
+   */
+  async verifyModule(moduleName) {
+    if (!moduleName || typeof moduleName !== 'string') {
+      throw new Error('Module name is required and must be a string');
+    }
+
+    const result = {
+      success: true,
+      errors: [],
+      warnings: [],
+      counts: {},
+      ratios: {},
+      moduleName,
+      timestamp: new Date().toISOString()
+    };
+
+    try {
+      // Get counts for specific module
+      result.counts = await this.getModuleCounts(moduleName);
+      
+      // Calculate ratios for this module
+      result.ratios = this.calculateRatios(result.counts);
+      
+      // Run module-specific validations
+      await this.validateModuleCounts(result, moduleName);
+      await this.validateModuleRatios(result, moduleName);
+      await this.validateModuleRelationships(result, moduleName);
+      await this.validateModuleVectorSync(result, moduleName);
+      
+      if (result.errors.length > 0) {
+        result.success = false;
+      }
+
+      return result;
+    } catch (error) {
+      result.success = false;
+      result.errors.push(`Module verification failed: ${error.message}`);
+      return result;
+    }
+  }
+
+  /**
    * Get counts from all data sources
    * @returns {Promise<Object>}
    */
@@ -110,6 +156,77 @@ export class Verifier {
   }
 
   /**
+   * Get counts for specific module only
+   * @param {string} moduleName - Name of module to get counts for
+   * @returns {Promise<Object>}
+   */
+  async getModuleCounts(moduleName) {
+    const counts = {};
+    
+    try {
+      // Ensure MongoDB connection is established
+      if (!this.mongoProvider.connected) {
+        await this.mongoProvider.connect();
+      }
+      
+      if (this.verbose) {
+        console.log(`[Verifier] Getting counts for module: ${moduleName}`);
+      }
+      
+      // MongoDB counts for specific module
+      counts.modules = await this.mongoProvider.databaseService.mongoProvider.db
+        .collection('modules').countDocuments({ name: moduleName });
+      
+      counts.tools = await this.mongoProvider.databaseService.mongoProvider.db
+        .collection('tools').countDocuments({ moduleName: moduleName });
+      
+      counts.perspectives = await this.mongoProvider.databaseService.mongoProvider.db
+        .collection('tool_perspectives').countDocuments({ moduleName: moduleName });
+      
+      if (this.verbose) {
+        console.log(`[Verifier] Module ${moduleName} counts: modules=${counts.modules}, tools=${counts.tools}, perspectives=${counts.perspectives}`);
+      }
+    } catch (error) {
+      console.error(`Error getting MongoDB counts for module ${moduleName}:`, error.message);
+      counts.modules = 0;
+      counts.tools = 0;
+      counts.perspectives = 0;
+    }
+    
+    // Qdrant count for specific module
+    if (this.semanticSearchProvider) {
+      try {
+        // Search for vectors with moduleName in payload
+        const vectorSearchResult = await this.semanticSearchProvider.search('legion_tools', 
+          Array(768).fill(0), // dummy vector for search
+          {
+            limit: 0, // We only want count
+            filter: {
+              must: [
+                { key: 'moduleName', match: { value: moduleName } }
+              ]
+            }
+          }
+        );
+        counts.vectors = vectorSearchResult?.totalCount || 0;
+        
+        if (this.verbose) {
+          console.log(`[Verifier] Module ${moduleName} vector count: ${counts.vectors}`);
+        }
+      } catch (error) {
+        if (this.verbose) {
+          console.warn(`[Verifier] Could not get vector count for module ${moduleName}:`, error.message);
+        }
+        counts.vectors = 0;
+      }
+    } else {
+      counts.vectors = 0;
+    }
+
+    return counts;
+  }
+
+  /**
    * Calculate key ratios for validation
    * @param {Object} counts 
    * @returns {Object}
@@ -155,6 +272,33 @@ export class Verifier {
   }
 
   /**
+   * Validate basic counts for specific module
+   * @param {VerificationResult} result 
+   * @param {string} moduleName 
+   */
+  async validateModuleCounts(result, moduleName) {
+    const { counts } = result;
+
+    // Check for zero counts where we expect data for this module
+    if (counts.modules === 0) {
+      result.errors.push(`Module '${moduleName}' not found in database`);
+      return; // No point checking further if module doesn't exist
+    }
+    
+    if (counts.tools === 0) {
+      result.warnings.push(`Module '${moduleName}' has no tools - may not have been loaded yet`);
+    }
+
+    if (counts.perspectives === 0 && counts.tools > 0) {
+      result.errors.push(`Module '${moduleName}' has ${counts.tools} tools but no perspectives - perspective generation failed`);
+    }
+
+    if (counts.vectors === 0 && counts.perspectives > 0) {
+      result.errors.push(`Module '${moduleName}' has ${counts.perspectives} perspectives but no vectors - vector indexing failed`);
+    }
+  }
+
+  /**
    * Validate ratios are within expected ranges
    * @param {VerificationResult} result 
    */
@@ -175,6 +319,32 @@ export class Verifier {
       const ratio = ratios.vectorsPerPerspective;
       if (Math.abs(ratio - 1.0) > 0.01) {
         result.errors.push(`Perspectives:Vectors not 1:1 - ratio: ${ratio.toFixed(3)} (${counts.perspectives} perspectives vs ${counts.vectors} vectors)`);
+      }
+    }
+  }
+
+  /**
+   * Validate ratios are within expected ranges for specific module
+   * @param {VerificationResult} result 
+   * @param {string} moduleName 
+   */
+  async validateModuleRatios(result, moduleName) {
+    const { ratios, counts } = result;
+
+    // Expected: 8-12 perspectives per tool (different perspective types)
+    if (ratios.perspectivesPerTool) {
+      if (ratios.perspectivesPerTool < 6) {
+        result.warnings.push(`Module '${moduleName}' has low perspectives per tool: ${ratios.perspectivesPerTool.toFixed(2)} (expected 8-12)`);
+      } else if (ratios.perspectivesPerTool > 15) {
+        result.errors.push(`Module '${moduleName}' has too many perspectives per tool: ${ratios.perspectivesPerTool.toFixed(2)} (expected 8-12) - possible accumulation`);
+      }
+    }
+
+    // Expected: 1:1 perspectives to vectors
+    if (ratios.vectorsPerPerspective) {
+      const ratio = ratios.vectorsPerPerspective;
+      if (Math.abs(ratio - 1.0) > 0.01) {
+        result.errors.push(`Module '${moduleName}' Perspectives:Vectors not 1:1 - ratio: ${ratio.toFixed(3)} (${counts.perspectives} perspectives vs ${counts.vectors} vectors)`);
       }
     }
   }
@@ -225,6 +395,75 @@ export class Verifier {
   }
 
   /**
+   * Validate relationships between entities for specific module
+   * @param {VerificationResult} result 
+   * @param {string} moduleName
+   */
+  async validateModuleRelationships(result, moduleName) {
+    try {
+      // Ensure MongoDB connection is established
+      if (!this.mongoProvider.connected) {
+        await this.mongoProvider.connect();
+      }
+      
+      // Check for orphaned tools in this module (tools without valid module references)
+      const orphanedTools = await this.mongoProvider.databaseService.mongoProvider.db
+        .collection('tools').countDocuments({
+          moduleName: moduleName,
+          $or: [
+            { moduleId: { $exists: false } },
+            { moduleId: null }
+          ]
+        });
+
+      if (orphanedTools > 0) {
+        result.errors.push(`Module '${moduleName}' has ${orphanedTools} tools without moduleId references`);
+      }
+
+      // Check for orphaned perspectives in this module
+      const orphanedPerspectives = await this.mongoProvider.databaseService.mongoProvider.db
+        .collection('tool_perspectives').countDocuments({
+          moduleName: moduleName,
+          $or: [
+            { toolName: { $exists: false } },
+            { toolName: null },
+            { toolName: '' }
+          ]
+        });
+
+      if (orphanedPerspectives > 0) {
+        result.errors.push(`Module '${moduleName}' has ${orphanedPerspectives} perspectives without tool references`);
+      }
+
+      // Check for perspective-tool mismatches in this module
+      const mismatchedPerspectives = await this.mongoProvider.databaseService.mongoProvider.db
+        .collection('tool_perspectives').aggregate([
+          { $match: { moduleName: moduleName } },
+          {
+            $lookup: {
+              from: 'tools',
+              localField: 'toolName',
+              foreignField: 'name',
+              as: 'tool'
+            }
+          },
+          {
+            $match: {
+              'tool': { $size: 0 }
+            }
+          }
+        ]).toArray();
+
+      if (mismatchedPerspectives.length > 0) {
+        result.errors.push(`Module '${moduleName}' has ${mismatchedPerspectives.length} perspectives referencing non-existent tools`);
+      }
+
+    } catch (error) {
+      result.errors.push(`Module relationship validation failed: ${error.message}`);
+    }
+  }
+
+  /**
    * Validate vector database sync
    * @param {VerificationResult} result 
    */
@@ -244,6 +483,48 @@ export class Verifier {
 
     } catch (error) {
       result.errors.push(`Vector sync validation failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Validate vector database sync for specific module
+   * @param {VerificationResult} result 
+   * @param {string} moduleName
+   */
+  async validateModuleVectorSync(result, moduleName) {
+    if (!this.semanticSearchProvider) {
+      result.warnings.push(`Module '${moduleName}': Semantic search provider not available - cannot verify vector sync`);
+      return;
+    }
+
+    try {
+      const { counts } = result;
+      
+      // Get actual vector count from Qdrant for this module
+      const vectorSearchResult = await this.semanticSearchProvider.search('legion_tools', 
+        Array(768).fill(0), // dummy vector for search
+        {
+          limit: 0, // We only want count
+          filter: {
+            must: [
+              { key: 'moduleName', match: { value: moduleName } }
+            ]
+          }
+        }
+      );
+      const actualVectorCount = vectorSearchResult?.totalCount || 0;
+      
+      if (actualVectorCount !== counts.vectors) {
+        result.errors.push(`Module '${moduleName}' vector count mismatch: expected ${counts.vectors}, got ${actualVectorCount} in Qdrant`);
+      }
+
+      // Check for perspectives without corresponding vectors
+      if (counts.perspectives > 0 && actualVectorCount === 0) {
+        result.errors.push(`Module '${moduleName}' has ${counts.perspectives} perspectives but no vectors in Qdrant - indexing failed`);
+      }
+
+    } catch (error) {
+      result.errors.push(`Module '${moduleName}' vector sync validation failed: ${error.message}`);
     }
   }
 
