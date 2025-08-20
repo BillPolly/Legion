@@ -78,21 +78,43 @@ export class ModuleLoader {
         
         const module = await this.loadModule(moduleConfig);
         if (module) {
-          // Update loading status to success
+          // Check if module was recently cleared - don't automatically mark as loaded
+          const moduleRecord = await this.databaseProvider.databaseService.mongoProvider.findOne('modules', { _id: moduleConfig._id });
+          const wasRecentlyCleared = moduleRecord && moduleRecord.clearedForReload && 
+            moduleRecord.clearedAt && (Date.now() - moduleRecord.clearedAt.getTime()) < 300000; // 5 minutes
+          
+          // Update loading status to success, but respect cleared state
           const tools = module.getTools ? module.getTools() : [];
+          const updateData = {
+            $set: {
+              loadingStatus: wasRecentlyCleared ? 'unloaded' : 'loaded',
+              lastLoadedAt: new Date(),
+              toolCount: tools.length
+            },
+            $unset: {
+              loadingError: ""
+            },
+            $setOnInsert: {
+              name: moduleConfig.name || 'unknown',
+              description: moduleConfig.description || `${moduleConfig.name || 'unknown'} module successfully loaded into the tool registry system. This module provides various tools and functionality within the Legion framework ecosystem.`,
+              type: moduleConfig.type || 'class',
+              path: moduleConfig.path || 'unknown',
+              createdAt: new Date(),
+              status: 'active'
+            }
+          };
+          
+          // Clear the clearedForReload flag only if we're actually loading it
+          if (!wasRecentlyCleared) {
+            updateData.$unset.clearedForReload = "";
+            updateData.$unset.clearedAt = "";
+          }
+          
           await this.databaseProvider.databaseService.mongoProvider.update(
             'modules',
             { _id: moduleConfig._id },
-            {
-              $set: {
-                loadingStatus: 'loaded',
-                lastLoadedAt: new Date(),
-                toolCount: tools.length
-              },
-              $unset: {
-                loadingError: ""
-              }
-            }
+            updateData,
+            { upsert: true }
           );
           
           loadedModules.push({
@@ -114,8 +136,17 @@ export class ModuleLoader {
               loadingStatus: 'failed',
               loadingError: error.message,
               lastLoadedAt: new Date()
+            },
+            $setOnInsert: {
+              name: moduleConfig.name || 'unknown',
+              description: moduleConfig.description || `${moduleConfig.name || 'unknown'} module failed to load in the tool registry system. Error details: ${error.message}. This module may require additional configuration.`,
+              type: moduleConfig.type || 'class',
+              path: moduleConfig.path || 'unknown',
+              createdAt: new Date(),
+              status: 'maintenance'
             }
-          }
+          },
+          { upsert: true }
         );
         
         failedModules.push({

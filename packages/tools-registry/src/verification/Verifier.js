@@ -582,9 +582,10 @@ export class Verifier {
 
   /**
    * Verify that modules are in unloaded state after clearing
+   * @param {string|null} moduleFilter - Optional module filter for specific module verification
    * @returns {Promise<Object>}
    */
-  async verifyModulesUnloaded() {
+  async verifyModulesUnloaded(moduleFilter = null) {
     const result = {
       success: true,
       errors: [],
@@ -600,20 +601,24 @@ export class Verifier {
       
       // Count modules by loading status
       if (this.verbose) {
-        console.log(`[Verifier] Checking module loading statuses...`);
+        const target = moduleFilter ? ` for module '${moduleFilter}'` : '';
+        console.log(`[Verifier] Checking module loading statuses${target}...`);
       }
       
+      // Build queries based on module filter
+      const baseQuery = moduleFilter ? { name: moduleFilter } : {};
+      
       const loadedCount = await this.mongoProvider.databaseService.mongoProvider.db
-        .collection('modules').countDocuments({ loadingStatus: 'loaded' });
+        .collection('modules').countDocuments({ ...baseQuery, loadingStatus: 'loaded' });
       
       const unloadedCount = await this.mongoProvider.databaseService.mongoProvider.db
-        .collection('modules').countDocuments({ loadingStatus: 'unloaded' });
+        .collection('modules').countDocuments({ ...baseQuery, loadingStatus: 'unloaded' });
       
       const pendingCount = await this.mongoProvider.databaseService.mongoProvider.db
-        .collection('modules').countDocuments({ loadingStatus: 'pending' });
+        .collection('modules').countDocuments({ ...baseQuery, loadingStatus: 'pending' });
         
       const failedCount = await this.mongoProvider.databaseService.mongoProvider.db
-        .collection('modules').countDocuments({ loadingStatus: 'failed' });
+        .collection('modules').countDocuments({ ...baseQuery, loadingStatus: 'failed' });
 
       result.moduleStats = {
         loaded: loadedCount,
@@ -624,18 +629,29 @@ export class Verifier {
       };
       
       if (this.verbose) {
-        console.log(`[Verifier] Module stats: loaded=${loadedCount}, unloaded=${unloadedCount}, pending=${pendingCount}, failed=${failedCount}, total=${result.moduleStats.total}`);
+        const target = moduleFilter ? ` (${moduleFilter})` : '';
+        console.log(`[Verifier] Module stats${target}: loaded=${loadedCount}, unloaded=${unloadedCount}, pending=${pendingCount}, failed=${failedCount}, total=${result.moduleStats.total}`);
       }
 
-      if (loadedCount > 0) {
-        result.errors.push(`Found ${loadedCount} modules still marked as loaded - should be pending/unloaded after clearing`);
-      }
-
-      if (result.moduleStats.total === 0) {
-        if (this.verbose) {
-          console.log(`[Verifier] ERROR: Total modules is 0, but we should have found modules`);
+      if (moduleFilter) {
+        // For module-specific verification, only check the specific module
+        if (loadedCount > 0) {
+          result.errors.push(`Module '${moduleFilter}' is still marked as loaded - should be unloaded after clearing`);
         }
-        result.errors.push(`No modules found - modules should be preserved during clearing`);
+        if (result.moduleStats.total === 0) {
+          result.errors.push(`Module '${moduleFilter}' not found in database`);
+        }
+      } else {
+        // For global verification, ALL modules should be unloaded
+        if (loadedCount > 0) {
+          result.errors.push(`Found ${loadedCount} modules still marked as loaded - should be pending/unloaded after clearing`);
+        }
+        if (result.moduleStats.total === 0) {
+          if (this.verbose) {
+            console.log(`[Verifier] ERROR: Total modules is 0, but we should have found modules`);
+          }
+          result.errors.push(`No modules found - modules should be preserved during clearing`);
+        }
       }
 
       result.success = result.errors.length === 0;

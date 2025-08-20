@@ -374,7 +374,18 @@ export class ModuleDiscovery {
           await this.provider.databaseService.mongoProvider.update(
             'modules',
             { _id: existing._id },
-            { $set: updates }
+            { 
+              $set: updates,
+              $setOnInsert: {
+                name: moduleInfo.name,
+                description: moduleInfo.description || `${moduleInfo.name} module discovered in the Legion framework system. This module contains tools and functionality for various operations.`,
+                type: moduleInfo.type || 'class',
+                path: moduleInfo.path || `modules/${moduleInfo.name}`,
+                createdAt: new Date(),
+                status: 'active'
+              }
+            },
+            { upsert: true }
           );
           
           this.stats.updated++;

@@ -659,7 +659,7 @@ WORKFLOW TIP: Use this after run_jest_tests to understand failures, or periodica
 export class JesterModule extends Module {
   constructor(dependencies = {}) {
     super();
-    this.name = 'JesterModule';
+    this.name = 'jester';
     this.config = dependencies;
     this.description = 'Powerful Jest testing tools with session management and intelligent analysis';
     this.version = '2.0.0';

@@ -1,5 +1,5 @@
 {
-  "name": "@legion/tools-registry-collection",
+  "name": "@legion/tools-collection",
   "version": "1.0.0",
   "description": "Collection of tool implementations for the Legion framework",
   "type": "module",

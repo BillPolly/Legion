@@ -964,13 +964,14 @@ export class ToolRegistry {
    * Verify that modules are in correct unloaded state after clearing
    * Validates that modules exist but are marked as unloaded/pending
    * 
+   * @param {string|null} moduleFilter - Optional module filter for specific module verification
    * @returns {Promise<ModuleStatusVerificationResult>}
    */
-  async verifyModulesUnloaded() {
+  async verifyModulesUnloaded(moduleFilter = null) {
     await this._ensureInitialized();
     
     const verifier = await this.getVerifier();
-    return await verifier.verifyModulesUnloaded();
+    return await verifier.verifyModulesUnloaded(moduleFilter);
   }
 
   /**

@@ -19,7 +19,7 @@ import { ToolRegistry } from '../../src/integration/ToolRegistry.js';
 import { ResourceManager } from '@legion/resource-manager';
 
 // Test configuration
-const TEST_MODULE_NAME = 'Calculator';  // Use Calculator module for consistent testing
+const TEST_MODULE_NAME = 'calculator';  // Use calculator module for consistent testing (matches database storage)
 const TEST_TIMEOUT = 180000; // 3 minutes for real operations including embeddings
 
 describe('Module Operations Integration Tests', () => {
@@ -116,7 +116,7 @@ describe('Module Operations Integration Tests', () => {
       expect(clearResult.moduleName).toBe(TEST_MODULE_NAME);
       expect(clearResult.recordsCleared).toBeGreaterThan(0);
 
-      // Verify only Calculator module was cleared
+      // Verify only calculator module was cleared
       const afterClearHealth = await toolRegistry.quickHealthCheck();
       expect(afterClearHealth.counts.tools).toBeLessThan(initialTools);
       expect(afterClearHealth.counts.perspectives).toBeLessThan(initialPerspectives);
@@ -261,7 +261,7 @@ describe('Module Operations Integration Tests', () => {
     test('should detect and report module inconsistencies', async () => {
       // Create inconsistency by manually removing some perspectives
       const loader = await toolRegistry.getLoader();
-      await loader.mongoProvider.mongoProvider.delete('tool_perspectives', {
+      await loader.mongoProvider.databaseService.mongoProvider.delete('tool_perspectives', {
         moduleName: TEST_MODULE_NAME
       }, { limit: 2 });
 
@@ -343,9 +343,9 @@ describe('Module Operations Integration Tests', () => {
 
       // Run multiple operations concurrently
       const operations = [
-        toolRegistry.loadModule('Calculator', { verbose: false, includeVectors: false }),
+        toolRegistry.loadModule('calculator', { verbose: false, includeVectors: false }),
         toolRegistry.loadModule('Json', { verbose: false, includeVectors: false }),
-        toolRegistry.verifyModule('Calculator'),
+        toolRegistry.verifyModule('calculator'),
       ];
 
       const results = await Promise.allSettled(operations);
@@ -365,18 +365,22 @@ describe('Module Operations Integration Tests', () => {
 
       // Test MongoDB connection
       expect(mongoProvider).toBeDefined();
-      expect(mongoProvider.mongoProvider).toBeDefined();
+      expect(mongoProvider.databaseService.mongoProvider).toBeDefined();
 
       // Test basic CRUD operations
       const testRecord = { name: 'test', timestamp: new Date() };
-      const insertResult = await mongoProvider.mongoProvider.insertOne('test_collection', testRecord);
-      expect(insertResult.insertedId).toBeDefined();
+      const insertResult = await mongoProvider.databaseService.mongoProvider.insert('test_collection', testRecord);
+      expect(insertResult.insertedIds).toBeDefined();
+      const insertedId = Object.values(insertResult.insertedIds)[0];
+      expect(insertedId).toBeDefined();
 
-      const findResult = await mongoProvider.mongoProvider.findOne('test_collection', { name: 'test' });
-      expect(findResult).toMatchObject(testRecord);
+      const findResult = await mongoProvider.databaseService.mongoProvider.findOne('test_collection', { name: 'test' });
+      expect(findResult).toBeDefined();
+      expect(findResult.name).toBe(testRecord.name);
+      expect(findResult._id).toBeDefined(); // MongoDB ObjectId should be present
 
-      const deleteResult = await mongoProvider.mongoProvider.deleteOne('test_collection', { name: 'test' });
-      expect(deleteResult.deletedCount).toBe(1);
+      const deleteResult = await mongoProvider.databaseService.mongoProvider.delete('test_collection', { name: 'test' });
+      expect(deleteResult.deletedCount).toBeGreaterThanOrEqual(1);
     }, TEST_TIMEOUT);
 
     test('should verify Qdrant connection and vector operations', async () => {

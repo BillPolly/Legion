@@ -18,7 +18,7 @@ import { GenerateHTMLPageTool } from './tools/GenerateHTMLPageTool.js';
 export class JSGeneratorModule extends Module {
   constructor(dependencies = {}) {
     super();
-    this.name = 'JSGeneratorModule';
+    this.name = 'js-generator';
     this.config = dependencies;
     this.description = 'JavaScript code generation tools for creating modules, functions, classes, and API endpoints';
     this.version = '1.0.0';

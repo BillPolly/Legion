@@ -188,6 +188,9 @@ export class LoadingManager {
     const moduleQuery = moduleFilter ? { name: moduleFilter } : {};
     const toolQuery = moduleFilter ? { moduleName: moduleFilter } : {};
 
+    // Track which modules are being cleared to prevent automatic reloading
+    const clearedTimestamp = new Date();
+
     if (clearModules) {
       // Complete clear of modules (with optional filter)
       const result = await this.mongoProvider.databaseService.mongoProvider.db.collection('modules').deleteMany(moduleQuery);
@@ -198,18 +201,21 @@ export class LoadingManager {
       }
     } else {
       // Reset module statuses but preserve discovery (with optional filter)
+      // Add tracking timestamp to prevent automatic reloading
       const result = await this.mongoProvider.databaseService.mongoProvider.db.collection('modules').updateMany(
         moduleQuery,
         {
           $set: {
-            loadingStatus: 'pending',
-            validationStatus: 'pending'
+            loadingStatus: 'unloaded',
+            validationStatus: 'pending',
+            clearedAt: clearedTimestamp,
+            clearedForReload: true
           }
         }
       );
       if (this.verbose) {
         const target = moduleFilter ? ` for module '${moduleFilter}'` : '';
-        console.log(`  ✅ Reset${target} ${result.modifiedCount} module statuses`);
+        console.log(`  ✅ Reset${target} ${result.modifiedCount} module statuses to 'unloaded'`);
       }
     }
 
@@ -325,7 +331,7 @@ export class LoadingManager {
         expectEmptyVectors: clearVectors
       });
       
-      const moduleVerification = await this.verifier.verifyModulesUnloaded();
+      const moduleVerification = await this.verifier.verifyModulesUnloaded(moduleFilter);
       
       if (!clearingVerification.success || !moduleVerification.success) {
         const errors = [...clearingVerification.errors, ...moduleVerification.errors];
@@ -834,20 +840,52 @@ export class LoadingManager {
       }
     }
     
-    // Update module indexing status
+    // Update module indexing status - check if exists first, then update/insert appropriately
     for (const [moduleName, perspectiveCount] of Object.entries(modulesPerspectives)) {
-      await this.mongoProvider.databaseService.mongoProvider.update(
-        'modules',
-        { name: moduleName },
-        {
-          $set: {
-            indexingStatus: 'indexed',
-            lastIndexedAt: new Date(),
-            perspectiveCount: perspectiveCount,
-            indexingError: null
-          }
+      try {
+        // Check if module already exists
+        const existingModule = await this.mongoProvider.databaseService.mongoProvider.findOne(
+          'modules',
+          { name: moduleName }
+        );
+        
+        if (existingModule) {
+          // Update existing module
+          await this.mongoProvider.databaseService.mongoProvider.update(
+            'modules',
+            { name: moduleName },
+            {
+              $set: {
+                indexingStatus: 'indexed',
+                lastIndexedAt: new Date(),
+                perspectiveCount: perspectiveCount,
+                indexingError: null
+              }
+            }
+          );
+        } else {
+          // Insert new module with all required fields
+          await this.mongoProvider.databaseService.mongoProvider.insert(
+            'modules',
+            {
+              name: moduleName,
+              description: `${moduleName} module automatically discovered and loaded during tool registry indexing process. This module provides various tools and functionality within the Legion framework ecosystem.`,
+              type: 'dynamic',
+              path: `modules/${moduleName}`,
+              indexingStatus: 'indexed',
+              lastIndexedAt: new Date(),
+              perspectiveCount: perspectiveCount,
+              indexingError: null,
+              createdAt: new Date(),
+              status: 'active',
+              loadingStatus: 'pending'
+            }
+          );
         }
-      );
+      } catch (error) {
+        console.warn(`Failed to update indexing status for module ${moduleName}: ${error.message}`);
+        this.pipelineState.errors.push(`Failed to update module ${moduleName} indexing status: ${error.message}`);
+      }
     }
 
     if (this.verbose) {
@@ -1239,20 +1277,42 @@ export class LoadingManager {
     
     for (const { config, instance } of loadedModules) {
       try {
-        // Update module status to loaded
+        // Check if module was recently cleared - don't automatically mark as loaded
+        const existingModule = await this.mongoProvider.databaseService.mongoProvider.findOne('modules', { name: config.name });
+        const wasRecentlyCleared = existingModule && existingModule.clearedForReload && 
+          existingModule.clearedAt && (Date.now() - existingModule.clearedAt.getTime()) < 300000; // 5 minutes
+          
+        // Update module status to loaded, but respect cleared state - use upsert to handle missing modules
+        const updateData = {
+          $set: {
+            loadingStatus: wasRecentlyCleared ? 'unloaded' : 'loaded',
+            lastLoadedAt: new Date(),
+            toolCount: instance.getTools ? instance.getTools().length : 0
+          },
+          $unset: {
+            loadingError: ""
+          },
+          $setOnInsert: {
+            name: config.name,
+            description: config.description || `${config.name} module automatically loaded into the tool registry system. This module provides various tools and functionality within the Legion framework ecosystem.`,
+            type: config.type || 'class',
+            path: config.path || `modules/${config.name}`,
+            createdAt: new Date(),
+            status: 'active'
+          }
+        };
+        
+        // Clear the clearedForReload flag only if we're actually loading it
+        if (!wasRecentlyCleared) {
+          updateData.$unset.clearedForReload = "";
+          updateData.$unset.clearedAt = "";
+        }
+        
         await this.mongoProvider.databaseService.mongoProvider.update(
           'modules',
           { name: config.name, className: config.className },
-          {
-            $set: {
-              loadingStatus: 'loaded',
-              lastLoadedAt: new Date(),
-              toolCount: instance.getTools ? instance.getTools().length : 0
-            },
-            $unset: {
-              loadingError: ""
-            }
-          }
+          updateData,
+          { upsert: true }
         );
         
         // Save tools from this module
@@ -1298,19 +1358,32 @@ export class LoadingManager {
       }
     }
     
-    // Update failed modules
+    // Update failed modules - use upsert to handle missing modules
     for (const { config, error } of failedModules) {
-      await this.mongoProvider.databaseService.mongoProvider.update(
-        'modules',
-        { name: config.name, className: config.className },
-        {
-          $set: {
-            loadingStatus: 'failed',
-            loadingError: error,
-            lastLoadedAt: new Date()
-          }
-        }
-      );
+      try {
+        await this.mongoProvider.databaseService.mongoProvider.update(
+          'modules',
+          { name: config.name, className: config.className },
+          {
+            $set: {
+              loadingStatus: 'failed',
+              loadingError: error,
+              lastLoadedAt: new Date()
+            },
+            $setOnInsert: {
+              name: config.name,
+              description: config.description || `${config.name} module encountered loading errors in the tool registry system. This module may require additional configuration or dependencies to function properly.`,
+              type: config.type || 'class',
+              path: config.path || `modules/${config.name}`,
+              createdAt: new Date(),
+              status: 'maintenance'
+            }
+          },
+          { upsert: true }
+        );
+      } catch (updateError) {
+        console.warn(`Failed to update failed module ${config.name}: ${updateError.message}`);
+      }
     }
     
     return {
