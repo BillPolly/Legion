@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+IF you are following an implementation plan YOU MUST UPDATE IT AS YOU PROCEED AT THE END OF EACH PHASE
+
 ## Project Overview
 
 Legion is a modular framework for building AI agent tools with consistent interfaces. It's organized as a monorepo using npm workspaces with packages for core infrastructure, AI/LLM services, tool collections, and applications.
