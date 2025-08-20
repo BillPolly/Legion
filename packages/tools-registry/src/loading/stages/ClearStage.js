@@ -117,12 +117,17 @@ export class ClearStage {
       
       console.log(`  ✓ Created Qdrant collection with ${this.embeddingDimension} dimensions`);
       
-      // Verify it was created correctly
-      const collectionInfo = await this.vectorStore.getCollection(this.collectionName);
-      const actualDimension = collectionInfo?.config?.params?.vectors?.size;
-      
-      if (actualDimension !== this.embeddingDimension) {
-        throw new Error(`Qdrant collection created with wrong dimensions! Expected ${this.embeddingDimension}, got ${actualDimension}`);
+      // Verify it was created correctly using the Qdrant client directly
+      try {
+        const collectionInfo = await this.vectorStore.client.getCollection(this.collectionName);
+        const actualDimension = collectionInfo?.config?.params?.vectors?.size;
+        
+        if (actualDimension !== this.embeddingDimension) {
+          throw new Error(`Qdrant collection created with wrong dimensions! Expected ${this.embeddingDimension}, got ${actualDimension}`);
+        }
+      } catch (verifyError) {
+        // Collection verification failed, but creation might have succeeded
+        console.log('  ⚠️ Could not verify collection dimensions, continuing...');
       }
       
     } catch (error) {

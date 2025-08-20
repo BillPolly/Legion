@@ -38,13 +38,13 @@ describe('Live Semantic Search Complete Test', () => {
     
     // 4. Create ToolIndexer
     toolIndexer = await ToolIndexer.createForTools(resourceManager, {
-      collectionName: 'legion_tools'
+      collectionName: 'tool_perspectives'
     });
     console.log('✅ ToolIndexer created');
     
     // 5. Create SemanticToolDiscovery
     semanticDiscovery = await SemanticToolDiscovery.createForTools(resourceManager, {
-      collectionName: 'legion_tools'
+      collectionName: 'tool_perspectives'
     });
     console.log('✅ SemanticToolDiscovery created\n');
   }, 120000);

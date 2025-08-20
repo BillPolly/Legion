@@ -13,7 +13,7 @@ export class SemanticToolDiscovery {
     this.semanticSearchProvider = dependencies.semanticSearchProvider;
     this.toolIndexer = dependencies.toolIndexer || new ToolIndexer(dependencies);
     this.toolRegistry = dependencies.toolRegistry;
-    this.collectionName = dependencies.collectionName || 'legion_tools';
+    this.collectionName = dependencies.collectionName || 'tool_perspectives';
     this.mongoProvider = dependencies.mongoProvider; // For 3-collection architecture
     
     // MCP Integration
@@ -62,7 +62,7 @@ export class SemanticToolDiscovery {
     
     // Create ToolIndexer with Nomic embeddings
     const toolIndexer = await ToolIndexer.createForTools(resourceManager, {
-      collectionName: options.collectionName || 'legion_tools'
+      collectionName: options.collectionName || 'tool_perspectives'
     });
     
     console.log('✅ SemanticToolDiscovery configured with Nomic embeddings');
@@ -78,7 +78,7 @@ export class SemanticToolDiscovery {
       toolIndexer,
       toolRegistry: options.toolRegistry,
       mongoProvider: mongoProvider,
-      collectionName: options.collectionName || 'legion_tools',
+      collectionName: options.collectionName || 'tool_perspectives',
       ...options
     });
   }
@@ -114,9 +114,9 @@ export class SemanticToolDiscovery {
     // Enhance task description for better semantic matching
     const enhancedQuery = this.enhanceTaskDescription(taskDescription);
 
-    // Search Legion tools - use Qdrant legion_tools collection
+    // Search Legion tools - use Qdrant tool_perspectives collection
     const legionSearchResults = await this.semanticSearchProvider.semanticSearch(
-      this.collectionName,  // Use the Qdrant collection name (legion_tools)
+      this.collectionName,  // Use the Qdrant collection name (tool_perspectives)
       enhancedQuery,
       {
         limit: limit * 2, // Get more for filtering

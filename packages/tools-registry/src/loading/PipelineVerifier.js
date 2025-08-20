@@ -55,7 +55,7 @@ export class PipelineVerifier {
 
       // Verify Qdrant collection exists with correct dimensions
       try {
-        const collectionInfo = await this.vectorStore.getCollection(this.collectionName);
+        const collectionInfo = await this.vectorStore.client.getCollection(this.collectionName);
         const dimension = collectionInfo?.config?.params?.vectors?.size;
         
         if (dimension !== 768) {

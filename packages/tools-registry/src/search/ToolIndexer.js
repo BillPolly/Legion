@@ -13,7 +13,7 @@ export class ToolIndexer {
     this.embeddingService = dependencies.embeddingService;
     this.vectorStore = dependencies.vectorStore;
     this.documentProcessor = dependencies.documentProcessor || new DocumentProcessor();
-    this.collectionName = dependencies.collectionName || 'legion_tools';
+    this.collectionName = dependencies.collectionName || 'tool_perspectives';
     this.mongoProvider = dependencies.mongoProvider; // For storing perspectives in MongoDB
     this.indexedTools = new Map();
     this.batchSize = dependencies.batchSize || 50;
@@ -46,7 +46,7 @@ export class ToolIndexer {
       vectorStore: toolSemanticProvider.vectorStore,
       documentProcessor: toolSemanticProvider.documentProcessor,
       mongoProvider: mongoProvider,
-      collectionName: options.collectionName || 'legion_tools',
+      collectionName: options.collectionName || 'tool_perspectives',
       batchSize: options.batchSize || 50
     });
   }

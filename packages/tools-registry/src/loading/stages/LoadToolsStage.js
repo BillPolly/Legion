@@ -214,7 +214,7 @@ export class LoadToolsStage {
       
       for (let i = 0; i < tools.length; i += batchSize) {
         const batch = tools.slice(i, i + batchSize);
-        const result = await this.mongoProvider.insertMany('tools', batch);
+        const result = await this.mongoProvider.insert('tools', batch);
         // Handle both insertedIds and insertedCount
         const insertedCount = result.insertedCount || (result.insertedIds ? Object.keys(result.insertedIds).length : batch.length);
         totalInserted += insertedCount;

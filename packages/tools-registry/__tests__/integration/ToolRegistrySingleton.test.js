@@ -102,8 +102,8 @@ describe('ToolRegistry Singleton Integration', () => {
       expect(registry.resourceManager.initialized).toBe(true);
       
       // Should have environment variables
-      const mongoUri = registry.resourceManager.get('env.MONGODB_URI');
-      expect(mongoUri).toBeDefined();
+      const mongoUrl = registry.resourceManager.get('env.MONGODB_URL');
+      expect(mongoUrl).toBeDefined();
     });
     
     test('MongoDB provider is created automatically', async () => {

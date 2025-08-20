@@ -48,24 +48,22 @@ describe('Live Semantic Tool Discovery Integration Tests', () => {
     semanticProvider = await SemanticSearchProvider.create(resourceManager);
     console.log('✅ SemanticSearchProvider created with Nomic embeddings');
     
-    // Initialize loading manager and load tools
-    loadingManager = new LoadingManager({
-      mongoProvider: mongoProvider,
-      resourceManager
-    });
+    // Use ToolRegistry singleton properly
+    const { default: toolRegistryInstance } = await import('../../src/index.js');
+    toolRegistry = toolRegistryInstance;
     
-    toolRegistry = new ToolRegistry();
+    // Get the loading manager from ToolRegistry
+    loadingManager = await toolRegistry.getLoader();
+    console.log('✅ LoadingManager created from ToolRegistry');
     
-    // Load all modules and tools
     console.log('Loading modules and tools...');
-    const loadResult = await loadingManager.loadModules({ all: true });
-    console.log(`✅ Loaded ${loadResult.loaded} modules with ${loadResult.tools.length} tools`);
-    
-    // Register tools in registry
-    for (const tool of loadResult.tools) {
-      await toolRegistry.registerTool(tool);
-    }
-    console.log(`✅ Registered ${toolRegistry.tools.size} tools in registry`);
+    // Use the full pipeline to ensure all data is loaded
+    const loadResult = await loadingManager.fullPipeline({
+      clearFirst: false, // Don't clear existing data
+      includePerspectives: false, // We already have perspectives
+      includeVectors: false // We already have vectors indexed
+    });
+    console.log(`✅ Loaded ${loadResult.modules?.loaded || 0} modules with ${loadResult.tools?.loaded || 0} tools`);
     
     // Create ToolIndexer for indexing
     toolIndexer = await ToolIndexer.createForTools(resourceManager, {
@@ -82,9 +80,11 @@ describe('Live Semantic Tool Discovery Integration Tests', () => {
     
     // Index all tools if not already indexed
     console.log('Indexing tools...');
-    const tools = Array.from(toolRegistry.tools.values());
-    const indexResult = await toolIndexer.indexTools(tools);
-    console.log(`✅ Indexed ${indexResult.indexed} tools with ${indexResult.totalPerspectives} perspectives`);
+    const tools = await toolRegistry.listTools();
+    console.log(`Found ${tools.length} tools in registry`);
+    
+    // Since we already have data indexed from previous tests, skip re-indexing
+    console.log(`✅ Using existing indexed data: ${tools.length} tools available`);
   }, 60000); // Increase timeout for setup
   
   afterAll(async () => {

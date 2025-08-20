@@ -82,7 +82,7 @@ export class ToolRegistry {
         this.semanticDiscovery = await SemanticToolDiscovery.createForTools(
           this.resourceManager,
           {
-            collectionName: 'legion_tools',  // Use the correct Qdrant collection name
+            collectionName: 'tool_perspectives',  // Use the correct Qdrant collection name
             toolRegistry: this
           }
         );
