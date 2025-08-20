@@ -91,7 +91,8 @@ export class GeneratePerspectivesStage {
       ...verificationResult,
       toolsProcessed,
       toolsSkipped,
-      perspectivesGenerated
+      perspectivesGenerated,
+      perspectivesPerTool: toolsProcessed > 0 ? Math.round(perspectivesGenerated / toolsProcessed) : 0
     };
   }
 

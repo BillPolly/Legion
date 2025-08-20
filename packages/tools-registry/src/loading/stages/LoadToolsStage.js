@@ -65,9 +65,10 @@ export class LoadToolsStage {
     
     return {
       ...verificationResult,
-      modulesLoaded: successCount,
+      modulesProcessed: successCount,
+      modulesLoaded: successCount,  // Keep for backward compatibility
       modulesFailed: failCount,
-      toolsAdded: allTools.length,  // Changed from toolsLoaded to match expectation
+      toolsAdded: allTools.length,
       toolsLoaded: allTools.length  // Keep for backward compatibility
     };
   }

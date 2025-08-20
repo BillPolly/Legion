@@ -14,8 +14,11 @@
  * }
  */
 
-export class Tool {
+import { EventEmitter } from 'events';
+
+export class Tool extends EventEmitter {
   constructor({ name, description, execute, getMetadata, schema, inputSchema, outputSchema }) {
+    super();
     this.name = name;
     this.description = description || 'No description available';
     this._execute = execute;

@@ -28,7 +28,24 @@ export class Module extends EventEmitter {
   registerTool(name, tool) {
     this.tools[name] = tool;
     
-    // Subscribe to tool events and forward them to module level
+    // Forward tool events to module level (EventEmitter style)
+    if (tool.on && typeof tool.on === 'function') {
+      // Forward common events with module context
+      const forwardEvent = (eventType) => {
+        tool.on(eventType, (data) => {
+          this.emit(eventType, {
+            tool: name,
+            module: this.moduleDefinition?.name || 'unknown',
+            ...data
+          });
+        });
+      };
+      
+      // Forward common events
+      ['progress', 'error', 'info', 'warning'].forEach(forwardEvent);
+    }
+    
+    // Also support legacy subscription method if available
     if (tool.subscribe && typeof tool.subscribe === 'function') {
       tool.subscribe((message) => {
         // Forward to module level with context
