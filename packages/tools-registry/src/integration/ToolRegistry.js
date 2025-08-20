@@ -594,6 +594,208 @@ export class ToolRegistry {
       success: result.success
     };
   }
+
+  // ============================================================================
+  // CENTRALIZED VALIDATION & VERIFICATION METHODS
+  // ============================================================================
+
+  /**
+   * Get the Verifier instance for comprehensive validation
+   * Creates and initializes it on first access
+   * 
+   * @returns {Promise<Verifier>} The verifier instance
+   */
+  async getVerifier() {
+    await this._ensureInitialized();
+    
+    const loader = await this.getLoader();
+    if (!loader.verifier) {
+      const { Verifier } = await import('../verification/Verifier.js');
+      loader.verifier = new Verifier(
+        this.provider,
+        this.semanticDiscovery?.semanticProvider || null,
+        false // verbose = false by default
+      );
+    }
+    
+    return loader.verifier;
+  }
+
+  /**
+   * Comprehensive system verification
+   * Validates tool:perspective:vector ratios, relationships, and data integrity
+   * 
+   * @param {Object} options - Verification options
+   * @param {boolean} options.verbose - Show detailed output (default: false)
+   * @returns {Promise<VerificationResult>}
+   */
+  async verifySystem(options = {}) {
+    await this._ensureInitialized();
+    
+    const verifier = await this.getVerifier();
+    const originalVerbose = verifier.verbose;
+    
+    try {
+      // Configure verbosity
+      verifier.verbose = options.verbose || false;
+      
+      // Run comprehensive system verification
+      const result = await verifier.verifySystem();
+      
+      // Log results if requested
+      if (options.verbose) {
+        verifier.logResults(result);
+      }
+      
+      return result;
+    } finally {
+      // Restore original verbosity
+      verifier.verbose = originalVerbose;
+    }
+  }
+
+  /**
+   * Quick health check - essential validations only
+   * Fast check for critical issues without full verification
+   * 
+   * @returns {Promise<HealthCheckResult>}
+   */
+  async quickHealthCheck() {
+    await this._ensureInitialized();
+    
+    const verifier = await this.getVerifier();
+    return await verifier.quickHealthCheck();
+  }
+
+  /**
+   * Comprehensive inconsistency detection
+   * Detects orphaned records, duplicates, invalid embeddings, schema mismatches, etc.
+   * 
+   * @param {Object} options - Detection options
+   * @param {boolean} options.verbose - Show detailed output (default: false)
+   * @returns {Promise<InconsistencyReport>}
+   */
+  async detectInconsistencies(options = {}) {
+    await this._ensureInitialized();
+    
+    const verifier = await this.getVerifier();
+    const originalVerbose = verifier.verbose;
+    
+    try {
+      // Configure verbosity
+      verifier.verbose = options.verbose || false;
+      
+      // Run comprehensive inconsistency detection
+      const report = await verifier.detectInconsistencies();
+      
+      // Log results if requested
+      if (options.verbose) {
+        verifier.logInconsistencies(report);
+      }
+      
+      return report;
+    } finally {
+      // Restore original verbosity
+      verifier.verbose = originalVerbose;
+    }
+  }
+
+  /**
+   * Verify that database clearing worked correctly
+   * Validates that tools, perspectives, and vectors were cleared but modules remain
+   * 
+   * @param {Object} options - Clearing verification options
+   * @param {boolean} options.expectEmptyTools - Whether tools should be cleared (default: true)
+   * @param {boolean} options.expectEmptyPerspectives - Whether perspectives should be cleared (default: true)
+   * @param {boolean} options.expectEmptyVectors - Whether vectors should be cleared (default: true)
+   * @returns {Promise<ClearingVerificationResult>}
+   */
+  async verifyClearingWorked(options = {}) {
+    await this._ensureInitialized();
+    
+    const verifier = await this.getVerifier();
+    return await verifier.verifyClearingWorked(options);
+  }
+
+  /**
+   * Verify that modules are in correct unloaded state after clearing
+   * Validates that modules exist but are marked as unloaded/pending
+   * 
+   * @returns {Promise<ModuleStatusVerificationResult>}
+   */
+  async verifyModulesUnloaded() {
+    await this._ensureInitialized();
+    
+    const verifier = await this.getVerifier();
+    return await verifier.verifyModulesUnloaded();
+  }
+
+  /**
+   * Get comprehensive validation state
+   * Returns current counts, ratios, and validation status
+   * 
+   * @returns {Promise<ValidationState>}
+   */
+  async getValidationState() {
+    await this._ensureInitialized();
+    
+    const verifier = await this.getVerifier();
+    const counts = await verifier.getCounts();
+    const ratios = verifier.calculateRatios(counts);
+    
+    return {
+      counts,
+      ratios,
+      timestamp: new Date().toISOString(),
+      healthy: counts.perspectives === counts.vectors && ratios.perspectivesPerTool < 15
+    };
+  }
+
+  /**
+   * Validate and repair database inconsistencies
+   * Runs detection and applies automatic fixes where safe
+   * 
+   * @param {Object} options - Repair options
+   * @param {boolean} options.dryRun - Only detect, don't repair (default: true)
+   * @param {boolean} options.verbose - Show detailed output (default: false)
+   * @param {string[]} options.repairActions - Specific actions to take (default: all safe actions)
+   * @returns {Promise<RepairResult>}
+   */
+  async validateAndRepair(options = {}) {
+    await this._ensureInitialized();
+    
+    const {
+      dryRun = true,
+      verbose = false,
+      repairActions = ['clean_orphaned_records', 'fix_reference_integrity']
+    } = options;
+    
+    // First, detect all inconsistencies
+    const report = await this.detectInconsistencies({ verbose });
+    
+    const repairResult = {
+      success: true,
+      detectionReport: report,
+      repairsAttempted: [],
+      repairsSuccessful: [],
+      repairsFailed: [],
+      dryRun
+    };
+    
+    if (dryRun) {
+      // Just return the detection report with recommendations
+      return repairResult;
+    }
+    
+    // Apply repairs (implementation would go here in a real system)
+    // For now, we'll just return the detection results
+    if (verbose) {
+      console.log('🔧 Repair functionality not yet implemented');
+      console.log('   Use the detection report to manually fix issues');
+    }
+    
+    return repairResult;
+  }
   
   /**
    * Clean up resources and close connections

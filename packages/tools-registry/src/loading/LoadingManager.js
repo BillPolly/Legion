@@ -19,6 +19,8 @@ import { SemanticSearchProvider } from '../../../semantic-search/src/SemanticSea
 import { createToolIndexer } from '../search/index.js';
 import { ResourceManager } from '@legion/resource-manager';
 import { Verifier } from '../verification/Verifier.js';
+import { PipelineOrchestrator } from './PipelineOrchestrator.js';
+import { PerspectiveGenerator } from '../search/PerspectiveGenerator.js';
 
 export class LoadingManager {
   constructor(options = {}) {
@@ -31,6 +33,7 @@ export class LoadingManager {
     this.mongoProvider = options.mongoProvider || null;
     this.semanticSearchProvider = options.semanticSearchProvider || null;
     this.toolIndexer = null;
+    this.orchestrator = null; // NEW: Pipeline orchestrator
     
     // State tracking
     this.initialized = false;
@@ -73,6 +76,7 @@ export class LoadingManager {
     this.databasePopulator = new DatabasePopulator({
       verbose: this.verbose
     });
+    await this.databasePopulator.initialize();
 
     // Only create MongoDB provider if not provided (allows sharing connections)
     if (!this.mongoProvider) {
@@ -88,10 +92,44 @@ export class LoadingManager {
     // Initialize verifier (will be properly configured when semantic search is initialized)
     this.verifier = null;
 
+    // Initialize orchestrator after other components are ready
+    // Will be initialized when needed to ensure all dependencies are available
+    this.orchestrator = null;
+
     this.initialized = true;
 
     if (this.verbose) {
       console.log('✅ LoadingManager initialized with all components');
+    }
+  }
+
+  /**
+   * Initialize the pipeline orchestrator
+   */
+  async #initializeOrchestrator() {
+    if (this.orchestrator) return;
+
+    // Ensure semantic search is initialized first
+    await this.#ensureSemanticSearchInitialized();
+
+    // Create perspective generator
+    const perspectiveGenerator = new PerspectiveGenerator(
+      this.mongoProvider.databaseService.mongoProvider
+    );
+
+    // Create orchestrator with all required dependencies
+    this.orchestrator = new PipelineOrchestrator({
+      mongoProvider: this.mongoProvider.databaseService.mongoProvider,
+      vectorStore: this.semanticSearchProvider.vectorStore,
+      moduleLoader: this.moduleLoader,
+      perspectiveGenerator: perspectiveGenerator,
+      embeddingService: this.semanticSearchProvider.embeddingService,
+      embeddingBatchSize: 50,
+      vectorBatchSize: 100
+    });
+
+    if (this.verbose) {
+      console.log('✅ Pipeline orchestrator initialized');
     }
   }
 
@@ -150,18 +188,13 @@ export class LoadingManager {
       }
     } else {
       // Reset module statuses but preserve discovery
+      // Only update fields that exist in the runtime modules schema
       const result = await this.mongoProvider.databaseService.mongoProvider.db.collection('modules').updateMany(
         {},
         {
           $set: {
             loadingStatus: 'pending',
-            indexingStatus: 'pending',
-            lastLoadedAt: null,
-            lastIndexedAt: null,
-            loadingError: null,
-            indexingError: null,
-            toolCount: 0,
-            perspectiveCount: 0
+            validationStatus: 'pending'
           }
         }
       );
@@ -292,18 +325,19 @@ export class LoadingManager {
 
   /**
    * Clear all databases (MongoDB collections + Qdrant vectors)
+   * Preserves module_registry collection to avoid re-discovery
    * @deprecated Use clearForReload() instead to preserve module discovery
    */
   async clearAll() {
     await this.#ensureInitialized();
 
     if (this.verbose) {
-      console.log('🧹 Clearing all databases...');
+      console.log('🧹 Clearing all databases (preserving module_registry)...');
     }
 
     let totalCleared = 0;
 
-    // Clear MongoDB collections
+    // Clear MongoDB collections - NOTE: module_registry is preserved!
     const mongoCollections = ['modules', 'tools', 'tool_perspectives'];
     
     for (const collectionName of mongoCollections) {
@@ -378,6 +412,155 @@ export class LoadingManager {
   }
 
   /**
+   * Populate runtime modules collection from permanent module_registry
+   * This allows clearing runtime state while preserving discovery data
+   */
+  async populateModulesFromRegistry(filter = null) {
+    await this.#ensureInitialized();
+
+    if (this.verbose) {
+      console.log('📋 Populating modules from registry...');
+    }
+
+    // Build query for module_registry
+    let query = { loadable: { $ne: false } };
+    if (filter) {
+      query.$or = [
+        { name: { $regex: new RegExp(filter, 'i') } },
+        { className: { $regex: new RegExp(filter, 'i') } }
+      ];
+    }
+
+    // Get modules from registry
+    const registryModules = await this.mongoProvider.databaseService.mongoProvider.find('module_registry', query);
+
+    if (this.verbose) {
+      console.log(`  Found ${registryModules.length} modules in registry`);
+    }
+
+    let populated = 0;
+    let skipped = 0;
+
+    // Populate runtime modules collection with default state
+    for (const registryModule of registryModules) {
+      if (this.verbose) {
+        console.log(`  🔄 Processing registry module: ${registryModule.name}`);
+      }
+      
+      try {
+        // Check if already exists in runtime collection
+        const existingModule = await this.mongoProvider.databaseService.mongoProvider.findOne('modules', {
+          name: registryModule.name,
+          className: registryModule.className,
+          filePath: registryModule.filePath
+        });
+
+        if (existingModule) {
+          skipped++;
+          continue;
+        }
+
+        // Create runtime module entry with default state
+        const runtimeModule = {
+          // Core fields from registry
+          name: registryModule.name,
+          type: registryModule.type,
+          path: registryModule.path,
+          className: registryModule.className,
+          filePath: registryModule.filePath,
+          package: registryModule.package,
+          dependencies: registryModule.dependencies || [],
+          
+          // Ensure description meets validation requirements
+          description: registryModule.description && registryModule.description.length >= 10 
+            ? registryModule.description
+            : `${registryModule.name} module provides tools for specific functionality`,
+          
+          // Required schema fields that might be missing
+          tags: [],
+          category: 'utility',
+          config: {},
+          status: 'active',
+          maintainer: {},
+            
+          // Loading status
+          loadingStatus: 'pending',
+          // Note: omitting null date fields as they're optional in schema
+          
+          // Indexing status
+          indexingStatus: 'pending',
+          // Note: omitting null date fields as they're optional in schema
+          
+          // Tool counts (ensure proper MongoDB integer type)
+          toolCount: 0,
+          perspectiveCount: 0,
+          
+          // Validation status
+          validationStatus: 'pending',
+          
+          // Timestamps
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+
+        if (this.verbose) {
+          console.log(`  🔍 Created runtime module object for ${registryModule.name}`);
+          console.log(`      Type: ${runtimeModule.type}, Status: ${runtimeModule.status}`);
+        }
+
+        // Insert into runtime collection
+        try {
+          if (this.verbose) {
+            console.log(`  📝 Inserting ${registryModule.name} into runtime collection...`);
+          }
+          
+          const insertResult = await this.mongoProvider.databaseService.mongoProvider.insert('modules', runtimeModule);
+          populated++;
+
+          if (this.verbose) {
+            console.log(`  ✅ Populated: ${registryModule.name} (ID: ${insertResult.insertedIds?.[0]})`);
+          }
+        } catch (insertError) {
+          if (this.verbose) {
+            console.log(`  ❌ Insert failed for ${registryModule.name}: ${insertError.message}`);
+            console.log('    Error code:', insertError.code);
+            if (insertError.code === 121) {
+              console.log('    This is a document validation error');
+              // Show just the first few fields to avoid overwhelming output
+              const debugData = {
+                name: runtimeModule.name,
+                type: runtimeModule.type,
+                description: runtimeModule.description?.substring(0, 50) + '...',
+                toolCount: runtimeModule.toolCount,
+                perspectiveCount: runtimeModule.perspectiveCount,
+                status: runtimeModule.status,
+                category: runtimeModule.category
+              };
+              console.log('    Key fields being inserted:', JSON.stringify(debugData, null, 2));
+            }
+          }
+          throw insertError;
+        }
+
+      } catch (error) {
+        if (this.verbose) {
+          console.log(`  ❌ Failed to populate ${registryModule.name}: ${error.message}`);
+        }
+      }
+    }
+
+    if (this.verbose) {
+      console.log(`✅ Population complete: ${populated} populated, ${skipped} skipped`);
+    }
+
+    return {
+      populated,
+      skipped,
+      total: registryModules.length
+    };
+  }
+
+  /**
    * Load modules to MongoDB
    * @param {string|Object} options - Module filter string or options object
    * @param {string} [options.module] - Single module name to load
@@ -418,6 +601,15 @@ export class LoadingManager {
       if (this.verbose) {
         console.log(`📦 Loading all modules...`);
       }
+    }
+
+    // First check if we need to populate runtime modules from registry
+    const moduleCount = await this.mongoProvider.databaseService.mongoProvider.count('modules', {});
+    if (moduleCount === 0) {
+      if (this.verbose) {
+        console.log('📋 No modules in runtime collection, populating from registry...');
+      }
+      await this.populateModulesFromRegistry(moduleFilter);
     }
 
     // Load modules using ModuleLoader
@@ -841,6 +1033,65 @@ export class LoadingManager {
   }
 
   /**
+   * Run the staged pipeline with verification between stages
+   * This is the NEW method that uses the PipelineOrchestrator
+   * 
+   * @param {Object} options - Pipeline options
+   * @param {string} [options.module] - Single module name to process
+   * @param {boolean} [options.forceRestart] - Force restart even if resume is possible
+   * @param {boolean} [options.clearModules] - Whether to clear modules collection (default: false)
+   * @returns {Promise<Object>} Pipeline execution report
+   */
+  async runFullPipeline(options = {}) {
+    await this.#ensureInitialized();
+    await this.#initializeOrchestrator();
+
+    console.log('🚀 Starting staged pipeline with verification...');
+    console.log('=' + '='.repeat(59));
+    
+    try {
+      const result = await this.orchestrator.execute(options);
+      
+      // Update our state tracking from orchestrator results
+      if (result.success) {
+        this.pipelineState = {
+          cleared: true,
+          modulesLoaded: true,
+          perspectivesGenerated: true,
+          vectorsIndexed: true,
+          lastModuleFilter: options.module || null,
+          moduleCount: result.counts.tools,
+          toolCount: result.counts.tools,
+          perspectiveCount: result.counts.perspectives,
+          vectorCount: result.counts.vectors,
+          errors: []
+        };
+      }
+      
+      console.log('✅ Pipeline completed successfully');
+      return result;
+      
+    } catch (error) {
+      // Record error in state
+      this.pipelineState.errors.push(error.message);
+      
+      console.error('❌ Pipeline failed:', error.message);
+      console.log('💡 Run again to resume from last checkpoint');
+      throw error;
+    }
+  }
+
+  /**
+   * Get current pipeline progress from orchestrator
+   */
+  async getPipelineProgress() {
+    if (!this.orchestrator) {
+      return null;
+    }
+    return await this.orchestrator.getProgress();
+  }
+
+  /**
    * Close all connections
    */
   async close() {
@@ -887,13 +1138,21 @@ export class LoadingManager {
     
     const { 
       onlyValidated = false,
-      includeWarnings = true 
+      includeWarnings = true,
+      filter = null
     } = options;
     
     // Build query for modules to load
     const query = {
       loadable: { $ne: false }
     };
+    
+    if (filter) {
+      query.$or = [
+        { name: { $regex: new RegExp(filter, 'i') } },
+        { className: { $regex: new RegExp(filter, 'i') } }
+      ];
+    }
     
     if (onlyValidated) {
       query.validationStatus = 'validated';
@@ -932,20 +1191,95 @@ export class LoadingManager {
       }
     }
     
-    // Populate database with loaded modules
-    const popResult = await this.databasePopulator.populate(loadedModules, {
-      clearExisting: false
-    });
+    // Update module loading status and save tools
+    let toolsSaved = 0;
+    let toolsFailed = 0;
+    
+    for (const { config, instance } of loadedModules) {
+      try {
+        // Update module status to loaded
+        await this.mongoProvider.databaseService.mongoProvider.update(
+          'modules',
+          { name: config.name, className: config.className },
+          {
+            $set: {
+              loadingStatus: 'loaded',
+              lastLoadedAt: new Date(),
+              toolCount: instance.getTools ? instance.getTools().length : 0
+            },
+            $unset: {
+              loadingError: ""
+            }
+          }
+        );
+        
+        // Save tools from this module
+        if (instance.getTools) {
+          const tools = instance.getTools();
+          for (const tool of tools) {
+            try {
+              // Check if tool already exists
+              const existingTool = await this.mongoProvider.databaseService.mongoProvider.findOne('tools', {
+                name: tool.name,
+                moduleName: instance.name || config.name
+              });
+              
+              if (!existingTool) {
+                // Create tool data
+                const toolData = {
+                  name: tool.name,
+                  moduleName: instance.name || config.name,
+                  description: tool.description || `${tool.name} tool from ${instance.name || config.name} module`,
+                  inputSchema: tool.inputSchema || {},
+                  outputSchema: tool.outputSchema || null,
+                  category: 'execute',
+                  status: 'active',
+                  createdAt: new Date(),
+                  updatedAt: new Date()
+                };
+                
+                await this.mongoProvider.databaseService.mongoProvider.insert('tools', toolData);
+                toolsSaved++;
+              }
+            } catch (toolError) {
+              toolsFailed++;
+              if (this.verbose) {
+                console.log(`   ❌ Tool ${tool.name} failed: ${toolError.message}`);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        if (this.verbose) {
+          console.log(`  ❌ Failed to update module ${config.name}: ${error.message}`);
+        }
+      }
+    }
+    
+    // Update failed modules
+    for (const { config, error } of failedModules) {
+      await this.mongoProvider.databaseService.mongoProvider.update(
+        'modules',
+        { name: config.name, className: config.className },
+        {
+          $set: {
+            loadingStatus: 'failed',
+            loadingError: error,
+            lastLoadedAt: new Date()
+          }
+        }
+      );
+    }
     
     return {
       loaded: loadedModules,
       failed: failedModules,
-      popResult,
       summary: {
         total: modules.length,
         loaded: loadedModules.length,
         failed: failedModules.length,
-        tools: popResult.tools.saved
+        toolsSaved,
+        toolsFailed
       }
     };
   }

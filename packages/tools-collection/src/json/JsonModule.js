@@ -1,5 +1,10 @@
+/**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
 import { Tool, Module } from '@legion/tools-registry';
-import { z } from 'zod';
 
 /**
  * JSON parsing tool with event support
@@ -9,10 +14,40 @@ class JsonParseTool extends Tool {
     super({
       name: 'json_parse',
       description: 'Parse JSON string into JavaScript object',
-      inputSchema: z.object({
-        json_string: z.string().describe('The JSON string to parse'),
-        reviver: z.string().optional().describe('Optional reviver function code (advanced use)')
-      })
+      inputSchema: {
+        type: 'object',
+        properties: {
+          json_string: {
+            type: 'string',
+            description: 'The JSON string to parse'
+          },
+          reviver: {
+            type: 'string',
+            description: 'Optional reviver function code (advanced use)'
+          }
+        },
+        required: ['json_string']
+      },
+      outputSchema: {
+        type: 'object',
+        properties: {
+          parsed: {
+            description: 'The parsed JavaScript object'
+          },
+          result: {
+            description: 'The parsed JavaScript object (duplicate for compatibility)'
+          },
+          type: {
+            type: 'string',
+            description: 'The type of the parsed result'
+          },
+          isArray: {
+            type: 'boolean',
+            description: 'Whether the parsed result is an array'
+          }
+        },
+        required: ['parsed', 'result', 'type', 'isArray']
+      }
     });
     
     // Override _execute instead of execute to use base class error handling
@@ -51,11 +86,47 @@ class JsonStringifyTool extends Tool {
     super({
       name: 'json_stringify',
       description: 'Convert JavaScript object to JSON string',
-      inputSchema: z.object({
-        object: z.any().describe('The object to stringify'),
-        indent: z.number().optional().default(2).describe('Number of spaces for indentation (0 for compact)'),
-        sort_keys: z.boolean().optional().default(false).describe('Whether to sort object keys alphabetically')
-      })
+      inputSchema: {
+        type: 'object',
+        properties: {
+          object: {
+            description: 'The object to stringify'
+          },
+          indent: {
+            type: 'number',
+            default: 2,
+            description: 'Number of spaces for indentation (0 for compact)'
+          },
+          sort_keys: {
+            type: 'boolean',
+            default: false,
+            description: 'Whether to sort object keys alphabetically'
+          }
+        },
+        required: ['object']
+      },
+      outputSchema: {
+        type: 'object',
+        properties: {
+          json: {
+            type: 'string',
+            description: 'The stringified JSON'
+          },
+          result: {
+            type: 'string',
+            description: 'The stringified JSON (duplicate for compatibility)'
+          },
+          length: {
+            type: 'number',
+            description: 'Length of the JSON string'
+          },
+          sorted: {
+            type: 'boolean',
+            description: 'Whether keys were sorted'
+          }
+        },
+        required: ['json', 'result', 'length', 'sorted']
+      }
     });
     
     // Override _execute instead of execute to use base class error handling
@@ -100,6 +171,62 @@ class JsonStringifyTool extends Tool {
   }
 }
 
+// Input schema for JsonValidateTool
+const jsonValidateToolInputSchema = {
+  type: 'object',
+  properties: {
+    json_string: {
+      type: 'string',
+      description: 'The JSON string to validate'
+    }
+  },
+  required: ['json_string']
+};
+
+// Output schema for JsonValidateTool
+const jsonValidateToolOutputSchema = {
+  type: 'object',
+  properties: {
+    valid: {
+      type: 'boolean',
+      description: 'Whether the JSON string is valid'
+    },
+    isValid: {
+      type: 'boolean',
+      description: 'Whether the JSON string is valid (duplicate for compatibility)'
+    },
+    type: {
+      type: 'string',
+      description: 'Type of the parsed result'
+    },
+    isArray: {
+      type: 'boolean',
+      description: 'Whether the parsed result is an array'
+    },
+    message: {
+      type: 'string',
+      description: 'Success or error message'
+    },
+    error: {
+      type: 'string',
+      description: 'Error message if validation failed'
+    },
+    position: {
+      type: 'number',
+      description: 'Position of error in string'
+    },
+    line: {
+      type: 'number',
+      description: 'Line number of error'
+    },
+    column: {
+      type: 'number',
+      description: 'Column number of error'
+    }
+  },
+  required: ['valid', 'isValid', 'message']
+};
+
 /**
  * JSON validation tool with event support
  */
@@ -108,9 +235,8 @@ class JsonValidateTool extends Tool {
     super({
       name: 'json_validate',
       description: 'Validate if a string is valid JSON and provide detailed error information',
-      inputSchema: z.object({
-        json_string: z.string().describe('The JSON string to validate')
-      })
+      inputSchema: jsonValidateToolInputSchema,
+      outputSchema: jsonValidateToolOutputSchema
     });
     
     // Override _execute instead of execute to use base class error handling
@@ -177,6 +303,43 @@ class JsonValidateTool extends Tool {
   }
 }
 
+// Input schema for JsonExtractTool
+const jsonExtractToolInputSchema = {
+  type: 'object',
+  properties: {
+    json_object: {
+      description: 'The JSON object to extract from'
+    },
+    path: {
+      type: 'string',
+      description: 'Dot notation path (e.g., "user.address.city" or "items[0].name")'
+    },
+    default_value: {
+      description: 'Default value if path not found'
+    }
+  },
+  required: ['json_object', 'path']
+};
+
+// Output schema for JsonExtractTool
+const jsonExtractToolOutputSchema = {
+  type: 'object',
+  properties: {
+    value: {
+      description: 'The extracted value'
+    },
+    found: {
+      type: 'boolean',
+      description: 'Whether the value was found at the specified path'
+    },
+    path: {
+      type: 'string',
+      description: 'The path that was searched'
+    }
+  },
+  required: ['value', 'found', 'path']
+};
+
 /**
  * JSON path extraction tool with event support
  */
@@ -185,11 +348,8 @@ class JsonExtractTool extends Tool {
     super({
       name: 'json_extract',
       description: 'Extract a value from a JSON object using dot notation path',
-      inputSchema: z.object({
-        json_object: z.any().describe('The JSON object to extract from'),
-        path: z.string().describe('Dot notation path (e.g., "user.address.city" or "items[0].name")'),
-        default_value: z.any().optional().describe('Default value if path not found')
-      })
+      inputSchema: jsonExtractToolInputSchema,
+      outputSchema: jsonExtractToolOutputSchema
     });
     
     // Override _execute instead of execute to use base class error handling

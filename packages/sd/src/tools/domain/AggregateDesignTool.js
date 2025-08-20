@@ -1,21 +1,171 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * AggregateDesignTool - Designs aggregates and aggregate roots using LLM
  */
 
 import { Tool, ToolResult } from '@legion/tools-registry';
-import { z } from 'zod';
+
+// Input schema as plain JSON Schema
+const aggregateDesignToolInputSchema = {
+  type: 'object',
+  properties: {
+    entities: {
+      type: 'array',
+      items: {},
+      description: 'Domain entities'
+    },
+    valueObjects: {
+      type: 'array',
+      items: {},
+      description: 'Value objects'
+    },
+    boundedContexts: {
+      type: 'array',
+      items: {},
+      description: 'Bounded contexts'
+    },
+    projectId: {
+      type: 'string',
+      description: 'Project ID'
+    }
+  },
+  required: ['entities', 'boundedContexts']
+};
+
+// Output schema as plain JSON Schema
+const aggregateDesignToolOutputSchema = {
+  type: 'object',
+  properties: {
+    aggregates: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          description: { type: 'string' },
+          boundedContext: { type: 'string' },
+          aggregateRoot: {
+            type: 'object',
+            properties: {
+              entityId: { type: 'string' },
+              entityName: { type: 'string' },
+              responsibilities: {
+                type: 'array',
+                items: { type: 'string' }
+              }
+            }
+          },
+          entities: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                entityId: { type: 'string' },
+                entityName: { type: 'string' },
+                role: { type: 'string' }
+              }
+            }
+          },
+          valueObjects: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                valueObjectId: { type: 'string' },
+                valueObjectName: { type: 'string' },
+                usage: { type: 'string' }
+              }
+            }
+          },
+          invariants: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                rule: { type: 'string' },
+                enforcedBy: { type: 'string' }
+              }
+            }
+          },
+          commands: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                description: { type: 'string' },
+                invariantsChecked: {
+                  type: 'array',
+                  items: { type: 'string' }
+                }
+              }
+            }
+          },
+          events: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                description: { type: 'string' },
+                payload: { type: 'string' }
+              }
+            }
+          },
+          boundaries: {
+            type: 'object',
+            properties: {
+              transactional: { type: 'string' },
+              consistency: { type: 'string' },
+              references: {
+                type: 'array',
+                items: { type: 'string' }
+              }
+            }
+          }
+        }
+      },
+      description: 'Designed aggregates'
+    },
+    artifactId: {
+      type: 'string',
+      description: 'Stored artifact ID'
+    },
+    summary: {
+      type: 'object',
+      properties: {
+        totalAggregates: { type: 'number' },
+        byContext: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              context: { type: 'string' },
+              aggregateCount: { type: 'number' }
+            }
+          }
+        }
+      },
+      description: 'Summary of aggregates'
+    }
+  },
+  required: ['aggregates', 'artifactId', 'summary']
+};
 
 export class AggregateDesignTool extends Tool {
   constructor(dependencies = {}) {
     super({
       name: 'design_aggregates',
       description: 'Design aggregates and identify aggregate roots following DDD principles',
-      inputSchema: z.object({
-        entities: z.array(z.any()).describe('Domain entities'),
-        valueObjects: z.array(z.any()).optional().describe('Value objects'),
-        boundedContexts: z.array(z.any()).describe('Bounded contexts'),
-        projectId: z.string().optional()
-      })
+      inputSchema: aggregateDesignToolInputSchema,
+      outputSchema: aggregateDesignToolOutputSchema
     });
     
     this.llmClient = dependencies.llmClient;

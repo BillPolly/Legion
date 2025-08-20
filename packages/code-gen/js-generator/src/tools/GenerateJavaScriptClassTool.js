@@ -1,4 +1,10 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * GenerateJavaScriptClassTool - Generate ES6 classes with methods and properties
  * 
  * Creates JavaScript classes with constructor, methods, properties, inheritance,
@@ -6,76 +12,190 @@
  */
 
 import { Tool, ToolResult } from '@legion/tools-registry';
-import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';
+
+// Input schema as plain JSON Schema
+const generateJavaScriptClassToolInputSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+      description: 'Class name'
+    },
+    extends: {
+      type: 'string',
+      description: 'Parent class to extend'
+    },
+    constructor: {
+      type: 'object',
+      properties: {
+        params: {
+          type: 'array',
+          items: {
+            oneOf: [
+              { type: 'string' },
+              {
+                type: 'object',
+                properties: {
+                  name: { type: 'string' },
+                  type: { type: 'string' },
+                  default: {},
+                  description: { type: 'string' }
+                },
+                required: ['name']
+              }
+            ]
+          },
+          default: [],
+          description: 'Constructor parameters'
+        },
+        body: {
+          type: 'string',
+          default: '',
+          description: 'Constructor body code'
+        }
+      }
+    },
+    properties: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          type: { type: 'string' },
+          visibility: {
+            type: 'string',
+            enum: ['public', 'private', 'protected'],
+            default: 'public'
+          },
+          static: {
+            type: 'boolean',
+            default: false
+          },
+          defaultValue: {},
+          description: { type: 'string' }
+        },
+        required: ['name']
+      },
+      default: [],
+      description: 'Class properties'
+    },
+    methods: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          params: {
+            type: 'array',
+            items: {
+              oneOf: [
+                { type: 'string' },
+                {
+                  type: 'object',
+                  properties: {
+                    name: { type: 'string' },
+                    type: { type: 'string' },
+                    default: {},
+                    description: { type: 'string' }
+                  },
+                  required: ['name']
+                }
+              ]
+            },
+            default: []
+          },
+          returnType: { type: 'string' },
+          body: {
+            type: 'string',
+            default: '// TODO: Implement method'
+          },
+          static: {
+            type: 'boolean',
+            default: false
+          },
+          async: {
+            type: 'boolean',
+            default: false
+          },
+          description: { type: 'string' }
+        },
+        required: ['name']
+      },
+      default: [],
+      description: 'Class methods'
+    },
+    isExport: {
+      type: 'boolean',
+      default: true,
+      description: 'Whether to export the class'
+    },
+    jsdoc: {
+      type: 'object',
+      properties: {
+        description: { type: 'string' },
+        since: { type: 'string' },
+        author: { type: 'string' },
+        example: { type: 'string' },
+        deprecated: { type: 'string' }
+      },
+      description: 'JSDoc documentation'
+    }
+  },
+  required: ['name']
+};
+
+// Output schema as plain JSON Schema
+const generateJavaScriptClassToolOutputSchema = {
+  type: 'object',
+  properties: {
+    code: {
+      type: 'string',
+      description: 'Generated class code'
+    },
+    components: {
+      type: 'object',
+      properties: {
+        methods: {
+          type: 'number',
+          description: 'Number of methods generated'
+        },
+        properties: {
+          type: 'number',
+          description: 'Number of properties generated'
+        },
+        hasConstructor: {
+          type: 'boolean',
+          description: 'Whether constructor was generated'
+        },
+        hasJSDoc: {
+          type: 'boolean',
+          description: 'Whether JSDoc was generated'
+        },
+        isExported: {
+          type: 'boolean',
+          description: 'Whether class is exported'
+        },
+        hasInheritance: {
+          type: 'boolean',
+          description: 'Whether class extends another class'
+        }
+      },
+      description: 'Analysis of generated components'
+    }
+  },
+  required: ['code', 'components']
+};
 
 export class GenerateJavaScriptClassTool extends Tool {
   constructor() {
     super({
       name: 'generate_javascript_class',
       description: 'Generate a JavaScript class with constructor, methods, and properties',
-      inputSchema: z.object({
-        name: z.string().describe('Class name'),
-        extends: z.string().optional().describe('Parent class to extend'),
-        constructor: z.object({
-          params: z.array(z.union([
-            z.string(),
-            z.object({
-              name: z.string(),
-              type: z.string().optional(),
-              default: z.any().optional(),
-              description: z.string().optional()
-            })
-          ])).optional().default([]),
-          body: z.string().optional().default('')
-        }).optional(),
-        properties: z.array(z.object({
-          name: z.string(),
-          type: z.string().optional(),
-          visibility: z.enum(['public', 'private', 'protected']).optional().default('public'),
-          static: z.boolean().optional().default(false),
-          defaultValue: z.any().optional(),
-          description: z.string().optional()
-        })).optional().default([]),
-        methods: z.array(z.object({
-          name: z.string(),
-          params: z.array(z.union([
-            z.string(),
-            z.object({
-              name: z.string(),
-              type: z.string().optional(),
-              default: z.any().optional(),
-              description: z.string().optional()
-            })
-          ])).optional().default([]),
-          returnType: z.string().optional(),
-          body: z.string().default('// TODO: Implement method'),
-          static: z.boolean().optional().default(false),
-          async: z.boolean().optional().default(false),
-          description: z.string().optional()
-        })).optional().default([]),
-        isExport: z.boolean().optional().default(true),
-        jsdoc: z.object({
-          description: z.string().optional(),
-          since: z.string().optional(),
-          author: z.string().optional(),
-          example: z.string().optional(),
-          deprecated: z.string().optional()
-        }).optional()
-      })
+      inputSchema: generateJavaScriptClassToolInputSchema,
+      outputSchema: generateJavaScriptClassToolOutputSchema
     });
-    this.outputSchema = z.object({
-        code: z.string().describe('Generated class code'),
-        components: z.object({
-          methods: z.number().describe('Number of methods generated'),
-          properties: z.number().describe('Number of properties generated'),
-          hasConstructor: z.boolean().describe('Whether constructor was generated'),
-          hasJSDoc: z.boolean().describe('Whether JSDoc was generated'),
-          isExported: z.boolean().describe('Whether class is exported'),
-          hasInheritance: z.boolean().describe('Whether class extends another class')
-        }).describe('Analysis of generated components')
-      });
   }
 
 

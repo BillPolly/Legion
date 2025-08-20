@@ -1,4 +1,10 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * GenerateEventHandlerTool - Generate DOM event handlers with modern patterns
  * 
  * Creates JavaScript event handlers with proper event delegation, preventDefault,
@@ -6,54 +12,170 @@
  */
 
 import { Tool, ToolResult } from '@legion/tools-registry';
-import { z } from 'zod';
+
+// Input schema as plain JSON Schema
+const generateEventHandlerToolInputSchema = {
+  type: 'object',
+  properties: {
+    handlerName: {
+      type: 'string',
+      description: 'Custom handler function name'
+    },
+    element: {
+      type: 'string',
+      description: 'Target element selector or variable name'
+    },
+    event: {
+      type: 'string',
+      description: 'Event type (click, change, submit, keydown, etc.)'
+    },
+    action: {
+      type: 'string',
+      description: 'Action code to execute when event fires'
+    },
+    preventDefault: {
+      type: 'boolean',
+      default: false,
+      description: 'Call preventDefault()'
+    },
+    stopPropagation: {
+      type: 'boolean',
+      default: false,
+      description: 'Call stopPropagation()'
+    },
+    delegation: {
+      type: 'object',
+      properties: {
+        enabled: {
+          type: 'boolean',
+          default: false
+        },
+        parent: {
+          type: 'string'
+        },
+        target: {
+          type: 'string'
+        }
+      },
+      description: 'Event delegation configuration'
+    },
+    throttle: {
+      type: 'object',
+      properties: {
+        enabled: {
+          type: 'boolean',
+          default: false
+        },
+        delay: {
+          type: 'number',
+          default: 300
+        }
+      }
+    },
+    debounce: {
+      type: 'object',
+      properties: {
+        enabled: {
+          type: 'boolean',
+          default: false
+        },
+        delay: {
+          type: 'number',
+          default: 500
+        }
+      }
+    },
+    validation: {
+      type: 'string',
+      description: 'Validation code to run before action'
+    },
+    errorHandling: {
+      type: 'boolean',
+      default: true,
+      description: 'Include try-catch error handling'
+    },
+    once: {
+      type: 'boolean',
+      default: false,
+      description: 'Remove listener after first execution'
+    },
+    passive: {
+      type: 'boolean',
+      default: false,
+      description: 'Set passive option for better performance'
+    },
+    useCapture: {
+      type: 'boolean',
+      default: false,
+      description: 'Use capture phase instead of bubble'
+    }
+  },
+  required: ['event', 'action']
+};
+
+// Output schema as plain JSON Schema
+const generateEventHandlerToolOutputSchema = {
+  type: 'object',
+  properties: {
+    code: {
+      type: 'string',
+      description: 'Generated event handler code'
+    },
+    handlerName: {
+      type: 'string',
+      description: 'Generated handler function name'
+    },
+    attachmentCode: {
+      type: 'string',
+      description: 'Code to attach the event listener'
+    },
+    components: {
+      type: 'object',
+      properties: {
+        hasPreventDefault: {
+          type: 'boolean',
+          description: 'Whether preventDefault is used'
+        },
+        hasStopPropagation: {
+          type: 'boolean',
+          description: 'Whether stopPropagation is used'
+        },
+        hasDelegation: {
+          type: 'boolean',
+          description: 'Whether event delegation is used'
+        },
+        hasThrottling: {
+          type: 'boolean',
+          description: 'Whether throttling is applied'
+        },
+        hasDebouncing: {
+          type: 'boolean',
+          description: 'Whether debouncing is applied'
+        },
+        hasValidation: {
+          type: 'boolean',
+          description: 'Whether validation is included'
+        },
+        hasErrorHandling: {
+          type: 'boolean',
+          description: 'Whether error handling is included'
+        }
+      },
+      required: ['hasPreventDefault', 'hasStopPropagation', 'hasDelegation', 'hasThrottling', 'hasDebouncing', 'hasValidation', 'hasErrorHandling'],
+      description: 'Analysis of generated components'
+    }
+  },
+  required: ['code', 'handlerName', 'attachmentCode', 'components']
+};
 
 export class GenerateEventHandlerTool extends Tool {
   constructor() {
     super({
       name: 'generate_event_handler',
-      description: 'Generate DOM event handler with preventDefault and stopPropagation options'
+      description: 'Generate DOM event handler with preventDefault and stopPropagation options',
+      inputSchema: generateEventHandlerToolInputSchema,
+      outputSchema: generateEventHandlerToolOutputSchema
     });
-    this.inputSchema = z.object({
-        handlerName: z.string().optional().describe('Custom handler function name'),
-        element: z.string().optional().describe('Target element selector or variable name'),
-        event: z.string().describe('Event type (click, change, submit, keydown, etc.)'),
-        action: z.string().describe('Action code to execute when event fires'),
-        preventDefault: z.boolean().optional().default(false).describe('Call preventDefault()'),
-        stopPropagation: z.boolean().optional().default(false).describe('Call stopPropagation()'),
-        delegation: z.object({
-          enabled: z.boolean().optional().default(false),
-          parent: z.string().optional(),
-          target: z.string().optional()
-        }).optional().describe('Event delegation configuration'),
-        throttle: z.object({
-          enabled: z.boolean().optional().default(false),
-          delay: z.number().optional().default(300)
-        }).optional(),
-        debounce: z.object({
-          enabled: z.boolean().optional().default(false),
-          delay: z.number().optional().default(500)
-        }).optional(),
-        validation: z.string().optional().describe('Validation code to run before action'),
-        errorHandling: z.boolean().optional().default(true).describe('Include try-catch error handling'),
-        once: z.boolean().optional().default(false).describe('Remove listener after first execution'),
-        passive: z.boolean().optional().default(false).describe('Set passive option for better performance'),
-        useCapture: z.boolean().optional().default(false).describe('Use capture phase instead of bubble')
-      });
-    this.outputSchema = z.object({
-        code: z.string().describe('Generated event handler code'),
-        handlerName: z.string().describe('Generated handler function name'),
-        attachmentCode: z.string().describe('Code to attach the event listener'),
-        components: z.object({
-          hasPreventDefault: z.boolean().describe('Whether preventDefault is used'),
-          hasStopPropagation: z.boolean().describe('Whether stopPropagation is used'),
-          hasDelegation: z.boolean().describe('Whether event delegation is used'),
-          hasThrottling: z.boolean().describe('Whether throttling is applied'),
-          hasDebouncing: z.boolean().describe('Whether debouncing is applied'),
-          hasValidation: z.boolean().describe('Whether validation is included'),
-          hasErrorHandling: z.boolean().describe('Whether error handling is included')
-        }).describe('Analysis of generated components')
-      });
   }
 
   
@@ -115,24 +237,21 @@ export class GenerateEventHandlerTool extends Tool {
   }
 
   async execute(args) {
-    // Validate input schema
-    const validatedArgs = this.inputSchema.parse(args);
-    
     // Generate handler name
-    const handlerName = validatedArgs.handlerName || 
-      this._generateHandlerName(validatedArgs.event, validatedArgs.element);
+    const handlerName = args.handlerName || 
+      this._generateHandlerName(args.event, args.element);
     
     // Build the event handler code
     const codeParts = [];
     
     // Add utility functions if needed
-    const utilityFunctions = this._generateUtilityFunctions(validatedArgs);
+    const utilityFunctions = this._generateUtilityFunctions(args);
     if (utilityFunctions) {
       codeParts.push(utilityFunctions);
     }
     
     // Add JSDoc comment
-    const jsdoc = this._generateJSDoc(validatedArgs, handlerName);
+    const jsdoc = this._generateJSDoc(args, handlerName);
     codeParts.push(jsdoc);
     
     // Build handler function
@@ -142,38 +261,38 @@ export class GenerateEventHandlerTool extends Tool {
     const bodyParts = [];
     
     // Add event delegation check if needed
-    if (validatedArgs.delegation?.enabled && validatedArgs.delegation.target) {
+    if (args.delegation?.enabled && args.delegation.target) {
       bodyParts.push(`  // Event delegation check`);
-      bodyParts.push(`  if (!event.target.matches('${validatedArgs.delegation.target}')) {`);
+      bodyParts.push(`  if (!event.target.matches('${args.delegation.target}')) {`);
       bodyParts.push(`    return;`);
       bodyParts.push(`  }`);
       bodyParts.push('');
     }
     
     // Add validation if provided
-    const hasValidation = this._addValidation(bodyParts, validatedArgs.validation);
+    const hasValidation = this._addValidation(bodyParts, args.validation);
     
     // Add preventDefault if requested
-    if (validatedArgs.preventDefault) {
+    if (args.preventDefault) {
       bodyParts.push('  // Prevent default browser behavior');
       bodyParts.push('  event.preventDefault();');
       bodyParts.push('');
     }
     
     // Add stopPropagation if requested
-    if (validatedArgs.stopPropagation) {
+    if (args.stopPropagation) {
       bodyParts.push('  // Stop event propagation');
       bodyParts.push('  event.stopPropagation();');
       bodyParts.push('');
     }
     
     // Add error handling wrapper if enabled
-    if (validatedArgs.errorHandling) {
+    if (args.errorHandling) {
       bodyParts.push('  try {');
       bodyParts.push('    // Main event handler logic');
       
       // Add the action code with proper indentation
-      const actionLines = validatedArgs.action.split('\n');
+      const actionLines = args.action.split('\n');
       actionLines.forEach(line => {
         bodyParts.push(`    ${line}`);
       });
@@ -185,18 +304,18 @@ export class GenerateEventHandlerTool extends Tool {
       bodyParts.push('  }');
     } else {
       bodyParts.push('  // Main event handler logic');
-      const actionLines = validatedArgs.action.split('\n');
+      const actionLines = args.action.split('\n');
       actionLines.forEach(line => {
         bodyParts.push(`  ${line}`);
       });
     }
     
     // Add once logic if enabled
-    if (validatedArgs.once) {
+    if (args.once) {
       bodyParts.push('');
       bodyParts.push('  // Remove listener after first execution');
-      const element = validatedArgs.element || 'event.currentTarget';
-      bodyParts.push(`  ${element}.removeEventListener('${validatedArgs.event}', ${handlerName});`);
+      const element = args.element || 'event.currentTarget';
+      bodyParts.push(`  ${element}.removeEventListener('${args.event}', ${handlerName});`);
     }
     
     handlerParts.push(bodyParts.join('\n'));
@@ -205,20 +324,20 @@ export class GenerateEventHandlerTool extends Tool {
     codeParts.push(handlerParts.join('\n'));
     
     // Generate attachment code
-    const attachmentCode = this._generateAttachmentCode(validatedArgs, handlerName);
+    const attachmentCode = this._generateAttachmentCode(args, handlerName);
     
     // Build final code
     const finalCode = codeParts.join('\n\n');
     
     // Analyze components
     const components = {
-      hasPreventDefault: !!validatedArgs.preventDefault,
-      hasStopPropagation: !!validatedArgs.stopPropagation,
-      hasDelegation: !!validatedArgs.delegation?.enabled,
-      hasThrottling: !!validatedArgs.throttle?.enabled,
-      hasDebouncing: !!validatedArgs.debounce?.enabled,
+      hasPreventDefault: !!args.preventDefault,
+      hasStopPropagation: !!args.stopPropagation,
+      hasDelegation: !!args.delegation?.enabled,
+      hasThrottling: !!args.throttle?.enabled,
+      hasDebouncing: !!args.debounce?.enabled,
       hasValidation: hasValidation,
-      hasErrorHandling: !!validatedArgs.errorHandling
+      hasErrorHandling: !!args.errorHandling
     };
     
     return {

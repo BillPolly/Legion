@@ -1,26 +1,64 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * ValidateJavaScriptSyntaxTool - Validate JavaScript code syntax
  */
 
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
+
+// Input schema as plain JSON Schema
+const validateJavaScriptSyntaxToolInputSchema = {
+  type: 'object',
+  properties: {
+    code: {
+      type: 'string',
+      description: 'JavaScript code to validate'
+    },
+    strict: {
+      type: 'boolean',
+      default: true,
+      description: 'Use strict mode validation'
+    }
+  },
+  required: ['code']
+};
+
+// Output schema as plain JSON Schema
+const validateJavaScriptSyntaxToolOutputSchema = {
+  type: 'object',
+  properties: {
+    valid: {
+      type: 'boolean',
+      description: 'Whether the code is syntactically valid'
+    },
+    error: {
+      type: 'string',
+      description: 'Syntax error message if invalid'
+    },
+    line: {
+      type: 'number',
+      description: 'Line number of error if available'
+    },
+    column: {
+      type: 'number',
+      description: 'Column number of error if available'
+    }
+  },
+  required: ['valid']
+};
 
 export class ValidateJavaScriptSyntaxTool extends Tool {
   constructor() {
     super({
       name: 'validate_javascript_syntax',
-      description: 'Validate JavaScript code syntax using Function constructor'
+      description: 'Validate JavaScript code syntax using Function constructor',
+      inputSchema: validateJavaScriptSyntaxToolInputSchema,
+      outputSchema: validateJavaScriptSyntaxToolOutputSchema
     });
-    this.inputSchema = z.object({
-        code: z.string().describe('JavaScript code to validate'),
-        strict: z.boolean().default(true).describe('Use strict mode validation')
-      });
-    this.outputSchema = z.object({
-        valid: z.boolean().describe('Whether the code is syntactically valid'),
-        error: z.string().optional().describe('Syntax error message if invalid'),
-        line: z.number().optional().describe('Line number of error if available'),
-        column: z.number().optional().describe('Column number of error if available')
-      });
   }
 
   async execute(args) {

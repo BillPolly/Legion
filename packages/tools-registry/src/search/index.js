@@ -11,6 +11,7 @@ import { SemanticToolDiscovery } from './SemanticToolDiscovery.js';
 export { ToolIndexer } from './ToolIndexer.js';
 export { SemanticToolDiscovery } from './SemanticToolDiscovery.js';
 export { DocumentProcessor } from './DocumentProcessor.js';
+export { PerspectiveGenerator } from './PerspectiveGenerator.js';
 
 // Tool-specific factory methods that enforce local Nomic embeddings
 export const createToolIndexer = ToolIndexer.createForTools;

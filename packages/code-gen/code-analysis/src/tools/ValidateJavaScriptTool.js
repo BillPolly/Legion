@@ -1,73 +1,173 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * ValidateJavaScriptTool - Comprehensive JavaScript validation
  * 
  * Extracted and adapted from cerebrate CodeAnalysisCommands for Legion framework
  */
 
 import { Tool, ToolResult } from '@legion/tools-registry';
-import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';
+
+// Input schema as plain JSON Schema
+const validateJavaScriptToolInputSchema = {
+  type: 'object',
+  properties: {
+    code: {
+      type: 'string',
+      description: 'JavaScript code to validate'
+    },
+    filePath: {
+      type: 'string',
+      description: 'Path to JavaScript file to validate (alternative to code)'
+    },
+    projectPath: {
+      type: 'string',
+      description: 'Project root directory for batch analysis of all JS files'
+    },
+    includeAnalysis: {
+      type: 'boolean',
+      default: true,
+      description: 'Include code quality analysis'
+    },
+    checkSecurity: {
+      type: 'boolean',
+      default: true,
+      description: 'Check for security issues'
+    },
+    checkPerformance: {
+      type: 'boolean',
+      default: true,
+      description: 'Check for performance issues'
+    },
+    filePattern: {
+      type: 'string',
+      default: '**/*.{js,mjs,jsx}',
+      description: 'File pattern for batch analysis (when projectPath is provided)'
+    }
+  }
+};
+
+// Output schema as plain JSON Schema
+const validateJavaScriptToolOutputSchema = {
+  type: 'object',
+  properties: {
+    valid: {
+      type: 'boolean',
+      description: 'Whether the code is syntactically valid'
+    },
+    errors: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'Array of validation errors'
+    },
+    warnings: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'Array of code quality warnings'
+    },
+    securityIssues: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          type: { type: 'string' },
+          severity: { type: 'string' },
+          message: { type: 'string' },
+          line: { type: 'number' },
+          file: { type: 'string' }
+        },
+        required: ['type', 'severity', 'message']
+      },
+      description: 'Security vulnerabilities found'
+    },
+    performanceIssues: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          type: { type: 'string' },
+          severity: { type: 'string' },
+          message: { type: 'string' },
+          suggestion: { type: 'string' },
+          file: { type: 'string' }
+        },
+        required: ['type', 'severity', 'message', 'suggestion']
+      },
+      description: 'Performance issues found'
+    },
+    metrics: {
+      type: 'object',
+      properties: {
+        linesOfCode: { type: 'number' },
+        complexity: { type: 'number' },
+        maintainabilityIndex: { type: 'number' }
+      },
+      required: ['linesOfCode', 'complexity', 'maintainabilityIndex'],
+      description: 'Code metrics'
+    },
+    results: {
+      type: 'object',
+      properties: {
+        javascript: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              file: { type: 'string' },
+              valid: { type: 'boolean' },
+              errors: {
+                type: 'array',
+                items: { type: 'string' }
+              },
+              warnings: {
+                type: 'array',
+                items: { type: 'string' }
+              },
+              metrics: {
+                type: 'object',
+                properties: {
+                  linesOfCode: { type: 'number' },
+                  complexity: { type: 'number' },
+                  maintainabilityIndex: { type: 'number' }
+                },
+                required: ['linesOfCode', 'complexity', 'maintainabilityIndex']
+              }
+            },
+            required: ['file', 'valid', 'errors', 'warnings', 'metrics']
+          }
+        },
+        summary: {
+          type: 'object',
+          properties: {
+            totalFiles: { type: 'number' },
+            validFiles: { type: 'number' },
+            totalErrors: { type: 'number' },
+            totalWarnings: { type: 'number' },
+            securityIssues: { type: 'number' },
+            performanceIssues: { type: 'number' }
+          },
+          required: ['totalFiles', 'validFiles', 'totalErrors', 'totalWarnings', 'securityIssues', 'performanceIssues']
+        }
+      },
+      description: 'Batch analysis results (when projectPath is provided)'
+    }
+  },
+  required: ['valid', 'errors', 'warnings', 'securityIssues', 'performanceIssues', 'metrics']
+};
 
 export class ValidateJavaScriptTool extends Tool {
   constructor() {
     super({
       name: 'validate_javascript',
       description: 'Validate JavaScript code for syntax and quality issues',
-      inputSchema: z.object({
-      code: z.string().optional().describe('JavaScript code to validate'),
-      filePath: z.string().optional().describe('Path to JavaScript file to validate (alternative to code)'),
-      projectPath: z.string().optional().describe('Project root directory for batch analysis of all JS files'),
-      includeAnalysis: z.boolean().default(true).describe('Include code quality analysis'),
-      checkSecurity: z.boolean().default(true).describe('Check for security issues'),
-      checkPerformance: z.boolean().default(true).describe('Check for performance issues'),
-      filePattern: z.string().optional().default('**/*.{js,mjs,jsx}').describe('File pattern for batch analysis (when projectPath is provided)')
-      })
-    });
-    this.outputSchema = z.object({
-      valid: z.boolean().describe('Whether the code is syntactically valid'),
-      errors: z.array(z.string()).describe('Array of validation errors'),
-      warnings: z.array(z.string()).describe('Array of code quality warnings'),
-      securityIssues: z.array(z.object({
-        type: z.string(),
-        severity: z.string(),
-        message: z.string(),
-        line: z.number().optional(),
-        file: z.string().optional()
-      })).describe('Security vulnerabilities found'),
-      performanceIssues: z.array(z.object({
-        type: z.string(),
-        severity: z.string(),
-        message: z.string(),
-        suggestion: z.string(),
-        file: z.string().optional()
-      })).describe('Performance issues found'),
-      metrics: z.object({
-        linesOfCode: z.number(),
-        complexity: z.number(),
-        maintainabilityIndex: z.number()
-      }).describe('Code metrics'),
-      results: z.object({
-        javascript: z.array(z.object({
-          file: z.string(),
-          valid: z.boolean(),
-          errors: z.array(z.string()),
-          warnings: z.array(z.string()),
-          metrics: z.object({
-            linesOfCode: z.number(),
-            complexity: z.number(),
-            maintainabilityIndex: z.number()
-          })
-        })).optional(),
-        summary: z.object({
-          totalFiles: z.number(),
-          validFiles: z.number(),
-          totalErrors: z.number(),
-          totalWarnings: z.number(),
-          securityIssues: z.number(),
-          performanceIssues: z.number()
-        }).optional()
-      }).optional().describe('Batch analysis results (when projectPath is provided)')
+      inputSchema: validateJavaScriptToolInputSchema,
+      outputSchema: validateJavaScriptToolOutputSchema
     });
 
     // Security patterns to detect
@@ -101,7 +201,7 @@ export class ValidateJavaScriptTool extends Tool {
 
   async execute(args) {
     try {
-      this.progress('Preparing code validation...', 10);
+      this.emit('progress', { percentage: 10, status: 'Preparing code validation...' });
 
       let code = args.code;
       
@@ -132,7 +232,7 @@ export class ValidateJavaScriptTool extends Tool {
         };
       }
 
-      this.progress('Validating syntax...', 30);
+      this.emit('progress', { percentage: 30, status: 'Validating syntax...' });
 
       const result = {
         valid: true,
@@ -151,33 +251,33 @@ export class ValidateJavaScriptTool extends Tool {
         result.errors.push(`Syntax error: ${syntaxError.message}`);
       }
 
-      this.progress('Analyzing code quality...', 50);
+      this.emit('progress', { percentage: 50, status: 'Analyzing code quality...' });
 
       // Code quality analysis
-      if (args.includeAnalysis) {
+      if (args.includeAnalysis !== false) {
         result.warnings.push(...this._analyzeCodeQuality(code));
       }
 
-      this.progress('Checking security issues...', 70);
+      this.emit('progress', { percentage: 70, status: 'Checking security issues...' });
 
       // Security analysis
-      if (args.checkSecurity) {
+      if (args.checkSecurity !== false) {
         result.securityIssues = this._analyzeSecurityIssues(code);
       }
 
-      this.progress('Analyzing performance...', 90);
+      this.emit('progress', { percentage: 90, status: 'Analyzing performance...' });
 
       // Performance analysis
-      if (args.checkPerformance) {
+      if (args.checkPerformance !== false) {
         result.performanceIssues = this._analyzePerformanceIssues(code);
       }
 
-      this.progress('Validation complete', 100);
+      this.emit('progress', { percentage: 100, status: 'Validation complete' });
 
       return result;
 
     } catch (error) {
-      this.error(error.message);
+      this.emit('error', { message: error.message });
       throw error;
     }
   }

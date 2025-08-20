@@ -287,6 +287,7 @@ export class ModuleDiscovery {
 
   /**
    * Register discovered modules in the database
+   * Saves to both module_registry (permanent) and modules (runtime state)
    */
   async registerModules(modules) {
     await this.initialize();
@@ -298,7 +299,44 @@ export class ModuleDiscovery {
     
     for (const moduleInfo of modules) {
       try {
-        // Check if module already exists - must match ALL fields to be considered duplicate
+        // STEP 1: Save to module_registry (permanent storage)
+        // This is NEVER cleared during normal operations
+        const registryEntry = {
+          name: moduleInfo.name,
+          type: moduleInfo.type,
+          path: moduleInfo.path,
+          className: moduleInfo.className,
+          filePath: moduleInfo.filePath,
+          package: moduleInfo.package,
+          description: moduleInfo.description,
+          dependencies: moduleInfo.dependencies,
+          requiredEnvVars: moduleInfo.requiredEnvVars,
+          loadable: true,
+          discoveredAt: new Date(),
+          lastValidatedAt: new Date()
+        };
+        
+        // Check if already in registry
+        const existingRegistry = await this.provider.databaseService.mongoProvider.findOne('module_registry', {
+          name: moduleInfo.name,
+          className: moduleInfo.className,
+          filePath: moduleInfo.filePath
+        });
+        
+        if (existingRegistry) {
+          // Update registry entry
+          await this.provider.databaseService.mongoProvider.update(
+            'module_registry',
+            { _id: existingRegistry._id },
+            { $set: { ...registryEntry, discoveredAt: existingRegistry.discoveredAt } }
+          );
+        } else {
+          // Create new registry entry
+          await this.provider.databaseService.mongoProvider.insert('module_registry', registryEntry);
+        }
+        
+        // STEP 2: Save to modules collection (runtime state)
+        // This gets cleared and reloaded from module_registry
         const existing = await this.provider.databaseService.mongoProvider.findOne('modules', {
           name: moduleInfo.name,
           className: moduleInfo.className,

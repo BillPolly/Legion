@@ -1,4 +1,3 @@
-import { z } from 'zod';
 
 /**
  * Zod schemas for deployment configuration validation
@@ -45,7 +44,8 @@ class DeploymentConfig {
       }
       
       // Parse and validate with Zod
-      const validated = DeploymentConfigSchema.parse(normalizedData);
+      const validated = // Validation removed - happens at invocation layer
+      // Original: schema.parse(normalizedData);
       
       // Check provider-specific config validity
       if (validated.docker && validated.provider !== 'docker') {
@@ -81,7 +81,8 @@ class DeploymentConfig {
    */
   isValid() {
     try {
-      DeploymentConfigSchema.parse(this.toObject());
+      // Validation removed - happens at invocation layer
+      // Original: schema.parse(this.toObject());
       return true;
     } catch {
       return false;

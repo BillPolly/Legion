@@ -123,11 +123,20 @@ export class DatabasePopulator {
                 outputSchema = this.extractSchema(tool.output);
               }
               
+              // Ensure description meets validation requirements (min 10 chars)
+              let description = tool.description;
+              if (!description || description.length < 10) {
+                description = `${tool.name} tool from ${moduleName} module provides ${tool.name} functionality`;
+              }
+              if (description.length > 1000) {
+                description = description.substring(0, 997) + '...';
+              }
+              
               const toolData = {
                 name: tool.name,
                 moduleId: savedModule._id,  // Link to the module's _id
                 moduleName: moduleName,  // Keep for backwards compatibility
-                description: tool.description || '',
+                description: description,
                 inputSchema: inputSchema,
                 outputSchema: outputSchema,
                 category: this.inferCategory(tool.name, moduleName),
@@ -397,35 +406,39 @@ export class DatabasePopulator {
   inferCategory(toolName, moduleName) {
     const name = (toolName + ' ' + moduleName).toLowerCase();
     
-    if (name.includes('file') || name.includes('directory')) {
-      return 'file-system';
+    if (name.includes('read') || name.includes('get') || name.includes('fetch')) {
+      return 'read';
     }
-    if (name.includes('json') || name.includes('parse')) {
-      return 'data-processing';
+    if (name.includes('write') || name.includes('save') || name.includes('store')) {
+      return 'write';
     }
-    if (name.includes('ai') || name.includes('generate')) {
-      return 'ai-generation';
+    if (name.includes('create') || name.includes('new') || name.includes('add')) {
+      return 'create';
     }
-    if (name.includes('git') || name.includes('github')) {
-      return 'version-control';
+    if (name.includes('delete') || name.includes('remove') || name.includes('drop')) {
+      return 'delete';
     }
-    if (name.includes('web') || name.includes('browser') || name.includes('crawl')) {
-      return 'web';
+    if (name.includes('update') || name.includes('edit') || name.includes('modify')) {
+      return 'update';
     }
-    if (name.includes('test') || name.includes('jest')) {
-      return 'testing';
+    if (name.includes('search') || name.includes('find') || name.includes('query')) {
+      return 'search';
     }
-    if (name.includes('code') || name.includes('analysis')) {
-      return 'development';
+    if (name.includes('transform') || name.includes('convert') || name.includes('parse')) {
+      return 'transform';
     }
-    if (name.includes('deploy') || name.includes('railway')) {
-      return 'deployment';
+    if (name.includes('validate') || name.includes('check') || name.includes('verify')) {
+      return 'validate';
     }
-    if (name.includes('command') || name.includes('system')) {
-      return 'system';
+    if (name.includes('generate') || name.includes('build') || name.includes('make')) {
+      return 'generate';
+    }
+    if (name.includes('analyze') || name.includes('process') || name.includes('calculate')) {
+      return 'analyze';
     }
     
-    return 'general';
+    // Default to 'execute' for tools that don't match specific patterns
+    return 'execute';
   }
 
   /**

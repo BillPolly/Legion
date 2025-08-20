@@ -1,19 +1,90 @@
+/**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
 import { Tool, ToolResult } from '@legion/tools-registry';
 import puppeteer from 'puppeteer';
-import { z } from 'zod';
+
+// Input schema for PageScreenshot
+const pageScreenshotInputSchema = {
+  type: 'object',
+  properties: {
+    url: {
+      type: 'string',
+      description: 'The URL of the webpage to screenshot'
+    },
+    fullPage: {
+      type: 'boolean',
+      default: false,
+      description: 'Whether to capture the full page or just the viewport'
+    },
+    width: {
+      type: 'number',
+      default: 1280,
+      description: 'Viewport width in pixels'
+    },
+    height: {
+      type: 'number',
+      default: 720,
+      description: 'Viewport height in pixels'
+    },
+    waitForSelector: {
+      type: 'string',
+      description: 'Optional CSS selector to wait for before taking screenshot'
+    }
+  },
+  required: ['url']
+};
+
+// Output schema for PageScreenshot
+const pageScreenshotOutputSchema = {
+  type: 'object',
+  properties: {
+    success: {
+      type: 'boolean',
+      description: 'Whether the screenshot was successful'
+    },
+    url: {
+      type: 'string',
+      description: 'The URL that was screenshotted'
+    },
+    image: {
+      type: 'string',
+      description: 'Base64 encoded screenshot image'
+    },
+    isImage: {
+      type: 'boolean',
+      description: 'Indicates this is an image result'
+    },
+    mimeType: {
+      type: 'string',
+      description: 'MIME type of the image'
+    },
+    fullPage: {
+      type: 'boolean',
+      description: 'Whether full page was captured'
+    },
+    dimensions: {
+      type: 'object',
+      properties: {
+        width: { type: 'number' },
+        height: { type: ['number', 'string'] }
+      },
+      description: 'Screenshot dimensions'
+    }
+  },
+  required: ['success', 'url', 'image']
+};
 
 class PageScreenshot extends Tool {
   constructor() {
     super({
       name: 'page_screenshot',
       description: 'Takes screenshots of web pages',
-      inputSchema: z.object({
-        url: z.string().describe('The URL of the webpage to screenshot'),
-        fullPage: z.boolean().optional().default(false).describe('Whether to capture the full page or just the viewport'),
-        width: z.number().optional().default(1280).describe('Viewport width in pixels'),
-        height: z.number().optional().default(720).describe('Viewport height in pixels'),
-        waitForSelector: z.string().optional().describe('Optional CSS selector to wait for before taking screenshot')
-      })
+      inputSchema: pageScreenshotInputSchema,
+      outputSchema: pageScreenshotOutputSchema
     });
   }
 

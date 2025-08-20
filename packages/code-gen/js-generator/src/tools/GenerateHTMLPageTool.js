@@ -1,56 +1,177 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * GenerateHTMLPageTool - Generate complete HTML pages with CSS and JavaScript
  * 
  * Similar to GenerateJavaScriptModuleTool but for HTML pages
  */
 
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';
+
+// Input schema as plain JSON Schema
+const generateHTMLPageToolInputSchema = {
+  type: 'object',
+  properties: {
+    title: {
+      type: 'string',
+      description: 'Page title'
+    },
+    description: {
+      type: 'string',
+      description: 'Page description for meta tag'
+    },
+    favicon: {
+      type: 'string',
+      description: 'Favicon path or emoji'
+    },
+    css: {
+      type: 'object',
+      properties: {
+        inline: {
+          type: 'string',
+          description: 'Inline CSS styles'
+        },
+        external: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'External CSS file URLs'
+        },
+        framework: {
+          type: 'string',
+          enum: ['none', 'bootstrap', 'tailwind', 'bulma'],
+          default: 'none',
+          description: 'CSS framework to include'
+        }
+      },
+      description: 'CSS configuration'
+    },
+    body: {
+      type: 'object',
+      properties: {
+        content: {
+          type: 'string',
+          description: 'HTML body content'
+        },
+        class: {
+          type: 'string',
+          description: 'Body CSS class'
+        },
+        background: {
+          type: 'string',
+          description: 'Background style'
+        }
+      },
+      description: 'Body configuration'
+    },
+    javascript: {
+      type: 'object',
+      properties: {
+        inline: {
+          type: 'string',
+          description: 'Inline JavaScript code'
+        },
+        external: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'External JavaScript file URLs'
+        },
+        modules: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'ES6 modules to import'
+        },
+        onLoad: {
+          type: 'string',
+          description: 'JavaScript to run on page load'
+        }
+      },
+      description: 'JavaScript configuration'
+    },
+    meta: {
+      type: 'object',
+      properties: {
+        viewport: {
+          type: 'string',
+          default: 'width=device-width, initial-scale=1.0',
+          description: 'Viewport meta tag'
+        },
+        charset: {
+          type: 'string',
+          default: 'UTF-8',
+          description: 'Character encoding'
+        },
+        author: {
+          type: 'string',
+          description: 'Page author'
+        },
+        keywords: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'SEO keywords'
+        }
+      },
+      description: 'Meta tag configuration'
+    },
+    projectPath: {
+      type: 'string',
+      description: 'Project root directory (optional, for file writing)'
+    },
+    writeToFile: {
+      type: 'boolean',
+      default: false,
+      description: 'Whether to write generated HTML to file'
+    },
+    outputPath: {
+      type: 'string',
+      description: 'Relative path within project for output file (when writeToFile is true)'
+    },
+    responsive: {
+      type: 'boolean',
+      default: true,
+      description: 'Whether to include responsive design meta tags'
+    },
+    minify: {
+      type: 'boolean',
+      default: false,
+      description: 'Whether to minify the output HTML'
+    }
+  },
+  required: ['title']
+};
+
+// Output schema as plain JSON Schema
+const generateHTMLPageToolOutputSchema = {
+  type: 'object',
+  properties: {
+    html: {
+      type: 'string',
+      description: 'Generated HTML code'
+    },
+    filePath: {
+      type: 'string',
+      description: 'File path where HTML was written (if writeToFile was true)'
+    },
+    size: {
+      type: 'number',
+      description: 'Size of generated HTML in characters'
+    }
+  },
+  required: ['html', 'size']
+};
 
 export class GenerateHTMLPageTool extends Tool {
   constructor() {
     super({
       name: 'generate_html_page',
-      description: 'Generate a complete HTML page with CSS styling and JavaScript functionality'
-    });
-    this.inputSchema = z.object({
-      title: z.string().describe('Page title'),
-      description: z.string().optional().describe('Page description for meta tag'),
-      favicon: z.string().optional().describe('Favicon path or emoji'),
-      css: z.object({
-        inline: z.string().optional().describe('Inline CSS styles'),
-        external: z.array(z.string()).optional().describe('External CSS file URLs'),
-        framework: z.enum(['none', 'bootstrap', 'tailwind', 'bulma']).optional().default('none').describe('CSS framework to include')
-      }).optional().describe('CSS configuration'),
-      body: z.object({
-        content: z.string().optional().describe('HTML body content'),
-        class: z.string().optional().describe('Body CSS class'),
-        background: z.string().optional().describe('Background style')
-      }).optional().describe('Body configuration'),
-      javascript: z.object({
-        inline: z.string().optional().describe('Inline JavaScript code'),
-        external: z.array(z.string()).optional().describe('External JavaScript file URLs'),
-        modules: z.array(z.string()).optional().describe('ES6 modules to import'),
-        onLoad: z.string().optional().describe('JavaScript to run on page load')
-      }).optional().describe('JavaScript configuration'),
-      meta: z.object({
-        viewport: z.string().optional().default('width=device-width, initial-scale=1.0').describe('Viewport meta tag'),
-        charset: z.string().optional().default('UTF-8').describe('Character encoding'),
-        author: z.string().optional().describe('Page author'),
-        keywords: z.array(z.string()).optional().describe('SEO keywords')
-      }).optional().describe('Meta tag configuration'),
-      projectPath: z.string().optional().describe('Project root directory (optional, for file writing)'),
-      writeToFile: z.boolean().optional().default(false).describe('Whether to write generated HTML to file'),
-      outputPath: z.string().optional().describe('Relative path within project for output file (when writeToFile is true)'),
-      responsive: z.boolean().optional().default(true).describe('Whether to include responsive design meta tags'),
-      minify: z.boolean().optional().default(false).describe('Whether to minify the output HTML')
-    });
-    this.outputSchema = z.object({
-      html: z.string().describe('Generated HTML code'),
-      filePath: z.string().optional().describe('File path where HTML was written (if writeToFile was true)'),
-      size: z.number().describe('Size of generated HTML in characters')
+      description: 'Generate a complete HTML page with CSS styling and JavaScript functionality',
+      inputSchema: generateHTMLPageToolInputSchema,
+      outputSchema: generateHTMLPageToolOutputSchema
     });
   }
 

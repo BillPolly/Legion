@@ -4,79 +4,290 @@
  * Manages configuration for log-manager, node-runner, and playwright integrations
  */
 
-import { z } from 'zod';
+import { createValidator } from '@legion/schema';
 
 /**
  * Configuration schema for runtime testing
  */
-const RuntimeConfigSchema = z.object({
-  logManager: z.object({
-    logLevel: z.enum(['error', 'warn', 'info', 'debug', 'trace']).default('info'),
-    bufferSize: z.number().min(100).max(10000).default(1000),
-    enableStreaming: z.boolean().default(true),
-    enableAnalysis: z.boolean().default(true),
-    outputFormat: z.enum(['json', 'text', 'structured']).default('structured'),
-    captureStdout: z.boolean().default(true),
-    captureStderr: z.boolean().default(true),
-    correlationEnabled: z.boolean().default(true)
-  }).default({}),
-  
-  nodeRunner: z.object({
-    timeout: z.number().min(1000).max(300000).default(30000),
-    maxProcesses: z.number().min(1).max(20).default(5),
-    enableHealthCheck: z.boolean().default(true),
-    healthCheckInterval: z.number().min(1000).max(30000).default(5000),
-    shutdownTimeout: z.number().min(1000).max(60000).default(10000),
-    processIsolation: z.boolean().default(true),
-    captureOutput: z.boolean().default(true),
-    workingDirectory: z.string().optional()
-  }).default({}),
-  
-  playwright: z.object({
-    browserType: z.enum(['chromium', 'firefox', 'webkit']).default('chromium'),
-    headless: z.boolean().default(true),
-    timeout: z.number().min(1000).max(120000).default(30000),
-    viewport: z.object({
-      width: z.number().min(320).max(1920).default(1280),
-      height: z.number().min(240).max(1080).default(720)
-    }).default({}),
-    enableScreenshots: z.boolean().default(true),
-    enableVideoRecording: z.boolean().default(false),
-    enableTracing: z.boolean().default(false),
-    slowMo: z.number().min(0).max(5000).default(0),
-    devtools: z.boolean().default(false)
-  }).default({}),
-  
-  integration: z.object({
-    enableCrossComponentLogging: z.boolean().default(true),
-    enablePerformanceMonitoring: z.boolean().default(true),
-    enableResourceTracking: z.boolean().default(true),
-    maxConcurrentOperations: z.number().min(1).max(10).default(3),
-    operationTimeout: z.number().min(5000).max(600000).default(60000),
-    enableFailureRecovery: z.boolean().default(true),
-    retryAttempts: z.number().min(0).max(5).default(2),
-    retryDelay: z.number().min(100).max(10000).default(1000)
-  }).default({}),
-  
-  quality: z.object({
-    enableRealTimeValidation: z.boolean().default(true),
-    enableLogCorrelation: z.boolean().default(true),
-    enablePerformanceProfiling: z.boolean().default(true),
-    enableVisualRegression: z.boolean().default(false),
-    testCoverageThreshold: z.number().min(0).max(100).default(80),
-    performanceThreshold: z.number().min(100).max(10000).default(2000),
-    memoryThreshold: z.number().min(50).max(2000).default(500) // MB
-  }).default({}),
-  
-  debugging: z.object({
-    enableVerboseLogging: z.boolean().default(false),
-    enableStackTraces: z.boolean().default(true),
-    enableSourceMaps: z.boolean().default(true),
-    enableBreakpoints: z.boolean().default(false),
-    logCorrelationWindow: z.number().min(1000).max(30000).default(5000),
-    enableRootCauseAnalysis: z.boolean().default(true)
-  }).default({})
-});
+const runtimeConfigSchema = {
+  type: 'object',
+  properties: {
+    logManager: {
+      type: 'object',
+      properties: {
+        logLevel: {
+          type: 'string',
+          enum: ['error', 'warn', 'info', 'debug', 'trace'],
+          default: 'info'
+        },
+        bufferSize: {
+          type: 'number',
+          minimum: 100,
+          maximum: 10000,
+          default: 1000
+        },
+        enableStreaming: {
+          type: 'boolean',
+          default: true
+        },
+        enableAnalysis: {
+          type: 'boolean',
+          default: true
+        },
+        outputFormat: {
+          type: 'string',
+          enum: ['json', 'text', 'structured'],
+          default: 'structured'
+        },
+        captureStdout: {
+          type: 'boolean',
+          default: true
+        },
+        captureStderr: {
+          type: 'boolean',
+          default: true
+        },
+        correlationEnabled: {
+          type: 'boolean',
+          default: true
+        }
+      },
+      default: {}
+    },
+    
+    nodeRunner: {
+      type: 'object',
+      properties: {
+        timeout: {
+          type: 'number',
+          minimum: 1000,
+          maximum: 300000,
+          default: 30000
+        },
+        maxProcesses: {
+          type: 'number',
+          minimum: 1,
+          maximum: 20,
+          default: 5
+        },
+        enableHealthCheck: {
+          type: 'boolean',
+          default: true
+        },
+        healthCheckInterval: {
+          type: 'number',
+          minimum: 1000,
+          maximum: 30000,
+          default: 5000
+        },
+        shutdownTimeout: {
+          type: 'number',
+          minimum: 1000,
+          maximum: 60000,
+          default: 10000
+        },
+        processIsolation: {
+          type: 'boolean',
+          default: true
+        },
+        captureOutput: {
+          type: 'boolean',
+          default: true
+        },
+        workingDirectory: {
+          type: 'string'
+        }
+      },
+      default: {}
+    },
+    
+    playwright: {
+      type: 'object',
+      properties: {
+        browserType: {
+          type: 'string',
+          enum: ['chromium', 'firefox', 'webkit'],
+          default: 'chromium'
+        },
+        headless: {
+          type: 'boolean',
+          default: true
+        },
+        timeout: {
+          type: 'number',
+          minimum: 1000,
+          maximum: 120000,
+          default: 30000
+        },
+        viewport: {
+          type: 'object',
+          properties: {
+            width: {
+              type: 'number',
+              minimum: 320,
+              maximum: 1920,
+              default: 1280
+            },
+            height: {
+              type: 'number',
+              minimum: 240,
+              maximum: 1080,
+              default: 720
+            }
+          },
+          default: {}
+        },
+        enableScreenshots: {
+          type: 'boolean',
+          default: true
+        },
+        enableVideoRecording: {
+          type: 'boolean',
+          default: false
+        },
+        enableTracing: {
+          type: 'boolean',
+          default: false
+        },
+        slowMo: {
+          type: 'number',
+          minimum: 0,
+          maximum: 5000,
+          default: 0
+        },
+        devtools: {
+          type: 'boolean',
+          default: false
+        }
+      },
+      default: {}
+    },
+    
+    integration: {
+      type: 'object',
+      properties: {
+        enableCrossComponentLogging: {
+          type: 'boolean',
+          default: true
+        },
+        enablePerformanceMonitoring: {
+          type: 'boolean',
+          default: true
+        },
+        enableResourceTracking: {
+          type: 'boolean',
+          default: true
+        },
+        maxConcurrentOperations: {
+          type: 'number',
+          minimum: 1,
+          maximum: 10,
+          default: 3
+        },
+        operationTimeout: {
+          type: 'number',
+          minimum: 5000,
+          maximum: 600000,
+          default: 60000
+        },
+        enableFailureRecovery: {
+          type: 'boolean',
+          default: true
+        },
+        retryAttempts: {
+          type: 'number',
+          minimum: 0,
+          maximum: 5,
+          default: 2
+        },
+        retryDelay: {
+          type: 'number',
+          minimum: 100,
+          maximum: 10000,
+          default: 1000
+        }
+      },
+      default: {}
+    },
+    
+    quality: {
+      type: 'object',
+      properties: {
+        enableRealTimeValidation: {
+          type: 'boolean',
+          default: true
+        },
+        enableLogCorrelation: {
+          type: 'boolean',
+          default: true
+        },
+        enablePerformanceProfiling: {
+          type: 'boolean',
+          default: true
+        },
+        enableVisualRegression: {
+          type: 'boolean',
+          default: false
+        },
+        testCoverageThreshold: {
+          type: 'number',
+          minimum: 0,
+          maximum: 100,
+          default: 80
+        },
+        performanceThreshold: {
+          type: 'number',
+          minimum: 100,
+          maximum: 10000,
+          default: 2000
+        },
+        memoryThreshold: {
+          type: 'number',
+          minimum: 50,
+          maximum: 2000,
+          default: 500,
+          description: 'Memory threshold in MB'
+        }
+      },
+      default: {}
+    },
+    
+    debugging: {
+      type: 'object',
+      properties: {
+        enableVerboseLogging: {
+          type: 'boolean',
+          default: false
+        },
+        enableStackTraces: {
+          type: 'boolean',
+          default: true
+        },
+        enableSourceMaps: {
+          type: 'boolean',
+          default: true
+        },
+        enableBreakpoints: {
+          type: 'boolean',
+          default: false
+        },
+        logCorrelationWindow: {
+          type: 'number',
+          minimum: 1000,
+          maximum: 30000,
+          default: 5000
+        },
+        enableRootCauseAnalysis: {
+          type: 'boolean',
+          default: true
+        }
+      },
+      default: {}
+    }
+  }
+};
+
+const RuntimeConfigSchema = createValidator(runtimeConfigSchema);
 
 /**
  * Default configuration for development environment
@@ -238,7 +449,7 @@ class RuntimeConfig {
    */
   validateConfig() {
     try {
-      this.config = RuntimeConfigSchema.parse(this.config);
+      this.config = RuntimeConfigSchema.validate(this.config);
     } catch (error) {
       throw new Error(`Invalid runtime configuration: ${error.message}`);
     }

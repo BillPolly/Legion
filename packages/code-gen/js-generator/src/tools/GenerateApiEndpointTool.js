@@ -1,4 +1,10 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * GenerateApiEndpointTool - Generate Express.js API endpoint handlers
  * 
  * Creates Express.js route handlers with validation, error handling,
@@ -6,54 +12,169 @@
  */
 
 import { Tool, ToolResult } from '@legion/tools-registry';
-import { z } from 'zod';
+
+// Input schema as plain JSON Schema
+const generateApiEndpointToolInputSchema = {
+  type: 'object',
+  properties: {
+    method: {
+      type: 'string',
+      enum: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+      default: 'GET',
+      description: 'HTTP method'
+    },
+    path: {
+      type: 'string',
+      description: 'API endpoint path (e.g., "/users/:id")'
+    },
+    handlerName: {
+      type: 'string',
+      description: 'Custom handler function name'
+    },
+    description: {
+      type: 'string',
+      description: 'Endpoint description for JSDoc'
+    },
+    parameters: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          type: {
+            type: 'string',
+            enum: ['path', 'query', 'body']
+          },
+          dataType: {
+            type: 'string',
+            default: 'string'
+          },
+          required: {
+            type: 'boolean',
+            default: false
+          },
+          description: { type: 'string' }
+        },
+        required: ['name', 'type']
+      },
+      default: [],
+      description: 'Request parameters'
+    },
+    validation: {
+      type: 'object',
+      properties: {
+        body: {
+          type: 'string',
+          description: 'Request body validation code'
+        },
+        params: {
+          type: 'string',
+          description: 'Path parameters validation code'
+        },
+        query: {
+          type: 'string',
+          description: 'Query parameters validation code'
+        }
+      }
+    },
+    authentication: {
+      type: 'object',
+      properties: {
+        type: {
+          type: 'string',
+          enum: ['jwt', 'api-key', 'basic', 'oauth', 'none'],
+          default: 'none'
+        },
+        middleware: {
+          type: 'string',
+          description: 'Custom authentication middleware function name'
+        }
+      }
+    },
+    responseFormat: {
+      type: 'object',
+      properties: {
+        success: {
+          type: 'string',
+          description: 'Success response format'
+        },
+        error: {
+          type: 'string',
+          description: 'Error response format'
+        }
+      }
+    },
+    middleware: {
+      type: 'array',
+      items: { type: 'string' },
+      default: [],
+      description: 'Additional middleware to apply'
+    },
+    errorHandling: {
+      type: 'boolean',
+      default: true,
+      description: 'Include error handling'
+    },
+    asyncHandler: {
+      type: 'boolean',
+      default: true,
+      description: 'Use async/await pattern'
+    }
+  },
+  required: ['path']
+};
+
+// Output schema as plain JSON Schema
+const generateApiEndpointToolOutputSchema = {
+  type: 'object',
+  properties: {
+    code: {
+      type: 'string',
+      description: 'Generated endpoint handler code'
+    },
+    functionName: {
+      type: 'string',
+      description: 'Generated function name'
+    },
+    route: {
+      type: 'string',
+      description: 'Complete route definition for Express app'
+    },
+    components: {
+      type: 'object',
+      properties: {
+        hasValidation: {
+          type: 'boolean',
+          description: 'Whether validation was included'
+        },
+        hasErrorHandling: {
+          type: 'boolean',
+          description: 'Whether error handling was included'
+        },
+        hasAuthentication: {
+          type: 'boolean',
+          description: 'Whether authentication was included'
+        },
+        middlewareCount: {
+          type: 'number',
+          description: 'Number of middleware functions'
+        }
+      },
+      required: ['hasValidation', 'hasErrorHandling', 'hasAuthentication', 'middlewareCount'],
+      description: 'Analysis of generated components'
+    }
+  },
+  required: ['code', 'functionName', 'route', 'components']
+};
 
 export class GenerateApiEndpointTool extends Tool {
   constructor() {
     super({
       name: 'generate_api_endpoint',
-      description: 'Generate Express.js API endpoint handler with validation and error handling'
+      description: 'Generate Express.js API endpoint handler with validation and error handling',
+      inputSchema: generateApiEndpointToolInputSchema,
+      outputSchema: generateApiEndpointToolOutputSchema
     });
-    this.inputSchema = z.object({
-        method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH']).default('GET').describe('HTTP method'),
-        path: z.string().describe('API endpoint path (e.g., "/users/:id")'),
-        handlerName: z.string().optional().describe('Custom handler function name'),
-        description: z.string().optional().describe('Endpoint description for JSDoc'),
-        parameters: z.array(z.object({
-          name: z.string(),
-          type: z.enum(['path', 'query', 'body']),
-          dataType: z.string().optional().default('string'),
-          required: z.boolean().optional().default(false),
-          description: z.string().optional()
-        })).optional().default([]).describe('Request parameters'),
-        validation: z.object({
-          body: z.string().optional().describe('Request body validation code'),
-          params: z.string().optional().describe('Path parameters validation code'),
-          query: z.string().optional().describe('Query parameters validation code')
-        }).optional(),
-        authentication: z.object({
-          type: z.enum(['jwt', 'api-key', 'basic', 'oauth', 'none']).default('none'),
-          middleware: z.string().optional().describe('Custom authentication middleware function name')
-        }).optional(),
-        responseFormat: z.object({
-          success: z.string().optional().describe('Success response format'),
-          error: z.string().optional().describe('Error response format')
-        }).optional(),
-        middleware: z.array(z.string()).optional().default([]).describe('Additional middleware to apply'),
-        errorHandling: z.boolean().optional().default(true).describe('Include error handling'),
-        asyncHandler: z.boolean().optional().default(true).describe('Use async/await pattern')
-      });
-    this.outputSchema = z.object({
-        code: z.string().describe('Generated endpoint handler code'),
-        functionName: z.string().describe('Generated function name'),
-        route: z.string().describe('Complete route definition for Express app'),
-        components: z.object({
-          hasValidation: z.boolean().describe('Whether validation was included'),
-          hasErrorHandling: z.boolean().describe('Whether error handling was included'),
-          hasAuthentication: z.boolean().describe('Whether authentication was included'),
-          middlewareCount: z.number().describe('Number of middleware functions')
-        }).describe('Analysis of generated components')
-      });
   }
 
   

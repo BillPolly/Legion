@@ -1,20 +1,134 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * ValueObjectIdentifierTool - Identifies value objects in domain model using LLM
  */
 
 import { Tool, ToolResult } from '@legion/tools-registry';
-import { z } from 'zod';
+
+// Input schema as plain JSON Schema
+const valueObjectIdentifierToolInputSchema = {
+  type: 'object',
+  properties: {
+    entities: {
+      type: 'array',
+      items: {},
+      description: 'Domain entities to analyze'
+    },
+    boundedContexts: {
+      type: 'array',
+      items: {},
+      description: 'Bounded contexts for reference'
+    },
+    projectId: {
+      type: 'string',
+      description: 'Project ID'
+    }
+  },
+  required: ['entities', 'boundedContexts']
+};
+
+// Output schema as plain JSON Schema
+const valueObjectIdentifierToolOutputSchema = {
+  type: 'object',
+  properties: {
+    valueObjects: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          description: { type: 'string' },
+          entityId: { type: 'string' },
+          attributes: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                type: { type: 'string' },
+                required: { type: 'boolean' },
+                validation: { type: 'string' },
+                example: { type: 'string' }
+              }
+            }
+          },
+          immutability: {
+            type: 'object',
+            properties: {
+              enforcedBy: { type: 'string' },
+              description: { type: 'string' }
+            }
+          },
+          equality: {
+            type: 'object',
+            properties: {
+              basedOn: {
+                type: 'array',
+                items: { type: 'string' }
+              },
+              description: { type: 'string' }
+            }
+          },
+          validation: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                rule: { type: 'string' },
+                errorMessage: { type: 'string' }
+              }
+            }
+          },
+          usedIn: {
+            type: 'array',
+            items: { type: 'string' }
+          },
+          examples: {
+            type: 'array',
+            items: { type: 'string' }
+          }
+        }
+      },
+      description: 'Identified value objects'
+    },
+    artifactId: {
+      type: 'string',
+      description: 'Stored artifact ID'
+    },
+    summary: {
+      type: 'object',
+      properties: {
+        totalValueObjects: { type: 'number' },
+        byEntity: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              entity: { type: 'string' },
+              valueObjectCount: { type: 'number' }
+            }
+          }
+        }
+      },
+      description: 'Summary of value objects'
+    }
+  },
+  required: ['valueObjects', 'artifactId', 'summary']
+};
 
 export class ValueObjectIdentifierTool extends Tool {
   constructor(dependencies = {}) {
     super({
       name: 'identify_value_objects',
       description: 'Identify value objects within entities following DDD principles',
-      inputSchema: z.object({
-        entities: z.array(z.any()).describe('Domain entities to analyze'),
-        boundedContexts: z.array(z.any()).describe('Bounded contexts for reference'),
-        projectId: z.string().optional()
-      })
+      inputSchema: valueObjectIdentifierToolInputSchema,
+      outputSchema: valueObjectIdentifierToolOutputSchema
     });
     
     this.llmClient = dependencies.llmClient;

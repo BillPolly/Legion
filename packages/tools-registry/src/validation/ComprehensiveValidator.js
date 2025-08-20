@@ -1,4 +1,10 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * Comprehensive Validator
  * 
  * Validates modules and tools across multiple dimensions:
@@ -9,7 +15,6 @@
  * - Environment validation (required env vars set)
  */
 
-import { z } from 'zod';
 import { MongoDBToolRegistryProvider } from '../providers/MongoDBToolRegistryProvider.js';
 import { ResourceManager } from '@legion/resource-manager';
 import { ModuleLoader } from '../loading/ModuleLoader.js';

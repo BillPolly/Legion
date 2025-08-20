@@ -1,4 +1,78 @@
+/**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
 import { Tool } from '@legion/tools-registry';
+
+// Input schema as plain JSON Schema
+const imageGenerationToolInputSchema = {
+  type: 'object',
+  properties: {
+    prompt: {
+      type: 'string',
+      description: 'Text description of the image to generate'
+    },
+    size: {
+      type: 'string',
+      enum: ['1024x1024', '1792x1024', '1024x1792'],
+      default: '1024x1024',
+      description: 'Size of the generated image'
+    },
+    quality: {
+      type: 'string',
+      enum: ['standard', 'hd'],
+      default: 'standard',
+      description: 'Quality of the generated image (hd costs more)'
+    },
+    style: {
+      type: 'string',
+      enum: ['vivid', 'natural'],
+      default: 'vivid',
+      description: 'Style of the generated image'
+    },
+    response_format: {
+      type: 'string',
+      enum: ['b64_json', 'url'],
+      default: 'b64_json',
+      description: 'Format for the generated image (b64_json for base64, url for hosted URL)'
+    }
+  },
+  required: ['prompt']
+};
+
+// Output schema as plain JSON Schema
+const imageGenerationToolOutputSchema = {
+  type: 'object',
+  properties: {
+    success: {
+      type: 'boolean',
+      description: 'Whether the generation was successful'
+    },
+    imageData: {
+      type: 'string',
+      description: 'Base64 encoded image data'
+    },
+    imageUrl: {
+      type: 'string',
+      description: 'URL to the generated image'
+    },
+    filename: {
+      type: 'string',
+      description: 'Generated filename'
+    },
+    metadata: {
+      type: 'object',
+      description: 'Additional metadata'
+    },
+    artifact: {
+      type: 'object',
+      description: 'Artifact information'
+    }
+  },
+  required: ['success']
+};
 
 /**
  * ImageGenerationTool - Tool for generating images using DALL-E 3
@@ -6,83 +80,21 @@ import { Tool } from '@legion/tools-registry';
  */
 export class ImageGenerationTool extends Tool {
   constructor(dependencies = {}) {
+    
+    // Define the tool schema
     super({
       name: 'generate_image',
       description: 'Generate an image using DALL-E 3 AI model. Returns base64 encoded image data by default.',
-      schema: {
-        input: {
-          type: 'object',
-          properties: {
-            prompt: {
-              type: 'string',
-              description: 'Text description of the image to generate'
-            },
-            size: {
-              type: 'string',
-              enum: ['1024x1024', '1792x1024', '1024x1792'],
-              default: '1024x1024',
-              description: 'Size of the generated image'
-            },
-            quality: {
-              type: 'string',
-              enum: ['standard', 'hd'],
-              default: 'standard',
-              description: 'Quality of the generated image (hd costs more)'
-            },
-            style: {
-              type: 'string',
-              enum: ['vivid', 'natural'],
-              default: 'vivid',
-              description: 'Style of the generated image'
-            },
-            response_format: {
-              type: 'string',
-              enum: ['b64_json', 'url'],
-              default: 'b64_json',
-              description: 'Format for the generated image (b64_json for base64, url for hosted URL)'
-            }
-          },
-          required: ['prompt']
-        },
-        output: {
-          type: 'object',
-          properties: {
-            success: {
-              type: 'boolean',
-              description: 'Whether the generation was successful'
-            },
-            imageData: {
-              type: 'string',
-              description: 'Base64 encoded image data'
-            },
-            imageUrl: {
-              type: 'string',
-              description: 'URL to the generated image'
-            },
-            filename: {
-              type: 'string',
-              description: 'Generated filename'
-            },
-            metadata: {
-              type: 'object',
-              description: 'Additional metadata'
-            },
-            artifact: {
-              type: 'object',
-              description: 'Artifact information'
-            }
-          },
-          required: ['success']
-        }
-      },
-      execute: async (args) => this.generateImage(args)
+      inputSchema: imageGenerationToolInputSchema,
+      outputSchema: imageGenerationToolOutputSchema
     });
     
+    this.dependencies = dependencies;
     this.config = dependencies;
-    this.module = dependencies.module;
+    this.module = dependencies.module; // Reference to AIGenerationModule instance
   }
 
-  async generateImage(args) {
+  async execute(args) {
     console.log('[ImageGenerationTool] Execute called');
     try {
       // Emit progress event
@@ -91,6 +103,7 @@ export class ImageGenerationTool extends Tool {
         status: 'Preparing image generation request...'
       });
 
+      // Use args directly - validation removed, happens at invocation layer
       console.log('[ImageGenerationTool] Inputs validated');
 
       // Emit progress event
@@ -154,6 +167,15 @@ export class ImageGenerationTool extends Tool {
       };
     }
   }
+
+  getMetadata() {
+    return {
+      description: 'Generate an image using DALL-E 3 AI model. Returns base64 encoded image data by default.',
+      input: imageGenerationToolInputSchema,
+      output: imageGenerationToolOutputSchema
+    };
+  }
+
 
   /**
    * Static method to create tool from module instance

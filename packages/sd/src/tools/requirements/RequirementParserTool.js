@@ -1,4 +1,10 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * RequirementParserTool - Parses and analyzes requirements using LLM
  * 
  * Extends Legion's Tool class to parse requirements text and extract
@@ -6,19 +12,74 @@
  */
 
 import { Tool, ToolResult } from '@legion/tools-registry';
-import { z } from 'zod';
+
+// Input schema as plain JSON Schema
+const requirementParserToolInputSchema = {
+  type: 'object',
+  properties: {
+    requirementsText: {
+      type: 'string',
+      description: 'Raw requirements text to parse'
+    },
+    projectId: {
+      type: 'string',
+      description: 'Project ID for context'
+    },
+    analysisDepth: {
+      type: 'string',
+      enum: ['basic', 'detailed', 'comprehensive'],
+      default: 'detailed',
+      description: 'Level of analysis depth'
+    }
+  },
+  required: ['requirementsText']
+};
+
+// Output schema as plain JSON Schema
+const requirementParserToolOutputSchema = {
+  type: 'object',
+  properties: {
+    parsedRequirements: {
+      type: 'object',
+      properties: {
+        functional: { type: 'array' },
+        nonFunctional: { type: 'array' },
+        constraints: { type: 'array' },
+        assumptions: { type: 'array' },
+        dependencies: { type: 'array' },
+        reasoning: { type: 'string' }
+      },
+      description: 'Parsed requirements structure'
+    },
+    artifactId: {
+      type: 'string',
+      description: 'ID of stored artifact'
+    },
+    summary: {
+      type: 'object',
+      properties: {
+        functionalCount: { type: 'integer' },
+        nonFunctionalCount: { type: 'integer' },
+        constraintCount: { type: 'integer' },
+        assumptionCount: { type: 'integer' }
+      },
+      description: 'Summary statistics'
+    },
+    llmReasoning: {
+      type: 'string',
+      description: 'LLM reasoning about the analysis'
+    }
+  },
+  required: ['parsedRequirements', 'artifactId', 'summary']
+};
 
 export class RequirementParserTool extends Tool {
   constructor(dependencies = {}) {
     super({
       name: 'parse_requirements',
       description: 'Parse and analyze requirements text to extract structured information',
-      inputSchema: z.object({
-        requirementsText: z.string().describe('Raw requirements text to parse'),
-        projectId: z.string().optional().describe('Project ID for context'),
-        analysisDepth: z.enum(['basic', 'detailed', 'comprehensive']).default('detailed')
-          .describe('Level of analysis depth')
-      })
+      inputSchema: requirementParserToolInputSchema,
+      outputSchema: requirementParserToolOutputSchema
     });
     
     this.llmClient = dependencies.llmClient;

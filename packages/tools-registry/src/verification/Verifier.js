@@ -409,6 +409,695 @@ export class Verifier {
   }
 
   /**
+   * Comprehensive inconsistency detection across all databases
+   * @returns {Promise<InconsistencyReport>}
+   */
+  async detectInconsistencies() {
+    const report = {
+      success: true,
+      timestamp: new Date().toISOString(),
+      inconsistencies: {
+        orphanedRecords: [],
+        duplicateRecords: [],
+        invalidEmbeddings: [],
+        schemaMismatches: [],
+        referenceErrors: [],
+        dataQualityIssues: []
+      },
+      summary: {
+        totalIssues: 0,
+        criticalIssues: 0,
+        warningIssues: 0
+      },
+      repairRecommendations: []
+    };
+
+    try {
+      // Ensure connections
+      if (!this.mongoProvider.connected) {
+        await this.mongoProvider.connect();
+      }
+
+      // Run all inconsistency checks
+      await this._detectOrphanedRecords(report);
+      await this._detectDuplicateRecords(report);
+      await this._detectInvalidEmbeddings(report);
+      await this._detectSchemaMismatches(report);
+      await this._detectReferenceErrors(report);
+      await this._detectDataQualityIssues(report);
+
+      // Generate summary and recommendations
+      this._generateInconsistencySummary(report);
+      this._generateRepairRecommendations(report);
+
+    } catch (error) {
+      report.success = false;
+      report.error = `Inconsistency detection failed: ${error.message}`;
+    }
+
+    return report;
+  }
+
+  /**
+   * Detect orphaned records across collections
+   */
+  async _detectOrphanedRecords(report) {
+    try {
+      const db = this.mongoProvider.databaseService.mongoProvider.db;
+
+      // Orphaned tools (no parent module)
+      const orphanedTools = await db.collection('tools').aggregate([
+        {
+          $lookup: {
+            from: 'modules',
+            localField: 'moduleName',
+            foreignField: 'name',
+            as: 'module'
+          }
+        },
+        {
+          $match: {
+            'module': { $size: 0 }
+          }
+        }
+      ]).toArray();
+
+      orphanedTools.forEach(tool => {
+        report.inconsistencies.orphanedRecords.push({
+          type: 'orphaned_tool',
+          severity: 'critical',
+          record: { name: tool.name, moduleName: tool.moduleName },
+          description: `Tool "${tool.name}" references non-existent module "${tool.moduleName}"`
+        });
+      });
+
+      // Orphaned perspectives (no parent tool)
+      const orphanedPerspectives = await db.collection('tool_perspectives').aggregate([
+        {
+          $lookup: {
+            from: 'tools',
+            localField: 'toolName',
+            foreignField: 'name',
+            as: 'tool'
+          }
+        },
+        {
+          $match: {
+            'tool': { $size: 0 }
+          }
+        }
+      ]).toArray();
+
+      orphanedPerspectives.forEach(perspective => {
+        report.inconsistencies.orphanedRecords.push({
+          type: 'orphaned_perspective',
+          severity: 'critical',
+          record: { _id: perspective._id, toolName: perspective.toolName },
+          description: `Perspective references non-existent tool "${perspective.toolName}"`
+        });
+      });
+
+      if (this.verbose) {
+        console.log(`[Verifier] Found ${orphanedTools.length} orphaned tools, ${orphanedPerspectives.length} orphaned perspectives`);
+      }
+
+    } catch (error) {
+      if (this.verbose) {
+        console.error('[Verifier] Error detecting orphaned records:', error.message);
+      }
+    }
+  }
+
+  /**
+   * Detect duplicate records
+   */
+  async _detectDuplicateRecords(report) {
+    try {
+      const db = this.mongoProvider.databaseService.mongoProvider.db;
+
+      // Duplicate tools (same name within module)
+      const duplicateTools = await db.collection('tools').aggregate([
+        {
+          $group: {
+            _id: { name: '$name', moduleName: '$moduleName' },
+            count: { $sum: 1 },
+            docs: { $push: '$_id' }
+          }
+        },
+        {
+          $match: {
+            count: { $gt: 1 }
+          }
+        }
+      ]).toArray();
+
+      duplicateTools.forEach(duplicate => {
+        report.inconsistencies.duplicateRecords.push({
+          type: 'duplicate_tool',
+          severity: 'critical',
+          record: duplicate._id,
+          count: duplicate.count,
+          documentIds: duplicate.docs,
+          description: `Tool "${duplicate._id.name}" has ${duplicate.count} duplicates in module "${duplicate._id.moduleName}"`
+        });
+      });
+
+      // Duplicate perspective embeddings (same embeddingId)
+      const duplicateEmbeddings = await db.collection('tool_perspectives').aggregate([
+        {
+          $match: {
+            embeddingId: { $exists: true, $ne: null }
+          }
+        },
+        {
+          $group: {
+            _id: '$embeddingId',
+            count: { $sum: 1 },
+            docs: { $push: { _id: '$_id', toolName: '$toolName' } }
+          }
+        },
+        {
+          $match: {
+            count: { $gt: 1 }
+          }
+        }
+      ]).toArray();
+
+      duplicateEmbeddings.forEach(duplicate => {
+        report.inconsistencies.duplicateRecords.push({
+          type: 'duplicate_embedding',
+          severity: 'warning',
+          embeddingId: duplicate._id,
+          count: duplicate.count,
+          records: duplicate.docs,
+          description: `Embedding ID "${duplicate._id}" is used by ${duplicate.count} perspectives`
+        });
+      });
+
+      if (this.verbose) {
+        console.log(`[Verifier] Found ${duplicateTools.length} duplicate tools, ${duplicateEmbeddings.length} duplicate embeddings`);
+      }
+
+    } catch (error) {
+      if (this.verbose) {
+        console.error('[Verifier] Error detecting duplicates:', error.message);
+      }
+    }
+  }
+
+  /**
+   * Detect invalid embeddings (wrong dimensions, NaN values, etc.)
+   */
+  async _detectInvalidEmbeddings(report) {
+    try {
+      const db = this.mongoProvider.databaseService.mongoProvider.db;
+
+      // Check tool embeddings
+      const invalidToolEmbeddings = await db.collection('tools').aggregate([
+        {
+          $match: {
+            embedding: { $exists: true, $ne: null }
+          }
+        },
+        {
+          $project: {
+            name: 1,
+            embeddingLength: { $size: '$embedding' },
+            hasNaN: {
+              $gt: [
+                {
+                  $size: {
+                    $filter: {
+                      input: '$embedding',
+                      cond: { $ne: ['$$this', '$$this'] } // NaN check
+                    }
+                  }
+                },
+                0
+              ]
+            }
+          }
+        },
+        {
+          $match: {
+            $or: [
+              { embeddingLength: { $ne: 768 } }, // Wrong dimension for Nomic model
+              { hasNaN: true }
+            ]
+          }
+        }
+      ]).toArray();
+
+      invalidToolEmbeddings.forEach(tool => {
+        const issues = [];
+        if (tool.embeddingLength !== 768) {
+          issues.push(`wrong dimension (${tool.embeddingLength}, expected 768)`);
+        }
+        if (tool.hasNaN) {
+          issues.push('contains NaN values');
+        }
+
+        report.inconsistencies.invalidEmbeddings.push({
+          type: 'invalid_tool_embedding',
+          severity: 'critical',
+          record: { name: tool.name },
+          issues: issues,
+          description: `Tool "${tool.name}" has invalid embedding: ${issues.join(', ')}`
+        });
+      });
+
+      // Check perspective embeddings
+      const invalidPerspectiveEmbeddings = await db.collection('tool_perspectives').aggregate([
+        {
+          $match: {
+            embedding: { $exists: true, $ne: null }
+          }
+        },
+        {
+          $project: {
+            toolName: 1,
+            perspectiveType: 1,
+            embeddingLength: { $size: '$embedding' },
+            hasNaN: {
+              $gt: [
+                {
+                  $size: {
+                    $filter: {
+                      input: '$embedding',
+                      cond: { $ne: ['$$this', '$$this'] }
+                    }
+                  }
+                },
+                0
+              ]
+            }
+          }
+        },
+        {
+          $match: {
+            $or: [
+              { embeddingLength: { $ne: 768 } },
+              { hasNaN: true }
+            ]
+          }
+        }
+      ]).toArray();
+
+      invalidPerspectiveEmbeddings.forEach(perspective => {
+        const issues = [];
+        if (perspective.embeddingLength !== 768) {
+          issues.push(`wrong dimension (${perspective.embeddingLength}, expected 768)`);
+        }
+        if (perspective.hasNaN) {
+          issues.push('contains NaN values');
+        }
+
+        report.inconsistencies.invalidEmbeddings.push({
+          type: 'invalid_perspective_embedding',
+          severity: 'critical',
+          record: { toolName: perspective.toolName, perspectiveType: perspective.perspectiveType },
+          issues: issues,
+          description: `Perspective for "${perspective.toolName}" (${perspective.perspectiveType}) has invalid embedding: ${issues.join(', ')}`
+        });
+      });
+
+      if (this.verbose) {
+        console.log(`[Verifier] Found ${invalidToolEmbeddings.length} invalid tool embeddings, ${invalidPerspectiveEmbeddings.length} invalid perspective embeddings`);
+      }
+
+    } catch (error) {
+      if (this.verbose) {
+        console.error('[Verifier] Error detecting invalid embeddings:', error.message);
+      }
+    }
+  }
+
+  /**
+   * Detect schema mismatches and validation issues
+   */
+  async _detectSchemaMismatches(report) {
+    try {
+      const db = this.mongoProvider.databaseService.mongoProvider.db;
+
+      // Tools with invalid input/output schemas
+      const invalidSchemas = await db.collection('tools').find({
+        $or: [
+          {
+            inputSchema: { $exists: true },
+            'inputSchema.type': { $exists: false }
+          },
+          {
+            outputSchema: { $exists: true },
+            'outputSchema.type': { $exists: false }
+          },
+          {
+            'inputSchema.type': { $nin: ['object', 'string', 'number', 'boolean', 'array'] }
+          },
+          {
+            'outputSchema.type': { $nin: ['object', 'string', 'number', 'boolean', 'array'] }
+          }
+        ]
+      }).toArray();
+
+      invalidSchemas.forEach(tool => {
+        const issues = [];
+        if (tool.inputSchema && !tool.inputSchema.type) {
+          issues.push('inputSchema missing type field');
+        }
+        if (tool.outputSchema && !tool.outputSchema.type) {
+          issues.push('outputSchema missing type field');
+        }
+        if (tool.inputSchema?.type && !['object', 'string', 'number', 'boolean', 'array'].includes(tool.inputSchema.type)) {
+          issues.push(`invalid inputSchema type: ${tool.inputSchema.type}`);
+        }
+        if (tool.outputSchema?.type && !['object', 'string', 'number', 'boolean', 'array'].includes(tool.outputSchema.type)) {
+          issues.push(`invalid outputSchema type: ${tool.outputSchema.type}`);
+        }
+
+        report.inconsistencies.schemaMismatches.push({
+          type: 'invalid_schema',
+          severity: 'warning',
+          record: { name: tool.name, moduleName: tool.moduleName },
+          issues: issues,
+          description: `Tool "${tool.name}" has invalid schema: ${issues.join(', ')}`
+        });
+      });
+
+      // Check for missing embedding models
+      const missingEmbeddingModels = await db.collection('tool_perspectives').find({
+        embedding: { $exists: true },
+        embeddingModel: { $exists: false }
+      }).toArray();
+
+      missingEmbeddingModels.forEach(perspective => {
+        report.inconsistencies.schemaMismatches.push({
+          type: 'missing_embedding_model',
+          severity: 'warning',
+          record: { toolName: perspective.toolName, perspectiveType: perspective.perspectiveType },
+          description: `Perspective for "${perspective.toolName}" has embedding but no embeddingModel field`
+        });
+      });
+
+      if (this.verbose) {
+        console.log(`[Verifier] Found ${invalidSchemas.length} schema issues, ${missingEmbeddingModels.length} missing embedding models`);
+      }
+
+    } catch (error) {
+      if (this.verbose) {
+        console.error('[Verifier] Error detecting schema mismatches:', error.message);
+      }
+    }
+  }
+
+  /**
+   * Detect reference integrity errors
+   */
+  async _detectReferenceErrors(report) {
+    try {
+      const db = this.mongoProvider.databaseService.mongoProvider.db;
+
+      // Tools with mismatched module references (moduleId vs moduleName)
+      const mismatchedRefs = await db.collection('tools').aggregate([
+        {
+          $lookup: {
+            from: 'modules',
+            localField: 'moduleId',
+            foreignField: '_id',
+            as: 'moduleById'
+          }
+        },
+        {
+          $lookup: {
+            from: 'modules',
+            localField: 'moduleName',
+            foreignField: 'name',
+            as: 'moduleByName'
+          }
+        },
+        {
+          $match: {
+            $expr: {
+              $ne: [
+                { $arrayElemAt: ['$moduleById.name', 0] },
+                { $arrayElemAt: ['$moduleByName.name', 0] }
+              ]
+            }
+          }
+        }
+      ]).toArray();
+
+      mismatchedRefs.forEach(tool => {
+        report.inconsistencies.referenceErrors.push({
+          type: 'module_reference_mismatch',
+          severity: 'critical',
+          record: { name: tool.name, moduleId: tool.moduleId, moduleName: tool.moduleName },
+          description: `Tool "${tool.name}" has mismatched module references: moduleId points to different module than moduleName`
+        });
+      });
+
+      // Perspectives with missing toolId but existing toolName
+      const missingToolIds = await db.collection('tool_perspectives').aggregate([
+        {
+          $match: {
+            toolName: { $exists: true, $ne: null },
+            toolId: { $exists: false }
+          }
+        },
+        {
+          $lookup: {
+            from: 'tools',
+            localField: 'toolName',
+            foreignField: 'name',
+            as: 'tool'
+          }
+        },
+        {
+          $match: {
+            'tool': { $size: 1 }
+          }
+        }
+      ]).toArray();
+
+      missingToolIds.forEach(perspective => {
+        report.inconsistencies.referenceErrors.push({
+          type: 'missing_tool_id',
+          severity: 'warning',
+          record: { _id: perspective._id, toolName: perspective.toolName },
+          description: `Perspective for "${perspective.toolName}" is missing toolId reference`
+        });
+      });
+
+      if (this.verbose) {
+        console.log(`[Verifier] Found ${mismatchedRefs.length} reference mismatches, ${missingToolIds.length} missing tool IDs`);
+      }
+
+    } catch (error) {
+      if (this.verbose) {
+        console.error('[Verifier] Error detecting reference errors:', error.message);
+      }
+    }
+  }
+
+  /**
+   * Detect general data quality issues
+   */
+  async _detectDataQualityIssues(report) {
+    try {
+      const db = this.mongoProvider.databaseService.mongoProvider.db;
+
+      // Tools/modules with poor quality descriptions
+      const poorDescriptions = await db.collection('tools').find({
+        $or: [
+          { description: { $regex: /^.{1,20}$/ } }, // Too short
+          { description: { $regex: /^test|TODO|FIXME|placeholder/i } }, // Placeholder text
+          { description: { $exists: false } },
+          { description: null },
+          { description: '' }
+        ]
+      }).toArray();
+
+      poorDescriptions.forEach(tool => {
+        let issue = 'missing description';
+        if (tool.description) {
+          if (tool.description.length < 20) {
+            issue = `description too short (${tool.description.length} chars)`;
+          } else if (/^test|TODO|FIXME|placeholder/i.test(tool.description)) {
+            issue = 'placeholder description';
+          }
+        }
+
+        report.inconsistencies.dataQualityIssues.push({
+          type: 'poor_description',
+          severity: 'warning',
+          record: { name: tool.name, moduleName: tool.moduleName },
+          issue: issue,
+          description: `Tool "${tool.name}" has ${issue}`
+        });
+      });
+
+      // Tools with missing or invalid status
+      const invalidStatuses = await db.collection('tools').find({
+        $or: [
+          { status: { $exists: false } },
+          { status: { $nin: ['active', 'deprecated', 'experimental', 'maintenance'] } }
+        ]
+      }).toArray();
+
+      invalidStatuses.forEach(tool => {
+        report.inconsistencies.dataQualityIssues.push({
+          type: 'invalid_status',
+          severity: 'warning',
+          record: { name: tool.name, moduleName: tool.moduleName },
+          description: `Tool "${tool.name}" has invalid status: ${tool.status || 'missing'}`
+        });
+      });
+
+      // Perspectives with missing or invalid types
+      const invalidPerspectiveTypes = await db.collection('tool_perspectives').find({
+        $or: [
+          { perspectiveType: { $exists: false } },
+          { perspectiveType: null },
+          { perspectiveType: '' },
+          { perspectiveText: { $exists: false } },
+          { perspectiveText: null },
+          { perspectiveText: '' }
+        ]
+      }).toArray();
+
+      invalidPerspectiveTypes.forEach(perspective => {
+        const issues = [];
+        if (!perspective.perspectiveType) {
+          issues.push('missing perspectiveType');
+        }
+        if (!perspective.perspectiveText) {
+          issues.push('missing perspectiveText');
+        }
+
+        report.inconsistencies.dataQualityIssues.push({
+          type: 'invalid_perspective',
+          severity: 'warning',
+          record: { _id: perspective._id, toolName: perspective.toolName },
+          issues: issues,
+          description: `Perspective for "${perspective.toolName}" has issues: ${issues.join(', ')}`
+        });
+      });
+
+      if (this.verbose) {
+        console.log(`[Verifier] Found ${poorDescriptions.length} poor descriptions, ${invalidStatuses.length} invalid statuses, ${invalidPerspectiveTypes.length} invalid perspectives`);
+      }
+
+    } catch (error) {
+      if (this.verbose) {
+        console.error('[Verifier] Error detecting data quality issues:', error.message);
+      }
+    }
+  }
+
+  /**
+   * Generate summary statistics for inconsistencies
+   */
+  _generateInconsistencySummary(report) {
+    let totalIssues = 0;
+    let criticalIssues = 0;
+    let warningIssues = 0;
+
+    // Count all issues by severity
+    Object.values(report.inconsistencies).forEach(category => {
+      if (Array.isArray(category)) {
+        category.forEach(issue => {
+          totalIssues++;
+          if (issue.severity === 'critical') {
+            criticalIssues++;
+          } else if (issue.severity === 'warning') {
+            warningIssues++;
+          }
+        });
+      }
+    });
+
+    report.summary = {
+      totalIssues,
+      criticalIssues,
+      warningIssues,
+      categoryCounts: {
+        orphanedRecords: report.inconsistencies.orphanedRecords.length,
+        duplicateRecords: report.inconsistencies.duplicateRecords.length,
+        invalidEmbeddings: report.inconsistencies.invalidEmbeddings.length,
+        schemaMismatches: report.inconsistencies.schemaMismatches.length,
+        referenceErrors: report.inconsistencies.referenceErrors.length,
+        dataQualityIssues: report.inconsistencies.dataQualityIssues.length
+      }
+    };
+
+    if (criticalIssues > 0) {
+      report.success = false;
+    }
+  }
+
+  /**
+   * Generate repair recommendations based on found inconsistencies
+   */
+  _generateRepairRecommendations(report) {
+    const recommendations = [];
+
+    if (report.inconsistencies.orphanedRecords.length > 0) {
+      recommendations.push({
+        priority: 'high',
+        action: 'clean_orphaned_records',
+        description: 'Remove orphaned tools and perspectives that reference non-existent parents',
+        affectedRecords: report.inconsistencies.orphanedRecords.length
+      });
+    }
+
+    if (report.inconsistencies.duplicateRecords.length > 0) {
+      recommendations.push({
+        priority: 'high',
+        action: 'merge_or_remove_duplicates',
+        description: 'Merge or remove duplicate tools and perspective embeddings',
+        affectedRecords: report.inconsistencies.duplicateRecords.length
+      });
+    }
+
+    if (report.inconsistencies.invalidEmbeddings.length > 0) {
+      recommendations.push({
+        priority: 'critical',
+        action: 'regenerate_embeddings',
+        description: 'Regenerate embeddings with wrong dimensions or NaN values',
+        affectedRecords: report.inconsistencies.invalidEmbeddings.length
+      });
+    }
+
+    if (report.inconsistencies.referenceErrors.length > 0) {
+      recommendations.push({
+        priority: 'high',
+        action: 'fix_reference_integrity',
+        description: 'Sync moduleId/moduleName references and add missing toolId references',
+        affectedRecords: report.inconsistencies.referenceErrors.length
+      });
+    }
+
+    if (report.inconsistencies.schemaMismatches.length > 0) {
+      recommendations.push({
+        priority: 'medium',
+        action: 'validate_and_fix_schemas',
+        description: 'Fix invalid JSON schemas and add missing embedding model references',
+        affectedRecords: report.inconsistencies.schemaMismatches.length
+      });
+    }
+
+    if (report.inconsistencies.dataQualityIssues.length > 0) {
+      recommendations.push({
+        priority: 'low',
+        action: 'improve_data_quality',
+        description: 'Update poor quality descriptions, invalid statuses, and missing metadata',
+        affectedRecords: report.inconsistencies.dataQualityIssues.length
+      });
+    }
+
+    report.repairRecommendations = recommendations;
+  }
+
+  /**
    * Log verification results
    * @param {VerificationResult} result 
    */
@@ -435,6 +1124,50 @@ export class Verifier {
     if (result.warnings.length > 0) {
       console.log('\n⚠️ Warnings:');
       result.warnings.forEach(warning => console.log(`   • ${warning}`));
+    }
+  }
+
+  /**
+   * Log inconsistency report
+   * @param {InconsistencyReport} report 
+   */
+  logInconsistencies(report) {
+    if (!this.verbose) return;
+
+    console.log('\n🔍 Inconsistency Detection Results:');
+    console.log(`   Overall Status: ${report.success ? '✅ CLEAN' : '❌ ISSUES FOUND'}`);
+    console.log(`   Total Issues: ${report.summary.totalIssues}`);
+    console.log(`   Critical Issues: ${report.summary.criticalIssues}`);
+    console.log(`   Warning Issues: ${report.summary.warningIssues}`);
+
+    console.log('\n📊 Issues by Category:');
+    Object.entries(report.summary.categoryCounts).forEach(([category, count]) => {
+      if (count > 0) {
+        console.log(`   ${category}: ${count}`);
+      }
+    });
+
+    if (report.repairRecommendations.length > 0) {
+      console.log('\n🔧 Repair Recommendations:');
+      report.repairRecommendations.forEach(rec => {
+        console.log(`   [${rec.priority.toUpperCase()}] ${rec.description} (${rec.affectedRecords} records)`);
+      });
+    }
+
+    // Show some example issues
+    if (report.summary.criticalIssues > 0) {
+      console.log('\n❌ Critical Issues (examples):');
+      let shown = 0;
+      for (const [category, issues] of Object.entries(report.inconsistencies)) {
+        if (Array.isArray(issues)) {
+          for (const issue of issues) {
+            if (issue.severity === 'critical' && shown < 5) {
+              console.log(`   • ${issue.description}`);
+              shown++;
+            }
+          }
+        }
+      }
     }
   }
 }

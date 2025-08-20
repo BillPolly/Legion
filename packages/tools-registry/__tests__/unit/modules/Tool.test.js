@@ -5,7 +5,7 @@
 
 import { describe, test, expect, beforeEach } from '@jest/globals';
 import { Tool } from '../../../src/modules/Tool.js';
-import { z } from 'zod';
+import { createValidator } from '@legion/schema';
 
 describe('Tool Class', () => {
   describe('constructor', () => {
@@ -31,47 +31,59 @@ describe('Tool Class', () => {
       expect(tool.description).toBe('No description available');
     });
     
-    test('accepts Zod schema as inputSchema', () => {
-      const zodSchema = z.object({
-        value: z.string().describe('Test value')
-      });
-      
-      const tool = new Tool({
-        name: 'test_tool',
-        description: 'A test tool',
-        inputSchema: zodSchema,
-        execute: async () => ({})
-      });
-      
-      expect(tool.validator).toBeDefined();
-      expect(tool.validator.zodSchema).toBe(zodSchema);
-    });
-    
-    test('accepts schema validator object', () => {
-      const validator = {
-        validate: (data) => ({ valid: true, data, errors: null })
+    test('accepts JSON Schema as inputSchema', () => {
+      const jsonSchema = {
+        type: 'object',
+        properties: {
+          value: {
+            type: 'string',
+            description: 'Test value'
+          }
+        },
+        required: ['value']
       };
       
       const tool = new Tool({
         name: 'test_tool',
         description: 'A test tool',
-        schema: validator,
+        inputSchema: jsonSchema,
         execute: async () => ({})
       });
       
-      expect(tool.validator).toBe(validator);
+      expect(tool.inputSchema).toBeDefined();
+      expect(tool.inputSchema).toEqual(jsonSchema);
     });
     
-    test('extends EventEmitter', () => {
+    test('accepts schema via schema parameter', () => {
+      const schema = {
+        type: 'object',
+        properties: {
+          value: { type: 'string' }
+        }
+      };
+      
+      const tool = new Tool({
+        name: 'test_tool',
+        description: 'A test tool',
+        schema: schema,
+        execute: async () => ({})
+      });
+      
+      expect(tool.inputSchema).toBe(schema);
+    });
+    
+    test('has subscriber pattern for events', () => {
       const tool = new Tool({
         name: 'test_tool',
         description: 'A test tool',
         execute: async () => ({})
       });
       
-      expect(typeof tool.emit).toBe('function');
-      expect(typeof tool.on).toBe('function');
-      expect(typeof tool.removeAllListeners).toBe('function');
+      expect(typeof tool.subscribe).toBe('function');
+      expect(typeof tool.progress).toBe('function');
+      expect(typeof tool.error).toBe('function');
+      expect(typeof tool.info).toBe('function');
+      expect(typeof tool.warning).toBe('function');
     });
   });
   
@@ -89,20 +101,24 @@ describe('Tool Class', () => {
       expect(result.data).toEqual({ doubled: 10 });
     });
     
-    test('validates input with Zod schema', async () => {
-      const zodSchema = z.object({
-        name: z.string(),
-        age: z.number().min(0)
-      });
+    test('executes without validation (validation happens at invocation layer)', async () => {
+      const jsonSchema = {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          age: { type: 'number', minimum: 0 }
+        },
+        required: ['name', 'age']
+      };
       
       const tool = new Tool({
         name: 'test_tool',
         description: 'A test tool',
-        inputSchema: zodSchema,
+        inputSchema: jsonSchema,
         execute: async (input) => ({ received: input })
       });
       
-      // Valid input
+      // Tool executes without validation - validation happens at invocation layer
       const result = await tool.execute({
         name: 'John',
         age: 25
@@ -115,29 +131,34 @@ describe('Tool Class', () => {
       });
     });
     
-    test('returns error result for invalid input', async () => {
-      const zodSchema = z.object({
-        name: z.string(),
-        age: z.number().min(0)
-      });
+    test('passes through input without validation', async () => {
+      const jsonSchema = {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          age: { type: 'number', minimum: 0 }
+        },
+        required: ['name', 'age']
+      };
       
       const tool = new Tool({
         name: 'test_tool',
         description: 'A test tool',
-        inputSchema: zodSchema,
+        inputSchema: jsonSchema,
         execute: async (input) => ({ received: input })
       });
       
-      // Invalid input - negative age
+      // Tool passes through input without validation - even "invalid" input
       const result = await tool.execute({
+        name: 'John',
+        age: -5  // Would be invalid but tool doesn't validate
+      });
+      
+      expect(result.success).toBe(true);
+      expect(result.data.received).toEqual({
         name: 'John',
         age: -5
       });
-      
-      // Tool returns error as result, not throwing
-      expect(result.success).toBe(false);
-      expect(result.data.code).toBe('EXECUTION_ERROR');
-      expect(result.data.errorMessage).toContain('Validation failed');
     });
     
     test('wraps execution errors in standard format', async () => {
@@ -152,9 +173,10 @@ describe('Tool Class', () => {
       const result = await tool.execute({});
       
       expect(result.success).toBe(false);
-      expect(result.data.errorMessage).toBe('Something went wrong');
-      expect(result.data.code).toBe('EXECUTION_ERROR');
-      expect(result.data.tool).toBe('test_tool');
+      expect(result.data).toBe(null);
+      expect(result.error.message).toBe('Something went wrong');
+      expect(result.error.code).toBe('EXECUTION_ERROR');
+      expect(result.error.details.tool).toBe('test_tool');
     });
     
     test('passes through already formatted errors', async () => {
@@ -190,68 +212,76 @@ describe('Tool Class', () => {
   });
   
   describe('event methods', () => {
-    test('progress emits progress event', (done) => {
+    test('progress notifies subscribers with progress event', (done) => {
       const tool = new Tool({
         name: 'test_tool',
         description: 'A test tool',
         execute: async () => ({})
       });
       
-      tool.on('progress', (data) => {
-        expect(data.tool).toBe('test_tool');
-        expect(data.message).toBe('Processing...');
-        expect(data.percentage).toBe(50);
-        expect(data.timestamp).toBeDefined();
-        done();
+      tool.subscribe((data) => {
+        if (data.type === 'progress') {
+          expect(data.tool).toBe('test_tool');
+          expect(data.message).toBe('Processing...');
+          expect(data.percentage).toBe(50);
+          expect(data.timestamp).toBeDefined();
+          done();
+        }
       });
       
       tool.progress('Processing...', 50);
     });
     
-    test('error emits error event', (done) => {
+    test('error notifies subscribers with error event', (done) => {
       const tool = new Tool({
         name: 'test_tool',
         description: 'A test tool',
         execute: async () => ({})
       });
       
-      tool.on('error', (data) => {
-        expect(data.tool).toBe('test_tool');
-        expect(data.message).toBe('Error occurred');
-        expect(data.timestamp).toBeDefined();
-        done();
+      tool.subscribe((data) => {
+        if (data.type === 'error') {
+          expect(data.tool).toBe('test_tool');
+          expect(data.message).toBe('Error occurred');
+          expect(data.timestamp).toBeDefined();
+          done();
+        }
       });
       
       tool.error('Error occurred');
     });
     
-    test('info emits info event', (done) => {
+    test('info notifies subscribers with info event', (done) => {
       const tool = new Tool({
         name: 'test_tool',
         description: 'A test tool',
         execute: async () => ({})
       });
       
-      tool.on('info', (data) => {
-        expect(data.tool).toBe('test_tool');
-        expect(data.message).toBe('Information');
-        done();
+      tool.subscribe((data) => {
+        if (data.type === 'info') {
+          expect(data.tool).toBe('test_tool');
+          expect(data.message).toBe('Information');
+          done();
+        }
       });
       
       tool.info('Information');
     });
     
-    test('warning emits warning event', (done) => {
+    test('warning notifies subscribers with warning event', (done) => {
       const tool = new Tool({
         name: 'test_tool',
         description: 'A test tool',
         execute: async () => ({})
       });
       
-      tool.on('warning', (data) => {
-        expect(data.tool).toBe('test_tool');
-        expect(data.message).toBe('Warning');
-        done();
+      tool.subscribe((data) => {
+        if (data.type === 'warning') {
+          expect(data.tool).toBe('test_tool');
+          expect(data.message).toBe('Warning');
+          done();
+        }
       });
       
       tool.warning('Warning');
@@ -259,31 +289,41 @@ describe('Tool Class', () => {
   });
   
   describe('getMetadata', () => {
-    test('calls getMetadata function if provided', () => {
-      const metadata = { version: '1.0', author: 'Test' };
+    test('merges custom metadata with base metadata', () => {
+      const customMetadata = { version: '1.0', author: 'Test' };
       const tool = new Tool({
         name: 'test_tool',
         description: 'A test tool',
         execute: async () => ({}),
-        getMetadata: () => metadata
+        getMetadata: () => customMetadata
       });
       
-      expect(tool.getMetadata()).toBe(metadata);
+      const result = tool.getMetadata();
+      expect(result.name).toBe('test_tool');
+      expect(result.description).toBe('A test tool');
+      expect(result.version).toBe('1.0');
+      expect(result.author).toBe('Test');
+      expect(result.inputSchema).toBe(null);
+      expect(result.outputSchema).toBe(null);
     });
     
-    test('throws if getMetadata not provided', () => {
+    test('returns base metadata if no custom getMetadata provided', () => {
       const tool = new Tool({
         name: 'test_tool',
         description: 'A test tool',
         execute: async () => ({})
       });
       
-      expect(() => tool.getMetadata()).toThrow();
+      const result = tool.getMetadata();
+      expect(result.name).toBe('test_tool');
+      expect(result.description).toBe('A test tool');
+      expect(result.inputSchema).toBe(null);
+      expect(result.outputSchema).toBe(null);
     });
   });
   
-  describe('validation with custom validator', () => {
-    test('uses custom validator if provided', async () => {
+  describe('schema storage', () => {
+    test('stores custom validator object as inputSchema', () => {
       const customValidator = {
         validate: (data) => {
           if (data.value > 10) {
@@ -300,15 +340,30 @@ describe('Tool Class', () => {
         execute: async (input) => ({ result: input })
       });
       
-      // Valid input
-      const result1 = await tool.execute({ value: 5 });
-      expect(result1.success).toBe(true);
-      expect(result1.data.result.value).toBe(5);
+      expect(tool.inputSchema).toBe(customValidator);
+    });
+    
+    test('tool executes without validation regardless of schema', async () => {
+      const customValidator = {
+        validate: (data) => {
+          if (data.value > 10) {
+            return { valid: false, data: null, errors: ['Value too large'] };
+          }
+          return { valid: true, data, errors: null };
+        }
+      };
       
-      // Invalid input - returns error result
-      const result2 = await tool.execute({ value: 15 });
-      expect(result2.success).toBe(false);
-      expect(result2.data.errorMessage).toContain('Validation failed');
+      const tool = new Tool({
+        name: 'test_tool',
+        description: 'A test tool',
+        schema: customValidator,
+        execute: async (input) => ({ result: input })
+      });
+      
+      // Tool executes "invalid" input without validation
+      const result = await tool.execute({ value: 15 });
+      expect(result.success).toBe(true);
+      expect(result.data.result.value).toBe(15);
     });
   });
 });

@@ -1,3 +1,9 @@
+/**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
 import { Tool } from '@legion/tools-registry';
 import { readFileSync } from 'fs';
 import { resolve, dirname } from 'path';
@@ -10,87 +16,54 @@ export class ModuleListTool extends Tool {
     super({
       name: 'module_list',
       description: 'List all loaded and available modules',
-      schema: {
-        input: {
-          type: 'object',
-          properties: {
-            filter: {
-              type: 'string',
-              description: 'Filter modules by name'
+      inputSchema: {
+        type: 'object',
+        properties: {
+          filter: {
+            type: 'string',
+            description: 'Filter modules by name'
+          }
+        }
+      },
+      outputSchema: {
+        type: 'object',
+        properties: {
+          loaded: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                toolCount: { type: 'integer' },
+                tools: { 
+                  type: 'array',
+                  items: { type: 'string' }
+                }
+              }
+            },
+            description: 'List of loaded modules'
+          },
+          available: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'List of available modules'
+          },
+          summary: {
+            type: 'object',
+            properties: {
+              loadedCount: { type: 'integer' },
+              availableCount: { type: 'integer' },
+              totalTools: { type: 'integer' }
             }
           }
         },
-        output: {
-          type: 'object',
-          properties: {
-            success: {
-              type: 'boolean',
-              description: 'Whether the operation was successful'
-            },
-            modules: {
-              type: 'object',
-              properties: {
-                loaded: {
-                  type: 'array',
-                  items: {
-                    type: 'string'
-                  },
-                  description: 'List of loaded module names'
-                },
-                available: {
-                  type: 'array',
-                  items: {
-                    type: 'string'
-                  },
-                  description: 'List of available but not loaded module names'
-                },
-                total: {
-                  type: 'number',
-                  description: 'Total number of modules'
-                },
-                details: {
-                  type: 'object',
-                  additionalProperties: {
-                    type: 'object',
-                    properties: {
-                      name: {
-                        type: 'string',
-                        description: 'Module name'
-                      },
-                      loaded: {
-                        type: 'boolean',
-                        description: 'Whether the module is loaded'
-                      },
-                      toolCount: {
-                        type: 'number',
-                        description: 'Number of tools in the module'
-                      }
-                    }
-                  },
-                  description: 'Detailed information about loaded modules'
-                }
-              },
-              description: 'Module listing information'
-            },
-            totalTools: {
-              type: 'number',
-              description: 'Total number of tools across all modules'
-            },
-            error: {
-              type: 'string',
-              description: 'Error message if operation failed'
-            }
-          },
-          required: ['success']
-        }
-      },
-      execute: async (args) => this.listModules(args)
+        required: ['loaded', 'available', 'summary']
+      }
     });
-
     this.config = dependencies;
   }
 
-  async listModules(args) {
+  async execute(args) {
     const moduleLoader = this.config.moduleLoader;
     if (!moduleLoader) {
       return {

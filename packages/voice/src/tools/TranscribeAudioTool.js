@@ -1,5 +1,10 @@
+/**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 import fs from 'fs/promises';
 
 /**
@@ -8,67 +13,101 @@ import fs from 'fs/promises';
  * Supports multiple audio formats and languages using the configured
  * voice provider (e.g., OpenAI Whisper).
  */
+// Input schema as plain JSON Schema
+const transcribeAudioToolInputSchema = {
+  type: 'object',
+  properties: {
+    audio: {
+      type: 'string',
+      description: 'Base64 encoded audio data or file path'
+    },
+    format: {
+      type: 'string',
+      enum: ['mp3', 'mp4', 'mpeg', 'mpga', 'm4a', 'wav', 'webm'],
+      default: 'webm',
+      description: 'Audio format'
+    },
+    language: {
+      type: 'string',
+      description: 'Language code (e.g., "en", "es", "fr"). Auto-detect if not specified'
+    },
+    prompt: {
+      type: 'string',
+      description: 'Optional prompt to guide the transcription'
+    }
+  },
+  required: ['audio']
+};
+
+// Output schema as plain JSON Schema
+const transcribeAudioToolOutputSchema = {
+  type: 'object',
+  properties: {
+    text: {
+      type: 'string',
+      description: 'Transcribed text'
+    },
+    language: {
+      type: 'string',
+      description: 'Detected or specified language'
+    },
+    duration: {
+      type: 'number',
+      description: 'Audio duration in seconds'
+    },
+    confidence: {
+      type: 'number',
+      description: 'Transcription confidence score'
+    },
+    provider: {
+      type: 'string',
+      description: 'Provider used for transcription'
+    }
+  },
+  required: ['text', 'language', 'provider']
+};
+
 export class TranscribeAudioTool extends Tool {
   constructor(provider) {
-    const inputSchema = z.object({
-      audio: z.string().describe('Base64 encoded audio data or file path'),
-      format: z.enum(['mp3', 'mp4', 'mpeg', 'mpga', 'm4a', 'wav', 'webm'])
-        .default('webm')
-        .optional()
-        .describe('Audio format'),
-      language: z.string()
-        .optional()
-        .describe('Language code (e.g., "en", "es", "fr"). Auto-detect if not specified'),
-      prompt: z.string()
-        .optional()
-        .describe('Optional prompt to guide the transcription')
-    });
-    
-    const outputSchema = z.object({
-      text: z.string().describe('Transcribed text'),
-      language: z.string().describe('Detected or specified language'),
-      duration: z.number().optional().describe('Audio duration in seconds'),
-      confidence: z.number().optional().describe('Transcription confidence score'),
-      provider: z.string().describe('Provider used for transcription')
-    });
 
     super({
       name: 'transcribe_audio',
       description: 'Convert audio to text using speech recognition',
-      inputSchema: inputSchema,
+      inputSchema: transcribeAudioToolInputSchema,
       execute: async (params) => {
         try {
           this.progress('Starting transcription...', 0, {
             status: 'Starting transcription...'
           });
           
-          // Validate input
-          const validated = inputSchema.parse(params);
+          // No validation here - happens at invocation layer
+          // Use input parameters directly
+          const { audio, format = 'webm', language, prompt } = params;
           
           // Handle audio input
           let audioData;
           
-          if (validated.audio.startsWith('/') || validated.audio.startsWith('./')) {
+          if (audio.startsWith('/') || audio.startsWith('./')) {
             // File path - read the file
             this.progress('Reading audio file...', 10, {
               status: 'Reading audio file...'
             });
             
             try {
-              audioData = await fs.readFile(validated.audio);
+              audioData = await fs.readFile(audio);
             } catch (error) {
               throw new Error(`Failed to read audio file: ${error.message}`);
             }
-          } else if (validated.audio.startsWith('data:')) {
+          } else if (audio.startsWith('data:')) {
             // Data URL - extract base64 data
-            const base64Data = validated.audio.split(',')[1];
+            const base64Data = audio.split(',')[1];
             if (!base64Data) {
               throw new Error('Invalid data URL format');
             }
             audioData = base64Data;
           } else {
             // Assume it's already base64 encoded
-            audioData = validated.audio;
+            audioData = audio;
           }
           
           this.progress('Processing audio...', 30, {
@@ -77,9 +116,9 @@ export class TranscribeAudioTool extends Tool {
           
           // Prepare options
           const options = {
-            format: validated.format,
-            language: validated.language,
-            prompt: validated.prompt
+            format,
+            language,
+            prompt
           };
           
           // Call provider to transcribe
@@ -122,8 +161,8 @@ export class TranscribeAudioTool extends Tool {
       },
       getMetadata: () => ({
         description: 'Convert audio to text using speech recognition',
-        input: inputSchema,
-        output: outputSchema
+        input: transcribeAudioToolInputSchema,
+        output: transcribeAudioToolOutputSchema
       })
     });
     

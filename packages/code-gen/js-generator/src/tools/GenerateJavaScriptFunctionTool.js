@@ -1,9 +1,14 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * GenerateJavaScriptFunctionTool - Generate individual JavaScript functions
  */
 
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -12,39 +17,107 @@ export class GenerateJavaScriptFunctionTool extends Tool {
     super({
       name: 'generate_javascript_function',
       description: 'Generate a JavaScript function with JSDoc, parameters, and body',
-      inputSchema: z.object({
-        name: z.string().describe('Function name'),
-        params: z.array(z.union([
-          z.string(),
-          z.object({
-            name: z.string(),
-            type: z.string().optional(),
-            default: z.any().optional(),
-            description: z.string().optional()
-          })
-        ])).optional().describe('Function parameters'),
-        body: z.string().describe('Function body code'),
-        returnType: z.string().optional().describe('Return type for JSDoc'),
-        isAsync: z.boolean().default(false).describe('Whether function is async'),
-        isArrow: z.boolean().default(false).describe('Whether to use arrow function syntax'),
-        isExport: z.boolean().default(false).describe('Whether to export the function'),
-        jsdoc: z.object({
-          description: z.string().optional(),
-          returns: z.string().optional(),
-          example: z.string().optional()
-        }).optional().describe('JSDoc documentation'),
-        projectPath: z.string().optional().describe('Project root directory (optional, for file writing)'),
-        writeToFile: z.boolean().optional().default(false).describe('Whether to write generated code to file'),
-        outputPath: z.string().optional().describe('Relative path within project for output file (when writeToFile is true)')
-      })
+      inputSchema: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'Function name'
+          },
+          params: {
+            type: 'array',
+            items: {
+              oneOf: [
+                { type: 'string' },
+                {
+                  type: 'object',
+                  properties: {
+                    name: { type: 'string' },
+                    type: { type: 'string' },
+                    default: {},
+                    description: { type: 'string' }
+                  },
+                  required: ['name']
+                }
+              ]
+            },
+            description: 'Function parameters'
+          },
+          body: {
+            type: 'string',
+            description: 'Function body code'
+          },
+          returnType: {
+            type: 'string',
+            description: 'Return type for JSDoc'
+          },
+          isAsync: {
+            type: 'boolean',
+            default: false,
+            description: 'Whether function is async'
+          },
+          isArrow: {
+            type: 'boolean',
+            default: false,
+            description: 'Whether to use arrow function syntax'
+          },
+          isExport: {
+            type: 'boolean',
+            default: false,
+            description: 'Whether to export the function'
+          },
+          jsdoc: {
+            type: 'object',
+            properties: {
+              description: { type: 'string' },
+              returns: { type: 'string' },
+              example: { type: 'string' }
+            },
+            description: 'JSDoc documentation'
+          },
+          projectPath: {
+            type: 'string',
+            description: 'Project root directory (optional, for file writing)'
+          },
+          writeToFile: {
+            type: 'boolean',
+            default: false,
+            description: 'Whether to write generated code to file'
+          },
+          outputPath: {
+            type: 'string',
+            description: 'Relative path within project for output file (when writeToFile is true)'
+          }
+        },
+        required: ['name', 'body']
+      },
+      outputSchema: {
+        type: 'object',
+        properties: {
+          code: {
+            type: 'string',
+            description: 'Generated function code'
+          },
+          signature: {
+            type: 'string',
+            description: 'Function signature'
+          },
+          hasJSDoc: {
+            type: 'boolean',
+            description: 'Whether JSDoc was generated'
+          },
+          filePath: {
+            type: 'string',
+            description: 'Full path to written file (when writeToFile is true)'
+          },
+          written: {
+            type: 'boolean',
+            description: 'Whether the file was written to disk'
+          }
+        },
+        required: ['code', 'signature', 'hasJSDoc', 'written']
+      }
     });
-    this.outputSchema = z.object({
-        code: z.string().describe('Generated function code'),
-        signature: z.string().describe('Function signature'),
-        hasJSDoc: z.boolean().describe('Whether JSDoc was generated'),
-        filePath: z.string().optional().describe('Full path to written file (when writeToFile is true)'),
-        written: z.boolean().describe('Whether the file was written to disk')
-      });
 
     this.config = {
       indentation: 2,

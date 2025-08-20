@@ -1,4 +1,10 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * GenerateUnitTestsTool - Generate Jest unit tests for JavaScript code
  * 
  * Creates comprehensive Jest test suites with proper setup, teardown,
@@ -6,61 +12,206 @@
  */
 
 import { Tool, ToolResult } from '@legion/tools-registry';
-import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';
+
+// Input schema as plain JSON Schema
+const generateUnitTestsToolInputSchema = {
+  type: 'object',
+  properties: {
+    target_file: {
+      type: 'string',
+      description: 'Path to the JavaScript file to test (relative to test file)'
+    },
+    module_name: {
+      type: 'string',
+      description: 'Name of the module being tested'
+    },
+    test_cases: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          function: {
+            type: 'string',
+            description: 'Function or feature being tested'
+          },
+          description: {
+            type: 'string',
+            description: 'Test description'
+          },
+          setup: {
+            type: 'string',
+            description: 'Test setup code'
+          },
+          args: {
+            type: 'array',
+            items: {},
+            default: [],
+            description: 'Arguments to pass to function'
+          },
+          expectations: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                type: {
+                  type: 'string',
+                  enum: ['toBe', 'toEqual', 'toContain', 'toThrow', 'toBeTruthy', 'toBeFalsy', 'toBeNull', 'toBeUndefined', 'toBeGreaterThan', 'toBeLessThan', 'toHaveLength', 'toHaveProperty', 'toMatchObject', 'custom']
+                },
+                expected: {
+                  description: 'Expected value for assertion'
+                },
+                code: {
+                  type: 'string',
+                  description: 'Custom assertion code'
+                }
+              },
+              required: ['type']
+            },
+            description: 'Test expectations/assertions'
+          }
+        },
+        required: ['function', 'description']
+      },
+      default: [],
+      description: 'Array of test cases'
+    },
+    mocks: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          module: {
+            type: 'string',
+            description: 'Module name to mock'
+          },
+          functions: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Specific functions to mock'
+          },
+          mockImplementation: {
+            type: 'string',
+            description: 'Mock implementation code'
+          }
+        },
+        required: ['module']
+      },
+      description: 'Modules to mock'
+    },
+    setup: {
+      type: 'object',
+      properties: {
+        beforeAll: {
+          type: 'string',
+          description: 'Code to run before all tests'
+        },
+        afterAll: {
+          type: 'string',
+          description: 'Code to run after all tests'
+        },
+        beforeEach: {
+          type: 'string',
+          description: 'Code to run before each test'
+        },
+        afterEach: {
+          type: 'string',
+          description: 'Code to run after each test'
+        }
+      },
+      description: 'Setup and teardown hooks'
+    },
+    async_tests: {
+      type: 'boolean',
+      default: false,
+      description: 'Generate async test functions'
+    },
+    timeout: {
+      type: 'number',
+      description: 'Test timeout in milliseconds'
+    },
+    coverage: {
+      type: 'boolean',
+      default: false,
+      description: 'Include coverage annotations'
+    },
+    projectPath: {
+      type: 'string',
+      description: 'Project root directory (optional, for file writing)'
+    },
+    writeToFile: {
+      type: 'boolean',
+      default: false,
+      description: 'Whether to write generated test file to disk'
+    },
+    outputPath: {
+      type: 'string',
+      description: 'Relative path within project for test file (when writeToFile is true)'
+    }
+  },
+  required: ['target_file']
+};
+
+// Output schema as plain JSON Schema
+const generateUnitTestsToolOutputSchema = {
+  type: 'object',
+  properties: {
+    test_content: {
+      type: 'string',
+      description: 'Generated Jest test code'
+    },
+    test_path: {
+      type: 'string',
+      description: 'Suggested path for the test file'
+    },
+    components: {
+      type: 'object',
+      properties: {
+        test_count: {
+          type: 'number',
+          description: 'Number of test cases generated'
+        },
+        has_mocks: {
+          type: 'boolean',
+          description: 'Whether mocks are included'
+        },
+        has_setup: {
+          type: 'boolean',
+          description: 'Whether setup/teardown hooks are included'
+        },
+        has_async: {
+          type: 'boolean',
+          description: 'Whether async tests are included'
+        },
+        coverage_enabled: {
+          type: 'boolean',
+          description: 'Whether coverage annotations are included'
+        }
+      },
+      required: ['test_count', 'has_mocks', 'has_setup', 'has_async', 'coverage_enabled'],
+      description: 'Analysis of generated test components'
+    },
+    filePath: {
+      type: 'string',
+      description: 'Full path to written test file (when writeToFile is true)'
+    },
+    written: {
+      type: 'boolean',
+      description: 'Whether the test file was written to disk'
+    }
+  },
+  required: ['test_content', 'test_path', 'components', 'written']
+};
 
 export class GenerateUnitTestsTool extends Tool {
   constructor() {
     super({
       name: 'generate_unit_tests',
-      description: 'Generate Jest unit tests for JavaScript code'
+      description: 'Generate Jest unit tests for JavaScript code',
+      inputSchema: generateUnitTestsToolInputSchema,
+      outputSchema: generateUnitTestsToolOutputSchema
     });
-    this.inputSchema = z.object({
-        target_file: z.string().describe('Path to the JavaScript file to test (relative to test file)'),
-        module_name: z.string().optional().describe('Name of the module being tested'),
-        test_cases: z.array(z.object({
-          function: z.string().describe('Function or feature being tested'),
-          description: z.string().describe('Test description'),
-          setup: z.string().optional().describe('Test setup code'),
-          args: z.array(z.any()).optional().default([]).describe('Arguments to pass to function'),
-          expectations: z.array(z.object({
-            type: z.enum(['toBe', 'toEqual', 'toContain', 'toThrow', 'toBeTruthy', 'toBeFalsy', 'toBeNull', 'toBeUndefined', 'toBeGreaterThan', 'toBeLessThan', 'toHaveLength', 'toHaveProperty', 'toMatchObject', 'custom']),
-            expected: z.any().optional().describe('Expected value for assertion'),
-            code: z.string().optional().describe('Custom assertion code')
-          })).describe('Test expectations/assertions')
-        })).optional().default([]).describe('Array of test cases'),
-        mocks: z.array(z.object({
-          module: z.string().describe('Module name to mock'),
-          functions: z.array(z.string()).optional().describe('Specific functions to mock'),
-          mockImplementation: z.string().optional().describe('Mock implementation code')
-        })).optional().describe('Modules to mock'),
-        setup: z.object({
-          beforeAll: z.string().optional().describe('Code to run before all tests'),
-          afterAll: z.string().optional().describe('Code to run after all tests'),
-          beforeEach: z.string().optional().describe('Code to run before each test'),
-          afterEach: z.string().optional().describe('Code to run after each test')
-        }).optional().describe('Setup and teardown hooks'),
-        async_tests: z.boolean().optional().default(false).describe('Generate async test functions'),
-        timeout: z.number().optional().describe('Test timeout in milliseconds'),
-        coverage: z.boolean().optional().default(false).describe('Include coverage annotations'),
-        projectPath: z.string().optional().describe('Project root directory (optional, for file writing)'),
-        writeToFile: z.boolean().optional().default(false).describe('Whether to write generated test file to disk'),
-        outputPath: z.string().optional().describe('Relative path within project for test file (when writeToFile is true)')
-      });
-    this.outputSchema = z.object({
-        test_content: z.string().describe('Generated Jest test code'),
-        test_path: z.string().describe('Suggested path for the test file'),
-        components: z.object({
-          test_count: z.number().describe('Number of test cases generated'),
-          has_mocks: z.boolean().describe('Whether mocks are included'),
-          has_setup: z.boolean().describe('Whether setup/teardown hooks are included'),
-          has_async: z.boolean().describe('Whether async tests are included'),
-          coverage_enabled: z.boolean().describe('Whether coverage annotations are included')
-        }).describe('Analysis of generated test components'),
-        filePath: z.string().optional().describe('Full path to written test file (when writeToFile is true)'),
-        written: z.boolean().describe('Whether the test file was written to disk')
-      });
   }
 
   
@@ -122,28 +273,25 @@ export class GenerateUnitTestsTool extends Tool {
   }
 
   async execute(args) {
-    // Validate input schema
-    const validatedArgs = this.inputSchema.parse(args);
-    
     // Extract module name
-    const moduleName = validatedArgs.module_name || 
-      this._extractModuleName(validatedArgs.target_file);
+    const moduleName = args.module_name || 
+      this._extractModuleName(args.target_file);
     
     // Build test content parts
     const testParts = [];
     
     // Generate imports
     const imports = this._generateImports(
-      validatedArgs.target_file, 
+      args.target_file, 
       moduleName, 
-      validatedArgs.mocks
+      args.mocks
     );
     testParts.push(imports);
     testParts.push('');
     
     // Add mocks if provided
-    if (validatedArgs.mocks && validatedArgs.mocks.length > 0) {
-      const mocks = this._generateMocks(validatedArgs.mocks);
+    if (args.mocks && args.mocks.length > 0) {
+      const mocks = this._generateMocks(args.mocks);
       testParts.push(mocks);
       testParts.push('');
     }
@@ -153,7 +301,7 @@ export class GenerateUnitTestsTool extends Tool {
     
     // Add setup hooks if provided
     const setupParts = [];
-    const hasSetup = this._generateSetupHooks(setupParts, validatedArgs.setup);
+    const hasSetup = this._generateSetupHooks(setupParts, args.setup);
     if (hasSetup) {
       testParts.push('');
       setupParts.forEach(part => testParts.push(part));
@@ -164,16 +312,16 @@ export class GenerateUnitTestsTool extends Tool {
     let testCount = 0;
     let hasAsync = false;
     
-    if (validatedArgs.test_cases && validatedArgs.test_cases.length > 0) {
-      validatedArgs.test_cases.forEach(testCase => {
-        const isAsync = validatedArgs.async_tests || testCase.setup?.includes('await');
+    if (args.test_cases && args.test_cases.length > 0) {
+      args.test_cases.forEach(testCase => {
+        const isAsync = args.async_tests || testCase.setup?.includes('await');
         if (isAsync) hasAsync = true;
         
         const testCaseCode = this._generateTestCase(
           testCase, 
           isAsync, 
-          validatedArgs.timeout,
-          validatedArgs.target_file,
+          args.timeout,
+          args.target_file,
           moduleName
         );
         
@@ -194,7 +342,7 @@ export class GenerateUnitTestsTool extends Tool {
     testParts.push('});');
     
     // Add coverage annotations if requested
-    if (validatedArgs.coverage) {
+    if (args.coverage) {
       testParts.push('');
       testParts.push('// Coverage annotations');
       testParts.push('// @ts-coverage:ignore-file');
@@ -202,7 +350,7 @@ export class GenerateUnitTestsTool extends Tool {
     }
     
     // Generate test path
-    const testPath = this._generateTestPath(validatedArgs.target_file);
+    const testPath = this._generateTestPath(args.target_file);
     
     // Build final test content
     const testContent = testParts.join('\n');
@@ -210,21 +358,21 @@ export class GenerateUnitTestsTool extends Tool {
     // Analyze generated components
     const components = {
       test_count: testCount,
-      has_mocks: !!(validatedArgs.mocks && validatedArgs.mocks.length > 0),
+      has_mocks: !!(args.mocks && args.mocks.length > 0),
       has_setup: hasSetup,
-      has_async: hasAsync || validatedArgs.async_tests,
-      coverage_enabled: !!validatedArgs.coverage
+      has_async: hasAsync || args.async_tests,
+      coverage_enabled: !!args.coverage
     };
     
     // Write to file if requested
     let filePath = null;
     let written = false;
     
-    if (validatedArgs.writeToFile && validatedArgs.outputPath) {
+    if (args.writeToFile && args.outputPath) {
       try {
         // Determine the full file path
-        const projectPath = validatedArgs.projectPath || process.cwd();
-        filePath = path.join(projectPath, validatedArgs.outputPath);
+        const projectPath = args.projectPath || process.cwd();
+        filePath = path.join(projectPath, args.outputPath);
         
         // Ensure the directory exists
         const dir = path.dirname(filePath);

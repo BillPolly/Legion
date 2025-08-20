@@ -1,24 +1,135 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * BoundedContextGeneratorTool - Generates bounded contexts using DDD with LLM
  */
 
 import { Tool, ToolResult } from '@legion/tools-registry';
-import { z } from 'zod';
+
+// Input schema as plain JSON Schema
+const boundedContextGeneratorToolInputSchema = {
+  type: 'object',
+  properties: {
+    requirementsContext: {
+      description: 'Requirements context from database'
+    },
+    projectId: {
+      type: 'string',
+      description: 'Project ID'
+    },
+    strategy: {
+      type: 'object',
+      properties: {
+        boundedContextCount: {
+          type: 'number',
+          description: 'Suggested number of contexts'
+        },
+        coreDomain: {
+          type: 'string',
+          description: 'Core domain focus'
+        },
+        supportingDomains: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Supporting domains'
+        }
+      },
+      description: 'Domain strategy from agent'
+    }
+  },
+  required: ['requirementsContext']
+};
+
+// Output schema as plain JSON Schema
+const boundedContextGeneratorToolOutputSchema = {
+  type: 'object',
+  properties: {
+    boundedContexts: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          description: { type: 'string' },
+          isCore: { type: 'boolean' },
+          domainType: {
+            type: 'string',
+            enum: ['core', 'supporting', 'generic']
+          },
+          boundaries: {
+            type: 'array',
+            items: { type: 'string' }
+          },
+          responsibilities: {
+            type: 'array',
+            items: { type: 'string' }
+          },
+          interfaces: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                type: {
+                  type: 'string',
+                  enum: ['inbound', 'outbound']
+                },
+                name: { type: 'string' },
+                description: { type: 'string' }
+              }
+            }
+          },
+          relationshipsWith: {
+            type: 'array',
+            items: { type: 'string' }
+          },
+          ubiquitousLanguage: {
+            type: 'array',
+            items: { type: 'string' }
+          },
+          createdAt: { type: 'string' },
+          requirementsCount: { type: 'number' },
+          status: { type: 'string' },
+          validationStatus: { type: 'string' }
+        }
+      },
+      description: 'Identified bounded contexts'
+    },
+    artifactId: {
+      type: 'string',
+      description: 'Stored artifact ID'
+    },
+    summary: {
+      type: 'object',
+      properties: {
+        contextCount: { type: 'number' },
+        coreDomain: { type: 'string' },
+        supportingDomains: {
+          type: 'array',
+          items: { type: 'string' }
+        }
+      },
+      description: 'Summary of bounded contexts'
+    },
+    llmReasoning: {
+      type: 'string',
+      description: 'LLM reasoning for context boundaries'
+    }
+  },
+  required: ['boundedContexts', 'artifactId', 'summary']
+};
 
 export class BoundedContextGeneratorTool extends Tool {
   constructor(dependencies = {}) {
     super({
       name: 'identify_bounded_contexts',
       description: 'Identify bounded contexts from requirements using DDD principles',
-      inputSchema: z.object({
-        requirementsContext: z.any().describe('Requirements context from database'),
-        projectId: z.string().optional().describe('Project ID'),
-        strategy: z.object({
-          boundedContextCount: z.number().optional(),
-          coreDomain: z.string().optional(),
-          supportingDomains: z.array(z.string()).optional()
-        }).optional().describe('Domain strategy from agent')
-      })
+      inputSchema: boundedContextGeneratorToolInputSchema,
+      outputSchema: boundedContextGeneratorToolOutputSchema
     });
     
     this.llmClient = dependencies.llmClient;

@@ -1,24 +1,36 @@
-import { z } from 'zod';
+
+import { createValidator } from '@legion/schema';
 
 /**
- * Zod schema for input validation as specified in DESIGN.md
+ * JSON Schema for input validation as specified in DESIGN.md
  */
-export const InputSchema = z.object({
-  file_path: z.string()
-    .min(1, "File path is required"),
-  
-  prompt: z.string()
-    .min(10, "Prompt must be at least 10 characters")
-    .max(2000, "Prompt must not exceed 2000 characters")
-});
+const inputSchema = {
+  type: 'object',
+  properties: {
+    file_path: {
+      type: 'string',
+      minLength: 1,
+      description: 'File path is required'
+    },
+    prompt: {
+      type: 'string',
+      minLength: 10,
+      maxLength: 2000,
+      description: 'Prompt must be between 10 and 2000 characters'
+    }
+  },
+  required: ['file_path', 'prompt']
+};
+
+export const InputSchema = createValidator(inputSchema);
 
 /**
- * Validate input parameters using Zod schema
+ * Validate input parameters using schema package
  * @param {Object} input - Input parameters to validate
  * @returns {Object} Parsed and validated input
  */
 export function validateInputParameters(input) {
-  return InputSchema.parse(input);
+  return InputSchema.validate(input);
 }
 
 /**

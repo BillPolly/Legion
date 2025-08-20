@@ -1,20 +1,67 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * UseCaseGeneratorTool - Generates use cases from requirements
  */
 
 import { Tool, ToolResult } from '@legion/tools-registry';
-import { z } from 'zod';
+
+// Input schema as plain JSON Schema
+const useCaseGeneratorToolInputSchema = {
+  type: 'object',
+  properties: {
+    userStories: {
+      type: 'array',
+      items: {},
+      description: 'User stories'
+    },
+    entities: {
+      type: 'array',
+      items: {},
+      description: 'Domain entities'
+    },
+    projectId: {
+      type: 'string',
+      description: 'Project ID'
+    }
+  },
+  required: ['userStories', 'entities']
+};
+
+// Output schema as plain JSON Schema
+const useCaseGeneratorToolOutputSchema = {
+  type: 'object',
+  properties: {
+    useCases: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          input: { type: 'object' },
+          output: { type: 'object' },
+          steps: { type: 'array' },
+          layer: { type: 'string' }
+        }
+      },
+      description: 'Generated use cases'
+    }
+  },
+  required: ['useCases']
+};
 
 export class UseCaseGeneratorTool extends Tool {
   constructor(dependencies = {}) {
     super({
       name: 'generate_use_cases',
       description: 'Generate use cases from user stories and entities',
-      inputSchema: z.object({
-        userStories: z.array(z.any()).describe('User stories'),
-        entities: z.array(z.any()).describe('Domain entities'),
-        projectId: z.string().optional()
-      })
+      inputSchema: useCaseGeneratorToolInputSchema,
+      outputSchema: useCaseGeneratorToolOutputSchema
     });
     
     this.llmClient = dependencies.llmClient;

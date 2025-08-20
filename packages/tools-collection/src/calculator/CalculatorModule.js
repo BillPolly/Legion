@@ -1,5 +1,4 @@
 import { Tool, Module } from '@legion/tools-registry';
-import { z } from 'zod';
 
 /**
  * Calculator tool that evaluates mathematical expressions
@@ -9,9 +8,30 @@ class CalculatorTool extends Tool {
     super({
       name: 'calculator',
       description: 'Performs mathematical calculations',
-      inputSchema: z.object({
-        expression: z.union([z.string(), z.number()]).transform(val => String(val)).describe('JavaScript mathematical expression to evaluate (e.g., "784*566", "Math.sqrt(16)", "(10+5)*3/5")')
-      })
+      inputSchema: {
+        type: 'object',
+        properties: {
+          expression: {
+            type: ['string', 'number'],
+            description: 'JavaScript mathematical expression to evaluate (e.g., "784*566", "Math.sqrt(16)", "(10+5)*3/5")'
+          }
+        },
+        required: ['expression']
+      },
+      outputSchema: {
+        type: 'object',
+        properties: {
+          result: {
+            type: 'number',
+            description: 'The result of the calculation'
+          },
+          expression: {
+            type: 'string',
+            description: 'The expression that was evaluated'
+          }
+        },
+        required: ['result', 'expression']
+      }
     });
     this.shortName = 'calc';
     
@@ -20,12 +40,16 @@ class CalculatorTool extends Tool {
   }
 
   /**
-   * Execute the calculator with validated parameters
+   * Execute the calculator - no validation, just execution
    */
   async _executeCalculation(params) {
-    const { expression } = params;
+    // Convert expression to string if it's a number
+    let { expression } = params;
+    if (typeof expression === 'number') {
+      expression = String(expression);
+    }
     
-    // Validate expression before using it
+    // Basic check - let execution fail if invalid
     if (!expression) {
       throw new Error('Expression is required');
     }

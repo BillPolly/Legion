@@ -1,20 +1,153 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * EntityModelingTool - Models domain entities with DDD principles using LLM
  */
 
 import { Tool, ToolResult } from '@legion/tools-registry';
-import { z } from 'zod';
+
+// Input schema as plain JSON Schema
+const entityModelingToolInputSchema = {
+  type: 'object',
+  properties: {
+    boundedContexts: {
+      type: 'array',
+      items: {},
+      description: 'Bounded contexts to model entities for'
+    },
+    requirementsContext: {
+      description: 'Requirements context'
+    },
+    projectId: {
+      type: 'string',
+      description: 'Project ID'
+    }
+  },
+  required: ['boundedContexts', 'requirementsContext']
+};
+
+// Output schema as plain JSON Schema
+const entityModelingToolOutputSchema = {
+  type: 'object',
+  properties: {
+    entities: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          description: { type: 'string' },
+          boundedContext: { type: 'string' },
+          identity: {
+            type: 'object',
+            properties: {
+              type: { type: 'string' },
+              description: { type: 'string' }
+            }
+          },
+          properties: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                type: { type: 'string' },
+                required: { type: 'boolean' },
+                description: { type: 'string' },
+                validation: { type: 'string' }
+              }
+            }
+          },
+          behaviors: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                description: { type: 'string' },
+                parameters: {
+                  type: 'array',
+                  items: { type: 'string' }
+                },
+                sideEffects: { type: 'string' },
+                invariantsChecked: {
+                  type: 'array',
+                  items: { type: 'string' }
+                }
+              }
+            }
+          },
+          invariants: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                rule: { type: 'string' },
+                errorMessage: { type: 'string' }
+              }
+            }
+          },
+          relationships: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                type: { type: 'string' },
+                target: { type: 'string' },
+                description: { type: 'string' }
+              }
+            }
+          },
+          lifecycle: {
+            type: 'object',
+            properties: {
+              creation: { type: 'string' },
+              modification: { type: 'string' },
+              deletion: { type: 'string' }
+            }
+          }
+        }
+      },
+      description: 'Domain entities'
+    },
+    artifactId: {
+      type: 'string',
+      description: 'Stored artifact ID'
+    },
+    summary: {
+      type: 'object',
+      properties: {
+        totalEntities: { type: 'number' },
+        byContext: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              context: { type: 'string' },
+              entityCount: { type: 'number' }
+            }
+          }
+        }
+      },
+      description: 'Summary of entities'
+    }
+  },
+  required: ['entities', 'artifactId', 'summary']
+};
 
 export class EntityModelingTool extends Tool {
   constructor(dependencies = {}) {
     super({
       name: 'model_entities',
       description: 'Model domain entities with invariants following DDD principles',
-      inputSchema: z.object({
-        boundedContexts: z.array(z.any()).describe('Bounded contexts to model entities for'),
-        requirementsContext: z.any().describe('Requirements context'),
-        projectId: z.string().optional()
-      })
+      inputSchema: entityModelingToolInputSchema,
+      outputSchema: entityModelingToolOutputSchema
     });
     
     this.llmClient = dependencies.llmClient;

@@ -1,27 +1,65 @@
+/**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 
-const inputSchema = z.object({
-  serviceId: z.string().describe('Railway service ID'),
-  environmentId: z.string().optional().describe('Railway environment ID'),
-  variables: z.record(z.string()).describe('Environment variables to set or update')
-});
+// Input schema as plain JSON Schema
+const railwayUpdateEnvToolInputSchema = {
+  type: 'object',
+  properties: {
+    serviceId: {
+      type: 'string',
+      description: 'Railway service ID'
+    },
+    environmentId: {
+      type: 'string',
+      description: 'Railway environment ID'
+    },
+    variables: {
+      type: 'object',
+      additionalProperties: { type: 'string' },
+      description: 'Environment variables to set or update'
+    }
+  },
+  required: ['serviceId', 'variables']
+};
 
-const outputSchema = z.object({
-  success: z.boolean(),
-  updatedVariables: z.record(z.string()),
-  redeploymentId: z.string().nullable(),
-  message: z.string()
-});
+// Output schema as plain JSON Schema
+const railwayUpdateEnvToolOutputSchema = {
+  type: 'object',
+  properties: {
+    success: {
+      type: 'boolean',
+      description: 'Whether the update was successful'
+    },
+    updatedVariables: {
+      type: 'object',
+      additionalProperties: { type: 'string' },
+      description: 'Variables that were updated'
+    },
+    redeploymentId: {
+      type: ['string', 'null'],
+      description: 'ID of the redeployment'
+    },
+    message: {
+      type: 'string',
+      description: 'Result message'
+    }
+  },
+  required: ['success', 'updatedVariables', 'message']
+};
 
 class RailwayUpdateEnvTool extends Tool {
   constructor(resourceManager) {
     super({
       name: 'railway_update_env',
       description: 'Update environment variables for a Railway service',
-      inputSchema: inputSchema,
+      inputSchema: railwayUpdateEnvToolInputSchema,
+      outputSchema: railwayUpdateEnvToolOutputSchema,
       execute: async (input) => {
-        const validated = inputSchema.parse(input);
         const provider = this.resourceManager.railwayProvider;
         
         if (!provider) {
@@ -29,9 +67,9 @@ class RailwayUpdateEnvTool extends Tool {
         }
 
         const result = await provider.setEnvironmentVariables(
-          validated.serviceId,
-          validated.variables,
-          validated.environmentId
+          input.serviceId,
+          input.variables,
+          input.environmentId
         );
         
         if (!result.success) {
@@ -39,19 +77,19 @@ class RailwayUpdateEnvTool extends Tool {
         }
 
         // Trigger redeploy to apply changes
-        const redeployResult = await provider.redeploy(validated.serviceId);
+        const redeployResult = await provider.redeploy(input.serviceId);
         
         return {
           success: true,
-          updatedVariables: validated.variables,
+          updatedVariables: input.variables,
           redeploymentId: redeployResult.success ? redeployResult.deploymentId : null,
-          message: `Environment variables updated for service ${validated.serviceId}`
+          message: `Environment variables updated for service ${input.serviceId}`
         };
       },
       getMetadata: () => ({
         description: 'Update environment variables for a Railway service',
-        input: inputSchema,
-        output: outputSchema
+        input: railwayUpdateEnvToolInputSchema,
+        output: railwayUpdateEnvToolOutputSchema
       })
     });
     this.resourceManager = resourceManager;

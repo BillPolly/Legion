@@ -1,26 +1,97 @@
-import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
+/**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
 
-const inputSchema = z.object({
-  projectName: z.string().describe('Name for the Railway project'),
-  source: z.object({
-    type: z.enum(['github', 'docker']).describe('Source type for deployment'),
-    repository: z.string().describe('GitHub repository (owner/repo) or Docker image'),
-    branch: z.string().default('main').describe('Git branch (for GitHub deployments)')
-  }).describe('Deployment source configuration'),
-  environmentVariables: z.record(z.string()).default({}).describe('Environment variables for the deployment'),
-  serviceName: z.string().default('app').describe('Name for the Railway service')
-});
+import { Tool } from '@legion/tools-registry';
+
+// Input schema as plain JSON Schema
+const railwayDeployToolInputSchema = {
+  type: 'object',
+  properties: {
+    projectName: {
+      type: 'string',
+      description: 'Name for the Railway project'
+    },
+    source: {
+      type: 'object',
+      properties: {
+        type: {
+          type: 'string',
+          enum: ['github', 'docker'],
+          description: 'Source type for deployment'
+        },
+        repository: {
+          type: 'string',
+          description: 'GitHub repository (owner/repo) or Docker image'
+        },
+        branch: {
+          type: 'string',
+          default: 'main',
+          description: 'Git branch (for GitHub deployments)'
+        }
+      },
+      required: ['type', 'repository'],
+      description: 'Deployment source configuration'
+    },
+    environmentVariables: {
+      type: 'object',
+      additionalProperties: {
+        type: 'string'
+      },
+      default: {},
+      description: 'Environment variables for the deployment'
+    },
+    serviceName: {
+      type: 'string',
+      default: 'app',
+      description: 'Name for the Railway service'
+    }
+  },
+  required: ['projectName', 'source']
+};
+
+// Output schema as plain JSON Schema
+const railwayDeployToolOutputSchema = {
+  type: 'object',
+  properties: {
+    deploymentId: {
+      type: 'string',
+      description: 'Railway deployment ID'
+    },
+    projectId: {
+      type: 'string',
+      description: 'Railway project ID'
+    },
+    serviceId: {
+      type: 'string',
+      description: 'Railway service ID'
+    },
+    deploymentUrl: {
+      type: 'string',
+      description: 'Deployment URL'
+    },
+    status: {
+      type: 'string',
+      description: 'Deployment status'
+    },
+    message: {
+      type: 'string',
+      description: 'Success message'
+    }
+  },
+  required: ['deploymentId', 'projectId', 'serviceId', 'deploymentUrl', 'status', 'message']
+};
 
 class RailwayDeployTool extends Tool {
   constructor(resourceManager) {
     super({
       name: 'railway_deploy',
       description: 'Deploy an application to Railway from GitHub repository or Docker image',
-      inputSchema: inputSchema,
+      inputSchema: railwayDeployToolInputSchema,
+      outputSchema: railwayDeployToolOutputSchema,
       execute: async (input) => {
-        const validated = inputSchema.parse(input);
-        
         // Get provider from resourceManager or module's provider
         let provider;
         if (this.resourceManager && typeof this.resourceManager.get === 'function') {
@@ -33,18 +104,18 @@ class RailwayDeployTool extends Tool {
 
         // Prepare deployment configuration
         const config = {
-          name: validated.projectName,
-          serviceName: validated.serviceName,
-          environment: validated.environmentVariables
+          name: input.projectName,
+          serviceName: input.serviceName,
+          environment: input.environmentVariables
         };
 
         // Configure source based on type
-        if (validated.source.type === 'github') {
+        if (input.source.type === 'github') {
           config.source = 'github';
-          config.repo = validated.source.repository;
-          config.branch = validated.source.branch;
-        } else if (validated.source.type === 'docker') {
-          config.image = validated.source.repository;
+          config.repo = input.source.repository;
+          config.branch = input.source.branch;
+        } else if (input.source.type === 'docker') {
+          config.image = input.source.repository;
         }
 
         // Deploy with domain generation
@@ -60,20 +131,13 @@ class RailwayDeployTool extends Tool {
           serviceId: result.serviceId,
           deploymentUrl: result.url || `Deployment ${result.deploymentId} created`,
           status: result.status,
-          message: `Successfully deployed ${validated.projectName} to Railway`
+          message: `Successfully deployed ${input.projectName} to Railway`
         };
       },
       getMetadata: () => ({
         description: 'Deploy an application to Railway from GitHub repository or Docker image',
-        input: inputSchema,
-        output: z.object({
-          deploymentId: z.string(),
-          projectId: z.string(), 
-          serviceId: z.string(),
-          deploymentUrl: z.string(),
-          status: z.string(),
-          message: z.string()
-        })
+        input: railwayDeployToolInputSchema,
+        output: railwayDeployToolOutputSchema
       })
     });
     this.resourceManager = resourceManager;

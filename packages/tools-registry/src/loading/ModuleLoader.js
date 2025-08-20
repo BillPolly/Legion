@@ -87,8 +87,10 @@ export class ModuleLoader {
               $set: {
                 loadingStatus: 'loaded',
                 lastLoadedAt: new Date(),
-                loadingError: null,
                 toolCount: tools.length
+              },
+              $unset: {
+                loadingError: ""
               }
             }
           );

@@ -1,7 +1,12 @@
+/**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
 import { Tool, Module, ToolResult } from '@legion/tools-registry';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { z } from 'zod';
 
 /**
  * Internal tool class for file operations
@@ -11,13 +16,55 @@ class FileOperationsTool extends Tool {
     super({
       name: 'file_operations',
       description: 'Comprehensive file system operations including reading, writing, and directory management',
-      inputSchema: z.object({
-        filepath: z.string().optional().describe('The path to the file (for read/write operations)'),
-        content: z.union([z.string(), z.object({}).passthrough()]).optional().describe('The content to write to the file (string or object - objects will be JSON stringified)'),
-        encoding: z.string().optional().default('utf8').describe('The encoding to use when reading/writing the file'),
-        dirpath: z.string().optional().describe('The directory path (for directory operations)'),
-        operation: z.enum(['read', 'write', 'create', 'list', 'change', 'current']).optional().describe('The operation to perform')
-      })
+      inputSchema: {
+        type: 'object',
+        properties: {
+          filepath: {
+            type: 'string',
+            description: 'The path to the file (for read/write operations)'
+          },
+          content: {
+            type: ['string', 'object'],
+            description: 'The content to write to the file (string or object - objects will be JSON stringified)'
+          },
+          encoding: {
+            type: 'string',
+            default: 'utf8',
+            description: 'The encoding to use when reading/writing the file'
+          },
+          dirpath: {
+            type: 'string',
+            description: 'The directory path (for directory operations)'
+          },
+          operation: {
+            type: 'string',
+            enum: ['read', 'write', 'create', 'list', 'change', 'current'],
+            description: 'The operation to perform'
+          }
+        }
+      },
+      outputSchema: {
+        type: 'object',
+        properties: {
+          content: {
+            type: 'string',
+            description: 'File content or operation result'
+          },
+          filepath: {
+            type: 'string',
+            description: 'Path of the file/directory operated on'
+          },
+          size: {
+            type: 'number',
+            description: 'Size in bytes (for file operations)'
+          },
+          files: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'List of files (for directory listing)'
+          }
+        }
+      }
     });
   }
 

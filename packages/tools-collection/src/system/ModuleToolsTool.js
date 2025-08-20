@@ -1,14 +1,61 @@
+/**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
+
+// Input schema as plain JSON Schema
+const moduleToolsToolInputSchema = {
+  type: 'object',
+  properties: {
+    module: {
+      type: 'string',
+      description: 'Name of the module to inspect'
+    }
+  },
+  required: ['module']
+};
+
+// Output schema as plain JSON Schema
+const moduleToolsToolOutputSchema = {
+  type: 'object',
+  properties: {
+    success: {
+      type: 'boolean',
+      description: 'Whether the operation was successful'
+    },
+    module: {
+      type: 'string',
+      description: 'Module name'
+    },
+    tools: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          description: { type: 'string' }
+        }
+      },
+      description: 'Array of available tools'
+    },
+    error: {
+      type: 'string',
+      description: 'Error message if operation failed'
+    }
+  },
+  required: ['success']
+};
 
 export class ModuleToolsTool extends Tool {
   constructor(dependencies = {}) {
     super({
       name: 'module_tools',
       description: 'List tools available in a specific module',
-      inputSchema: z.object({
-        module: z.string().describe('Name of the module to inspect')
-      })
+      inputSchema: moduleToolsToolInputSchema,
+      outputSchema: moduleToolsToolOutputSchema
     });
     this.config = dependencies;
   }

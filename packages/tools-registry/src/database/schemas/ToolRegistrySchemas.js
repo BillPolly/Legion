@@ -20,8 +20,8 @@ export const ModulesCollectionSchema = {
           bsonType: 'string',
           minLength: 1,
           maxLength: 100,
-          pattern: '^[a-z0-9-]+$',
-          description: 'Module name (kebab-case, unique identifier)'
+          pattern: '^[a-zA-Z0-9][a-zA-Z0-9_-]*$',
+          description: 'Module name (supports kebab-case, snake_case, PascalCase, camelCase)'
         },
         description: {
           bsonType: 'string',
@@ -93,6 +93,42 @@ export const ModulesCollectionSchema = {
           bsonType: 'int',
           minimum: 0,
           description: 'Cached count of tools provided by this module'
+        },
+        loadingStatus: {
+          bsonType: 'string',
+          enum: ['pending', 'loading', 'loaded', 'unloaded', 'failed'],
+          description: 'Current module loading state'
+        },
+        indexingStatus: {
+          bsonType: 'string',
+          enum: ['pending', 'indexing', 'indexed', 'failed'],
+          description: 'Current module indexing state for perspectives/vectors'
+        },
+        validationStatus: {
+          bsonType: 'string',
+          enum: ['pending', 'validating', 'validated', 'failed', 'warnings'],
+          description: 'Current validation state'
+        },
+        lastLoadedAt: {
+          bsonType: 'date',
+          description: 'When module was last successfully loaded'
+        },
+        lastIndexedAt: {
+          bsonType: 'date',
+          description: 'When module perspectives were last indexed'
+        },
+        loadingError: {
+          bsonType: 'string',
+          description: 'Error message if loading failed'
+        },
+        indexingError: {
+          bsonType: 'string',
+          description: 'Error message if indexing failed'
+        },
+        perspectiveCount: {
+          bsonType: 'int',
+          minimum: 0,
+          description: 'Cached count of perspectives generated for this module'
         },
         createdAt: {
           bsonType: 'date',
@@ -234,11 +270,14 @@ export const ToolPerspectivesCollectionSchema = {
           items: {
             bsonType: 'double'
           },
-          description: 'Semantic embedding vector for this perspective text'
+          minItems: 768,
+          maxItems: 768,
+          description: 'Semantic embedding vector for this perspective text (768 dimensions for Nomic model)'
         },
         embeddingModel: {
           bsonType: 'string',
-          description: 'Model used to generate the embedding (e.g., all-MiniLM-L6-v2)'
+          enum: ['nomic-embed-text-v1', 'all-MiniLM-L6-v2', 'text-embedding-ada-002'],
+          description: 'Model used to generate the embedding'
         },
         generatedAt: {
           bsonType: 'date',
@@ -294,7 +333,9 @@ export const ToolsCollectionSchema = {
         },
         moduleName: {
           bsonType: 'string',
-          description: 'Denormalized module name for efficient queries'
+          minLength: 1,
+          maxLength: 100,
+          description: 'Denormalized module name for efficient queries (must match parent module)'
         },
         description: {
           bsonType: 'string',
@@ -309,11 +350,35 @@ export const ToolsCollectionSchema = {
         },
         inputSchema: {
           bsonType: 'object',
-          description: 'JSON Schema or Zod schema definition for tool inputs'
+          required: ['type'],
+          properties: {
+            type: {
+              bsonType: 'string',
+              enum: ['object', 'string', 'number', 'boolean', 'array']
+            },
+            properties: {
+              bsonType: 'object'
+            },
+            required: {
+              bsonType: 'array',
+              items: { bsonType: 'string' }
+            }
+          },
+          description: 'Valid JSON Schema definition for tool inputs'
         },
         outputSchema: {
           bsonType: 'object',
-          description: 'JSON Schema definition for expected outputs'
+          required: ['type'],
+          properties: {
+            type: {
+              bsonType: 'string',
+              enum: ['object', 'string', 'number', 'boolean', 'array']
+            },
+            properties: {
+              bsonType: 'object'
+            }
+          },
+          description: 'Valid JSON Schema definition for expected outputs'
         },
         examples: {
           bsonType: 'array',
@@ -362,10 +427,13 @@ export const ToolsCollectionSchema = {
           items: {
             bsonType: 'double'
           },
-          description: 'Semantic embedding vector for similarity search'
+          minItems: 768,
+          maxItems: 768,
+          description: 'Semantic embedding vector for similarity search (768 dimensions)'
         },
         embeddingModel: {
           bsonType: 'string',
+          enum: ['nomic-embed-text-v1', 'all-MiniLM-L6-v2', 'text-embedding-ada-002'],
           description: 'Model used to generate the embedding'
         },
         status: {
@@ -410,10 +478,98 @@ export const ToolsCollectionSchema = {
 };
 
 /**
+ * Module Registry Collection Schema
+ * Permanent storage of discovered module metadata
+ * This collection is NEVER cleared during normal operations
+ */
+export const ModuleRegistryCollectionSchema = {
+  name: 'module_registry',
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['name', 'type', 'path'],
+      properties: {
+        name: {
+          bsonType: 'string',
+          minLength: 1,
+          maxLength: 100,
+          pattern: '^[a-zA-Z0-9][a-zA-Z0-9_-]*$',
+          description: 'Module name (supports kebab-case, snake_case, PascalCase, camelCase)'
+        },
+        type: {
+          bsonType: 'string',
+          enum: ['class', 'json', 'module.json', 'definition', 'dynamic'],
+          description: 'Module type for loading strategy'
+        },
+        path: {
+          bsonType: 'string',
+          minLength: 1,
+          description: 'Relative path to module from monorepo root'
+        },
+        className: {
+          bsonType: 'string',
+          description: 'Class name for class-based modules'
+        },
+        filePath: {
+          bsonType: 'string',
+          description: 'Full file path relative to monorepo root'
+        },
+        package: {
+          bsonType: 'string',
+          description: 'Package name (e.g. @legion/tools)'
+        },
+        description: {
+          bsonType: 'string',
+          maxLength: 500,
+          description: 'Module description extracted from code or metadata'
+        },
+        dependencies: {
+          bsonType: 'array',
+          items: {
+            bsonType: 'string'
+          },
+          description: 'List of npm dependencies'
+        },
+        requiredEnvVars: {
+          bsonType: 'array',
+          items: {
+            bsonType: 'string'
+          },
+          description: 'Environment variables required by this module'
+        },
+        loadable: {
+          bsonType: 'bool',
+          description: 'Whether this module can be loaded'
+        },
+        discoveredAt: {
+          bsonType: 'date',
+          description: 'When this module was first discovered'
+        },
+        lastValidatedAt: {
+          bsonType: 'date',
+          description: 'When this module was last validated'
+        }
+      }
+    }
+  },
+  indexes: [
+    { name: 1 }, // Unique index on module name
+    { package: 1 },
+    { type: 1 },
+    { loadable: 1 },
+    { discoveredAt: -1 }
+  ],
+  uniqueIndexes: [
+    { name: 1, className: 1, filePath: 1 } // Ensure unique module entries
+  ]
+};
+
+/**
  * Collection initialization configurations
  */
 export const ToolRegistryCollections = {
-  modules: ModulesCollectionSchema,
+  module_registry: ModuleRegistryCollectionSchema,  // Permanent module discovery storage
+  modules: ModulesCollectionSchema,                 // Runtime module state
   tools: ToolsCollectionSchema,
   perspective_types: PerspectiveTypesCollectionSchema,
   tool_perspectives: ToolPerspectivesCollectionSchema
@@ -465,19 +621,38 @@ export class ToolRegistrySchemaManager {
         });
 
       } catch (error) {
-        if (error.code === 48) {
-          // Collection already exists
+        if (error.code === 48 || error.message.includes('already exists')) {
+          // Collection already exists (code 48) or exists message
           results.push({
             collection: collectionName,
             status: 'exists',
             message: 'Collection already exists'
           });
         } else {
-          results.push({
-            collection: collectionName,
-            status: 'error',
-            error: error.message
-          });
+          // Check if collection actually exists despite the error
+          try {
+            const collections = await this.mongoProvider.db.collections();
+            const exists = collections.some(col => col.collectionName === collectionName);
+            if (exists) {
+              results.push({
+                collection: collectionName,
+                status: 'exists',
+                message: 'Collection exists despite creation error'
+              });
+            } else {
+              results.push({
+                collection: collectionName,
+                status: 'error',
+                error: error.message
+              });
+            }
+          } catch (checkError) {
+            results.push({
+              collection: collectionName,
+              status: 'error',
+              error: `${error.message} (check failed: ${checkError.message})`
+            });
+          }
         }
       }
     }

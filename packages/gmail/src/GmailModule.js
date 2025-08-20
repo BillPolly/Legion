@@ -1,23 +1,61 @@
 import nodemailer from 'nodemailer';
 import Imap from 'imap';
 import { simpleParser } from 'mailparser';
-import { z } from 'zod';
 import { ResourceManager } from '@legion/resource-manager';
+import { createValidator } from '@legion/schema';
 
-const GmailConfigSchema = z.object({
-  user: z.string().email().optional(),
-  password: z.string().optional(),
-  smtp: z.object({
-    host: z.string().default('smtp.gmail.com'),
-    port: z.number().default(587),
-    secure: z.boolean().default(false)
-  }).default({}),
-  imap: z.object({
-    host: z.string().default('imap.gmail.com'),
-    port: z.number().default(993),
-    tls: z.boolean().default(true)
-  }).default({})
-});
+const gmailConfigSchema = {
+  type: 'object',
+  properties: {
+    user: {
+      type: 'string',
+      format: 'email',
+      description: 'Gmail email address'
+    },
+    password: {
+      type: 'string',
+      description: 'Gmail app password'
+    },
+    smtp: {
+      type: 'object',
+      properties: {
+        host: {
+          type: 'string',
+          default: 'smtp.gmail.com'
+        },
+        port: {
+          type: 'number',
+          default: 587
+        },
+        secure: {
+          type: 'boolean',
+          default: false
+        }
+      },
+      default: {}
+    },
+    imap: {
+      type: 'object',
+      properties: {
+        host: {
+          type: 'string',
+          default: 'imap.gmail.com'
+        },
+        port: {
+          type: 'number',
+          default: 993
+        },
+        tls: {
+          type: 'boolean',
+          default: true
+        }
+      },
+      default: {}
+    }
+  }
+};
+
+const GmailConfigSchema = createValidator(gmailConfigSchema);
 
 export class GmailModule {
   constructor(config = {}) {
@@ -44,7 +82,7 @@ export class GmailModule {
     };
 
     const mergedConfig = { ...envConfig, ...providedConfig };
-    return GmailConfigSchema.parse(mergedConfig);
+    return GmailConfigSchema.validate(mergedConfig);
   }
 
   async initialize() {

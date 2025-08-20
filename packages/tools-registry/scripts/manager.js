@@ -64,7 +64,9 @@ function parseArgs() {
     clear: args.includes('--clear'),
     // Pipeline options
     skipPerspectives: args.includes('--skip-perspectives'),
-    skipVectors: args.includes('--skip-vectors')
+    skipVectors: args.includes('--skip-vectors'),
+    // Staged pipeline options
+    forceRestart: args.includes('--force-restart')
   };
   
   // Extract module name
@@ -89,6 +91,7 @@ function showHelp() {
   console.log(chalk.white('  load                         Load modules and populate database'));
   console.log(chalk.white('  clear                        Clear database collections'));
   console.log(chalk.white('  pipeline                     Run complete loading pipeline'));
+  console.log(chalk.white('  staged-pipeline              Run NEW staged pipeline with verification'));
   console.log(chalk.white('  status                       Show pipeline status'));
   console.log(chalk.white('  help                         Show this help message\n'));
   
@@ -106,12 +109,18 @@ function showHelp() {
   console.log(chalk.white('  --skip-perspectives          Skip perspective generation'));
   console.log(chalk.white('  --skip-vectors               Skip vector indexing\n'));
   
+  console.log(chalk.cyan('Staged Pipeline Options:'));
+  console.log(chalk.white('  --force-restart              Force restart (ignore resume capability)'));
+  console.log(chalk.white('  --clear-modules              Clear modules collection too\n'));
+  
   console.log(chalk.cyan('Examples:'));
   console.log(chalk.gray('  node manager.js discover --verbose'));
   console.log(chalk.gray('  node manager.js load --module file'));
   console.log(chalk.gray('  node manager.js clear --clear --confirm'));
   console.log(chalk.gray('  node manager.js pipeline --clear --verbose'));
-  console.log(chalk.gray('  node manager.js pipeline --module calculator --skip-vectors\n'));
+  console.log(chalk.gray('  node manager.js pipeline --module calculator --skip-vectors'));
+  console.log(chalk.gray('  node manager.js staged-pipeline --verbose'));
+  console.log(chalk.gray('  node manager.js staged-pipeline --force-restart\n'));
 }
 
 /**
@@ -405,6 +414,74 @@ async function statusCommand(options) {
 }
 
 /**
+ * Staged pipeline command - NEW method with verification between stages
+ */
+async function stagedPipelineCommand(options) {
+  console.log(chalk.blue.bold('\n🚀 Staged Pipeline with Verification\n'));
+  console.log(chalk.gray('Running staged pipeline with verification between each stage:'));
+  console.log(chalk.gray('1. Clear databases'));
+  console.log(chalk.gray('2. Load tools from modules'));
+  console.log(chalk.gray('3. Generate perspectives'));
+  console.log(chalk.gray('4. Generate embeddings'));
+  console.log(chalk.gray('5. Index vectors to Qdrant'));
+  console.log(chalk.gray('✓ Verification after each stage'));
+  console.log(chalk.gray('✓ Resume capability on failure\n'));
+  
+  const startTime = Date.now();
+  const loadingManager = await createLoadingManager(options);
+  
+  try {
+    // Use the new runFullPipeline method
+    const result = await loadingManager.runFullPipeline({
+      module: options.module,
+      forceRestart: options.forceRestart,
+      clearModules: options.clearModules
+    });
+    
+    const totalTime = Date.now() - startTime;
+    
+    console.log(chalk.green.bold('\n🎉 Pipeline completed successfully!\n'));
+    console.log(chalk.cyan('Final statistics:'));
+    console.log(chalk.white(`   Duration: ${result.durationFormatted || Math.round(totalTime / 1000) + 's'}`));
+    console.log(chalk.white(`   Tools: ${result.counts.tools}`));
+    console.log(chalk.white(`   Perspectives: ${result.counts.perspectives} (${result.counts.perspectivesPerTool} per tool)`));
+    console.log(chalk.white(`   Vectors: ${result.counts.vectors} (${result.counts.vectorsPerTool} per tool)`));
+    
+    if (result.verification && result.verification.checks) {
+      console.log(chalk.cyan('\nVerification checks:'));
+      for (const check of result.verification.checks) {
+        const status = check.success ? chalk.green('✓') : chalk.red('✗');
+        console.log(`   ${status} ${check.message}`);
+      }
+    }
+    
+  } catch (error) {
+    console.error(chalk.red('❌ Pipeline failed:'), error.message);
+    console.log(chalk.yellow('\n💡 The pipeline can be resumed by running the same command again.'));
+    console.log(chalk.yellow('   Use --force-restart to start from the beginning.\n'));
+    
+    // Try to get progress information
+    try {
+      const progress = await loadingManager.getPipelineProgress();
+      if (progress) {
+        console.log(chalk.cyan('Pipeline progress:'));
+        console.log(chalk.white(`   Current stage: ${progress.currentStage || 'unknown'}`));
+        console.log(chalk.white(`   Completed stages: ${progress.completedStages?.join(', ') || 'none'}`));
+      }
+    } catch (progressError) {
+      // Ignore progress error
+    }
+    
+    if (options.verbose) {
+      console.error(error.stack);
+    }
+    throw error;
+  } finally {
+    await loadingManager.close();
+  }
+}
+
+/**
  * Main function
  */
 async function main() {
@@ -426,6 +503,10 @@ async function main() {
         
       case 'pipeline':
         await pipelineCommand(options);
+        break;
+      
+      case 'staged-pipeline':
+        await stagedPipelineCommand(options);
         break;
         
       case 'status':

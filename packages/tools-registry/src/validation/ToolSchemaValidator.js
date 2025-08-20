@@ -1,4 +1,10 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * Tool Schema Validator
  * 
  * Comprehensive validation system that:
@@ -8,7 +14,6 @@
  * 4. Reports and fixes mismatches
  */
 
-import { z } from 'zod';
 import { ModuleLoader } from '../loading/ModuleLoader.js';
 import { MongoDBToolRegistryProvider } from '../providers/MongoDBToolRegistryProvider.js';
 import { ResourceManager } from '@legion/resource-manager';

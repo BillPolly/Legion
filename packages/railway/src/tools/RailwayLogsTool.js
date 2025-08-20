@@ -1,32 +1,61 @@
+/**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 
-const inputSchema = z.object({
-  deploymentId: z.string().describe('Railway deployment ID'),
-  limit: z.number().default(100).describe('Number of log lines to retrieve')
-});
+// Input schema as plain JSON Schema
+const railwayLogsToolInputSchema = {
+  type: 'object',
+  properties: {
+    deploymentId: {
+      type: 'string',
+      description: 'Railway deployment ID'
+    },
+    limit: {
+      type: 'number',
+      default: 100,
+      description: 'Number of log lines to retrieve'
+    }
+  },
+  required: ['deploymentId']
+};
 
-const outputSchema = z.object({
-  logs: z.array(z.string()),
-  count: z.number()
-});
+// Output schema as plain JSON Schema
+const railwayLogsToolOutputSchema = {
+  type: 'object',
+  properties: {
+    logs: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'Log lines'
+    },
+    count: {
+      type: 'number',
+      description: 'Number of log lines retrieved'
+    }
+  },
+  required: ['logs', 'count']
+};
 
 class RailwayLogsTool extends Tool {
   constructor(resourceManager) {
     super({
       name: 'railway_logs',
       description: 'Retrieve logs from a Railway deployment',
-      inputSchema: inputSchema,
+      inputSchema: railwayLogsToolInputSchema,
+      outputSchema: railwayLogsToolOutputSchema,
       execute: async (input) => {
-        const validated = inputSchema.parse(input);
         const provider = this.resourceManager.railwayProvider;
         
         if (!provider) {
           throw new Error('Railway provider not initialized');
         }
 
-        const result = await provider.getLogs(validated.deploymentId, {
-          limit: validated.limit
+        const result = await provider.getLogs(input.deploymentId, {
+          limit: input.limit || 100
         });
         
         if (!result.success) {
@@ -40,8 +69,8 @@ class RailwayLogsTool extends Tool {
       },
       getMetadata: () => ({
         description: 'Retrieve logs from a Railway deployment',
-        input: inputSchema,
-        output: outputSchema
+        input: railwayLogsToolInputSchema,
+        output: railwayLogsToolOutputSchema
       })
     });
     this.resourceManager = resourceManager;

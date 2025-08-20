@@ -1,52 +1,45 @@
 /**
  * @fileoverview Schema helper for tool input validation
- * Mock implementation that wraps Zod for Legion framework
+ * Implementation that creates JSON Schema for Legion framework
  */
 
-import { z } from 'zod';
+import { createValidator } from '@legion/schema';
 
 export function schema(definition) {
-  // Convert simple object definition to Zod schema
-  const schemaFields = {};
+  // Convert simple object definition to JSON Schema
+  const properties = {};
+  const required = [];
   
   for (const [key, config] of Object.entries(definition)) {
-    let field;
+    const property = {
+      type: config.type || 'string'
+    };
     
-    switch (config.type) {
-      case 'string':
-        field = z.string();
-        if (config.description) field = field.describe(config.description);
-        if (config.default !== undefined) field = field.default(config.default);
-        if (config.optional) field = field.optional();
-        break;
-        
-      case 'number':
-        field = z.number();
-        if (config.description) field = field.describe(config.description);
-        if (config.default !== undefined) field = field.default(config.default);
-        if (config.optional) field = field.optional();
-        break;
-        
-      case 'boolean':
-        field = z.boolean();
-        if (config.description) field = field.describe(config.description);
-        if (config.default !== undefined) field = field.default(config.default);
-        if (config.optional) field = field.optional();
-        break;
-        
-      case 'array':
-        field = z.array(z.string()); // Simple string array for now
-        if (config.description) field = field.describe(config.description);
-        if (config.default !== undefined) field = field.default(config.default);
-        if (config.optional) field = field.optional();
-        break;
-        
-      default:
-        field = z.string();
+    if (config.description) {
+      property.description = config.description;
     }
     
-    schemaFields[key] = field;
+    if (config.default !== undefined) {
+      property.default = config.default;
+    }
+    
+    if (config.type === 'array') {
+      property.items = { type: 'string' }; // Simple string array for now
+    }
+    
+    properties[key] = property;
+    
+    // Add to required if not optional
+    if (!config.optional) {
+      required.push(key);
+    }
   }
   
-  return z.object(schemaFields);
+  const jsonSchema = {
+    type: 'object',
+    properties,
+    required
+  };
+  
+  return createValidator(jsonSchema);
 }

@@ -1,22 +1,63 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * DatabaseConnectionTool - Manages MongoDB connection for design database
  */
 
 import { Tool, ToolResult } from '@legion/tools-registry';
-import { z } from 'zod';
 import { MongoClient } from 'mongodb';
+
+// Input schema as plain JSON Schema
+const databaseConnectionToolInputSchema = {
+  type: 'object',
+  properties: {
+    uri: {
+      type: 'string',
+      description: 'MongoDB connection URI'
+    },
+    options: {
+      type: 'object',
+      properties: {
+        dbName: {
+          type: 'string',
+          description: 'Database name'
+        }
+      }
+    }
+  }
+};
+
+// Output schema as plain JSON Schema
+const databaseConnectionToolOutputSchema = {
+  type: 'object',
+  properties: {
+    connected: {
+      type: 'boolean',
+      description: 'Connection status'
+    },
+    uri: {
+      type: 'string',
+      description: 'MongoDB URI (with credentials hidden)'
+    },
+    database: {
+      type: 'string',
+      description: 'Database name'
+    }
+  },
+  required: ['connected', 'uri', 'database']
+};
 
 export class DatabaseConnectionTool extends Tool {
   constructor(dependencies = {}) {
     super({
       name: 'database_connect',
       description: 'Connect to the design database',
-      inputSchema: z.object({
-        uri: z.string().optional().describe('MongoDB connection URI'),
-        options: z.object({
-          dbName: z.string().optional()
-        }).optional()
-      })
+      inputSchema: databaseConnectionToolInputSchema,
+      outputSchema: databaseConnectionToolOutputSchema
     });
     
     this.resourceManager = dependencies.resourceManager;

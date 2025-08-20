@@ -1,29 +1,61 @@
+/**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 
-const inputSchema = z.object({});
+// Input schema as plain JSON Schema
+const railwayListProjectsToolInputSchema = {
+  type: 'object',
+  properties: {},
+  required: []
+};
 
-const outputSchema = z.object({
-  projects: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-    description: z.string().optional(),
-    createdAt: z.string(),
-    serviceCount: z.number(),
-    services: z.array(z.object({
-      id: z.string(),
-      name: z.string()
-    }))
-  })),
-  count: z.number()
-});
+// Output schema as plain JSON Schema
+const railwayListProjectsToolOutputSchema = {
+  type: 'object',
+  properties: {
+    projects: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          description: { type: 'string' },
+          createdAt: { type: 'string' },
+          serviceCount: { type: 'number' },
+          services: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                name: { type: 'string' }
+              }
+            }
+          }
+        }
+      },
+      description: 'List of Railway projects'
+    },
+    count: {
+      type: 'number',
+      description: 'Total number of projects'
+    }
+  },
+  required: ['projects', 'count']
+};
 
 class RailwayListProjectsTool extends Tool {
   constructor(resourceManager) {
     super({
       name: 'railway_list_projects',
       description: 'List all Railway projects in the account',
-      inputSchema: inputSchema,
+      inputSchema: railwayListProjectsToolInputSchema,
+      outputSchema: railwayListProjectsToolOutputSchema,
       execute: async (input) => {
         const provider = this.resourceManager.railwayProvider;
         
@@ -57,8 +89,8 @@ class RailwayListProjectsTool extends Tool {
       },
       getMetadata: () => ({
         description: 'List all Railway projects in the account',
-        input: inputSchema,
-        output: outputSchema
+        input: railwayListProjectsToolInputSchema,
+        output: railwayListProjectsToolOutputSchema
       })
     });
     this.resourceManager = resourceManager;

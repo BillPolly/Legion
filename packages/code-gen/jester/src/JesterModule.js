@@ -1,4 +1,10 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * JesterModule - Legion module wrapper for Jest Agent Wrapper (JAW)
  * 
  * Provides two powerful tools for Jest testing:
@@ -12,53 +18,123 @@ import { AgentTDDHelper } from './agents/AgentTDDHelper.js';
 import { GenerateTestReportTool } from './tools/GenerateTestReportTool.js';
 import { PerformanceAnalyzer } from './analytics/performance.js';
 import { ErrorPatternAnalyzer } from './analytics/error-patterns.js';
-import { z } from 'zod';
 
 /**
  * Tool for running Jest tests with session management
  */
+// Input schema for RunJestTestsTool
+const runJestTestsToolInputSchema = {
+  type: 'object',
+  properties: {
+    pattern: {
+      type: 'string',
+      description: 'Test file pattern to match (e.g., "**/*.test.js", "src/auth/**"). If not specified, runs all tests.'
+    },
+    projectPath: {
+      type: 'string',
+      default: process.cwd(),
+      description: 'Project root directory where tests should be executed. Defaults to current directory.'
+    },
+    testRunId: {
+      type: 'string',
+      description: 'Custom identifier for this test run (e.g., "pr-123", "fix-auth-bug"). Useful for tracking and comparing specific test runs.'
+    },
+    clearPrevious: {
+      type: 'boolean',
+      default: false,
+      description: 'Clear all previous test data before running. Use this for a fresh start. Default: false (preserves history).'
+    },
+    config: {
+      type: 'object',
+      properties: {
+        collectCoverage: {
+          type: 'boolean',
+          description: 'Collect code coverage metrics'
+        },
+        verbose: {
+          type: 'boolean',
+          description: 'Show detailed test output'
+        },
+        bail: {
+          type: 'boolean',
+          description: 'Stop after first test failure'
+        },
+        timeout: {
+          type: 'number',
+          description: 'Test timeout in milliseconds'
+        }
+      },
+      description: 'Jest configuration options'
+    }
+  }
+};
+
+// Output schema for RunJestTestsTool
+const runJestTestsToolOutputSchema = {
+  type: 'object',
+  properties: {
+    sessionId: {
+      type: 'string',
+      description: 'Unique identifier for this test session'
+    },
+    projectPath: {
+      type: 'string',
+      description: 'Project path where tests were executed'
+    },
+    summary: {
+      type: 'object',
+      properties: {
+        total: {
+          type: 'number',
+          description: 'Total number of tests'
+        },
+        passed: {
+          type: 'number',
+          description: 'Number of passing tests'
+        },
+        failed: {
+          type: 'number',
+          description: 'Number of failing tests'
+        },
+        skipped: {
+          type: 'number',
+          description: 'Number of skipped tests'
+        },
+        duration: {
+          type: 'number',
+          description: 'Total duration in milliseconds'
+        },
+        success: {
+          type: 'boolean',
+          description: 'True if all tests passed'
+        }
+      },
+      required: ['total', 'passed', 'failed', 'skipped', 'duration', 'success'],
+      description: 'Test run summary statistics'
+    },
+    failedTests: {
+      type: 'array',
+      items: {
+        type: 'string'
+      },
+      description: 'List of failed test names for quick reference'
+    },
+    coverage: {
+      type: 'object',
+      properties: {
+        lines: { type: 'number' },
+        statements: { type: 'number' },
+        functions: { type: 'number' },
+        branches: { type: 'number' }
+      },
+      description: 'Code coverage percentages if coverage was collected'
+    }
+  },
+  required: ['sessionId', 'projectPath', 'summary', 'failedTests']
+};
+
 class RunJestTestsTool extends Tool {
   constructor(jestWrapper) {
-    const inputSchema = z.object({
-      pattern: z.string().optional().describe(
-        'Test file pattern to match (e.g., "**/*.test.js", "src/auth/**"). If not specified, runs all tests.'
-      ),
-      projectPath: z.string().optional().default(process.cwd()).describe(
-        'Project root directory where tests should be executed. Defaults to current directory.'
-      ),
-      testRunId: z.string().optional().describe(
-        'Custom identifier for this test run (e.g., "pr-123", "fix-auth-bug"). Useful for tracking and comparing specific test runs.'
-      ),
-      clearPrevious: z.boolean().optional().default(false).describe(
-        'Clear all previous test data before running. Use this for a fresh start. Default: false (preserves history).'
-      ),
-      config: z.object({
-        collectCoverage: z.boolean().optional().describe('Collect code coverage metrics'),
-        verbose: z.boolean().optional().describe('Show detailed test output'),
-        bail: z.boolean().optional().describe('Stop after first test failure'),
-        timeout: z.number().optional().describe('Test timeout in milliseconds')
-      }).optional().describe('Jest configuration options')
-    });
-    
-    const outputSchema = z.object({
-      sessionId: z.string().describe('Unique identifier for this test session'),
-      projectPath: z.string().describe('Project path where tests were executed'),
-      summary: z.object({
-        total: z.number().describe('Total number of tests'),
-        passed: z.number().describe('Number of passing tests'),
-        failed: z.number().describe('Number of failing tests'),
-        skipped: z.number().describe('Number of skipped tests'),
-        duration: z.number().describe('Total duration in milliseconds'),
-        success: z.boolean().describe('True if all tests passed')
-      }).describe('Test run summary statistics'),
-      failedTests: z.array(z.string()).describe('List of failed test names for quick reference'),
-      coverage: z.object({
-        lines: z.number(),
-        statements: z.number(),
-        functions: z.number(),
-        branches: z.number()
-      }).optional().describe('Code coverage percentages if coverage was collected')
-    });
     
     super({
       name: 'run_jest_tests',
@@ -82,7 +158,8 @@ EXAMPLES:
 • Quick fail on first error: {config: {bail: true}}
 
 WORKFLOW TIP: After running tests, use query_jest_results to analyze failures, generate reports, or compare with previous runs.`,
-      inputSchema: inputSchema,
+      inputSchema: runJestTestsToolInputSchema,
+      outputSchema: runJestTestsToolOutputSchema,
       execute: async (args) => {
         try {
           this.progress('Initializing test session...', 10);
@@ -174,10 +251,13 @@ WORKFLOW TIP: After running tests, use query_jest_results to analyze failures, g
 /**
  * Tool for querying and analyzing Jest test results
  */
-class QueryJestResultsTool extends Tool {
-  constructor(jestWrapper) {
-    const inputSchema = z.object({
-      queryType: z.enum([
+// Input schema for QueryJestResultsTool
+const queryJestResultsToolInputSchema = {
+  type: 'object',
+  properties: {
+    queryType: {
+      type: 'string',
+      enum: [
         'failures',
         'report', 
         'sessions',
@@ -185,45 +265,94 @@ class QueryJestResultsTool extends Tool {
         'trends',
         'logs',
         'performance'
-      ]).describe(`Type of query to perform:
+      ],
+      description: `Type of query to perform:
 • failures - Analyze failed tests with TDD insights and suggestions
 • report - Generate comprehensive markdown report  
 • sessions - List all test sessions with metadata
 • comparison - Compare results between sessions
 • trends - Track test performance over time
 • logs - Search through test logs and console output
-• performance - Identify slowest tests and bottlenecks`),
-      
-      sessionId: z.string().optional().describe(
-        'Specific session ID to query. If not provided, uses the most recent session.'
-      ),
-      sessionIds: z.array(z.string()).optional().describe(
-        'Multiple session IDs for comparison or trend analysis. Used with comparison and trends queries.'
-      ),
-      testName: z.string().optional().describe(
-        'Specific test name for history or trend analysis. Used with trends query.'
-      ),
-      searchQuery: z.string().optional().describe(
-        'Search term for log queries. Used with logs query.'
-      ),
-      limit: z.number().optional().default(10).describe(
-        'Maximum number of results to return. Default: 10'
-      ),
-      format: z.enum(['json', 'markdown', 'summary']).optional().default('json').describe(
-        'Output format. JSON for structured data, markdown for reports, summary for concise overview.'
-      )
-    });
-    
-    const outputSchema = z.object({
-      queryType: z.string().describe('The type of query that was performed'),
-      sessionId: z.string().optional().describe('The session ID that was queried'),
-      data: z.any().describe('Query results (structure varies by query type)'),
-      insights: z.object({
-        summary: z.string().describe('One-line summary of the findings'),
-        recommendations: z.array(z.string()).describe('Actionable recommendations based on the query'),
-        priority: z.enum(['high', 'medium', 'low']).describe('Priority level of recommendations')
-      }).describe('AI-generated insights and recommendations')
-    });
+• performance - Identify slowest tests and bottlenecks`
+    },
+    sessionId: {
+      type: 'string',
+      description: 'Specific session ID to query. If not provided, uses the most recent session.'
+    },
+    sessionIds: {
+      type: 'array',
+      items: {
+        type: 'string'
+      },
+      description: 'Multiple session IDs for comparison or trend analysis. Used with comparison and trends queries.'
+    },
+    testName: {
+      type: 'string',
+      description: 'Specific test name for history or trend analysis. Used with trends query.'
+    },
+    searchQuery: {
+      type: 'string',
+      description: 'Search term for log queries. Used with logs query.'
+    },
+    limit: {
+      type: 'number',
+      default: 10,
+      description: 'Maximum number of results to return. Default: 10'
+    },
+    format: {
+      type: 'string',
+      enum: ['json', 'markdown', 'summary'],
+      default: 'json',
+      description: 'Output format. JSON for structured data, markdown for reports, summary for concise overview.'
+    }
+  },
+  required: ['queryType']
+};
+
+// Output schema for QueryJestResultsTool
+const queryJestResultsToolOutputSchema = {
+  type: 'object',
+  properties: {
+    queryType: {
+      type: 'string',
+      description: 'The type of query that was performed'
+    },
+    sessionId: {
+      type: 'string',
+      description: 'The session ID that was queried'
+    },
+    data: {
+      description: 'Query results (structure varies by query type)'
+    },
+    insights: {
+      type: 'object',
+      properties: {
+        summary: {
+          type: 'string',
+          description: 'One-line summary of the findings'
+        },
+        recommendations: {
+          type: 'array',
+          items: {
+            type: 'string'
+          },
+          description: 'Actionable recommendations based on the query'
+        },
+        priority: {
+          type: 'string',
+          enum: ['high', 'medium', 'low'],
+          description: 'Priority level of recommendations'
+        }
+      },
+      required: ['summary', 'recommendations', 'priority'],
+      description: 'AI-generated insights and recommendations'
+    }
+  },
+  required: ['queryType', 'data', 'insights']
+};
+
+class QueryJestResultsTool extends Tool {
+  constructor(jestWrapper) {
     
     super({
       name: 'query_jest_results',
@@ -250,7 +379,8 @@ EXAMPLES:
 • Find slow tests: {queryType: "performance", limit: 5}
 
 WORKFLOW TIP: Use this after run_jest_tests to understand failures, or periodically to track test health and performance trends.`,
-      inputSchema: inputSchema,
+      inputSchema: queryJestResultsToolInputSchema,
+      outputSchema: queryJestResultsToolOutputSchema,
       execute: async (args) => {
         try {
           const { queryType, sessionId, sessionIds, testName, searchQuery, limit = 10, format = 'json' } = args;

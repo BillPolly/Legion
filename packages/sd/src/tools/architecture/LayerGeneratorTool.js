@@ -1,19 +1,61 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * LayerGeneratorTool - Generates clean architecture layers
  */
 
 import { Tool, ToolResult } from '@legion/tools-registry';
-import { z } from 'zod';
+
+// Input schema as plain JSON Schema
+const layerGeneratorToolInputSchema = {
+  type: 'object',
+  properties: {
+    boundedContexts: {
+      type: 'array',
+      items: {},
+      description: 'Bounded contexts'
+    },
+    projectId: {
+      type: 'string',
+      description: 'Project ID'
+    }
+  },
+  required: ['boundedContexts']
+};
+
+// Output schema as plain JSON Schema
+const layerGeneratorToolOutputSchema = {
+  type: 'object',
+  properties: {
+    layers: {
+      type: 'object',
+      additionalProperties: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          dependencies: {
+            type: 'array',
+            items: { type: 'string' }
+          }
+        }
+      },
+      description: 'Architecture layers'
+    }
+  },
+  required: ['layers']
+};
 
 export class LayerGeneratorTool extends Tool {
   constructor(dependencies = {}) {
     super({
       name: 'design_layers',
       description: 'Design clean architecture layers',
-      inputSchema: z.object({
-        boundedContexts: z.array(z.any()).describe('Bounded contexts'),
-        projectId: z.string().optional()
-      })
+      inputSchema: layerGeneratorToolInputSchema,
+      outputSchema: layerGeneratorToolOutputSchema
     });
     
     this.llmClient = dependencies.llmClient;

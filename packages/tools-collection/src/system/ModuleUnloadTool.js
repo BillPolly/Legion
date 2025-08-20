@@ -1,14 +1,54 @@
+/**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
+
+// Input schema as plain JSON Schema
+const moduleUnloadToolInputSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+      description: 'Name of the module to unload'
+    }
+  },
+  required: ['name']
+};
+
+// Output schema as plain JSON Schema
+const moduleUnloadToolOutputSchema = {
+  type: 'object',
+  properties: {
+    success: {
+      type: 'boolean',
+      description: 'Whether the module was unloaded successfully'
+    },
+    message: {
+      type: 'string',
+      description: 'Success or status message'
+    },
+    module: {
+      type: 'string',
+      description: 'Name of the unloaded module'
+    },
+    error: {
+      type: 'string',
+      description: 'Error message if unloading failed'
+    }
+  },
+  required: ['success']
+};
 
 export class ModuleUnloadTool extends Tool {
   constructor(dependencies = {}) {
     super({
       name: 'module_unload',
       description: 'Unload a module and remove its tools',
-      inputSchema: z.object({
-        name: z.string().describe('Name of the module to unload')
-      })
+      inputSchema: moduleUnloadToolInputSchema,
+      outputSchema: moduleUnloadToolOutputSchema
     });
     this.config = dependencies;
   }

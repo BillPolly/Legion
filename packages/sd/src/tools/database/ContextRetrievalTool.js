@@ -1,22 +1,73 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * ContextRetrievalTool - Retrieves context from design database
  */
 
 import { Tool, ToolResult } from '@legion/tools-registry';
-import { z } from 'zod';
+
+// Input schema as plain JSON Schema
+const contextRetrievalToolInputSchema = {
+  type: 'object',
+  properties: {
+    query: {
+      type: 'object',
+      properties: {
+        type: {
+          type: 'string',
+          description: 'Artifact type to retrieve'
+        },
+        projectId: {
+          type: 'string',
+          description: 'Project ID'
+        },
+        filters: {
+          description: 'Additional filters'
+        }
+      },
+      description: 'Query parameters'
+    }
+  },
+  required: ['query']
+};
+
+// Output schema as plain JSON Schema  
+const contextRetrievalToolOutputSchema = {
+  type: 'object',
+  properties: {
+    context: {
+      type: 'object',
+      properties: {
+        projectId: {
+          type: 'string',
+          description: 'Project ID'
+        },
+        artifacts: {
+          type: 'array',
+          description: 'Retrieved artifacts'
+        },
+        metadata: {
+          type: 'object',
+          description: 'Retrieval metadata'
+        }
+      },
+      description: 'Retrieved context'
+    }
+  },
+  required: ['context']
+};
 
 export class ContextRetrievalTool extends Tool {
   constructor(dependencies = {}) {
     super({
       name: 'retrieve_context',
       description: 'Retrieve context from design database',
-      inputSchema: z.object({
-        query: z.object({
-          type: z.string().optional().describe('Artifact type to retrieve'),
-          projectId: z.string().optional().describe('Project ID'),
-          filters: z.any().optional().describe('Additional filters')
-        }).describe('Query parameters')
-      })
+      inputSchema: contextRetrievalToolInputSchema,
+      outputSchema: contextRetrievalToolOutputSchema
     });
     
     this.designDatabase = dependencies.designDatabase;

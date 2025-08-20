@@ -1,20 +1,65 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * DomainEventExtractorTool - Extracts domain events from entities
  */
 
 import { Tool, ToolResult } from '@legion/tools-registry';
-import { z } from 'zod';
+
+// Input schema as plain JSON Schema
+const domainEventExtractorToolInputSchema = {
+  type: 'object',
+  properties: {
+    entities: {
+      type: 'array',
+      items: {},
+      description: 'Domain entities'
+    },
+    aggregates: {
+      type: 'array',
+      items: {},
+      description: 'Domain aggregates'
+    },
+    projectId: {
+      type: 'string',
+      description: 'Project ID'
+    }
+  },
+  required: ['entities', 'aggregates']
+};
+
+// Output schema as plain JSON Schema
+const domainEventExtractorToolOutputSchema = {
+  type: 'object',
+  properties: {
+    domainEvents: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          aggregate: { type: 'string' },
+          payload: { type: 'object' }
+        }
+      },
+      description: 'Extracted domain events'
+    }
+  },
+  required: ['domainEvents']
+};
 
 export class DomainEventExtractorTool extends Tool {
   constructor(dependencies = {}) {
     super({
       name: 'extract_domain_events',
       description: 'Extract domain events from entities and aggregates',
-      inputSchema: z.object({
-        entities: z.array(z.any()).describe('Domain entities'),
-        aggregates: z.array(z.any()).describe('Domain aggregates'),
-        projectId: z.string().optional()
-      })
+      inputSchema: domainEventExtractorToolInputSchema,
+      outputSchema: domainEventExtractorToolOutputSchema
     });
     
     this.llmClient = dependencies.llmClient;

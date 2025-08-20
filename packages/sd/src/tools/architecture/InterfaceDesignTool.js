@@ -1,20 +1,63 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * InterfaceDesignTool - Designs interfaces for boundaries
  */
 
 import { Tool, ToolResult } from '@legion/tools-registry';
-import { z } from 'zod';
+
+// Input schema as plain JSON Schema
+const interfaceDesignToolInputSchema = {
+  type: 'object',
+  properties: {
+    useCases: {
+      type: 'array',
+      items: {},
+      description: 'Use cases'
+    },
+    layers: {
+      description: 'Architecture layers'
+    },
+    projectId: {
+      type: 'string',
+      description: 'Project ID'
+    }
+  },
+  required: ['useCases', 'layers']
+};
+
+// Output schema as plain JSON Schema
+const interfaceDesignToolOutputSchema = {
+  type: 'object',
+  properties: {
+    interfaces: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          methods: { type: 'array' },
+          layer: { type: 'string' }
+        }
+      },
+      description: 'Designed interfaces'
+    }
+  },
+  required: ['interfaces']
+};
 
 export class InterfaceDesignTool extends Tool {
   constructor(dependencies = {}) {
     super({
       name: 'design_interfaces',
       description: 'Design interfaces for clean architecture boundaries',
-      inputSchema: z.object({
-        useCases: z.array(z.any()).describe('Use cases'),
-        layers: z.any().describe('Architecture layers'),
-        projectId: z.string().optional()
-      })
+      inputSchema: interfaceDesignToolInputSchema,
+      outputSchema: interfaceDesignToolOutputSchema
     });
     
     this.llmClient = dependencies.llmClient;

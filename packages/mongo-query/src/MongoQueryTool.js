@@ -1,32 +1,76 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * MongoQueryTool - Direct MongoDB query execution tool
  */
 
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 
-export class MongoQueryTool extends Tool {
-  constructor(dependencies = {}) {
-    // Define Zod schema for input validation
-    const inputSchema = z.object({
-      database: z.string().optional()
-        .describe('MongoDB database name (optional, defaults to .env)'),
-      collection: z.string()
-        .describe('Collection name to operate on'),
-      command: z.enum([
+// Input schema as plain JSON Schema
+const mongoQueryToolInputSchema = {
+  type: 'object',
+  properties: {
+    database: {
+      type: 'string',
+      description: 'MongoDB database name (optional, defaults to .env)'
+    },
+    collection: {
+      type: 'string',
+      description: 'Collection name to operate on'
+    },
+    command: {
+      type: 'string',
+      enum: [
         'find', 'findOne', 'insertOne', 'insertMany',
         'updateOne', 'updateMany', 'deleteOne', 'deleteMany',
         'aggregate', 'countDocuments', 'distinct',
         'createIndex', 'dropCollection', 'listCollections'
-      ]).describe('MongoDB command to execute'),
-      params: z.object({}).passthrough()
-        .describe('Command parameters in MongoDB JSON format')
-    });
+      ],
+      description: 'MongoDB command to execute'
+    },
+    params: {
+      type: 'object',
+      additionalProperties: true,
+      description: 'Command parameters in MongoDB JSON format'
+    }
+  },
+  required: ['collection', 'command', 'params']
+};
 
+// Output schema as plain JSON Schema
+const mongoQueryToolOutputSchema = {
+  type: 'object',
+  properties: {
+    database: {
+      type: 'string',
+      description: 'Database name used'
+    },
+    collection: {
+      type: 'string',
+      description: 'Collection operated on'
+    },
+    command: {
+      type: 'string',
+      description: 'Command executed'
+    },
+    result: {
+      description: 'Command execution result'
+    }
+  },
+  required: ['database', 'collection', 'command', 'result']
+};
+
+export class MongoQueryTool extends Tool {
+  constructor(dependencies = {}) {
     super({
       name: 'mongo_query',
       description: 'Execute MongoDB database operations with native JSON syntax',
-      inputSchema
+      inputSchema: mongoQueryToolInputSchema,
+      outputSchema: mongoQueryToolOutputSchema
     });
     
     // Validate dependencies

@@ -1,121 +1,132 @@
 /**
  * Tool class
  * Represents an individual tool that can be executed
+ * 
+ * Standard Result Format:
+ * {
+ *   success: boolean,
+ *   data: any,        // The actual result data when successful
+ *   error?: {         // Error details when unsuccessful
+ *     code: string,
+ *     message: string,
+ *     details?: any
+ *   }
+ * }
  */
 
-// Lazy load schema package if available
-let createValidator;
-try {
-  const schemaModule = await import('@legion/schema');
-  createValidator = schemaModule.createValidator;
-} catch (e) {
-  // Schema package not available, validation will be skipped
-  createValidator = null;
-}
-
 export class Tool {
-  constructor({ name, description, execute, getMetadata, schema, inputSchema }) {
+  constructor({ name, description, execute, getMetadata, schema, inputSchema, outputSchema }) {
     this.name = name;
     this.description = description || 'No description available';
     this._execute = execute;
     this._getMetadata = getMetadata;
     this.subscribers = new Set();  // Store subscribers
     
-    // Handle new descriptive schema format
-    if (schema && typeof schema === 'object' && (schema.input || schema.output)) {
-      // New descriptive schema format
-      this.schema = schema;
+    // Store schemas as plain JSON Schema only - no validation here
+    this.inputSchema = inputSchema || schema || null;
+    this.outputSchema = outputSchema || null;
+  }
+  
+  /**
+   * Execute the tool - no validation, just execution
+   * @param {Object} input - JSON input
+   * @returns {Promise<Object>} Standardized result: {success, data, error?}
+   */
+  async execute(input) {
+    try {
+      // Call the provided execute function directly - no validation
+      let result = await this._execute(input);
       
-      // Create validator from input schema if available
-      if (schema.input && createValidator) {
-        this.validator = createValidator(schema.input);
-      } else {
-        this.validator = null;
-      }
-    } else if (schema) {
-      // Legacy: schema is already a validator object (has validate method)
-      this.validator = schema;
-      this.schema = null; // No descriptive schema available
-    } else if (inputSchema && createValidator) {
-      // Legacy: inputSchema provided directly
-      this.schema = null; // No descriptive schema available
+      // Standardize the result format
+      result = this._standardizeResult(result);
       
-      // Check if inputSchema is a Zod schema (has _def property)
-      if (inputSchema && typeof inputSchema === 'object' && inputSchema._def) {
-        // This is a Zod schema - store it directly and create a custom validator
-        this.validator = {
-          zodSchema: inputSchema,
-          jsonSchema: inputSchema, // Keep original Zod schema
-          validate: (data) => {
-            const result = inputSchema.safeParse(data);
-            if (result.success) {
-              return { valid: true, data: result.data, errors: null };
-            } else {
-              return { valid: false, data: null, errors: result.error.errors };
-            }
-          }
-        };
-      } else {
-        // If inputSchema is provided as JSON schema, create validator
-        this.validator = createValidator(inputSchema);
-      }
-    } else {
-      this.validator = null;
-      this.schema = null;
+      return result;
+      
+    } catch (error) {
+      // If the tool throws, wrap in standard error format
+      return this._createErrorResult(error);
     }
   }
   
   /**
-   * Execute the tool with optional validation
-   * @param {Object} input - JSON input
-   * @returns {Promise<Object>} JSON output
+   * Standardize result format to {success, data, error?}
+   * @private
    */
-  async execute(input) {
-    try {
-      // Validate input if validator is available
-      if (this.validator) {
-        const validation = this.validator.validate(input);
-        if (!validation.valid) {
-          const errorMessage = validation.errors 
-            ? JSON.stringify(validation.errors) 
-            : 'Invalid input';
-          throw new Error(`Validation failed: ${errorMessage}`);
-        }
-        input = validation.data || input; // Use validated/coerced data
+  _standardizeResult(result) {
+    // If already in standard format
+    if (result && typeof result === 'object' && 'success' in result) {
+      // Ensure error format is correct
+      if (!result.success && result.error) {
+        result.error = this._standardizeError(result.error);
       }
-      
-      // Call the provided execute function
-      const result = await this._execute(input);
-      
-      // Wrap result in ToolResult format if it's not already wrapped
-      if (result && typeof result === 'object' && 'success' in result) {
-        // Already in ToolResult format
-        return result;
+      // Legacy support: move errorMessage to error object
+      if (!result.success && result.data && result.data.errorMessage) {
+        result.error = {
+          code: result.data.code || 'EXECUTION_ERROR',
+          message: result.data.errorMessage,
+          details: result.data
+        };
+        delete result.data;
       }
-      
-      // Wrap in success format
-      return {
-        success: true,
-        data: result
-      };
-      
-    } catch (error) {
-      // If the tool throws, wrap in standard error format
-      if (error.success === false) {
-        return error; // Already in correct format
-      }
-      
-      return {
-        success: false,
-        data: {
-          errorMessage: error.message || 'Tool execution failed',
-          code: 'EXECUTION_ERROR',
-          stackTrace: error.stack,
+      return result;
+    }
+    
+    // Wrap raw result in success format
+    return {
+      success: true,
+      data: result
+    };
+  }
+  
+  /**
+   * Create standardized error result
+   * @private
+   */
+  _createErrorResult(error) {
+    // If already in standard format
+    if (error && error.success === false) {
+      return this._standardizeResult(error);
+    }
+    
+    return {
+      success: false,
+      data: null,
+      error: {
+        code: error.code || 'EXECUTION_ERROR',
+        message: error.message || 'Tool execution failed',
+        details: {
           tool: this.name,
+          stack: error.stack,
           timestamp: Date.now()
         }
+      }
+    };
+  }
+  
+  /**
+   * Standardize error object format
+   * @private
+   */
+  _standardizeError(error) {
+    if (typeof error === 'string') {
+      return {
+        code: 'ERROR',
+        message: error
       };
     }
+    
+    if (error && typeof error === 'object') {
+      return {
+        code: error.code || 'ERROR',
+        message: error.message || error.errorMessage || 'Unknown error',
+        details: error.details || error
+      };
+    }
+    
+    return {
+      code: 'UNKNOWN_ERROR',
+      message: 'An unknown error occurred'
+    };
   }
   
   /**
@@ -215,11 +226,19 @@ export class Tool {
   }
   
   /**
-   * Get tool metadata
+   * Get tool metadata including schemas
    * @returns {Object} Tool metadata
    */
   getMetadata() {
-    return this._getMetadata();
+    const baseMetadata = this._getMetadata ? this._getMetadata() : {};
+    
+    return {
+      name: this.name,
+      description: this.description,
+      ...baseMetadata,
+      inputSchema: this.inputSchema || null,
+      outputSchema: this.outputSchema || null
+    };
   }
   
   /**

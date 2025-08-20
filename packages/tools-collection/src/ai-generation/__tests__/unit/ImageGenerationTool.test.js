@@ -1,11 +1,11 @@
 import { jest } from '@jest/globals';
 import { ImageGenerationTool } from '../../ImageGenerationTool.js';
-import { z } from 'zod';
+import { createValidator } from '@legion/schema';
 
 describe('ImageGenerationTool', () => {
   let tool;
   let mockModule;
-  let mockEmit;
+  let subscriberCalls;
 
   beforeEach(() => {
     // Create mock module
@@ -16,12 +16,16 @@ describe('ImageGenerationTool', () => {
     // Create tool instance
     tool = new ImageGenerationTool({ module: mockModule });
     
-    // Mock emit method for event tracking
-    mockEmit = jest.spyOn(tool, 'emit');
+    // Track subscriber events
+    subscriberCalls = [];
+    tool.subscribe((event) => {
+      subscriberCalls.push(event);
+    });
   });
 
   afterEach(() => {
     jest.clearAllMocks();
+    subscriberCalls = [];
   });
 
   describe('Tool Configuration', () => {
@@ -31,24 +35,30 @@ describe('ImageGenerationTool', () => {
       expect(tool.description).toContain('base64 encoded image data by default');
     });
 
-    test('should have valid input schema', () => {
+    test('should have valid input schema as plain JSON Schema', () => {
       const schema = tool.inputSchema;
       
-      // Test schema structure
-      expect(schema).toBeInstanceOf(z.ZodObject);
+      // Test schema structure - should be plain JSON Schema object
+      expect(schema.type).toBe('object');
+      expect(schema.properties.prompt).toBeDefined();
+      expect(schema.required).toContain('prompt');
       
-      // Test required field
-      const result = schema.safeParse({
+      // Test validation with @legion/schema
+      const validator = createValidator(schema);
+      
+      const result = validator.validate({
         prompt: 'test prompt'
       });
-      expect(result.success).toBe(true);
+      expect(result.valid).toBe(true);
       
       // Test missing required field
-      const invalidResult = schema.safeParse({});
-      expect(invalidResult.success).toBe(false);
+      const invalidResult = validator.validate({});
+      expect(invalidResult.valid).toBe(false);
     });
 
     test('should validate optional parameters', () => {
+      const validator = createValidator(tool.inputSchema);
+      
       const validInputs = {
         prompt: 'test',
         size: '1792x1024',
@@ -57,12 +67,14 @@ describe('ImageGenerationTool', () => {
         response_format: 'url'
       };
       
-      const result = tool.inputSchema.safeParse(validInputs);
-      expect(result.success).toBe(true);
+      const result = validator.validate(validInputs);
+      expect(result.valid).toBe(true);
       expect(result.data).toEqual(validInputs);
     });
 
     test('should reject invalid parameters', () => {
+      const validator = createValidator(tool.inputSchema);
+      
       const invalidInputs = {
         prompt: 'test',
         size: 'invalid-size',
@@ -70,13 +82,13 @@ describe('ImageGenerationTool', () => {
         style: 'abstract'
       };
       
-      const result = tool.inputSchema.safeParse(invalidInputs);
-      expect(result.success).toBe(false);
+      const result = validator.validate(invalidInputs);
+      expect(result.valid).toBe(false);
     });
   });
 
   describe('execute', () => {
-    test('should successfully generate image with default parameters', async () => {
+    test('should successfully generate image with provided parameters', async () => {
       const mockImageResult = {
         success: true,
         imageData: 'data:image/png;base64,abc123',
@@ -96,13 +108,9 @@ describe('ImageGenerationTool', () => {
         prompt: 'A test image'
       });
 
-      // Check module was called with validated parameters
+      // Check module was called with provided parameters (tool doesn't validate)
       expect(mockModule.generateImage).toHaveBeenCalledWith({
-        prompt: 'A test image',
-        size: '1024x1024',
-        quality: 'standard',
-        style: 'vivid',
-        response_format: 'b64_json'
+        prompt: 'A test image'
       });
 
       // Check result structure
@@ -114,7 +122,7 @@ describe('ImageGenerationTool', () => {
       expect(result.artifact.downloadable).toBe(true);
     });
 
-    test('should emit progress events during execution', async () => {
+    test('should notify subscribers with progress events during execution', async () => {
       mockModule.generateImage.mockResolvedValue({
         success: true,
         imageData: 'data:image/png;base64,test'
@@ -122,26 +130,33 @@ describe('ImageGenerationTool', () => {
 
       await tool.execute({ prompt: 'test' });
 
-      // Check progress events
-      expect(mockEmit).toHaveBeenCalledWith('progress', expect.objectContaining({
+      // Check progress events through subscriber
+      const progressEvents = subscriberCalls.filter(event => event.type === 'progress');
+      expect(progressEvents).toHaveLength(4);
+      
+      expect(progressEvents[0]).toMatchObject({
+        type: 'progress',
         percentage: 10,
-        status: expect.stringContaining('Preparing')
-      }));
+        message: expect.stringContaining('Preparing')
+      });
       
-      expect(mockEmit).toHaveBeenCalledWith('progress', expect.objectContaining({
+      expect(progressEvents[1]).toMatchObject({
+        type: 'progress',
         percentage: 30,
-        status: expect.stringContaining('Generating image')
-      }));
+        message: expect.stringContaining('Generating image')
+      });
       
-      expect(mockEmit).toHaveBeenCalledWith('progress', expect.objectContaining({
+      expect(progressEvents[2]).toMatchObject({
+        type: 'progress',
         percentage: 90,
-        status: expect.stringContaining('successfully')
-      }));
+        message: expect.stringContaining('successfully')
+      });
       
-      expect(mockEmit).toHaveBeenCalledWith('progress', expect.objectContaining({
+      expect(progressEvents[3]).toMatchObject({
+        type: 'progress',
         percentage: 100,
-        status: 'Complete'
-      }));
+        message: 'Complete'
+      });
     });
 
     test('should handle module errors gracefully', async () => {
@@ -155,16 +170,24 @@ describe('ImageGenerationTool', () => {
       expect(result.error).toBe(errorMessage);
       expect(result.code).toBe('IMAGE_GENERATION_ERROR');
 
-      // Check error event was emitted
-      expect(mockEmit).toHaveBeenCalledWith('error', expect.objectContaining({
+      // Check error event was notified to subscribers
+      const errorEvents = subscriberCalls.filter(event => event.type === 'error');
+      expect(errorEvents).toHaveLength(1);
+      expect(errorEvents[0]).toMatchObject({
+        type: 'error',
         message: errorMessage,
         code: 'IMAGE_GENERATION_ERROR'
-      }));
+      });
     });
 
     test('should handle missing module gracefully', async () => {
       tool = new ImageGenerationTool({}); // No module provided
-      mockEmit = jest.spyOn(tool, 'emit');
+      
+      // Set up new subscriber
+      subscriberCalls = [];
+      tool.subscribe((event) => {
+        subscriberCalls.push(event);
+      });
 
       const result = await tool.execute({ prompt: 'test' });
 
@@ -172,14 +195,22 @@ describe('ImageGenerationTool', () => {
       expect(result.error).toContain('AIGenerationModule instance not available');
     });
 
-    test('should validate input parameters', async () => {
+    test('should execute without validation (validation happens at invocation layer)', async () => {
+      mockModule.generateImage.mockResolvedValue({
+        success: true,
+        imageData: 'data:image/png;base64,test'
+      });
+      
+      // Tool should execute even with "invalid" input - validation happens at invocation layer
       const result = await tool.execute({
-        // Missing required 'prompt' field
+        // Missing required 'prompt' field - but tool doesn't validate
         size: '1024x1024'
       });
 
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Required');
+      expect(result.success).toBe(true);
+      expect(mockModule.generateImage).toHaveBeenCalledWith({
+        size: '1024x1024'
+      });
     });
 
     test('should format artifact correctly for URL response', async () => {

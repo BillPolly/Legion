@@ -1,33 +1,67 @@
+/**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 
-const inputSchema = z.object({
-  deploymentId: z.string().describe('Railway deployment ID')
-});
+// Input schema as plain JSON Schema
+const railwayStatusToolInputSchema = {
+  type: 'object',
+  properties: {
+    deploymentId: {
+      type: 'string',
+      description: 'Railway deployment ID'
+    }
+  },
+  required: ['deploymentId']
+};
 
-const outputSchema = z.object({
-  status: z.string(),
-  url: z.string(),
-  createdAt: z.string().optional(),
-  domains: z.array(z.string()),
-  error: z.string().optional()
-});
+// Output schema as plain JSON Schema
+const railwayStatusToolOutputSchema = {
+  type: 'object',
+  properties: {
+    status: {
+      type: 'string',
+      description: 'Deployment status'
+    },
+    url: {
+      type: 'string',
+      description: 'Deployment URL'
+    },
+    createdAt: {
+      type: 'string',
+      description: 'Creation timestamp'
+    },
+    domains: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'Associated domains'
+    },
+    error: {
+      type: 'string',
+      description: 'Error message if any'
+    }
+  },
+  required: ['status', 'url', 'domains']
+};
 
 class RailwayStatusTool extends Tool {
   constructor(resourceManager) {
     super({
       name: 'railway_status',
       description: 'Get the status and details of a Railway deployment',
-      inputSchema: inputSchema,
+      inputSchema: railwayStatusToolInputSchema,
+      outputSchema: railwayStatusToolOutputSchema,
       execute: async (input) => {
-        const validated = inputSchema.parse(input);
         const provider = this.resourceManager.railwayProvider;
         
         if (!provider) {
           throw new Error('Railway provider not initialized');
         }
 
-        const status = await provider.getStatus(validated.deploymentId);
+        const status = await provider.getStatus(input.deploymentId);
         
         // Get service domains if deployment is running
         let domains = [];
@@ -52,8 +86,8 @@ class RailwayStatusTool extends Tool {
       },
       getMetadata: () => ({
         description: 'Get the status and details of a Railway deployment',
-        input: inputSchema,
-        output: outputSchema
+        input: railwayStatusToolInputSchema,
+        output: railwayStatusToolOutputSchema
       })
     });
     this.resourceManager = resourceManager;

@@ -1,78 +1,64 @@
+/**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
 import { Tool } from '@legion/tools-registry';
+
+// Input schema as plain JSON Schema
+const moduleInfoToolInputSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+      description: 'Module name'
+    }
+  },
+  required: ['name']
+};
+
+// Output schema as plain JSON Schema
+const moduleInfoToolOutputSchema = {
+  type: 'object',
+  properties: {
+    success: {
+      type: 'boolean',
+      description: 'Whether the operation was successful'
+    },
+    name: {
+      type: 'string',
+      description: 'Module name'
+    },
+    tools: {
+      type: 'array',
+      items: { type: 'object' },
+      description: 'Array of tool information'
+    },
+    metadata: {
+      type: 'object',
+      description: 'Module metadata'
+    },
+    error: {
+      type: 'string',
+      description: 'Error message if operation failed'
+    }
+  },
+  required: ['success']
+};
 
 export class ModuleInfoTool extends Tool {
   constructor(dependencies = {}) {
     super({
       name: 'module_info',
       description: 'Get detailed information about a module',
-      schema: {
-        input: {
-          type: 'object',
-          properties: {
-            name: {
-              type: 'string',
-              description: 'Module name'
-            }
-          },
-          required: ['name']
-        },
-        output: {
-          type: 'object',
-          properties: {
-            success: {
-              type: 'boolean',
-              description: 'Whether the operation was successful'
-            },
-            module: {
-              type: 'object',
-              properties: {
-                name: {
-                  type: 'string',
-                  description: 'Module name'
-                },
-                description: {
-                  type: 'string',
-                  description: 'Module description'
-                },
-                toolCount: {
-                  type: 'number',
-                  description: 'Number of tools in the module'
-                },
-                tools: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      name: {
-                        type: 'string',
-                        description: 'Tool name'
-                      },
-                      description: {
-                        type: 'string',
-                        description: 'Tool description'
-                      }
-                    }
-                  },
-                  description: 'List of tools in the module'
-                }
-              },
-              description: 'Module information'
-            },
-            error: {
-              type: 'string',
-              description: 'Error message if operation failed'
-            }
-          },
-          required: ['success']
-        }
-      },
-      execute: async (args) => this.getModuleInfo(args)
+      inputSchema: moduleInfoToolInputSchema,
+      outputSchema: moduleInfoToolOutputSchema
     });
-
     this.config = dependencies;
   }
 
-  async getModuleInfo(args) {
+  async execute(args) {
     const moduleLoader = this.config.moduleLoader;
     if (!moduleLoader) {
       return {

@@ -1,69 +1,182 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * GenerateJavaScriptModuleTool - Generate complete JavaScript modules
  * 
  * Extracted and adapted from code-agent JSGenerator for Legion framework
  */
 
 import { Tool } from '@legion/tools-registry';
-import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';
+
+// Input schema as plain JSON Schema
+const generateJavaScriptModuleToolInputSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+      description: 'Name of the module'
+    },
+    description: {
+      type: 'string',
+      description: 'Module description for header comment'
+    },
+    imports: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          from: { type: 'string' },
+          default: { type: 'string' },
+          named: {
+            type: 'array',
+            items: { type: 'string' }
+          },
+          namespace: { type: 'string' }
+        }
+      },
+      description: 'Array of import statements'
+    },
+    constants: {
+      type: 'object',
+      additionalProperties: true,
+      description: 'Object of constant definitions'
+    },
+    functions: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          params: {
+            type: 'array',
+            items: {}
+          },
+          body: { type: 'string' },
+          isAsync: { type: 'boolean' },
+          isExport: { type: 'boolean' },
+          jsdoc: {
+            type: 'object',
+            additionalProperties: true
+          }
+        },
+        required: ['name']
+      },
+      description: 'Array of function definitions'
+    },
+    classes: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          extends: { type: 'string' },
+          constructor: {
+            type: 'object',
+            additionalProperties: true
+          },
+          methods: {
+            type: 'array',
+            items: {}
+          },
+          properties: {
+            type: 'array',
+            items: {}
+          },
+          isExport: { type: 'boolean' }
+        },
+        required: ['name']
+      },
+      description: 'Array of class definitions'
+    },
+    exports: {
+      type: 'object',
+      properties: {
+        default: { type: 'string' },
+        named: {
+          type: 'array',
+          items: { type: 'string' }
+        }
+      },
+      description: 'Export statements'
+    },
+    projectPath: {
+      type: 'string',
+      description: 'Project root directory (optional, for file writing)'
+    },
+    writeToFile: {
+      type: 'boolean',
+      default: false,
+      description: 'Whether to write generated code to file'
+    },
+    outputPath: {
+      type: 'string',
+      description: 'Relative path within project for output file (when writeToFile is true)'
+    },
+    includeMain: {
+      type: 'boolean',
+      default: false,
+      description: 'Whether to include a main execution block'
+    },
+    mainFunction: {
+      type: 'string',
+      description: 'Code to execute in the main block (when includeMain is true)'
+    }
+  },
+  required: ['name']
+};
+
+// Output schema as plain JSON Schema
+const generateJavaScriptModuleToolOutputSchema = {
+  type: 'object',
+  properties: {
+    code: {
+      type: 'string',
+      description: 'Generated JavaScript module code'
+    },
+    filename: {
+      type: 'string',
+      description: 'Suggested filename for the module'
+    },
+    linesOfCode: {
+      type: 'number',
+      description: 'Number of lines generated'
+    },
+    components: {
+      type: 'object',
+      properties: {
+        functions: { type: 'number' },
+        classes: { type: 'number' },
+        imports: { type: 'number' },
+        exports: { type: 'number' }
+      },
+      required: ['functions', 'classes', 'imports', 'exports']
+    },
+    filePath: {
+      type: 'string',
+      description: 'Full path to written file (when writeToFile is true)'
+    },
+    written: {
+      type: 'boolean',
+      description: 'Whether the file was written to disk'
+    }
+  },
+  required: ['code', 'filename', 'linesOfCode', 'components', 'written']
+};
 
 export class GenerateJavaScriptModuleTool extends Tool {
   constructor() {
     super({
       name: 'generate_javascript_module',
-      description: 'Generate a complete JavaScript module with imports, exports, functions, and classes'
+      description: 'Generate a complete JavaScript module with imports, exports, functions, and classes',
+      inputSchema: generateJavaScriptModuleToolInputSchema,
+      outputSchema: generateJavaScriptModuleToolOutputSchema
     });
-    this.inputSchema = z.object({
-        name: z.string().describe('Name of the module'),
-        description: z.string().optional().describe('Module description for header comment'),
-        imports: z.array(z.object({
-          from: z.string().optional(),
-          default: z.string().optional(),
-          named: z.array(z.string()).optional(),
-          namespace: z.string().optional()
-        })).optional().describe('Array of import statements'),
-        constants: z.record(z.any()).optional().describe('Object of constant definitions'),
-        functions: z.array(z.object({
-          name: z.string(),
-          params: z.array(z.any()).optional(),
-          body: z.string().optional(),
-          isAsync: z.boolean().optional(),
-          isExport: z.boolean().optional(),
-          jsdoc: z.record(z.any()).optional()
-        })).optional().describe('Array of function definitions'),
-        classes: z.array(z.object({
-          name: z.string(),
-          extends: z.string().optional(),
-          constructor: z.record(z.any()).optional(),
-          methods: z.array(z.any()).optional(),
-          properties: z.array(z.any()).optional(),
-          isExport: z.boolean().optional()
-        })).optional().describe('Array of class definitions'),
-        exports: z.object({
-          default: z.string().optional(),
-          named: z.array(z.string()).optional()
-        }).optional().describe('Export statements'),
-        projectPath: z.string().optional().describe('Project root directory (optional, for file writing)'),
-        writeToFile: z.boolean().optional().default(false).describe('Whether to write generated code to file'),
-        outputPath: z.string().optional().describe('Relative path within project for output file (when writeToFile is true)'),
-        includeMain: z.boolean().optional().default(false).describe('Whether to include a main execution block'),
-        mainFunction: z.string().optional().describe('Code to execute in the main block (when includeMain is true)')
-      });
-    this.outputSchema = z.object({
-        code: z.string().describe('Generated JavaScript module code'),
-        filename: z.string().describe('Suggested filename for the module'),
-        linesOfCode: z.number().describe('Number of lines generated'),
-        components: z.object({
-          functions: z.number(),
-          classes: z.number(),
-          imports: z.number(),
-          exports: z.number()
-        }),
-        filePath: z.string().optional().describe('Full path to written file (when writeToFile is true)'),
-        written: z.boolean().describe('Whether the file was written to disk')
-      });
 
     // Configuration options
     this.config = {

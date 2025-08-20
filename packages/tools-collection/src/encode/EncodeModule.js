@@ -1,9 +1,51 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * EncodeModule - Module wrapper for encoding/decoding tools
  */
 
 import { Module, Tool } from '@legion/tools-registry';
-import { z } from 'zod';
+
+// Input schema for Base64EncodeTool
+const base64EncodeToolInputSchema = {
+  type: 'object',
+  properties: {
+    data: {
+      type: 'string',
+      description: 'The data to encode'
+    },
+    inputEncoding: {
+      type: 'string',
+      default: 'utf8',
+      description: 'Input encoding (default: utf8)'
+    }
+  },
+  required: ['data']
+};
+
+// Output schema for Base64EncodeTool
+const base64EncodeToolOutputSchema = {
+  type: 'object',
+  properties: {
+    encoded: {
+      type: 'string',
+      description: 'Base64 encoded data'
+    },
+    success: {
+      type: 'boolean',
+      description: 'Whether encoding was successful'
+    },
+    error: {
+      type: 'string',
+      description: 'Error message if encoding failed'
+    }
+  },
+  required: ['success']
+};
 
 /**
  * Base64 encoding tool
@@ -13,10 +55,8 @@ class Base64EncodeTool extends Tool {
     super({
       name: 'base64_encode',
       description: 'Encode data to base64 format',
-      inputSchema: z.object({
-        data: z.string().describe('The data to encode'),
-        inputEncoding: z.string().optional().default('utf8').describe('Input encoding (default: utf8)')
-      })
+      inputSchema: base64EncodeToolInputSchema,
+      outputSchema: base64EncodeToolOutputSchema
     });
   }
 
@@ -49,6 +89,43 @@ class Base64EncodeTool extends Tool {
   }
 }
 
+// Input schema for Base64DecodeTool
+const base64DecodeToolInputSchema = {
+  type: 'object',
+  properties: {
+    data: {
+      type: 'string',
+      description: 'The base64 encoded data to decode'
+    },
+    outputEncoding: {
+      type: 'string',
+      default: 'utf8',
+      description: 'Output encoding (default: utf8)'
+    }
+  },
+  required: ['data']
+};
+
+// Output schema for Base64DecodeTool
+const base64DecodeToolOutputSchema = {
+  type: 'object',
+  properties: {
+    decoded: {
+      type: 'string',
+      description: 'Base64 decoded data'
+    },
+    success: {
+      type: 'boolean',
+      description: 'Whether decoding was successful'
+    },
+    error: {
+      type: 'string',
+      description: 'Error message if decoding failed'
+    }
+  },
+  required: ['success']
+};
+
 /**
  * Base64 decoding tool
  */
@@ -57,10 +134,8 @@ class Base64DecodeTool extends Tool {
     super({
       name: 'base64_decode',
       description: 'Decode base64 encoded data',
-      inputSchema: z.object({
-        data: z.string().describe('The base64 encoded data to decode'),
-        outputEncoding: z.string().optional().default('utf8').describe('Output encoding (default: utf8)')
-      })
+      inputSchema: base64DecodeToolInputSchema,
+      outputSchema: base64DecodeToolOutputSchema
     });
   }
 
@@ -93,6 +168,46 @@ class Base64DecodeTool extends Tool {
   }
 }
 
+// Input schema for UrlEncodeTool
+const urlEncodeToolInputSchema = {
+  type: 'object',
+  properties: {
+    data: {
+      type: 'string',
+      description: 'The string to URL encode'
+    }
+  },
+  required: ['data']
+};
+
+// Output schema for UrlEncodeTool
+const urlEncodeToolOutputSchema = {
+  type: 'object',
+  properties: {
+    encoded: {
+      type: 'string',
+      description: 'URL encoded data'
+    },
+    success: {
+      type: 'boolean',
+      description: 'Whether encoding was successful'
+    },
+    originalLength: {
+      type: 'number',
+      description: 'Length of original data'
+    },
+    encodedLength: {
+      type: 'number',
+      description: 'Length of encoded data'
+    },
+    error: {
+      type: 'string',
+      description: 'Error message if encoding failed'
+    }
+  },
+  required: ['success']
+};
+
 /**
  * URL encoding tool
  */
@@ -101,9 +216,8 @@ class UrlEncodeTool extends Tool {
     super({
       name: 'url_encode',
       description: 'URL encode a string',
-      inputSchema: z.object({
-        data: z.string().describe('The string to URL encode')
-      })
+      inputSchema: urlEncodeToolInputSchema,
+      outputSchema: urlEncodeToolOutputSchema
     });
   }
 
@@ -135,6 +249,46 @@ class UrlEncodeTool extends Tool {
   }
 }
 
+// Input schema for UrlDecodeTool
+const urlDecodeToolInputSchema = {
+  type: 'object',
+  properties: {
+    data: {
+      type: 'string',
+      description: 'The URL encoded string to decode'
+    }
+  },
+  required: ['data']
+};
+
+// Output schema for UrlDecodeTool
+const urlDecodeToolOutputSchema = {
+  type: 'object',
+  properties: {
+    decoded: {
+      type: 'string',
+      description: 'URL decoded data'
+    },
+    success: {
+      type: 'boolean',
+      description: 'Whether decoding was successful'
+    },
+    originalLength: {
+      type: 'number',
+      description: 'Length of original encoded data'
+    },
+    decodedLength: {
+      type: 'number',
+      description: 'Length of decoded data'
+    },
+    error: {
+      type: 'string',
+      description: 'Error message if decoding failed'
+    }
+  },
+  required: ['success']
+};
+
 /**
  * URL decoding tool
  */
@@ -143,9 +297,8 @@ class UrlDecodeTool extends Tool {
     super({
       name: 'url_decode',
       description: 'URL decode a string',
-      inputSchema: z.object({
-        data: z.string().describe('The URL encoded string to decode')
-      })
+      inputSchema: urlDecodeToolInputSchema,
+      outputSchema: urlDecodeToolOutputSchema
     });
   }
 

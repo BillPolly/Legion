@@ -1,22 +1,70 @@
 /**
+ * NOTE: Validation has been removed from this tool.
+ * All validation now happens at the invocation layer.
+ * Tools only define schemas as plain JSON Schema objects.
+ */
+
+/**
  * AcceptanceCriteriaGeneratorTool - Generates acceptance criteria for user stories
  */
 
 import { Tool, ToolResult } from '@legion/tools-registry';
-import { z } from 'zod';
+
+// Input schema as plain JSON Schema
+const acceptanceCriteriaGeneratorToolInputSchema = {
+  type: 'object',
+  properties: {
+    userStories: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'string',
+            description: 'User story ID'
+          },
+          story: {
+            type: 'string',
+            description: 'User story text'
+          }
+        },
+        required: ['id', 'story']
+      },
+      description: 'User stories to generate criteria for'
+    },
+    projectId: {
+      type: 'string',
+      description: 'Project ID'
+    }
+  },
+  required: ['userStories']
+};
+
+// Output schema as plain JSON Schema
+const acceptanceCriteriaGeneratorToolOutputSchema = {
+  type: 'object',
+  properties: {
+    acceptanceCriteria: {
+      type: 'object',
+      additionalProperties: {
+        type: 'array',
+        items: {
+          type: 'string'
+        }
+      },
+      description: 'Map of story IDs to acceptance criteria'
+    }
+  },
+  required: ['acceptanceCriteria']
+};
 
 export class AcceptanceCriteriaGeneratorTool extends Tool {
   constructor(dependencies = {}) {
     super({
       name: 'generate_acceptance_criteria',
       description: 'Generate acceptance criteria for user stories',
-      inputSchema: z.object({
-        userStories: z.array(z.object({
-          id: z.string(),
-          story: z.string()
-        })).describe('User stories to generate criteria for'),
-        projectId: z.string().optional()
-      })
+      inputSchema: acceptanceCriteriaGeneratorToolInputSchema,
+      outputSchema: acceptanceCriteriaGeneratorToolOutputSchema
     });
     
     this.llmClient = dependencies.llmClient;
