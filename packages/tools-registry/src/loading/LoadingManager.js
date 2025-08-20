@@ -325,27 +325,42 @@ export class LoadingManager {
 
     // Verify clearing actually worked
     if (this.verifier) {
+      // For module-specific clearing, we don't expect ALL tools to be empty
+      const expectEmpty = !moduleFilter;
+      
       const clearingVerification = await this.verifier.verifyClearingWorked({
-        expectEmptyTools: true,
-        expectEmptyPerspectives: true,
-        expectEmptyVectors: clearVectors
+        expectEmptyTools: expectEmpty,
+        expectEmptyPerspectives: expectEmpty,
+        expectEmptyVectors: clearVectors && expectEmpty
       });
       
       const moduleVerification = await this.verifier.verifyModulesUnloaded(moduleFilter);
       
-      if (!clearingVerification.success || !moduleVerification.success) {
+      // For module-specific clearing, just verify the module was unloaded
+      if (moduleFilter) {
+        if (!moduleVerification.success) {
+          const errorMsg = `Module clearing verification failed: ${moduleVerification.errors.join(', ')}`;
+          if (this.verbose) {
+            console.log(`❌ ${errorMsg}`);
+          }
+          throw new Error(errorMsg);
+        }
+      } else if (!clearingVerification.success || !moduleVerification.success) {
         const errors = [...clearingVerification.errors, ...moduleVerification.errors];
         const errorMsg = `Clearing verification failed: ${errors.join(', ')}`;
         if (this.verbose) {
           console.log(`❌ ${errorMsg}`);
         }
         throw new Error(errorMsg);
-      } else if (this.verbose) {
+      }
+      
+      if (this.verbose) {
         console.log(`✅ Clearing verified:`);
-        console.log(`   Tools: ${clearingVerification.clearedCounts.tools}`);
-        console.log(`   Perspectives: ${clearingVerification.clearedCounts.perspectives}`);
-        console.log(`   Vectors: ${clearingVerification.clearedCounts.vectors}`);
-        console.log(`   Modules: ${clearingVerification.clearedCounts.modules} (preserved)`);
+        console.log(`   Tools cleared: ${toolResult.deletedCount}`);
+        console.log(`   Perspectives cleared: ${perspectiveResult.deletedCount}`);
+        if (clearVectors) {
+          console.log(`   Vectors cleared: ${totalCleared - toolResult.deletedCount - perspectiveResult.deletedCount}`);
+        }
         console.log(`   Module statuses: loaded=${moduleVerification.moduleStats.loaded}, unloaded=${moduleVerification.moduleStats.unloaded}`);
       }
     }

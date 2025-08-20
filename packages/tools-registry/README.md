@@ -1,119 +1,238 @@
-# @legion/tools-registry - Tool Registry and Management Infrastructure
+# ToolRegistry Singleton API
 
-Tool registry and management infrastructure for Legion AI agents. Provides comprehensive tool discovery, execution, and management capabilities with advanced semantic search and MongoDB integration.
+## Zero-Configuration Usage
 
-## Features
-
-### 🔍 **Intelligent Tool Discovery**
-- **Semantic Search**: Find tools using natural language descriptions
-- **MCP Integration**: Search across thousands of MCP servers and tools
-- **Auto-Suggestions**: Get installation recommendations for missing capabilities
-- **Multi-Source Discovery**: NPM, GitHub, and manual server registry
-
-### ⚡ **Automated MCP Server Management**
-- **One-Click Installation**: Install servers from NPM or GitHub
-- **Process Management**: Start, stop, restart, and monitor server health
-- **Configuration Management**: Template-based configuration with environment variables
-- **Health Monitoring**: Continuous health checks with automatic remediation
-
-### 🛠 **Advanced Tool Registry**
-- **Unified Interface**: Access Legion and MCP tools through single registry
-- **Smart Recommendations**: Context-aware tool suggestions
-- **Usage Analytics**: Track tool usage patterns and performance
-- **Load Balancing**: Distribute tool execution across multiple servers
-
-### 🎯 **Developer Experience**
-- **CLI Management**: Comprehensive command-line interface
-- **Interactive Configuration**: Guided setup for MCP servers
-- **Rich Observability**: Detailed logging and tracing
-- **Zero-Config Integration**: Works out of the box with Legion framework
+The ToolRegistry is now a singleton that automatically configures itself using the ResourceManager from `@legion/resource-manager`. No initialization or configuration is required.
 
 ## Quick Start
 
-### Installation
+```javascript
+import toolRegistry from '@legion/tools-registry';
 
-```bash
-# Install the tools package
-npm install @legion/tools-registry
-
-# Make CLI available globally
-npm link @legion/tools-registry
+// That's it! Ready to use immediately
+const tool = await toolRegistry.getTool('calculator');
+const result = await tool.execute({ expression: '2 + 2' });
 ```
 
-### Basic Usage
+## API Reference
+
+### Runtime Tool Access
+
+#### `getTool(name)`
+Get an executable tool by name.
 
 ```javascript
-import { MCPServerManager, ToolRegistry, SemanticToolDiscovery } from '@legion/tools-registry';
-
-// Initialize MCP integration
-const serverManager = new MCPServerManager();
-await serverManager.initialize();
-
-// Enhanced tool registry with MCP support
-const toolRegistry = new ToolRegistry({
-  enableMCPIntegration: true,
-  mcpServerRegistry: serverManager.registry
-});
-
-// Semantic tool discovery with auto-install suggestions
-const toolDiscovery = new SemanticToolDiscovery({
-  toolRegistry,
-  mcpServerRegistry: serverManager.registry,
-  mcpPackageManager: serverManager.packageManager
-});
-
-// Find tools for a task
-const results = await toolDiscovery.findRelevantTools("analyze git repository");
-console.log('Available tools:', results.tools);
-console.log('Install suggestions:', results.suggestions);
+const tool = await toolRegistry.getTool('file_read');
+const content = await tool.execute({ path: '/path/to/file.txt' });
 ```
 
-### CLI Usage
+#### `listTools(options)`
+List available tools with optional filtering.
 
-```bash
-# Search for available MCP servers
-legion-mcp search "filesystem"
-
-# Install a server
-legion-mcp install @modelcontextprotocol/server-filesystem
-
-# Start the server
-legion-mcp start filesystem
-
-# List available tools
-legion-mcp tools
-
-# Execute a tool
-legion-mcp exec read_file '{"path": "/path/to/file.txt"}'
-
-# Check system status
-legion-mcp status
+```javascript
+const tools = await toolRegistry.listTools({ 
+  limit: 10,
+  module: 'file' 
+});
 ```
 
-## CLI Commands
+#### `searchTools(query, options)`
+Search for tools by text query.
 
-### Discovery Commands
-- `legion-mcp search <query>` - Search for MCP servers
-- `legion-mcp list` - List installed servers  
-- `legion-mcp info <serverId>` - Show server details
+```javascript
+const tools = await toolRegistry.searchTools('json', {
+  limit: 5
+});
+```
 
-### Management Commands
-- `legion-mcp install <serverId>` - Install MCP server
-- `legion-mcp uninstall <serverId>` - Uninstall server
-- `legion-mcp start <serverId>` - Start server
-- `legion-mcp stop <serverId>` - Stop server
-- `legion-mcp restart <serverId>` - Restart server
+#### `semanticToolSearch(query, options)`
+Search for tools using natural language (requires semantic search to be available).
 
-### Monitoring Commands
-- `legion-mcp status` - System status overview
-- `legion-mcp health [serverId]` - Check server health
-- `legion-mcp tools [serverId]` - List available tools
+```javascript
+const results = await toolRegistry.semanticToolSearch(
+  'I need to analyze code quality',
+  { 
+    limit: 5,
+    minConfidence: 0.7 
+  }
+);
+```
 
-### Tool Execution
-- `legion-mcp exec <toolName> [args]` - Execute tool
-- `legion-mcp configure <serverId>` - Configure server
-- `legion-mcp config [serverId]` - Show configuration
+### Database Management
 
-## License
+#### `getLoader()`
+Get the LoadingManager instance for database operations.
 
-MIT License - see LICENSE file for details.
+```javascript
+const loader = await toolRegistry.getLoader();
+
+// Clear all data
+await loader.clearAll();
+
+// Load modules
+await loader.loadModules();
+
+// Generate perspectives
+await loader.generatePerspectives();
+
+// Index vectors
+await loader.indexVectors();
+
+// Or run everything at once
+await loader.fullPipeline({
+  clearFirst: true,
+  includePerspectives: true,
+  includeVectors: false
+});
+```
+
+## Migration from Old API
+
+### Before (Manual Configuration)
+```javascript
+import { ResourceManager } from '@legion/resource-manager';
+import { ToolRegistry } from '@legion/tools-registry';
+import { MongoDBToolRegistryProvider } from '@legion/tools-registry/providers';
+
+// Manual setup required
+const resourceManager = new ResourceManager();
+await resourceManager.initialize();
+
+const provider = await MongoDBToolRegistryProvider.create(resourceManager);
+const toolRegistry = new ToolRegistry({ provider });
+await toolRegistry.initialize();
+
+// Now ready to use
+const tool = await toolRegistry.getTool('calculator');
+```
+
+### After (Zero Configuration)
+```javascript
+import toolRegistry from '@legion/tools-registry';
+
+// Ready immediately!
+const tool = await toolRegistry.getTool('calculator');
+```
+
+## Advanced Usage
+
+### Custom Provider
+If you need a custom provider, you can still pass one:
+
+```javascript
+import { ToolRegistry } from '@legion/tools-registry';
+
+const customRegistry = new ToolRegistry({ 
+  provider: myCustomProvider,
+  _forceNew: true  // Force new instance instead of singleton
+});
+```
+
+### Accessing the Class
+The class is still exported for typing and testing:
+
+```javascript
+import { ToolRegistry } from '@legion/tools-registry';
+
+// For TypeScript typing
+function processRegistry(registry: ToolRegistry) {
+  // ...
+}
+```
+
+### Singleton Behavior
+- The singleton is created on first access
+- Automatic initialization with ResourceManager
+- Shared across all imports in your application
+- Thread-safe initialization
+
+## Benefits
+
+1. **Zero Configuration** - No setup code required
+2. **Automatic Resource Management** - ResourceManager handled internally
+3. **Connection Sharing** - MongoDB and Qdrant connections are reused
+4. **Lazy Initialization** - Resources created only when needed
+5. **Simplified API** - Clean, intuitive interface
+6. **Backward Compatible** - Old code continues to work
+
+## Common Patterns
+
+### Script Usage
+```javascript
+#!/usr/bin/env node
+import toolRegistry from '@legion/tools-registry';
+
+async function main() {
+  // Get loader for database operations
+  const loader = await toolRegistry.getLoader();
+  
+  // Populate database
+  await loader.fullPipeline({ clearFirst: true });
+  
+  // Use tools
+  const tool = await toolRegistry.getTool('my_tool');
+  await tool.execute({ /* args */ });
+}
+
+main().catch(console.error);
+```
+
+### Application Usage
+```javascript
+import toolRegistry from '@legion/tools-registry';
+
+export class MyService {
+  async processWithTool(toolName, args) {
+    const tool = await toolRegistry.getTool(toolName);
+    if (!tool) {
+      throw new Error(`Tool ${toolName} not found`);
+    }
+    return await tool.execute(args);
+  }
+}
+```
+
+### Testing
+```javascript
+import toolRegistry from '@legion/tools-registry';
+
+beforeAll(async () => {
+  // Ensure database is populated for tests
+  const loader = await toolRegistry.getLoader();
+  await loader.fullPipeline({ clearFirst: true });
+});
+
+test('calculator tool works', async () => {
+  const calc = await toolRegistry.getTool('calculator');
+  const result = await calc.execute({ expression: '2 + 2' });
+  expect(result.result).toBe(4);
+});
+```
+
+## Troubleshooting
+
+### Tool Not Found
+If `getTool()` returns null:
+1. Check if the database is populated: `loader.getPipelineState()`
+2. Run population if needed: `loader.fullPipeline()`
+3. Verify tool name is correct: `toolRegistry.listTools()`
+
+### Semantic Search Not Available
+If semantic search throws an error:
+1. Ensure Qdrant is running: `docker ps`
+2. Check QDRANT_URL in .env file
+3. Generate vectors: `loader.indexVectors()`
+
+### Connection Issues
+If you see MongoDB connection errors:
+1. Verify MONGODB_URI in .env file
+2. Ensure MongoDB is running
+3. Check network connectivity
+
+## Environment Variables
+
+The singleton automatically loads these from .env:
+- `MONGODB_URI` - MongoDB connection string
+- `QDRANT_URL` - Qdrant vector database URL (optional)
+- `OPENAI_API_KEY` - For AI-powered tools (optional)
+- Other API keys as needed by specific tools

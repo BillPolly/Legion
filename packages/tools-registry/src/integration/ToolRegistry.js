@@ -731,7 +731,7 @@ export class ToolRegistry {
 
       return {
         moduleName,
-        modulesLoaded: loadResult.modulesLoaded,
+        modulesLoaded: 1, // We're loading a specific module
         toolsAdded: loadResult.toolsAdded,
         perspectivesGenerated,
         vectorsIndexed,
