@@ -564,9 +564,16 @@ export class Verifier {
         result.errors.push(`Vectors not cleared: found ${counts.vectors} remaining`);
       }
 
-      // Verify modules still exist but are in unloaded state
-      if (counts.modules === 0) {
-        result.errors.push(`Modules were cleared - they should be preserved but set to unloaded`);
+      // Verify module_registry still exists (permanent registry)
+      const registryCount = await this.mongoProvider.databaseService.mongoProvider.db
+        .collection('module_registry').countDocuments();
+      if (registryCount === 0) {
+        result.errors.push(`Module registry was cleared - it should be preserved with statuses set to unloaded`);
+      }
+      
+      // Verify modules collection was cleared
+      if (expectEmptyTools && counts.modules > 0) {
+        result.errors.push(`Modules collection not cleared: found ${counts.modules} remaining`);
       }
 
       result.clearedCounts = counts;
@@ -608,17 +615,18 @@ export class Verifier {
       // Build queries based on module filter
       const baseQuery = moduleFilter ? { name: moduleFilter } : {};
       
+      // Check module_registry (permanent registry) for status
       const loadedCount = await this.mongoProvider.databaseService.mongoProvider.db
-        .collection('modules').countDocuments({ ...baseQuery, loadingStatus: 'loaded' });
+        .collection('module_registry').countDocuments({ ...baseQuery, loadingStatus: 'loaded' });
       
       const unloadedCount = await this.mongoProvider.databaseService.mongoProvider.db
-        .collection('modules').countDocuments({ ...baseQuery, loadingStatus: 'unloaded' });
+        .collection('module_registry').countDocuments({ ...baseQuery, loadingStatus: 'unloaded' });
       
       const pendingCount = await this.mongoProvider.databaseService.mongoProvider.db
-        .collection('modules').countDocuments({ ...baseQuery, loadingStatus: 'pending' });
+        .collection('module_registry').countDocuments({ ...baseQuery, loadingStatus: 'pending' });
         
       const failedCount = await this.mongoProvider.databaseService.mongoProvider.db
-        .collection('modules').countDocuments({ ...baseQuery, loadingStatus: 'failed' });
+        .collection('module_registry').countDocuments({ ...baseQuery, loadingStatus: 'failed' });
 
       result.moduleStats = {
         loaded: loadedCount,

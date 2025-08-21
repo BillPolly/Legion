@@ -226,6 +226,10 @@ export class PipelineOrchestrator {
     switch (stageName) {
       case 'clear':
         stageOptions.clearModules = globalOptions.clearModules || false;
+        // Pass moduleName for module-specific clearing
+        if (globalOptions.module) {
+          stageOptions.moduleName = globalOptions.module;
+        }
         break;
       case 'loadTools':
         stageOptions.module = globalOptions.module;

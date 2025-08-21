@@ -10,6 +10,20 @@
 import { MongoDBToolRegistryProvider } from '../providers/MongoDBToolRegistryProvider.js';
 import { ResourceManager } from '@legion/resource-manager';
 import { SemanticToolDiscovery } from '../search/SemanticToolDiscovery.js';
+import { LRUCache } from '../utils/LRUCache.js';
+import { Mutex } from 'async-mutex';
+import {
+  ToolRegistryError,
+  ModuleNotFoundError,
+  ToolNotFoundError,
+  ToolExecutionError,
+  ModuleLoadError,
+  DatabaseError,
+  SemanticSearchError,
+  ValidationError,
+  InitializationError,
+  CleanupError
+} from '../errors/ToolRegistryErrors.js';
 
 export class ToolRegistry {
   static _instance = null;
@@ -25,9 +39,15 @@ export class ToolRegistry {
     // Always use ResourceManager singleton - no option to override
     this.resourceManager = null;
     
-    // Caching
-    this.toolCache = new Map();
-    this.moduleCache = new Map();
+    // Caching with LRU and TTL
+    this.toolCache = new LRUCache({
+      maxSize: options.toolCacheSize || 100,
+      ttl: options.toolCacheTTL || 3600000 // 1 hour default
+    });
+    this.moduleCache = new LRUCache({
+      maxSize: options.moduleCacheSize || 50,
+      ttl: options.moduleCacheTTL || 7200000 // 2 hours default
+    });
     
     // Semantic search
     this.semanticDiscovery = null;
@@ -39,6 +59,16 @@ export class ToolRegistry {
     // State
     this.initialized = false;
     this.usageStats = new Map();
+    
+    // Concurrency control
+    this.moduleOperationMutexes = new Map(); // Mutex per module
+    this.globalOperationMutex = new Mutex(); // Global mutex for all-module operations
+    
+    // Start periodic cache cleanup
+    this.cacheCleanupInterval = setInterval(() => {
+      this.toolCache.cleanupExpired();
+      this.moduleCache.cleanupExpired();
+    }, 300000); // Clean up every 5 minutes
     
     // Set singleton instance if this is the first creation
     if (!ToolRegistry._instance) {
@@ -106,8 +136,12 @@ export class ToolRegistry {
   async getTool(name) {
     await this._ensureInitialized();
     
-    if (!name || typeof name !== 'string') {
-      return null;
+    if (!name) {
+      throw new ValidationError('name', 'string', name);
+    }
+    
+    if (typeof name !== 'string') {
+      throw new ValidationError('name', 'string', name);
     }
     
     // 1. Check cache first
@@ -179,7 +213,11 @@ export class ToolRegistry {
     
     // Check if semantic search is available - no fallbacks, raise error
     if (!this.semanticDiscovery) {
-      throw new Error('Semantic search not available - semantic discovery service not initialized');
+      throw new SemanticSearchError(
+        'semanticToolSearch',
+        'Semantic discovery service not initialized',
+        { query }
+      );
     }
     
     // Perform semantic search - no fallbacks, let errors propagate
@@ -266,30 +304,44 @@ export class ToolRegistry {
       // 2. Get module name from tool metadata
       const moduleName = toolMetadata.moduleName || toolMetadata.module;
       if (!moduleName) {
-        console.warn(`Tool ${name} has no module reference in database`);
-        return null;
+        throw new DatabaseError(
+          'getTool',
+          new Error(`Tool ${name} has no module reference in database`),
+          { toolName: name }
+        );
       }
 
       // 3. Load module instance
       const moduleInstance = await this.#loadModuleFromMongoDB(moduleName);
       if (!moduleInstance) {
-        console.warn(`Could not load module ${moduleName} for tool ${name}`);
-        return null;
+        throw new ModuleLoadError(
+          moduleName,
+          `Could not load module for tool ${name}`,
+          { toolName: name }
+        );
       }
 
       // 4. Get executable tool from module
       const executableTool = this._extractToolFromModule(moduleInstance, toolMetadata.name);
       
       if (!executableTool) {
-        console.warn(`Failed to get tool ${toolMetadata.name} from module ${moduleName}`);
-        return null;
+        throw new ToolNotFoundError(
+          toolMetadata.name,
+          moduleName,
+          { reason: 'Tool not found in module' }
+        );
       }
 
       return executableTool;
       
     } catch (error) {
-      console.warn(`Failed to get tool ${name} from database:`, error.message);
-      return null;
+      // Re-throw our custom errors
+      if (error instanceof ToolRegistryError) {
+        throw error;
+      }
+      
+      // Wrap other errors
+      throw new DatabaseError('getTool', error, { toolName: name });
     }
   }
 
@@ -392,28 +444,53 @@ export class ToolRegistry {
     try {
       const path = await import('path');
       const fs = await import('fs');
+      const { fileURLToPath } = await import('url');
 
-      // Build the module path from Legion root
+      // Get the directory of this file to use as a reference point
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      
+      // Navigate to the monorepo root (4 levels up from tools-registry/src/integration/ToolRegistry.js)
+      const monorepoRoot = path.resolve(__dirname, '../../../..');
+      
+      // Build the module path from monorepo root
       let modulePath;
       const basePath = moduleMetadata.path;
       
-      // Determine the actual file path
-      if (basePath.includes('tools-collection')) {
-        // Tools collection modules
-        modulePath = path.resolve('../../' + basePath + '/index.js');
+      // Handle different module path formats
+      if (basePath.startsWith('/')) {
+        // Absolute path
+        modulePath = basePath;
+      } else if (basePath.startsWith('packages/') || basePath.startsWith('tools-collection/')) {
+        // Path relative to monorepo root
+        modulePath = path.join(monorepoRoot, basePath, 'index.js');
       } else {
-        // Package modules  
-        modulePath = path.resolve('../../' + basePath + '/index.js');
+        // Legacy format - try to resolve from monorepo root
+        modulePath = path.join(monorepoRoot, 'packages', basePath, 'index.js');
+        
+        // If not found, try tools-collection
+        if (!fs.existsSync(modulePath)) {
+          modulePath = path.join(monorepoRoot, 'tools-collection', basePath, 'index.js');
+        }
       }
+
+      // Normalize the path
+      modulePath = path.resolve(modulePath);
 
       // Check if the file exists
       if (!fs.existsSync(modulePath)) {
         console.warn(`Module file not found: ${modulePath}`);
+        console.warn(`  Searched from monorepo root: ${monorepoRoot}`);
+        console.warn(`  Module metadata path: ${basePath}`);
         return null;
       }
 
-      // Import and instantiate the module
-      const ModuleClass = await import(modulePath);
+      // Import and instantiate the module using file URL protocol for Windows compatibility
+      const moduleUrl = path.isAbsolute(modulePath) 
+        ? `file://${modulePath.replace(/\\/g, '/')}`
+        : modulePath;
+      
+      const ModuleClass = await import(moduleUrl);
       const ActualClass = ModuleClass.default || ModuleClass[moduleMetadata.className];
       
       if (!ActualClass) {
@@ -431,6 +508,7 @@ export class ToolRegistry {
 
     } catch (error) {
       console.warn(`Direct module loading failed: ${error.message}`);
+      console.warn(`  Stack: ${error.stack}`);
       return null;
     }
   }
@@ -519,7 +597,11 @@ export class ToolRegistry {
    * Get usage statistics
    */
   getUsageStats() {
-    return Object.fromEntries(this.usageStats);
+    return {
+      toolUsage: Object.fromEntries(this.usageStats),
+      toolCacheStats: this.toolCache.getStats(),
+      moduleCacheStats: this.moduleCache.getStats()
+    };
   }
 
   /**
@@ -596,6 +678,21 @@ export class ToolRegistry {
   }
 
   // ============================================================================
+  // CONCURRENCY CONTROL HELPERS
+  // ============================================================================
+
+  /**
+   * Get or create mutex for a specific module
+   * @private
+   */
+  #getModuleMutex(moduleName) {
+    if (!this.moduleOperationMutexes.has(moduleName)) {
+      this.moduleOperationMutexes.set(moduleName, new Mutex());
+    }
+    return this.moduleOperationMutexes.get(moduleName);
+  }
+
+  // ============================================================================
   // MODULE-SPECIFIC OPERATIONS
   // ============================================================================
 
@@ -612,34 +709,50 @@ export class ToolRegistry {
     await this._ensureInitialized();
 
     if (!moduleName || typeof moduleName !== 'string') {
-      throw new Error('Module name is required and must be a string');
+      throw new ValidationError('moduleName', 'non-empty string', moduleName);
     }
 
-    const loader = await this.getLoader();
-    const originalVerbose = loader.verbose;
+    // Get mutex for this module
+    const mutex = this.#getModuleMutex(moduleName);
     
-    try {
-      loader.verbose = options.verbose || false;
+    // Acquire lock for this module operation
+    return await mutex.runExclusive(async () => {
+      const loader = await this.getLoader();
+      const originalVerbose = loader.verbose;
+      
+      try {
+        loader.verbose = options.verbose || false;
 
-      if (loader.verbose) {
-        console.log(`🧹 Clearing module: ${moduleName}`);
+        if (loader.verbose) {
+          console.log(`🧹 Clearing module: ${moduleName}`);
+        }
+
+        // Use LoadingManager's clearForReload with module filter
+        const result = await loader.clearForReload({
+          clearVectors: true,
+          clearModules: false, // Keep module discovery
+          moduleFilter: moduleName
+        });
+
+        // Clear module from cache
+        this.moduleCache.delete(moduleName);
+        
+        // Clear tools from this module from cache
+        for (const [key] of this.toolCache.cache.entries()) {
+          if (key.startsWith(`${moduleName}.`)) {
+            this.toolCache.delete(key);
+          }
+        }
+
+        return {
+          moduleName,
+          recordsCleared: result.totalCleared,
+          success: true
+        };
+      } finally {
+        loader.verbose = originalVerbose;
       }
-
-      // Use LoadingManager's clearForReload with module filter
-      const result = await loader.clearForReload({
-        clearVectors: true,
-        clearModules: false, // Keep module discovery
-        moduleFilter: moduleName
-      });
-
-      return {
-        moduleName,
-        recordsCleared: result.totalCleared,
-        success: true
-      };
-    } finally {
-      loader.verbose = originalVerbose;
-    }
+    });
   }
 
   /**
@@ -652,29 +765,36 @@ export class ToolRegistry {
   async clearAllModules(options = {}) {
     await this._ensureInitialized();
 
-    const loader = await this.getLoader();
-    const originalVerbose = loader.verbose;
-    
-    try {
-      loader.verbose = options.verbose || false;
+    // Acquire global lock for all-module operation
+    return await this.globalOperationMutex.runExclusive(async () => {
+      const loader = await this.getLoader();
+      const originalVerbose = loader.verbose;
+      
+      try {
+        loader.verbose = options.verbose || false;
 
-      if (loader.verbose) {
-        console.log('🧹 Clearing all modules');
+        if (loader.verbose) {
+          console.log('🧹 Clearing all modules');
+        }
+
+        const result = await loader.clearForReload({
+          clearVectors: true,
+          clearModules: false // Keep module discovery
+        });
+
+        // Clear all caches
+        this.toolCache.clear();
+        this.moduleCache.clear();
+
+        return {
+          moduleName: 'all',
+          recordsCleared: result.totalCleared,
+          success: true
+        };
+      } finally {
+        loader.verbose = originalVerbose;
       }
-
-      const result = await loader.clearForReload({
-        clearVectors: true,
-        clearModules: false // Keep module discovery
-      });
-
-      return {
-        moduleName: 'all',
-        recordsCleared: result.totalCleared,
-        success: true
-      };
-    } finally {
-      loader.verbose = originalVerbose;
-    }
+    });
   }
 
   /**
@@ -692,54 +812,130 @@ export class ToolRegistry {
     await this._ensureInitialized();
 
     if (!moduleName || typeof moduleName !== 'string') {
-      throw new Error('Module name is required and must be a string');
+      throw new ValidationError('moduleName', 'non-empty string', moduleName);
     }
 
-    const loader = await this.getLoader();
-    const originalVerbose = loader.verbose;
+    // Get mutex for this module
+    const mutex = this.#getModuleMutex(moduleName);
     
-    try {
-      loader.verbose = options.verbose || false;
+    // Acquire lock for this module operation
+    return await mutex.runExclusive(async () => {
+      const loader = await this.getLoader();
+      const originalVerbose = loader.verbose;
+      
+      try {
+        loader.verbose = options.verbose || false;
 
-      if (loader.verbose) {
-        console.log(`📦 Loading module: ${moduleName}`);
-      }
-
-      // Load modules (append mode - no clearing)
-      const loadResult = await loader.loadModules({ module: moduleName });
-
-      let perspectivesGenerated = 0;
-      let vectorsIndexed = 0;
-
-      // Generate perspectives if requested
-      if (options.includePerspectives !== false) {
         if (loader.verbose) {
-          console.log(`📝 Generating perspectives for: ${moduleName}`);
+          console.log(`📦 Loading module: ${moduleName}`);
         }
-        const perspectiveResult = await loader.generatePerspectives({ module: moduleName });
-        perspectivesGenerated = perspectiveResult.perspectivesGenerated;
-      }
 
-      // Index vectors if requested
-      if (options.includeVectors) {
+        // Load modules (append mode - no clearing)
+        const result = await loader.loadModules({ module: moduleName });
+
+        // Check if module was actually found and loaded
+        // LoadingManager returns { loadResult, popResult, modulesLoaded, toolsAdded }
+        const toolsAdded = result.toolsAdded || 0;
+        const modulesLoaded = result.modulesLoaded || 0;
+        
+        // Check if module was actually loaded (even if no new tools were added due to duplicates)
+        if (modulesLoaded === 0 && toolsAdded === 0) {
+          if (loader.verbose) {
+            console.log(`⚠️ Module ${moduleName} not found`);
+          }
+          return {
+            moduleName,
+            modulesLoaded: 0,
+            toolsAdded: 0,
+            perspectivesGenerated: 0,
+            vectorsIndexed: 0,
+            success: false,
+            error: `Module '${moduleName}' not found`
+          };
+        }
+        
+        // If module was loaded but no tools added (likely duplicates), check if tools exist
+        if (toolsAdded === 0 && modulesLoaded > 0) {
+          // Check if tools already exist for this module
+          const existingTools = await this.listTools({ moduleName });
+          if (existingTools.length > 0) {
+            if (loader.verbose) {
+              console.log(`ℹ️ Module ${moduleName} already loaded with ${existingTools.length} existing tools`);
+            }
+            // This is success - module and tools already exist
+          } else {
+            if (loader.verbose) {
+              console.log(`⚠️ Module ${moduleName} loaded but contains no tools`);
+            }
+            return {
+              moduleName,
+              modulesLoaded: modulesLoaded,
+              toolsAdded: 0,
+              perspectivesGenerated: 0,
+              vectorsIndexed: 0,
+              success: false,
+              error: `Module '${moduleName}' contains no loadable tools`
+            };
+          }
+        }
+
+        let perspectivesGenerated = 0;
+        let vectorsIndexed = 0;
+
+        // Generate perspectives if requested
+        if (options.includePerspectives !== false) {
+          if (loader.verbose) {
+            console.log(`📝 Generating perspectives for: ${moduleName}`);
+          }
+          const perspectiveResult = await loader.generatePerspectives({ module: moduleName });
+          perspectivesGenerated = perspectiveResult.perspectivesGenerated;
+        }
+
+        // Index vectors if requested (requires embeddings first)
+        if (options.includeVectors) {
+          // Generate embeddings first
+          if (loader.verbose) {
+            console.log(`🧮 Generating embeddings for: ${moduleName}`);
+          }
+          await loader.generateEmbeddings({ module: moduleName });
+          
+          // Then index vectors
+          if (loader.verbose) {
+            console.log(`🚀 Indexing vectors for: ${moduleName}`);
+          }
+          const vectorResult = await loader.indexVectors({ module: moduleName });
+          vectorsIndexed = vectorResult.perspectivesIndexed;
+        }
+
+        // Clear module from cache to force reload on next access
+        this.moduleCache.delete(moduleName);
+
+        return {
+          moduleName,
+          modulesLoaded: modulesLoaded || 1, // Use the actual count or default to 1
+          toolsAdded: toolsAdded,
+          perspectivesGenerated,
+          vectorsIndexed,
+          success: true
+        };
+      } catch (error) {
+        // Handle any unexpected errors gracefully
         if (loader.verbose) {
-          console.log(`🚀 Indexing vectors for: ${moduleName}`);
+          console.log(`❌ Module loading failed for ${moduleName}: ${error.message}`);
         }
-        const vectorResult = await loader.indexVectors({ module: moduleName });
-        vectorsIndexed = vectorResult.perspectivesIndexed;
+        return {
+          moduleName,
+          modulesLoaded: 0,
+          toolsAdded: 0,
+          perspectivesGenerated: 0,
+          vectorsIndexed: 0,
+          success: false,
+          error: error.message
+        };
+      } finally {
+        loader.verbose = originalVerbose;
       }
-
-      return {
-        moduleName,
-        modulesLoaded: 1, // We're loading a specific module
-        toolsAdded: loadResult.toolsAdded,
-        perspectivesGenerated,
-        vectorsIndexed,
-        success: true
-      };
-    } finally {
-      loader.verbose = originalVerbose;
-    }
+    });
   }
 
   /**
@@ -780,8 +976,15 @@ export class ToolRegistry {
         perspectivesGenerated = perspectiveResult.perspectivesGenerated;
       }
 
-      // Index vectors if requested
+      // Index vectors if requested (requires embeddings first)
       if (options.includeVectors) {
+        // Generate embeddings first
+        if (loader.verbose) {
+          console.log('🧮 Generating embeddings for all modules');
+        }
+        await loader.generateEmbeddings({});
+        
+        // Then index vectors
         if (loader.verbose) {
           console.log('🚀 Indexing vectors for all modules');
         }
@@ -815,7 +1018,7 @@ export class ToolRegistry {
     await this._ensureInitialized();
 
     if (!moduleName || typeof moduleName !== 'string') {
-      throw new Error('Module name is required and must be a string');
+      throw new ValidationError('moduleName', 'non-empty string', moduleName);
     }
 
     const verifier = await this.getVerifier();
@@ -828,8 +1031,9 @@ export class ToolRegistry {
       const result = await verifier.verifyModule(moduleName);
       
       // Log results if requested
-      if (options.verbose) {
-        verifier.logResults(result);
+      if (options.verbose && result.errors && result.errors.length > 0) {
+        console.log(`❌ Module verification errors for ${moduleName}:`);
+        result.errors.forEach(error => console.log(`  - ${error}`));
       }
       
       return result;
@@ -886,8 +1090,9 @@ export class ToolRegistry {
       const result = await verifier.verifySystem();
       
       // Log results if requested
-      if (options.verbose) {
-        verifier.logResults(result);
+      if (options.verbose && result.errors && result.errors.length > 0) {
+        console.log(`❌ System verification errors:`);
+        result.errors.forEach(error => console.log(`  - ${error}`));
       }
       
       return result;
@@ -1047,15 +1252,59 @@ export class ToolRegistry {
    */
   async cleanup() {
     try {
-      // Close MongoDB connection if provider exists
-      if (this.provider && this.provider.cleanup) {
-        await this.provider.cleanup();
+      // Clear cache cleanup interval immediately
+      if (this.cacheCleanupInterval) {
+        clearInterval(this.cacheCleanupInterval);
+        this.cacheCleanupInterval = null;
       }
       
-      // Close any loader connections
-      if (this._loader && this._loader.cleanup) {
-        await this._loader.cleanup();
+      // Close MongoDB connection - simpler approach for tests
+      if (this.provider && this.provider.cleanup) {
+        try {
+          if (process.env.NODE_ENV === 'test') {
+            // In test mode, don't use timeouts to avoid open handles
+            await this.provider.cleanup();
+          } else {
+            // Production mode uses timeout protection
+            let timeoutHandle;
+            await Promise.race([
+              this.provider.cleanup(),
+              new Promise((_, reject) => {
+                timeoutHandle = setTimeout(() => reject(new Error('Provider cleanup timeout')), 5000);
+              })
+            ]);
+            if (timeoutHandle) clearTimeout(timeoutHandle);
+          }
+        } catch (error) {
+          console.warn('Provider cleanup failed:', error.message);
+        }
       }
+      
+      // Close any loader connections - simpler approach for tests
+      if (this._loader && this._loader.cleanup) {
+        try {
+          if (process.env.NODE_ENV === 'test') {
+            // In test mode, don't use timeouts to avoid open handles
+            await this._loader.cleanup();
+          } else {
+            // Production mode uses timeout protection
+            let timeoutHandle;
+            await Promise.race([
+              this._loader.cleanup(),
+              new Promise((_, reject) => {
+                timeoutHandle = setTimeout(() => reject(new Error('Loader cleanup timeout')), 5000);
+              })
+            ]);
+            if (timeoutHandle) clearTimeout(timeoutHandle);
+          }
+        } catch (error) {
+          console.warn('Loader cleanup failed:', error.message);
+        }
+      }
+      
+      // Clear caches
+      this.toolCache.clear();
+      this.moduleCache.clear();
       
       // Reset singleton instance for testing
       if (process.env.NODE_ENV === 'test') {

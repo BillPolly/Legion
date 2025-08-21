@@ -15,7 +15,7 @@ export class IndexVectorsStage {
     this.verifier = dependencies.verifier;
     this.stateManager = dependencies.stateManager;
     this.batchSize = dependencies.batchSize || 100; // Qdrant batch size
-    this.collectionName = 'tool_perspectives';
+    this.collectionName = 'legion_tools'; // Qdrant collection name (not MongoDB collection name)
   }
 
   /**

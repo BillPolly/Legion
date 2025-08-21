@@ -44,7 +44,8 @@ export class ModuleLoader {
       });
     }
     
-    // Load modules from database where discovery put them
+    // Load modules from registry where discovery put them  
+    // NOTE: Use module_registry collection (where discovery saves modules), not modules collection (runtime state)
     let query = { 
       loadable: { $ne: false }  // Include all loadable modules
     };
@@ -57,7 +58,7 @@ export class ModuleLoader {
       ];
     }
     
-    let modules = await this.databaseProvider.databaseService.mongoProvider.find('modules', query);
+    let modules = await this.databaseProvider.databaseService.mongoProvider.find('module_registry', query);
     
     if (this.verbose) {
       console.log(`📋 Found ${modules.length} modules in database`);
@@ -85,6 +86,10 @@ export class ModuleLoader {
           
           // Update loading status to success, but respect cleared state
           const tools = module.getTools ? module.getTools() : [];
+          
+          // Map 'json' type to 'module.json' for MongoDB validation
+          const moduleType = moduleConfig.type === 'json' ? 'module.json' : (moduleConfig.type || 'class');
+          
           const updateData = {
             $set: {
               loadingStatus: wasRecentlyCleared ? 'unloaded' : 'loaded',
@@ -97,7 +102,7 @@ export class ModuleLoader {
             $setOnInsert: {
               name: moduleConfig.name || 'unknown',
               description: moduleConfig.description || `${moduleConfig.name || 'unknown'} module successfully loaded into the tool registry system. This module provides various tools and functionality within the Legion framework ecosystem.`,
-              type: moduleConfig.type || 'class',
+              type: moduleType,
               path: moduleConfig.path || 'unknown',
               createdAt: new Date(),
               status: 'active'
@@ -113,7 +118,8 @@ export class ModuleLoader {
           await this.databaseProvider.databaseService.mongoProvider.update(
             'modules',
             { _id: moduleConfig._id },
-            updateData
+            updateData,
+            { upsert: true }  // Allow creating document if it doesn't exist
           );
           
           loadedModules.push({
@@ -126,6 +132,9 @@ export class ModuleLoader {
           }
         }
       } catch (error) {
+        // Map 'json' type to 'module.json' for MongoDB validation
+        const moduleType = moduleConfig.type === 'json' ? 'module.json' : (moduleConfig.type || 'class');
+        
         // Update loading status to failed
         await this.databaseProvider.databaseService.mongoProvider.update(
           'modules',
@@ -135,8 +144,17 @@ export class ModuleLoader {
               loadingStatus: 'failed',
               loadingError: error.message,
               lastLoadedAt: new Date()
+            },
+            $setOnInsert: {
+              name: moduleConfig.name || 'unknown',
+              description: moduleConfig.description || `${moduleConfig.name || 'unknown'} module failed to load`,
+              type: moduleType,
+              path: moduleConfig.path || 'unknown',
+              createdAt: new Date(),
+              status: 'maintenance'  // Use valid enum value - 'maintenance' indicates module needs attention
             }
-          }
+          },
+          { upsert: true }  // Allow creating document if it doesn't exist
         );
         
         failedModules.push({

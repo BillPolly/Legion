@@ -923,20 +923,25 @@ export class SemanticToolDiscovery {
       return tools;
     }
 
-    return tools.map(toolInfo => {
-      const toolInstance = this.toolRegistry.getTool(toolInfo.name);
-      if (toolInstance) {
-        return {
-          ...toolInfo,
-          instance: toolInstance,
-          available: true
-        };
+    return Promise.all(tools.map(async toolInfo => {
+      try {
+        const toolInstance = await this.toolRegistry.getTool(toolInfo.name);
+        if (toolInstance) {
+          return {
+            ...toolInfo,
+            instance: toolInstance,
+            available: true
+          };
+        }
+      } catch (error) {
+        // Tool might not be available anymore (e.g., module was cleared)
+        // This is OK - just mark as unavailable
       }
       return {
         ...toolInfo,
         available: false
       };
-    });
+    }));
   }
 
   /**

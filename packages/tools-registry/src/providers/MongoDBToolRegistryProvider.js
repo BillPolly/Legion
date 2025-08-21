@@ -971,7 +971,7 @@ export class MongoDBToolRegistryProvider extends IToolRegistryProvider {
           // Create searchable text from tool data
           const searchText = `${tool.name} ${tool.description || ''} ${tool.summary || ''}`.trim();
           
-          // Generate embedding using LOCAL ONNX only
+          // Generate embedding using LOCAL Nomic only
           const embeddings = await toolSemanticProvider.embeddingService.generateEmbeddings([searchText]);
           
           if (embeddings && embeddings.length > 0) {

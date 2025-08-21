@@ -259,11 +259,22 @@ export class QdrantVectorStore {
     
     const { limit = 10, threshold = 0, filter = {} } = options;
     
+    // Convert simple filter format to Qdrant filter format
+    let qdrantFilter = undefined;
+    if (Object.keys(filter).length > 0) {
+      qdrantFilter = {
+        must: Object.entries(filter).map(([key, value]) => ({
+          key: key,
+          match: { value: value }
+        }))
+      };
+    }
+    
     const results = await this.client.search(collection, {
       vector: queryVector,
       limit,
       score_threshold: threshold,
-      filter: Object.keys(filter).length > 0 ? filter : undefined,
+      filter: qdrantFilter,
       with_payload: true,
       with_vector: options.includeVectors
     });
@@ -288,9 +299,20 @@ export class QdrantVectorStore {
     // Qdrant doesn't have a direct "find" - use scroll with filter
     const { limit = 100 } = options;
     
+    // Convert simple filter format to Qdrant filter format
+    let qdrantFilter = undefined;
+    if (Object.keys(filter).length > 0) {
+      qdrantFilter = {
+        must: Object.entries(filter).map(([key, value]) => ({
+          key: key,
+          match: { value: value }
+        }))
+      };
+    }
+    
     try {
       const result = await this.client.scroll(collection, {
-        filter: Object.keys(filter).length > 0 ? filter : undefined,
+        filter: qdrantFilter,
         limit,
         with_payload: true
       });

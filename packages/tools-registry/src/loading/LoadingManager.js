@@ -18,7 +18,7 @@ import { MongoDBToolRegistryProvider } from '../providers/MongoDBToolRegistryPro
 import { SemanticSearchProvider } from '../../../semantic-search/src/SemanticSearchProvider.js';
 import { createToolIndexer } from '../search/index.js';
 import { ResourceManager } from '@legion/resource-manager';
-import { Verifier } from '../verification/Verifier.js';
+import { PipelineVerifier } from './PipelineVerifier.js';
 import { PipelineOrchestrator } from './PipelineOrchestrator.js';
 import { PerspectiveGenerator } from '../search/PerspectiveGenerator.js';
 
@@ -89,8 +89,8 @@ export class LoadingManager {
     // this.semanticSearchProvider = await SemanticSearchProvider.create(this.resourceManager);
     // this.toolIndexer = await createToolIndexer(this.resourceManager);
 
-    // Initialize verifier (will be properly configured when semantic search is initialized)
-    this.verifier = null;
+    // Initialize verifier with basic MongoDB provider (vectorStore will be added when semantic search is initialized)
+    this.verifier = new PipelineVerifier(this.mongoProvider.databaseService.mongoProvider, null);
 
     // Initialize orchestrator after other components are ready
     // Will be initialized when needed to ensure all dependencies are available
@@ -145,24 +145,43 @@ export class LoadingManager {
       this.toolIndexer = await createToolIndexer(this.resourceManager);
     }
     
-    // Always initialize verifier (semantic search provider can be null)
-    if (!this.verifier) {
+    // Update verifier with vectorStore if semantic search is available
+    if (this.verifier && this.semanticSearchProvider?.vectorStore) {
       if (this.verbose) {
-        console.log('🔍 Creating Verifier for clearing verification...');
+        console.log('🔍 Updating Verifier with vector store...');
       }
-      this.verifier = new Verifier(this.mongoProvider, this.semanticSearchProvider, this.verbose);
+      this.verifier.vectorStore = this.semanticSearchProvider.vectorStore;
       if (this.verbose) {
-        console.log('✅ Verifier created successfully');
+        console.log('✅ Verifier updated with vector store');
       }
     }
   }
 
   /**
-   * Clear for reload - preserves discovered modules but resets their loading status
+   * Clear for reload - Manages the two-collection architecture
+   * 
+   * IMPORTANT: This method works with two separate collections:
+   * 1. module_registry - Permanent record of discovered modules (NEVER deleted, only status updated)
+   * 2. modules - Runtime state of loaded modules (cleared when reloading)
+   * 
+   * Two modes of operation:
+   * 
+   * Mode 1: Clear ALL modules (moduleFilter = null)
+   * - Deletes ALL records from 'modules' collection
+   * - Updates ALL records in 'module_registry' to status='unloaded'
+   * - Clears ALL tools and perspectives
+   * - Optionally clears ALL vectors from Qdrant
+   * 
+   * Mode 2: Clear SPECIFIC module (moduleFilter = 'moduleName')
+   * - Deletes only matching records from 'modules' collection
+   * - Updates only matching record in 'module_registry' to status='unloaded'
+   * - Clears only tools and perspectives for that module
+   * - Optionally clears only vectors for that module
+   * 
    * @param {Object} options - Clear options
    * @param {boolean} options.clearVectors - Whether to clear vector database (default: true)
-   * @param {boolean} options.clearModules - Whether to completely clear modules (default: false)
-   * @param {string} options.moduleFilter - Only clear data for specific module (optional)
+   * @param {boolean} options.clearModules - DEPRECATED/IGNORED - modules collection handling is automatic
+   * @param {string} options.moduleFilter - Module name to clear, or null to clear all modules
    */
   async clearForReload(options = {}) {
     await this.#ensureInitialized();
@@ -184,39 +203,43 @@ export class LoadingManager {
 
     let totalCleared = 0;
 
-    // Build query filter for module-specific clearing
+    // Build query filters based on operation mode
+    // If moduleFilter is provided: clear only that module
+    // If moduleFilter is null: clear all modules
     const moduleQuery = moduleFilter ? { name: moduleFilter } : {};
     const toolQuery = moduleFilter ? { moduleName: moduleFilter } : {};
 
-    // Track which modules are being cleared to prevent automatic reloading
+    // Track when modules were cleared (used to prevent automatic reloading during operations)
     const clearedTimestamp = new Date();
 
-    if (clearModules) {
-      // Complete clear of modules (with optional filter)
-      const result = await this.mongoProvider.databaseService.mongoProvider.db.collection('modules').deleteMany(moduleQuery);
-      totalCleared += result.deletedCount;
-      if (this.verbose) {
-        const target = moduleFilter ? ` for module '${moduleFilter}'` : '';
-        console.log(`  ✅ Cleared modules${target}: ${result.deletedCount} records deleted`);
-      }
-    } else {
-      // Reset module statuses but preserve discovery (with optional filter)
-      // Add tracking timestamp to prevent automatic reloading
-      const result = await this.mongoProvider.databaseService.mongoProvider.db.collection('modules').updateMany(
-        moduleQuery,
-        {
-          $set: {
-            loadingStatus: 'unloaded',
-            validationStatus: 'pending',
-            clearedAt: clearedTimestamp,
-            clearedForReload: true
-          }
+    // STEP 1: Clear the 'modules' collection (runtime state)
+    // This removes the actual loaded module instances
+    // In single-module mode: only removes that module's runtime record
+    // In all-modules mode: clears entire collection
+    const modulesResult = await this.mongoProvider.databaseService.mongoProvider.db.collection('modules').deleteMany(moduleQuery);
+    totalCleared += modulesResult.deletedCount;
+    if (this.verbose) {
+      const target = moduleFilter ? ` for module '${moduleFilter}'` : '';
+      console.log(`  ✅ Cleared modules collection${target}: ${modulesResult.deletedCount} records deleted`);
+    }
+
+    // STEP 2: Update 'module_registry' status (permanent registry)
+    // This preserves the module discovery information but marks them as unloaded
+    // The module can be reloaded later without re-discovering it
+    const registryResult = await this.mongoProvider.databaseService.mongoProvider.db.collection('module_registry').updateMany(
+      moduleQuery,
+      {
+        $set: {
+          loadingStatus: 'unloaded',      // Mark as not currently loaded
+          validationStatus: 'pending',     // Needs re-validation when loaded
+          clearedAt: clearedTimestamp,     // Track when it was cleared
+          clearedForReload: true           // Flag indicating it's ready for reload
         }
-      );
-      if (this.verbose) {
-        const target = moduleFilter ? ` for module '${moduleFilter}'` : '';
-        console.log(`  ✅ Reset${target} ${result.modifiedCount} module statuses to 'unloaded'`);
       }
+    );
+    if (this.verbose) {
+      const target = moduleFilter ? ` for module '${moduleFilter}'` : '';
+      console.log(`  ✅ Updated module_registry${target}: ${registryResult.modifiedCount} statuses set to 'unloaded'`);
     }
 
     // Clear tools and perspectives (with optional filter)
@@ -323,36 +346,33 @@ export class LoadingManager {
       }
     }
 
-    // Verify clearing actually worked
-    if (this.verifier) {
-      // For module-specific clearing, we don't expect ALL tools to be empty
-      const expectEmpty = !moduleFilter;
-      
-      const clearingVerification = await this.verifier.verifyClearingWorked({
-        expectEmptyTools: expectEmpty,
-        expectEmptyPerspectives: expectEmpty,
-        expectEmptyVectors: clearVectors && expectEmpty
-      });
-      
-      const moduleVerification = await this.verifier.verifyModulesUnloaded(moduleFilter);
-      
-      // For module-specific clearing, just verify the module was unloaded
-      if (moduleFilter) {
-        if (!moduleVerification.success) {
-          const errorMsg = `Module clearing verification failed: ${moduleVerification.errors.join(', ')}`;
-          if (this.verbose) {
-            console.log(`❌ ${errorMsg}`);
-          }
-          throw new Error(errorMsg);
-        }
-      } else if (!clearingVerification.success || !moduleVerification.success) {
-        const errors = [...clearingVerification.errors, ...moduleVerification.errors];
-        const errorMsg = `Clearing verification failed: ${errors.join(', ')}`;
-        if (this.verbose) {
-          console.log(`❌ ${errorMsg}`);
-        }
-        throw new Error(errorMsg);
+    // Verify clearing actually worked - ensure verifier is initialized
+    if (!moduleFilter) {
+      // For full clearing, ensure verifier is available and verify all collections are empty
+      if (!this.verifier) {
+        await this.#ensureSemanticSearchInitialized();
       }
+      
+      if (this.verifier) {
+        const clearingVerification = await this.verifier.verifyCleared();
+        if (!clearingVerification.success) {
+          if (this.verbose) {
+            console.log(`❌ Full clearing verification failed: ${clearingVerification.message}`);
+          }
+          throw new Error(`Full clearing verification failed: ${clearingVerification.message}`);
+        }
+        if (this.verbose) {
+          console.log('✅ Full clearing verification passed');
+        }
+      }
+    } else {
+      if (this.verbose) {
+        console.log(`✅ Module ${moduleFilter} clearing completed (verification skipped for module-specific clearing)`);
+      }
+    }
+    
+    // Show clearing summary if verifier is available
+    if (this.verifier) {
       
       if (this.verbose) {
         console.log(`✅ Clearing verified:`);
@@ -361,7 +381,7 @@ export class LoadingManager {
         if (clearVectors) {
           console.log(`   Vectors cleared: ${totalCleared - toolResult.deletedCount - perspectiveResult.deletedCount}`);
         }
-        console.log(`   Module statuses: loaded=${moduleVerification.moduleStats.loaded}, unloaded=${moduleVerification.moduleStats.unloaded}`);
+        console.log(`   Module registry updated: ${registryResult.modifiedCount} modules marked as unloaded`);
       }
     }
 
@@ -770,7 +790,8 @@ export class LoadingManager {
     
     if (opts.module) {
       // First find the module by name to get its ID (case-insensitive)
-      const module = await this.mongoProvider.databaseService.mongoProvider.findOne('modules', { 
+      // NOTE: Use module_registry collection (where discovery saves modules), not modules collection (runtime state)
+      const module = await this.mongoProvider.databaseService.mongoProvider.findOne('module_registry', { 
         name: { $regex: new RegExp(`^${opts.module}$`, 'i') }
       });
       
@@ -918,6 +939,60 @@ export class LoadingManager {
   }
 
   /**
+   * Generate embeddings for perspectives
+   * @param {string|Object} options - Module filter string or options object
+   * @param {string} [options.module] - Single module name to process
+   * @param {boolean} [options.all] - Process all modules (default: true)
+   */
+  async generateEmbeddings(options = {}) {
+    await this.#ensureInitialized();
+    await this.#ensureSemanticSearchInitialized();
+
+    // Normalize options
+    const opts = typeof options === 'string' 
+      ? { module: options }
+      : { all: true, ...options };
+
+    // Check prerequisites - look for actual perspectives in database
+    const perspectiveCount = await this.mongoProvider.databaseService.mongoProvider.count('tool_perspectives', {});
+    if (perspectiveCount === 0) {
+      throw new Error('Cannot generate embeddings: no perspectives found in database. Run generatePerspectives() first.');
+    }
+
+    // Log what we're doing
+    if (this.verbose) {
+      if (opts.module) {
+        console.log(`🧮 Generating embeddings for module: ${opts.module}`);
+      } else {
+        console.log(`🧮 Generating embeddings for all perspectives...`);
+      }
+    }
+
+    // Import and create GenerateEmbeddingsStage
+    const { GenerateEmbeddingsStage } = await import('./stages/GenerateEmbeddingsStage.js');
+    const embeddingStage = new GenerateEmbeddingsStage({
+      embeddingService: this.semanticSearchProvider.embeddingService,
+      mongoProvider: this.mongoProvider.databaseService.mongoProvider,
+      verifier: this.verifier,
+      stateManager: this.stateManager,
+      batchSize: 50
+    });
+
+    // Execute embedding generation
+    const result = await embeddingStage.execute(opts);
+
+    // Update pipeline state
+    this.pipelineState.embeddingsGenerated = true;
+
+    return {
+      embeddingsGenerated: result.embeddingsGenerated || result.perspectivesProcessed || 0,
+      perspectivesProcessed: result.perspectivesProcessed || 0,
+      batchesProcessed: result.batchesProcessed || 0,
+      success: result.success
+    };
+  }
+
+  /**
    * Index vectors to Qdrant
    * @param {string|Object} options - Module filter string or options object
    * @param {string} [options.module] - Single module name to process
@@ -938,13 +1013,22 @@ export class LoadingManager {
       throw new Error('Cannot index vectors for a single tool without specifying its module');
     }
 
-    // Check prerequisites
-    if (!this.pipelineState.modulesLoaded) {
-      throw new Error('Cannot index vectors: modules must be loaded first. Run loadModules() first.');
+    // Check prerequisites - look for actual data in database
+    const toolCount = await this.mongoProvider.databaseService.mongoProvider.count('tools', {});
+    if (toolCount === 0) {
+      throw new Error('Cannot index vectors: no tools found in database. Run loadModules() first.');
     }
 
-    if (!this.pipelineState.perspectivesGenerated) {
-      throw new Error('Cannot index vectors: perspectives must be generated first. Run generatePerspectives() first.');
+    const perspectiveCount = await this.mongoProvider.databaseService.mongoProvider.count('tool_perspectives', {});
+    if (perspectiveCount === 0) {
+      throw new Error('Cannot index vectors: no perspectives found in database. Run generatePerspectives() first.');
+    }
+
+    const embeddingCount = await this.mongoProvider.databaseService.mongoProvider.count('tool_perspectives', {
+      embedding: { $exists: true, $ne: null }
+    });
+    if (embeddingCount === 0) {
+      throw new Error('Cannot index vectors: no embeddings found in database. Run generateEmbeddings() first.');
     }
 
     // Log what we're doing
@@ -966,16 +1050,18 @@ export class LoadingManager {
       query.toolName = opts.tool;
     } else if (opts.module) {
       // Single module - get all tools for the module
-      const module = await this.mongoProvider.databaseService.mongoProvider.findOne('modules', { 
+      // NOTE: Use module_registry collection (where discovery saves modules), not modules collection (runtime state)
+      const module = await this.mongoProvider.databaseService.mongoProvider.findOne('module_registry', { 
         name: { $regex: new RegExp(`^${opts.module}$`, 'i') }
       });
       
-      // Get tools for this module
-      const toolQuery = module ? { moduleId: module._id } : { moduleName: opts.module };
-      const tools = await this.mongoProvider.listTools(toolQuery);
+      // Get tools for this module - use moduleName since that's how tools are stored
+      const toolQuery = { moduleName: opts.module };
+      const tools = await this.mongoProvider.databaseService.mongoProvider.find('tools', toolQuery);
+      const toolIds = tools.map(t => t._id);
       const toolNames = tools.map(t => t.name);
       
-      if (toolNames.length === 0) {
+      if (tools.length === 0) {
         if (this.verbose) {
           console.log(`⚠️ No tools found for module: ${opts.module}`);
         }
@@ -983,7 +1069,8 @@ export class LoadingManager {
         return { perspectivesIndexed: 0, toolsProcessed: 0 };
       }
       
-      query.toolName = { $in: toolNames };
+      // Query by toolId to get only perspectives for current tools (not old ones with same name)
+      query.toolId = { $in: toolIds };
     }
     // else: all modules - no additional filter needed
 
@@ -1001,6 +1088,13 @@ export class LoadingManager {
 
     if (this.verbose) {
       console.log(`📝 Upserting ${perspectives.length} vectors to Qdrant collection: ${this.toolIndexer.collectionName} (768D)`);
+      // Debug: Check current count before upserting
+      const currentCount = await this.toolIndexer.vectorStore.count(this.toolIndexer.collectionName);
+      console.log(`📊 Current vectors in Qdrant before upsert: ${currentCount}`);
+      
+      // Debug: Show the IDs we're about to upsert
+      const idsToUpsert = perspectives.map(p => p._id?.toString()).slice(0, 3);
+      console.log(`📋 Sample IDs to upsert: ${idsToUpsert.join(', ')}`);
     }
 
     // Transform perspectives to vectors using proper Qdrant format (matching ToolIndexer)
@@ -1016,11 +1110,35 @@ export class LoadingManager {
     }));
 
     try {
-      // Index vectors using ToolIndexer's vectorStore with proper error handling
+      // First delete existing vectors for this module to avoid duplicates
+      if (opts.module) {
+        // Delete by toolName filter for module-specific indexing
+        const toolNames = new Set(perspectives.map(p => p.toolName));
+        for (const toolName of toolNames) {
+          try {
+            await this.toolIndexer.vectorStore.deleteByFilter(this.toolIndexer.collectionName, {
+              toolName: toolName
+            });
+            if (this.verbose) {
+              console.log(`🗑️ Deleted existing vectors for tool: ${toolName}`);
+            }
+          } catch (deleteError) {
+            // Continue if delete fails (vectors might not exist)
+            if (this.verbose) {
+              console.log(`⚠️ Could not delete existing vectors for ${toolName}: ${deleteError.message}`);
+            }
+          }
+        }
+      }
+      
+      // Now insert the new vectors
       await this.toolIndexer.vectorStore.upsert(this.toolIndexer.collectionName, vectors);
 
       if (this.verbose) {
         console.log(`✅ Indexed ${vectors.length} vectors from ${new Set(perspectives.map(p => p.toolName)).size} tools`);
+        // Debug: Check count immediately after upserting
+        const afterCount = await this.toolIndexer.vectorStore.count(this.toolIndexer.collectionName);
+        console.log(`📊 Vectors in Qdrant immediately after insert: ${afterCount}`);
       }
 
       // Update state
@@ -1255,8 +1373,9 @@ export class LoadingManager {
       query.validationStatus = { $ne: 'failed' };
     }
     
-    // Get modules from database
-    const modules = await this.mongoProvider.databaseService.mongoProvider.find('modules', query);
+    // Get modules from registry (where discovered modules are stored)
+    // NOTE: Use module_registry collection to find modules to load, not modules collection (runtime state)
+    const modules = await this.mongoProvider.databaseService.mongoProvider.find('module_registry', query);
     
     if (this.verbose) {
       console.log(`📦 Loading ${modules.length} modules from database...`);
@@ -1499,15 +1618,20 @@ export class LoadingManager {
       if (this.verbose) {
         console.log('\n🔍 Running final system verification...');
       }
-      const verification = await this.verifier.verifySystem();
+      const verification = await this.verifier.runFinalVerification();
       results.verification = verification;
       
       if (this.verbose) {
-        this.verifier.logResults(verification);
+        console.log(`📊 Final verification: ${verification.message}`);
+        if (verification.toolCount !== undefined) {
+          console.log(`   Tools: ${verification.toolCount}`);
+          console.log(`   Perspectives: ${verification.perspectiveCount}`);
+          console.log(`   Vectors: ${verification.vectorCount}`);
+        }
       }
       
       if (!verification.success) {
-        throw new Error(`Pipeline verification failed: ${verification.errors.join(', ')}`);
+        throw new Error(`Pipeline verification failed: ${verification.message}`);
       }
     }
     

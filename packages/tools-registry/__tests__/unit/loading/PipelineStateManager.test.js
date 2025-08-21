@@ -28,6 +28,13 @@ describe('PipelineStateManager', () => {
           return false;
         }) || null;
       }),
+      find: jest.fn(async (collection, query) => {
+        return mockStateData.states.filter(state => {
+          if (query.active !== undefined) return state.active === query.active;
+          if (query._id) return state._id.toString() === query._id.toString();
+          return true;  // Return all if no query
+        });
+      }),
       update: jest.fn(async (collection, query, update, options = {}) => {
         // Handle multi option
         if (options.multi) {
@@ -165,14 +172,7 @@ describe('PipelineStateManager', () => {
     it('should create a new pipeline state', async () => {
       await stateManager.reset();
       
-      // Check that a new active state was created
-      expect(mockMongoProvider.update).toHaveBeenCalledWith(
-        testCollectionName,
-        { active: true },
-        { $set: { active: false } },
-        { multi: true }
-      );
-      
+      // Check that insert was called for the new active state
       expect(mockMongoProvider.insert).toHaveBeenCalledWith(
         testCollectionName,
         expect.objectContaining({
@@ -186,8 +186,9 @@ describe('PipelineStateManager', () => {
 
     it('should deactivate existing states', async () => {
       // Create an existing active state in mock data
+      const existingStateId = new ObjectId();
       mockStateData.states.push({
-        _id: new ObjectId(),
+        _id: existingStateId,
         active: true,
         status: 'in_progress',
         startedAt: new Date()
@@ -195,12 +196,11 @@ describe('PipelineStateManager', () => {
 
       await stateManager.reset();
       
-      // Check that existing states were deactivated
+      // Check that existing states were deactivated (individual updates, not multi)
       expect(mockMongoProvider.update).toHaveBeenCalledWith(
         testCollectionName,
-        { active: true },
-        { $set: { active: false } },
-        { multi: true }
+        { _id: existingStateId },
+        { $set: { active: false } }
       );
       
       // Verify a new state was added to mock data

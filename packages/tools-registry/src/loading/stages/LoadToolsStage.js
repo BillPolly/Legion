@@ -42,12 +42,21 @@ export class LoadToolsStage {
           allTools.push(...tools);
           successCount++;
           console.log(`    ✓ Loaded ${tools.length} tools from ${moduleRecord.name}`);
+          
+          // Save module to modules collection (runtime state)
+          await this.saveModuleRuntimeState(moduleRecord, tools.length, 'loaded');
+          
+          // Update module_registry status
+          await this.updateModuleRegistryStatus(moduleRecord.name, 'loaded');
         } else {
           console.log(`    ⚠️ No tools found in ${moduleRecord.name}`);
+          await this.saveModuleRuntimeState(moduleRecord, 0, 'loaded');
+          await this.updateModuleRegistryStatus(moduleRecord.name, 'loaded');
         }
       } catch (error) {
         failCount++;
         console.log(`    ❌ Failed to load ${moduleRecord.name}: ${error.message}`);
+        await this.updateModuleRegistryStatus(moduleRecord.name, 'failed');
       }
     }
     
@@ -74,24 +83,24 @@ export class LoadToolsStage {
   }
 
   /**
-   * Get modules to load from discovery
+   * Get modules to load from module registry
    */
   async getModulesToLoad(specificModule) {
     if (specificModule) {
-      // Load specific module
-      const module = await this.mongoProvider.findOne('modules', {
+      // Load specific module from registry
+      const module = await this.mongoProvider.findOne('module_registry', {
         name: specificModule
       });
       
       if (!module) {
-        throw new Error(`Module ${specificModule} not found in discovery`);
+        throw new Error(`Module ${specificModule} not found in module registry`);
       }
       
       return [module];
     }
     
-    // Load all discovered modules
-    const modules = await this.mongoProvider.find('modules', {
+    // Load all discovered modules from registry
+    const modules = await this.mongoProvider.find('module_registry', {
       enabled: { $ne: false }
     });
     
@@ -228,6 +237,35 @@ export class LoadToolsStage {
       console.error('  ❌ Error saving tools:', error.message);
       throw error;
     }
+  }
+
+  /**
+   * Save module runtime state to modules collection
+   */
+  async saveModuleRuntimeState(moduleRecord, toolCount, status) {
+    await this.mongoProvider.insertOne('modules', {
+      ...moduleRecord,
+      _id: new ObjectId(), // New ID for runtime record
+      registryId: moduleRecord._id, // Reference to registry
+      toolCount,
+      loadingStatus: status,
+      loadedAt: new Date()
+    });
+  }
+
+  /**
+   * Update module status in module_registry
+   */
+  async updateModuleRegistryStatus(moduleName, status) {
+    await this.mongoProvider.updateOne('module_registry', 
+      { name: moduleName },
+      { 
+        $set: { 
+          loadingStatus: status,
+          lastLoadedAt: new Date()
+        }
+      }
+    );
   }
 
   /**

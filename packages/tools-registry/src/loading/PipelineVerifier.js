@@ -33,14 +33,16 @@ export class PipelineVerifier {
       const toolCount = await this.mongoProvider.count('tools', {});
       const perspectiveCount = await this.mongoProvider.count('tool_perspectives', {});
       
-      // Check Qdrant
+      // Check Qdrant (only if vectorStore is available)
       let vectorCount = 0;
-      try {
-        vectorCount = await this.vectorStore.count(this.collectionName);
-      } catch (error) {
-        // Collection might not exist, which is fine for clear verification
-        if (!error.message.includes('not found')) {
-          throw error;
+      if (this.vectorStore) {
+        try {
+          vectorCount = await this.vectorStore.count(this.collectionName);
+        } catch (error) {
+          // Collection might not exist, which is fine for clear verification
+          if (!error.message.includes('not found')) {
+            throw error;
+          }
         }
       }
 
@@ -53,20 +55,22 @@ export class PipelineVerifier {
         );
       }
 
-      // Verify Qdrant collection exists with correct dimensions
-      try {
-        const collectionInfo = await this.vectorStore.client.getCollection(this.collectionName);
-        const dimension = collectionInfo?.config?.params?.vectors?.size;
-        
-        if (dimension !== 768) {
-          return this.createResult(false,
-            `Qdrant collection has wrong dimensions! Expected 768, got ${dimension}`,
-            { actualDimension: dimension }
-          );
+      // Verify Qdrant collection exists with correct dimensions (only if vectorStore is available)
+      if (this.vectorStore) {
+        try {
+          const collectionInfo = await this.vectorStore.client.getCollection(this.collectionName);
+          const dimension = collectionInfo?.config?.params?.vectors?.size;
+          
+          if (dimension !== 768) {
+            return this.createResult(false,
+              `Qdrant collection has wrong dimensions! Expected 768, got ${dimension}`,
+              { actualDimension: dimension }
+            );
+          }
+        } catch (error) {
+          // Collection doesn't exist yet, will be created
+          console.log('Qdrant collection will be created with correct dimensions');
         }
-      } catch (error) {
-        // Collection doesn't exist yet, will be created
-        console.log('Qdrant collection will be created with correct dimensions');
       }
 
       return this.createResult(true, 'All collections cleared and ready', {
@@ -335,6 +339,221 @@ export class PipelineVerifier {
 
     } catch (error) {
       return this.createResult(false, `Sample verification failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Quick health check - essential validations only
+   * Fast check for critical issues without full verification
+   * 
+   * @returns {Promise<Object>}
+   */
+  async quickHealthCheck() {
+    try {
+      const counts = await this.getCounts();
+      const ratios = this.calculateRatios(counts);
+      
+      const health = {
+        healthy: true,
+        issues: [],
+        counts,
+        ratios
+      };
+
+      // Get current tools (active in the system)
+      const currentTools = await this.mongoProvider.find('tools', {});
+      const currentToolIds = currentTools.map(t => t._id);
+      
+      // Only count perspectives with embeddings that belong to current tools
+      // This handles cases where old perspectives exist from previous test runs
+      const perspectivesWithEmbeddings = await this.mongoProvider.count('tool_perspectives', {
+        toolId: { $in: currentToolIds },
+        embedding: { $exists: true, $ne: null, $ne: [] }
+      });
+
+      // Critical checks only
+      if (perspectivesWithEmbeddings !== counts.vectors) {
+        health.healthy = false;
+        health.issues.push(`Perspective/Vector mismatch: ${perspectivesWithEmbeddings} perspectives with embeddings vs ${counts.vectors} vectors`);
+      }
+
+      if (ratios.perspectivesPerTool > 15) {
+        health.healthy = false;
+        health.issues.push(`Excessive perspectives per tool: ${ratios.perspectivesPerTool.toFixed(2)} - possible accumulation`);
+      }
+
+      return health;
+    } catch (error) {
+      return {
+        healthy: false,
+        issues: [`Health check failed: ${error.message}`],
+        counts: {},
+        ratios: {}
+      };
+    }
+  }
+
+  /**
+   * Get counts from all databases
+   * @returns {Promise<Object>}
+   */
+  async getCounts() {
+    const counts = {};
+    
+    try {
+      // MongoDB counts
+      counts.modules = await this.mongoProvider.count('modules', {});
+      counts.tools = await this.mongoProvider.count('tools', {});
+      counts.perspectives = await this.mongoProvider.count('tool_perspectives', {});
+    } catch (error) {
+      console.error('Error getting MongoDB counts:', error.message);
+      counts.modules = 0;
+      counts.tools = 0;
+      counts.perspectives = 0;
+    }
+    
+    // Qdrant count
+    try {
+      counts.vectors = await this.vectorStore.count(this.collectionName);
+    } catch (error) {
+      counts.vectors = 0;
+    }
+
+    return counts;
+  }
+
+  /**
+   * Calculate ratios from counts
+   * @param {Object} counts - Database counts
+   * @returns {Object} Calculated ratios
+   */
+  calculateRatios(counts) {
+    const ratios = {};
+    
+    if (counts.tools > 0) {
+      ratios.perspectivesPerTool = counts.perspectives / counts.tools;
+      ratios.vectorsPerTool = counts.vectors / counts.tools;
+    }
+    
+    if (counts.perspectives > 0) {
+      ratios.vectorsPerPerspective = counts.vectors / counts.perspectives;
+    }
+
+    return ratios;
+  }
+
+  /**
+   * Verify a specific module's integrity
+   * @param {string} moduleName - Name of module to verify
+   * @returns {Promise<Object>} Verification result
+   */
+  async verifyModule(moduleName) {
+    try {
+      // Get tools for this module (tools are the primary indicator of a loaded module)
+      const tools = await this.mongoProvider.find('tools', { moduleName });
+      const toolCount = tools.length;
+
+      if (toolCount === 0) {
+        return this.createResult(false, `Module not found: ${moduleName}`, {
+          moduleName,
+          errors: [`Module not found: ${moduleName}`],
+          counts: { modules: 0, tools: 0, perspectives: 0, vectors: 0 },
+          ratios: { perspectivesPerTool: 0 }
+        });
+      }
+
+      // Get perspectives for this module's tools
+      const toolIds = tools.map(t => t._id);
+      const perspectives = await this.mongoProvider.find('tool_perspectives', {
+        toolId: { $in: toolIds }
+      });
+      const perspectiveCount = perspectives.length;
+
+      // Count vectors for this module (by toolName)
+      const toolNames = tools.map(t => t.name);
+      let vectorCount = 0;
+      
+      if (this.vectorStore && toolNames.length > 0) {
+        try {
+          // Use proper 768-dimension dummy vector for search
+          const dummyVector = new Array(768).fill(0.1);
+          
+          // For each tool, count vectors
+          for (const toolName of toolNames) {
+            const toolVectors = await this.vectorStore.search(this.collectionName, 
+              dummyVector, // proper 768-dimension dummy query vector
+              { 
+                filter: { toolName },
+                limit: 1000 // get count by searching with high limit
+              }
+            );
+            vectorCount += toolVectors?.length || 0;
+          }
+        } catch (error) {
+          // If search fails, it might be because there are no vectors yet
+          // This is OK for modules loaded without vectors
+          if (error.message.includes('Bad Request') || error.message.includes('not found')) {
+            // No vectors indexed yet, which is valid
+            vectorCount = 0;
+          } else {
+            console.warn(`Could not count vectors for module ${moduleName}: ${error.message}`);
+            vectorCount = 0;
+          }
+        }
+      }
+
+      // Validation checks
+      const errors = [];
+      
+      // Calculate ratios (always calculate for reporting)
+      const ratios = {
+        perspectivesPerTool: perspectiveCount / Math.max(toolCount, 1)
+      };
+      
+      // Check for orphaned vectors (vectors without perspectives)
+      if (vectorCount > 0 && perspectiveCount === 0) {
+        errors.push(`Module ${moduleName} has orphaned vectors: ${vectorCount} vectors but no perspectives`);
+      }
+      
+      // Only validate perspectives/vectors if they were expected (perspectiveCount > 0 means they were generated)
+      if (perspectiveCount > 0) {
+        // Check perspective/vector sync only if perspectives exist
+        if (perspectiveCount !== vectorCount) {
+          errors.push(`Module ${moduleName} has vector count mismatch: ${perspectiveCount} perspectives vs ${vectorCount} vectors`);
+        }
+        
+        // Check reasonable perspective ratio only if perspectives were generated
+        if (ratios.perspectivesPerTool < 1) {
+          errors.push(`Module ${moduleName} has too few perspectives per tool: ${ratios.perspectivesPerTool.toFixed(2)}`);
+        }
+      }
+      // Note: No perspectives is OK - module might have been loaded without them (unless there are orphaned vectors)
+
+      const success = errors.length === 0;
+      const counts = {
+        modules: 1,
+        tools: toolCount,
+        perspectives: perspectiveCount,
+        vectors: vectorCount
+      };
+
+      return this.createResult(success, 
+        success ? `Module ${moduleName} verification passed` : `Module ${moduleName} has ${errors.length} issues`,
+        {
+          moduleName,
+          errors,
+          counts,
+          ratios
+        }
+      );
+
+    } catch (error) {
+      return this.createResult(false, `Module verification failed: ${error.message}`, {
+        moduleName,
+        errors: [`Verification failed: ${error.message}`],
+        counts: { modules: 0, tools: 0, perspectives: 0, vectors: 0 },
+        ratios: { perspectivesPerTool: 0 }
+      });
     }
   }
 

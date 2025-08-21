@@ -18,6 +18,7 @@ const mockLoadingManager = {
   clearForReload: jest.fn(),
   loadModules: jest.fn(),
   generatePerspectives: jest.fn(),
+  generateEmbeddings: jest.fn(),
   indexVectors: jest.fn(),
   verifier: null,
   verbose: false
@@ -94,6 +95,10 @@ describe('ToolRegistry Module-Specific Operations', () => {
       perspectivesGenerated: 15
     });
 
+    mockLoadingManager.generateEmbeddings.mockResolvedValue({
+      embeddingsGenerated: 15
+    });
+    
     mockLoadingManager.indexVectors.mockResolvedValue({
       perspectivesIndexed: 15
     });
@@ -112,7 +117,11 @@ describe('ToolRegistry Module-Specific Operations', () => {
     mockLoadingManager.verifier = mockVerifier;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // Clean up the ToolRegistry instance properly
+    if (toolRegistry && typeof toolRegistry.cleanup === 'function') {
+      await toolRegistry.cleanup();
+    }
     ToolRegistry._instance = null;
   });
 
@@ -149,9 +158,9 @@ describe('ToolRegistry Module-Specific Operations', () => {
     });
 
     test('should throw error for invalid module name', async () => {
-      await expect(toolRegistry.clearModule()).rejects.toThrow('Module name is required and must be a string');
-      await expect(toolRegistry.clearModule('')).rejects.toThrow('Module name is required and must be a string');
-      await expect(toolRegistry.clearModule(123)).rejects.toThrow('Module name is required and must be a string');
+      await expect(toolRegistry.clearModule()).rejects.toThrow('Invalid parameter \'moduleName\': expected non-empty string, got undefined');
+      await expect(toolRegistry.clearModule('')).rejects.toThrow('Invalid parameter \'moduleName\': expected non-empty string, got');
+      await expect(toolRegistry.clearModule(123)).rejects.toThrow('Invalid parameter \'moduleName\': expected non-empty string, got number');
     });
 
     test('should restore original verbose setting after operation', async () => {
@@ -232,15 +241,16 @@ describe('ToolRegistry Module-Specific Operations', () => {
 
       expect(mockLoadingManager.loadModules).toHaveBeenCalledWith({ module: 'TestModule' });
       expect(mockLoadingManager.generatePerspectives).toHaveBeenCalledWith({ module: 'TestModule' });
+      expect(mockLoadingManager.generateEmbeddings).toHaveBeenCalledWith({ module: 'TestModule' });
       expect(mockLoadingManager.indexVectors).toHaveBeenCalledWith({ module: 'TestModule' });
 
       expect(result.vectorsIndexed).toBe(15);
     });
 
     test('should throw error for invalid module name', async () => {
-      await expect(toolRegistry.loadModule()).rejects.toThrow('Module name is required and must be a string');
-      await expect(toolRegistry.loadModule('')).rejects.toThrow('Module name is required and must be a string');
-      await expect(toolRegistry.loadModule(null)).rejects.toThrow('Module name is required and must be a string');
+      await expect(toolRegistry.loadModule()).rejects.toThrow('Invalid parameter \'moduleName\': expected non-empty string, got undefined');
+      await expect(toolRegistry.loadModule('')).rejects.toThrow('Invalid parameter \'moduleName\': expected non-empty string, got');
+      await expect(toolRegistry.loadModule(null)).rejects.toThrow('Invalid parameter \'moduleName\': expected non-empty string, got null');
     });
   });
 
@@ -272,6 +282,7 @@ describe('ToolRegistry Module-Specific Operations', () => {
       // The verbose setting is restored after the operation, so we check method calls
       expect(mockLoadingManager.loadModules).toHaveBeenCalledWith({});
       expect(mockLoadingManager.generatePerspectives).toHaveBeenCalledWith({});
+      expect(mockLoadingManager.generateEmbeddings).toHaveBeenCalledWith({});
       expect(mockLoadingManager.indexVectors).toHaveBeenCalledWith({});
 
       expect(result.vectorsIndexed).toBe(15);
@@ -305,9 +316,9 @@ describe('ToolRegistry Module-Specific Operations', () => {
     });
 
     test('should throw error for invalid module name', async () => {
-      await expect(toolRegistry.verifyModule()).rejects.toThrow('Module name is required and must be a string');
-      await expect(toolRegistry.verifyModule('')).rejects.toThrow('Module name is required and must be a string');
-      await expect(toolRegistry.verifyModule(42)).rejects.toThrow('Module name is required and must be a string');
+      await expect(toolRegistry.verifyModule()).rejects.toThrow('Invalid parameter \'moduleName\': expected non-empty string, got undefined');
+      await expect(toolRegistry.verifyModule('')).rejects.toThrow('Invalid parameter \'moduleName\': expected non-empty string, got');
+      await expect(toolRegistry.verifyModule(42)).rejects.toThrow('Invalid parameter \'moduleName\': expected non-empty string, got number');
     });
 
     test('should restore original verbose setting after verification', async () => {
@@ -400,7 +411,12 @@ describe('ToolRegistry Module-Specific Operations', () => {
     test('should handle loadModules failure', async () => {
       mockLoadingManager.loadModules.mockRejectedValueOnce(new Error('Load failed'));
 
-      await expect(toolRegistry.loadModule('TestModule')).rejects.toThrow('Load failed');
+      const result = await toolRegistry.loadModule('TestModule');
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Load failed');
+      expect(result.toolsAdded).toBe(0);
+      expect(result.modulesLoaded).toBe(0);
     });
 
     test('should handle verifyModule failure', async () => {
@@ -411,18 +427,25 @@ describe('ToolRegistry Module-Specific Operations', () => {
   });
 
   describe('Singleton behavior', () => {
-    test('should maintain singleton pattern across operations', () => {
+    test('should maintain singleton pattern across operations', async () => {
       const registry1 = ToolRegistry.getInstance();
       const registry2 = ToolRegistry.getInstance();
 
       expect(registry1).toBe(registry2);
+      
+      // Note: Don't cleanup singleton instances here as they're shared 
+      // The afterEach will handle singleton cleanup
     });
 
-    test('should allow force new instance for testing', () => {
+    test('should allow force new instance for testing', async () => {
       const registry1 = new ToolRegistry();
       const registry2 = new ToolRegistry({ _forceNew: true });
 
       expect(registry1).not.toBe(registry2);
+      
+      // Clean up the test instances to prevent open handles
+      await registry1.cleanup();
+      await registry2.cleanup();
     });
   });
 

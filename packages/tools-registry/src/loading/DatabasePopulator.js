@@ -67,10 +67,13 @@ export class DatabasePopulator {
     // Process each module
     for (const { config, instance } of modules) {
       try {
+        // Map 'json' type to 'module.json' for MongoDB validation
+        const moduleType = config.type === 'json' ? 'module.json' : (config.type || 'class');
+        
         // Save module to database
         const moduleData = {
           name: instance.name || config.name,  // Use module instance name first, fallback to config
-          type: config.type,
+          type: moduleType,
           path: config.path,
           className: config.className,
           description: instance.description || config.description,  // Use instance description if available

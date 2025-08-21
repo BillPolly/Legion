@@ -62,7 +62,7 @@ describe('GenerateEmbeddingsStage', () => {
       })
     };
     
-    // Mock embedding service - NO REAL ONNX
+    // Mock embedding service - NO REAL Nomic
     mockEmbeddingService = {
       generateEmbeddings: jest.fn(async (texts) => {
         return texts.map(text => {

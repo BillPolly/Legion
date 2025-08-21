@@ -22,10 +22,8 @@ describe('ToolRegistry Database Operations', () => {
     await ensureMongoDBAvailable();
     await cleanTestDatabase();
     
-    // Populate with real modules for testing
-    const loader = await toolRegistry.getLoader();
-    await loader.fullPipeline({
-      clearFirst: true,
+    // Load all modules for testing using ToolRegistry API
+    await toolRegistry.loadAllModules({
       includePerspectives: false,
       includeVectors: false
     });
