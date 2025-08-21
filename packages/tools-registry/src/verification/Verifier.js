@@ -588,7 +588,8 @@ export class Verifier {
   }
 
   /**
-   * Verify that modules are in unloaded state after clearing
+   * Verify that modules in module_registry are in unloaded state after clearing
+   * (The runtime modules collection should be cleared, but module_registry should be preserved with unloaded status)
    * @param {string|null} moduleFilter - Optional module filter for specific module verification
    * @returns {Promise<Object>}
    */
@@ -656,9 +657,9 @@ export class Verifier {
         }
         if (result.moduleStats.total === 0) {
           if (this.verbose) {
-            console.log(`[Verifier] ERROR: Total modules is 0, but we should have found modules`);
+            console.log(`[Verifier] ERROR: Total modules is 0, but we should have found modules in module_registry`);
           }
-          result.errors.push(`No modules found - modules should be preserved during clearing`);
+          result.errors.push(`No modules found in module_registry - discovery metadata should be preserved during clearing`);
         }
       }
 
