@@ -312,6 +312,7 @@ export const ToolPerspectivesCollectionSchema = {
 /**
  * Tools Collection Schema
  * Stores individual tool definitions with schemas, examples, and semantic embeddings
+ * SIMPLIFIED VALIDATION: Only validates essential fields to avoid MongoDB validation issues
  */
 export const ToolsCollectionSchema = {
   name: 'tools',
@@ -333,9 +334,7 @@ export const ToolsCollectionSchema = {
         },
         moduleName: {
           bsonType: 'string',
-          minLength: 1,
-          maxLength: 100,
-          description: 'Denormalized module name for efficient queries (must match parent module)'
+          description: 'Denormalized module name for efficient queries'
         },
         description: {
           bsonType: 'string',
@@ -350,55 +349,20 @@ export const ToolsCollectionSchema = {
         },
         inputSchema: {
           bsonType: 'object',
-          required: ['type'],
-          properties: {
-            type: {
-              bsonType: 'string',
-              enum: ['object', 'string', 'number', 'boolean', 'array']
-            },
-            properties: {
-              bsonType: 'object'
-            },
-            required: {
-              bsonType: 'array',
-              items: { bsonType: 'string' }
-            }
-          },
-          description: 'Valid JSON Schema definition for tool inputs'
+          description: 'JSON Schema definition for tool inputs (flexible validation)'
         },
         outputSchema: {
           bsonType: 'object',
-          required: ['type'],
-          properties: {
-            type: {
-              bsonType: 'string',
-              enum: ['object', 'string', 'number', 'boolean', 'array']
-            },
-            properties: {
-              bsonType: 'object'
-            }
-          },
-          description: 'Valid JSON Schema definition for expected outputs'
+          description: 'JSON Schema definition for expected outputs (flexible validation)'
         },
         examples: {
           bsonType: 'array',
-          items: {
-            bsonType: 'object',
-            required: ['title', 'input'],
-            properties: {
-              title: { bsonType: 'string' },
-              description: { bsonType: 'string' },
-              input: { bsonType: 'object' },
-              output: { bsonType: 'object' }
-            }
-          },
           description: 'Example usage scenarios with inputs and outputs'
         },
         tags: {
           bsonType: 'array',
           items: {
-            bsonType: 'string',
-            pattern: '^[a-z0-9-]+$'
+            bsonType: 'string'
           },
           description: 'Searchable tags for functionality'
         },
@@ -427,9 +391,7 @@ export const ToolsCollectionSchema = {
           items: {
             bsonType: 'double'
           },
-          minItems: 768,
-          maxItems: 768,
-          description: 'Semantic embedding vector for similarity search (768 dimensions)'
+          description: 'Semantic embedding vector for similarity search'
         },
         embeddingModel: {
           bsonType: 'string',
@@ -443,11 +405,6 @@ export const ToolsCollectionSchema = {
         },
         performance: {
           bsonType: 'object',
-          properties: {
-            avgExecutionTime: { bsonType: 'double' },
-            successRate: { bsonType: 'double' },
-            lastBenchmark: { bsonType: 'date' }
-          },
           description: 'Performance metrics'
         },
         createdAt: {

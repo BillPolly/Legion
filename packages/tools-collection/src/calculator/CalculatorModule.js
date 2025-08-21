@@ -7,7 +7,7 @@ class CalculatorTool extends Tool {
   constructor() {
     super({
       name: 'calculator',
-      description: 'Performs mathematical calculations',
+      description: 'Evaluates mathematical expressions and performs calculations',
       inputSchema: {
         type: 'object',
         properties: {

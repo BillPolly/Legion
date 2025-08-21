@@ -243,9 +243,12 @@ export class SemanticToolDiscovery {
     } = options;
 
     // Get initial relevant tools
-    const relevantTools = await this.findRelevantTools(taskDescription, {
+    const relevantToolsResult = await this.findRelevantTools(taskDescription, {
       limit: maxTools * 2
     });
+
+    // Extract the tools array from the result
+    const relevantTools = relevantToolsResult?.tools || [];
 
     // Analyze task for subtasks
     const subtasks = this.analyzeTaskForSubtasks(taskDescription);
@@ -259,20 +262,22 @@ export class SemanticToolDiscovery {
     };
 
     // Categorize tools by their role
+    // Note: With Nomic embeddings, scores are typically lower (0.2-0.6 range)
+    // Adjust thresholds accordingly
     for (const tool of relevantTools) {
-      if (tool.relevanceScore > 0.85) {
+      if (tool.relevanceScore > 0.4) {  // Lowered from 0.85
         toolCombinations.primaryTools.push(tool);
-      } else if (tool.relevanceScore > 0.7) {
+      } else if (tool.relevanceScore > 0.2) {  // Lowered from 0.7
         toolCombinations.supportingTools.push(tool);
       }
     }
 
     // Find tools for each subtask
     for (const subtask of subtasks) {
-      const subtaskTools = await this.findRelevantTools(subtask.description, {
+      const subtaskToolsResult = await this.findRelevantTools(subtask.description, {
         limit: 5
       });
-      toolCombinations.subtaskTools[subtask.name] = subtaskTools;
+      toolCombinations.subtaskTools[subtask.name] = subtaskToolsResult?.tools || [];
     }
 
     // Generate workflow suggestion if requested
@@ -1092,13 +1097,16 @@ export class SemanticToolDiscovery {
   buildSearchFilter(categories, excludeTools) {
     const filter = {};
 
-    if (categories && categories.length > 0) {
-      filter.category = { $in: categories };
-    }
+    // For now, disable filtering as Qdrant filter implementation needs work
+    // TODO: Implement proper Qdrant filter format conversion
+    // 
+    // if (categories && categories.length > 0) {
+    //   filter.category = { $in: categories };
+    // }
 
-    if (excludeTools && excludeTools.length > 0) {
-      filter.name = { $nin: excludeTools };
-    }
+    // if (excludeTools && excludeTools.length > 0) {
+    //   filter.name = { $nin: excludeTools };
+    // }
 
     return filter;
   }

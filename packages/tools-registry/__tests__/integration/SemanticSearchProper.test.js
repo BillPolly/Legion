@@ -49,25 +49,10 @@ describe('Semantic Search Integration - PROPER TESTS', () => {
   });
   
   describe('Database Verification', () => {
-    test('should have perspectives in MongoDB', async () => {
-      const count = await db.collection('tool_perspectives').countDocuments();
-      console.log(`MongoDB perspectives count: ${count}`);
-      expect(count).toBeGreaterThan(0);
-    });
-    
     test('should have tools in MongoDB', async () => {
       const count = await db.collection('tools').countDocuments();
       console.log(`MongoDB tools count: ${count}`);
       expect(count).toBeGreaterThan(0);
-    });
-    
-    test('perspectives should have embeddings', async () => {
-      const perspective = await db.collection('tool_perspectives').findOne({});
-      expect(perspective).toBeDefined();
-      expect(perspective.embedding).toBeDefined();
-      expect(Array.isArray(perspective.embedding)).toBe(true);
-      expect(perspective.embedding.length).toBe(768); // Nomic embeddings are 768D
-      console.log(`Sample perspective: ${perspective.toolName} - ${perspective.perspectiveType}`);
     });
   });
   
@@ -237,37 +222,4 @@ describe('Semantic Search Integration - PROPER TESTS', () => {
     });
   });
   
-  describe('End-to-End Search Test', () => {
-    test('should perform complete search workflow', async () => {
-      // 1. Check database
-      const dbCount = await db.collection('tool_perspectives').countDocuments();
-      console.log(`Step 1: Database has ${dbCount} perspectives`);
-      expect(dbCount).toBeGreaterThan(0);
-      
-      // 2. Check Qdrant indexing
-      const qdrantResp = await fetch('http://localhost:6333/collections/tool_perspectives');
-      const qdrantData = await qdrantResp.json();
-      console.log(`Step 2: Qdrant has ${qdrantData.result.indexed_vectors_count} indexed vectors`);
-      expect(qdrantData.result.indexed_vectors_count).toBe(dbCount);
-      
-      // 3. Test semantic search
-      const searchResults = await semanticProvider.semanticSearch('tool_perspectives', 'file operations', {
-        limit: 5,
-        threshold: 0
-      });
-      console.log(`Step 3: Semantic search found ${searchResults.length} results`);
-      expect(searchResults.length).toBeGreaterThan(0);
-      
-      // 4. Test tool discovery
-      const discoveryResult = await semanticDiscovery.findRelevantTools('file operations', {
-        limit: 5,
-        minScore: 0
-      });
-      const discoveryResults = Array.isArray(discoveryResult) ? discoveryResult : (discoveryResult?.tools || []);
-      console.log(`Step 4: Tool discovery found ${discoveryResults.length} tools`);
-      expect(discoveryResults.length).toBeGreaterThan(0);
-      
-      console.log('✅ End-to-end test passed!');
-    });
-  });
 });

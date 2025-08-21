@@ -395,20 +395,17 @@ describe('Module Operations Integration Tests', () => {
       expect(loadResult1.toolsAdded).toBeGreaterThan(0);
       console.log(`   ✅ Calculator module loaded with ${loadResult1.toolsAdded} tools`);
 
-      // Step 3: Try to load calculator again (should handle duplicate gracefully)
-      console.log('3️⃣ Loading calculator module again (duplicate)...');
+      // Step 3: Try to load calculator again (should clear and reload)
+      console.log('3️⃣ Loading calculator module again (should clear and reload)...');
       const loadResult2 = await toolRegistry.loadModule('calculator', { 
         verbose: false, 
         includePerspectives: false,
         includeVectors: false 
       });
-      // Should either succeed with 0 tools added (already exists) or handle gracefully
-      expect(typeof loadResult2.success).toBe('boolean');
-      if (loadResult2.success) {
-        // If it succeeds, it should report 0 tools added since they already exist
-        expect(loadResult2.toolsAdded).toBe(0);
-      }
-      console.log(`   ${loadResult2.success ? '✅' : '⚠️'} Duplicate load handled (${loadResult2.toolsAdded || 0} tools added)`);
+      // Should succeed and add the same number of tools as first load (since we clear first)
+      expect(loadResult2.success).toBe(true);
+      expect(loadResult2.toolsAdded).toBe(loadResult1.toolsAdded);
+      console.log(`   ✅ Module reloaded successfully with ${loadResult2.toolsAdded} tools`);
 
       // Step 4: Verify the calculator module
       console.log('4️⃣ Verifying calculator module...');

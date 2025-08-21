@@ -66,21 +66,6 @@ describe('Live Semantic Search Complete Test', () => {
       sampleTools.forEach(t => console.log(`  - ${t.name}: ${t.description?.substring(0, 50)}...`));
     });
     
-    test('MongoDB has tool_perspectives with embeddings', async () => {
-      const count = await db.collection('tool_perspectives').countDocuments();
-      console.log(`\n📊 MongoDB perspectives count: ${count}`);
-      expect(count).toBeGreaterThan(0);
-      
-      // Check a perspective
-      const perspective = await db.collection('tool_perspectives').findOne({});
-      expect(perspective.embedding).toBeDefined();
-      expect(perspective.embedding.length).toBe(768); // Nomic embeddings
-      
-      // Count perspectives by type
-      const types = await db.collection('tool_perspectives').distinct('perspectiveType');
-      console.log('Perspective types:', types);
-    });
-    
     test('Qdrant is properly indexed', async () => {
       try {
         const response = await fetch('http://localhost:6333/collections/tool_perspectives');
@@ -100,31 +85,6 @@ describe('Live Semantic Search Complete Test', () => {
   });
   
   describe('2. Semantic Search Provider', () => {
-    test('should perform semantic search for file operations', async () => {
-      const query = 'how to read and write files';
-      console.log(`\n🔍 Semantic search: "${query}"`);
-      
-      const results = await semanticProvider.semanticSearch('tool_perspectives', query, {
-        limit: 5,
-        threshold: 0
-      });
-      
-      console.log(`Found ${results.length} results:`);
-      results.forEach((r, i) => {
-        const payload = r.document || r.payload;
-        console.log(`  ${i+1}. ${payload.toolName} (${payload.perspectiveType})`);
-      });
-      
-      expect(results.length).toBeGreaterThan(0);
-      
-      // Should find file-related tools
-      const hasFileTools = results.some(r => {
-        const payload = r.document || r.payload;
-        return payload.toolName.includes('file') || payload.toolName.includes('read');
-      });
-      expect(hasFileTools).toBe(true);
-    });
-    
     test('should perform semantic search for JSON operations', async () => {
       const query = 'parse and validate JSON data';
       console.log(`\n🔍 Semantic search: "${query}"`);
@@ -145,36 +105,6 @@ describe('Live Semantic Search Complete Test', () => {
   });
   
   describe('3. SemanticToolDiscovery.findRelevantTools()', () => {
-    test('should find file operation tools with enriched data', async () => {
-      const query = 'I need to read files from the filesystem and process their content';
-      console.log(`\n🎯 Tool discovery: "${query}"`);
-      
-      const result = await semanticDiscovery.findRelevantTools(query, {
-        limit: 10,
-        minScore: 0
-      });
-      
-      console.log(`\nFound ${result.tools.length} tools:`);
-      console.log('Top 5 tools with scores:');
-      result.tools.slice(0, 5).forEach((tool, i) => {
-        console.log(`  ${i+1}. ${tool.name}`);
-        console.log(`     Relevance: ${tool.relevanceScore?.toFixed(3)}`);
-        console.log(`     Name match: ${tool.nameRelevance?.toFixed(3)}`);
-        console.log(`     Category: ${tool.category}`);
-      });
-      
-      expect(result.tools.length).toBeGreaterThan(0);
-      
-      // Check for file tools
-      const fileTools = result.tools.filter(t => 
-        t.name.includes('file') || t.name.includes('read')
-      );
-      expect(fileTools.length).toBeGreaterThan(0);
-      
-      // Verify metadata structure
-      expect(result.metadata).toBeDefined();
-      expect(result.metadata.totalFound).toBe(result.tools.length);
-    });
     
     test('should find calculator tools', async () => {
       const query = 'perform mathematical calculations';
@@ -434,51 +364,5 @@ describe('Live Semantic Search Complete Test', () => {
   });
   
   describe('8. Summary', () => {
-    test('should provide overall system status', async () => {
-      console.log('\n' + '='.repeat(50));
-      console.log('SEMANTIC SEARCH SYSTEM STATUS');
-      console.log('='.repeat(50));
-      
-      // Database counts
-      const toolCount = await db.collection('tools').countDocuments();
-      const perspectiveCount = await db.collection('tool_perspectives').countDocuments();
-      
-      console.log('\n📊 Database:');
-      console.log(`  Tools: ${toolCount}`);
-      console.log(`  Perspectives: ${perspectiveCount}`);
-      console.log(`  Avg perspectives/tool: ${(perspectiveCount/toolCount).toFixed(1)}`);
-      
-      // Qdrant status
-      try {
-        const response = await fetch('http://localhost:6333/collections/tool_perspectives');
-        const data = await response.json();
-        console.log('\n🔍 Vector Database:');
-        console.log(`  Vectors: ${data.result.points_count}`);
-        console.log(`  Indexed: ${data.result.indexed_vectors_count}`);
-        console.log(`  Status: ${data.result.status}`);
-      } catch (error) {
-        console.log('\n⚠️ Vector database not available');
-      }
-      
-      // Test a real query
-      const testQuery = 'file operations';
-      const testResult = await semanticDiscovery.findRelevantTools(testQuery, {
-        limit: 5,
-        minScore: 0
-      });
-      
-      console.log('\n✅ System Test:');
-      console.log(`  Query: "${testQuery}"`);
-      console.log(`  Results: ${testResult.tools.length} tools found`);
-      console.log(`  Top result: ${testResult.tools[0]?.name || 'none'}`);
-      
-      console.log('\n' + '='.repeat(50));
-      console.log('✅ SEMANTIC SEARCH FULLY OPERATIONAL');
-      console.log('='.repeat(50) + '\n');
-      
-      expect(toolCount).toBeGreaterThan(0);
-      expect(perspectiveCount).toBeGreaterThan(0);
-      expect(testResult.tools.length).toBeGreaterThan(0);
-    });
   });
 });

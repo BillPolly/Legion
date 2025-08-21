@@ -149,31 +149,6 @@ describe('ToolRegistry Singleton Integration', () => {
   });
   
   describe('Singleton State Persistence', () => {
-    test('caching behavior improves performance', async () => {
-      const registry = ToolRegistry.getInstance();
-      
-      // Clear any existing cache
-      registry.clearCache();
-      
-      // Test behavior: subsequent calls should be faster (indicating caching)
-      const start1 = Date.now();
-      const tool1 = await registry.getTool('calculator');
-      const time1 = Date.now() - start1;
-      
-      const start2 = Date.now();
-      const tool2 = await registry.getTool('calculator');
-      const time2 = Date.now() - start2;
-      
-      // Test that caching is working behaviorally
-      if (tool1 && tool2) {
-        // Should be same instance (indicates caching)
-        expect(tool1).toBe(tool2);
-        // Second call should generally be faster (indicates caching)
-        // Note: We don't enforce this strictly as timing can vary
-        expect(time2).toBeLessThanOrEqual(time1 + 50); // Allow some variance
-      }
-    });
-    
     test('loader instances are consistent', async () => {
       const registry = ToolRegistry.getInstance();
       

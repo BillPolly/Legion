@@ -792,18 +792,15 @@ export class ToolRegistry {
           console.log(`📦 Loading module: ${moduleName}`);
         }
 
-        // Clear module data first if requested
-        if (options.clearFirst) {
-          if (loader.verbose) {
-            console.log(`🧹 Clearing module ${moduleName} first...`);
-          }
-          await loader.clearForReload({ 
-            moduleFilter: moduleName,
-            clearVectors: options.includeVectors !== false
-          });
-          
-          // NO CACHE - Nothing to clear
+        // ALWAYS clear the specific module first - this is the correct behavior!
+        if (loader.verbose) {
+          console.log(`🧹 Clearing existing data for module: ${moduleName}`);
         }
+
+        await loader.clearForReload({ 
+          moduleFilter: moduleName,
+          clearVectors: options.includeVectors !== false
+        });
 
         // Load modules (append mode - no clearing)
         const result = await loader.loadModules({ module: moduleName });

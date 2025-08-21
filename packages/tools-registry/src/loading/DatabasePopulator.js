@@ -141,12 +141,16 @@ export class DatabasePopulator {
                 moduleName: moduleName,  // Keep for backwards compatibility
                 description: description,
                 inputSchema: inputSchema,
-                outputSchema: outputSchema,
                 category: this.inferCategory(tool.name, moduleName),
                 status: 'active',
                 createdAt: new Date(),
                 updatedAt: new Date()
               };
+              
+              // Only include outputSchema if it exists and is valid
+              if (outputSchema && outputSchema.type) {
+                toolData.outputSchema = outputSchema;
+              }
               
               await this.provider.saveTool(toolData);
               stats.tools.saved++;
@@ -218,6 +222,7 @@ export class DatabasePopulator {
   /**
    * Extract schema from tool definition
    * Handles both Zod schemas and JSON schemas
+   * Sanitizes schemas to be compatible with MongoDB validation
    */
   extractSchema(schema) {
     if (!schema) return null;
@@ -227,8 +232,62 @@ export class DatabasePopulator {
       return this.zodSchemaToJson(schema);
     }
     
-    // If it's already JSON Schema or plain object, return as is
-    return schema;
+    // If it's already JSON Schema or plain object, sanitize for MongoDB compatibility
+    return this.sanitizeSchemaForMongoDB(schema);
+  }
+
+  /**
+   * Sanitize JSON Schema to be compatible with MongoDB validation
+   * Removes features that MongoDB's $jsonSchema doesn't support
+   */
+  sanitizeSchemaForMongoDB(schema) {
+    if (!schema || typeof schema !== 'object') return schema;
+    
+    const sanitized = {};
+    
+    for (const [key, value] of Object.entries(schema)) {
+      // Remove features MongoDB doesn't support
+      if (key === 'oneOf' || key === 'anyOf' || key === 'allOf') {
+        // For oneOf/anyOf/allOf, try to find the most permissive type
+        if (Array.isArray(value) && value.length > 0) {
+          // If one of the options is 'object', use that as it's most permissive
+          const objectOption = value.find(option => option.type === 'object');
+          if (objectOption) {
+            Object.assign(sanitized, this.sanitizeSchemaForMongoDB(objectOption));
+          } else {
+            // Otherwise use the first option and convert to string if multiple types
+            const firstOption = value[0];
+            if (firstOption.type) {
+              sanitized.type = firstOption.type;
+            } else {
+              sanitized.type = 'string'; // Safe fallback
+            }
+            if (firstOption.description) {
+              sanitized.description = firstOption.description;
+            }
+          }
+        }
+        continue;
+      }
+      
+      // Remove default values as they can cause validation issues
+      if (key === 'default') {
+        continue;
+      }
+      
+      // Recursively sanitize nested objects
+      if (typeof value === 'object' && value !== null) {
+        if (Array.isArray(value)) {
+          sanitized[key] = value.map(item => this.sanitizeSchemaForMongoDB(item));
+        } else {
+          sanitized[key] = this.sanitizeSchemaForMongoDB(value);
+        }
+      } else {
+        sanitized[key] = value;
+      }
+    }
+    
+    return sanitized;
   }
 
   /**

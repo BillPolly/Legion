@@ -726,9 +726,22 @@ export class LoadingManager {
       }
     }
 
-    // Populate database with loaded modules
+    // Clear module-specific data before populating if we have a filter
+    const shouldClearFirst = !!moduleFilter;
+
+    if (shouldClearFirst) {
+      if (this.verbose) {
+        console.log(`🧹 Clearing database data for module: ${moduleFilter}`);
+      }
+      await this.clearForReload({
+        moduleFilter: moduleFilter,
+        clearVectors: true // Clear vectors too
+      });
+    }
+
+    // Populate database with loaded modules - no need to clear since we did it above
     const popResult = await this.databasePopulator.populate(modulesToPopulate, {
-      clearExisting: false // Don't clear, we may have cleared already
+      clearExisting: false // We already cleared what we needed above
     });
 
     if (this.verbose) {

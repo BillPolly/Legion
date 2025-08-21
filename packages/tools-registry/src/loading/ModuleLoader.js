@@ -81,7 +81,7 @@ export class ModuleLoader {
         const module = await this.loadModule(moduleConfig);
         if (module) {
           // Check if module was recently cleared - don't automatically mark as loaded
-          const moduleRecord = await this.databaseProvider.databaseService.mongoProvider.findOne('modules', { _id: moduleConfig._id });
+          const moduleRecord = await this.databaseProvider.databaseService.mongoProvider.findOne('modules', { name: moduleConfig.name });
           const wasRecentlyCleared = moduleRecord && moduleRecord.clearedForReload && 
             moduleRecord.clearedAt && (Date.now() - moduleRecord.clearedAt.getTime()) < 300000; // 5 minutes
           
@@ -118,7 +118,7 @@ export class ModuleLoader {
           
           await this.databaseProvider.databaseService.mongoProvider.update(
             'modules',
-            { _id: moduleConfig._id },
+            { name: moduleConfig.name },
             updateData,
             { upsert: true }  // Allow creating document if it doesn't exist
           );
@@ -139,7 +139,7 @@ export class ModuleLoader {
         // Update loading status to failed
         await this.databaseProvider.databaseService.mongoProvider.update(
           'modules',
-          { _id: moduleConfig._id },
+          { name: moduleConfig.name },
           {
             $set: {
               loadingStatus: 'failed',
