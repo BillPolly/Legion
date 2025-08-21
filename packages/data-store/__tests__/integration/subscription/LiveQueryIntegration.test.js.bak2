@@ -1,0 +1,478 @@
+/**
+ * Integration tests for live query subscription scenarios
+ * Tests complete query → subscription → update flow per design §4
+ */
+
+import { Store } from '../../../src/Store.js';
+import { Edge } from '../../../src/Edge.js';
+import { TrieManager } from '../../../src/trie/TrieManager.js';
+import { Dispatcher } from '../../../src/kernel/Dispatcher.js';
+import { SubscriptionManager } from '../../../src/subscription/SubscriptionManager.js';
+
+// Helper to add edge and return delta
+function addEdge(store, type, src, dst) {
+  const edge = new Edge(type, src, dst);
+  store.addEdge(edge);
+  return { type: 'add', edge };
+}
+
+// Simple mock function for testing
+function createMockFn() {
+  const fn = function(...args) {
+    fn.calls.push(args);
+    fn.callCount++;
+    if (fn.mockImplementation) {
+      return fn.mockImplementation(...args);
+    }
+    return fn.returnValue;
+  };
+  fn.calls = [];
+  fn.callCount = 0;
+  fn.returnValue = undefined;
+  fn.mockImplementation = null;
+  fn.mockClear = () => {
+    fn.calls = [];
+    fn.callCount = 0;
+  };
+  return fn;
+}
+
+describe('Live Query Integration', () => {
+  let store;
+  let trieManager;
+  let dispatcher;
+  let subscriptionManager;
+
+  beforeEach(() => {
+    store = new Store();
+    trieManager = new TrieManager();
+    dispatcher = new Dispatcher(store, trieManager);
+    subscriptionManager = new SubscriptionManager(dispatcher);
+    
+    // Define relationship types
+    store.defineRelationType('follows', 'followedBy');
+    store.defineRelationType('likes', 'likedBy');
+    store.defineRelationType('friendOf', 'friendOf');
+  });
+
+  describe('basic live query workflow', () => {
+    it('should deliver initial results on subscription', () => {
+      // Setup initial data
+      addEdge(store, 'follows', 'alice', 'bob');
+      addEdge(store, 'follows', 'alice', 'charlie');
+      addEdge(store, 'follows', 'bob', 'charlie');
+      
+      // Register query
+      dispatcher.registerQuery('q1', {
+        type: 'select',
+        relation: 'follows'
+      });
+      
+      // Create subscription
+      const callback = createMockFn();
+      const subscription = subscriptionManager.subscribe('q1', callback);
+      
+      // Should receive initial results
+      expect(callback.callCount).toBe(1);
+      expect(callback.calls[0][0].type).toBe('bootstrap');
+      expect(callback.calls[0][0].results).toHaveLength(3);
+    });
+
+    it('should deliver updates when data changes', () => {
+      // Setup initial data
+      addEdge(store, 'follows', 'alice', 'bob');
+      
+      // Register and activate query
+      dispatcher.registerQuery('q1', {
+        type: 'select',
+        relation: 'follows'
+      });
+      dispatcher.activateQuery('q1');
+      
+      // Create subscription
+      const callback = createMockFn();
+      const subscription = subscriptionManager.subscribe('q1', callback);
+      callback.mockClear(); // Clear bootstrap callback
+      
+      // Add new edge
+      const edge = new Edge('follows', 'bob', 'charlie');
+      store.addEdge(edge);
+      const delta = { type: 'add', edge };
+      dispatcher.processDelta(delta);
+      
+      // Should receive update
+      expect(callback.callCount).toBeGreaterThan(0);
+      const lastCall = callback.calls[callback.calls.length - 1];
+      expect(lastCall[0].type).toBe('update');
+    });
+
+    it('should handle multiple subscriptions to same query', () => {
+      // Register query
+      dispatcher.registerQuery('q1', {
+        type: 'select',
+        relation: 'likes'
+      });
+      
+      // Create multiple subscriptions
+      const callbacks = [createMockFn(), createMockFn(), createMockFn()];
+      const subscriptions = callbacks.map(cb => 
+        subscriptionManager.subscribe('q1', cb)
+      );
+      
+      // Add data
+      addEdge(store, 'likes', 'alice', 'post1');
+      const edge = new Edge('likes', 'bob', 'post1');
+      store.addEdge(edge);
+      const delta = { type: 'add', edge };
+      dispatcher.processDelta(delta);
+      
+      // All callbacks should receive updates
+      callbacks.forEach(cb => {
+        expect(cb.callCount).toBeGreaterThan(0);
+      });
+    });
+  });
+
+  describe('subscription lifecycle', () => {
+    it('should handle subscription pause and resume', () => {
+      // Setup
+      store.addEdge('friendOf', 'alice', 'bob');
+      dispatcher.registerQuery('q1', {
+        type: 'select',
+        relation: 'friendOf'
+      });
+      dispatcher.activateQuery('q1');
+      
+      // Create and pause subscription
+      const callback = createMockFn();
+      const subscription = subscriptionManager.subscribe('q1', callback);
+      callback.mockClear();
+      
+      subscriptionManager.pauseSubscription(subscription.subscriptionId);
+      
+      // Add data while paused
+      const delta1 = store.addEdge('friendOf', 'bob', 'charlie');
+      dispatcher.processDelta(delta1);
+      
+      // Should not receive update while paused
+      expect(callback.callCount).toBe(0);
+      
+      // Resume subscription
+      subscriptionManager.resumeSubscription(subscription.subscriptionId);
+      
+      // Add more data
+      const delta2 = store.addEdge('friendOf', 'charlie', 'david');
+      dispatcher.processDelta(delta2);
+      
+      // Should receive update after resume
+      expect(callback.callCount).toBeGreaterThan(0);
+    });
+
+    it('should handle subscription cancellation', () => {
+      // Setup
+      dispatcher.registerQuery('q1', {
+        type: 'select',
+        relation: 'follows'
+      });
+      
+      // Create subscription
+      const callback = createMockFn();
+      const subscription = subscriptionManager.subscribe('q1', callback);
+      callback.mockClear();
+      
+      // Unsubscribe
+      subscriptionManager.unsubscribe(subscription.subscriptionId);
+      
+      // Add data
+      store.addEdge('follows', 'alice', 'bob');
+      const delta = store.addEdge('follows', 'bob', 'charlie');
+      dispatcher.processDelta(delta);
+      
+      // Should not receive updates after cancellation
+      expect(callback.callCount).toBe(0);
+    });
+
+    it('should deactivate query when no active subscriptions', () => {
+      // Register query
+      dispatcher.registerQuery('q1', {
+        type: 'select',
+        relation: 'follows'
+      });
+      
+      // Create subscriptions
+      const sub1 = subscriptionManager.subscribe('q1', createMockFn());
+      const sub2 = subscriptionManager.subscribe('q1', createMockFn());
+      
+      expect(dispatcher.isQueryActive('q1')).toBe(true);
+      
+      // Remove first subscription
+      subscriptionManager.unsubscribe(sub1.subscriptionId);
+      expect(dispatcher.isQueryActive('q1')).toBe(true); // Still one active
+      
+      // Remove second subscription
+      subscriptionManager.unsubscribe(sub2.subscriptionId);
+      expect(dispatcher.isQueryActive('q1')).toBe(false); // None active
+    });
+  });
+
+  describe('filtered subscriptions', () => {
+    it('should apply filter to results', () => {
+      // Setup data
+      store.addEdge('follows', 'alice', 'bob');
+      store.addEdge('follows', 'alice', 'charlie');
+      store.addEdge('follows', 'bob', 'charlie');
+      store.addEdge('follows', 'charlie', 'alice');
+      
+      // Register query
+      dispatcher.registerQuery('q1', {
+        type: 'select',
+        relation: 'follows'
+      });
+      
+      // Create filtered subscription
+      const callback = createMockFn();
+      const subscription = subscriptionManager.subscribe('q1', callback, {
+        filter: (edge) => edge.src === 'alice'
+      });
+      
+      // Should only receive alice's follows
+      expect(callback.callCount).toBe(1);
+      expect(callback.calls[0][0].results).toHaveLength(2);
+      callback.calls[0][0].results.forEach(edge => {
+        expect(edge.src).toBe('alice');
+      });
+    });
+
+    it('should apply transform to results', () => {
+      // Setup data
+      store.addEdge('likes', 'alice', 'post1');
+      store.addEdge('likes', 'bob', 'post1');
+      
+      // Register query
+      dispatcher.registerQuery('q1', {
+        type: 'select',
+        relation: 'likes'
+      });
+      
+      // Create subscription with transform
+      const callback = createMockFn();
+      const subscription = subscriptionManager.subscribe('q1', callback, {
+        transform: (edge) => ({ user: edge.src, item: edge.dst })
+      });
+      
+      // Should receive transformed results
+      expect(callback.callCount).toBe(1);
+      const results = callback.calls[0][0].results;
+      expect(results[0]).toHaveProperty('user');
+      expect(results[0]).toHaveProperty('item');
+      expect(results[0]).not.toHaveProperty('src');
+      expect(results[0]).not.toHaveProperty('dst');
+    });
+  });
+
+  describe('complex query scenarios', () => {
+    it('should handle queries with constraints', () => {
+      // Setup data with metadata
+      const edge1 = store.addEdge('follows', 'alice', 'bob');
+      edge1.metadata = { since: 2020 };
+      const edge2 = store.addEdge('follows', 'alice', 'charlie');
+      edge2.metadata = { since: 2021 };
+      const edge3 = store.addEdge('follows', 'bob', 'charlie');
+      edge3.metadata = { since: 2022 };
+      
+      // Register constrained query
+      dispatcher.registerQuery('recent-follows', {
+        type: 'select',
+        relation: 'follows',
+        constraints: [
+          { field: 'metadata.since', operator: '>=', value: 2021 }
+        ]
+      });
+      
+      // Subscribe
+      const callback = createMockFn();
+      const subscription = subscriptionManager.subscribe('recent-follows', callback);
+      
+      // Should only get recent follows
+      expect(callback.callCount).toBe(1);
+      expect(callback.calls[0][0].results).toHaveLength(2);
+    });
+
+    it('should handle incremental updates with filters', () => {
+      // Register query
+      dispatcher.registerQuery('q1', {
+        type: 'select',
+        relation: 'likes'
+      });
+      dispatcher.activateQuery('q1');
+      
+      // Create filtered subscription
+      const callback = createMockFn();
+      const subscription = subscriptionManager.subscribe('q1', callback, {
+        filter: (edge) => edge.dst.startsWith('post')
+      });
+      callback.mockClear();
+      
+      // Add matching edge
+      const delta1 = store.addEdge('likes', 'alice', 'post1');
+      dispatcher.processDelta(delta1);
+      
+      // Should receive update
+      expect(callback.callCount).toBe(1);
+      callback.mockClear();
+      
+      // Add non-matching edge
+      const delta2 = store.addEdge('likes', 'alice', 'comment1');
+      dispatcher.processDelta(delta2);
+      
+      // Should not receive update for filtered item
+      expect(callback.callCount).toBe(0);
+    });
+  });
+
+  describe('error handling', () => {
+    it('should handle callback errors gracefully', () => {
+      // Register query
+      dispatcher.registerQuery('q1', {
+        type: 'select',
+        relation: 'follows'
+      });
+      
+      // Create subscription with error-throwing callback
+      const errorCallback = createMockFn();
+      errorCallback.mockImplementation = () => {
+        throw new Error('Callback error');
+      };
+      
+      const normalCallback = createMockFn();
+      
+      const sub1 = subscriptionManager.subscribe('q1', errorCallback);
+      const sub2 = subscriptionManager.subscribe('q1', normalCallback);
+      
+      // Add error handlers to prevent unhandled errors
+      sub1.on('error', () => {});
+      
+      // Add data
+      store.addEdge('follows', 'alice', 'bob');
+      const delta = store.addEdge('follows', 'bob', 'charlie');
+      dispatcher.processDelta(delta);
+      
+      // Normal callback should still work
+      expect(normalCallback.callCount).toBeGreaterThan(0);
+    });
+
+    it('should handle query activation failures', () => {
+      // Try to subscribe to non-existent query
+      const callback = createMockFn();
+      
+      // This should work but query won't activate
+      const subscription = subscriptionManager.subscribe('non-existent', callback);
+      
+      // Subscription exists but query is not active
+      expect(subscription).toBeDefined();
+      expect(dispatcher.isQueryActive('non-existent')).toBe(false);
+    });
+  });
+
+  describe('performance scenarios', () => {
+    it('should handle many subscriptions efficiently', () => {
+      // Register query
+      dispatcher.registerQuery('q1', {
+        type: 'select',
+        relation: 'follows'
+      });
+      
+      // Create many subscriptions
+      const subscriptions = [];
+      const callbacks = [];
+      
+      for (let i = 0; i < 100; i++) {
+        const callback = createMockFn();
+        callbacks.push(callback);
+        subscriptions.push(
+          subscriptionManager.subscribe('q1', callback, {
+            filter: i % 2 === 0 ? (e) => e.src.startsWith('a') : null
+          })
+        );
+      }
+      
+      // Add data
+      store.addEdge('follows', 'alice', 'bob');
+      store.addEdge('follows', 'bob', 'charlie');
+      
+      // All callbacks should have been called
+      callbacks.forEach((cb, i) => {
+        expect(cb.callCount).toBeGreaterThan(0);
+      });
+      
+      // Check manager stats
+      const stats = subscriptionManager.getStats();
+      expect(stats.totalSubscriptions).toBe(100);
+      expect(stats.activeSubscriptions).toBe(100);
+    });
+
+    it('should handle rapid updates', () => {
+      // Setup
+      dispatcher.registerQuery('q1', {
+        type: 'select',
+        relation: 'likes'
+      });
+      dispatcher.activateQuery('q1');
+      
+      const callback = createMockFn();
+      const subscription = subscriptionManager.subscribe('q1', callback);
+      callback.mockClear();
+      
+      // Rapid fire updates
+      const deltas = [];
+      for (let i = 0; i < 50; i++) {
+        const delta = store.addEdge('likes', `user${i}`, `post${i}`);
+        deltas.push(delta);
+      }
+      
+      // Process all deltas
+      deltas.forEach(delta => dispatcher.processDelta(delta));
+      
+      // Should have received updates (might be batched)
+      expect(callback.callCount).toBeGreaterThan(0);
+    });
+  });
+
+  describe('event notifications', () => {
+    it('should emit subscription lifecycle events', () => {
+      const events = {
+        created: createMockFn(),
+        removed: createMockFn(),
+        resultsDelivered: createMockFn(),
+        updateDelivered: createMockFn()
+      };
+      
+      subscriptionManager.on('subscriptionCreated', events.created);
+      subscriptionManager.on('subscriptionRemoved', events.removed);
+      subscriptionManager.on('resultsDelivered', events.resultsDelivered);
+      subscriptionManager.on('updateDelivered', events.updateDelivered);
+      
+      // Register query
+      dispatcher.registerQuery('q1', {
+        type: 'select',
+        relation: 'follows'
+      });
+      dispatcher.activateQuery('q1');
+      
+      // Create subscription
+      const subscription = subscriptionManager.subscribe('q1', createMockFn());
+      expect(events.created.callCount).toBe(1);
+      
+      // Add data to trigger update
+      const delta = store.addEdge('follows', 'alice', 'bob');
+      dispatcher.processDelta(delta);
+      
+      // Should emit delivery events
+      expect(events.resultsDelivered.callCount).toBeGreaterThan(0);
+      
+      // Remove subscription
+      subscriptionManager.unsubscribe(subscription.subscriptionId);
+      expect(events.removed.callCount).toBe(1);
+    });
+  });
+});
