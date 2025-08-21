@@ -42,11 +42,8 @@ export class ClearStage {
     // Step 2: Clear MongoDB collections
     await this.clearMongoDB();
     
-    // Step 2b: Clear modules if requested
-    let modulesCleared = 0;
-    if (options.clearModules) {
-      modulesCleared = await this.clearModules();
-    }
+    // Step 2b: Always clear modules collection (runtime state)
+    const modulesCleared = await this.clearModules();
     
     // Step 3: Create fresh Qdrant collection
     await this.createFreshQdrantCollection();
@@ -58,10 +55,8 @@ export class ClearStage {
       throw new Error(`Clear verification failed: ${verificationResult.message}`);
     }
     
-    // Add modulesCleared to result if modules were cleared
-    if (options.clearModules) {
-      verificationResult.modulesCleared = modulesCleared;
-    }
+    // Always add modulesCleared to result
+    verificationResult.modulesCleared = modulesCleared;
     
     return verificationResult;
   }
@@ -101,15 +96,12 @@ export class ClearStage {
       .deleteMany({ moduleName });
     console.log(`  ✓ Cleared ${toolsResult.deletedCount} tools`);
     
-    // Step 5: Clear module runtime state if requested
-    let modulesCleared = 0;
-    if (options.clearModules) {
-      const moduleResult = await this.mongoProvider.db
-        .collection('modules')
-        .deleteMany({ name: moduleName });
-      modulesCleared = moduleResult.deletedCount;
-      console.log(`  ✓ Cleared ${modulesCleared} module runtime records`);
-    }
+    // Step 5: Always clear module runtime state  
+    const moduleResult = await this.mongoProvider.db
+      .collection('modules')
+      .deleteMany({ name: moduleName });
+    const modulesCleared = moduleResult.deletedCount;
+    console.log(`  ✓ Cleared ${modulesCleared} module runtime records`);
     
     // Step 6: Ensure Qdrant collection exists with correct dimensions
     await this.ensureQdrantCollection();
@@ -121,9 +113,7 @@ export class ClearStage {
       throw new Error(`Module clear verification failed: ${verificationResult.message}`);
     }
     
-    if (options.clearModules) {
-      verificationResult.modulesCleared = modulesCleared;
-    }
+    verificationResult.modulesCleared = modulesCleared;
     
     return verificationResult;
   }
@@ -251,8 +241,8 @@ export class ClearStage {
         .deleteMany({});
       console.log(`  ✓ Cleared ${perspectivesResult.deletedCount} perspectives`);
       
-      // Note: We keep modules collection as it's discovery metadata
-      // Only clear if explicitly requested
+      // Note: We keep module_registry collection as it's discovery metadata
+      // modules collection is runtime state that can be cleared
       
     } catch (error) {
       console.error('  ❌ Error clearing MongoDB:', error.message);
@@ -312,7 +302,7 @@ export class ClearStage {
   }
 
   /**
-   * Clear modules collection (optional - only when doing full reset)
+   * Clear modules collection (runtime state - always cleared)
    */
   async clearModules() {
     console.log('  Clearing modules collection...');
@@ -324,9 +314,8 @@ export class ClearStage {
       console.log(`  ✓ Cleared ${result.deletedCount} modules`);
       return result.deletedCount;
     } catch (error) {
-      console.error('  ⚠️ Error clearing modules:', error.message);
-      // Don't throw - modules clear is optional
-      return 0;
+      console.error('  ❌ Error clearing modules:', error.message);
+      throw error;
     }
   }
 }

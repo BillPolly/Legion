@@ -18,27 +18,22 @@ import fs from 'fs/promises';
  * THROWS if MongoDB is not available
  */
 export async function ensureMongoDBAvailable() {
-  const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
+  const resourceManager = ResourceManager.getInstance();
+  await resourceManager.initialize();
+  
+  const mongoUri = resourceManager.get('env.MONGODB_URL');
+  const dbName = resourceManager.get('env.TOOLS_DATABASE_NAME') || resourceManager.get('env.MONGODB_DATABASE');
+  
   const client = new MongoClient(mongoUri);
   
   try {
     await client.connect();
-    await client.db('legion_tools_test').admin().ping();
+    await client.db(dbName).admin().ping();
     await client.close();
     return true;
   } catch (error) {
     throw new Error(`MongoDB is REQUIRED but not available: ${error.message}`);
   }
-}
-
-/**
- * Override MongoDB database to use test database
- * Call this before initializing ToolRegistry in tests
- */
-export function useTestDatabase() {
-  // Override the database name to use test database
-  process.env.MONGODB_DATABASE = 'legion_tools_test';
-  process.env.TOOLS_DATABASE_NAME = 'legion_tools_test';
 }
 
 /**
@@ -60,33 +55,13 @@ export async function ensureQdrantAvailable() {
 }
 
 /**
- * Clean test database collections
- * THROWS if cleanup fails
+ * DEPRECATED: No longer cleaning production database
+ * Tests should work with existing production data
  */
 export async function cleanTestDatabase() {
-  const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
-  const client = new MongoClient(mongoUri);
-  
-  try {
-    await client.connect();
-    const db = client.db('legion_tools_test');
-    
-    const collections = ['modules', 'tools', 'tool_perspectives'];
-    for (const collectionName of collections) {
-      try {
-        await db.collection(collectionName).deleteMany({});
-      } catch (error) {
-        // Collection might not exist, that's ok
-        if (error.code !== 26) {
-          throw error;
-        }
-      }
-    }
-    
-    await client.close();
-  } catch (error) {
-    throw new Error(`Failed to clean test database: ${error.message}`);
-  }
+  // NO-OP: We no longer clean production database
+  console.warn('cleanTestDatabase() is deprecated - tests now use production database without cleaning');
+  return;
 }
 
 /**
@@ -127,6 +102,12 @@ export async function resetToolRegistrySingleton() {
   // Clean up existing instance if it exists
   if (ToolRegistry._instance) {
     try {
+      // Force cleanup of interval to prevent Jest handle leaks
+      if (ToolRegistry._instance.cacheCleanupInterval) {
+        clearInterval(ToolRegistry._instance.cacheCleanupInterval);
+        ToolRegistry._instance.cacheCleanupInterval = null;
+      }
+      
       await ToolRegistry._instance.cleanup();
     } catch (error) {
       console.warn('Failed to cleanup ToolRegistry instance:', error.message);
@@ -143,6 +124,9 @@ export async function resetToolRegistrySingleton() {
   if (toolRegistry.moduleCache) {
     toolRegistry.moduleCache.clear();
   }
+  
+  // Add a small delay to ensure intervals are fully cleared
+  await new Promise(resolve => setTimeout(resolve, 10));
 }
 
 /**
@@ -224,15 +208,20 @@ export async function verifyToolExecution(toolName, args) {
 }
 
 /**
- * Get test MongoDB database connection
+ * Get production MongoDB database connection
  * For direct database operations in tests
  */
-export async function getTestDatabase() {
-  const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
+export async function getProductionDatabase() {
+  const resourceManager = ResourceManager.getInstance();
+  await resourceManager.initialize();
+  
+  const mongoUri = resourceManager.get('env.MONGODB_URL');
+  const dbName = resourceManager.get('env.TOOLS_DATABASE_NAME') || resourceManager.get('env.MONGODB_DATABASE');
+  
   const client = new MongoClient(mongoUri);
   await client.connect();
   
-  const db = client.db('legion_tools_test');
+  const db = client.db(dbName);
   
   // Return db and cleanup function
   return {
@@ -241,6 +230,14 @@ export async function getTestDatabase() {
       await client.close();
     }
   };
+}
+
+/**
+ * @deprecated Use getProductionDatabase() instead
+ */
+export async function getTestDatabase() {
+  console.warn('getTestDatabase() is deprecated - use getProductionDatabase() instead');
+  return getProductionDatabase();
 }
 
 /**

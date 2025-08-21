@@ -134,26 +134,34 @@ export class LoadToolsStage {
           continue;
         }
         
-        // Prepare tool document for MongoDB
+        // Prepare tool document for MongoDB with schema validation compliance
+        const description = tool.description || `Tool for ${tool.name} functionality`;
+        
+        // Ensure description meets minimum length requirement (10 characters)
+        const validDescription = description.length >= 10 
+          ? description 
+          : `${description} - performs ${tool.name} operations`;
+        
         const toolDoc = {
           name: tool.name,
-          description: tool.description || '',
+          description: validDescription,
           moduleName: moduleRecord.name,
           moduleId: moduleRecord._id,
-          category: tool.category || moduleRecord.category || 'general',
           
-          // Schema information
-          inputSchema: this.normalizeSchema(tool.inputSchema || tool.schema),
-          outputSchema: this.normalizeSchema(tool.outputSchema),
+          // Ensure category is valid according to schema enum
+          category: this.validateCategory(tool.category || moduleRecord.category),
           
-          // Metadata
+          // Schema information - only include if valid
+          ...(this.normalizeSchema(tool.inputSchema || tool.schema) && {
+            inputSchema: this.normalizeSchema(tool.inputSchema || tool.schema)
+          }),
+          ...(this.normalizeSchema(tool.outputSchema) && {
+            outputSchema: this.normalizeSchema(tool.outputSchema)
+          }),
+          
+          // Metadata - only include fields that match schema
           tags: tool.tags || [],
           examples: tool.examples || [],
-          version: tool.version || moduleRecord.version,
-          author: tool.author || moduleRecord.author,
-          
-          // Function reference for execution
-          hasExecute: typeof tool.execute === 'function',
           
           // Timestamps
           createdAt: new Date(),
@@ -172,37 +180,99 @@ export class LoadToolsStage {
   }
 
   /**
-   * Normalize schema to consistent format
+   * Validate category against schema enum values
+   */
+  validateCategory(category) {
+    const validCategories = [
+      'read', 'write', 'create', 'delete', 'update', 'search',
+      'transform', 'validate', 'execute', 'generate', 'analyze'
+    ];
+    
+    if (category && validCategories.includes(category)) {
+      return category;
+    }
+    
+    // Default to 'execute' which is a safe generic category
+    return 'execute';
+  }
+
+  /**
+   * Normalize schema to consistent format that matches MongoDB validation
    */
   normalizeSchema(schema) {
     if (!schema) return null;
     
-    // Handle Zod schemas
+    // Handle Zod schemas - convert to valid JSON Schema
     if (schema._def) {
       return {
-        type: 'zod',
-        zodType: schema._def.typeName,
-        properties: schema._def.shape ? Object.keys(schema._def.shape()) : []
+        type: 'object',
+        properties: schema._def.shape ? this.extractZodProperties(schema._def.shape()) : {},
+        additionalProperties: false
       };
     }
     
-    // Handle JSON schemas
+    // Handle existing JSON schemas - ensure they have required 'type' field
     if (schema.type || schema.properties) {
       return {
-        type: 'json-schema',
+        type: schema.type || 'object',
         ...schema
       };
     }
     
-    // Handle OpenAI function schemas
+    // Handle OpenAI function schemas - convert parameters to JSON Schema
     if (schema.parameters) {
       return {
-        type: 'openai-function',
-        ...schema.parameters
+        type: schema.parameters.type || 'object',
+        properties: schema.parameters.properties || {},
+        required: schema.parameters.required || []
       };
     }
     
-    return schema;
+    // Handle plain objects - convert to JSON Schema
+    if (typeof schema === 'object') {
+      return {
+        type: 'object',
+        properties: schema,
+        additionalProperties: false
+      };
+    }
+    
+    return null;
+  }
+
+  /**
+   * Extract properties from Zod schema definition
+   */
+  extractZodProperties(shape) {
+    const properties = {};
+    try {
+      const shapeObj = shape();
+      for (const [key, zodType] of Object.entries(shapeObj)) {
+        if (zodType._def) {
+          properties[key] = {
+            type: this.zodTypeToJsonSchemaType(zodType._def.typeName)
+          };
+        }
+      }
+    } catch (error) {
+      // Fallback for complex Zod schemas
+      console.log(`    Warning: Could not extract Zod schema properties: ${error.message}`);
+    }
+    return properties;
+  }
+
+  /**
+   * Convert Zod type names to JSON Schema types
+   */
+  zodTypeToJsonSchemaType(zodTypeName) {
+    const typeMap = {
+      'ZodString': 'string',
+      'ZodNumber': 'number',
+      'ZodBoolean': 'boolean',
+      'ZodArray': 'array',
+      'ZodObject': 'object'
+    };
+    return typeMap[zodTypeName] || 'string';
   }
 
   /**
@@ -243,7 +313,7 @@ export class LoadToolsStage {
    * Save module runtime state to modules collection
    */
   async saveModuleRuntimeState(moduleRecord, toolCount, status) {
-    await this.mongoProvider.insertOne('modules', {
+    await this.mongoProvider.insert('modules', {
       ...moduleRecord,
       _id: new ObjectId(), // New ID for runtime record
       registryId: moduleRecord._id, // Reference to registry

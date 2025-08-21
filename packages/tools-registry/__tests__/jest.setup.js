@@ -29,17 +29,20 @@ global.qdrantAvailable = false;
 async function verifyMongoDB() {
   console.log(chalk.blue('🔍 Verifying MongoDB connection...'));
   
-  const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
+  // Use ResourceManager to get actual database configuration
+  const mongoUri = global.testResourceManager.get('env.MONGODB_URL');
+  const dbName = global.testResourceManager.get('env.TOOLS_DATABASE_NAME') || global.testResourceManager.get('env.MONGODB_DATABASE');
   
   try {
     global.testMongoClient = new MongoClient(mongoUri);
     await global.testMongoClient.connect();
     
-    // Verify we can access the test database
-    global.testMongoDb = global.testMongoClient.db('legion_tools_test');
+    // Verify we can access the production database
+    global.testMongoDb = global.testMongoClient.db(dbName);
     await global.testMongoDb.admin().ping();
     
-    console.log(chalk.green('✅ MongoDB connected successfully'));
+    console.log(chalk.green('✅ MongoDB connected successfully to production database'));
+    console.log(chalk.gray(`   Database: ${dbName}`));
     return true;
   } catch (error) {
     console.error(chalk.red('❌ MongoDB connection FAILED:'), error.message);
@@ -113,32 +116,13 @@ async function initializeResourceManager() {
 }
 
 /**
- * Clear test database collections
- * Ensures clean state for tests
+ * DEPRECATED: No longer clearing production database
+ * Tests should work with existing production data
  */
 async function clearTestDatabase() {
-  console.log(chalk.blue('🧹 Clearing test database...'));
-  
-  try {
-    const collections = ['modules', 'tools', 'tool_perspectives'];
-    
-    for (const collectionName of collections) {
-      try {
-        await global.testMongoDb.collection(collectionName).drop();
-        console.log(chalk.gray(`   Dropped collection: ${collectionName}`));
-      } catch (error) {
-        // Collection might not exist, that's ok
-        if (error.code !== 26) { // 26 = NamespaceNotFound
-          throw error;
-        }
-      }
-    }
-    
-    console.log(chalk.green('✅ Test database cleared'));
-  } catch (error) {
-    console.error(chalk.red('❌ Failed to clear test database:'), error.message);
-    throw error;
-  }
+  // NO-OP: We no longer clear production database
+  console.warn('clearTestDatabase() is deprecated - tests now use production database without clearing');
+  return;
 }
 
 /**
@@ -159,8 +143,8 @@ async function globalSetup() {
     // 3. Verify Qdrant (optional but will cause semantic test failures)
     await verifyQdrant();
     
-    // 4. Clear test database
-    await clearTestDatabase();
+    // 4. Skip database clearing - using production database
+    console.log(chalk.gray('   Skipping database clearing - tests use production database'));
     
     console.log(chalk.bold.green('\n✅ Global setup complete - ready to run tests\n'));
   } catch (error) {
@@ -188,14 +172,8 @@ async function globalSetup() {
   return async () => {
     console.log(chalk.blue('\n🧹 Global teardown...'));
     
-    // Clean up test database
-    try {
-      if (global.testMongoDb) {
-        await clearTestDatabase();
-      }
-    } catch (error) {
-      console.error(chalk.yellow('Warning: Failed to clean test database:'), error.message);
-    }
+    // Skip database cleaning - using production database
+    console.log(chalk.gray('   Skipping database cleanup - production database preserved'));
     
     // Close MongoDB connection with timeout
     if (global.testMongoClient) {
@@ -216,5 +194,35 @@ async function globalSetup() {
   };
 }
 
-// Export the setup function
+/**
+ * Global cleanup for ToolRegistry instances
+ * Ensures all intervals are cleared to prevent Jest open handles
+ */
+async function globalCleanup() {
+  const { ToolRegistry } = await import('../src/integration/ToolRegistry.js');
+  
+  // Force cleanup of any existing singleton instance
+  if (ToolRegistry._instance) {
+    try {
+      await ToolRegistry._instance.cleanup();
+    } catch (error) {
+      // Ignore cleanup errors
+    }
+    ToolRegistry._instance = null;
+  }
+}
+
+// Register process exit handler to ensure cleanup
+process.on('beforeExit', async () => {
+  await globalCleanup();
+});
+
+// Register SIGINT handler for Ctrl+C during tests
+process.on('SIGINT', async () => {
+  await globalCleanup();
+  process.exit(0);
+});
+
+// Export the setup function along with cleanup
 export default globalSetup;
+export { globalCleanup };

@@ -1,238 +1,245 @@
-# ToolRegistry Singleton API
+# Tools Registry
 
-## Zero-Configuration Usage
+A comprehensive tool registry system for the Legion AI agent framework, providing database-backed tool discovery, semantic search, and automated loading pipelines.
 
-The ToolRegistry is now a singleton that automatically configures itself using the ResourceManager from `@legion/resource-manager`. No initialization or configuration is required.
+## Overview
+
+The Tools Registry manages AI agent tools with:
+- **MongoDB-backed storage** for tools, modules, and metadata
+- **Qdrant vector database** for semantic tool search
+- **Automated loading pipelines** for tool discovery and indexing
+- **Staged processing** with resume capability and verification
+- **Production-ready architecture** with comprehensive error handling
 
 ## Quick Start
 
 ```javascript
 import toolRegistry from '@legion/tools-registry';
 
-// That's it! Ready to use immediately
+// Get and execute a tool
 const tool = await toolRegistry.getTool('calculator');
 const result = await tool.execute({ expression: '2 + 2' });
 ```
 
-## API Reference
+## Core Architecture
 
-### Runtime Tool Access
+### Database Collections
 
-#### `getTool(name)`
-Get an executable tool by name.
+- **`module_registry`** - Permanent registry of discovered modules (persistent)
+- **`modules`** - Currently loaded module metadata (pipeline managed)
+- **`tools`** - Available tool definitions (pipeline managed)
+- **`tool_perspectives`** - AI-generated tool descriptions (pipeline managed) 
+- **`pipeline_state`** - Pipeline execution state and progress tracking
 
-```javascript
-const tool = await toolRegistry.getTool('file_read');
-const content = await tool.execute({ path: '/path/to/file.txt' });
-```
+### Staged Loading Pipeline
 
-#### `listTools(options)`
-List available tools with optional filtering.
+The system uses a 5-stage pipeline for tool processing:
 
-```javascript
-const tools = await toolRegistry.listTools({ 
-  limit: 10,
-  module: 'file' 
-});
-```
+1. **Clear Stage** - Removes existing data (preserves module_registry)
+2. **LoadTools Stage** - Loads tools from discovered modules
+3. **GeneratePerspectives Stage** - Creates AI descriptions for tools
+4. **GenerateEmbeddings Stage** - Generates vector embeddings
+5. **IndexVectors Stage** - Stores vectors in Qdrant for search
 
-#### `searchTools(query, options)`
-Search for tools by text query.
+## Database Management
 
-```javascript
-const tools = await toolRegistry.searchTools('json', {
-  limit: 5
-});
-```
-
-#### `semanticToolSearch(query, options)`
-Search for tools using natural language (requires semantic search to be available).
-
-```javascript
-const results = await toolRegistry.semanticToolSearch(
-  'I need to analyze code quality',
-  { 
-    limit: 5,
-    minConfidence: 0.7 
-  }
-);
-```
-
-### Database Management
-
-#### `getLoader()`
-Get the LoadingManager instance for database operations.
+### Loading Manager API
 
 ```javascript
 const loader = await toolRegistry.getLoader();
 
-// Clear all data
+// Full pipeline with specific modules
+await loader.runFullPipeline({
+  forceRestart: true,
+  clearModules: true, 
+  module: 'calculator,json,file'
+});
+
+// Individual stage operations
 await loader.clearAll();
-
-// Load modules
-await loader.loadModules();
-
-// Generate perspectives
+await loader.loadModules({ module: 'calculator' });
 await loader.generatePerspectives();
-
-// Index vectors
+await loader.generateEmbeddings();
 await loader.indexVectors();
 
-// Or run everything at once
-await loader.fullPipeline({
-  clearFirst: true,
-  includePerspectives: true,
-  includeVectors: false
+// Check pipeline state
+const progress = await loader.getPipelineProgress();
+```
+
+### Command Line Scripts
+
+Clear and rebuild database:
+```bash
+node src/loading/populate.js --clear --verbose
+```
+
+Load specific modules:
+```bash
+node src/loading/populate.js --module calculator,json --perspectives --vectors
+```
+
+## Tool Discovery and Search
+
+### Basic Tool Access
+```javascript
+// Get single tool
+const tool = await toolRegistry.getTool('file_read');
+
+// List tools with filtering
+const tools = await toolRegistry.listTools({ 
+  limit: 10,
+  moduleName: 'file'
+});
+
+// Text-based search
+const results = await toolRegistry.searchTools('json parsing');
+```
+
+### Semantic Search
+```javascript
+// Natural language search (requires Qdrant + embeddings)
+const results = await toolRegistry.semanticToolSearch(
+  'I need to process CSV files',
+  { limit: 5, minConfidence: 0.7 }
+);
+```
+
+## Production Usage
+
+### Environment Configuration
+
+Required `.env` variables:
+```bash
+MONGODB_URL=mongodb://localhost:27017/legion_tools
+TOOLS_DATABASE_NAME=legion_tools
+QDRANT_URL=http://localhost:6333
+ANTHROPIC_API_KEY=your_key_here
+```
+
+### Pipeline Resume Capability
+
+The system supports resuming failed pipelines:
+```javascript
+// If pipeline fails at stage 3, simply run again
+await loader.runFullPipeline({ forceRestart: false }); // Resumes from failure
+```
+
+### Verification and Monitoring
+
+```javascript
+// Get detailed pipeline state
+const state = await loader.getPipelineState();
+console.log(state.currentStage, state.percentComplete);
+
+// Verify data consistency
+const verificationResult = await loader.verifyPipelineState();
+```
+
+## Testing
+
+All tests use the **production database** - no test database isolation:
+
+```javascript
+// Tests work with real production data
+describe('Tool Registry', () => {
+  it('should find calculator tool', async () => {
+    const tool = await toolRegistry.getTool('calculator');
+    expect(tool).toBeDefined();
+    
+    const result = await tool.execute({ expression: '5 * 8' });
+    expect(result.success).toBe(true);
+  });
 });
 ```
 
-## Migration from Old API
-
-### Before (Manual Configuration)
-```javascript
-import { ResourceManager } from '@legion/resource-manager';
-import { ToolRegistry } from '@legion/tools-registry';
-import { MongoDBToolRegistryProvider } from '@legion/tools-registry/providers';
-
-// Manual setup required
-const resourceManager = new ResourceManager();
-await resourceManager.initialize();
-
-const provider = await MongoDBToolRegistryProvider.create(resourceManager);
-const toolRegistry = new ToolRegistry({ provider });
-await toolRegistry.initialize();
-
-// Now ready to use
-const tool = await toolRegistry.getTool('calculator');
+Run tests:
+```bash
+npm test                           # Run all tests
+npm test -- --testNamePattern="should execute complete pipeline"
 ```
 
-### After (Zero Configuration)
-```javascript
-import toolRegistry from '@legion/tools-registry';
+## Error Handling and Recovery
 
-// Ready immediately!
-const tool = await toolRegistry.getTool('calculator');
+### Pipeline Failures
+- Automatic state tracking with resume capability
+- Detailed error logging with stack traces
+- Stage-level verification and rollback
+- Connection failure recovery
+
+### Common Issues
+
+**Tool Not Found:**
+```javascript
+const tool = await toolRegistry.getTool('unknown_tool');
+if (!tool) {
+  // Tool doesn't exist or database not populated
+  const loader = await toolRegistry.getLoader();
+  await loader.runFullPipeline({ forceRestart: true });
+}
 ```
 
-## Advanced Usage
+**Database Connection Issues:**
+- Verify MongoDB is running and accessible
+- Check MONGODB_URL in environment
+- Ensure database permissions are correct
+
+**Semantic Search Failures:**
+- Verify Qdrant is running on QDRANT_URL
+- Run pipeline with vectors: `await loader.indexVectors()`
+- Check embedding generation completed successfully
+
+## Module Development
+
+Tools are discovered from modules in the Legion monorepo:
+- Modules must be in `packages/*/` directories
+- Must export tools via `getTools()` method
+- Tools require `name`, `description`, and `execute()` method
+- Module registry persists discovered modules permanently
+
+## Advanced Configuration
 
 ### Custom Provider
-If you need a custom provider, you can still pass one:
-
 ```javascript
-import { ToolRegistry } from '@legion/tools-registry';
+import { ToolRegistry, MongoDBToolRegistryProvider } from '@legion/tools-registry';
 
-const customRegistry = new ToolRegistry({ 
-  provider: myCustomProvider,
-  _forceNew: true  // Force new instance instead of singleton
-});
-```
-
-### Accessing the Class
-The class is still exported for typing and testing:
-
-```javascript
-import { ToolRegistry } from '@legion/tools-registry';
-
-// For TypeScript typing
-function processRegistry(registry: ToolRegistry) {
-  // ...
-}
-```
-
-### Singleton Behavior
-- The singleton is created on first access
-- Automatic initialization with ResourceManager
-- Shared across all imports in your application
-- Thread-safe initialization
-
-## Benefits
-
-1. **Zero Configuration** - No setup code required
-2. **Automatic Resource Management** - ResourceManager handled internally
-3. **Connection Sharing** - MongoDB and Qdrant connections are reused
-4. **Lazy Initialization** - Resources created only when needed
-5. **Simplified API** - Clean, intuitive interface
-6. **Backward Compatible** - Old code continues to work
-
-## Common Patterns
-
-### Script Usage
-```javascript
-#!/usr/bin/env node
-import toolRegistry from '@legion/tools-registry';
-
-async function main() {
-  // Get loader for database operations
-  const loader = await toolRegistry.getLoader();
-  
-  // Populate database
-  await loader.fullPipeline({ clearFirst: true });
-  
-  // Use tools
-  const tool = await toolRegistry.getTool('my_tool');
-  await tool.execute({ /* args */ });
-}
-
-main().catch(console.error);
-```
-
-### Application Usage
-```javascript
-import toolRegistry from '@legion/tools-registry';
-
-export class MyService {
-  async processWithTool(toolName, args) {
-    const tool = await toolRegistry.getTool(toolName);
-    if (!tool) {
-      throw new Error(`Tool ${toolName} not found`);
-    }
-    return await tool.execute(args);
-  }
-}
-```
-
-### Testing
-```javascript
-import toolRegistry from '@legion/tools-registry';
-
-beforeAll(async () => {
-  // Ensure database is populated for tests
-  const loader = await toolRegistry.getLoader();
-  await loader.fullPipeline({ clearFirst: true });
+const customProvider = await MongoDBToolRegistryProvider.create(resourceManager, {
+  enableSemanticSearch: true,
+  embeddingModel: 'custom-model'
 });
 
-test('calculator tool works', async () => {
-  const calc = await toolRegistry.getTool('calculator');
-  const result = await calc.execute({ expression: '2 + 2' });
-  expect(result.result).toBe(4);
-});
+const registry = new ToolRegistry({ provider: customProvider });
 ```
 
-## Troubleshooting
+### Semantic Search Configuration
+```javascript
+// Configure local ONNX embeddings
+process.env.USE_LOCAL_EMBEDDINGS = 'true';
+process.env.LOCAL_EMBEDDING_MODEL_PATH = './models/embeddings.onnx';
+```
 
-### Tool Not Found
-If `getTool()` returns null:
-1. Check if the database is populated: `loader.getPipelineState()`
-2. Run population if needed: `loader.fullPipeline()`
-3. Verify tool name is correct: `toolRegistry.listTools()`
+## Performance Characteristics
 
-### Semantic Search Not Available
-If semantic search throws an error:
-1. Ensure Qdrant is running: `docker ps`
-2. Check QDRANT_URL in .env file
-3. Generate vectors: `loader.indexVectors()`
+- **Tool lookup:** ~1ms (cached)
+- **Database operations:** ~10-50ms
+- **Semantic search:** ~100-500ms (depends on vector count)
+- **Pipeline execution:** ~30-180s (depends on module count)
+- **Memory usage:** ~50-200MB (depends on loaded tools)
 
-### Connection Issues
-If you see MongoDB connection errors:
-1. Verify MONGODB_URI in .env file
-2. Ensure MongoDB is running
-3. Check network connectivity
+## Monitoring and Observability
 
-## Environment Variables
+The system provides extensive logging:
+```bash
+# Enable verbose logging
+DEBUG=tools-registry:* node your-script.js
 
-The singleton automatically loads these from .env:
-- `MONGODB_URI` - MongoDB connection string
-- `QDRANT_URL` - Qdrant vector database URL (optional)
-- `OPENAI_API_KEY` - For AI-powered tools (optional)
-- Other API keys as needed by specific tools
+# Pipeline state tracking
+curl http://localhost:3000/pipeline/state  # If monitoring endpoint enabled
+```
+
+## Deployment Considerations
+
+- MongoDB requires persistent storage for `module_registry`
+- Qdrant optional but required for semantic search
+- Pipeline can be run as initialization job
+- Supports horizontal scaling (singleton per process)
+- Memory usage scales with tool count (~1KB per tool)

@@ -151,6 +151,18 @@ export class LRUCache {
   }
 
   /**
+   * Get all entries as an iterable
+   * @returns {IterableIterator<[string, any]>} Iterator of [key, value] pairs
+   */
+  *entries() {
+    for (const [key, item] of this.cache.entries()) {
+      if (!this.isExpired(item)) {
+        yield [key, item.value];
+      }
+    }
+  }
+
+  /**
    * Clean up expired items
    * @returns {number} Number of expired items removed
    */

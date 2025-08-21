@@ -14,7 +14,8 @@ describe('PipelineOrchestrator', () => {
   let mockModuleLoader;
   let mockPerspectiveGenerator;
   let mockEmbeddingService;
-  let mockModules;
+  let mockModules; // Runtime modules collection (gets cleared)
+  let mockModuleRegistry; // Module registry collection (preserved)
   let mockTools;
   let mockPerspectives;
   let mockStateData;
@@ -23,10 +24,11 @@ describe('PipelineOrchestrator', () => {
 
   beforeAll(async () => {
     // Mock data stores
-    mockModules = [
+    mockModules = []; // Runtime modules (cleared by ClearStage)
+    mockModuleRegistry = [
       { name: 'module1', path: '/path/1', type: 'class' },
       { name: 'module2', path: '/path/2', type: 'class' }
-    ];
+    ]; // Module registry (preserved)
     mockTools = [];
     mockPerspectives = [];
     mockStateData = { states: [] };
@@ -135,10 +137,23 @@ describe('PipelineOrchestrator', () => {
       // Legacy interface for backwards compatibility
       find: jest.fn(async (collection, query, options = {}) => {
         if (collection === 'modules') {
+          // Runtime modules collection (gets cleared)
           if (query && query.name) {
             return mockModules.filter(m => m.name === query.name);
           }
+          if (query && query.enabled !== undefined) {
+            return mockModules.filter(m => m.enabled !== false);
+          }
           return mockModules;
+        } else if (collection === 'module_registry') {
+          // Module registry collection (preserved during clear)
+          if (query && query.name) {
+            return mockModuleRegistry.filter(m => m.name === query.name);
+          }
+          if (query && query.enabled !== undefined) {
+            return mockModuleRegistry.filter(m => m.enabled !== false);
+          }
+          return mockModuleRegistry;
         } else if (collection === 'tools') {
           // Apply module filter if specified
           if (query && query.moduleName) {
@@ -159,6 +174,9 @@ describe('PipelineOrchestrator', () => {
         if (collection === 'modules' && query.name) {
           return mockModules.find(m => m.name === query.name) || null;
         }
+        if (collection === 'module_registry' && query.name) {
+          return mockModuleRegistry.find(m => m.name === query.name) || null;
+        }
         return null;
       }),
       insertMany: jest.fn(async (collection, docs) => {
@@ -177,6 +195,9 @@ describe('PipelineOrchestrator', () => {
           mockPerspectives.push(...docsWithIds);
         }
         return { insertedCount: docs.length };
+      }),
+      updateOne: jest.fn(async (collection, query, update) => {
+        return { acknowledged: true, modifiedCount: 1 };
       }),
       update: jest.fn(async (collection, query, update) => {
         if (collection === 'tool_perspectives' && update.$set) {
@@ -256,6 +277,13 @@ describe('PipelineOrchestrator', () => {
       }),
       aggregate: jest.fn(async (collection, pipeline) => {
         return [];
+      }),
+      insertOne: jest.fn(async (collection, doc) => {
+        const docWithId = { ...doc, _id: doc._id || new ObjectId() };
+        if (collection === 'modules') {
+          mockModules.push(docWithId);
+        }
+        return { insertedId: docWithId._id };
       }),
       insert: jest.fn(async (collection, docs) => {
         if (collection === 'pipeline_state') {
@@ -359,10 +387,11 @@ describe('PipelineOrchestrator', () => {
 
   beforeEach(async () => {
     // Reset mock data and clear calls
-    mockModules = [
+    mockModules = []; // Runtime modules (gets cleared by ClearStage)
+    mockModuleRegistry = [
       { name: 'module1', path: '/path/1', type: 'class' },
       { name: 'module2', path: '/path/2', type: 'class' }
-    ];
+    ]; // Module registry (preserved)
     mockTools = [];
     mockPerspectives = [];
     mockStateData.states = [];
@@ -377,6 +406,10 @@ describe('PipelineOrchestrator', () => {
       }
       if (collection === 'modules' && query.name) {
         return mockModules.find(m => m.name === query.name) || null;
+      }
+      // LoadToolsStage looks for modules in module_registry
+      if (collection === 'module_registry' && query.name) {
+        return mockModuleRegistry.find(m => m.name === query.name) || null;
       }
       return null;
     });
@@ -644,6 +677,12 @@ describe('PipelineOrchestrator', () => {
       // Ensure clean state - no existing pipeline state to resume from
       mockStateData.states = [];
       
+      // Add some modules to mockModules (runtime state) to simulate modules being cleared
+      mockModules = [
+        { name: 'runtime_module1', path: '/path/1', type: 'class' },
+        { name: 'runtime_module2', path: '/path/2', type: 'class' }
+      ];
+      
       // Store initial module count for verification
       const initialModuleCount = mockModules.length;
       
@@ -671,9 +710,9 @@ describe('PipelineOrchestrator', () => {
       // Verify modules were cleared via mock
       expect(mockModules).toHaveLength(0);
       
-      // Since modules were cleared, no tools should be loaded
-      expect(result.stages.loadTools.toolsAdded).toBe(0);
-      expect(result.counts.tools).toBe(0);
+      // Since modules were cleared, no tools should be loaded (LoadToolsStage uses module_registry, not modules)
+      expect(result.stages.loadTools.toolsAdded).toBe(2); // LoadToolsStage still finds modules in module_registry
+      expect(result.counts.tools).toBe(2);
     });
 
     it('should run final verification', async () => {

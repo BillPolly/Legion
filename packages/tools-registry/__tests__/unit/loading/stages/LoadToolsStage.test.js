@@ -153,8 +153,8 @@ describe('LoadToolsStage', () => {
   });
 
   beforeEach(async () => {
-    // Reset mock data and calls
-    mockTools = [];
+    // Reset mock data and calls - ENSURE CLEAN STATE
+    mockTools.length = 0; // Clear array properly
     mockModules = [
       { _id: new ObjectId(), name: 'module1', path: '/path/to/module1', type: 'class', status: 'discovered' },
       { _id: new ObjectId(), name: 'module2', path: '/path/to/module2', type: 'class', status: 'discovered' },
@@ -424,21 +424,33 @@ describe('LoadToolsStage', () => {
     });
 
     it('should handle partial batch failures', async () => {
+      // Reset mockTools to ensure clean state
+      mockTools.length = 0;
+      
       // Simulate a batch insert that partially fails
       const customProvider = {
         ...mockMongoProvider,
         insert: jest.fn(async (collection, docs) => {
-          const docsArray = Array.isArray(docs) ? docs : [docs];
-          if (docsArray.length > 2) {
-            // Simulate partial failure - only insert first 2
-            mockTools.push(...docsArray.slice(0, 2));
+          if (collection === 'tools') {
+            const docsArray = Array.isArray(docs) ? docs : [docs];
+            if (docsArray.length > 2) {
+              // Simulate partial failure - only insert first 2
+              mockTools.push(...docsArray.slice(0, 2));
+              return { 
+                acknowledged: true,
+                insertedCount: 2,
+                insertedIds: docsArray.slice(0, 2).map((_, i) => new ObjectId())
+              };
+            }
+            mockTools.push(...docsArray);
             return { 
               acknowledged: true,
-              insertedCount: 2,
-              insertedIds: docsArray.slice(0, 2).map((_, i) => new ObjectId())
+              insertedCount: docsArray.length,
+              insertedIds: docsArray.map((_, i) => new ObjectId())
             };
           }
-          mockTools.push(...docsArray);
+          // For other collections, just return success without adding to mockTools
+          const docsArray = Array.isArray(docs) ? docs : [docs];
           return { 
             acknowledged: true,
             insertedCount: docsArray.length,
@@ -446,12 +458,15 @@ describe('LoadToolsStage', () => {
           };
         }),
         insertMany: jest.fn(async (collection, docs) => {
-          if (docs.length > 2) {
-            // Simulate partial failure - only insert first 2
-            mockTools.push(...docs.slice(0, 2));
-            return { insertedCount: 2 };
+          if (collection === 'tools') {
+            if (docs.length > 2) {
+              // Simulate partial failure - only insert first 2
+              mockTools.push(...docs.slice(0, 2));
+              return { insertedCount: 2 };
+            }
+            mockTools.push(...docs);
+            return { insertedCount: docs.length };
           }
-          mockTools.push(...docs);
           return { insertedCount: docs.length };
         })
       };

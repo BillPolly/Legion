@@ -120,7 +120,16 @@ describe('ToolRegistry Module-Specific Operations', () => {
   afterEach(async () => {
     // Clean up the ToolRegistry instance properly
     if (toolRegistry && typeof toolRegistry.cleanup === 'function') {
-      await toolRegistry.cleanup();
+      try {
+        // Force cleanup of interval to prevent Jest handle leaks
+        if (toolRegistry.cacheCleanupInterval) {
+          clearInterval(toolRegistry.cacheCleanupInterval);
+          toolRegistry.cacheCleanupInterval = null;
+        }
+        await toolRegistry.cleanup();
+      } catch (error) {
+        console.warn('Warning: ToolRegistry cleanup failed:', error.message);
+      }
     }
     ToolRegistry._instance = null;
   });
@@ -131,7 +140,6 @@ describe('ToolRegistry Module-Specific Operations', () => {
 
       expect(mockLoadingManager.clearForReload).toHaveBeenCalledWith({
         clearVectors: true,
-        clearModules: false,
         moduleFilter: 'TestModule'
       });
 
@@ -152,7 +160,6 @@ describe('ToolRegistry Module-Specific Operations', () => {
       // The method should have been called, and console.log should show verbose output
       expect(mockLoadingManager.clearForReload).toHaveBeenCalledWith({
         clearVectors: true,
-        clearModules: false,
         moduleFilter: 'TestModule'
       });
     });
@@ -177,8 +184,7 @@ describe('ToolRegistry Module-Specific Operations', () => {
       const result = await toolRegistry.clearAllModules();
 
       expect(mockLoadingManager.clearForReload).toHaveBeenCalledWith({
-        clearVectors: true,
-        clearModules: false
+        clearVectors: true
       });
 
       expect(result).toEqual({
@@ -197,8 +203,7 @@ describe('ToolRegistry Module-Specific Operations', () => {
       
       // The method should have been called
       expect(mockLoadingManager.clearForReload).toHaveBeenCalledWith({
-        clearVectors: true,
-        clearModules: false
+        clearVectors: true
       });
     });
   });
@@ -455,7 +460,6 @@ describe('ToolRegistry Module-Specific Operations', () => {
 
       expect(mockLoadingManager.clearForReload).toHaveBeenCalledWith({
         clearVectors: true,
-        clearModules: false,
         moduleFilter: 'TestModule'
       });
     });

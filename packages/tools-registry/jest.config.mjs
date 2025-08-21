@@ -6,11 +6,13 @@ export default {
   testPathIgnorePatterns: [
     '/node_modules/',
     '/__tests__/utils/',
-    '/__tests__/jest.setup.js'
+    '/__tests__/jest.setup.js',
+    '/__tests__/jest.teardown.js'
   ],
   setupFilesAfterEnv: [
     './__tests__/jest.setup.js'
   ],
+  globalTeardown: './__tests__/jest.teardown.js',
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1'
   },

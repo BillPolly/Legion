@@ -16,7 +16,8 @@ export class ModuleLoader {
     this.monorepoRoot = options.monorepoRoot || this.findMonorepoRoot();
     this.resourceManager = options.resourceManager;
     this.verbose = options.verbose || false;
-    this.databaseProvider = null;
+    // Accept shared database provider to avoid creating duplicate connections
+    this.databaseProvider = options.databaseProvider || null;
   }
 
   /**

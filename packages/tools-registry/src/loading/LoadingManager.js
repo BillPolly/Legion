@@ -58,32 +58,39 @@ export class LoadingManager {
     if (this.initialized) return;
 
     // Create ResourceManager if not provided
+    // CRITICAL: Never re-initialize a ResourceManager that was passed in from tests
+    // The test may have overridden environment values that would be lost
     if (!this.resourceManager) {
       this.resourceManager = ResourceManager.getInstance();
       if (!this.resourceManager.initialized) {
         await this.resourceManager.initialize();
       }
+    } else {
+      // ResourceManager was provided (likely from tests with overridden values)
+      // DO NOT call initialize() as it would reload .env and overwrite test values
+      console.log('LoadingManager: Using provided ResourceManager (test environment), skipping re-initialization');
     }
 
     // SemanticSearchProvider always uses local Nomic embeddings
 
-    // Initialize components
+    // Initialize MongoDB provider first so other components can share it
+    if (!this.mongoProvider) {
+      this.mongoProvider = await MongoDBToolRegistryProvider.create(this.resourceManager, {
+        enableSemanticSearch: false
+      });
+    }
+
+    // Initialize components with shared database provider
     this.moduleLoader = new ModuleLoader({
       verbose: this.verbose,
-      resourceManager: this.resourceManager
+      resourceManager: this.resourceManager,
+      databaseProvider: this.mongoProvider  // Share the same database provider
     });
 
     this.databasePopulator = new DatabasePopulator({
       verbose: this.verbose
     });
     await this.databasePopulator.initialize();
-
-    // Only create MongoDB provider if not provided (allows sharing connections)
-    if (!this.mongoProvider) {
-      this.mongoProvider = await MongoDBToolRegistryProvider.create(this.resourceManager, {
-        enableSemanticSearch: false
-      });
-    }
 
     // Don't initialize semantic search components until needed
     // this.semanticSearchProvider = await SemanticSearchProvider.create(this.resourceManager);
@@ -180,7 +187,6 @@ export class LoadingManager {
    * 
    * @param {Object} options - Clear options
    * @param {boolean} options.clearVectors - Whether to clear vector database (default: true)
-   * @param {boolean} options.clearModules - DEPRECATED/IGNORED - modules collection handling is automatic
    * @param {string} options.moduleFilter - Module name to clear, or null to clear all modules
    */
   async clearForReload(options = {}) {
@@ -188,13 +194,11 @@ export class LoadingManager {
 
     const { 
       clearVectors = true,
-      clearModules = false,
       moduleFilter = null
     } = options;
 
     if (this.verbose) {
       console.log('🧹 Clearing for reload...');
-      console.log(`   Preserve modules: ${!clearModules}`);
       console.log(`   Clear vectors: ${clearVectors}`);
       if (moduleFilter) {
         console.log(`   Module filter: ${moduleFilter}`);

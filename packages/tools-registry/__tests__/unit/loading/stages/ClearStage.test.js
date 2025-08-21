@@ -162,28 +162,28 @@ describe('ClearStage', () => {
       expect(mockMongoProvider.db.collection).toHaveBeenCalledWith('modules');
     });
 
-    it('should not clear modules by default', async () => {
+    it('should clear modules by default (runtime state always cleared)', async () => {
       const result = await clearStage.execute({});
       
       expect(result.success).toBe(true);
-      expect(result.modulesCleared).toBeUndefined();
+      expect(result.modulesCleared).toBe(1);
       
-      // Verify modules were not cleared
-      expect(mockMongoProvider.db.collection).not.toHaveBeenCalledWith('modules');
+      // Verify modules were cleared (runtime state always cleared in clearAll)
+      expect(mockMongoProvider.db.collection).toHaveBeenCalledWith('modules');
     });
 
-    it('should clear base collections but not modules when clearModules is false', async () => {
+    it('should clear base collections and modules (runtime state always cleared)', async () => {
       const result = await clearStage.execute({ someOption: 'ignored' });
       
       expect(result.success).toBe(true);
       expect(result.toolCount).toBe(0);
       expect(result.perspectiveCount).toBe(0);
-      expect(result.modulesCleared).toBeUndefined();
+      expect(result.modulesCleared).toBe(1);
       
-      // Verify only base collections were cleared
+      // Verify all collections were cleared (modules runtime state always cleared)
       expect(mockMongoProvider.db.collection).toHaveBeenCalledWith('tools');
       expect(mockMongoProvider.db.collection).toHaveBeenCalledWith('tool_perspectives');
-      expect(mockMongoProvider.db.collection).not.toHaveBeenCalledWith('modules');
+      expect(mockMongoProvider.db.collection).toHaveBeenCalledWith('modules');
     });
 
     it('should handle clearing when collections are already empty', async () => {

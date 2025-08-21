@@ -9,9 +9,7 @@ import { ToolRegistry } from '../../src/integration/ToolRegistry.js';
 
 // Reset singleton state before each test file
 beforeAll(() => {
-  // Force use of test database
-  process.env.MONGODB_DATABASE = 'legion_tools_test';
-  process.env.TOOLS_DATABASE_NAME = 'legion_tools_test';
+  // Use production database - no overrides
   
   // Clear the singleton instance to ensure fresh state
   ToolRegistry._instance = null;

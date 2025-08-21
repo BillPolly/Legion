@@ -15,7 +15,7 @@ describe('IndexVectorsStage', () => {
   let mockStateManager;
   let mockPerspectives;
   let vectorCount;
-  const testCollectionName = 'legion_tools_test';
+  const testCollectionName = 'legion_tools'; // Use production collection for testing
 
   beforeAll(async () => {
     // Mock data stores

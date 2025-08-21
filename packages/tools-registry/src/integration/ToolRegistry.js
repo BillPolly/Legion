@@ -10,7 +10,7 @@
 import { MongoDBToolRegistryProvider } from '../providers/MongoDBToolRegistryProvider.js';
 import { ResourceManager } from '@legion/resource-manager';
 import { SemanticToolDiscovery } from '../search/SemanticToolDiscovery.js';
-import { LRUCache } from '../utils/LRUCache.js';
+// LRUCache removed - no caching
 import { Mutex } from 'async-mutex';
 import {
   ToolRegistryError,
@@ -39,15 +39,9 @@ export class ToolRegistry {
     // Always use ResourceManager singleton - no option to override
     this.resourceManager = null;
     
-    // Caching with LRU and TTL
-    this.toolCache = new LRUCache({
-      maxSize: options.toolCacheSize || 100,
-      ttl: options.toolCacheTTL || 3600000 // 1 hour default
-    });
-    this.moduleCache = new LRUCache({
-      maxSize: options.moduleCacheSize || 50,
-      ttl: options.moduleCacheTTL || 7200000 // 2 hours default
-    });
+    // NO CACHE - Direct database access only
+    // Caching removed to avoid synchronization issues
+    // All tool and module access goes directly to MongoDB
     
     // Semantic search
     this.semanticDiscovery = null;
@@ -63,12 +57,6 @@ export class ToolRegistry {
     // Concurrency control
     this.moduleOperationMutexes = new Map(); // Mutex per module
     this.globalOperationMutex = new Mutex(); // Global mutex for all-module operations
-    
-    // Start periodic cache cleanup
-    this.cacheCleanupInterval = setInterval(() => {
-      this.toolCache.cleanupExpired();
-      this.moduleCache.cleanupExpired();
-    }, 300000); // Clean up every 5 minutes
     
     // Set singleton instance if this is the first creation
     if (!ToolRegistry._instance) {
@@ -144,18 +132,10 @@ export class ToolRegistry {
       throw new ValidationError('name', 'string', name);
     }
     
-    // 1. Check cache first
-    if (this.toolCache.has(name)) {
-      this.#trackUsage(name);
-      return this.toolCache.get(name);
-    }
-    
-    // 2. Get executable tool from MongoDB
+    // Get executable tool directly from MongoDB (no cache)
     const executableTool = await this.#getExecutableToolFromMongoDB(name);
     
-    // 3. Cache and return
     if (executableTool) {
-      this.toolCache.set(name, executableTool);
       this.#trackUsage(name);
     }
     
@@ -352,11 +332,7 @@ export class ToolRegistry {
     try {
       console.log(`[DEBUG] Loading module '${moduleName}' from MongoDB`);
       
-      // Check module cache first
-      if (this.moduleCache.has(moduleName)) {
-        console.log(`[DEBUG] Module '${moduleName}' found in cache`);
-        return this.moduleCache.get(moduleName);
-      }
+      // NO CACHE - Load fresh from database every time
 
       // Get module metadata from database
       const moduleMetadata = await this.provider.getModule(moduleName);
@@ -374,7 +350,7 @@ export class ToolRegistry {
         console.log(`[DEBUG] Module '${moduleName}' loaded successfully`);
         console.log(`[DEBUG] Module instance type: ${typeof moduleInstance}`);
         console.log(`[DEBUG] Module instance constructor: ${moduleInstance?.constructor?.name}`);
-        this.moduleCache.set(moduleName, moduleInstance);
+        // NO CACHE - Return directly
         return moduleInstance;
       }
 
@@ -598,9 +574,8 @@ export class ToolRegistry {
    */
   getUsageStats() {
     return {
-      toolUsage: Object.fromEntries(this.usageStats),
-      toolCacheStats: this.toolCache.getStats(),
-      moduleCacheStats: this.moduleCache.getStats()
+      toolUsage: Object.fromEntries(this.usageStats)
+      // NO CACHE - No cache stats to report
     };
   }
 
@@ -608,8 +583,7 @@ export class ToolRegistry {
    * Clear caches
    */
   clearCache() {
-    this.toolCache.clear();
-    this.moduleCache.clear();
+    // NO CACHE - Only clear usage stats
     this.usageStats.clear();
   }
 
@@ -730,19 +704,10 @@ export class ToolRegistry {
         // Use LoadingManager's clearForReload with module filter
         const result = await loader.clearForReload({
           clearVectors: true,
-          clearModules: false, // Keep module discovery
           moduleFilter: moduleName
         });
 
-        // Clear module from cache
-        this.moduleCache.delete(moduleName);
-        
-        // Clear tools from this module from cache
-        for (const [key] of this.toolCache.cache.entries()) {
-          if (key.startsWith(`${moduleName}.`)) {
-            this.toolCache.delete(key);
-          }
-        }
+        // NO CACHE - Nothing to clear from cache
 
         return {
           moduleName,
@@ -778,13 +743,10 @@ export class ToolRegistry {
         }
 
         const result = await loader.clearForReload({
-          clearVectors: true,
-          clearModules: false // Keep module discovery
+          clearVectors: true
         });
 
-        // Clear all caches
-        this.toolCache.clear();
-        this.moduleCache.clear();
+        // NO CACHE - Nothing to clear
 
         return {
           moduleName: 'all',
@@ -798,11 +760,11 @@ export class ToolRegistry {
   }
 
   /**
-   * Load specific module only (without clearing first)
-   * Appends to existing data - use after clearModule() if needed
+   * Load specific module only (with optional clearing first)
    * 
    * @param {string} moduleName - Name of module to load
    * @param {Object} options - Load options
+   * @param {boolean} options.clearFirst - Clear module data first (default: false)
    * @param {boolean} options.verbose - Show detailed output (default: false)
    * @param {boolean} options.includePerspectives - Generate perspectives (default: true)
    * @param {boolean} options.includeVectors - Index vectors (default: false)
@@ -828,6 +790,19 @@ export class ToolRegistry {
 
         if (loader.verbose) {
           console.log(`📦 Loading module: ${moduleName}`);
+        }
+
+        // Clear module data first if requested
+        if (options.clearFirst) {
+          if (loader.verbose) {
+            console.log(`🧹 Clearing module ${moduleName} first...`);
+          }
+          await loader.clearForReload({ 
+            moduleFilter: moduleName,
+            clearVectors: options.includeVectors !== false
+          });
+          
+          // NO CACHE - Nothing to clear
         }
 
         // Load modules (append mode - no clearing)
@@ -907,8 +882,7 @@ export class ToolRegistry {
           vectorsIndexed = vectorResult.perspectivesIndexed;
         }
 
-        // Clear module from cache to force reload on next access
-        this.moduleCache.delete(moduleName);
+        // NO CACHE - Nothing to clear
 
         return {
           moduleName,
@@ -1031,9 +1005,13 @@ export class ToolRegistry {
       const result = await verifier.verifyModule(moduleName);
       
       // Log results if requested
-      if (options.verbose && result.errors && result.errors.length > 0) {
-        console.log(`❌ Module verification errors for ${moduleName}:`);
-        result.errors.forEach(error => console.log(`  - ${error}`));
+      if (options.verbose) {
+        if (verifier.logResults) {
+          verifier.logResults(result);
+        } else if (result.errors && result.errors.length > 0) {
+          console.log(`❌ Module verification errors for ${moduleName}:`);
+          result.errors.forEach(error => console.log(`  - ${error}`));
+        }
       }
       
       return result;
@@ -1252,11 +1230,7 @@ export class ToolRegistry {
    */
   async cleanup() {
     try {
-      // Clear cache cleanup interval immediately
-      if (this.cacheCleanupInterval) {
-        clearInterval(this.cacheCleanupInterval);
-        this.cacheCleanupInterval = null;
-      }
+      // NO CACHE - No interval to clear
       
       // Close MongoDB connection - simpler approach for tests
       if (this.provider && this.provider.cleanup) {
@@ -1302,9 +1276,7 @@ export class ToolRegistry {
         }
       }
       
-      // Clear caches
-      this.toolCache.clear();
-      this.moduleCache.clear();
+      // NO CACHE - Nothing to clear
       
       // Reset singleton instance for testing
       if (process.env.NODE_ENV === 'test') {
