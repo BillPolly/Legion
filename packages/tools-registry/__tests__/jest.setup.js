@@ -171,6 +171,15 @@ async function globalSetup() {
     console.error(chalk.red('  2. Qdrant (required for semantic tests)'));
     console.error(chalk.red('  3. .env file with valid configuration'));
     
+    // Clean up any open connections before exiting
+    if (global.testMongoClient) {
+      try {
+        await global.testMongoClient.close();
+      } catch (e) {
+        // Ignore errors during cleanup
+      }
+    }
+    
     // Exit with error code to prevent tests from running
     process.exit(1);
   }
@@ -181,15 +190,26 @@ async function globalSetup() {
     
     // Clean up test database
     try {
-      await clearTestDatabase();
+      if (global.testMongoDb) {
+        await clearTestDatabase();
+      }
     } catch (error) {
       console.error(chalk.yellow('Warning: Failed to clean test database:'), error.message);
     }
     
-    // Close MongoDB connection
+    // Close MongoDB connection with timeout
     if (global.testMongoClient) {
-      await global.testMongoClient.close();
-      console.log(chalk.green('✅ MongoDB connection closed'));
+      try {
+        await Promise.race([
+          global.testMongoClient.close(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+        ]);
+        console.log(chalk.green('✅ MongoDB connection closed'));
+      } catch (error) {
+        console.warn(chalk.yellow('Warning: MongoDB close timeout, forcing exit'));
+      }
+      global.testMongoClient = null;
+      global.testMongoDb = null;
     }
     
     console.log(chalk.green('✅ Global teardown complete\n'));

@@ -15,6 +15,11 @@ export default {
     '^(\\.{1,2}/.*)\\.js$': '$1'
   },
   transform: {},
-  testTimeout: 30000,
-  maxWorkers: 1
+  // Increase timeout for integration tests that may include embedding generation
+  testTimeout: 120000, // 2 minutes for integration tests
+  maxWorkers: 1,
+  // Force exit to prevent hanging
+  forceExit: true,
+  // Detect open handles for debugging
+  detectOpenHandles: true
 };

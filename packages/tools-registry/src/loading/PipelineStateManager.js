@@ -128,13 +128,15 @@ export class PipelineStateManager {
    * Reset the entire pipeline state
    */
   async reset() {
-    // Mark any existing active states as inactive
-    await this.mongoProvider.update(
-      this.stateCollection,
-      { active: true },
-      { $set: { active: false } },
-      { multi: true }
-    );
+    // Mark any existing active states as inactive - find and update ALL active states
+    const activeStates = await this.mongoProvider.find(this.stateCollection, { active: true });
+    for (const state of activeStates) {
+      await this.mongoProvider.update(
+        this.stateCollection,
+        { _id: state._id },
+        { $set: { active: false } }
+      );
+    }
 
     // Create fresh state
     const freshState = {

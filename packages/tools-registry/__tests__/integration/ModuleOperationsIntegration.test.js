@@ -53,47 +53,51 @@ describe('Module Operations Integration Tests', () => {
   }, TEST_TIMEOUT);
 
   beforeEach(async () => {
-    // Reset singleton and create fresh instance
-    ToolRegistry._instance = null;
-    
-    // Create ToolRegistry with real providers
-    toolRegistry = ToolRegistry.getInstance();
-    await toolRegistry.initialize();
-    
-    // Verify providers are real (not mocked)
-    expect(toolRegistry.provider).toBeDefined();
-    expect(toolRegistry.provider.constructor.name).toBe('MongoDBToolRegistryProvider');
-    expect(toolRegistry.semanticDiscovery).toBeDefined();
-    
-    console.log(`🚀 Test setup complete - using real services`);
+    // Don't reset singleton between tests - reuse the initialized instance
+    if (!toolRegistry) {
+      toolRegistry = ToolRegistry.getInstance();
+      await toolRegistry.initialize();
+      
+      // Verify providers are real (not mocked)
+      expect(toolRegistry.provider).toBeDefined();
+      expect(toolRegistry.provider.constructor.name).toBe('MongoDBToolRegistryProvider');
+      expect(toolRegistry.semanticDiscovery).toBeDefined();
+      
+      console.log(`🚀 Test setup complete - using real services`);
+    }
   }, TEST_TIMEOUT);
 
   afterEach(async () => {
-    // Cleanup between tests but don't fail tests if cleanup fails
-    try {
-      if (toolRegistry) {
-        await toolRegistry.cleanup();
-      }
-    } catch (error) {
-      console.warn('Cleanup warning:', error.message);
-    }
+    // Don't cleanup between tests to avoid re-initialization overhead
+    // Just clear any test data if needed
   }, 30000);
 
   afterAll(async () => {
     try {
-      // Clean up test database
+      // Clean up test database with timeout
       if (toolRegistry?.provider?.databaseService) {
-        await toolRegistry.provider.databaseService.mongoProvider.db.dropDatabase();
+        await Promise.race([
+          toolRegistry.provider.databaseService.mongoProvider.db.dropDatabase(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('DB drop timeout')), 10000))
+        ]);
         console.log(`🧹 Cleaned up test database: ${testDbName}`);
       }
       
-      // Ensure all connections are closed
+      // Ensure all connections are closed with timeout
       if (toolRegistry) {
-        await toolRegistry.cleanup();
+        await Promise.race([
+          toolRegistry.cleanup(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Final cleanup timeout')), 10000))
+        ]);
       }
       
       // Reset singleton
       ToolRegistry._instance = null;
+      
+      // Force garbage collection
+      if (global.gc) {
+        global.gc();
+      }
     } catch (error) {
       console.warn('Database cleanup warning:', error.message);
     }

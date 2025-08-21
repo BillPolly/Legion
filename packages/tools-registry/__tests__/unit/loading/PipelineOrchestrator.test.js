@@ -257,17 +257,29 @@ describe('PipelineOrchestrator', () => {
       aggregate: jest.fn(async (collection, pipeline) => {
         return [];
       }),
-      insert: jest.fn(async (collection, doc) => {
+      insert: jest.fn(async (collection, docs) => {
         if (collection === 'pipeline_state') {
           const newDoc = {
             _id: new ObjectId(),
-            ...doc,
+            ...docs,
             createdAt: new Date()
           };
           mockStateData.states.push(newDoc);
           return { insertedId: newDoc._id };
+        } else if (collection === 'tools') {
+          const docsArray = Array.isArray(docs) ? docs : [docs];
+          const docsWithIds = docsArray.map(doc => ({
+            ...doc,
+            _id: doc._id || new ObjectId()
+          }));
+          mockTools.push(...docsWithIds);
+          return { 
+            acknowledged: true,
+            insertedCount: docsWithIds.length,
+            insertedIds: docsWithIds.map((_, i) => new ObjectId())
+          };
         }
-        return { insertedId: 'mock-id' };
+        return { acknowledged: true, insertedCount: 0, insertedIds: [] };
       })
     };
     

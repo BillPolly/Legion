@@ -113,8 +113,7 @@ export class ModuleLoader {
           await this.databaseProvider.databaseService.mongoProvider.update(
             'modules',
             { _id: moduleConfig._id },
-            updateData,
-            { upsert: true }
+            updateData
           );
           
           loadedModules.push({
@@ -136,17 +135,8 @@ export class ModuleLoader {
               loadingStatus: 'failed',
               loadingError: error.message,
               lastLoadedAt: new Date()
-            },
-            $setOnInsert: {
-              name: moduleConfig.name || 'unknown',
-              description: moduleConfig.description || `${moduleConfig.name || 'unknown'} module failed to load in the tool registry system. Error details: ${error.message}. This module may require additional configuration.`,
-              type: moduleConfig.type || 'class',
-              path: moduleConfig.path || 'unknown',
-              createdAt: new Date(),
-              status: 'maintenance'
             }
-          },
-          { upsert: true }
+          }
         );
         
         failedModules.push({

@@ -44,6 +44,18 @@ describe('LoadToolsStage', () => {
         }
         return null;
       }),
+      insert: jest.fn(async (collection, docs) => {
+        if (collection === 'tools') {
+          const docsArray = Array.isArray(docs) ? docs : [docs];
+          mockTools.push(...docsArray);
+          return { 
+            acknowledged: true,
+            insertedCount: docsArray.length,
+            insertedIds: docsArray.map((_, i) => new ObjectId())
+          };
+        }
+        return { acknowledged: true, insertedCount: 0, insertedIds: [] };
+      }),
       insertMany: jest.fn(async (collection, docs) => {
         if (collection === 'tools') {
           mockTools.push(...docs);
@@ -219,8 +231,8 @@ describe('LoadToolsStage', () => {
       expect(result.success).toBe(true);
       expect(result.toolsAdded).toBe(2);
       
-      // Verify insertMany was called (batch insertion)
-      expect(mockMongoProvider.insertMany).toHaveBeenCalledWith('tools', expect.any(Array));
+      // Verify insert was called (batch insertion)
+      expect(mockMongoProvider.insert).toHaveBeenCalledWith('tools', expect.any(Array));
     });
 
     it('should track processed modules in state', async () => {
@@ -397,6 +409,24 @@ describe('LoadToolsStage', () => {
       // Simulate a batch insert that partially fails
       const customProvider = {
         ...mockMongoProvider,
+        insert: jest.fn(async (collection, docs) => {
+          const docsArray = Array.isArray(docs) ? docs : [docs];
+          if (docsArray.length > 2) {
+            // Simulate partial failure - only insert first 2
+            mockTools.push(...docsArray.slice(0, 2));
+            return { 
+              acknowledged: true,
+              insertedCount: 2,
+              insertedIds: docsArray.slice(0, 2).map((_, i) => new ObjectId())
+            };
+          }
+          mockTools.push(...docsArray);
+          return { 
+            acknowledged: true,
+            insertedCount: docsArray.length,
+            insertedIds: docsArray.map((_, i) => new ObjectId())
+          };
+        }),
         insertMany: jest.fn(async (collection, docs) => {
           if (docs.length > 2) {
             // Simulate partial failure - only insert first 2
