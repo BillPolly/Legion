@@ -18,10 +18,14 @@ export default {
   },
   transform: {},
   // Increase timeout for integration tests that may include embedding generation
-  testTimeout: 120000, // 2 minutes for integration tests
+  testTimeout: 60000, // 1 minute for integration tests
   maxWorkers: 1,
   // Force exit to prevent hanging
   forceExit: true,
   // Detect open handles for debugging
-  detectOpenHandles: true
+  detectOpenHandles: true,
+  // Exit after tests complete
+  clearMocks: true,
+  resetMocks: true,
+  restoreMocks: true
 };

@@ -7,6 +7,7 @@
 
 import { DocumentProcessor } from './DocumentProcessor.js';
 import { ObjectId } from 'mongodb';
+import { v5 as uuidv5 } from 'uuid';
 
 export class ToolIndexer {
   constructor(dependencies = {}) {
@@ -30,7 +31,7 @@ export class ToolIndexer {
     console.log('🔧 Creating ToolIndexer with Nomic embeddings for tools');
     
     // Import SemanticSearchProvider to get embedding service
-    const { SemanticSearchProvider } = await import('../../../semantic-search/src/SemanticSearchProvider.js');
+    const { SemanticSearchProvider } = await import('@legion/semantic-search');
     const toolSemanticProvider = await SemanticSearchProvider.create(resourceManager);
     
     console.log('✅ ToolIndexer configured with Nomic embedding service');
@@ -141,17 +142,23 @@ export class ToolIndexer {
       }
     }
     
-    // Create vectors using MongoDB perspective IDs
+    // Create vectors using MongoDB perspective IDs converted to UUIDs
     const vectors = [];
+    // UUID namespace for Legion tool perspectives - ensures deterministic UUID generation
+    const LEGION_NAMESPACE = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
+    
     for (let i = 0; i < insertResults.length; i++) {
       const insertResult = insertResults[i];
       const perspective = perspectives[i];
       const embedding = embeddings[i];
       const perspectiveId = Object.values(insertResult.insertedIds)[0];
 
-      // Vector DB record using MongoDB _id as vector ID
+      // Convert MongoDB ObjectId to deterministic UUID for Qdrant compatibility
+      const vectorId = uuidv5(perspectiveId.toString(), LEGION_NAMESPACE);
+
+      // Vector DB record using UUID as vector ID
       const vectorRecord = {
-        id: perspectiveId.toString(),
+        id: vectorId,
         vector: embedding,
         payload: {
           perspectiveId: perspectiveId.toString(),

@@ -1289,4 +1289,52 @@ export class ToolRegistry {
       throw error;
     }
   }
+
+  /**
+   * Verify that clearing worked correctly
+   * @returns {Promise<Object>} Verification result with success status and details
+   */
+  async verifyClearingWorked() {
+    await this._ensureInitialized();
+    
+    const verifier = await this.getVerifier();
+    const clearResult = await verifier.verifyCleared();
+    
+    // Get counts for reporting
+    const toolCount = await this.provider.databaseService.mongoProvider.count('tools', {});
+    const perspectiveCount = await this.provider.databaseService.mongoProvider.count('tool_perspectives', {});
+    const moduleCount = await this.provider.databaseService.mongoProvider.count('modules', {});
+    
+    return {
+      success: clearResult.success && toolCount === 0 && perspectiveCount === 0 && moduleCount === 0,
+      message: clearResult.message,
+      clearedCounts: {
+        tools: toolCount,
+        perspectives: perspectiveCount,
+        modules: moduleCount,
+        vectors: clearResult.vectorCount || 0
+      },
+      errors: clearResult.success ? [] : [clearResult.message]
+    };
+  }
+
+  /**
+   * Verify that modules are unloaded
+   * @returns {Promise<Object>} Verification result with module status
+   */
+  async verifyModulesUnloaded() {
+    await this._ensureInitialized();
+    
+    const moduleCount = await this.provider.databaseService.mongoProvider.count('modules', {});
+    const moduleRegistryCount = await this.provider.databaseService.mongoProvider.count('module_registry', {});
+    
+    return {
+      success: moduleCount === 0,
+      message: moduleCount === 0 ? 'All modules unloaded' : `${moduleCount} modules still loaded`,
+      moduleStats: {
+        'loaded (runtime)': moduleCount,
+        'discovered (registry)': moduleRegistryCount
+      }
+    };
+  }
 }

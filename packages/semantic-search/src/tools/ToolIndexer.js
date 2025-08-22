@@ -6,6 +6,7 @@
  */
 
 import { DocumentProcessor } from '../utils/DocumentProcessor.js';
+import crypto from 'crypto';
 
 export class ToolIndexer {
   constructor(dependencies = {}) {
@@ -43,11 +44,12 @@ export class ToolIndexer {
     const searchTexts = perspectives.map(p => p.text);
     const embeddings = await this.embeddingService.generateEmbeddings(searchTexts);
     
-    // Create vectors for each perspective
+    // Create vectors for each perspective using UUID format for Qdrant compatibility
     const vectors = perspectives.map((perspective, index) => ({
-      id: `tool_${tool.name}_${perspective.type}`,
+      id: this._generateToolUUID(tool.name, perspective.type),
       vector: embeddings[index],
       payload: {
+        originalId: `tool_${tool.name}_${perspective.type}`, // Store original ID for debugging
         ...document,
         perspectiveType: perspective.type,
         perspectiveText: perspective.text
@@ -125,11 +127,12 @@ export class ToolIndexer {
           // Generate embeddings for all texts
           const embeddings = await this.embeddingService.generateEmbeddings(allSearchTexts);
           
-          // Create vectors with proper mapping
+          // Create vectors with proper mapping using UUID format for Qdrant compatibility
           const vectors = textToToolMap.map((mapping, index) => ({
-            id: `tool_${mapping.tool}_${mapping.perspective.type}`,
+            id: this._generateToolUUID(mapping.tool, mapping.perspective.type),
             vector: embeddings[index],
             payload: {
+              originalId: `tool_${mapping.tool}_${mapping.perspective.type}`, // Store original ID for debugging
               ...mapping.document,
               perspectiveType: mapping.perspective.type,
               perspectiveText: mapping.perspective.text
@@ -141,11 +144,16 @@ export class ToolIndexer {
           
           // Track indexed tools
           toolDocuments.forEach(({ document, tool }) => {
+            // Count perspectives for this tool based on originalId in payload
+            const toolVectorCount = vectors.filter(v => 
+              v.payload.originalId && v.payload.originalId.startsWith(`tool_${tool}_`)
+            ).length;
+            
             this.indexedTools.set(tool, {
               indexedAt: new Date(),
               document: document,
               metadata: {},
-              perspectiveCount: vectors.filter(v => v.id.startsWith(`tool_${tool}_`)).length
+              perspectiveCount: toolVectorCount
             });
             results.success.push(tool);
           });
@@ -174,6 +182,7 @@ export class ToolIndexer {
     // Extract tool information
     const document = {
       // Core properties
+      id: `tool_${tool.name}`,
       name: tool.name,
       description: tool.description || '',
       category: metadata.category || tool.category || 'general',
@@ -197,7 +206,10 @@ export class ToolIndexer {
       author: metadata.author || tool.author,
       version: metadata.version || tool.version,
       module: metadata.module,
-      indexedAt: new Date().toISOString()
+      indexedAt: new Date().toISOString(),
+      
+      // Include any additional metadata fields
+      ...metadata
     };
 
     // Add function-specific metadata for multi-function tools
@@ -208,6 +220,9 @@ export class ToolIndexer {
         parameters: this.extractSchemaInfo(fn.parameters)
       }));
     }
+
+    // Generate searchable text
+    document.searchableText = this.generateSearchText(document);
 
     return document;
   }
@@ -584,9 +599,7 @@ export class ToolIndexer {
     try {
       // Delete all vectors in collection
       await this.vectorStore.deleteCollection(this.collectionName);
-      await this.vectorStore.createCollection(this.collectionName, {
-        vectorSize: 1536 // OpenAI embedding size
-      });
+      // Don't recreate - let upsert create it with the right dimensions
       
       this.indexedTools.clear();
       
@@ -624,5 +637,32 @@ export class ToolIndexer {
       lastIndexed: tools.length > 0 ? 
         Math.max(...tools.map(t => new Date(t.indexedAt).getTime())) : null
     };
+  }
+
+  /**
+   * Generate a valid UUID for tool vectors (Qdrant compatible)
+   * Uses deterministic UUID generation so same tool+perspective always gets same ID
+   * @private
+   */
+  _generateToolUUID(toolName, perspectiveType) {
+    // Use deterministic UUID generation so same tool+perspective always gets same ID
+    
+    // Use UUID v5 for deterministic generation
+    const namespace = '6ba7b810-9dad-11d1-80b4-00c04fd430c8'; // Standard namespace UUID
+    const input = `${toolName}_${perspectiveType}`;
+    
+    const hash = crypto.createHash('sha1');
+    hash.update(namespace.replace(/-/g, ''), 'hex');
+    hash.update(input, 'utf8');
+    const hashBytes = hash.digest();
+    
+    // Format as UUID v5
+    return [
+      hashBytes.toString('hex', 0, 4),
+      hashBytes.toString('hex', 4, 6),
+      ((hashBytes[6] & 0x0f) | 0x50).toString(16) + hashBytes.toString('hex', 7, 8),
+      ((hashBytes[8] & 0x3f) | 0x80).toString(16) + hashBytes.toString('hex', 9, 10),
+      hashBytes.toString('hex', 10, 16)
+    ].join('-');
   }
 }

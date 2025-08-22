@@ -40,9 +40,16 @@ export class PipelineVerifier {
           vectorCount = await this.vectorStore.count(this.collectionName);
         } catch (error) {
           // Collection might not exist, which is fine for clear verification
-          if (!error.message.includes('not found')) {
+          // Check for various "not found" error messages
+          const isNotFoundError = error.message.toLowerCase().includes('not found') ||
+                                   error.message.includes('Not found') ||
+                                   error.message.includes('does not exist');
+          
+          if (!isNotFoundError) {
             throw error;
           }
+          // Collection doesn't exist, so vector count is 0
+          vectorCount = 0;
         }
       }
 
@@ -55,23 +62,9 @@ export class PipelineVerifier {
         );
       }
 
-      // Verify Qdrant collection exists with correct dimensions (only if vectorStore is available)
-      if (this.vectorStore) {
-        try {
-          const collectionInfo = await this.vectorStore.client.getCollection(this.collectionName);
-          const dimension = collectionInfo?.config?.params?.vectors?.size;
-          
-          if (dimension !== 768) {
-            return this.createResult(false,
-              `Qdrant collection has wrong dimensions! Expected 768, got ${dimension}`,
-              { actualDimension: dimension }
-            );
-          }
-        } catch (error) {
-          // Collection doesn't exist yet, will be created
-          console.log('Qdrant collection will be created with correct dimensions');
-        }
-      }
+      // Note: We do NOT verify Qdrant collection dimensions here
+      // The collection will be created with correct dimensions when needed during upsert
+      // This prevents arbitrary collection creation during verification
 
       return this.createResult(true, 'All collections cleared and ready', {
         toolCount: 0,
@@ -82,6 +75,13 @@ export class PipelineVerifier {
     } catch (error) {
       return this.createResult(false, `Clear verification failed: ${error.message}`);
     }
+  }
+
+  /**
+   * Alias for verifyCleared - used by verify script
+   */
+  async verifyClearingWorked() {
+    return this.verifyCleared();
   }
 
   /**

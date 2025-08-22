@@ -36,17 +36,14 @@ export class ClearStage {
    * Clear ALL modules data
    */
   async clearAll(options = {}) {
-    // Step 1: Clear Qdrant first (more likely to have issues)
+    // Step 1: Clear Qdrant vectors (if collection exists)
     await this.clearVectorStore();
     
     // Step 2: Clear MongoDB collections
     await this.clearMongoDB();
     
-    // Step 2b: Always clear modules collection (runtime state)
+    // Step 3: Always clear modules collection (runtime state)
     const modulesCleared = await this.clearModules();
-    
-    // Step 3: Create fresh Qdrant collection
-    await this.createFreshQdrantCollection();
     
     // Step 4: Verify everything is cleared
     const verificationResult = await this.verify();
@@ -103,10 +100,7 @@ export class ClearStage {
     const modulesCleared = moduleResult.deletedCount;
     console.log(`  ✓ Cleared ${modulesCleared} module runtime records`);
     
-    // Step 6: Ensure Qdrant collection exists with correct dimensions
-    await this.ensureQdrantCollection();
-    
-    // Step 7: Verify the specific module is cleared
+    // Step 6: Verify the specific module is cleared
     const verificationResult = await this.verifyModuleCleared(moduleName);
     
     if (!verificationResult.success) {
@@ -143,19 +137,6 @@ export class ClearStage {
     }
   }
 
-  /**
-   * Ensure Qdrant collection exists (don't recreate if already exists)
-   */
-  async ensureQdrantCollection() {
-    try {
-      await this.vectorStore.ensureCollection(this.collectionName, this.embeddingDimension, {
-        distance: 'Cosine'
-      });
-    } catch (error) {
-      console.error('  ⚠️ Error ensuring Qdrant collection:', error.message);
-      // Don't throw - collection might already exist
-    }
-  }
 
   /**
    * Verify a specific module is cleared
@@ -208,17 +189,12 @@ export class ClearStage {
     console.log('  Clearing Qdrant vector store...');
     
     try {
-      // Try to delete the collection
-      await this.vectorStore.deleteCollection(this.collectionName);
-      console.log('  ✓ Qdrant collection deleted');
+      // Clear all points from the collection without deleting it
+      const result = await this.vectorStore.clearCollection(this.collectionName);
+      console.log(`  ✓ ${result.message}`);
     } catch (error) {
-      // Collection might not exist, which is fine
-      if (!error.message.includes('not found') && !error.message.includes('does not exist')) {
-        console.error('  ⚠️ Error deleting Qdrant collection:', error.message);
-        throw error;
-      } else {
-        console.log('  ✓ Qdrant collection does not exist (already clear)');
-      }
+      console.error('  ⚠️ Error clearing Qdrant:', error.message);
+      // Don't throw - continue with MongoDB clear
     }
   }
 
@@ -250,39 +226,6 @@ export class ClearStage {
     }
   }
 
-  /**
-   * Create fresh Qdrant collection with correct dimensions
-   */
-  async createFreshQdrantCollection() {
-    console.log('  Creating fresh Qdrant collection...');
-    
-    try {
-      // Create collection with Nomic embedding dimensions
-      await this.vectorStore.createCollection(this.collectionName, {
-        dimension: this.embeddingDimension,
-        distance: 'Cosine'
-      });
-      
-      console.log(`  ✓ Created Qdrant collection with ${this.embeddingDimension} dimensions`);
-      
-      // Verify it was created correctly using the Qdrant client directly
-      try {
-        const collectionInfo = await this.vectorStore.client.getCollection(this.collectionName);
-        const actualDimension = collectionInfo?.config?.params?.vectors?.size;
-        
-        if (actualDimension !== this.embeddingDimension) {
-          throw new Error(`Qdrant collection created with wrong dimensions! Expected ${this.embeddingDimension}, got ${actualDimension}`);
-        }
-      } catch (verifyError) {
-        // Collection verification failed, but creation might have succeeded
-        console.log('  ⚠️ Could not verify collection dimensions, continuing...');
-      }
-      
-    } catch (error) {
-      console.error('  ❌ Error creating Qdrant collection:', error.message);
-      throw error;
-    }
-  }
 
   /**
    * Verify the clear operation succeeded

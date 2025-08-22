@@ -102,13 +102,20 @@ export async function resetToolRegistrySingleton() {
   // Clean up existing instance if it exists
   if (ToolRegistry._instance) {
     try {
-      // Force cleanup of interval to prevent Jest handle leaks
-      if (ToolRegistry._instance.cacheCleanupInterval) {
-        clearInterval(ToolRegistry._instance.cacheCleanupInterval);
-        ToolRegistry._instance.cacheCleanupInterval = null;
-      }
-      
-      await ToolRegistry._instance.cleanup();
+      // Force cleanup with timeout to prevent Jest handle leaks
+      await Promise.race([
+        (async () => {
+          // Clear any intervals first
+          if (ToolRegistry._instance.cacheCleanupInterval) {
+            clearInterval(ToolRegistry._instance.cacheCleanupInterval);
+            ToolRegistry._instance.cacheCleanupInterval = null;
+          }
+          
+          // Call the cleanup method
+          await ToolRegistry._instance.cleanup();
+        })(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('ToolRegistry cleanup timeout')), 5000))
+      ]);
     } catch (error) {
       console.warn('Failed to cleanup ToolRegistry instance:', error.message);
     }
@@ -223,12 +230,26 @@ export async function getProductionDatabase() {
   
   const db = client.db(dbName);
   
+  // Register cleanup task for global cleanup
+  const cleanup = async () => {
+    try {
+      await Promise.race([
+        client.close(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('MongoDB close timeout')), 3000))
+      ]);
+    } catch (error) {
+      console.warn('⚠️  MongoDB cleanup failed:', error.message);
+    }
+  };
+  
+  if (global.registerCleanupTask) {
+    global.registerCleanupTask(cleanup);
+  }
+  
   // Return db and cleanup function
   return {
     db,
-    cleanup: async () => {
-      await client.close();
-    }
+    cleanup
   };
 }
 

@@ -57,7 +57,7 @@ export class SemanticToolDiscovery {
     console.log('🔧 Creating SemanticToolDiscovery with Nomic embeddings for tools');
     
     // Import SemanticSearchProvider to get embedding service
-    const { SemanticSearchProvider } = await import('../../../semantic-search/src/SemanticSearchProvider.js');
+    const { SemanticSearchProvider } = await import('@legion/semantic-search');
     const toolSemanticProvider = await SemanticSearchProvider.create(resourceManager);
     
     // Create ToolIndexer with Nomic embeddings

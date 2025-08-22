@@ -15,7 +15,7 @@ import { DatabasePopulator } from './DatabasePopulator.js';
 import { ModuleDiscovery } from './ModuleDiscovery.js';
 import { ComprehensiveValidator } from '../validation/ComprehensiveValidator.js';
 import { MongoDBToolRegistryProvider } from '../providers/MongoDBToolRegistryProvider.js';
-import { SemanticSearchProvider } from '../../../semantic-search/src/SemanticSearchProvider.js';
+import { SemanticSearchProvider } from '@legion/semantic-search';
 import { createToolIndexer } from '../search/index.js';
 import { ResourceManager } from '@legion/resource-manager';
 import { PipelineVerifier } from './PipelineVerifier.js';
@@ -326,27 +326,8 @@ export class LoadingManager {
           }
         }
 
-        // Recreate collection with correct dimensions for Nomic embeddings (768D)
-        try {
-          await this.semanticSearchProvider.vectorStore.createCollection(collectionName, {
-            dimension: 768,
-            distance: 'cosine'
-          });
-          if (this.verbose) {
-            console.log(`  ✅ Recreated '${collectionName}' with 768 dimensions (Nomic embeddings)`);
-          }
-          
-          // Verify the collection was created and is empty
-          const countAfter = await this.semanticSearchProvider.count(collectionName);
-          if (this.verbose) {
-            console.log(`  📊 Verified: ${countAfter} vectors in recreated collection`);
-          }
-        } catch (error) {
-          if (this.verbose) {
-            console.log(`  ⚠️ Could not recreate '${collectionName}': ${error.message}`);
-          }
-          throw new Error(`Failed to recreate Qdrant collection '${collectionName}': ${error.message}`);
-        }
+        // Note: We don't recreate the collection - it will be created when needed during upsert
+        // This prevents arbitrarily creating collections during initialization
       }
     }
 
@@ -460,20 +441,8 @@ export class LoadingManager {
         }
       }
 
-        // Recreate collection with correct dimensions for Nomic embeddings (768D)
-        try {
-          await this.semanticSearchProvider.vectorStore.createCollection(collectionName, {
-            dimension: 768, // Nomic embed model dimensions
-            distance: 'cosine'
-          });
-          if (this.verbose) {
-            console.log(`  ✅ Recreated '${collectionName}' with 768 dimensions (Nomic embeddings)`);
-          }
-        } catch (error) {
-          if (this.verbose) {
-            console.log(`  ⚠️ Could not recreate '${collectionName}': ${error.message}`);
-          }
-        }
+        // Note: We don't recreate the collection - it will be created when needed during upsert
+        // This prevents arbitrarily creating collections during initialization
       }
     }
 

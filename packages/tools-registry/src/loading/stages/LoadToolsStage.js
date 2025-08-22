@@ -327,7 +327,7 @@ export class LoadToolsStage {
    * Update module status in module_registry
    */
   async updateModuleRegistryStatus(moduleName, status) {
-    await this.mongoProvider.updateOne('module_registry', 
+    await this.mongoProvider.update('module_registry', 
       { name: moduleName },
       { 
         $set: { 

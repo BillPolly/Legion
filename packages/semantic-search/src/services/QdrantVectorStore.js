@@ -1,45 +1,26 @@
 /**
  * QdrantVectorStore - Handles vector storage and search using Qdrant
  * 
- * Now uses ResourceManager for singleton Qdrant client management.
- * Includes automatic Qdrant startup when connection fails.
+ * Uses ResourceManager for singleton Qdrant client management.
+ * NO FALLBACKS - fails immediately if Qdrant is not available.
  */
 
 import { ResourceManager } from '@legion/resource-manager';
-import { QdrantAutoStarter } from '../utils/QdrantAutoStarter.js';
 
 export class QdrantVectorStore {
   constructor(config, resourceManager = null) {
     this.config = {
       url: config.url || 'http://localhost:6333',
       apiKey: config.apiKey,
-      timeout: config.timeout || 30000,
-      autoStart: config.autoStart !== false // Default true
+      timeout: config.timeout || 30000
     };
     
     // Use provided ResourceManager or get singleton
     this.resourceManager = resourceManager || ResourceManager.getInstance();
     this.client = null;
     this.connected = false;
-    
-    // Initialize auto-starter with config
-    // Extract port from URL (default to 6333 if not found)
-    let port = 6333;
-    try {
-      const urlParts = this.config.url.split(':');
-      if (urlParts.length > 2) {
-        port = parseInt(urlParts[2].replace(/\D/g, '')) || 6333;
-      }
-    } catch {
-      port = 6333;
-    }
-    
-    this.autoStarter = new QdrantAutoStarter({
-      port: port,
-      autoStart: this.config.autoStart,
-      verbose: config.verbose || process.env.QDRANT_VERBOSE === 'true'
-    });
   }
+  
   
   async _ensureClient() {
     if (this.client) return this.client;
@@ -91,38 +72,27 @@ export class QdrantVectorStore {
       this.connected = true;
       console.log('✅ Connected to Qdrant at', this.config.url);
     } catch (error) {
-      // If connection fails and auto-start is enabled, try to start Qdrant
-      // Check for various connection failure indicators
-      const isConnectionError = error.message.includes('ECONNREFUSED') || 
-                                error.message.includes('fetch failed') ||
-                                error.message.includes('connect ECONNREFUSED') ||
-                                error.message.includes('Unable to check client-server compatibility');
-      
-      if (this.config.autoStart && isConnectionError) {
-        console.log('⚠️ Qdrant connection failed, attempting auto-start...');
-        
-        try {
-          // Ensure Qdrant is running
-          await this.autoStarter.ensureQdrantRunning();
-          
-          // Retry connection after Qdrant starts
-          console.log('🔄 Retrying Qdrant connection...');
-          await this.client.getCollections();
-          this.connected = true;
-          console.log('✅ Connected to Qdrant at', this.config.url);
-        } catch (autoStartError) {
-          this.connected = false;
-          throw new Error(`Failed to auto-start Qdrant: ${autoStartError.message}`);
-        }
-      } else {
-        this.connected = false;
-        throw new Error(`Failed to connect to Qdrant at ${this.config.url}: ${error.message}`);
-      }
+      // NO FALLBACK - just fail immediately as requested
+      this.connected = false;
+      throw new Error(`Failed to connect to Qdrant at ${this.config.url}: ${error.message}`);
     }
   }
   
   async disconnect() {
     this.connected = false;
+  }
+  
+  async collectionExists(name) {
+    if (!this.client) {
+      await this._ensureClient();
+    }
+    
+    if (!this.client) {
+      throw new Error('Qdrant client not initialized');
+    }
+    
+    const collections = await this.client.getCollections();
+    return collections.collections.some(c => c.name === name);
   }
   
   async ensureCollection(name, vectorSize = 1536, options = {}) {
@@ -138,16 +108,19 @@ export class QdrantVectorStore {
     const exists = collections.collections.some(c => c.name === name);
     
     if (!exists) {
-      console.log(`📝 Creating Qdrant collection: ${name} with ${vectorSize} dimensions`);
+      console.log(`📝 Creating new Qdrant collection: ${name} with ${vectorSize} dimensions`);
       await this.client.createCollection(name, {
         vectors: {
           size: vectorSize,
           distance: options.distance || 'Cosine'
         }
       });
-      console.log(`✅ Created Qdrant collection: ${name} (${vectorSize}D)`);
+      console.log(`✅ Created new Qdrant collection: ${name} (${vectorSize}D)`);
     } else {
-      console.log(`📋 Collection ${name} already exists`);
+      // Collection exists - don't log unless verbose
+      if (process.env.QDRANT_VERBOSE === 'true') {
+        console.log(`📋 Qdrant collection ${name} already exists`);
+      }
     }
   }
 
@@ -202,30 +175,12 @@ export class QdrantVectorStore {
     const vectorSize = vectors[0].vector.length;
     await this.ensureCollection(collection, vectorSize);
     
-    // Generate numeric IDs - Qdrant prefers numeric IDs for better performance
-    const points = vectors.map((v, idx) => {
-      let id = v.id;
-      
-      // If ID is already a number, use it
-      if (typeof id === 'number') {
-        // Keep as is
-      } 
-      // If ID is a string that looks like a number, convert it
-      else if (typeof id === 'string' && /^\d+$/.test(id)) {
-        id = parseInt(id, 10);
-      }
-      // Generate a numeric ID based on timestamp and index
-      else {
-        // Use timestamp + index to create a unique numeric ID
-        id = Date.now() * 1000 + idx;
-      }
-      
-      return {
-        id: id,
-        vector: v.vector,
-        payload: v.payload || {}
-      };
-    });
+    // Create points for upsert - IDs should already be in valid format (numeric or UUID)
+    const points = vectors.map((v) => ({
+      id: v.id,
+      vector: v.vector,
+      payload: v.payload
+    }));
     
     // Only log for large batches or in verbose mode
     if (points.length > 10 || process.env.DEBUG_QDRANT === 'true') {
@@ -348,7 +303,19 @@ export class QdrantVectorStore {
       throw new Error('Qdrant client not initialized');
     }
     
-    // Build Qdrant filter format
+    // Delete by IDs (IDs should already be in valid Qdrant format)
+    if (filter.ids) {
+      
+      // Delete by IDs
+      const result = await this.client.delete(collection, {
+        points: filter.ids,
+        wait: true
+      });
+      
+      return { deletedCount: filter.ids.length };
+    }
+    
+    // Build Qdrant filter format for other filters
     const qdrantFilter = {
       must: Object.entries(filter).map(([key, value]) => ({
         key: key,
@@ -364,6 +331,39 @@ export class QdrantVectorStore {
     return { deletedCount: result.operation_id ? 1 : 0 };
   }
   
+  /**
+   * Clear all points from a collection without deleting the collection itself
+   */
+  async clearCollection(collectionName) {
+    if (!this.client) {
+      await this._ensureClient();
+    }
+    
+    if (!this.client) {
+      throw new Error('Qdrant client not initialized');
+    }
+    
+    try {
+      // Check if collection exists first
+      const collections = await this.client.getCollections();
+      const exists = collections.collections.some(c => c.name === collectionName);
+      
+      if (!exists) {
+        return { success: true, message: `Collection ${collectionName} does not exist` };
+      }
+      
+      // Use an empty filter to match all points
+      await this.client.delete(collectionName, {
+        filter: {}, // Empty filter matches all points
+        wait: true  // Wait for the operation to complete
+      });
+      
+      return { success: true, message: `All points cleared from collection ${collectionName}` };
+    } catch (error) {
+      throw error;
+    }
+  }
+
   /**
    * Delete entire collection (for complete index clearing)
    */

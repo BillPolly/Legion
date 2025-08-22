@@ -391,12 +391,12 @@ async function clearingCommand(options) {
       });
     }
     
-    if (clearingResult.errors.length > 0) {
+    if (clearingResult.errors && clearingResult.errors.length > 0) {
       console.log(chalk.red('\n❌ Clearing Issues:'));
       clearingResult.errors.forEach(error => console.log(`   • ${error}`));
     }
     
-    if (moduleResult.errors.length > 0) {
+    if (moduleResult.errors && moduleResult.errors.length > 0) {
       console.log(chalk.red('\n❌ Module Status Issues:'));
       moduleResult.errors.forEach(error => console.log(`   • ${error}`));
     }

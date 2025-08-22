@@ -21,6 +21,12 @@ global.testResourceManager = null;
 global.testMongoClient = null;
 global.testMongoDb = null;
 global.qdrantAvailable = false;
+global.testCleanupTasks = [];
+
+// Helper to register cleanup tasks
+global.registerCleanupTask = function(task) {
+  global.testCleanupTasks.push(task);
+};
 
 /**
  * Verify MongoDB is available
@@ -195,21 +201,63 @@ async function globalSetup() {
 }
 
 /**
- * Global cleanup for ToolRegistry instances
- * Ensures all intervals are cleared to prevent Jest open handles
+ * Global cleanup for all test resources
+ * Ensures all connections and intervals are cleared to prevent Jest open handles
  */
 async function globalCleanup() {
-  const { ToolRegistry } = await import('../src/integration/ToolRegistry.js');
+  console.log('🧹 Starting comprehensive test cleanup...');
   
-  // Force cleanup of any existing singleton instance
-  if (ToolRegistry._instance) {
-    try {
-      await ToolRegistry._instance.cleanup();
-    } catch (error) {
-      // Ignore cleanup errors
+  // 1. Run all registered cleanup tasks
+  if (global.testCleanupTasks && global.testCleanupTasks.length > 0) {
+    console.log(`🧹 Running ${global.testCleanupTasks.length} cleanup tasks...`);
+    for (const task of global.testCleanupTasks) {
+      try {
+        await Promise.race([task(), new Promise((_, reject) => setTimeout(() => reject(new Error('Cleanup timeout')), 3000))]);
+      } catch (error) {
+        console.warn('⚠️  Cleanup task failed:', error.message);
+      }
     }
-    ToolRegistry._instance = null;
+    global.testCleanupTasks = [];
   }
+  
+  // 2. Force cleanup of any existing ToolRegistry singleton instance
+  try {
+    const { ToolRegistry } = await import('../src/integration/ToolRegistry.js');
+    if (ToolRegistry._instance) {
+      try {
+        await Promise.race([
+          ToolRegistry._instance.cleanup(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('ToolRegistry cleanup timeout')), 3000))
+        ]);
+      } catch (error) {
+        console.warn('⚠️  ToolRegistry cleanup failed:', error.message);
+      }
+      ToolRegistry._instance = null;
+    }
+  } catch (error) {
+    // ToolRegistry might not be loaded yet
+  }
+  
+  // 3. Clean up global MongoDB connection
+  if (global.testMongoClient) {
+    try {
+      await Promise.race([
+        global.testMongoClient.close(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('MongoDB close timeout')), 3000))
+      ]);
+    } catch (error) {
+      console.warn('⚠️  MongoDB close failed:', error.message);
+    }
+    global.testMongoClient = null;
+    global.testMongoDb = null;
+  }
+  
+  // 4. Force garbage collection if available
+  if (global.gc) {
+    global.gc();
+  }
+  
+  console.log('✅ Comprehensive test cleanup completed');
 }
 
 // Register process exit handler to ensure cleanup

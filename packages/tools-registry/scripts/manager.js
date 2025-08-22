@@ -336,22 +336,31 @@ async function statusCommand(options) {
  */
 async function main() {
   const { command, options } = parseArgs();
+  let registry = null;
   
   try {
+    // Track if we need to cleanup registry
+    const needsRegistry = ['discover', 'load', 'clear', 'pipeline', 'status'].includes(command);
+    
     switch (command) {
       case 'discover':
+        registry = await ToolRegistry.getInstance();
         await discoverCommand(options);
         break;
       case 'load':
+        registry = await ToolRegistry.getInstance();
         await loadCommand(options);
         break;
       case 'clear':
+        registry = await ToolRegistry.getInstance();
         await clearCommand(options);
         break;
       case 'pipeline':
+        registry = await ToolRegistry.getInstance();
         await pipelineCommand(options);
         break;
       case 'status':
+        registry = await ToolRegistry.getInstance();
         await statusCommand(options);
         break;
       case 'help':
@@ -359,8 +368,26 @@ async function main() {
         showHelp();
         break;
     }
+    
+    // Clean up registry connections
+    if (registry) {
+      await registry.cleanup();
+    }
+    
+    // Exit successfully
+    process.exit(0);
   } catch (error) {
     console.error(chalk.red('\n💥 Operation failed:'), error.message);
+    
+    // Try to cleanup even on error
+    if (registry) {
+      try {
+        await registry.cleanup();
+      } catch (cleanupError) {
+        console.error(chalk.yellow('⚠️ Cleanup failed:'), cleanupError.message);
+      }
+    }
+    
     process.exit(1);
   }
 }

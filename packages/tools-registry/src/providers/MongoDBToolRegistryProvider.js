@@ -956,7 +956,7 @@ export class MongoDBToolRegistryProvider extends IToolRegistryProvider {
       console.log('🔧 Creating SemanticSearchProvider with Nomic embeddings for tools');
       
       // Import SemanticSearchProvider class
-      const { SemanticSearchProvider } = await import('../../../semantic-search/src/SemanticSearchProvider.js');
+      const { SemanticSearchProvider } = await import('@legion/semantic-search');
       
       // Create provider with Nomic embeddings
       const toolSemanticProvider = await SemanticSearchProvider.create(this.resourceManager);
