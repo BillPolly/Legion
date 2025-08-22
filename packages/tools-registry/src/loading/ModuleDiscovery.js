@@ -169,7 +169,7 @@ export class ModuleDiscovery {
         type: 'json',
         path: dirPath,
         className: null,
-        description: jsonModule.description || '',
+        description: jsonModule.description || `JSON-based module: ${jsonModule.name}`,
         package: this.getPackageName(dirPath),
         filePath: relativePath,
         dependencies: jsonModule.dependencies || [],
@@ -202,6 +202,11 @@ export class ModuleDiscovery {
       if (jsdocMatch) {
         description = jsdocMatch[1].trim();
       }
+    }
+    
+    // Ensure description meets MongoDB schema minimum length requirement (10 characters)
+    if (!description || description.length < 10) {
+      description = `${className || moduleName} - Legion module for ${moduleName.toLowerCase()} functionality`;
     }
     
     // Extract dependencies (imports)
