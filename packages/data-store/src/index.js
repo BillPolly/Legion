@@ -1,43 +1,44 @@
 /**
  * @legion/data-store
  * 
- * Data Store with Incremental N-ary Relational Kernel integration
- * Provides binary relationship storage with live query subscriptions
+ * Immutable Data Store with Constraint Validation
+ * Provides immutable binary relationship storage with comprehensive validation
  */
 
-// Core classes
-import { DataStore, createDataStore } from './DataStore.js';
-export { DataStore, createDataStore };
-export { Store } from './Store.js';
+// Shared Core Classes (used by immutable implementation)
 export { Edge } from './Edge.js';
 export { Attribute } from './Attribute.js';
 export { RelationshipType } from './RelationshipType.js';
 
-// Trie infrastructure
-export { TrieNode } from './trie/TrieNode.js';
-export { OutTrie } from './trie/OutTrie.js';
-export { InTrie } from './trie/InTrie.js';
-export { TrieManager } from './trie/TrieManager.js';
+// Immutable Data Store (MVP Implementation)
+import { ImmutableDataStore } from './immutable/ImmutableDataStore.js';
+export { ImmutableDataStore };
+export { ImmutableStoreRoot } from './immutable/ImmutableStoreRoot.js';
+export { ImmutableTrieManager } from './immutable/ImmutableTrieManager.js';
+export { ImmutableTrieNode } from './immutable/ImmutableTrieNode.js';
+export { ImmutableOutTrie } from './immutable/ImmutableOutTrie.js';
+export { ImmutableInTrie } from './immutable/ImmutableInTrie.js';
 
-// Kernel integration
-export { Dispatcher } from './kernel/Dispatcher.js';
+// Constraint System
+export { Constraint } from './immutable/constraints/Constraint.js';
+export { ConstraintResult } from './immutable/constraints/ConstraintResult.js';
+export { ConstraintViolation } from './immutable/constraints/ConstraintViolation.js';
+export { ConstraintRegistry } from './immutable/constraints/ConstraintRegistry.js';
+export { ConstraintValidator } from './immutable/constraints/ConstraintValidator.js';
+export { CardinalityConstraint } from './immutable/constraints/CardinalityConstraint.js';
+export { EntityTypeConstraint } from './immutable/constraints/EntityTypeConstraint.js';
+export { CustomConstraint } from './immutable/constraints/CustomConstraint.js';
 
-// Query system
-export { PathStep } from './query/PathStep.js';
-export { PathQuery, Variable } from './query/PathQuery.js';
-export { GraphSpec, GraphSpecBuilder } from './query/GraphSpecBuilder.js';
-export { PredicateProvider } from './query/PredicateProvider.js';
-export { ComplexQueryPatterns, createComplexQueryPatterns } from './query/ComplexQueryPatterns.js';
+// Entity Schema System
+export { EntityType } from './immutable/schema/EntityType.js';
+export { EntityTypeRegistry } from './immutable/schema/EntityTypeRegistry.js';
+export { SchemaConstraintGenerator } from './immutable/schema/SchemaConstraintGenerator.js';
 
-// Subscription system
-export { Subscription } from './subscription/Subscription.js';
-export { SubscriptionManager } from './subscription/SubscriptionManager.js';
+// Error Types
+export { ConstraintViolationError } from './immutable/ConstraintViolationError.js';
 
-// Client API
-export { QueryAPI } from './api/QueryAPI.js';
+// Default export - Main Data Store
+export default ImmutableDataStore;
 
-// Default export
-export default {
-  DataStore,
-  createDataStore
-};
+// Named export for convenience
+export const createDataStore = () => new ImmutableDataStore();
