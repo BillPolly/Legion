@@ -12,20 +12,18 @@ import toolRegistry from '../../src/index.js';
 import { 
   ensureMongoDBAvailable,
   resetToolRegistrySingleton,
-  cleanTestDatabase 
+   
 } from '../utils/testHelpers.js';
 
 describe('ToolRegistry Singleton Integration', () => {
   beforeAll(async () => {
     // Ensure MongoDB is running - FAIL if not
     await ensureMongoDBAvailable();
-    await cleanTestDatabase();
     // Reset singleton before tests to ensure clean state
     await resetToolRegistrySingleton();
   });
   
   afterAll(async () => {
-    await cleanTestDatabase();
     
     // Force cleanup of ALL ToolRegistry instances to prevent handle leaks
     try {

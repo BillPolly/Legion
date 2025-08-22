@@ -8,7 +8,7 @@ import toolRegistry from '../../src/index.js';
 import { 
   ensureMongoDBAvailable,
   resetToolRegistrySingleton,
-  cleanTestDatabase 
+   
 } from '../utils/testHelpers.js';
 
 console.log('🔍 DEBUG: Test file loaded');
@@ -24,9 +24,7 @@ describe('ToolRegistry Singleton Integration', () => {
       await ensureMongoDBAvailable();
       console.log('✅ DEBUG: MongoDB available');
       
-      console.log('🔍 DEBUG: Cleaning test database...');
-      await cleanTestDatabase();
-      console.log('✅ DEBUG: Test database cleaned');
+      console.log('🔍 DEBUG: Using production database (no cleaning needed)');
     } catch (error) {
       console.error('❌ DEBUG: beforeAll failed:', error);
       throw error;
@@ -36,7 +34,6 @@ describe('ToolRegistry Singleton Integration', () => {
   afterAll(async () => {
     console.log('🔍 DEBUG: afterAll started');
     try {
-      await cleanTestDatabase();
       await resetToolRegistrySingleton();
       console.log('✅ DEBUG: afterAll completed');
     } catch (error) {

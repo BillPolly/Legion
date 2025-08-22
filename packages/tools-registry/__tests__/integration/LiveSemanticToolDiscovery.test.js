@@ -10,7 +10,7 @@ import { SemanticToolDiscovery } from '../../src/search/SemanticToolDiscovery.js
 import { ToolIndexer } from '../../src/search/ToolIndexer.js';
 import { LoadingManager } from '../../src/loading/LoadingManager.js';
 import { ToolRegistry } from '../../src/integration/ToolRegistry.js';
-import { ensureMongoDBAvailable, getTestDatabase, cleanTestDatabase } from '../utils/testHelpers.js';
+import { ensureMongoDBAvailable, getTestDatabase } from '../utils/testHelpers.js';
 import { MongoClient } from 'mongodb';
 
 describe('Live Semantic Tool Discovery Integration Tests', () => {
@@ -107,7 +107,6 @@ describe('Live Semantic Tool Discovery Integration Tests', () => {
     if (semanticProvider) {
       await semanticProvider.disconnect();
     }
-    await cleanTestDatabase();
   });
   
   describe('1. Database and Index Verification', () => {

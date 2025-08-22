@@ -20,6 +20,7 @@ import { ResourceManager } from '@legion/resource-manager';
 import { PipelineVerifier } from './PipelineVerifier.js';
 import { PipelineOrchestrator } from './PipelineOrchestrator.js';
 import { PerspectiveGenerator } from '../search/PerspectiveGenerator.js';
+import { v5 as uuidv5 } from 'uuid';
 
 export class LoadingManager {
   constructor(options = {}) {
@@ -1099,16 +1100,25 @@ export class LoadingManager {
     }
 
     // Transform perspectives to vectors using proper Qdrant format (matching ToolIndexer)
-    const vectors = perspectives.map((perspective, index) => ({
-      id: perspective._id?.toString() || `tool_${perspective.toolName}_${perspective.perspectiveType}_${index}`,
-      vector: Array.from(perspective.embedding), // Ensure it's a regular array
-      payload: {
-        perspectiveId: perspective._id?.toString(),
-        toolId: perspective.toolId?.toString(),
-        toolName: perspective.toolName,
-        perspectiveType: perspective.perspectiveType
-      }
-    }));
+    // UUID namespace for Legion tool perspectives - same as ToolIndexer for consistency
+    const LEGION_NAMESPACE = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
+    
+    const vectors = perspectives.map((perspective, index) => {
+      // Convert MongoDB ObjectId to deterministic UUID for Qdrant compatibility (same as ToolIndexer)
+      const perspectiveId = perspective._id?.toString() || `fallback_${perspective.toolName}_${perspective.perspectiveType}_${index}`;
+      const vectorId = uuidv5(perspectiveId, LEGION_NAMESPACE);
+      
+      return {
+        id: vectorId, // Proper UUID format for Qdrant
+        vector: Array.from(perspective.embedding), // Ensure it's a regular array
+        payload: {
+          perspectiveId: perspective._id?.toString(),
+          toolId: perspective.toolId?.toString(),
+          toolName: perspective.toolName,
+          perspectiveType: perspective.perspectiveType
+        }
+      };
+    });
 
     try {
       // First delete existing vectors for this module to avoid duplicates

@@ -86,7 +86,23 @@ export class SemanticToolDiscovery {
     const semanticSearchProvider = {
       embeddingService: embeddingService,
       vectorStore: vectorStore,
-      documentProcessor: toolIndexer.documentProcessor
+      documentProcessor: toolIndexer.documentProcessor,
+      
+      // Add semanticSearch method that wraps vectorStore.search
+      async semanticSearch(collection, query, options = {}) {
+        // Generate embedding for the query
+        const queryEmbedding = await embeddingService.embed(query);
+        
+        // Search using the vector store
+        const searchResults = await vectorStore.search(collection, queryEmbedding, {
+          limit: options.limit || 20,
+          threshold: options.threshold || 0,
+          filter: options.filter,
+          includeVectors: options.includeMetadata
+        });
+        
+        return searchResults;
+      }
     };
     
     // Create SemanticToolDiscovery with components

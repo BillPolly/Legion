@@ -195,10 +195,35 @@ export class QdrantVectorStore {
       return result;
     } catch (error) {
       console.error('❌ Upsert error:', error.message);
+      console.error('❌ Error type:', error.constructor.name);
+      
+      // Try multiple approaches to get error details from Qdrant client
       if (error.response) {
-        const text = await error.response.text();
-        console.error('   Response body:', text);
+        try {
+          const text = await error.response.text();
+          console.error('   Response body:', text);
+        } catch (responseError) {
+          console.error('   Could not read response body:', responseError.message);
+        }
       }
+      
+      // Log additional error properties that might contain details
+      if (error.status) console.error('   Status:', error.status);
+      if (error.statusText) console.error('   Status text:', error.statusText);
+      if (error.body) console.error('   Body:', error.body);
+      if (error.data) console.error('   Data:', error.data);
+      
+      // For debugging: log first vector sample on error
+      if (points && points.length > 0) {
+        console.error('🔍 Debug - First vector sample:', {
+          id: points[0].id,
+          idType: typeof points[0].id,
+          vectorLength: points[0].vector?.length,
+          vectorType: Array.isArray(points[0].vector) ? 'array' : typeof points[0].vector,
+          payloadKeys: points[0].payload ? Object.keys(points[0].payload) : 'none'
+        });
+      }
+      
       throw error;
     }
   }

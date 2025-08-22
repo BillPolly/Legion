@@ -6,7 +6,7 @@
 import { ResourceManager } from '@legion/resource-manager';
 import { LoadingManager } from '../../src/loading/LoadingManager.js';
 import { ToolRegistry } from '../../src/integration/ToolRegistry.js';
-import { ensureMongoDBAvailable, getTestDatabase, cleanTestDatabase } from '../utils/testHelpers.js';
+import { ensureMongoDBAvailable, getTestDatabase } from '../utils/testHelpers.js';
 
 describe('Semantic Search Integration Tests', () => {
   let resourceManager;
@@ -54,7 +54,7 @@ describe('Semantic Search Integration Tests', () => {
   }, 60000); // Increase timeout
   
   afterAll(async () => {
-    await cleanTestDatabase();
+    // No cleanup needed - tests use production database
   });
   
   describe('Text Search', () => {

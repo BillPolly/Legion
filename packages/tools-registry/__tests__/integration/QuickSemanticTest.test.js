@@ -5,7 +5,7 @@
 import { ResourceManager } from '@legion/resource-manager';
 import { LocalEmbeddingService } from '../../src/search/LocalEmbeddingService.js';
 import { QdrantVectorStore } from '../../src/search/QdrantVectorStore.js';
-import { ensureMongoDBAvailable, getTestDatabase, cleanTestDatabase } from '../utils/testHelpers.js';
+import { ensureMongoDBAvailable, getTestDatabase } from '../utils/testHelpers.js';
 
 describe('Quick Semantic Search Test', () => {
   let resourceManager;
@@ -48,7 +48,6 @@ describe('Quick Semantic Search Test', () => {
   });
   
   afterAll(async () => {
-    await cleanTestDatabase();
     if (dbConnection && dbConnection.cleanup) {
       await dbConnection.cleanup();
     }

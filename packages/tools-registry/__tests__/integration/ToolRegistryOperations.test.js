@@ -9,7 +9,6 @@ import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
 import toolRegistry from '../../src/index.js';
 import { 
   ensureMongoDBAvailable,
-  cleanTestDatabase,
   getTestDatabase,
   resetToolRegistrySingleton
 } from '../utils/testHelpers.js';
@@ -20,7 +19,6 @@ describe('ToolRegistry Database Operations', () => {
   beforeAll(async () => {
     // FAIL if MongoDB not available
     await ensureMongoDBAvailable();
-    await cleanTestDatabase();
     
     // Load only calculator module for testing using ToolRegistry API
     // Calculator is reliable and always available
@@ -36,7 +34,6 @@ describe('ToolRegistry Database Operations', () => {
   });
   
   afterAll(async () => {
-    await cleanTestDatabase();
     if (testDb?.cleanup) {
       await testDb.cleanup();
     }
