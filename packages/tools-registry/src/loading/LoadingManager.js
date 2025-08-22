@@ -280,7 +280,7 @@ export class LoadingManager {
     // Clear vectors if requested - ALWAYS initialize semantic search for clearing
     if (clearVectors) {
       await this.#ensureSemanticSearchInitialized();
-      const qdrantCollections = ['legion_tools'];
+      const qdrantCollections = ['legion_tools', 'tool_perspectives'];
       
       if (this.verbose) {
         const target = moduleFilter ? ` for module '${moduleFilter}'` : '';
@@ -437,7 +437,7 @@ export class LoadingManager {
 
     // Clear Qdrant collections only if semantic search is initialized
     if (this.semanticSearchProvider) {
-      const qdrantCollections = ['legion_tools'];
+      const qdrantCollections = ['legion_tools', 'tool_perspectives'];
       
       for (const collectionName of qdrantCollections) {
         try {

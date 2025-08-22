@@ -28,3 +28,5 @@ The resouorce manager should supply anything needed, nothing should be set on it
 
 We are making an MVP we dont care about NFRs or future extensions we just need to get it working
 
+Always keep package root directories as clean as possible! NEVER put scripts there. if scripts are temporary they must be put in a /tmp directory and cleaned up when finished with.
+

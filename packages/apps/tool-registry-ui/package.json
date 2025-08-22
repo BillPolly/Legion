@@ -18,7 +18,6 @@
   "dependencies": {
     "@legion/tools-registry": "*",
     "@legion/actors": "*",
-    "@legion/semantic-search": "*",
     "@legion/storage": "*",
     "express": "^4.18.2",
     "ws": "^8.13.0",

@@ -9,7 +9,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { ActorSpace } from '@legion/actors';
 import { ToolRegistry } from '@legion/tools-registry';
-import { SemanticSearchProvider } from '@legion/semantic-search';
 import { DecentPlanner } from '@legion/decent-planner';
 import { BehaviorTreeExecutor as BTExecutor } from '@legion/actor-bt';
 import { LLMClient } from '@legion/llm';
