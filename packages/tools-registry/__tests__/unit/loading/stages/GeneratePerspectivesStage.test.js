@@ -17,11 +17,22 @@ describe('GeneratePerspectivesStage', () => {
   let mockPerspectives;
 
   beforeAll(async () => {
-    // Mock data stores
-    mockTools = [];
+    // Empty - all setup moved to beforeEach to avoid closure issues
+  });
+
+  beforeEach(async () => {
+    // Reset mock data and clear calls
+    mockTools = [
+      { _id: new ObjectId(), name: 'tool1', description: 'Test tool 1', moduleName: 'module1' },
+      { _id: new ObjectId(), name: 'tool2', description: 'Test tool 2', moduleName: 'module1' },
+      { _id: new ObjectId(), name: 'tool3', description: 'Test tool 3', moduleName: 'module2' }
+    ];
     mockPerspectives = [];
     
+    jest.clearAllMocks();
+    
     // Mock MongoDB provider - NO REAL CONNECTIONS
+    // Move setup here to avoid closure issues with mockTools and mockPerspectives
     mockMongoProvider = {
       find: jest.fn(async (collection, query, options = {}) => {
         if (collection === 'tools') {
@@ -122,18 +133,6 @@ describe('GeneratePerspectivesStage', () => {
         };
       })
     };
-  });
-
-  beforeEach(async () => {
-    // Reset mock data and clear calls
-    mockTools = [
-      { _id: new ObjectId(), name: 'tool1', description: 'Test tool 1', moduleName: 'module1' },
-      { _id: new ObjectId(), name: 'tool2', description: 'Test tool 2', moduleName: 'module1' },
-      { _id: new ObjectId(), name: 'tool3', description: 'Test tool 3', moduleName: 'module2' }
-    ];
-    mockPerspectives = [];
-    
-    jest.clearAllMocks();
     
     generatePerspectivesStage = new GeneratePerspectivesStage({
       perspectiveGenerator: mockPerspectiveGenerator,
@@ -475,6 +474,25 @@ describe('GeneratePerspectivesStage', () => {
         _id: new ObjectId(),
         name: 'failing-tool',
         description: 'Will fail'
+      });
+      
+      // Update verifier to expect the failure
+      mockVerifier.verifyAllToolsHavePerspectives = jest.fn(async () => {
+        // Only check non-failing tools
+        const nonFailingTools = mockTools.filter(t => t.name !== 'failing-tool');
+        const toolsWithoutPerspectives = [];
+        for (const tool of nonFailingTools) {
+          const hasPerspectives = mockPerspectives.some(p => p.toolId.toString() === tool._id.toString());
+          if (!hasPerspectives) {
+            toolsWithoutPerspectives.push(tool.name);
+          }
+        }
+        
+        return {
+          success: toolsWithoutPerspectives.length === 0,
+          toolsWithoutPerspectives,
+          message: toolsWithoutPerspectives.length === 0 ? 'All non-failing tools have perspectives' : `${toolsWithoutPerspectives.length} tools lack perspectives`
+        };
       });
       
       const result = await generatePerspectivesStage.execute({});

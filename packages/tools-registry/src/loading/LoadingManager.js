@@ -15,7 +15,6 @@ import { DatabasePopulator } from './DatabasePopulator.js';
 import { ModuleDiscovery } from './ModuleDiscovery.js';
 import { ComprehensiveValidator } from '../validation/ComprehensiveValidator.js';
 import { MongoDBToolRegistryProvider } from '../providers/MongoDBToolRegistryProvider.js';
-import { SemanticSearchProvider } from '@legion/semantic-search';
 import { createToolIndexer } from '../search/index.js';
 import { ResourceManager } from '@legion/resource-manager';
 import { PipelineVerifier } from './PipelineVerifier.js';
@@ -146,7 +145,23 @@ export class LoadingManager {
   async #ensureSemanticSearchInitialized() {
     // Only create if not provided (allows sharing from ToolRegistry)
     if (!this.semanticSearchProvider) {
-      this.semanticSearchProvider = await SemanticSearchProvider.create(this.resourceManager);
+      // Create local services instead of using SemanticSearchProvider
+      const { LocalEmbeddingService } = await import('../search/LocalEmbeddingService.js');
+      const { QdrantVectorStore } = await import('../search/QdrantVectorStore.js');
+      
+      const embeddingService = new LocalEmbeddingService();
+      await embeddingService.initialize();
+      
+      const vectorStore = new QdrantVectorStore({
+        url: this.resourceManager.get('env.QDRANT_URL') || 'http://localhost:6333',
+        apiKey: this.resourceManager.get('env.QDRANT_API_KEY')
+      }, this.resourceManager);
+      
+      this.semanticSearchProvider = {
+        embeddingService: embeddingService,
+        vectorStore: vectorStore,
+        documentProcessor: new (await import('../search/DocumentProcessor.js')).DocumentProcessor()
+      };
     }
     if (!this.toolIndexer) {
       this.toolIndexer = await createToolIndexer(this.resourceManager);

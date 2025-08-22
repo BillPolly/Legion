@@ -4,7 +4,8 @@
  */
 
 import { ResourceManager } from '@legion/resource-manager';
-import { SemanticSearchProvider } from '@legion/semantic-search';
+import { LocalEmbeddingService } from '../../src/search/LocalEmbeddingService.js';
+import { QdrantVectorStore } from '../../src/search/QdrantVectorStore.js';
 import { MongoClient } from 'mongodb';
 import { SemanticToolDiscovery } from '../../src/search/SemanticToolDiscovery.js';
 
@@ -28,9 +29,21 @@ describe('Semantic Search Integration - PROPER TESTS', () => {
     await mongoClient.connect();
     db = mongoClient.db('legion_tools');
     
-    // Create semantic search provider
-    semanticProvider = await SemanticSearchProvider.create(resourceManager);
-    console.log('Semantic provider created');
+    // Create semantic search components
+    const embeddingService = new LocalEmbeddingService();
+    await embeddingService.initialize();
+    
+    const vectorStore = new QdrantVectorStore({
+      url: resourceManager.get('env.QDRANT_URL') || 'http://localhost:6333',
+      apiKey: resourceManager.get('env.QDRANT_API_KEY')
+    }, resourceManager);
+    
+    semanticProvider = {
+      embeddingService,
+      vectorStore,
+      disconnect: async () => {}
+    };
+    console.log('Semantic components created');
     
     // Create SemanticToolDiscovery with proper parameters
     semanticDiscovery = await SemanticToolDiscovery.createForTools(resourceManager, {

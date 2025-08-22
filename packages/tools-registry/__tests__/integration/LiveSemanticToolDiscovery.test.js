@@ -4,7 +4,8 @@
  */
 
 import { ResourceManager } from '@legion/resource-manager';
-import { SemanticSearchProvider } from '@legion/semantic-search';
+import { LocalEmbeddingService } from '../../src/search/LocalEmbeddingService.js';
+import { QdrantVectorStore } from '../../src/search/QdrantVectorStore.js';
 import { SemanticToolDiscovery } from '../../src/search/SemanticToolDiscovery.js';
 import { ToolIndexer } from '../../src/search/ToolIndexer.js';
 import { LoadingManager } from '../../src/loading/LoadingManager.js';
@@ -44,9 +45,21 @@ describe('Live Semantic Tool Discovery Integration Tests', () => {
     db = mongoClient.db('legion_tools');
     console.log('✅ Direct MongoDB connection established');
     
-    // Initialize semantic search provider
-    semanticProvider = await SemanticSearchProvider.create(resourceManager);
-    console.log('✅ SemanticSearchProvider created with Nomic embeddings');
+    // Initialize semantic search components
+    const embeddingService = new LocalEmbeddingService();
+    await embeddingService.initialize();
+    
+    const vectorStore = new QdrantVectorStore({
+      url: resourceManager.get('env.QDRANT_URL') || 'http://localhost:6333',
+      apiKey: resourceManager.get('env.QDRANT_API_KEY')
+    }, resourceManager);
+    
+    semanticProvider = {
+      embeddingService,
+      vectorStore,
+      disconnect: async () => {}
+    };
+    console.log('✅ Semantic components created with Nomic embeddings');
     
     // Use ToolRegistry singleton properly
     const { default: toolRegistryInstance } = await import('../../src/index.js');

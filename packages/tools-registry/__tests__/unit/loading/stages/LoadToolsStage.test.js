@@ -26,113 +26,217 @@ describe('LoadToolsStage', () => {
     
     mockTools = [];
     
-    mockMongoProvider = {
-      find: jest.fn(async (collection, query, options = {}) => {
-        if (collection === 'modules' || collection === 'module_registry') {
-          if (query.name) {
-            return mockModules.filter(m => m.name === query.name);
-          }
-          return mockModules;
+    // Create mock implementations as regular functions first  
+    const findImpl = async (collection, query, options = {}) => {
+      console.log('🔍 MOCK find() called with:', { collection, query });
+      console.log('🔍 MOCK mockModules:', mockModules.map(m => ({ name: m.name, enabled: m.enabled })));
+      
+      if (collection === 'modules' || collection === 'module_registry') {
+        if (query.name) {
+          const result = mockModules.filter(m => m.name === query.name);
+          console.log('🔍 MOCK find() name query result:', result);
+          return result;
         }
-        return [];
-      }),
-      findOne: jest.fn(async (collection, query) => {
-        if (collection === 'modules' || collection === 'module_registry') {
-          if (query.name) {
-            return mockModules.find(m => m.name === query.name) || null;
-          }
+        // Handle enabled query for module_registry
+        if (query.enabled && query.enabled.$ne === false) {
+          const result = mockModules.filter(m => m.enabled !== false);
+          console.log('🔍 MOCK find() enabled query result:', result);
+          return result;
         }
-        return null;
-      }),
-      insert: jest.fn(async (collection, docs) => {
-        if (collection === 'tools') {
-          const docsArray = Array.isArray(docs) ? docs : [docs];
-          mockTools.push(...docsArray);
-          return { 
-            acknowledged: true,
-            insertedCount: docsArray.length,
-            insertedIds: docsArray.map((_, i) => new ObjectId())
-          };
+        // Return all modules if no specific query
+        console.log('🔍 MOCK find() returning all modules:', mockModules.length);
+        return mockModules;
+      }
+      console.log('🔍 MOCK find() unknown collection, returning []');
+      return [];
+    };
+
+    const findOneImpl = async (collection, query) => {
+      console.log('🔍 MOCK findOne() called with:', { collection, query });
+      console.log('🔍 MOCK mockModules for findOne:', mockModules.map(m => ({ name: m.name, enabled: m.enabled })));
+      
+      if (collection === 'modules' || collection === 'module_registry') {
+        if (query.name) {
+          const result = mockModules.find(m => m.name === query.name) || null;
+          console.log('🔍 MOCK findOne() result:', result);
+          return result;
         }
-        return { acknowledged: true, insertedCount: 0, insertedIds: [] };
-      }),
-      insertMany: jest.fn(async (collection, docs) => {
+      }
+      console.log('🔍 MOCK findOne() returning null');
+      return null;
+    };
+
+    const insertImpl = async (collection, docs) => {
+      if (collection === 'tools') {
+        const docsArray = Array.isArray(docs) ? docs : [docs];
+        mockTools.push(...docsArray);
+        return { 
+          acknowledged: true,
+          insertedCount: docsArray.length,
+          insertedIds: docsArray.map((_, i) => new ObjectId())
+        };
+      }
+      return { acknowledged: true, insertedCount: 0, insertedIds: [] };
+    };
+
+    const updateImpl = async (collection, query, update) => {
+      if (collection === 'module_registry') {
+        // Find and update module status
+        const module = mockModules.find(m => m.name === query.name);
+        if (module && update.$set) {
+          Object.assign(module, update.$set);
+        }
+      }
+      return { modifiedCount: 1 };
+    };
+
+    const countImpl = async (collection, query) => {
+      if (collection === 'tools') {
+        return mockTools.length;
+      }
+      return 0;
+    };
+
+    // Create custom mock class that directly calls implementations
+    class MockMongoProvider {
+      constructor() {
+        this.calls = {
+          find: [],
+          findOne: [],
+          insert: [],
+          insertMany: [],
+          insertOne: [],
+          update: [],
+          updateOne: [],
+          count: []
+        };
+      }
+
+      async find(collection, query, options) {
+        this.calls.find.push({ collection, query, options });
+        return findImpl(collection, query, options);
+      }
+
+      async findOne(collection, query) {
+        this.calls.findOne.push({ collection, query });
+        return findOneImpl(collection, query);
+      }
+
+      async insert(collection, docs) {
+        this.calls.insert.push({ collection, docs });
+        return insertImpl(collection, docs);
+      }
+
+      async insertMany(collection, docs) {
+        this.calls.insertMany.push({ collection, docs });
         if (collection === 'tools') {
           mockTools.push(...docs);
         }
         return { insertedCount: docs.length };
-      }),
-      insertOne: jest.fn(async (collection, doc) => {
+      }
+
+      async insertOne(collection, doc) {
+        this.calls.insertOne.push({ collection, doc });
         if (collection === 'modules') {
-          // Insert into mock modules but don't duplicate
           return { insertedId: doc._id || new ObjectId() };
         }
         return { insertedId: new ObjectId() };
-      }),
-      updateOne: jest.fn(async (collection, query, update) => {
-        if (collection === 'module_registry') {
-          // Find and update module status
-          const module = mockModules.find(m => m.name === query.name);
-          if (module && update.$set) {
-            Object.assign(module, update.$set);
-          }
-        }
-        return { modifiedCount: 1 };
-      }),
-      count: jest.fn(async (collection, query) => {
-        if (collection === 'tools') {
-          return mockTools.length;
-        }
-        return 0;
-      })
-    };
+      }
+
+      async update(collection, query, update) {
+        this.calls.update.push({ collection, query, update });
+        return updateImpl(collection, query, update);
+      }
+
+      async updateOne(collection, query, update) {
+        this.calls.updateOne.push({ collection, query, update });
+        return updateImpl(collection, query, update);
+      }
+
+      async count(collection, query) {
+        this.calls.count.push({ collection, query });
+        return countImpl(collection, query);
+      }
+
+      // Helper methods for test assertions
+      getCallCount(method) {
+        return this.calls[method].length;
+      }
+
+      clearCalls() {
+        Object.keys(this.calls).forEach(method => {
+          this.calls[method] = [];
+        });
+      }
+    }
+
+    mockMongoProvider = new MockMongoProvider();
     
-    // Create mock module loader
-    mockModuleLoader = {
-      loadModule: jest.fn(async (moduleDoc) => {
-        // Simulate loading a module
-        if (moduleDoc.name === 'failing-module') {
-          throw new Error('Module load failed');
-        }
-        
-        return {
-          name: moduleDoc.name,
-          getTools: () => {
-            if (moduleDoc.name === 'empty-module') {
-              return [];
+    // Create mock module loader with direct implementation
+    const loadModuleImpl = async (moduleDoc) => {
+      console.log('🔧 MOCK loadModule called with:', moduleDoc.name);
+      // Simulate loading a module
+      if (moduleDoc.name === 'failing-module') {
+        throw new Error('Module load failed');
+      }
+      
+      const result = {
+        name: moduleDoc.name,
+        getTools: () => {
+          if (moduleDoc.name === 'empty-module') {
+            return [];
+          }
+          
+          // Return mock tools based on module name
+          const tools = [
+            {
+              name: `${moduleDoc.name}_tool1`,
+              description: `Tool 1 from ${moduleDoc.name}`,
+              execute: async () => ({ success: true })
+            },
+            {
+              name: `${moduleDoc.name}_tool2`,
+              description: `Tool 2 from ${moduleDoc.name}`,
+              execute: async () => ({ success: true })
             }
-            
-            // Return mock tools based on module name
-            return [
-              {
-                name: `${moduleDoc.name}_tool1`,
-                description: `Tool 1 from ${moduleDoc.name}`,
-                execute: async () => ({ success: true })
-              },
-              {
-                name: `${moduleDoc.name}_tool2`,
-                description: `Tool 2 from ${moduleDoc.name}`,
-                execute: async () => ({ success: true })
-              }
-            ];
-          }
-        };
-      })
+          ];
+          console.log('🔧 MOCK getTools returning:', tools.length, 'tools for', moduleDoc.name);
+          return tools;
+        }
+      };
+      console.log('🔧 MOCK loadModule returning module with getTools');
+      return result;
+    };
+
+    mockModuleLoader = {
+      loadModule: loadModuleImpl,
+      calls: [],
+      // Track calls manually since we're not using jest.fn
+      trackCall(moduleDoc) {
+        this.calls.push({ moduleDoc });
+      }
     };
     
-    // Create mock verifier
+    // Create mock verifier with direct implementation
+    const verifyToolCountImpl = async (expectedCount) => {
+      console.log('✅ MOCK verifyToolCount called with expectedCount:', expectedCount);
+      console.log('✅ MOCK mockTools.length:', mockTools.length);
+      // The verifier should check the tools that were actually saved to database
+      const actualCount = mockTools.length;
+      const success = actualCount >= expectedCount; // Allow for more tools than expected
+      const result = {
+        success,
+        actualCount,
+        expectedCount,
+        message: success ? `Tool count verified: ${actualCount} tools found (expected >= ${expectedCount})` : `Tool count mismatch! Expected: ${expectedCount}, Actual: ${actualCount}`
+      };
+      console.log('✅ MOCK verifyToolCount returning:', result);
+      return result;
+    };
+
     mockVerifier = {
-      verifyToolCount: jest.fn(async (expectedCount) => {
-        // The verifier should check the tools that were actually saved to database
-        const actualCount = mockTools.length;
-        const success = actualCount >= expectedCount; // Allow for more tools than expected
-        return {
-          success,
-          actualCount,
-          expectedCount,
-          message: success ? `Tool count verified: ${actualCount} tools found (expected >= ${expectedCount})` : `Tool count mismatch! Expected: ${expectedCount}, Actual: ${actualCount}`
-        };
-      })
+      verifyToolCount: verifyToolCountImpl,
+      calls: []
     };
     
     // Create mock state manager
@@ -160,7 +264,9 @@ describe('LoadToolsStage', () => {
       { _id: new ObjectId(), name: 'module2', path: '/path/to/module2', type: 'class', status: 'discovered' },
       { _id: new ObjectId(), name: 'module3', path: '/path/to/module3', type: 'class', status: 'discovered' }
     ];
-    jest.clearAllMocks();
+    
+    // Clear call history using our custom mock's method
+    mockMongoProvider.clearCalls();
     
     loadToolsStage = new LoadToolsStage({
       moduleLoader: mockModuleLoader,
@@ -250,7 +356,11 @@ describe('LoadToolsStage', () => {
       expect(result.toolsAdded).toBe(2);
       
       // Verify insert was called (batch insertion)
-      expect(mockMongoProvider.insert).toHaveBeenCalledWith('tools', expect.any(Array));
+      expect(mockMongoProvider.getCallCount('insert')).toBeGreaterThan(0);
+      const insertCalls = mockMongoProvider.calls.insert;
+      const toolsInsertCall = insertCalls.find(call => call.collection === 'tools');
+      expect(toolsInsertCall).toBeDefined();
+      expect(Array.isArray(toolsInsertCall.docs)).toBe(true);
     });
 
     it('should track processed modules in state', async () => {
@@ -312,13 +422,16 @@ describe('LoadToolsStage', () => {
     });
 
     it('should fail if verification fails', async () => {
+      const failingVerifierImpl = async () => ({
+        success: false,
+        actualCount: 5,
+        expectedCount: 6,
+        message: 'Tool count mismatch'
+      });
+
       const failingVerifier = {
-        verifyToolCount: jest.fn(async () => ({
-          success: false,
-          actualCount: 5,
-          expectedCount: 6,
-          message: 'Tool count mismatch'
-        }))
+        verifyToolCount: failingVerifierImpl,
+        calls: []
       };
       
       const stage = new LoadToolsStage({
@@ -333,10 +446,13 @@ describe('LoadToolsStage', () => {
     });
 
     it('should handle MongoDB errors', async () => {
+      const failingFindImpl = async () => {
+        throw new Error('MongoDB connection lost');
+      };
+
       const failingProvider = {
-        find: jest.fn(async () => {
-          throw new Error('MongoDB connection lost');
-        })
+        find: failingFindImpl,
+        calls: []
       };
       
       const stage = new LoadToolsStage({
@@ -427,63 +543,88 @@ describe('LoadToolsStage', () => {
       // Reset mockTools to ensure clean state
       mockTools.length = 0;
       
-      // Simulate a batch insert that partially fails
-      const customProvider = {
-        ...mockMongoProvider,
-        insert: jest.fn(async (collection, docs) => {
-          if (collection === 'tools') {
-            const docsArray = Array.isArray(docs) ? docs : [docs];
-            if (docsArray.length > 2) {
-              // Simulate partial failure - only insert first 2
-              mockTools.push(...docsArray.slice(0, 2));
-              return { 
-                acknowledged: true,
-                insertedCount: 2,
-                insertedIds: docsArray.slice(0, 2).map((_, i) => new ObjectId())
-              };
-            }
-            mockTools.push(...docsArray);
+      // Create custom insert implementation with partial failures
+      const partialInsertImpl = async (collection, docs) => {
+        if (collection === 'tools') {
+          const docsArray = Array.isArray(docs) ? docs : [docs];
+          if (docsArray.length > 2) {
+            // Simulate partial failure - only insert first 2
+            mockTools.push(...docsArray.slice(0, 2));
             return { 
               acknowledged: true,
-              insertedCount: docsArray.length,
-              insertedIds: docsArray.map((_, i) => new ObjectId())
+              insertedCount: 2,
+              insertedIds: docsArray.slice(0, 2).map((_, i) => new ObjectId())
             };
           }
-          // For other collections, just return success without adding to mockTools
-          const docsArray = Array.isArray(docs) ? docs : [docs];
+          mockTools.push(...docsArray);
           return { 
             acknowledged: true,
             insertedCount: docsArray.length,
             insertedIds: docsArray.map((_, i) => new ObjectId())
           };
-        }),
-        insertMany: jest.fn(async (collection, docs) => {
-          if (collection === 'tools') {
-            if (docs.length > 2) {
-              // Simulate partial failure - only insert first 2
-              mockTools.push(...docs.slice(0, 2));
-              return { insertedCount: 2 };
-            }
-            mockTools.push(...docs);
-            return { insertedCount: docs.length };
+        }
+        // For other collections, just return success without adding to mockTools
+        const docsArray = Array.isArray(docs) ? docs : [docs];
+        return { 
+          acknowledged: true,
+          insertedCount: docsArray.length,
+          insertedIds: docsArray.map((_, i) => new ObjectId())
+        };
+      };
+
+      const partialInsertManyImpl = async (collection, docs) => {
+        if (collection === 'tools') {
+          if (docs.length > 2) {
+            // Simulate partial failure - only insert first 2
+            mockTools.push(...docs.slice(0, 2));
+            return { insertedCount: 2 };
           }
+          mockTools.push(...docs);
           return { insertedCount: docs.length };
-        })
+        }
+        return { insertedCount: docs.length };
+      };
+
+      // Simulate a batch insert that partially fails using direct implementations
+      const customProvider = {
+        // Copy the essential methods from mockMongoProvider that we know exist
+        find: mockMongoProvider.find,
+        findOne: mockMongoProvider.findOne,
+        update: mockMongoProvider.update,
+        count: mockMongoProvider.count,
+        getCallCount: mockMongoProvider.getCallCount,
+        clearCalls: mockMongoProvider.clearCalls,
+        calls: {
+          ...mockMongoProvider.calls,
+          insert: [],
+          insertMany: []
+        },
+        insert: async (collection, docs) => {
+          customProvider.calls.insert.push({ collection, docs });
+          return partialInsertImpl(collection, docs);
+        },
+        insertMany: async (collection, docs) => {
+          customProvider.calls.insertMany.push({ collection, docs });
+          return partialInsertManyImpl(collection, docs);
+        }
       };
       
-      // Custom verifier that accepts partial failures
+      // Custom verifier that accepts partial failures using direct implementation
+      const flexibleVerifierImpl = async (expectedCount) => {
+        const actualCount = mockTools.length;
+        // Accept any count as long as some tools were saved
+        const success = actualCount > 0;
+        return {
+          success,
+          actualCount,
+          expectedCount,
+          message: success ? `Tool count verified: ${actualCount}` : `No tools were saved`
+        };
+      };
+
       const flexibleVerifier = {
-        verifyToolCount: jest.fn(async (expectedCount) => {
-          const actualCount = mockTools.length;
-          // Accept any count as long as some tools were saved
-          const success = actualCount > 0;
-          return {
-            success,
-            actualCount,
-            expectedCount,
-            message: success ? `Tool count verified: ${actualCount}` : `No tools were saved`
-          };
-        })
+        verifyToolCount: flexibleVerifierImpl,
+        calls: []
       };
       
       const stage = new LoadToolsStage({

@@ -56,9 +56,19 @@ export class SemanticToolDiscovery {
   static async createForTools(resourceManager, options = {}) {
     console.log('🔧 Creating SemanticToolDiscovery with Nomic embeddings for tools');
     
-    // Import SemanticSearchProvider to get embedding service
-    const { SemanticSearchProvider } = await import('@legion/semantic-search');
-    const toolSemanticProvider = await SemanticSearchProvider.create(resourceManager);
+    // Import local services
+    const { LocalEmbeddingService } = await import('./LocalEmbeddingService.js');
+    const { QdrantVectorStore } = await import('./QdrantVectorStore.js');
+    
+    // Create local embedding service
+    const embeddingService = new LocalEmbeddingService();
+    await embeddingService.initialize();
+    
+    // Create Qdrant vector store
+    const vectorStore = new QdrantVectorStore({
+      url: resourceManager.get('env.QDRANT_URL') || 'http://localhost:6333',
+      apiKey: resourceManager.get('env.QDRANT_API_KEY')
+    }, resourceManager);
     
     // Create ToolIndexer with Nomic embeddings
     const toolIndexer = await ToolIndexer.createForTools(resourceManager, {
@@ -72,9 +82,16 @@ export class SemanticToolDiscovery {
     const storageProvider = await StorageProvider.create(resourceManager);
     const mongoProvider = storageProvider.getProvider('mongodb');
     
+    // Create a simple provider object with the services we need
+    const semanticSearchProvider = {
+      embeddingService: embeddingService,
+      vectorStore: vectorStore,
+      documentProcessor: toolIndexer.documentProcessor
+    };
+    
     // Create SemanticToolDiscovery with components
     return new SemanticToolDiscovery({
-      semanticSearchProvider: toolSemanticProvider,
+      semanticSearchProvider: semanticSearchProvider,
       toolIndexer,
       toolRegistry: options.toolRegistry,
       mongoProvider: mongoProvider,

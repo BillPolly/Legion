@@ -18,26 +18,65 @@ describe('IndexVectorsStage', () => {
   const testCollectionName = 'legion_tools'; // Use production collection for testing
 
   beforeAll(async () => {
-    // Mock data stores
+    // Empty - all setup moved to beforeEach to avoid closure issues
+  });
+
+  beforeEach(async () => {
+    // Reset mock data and call history
     mockPerspectives = [];
     vectorCount = 0;
+    jest.clearAllMocks();
+    
+    // Add test perspectives with embeddings
+    for (let i = 1; i <= 10; i++) {
+      const embedding = new Array(768).fill(0);
+      // Make each embedding slightly different
+      for (let j = 0; j < 10; j++) {
+        embedding[j] = i * 0.01 + j * 0.001;
+      }
+      
+      mockPerspectives.push({
+        _id: new ObjectId(),
+        toolId: new ObjectId(),
+        toolName: `tool${i}`,
+        perspectiveType: 'usage',
+        perspectiveText: `This is perspective text for tool ${i}`,
+        embedding: embedding,
+        embeddingGeneratedAt: new Date(),
+        embeddingModel: 'nomic-embed-text',
+        embeddingDimension: 768,
+        createdAt: new Date()
+      });
+    }
     
     // Mock MongoDB provider - NO REAL CONNECTIONS
+    // Moved here to avoid closure issues with mockPerspectives and vectorCount
     mockMongoProvider = {
       find: jest.fn(async (collection, query, options = {}) => {
         if (collection === 'tool_perspectives') {
           let results = mockPerspectives.filter(p => {
             // Filter by embedding existence if specified
-            if (query.embedding && query.embedding.$exists) {
-              return p.embedding && Array.isArray(p.embedding) && p.embedding.length > 0;
+            if (query && query.embedding) {
+              // Handle $exists: true, $ne: null pattern
+              if (query.embedding.$exists && query.embedding.$ne === null) {
+                return p.embedding && Array.isArray(p.embedding) && p.embedding.length > 0;
+              }
+              // Handle just $exists: true
+              else if (query.embedding.$exists) {
+                return p.embedding && Array.isArray(p.embedding) && p.embedding.length > 0;
+              }
             }
-            if (query.vectorIndexedAt && query.vectorIndexedAt.$exists === false) {
+            if (query && query.vectorIndexedAt && query.vectorIndexedAt.$exists === false) {
               return !p.vectorIndexedAt;
+            }
+            // If no specific filters, return all
+            if (!query || Object.keys(query).length === 0) {
+              return true;
             }
             return true;
           });
           
-          if (options.limit) {
+          if (options && options.limit) {
             results = results.slice(0, options.limit);
           }
           return results;
@@ -132,35 +171,6 @@ describe('IndexVectorsStage', () => {
         };
       })
     };
-  });
-
-  beforeEach(async () => {
-    // Reset mock data and call history
-    mockPerspectives = [];
-    vectorCount = 0;
-    jest.clearAllMocks();
-    
-    // Add test perspectives with embeddings
-    for (let i = 1; i <= 10; i++) {
-      const embedding = new Array(768).fill(0);
-      // Make each embedding slightly different
-      for (let j = 0; j < 10; j++) {
-        embedding[j] = i * 0.01 + j * 0.001;
-      }
-      
-      mockPerspectives.push({
-        _id: new ObjectId(),
-        toolId: new ObjectId(),
-        toolName: `tool${i}`,
-        perspectiveType: 'usage',
-        perspectiveText: `This is perspective text for tool ${i}`,
-        embedding: embedding,
-        embeddingGeneratedAt: new Date(),
-        embeddingModel: 'nomic-embed-text',
-        embeddingDimension: 768,
-        createdAt: new Date()
-      });
-    }
     
     indexVectorsStage = new IndexVectorsStage({
       vectorStore: mockVectorStore,

@@ -14,7 +14,7 @@ import { ToolRegistry } from '../../src/integration/ToolRegistry.js';
 
 // Mock dependencies
 const mockLoadingManager = {
-  initialize: jest.fn(),
+  initialize: jest.fn().mockResolvedValue(true),
   clearForReload: jest.fn(),
   loadModules: jest.fn(),
   generatePerspectives: jest.fn(),
@@ -401,7 +401,22 @@ describe('ToolRegistry Module-Specific Operations', () => {
     test('should handle LoadingManager initialization failure', async () => {
       // Reset loader to test creation
       toolRegistry._loader = null;
-      mockLoadingManager.initialize.mockRejectedValueOnce(new Error('Init failed'));
+      
+      // Create a new mock loader that will fail on initialize
+      const failingLoader = {
+        initialize: jest.fn().mockRejectedValueOnce(new Error('Init failed')),
+        clearForReload: jest.fn(),
+        loadModules: jest.fn(),
+        generatePerspectives: jest.fn(),
+        generateEmbeddings: jest.fn(),
+        indexVectors: jest.fn(),
+        verifier: null,
+        verbose: false
+      };
+      
+      // Make the LoadingManager constructor return the failing loader
+      const { LoadingManager } = await import('../../src/loading/LoadingManager.js');
+      LoadingManager.mockImplementationOnce(() => failingLoader);
 
       // The getLoader method will create the loader and call initialize, which will fail
       await expect(toolRegistry.getLoader()).rejects.toThrow('Init failed');

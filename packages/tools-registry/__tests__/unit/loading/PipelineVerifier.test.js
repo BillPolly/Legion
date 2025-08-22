@@ -14,7 +14,11 @@ describe('PipelineVerifier', () => {
   let mockDataState;
 
   beforeAll(async () => {
-    // Mock data state
+    // Empty - all setup moved to beforeEach to avoid closure issues
+  });
+
+  beforeEach(async () => {
+    // Reset mock data and clear calls
     mockDataState = {
       tools: [],
       perspectives: [],
@@ -23,7 +27,10 @@ describe('PipelineVerifier', () => {
       collectionDimension: 768
     };
 
+    jest.clearAllMocks();
+
     // Mock MongoDB provider - NO REAL CONNECTIONS
+    // Moved here to avoid closure issues with mockDataState
     mockMongoProvider = {
       count: jest.fn(async (collection, query) => {
         if (collection === 'tools') {
@@ -125,19 +132,6 @@ describe('PipelineVerifier', () => {
         }));
       })
     };
-  });
-
-  beforeEach(async () => {
-    // Reset mock data and clear calls
-    mockDataState = {
-      tools: [],
-      perspectives: [],
-      vectors: 0,
-      collectionExists: true,
-      collectionDimension: 768
-    };
-
-    jest.clearAllMocks();
     
     verifier = new PipelineVerifier(mockMongoProvider, mockVectorStore);
   });

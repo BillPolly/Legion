@@ -15,21 +15,50 @@ describe('GenerateEmbeddingsStage', () => {
   let mockStateManager;
   let mockPerspectives;
 
-  beforeAll(async () => {
-    // Mock data stores
+  beforeEach(async () => {
+    // Reset mock data and clear calls
     mockPerspectives = [];
+    jest.clearAllMocks();
+    
+    // Add test perspectives without embeddings
+    for (let i = 1; i <= 10; i++) {
+      mockPerspectives.push({
+        _id: new ObjectId(),
+        toolId: new ObjectId(),
+        toolName: `tool${i}`,
+        perspectiveType: 'usage',
+        perspectiveText: `This is perspective text for tool ${i}`,
+        embedding: null,
+        createdAt: new Date()
+      });
+    }
     
     // Mock MongoDB provider - NO REAL CONNECTIONS
     mockMongoProvider = {
       find: jest.fn(async (collection, query, options = {}) => {
         if (collection === 'tool_perspectives') {
-          let results = mockPerspectives.filter(p => {
-            // Filter by embedding existence if specified
-            if (query.$or) {
-              return !p.embedding || p.embedding === null || p.embedding.length === 0;
-            }
-            return true;
-          });
+          let results;
+          
+          // Handle $or queries properly
+          if (query && query.$or) {
+            results = mockPerspectives.filter(p => {
+              return query.$or.some(condition => {
+                if (condition.embedding && condition.embedding.$exists === false) {
+                  return !p.hasOwnProperty('embedding');
+                }
+                if (condition.embedding === null) {
+                  return p.embedding === null;
+                }
+                if (Array.isArray(condition.embedding) && condition.embedding.length === 0) {
+                  return Array.isArray(p.embedding) && p.embedding.length === 0;
+                }
+                return false;
+              });
+            });
+          } else {
+            // For queries without $or, return all perspectives
+            results = [...mockPerspectives];
+          }
           
           if (options.limit) {
             results = results.slice(0, options.limit);
@@ -65,7 +94,21 @@ describe('GenerateEmbeddingsStage', () => {
     // Mock embedding service - NO REAL Nomic
     mockEmbeddingService = {
       generateEmbeddings: jest.fn(async (texts) => {
+        // Ensure texts is an array
+        if (!Array.isArray(texts)) {
+          throw new Error('generateEmbeddings expects an array of texts');
+        }
+        
         return texts.map(text => {
+          // Handle undefined/null text
+          if (!text) {
+            text = '';
+          }
+          
+          if (typeof text !== 'string') {
+            text = String(text);
+          }
+          
           if (text.includes('fail')) {
             throw new Error('Embedding generation failed');
           }
@@ -125,25 +168,6 @@ describe('GenerateEmbeddingsStage', () => {
         };
       })
     };
-  });
-
-  beforeEach(async () => {
-    // Reset mock data and clear calls
-    mockPerspectives = [];
-    jest.clearAllMocks();
-    
-    // Add test perspectives without embeddings
-    for (let i = 1; i <= 10; i++) {
-      mockPerspectives.push({
-        _id: new ObjectId(),
-        toolId: new ObjectId(),
-        toolName: `tool${i}`,
-        perspectiveType: 'usage',
-        perspectiveText: `This is perspective text for tool ${i}`,
-        embedding: null,
-        createdAt: new Date()
-      });
-    }
     
     generateEmbeddingsStage = new GenerateEmbeddingsStage({
       embeddingService: mockEmbeddingService,
@@ -152,14 +176,6 @@ describe('GenerateEmbeddingsStage', () => {
       stateManager: mockStateManager,
       batchSize: 3 // Small batch size for testing
     });
-  });
-
-  afterEach(async () => {
-    // No cleanup needed for mocks
-  });
-
-  afterAll(async () => {
-    // No cleanup needed for mocks
   });
 
   describe('execute', () => {

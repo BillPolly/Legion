@@ -4,9 +4,10 @@
  */
 
 import { ResourceManager } from '@legion/resource-manager';
-import { SemanticSearchProvider } from '@legion/semantic-search';
 import { SemanticToolDiscovery } from '../../src/search/SemanticToolDiscovery.js';
 import { ToolIndexer } from '../../src/search/ToolIndexer.js';
+import { LocalEmbeddingService } from '../../src/search/LocalEmbeddingService.js';
+import { QdrantVectorStore } from '../../src/search/QdrantVectorStore.js';
 import { MongoClient } from 'mongodb';
 
 describe('Live Semantic Search Complete Test', () => {
@@ -32,9 +33,25 @@ describe('Live Semantic Search Complete Test', () => {
     db = mongoClient.db('legion_tools');
     console.log('✅ MongoDB connected');
     
-    // 3. Create SemanticSearchProvider
-    semanticProvider = await SemanticSearchProvider.create(resourceManager);
-    console.log('✅ SemanticSearchProvider created');
+    // 3. Create semantic search components directly
+    const embeddingService = new LocalEmbeddingService();
+    await embeddingService.initialize();
+    
+    const vectorStore = new QdrantVectorStore({
+      url: resourceManager.get('env.QDRANT_URL') || 'http://localhost:6333',
+      apiKey: resourceManager.get('env.QDRANT_API_KEY')
+    }, resourceManager);
+    
+    semanticProvider = {
+      embeddingService,
+      vectorStore,
+      semanticSearch: async (collection, query, options) => {
+        const embeddings = await embeddingService.generateEmbeddings([query]);
+        return vectorStore.search(collection, embeddings[0], options?.limit || 10);
+      },
+      disconnect: async () => {}
+    };
+    console.log('✅ Semantic search components created');
     
     // 4. Create ToolIndexer
     toolIndexer = await ToolIndexer.createForTools(resourceManager, {

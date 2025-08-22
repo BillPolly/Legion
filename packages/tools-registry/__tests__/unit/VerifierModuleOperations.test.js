@@ -13,6 +13,22 @@
 import { jest } from '@jest/globals';
 import { Verifier } from '../../src/verification/Verifier.js';
 
+// Create mock objects for find and aggregate results
+const mockFindResult = {
+  toArray: jest.fn()
+};
+
+const mockAggregateResult = {
+  toArray: jest.fn()
+};
+
+// Create mock collection object that will be reused
+const mockCollection = {
+  countDocuments: jest.fn(),
+  find: jest.fn().mockReturnValue(mockFindResult),
+  aggregate: jest.fn().mockReturnValue(mockAggregateResult)
+};
+
 // Mock dependencies
 const mockMongoProvider = {
   connected: true,
@@ -20,14 +36,10 @@ const mockMongoProvider = {
   databaseService: {
     mongoProvider: {
       db: {
-        collection: jest.fn().mockReturnValue({
-          countDocuments: jest.fn(),
-          find: jest.fn().mockReturnValue({
-            toArray: jest.fn()
-          }),
-          aggregate: jest.fn().mockReturnValue({
-            toArray: jest.fn()
-          })
+        collection: jest.fn((collectionName) => {
+          // Return same mock collection for all collection names
+          // The mock behavior will vary based on filter in countDocuments
+          return mockCollection;
         })
       }
     }
@@ -48,22 +60,33 @@ describe('Verifier Module-Specific Operations', () => {
     
     verifier = new Verifier(mockMongoProvider, mockSemanticProvider, false);
 
-    // Setup default mock responses for counts - need to track call order
-    let countCallIndex = 0;
-    const mockCollection = mockMongoProvider.databaseService.mongoProvider.db.collection();
+    // Setup default mock responses for counts
+    // We need to track which collection is being queried
+    const collectionCalls = [];
+    mockMongoProvider.databaseService.mongoProvider.db.collection.mockImplementation((collectionName) => {
+      collectionCalls.push(collectionName);
+      return mockCollection;
+    });
+    
     mockCollection.countDocuments.mockImplementation((filter) => {
+      const lastCollection = collectionCalls[collectionCalls.length - 1];
+      
       // Check for orphaned items (queries with $or)
       if (filter && filter.$or) {
         return Promise.resolve(0); // No orphaned items by default
       }
+      
       // For TestModule: modules=1, tools=5, perspectives=15
-      if (filter && filter.name === 'TestModule') return Promise.resolve(1); // modules count
-      if (filter && filter.moduleName === 'TestModule') {
-        // First call for tools, second call for perspectives
-        countCallIndex++;
-        if (countCallIndex === 1) return Promise.resolve(5); // tools
-        return Promise.resolve(15); // perspectives
+      if (lastCollection === 'modules' && filter && filter.name === 'TestModule') {
+        return Promise.resolve(1); // modules count
       }
+      if (lastCollection === 'tools' && filter && filter.moduleName === 'TestModule') {
+        return Promise.resolve(5); // tools count
+      }
+      if (lastCollection === 'tool_perspectives' && filter && filter.moduleName === 'TestModule') {
+        return Promise.resolve(15); // perspectives count
+      }
+      
       return Promise.resolve(0); // default
     });
 
@@ -76,21 +99,52 @@ describe('Verifier Module-Specific Operations', () => {
     mockSemanticProvider.count.mockResolvedValue(15);
 
     // Setup default mock responses for validation queries
-    const mockFind = mockCollection.find();
-    mockFind.toArray.mockImplementation(() => {
-      // This will be called for both tools and perspectives queries
-      return Promise.resolve([
-        { _id: 'tool1', name: 'tool1', moduleName: 'TestModule', moduleId: 'module1' },
-        { _id: 'tool2', name: 'tool2', moduleName: 'TestModule', moduleId: 'module1' },
-        { _id: 'tool3', name: 'tool3', moduleName: 'TestModule', moduleId: 'module1' },
-        { _id: 'tool4', name: 'tool4', moduleName: 'TestModule', moduleId: 'module1' },
-        { _id: 'tool5', name: 'tool5', moduleName: 'TestModule', moduleId: 'module1' }
-      ]);
+    mockCollection.find.mockImplementation((filter) => {
+      // Return the mock find result that has toArray method
+      return mockFindResult;
+    });
+    
+    mockFindResult.toArray.mockImplementation(() => {
+      const lastCollection = collectionCalls[collectionCalls.length - 1];
+      
+      // Return appropriate data based on collection being queried
+      if (lastCollection === 'tools') {
+        return Promise.resolve([
+          { _id: 'tool1', name: 'tool1', moduleName: 'TestModule', moduleId: 'module1' },
+          { _id: 'tool2', name: 'tool2', moduleName: 'TestModule', moduleId: 'module1' },
+          { _id: 'tool3', name: 'tool3', moduleName: 'TestModule', moduleId: 'module1' },
+          { _id: 'tool4', name: 'tool4', moduleName: 'TestModule', moduleId: 'module1' },
+          { _id: 'tool5', name: 'tool5', moduleName: 'TestModule', moduleId: 'module1' }
+        ]);
+      }
+      
+      if (lastCollection === 'tool_perspectives') {
+        // Return 3 perspectives for each tool (15 total)
+        const perspectives = [];
+        for (let toolNum = 1; toolNum <= 5; toolNum++) {
+          for (let perspNum = 1; perspNum <= 3; perspNum++) {
+            perspectives.push({
+              _id: `persp-tool${toolNum}-${perspNum}`,
+              toolId: `tool${toolNum}`,
+              toolName: `tool${toolNum}`,
+              moduleName: 'TestModule',
+              perspectiveType: 'usage'
+            });
+          }
+        }
+        return Promise.resolve(perspectives);
+      }
+      
+      return Promise.resolve([]);
     });
     
     // Setup aggregate mock for perspective-tool mismatch check
-    const mockAggregate = mockCollection.aggregate();
-    mockAggregate.toArray.mockResolvedValue([]); // No mismatches by default
+    mockCollection.aggregate.mockImplementation((pipeline) => {
+      // Always return the mock aggregate result that has toArray method
+      return mockAggregateResult;
+    });
+    
+    mockAggregateResult.toArray.mockResolvedValue([]); // No mismatches by default
   });
 
   describe('verifyModule()', () => {

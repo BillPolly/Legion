@@ -19,149 +19,230 @@ describe('PipelineStateManager', () => {
       states: []
     };
 
-    // Mock MongoDB provider - NO REAL CONNECTIONS
-    mockMongoProvider = {
-      findOne: jest.fn(async (collection, query) => {
-        return mockStateData.states.find(state => {
-          if (query.active !== undefined) return state.active === query.active;
-          if (query._id) return state._id.toString() === query._id.toString();
-          return false;
-        }) || null;
-      }),
-      find: jest.fn(async (collection, query) => {
-        return mockStateData.states.filter(state => {
-          if (query.active !== undefined) return state.active === query.active;
-          if (query._id) return state._id.toString() === query._id.toString();
-          return true;  // Return all if no query
-        });
-      }),
-      update: jest.fn(async (collection, query, update, options = {}) => {
-        // Handle multi option
-        if (options.multi) {
-          const states = mockStateData.states.filter(s => {
-            if (query.active !== undefined) return s.active === query.active;
-            if (query._id) return s._id.toString() === query._id.toString();
-            return false;
-          });
-          
-          states.forEach(state => {
-            if (update.$set) {
-              Object.assign(state, update.$set);
-            }
-          });
-          
-          return { nModified: states.length };
-        }
-        
-        // Single update
-        const state = mockStateData.states.find(s => {
+    // Create mock implementations as regular functions first
+    const findOneImpl = async (collection, query) => {
+      return mockStateData.states.find(state => {
+        if (query.active !== undefined) return state.active === query.active;
+        if (query._id) return state._id.toString() === query._id.toString();
+        return false;
+      }) || null;
+    };
+
+    const findImpl = (collection, query) => {
+      console.log('🔍 MOCK find() called with:', { collection, query });
+      console.log('🔍 MOCK mockStateData.states:', mockStateData.states.map(s => ({ _id: s._id.toString(), active: s.active })));
+      const results = mockStateData.states.filter(state => {
+        if (query.active !== undefined) return state.active === query.active;
+        if (query._id) return state._id.toString() === query._id.toString();
+        return true;  // Return all if no query
+      });
+      console.log('🔍 MOCK find() returning:', results.length, 'states');
+      console.log('🔍 MOCK find() actual results:', results);
+      return Promise.resolve(results);
+    };
+
+    const updateImpl = async (collection, query, update, options = {}) => {
+      // Handle multi option
+      if (options.multi) {
+        const states = mockStateData.states.filter(s => {
           if (query.active !== undefined) return s.active === query.active;
           if (query._id) return s._id.toString() === query._id.toString();
           return false;
         });
         
-        if (state) {
-          // Handle $set operations
+        states.forEach(state => {
           if (update.$set) {
-            // Handle nested updates like stages.loadTools.status
-            for (const [path, value] of Object.entries(update.$set)) {
-              if (path.startsWith('stages.')) {
-                const parts = path.split('.');
-                if (parts.length >= 3) {
-                  const stageName = parts[1];
-                  const property = parts.slice(2).join('.');
-                  if (!state.stages) state.stages = {};
-                  if (!state.stages[stageName]) state.stages[stageName] = {};
-                  state.stages[stageName][property] = value;
-                } else {
-                  state[path] = value;
-                }
+            Object.assign(state, update.$set);
+          }
+        });
+        
+        return { nModified: states.length };
+      }
+      
+      // Single update
+      const state = mockStateData.states.find(s => {
+        if (query.active !== undefined) return s.active === query.active;
+        if (query._id) return s._id.toString() === query._id.toString();
+        return false;
+      });
+      
+      if (state) {
+        // Handle $set operations
+        if (update.$set) {
+          // Handle nested updates like stages.loadTools.status
+          for (const [path, value] of Object.entries(update.$set)) {
+            if (path.startsWith('stages.')) {
+              const parts = path.split('.');
+              if (parts.length >= 3) {
+                const stageName = parts[1];
+                const property = parts.slice(2).join('.');
+                if (!state.stages) state.stages = {};
+                if (!state.stages[stageName]) state.stages[stageName] = {};
+                state.stages[stageName][property] = value;
               } else {
                 state[path] = value;
               }
+            } else {
+              state[path] = value;
             }
           }
-          
-          // Handle $addToSet operations  
-          if (update.$addToSet) {
-            for (const [path, value] of Object.entries(update.$addToSet)) {
-              if (path.startsWith('stages.')) {
-                const parts = path.split('.');
-                if (parts.length >= 3) {
-                  const stageName = parts[1];
-                  const property = parts.slice(2).join('.');
-                  if (!state.stages) state.stages = {};
-                  if (!state.stages[stageName]) state.stages[stageName] = {};
-                  if (!state.stages[stageName][property]) state.stages[stageName][property] = [];
-                  if (!state.stages[stageName][property].includes(value)) {
-                    state.stages[stageName][property].push(value);
-                  }
-                }
-              }
-            }
-          }
-          
-          // Handle direct property updates (for numeric checkpoint data)
-          // The implementation sets checkpoint data directly on the stage
-          if (update.$set) {
-            for (const [path, value] of Object.entries(update.$set)) {
-              if (path.includes('.checkpoint.')) {
-                // Handle checkpoint object properties
-                const parts = path.split('.');
-                if (parts.length >= 4 && parts[0] === 'stages') {
-                  const stageName = parts[1];
-                  const property = parts[3];  // Skip 'checkpoint'
-                  if (!state.stages) state.stages = {};
-                  if (!state.stages[stageName]) state.stages[stageName] = {};
-                  state.stages[stageName][property] = value;
-                }
-              }
-            }
-          }
-          
-          return { modifiedCount: 1 };
-        } else if (update.$set) {
-          // Upsert - create new document
-          const newState = {
-            _id: new ObjectId(),
-            ...update.$set,
-            createdAt: new Date()
-          };
-          mockStateData.states.push(newState);
-          return { modifiedCount: 0, upsertedId: newState._id };
         }
-        return { modifiedCount: 0 };
-      }),
-      updateMany: jest.fn(async (collection, query, update) => {
-        let modifiedCount = 0;
-        mockStateData.states.forEach(state => {
-          if (query.active === undefined || state.active === query.active) {
-            Object.assign(state, update.$set || {});
-            modifiedCount++;
+        
+        // Handle $addToSet operations  
+        if (update.$addToSet) {
+          for (const [path, value] of Object.entries(update.$addToSet)) {
+            if (path.startsWith('stages.')) {
+              const parts = path.split('.');
+              if (parts.length >= 3) {
+                const stageName = parts[1];
+                const property = parts.slice(2).join('.');
+                if (!state.stages) state.stages = {};
+                if (!state.stages[stageName]) state.stages[stageName] = {};
+                if (!state.stages[stageName][property]) state.stages[stageName][property] = [];
+                if (!state.stages[stageName][property].includes(value)) {
+                  state.stages[stageName][property].push(value);
+                }
+              }
+            }
           }
-        });
-        return { modifiedCount };
-      }),
-      insert: jest.fn(async (collection, doc) => {
-        const newDoc = {
+        }
+        
+        // Handle direct property updates (for numeric checkpoint data)
+        // The implementation sets checkpoint data directly on the stage
+        if (update.$set) {
+          for (const [path, value] of Object.entries(update.$set)) {
+            if (path.includes('.checkpoint.')) {
+              // Handle checkpoint object properties
+              const parts = path.split('.');
+              if (parts.length >= 4 && parts[0] === 'stages') {
+                const stageName = parts[1];
+                const property = parts[3];  // Skip 'checkpoint'
+                if (!state.stages) state.stages = {};
+                if (!state.stages[stageName]) state.stages[stageName] = {};
+                state.stages[stageName][property] = value;
+              }
+            }
+          }
+        }
+        
+        return { modifiedCount: 1 };
+      } else if (update.$set) {
+        // Upsert - create new document
+        const newState = {
           _id: new ObjectId(),
-          ...doc,
+          ...update.$set,
           createdAt: new Date()
         };
-        mockStateData.states.push(newDoc);
-        return { insertedId: newDoc._id };
-      })
+        mockStateData.states.push(newState);
+        return { modifiedCount: 0, upsertedId: newState._id };
+      }
+      return { modifiedCount: 0 };
     };
+
+    const updateManyImpl = async (collection, query, update) => {
+      let modifiedCount = 0;
+      mockStateData.states.forEach(state => {
+        if (query.active === undefined || state.active === query.active) {
+          Object.assign(state, update.$set || {});
+          modifiedCount++;
+        }
+      });
+      return { modifiedCount };
+    };
+
+    const insertImpl = async (collection, doc) => {
+      const newDoc = {
+        _id: new ObjectId(),
+        ...doc,
+        createdAt: new Date()
+      };
+      mockStateData.states.push(newDoc);
+      return { insertedId: newDoc._id };
+    };
+
+    // Mock MongoDB provider - NO REAL CONNECTIONS
+    // Create a custom mock class that tracks calls and executes implementations
+    class MockMongoProvider {
+      constructor() {
+        this.calls = {
+          findOne: [],
+          find: [],
+          update: [],
+          updateMany: [],
+          insert: []
+        };
+      }
+      
+      async findOne(collection, query) {
+        this.calls.findOne.push({ collection, query });
+        return findOneImpl(collection, query);
+      }
+      
+      async find(collection, query) {
+        this.calls.find.push({ collection, query });
+        console.log('🔍 CUSTOM MOCK find() called with:', { collection, query });
+        return findImpl(collection, query);
+      }
+      
+      async update(collection, query, update, options) {
+        this.calls.update.push({ collection, query, update, options });
+        return updateImpl(collection, query, update, options);
+      }
+      
+      async updateMany(collection, query, update) {
+        this.calls.updateMany.push({ collection, query, update });
+        return updateManyImpl(collection, query, update);
+      }
+      
+      async insert(collection, doc) {
+        this.calls.insert.push({ collection, doc });
+        return insertImpl(collection, doc);
+      }
+      
+      // Helper methods for test assertions
+      wasCalledWith(method, ...expectedArgs) {
+        return this.calls[method].some(call => 
+          JSON.stringify([call.collection, call.query, call.update, call.options].filter(x => x !== undefined)) ===
+          JSON.stringify(expectedArgs)
+        );
+      }
+      
+      getCallCount(method) {
+        return this.calls[method].length;
+      }
+      
+      clearCalls() {
+        Object.keys(this.calls).forEach(method => {
+          this.calls[method] = [];
+        });
+      }
+    }
+    
+    mockMongoProvider = new MockMongoProvider();
   });
 
   beforeEach(async () => {
-    // Reset mock data and clear calls
+    // Reset mock data and clear call history (but keep implementations)
     mockStateData.states = [];
-    jest.clearAllMocks();
+    
+    // Clear call history using our custom mock's method
+    mockMongoProvider.clearCalls();
     
     // Create fresh state manager
     stateManager = new PipelineStateManager(mockMongoProvider);
     stateManager.stateCollection = testCollectionName;  // Override default collection name
+    
+    console.log('🔍 SETUP: stateManager.mongoProvider === mockMongoProvider:', stateManager.mongoProvider === mockMongoProvider);
+    console.log('🔍 SETUP: stateManager.mongoProvider.find === mockMongoProvider.find:', stateManager.mongoProvider.find === mockMongoProvider.find);
+    
+    // Test direct mock call
+    console.log('🔍 SETUP: Testing direct mock call...');
+    try {
+      const directResult = stateManager.mongoProvider.find('test', { active: true });
+      console.log('🔍 SETUP: Direct mock call result:', directResult);
+    } catch (error) {
+      console.log('🔍 SETUP: Direct mock call error:', error.message);
+    }
   });
 
   afterAll(async () => {
@@ -173,35 +254,42 @@ describe('PipelineStateManager', () => {
       await stateManager.reset();
       
       // Check that insert was called for the new active state
-      expect(mockMongoProvider.insert).toHaveBeenCalledWith(
-        testCollectionName,
-        expect.objectContaining({
-          active: true,
-          status: 'in_progress',  // Implementation uses 'in_progress' not 'pending'
-          startedAt: expect.any(Date),
-          stages: expect.any(Object)  // Implementation creates default stages
-        })
-      );
+      expect(mockMongoProvider.getCallCount('insert')).toBe(1);
+      const insertCall = mockMongoProvider.calls.insert[0];
+      expect(insertCall.collection).toBe(testCollectionName);
+      expect(insertCall.doc).toEqual(expect.objectContaining({
+        active: true,
+        status: 'in_progress',  // Implementation uses 'in_progress' not 'pending'
+        startedAt: expect.any(Date),
+        stages: expect.any(Object)  // Implementation creates default stages
+      }));
     });
 
     it('should deactivate existing states', async () => {
       // Create an existing active state in mock data
       const existingStateId = new ObjectId();
-      mockStateData.states.push({
+      const existingState = {
         _id: existingStateId,
         active: true,
         status: 'in_progress',
         startedAt: new Date()
-      });
+      };
+      mockStateData.states.push(existingState);
+
+      console.log('🔍 Before reset: mockStateData.states =', mockStateData.states.length);
+      console.log('🔍 Existing state:', { _id: existingStateId.toString(), active: existingState.active });
 
       await stateManager.reset();
       
       // Check that existing states were deactivated (individual updates, not multi)
-      expect(mockMongoProvider.update).toHaveBeenCalledWith(
-        testCollectionName,
-        { _id: existingStateId },
-        { $set: { active: false } }
+      expect(mockMongoProvider.getCallCount('update')).toBeGreaterThanOrEqual(1);
+      const updateCalls = mockMongoProvider.calls.update;
+      const deactivateCall = updateCalls.find(call => 
+        call.collection === testCollectionName &&
+        call.query._id === existingStateId &&
+        call.update.$set.active === false
       );
+      expect(deactivateCall).toBeDefined();
       
       // Verify a new state was added to mock data
       const newState = mockStateData.states.find(s => s.active === true);

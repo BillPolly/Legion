@@ -3,7 +3,8 @@
  */
 
 import { ResourceManager } from '@legion/resource-manager';
-import { SemanticSearchProvider } from '@legion/semantic-search';
+import { LocalEmbeddingService } from '../../src/search/LocalEmbeddingService.js';
+import { QdrantVectorStore } from '../../src/search/QdrantVectorStore.js';
 import { ensureMongoDBAvailable, getTestDatabase, cleanTestDatabase } from '../utils/testHelpers.js';
 
 describe('Quick Semantic Search Test', () => {
@@ -26,12 +27,23 @@ describe('Quick Semantic Search Test', () => {
     
     console.log('MongoDB connected');
     
-    // Try to initialize semantic search
+    // Try to initialize semantic search components
     try {
-      semanticProvider = await SemanticSearchProvider.create(resourceManager);
-      console.log('Semantic search provider created');
+      const embeddingService = new LocalEmbeddingService();
+      await embeddingService.initialize();
+      
+      const vectorStore = new QdrantVectorStore({
+        url: resourceManager.get('env.QDRANT_URL') || 'http://localhost:6333',
+        apiKey: resourceManager.get('env.QDRANT_API_KEY')
+      }, resourceManager);
+      
+      semanticProvider = {
+        embeddingService,
+        vectorStore
+      };
+      console.log('Semantic search components created');
     } catch (error) {
-      console.log('Could not create semantic provider:', error.message);
+      console.log('Could not create semantic components:', error.message);
     }
   });
   

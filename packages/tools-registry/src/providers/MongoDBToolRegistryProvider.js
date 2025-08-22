@@ -952,16 +952,17 @@ export class MongoDBToolRegistryProvider extends IToolRegistryProvider {
     const results = { generated: 0, errors: [] };
     
     try {
-      // Create SemanticSearchProvider with Nomic embeddings for tools
-      console.log('🔧 Creating SemanticSearchProvider with Nomic embeddings for tools');
+      // Create local Nomic embedding service for tools
+      console.log('🔧 Creating local Nomic embedding service for tools');
       
-      // Import SemanticSearchProvider class
-      const { SemanticSearchProvider } = await import('@legion/semantic-search');
+      // Import LocalEmbeddingService
+      const { LocalEmbeddingService } = await import('../search/LocalEmbeddingService.js');
       
-      // Create provider with Nomic embeddings
-      const toolSemanticProvider = await SemanticSearchProvider.create(this.resourceManager);
+      // Create local embedding service
+      const embeddingService = new LocalEmbeddingService();
+      await embeddingService.initialize();
       
-      console.log('✅ Tool semantic search provider configured with Nomic embeddings');
+      console.log('✅ Tool embedding service configured with Nomic embeddings');
 
       // Get all tools that need embeddings
       const toolsWithoutEmbeddings = await this.getToolsWithoutEmbeddings(1000);
@@ -972,7 +973,7 @@ export class MongoDBToolRegistryProvider extends IToolRegistryProvider {
           const searchText = `${tool.name} ${tool.description || ''} ${tool.summary || ''}`.trim();
           
           // Generate embedding using LOCAL Nomic only
-          const embeddings = await toolSemanticProvider.embeddingService.generateEmbeddings([searchText]);
+          const embeddings = await embeddingService.generateEmbeddings([searchText]);
           
           if (embeddings && embeddings.length > 0) {
             await this.updateToolEmbedding(

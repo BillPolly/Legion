@@ -30,9 +30,19 @@ export class ToolIndexer {
   static async createForTools(resourceManager, options = {}) {
     console.log('🔧 Creating ToolIndexer with Nomic embeddings for tools');
     
-    // Import SemanticSearchProvider to get embedding service
-    const { SemanticSearchProvider } = await import('@legion/semantic-search');
-    const toolSemanticProvider = await SemanticSearchProvider.create(resourceManager);
+    // Import local services
+    const { LocalEmbeddingService } = await import('./LocalEmbeddingService.js');
+    const { QdrantVectorStore } = await import('./QdrantVectorStore.js');
+    
+    // Create local embedding service
+    const embeddingService = new LocalEmbeddingService();
+    await embeddingService.initialize();
+    
+    // Create Qdrant vector store
+    const vectorStore = new QdrantVectorStore({
+      url: resourceManager.get('env.QDRANT_URL') || 'http://localhost:6333',
+      apiKey: resourceManager.get('env.QDRANT_API_KEY')
+    }, resourceManager);
     
     console.log('✅ ToolIndexer configured with Nomic embedding service');
     
@@ -43,9 +53,9 @@ export class ToolIndexer {
     
     // Create ToolIndexer with local embedding service + MongoDB
     return new ToolIndexer({
-      embeddingService: toolSemanticProvider.embeddingService,
-      vectorStore: toolSemanticProvider.vectorStore,
-      documentProcessor: toolSemanticProvider.documentProcessor,
+      embeddingService: embeddingService,
+      vectorStore: vectorStore,
+      documentProcessor: new DocumentProcessor(),
       mongoProvider: mongoProvider,
       collectionName: options.collectionName || 'legion_tools', // Qdrant collection name
       batchSize: options.batchSize || 50
