@@ -2,7 +2,7 @@
  * ConnectionPool - Simple connection pool for database operations
  * 
  * Provides connection management and pooling for the tool registry system
- * Part of the semantic search functionality contained within new-tool-registry
+ * Part of the semantic search functionality contained within tools-registry
  * 
  * No mocks, no fallbacks - real implementation only
  */

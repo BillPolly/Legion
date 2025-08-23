@@ -195,17 +195,71 @@ describe('ModuleDiscovery Integration Tests', () => {
   });
   
   describe('Module validation', () => {
-    it('should validate discovered modules are loadable', async () => {
+    it('should validate discovered modules and test their interfaces', async () => {
       const modules = await moduleDiscovery.discoverInMonorepo();
+      expect(modules.length).toBeGreaterThan(0);
       
-      // Try to validate first few modules
-      const samplesToTest = modules.slice(0, Math.min(3, modules.length));
+      // Test validation on all discovered modules
+      let validCount = 0;
+      let invalidCount = 0;
+      const validModules = [];
       
-      for (const module of samplesToTest) {
+      for (const module of modules) {
         const isValid = await moduleDiscovery.validateModule(module.path);
         
-        // Log validation results
-        console.log(`Module ${module.name}: ${isValid ? 'valid' : 'invalid'}`);
+        if (isValid) {
+          validCount++;
+          validModules.push(module);
+          console.log(`✅ Module ${module.name}: valid`);
+        } else {
+          invalidCount++;
+          console.log(`❌ Module ${module.name}: invalid`);
+        }
+      }
+      
+      console.log(`Validation summary: ${validCount} valid, ${invalidCount} invalid`);
+      
+      // Should have some validation results
+      expect(validCount + invalidCount).toBe(modules.length);
+      
+      // Test that we can actually load at least one valid module if any exist
+      if (validModules.length > 0) {
+        const sampleValid = validModules[0];
+        
+        // Import the module and test its interface
+        const ModuleClass = await import(sampleValid.path);
+        const moduleInstance = new (ModuleClass.default || ModuleClass)();
+        
+        // Test supported interfaces
+        let interfaceFound = false;
+        
+        // Interface 1: getName() + getTools()
+        if (typeof moduleInstance.getName === 'function' && 
+            typeof moduleInstance.getTools === 'function') {
+          const name = moduleInstance.getName();
+          const tools = moduleInstance.getTools();
+          expect(typeof name).toBe('string');
+          expect(Array.isArray(tools)).toBe(true);
+          interfaceFound = true;
+          console.log(`Module ${sampleValid.name} implements getName/getTools interface`);
+        }
+        // Interface 2: name property + listTools()
+        else if (typeof moduleInstance.name === 'string' && 
+                 typeof moduleInstance.listTools === 'function') {
+          const tools = moduleInstance.listTools();
+          expect(Array.isArray(tools)).toBe(true);
+          interfaceFound = true;
+          console.log(`Module ${sampleValid.name} implements name/listTools interface`);
+        }
+        // Interface 3: getTools() only
+        else if (typeof moduleInstance.getTools === 'function') {
+          const tools = moduleInstance.getTools();
+          expect(Array.isArray(tools)).toBe(true);
+          interfaceFound = true;
+          console.log(`Module ${sampleValid.name} implements getTools-only interface`);
+        }
+        
+        expect(interfaceFound).toBe(true);
       }
     });
   });
@@ -257,38 +311,113 @@ describe('ModuleDiscovery Integration Tests', () => {
   });
   
   describe('Full workflow', () => {
-    it('should complete full discovery and storage workflow', async () => {
+    it('should complete full discovery → validation → loading → tool extraction workflow', async () => {
       // 1. Discover all modules
       const modules = await moduleDiscovery.discoverInMonorepo();
       console.log(`Discovered ${modules.length} modules`);
+      expect(modules.length).toBeGreaterThan(0);
       
       // 2. Validate modules
       const validModules = [];
+      let validationErrors = [];
+      
       for (const module of modules) {
-        const isValid = await moduleDiscovery.validateModule(module.path);
-        if (isValid) {
-          validModules.push(module);
+        try {
+          const isValid = await moduleDiscovery.validateModule(module.path);
+          if (isValid) {
+            validModules.push(module);
+          }
+        } catch (error) {
+          validationErrors.push({ module: module.name, error: error.message });
         }
       }
-      console.log(`${validModules.length} modules are valid`);
+      console.log(`${validModules.length} modules are valid, ${validationErrors.length} had validation errors`);
       
-      // 3. Save to database
-      const savedCount = await moduleDiscovery.saveModulesToDatabase(validModules);
-      console.log(`Saved ${savedCount} modules to database`);
-      
-      // 4. Verify in database
-      const dbModules = await testDb.collection('modules').find({}).toArray();
-      expect(dbModules.length).toBe(validModules.length);
-      
-      // 5. Check we can retrieve them (only if we have valid modules)
+      // 3. Save valid modules to database
       if (validModules.length > 0) {
-        const retrievedModule = await testDb.collection('modules').findOne({});
-        expect(retrievedModule).toBeDefined();
-        expect(retrievedModule.name).toBeDefined();
+        const savedCount = await moduleDiscovery.saveModulesToDatabase(validModules);
+        console.log(`Saved ${savedCount} modules to database`);
+        expect(savedCount).toBe(validModules.length);
+        
+        // 4. Verify in database
+        const dbModules = await testDb.collection('modules').find({}).toArray();
+        expect(dbModules.length).toBe(validModules.length);
+        
+        // 5. Load modules and extract tools
+        const loadedModulesWithTools = [];
+        
+        for (const module of validModules) {
+          try {
+            console.log(`Loading module: ${module.name}`);
+            const ModuleClass = await import(module.path);
+            const moduleInstance = new (ModuleClass.default || ModuleClass)();
+            
+            // Extract tools based on module interface
+            let tools = [];
+            let moduleInfo = { name: module.name };
+            
+            // Try different interfaces
+            if (typeof moduleInstance.getName === 'function' && 
+                typeof moduleInstance.getTools === 'function') {
+              moduleInfo.name = moduleInstance.getName();
+              tools = moduleInstance.getTools();
+            } else if (typeof moduleInstance.name === 'string' && 
+                       typeof moduleInstance.listTools === 'function') {
+              moduleInfo.name = moduleInstance.name;
+              tools = moduleInstance.listTools();
+            } else if (typeof moduleInstance.getTools === 'function') {
+              tools = moduleInstance.getTools();
+            }
+            
+            expect(Array.isArray(tools)).toBe(true);
+            
+            loadedModulesWithTools.push({
+              module: moduleInfo,
+              tools: tools,
+              instance: moduleInstance
+            });
+            
+            console.log(`✅ ${module.name}: loaded ${tools.length} tools`);
+            
+          } catch (loadError) {
+            console.log(`❌ Failed to load ${module.name}: ${loadError.message}`);
+          }
+        }
+        
+        // 6. Verify we successfully loaded at least some modules with tools
+        expect(loadedModulesWithTools.length).toBeGreaterThan(0);
+        
+        // 7. Test that extracted tools have proper structure
+        const modulesWithTools = loadedModulesWithTools.filter(m => m.tools.length > 0);
+        if (modulesWithTools.length > 0) {
+          const sampleModule = modulesWithTools[0];
+          const sampleTool = sampleModule.tools[0];
+          
+          expect(sampleTool).toHaveProperty('name');
+          expect(typeof sampleTool.name).toBe('string');
+          
+          if (sampleTool.description) {
+            expect(typeof sampleTool.description).toBe('string');
+          }
+          
+          if (sampleTool.execute) {
+            expect(typeof sampleTool.execute).toBe('function');
+          }
+          
+          console.log(`✅ Tool structure validated: ${sampleTool.name}`);
+        }
+        
+        console.log(`\n📊 Workflow Summary:`);
+        console.log(`  Discovered: ${modules.length} modules`);
+        console.log(`  Valid: ${validModules.length} modules`);
+        console.log(`  Loaded: ${loadedModulesWithTools.length} modules`);
+        console.log(`  With tools: ${loadedModulesWithTools.filter(m => m.tools.length > 0).length} modules`);
+        console.log(`  Total tools: ${loadedModulesWithTools.reduce((sum, m) => sum + m.tools.length, 0)} tools`);
+        
       } else {
-        // If no valid modules, that's expected due to broken imports in monorepo modules
-        console.log('No valid modules found - this is expected due to broken imports in Legion modules');
-        expect(validModules.length).toBe(0);
+        // This should not happen in a working monorepo - fail the test
+        console.log('❌ No valid modules found - this indicates a problem with module discovery or validation');
+        expect(validModules.length).toBeGreaterThan(0);
       }
     });
   });

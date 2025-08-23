@@ -1,5 +1,5 @@
 export default {
-  displayName: '@legion/new-tool-registry',
+  displayName: '@legion/tools-registry',
   testEnvironment: 'node',
   testMatch: [
     '**/__tests__/**/*.test.js'

@@ -1,5 +1,5 @@
 /**
- * Global test setup for new-tool-registry
+ * Global test setup for tools-registry
  * 
  * Provides proper test isolation, resource management, and cleanup
  * to avoid the issues that plagued the old tools-registry package.

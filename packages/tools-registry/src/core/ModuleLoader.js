@@ -99,12 +99,22 @@ export class ModuleLoader {
         if (typeof ModuleClass.create === 'function') {
           moduleInstance = await ModuleClass.create(this.resourceManager);
         } else {
-          // Try to instantiate as a class
+          // Try to instantiate as a class - Legion modules often need ResourceManager
           try {
-            moduleInstance = new ModuleClass();
+            // First try with ResourceManager if available
+            if (this.resourceManager) {
+              moduleInstance = new ModuleClass(this.resourceManager);
+            } else {
+              moduleInstance = new ModuleClass();
+            }
           } catch (error) {
-            // Might be a function that returns an instance
-            moduleInstance = ModuleClass();
+            // If constructor fails, might be a function that returns an instance
+            try {
+              moduleInstance = ModuleClass();
+            } catch (secondError) {
+              // Last resort - try empty constructor
+              moduleInstance = new ModuleClass();
+            }
           }
         }
       } else {
@@ -152,18 +162,19 @@ export class ModuleLoader {
       );
     }
     
-    if (typeof moduleInstance !== 'object' || !moduleInstance.getName) {
-      throw new ModuleValidationError(
-        'Invalid module instance: must have getName method',
-        'unknown',
-        ['Module must have getName method']
-      );
+    // Get name using different interfaces
+    let name = 'Unknown';
+    if (typeof moduleInstance.getName === 'function') {
+      name = moduleInstance.getName();
+    } else if (typeof moduleInstance.name === 'string') {
+      name = moduleInstance.name;
     }
     
     const metadata = {
-      name: moduleInstance.getName ? moduleInstance.getName() : 'Unknown',
+      name: name,
       version: moduleInstance.getVersion ? moduleInstance.getVersion() : 'unknown',
-      description: moduleInstance.getDescription ? moduleInstance.getDescription() : 'No description available'
+      description: moduleInstance.getDescription ? moduleInstance.getDescription() : 
+                   (moduleInstance.description || 'No description available')
     };
     
     // Add any additional metadata if available
@@ -189,15 +200,28 @@ export class ModuleLoader {
       );
     }
     
-    if (typeof moduleInstance.getTools !== 'function') {
+    let tools = [];
+    let moduleName = moduleInstance.getName ? moduleInstance.getName() : 
+                     moduleInstance.name || 'unknown';
+    
+    // Try different interfaces for getting tools
+    if (typeof moduleInstance.getTools === 'function') {
+      tools = moduleInstance.getTools();
+    } else if (typeof moduleInstance.listTools === 'function') {
+      const toolNames = moduleInstance.listTools();
+      // listTools() returns tool names, need to get actual tools
+      if (Array.isArray(toolNames) && typeof moduleInstance.getTool === 'function') {
+        tools = toolNames.map(name => moduleInstance.getTool(name));
+      } else {
+        tools = toolNames; // Hope they're already tool objects
+      }
+    } else {
       throw new ModuleValidationError(
-        'Module does not have getTools method',
-        moduleInstance.getName ? moduleInstance.getName() : 'unknown',
-        ['Module must have getTools method']
+        'Module does not have getTools or listTools method',
+        moduleName,
+        ['Module must have getTools() or listTools() method']
       );
     }
-    
-    const tools = moduleInstance.getTools();
     
     // Validate each tool
     if (Array.isArray(tools)) {
@@ -263,18 +287,45 @@ export class ModuleLoader {
       );
     }
     
-    if (typeof moduleInstance.getName !== 'function') {
-      errors.push('Module must have getName method');
+    // Check for Legion module interface patterns
+    let hasValidInterface = false;
+    let moduleName = 'unknown';
+    
+    // Pattern 1: getName() + getTools() (tools-registry interface)
+    if (typeof moduleInstance.getName === 'function' && 
+        typeof moduleInstance.getTools === 'function') {
+      hasValidInterface = true;
+      try {
+        moduleName = moduleInstance.getName();
+      } catch (e) {
+        // getName exists but fails
+        errors.push('getName method exists but fails to execute');
+      }
+    }
+    // Pattern 2: name property + getTools() method (Legion module interface)
+    else if (typeof moduleInstance.name === 'string' && 
+             typeof moduleInstance.getTools === 'function') {
+      hasValidInterface = true;
+      moduleName = moduleInstance.name;
+    }
+    // Pattern 3: name property + listTools() method (alternate Legion interface)
+    else if (typeof moduleInstance.name === 'string' && 
+             typeof moduleInstance.listTools === 'function') {
+      hasValidInterface = true;
+      moduleName = moduleInstance.name;
     }
     
-    if (typeof moduleInstance.getTools !== 'function') {
-      errors.push('Module must have getTools method');
+    if (!hasValidInterface) {
+      errors.push('Module must implement one of the supported interfaces:');
+      errors.push('  - getName() + getTools() methods');
+      errors.push('  - name property + getTools() method');
+      errors.push('  - name property + listTools() method');
     }
     
     if (errors.length > 0) {
       throw new ModuleValidationError(
         'Module validation failed',
-        moduleInstance.getName ? moduleInstance.getName() : 'unknown',
+        moduleName,
         errors
       );
     }

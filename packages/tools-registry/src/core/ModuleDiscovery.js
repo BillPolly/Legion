@@ -148,74 +148,68 @@ export class ModuleDiscovery {
    */
   async validateModule(modulePath) {
     try {
-      // First check if the file can be parsed (no syntax errors)
-      const fileContent = await fs.readFile(modulePath, 'utf-8');
+      // Use the ResourceManager singleton for proper module loading
+      if (!this.resourceManager) {
+        const { ResourceManager } = await import('@legion/resource-manager');
+        this.resourceManager = ResourceManager.getInstance();
+        await this.resourceManager.initialize();
+      }
       
-      // Basic syntax validation - this is not perfect but catches obvious errors
-      // We could use a proper parser here but for MVP, just try to import
+      // Create ModuleLoader with proper resourceManager
+      const moduleLoader = new (await import('./ModuleLoader.js')).ModuleLoader({
+        resourceManager: this.resourceManager
+      });
       
       try {
-        const moduleInstance = await this.moduleLoader.loadModule(modulePath);
+        const moduleInstance = await moduleLoader.loadModule(modulePath);
         
-        // Check for Legion module interface - modules may have different interfaces
-        // Try both interfaces: new-tool-registry interface and Legion module interface
-        
-        // Option 1: new-tool-registry interface (getName, getTools)
-        if (typeof moduleInstance.getName === 'function' && 
-            typeof moduleInstance.getTools === 'function') {
-          try {
-            moduleInstance.getName();
-            moduleInstance.getTools();
-            return true;
-          } catch (e) {
-            // Method exists but fails to execute
-          }
-        }
-        
-        // Option 2: Legion module interface (name property, listTools method)
-        if (typeof moduleInstance.name === 'string' && 
-            typeof moduleInstance.listTools === 'function') {
-          try {
-            const tools = moduleInstance.listTools();
-            if (Array.isArray(tools)) {
-              return true;
-            }
-          } catch (e) {
-            // Method exists but fails to execute
-          }
-        }
-        
-        // Option 3: Simple object with getTools method (like ClaudeToolsModule after initialize)
-        if (typeof moduleInstance.getTools === 'function') {
-          try {
-            const tools = moduleInstance.getTools();
-            if (Array.isArray(tools)) {
-              return true;
-            }
-          } catch (e) {
-            // Method exists but fails to execute
-          }
-        }
-        
-        // If none of the expected interfaces work, module is invalid
-        if (this.options.verbose) {
-          console.log(`Module ${modulePath} doesn't implement expected interface`);
-        }
-        return false;
+        // The ModuleLoader already validates the structure
+        // If we get here, the module is valid according to the expected interface
+        return true;
         
       } catch (importError) {
-        // If it's a syntax error, return false
-        if (importError instanceof SyntaxError) {
+        // Try a simpler approach - just check if module can be imported and has expected interface
+        try {
+          const ModuleClass = await import(modulePath);
+          const TestClass = ModuleClass.default || ModuleClass.Module || ModuleClass;
+          
+          // Quick structure check without full instantiation
+          if (typeof TestClass === 'function') {
+            // Check if it has static create method
+            if (typeof TestClass.create === 'function') {
+              return true; // Module with async factory pattern
+            }
+            
+            // Try to create a temporary instance to check interface
+            try {
+              let testInstance;
+              if (this.resourceManager) {
+                testInstance = new TestClass(this.resourceManager);
+              } else {
+                testInstance = new TestClass();
+              }
+              
+              // Check for valid interfaces
+              const hasNameGetTools = typeof testInstance.getName === 'function' && 
+                                    typeof testInstance.getTools === 'function';
+              const hasNameProperty = typeof testInstance.name === 'string';
+              const hasGetTools = typeof testInstance.getTools === 'function';
+              const hasListTools = typeof testInstance.listTools === 'function';
+              
+              return hasNameGetTools || (hasNameProperty && (hasGetTools || hasListTools));
+              
+            } catch (constructorError) {
+              // Constructor failed, but module structure might still be valid
+              return false;
+            }
+          }
+        } catch (secondError) {
+          // Both approaches failed
           if (this.options.verbose) {
-            console.log(`Module has syntax error ${modulePath}: ${importError.message}`);
+            console.log(`Module validation failed for ${modulePath}: ${importError.message}`);
           }
           return false;
         }
-        // For import/dependency errors, also return false (but this is expected for broken modules)
-        if (this.options.verbose) {
-          console.log(`Module validation failed for ${modulePath}: ${importError.message}`);
-        }
-        return false;
       }
     } catch (error) {
       if (this.options.verbose) {

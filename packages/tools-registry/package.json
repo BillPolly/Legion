@@ -1,5 +1,5 @@
 {
-  "name": "@legion/new-tool-registry",
+  "name": "@legion/tools-registry",
   "version": "1.0.0",
   "description": "Clean, test-driven tool registry for Legion AI agents with semantic search capabilities",
   "type": "module",

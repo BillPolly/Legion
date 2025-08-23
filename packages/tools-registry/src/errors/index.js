@@ -1,5 +1,5 @@
 /**
- * Custom error classes for new-tool-registry
+ * Custom error classes for tools-registry
  * 
  * Specific errors for better debugging and error handling
  * No fallbacks - these errors should be thrown and handled properly

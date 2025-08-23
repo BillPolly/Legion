@@ -1,5 +1,5 @@
 {
-  "name": "@legion/tools-registry",
+  "name": "@legion/tools-registry-obsolete",
   "version": "1.0.0",
   "description": "Tool registry and management infrastructure for Legion AI agents",
   "type": "module",

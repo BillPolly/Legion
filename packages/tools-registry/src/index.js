@@ -1,5 +1,5 @@
 /**
- * Main entry point for the new-tool-registry package
+ * Main entry point for the tools-registry package
  * 
  * Exports all the key components and utilities for tool registry functionality
  * with comprehensive module discovery, loading, caching, perspectives, and semantic search
