@@ -177,7 +177,7 @@ describe('VectorStore', () => {
       
       expect(results).toHaveLength(2);
       expect(results[0]).toHaveProperty('score', 0.95);
-      expect(results[0].payload).toHaveProperty('toolName', 'file-reader');
+      expect(results[0]).toHaveProperty('toolName', 'file-reader');
       expect(mockEmbeddingClient.generateEmbedding).toHaveBeenCalledWith('read files from disk');
       expect(mockVectorDatabase.search).toHaveBeenCalled();
     });

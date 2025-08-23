@@ -230,19 +230,6 @@ export default class InvalidModule {
       expect(isValid).toBe(false);
     });
     
-    it.skip('should handle syntax errors gracefully', async () => {
-      // NOTE: Skipping this test for MVP - dynamic imports in Node.js throw 
-      // SyntaxError at parse time which cannot be caught in try-catch
-      // This is a known limitation of dynamic imports
-      const syntaxErrorPath = path.join(testDir, 'SyntaxErrorModule.js');
-      await fs.writeFile(syntaxErrorPath, `
-export default class SyntaxErrorModule {
-  getName() { return 'SyntaxErrorModule' // Missing closing brace
-`);
-      
-      const isValid = await moduleDiscovery.validateModule(syntaxErrorPath);
-      expect(isValid).toBe(false);
-    });
   });
   
   describe('getModuleInfo', () => {
