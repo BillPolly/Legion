@@ -1,0 +1,44 @@
+{
+  "name": "@legion/new-tool-registry",
+  "version": "1.0.0",
+  "description": "Clean, test-driven tool registry for Legion AI agents with semantic search capabilities",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
+    "test:watch": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --watch --runInBand",
+    "test:coverage": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --coverage --runInBand",
+    "test:unit": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest __tests__/unit --runInBand",
+    "test:integration": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest __tests__/integration --runInBand",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix"
+  },
+  "keywords": [
+    "legion",
+    "ai",
+    "agent",
+    "tools-registry",
+    "module-loader",
+    "semantic-search",
+    "test-driven"
+  ],
+  "author": "Legion Framework",
+  "license": "MIT",
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0"
+  },
+  "dependencies": {
+    "@legion/resource-manager": "workspace:*",
+    "@legion/storage": "workspace:*",
+    "@legion/llm": "workspace:*"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "src/",
+    "README.md"
+  ]
+}

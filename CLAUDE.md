@@ -2,6 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+Never use .sh files, we only use javasrcipt or jest to run things
+
+
 ## Project Overview
 
 Legion is a modular framework for building AI agent tools with consistent interfaces. It's organized as a monorepo using npm workspaces with packages for core infrastructure, AI/LLM services, tool collections, and applications.
@@ -30,3 +33,12 @@ We are making an MVP we dont care about NFRs or future extensions we just need t
 
 Always keep package root directories as clean as possible! NEVER put scripts there. if scripts are temporary they must be put in a /tmp directory and cleaned up when finished with.
 
+
+DO NOT recreate functionality, this is a monorepo whereeveer possible use existing packages. if it follows good design principles extend or enhance them as requried.
+
+
+## Methedology
+Always use TDD methodolgy but without the refactor phase, try and get it right first time.
+All tests must be passing before moving on to next phase. 
+Always follow uncle Bob's CLEAN architecture principles
+Alwasy follow uncle Bob's CLEAN code principles
