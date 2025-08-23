@@ -5,26 +5,26 @@
  * TODO: Integrate with full MCP infrastructure when available.
  */
 
-import { Module } from '@legion/tools-registry/src/modules/Module.js';
+import { Module } from '@legion/tools-registry';
 
 export default class MCPModule extends Module {
-  constructor(dependencies = {}) {
-    super({ name: 'MCPModule' }, dependencies);
-    
+  constructor() {
+    super();
     this.name = 'mcp_search_servers';
     this.description = 'Search for available MCP servers';
     this.version = '1.0.0';
   }
 
   static async create(resourceManager) {
-    const module = new MCPModule({
-      resourceManager
-    });
+    const module = new MCPModule();
+    module.resourceManager = resourceManager;
     await module.initialize();
     return module;
   }
 
   async initialize() {
+    await super.initialize();
+    
     this.emit('info', 'Initializing MCP Module...');
     
     // Create basic tools for now

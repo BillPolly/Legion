@@ -7,41 +7,22 @@ import { ImageGenerationTool } from './ImageGenerationTool.js';
  * Currently supports DALL-E 3 image generation via LLMClient
  */
 export default class AIGenerationModule extends Module {
-  constructor(dependencies = {}) {
+  constructor() {
     super();
     this.name = 'AIGenerationModule';
     this.description = 'AI-powered content generation tools including DALL-E 3 image generation';
-    this.config = dependencies;
+    this.version = '1.0.0';
     this.llmClient = null;
   }
 
   /**
-   * Static async factory method following the ResourceManager pattern
+   * Static async factory method following the standard interface
    * @param {ResourceManager} resourceManager - The resource manager for dependency injection
    * @returns {Promise<AIGenerationModule>} Initialized module instance
    */
   static async create(resourceManager) {
-    console.log('[AIGenerationModule.create] Called with resourceManager:', !!resourceManager);
-    
-    if (!resourceManager) {
-      throw new Error('ResourceManager is required for AIGenerationModule.create()');
-    }
-    
-    // Get OpenAI API key from environment
-    console.log('[AIGenerationModule.create] Getting OPENAI_API_KEY from ResourceManager...');
-    const apiKey = resourceManager.get('env.OPENAI_API_KEY');
-    console.log('[AIGenerationModule.create] API Key found:', !!apiKey);
-    
-    if (!apiKey) {
-      // Debug: let's see what env vars are available
-      console.log('[AIGenerationModule.create] Available env vars in ResourceManager:');
-      const envVars = Object.keys(resourceManager._resources || {}).filter(k => k.startsWith('env.'));
-      console.log('[AIGenerationModule.create] Env vars:', envVars.slice(0, 10));
-      throw new Error('OPENAI_API_KEY environment variable is required for AI generation module');
-    }
-    
-    // Create module with dependencies
-    const module = new AIGenerationModule({ apiKey });
+    const module = new AIGenerationModule();
+    module.resourceManager = resourceManager;
     await module.initialize();
     return module;
   }
@@ -52,16 +33,31 @@ export default class AIGenerationModule extends Module {
   async initialize() {
     await super.initialize();
     
-    // Initialize LLMClient with OpenAI provider for image generation
-    if (this.config.apiKey) {
-      this.llmClient = new LLMClient({
-        provider: 'openai',
-        apiKey: this.config.apiKey,
-        model: 'dall-e-3' // Default model for images
-      });
-    } else {
-      throw new Error('OpenAI API key is required for initialization');
+    console.log('[AIGenerationModule.initialize] Called');
+    
+    if (!this.resourceManager) {
+      throw new Error('ResourceManager is required for AIGenerationModule');
     }
+    
+    // Get OpenAI API key from environment
+    console.log('[AIGenerationModule.initialize] Getting OPENAI_API_KEY from ResourceManager...');
+    const apiKey = this.resourceManager.get('env.OPENAI_API_KEY');
+    console.log('[AIGenerationModule.initialize] API Key found:', !!apiKey);
+    
+    if (!apiKey) {
+      // Debug: let's see what env vars are available
+      console.log('[AIGenerationModule.initialize] Available env vars in ResourceManager:');
+      const envVars = Object.keys(this.resourceManager._resources || {}).filter(k => k.startsWith('env.'));
+      console.log('[AIGenerationModule.initialize] Env vars:', envVars.slice(0, 10));
+      throw new Error('OPENAI_API_KEY environment variable is required for AI generation module');
+    }
+    
+    // Initialize LLMClient with OpenAI provider for image generation
+    this.llmClient = new LLMClient({
+      provider: 'openai',
+      apiKey: apiKey,
+      model: 'dall-e-3' // Default model for images
+    });
     
     // Verify that the provider supports image generation
     if (!this.llmClient.supportsImageGeneration()) {
@@ -274,12 +270,8 @@ export default class AIGenerationModule extends Module {
    * Initialize tools for this module
    */
   initializeTools() {
-    // Initialize tools dictionary
-    this.tools = {};
-    
     // Create and register the image generation tool
     const imageGenTool = new ImageGenerationTool({
-      ...this.config,
       module: this  // Pass reference to this module instance
     });
     this.registerTool(imageGenTool.name, imageGenTool);

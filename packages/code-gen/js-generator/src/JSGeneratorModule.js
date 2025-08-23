@@ -16,23 +16,21 @@ import { ValidateJavaScriptSyntaxTool } from './tools/ValidateJavaScriptSyntaxTo
 import { GenerateHTMLPageTool } from './tools/GenerateHTMLPageTool.js';
 
 export class JSGeneratorModule extends Module {
-  constructor(dependencies = {}) {
+  constructor() {
     super();
     this.name = 'js-generator';
-    this.config = dependencies;
     this.description = 'JavaScript code generation tools for creating modules, functions, classes, and API endpoints';
     this.version = '1.0.0';
+    this.config = {};
+    this.resourceManager = null;
   }
 
   /**
-   * Static async factory method following the Async Resource Manager Pattern
+   * Static async factory method following the standard interface
    */
   static async create(resourceManager) {
-    const dependencies = {
-      resourceManager: resourceManager
-    };
-
-    const module = new JSGeneratorModule(dependencies);
+    const module = new JSGeneratorModule();
+    module.resourceManager = resourceManager;
     await module.initialize();
     return module;
   }
@@ -41,10 +39,7 @@ export class JSGeneratorModule extends Module {
    * Initialize the module
    */
   async initialize() {
-    if (this.initialized) return;
-
-    // Initialize tools dictionary
-    this.tools = {};
+    await super.initialize();
     
     // Create and register tools
     const tools = [
@@ -61,30 +56,9 @@ export class JSGeneratorModule extends Module {
     for (const tool of tools) {
       this.registerTool(tool.name, tool);
     }
-
-    this.initialized = true;
-    await super.initialize();
   }
 
-  /**
-   * Get all tools provided by this module
-   * Returns an array of tool objects (new interface)
-   */
-  getTools() {
-    if (!this.initialized) {
-      throw new Error('JSGeneratorModule must be initialized before getting tools');
-    }
 
-    // Return tools as an array (new interface)
-    return Object.values(this.tools);
-  }
-
-  /**
-   * Get tool by name
-   */
-  getTool(name) {
-    return this.tools[name];
-  }
 
   /**
    * Generate complete JavaScript project structure

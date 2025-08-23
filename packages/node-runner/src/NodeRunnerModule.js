@@ -15,53 +15,48 @@ import { ListSessionsTool } from './tools/ListSessionsTool.js';
 import { ServerHealthTool } from './tools/ServerHealthTool.js';
 
 export class NodeRunnerModule extends Module {
-  constructor(dependencies = {}) {
-    super('node-runner', dependencies);
+  constructor() {
+    super();
+    this.name = 'node-runner';
+    this.description = 'Node.js process management and logging tools';
+    this.version = '1.0.0';
     
-    this.processManager = dependencies.processManager;
-    this.serverManager = dependencies.serverManager;
-    this.packageManager = dependencies.packageManager;
-    this.logStorage = dependencies.logStorage;
-    this.logSearch = dependencies.logSearch;
-    this.sessionManager = dependencies.sessionManager;
-    this.frontendInjector = dependencies.frontendInjector;
-    this.webSocketServer = dependencies.webSocketServer;
+    this.processManager = null;
+    this.serverManager = null;
+    this.packageManager = null;
+    this.logStorage = null;
+    this.logSearch = null;
+    this.sessionManager = null;
+    this.frontendInjector = null;
+    this.webSocketServer = null;
+  }
+
+  static async create(resourceManager) {
+    const module = new NodeRunnerModule();
+    module.resourceManager = resourceManager;
+    await module.initialize();
+    return module;
+  }
+
+  async initialize() {
+    await super.initialize();
+    
+    // Get providers from ResourceManager if available
+    const StorageProvider = this.resourceManager?.get('StorageProvider') || null;
+    const SemanticSearchProvider = this.resourceManager?.get('SemanticSearchProvider') || null;
+    
+    // Create core components
+    this.logStorage = new LogStorage(StorageProvider);
+    this.sessionManager = new SessionManager(StorageProvider);
+    this.processManager = new ProcessManager(this.logStorage, this.sessionManager);
+    this.serverManager = new ServerManager(this.processManager, this.logStorage);
+    this.logSearch = new LogSearch(SemanticSearchProvider, this.logStorage);
     
     // Initialize tools
     this.initializeTools();
   }
 
-  static async create(resourceManager) {
-    // Get providers from ResourceManager if available
-    const StorageProvider = resourceManager?.get('StorageProvider') || null;
-    const SemanticSearchProvider = resourceManager?.get('SemanticSearchProvider') || null;
-    
-    // Create core components
-    const logStorage = new LogStorage(StorageProvider);
-    const sessionManager = new SessionManager(StorageProvider);
-    const processManager = new ProcessManager(logStorage, sessionManager);
-    const serverManager = new ServerManager(processManager, logStorage);
-    const logSearch = new LogSearch(SemanticSearchProvider, logStorage);
-    
-    // Create module with dependencies
-    const dependencies = {
-      processManager,
-      serverManager,
-      packageManager: null, // Will be implemented in Phase 6
-      logStorage,
-      logSearch,
-      sessionManager,
-      frontendInjector: null, // Will be implemented in Phase 6
-      webSocketServer: null // Will be implemented in Phase 6
-    };
-    
-    return new NodeRunnerModule(dependencies);
-  }
-
   initializeTools() {
-    // Initialize tools dictionary
-    this.tools = {};
-    
     // Create and register all NodeRunner tools
     const tools = [
       new RunNodeTool(this),

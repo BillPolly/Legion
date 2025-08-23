@@ -933,44 +933,48 @@ class FileOperationsTool extends Tool {
  * This is a complete module with built-in tools, no external dependencies needed
  */
 class FileModule extends Module {
-  // These are optional dependencies with defaults
-  static dependencies = [];
-
-  constructor(resourceManager = {}) {
+  constructor() {
     super();
     this.name = 'file';
     this.description = 'File system operations for reading, writing, and managing files and directories';
+    this.version = '1.0.0';
+    this.config = null;
+    this.fileOperationsTool = null;
+  }
+
+  /**
+   * Static async factory method following the standard interface
+   */
+  static async create(resourceManager) {
+    const module = new FileModule();
+    module.resourceManager = resourceManager;
+    await module.initialize();
+    return module;
+  }
+
+  /**
+   * Initialize the module
+   */
+  async initialize() {
+    await super.initialize();
     
-    // Handle both object destructuring and ResourceManager patterns
-    let config = {};
-    if (resourceManager && typeof resourceManager.get === 'function') {
-      // ResourceManager pattern - try to get resources but don't fail if not found
-      config = {
-        basePath: (resourceManager.has && resourceManager.has('basePath') ? resourceManager.basePath : null) || process.cwd(),
-        encoding: (resourceManager.has && resourceManager.has('encoding') ? resourceManager.encoding : null) || 'utf8',
-        createDirectories: (resourceManager.has && resourceManager.has('createDirectories') ? resourceManager.createDirectories : true) !== false,
-        permissions: (resourceManager.has && resourceManager.has('permissions') ? resourceManager.permissions : null) || 0o755
-      };
-    } else if (resourceManager && typeof resourceManager === 'object') {
-      // Direct config object
-      config = {
-        basePath: resourceManager.basePath || process.cwd(),
-        encoding: resourceManager.encoding || 'utf8',
-        createDirectories: resourceManager.createDirectories !== false,
-        permissions: resourceManager.permissions || 0o755
-      };
-    } else {
-      // No config provided, use all defaults
-      config = {
-        basePath: process.cwd(),
-        encoding: 'utf8',
-        createDirectories: true,
-        permissions: 0o755
-      };
+    // Configure the module based on ResourceManager
+    this.config = {
+      basePath: process.cwd(),
+      encoding: 'utf8',
+      createDirectories: true,
+      permissions: 0o755
+    };
+    
+    // Try to get configuration from ResourceManager if available
+    if (this.resourceManager && typeof this.resourceManager.get === 'function') {
+      try {
+        this.config.basePath = this.resourceManager.get('basePath') || process.cwd();
+        this.config.encoding = this.resourceManager.get('encoding') || 'utf8';
+      } catch (error) {
+        // Use defaults if ResourceManager doesn't have these values
+      }
     }
-    
-    // Store configuration
-    this.config = config;
     
     // Create the file operations tool instance
     this.fileOperationsTool = new FileOperationsTool();

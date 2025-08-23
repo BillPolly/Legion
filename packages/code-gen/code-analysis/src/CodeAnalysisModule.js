@@ -8,23 +8,19 @@ import { Module } from '@legion/tools-registry';
 import { ValidateJavaScriptTool } from './tools/ValidateJavaScriptTool.js';
 
 export class CodeAnalysisModule extends Module {
-  constructor(dependencies = {}) {
+  constructor() {
     super();
     this.name = 'code-analysis';
-    this.config = dependencies;
     this.description = 'Code analysis tools for JavaScript and CSS validation, security scanning, and performance analysis';
     this.version = '1.0.0';
   }
 
   /**
-   * Static async factory method following the Async Resource Manager Pattern
+   * Static async factory method following the standard interface
    */
   static async create(resourceManager) {
-    const dependencies = {
-      resourceManager: resourceManager
-    };
-
-    const module = new CodeAnalysisModule(dependencies);
+    const module = new CodeAnalysisModule();
+    module.resourceManager = resourceManager;
     await module.initialize();
     return module;
   }
@@ -33,18 +29,12 @@ export class CodeAnalysisModule extends Module {
    * Initialize the module
    */
   async initialize() {
-    if (this.initialized) return;
-
-    // Initialize tools dictionary
-    this.tools = {};
+    await super.initialize();
     
     // Create and register tool
     const validateJsTool = new ValidateJavaScriptTool();
     this.registerTool(validateJsTool.name, validateJsTool);
     // TODO: Add remaining tools (security analysis, performance analysis, CSS validation, etc.)
-
-    this.initialized = true;
-    await super.initialize();
   }
 
   /**

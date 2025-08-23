@@ -29,20 +29,34 @@ import { ArtifactStorageTool } from './tools/database/ArtifactStorageTool.js';
 import { ContextRetrievalTool } from './tools/database/ContextRetrievalTool.js';
 
 export default class SDModule extends Module {
-  constructor(dependencies = {}) {
-    super('SDModule', dependencies);
-    this.resourceManager = dependencies.resourceManager || dependencies;
+  constructor() {
+    super();
+    this.name = 'sd';
+    this.description = 'Software Development autonomous agent system with Legion DecentPlanner integration';
+    this.version = '1.0.0';
+    this.resourceManager = null;
     this.profileManager = null;
     this.llmClient = null;
     this.decentPlanner = null;
     this.designDatabase = null;
-    this.tools = new Map();
+  }
+
+  /**
+   * Static async factory method following the standard interface
+   */
+  static async create(resourceManager) {
+    const module = new SDModule();
+    module.resourceManager = resourceManager;
+    await module.initialize();
+    return module;
   }
 
   /**
    * Initialize the SD module
    */
   async initialize() {
+    await super.initialize();
+    
     // Get LLM client from ResourceManager
     this.llmClient = await this.getLLMClient();
     
@@ -63,7 +77,7 @@ export default class SDModule extends Module {
     // Initialize planning profiles
     this.profileManager = new SDPlanningProfile(this.decentPlanner);
     
-    console.log('[SDModule] Initialized with', this.tools.size, 'tools and DecentPlanner integration');
+    console.log('[SDModule] Initialized with', this.getTools().length, 'tools and DecentPlanner integration');
   }
 
   /**
@@ -144,31 +158,14 @@ export default class SDModule extends Module {
   }
 
   /**
-   * Register a tool
+   * Register a tool - delegates to base class
    * @param {Tool} tool - Tool instance to register
    */
   registerTool(tool) {
     if (!tool.name) {
       throw new Error('Tool must have a name property');
     }
-    this.tools.set(tool.name, tool);
-  }
-
-  /**
-   * Get all tools (required by Module interface)
-   * @returns {Array<Tool>} Array of all registered tools
-   */
-  getTools() {
-    return Array.from(this.tools.values());
-  }
-
-  /**
-   * Get a specific tool by name
-   * @param {string} name - Tool name
-   * @returns {Tool|null} Tool instance or null if not found
-   */
-  getTool(name) {
-    return this.tools.get(name) || null;
+    super.registerTool(tool.name, tool);
   }
 
   /**
@@ -218,16 +215,6 @@ export default class SDModule extends Module {
     return this.decentPlanner;
   }
 
-  /**
-   * Create a Legion-compatible factory method
-   * @param {ResourceManager} resourceManager - Resource manager instance
-   * @returns {Promise<SDModule>} Initialized SD module
-   */
-  static async create(resourceManager) {
-    const module = new SDModule({ resourceManager });
-    await module.initialize();
-    return module;
-  }
 
   /**
    * Get module metadata
@@ -238,7 +225,7 @@ export default class SDModule extends Module {
       name: 'sd',
       version: '1.0.0',
       description: 'Software Development autonomous agent system with Legion DecentPlanner integration',
-      toolCount: this.tools.size,
+      toolCount: this.getTools().length,
       profileCount: this.profileManager ? this.profileManager.listProfiles().length : 0,
       hasPlanner: !!this.decentPlanner,
       databaseConnected: this.designDatabase?.connected || false,

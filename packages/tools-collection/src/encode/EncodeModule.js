@@ -334,10 +334,28 @@ class UrlDecodeTool extends Tool {
  * EncodeModule - Provides encoding and decoding tools
  */
 export default class EncodeModule extends Module {
-  constructor(dependencies = {}) {
-    super('EncodeModule', dependencies);
-    this.name = 'EncodeModule';
+  constructor() {
+    super();
+    this.name = 'encode';
     this.description = 'Encoding and decoding utilities for various formats';
+    this.version = '1.0.0';
+  }
+
+  /**
+   * Static async factory method following the standard interface
+   */
+  static async create(resourceManager) {
+    const module = new EncodeModule();
+    module.resourceManager = resourceManager;
+    await module.initialize();
+    return module;
+  }
+
+  /**
+   * Initialize the module
+   */
+  async initialize() {
+    await super.initialize();
     
     // Register tools
     this.registerTool('base64_encode', new Base64EncodeTool());

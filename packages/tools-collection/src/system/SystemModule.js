@@ -13,14 +13,28 @@ import { ModuleLoadTool } from './ModuleLoadTool.js';
 import { ModuleUnloadTool } from './ModuleUnloadTool.js';
 
 export default class SystemModule extends Module {
-  static dependencies = ['moduleLoader']; // Declare that we need moduleLoader
-  
-  constructor(dependencies = {}) {
-    super('SystemModule', dependencies);
+  constructor() {
+    super();
+    this.name = 'system';
     this.description = 'System-level tools for module and tool management';
-    
-    // Initialize tools dictionary
-    this.tools = {};
+    this.version = '1.0.0';
+  }
+
+  /**
+   * Static async factory method following the standard interface
+   */
+  static async create(resourceManager) {
+    const module = new SystemModule();
+    module.resourceManager = resourceManager;
+    await module.initialize();
+    return module;
+  }
+
+  /**
+   * Initialize the module
+   */
+  async initialize() {
+    await super.initialize();
     
     // Create and register all system tools
     const moduleLoadTool = new ModuleLoadTool(this.config);

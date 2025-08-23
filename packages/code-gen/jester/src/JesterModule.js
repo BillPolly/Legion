@@ -657,24 +657,20 @@ WORKFLOW TIP: Use this after run_jest_tests to understand failures, or periodica
  * Main Jester Module for Legion integration
  */
 export class JesterModule extends Module {
-  constructor(dependencies = {}) {
+  constructor() {
     super();
     this.name = 'jester';
-    this.config = dependencies;
     this.description = 'Powerful Jest testing tools with session management and intelligent analysis';
     this.version = '2.0.0';
     this.jestWrapper = null;
   }
 
   /**
-   * Static async factory method following the Async Resource Manager Pattern
+   * Static async factory method following the standard interface
    */
   static async create(resourceManager) {
-    const dependencies = {
-      resourceManager: resourceManager
-    };
-
-    const module = new JesterModule(dependencies);
+    const module = new JesterModule();
+    module.resourceManager = resourceManager;
     await module.initialize();
     return module;
   }
@@ -683,7 +679,7 @@ export class JesterModule extends Module {
    * Initialize the module
    */
   async initialize() {
-    if (this.initialized) return;
+    await super.initialize();
 
     // Initialize Jest Agent Wrapper with persistence
     this.jestWrapper = new JestAgentWrapper({
@@ -694,9 +690,6 @@ export class JesterModule extends Module {
       realTimeEvents: true,
       clearPrevious: false // Don't clear by default
     });
-
-    this.initialized = true;
-    await super.initialize();
   }
 
   /**

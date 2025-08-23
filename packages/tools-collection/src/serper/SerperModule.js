@@ -5,26 +5,19 @@ import { Serper } from './Serper.js';
  * SerperModule - Module wrapper for Serper tool with proper initialization
  */
 export default class SerperModule extends Module {
-  constructor(dependencies = {}) {
+  constructor() {
     super();
     this.name = 'SerperModule';
     this.description = 'Google search using Serper API';
-    this.config = dependencies;
+    this.version = '1.0.0';
   }
 
   /**
-   * Static async factory method following the ResourceManager pattern
+   * Static async factory method following the standard interface
    */
   static async create(resourceManager) {
-    // Get SERPER API key from environment
-    const serperKey = resourceManager.get('env.SERPER_API_KEY');
-    if (!serperKey) {
-      // Create module without API key - tool will fail at runtime
-      console.warn('SERPER_API_KEY environment variable not found - tool will require initialization');
-    }
-    
-    // Create module with dependencies
-    const module = new SerperModule({ SERPER: serperKey });
+    const module = new SerperModule();
+    module.resourceManager = resourceManager;
     await module.initialize();
     return module;
   }
@@ -32,8 +25,12 @@ export default class SerperModule extends Module {
   async initialize() {
     await super.initialize();
     
-    // Initialize tools dictionary
-    this.tools = {};
+    // Get SERPER API key from environment via ResourceManager
+    const serperKey = this.resourceManager.get('env.SERPER_API_KEY');
+    if (!serperKey) {
+      // Create module without API key - tool will fail at runtime
+      console.warn('SERPER_API_KEY environment variable not found - tool will require initialization');
+    }
     
     // Create the Serper tool
     // Don't initialize it - let it initialize at runtime or fail gracefully
@@ -41,8 +38,8 @@ export default class SerperModule extends Module {
     
     // Set API key if available but don't call initialize
     // The tool will check for apiKey when invoke is called
-    if (this.config.SERPER) {
-      serperTool.apiKey = this.config.SERPER;
+    if (serperKey) {
+      serperTool.apiKey = serperKey;
     }
     
     // Register the tool

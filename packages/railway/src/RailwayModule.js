@@ -8,47 +8,22 @@ import RailwayListProjectsTool from './tools/RailwayListProjectsTool.js';
 import RailwayProvider from './providers/RailwayProvider.js';
 
 class RailwayModule extends Module {
-  constructor(dependencies = {}) {
+  constructor() {
     super();
     this.name = 'railway';
-    this.displayName = 'Railway Deployment Module';
     this.description = 'Deploy and manage applications on Railway cloud platform';
-    this.config = dependencies;
-    this.provider = dependencies.railwayProvider;
-    this.resourceManager = dependencies.resourceManager;
-    
-    // Initialize tools immediately in constructor
-    this.tools = {};
+    this.version = '1.0.0';
+    this.resourceManager = null;
+    this.provider = null;
   }
 
   /**
-   * Static async factory method following the ResourceManager pattern
+   * Static async factory method following the standard interface
    */
   static async create(resourceManager) {
-    // Get Railway API key from environment
-    const apiKey = resourceManager.env.RAILWAY_API_KEY || 
-                   resourceManager.env.RAILWAY_API_TOKEN ||
-                   resourceManager.env.RAILWAY;
-    
-    if (!apiKey) {
-      throw new Error('Railway API key not found. Set RAILWAY_API_KEY, RAILWAY_API_TOKEN, or RAILWAY environment variable.');
-    }
-    
-    // Create Railway provider
-    const provider = new RailwayProvider(apiKey);
-    
-    // Register provider with resource manager for other modules to use
-    resourceManager.set('railwayProvider', provider);
-    
-    // Create module instance with dependencies
-    const module = new RailwayModule({
-      railwayProvider: provider,
-      resourceManager: resourceManager
-    });
-    
-    // Initialize the module (which will call initializeTools)
+    const module = new RailwayModule();
+    module.resourceManager = resourceManager;
     await module.initialize();
-    
     return module;
   }
   
@@ -72,6 +47,23 @@ class RailwayModule extends Module {
   }
   
   async initialize() {
+    await super.initialize();
+    
+    // Get Railway API key from environment
+    const apiKey = this.resourceManager.get('env.RAILWAY_API_KEY') || 
+                   this.resourceManager.get('env.RAILWAY_API_TOKEN') ||
+                   this.resourceManager.get('env.RAILWAY');
+    
+    if (!apiKey) {
+      throw new Error('Railway API key not found. Set RAILWAY_API_KEY, RAILWAY_API_TOKEN, or RAILWAY environment variable.');
+    }
+    
+    // Create Railway provider
+    this.provider = new RailwayProvider(apiKey);
+    
+    // Register provider with resource manager for other modules to use
+    this.resourceManager.set('railwayProvider', this.provider);
+    
     // Initialize tools
     this.initializeTools();
     

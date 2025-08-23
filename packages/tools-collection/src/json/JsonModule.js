@@ -408,15 +408,28 @@ class JsonExtractTool extends Tool {
  * JSON module providing JSON manipulation tools with event support
  */
 class JsonModule extends Module {
-  static dependencies = [];
-
-  constructor({} = {}) {
+  constructor() {
     super();
     this.name = 'json';
     this.description = 'JSON manipulation and validation tools for parsing, stringifying, and extracting data from JSON structures';
-    
-    // Initialize tools dictionary
-    this.tools = {};
+    this.version = '1.0.0';
+  }
+
+  /**
+   * Static async factory method following the standard interface
+   */
+  static async create(resourceManager) {
+    const module = new JsonModule();
+    module.resourceManager = resourceManager;
+    await module.initialize();
+    return module;
+  }
+
+  /**
+   * Initialize the module
+   */
+  async initialize() {
+    await super.initialize();
     
     // Create and register all JSON tools
     const jsonParseTool = new JsonParseTool();

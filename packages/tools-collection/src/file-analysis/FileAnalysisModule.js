@@ -7,31 +7,23 @@ import { FileConverter } from './utils/FileConverter.js';
  * Supports images, PDFs, documents, and other file types
  */
 export default class FileAnalysisModule extends Module {
-  constructor(dependencies = {}) {
+  constructor() {
     super();
     this.name = 'FileAnalysisModule';
     this.description = 'Analyze files including images, PDFs, and documents using AI';
-    this.config = dependencies;
+    this.version = '1.0.0';
     this.llmClient = null;
     this.openaiClient = null;
   }
 
   /**
-   * Static async factory method following the ResourceManager pattern
+   * Static async factory method following the standard interface
    * @param {ResourceManager} resourceManager - The resource manager for dependency injection
    * @returns {Promise<FileAnalysisModule>} Initialized module instance
    */
   static async create(resourceManager) {
-    // Get API keys from environment
-    const anthropicKey = resourceManager.env.ANTHROPIC_API_KEY;
-    const openaiKey = resourceManager.env.OPENAI_API_KEY;
-    
-    if (!anthropicKey) {
-      throw new Error('ANTHROPIC_API_KEY environment variable is required for file analysis module');
-    }
-    
-    // Create module with dependencies
-    const module = new FileAnalysisModule({ anthropicKey, openaiKey });
+    const module = new FileAnalysisModule();
+    module.resourceManager = resourceManager;
     await module.initialize();
     return module;
   }
@@ -42,19 +34,25 @@ export default class FileAnalysisModule extends Module {
   async initialize() {
     await super.initialize();
     
-    // Initialize Anthropic client (primary)
-    if (this.config.anthropicKey) {
-      this.llmClient = new LLMClient({
-        provider: 'anthropic',
-        apiKey: this.config.anthropicKey
-      });
+    // Get API keys from environment using ResourceManager
+    const anthropicKey = this.resourceManager.get('env.ANTHROPIC_API_KEY');
+    const openaiKey = this.resourceManager.get('env.OPENAI_API_KEY');
+    
+    if (!anthropicKey) {
+      throw new Error('ANTHROPIC_API_KEY environment variable is required for file analysis module');
     }
     
+    // Initialize Anthropic client (primary)
+    this.llmClient = new LLMClient({
+      provider: 'anthropic',
+      apiKey: anthropicKey
+    });
+    
     // Initialize OpenAI client if available
-    if (this.config.openaiKey) {
+    if (openaiKey) {
       this.openaiClient = new LLMClient({
         provider: 'openai',
-        apiKey: this.config.openaiKey
+        apiKey: openaiKey
       });
     }
     

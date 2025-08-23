@@ -92,33 +92,32 @@ export class ModuleLoader {
         );
       }
       
-      // Create instance if it's a class, otherwise use as-is
+      // Create instance using standard interface - all modules must have static create method
       let moduleInstance;
       if (typeof ModuleClass === 'function') {
-        // Check if module has a static create method (async factory pattern)
+        // Standard interface requires static create method
         if (typeof ModuleClass.create === 'function') {
+          if (!this.resourceManager) {
+            throw new ModuleLoadError(
+              `Module at ${fullPath} requires ResourceManager but none provided`,
+              fullPath,
+              new Error('ResourceManager is required for module creation')
+            );
+          }
           moduleInstance = await ModuleClass.create(this.resourceManager);
         } else {
-          // Try to instantiate as a class - Legion modules often need ResourceManager
-          try {
-            // First try with ResourceManager if available
-            if (this.resourceManager) {
-              moduleInstance = new ModuleClass(this.resourceManager);
-            } else {
-              moduleInstance = new ModuleClass();
-            }
-          } catch (error) {
-            // If constructor fails, might be a function that returns an instance
-            try {
-              moduleInstance = ModuleClass();
-            } catch (secondError) {
-              // Last resort - try empty constructor
-              moduleInstance = new ModuleClass();
-            }
-          }
+          throw new ModuleValidationError(
+            'Module does not implement standard interface',
+            fullPath,
+            ['Module class must have static async create(resourceManager) method']
+          );
         }
       } else {
-        moduleInstance = ModuleClass;
+        throw new ModuleValidationError(
+          'Invalid module structure - export is not a class',
+          fullPath,
+          ['Module export must be a class with static create() method']
+        );
       }
       
       // Validate the module structure
@@ -149,7 +148,7 @@ export class ModuleLoader {
   }
   
   /**
-   * Extract metadata from a loaded module
+   * Extract metadata from a loaded module - standard interface
    * @param {Object} moduleInstance - Loaded module instance
    * @returns {Object} Module metadata
    */
@@ -162,23 +161,15 @@ export class ModuleLoader {
       );
     }
     
-    // Get name using different interfaces
-    let name = 'Unknown';
-    if (typeof moduleInstance.getName === 'function') {
-      name = moduleInstance.getName();
-    } else if (typeof moduleInstance.name === 'string') {
-      name = moduleInstance.name;
-    }
-    
+    // Standard interface - all modules must have these properties
     const metadata = {
-      name: name,
-      version: moduleInstance.getVersion ? moduleInstance.getVersion() : 'unknown',
-      description: moduleInstance.getDescription ? moduleInstance.getDescription() : 
-                   (moduleInstance.description || 'No description available')
+      name: moduleInstance.name || 'Unknown',
+      version: moduleInstance.version || '1.0.0',
+      description: moduleInstance.description || 'No description available'
     };
     
-    // Add any additional metadata if available
-    if (moduleInstance.getMetadata) {
+    // Get additional metadata if module has getMetadata method
+    if (typeof moduleInstance.getMetadata === 'function') {
       const additionalMetadata = moduleInstance.getMetadata();
       Object.assign(metadata, additionalMetadata);
     }
@@ -187,7 +178,7 @@ export class ModuleLoader {
   }
   
   /**
-   * Get tools from a module
+   * Get tools from a module - standard interface only
    * @param {Object} moduleInstance - Loaded module instance
    * @returns {Array} Array of tool definitions
    */
@@ -200,37 +191,42 @@ export class ModuleLoader {
       );
     }
     
-    let tools = [];
-    let moduleName = moduleInstance.getName ? moduleInstance.getName() : 
-                     moduleInstance.name || 'unknown';
+    const moduleName = moduleInstance.name || 'unknown';
     
-    // Try different interfaces for getting tools
-    if (typeof moduleInstance.getTools === 'function') {
-      tools = moduleInstance.getTools();
-    } else if (typeof moduleInstance.listTools === 'function') {
-      const toolNames = moduleInstance.listTools();
-      // listTools() returns tool names, need to get actual tools
-      if (Array.isArray(toolNames) && typeof moduleInstance.getTool === 'function') {
-        tools = toolNames.map(name => moduleInstance.getTool(name));
-      } else {
-        tools = toolNames; // Hope they're already tool objects
-      }
-    } else {
+    // Standard interface - all modules must have getTools() method
+    if (typeof moduleInstance.getTools !== 'function') {
       throw new ModuleValidationError(
-        'Module does not have getTools or listTools method',
+        'Module does not have getTools method',
         moduleName,
-        ['Module must have getTools() or listTools() method']
+        ['Module must have getTools() method that returns array of tools']
+      );
+    }
+    
+    const tools = moduleInstance.getTools();
+    
+    // Validate that getTools returns an array
+    if (!Array.isArray(tools)) {
+      throw new ModuleValidationError(
+        'Module getTools() must return an array',
+        moduleName,
+        ['getTools() method must return an array of tool objects']
       );
     }
     
     // Validate each tool
-    if (Array.isArray(tools)) {
-      tools.forEach(tool => {
+    tools.forEach((tool, index) => {
+      try {
         this.validateToolSchema(tool);
-      });
-    }
+      } catch (error) {
+        throw new ModuleValidationError(
+          `Tool validation failed for tool at index ${index}`,
+          moduleName,
+          [error.message]
+        );
+      }
+    });
     
-    return tools || [];
+    return tools;
   }
   
   /**
@@ -273,7 +269,7 @@ export class ModuleLoader {
   }
   
   /**
-   * Validate module structure
+   * Validate module structure - standard interface only
    * @param {Object} moduleInstance - Module to validate
    */
   validateModuleStructure(moduleInstance) {
@@ -287,44 +283,26 @@ export class ModuleLoader {
       );
     }
     
-    // Check for Legion module interface patterns
-    let hasValidInterface = false;
-    let moduleName = 'unknown';
+    let moduleName = moduleInstance.name || 'unknown';
     
-    // Pattern 1: getName() + getTools() (tools-registry interface)
-    if (typeof moduleInstance.getName === 'function' && 
-        typeof moduleInstance.getTools === 'function') {
-      hasValidInterface = true;
-      try {
-        moduleName = moduleInstance.getName();
-      } catch (e) {
-        // getName exists but fails
-        errors.push('getName method exists but fails to execute');
-      }
-    }
-    // Pattern 2: name property + getTools() method (Legion module interface)
-    else if (typeof moduleInstance.name === 'string' && 
-             typeof moduleInstance.getTools === 'function') {
-      hasValidInterface = true;
-      moduleName = moduleInstance.name;
-    }
-    // Pattern 3: name property + listTools() method (alternate Legion interface)
-    else if (typeof moduleInstance.name === 'string' && 
-             typeof moduleInstance.listTools === 'function') {
-      hasValidInterface = true;
-      moduleName = moduleInstance.name;
+    // Standard interface validation
+    if (typeof moduleInstance.name !== 'string' || !moduleInstance.name) {
+      errors.push('Module must have a name property (string)');
     }
     
-    if (!hasValidInterface) {
-      errors.push('Module must implement one of the supported interfaces:');
-      errors.push('  - getName() + getTools() methods');
-      errors.push('  - name property + getTools() method');
-      errors.push('  - name property + listTools() method');
+    if (typeof moduleInstance.getTools !== 'function') {
+      errors.push('Module must have getTools() method that returns array of tools');
+    }
+    
+    // Check that module constructor has static create method
+    const ModuleClass = moduleInstance.constructor;
+    if (typeof ModuleClass.create !== 'function') {
+      errors.push('Module class must have static async create(resourceManager) method');
     }
     
     if (errors.length > 0) {
       throw new ModuleValidationError(
-        'Module validation failed',
+        'Module validation failed - must follow standard Legion module interface',
         moduleName,
         errors
       );

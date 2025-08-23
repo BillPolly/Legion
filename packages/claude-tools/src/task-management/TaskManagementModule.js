@@ -8,14 +8,11 @@ import { TodoWriteTool } from './TodoWriteTool.js';
 import { ExitPlanModeTool } from './ExitPlanModeTool.js';
 
 export class TaskManagementModule extends Module {
-  constructor(resourceManager) {
+  constructor() {
     super();
     this.name = 'task-management';
     this.description = 'Task planning, tracking, and agent delegation tools';
-    this.resourceManager = resourceManager;
-    
-    // Create and register all tools
-    this.createTools();
+    this.resourceManager = null;
   }
 
   /**
@@ -37,9 +34,20 @@ export class TaskManagementModule extends Module {
    * Factory method for creating the module
    */
   static async create(resourceManager) {
-    const module = new TaskManagementModule(resourceManager);
+    const module = new TaskManagementModule();
+    module.resourceManager = resourceManager;
     await module.initialize();
     return module;
+  }
+
+  /**
+   * Initialize the module
+   */
+  async initialize() {
+    await super.initialize();
+    
+    // Create and register all tools
+    this.createTools();
   }
 
   /**
@@ -49,13 +57,10 @@ export class TaskManagementModule extends Module {
     return {
       name: this.name,
       description: this.description,
-      tools: this.listTools().map(name => {
-        const tool = this.getTool(name);
-        return {
-          name: tool.name,
-          description: tool.description
-        };
-      })
+      tools: this.getTools().map(tool => ({
+        name: tool.name,
+        description: tool.description
+      }))
     };
   }
 }

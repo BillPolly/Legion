@@ -9,65 +9,21 @@ import { Module } from '@legion/tools-registry';
 import { PictureAnalysisTool } from './PictureAnalysisTool.js';
 
 export default class PictureAnalysisModule extends Module {
-  constructor(dependencies = {}) {
-    super({ name: 'picture-analysis' }, dependencies);
+  constructor() {
+    super();
     this.name = 'picture-analysis';
     this.description = 'AI-powered image analysis using vision models';
-    this.llmClient = dependencies.llmClient;
-    this.tools = {};
+    this.version = '1.0.0';
+    this.resourceManager = null;
+    this.llmClient = null;
   }
 
   /**
-   * Async factory method following ResourceManager pattern
-   * Gets LLM client automatically from ResourceManager with vision capabilities
-   * @param {ResourceManager} resourceManager - The resource manager for dependency injection
-   * @param {Object} options - Configuration options
-   * @param {string} options.provider - LLM provider to use (default: 'anthropic')
-   * @param {string} options.model - Model to use (default: 'claude-3-5-sonnet-20241022')
-   * @returns {Promise<PictureAnalysisModule>} Initialized module instance
+   * Static async factory method following the standard interface
    */
-  static async create(resourceManager, options = {}) {
-    const provider = options.provider || 'anthropic';
-    const model = options.model || 'claude-3-5-sonnet-20241022';
-    
-    // Get or create LLM client from ResourceManager
-    let llmClient = resourceManager.get('llmClient');
-    
-    if (!llmClient) {
-      // Get appropriate API key based on provider
-      const apiKeyMap = {
-        'anthropic': 'env.ANTHROPIC_API_KEY',
-        'openai': 'env.OPENAI_API_KEY'
-      };
-      
-      const apiKeyPath = apiKeyMap[provider];
-      const apiKey = resourceManager.get(apiKeyPath);
-      
-      if (!apiKey) {
-        throw new Error(`API key not found for provider ${provider}. Please set ${apiKeyPath.replace('env.', '')} in your .env file.`);
-      }
-      
-      // Import and create LLM client
-      const { LLMClient } = await import('@legion/llm');
-      llmClient = new LLMClient({
-        provider: provider,
-        apiKey: apiKey,
-        model: model
-      });
-      
-      // Store for reuse
-      resourceManager.set('llmClient', llmClient);
-    }
-
-    // Verify the client supports vision (if supportsVision method exists)
-    if (typeof llmClient.supportsVision === 'function') {
-      const visionSupport = await llmClient.supportsVision();
-      if (!visionSupport) {
-        throw new Error('LLM client does not support vision capabilities required for picture analysis');
-      }
-    }
-
-    const module = new PictureAnalysisModule({ llmClient });
+  static async create(resourceManager) {
+    const module = new PictureAnalysisModule();
+    module.resourceManager = resourceManager;
     await module.initialize();
     return module;
   }
@@ -78,10 +34,8 @@ export default class PictureAnalysisModule extends Module {
   async initialize() {
     await super.initialize();
     
-    // Verify LLM client is available
-    if (!this.llmClient) {
-      throw new Error('LLM client is required for PictureAnalysisModule initialization');
-    }
+    // Get LLM client with vision capabilities
+    await this._setupLLMClient();
     
     // Create and register the picture analysis tool
     const pictureAnalysisTool = new PictureAnalysisTool({ 
@@ -89,8 +43,51 @@ export default class PictureAnalysisModule extends Module {
     });
     
     this.registerTool(pictureAnalysisTool.name, pictureAnalysisTool);
+  }
+
+  /**
+   * Setup LLM client with vision capabilities
+   */
+  async _setupLLMClient() {
+    const provider = 'anthropic';
+    const model = 'claude-3-5-sonnet-20241022';
     
-    this.info(`Initialized picture analysis module with ${this.listTools().length} tools`);
+    // Get or create LLM client from ResourceManager
+    this.llmClient = this.resourceManager.get('llmClient');
+    
+    if (!this.llmClient) {
+      // Get appropriate API key based on provider
+      const apiKeyMap = {
+        'anthropic': 'env.ANTHROPIC_API_KEY',
+        'openai': 'env.OPENAI_API_KEY'
+      };
+      
+      const apiKeyPath = apiKeyMap[provider];
+      const apiKey = this.resourceManager.get(apiKeyPath);
+      
+      if (!apiKey) {
+        throw new Error(`API key not found for provider ${provider}. Please set ${apiKeyPath.replace('env.', '')} in your .env file.`);
+      }
+      
+      // Import and create LLM client
+      const { LLMClient } = await import('@legion/llm');
+      this.llmClient = new LLMClient({
+        provider: provider,
+        apiKey: apiKey,
+        model: model
+      });
+      
+      // Store for reuse
+      this.resourceManager.set('llmClient', this.llmClient);
+    }
+
+    // Verify the client supports vision (if supportsVision method exists)
+    if (typeof this.llmClient.supportsVision === 'function') {
+      const visionSupport = await this.llmClient.supportsVision();
+      if (!visionSupport) {
+        throw new Error('LLM client does not support vision capabilities required for picture analysis');
+      }
+    }
   }
 
   /**
@@ -102,7 +99,7 @@ export default class PictureAnalysisModule extends Module {
       name: 'picture-analysis',
       version: '1.0.0',
       description: 'AI-powered image analysis using vision models',
-      toolCount: this.listTools().length,
+      toolCount: this.getTools().length,
       requiredDependencies: ['ANTHROPIC_API_KEY'],
       supportedFormats: ['.png', '.jpg', '.jpeg', '.gif', '.webp'],
       maxFileSize: '20MB',

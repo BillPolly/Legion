@@ -9,6 +9,7 @@
 export { ToolRegistry } from './integration/ToolRegistry.js';
 
 // Core functionality
+export { Module } from './core/Module.js';
 export { ModuleLoader } from './core/ModuleLoader.js';
 export { ModuleDiscovery } from './core/ModuleDiscovery.js';
 export { ModuleRegistry } from './core/ModuleRegistry.js';

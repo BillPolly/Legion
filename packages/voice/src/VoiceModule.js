@@ -10,24 +10,14 @@ import { GenerateVoiceTool } from './tools/GenerateVoiceTool.js';
  * a provider architecture. Currently supports OpenAI (Whisper + TTS).
  */
 export class VoiceModule extends Module {
-  constructor(config = {}) {
-    super('voice', config);
-    
-    // Initialize provider based on configuration
-    this.provider = this.initializeProvider(config);
-    
-    // Create tool instances
-    // Initialize tools dictionary
-    this.tools = {};
-    
-    // Create and register tools
-    const transcribeTool = new TranscribeAudioTool(this.provider);
-    const generateTool = new GenerateVoiceTool(this.provider);
-    
-    this.registerTool(transcribeTool.name, transcribeTool);
-    this.registerTool(generateTool.name, generateTool);
-    
-    console.log(`VoiceModule initialized with ${config.provider || 'openai'} provider`);
+  constructor() {
+    super();
+    this.name = 'voice';
+    this.description = 'Voice services module providing speech-to-text and text-to-speech capabilities';
+    this.version = '1.0.0';
+    this.resourceManager = null;
+    this.provider = null;
+    this.config = {};
   }
 
   /**
@@ -36,21 +26,9 @@ export class VoiceModule extends Module {
    * @returns {Promise<VoiceModule>} Initialized module instance
    */
   static async create(resourceManager) {
-    // Get OpenAI API key from ResourceManager
-    const apiKey = resourceManager.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      throw new Error('OPENAI_API_KEY environment variable is required for voice module');
-    }
-    
-    // Create module with dependencies from ResourceManager
-    const module = new VoiceModule({
-      apiKey: apiKey,
-      provider: 'openai'  // Default to OpenAI provider
-    });
-    
-    // Initialize if needed (currently constructor handles everything)
+    const module = new VoiceModule();
+    module.resourceManager = resourceManager;
     await module.initialize();
-    
     return module;
   }
 
@@ -58,11 +36,30 @@ export class VoiceModule extends Module {
    * Initialize the module
    */
   async initialize() {
-    // Module base class initialization if needed
-    if (super.initialize) {
-      await super.initialize();
+    await super.initialize();
+    
+    // Get OpenAI API key from ResourceManager
+    const apiKey = this.resourceManager.get('env.OPENAI_API_KEY');
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY environment variable is required for voice module');
     }
-    // Provider is already initialized in constructor
+    
+    this.config = {
+      apiKey: apiKey,
+      provider: 'openai'  // Default to OpenAI provider
+    };
+    
+    // Initialize provider based on configuration
+    this.provider = this.initializeProvider(this.config);
+    
+    // Create and register tools
+    const transcribeTool = new TranscribeAudioTool(this.provider);
+    const generateTool = new GenerateVoiceTool(this.provider);
+    
+    this.registerTool(transcribeTool.name, transcribeTool);
+    this.registerTool(generateTool.name, generateTool);
+    
+    console.log(`VoiceModule initialized with ${this.config.provider || 'openai'} provider`);
     return this;
   }
 
@@ -94,9 +91,6 @@ export class VoiceModule extends Module {
     }
   }
 
-  /**
-   * Get all tools provided by this module
-   */
 
   /**
    * Transcribe audio to text

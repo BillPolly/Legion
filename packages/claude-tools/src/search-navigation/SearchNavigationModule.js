@@ -8,14 +8,11 @@ import { GrepTool } from './GrepTool.js';
 import { LSTool } from './LSTool.js';
 
 export class SearchNavigationModule extends Module {
-  constructor(resourceManager) {
+  constructor() {
     super();
     this.name = 'search-navigation';
     this.description = 'File search and navigation tools including glob patterns, content search, and directory listing';
-    this.resourceManager = resourceManager;
-    
-    // Create and register all tools
-    this.createTools();
+    this.resourceManager = null;
   }
 
   /**
@@ -37,9 +34,20 @@ export class SearchNavigationModule extends Module {
    * Factory method for creating the module
    */
   static async create(resourceManager) {
-    const module = new SearchNavigationModule(resourceManager);
+    const module = new SearchNavigationModule();
+    module.resourceManager = resourceManager;
     await module.initialize();
     return module;
+  }
+
+  /**
+   * Initialize the module
+   */
+  async initialize() {
+    await super.initialize();
+    
+    // Create and register all tools
+    this.createTools();
   }
 
   /**
@@ -49,13 +57,10 @@ export class SearchNavigationModule extends Module {
     return {
       name: this.name,
       description: this.description,
-      tools: this.listTools().map(name => {
-        const tool = this.getTool(name);
-        return {
-          name: tool.name,
-          description: tool.description
-        };
-      })
+      tools: this.getTools().map(tool => ({
+        name: tool.name,
+        description: tool.description
+      }))
     };
   }
 }

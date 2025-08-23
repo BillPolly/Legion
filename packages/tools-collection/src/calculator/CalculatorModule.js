@@ -109,16 +109,30 @@ class CalculatorTool extends Tool {
  * This is a self-contained module with no external dependencies
  */
 class CalculatorModule extends Module {
-  // No external dependencies needed
-  static dependencies = [];
-
-  constructor({} = {}) {
+  constructor() {
     super();
     this.name = 'calculator';
     this.description = 'Mathematical calculation tools for evaluating expressions and performing computations';
+    this.version = '1.0.0';
+  }
+
+  /**
+   * Static async factory method following the standard interface
+   */
+  static async create(resourceManager) {
+    const module = new CalculatorModule();
+    module.resourceManager = resourceManager;
+    await module.initialize();
+    return module;
+  }
+
+  /**
+   * Initialize the module
+   */
+  async initialize() {
+    await super.initialize();
     
     // Create and register the calculator tool
-    this.tools = {};
     const calculatorTool = new CalculatorTool();
     this.registerTool(calculatorTool.name, calculatorTool);
   }

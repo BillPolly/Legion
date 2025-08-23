@@ -10,14 +10,11 @@ import { MultiEditTool } from './MultiEditTool.js';
 import { NotebookEditTool } from './NotebookEditTool.js';
 
 export class FileOperationsModule extends Module {
-  constructor(resourceManager) {
+  constructor() {
     super();
     this.name = 'file-operations';
     this.description = 'Comprehensive file system operations including reading, writing, editing, and Jupyter notebook support';
-    this.resourceManager = resourceManager;
-    
-    // Create and register all tools
-    this.createTools();
+    this.resourceManager = null;
   }
 
   /**
@@ -43,9 +40,20 @@ export class FileOperationsModule extends Module {
    * Factory method for creating the module
    */
   static async create(resourceManager) {
-    const module = new FileOperationsModule(resourceManager);
+    const module = new FileOperationsModule();
+    module.resourceManager = resourceManager;
     await module.initialize();
     return module;
+  }
+
+  /**
+   * Initialize the module
+   */
+  async initialize() {
+    await super.initialize();
+    
+    // Create and register all tools
+    this.createTools();
   }
 
   /**
@@ -55,13 +63,10 @@ export class FileOperationsModule extends Module {
     return {
       name: this.name,
       description: this.description,
-      tools: this.listTools().map(name => {
-        const tool = this.getTool(name);
-        return {
-          name: tool.name,
-          description: tool.description
-        };
-      })
+      tools: this.getTools().map(tool => ({
+        name: tool.name,
+        description: tool.description
+      }))
     };
   }
 }

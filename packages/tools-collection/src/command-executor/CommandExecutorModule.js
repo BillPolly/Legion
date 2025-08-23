@@ -8,25 +8,19 @@ import { Module } from '@legion/tools-registry';
 import { CommandExecutor } from './CommandExecutorTool.js';
 
 export class CommandExecutorModule extends Module {
-  constructor(dependencies = {}) {
+  constructor() {
     super();
     this.name = 'CommandExecutorModule';
     this.description = 'Command execution tools for running bash commands';
     this.version = '1.0.0';
-    
-    // Initialize tools dictionary
-    this.tools = {};
-    
-    // Create and register the command executor tool
-    const commandExecutor = new CommandExecutor();
-    this.registerTool(commandExecutor.name, commandExecutor);
   }
 
   /**
-   * Static async factory method following the ResourceManager pattern
+   * Static async factory method following the standard interface
    */
   static async create(resourceManager) {
     const module = new CommandExecutorModule();
+    module.resourceManager = resourceManager;
     await module.initialize();
     return module;
   }
@@ -35,11 +29,11 @@ export class CommandExecutorModule extends Module {
    * Initialize the module
    */
   async initialize() {
-    if (this.initialized) return;
-    this.initialized = true;
-    if (super.initialize) {
-      await super.initialize();
-    }
+    await super.initialize();
+    
+    // Create and register the command executor tool
+    const commandExecutor = new CommandExecutor();
+    this.registerTool(commandExecutor.name, commandExecutor);
   }
 
   /**

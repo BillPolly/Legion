@@ -6,14 +6,11 @@ import { Module } from '@legion/tools-registry';
 import { BashTool } from './BashTool.js';
 
 export class SystemOperationsModule extends Module {
-  constructor(resourceManager) {
+  constructor() {
     super();
     this.name = 'system-operations';
     this.description = 'System command execution tools with security controls and timeout management';
-    this.resourceManager = resourceManager;
-    
-    // Create and register all tools
-    this.createTools();
+    this.resourceManager = null;
   }
 
   /**
@@ -31,9 +28,20 @@ export class SystemOperationsModule extends Module {
    * Factory method for creating the module
    */
   static async create(resourceManager) {
-    const module = new SystemOperationsModule(resourceManager);
+    const module = new SystemOperationsModule();
+    module.resourceManager = resourceManager;
     await module.initialize();
     return module;
+  }
+
+  /**
+   * Initialize the module
+   */
+  async initialize() {
+    await super.initialize();
+    
+    // Create and register all tools
+    this.createTools();
   }
 
   /**
@@ -43,13 +51,10 @@ export class SystemOperationsModule extends Module {
     return {
       name: this.name,
       description: this.description,
-      tools: this.listTools().map(name => {
-        const tool = this.getTool(name);
-        return {
-          name: tool.name,
-          description: tool.description
-        };
-      })
+      tools: this.getTools().map(tool => ({
+        name: tool.name,
+        description: tool.description
+      }))
     };
   }
 }

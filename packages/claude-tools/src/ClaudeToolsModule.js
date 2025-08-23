@@ -10,11 +10,12 @@ import { WebToolsModule } from './web-tools/WebToolsModule.js';
 import { TaskManagementModule } from './task-management/TaskManagementModule.js';
 
 export class ClaudeToolsModule extends Module {
-  constructor(resourceManager) {
+  constructor() {
     super();
     this.name = 'claude-tools';
     this.description = 'Complete suite of Claude Code tools for the Legion framework';
-    this.resourceManager = resourceManager;
+    this.version = '1.0.0';
+    this.resourceManager = null;
     this.subModules = new Map();
   }
 
@@ -23,6 +24,10 @@ export class ClaudeToolsModule extends Module {
    */
   async initialize() {
     await super.initialize();
+    
+    if (!this.resourceManager) {
+      throw new Error('ResourceManager is required for ClaudeToolsModule initialization');
+    }
     
     // Create all sub-modules
     const modules = [
@@ -38,9 +43,9 @@ export class ClaudeToolsModule extends Module {
       this.subModules.set(module.name, module);
       
       // Register each tool from the sub-module
-      for (const toolName of module.listTools()) {
-        const tool = module.getTool(toolName);
-        this.registerTool(toolName, tool);
+      const tools = module.getTools();
+      for (const tool of tools) {
+        this.registerTool(tool.name, tool);
       }
     }
   }
@@ -49,7 +54,8 @@ export class ClaudeToolsModule extends Module {
    * Factory method for creating the module
    */
   static async create(resourceManager) {
-    const module = new ClaudeToolsModule(resourceManager);
+    const module = new ClaudeToolsModule();
+    module.resourceManager = resourceManager;
     await module.initialize();
     return module;
   }
@@ -84,14 +90,13 @@ export class ClaudeToolsModule extends Module {
       metadata.subModules[name] = {
         name: module.name,
         description: module.description,
-        toolCount: module.listTools().length
+        toolCount: module.getTools().length
       };
     }
 
     // Group tools by module
     for (const [moduleName, module] of this.subModules) {
-      metadata.tools[moduleName] = module.listTools().map(toolName => {
-        const tool = module.getTool(toolName);
+      metadata.tools[moduleName] = module.getTools().map(tool => {
         return {
           name: tool.name,
           description: tool.description
@@ -99,7 +104,7 @@ export class ClaudeToolsModule extends Module {
       });
     }
 
-    metadata.totalTools = this.listTools().length;
+    metadata.totalTools = this.getTools().length;
 
     return metadata;
   }
@@ -111,7 +116,7 @@ export class ClaudeToolsModule extends Module {
     const categories = {};
     
     for (const [moduleName, module] of this.subModules) {
-      categories[moduleName] = module.listTools();
+      categories[moduleName] = module.getTools().map(tool => tool.name);
     }
     
     return categories;

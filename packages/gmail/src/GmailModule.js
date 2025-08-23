@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 import Imap from 'imap';
 import { simpleParser } from 'mailparser';
-import { ResourceManager } from '@legion/resource-manager';
+import { Module } from '@legion/tools-registry';
 import { createValidator } from '@legion/schema';
 
 const gmailConfigSchema = {
@@ -57,12 +57,26 @@ const gmailConfigSchema = {
 
 const GmailConfigSchema = createValidator(gmailConfigSchema);
 
-export class GmailModule {
-  constructor(config = {}) {
-    this.resourceManager = ResourceManager.getInstance();
-    this.config = this.loadConfig(config);
+export class GmailModule extends Module {
+  constructor() {
+    super();
+    this.name = 'gmail';
+    this.description = 'Gmail integration module for sending and receiving emails';
+    this.version = '1.0.0';
+    this.resourceManager = null;
+    this.config = null;
     this.transporter = null;
     this.imap = null;
+  }
+
+  /**
+   * Static async factory method following the standard interface
+   */
+  static async create(resourceManager) {
+    const module = new GmailModule();
+    module.resourceManager = resourceManager;
+    await module.initialize();
+    return module;
   }
 
   loadConfig(providedConfig) {
@@ -86,6 +100,11 @@ export class GmailModule {
   }
 
   async initialize() {
+    await super.initialize();
+    
+    // Load config using resourceManager
+    this.config = this.loadConfig();
+    
     try {
       // Initialize SMTP transporter
       this.transporter = nodemailer.createTransport({

@@ -7,14 +7,11 @@ import { WebSearchTool } from './WebSearchTool.js';
 import { WebFetchTool } from './WebFetchTool.js';
 
 export class WebToolsModule extends Module {
-  constructor(resourceManager) {
+  constructor() {
     super();
     this.name = 'web-tools';
     this.description = 'Web search and content fetching tools for accessing online information';
-    this.resourceManager = resourceManager;
-    
-    // Create and register all tools
-    this.createTools();
+    this.resourceManager = null;
   }
 
   /**
@@ -34,9 +31,20 @@ export class WebToolsModule extends Module {
    * Factory method for creating the module
    */
   static async create(resourceManager) {
-    const module = new WebToolsModule(resourceManager);
+    const module = new WebToolsModule();
+    module.resourceManager = resourceManager;
     await module.initialize();
     return module;
+  }
+
+  /**
+   * Initialize the module
+   */
+  async initialize() {
+    await super.initialize();
+    
+    // Create and register all tools
+    this.createTools();
   }
 
   /**
@@ -46,13 +54,10 @@ export class WebToolsModule extends Module {
     return {
       name: this.name,
       description: this.description,
-      tools: this.listTools().map(name => {
-        const tool = this.getTool(name);
-        return {
-          name: tool.name,
-          description: tool.description
-        };
-      })
+      tools: this.getTools().map(tool => ({
+        name: tool.name,
+        description: tool.description
+      }))
     };
   }
 }

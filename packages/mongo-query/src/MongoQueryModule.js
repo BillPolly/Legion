@@ -7,12 +7,12 @@ import { MongoQueryTool } from './MongoQueryTool.js';
 import { MongoDBProvider } from '@legion/storage';
 
 export default class MongoQueryModule extends Module {
-  constructor(dependencies = {}) {
+  constructor() {
     super();
     this.name = 'mongo-query';
     this.description = 'MongoDB query and manipulation tools';
-    this.mongoProvider = dependencies.mongoProvider;
-    this.tools = {};
+    this.version = '1.0.0';
+    this.mongoProvider = null;
   }
 
   /**
@@ -45,7 +45,8 @@ export default class MongoQueryModule extends Module {
       resourceManager.set('MongoDBProvider', mongoProvider);
     }
 
-    const module = new MongoQueryModule({ mongoProvider });
+    const module = new MongoQueryModule();
+    module.mongoProvider = mongoProvider;
     await module.initialize();
     return module;
   }
