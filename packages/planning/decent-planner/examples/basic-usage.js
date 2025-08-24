@@ -5,17 +5,13 @@
  */
 
 import { DecentPlanner } from '../src/index.js';
-import { ResourceManager, ToolRegistry } from '@legion/tools-registry';
-import { MongoDBToolRegistryProvider } from '@legion/tools-registry/src/providers/MongoDBToolRegistryProvider.js';
+import { ResourceManager } from '@legion/resource-manager';
 
 async function main() {
   console.log('🚀 DecentPlanner Example\n');
   
   // Initialize ResourceManager
   const resourceManager = await ResourceManager.getResourceManager();
-  
-  // ResourceManager will supply all dependencies through getOrInitialize
-  // This ensures proper singleton pattern and lazy initialization
   
   // Ensure LLM client is available (created on first access)
   const llmClient = await resourceManager.getOrInitialize('llmClient', async () => {
@@ -27,31 +23,9 @@ async function main() {
     return new LLMClient({ apiKey: anthropicKey });
   });
   
-  // Ensure tool registry provider is available
-  console.log('📚 Setting up tool registry...');
-  const toolRegistryProvider = await resourceManager.getOrInitialize('toolRegistryProvider', async () => {
-    return await MongoDBToolRegistryProvider.create(
-      resourceManager,
-      { enableSemanticSearch: true }
-    );
-  });
-  
-  // Ensure tool registry is available
-  const toolRegistry = await resourceManager.getOrInitialize('toolRegistry', async () => {
-    const provider = await resourceManager.getOrInitialize('toolRegistryProvider', async () => {
-      return await MongoDBToolRegistryProvider.create(
-        resourceManager,
-        { enableSemanticSearch: true }
-      );
-    });
-    const registry = new ToolRegistry({ provider });
-    await registry.initialize();
-    return registry;
-  });
-  
-  // Create DecentPlanner
+  // Create DecentPlanner (ToolRegistry singleton is used internally)
   console.log('🧠 Creating DecentPlanner...\n');
-  const planner = await DecentPlanner.create(resourceManager);
+  const planner = new DecentPlanner(llmClient);
   
   // Example 1: Simple web API
   console.log('═══════════════════════════════════════════════');
@@ -118,11 +92,6 @@ async function main() {
     });
   } else {
     console.error('❌ Pipeline planning failed:', pipelineResult.error);
-  }
-  
-  // Close connections
-  if (mongoProvider.close) {
-    await mongoProvider.close();
   }
 }
 

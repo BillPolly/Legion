@@ -1,6 +1,7 @@
 /**
  * Planning Error Handling Tests
  * Tests error handling for LLM failures, validation errors, and planning issues
+ * Updated to use ToolRegistry singleton pattern
  */
 
 import { jest } from '@jest/globals';
@@ -15,6 +16,7 @@ describe('Planning Error Handling Tests', () => {
   let mockPlanningActor;
   let mockExecutionActor;
   let mockToolRegistryActor;
+  let mockToolRegistry;
 
   beforeEach(async () => {
     // Create DOM container
@@ -23,7 +25,22 @@ describe('Planning Error Handling Tests', () => {
     dom.style.height = '800px';
     document.body.appendChild(dom);
 
-    // Create comprehensive mock actors
+    // Mock ToolRegistry singleton
+    mockToolRegistry = {
+      getTool: jest.fn(),
+      listTools: jest.fn(),
+      searchTools: jest.fn(),
+      getStatistics: jest.fn(),
+      validateTools: jest.fn(),
+      getAvailableTools: jest.fn()
+    };
+
+    // Mock ToolRegistry.getInstance()
+    const mockToolRegistryClass = {
+      getInstance: jest.fn().mockResolvedValue(mockToolRegistry)
+    };
+    
+    // Create comprehensive mock actors updated for ToolRegistry pattern
     mockPlanningActor = {
       createPlan: jest.fn(),
       decomposePlan: jest.fn(),
@@ -46,7 +63,11 @@ describe('Planning Error Handling Tests', () => {
       searchTools: jest.fn(),
       getToolDetails: jest.fn(),
       validateTools: jest.fn(),
-      getAvailableTools: jest.fn()
+      getAvailableTools: jest.fn(),
+      // Updated to match new ToolRegistry-based methods
+      loadTools: jest.fn(),
+      loadModules: jest.fn(),
+      getRegistryStats: jest.fn()
     };
 
     // Define planning tabs
@@ -81,16 +102,19 @@ describe('Planning Error Handling Tests', () => {
       }
     ];
 
-    // Create umbilical with error tracking
+    // Create umbilical with error tracking and ToolRegistry support
     mockUmbilical = {
       dom,
       tabs,
       activeTab: 'planning',
       
-      // Actors
+      // Actors (now ToolRegistry-based)
       planningActor: mockPlanningActor,
       executionActor: mockExecutionActor,
       toolRegistryActor: mockToolRegistryActor,
+      
+      // ToolRegistry singleton access
+      toolRegistry: mockToolRegistry,
       
       // Error tracking
       errorLog: [],
@@ -444,7 +468,8 @@ describe('Planning Error Handling Tests', () => {
         ]
       };
 
-      // Mock tool validation failure
+      // Mock tool validation failure via ToolRegistry
+      mockToolRegistry.validateTools.mockResolvedValue(toolValidationError);
       mockToolRegistryActor.validateTools.mockResolvedValue(toolValidationError);
 
       // Load planning workspace

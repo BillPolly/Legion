@@ -31,5 +31,13 @@ export default {
     }
   },
   coverageReporters: ['text', 'lcov', 'html'],
-  testTimeout: 30000
+  testTimeout: 30000,
+  transformIgnorePatterns: [
+    'node_modules/(?!(@legion|mongodb|bson))'
+  ],
+  globals: {
+    'ts-jest': {
+      useESM: true
+    }
+  }
 };

@@ -5,7 +5,6 @@
 import { describe, it, expect, beforeAll } from '@jest/globals';
 import { Planner } from '../../src/core/Planner.js';
 import { ResourceManager } from '@legion/resource-manager';
-import { ToolRegistry } from '@legion/tools-registry';
 import { Anthropic } from '@anthropic-ai/sdk';
 
 describe('Planner Integration', () => {
@@ -37,9 +36,9 @@ describe('Planner Integration', () => {
       }
     };
     
-    // Get tools from ToolRegistry - just get file_write
-    const toolRegistry = new ToolRegistry();
-    await toolRegistry.initialize();
+    // Get tools from ToolRegistry singleton - just get file_write
+    const { ToolRegistry } = await import('@legion/tools-registry');
+    const toolRegistry = await ToolRegistry.getInstance();
     
     const fileWriteTool = await toolRegistry.getTool('file_write');
     

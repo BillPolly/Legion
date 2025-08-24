@@ -7,7 +7,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from
 import { ServerPlanningActor } from '../../ServerPlanningActor.js';
 import { DecentPlanner } from '@legion/decent-planner';
 import { ResourceManager } from '@legion/resource-manager';
-import { MongoDBProvider } from '@legion/mongodb-provider';
+import { MongoDBProvider } from '@legion/storage';
 import { LLMClient } from '@legion/llm';
 import { ToolRegistry } from '@legion/tools-registry';
 import { WebSocketServer } from 'ws';
@@ -53,8 +53,8 @@ describe('ServerPlanningActor Integration', () => {
     
     // Handle WebSocket connections
     wss.on('connection', (ws) => {
-      // Create actor with real services
-      actor = new ServerPlanningActor(decentPlanner, mongoProvider);
+      // Create actor with real services - updated for ToolRegistry pattern
+      actor = new ServerPlanningActor(decentPlanner, toolRegistry, mongoProvider);
       
       // Set up bi-directional communication
       actor.setRemoteActor({

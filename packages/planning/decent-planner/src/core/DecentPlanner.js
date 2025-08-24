@@ -13,11 +13,14 @@ import { BTValidator } from '@legion/bt-validator';
 import { ToolRegistry } from '@legion/tools-registry';
 
 export class DecentPlanner {
-  constructor(dependencies) {
-    this.llmClient = dependencies.llmClient;
-    this.toolRegistry = dependencies.toolRegistry;
-    this.toolRegistryProvider = dependencies.toolRegistryProvider;
-    this.resourceManager = dependencies.resourceManager;
+  constructor(llmClient, options = {}) {
+    if (!llmClient) {
+      throw new Error('LLM client is required');
+    }
+    
+    this.llmClient = llmClient;
+    this.toolRegistry = null; // Will be initialized lazily
+    this.options = options;
     
     // Initialize components
     this.decomposer = new TaskDecomposer(this.llmClient);
@@ -56,75 +59,27 @@ export class DecentPlanner {
    * Must be called before using the planner
    */
   async initialize() {
-    // TODO: Fix this to use ToolRegistry properly
-    // For now, just set up a minimal tool discovery
-    this.toolDiscovery = {
-      discoverTools: async () => [],
-      getToolByName: async (name) => null
-    };
-    
-    // Update synthesizer with tool discovery
-    this.synthesizer.toolDiscovery = this.toolDiscovery;
+    if (!this.toolRegistry) {
+      // Use ToolRegistry singleton
+      this.toolRegistry = await ToolRegistry.getInstance();
+      
+      // Initialize tool discovery
+      this.toolDiscovery = {
+        discoverTools: async (query, options = {}) => {
+          return await this.toolRegistry.searchTools(query, options);
+        },
+        getToolByName: async (name) => {
+          return await this.toolRegistry.getTool(name);
+        }
+      };
+      
+      // Update synthesizer with tool discovery
+      this.synthesizer.toolDiscovery = this.toolDiscovery;
+    }
     
     return this;
   }
 
-  /**
-   * Create a DecentPlanner instance
-   * @param {ResourceManager} resourceManager - Resource manager for dependencies
-   * @returns {Promise<DecentPlanner>} Initialized planner
-   */
-  static async create(resourceManager) {
-    // ResourceManager supplies dependencies through getOrInitialize
-    // This ensures proper lazy initialization and singleton pattern
-    
-    // Get or create LLM client
-    const llmClient = await resourceManager.getOrInitialize('llmClient', async () => {
-      // Try to create from available API keys
-      const anthropicKey = resourceManager.get('env.ANTHROPIC_API_KEY');
-      const openaiKey = resourceManager.get('env.OPENAI_API_KEY');
-      
-      if (!anthropicKey && !openaiKey) {
-        throw new Error('DecentPlanner requires either ANTHROPIC_API_KEY or OPENAI_API_KEY in environment');
-      }
-      
-      const { LLMClient } = await import('@legion/ai-agent-core');
-      return new LLMClient({ 
-        apiKey: anthropicKey || openaiKey,
-        provider: anthropicKey ? 'anthropic' : 'openai'
-      });
-    });
-    
-    // Get or create tool registry provider for semantic search
-    const toolRegistryProvider = await resourceManager.getOrInitialize('toolRegistryProvider', async () => {
-      const { MongoDBToolRegistryProvider } = await import('@legion/tools-registry/src/providers/MongoDBToolRegistryProvider.js');
-      return await MongoDBToolRegistryProvider.create(
-        resourceManager,
-        { enableSemanticSearch: true }
-      );
-    });
-    
-    // Get or create tool registry for executable tools
-    const toolRegistry = await resourceManager.getOrInitialize('toolRegistry', async () => {
-      const { ToolRegistry } = await import('@legion/tools-registry');
-      const provider = resourceManager.get('toolRegistryProvider');
-      const registry = new ToolRegistry({ provider });
-      await registry.initialize();
-      return registry;
-    });
-    
-    const planner = new DecentPlanner({
-      llmClient,
-      toolRegistry,
-      toolRegistryProvider,
-      resourceManager
-    });
-    
-    // Initialize async components
-    await planner.initialize();
-    
-    return planner;
-  }
 
   /**
    * Plan a complex task through hierarchical decomposition
@@ -133,6 +88,9 @@ export class DecentPlanner {
    * @returns {Promise<PlanResult>} Complete hierarchical plan
    */
   async plan(goal, options = {}) {
+    // Ensure initialization
+    await this.initialize();
+    
     // Use bottom-up synthesis by default, with option to use legacy top-down
     if (options.useBottomUp !== false) {
       return this.planWithSynthesis(goal, options);

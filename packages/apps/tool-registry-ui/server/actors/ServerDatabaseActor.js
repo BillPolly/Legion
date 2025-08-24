@@ -1,15 +1,18 @@
 /**
  * ServerDatabaseActor - Server-side actor for database operations
+ * 
+ * Hybrid approach: Uses ToolRegistry for tool-related data,
+ * direct MongoDB for UI-specific database administration
  */
 
 export class ServerDatabaseActor {
-  constructor(storageProvider, mongoProvider) {
-    this.storageProvider = storageProvider;
+  constructor(toolRegistry, mongoProvider) {
+    this.toolRegistry = toolRegistry;
     this.mongoProvider = mongoProvider;
     this.remoteActor = null;
     this.mongoDb = null;
     
-    // Get MongoDB database instance
+    // Get MongoDB database instance for direct operations
     if (mongoProvider?.databaseService?.mongoProvider?.db) {
       this.mongoDb = mongoProvider.databaseService.mongoProvider.db;
     }
@@ -90,6 +93,12 @@ export class ServerDatabaseActor {
 
   async getCollectionData(collectionName, options = {}) {
     try {
+      // Delegate tool-related collections to ToolRegistry
+      if (this.isToolRelatedCollection(collectionName)) {
+        await this.getToolCollectionData(collectionName, options);
+        return;
+      }
+      
       if (!this.mongoDb) {
         throw new Error('MongoDB not connected');
       }
@@ -218,5 +227,80 @@ export class ServerDatabaseActor {
     }
     
     return schema;
+  }
+
+  /**
+   * Check if collection name is tool-related and should be delegated to ToolRegistry
+   */
+  isToolRelatedCollection(collectionName) {
+    return ['tools', 'modules', 'tool_perspectives'].includes(collectionName);
+  }
+
+  /**
+   * Handle tool-related collection data using ToolRegistry
+   */
+  async getToolCollectionData(collectionName, options = {}) {
+    try {
+      let documents = [];
+      let count = 0;
+      let schema = null;
+
+      switch (collectionName) {
+        case 'tools':
+          documents = await this.toolRegistry.listTools({
+            limit: options.limit || 20,
+            skip: options.skip || 0
+          });
+          // Get count from ToolRegistry statistics
+          const stats = await this.toolRegistry.getStatistics();
+          count = stats.tools || 0;
+          schema = documents[0] ? this.inferSchema(documents[0]) : null;
+          break;
+          
+        case 'modules':
+          documents = await this.toolRegistry.listModules({
+            limit: options.limit || 20,
+            skip: options.skip || 0
+          });
+          const moduleStats = await this.toolRegistry.getStatistics();
+          count = moduleStats.modules || 0;
+          schema = documents[0] ? this.inferSchema(documents[0]) : null;
+          break;
+          
+        case 'tool_perspectives':
+          // For perspectives, we'll need to get them from individual tools
+          const tools = await this.toolRegistry.listTools({ limit: 10 });
+          documents = [];
+          for (const tool of tools.slice(0, options.limit || 20)) {
+            try {
+              const toolWithPerspectives = await this.toolRegistry.getToolWithPerspectives(tool.name);
+              if (toolWithPerspectives?.perspectives) {
+                documents.push(...toolWithPerspectives.perspectives);
+              }
+            } catch (error) {
+              // Skip tools without perspectives
+            }
+          }
+          count = documents.length;
+          schema = documents[0] ? this.inferSchema(documents[0]) : null;
+          break;
+      }
+
+      // Send data to client
+      if (this.remoteActor) {
+        this.remoteActor.receive({
+          type: 'collection:data',
+          data: {
+            collectionName,
+            documents,
+            count,
+            schema
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Failed to get tool collection data:', error);
+      throw error;
+    }
   }
 }

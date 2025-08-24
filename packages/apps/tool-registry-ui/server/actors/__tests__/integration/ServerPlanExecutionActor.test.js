@@ -5,10 +5,10 @@
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from '@jest/globals';
 import { ServerPlanExecutionActor } from '../../ServerPlanExecutionActor.js';
-import { BTExecutor } from '@legion/bt-executor';
+import { BehaviorTreeExecutor as BTExecutor } from '@legion/actor-bt';
 import { ToolRegistry } from '@legion/tools-registry';
 import { ResourceManager } from '@legion/resource-manager';
-import { MongoDBProvider } from '@legion/mongodb-provider';
+import { MongoDBProvider } from '@legion/storage';
 import { WebSocketServer } from 'ws';
 import WebSocket from 'ws';
 
@@ -66,7 +66,7 @@ describe('ServerPlanExecutionActor Integration', () => {
     
     // Handle WebSocket connections
     wss.on('connection', (ws) => {
-      // Create actor with real services
+      // Create actor with real services - updated for ToolRegistry pattern
       actor = new ServerPlanExecutionActor(btExecutor, toolRegistry, mongoProvider);
       
       // Set up bi-directional communication

@@ -68,9 +68,8 @@ const wss = new WebSocketServer({
   path: '/ws'
 });
 
-// Initialize services
+// Initialize services - Simplified to use ToolRegistry singleton
 let toolRegistry = null;
-let semanticProvider = null;
 let resourceManager = null;
 let mongoProvider = null;
 let decentPlanner = null;
@@ -83,10 +82,13 @@ async function initializeServices() {
     console.log('Initializing services...');
     
     // Initialize ResourceManager
-    resourceManager = ResourceManager.getInstance();
-    await resourceManager.initialize();
+    resourceManager = await ResourceManager.getResourceManager();
     
-    // Initialize MongoDB provider with correct config
+    // Initialize ToolRegistry singleton - this handles all tool-related operations
+    toolRegistry = await ToolRegistry.getInstance();
+    console.log('✅ ToolRegistry singleton initialized');
+    
+    // Initialize minimal MongoDB provider for UI-specific operations only
     const mongoConfig = {
       connectionString: resourceManager.get('env.MONGODB_URL'),
       database: resourceManager.get('env.MONGODB_DATABASE') || resourceManager.get('env.TOOLS_DATABASE_NAME')
@@ -94,14 +96,10 @@ async function initializeServices() {
     mongoProvider = new MongoDBProvider(mongoConfig);
     await mongoProvider.connect();
     
-    // Initialize MongoDB schemas
+    // Initialize MongoDB schemas for UI-specific collections
     const db = mongoProvider.getDatabase();
     schemas = await initializeSchemas(db);
     console.log('✅ MongoDB schemas initialized');
-    
-    // Initialize ToolRegistry - it will create its own ResourceManager and MongoDB provider
-    toolRegistry = new ToolRegistry();
-    await toolRegistry.initialize();
     
     // Initialize LLM Client for planning
     llmClient = await resourceManager.createLLMClient();
@@ -118,10 +116,7 @@ async function initializeServices() {
     btExecutor = new BTExecutor(toolRegistry);
     console.log('✅ BT Executor initialized');
     
-    // Initialize SemanticSearchProvider if needed separately
-    // The ToolRegistry already has semantic search capabilities
-    
-    console.log('✅ All services initialized successfully');
+    console.log('✅ All services initialized successfully with ToolRegistry singleton');
   } catch (error) {
     console.error('Failed to initialize services:', error);
     process.exit(1);
@@ -138,13 +133,12 @@ wss.on('connection', (ws) => {
   // Create ActorSpace for this connection
   const actorSpace = new ActorSpace('server-' + Date.now());
   
-  // Create server actors - pass toolRegistry and its semantic provider
-  const toolActor = new ServerToolRegistryActor(toolRegistry, toolRegistry.provider);
-  const dbActor = new ServerDatabaseActor(toolRegistry, toolRegistry.provider);
-  // Pass toolRegistry's semantic discovery for search
-  const searchActor = new ServerSemanticSearchActor(toolRegistry.semanticDiscovery, toolRegistry.provider);
-  // Create planning actors
-  const planningActor = new ServerPlanningActor(decentPlanner, mongoProvider);
+  // Create server actors - simplified with ToolRegistry singleton
+  const toolActor = new ServerToolRegistryActor(toolRegistry);
+  const dbActor = new ServerDatabaseActor(toolRegistry, mongoProvider);
+  const searchActor = new ServerSemanticSearchActor(toolRegistry);
+  // Create planning actors - now using ToolRegistry singleton
+  const planningActor = new ServerPlanningActor(decentPlanner, toolRegistry, mongoProvider);
   const executionActor = new ServerPlanExecutionActor(btExecutor, toolRegistry, mongoProvider);
   
   // Register actors with unique GUIDs
@@ -220,9 +214,7 @@ process.on('SIGTERM', async () => {
   if (mongoProvider) {
     await mongoProvider.disconnect();
   }
-  if (storageProvider) {
-    await storageProvider.disconnect();
-  }
+  // ToolRegistry handles its own cleanup
   
   // Close HTTP server
   server.close(() => {
@@ -237,9 +229,7 @@ process.on('SIGINT', async () => {
   if (mongoProvider) {
     await mongoProvider.disconnect();
   }
-  if (storageProvider) {
-    await storageProvider.disconnect();
-  }
+  // ToolRegistry handles its own cleanup
   
   process.exit(0);
 });

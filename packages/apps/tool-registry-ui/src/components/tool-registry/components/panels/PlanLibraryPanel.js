@@ -1395,6 +1395,61 @@ export class PlanLibraryPanel {
     // Set view's reference to viewModel
     view.viewModel = viewModel;
     
-    return viewModel;
+    // Return component with standardized API
+    return {
+      api: {
+        // Standardized lifecycle methods
+        isReady: () => true,
+        getState: (key) => key ? model.getState(key) : model.getState(),
+        setState: (key, value) => model.updateState(key, value),
+        reset: () => {
+          model.updateState('plans', []);
+          model.updateState('selectedPlan', null);
+          model.updateState('searchQuery', '');
+        },
+        destroy: () => {
+          viewModel.cleanup && viewModel.cleanup();
+        },
+        
+        // Standardized error handling methods
+        getLastError: () => model.getState('lastError') || null,
+        clearError: () => model.updateState('lastError', null),
+        hasError: () => !!model.getState('lastError'),
+        setError: (error) => {
+          model.updateState('lastError', error);
+          return { success: false, error: error };
+        },
+        
+        // Standardized validation methods
+        validate: () => {
+          const errors = [];
+          const plans = model.getState('plans');
+          if (!Array.isArray(plans)) {
+            errors.push('Invalid plans data structure');
+          }
+          model.updateState('validationErrors', errors);
+          return { 
+            success: true, 
+            data: { 
+              isValid: errors.length === 0, 
+              errors 
+            } 
+          };
+        },
+        isValid: () => {
+          const errors = model.getState('validationErrors') || [];
+          return errors.length === 0;
+        },
+        getValidationErrors: () => model.getState('validationErrors') || [],
+        
+        // Component-specific API methods
+        ...viewModel.getComponentSpecificMethods()
+      },
+      
+      // Internal references for advanced usage
+      model,
+      viewModel,
+      view
+    };
   }
 }

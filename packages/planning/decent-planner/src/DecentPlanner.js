@@ -7,17 +7,14 @@ import { Planner } from '@legion/planner';
 import { BTValidator } from '@legion/bt-validator';
 
 export class DecentPlanner {
-  constructor(llmClient, toolRegistry, options = {}) {
+  constructor(llmClient, options = {}) {
     if (!llmClient) {
       throw new Error('LLM client is required');
     }
     
-    if (!toolRegistry) {
-      throw new Error('ToolRegistry is required');
-    }
-    
     this.llmClient = llmClient;
-    this.toolRegistry = toolRegistry;
+    this.toolRegistry = null; // Will be initialized lazily
+    this.informalPlanner = null; // Will be initialized lazily
     
     // Options
     this.options = {
@@ -33,17 +30,27 @@ export class DecentPlanner {
       ...options
     };
     
-    // Initialize informal planner
-    this.informalPlanner = new InformalPlanner(llmClient, toolRegistry, {
-      maxDepth: this.options.maxDepth,
-      confidenceThreshold: this.options.confidenceThreshold,
-      strictValidation: this.options.strictValidation
-    });
-    
     // Initialize formal planner (from @legion/planner package)
     if (this.options.enableFormalPlanning) {
       this.formalPlanner = new Planner({ llmClient });
       this.btValidator = new BTValidator();
+    }
+  }
+
+  /**
+   * Initialize the planner with ToolRegistry singleton
+   */
+  async initialize() {
+    if (!this.toolRegistry) {
+      const { ToolRegistry } = await import('@legion/tools-registry');
+      this.toolRegistry = await ToolRegistry.getInstance();
+      
+      // Initialize informal planner now that we have toolRegistry
+      this.informalPlanner = new InformalPlanner(this.llmClient, this.toolRegistry, {
+        maxDepth: this.options.maxDepth,
+        confidenceThreshold: this.options.confidenceThreshold,
+        strictValidation: this.options.strictValidation
+      });
     }
   }
 
@@ -57,6 +64,9 @@ export class DecentPlanner {
     if (!goal || goal.trim() === '') {
       throw new Error('Goal is required');
     }
+    
+    // Ensure planner is initialized
+    await this.initialize();
     
     const startTime = Date.now();
     const result = {

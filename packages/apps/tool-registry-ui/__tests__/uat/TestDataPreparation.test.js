@@ -1,13 +1,14 @@
 /**
  * UAT Preparation Tests: Test Data Preparation
  * Creates and validates sample data for UAT testing
+ * Updated to use ToolRegistry singleton pattern
  */
 
 import { jest } from '@jest/globals';
 
 describe('UAT Test Data Preparation', () => {
   let testDataStore;
-  let mockDatabase;
+  let mockToolRegistry;
   
   beforeEach(() => {
     // Initialize test data store
@@ -19,19 +20,28 @@ describe('UAT Test Data Preparation', () => {
       tools: []
     };
     
-    // Mock database for test data
-    mockDatabase = {
-      insertMany: jest.fn().mockImplementation((collection, docs) => {
-        testDataStore[collection].push(...docs);
-        return { insertedCount: docs.length };
+    // Mock ToolRegistry singleton for test data operations
+    mockToolRegistry = {
+      getTool: jest.fn(),
+      listTools: jest.fn().mockImplementation(() => testDataStore.tools),
+      searchTools: jest.fn(),
+      getStatistics: jest.fn(() => ({
+        tools: testDataStore.tools.length,
+        modules: 0,
+        perspectives: 0
+      })),
+      savePlan: jest.fn().mockImplementation((plan) => {
+        testDataStore.plans.push(plan);
+        return plan;
       }),
-      
-      find: jest.fn().mockImplementation((collection, query = {}) => {
-        return testDataStore[collection];
+      loadPlan: jest.fn().mockImplementation((planId) => {
+        return testDataStore.plans.find(p => p.id === planId);
       }),
-      
-      clear: jest.fn().mockImplementation((collection) => {
-        testDataStore[collection] = [];
+      clearAll: jest.fn().mockImplementation(() => {
+        Object.keys(testDataStore).forEach(key => {
+          testDataStore[key] = [];
+        });
+        return { success: true };
       })
     };
   });
@@ -129,11 +139,14 @@ describe('UAT Test Data Preparation', () => {
         }
       ];
       
-      const result = await mockDatabase.insertMany('plans', basicPlans);
-      expect(result.insertedCount).toBe(2);
+      // Use ToolRegistry to save plans
+      for (const plan of basicPlans) {
+        await mockToolRegistry.savePlan(plan);
+      }
+      expect(testDataStore.plans).toHaveLength(2);
       
       // Verify plans were created
-      const plans = await mockDatabase.find('plans');
+      const plans = testDataStore.plans;
       expect(plans.length).toBe(2);
       expect(plans[0].complexity).toBe('simple');
     });
@@ -306,11 +319,12 @@ describe('UAT Test Data Preparation', () => {
         createdAt: new Date().toISOString()
       };
       
-      const result = await mockDatabase.insertMany('plans', [complexPlan]);
-      expect(result.insertedCount).toBe(1);
+      // Use ToolRegistry to save the complex plan
+      await mockToolRegistry.savePlan(complexPlan);
+      expect(testDataStore.plans).toContain(complexPlan);
       
       // Verify complex plan structure
-      const plans = await mockDatabase.find('plans');
+      const plans = testDataStore.plans;
       const complex = plans.find(p => p.complexity === 'complex');
       expect(complex).toBeDefined();
       expect(complex.hierarchy.root.children.length).toBe(3); // 3 phases
@@ -374,11 +388,12 @@ describe('UAT Test Data Preparation', () => {
         createdAt: new Date().toISOString()
       };
       
-      const result = await mockDatabase.insertMany('plans', [constrainedPlan]);
-      expect(result.insertedCount).toBe(1);
+      // Use ToolRegistry to save the constrained plan
+      await mockToolRegistry.savePlan(constrainedPlan);
+      expect(testDataStore.plans).toContain(constrainedPlan);
       
       // Verify constraints
-      const plans = await mockDatabase.find('plans');
+      const plans = testDataStore.plans;
       const constrained = plans.find(p => p.constraints);
       expect(constrained).toBeDefined();
       expect(constrained.constraints.allowedTools).toContain('python');
@@ -524,11 +539,12 @@ describe('UAT Test Data Preparation', () => {
         }
       ];
       
-      const result = await mockDatabase.insertMany('templates', templates);
-      expect(result.insertedCount).toBe(3);
+      // Use test data store for templates (as they're not part of ToolRegistry)
+      testDataStore.templates.push(...templates);
+      expect(testDataStore.templates).toHaveLength(3);
       
       // Verify templates
-      const savedTemplates = await mockDatabase.find('templates');
+      const savedTemplates = testDataStore.templates;
       expect(savedTemplates.length).toBe(3);
       expect(savedTemplates.every(t => t.isTemplate)).toBe(true);
       expect(savedTemplates.every(t => t.templateConfig)).toBeTruthy();
@@ -580,11 +596,12 @@ describe('UAT Test Data Preparation', () => {
         }
       ];
       
-      const result = await mockDatabase.insertMany('executions', successfulExecutions);
-      expect(result.insertedCount).toBe(1);
+      // Store executions in test data store
+      testDataStore.executions.push(...successfulExecutions);
+      expect(testDataStore.executions).toHaveLength(1);
       
       // Verify execution
-      const executions = await mockDatabase.find('executions');
+      const executions = testDataStore.executions;
       const successful = executions.filter(e => e.status === 'completed');
       expect(successful.length).toBeGreaterThan(0);
       expect(successful[0].tasksFailed).toBe(0);
@@ -615,11 +632,12 @@ describe('UAT Test Data Preparation', () => {
         }
       };
       
-      const result = await mockDatabase.insertMany('executions', [failedExecution]);
-      expect(result.insertedCount).toBe(1);
+      // Store failed execution in test data store
+      testDataStore.executions.push(failedExecution);
+      expect(testDataStore.executions.length).toBeGreaterThan(0);
       
       // Verify failed execution
-      const executions = await mockDatabase.find('executions');
+      const executions = testDataStore.executions;
       const failed = executions.find(e => e.status === 'failed');
       expect(failed).toBeDefined();
       expect(failed.tasksFailed).toBeGreaterThan(0);
@@ -647,11 +665,12 @@ describe('UAT Test Data Preparation', () => {
         recoveryOptions: ['retry-failed', 'skip-failed', 'rollback']
       };
       
-      const result = await mockDatabase.insertMany('executions', [partialExecution]);
-      expect(result.insertedCount).toBe(1);
+      // Store partial execution in test data store
+      testDataStore.executions.push(partialExecution);
+      expect(testDataStore.executions.length).toBeGreaterThan(0);
       
       // Verify partial execution
-      const executions = await mockDatabase.find('executions');
+      const executions = testDataStore.executions;
       const partial = executions.find(e => e.status === 'partial');
       expect(partial).toBeDefined();
       expect(partial.completionPercentage).toBeLessThan(100);
@@ -714,11 +733,12 @@ describe('UAT Test Data Preparation', () => {
         }
       ];
       
-      const result = await mockDatabase.insertMany('tools', tools);
-      expect(result.insertedCount).toBe(5);
+      // Store tools in test data store
+      testDataStore.tools.push(...tools);
+      expect(testDataStore.tools).toHaveLength(5);
       
       // Verify tools
-      const savedTools = await mockDatabase.find('tools');
+      const savedTools = testDataStore.tools;
       expect(savedTools.length).toBe(5);
       
       const availableTools = savedTools.filter(t => t.available);

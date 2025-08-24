@@ -6,8 +6,6 @@
  */
 
 import { InformalPlanner } from '../src/core/informal/index.js';
-import { ResourceManager } from '@legion/module-loader';
-import { ToolRegistry } from '@legion/tools-registry';
 
 // Simple console LLM client for demonstration
 class DemoLLMClient {
@@ -217,13 +215,10 @@ async function main() {
   console.log('=== Informal Planner Demonstration ===\n');
   
   try {
-    // Initialize ResourceManager
-    console.log('Initializing ResourceManager...');
-    const resourceManager = await ResourceManager.getResourceManager();
-    
-    // Create ToolRegistry
-    console.log('Creating ToolRegistry...');
-    const toolRegistry = new ToolRegistry(resourceManager);
+    // Get ToolRegistry singleton
+    console.log('Getting ToolRegistry singleton...');
+    const { ToolRegistry } = await import('@legion/tools-registry');
+    const toolRegistry = await ToolRegistry.getInstance();
     
     // Create demo LLM client
     console.log('Creating demo LLM client...');

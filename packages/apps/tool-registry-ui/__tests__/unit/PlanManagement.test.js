@@ -1,6 +1,7 @@
 /**
  * Plan Management Unit Tests
  * Tests save/load operations and plan editing functionality for PlanLibraryPanel
+ * Updated to use ToolRegistry singleton pattern
  */
 
 import { jest } from '@jest/globals';
@@ -10,6 +11,7 @@ describe('Plan Management Unit Tests', () => {
   let component;
   let mockUmbilical;
   let mockPlanningActor;
+  let mockToolRegistry;
   let dom;
 
   beforeEach(async () => {
@@ -19,18 +21,33 @@ describe('Plan Management Unit Tests', () => {
     dom.style.height = '600px';
     document.body.appendChild(dom);
 
-    // Create mock planning actor
+    // Mock ToolRegistry singleton for plan operations
+    mockToolRegistry = {
+      getTool: jest.fn(),
+      listTools: jest.fn(),
+      searchTools: jest.fn(),
+      getStatistics: jest.fn(),
+      validatePlan: jest.fn(),
+      savePlan: jest.fn(),
+      loadPlan: jest.fn()
+    };
+
+    // Create mock planning actor (updated for ToolRegistry pattern)
     mockPlanningActor = {
       savePlan: jest.fn(),
       deletePlan: jest.fn(),
       getPlans: jest.fn(),
-      updatePlan: jest.fn()
+      updatePlan: jest.fn(),
+      // Add ToolRegistry-aware methods
+      validatePlanTools: jest.fn(),
+      getToolRequirements: jest.fn()
     };
 
-    // Create mock umbilical with planning actor
+    // Create mock umbilical with planning actor and ToolRegistry support
     mockUmbilical = {
       dom,
       planningActor: mockPlanningActor,
+      toolRegistry: mockToolRegistry,
       onPlanSave: jest.fn(),
       onPlanDelete: jest.fn(),
       onPlanImported: jest.fn(),

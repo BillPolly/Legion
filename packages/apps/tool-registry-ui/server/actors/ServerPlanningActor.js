@@ -1,19 +1,21 @@
 /**
  * ServerPlanningActor - Server-side actor for planning operations
  * Handles plan creation, validation, and management through DecentPlanner
+ * Updated to use ToolRegistry singleton pattern for tool operations
  */
 
 export class ServerPlanningActor {
-  constructor(decentPlanner, mongoProvider) {
+  constructor(decentPlanner, toolRegistry, mongoProvider = null) {
     if (!decentPlanner) {
       throw new Error('DecentPlanner is required');
     }
-    if (!mongoProvider) {
-      throw new Error('MongoDB provider is required');
+    if (!toolRegistry) {
+      throw new Error('ToolRegistry is required');
     }
     
     this.decentPlanner = decentPlanner;
-    this.mongoProvider = mongoProvider;
+    this.toolRegistry = toolRegistry;
+    this.mongoProvider = mongoProvider; // Optional for UI-specific plan storage
     this.remoteActor = null;
   }
 
@@ -126,22 +128,43 @@ export class ServerPlanningActor {
     }
 
     try {
-      const collection = this.mongoProvider.getCollection('plans');
-      
-      const planDocument = {
-        ...data,
-        metadata: {
-          ...data.metadata,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-      };
-      
-      const result = await collection.insertOne(planDocument);
-      
-      await this.sendMessage('plan:saved', {
-        planId: result.insertedId
-      });
+      // Try to use ToolRegistry first for plan storage
+      if (this.toolRegistry && this.toolRegistry.savePlan) {
+        const planDocument = {
+          ...data,
+          metadata: {
+            ...data.metadata,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          }
+        };
+        
+        const result = await this.toolRegistry.savePlan(planDocument);
+        
+        await this.sendMessage('plan:saved', {
+          planId: result.id || result.insertedId
+        });
+      } else if (this.mongoProvider) {
+        // Fallback to direct MongoDB for UI-specific plan storage
+        const collection = this.mongoProvider.getCollection('plans');
+        
+        const planDocument = {
+          ...data,
+          metadata: {
+            ...data.metadata,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          }
+        };
+        
+        const result = await collection.insertOne(planDocument);
+        
+        await this.sendMessage('plan:saved', {
+          planId: result.insertedId
+        });
+      } else {
+        throw new Error('No storage provider available for plans');
+      }
       
     } catch (error) {
       await this.sendError(`Failed to save plan: ${error.message}`, error);
@@ -155,8 +178,18 @@ export class ServerPlanningActor {
     }
 
     try {
-      const collection = this.mongoProvider.getCollection('plans');
-      const plan = await collection.findOne({ _id: data.planId });
+      let plan = null;
+      
+      // Try to use ToolRegistry first for plan loading
+      if (this.toolRegistry && this.toolRegistry.loadPlan) {
+        plan = await this.toolRegistry.loadPlan(data.planId);
+      } else if (this.mongoProvider) {
+        // Fallback to direct MongoDB for UI-specific plan storage
+        const collection = this.mongoProvider.getCollection('plans');
+        plan = await collection.findOne({ _id: data.planId });
+      } else {
+        throw new Error('No storage provider available for plans');
+      }
       
       if (!plan) {
         await this.sendError(`Plan not found: ${data.planId}`);
@@ -172,13 +205,24 @@ export class ServerPlanningActor {
 
   async handlePlanList(data) {
     try {
-      const collection = this.mongoProvider.getCollection('plans');
-      const filter = data?.filter || {};
+      let plans = [];
       
-      const plans = await collection
-        .find(filter)
-        .sort({ 'metadata.createdAt': -1 })
-        .toArray();
+      // Try to use ToolRegistry first for plan listing
+      if (this.toolRegistry && this.toolRegistry.listPlans) {
+        const filter = data?.filter || {};
+        plans = await this.toolRegistry.listPlans(filter);
+      } else if (this.mongoProvider) {
+        // Fallback to direct MongoDB for UI-specific plan storage
+        const collection = this.mongoProvider.getCollection('plans');
+        const filter = data?.filter || {};
+        
+        plans = await collection
+          .find(filter)
+          .sort({ 'metadata.createdAt': -1 })
+          .toArray();
+      } else {
+        throw new Error('No storage provider available for plans');
+      }
       
       await this.sendMessage('plan:list:result', { plans });
       
@@ -210,23 +254,43 @@ export class ServerPlanningActor {
     }
 
     try {
-      const collection = this.mongoProvider.getCollection('plans');
+      let result = null;
       
-      const updateDoc = {
-        $set: {
+      // Try to use ToolRegistry first for plan updates
+      if (this.toolRegistry && this.toolRegistry.updatePlan) {
+        const updates = {
           ...data.updates,
           'metadata.updatedAt': new Date()
+        };
+        
+        result = await this.toolRegistry.updatePlan(data.planId, updates);
+        
+        if (!result || !result.success) {
+          await this.sendError(`Plan not found or not modified: ${data.planId}`);
+          return;
         }
-      };
-      
-      const result = await collection.updateOne(
-        { _id: data.planId },
-        updateDoc
-      );
-      
-      if (result.modifiedCount === 0) {
-        await this.sendError(`Plan not found or not modified: ${data.planId}`);
-        return;
+      } else if (this.mongoProvider) {
+        // Fallback to direct MongoDB for UI-specific plan storage
+        const collection = this.mongoProvider.getCollection('plans');
+        
+        const updateDoc = {
+          $set: {
+            ...data.updates,
+            'metadata.updatedAt': new Date()
+          }
+        };
+        
+        result = await collection.updateOne(
+          { _id: data.planId },
+          updateDoc
+        );
+        
+        if (result.modifiedCount === 0) {
+          await this.sendError(`Plan not found or not modified: ${data.planId}`);
+          return;
+        }
+      } else {
+        throw new Error('No storage provider available for plans');
       }
       
       await this.sendMessage('plan:updated', {
@@ -245,13 +309,28 @@ export class ServerPlanningActor {
     }
 
     try {
-      const collection = this.mongoProvider.getCollection('plans');
+      let result = null;
       
-      const result = await collection.deleteOne({ _id: data.planId });
-      
-      if (result.deletedCount === 0) {
-        await this.sendError(`Plan not found: ${data.planId}`);
-        return;
+      // Try to use ToolRegistry first for plan deletion
+      if (this.toolRegistry && this.toolRegistry.deletePlan) {
+        result = await this.toolRegistry.deletePlan(data.planId);
+        
+        if (!result || !result.success) {
+          await this.sendError(`Plan not found: ${data.planId}`);
+          return;
+        }
+      } else if (this.mongoProvider) {
+        // Fallback to direct MongoDB for UI-specific plan storage
+        const collection = this.mongoProvider.getCollection('plans');
+        
+        result = await collection.deleteOne({ _id: data.planId });
+        
+        if (result.deletedCount === 0) {
+          await this.sendError(`Plan not found: ${data.planId}`);
+          return;
+        }
+      } else {
+        throw new Error('No storage provider available for plans');
       }
       
       await this.sendMessage('plan:deleted', {

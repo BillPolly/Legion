@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
 import { PlanSchema, ExecutionSchema, TemplateSchema, initializeSchemas } from '../../schemas/MongoDBSchemas.js';
 import { ResourceManager } from '@legion/resource-manager';
-import { MongoDBProvider } from '@legion/mongodb-provider';
+import { MongoDBProvider } from '@legion/storage';
 
 describe('MongoDB Schemas Integration', () => {
   let mongoProvider;

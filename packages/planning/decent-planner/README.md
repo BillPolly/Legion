@@ -38,18 +38,11 @@ npm install @legion/decent-planner
 
 ```javascript
 import { DecentPlanner } from '@legion/decent-planner';
-import { ResourceManager } from '@legion/module-loader';
-import { ToolRegistry } from '@legion/tools-registry';
 
-// Initialize dependencies
-const resourceManager = new ResourceManager();
-await resourceManager.initialize();
-
-const toolRegistry = new ToolRegistry(resourceManager);
 const llmClient = /* your LLM client */;
 
-// Create planner
-const planner = new DecentPlanner(llmClient, toolRegistry, {
+// Create planner (ToolRegistry singleton is used internally)
+const planner = new DecentPlanner(llmClient, {
   maxDepth: 5,
   confidenceThreshold: 0.7
 });
