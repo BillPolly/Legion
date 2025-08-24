@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import { ToolRegistry } from '../../src/integration/ToolRegistry.js';
+import { ToolRegistry } from '../../src/index.js';
 
 describe('ToolRegistry Metadata Verification', () => {
   let toolRegistry;
@@ -15,7 +15,10 @@ describe('ToolRegistry Metadata Verification', () => {
   let mockModuleLoader;
   let mockCollections;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Reset singleton before each test
+    ToolRegistry.reset();
+    
     // Create mock collections
     mockCollections = {
       'module-registry': {
@@ -57,13 +60,10 @@ describe('ToolRegistry Metadata Verification', () => {
       get: jest.fn().mockReturnValue('mock-value')
     };
 
-    // Create ToolRegistry instance with mocks
-    toolRegistry = new ToolRegistry({
-      resourceManager: mockResourceManager,
-      options: { cacheSize: 100 }
-    });
+    // Get ToolRegistry singleton
+    toolRegistry = await ToolRegistry.getInstance();
 
-    // Inject mocks
+    // Inject mocks (for testing purposes only)
     toolRegistry.databaseStorage = mockDatabaseStorage;
     toolRegistry.moduleLoader = mockModuleLoader;
     toolRegistry.initialized = true;
@@ -71,6 +71,8 @@ describe('ToolRegistry Metadata Verification', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    // Reset singleton after each test
+    ToolRegistry.reset();
   });
 
   describe('verifyModuleMetadata', () => {

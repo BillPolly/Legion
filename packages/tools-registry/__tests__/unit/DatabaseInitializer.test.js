@@ -76,7 +76,7 @@ describe('DatabaseInitializer', () => {
       });
 
       expect(initializer.options.verbose).toBe(false);
-      expect(initializer.options.seedData).toBe(false);
+      expect(initializer.options.seedData).toBe(true);
       expect(initializer.options.validateSchema).toBe(true);
     });
   });
@@ -124,7 +124,7 @@ describe('DatabaseInitializer', () => {
       const noSeedInitializer = new DatabaseInitializer({
         db,
         resourceManager: {},
-        options: { seedData: false }
+        options: { seedData: false, validateSchema: false }
       });
 
       await noSeedInitializer.initialize();
@@ -144,9 +144,9 @@ describe('DatabaseInitializer', () => {
     });
   });
 
-  describe('ensureCollections', () => {
+  describe('ensureCollectionsExist', () => {
     it('should create perspective_types collection with schema', async () => {
-      await databaseInitializer.ensureCollections();
+      await databaseInitializer.ensureCollectionsExist();
 
       const collection = db.collection('perspective_types');
       const exists = await collection.findOne({});
@@ -156,7 +156,7 @@ describe('DatabaseInitializer', () => {
     });
 
     it('should create tool_perspectives collection', async () => {
-      await databaseInitializer.ensureCollections();
+      await databaseInitializer.ensureCollectionsExist();
 
       const collection = db.collection('tool_perspectives');
       const exists = await collection.findOne({});
@@ -165,10 +165,10 @@ describe('DatabaseInitializer', () => {
     });
   });
 
-  describe('seedDefaultPerspectiveTypes', () => {
+  describe('seedPerspectiveTypes', () => {
     it('should insert all default perspective types', async () => {
-      await databaseInitializer.ensureCollections();
-      await databaseInitializer.seedDefaultPerspectiveTypes();
+      await databaseInitializer.ensureCollectionsExist();
+      await databaseInitializer.seedPerspectiveTypes();
 
       const perspectiveTypes = await db.collection('perspective_types').find({}).toArray();
       expect(perspectiveTypes).toHaveLength(4);
@@ -184,16 +184,16 @@ describe('DatabaseInitializer', () => {
     });
 
     it('should not duplicate perspective types on multiple calls', async () => {
-      await databaseInitializer.ensureCollections();
-      await databaseInitializer.seedDefaultPerspectiveTypes();
-      await databaseInitializer.seedDefaultPerspectiveTypes(); // Second call
+      await databaseInitializer.ensureCollectionsExist();
+      await databaseInitializer.seedPerspectiveTypes();
+      await databaseInitializer.seedPerspectiveTypes(); // Second call
 
       const perspectiveTypes = await db.collection('perspective_types').find({}).toArray();
       expect(perspectiveTypes).toHaveLength(4); // Should still be 4, not 8
     });
 
-    it('should preserve existing custom perspective types', async () => {
-      await databaseInitializer.ensureCollections();
+    it('should not seed if data already exists', async () => {
+      await databaseInitializer.ensureCollectionsExist();
 
       // Insert custom perspective type first
       await db.collection('perspective_types').insertOne({
@@ -206,10 +206,11 @@ describe('DatabaseInitializer', () => {
         created_at: new Date()
       });
 
-      await databaseInitializer.seedDefaultPerspectiveTypes();
+      const seeded = await databaseInitializer.seedPerspectiveTypes();
+      expect(seeded).toBe(0); // Should return 0 since collection is not empty
 
       const perspectiveTypes = await db.collection('perspective_types').find({}).toArray();
-      expect(perspectiveTypes).toHaveLength(5); // 4 defaults + 1 custom
+      expect(perspectiveTypes).toHaveLength(1); // Only the custom one
 
       const customType = perspectiveTypes.find(pt => pt.name === 'custom_perspective');
       expect(customType).toBeDefined();
@@ -218,7 +219,7 @@ describe('DatabaseInitializer', () => {
 
   describe('createIndexes', () => {
     it('should create all required indexes', async () => {
-      await databaseInitializer.ensureCollections();
+      await databaseInitializer.ensureCollectionsExist();
       await databaseInitializer.createIndexes();
 
       // Test perspective_types indexes
@@ -250,7 +251,7 @@ describe('DatabaseInitializer', () => {
     });
 
     it('should handle index creation errors gracefully', async () => {
-      await databaseInitializer.ensureCollections();
+      await databaseInitializer.ensureCollectionsExist();
       
       // Close database connection to simulate error
       await client.close();
@@ -264,56 +265,51 @@ describe('DatabaseInitializer', () => {
     it('should validate complete setup successfully', async () => {
       await databaseInitializer.initialize();
 
-      const isValid = await databaseInitializer.validateSetup();
-      expect(isValid).toBe(true);
+      // validateSetup throws error on failure, completing without error means success
+      await expect(databaseInitializer.validateSetup()).resolves.not.toThrow();
     });
 
-    it('should return false if collections are missing', async () => {
+    it('should throw error if collections are missing', async () => {
       // Don't initialize collections
-      const isValid = await databaseInitializer.validateSetup();
-      expect(isValid).toBe(false);
+      await expect(databaseInitializer.validateSetup()).rejects.toThrow('No perspective types found');
     });
 
-    it('should return false if default perspective types are missing', async () => {
-      await databaseInitializer.ensureCollections();
+    it('should throw error if perspective types are missing', async () => {
+      await databaseInitializer.ensureCollectionsExist();
       // Don't seed data
       
-      const isValid = await databaseInitializer.validateSetup();
-      expect(isValid).toBe(false);
+      await expect(databaseInitializer.validateSetup()).rejects.toThrow('No perspective types found');
     });
 
     it('should handle validation errors gracefully', async () => {
       await client.close(); // Close connection to simulate error
       
-      const isValid = await databaseInitializer.validateSetup();
-      expect(isValid).toBe(false);
+      await expect(databaseInitializer.validateSetup()).rejects.toThrow('Database validation failed');
     });
   });
 
-  describe('getSetupStatus', () => {
-    it('should return complete setup status', async () => {
+  describe('getStats', () => {
+    it('should return initialization statistics', async () => {
       await databaseInitializer.initialize();
 
-      const status = await databaseInitializer.getSetupStatus();
+      const stats = await databaseInitializer.getStats();
       
-      expect(status).toEqual({
-        collectionsExist: true,
-        perspectiveTypesSeeded: true,
-        indexesCreated: true,
-        setupComplete: true
-      });
+      expect(stats).toHaveProperty('initialized', true);
+      expect(stats).toHaveProperty('perspective_types');
+      expect(stats).toHaveProperty('tool_perspectives');
+      expect(stats).toHaveProperty('tools');
+      expect(typeof stats.perspective_types).toBe('number');
+      expect(stats.perspective_types).toBeGreaterThan(0);
     });
 
-    it('should return partial setup status', async () => {
-      await databaseInitializer.ensureCollections();
-      // Skip seeding and indexing
+    it('should return zero counts for empty collections', async () => {
+      await databaseInitializer.ensureCollectionsExist();
+      // Skip seeding
 
-      const status = await databaseInitializer.getSetupStatus();
+      const stats = await databaseInitializer.getStats();
       
-      expect(status.collectionsExist).toBe(true);
-      expect(status.perspectiveTypesSeeded).toBe(false);
-      expect(status.indexesCreated).toBe(false);
-      expect(status.setupComplete).toBe(false);
+      expect(stats.perspective_types).toBe(0);
+      expect(stats.tool_perspectives).toBe(0);
     });
   });
 
@@ -331,19 +327,19 @@ describe('DatabaseInitializer', () => {
         await databaseInitializer.initialize();
       } catch (error) {
         expect(error.message).toContain('Database initialization failed');
-        expect(error.code).toBe('initialization');
-        expect(error.component).toBe('DatabaseInitializer');
+        expect(error.code).toBe('DATABASE_ERROR');
+        expect(error.collection).toBe('DatabaseInitializer');
       }
     });
   });
 
-  describe('DEFAULT_PERSPECTIVE_TYPES', () => {
-    it('should have all required perspective types with correct structure', () => {
-      const { DEFAULT_PERSPECTIVE_TYPES } = DatabaseInitializer;
+  describe('getDefaultPerspectiveTypes', () => {
+    it('should return all default perspective types with correct structure', () => {
+      const defaultTypes = databaseInitializer.getDefaultPerspectiveTypes();
       
-      expect(DEFAULT_PERSPECTIVE_TYPES).toHaveLength(4);
+      expect(defaultTypes).toHaveLength(4);
       
-      for (const perspectiveType of DEFAULT_PERSPECTIVE_TYPES) {
+      for (const perspectiveType of defaultTypes) {
         expect(perspectiveType).toHaveProperty('name');
         expect(perspectiveType).toHaveProperty('description');
         expect(perspectiveType).toHaveProperty('prompt_template');
@@ -361,10 +357,10 @@ describe('DatabaseInitializer', () => {
     });
 
     it('should have unique names and orders', () => {
-      const { DEFAULT_PERSPECTIVE_TYPES } = DatabaseInitializer;
+      const defaultTypes = databaseInitializer.getDefaultPerspectiveTypes();
       
-      const names = DEFAULT_PERSPECTIVE_TYPES.map(pt => pt.name);
-      const orders = DEFAULT_PERSPECTIVE_TYPES.map(pt => pt.order);
+      const names = defaultTypes.map(pt => pt.name);
+      const orders = defaultTypes.map(pt => pt.order);
       
       expect(new Set(names).size).toBe(names.length);
       expect(new Set(orders).size).toBe(orders.length);

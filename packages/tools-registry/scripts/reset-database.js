@@ -12,27 +12,14 @@
  *   node scripts/reset-database.js --tools         # Reset only tools
  */
 
-import { ResourceManager } from '../../resource-manager/src/ResourceManager.js';
-import { DatabaseStorage } from '../src/core/DatabaseStorage.js';
-import { DatabaseInitializer } from '../src/core/DatabaseInitializer.js';
+import { ToolRegistry } from '../src/index.js';
 
 async function resetDatabase(options = {}) {
   const { perspectives = false, tools = false, all = false, confirm = false } = options;
   
-  let resourceManager;
-  let databaseStorage;
-  let databaseInitializer;
-  
   try {
-    // Initialize ResourceManager singleton
-    resourceManager = await ResourceManager.getResourceManager();
-    
-    // Initialize DatabaseStorage
-    databaseStorage = new DatabaseStorage({ 
-      resourceManager,
-      databaseName: 'legion_tools'
-    });
-    await databaseStorage.initialize();
+    // Get ToolRegistry singleton
+    const toolRegistry = await ToolRegistry.getInstance();
     
     console.log('🔄 Database Reset\n');
     console.log('=' + '='.repeat(50));
@@ -58,75 +45,39 @@ async function resetDatabase(options = {}) {
       await new Promise(resolve => setTimeout(resolve, 3000));
     }
     
-    const db = databaseStorage.db;
-    
-    // Perform reset
+    // Perform reset through the singleton
     console.log('\n🧹 Resetting...');
     
-    if (resetAll || perspectives) {
-      const result = await db.collection('tool_perspectives').deleteMany({});
-      console.log(`  ✅ Deleted ${result.deletedCount} perspectives`);
-    }
-    
-    if (resetAll || tools) {
-      const result = await db.collection('tools').deleteMany({});
-      console.log(`  ✅ Deleted ${result.deletedCount} tools`);
-    }
-    
     if (resetAll) {
-      // Reset and re-seed perspective types
-      const result = await db.collection('perspective_types').deleteMany({});
-      console.log(`  ✅ Deleted ${result.deletedCount} perspective types`);
+      await toolRegistry.clearAllData();
+      console.log('  ✅ All data cleared and perspective types re-seeded');
+    } else {
+      // Partial clear - use the singleton's database storage
+      const db = toolRegistry.databaseStorage.db;
       
-      // Re-initialize to seed defaults
-      console.log('\n🌱 Re-seeding default perspective types...');
-      databaseInitializer = new DatabaseInitializer({
-        db: db,
-        resourceManager: resourceManager,
-        options: {
-          verbose: true,
-          seedData: true,
-          createIndexes: true
-        }
-      });
+      if (perspectives) {
+        const result = await db.collection('tool_perspectives').deleteMany({});
+        console.log(`  ✅ Deleted ${result.deletedCount} perspectives`);
+      }
       
-      await databaseInitializer.seedPerspectiveTypes();
-      const newTypes = await db.collection('perspective_types').countDocuments();
-      console.log(`  ✅ Seeded ${newTypes} perspective types`);
+      if (tools) {
+        const result = await db.collection('tools').deleteMany({});
+        console.log(`  ✅ Deleted ${result.deletedCount} tools`);
+      }
     }
     
     // Show final state
+    const status = await toolRegistry.getSystemStatus({ verbose: false });
     console.log('\n📊 Final State:');
-    const perspectiveTypesCount = await db.collection('perspective_types').countDocuments();
-    const toolsCount = await db.collection('tools').countDocuments();
-    const perspectivesCount = await db.collection('tool_perspectives').countDocuments();
-    
-    console.log(`  Perspective Types: ${perspectiveTypesCount}`);
-    console.log(`  Tools: ${toolsCount}`);
-    console.log(`  Tool Perspectives: ${perspectivesCount}`);
+    console.log(`  Perspective Types: ${status.perspectiveTypes}`);
+    console.log(`  Tools: ${status.tools}`);
+    console.log(`  Perspectives: ${status.perspectives}`);
     
     console.log('\n✅ Database reset complete!');
     
-    // Suggest next steps
-    console.log('\n💡 Next Steps:');
-    if (toolsCount === 0) {
-      console.log('  1. Load tools: node scripts/load-tools.js');
-    }
-    if (perspectivesCount === 0 && toolsCount > 0) {
-      console.log('  2. Generate perspectives: node scripts/generate-perspectives.js');
-    }
-    if (toolsCount === 0) {
-      console.log('  2. Generate perspectives: node scripts/generate-perspectives.js');
-    }
-    
   } catch (error) {
     console.error('❌ Error resetting database:', error.message);
-    console.error(error.stack);
     process.exit(1);
-  } finally {
-    if (databaseStorage) {
-      await databaseStorage.close();
-    }
   }
 }
 
@@ -156,17 +107,16 @@ Usage:
   node scripts/reset-database.js [options]
 
 Options:
-  --perspectives   Reset only tool_perspectives collection
-  --tools          Reset only tools collection
-  --all            Reset all collections (default if no options)
-  --confirm, -y    Skip confirmation prompt
-  --help, -h       Show this help message
+  --perspectives   Reset only perspectives
+  --tools         Reset only tools
+  --all           Reset everything (default if no options)
+  --confirm, -y   Skip confirmation prompt
+  --help, -h      Show this help message
 
 Examples:
   node scripts/reset-database.js
   node scripts/reset-database.js --perspectives
   node scripts/reset-database.js --tools --confirm
-  node scripts/reset-database.js --all -y
     `);
     process.exit(0);
   }

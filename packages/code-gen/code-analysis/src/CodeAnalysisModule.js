@@ -45,7 +45,7 @@ class CodeAnalysisModule extends Module {
       throw new Error('CodeAnalysisModule must be initialized before getting tools');
     }
 
-    return this.tools;
+    return Object.values(this.tools);
   }
 
   /**

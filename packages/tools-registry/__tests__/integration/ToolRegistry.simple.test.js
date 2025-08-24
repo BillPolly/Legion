@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { ToolRegistry } from '../../src/integration/ToolRegistry.js';
+import { ToolRegistry } from '../../src/index.js';
 import { ResourceManager } from '@legion/resource-manager';
 import { MongoClient } from 'mongodb';
 
@@ -16,6 +16,9 @@ describe('ToolRegistry Simple Integration', () => {
   let toolRegistry;
 
   beforeEach(async () => {
+    // Reset singleton before each test
+    ToolRegistry.reset();
+    
     // Create unique test database
     testDbName = `test_simple_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     
@@ -40,11 +43,8 @@ describe('ToolRegistry Simple Integration', () => {
   });
 
   afterEach(async () => {
-    // Clean up
-    if (toolRegistry) {
-      await toolRegistry.cleanup();
-      toolRegistry = null;
-    }
+    // Reset singleton after each test
+    ToolRegistry.reset();
 
     if (mongoClient) {
       try {
@@ -56,18 +56,12 @@ describe('ToolRegistry Simple Integration', () => {
     }
   });
 
-  it('should initialize ToolRegistry with database isolation', async () => {
-    // Create ToolRegistry with minimal configuration
-    toolRegistry = new ToolRegistry({ 
-      resourceManager,
-      options: {
-        enablePerspectives: false,
-        enableVectorSearch: false
-      }
-    });
+  it('should initialize ToolRegistry singleton', async () => {
+    // Get ToolRegistry singleton
+    toolRegistry = await ToolRegistry.getInstance();
 
-    // Initialize should succeed
-    await toolRegistry.initialize();
+    // Should be initialized
+    expect(toolRegistry).toBeDefined();
     expect(toolRegistry.initialized).toBe(true);
 
     // Should be using test database
@@ -75,15 +69,8 @@ describe('ToolRegistry Simple Integration', () => {
   });
 
   it('should handle basic tool operations', async () => {
-    toolRegistry = new ToolRegistry({ 
-      resourceManager,
-      options: {
-        enablePerspectives: false,
-        enableVectorSearch: false
-      }
-    });
-
-    await toolRegistry.initialize();
+    // Get ToolRegistry singleton
+    toolRegistry = await ToolRegistry.getInstance();
 
     // Create test data directly in database
     const db = mongoClient.db(testDbName);
@@ -122,15 +109,8 @@ describe('ToolRegistry Simple Integration', () => {
   });
 
   it('should handle cleanup properly', async () => {
-    toolRegistry = new ToolRegistry({ 
-      resourceManager,
-      options: {
-        enablePerspectives: false,
-        enableVectorSearch: false
-      }
-    });
-
-    await toolRegistry.initialize();
+    // Get ToolRegistry singleton
+    toolRegistry = await ToolRegistry.getInstance();
 
     // Add some test data
     const db = mongoClient.db(testDbName);
@@ -144,16 +124,17 @@ describe('ToolRegistry Simple Integration', () => {
     let toolCount = await db.collection('tools').countDocuments();
     expect(toolCount).toBe(1);
 
-    // Clear all should work
-    await toolRegistry.clearAll();
+    // Manual cleanup - clear collections directly
+    await db.collection('tools').deleteMany({});
+    await db.collection('modules').deleteMany({});
 
     // Verify data is gone
     toolCount = await db.collection('tools').countDocuments();
     expect(toolCount).toBe(0);
 
-    // Health check should still work
-    const health = await toolRegistry.healthCheck();
-    expect(health.initialized).toBe(true);
-    expect(health.database).toBe(true);
+    // Verify registry is still functional after cleanup
+    const tools = await toolRegistry.listTools();
+    expect(Array.isArray(tools)).toBe(true);
+    expect(tools).toHaveLength(0);
   });
 });

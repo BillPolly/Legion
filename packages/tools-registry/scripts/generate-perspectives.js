@@ -13,136 +13,39 @@
  *   node scripts/generate-perspectives.js --force            # Force regeneration
  */
 
-import { ResourceManager } from '../../resource-manager/src/ResourceManager.js';
-import { DatabaseStorage } from '../src/core/DatabaseStorage.js';
-import { Perspectives } from '../src/search/Perspectives.js';
+import { ToolRegistry } from '../src/index.js';
 
 async function generatePerspectives(options = {}) {
   const { toolName, moduleName, force = false, verbose = false, dryRun = false } = options;
   
-  let resourceManager;
-  let databaseStorage;
-  let perspectives;
-  
   try {
-    // Initialize ResourceManager singleton
-    resourceManager = await ResourceManager.getResourceManager();
-    
-    // Initialize DatabaseStorage
-    databaseStorage = new DatabaseStorage({ 
-      resourceManager,
-      databaseName: 'legion_tools'
-    });
-    await databaseStorage.initialize();
-    
-    // Register with ResourceManager
-    resourceManager.set('databaseStorage', databaseStorage);
-    
-    // Check if LLM client is available
-    const llmClient = resourceManager.get('llmClient');
-    if (!llmClient && !dryRun) {
-      console.warn('⚠️  No LLM client configured. Using mock generation mode.');
-    }
-    
-    // Initialize Perspectives
-    perspectives = new Perspectives({
-      resourceManager,
-      options: { verbose }
-    });
-    await perspectives.initialize();
+    // Get ToolRegistry singleton
+    const toolRegistry = await ToolRegistry.getInstance();
     
     console.log('🚀 Starting perspective generation...\n');
     
-    // Check current state
-    const stats = await perspectives.getStatistics();
-    console.log('📊 Current Statistics:');
-    console.log(`  Perspective Types: ${stats.perspectiveTypes.total}`);
-    console.log(`  Tools: ${await databaseStorage.db.collection('tools').countDocuments()}`);
-    console.log(`  Existing Perspectives: ${stats.total}`);
-    console.log('');
+    // Generate perspectives through the singleton
+    const result = await toolRegistry.generatePerspectives({
+      toolName,
+      moduleName,
+      forceRegenerate: force,
+      verbose,
+      dryRun
+    });
     
-    let results = [];
-    
-    if (toolName) {
-      // Generate for specific tool
-      console.log(`🎯 Generating perspectives for tool: ${toolName}`);
-      
-      if (dryRun) {
-        console.log('  [DRY RUN] Would generate perspectives');
-      } else {
-        const toolPerspectives = await perspectives.generatePerspectivesForTool(toolName, {
-          forceRegenerate: force
-        });
-        results = toolPerspectives;
-        console.log(`  ✅ Generated ${toolPerspectives.length} perspectives`);
-      }
-      
-    } else if (moduleName) {
-      // Generate for module
-      console.log(`📦 Generating perspectives for module: ${moduleName}`);
-      
-      if (dryRun) {
-        const tools = await databaseStorage.findTools({ moduleName });
-        console.log(`  [DRY RUN] Would generate perspectives for ${tools.length} tools`);
-      } else {
-        const modulePerspectives = await perspectives.generateForModule(moduleName, {
-          forceRegenerate: force,
-          useBatch: true
-        });
-        results = modulePerspectives;
-        console.log(`  ✅ Generated ${modulePerspectives.length} perspectives`);
-      }
-      
-    } else {
-      // Generate for all tools
-      console.log('🌐 Generating perspectives for all tools...');
-      
-      if (dryRun) {
-        const toolCount = await databaseStorage.db.collection('tools').countDocuments();
-        const perspectiveTypes = await databaseStorage.db.collection('perspective_types').countDocuments();
-        console.log(`  [DRY RUN] Would generate ${toolCount * perspectiveTypes} perspectives`);
-      } else {
-        const allResults = await perspectives.generateAll({
-          forceRegenerate: force
-        });
-        console.log(`\n📈 Generation Complete:`);
-        console.log(`  Generated: ${allResults.generated}`);
-        console.log(`  Skipped: ${allResults.skipped}`);
-        console.log(`  Failed: ${allResults.failed}`);
-        
-        if (allResults.failures && allResults.failures.length > 0) {
-          console.log('\n⚠️  Failures:');
-          allResults.failures.forEach(f => {
-            console.log(`  - ${f.toolName}: ${f.error}`);
-          });
-        }
-      }
+    // Display results
+    if (result.generated > 0) {
+      console.log(`\n✅ Generated ${result.generated} perspectives`);
     }
-    
-    // Show sample perspectives if any were generated
-    if (results.length > 0 && verbose) {
-      console.log('\n🔍 Sample Generated Perspectives:');
-      const sample = results.slice(0, 2);
-      sample.forEach(persp => {
-        console.log(`\n📌 ${persp.tool_name} - ${persp.perspective_type_name}:`);
-        console.log(`  ${persp.content.substring(0, 200)}...`);
-        if (persp.keywords && persp.keywords.length > 0) {
-          console.log(`  Keywords: ${persp.keywords.join(', ')}`);
-        }
-      });
+    if (result.skipped > 0) {
+      console.log(`⏭️  Skipped ${result.skipped} existing perspectives`);
     }
-    
-    // Final statistics
-    if (!dryRun) {
-      const finalStats = await perspectives.getStatistics();
-      console.log('\n📊 Final Statistics:');
-      console.log(`  Total Perspectives: ${finalStats.total}`);
-      console.log(`  Coverage: ${JSON.stringify(finalStats.coverage)}`);
-      
-      if (finalStats.byModule && Object.keys(finalStats.byModule).length > 0) {
-        console.log('\n  By Module:');
-        Object.entries(finalStats.byModule).forEach(([module, count]) => {
-          console.log(`    ${module}: ${count}`);
+    if (result.failed > 0) {
+      console.log(`❌ Failed to generate ${result.failed} perspectives`);
+      if (result.failures && result.failures.length > 0 && verbose) {
+        console.log('\n⚠️  Failures:');
+        result.failures.forEach(f => {
+          console.log(`  - ${f.toolName}: ${f.error}`);
         });
       }
     }
@@ -155,10 +58,6 @@ async function generatePerspectives(options = {}) {
       console.error(error.stack);
     }
     process.exit(1);
-  } finally {
-    if (databaseStorage) {
-      await databaseStorage.close();
-    }
   }
 }
 

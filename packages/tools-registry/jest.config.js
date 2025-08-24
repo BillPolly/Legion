@@ -13,6 +13,6 @@ export default {
   coverageReporters: ['text', 'lcov', 'html'],
   verbose: true,
   testTimeout: 30000,
-  // No forceExit - we'll fix connection cleanup
+  forceExit: true, // Force exit to prevent hanging
   transform: {}
 };

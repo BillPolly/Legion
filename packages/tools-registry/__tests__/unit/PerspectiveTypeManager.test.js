@@ -138,7 +138,8 @@ describe('PerspectiveTypeManager', () => {
     });
 
     it('should return types in correct order', async () => {
-      // Add more test data with different orders
+      // Clear existing data and add new test data with different orders
+      await db.collection('perspective_types').deleteMany({});
       await db.collection('perspective_types').insertMany([
         {
           name: 'first_perspective',
