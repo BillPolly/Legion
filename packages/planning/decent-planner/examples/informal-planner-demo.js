@@ -219,8 +219,7 @@ async function main() {
   try {
     // Initialize ResourceManager
     console.log('Initializing ResourceManager...');
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = await ResourceManager.getResourceManager();
     
     // Create ToolRegistry
     console.log('Creating ToolRegistry...');

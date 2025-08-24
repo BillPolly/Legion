@@ -19,7 +19,7 @@ describe('Commit Message Generation', () => {
   let tempDir;
 
   beforeAll(async () => {
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     // Register test environment variables

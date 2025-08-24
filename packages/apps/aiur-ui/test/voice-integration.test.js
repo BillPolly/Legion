@@ -97,7 +97,7 @@ describe('Voice Integration Tests', () => {
   
   beforeAll(async () => {
     // Initialize ResourceManager and ModuleLoader for backend
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     moduleLoader = new ModuleLoader();

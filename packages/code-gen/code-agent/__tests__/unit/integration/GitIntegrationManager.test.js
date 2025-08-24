@@ -17,7 +17,7 @@ describe('GitIntegrationManager Base Structure', () => {
   let gitIntegrationManager;
 
   beforeAll(async () => {
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     // Register GitHub environment variables
@@ -195,8 +195,7 @@ describe('GitIntegrationManager Base Structure', () => {
     config.enabled = true;
     
     // Create a ResourceManager without GitHub credentials
-    const emptyResourceManager = new ResourceManager();
-    await emptyResourceManager.initialize();
+    const emptyResourceManager = await ResourceManager.getResourceManager();
     
     gitIntegrationManager = new GitIntegrationManager(emptyResourceManager, config);
     

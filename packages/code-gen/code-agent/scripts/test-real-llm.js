@@ -23,7 +23,7 @@ async function testRealLLM() {
     console.log('===================================\n');
     
     // Initialize ResourceManager
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     // Check for Anthropic API key

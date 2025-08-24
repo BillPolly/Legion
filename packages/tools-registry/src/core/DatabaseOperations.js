@@ -32,6 +32,12 @@ export class DatabaseOperations {
       ...options 
     });
     
+    // Pass resourceManager to components that need it
+    if (options.resourceManager) {
+      this.resourceManager = options.resourceManager;
+      this.moduleLoader.resourceManager = options.resourceManager;
+    }
+    
     this.monorepoRoot = this.findMonorepoRoot();
   }
   
@@ -61,8 +67,8 @@ export class DatabaseOperations {
         loadedAt: new Date().toISOString()
       };
       
-      // Save module to database
-      await this.databaseStorage.saveModule(moduleData);
+      // Save loaded module to modules collection
+      await this.databaseStorage.saveLoadedModule(moduleData);
       
       // Get and save tools
       const tools = await this.moduleLoader.getTools(moduleInstance);
@@ -73,8 +79,11 @@ export class DatabaseOperations {
         const toolsForStorage = tools.map(tool => ({
           name: tool.name,
           description: tool.description,
-          inputSchema: tool.inputSchema,
-          outputSchema: tool.outputSchema,
+          inputSchema: tool.inputSchema || null,
+          outputSchema: tool.outputSchema || null,
+          category: tool.category || null,
+          tags: tool.tags || null,
+          examples: tool.examples || null,
           // Don't save the execute function to database
         }));
         
@@ -109,8 +118,13 @@ export class DatabaseOperations {
    */
   async loadModuleByName(moduleName) {
     try {
-      // Find module in database
-      const moduleDoc = await this.databaseStorage.findModule(moduleName);
+      // First check if already loaded in modules collection
+      let moduleDoc = await this.databaseStorage.findModule(moduleName);
+      
+      // If not loaded, check module-registry (discovered modules)
+      if (!moduleDoc) {
+        moduleDoc = await this.databaseStorage.findDiscoveredModule(moduleName);
+      }
       
       if (!moduleDoc) {
         return {
@@ -139,7 +153,8 @@ export class DatabaseOperations {
    * @returns {Object} Result with loaded and failed counts
    */
   async loadAllModules() {
-    const modules = await this.databaseStorage.findModules();
+    // Load from module-registry (discovered modules)
+    const modules = await this.databaseStorage.findDiscoveredModules();
     const loaded = [];
     const failed = [];
     
@@ -284,20 +299,21 @@ export class DatabaseOperations {
   async getStatistics() {
     try {
       const modulesCollection = this.databaseStorage.getCollection('modules');
+      const registryCollection = this.databaseStorage.getCollection('module-registry');
       const toolsCollection = this.databaseStorage.getCollection('tools');
       
       const moduleCount = await modulesCollection.countDocuments();
+      const registryCount = await registryCollection.countDocuments();
       const toolCount = await toolsCollection.countDocuments();
       
       // Get loaded vs discovered counts
       const loadedModules = await modulesCollection.countDocuments({ loaded: true });
-      const discoveredModules = await modulesCollection.countDocuments();
       
       return {
         modules: {
           count: moduleCount,
           loaded: loadedModules,
-          discovered: discoveredModules
+          discovered: registryCount  // From module-registry
         },
         tools: {
           count: toolCount
@@ -321,8 +337,9 @@ export class DatabaseOperations {
    */
   async loadModulesFromPackage(packageName) {
     try {
-      const modulesCollection = this.databaseStorage.getCollection('modules');
-      const modules = await modulesCollection.find({ packageName }).toArray();
+      // Look in module-registry (discovered modules) first
+      const registryCollection = this.databaseStorage.getCollection('module-registry');
+      const modules = await registryCollection.find({ packageName }).toArray();
       
       const loaded = [];
       const failed = [];
@@ -405,8 +422,13 @@ export class DatabaseOperations {
    */
   async refreshModule(moduleName) {
     try {
-      // Find module in database
-      const moduleDoc = await this.databaseStorage.findModule(moduleName);
+      // First check if already loaded in modules collection
+      let moduleDoc = await this.databaseStorage.findModule(moduleName);
+      
+      // If not loaded, check module-registry (discovered modules)
+      if (!moduleDoc) {
+        moduleDoc = await this.databaseStorage.findDiscoveredModule(moduleName);
+      }
       
       if (!moduleDoc) {
         return {

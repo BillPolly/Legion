@@ -56,7 +56,7 @@ describe('CodeAgent JSON Module Integration', () => {
     await fs.mkdir(testDir, { recursive: true });
 
     // Setup ResourceManager
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
 
     // Create ModuleFactory

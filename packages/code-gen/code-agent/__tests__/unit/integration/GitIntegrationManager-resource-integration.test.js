@@ -17,7 +17,7 @@ describe('GitIntegrationManager Resource Integration', () => {
   let gitIntegrationManager;
 
   beforeAll(async () => {
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     // Register GitHub environment variables
@@ -150,8 +150,7 @@ describe('GitIntegrationManager Resource Integration', () => {
     config.enabled = true;
     
     // Create minimal resource manager
-    const minimalResourceManager = new ResourceManager();
-    await minimalResourceManager.initialize();
+    const minimalResourceManager = await ResourceManager.getResourceManager();
     
     // Only register GitHub credentials
     minimalResourceManager.register('GITHUB_PAT', resourceManager.GITHUB_PAT);
@@ -191,8 +190,7 @@ describe('GitIntegrationManager Resource Integration', () => {
     config.enabled = true;
     
     // Create resource manager without optional resources
-    const limitedResourceManager = new ResourceManager();
-    await limitedResourceManager.initialize();
+    const limitedResourceManager = await ResourceManager.getResourceManager();
     
     // Register only required resources
     limitedResourceManager.register('GITHUB_PAT', resourceManager.GITHUB_PAT);

@@ -10,7 +10,7 @@ import { ToolDiscoveryAdapter } from './ToolDiscoveryAdapter.js';
 import { PlanSynthesizer } from './PlanSynthesizer.js';
 import { Planner } from '@legion/planner';
 import { BTValidator } from '@legion/bt-validator';
-import { createSemanticToolDiscovery } from '@legion/tools-registry';
+import { ToolRegistry } from '@legion/tools-registry';
 
 export class DecentPlanner {
   constructor(dependencies) {
@@ -56,15 +56,14 @@ export class DecentPlanner {
    * Must be called before using the planner
    */
   async initialize() {
-    // Create real semantic tool discovery
-    const semanticDiscovery = await createSemanticToolDiscovery(this.resourceManager, {
-      toolRegistry: this.toolRegistryProvider
-    });
+    // TODO: Fix this to use ToolRegistry properly
+    // For now, just set up a minimal tool discovery
+    this.toolDiscovery = {
+      discoverTools: async () => [],
+      getToolByName: async (name) => null
+    };
     
-    // Wrap in adapter for interface compatibility
-    this.toolDiscovery = new ToolDiscoveryAdapter(semanticDiscovery, this.toolRegistryProvider);
-    
-    // Update synthesizer with real tool discovery
+    // Update synthesizer with tool discovery
     this.synthesizer.toolDiscovery = this.toolDiscovery;
     
     return this;

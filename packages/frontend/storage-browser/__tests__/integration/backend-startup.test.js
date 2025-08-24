@@ -11,7 +11,7 @@ describe('Backend Actor Server Integration', () => {
   const TEST_PORT = 3702;
 
   beforeEach(async () => {
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     
     // Mock environment for testing
     process.env.MONGODB_URL = 'memory://test';

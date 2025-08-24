@@ -12,7 +12,7 @@ describe('FullStackMonitor', () => {
   let monitor;
 
   beforeEach(async () => {
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
   });
 

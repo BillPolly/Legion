@@ -9,7 +9,7 @@ import { EditTool } from './EditTool.js';
 import { MultiEditTool } from './MultiEditTool.js';
 import { NotebookEditTool } from './NotebookEditTool.js';
 
-export class FileOperationsModule extends Module {
+class FileOperationsModule extends Module {
   constructor() {
     super();
     this.name = 'file-operations';
@@ -70,3 +70,5 @@ export class FileOperationsModule extends Module {
     };
   }
 }
+
+export default FileOperationsModule;

@@ -14,8 +14,7 @@ describe('Planner Integration', () => {
 
   beforeAll(async () => {
     // Initialize ResourceManager (loads .env automatically)
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = await ResourceManager.getResourceManager();
     
     // Get API key and create LLM client
     const apiKey = resourceManager.get('env.ANTHROPIC_API_KEY');

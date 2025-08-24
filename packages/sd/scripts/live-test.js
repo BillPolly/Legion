@@ -7,7 +7,7 @@
  * Run with: node scripts/live-test.js
  */
 
-import { ResourceManager } from '@legion/tools-registry';
+import { ResourceManager } from '@legion/resource-manager';
 import { DesignDatabaseService } from '../src/services/DesignDatabaseService.js';
 import { RequirementParserTool } from '../src/tools/requirements/RequirementParserTool.js';
 import SDModule from '../src/SDModule.js';
@@ -18,8 +18,7 @@ async function runLiveTests() {
   try {
     // Initialize ResourceManager
     console.log('📋 Initializing ResourceManager...');
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = await ResourceManager.getResourceManager();
     
     // Check environment variables
     const mongoUrl = resourceManager.get('env.MONGODB_URL');

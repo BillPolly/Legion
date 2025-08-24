@@ -12,8 +12,7 @@ async function debugGenericPlanner() {
   
   try {
     // Setup ResourceManager
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = await ResourceManager.getResourceManager();
     
     // Get LLM client
     const llmClient = resourceManager.llm-client;

@@ -9,8 +9,7 @@ async function debugToolRegistry() {
   try {
     // Step 1: ResourceManager
     console.log('\n📋 Step 1: Initialize ResourceManager');
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = await ResourceManager.getResourceManager();
     console.log('✅ ResourceManager initialized');
 
     // Step 2: Create ToolRegistry (no features)

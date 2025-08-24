@@ -426,8 +426,7 @@ class ListDeploymentsTool extends Tool {
    */
   async getDeploymentManager() {
     try {
-      const resourceManager = new ResourceManager();
-      await resourceManager.initialize();
+      const resourceManager = await ResourceManager.getResourceManager();
       
       let deploymentManager = resourceManager.deployment-manager;
       

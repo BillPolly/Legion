@@ -29,7 +29,7 @@ class ModuleLoaderIntegration {
       
       // Create instances
       this.moduleFactory = new ModuleFactory();
-      this.resourceManager = new ResourceManager();
+      this.resourceManager = ResourceManager.getInstance();
       
       this.initialized = true;
     } catch (error) {

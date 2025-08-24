@@ -83,7 +83,7 @@ async function initializeServices() {
     console.log('Initializing services...');
     
     // Initialize ResourceManager
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     // Initialize MongoDB provider with correct config

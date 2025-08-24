@@ -267,8 +267,7 @@ class DeployApplicationTool extends Tool {
   async getDeploymentManager() {
     try {
       // Try to get from resource manager first
-      const resourceManager = new ResourceManager();
-      await resourceManager.initialize();
+      const resourceManager = await ResourceManager.getResourceManager();
       
       let deploymentManager;
       

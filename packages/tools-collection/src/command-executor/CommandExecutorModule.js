@@ -7,7 +7,7 @@
 import { Module } from '@legion/tools-registry';
 import { CommandExecutor } from './CommandExecutorTool.js';
 
-export class CommandExecutorModule extends Module {
+class CommandExecutorModule extends Module {
   constructor() {
     super();
     this.name = 'CommandExecutorModule';

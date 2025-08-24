@@ -5,7 +5,7 @@
 import { Module } from '@legion/tools-registry';
 import { BashTool } from './BashTool.js';
 
-export class SystemOperationsModule extends Module {
+class SystemOperationsModule extends Module {
   constructor() {
     super();
     this.name = 'system-operations';
@@ -58,3 +58,5 @@ export class SystemOperationsModule extends Module {
     };
   }
 }
+
+export default SystemOperationsModule;

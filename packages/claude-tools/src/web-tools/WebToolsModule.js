@@ -6,7 +6,7 @@ import { Module } from '@legion/tools-registry';
 import { WebSearchTool } from './WebSearchTool.js';
 import { WebFetchTool } from './WebFetchTool.js';
 
-export class WebToolsModule extends Module {
+class WebToolsModule extends Module {
   constructor() {
     super();
     this.name = 'web-tools';
@@ -61,3 +61,5 @@ export class WebToolsModule extends Module {
     };
   }
 }
+
+export default WebToolsModule;

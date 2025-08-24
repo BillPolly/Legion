@@ -15,8 +15,7 @@ async function registerJSGeneratorModule() {
     try {
         // Initialize ResourceManager
         console.log('\n📋 Initializing ResourceManager...');
-        const resourceManager = new ResourceManager();
-        await resourceManager.initialize();
+        const resourceManager = await ResourceManager.getResourceManager();
         
         // Create MongoDB provider
         console.log('📋 Connecting to MongoDB...');

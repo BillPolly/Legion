@@ -36,8 +36,7 @@ async function makeGraphQLRequest(apiKey, query, variables = {}) {
 }
 
 async function checkTeamProjects() {
-  const resourceManager = new ResourceManager();
-  await resourceManager.initialize();
+  const resourceManager = await ResourceManager.getResourceManager();
   
   const apiKey = resourceManager.env.RAILWAY_API_TOKEN || 
                  resourceManager.env.RAILWAY;

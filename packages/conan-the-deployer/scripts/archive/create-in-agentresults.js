@@ -12,8 +12,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Initialize ResourceManager
-const resourceManager = new ResourceManager();
-await resourceManager.initialize();
+const resourceManager = await ResourceManager.getResourceManager();
 
 const GITHUB_PAT = resourceManager.env.GITHUB_PAT;
 const repoName = 'test-express-railway';

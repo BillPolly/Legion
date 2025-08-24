@@ -28,8 +28,7 @@ describe('ToolRegistry Integration', () => {
   
   beforeAll(async () => {
     // Create ResourceManager instance
-    resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    resourceManager = await ResourceManager.getResourceManager();
     
     // Create test directory for test modules
     testDir = path.join(__dirname, '../tmp/tool-registry-test');

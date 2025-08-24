@@ -39,7 +39,7 @@ global.registerTestTimer = (timer) => {
 // Test-specific ResourceManager that uses test database
 global.createTestResourceManager = async () => {
   const { ResourceManager } = await import('@legion/resource-manager');
-  const resourceManager = new ResourceManager(); // Create new instance, NOT singleton
+  const resourceManager = ResourceManager.getInstance(); // Create new instance, NOT singleton
   await resourceManager.initialize();
   
   // Override database name for testing

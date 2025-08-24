@@ -3,14 +3,14 @@
  * Simple Test - Just test ResourceManager and basic imports
  */
 
-import { ResourceManager } from '@legion/tools-registry';
+import { ResourceManager } from '@legion/resource-manager';
 
 async function simpleTest() {
   console.log('🧪 Simple Test - ResourceManager only...\n');
   
   try {
     console.log('📋 Testing ResourceManager import...');
-    const resourceManager = new ResourceManager();
+    const resourceManager = ResourceManager.getInstance();
     console.log('✅ ResourceManager imported');
     
     console.log('📋 Testing ResourceManager initialization...');

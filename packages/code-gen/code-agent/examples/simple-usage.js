@@ -17,8 +17,7 @@ async function main() {
   console.log('==================================\n');
   
   // 1. Initialize ResourceManager
-  const resourceManager = new ResourceManager();
-  await resourceManager.initialize();
+  const resourceManager = await ResourceManager.getResourceManager();
   
   // 2. Create ModuleFactory
   const factory = new ModuleFactory(resourceManager);

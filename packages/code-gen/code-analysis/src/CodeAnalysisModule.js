@@ -7,7 +7,7 @@
 import { Module } from '@legion/tools-registry';
 import { ValidateJavaScriptTool } from './tools/ValidateJavaScriptTool.js';
 
-export class CodeAnalysisModule extends Module {
+class CodeAnalysisModule extends Module {
   constructor() {
     super();
     this.name = 'code-analysis';

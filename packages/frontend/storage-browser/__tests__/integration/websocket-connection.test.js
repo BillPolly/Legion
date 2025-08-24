@@ -16,7 +16,7 @@ describe('WebSocket Connection Integration', () => {
   beforeAll(async () => {
     global.WebSocket = WebSocket;
     
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     process.env.MONGODB_URL = 'memory://test';
     process.env.STORAGE_ACTOR_PORT = TEST_PORT.toString();
     await resourceManager.initialize();

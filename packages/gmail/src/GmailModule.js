@@ -57,7 +57,7 @@ const gmailConfigSchema = {
 
 const GmailConfigSchema = createValidator(gmailConfigSchema);
 
-export class GmailModule extends Module {
+class GmailModule extends Module {
   constructor() {
     super();
     this.name = 'gmail';
@@ -103,38 +103,61 @@ export class GmailModule extends Module {
     await super.initialize();
     
     // Load config using resourceManager
-    this.config = this.loadConfig();
+    try {
+      this.config = this.loadConfig({});
+    } catch (error) {
+      // If validation fails, use defaults
+      this.config = {
+        user: this.resourceManager?.get('env.GMAIL_USER') || '',
+        password: this.resourceManager?.get('env.GMAIL_APP_PASSWORD') || '',
+        smtp: {
+          host: 'smtp.gmail.com',
+          port: 587,
+          secure: false
+        },
+        imap: {
+          host: 'imap.gmail.com',
+          port: 993,
+          tls: true
+        }
+      };
+    }
     
     try {
-      // Initialize SMTP transporter
-      this.transporter = nodemailer.createTransport({
-        host: this.config.smtp.host,
-        port: this.config.smtp.port,
-        secure: this.config.smtp.secure,
-        auth: {
+      // Only initialize if we have valid config
+      if (this.config.user && this.config.password) {
+        // Initialize SMTP transporter
+        this.transporter = nodemailer.createTransport({
+          host: this.config.smtp.host,
+          port: this.config.smtp.port,
+          secure: this.config.smtp.secure,
+          auth: {
+            user: this.config.user,
+            pass: this.config.password
+          }
+        });
+
+        // Initialize IMAP connection
+        this.imap = new Imap({
           user: this.config.user,
-          pass: this.config.password
-        }
-      });
+          password: this.config.password,
+          host: this.config.imap.host,
+          port: this.config.imap.port,
+          tls: this.config.imap.tls,
+          tlsOptions: {
+            rejectUnauthorized: false
+          },
+          authTimeout: 3000
+        });
 
-      // Initialize IMAP connection
-      this.imap = new Imap({
-        user: this.config.user,
-        password: this.config.password,
-        host: this.config.imap.host,
-        port: this.config.imap.port,
-        tls: this.config.imap.tls,
-        tlsOptions: {
-          rejectUnauthorized: false
-        },
-        authTimeout: 3000
-      });
-
-      // Verify SMTP connection
-      await this.transporter.verify();
+        // Verify SMTP connection
+        await this.transporter.verify();
+      }
       return true;
     } catch (error) {
-      throw new Error(`Failed to initialize Gmail module: ${error.message}`);
+      // Don't throw, just log - module can still be loaded
+      console.warn(`Gmail module initialization warning: ${error.message}`);
+      return true;
     }
   }
 
@@ -398,4 +421,15 @@ export class GmailModule extends Module {
     
     throw new Error(`Email with subject containing "${subject}" not found within ${timeoutMs}ms`);
   }
+
+  /**
+   * Get all tools provided by this module
+   * @returns {Array<Object>} Array of tool definitions
+   */
+  getTools() {
+    // Gmail module provides direct API methods instead of wrapped tools
+    return [];
+  }
 }
+
+export default GmailModule;

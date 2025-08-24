@@ -28,7 +28,7 @@ describeIf('Live Integration Tests', () => {
   
   beforeAll(async () => {
     // Initialize real ResourceManager (loads .env file)
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     // Verify required environment variables

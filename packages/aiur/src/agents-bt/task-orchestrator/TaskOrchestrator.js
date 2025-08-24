@@ -272,8 +272,7 @@ export class TaskOrchestrator extends Actor {
       const { Anthropic } = await import('@anthropic-ai/sdk');
       
       // Initialize ResourceManager to get API key
-      const resourceManager = new ResourceManager();
-      await resourceManager.initialize();
+      const resourceManager = await ResourceManager.getResourceManager();
       const apiKey = resourceManager.get('ANTHROPIC_API_KEY');
       
       if (!apiKey) {

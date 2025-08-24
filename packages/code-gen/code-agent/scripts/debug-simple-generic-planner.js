@@ -13,8 +13,7 @@ async function debugSimpleGenericPlanner() {
   
   try {
     // Setup ResourceManager
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = await ResourceManager.getResourceManager();
     
     // Get API key
     const apiKey = resourceManager.env.ANTHROPIC_API_KEY;

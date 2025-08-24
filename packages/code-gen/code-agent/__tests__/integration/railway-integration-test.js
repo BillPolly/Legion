@@ -95,8 +95,7 @@ async function waitFor(fn, timeout = 30000, interval = 1000) {
 // Main test function
 async function main() {
   // Initialize ResourceManager to get environment variables
-  const resourceManager = new ResourceManager();
-  await resourceManager.initialize();
+  const resourceManager = await ResourceManager.getResourceManager();
   
   // Get tokens from ResourceManager
   const githubToken = resourceManager.env.GITHUB_PAT;

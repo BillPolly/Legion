@@ -168,6 +168,17 @@ export class ModuleLoader {
       description: moduleInstance.description || 'No description available'
     };
     
+    // Extract additional optional metadata fields if present
+    if (moduleInstance.author) {
+      metadata.author = moduleInstance.author;
+    }
+    if (moduleInstance.keywords) {
+      metadata.keywords = moduleInstance.keywords;
+    }
+    if (moduleInstance.dependencies) {
+      metadata.dependencies = moduleInstance.dependencies;
+    }
+    
     // Get additional metadata if module has getMetadata method
     if (typeof moduleInstance.getMetadata === 'function') {
       const additionalMetadata = moduleInstance.getMetadata();

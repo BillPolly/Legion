@@ -454,8 +454,7 @@ class MonitorDeploymentTool extends Tool {
    */
   async getSystems() {
     try {
-      const resourceManager = new ResourceManager();
-      await resourceManager.initialize();
+      const resourceManager = await ResourceManager.getResourceManager();
       
       let monitoringSystem = resourceManager.monitoring-system;
       let deploymentManager = resourceManager.deployment-manager;

@@ -34,8 +34,7 @@ async function generateWebapp() {
     execSync('git config user.email "agent@codeagent.dev"', { cwd: projectDir });
     
     // Setup ResourceManager
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = await ResourceManager.getResourceManager();
     
     // Configure CodeAgent for a fullstack webapp
     agent = new CodeAgent({

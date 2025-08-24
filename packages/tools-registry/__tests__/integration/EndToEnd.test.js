@@ -33,8 +33,7 @@ describe('End-to-End Integration Tests', () => {
     testDbName = `test_e2e_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     
     // Initialize ResourceManager
-    resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    resourceManager = await ResourceManager.getResourceManager();
     
     // Create MongoDB connection
     const mongoUrl = resourceManager.get('env.MONGODB_URL') || 'mongodb://localhost:27017';
@@ -372,8 +371,10 @@ describe('End-to-End Integration Tests', () => {
 
       // Initialize perspectives with resourceManager
       const perspectives = new Perspectives({
-        resourceManager
+        resourceManager,
+        options: { verbose: false }
       });
+      await perspectives.initialize();
 
       // Generate perspectives for module
       const generated = await perspectives.generateForModule('FileSystemModule');

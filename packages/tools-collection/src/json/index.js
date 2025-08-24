@@ -1,1 +1,2 @@
-export { default, JsonModule, JsonParseTool, JsonStringifyTool, JsonValidateTool, JsonExtractTool } from './JsonModule.js';
+export { default } from './JsonModule.js';
+export { default as JsonModule } from './JsonModule.js';

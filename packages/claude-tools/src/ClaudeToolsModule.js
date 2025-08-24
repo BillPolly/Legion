@@ -3,13 +3,13 @@
  */
 
 import { Module } from '@legion/tools-registry';
-import { FileOperationsModule } from './file-operations/FileOperationsModule.js';
-import { SearchNavigationModule } from './search-navigation/SearchNavigationModule.js';
-import { SystemOperationsModule } from './system-operations/SystemOperationsModule.js';
-import { WebToolsModule } from './web-tools/WebToolsModule.js';
-import { TaskManagementModule } from './task-management/TaskManagementModule.js';
+import FileOperationsModule from './file-operations/FileOperationsModule.js';
+import SearchNavigationModule from './search-navigation/SearchNavigationModule.js';
+import SystemOperationsModule from './system-operations/SystemOperationsModule.js';
+import WebToolsModule from './web-tools/WebToolsModule.js';
+import TaskManagementModule from './task-management/TaskManagementModule.js';
 
-export class ClaudeToolsModule extends Module {
+class ClaudeToolsModule extends Module {
   constructor() {
     super();
     this.name = 'claude-tools';
@@ -122,3 +122,5 @@ export class ClaudeToolsModule extends Module {
     return categories;
   }
 }
+
+export default ClaudeToolsModule;

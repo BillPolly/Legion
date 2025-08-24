@@ -365,5 +365,5 @@ export default class EncodeModule extends Module {
   }
 }
 
-// Also export the original tool for backward compatibility if needed
+
 export { default as EncodeTool } from './index.js';

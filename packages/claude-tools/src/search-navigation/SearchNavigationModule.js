@@ -7,7 +7,7 @@ import { GlobTool } from './GlobTool.js';
 import { GrepTool } from './GrepTool.js';
 import { LSTool } from './LSTool.js';
 
-export class SearchNavigationModule extends Module {
+class SearchNavigationModule extends Module {
   constructor() {
     super();
     this.name = 'search-navigation';
@@ -64,3 +64,5 @@ export class SearchNavigationModule extends Module {
     };
   }
 }
+
+export default SearchNavigationModule;

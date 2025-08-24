@@ -16,7 +16,7 @@ describe('RailwayModule', () => {
     };
 
     // Create resource manager with mocked env
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     resourceManager.register('env.RAILWAY_API_KEY', 'test-api-key');
   });
 
@@ -30,7 +30,7 @@ describe('RailwayModule', () => {
     });
 
     it('should throw error if API key is not available', () => {
-      const emptyResourceManager = new ResourceManager();
+      const emptyResourceManager = ResourceManager.getInstance();
       
       expect(() => new RailwayModule(emptyResourceManager)).toThrow(
         'Railway API key not found. Set RAILWAY_API_KEY or RAILWAY environment variable.'
@@ -38,7 +38,7 @@ describe('RailwayModule', () => {
     });
 
     it('should accept RAILWAY env var as fallback', () => {
-      const rmWithRailway = new ResourceManager();
+      const rmWithRailway = ResourceManager.getInstance();
       rmWithRailway.register('env.RAILWAY', 'test-api-key-2');
       
       expect(() => new RailwayModule(rmWithRailway)).not.toThrow();

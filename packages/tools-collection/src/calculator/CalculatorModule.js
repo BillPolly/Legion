@@ -142,4 +142,3 @@ class CalculatorModule extends Module {
 export default CalculatorModule;
 
 // Also export the tool class for direct usage
-export { CalculatorTool, CalculatorModule };

@@ -22,8 +22,7 @@ describe.skip('Live File Analysis with Claude', () => {
     }
 
     // Initialize ResourceManager and ModuleLoader
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = await ResourceManager.getResourceManager();
     
     moduleLoader = new ModuleLoader(resourceManager);
     await moduleLoader.initialize();

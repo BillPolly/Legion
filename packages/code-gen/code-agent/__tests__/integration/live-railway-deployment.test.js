@@ -30,7 +30,7 @@ describe('Live Railway Deployment Test', () => {
 
   beforeAll(async () => {
     // Initialize ResourceManager
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     // Get tokens from ResourceManager

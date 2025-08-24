@@ -2,8 +2,7 @@
 
 import { ResourceManager } from '../../../module-loader/src/index.js';
 
-const resourceManager = new ResourceManager();
-await resourceManager.initialize();
+const resourceManager = await ResourceManager.getResourceManager();
 const RAILWAY_API_TOKEN = resourceManager.env.RAILWAY_API_TOKEN;
 
 async function debugServiceCreate() {

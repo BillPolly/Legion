@@ -40,21 +40,37 @@ describe('DatabaseOperations', () => {
       countDocuments: jest.fn().mockResolvedValue(0)
     };
     
+    // Create mock module registry collection
+    const mockModuleRegistryCollection = {
+      find: jest.fn().mockReturnValue({
+        toArray: jest.fn().mockResolvedValue([])
+      }),
+      findOne: jest.fn().mockResolvedValue(null),
+      replaceOne: jest.fn().mockResolvedValue({ upsertedId: '789' }),
+      deleteMany: jest.fn().mockResolvedValue({ deletedCount: 0 }),
+      countDocuments: jest.fn().mockResolvedValue(0)
+    };
+    
     // Create mock database
     mockDb = {
       collection: jest.fn((name) => {
         if (name === 'modules') return mockModulesCollection;
         if (name === 'tools') return mockToolsCollection;
+        if (name === 'module-registry') return mockModuleRegistryCollection;
         return null;
       })
     };
     
     // Create mock storage - use jest.fn() to create a mock instance
     mockStorage = {
-      saveModule: jest.fn().mockResolvedValue(1),
+      saveModule: jest.fn().mockResolvedValue(1), // Deprecated method
+      saveLoadedModule: jest.fn().mockResolvedValue(1), // New method
+      saveDiscoveredModule: jest.fn().mockResolvedValue(1), // New method
       saveTools: jest.fn().mockResolvedValue(1),
       findModule: jest.fn().mockResolvedValue(null),
       findModules: jest.fn().mockResolvedValue([]),
+      findDiscoveredModule: jest.fn().mockResolvedValue(null), // New method
+      findDiscoveredModules: jest.fn().mockResolvedValue([]), // New method
       deleteModule: jest.fn().mockResolvedValue(1),
       deleteTools: jest.fn().mockResolvedValue(1),
       clearAll: jest.fn().mockResolvedValue({ modules: 0, tools: 0 }),
@@ -62,6 +78,7 @@ describe('DatabaseOperations', () => {
       getCollection: jest.fn((name) => {
         if (name === 'modules') return mockModulesCollection;
         if (name === 'tools') return mockToolsCollection;
+        if (name === 'module-registry') return mockDb.collection('module-registry');
         return null;
       }),
       initialize: jest.fn().mockResolvedValue(true),
@@ -160,8 +177,8 @@ describe('DatabaseOperations', () => {
       const modulePath = '/test/TestModule.js';
       await databaseOperations.loadModule(modulePath);
       
-      expect(mockStorage.saveModule).toHaveBeenCalled();
-      expect(mockStorage.saveModule).toHaveBeenCalledWith(
+      expect(mockStorage.saveLoadedModule).toHaveBeenCalled();
+      expect(mockStorage.saveLoadedModule).toHaveBeenCalledWith(
         expect.objectContaining({ 
           name: 'TestModule'
         })
@@ -187,7 +204,9 @@ describe('DatabaseOperations', () => {
   
   describe('loadModuleByName', () => {
     it('should load a module by name from discovered modules', async () => {
-      mockModulesCollection.findOne.mockResolvedValue({
+      // Mock first checking loaded modules (empty), then discovered modules
+      mockStorage.findModule.mockResolvedValue(null);
+      mockStorage.findDiscoveredModule.mockResolvedValue({
         name: 'TestModule',
         path: '/test/TestModule.js'
       });
@@ -199,7 +218,8 @@ describe('DatabaseOperations', () => {
     });
     
     it('should return error if module not found', async () => {
-      mockModulesCollection.findOne.mockResolvedValue(null);
+      mockStorage.findModule.mockResolvedValue(null);
+      mockStorage.findDiscoveredModule.mockResolvedValue(null);
       
       const result = await databaseOperations.loadModuleByName('NonExistent');
       
@@ -210,8 +230,8 @@ describe('DatabaseOperations', () => {
   
   describe('loadAllModules', () => {
     it('should load all discovered modules', async () => {
-      // Mock findModules to return test modules
-      mockStorage.findModules.mockResolvedValue([
+      // Mock findDiscoveredModules to return test modules
+      mockStorage.findDiscoveredModules.mockResolvedValue([
         { name: 'Module1', path: '/test/Module1.js' },
         { name: 'Module2', path: '/test/Module2.js' }
       ]);
@@ -225,8 +245,8 @@ describe('DatabaseOperations', () => {
     });
     
     it('should continue loading even if some modules fail', async () => {
-      // Mock findModules to return test modules with one invalid
-      mockStorage.findModules.mockResolvedValue([
+      // Mock findDiscoveredModules to return test modules with one invalid
+      mockStorage.findDiscoveredModules.mockResolvedValue([
         { name: 'ValidModule', path: '/test/ValidModule.js' },
         { name: 'InvalidModule', path: '/invalid/path.js' }
       ]);
@@ -285,9 +305,9 @@ describe('DatabaseOperations', () => {
     it('should save discovered modules to database', async () => {
       await databaseOperations.discoverAndLoad();
       
-      // Discovery should trigger saves through loadModule which calls saveModule
-      // Since we mocked loadModule on the moduleLoader, we can check that saveModule was called
-      expect(mockStorage.saveModule).toHaveBeenCalled();
+      // Discovery should trigger saves through loadModule which calls saveLoadedModule
+      // Since we mocked loadModule on the moduleLoader, we can check that saveLoadedModule was called
+      expect(mockStorage.saveLoadedModule).toHaveBeenCalled();
     });
   });
   
@@ -307,7 +327,10 @@ describe('DatabaseOperations', () => {
   
   describe('loadModulesFromPackage', () => {
     it('should load all modules from a specific package', async () => {
-      mockModulesCollection.find.mockReturnValue({
+      // This test uses DatabaseOperations.loadModulesFromPackage which queries module-registry directly
+      // We don't need to mock the storage methods, just the collection
+      const mockModuleRegistryCollection = mockDb.collection('module-registry');
+      mockModuleRegistryCollection.find.mockReturnValue({
         toArray: jest.fn().mockResolvedValue([
           { name: 'Module1', path: '/packages/tools/Module1.js', packageName: 'tools' },
           { name: 'Module2', path: '/packages/tools/Module2.js', packageName: 'tools' }
@@ -318,7 +341,7 @@ describe('DatabaseOperations', () => {
       
       expect(result).toHaveProperty('loaded');
       expect(result).toHaveProperty('failed');
-      expect(mockModulesCollection.find).toHaveBeenCalledWith({ packageName: 'tools' });
+      expect(mockModuleRegistryCollection.find).toHaveBeenCalledWith({ packageName: 'tools' });
     });
   });
   
@@ -343,8 +366,8 @@ describe('DatabaseOperations', () => {
   
   describe('refreshModule', () => {
     it('should reload a module and update database', async () => {
-      // Mock findModule on databaseStorage
-      databaseOperations.databaseStorage.findModule = jest.fn().mockResolvedValue({
+      // Mock findModule and findDiscoveredModule on databaseStorage
+      mockStorage.findModule.mockResolvedValue({
         name: 'TestModule',
         path: '/test/TestModule.js'
       });
@@ -358,7 +381,7 @@ describe('DatabaseOperations', () => {
     
     it('should clear old tools before loading new ones', async () => {
       // Mock findModule on databaseStorage
-      databaseOperations.databaseStorage.findModule = jest.fn().mockResolvedValue({
+      mockStorage.findModule.mockResolvedValue({
         name: 'TestModule',
         path: '/test/TestModule.js'
       });

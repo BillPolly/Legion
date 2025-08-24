@@ -445,4 +445,3 @@ class JsonModule extends Module {
 }
 
 export default JsonModule;
-export { JsonModule, JsonParseTool, JsonStringifyTool, JsonValidateTool, JsonExtractTool };

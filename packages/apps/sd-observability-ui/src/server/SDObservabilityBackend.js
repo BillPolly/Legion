@@ -506,7 +506,7 @@ class SDObservabilityBackend {
     console.log('[SDObservabilityBackend] Initializing...');
     
     // Initialize ResourceManager
-    this.resourceManager = new ResourceManager();
+    this.resourceManager = ResourceManager.getInstance();
     await this.resourceManager.initialize();
     
     // Initialize LLM client if API key available

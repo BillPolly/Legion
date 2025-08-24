@@ -29,8 +29,7 @@ if (!command) {
 
 async function manageProjects() {
   try {
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = await ResourceManager.getResourceManager();
     
     const apiKey = resourceManager.env.RAILWAY || resourceManager.env.RAILWAY_API_KEY;
     const railwayProvider = new RailwayProvider(apiKey);

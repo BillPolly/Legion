@@ -12,7 +12,7 @@ describe('GitHub Authentication', () => {
   let authentication;
 
   beforeAll(async () => {
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     // Register GitHub environment variables for testing
@@ -97,8 +97,7 @@ describe('GitHub Authentication', () => {
 
   test('should handle missing GitHub token gracefully', async () => {
     // Create a resource manager without GitHub token
-    const emptyResourceManager = new ResourceManager();
-    await emptyResourceManager.initialize();
+    const emptyResourceManager = await ResourceManager.getResourceManager();
     
     authentication = new GitHubAuthentication(emptyResourceManager);
     
@@ -107,8 +106,7 @@ describe('GitHub Authentication', () => {
 
   test('should handle invalid GitHub token', async () => {
     // Create a resource manager with invalid token
-    const invalidResourceManager = new ResourceManager();
-    await invalidResourceManager.initialize();
+    const invalidResourceManager = await ResourceManager.getResourceManager();
     invalidResourceManager.register('GITHUB_PAT', 'ghp_invalid_token_format_1234567890');
     
     authentication = new GitHubAuthentication(invalidResourceManager);

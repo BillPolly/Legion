@@ -39,7 +39,7 @@ class LiveValidationTest {
     console.log('🔧 Initializing ResourceManager and LLM...');
     
     // Initialize ResourceManager which loads .env automatically
-    this.resourceManager = new ResourceManager();
+    this.resourceManager = ResourceManager.getInstance();
     await this.resourceManager.initialize();
     
     // Initialize LLM client with API key from ResourceManager

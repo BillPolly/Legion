@@ -4,8 +4,7 @@ import { ResourceManager, ModuleFactory } from '@legion/tools-registry';
 import ConanTheDeployer from '../../src/ConanTheDeployer.js';
 
 // Initialize ResourceManager
-const resourceManager = new ResourceManager();
-await resourceManager.initialize();
+const resourceManager = await ResourceManager.getResourceManager();
 
 // Register resourceManager so it can be injected
 resourceManager.register('resourceManager', resourceManager);

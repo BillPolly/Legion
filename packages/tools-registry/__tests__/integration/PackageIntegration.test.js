@@ -17,8 +17,7 @@ describe('Package Integration', () => {
 
   beforeEach(async () => {
     testDbName = `test_package_integration_${Date.now()}`;
-    resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    resourceManager = await ResourceManager.getResourceManager();
     
     // Override database name for testing
     resourceManager.set('test.database.name', testDbName);

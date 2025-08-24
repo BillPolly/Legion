@@ -30,8 +30,7 @@ describe('User Acceptance Tests', () => {
     testDbName = `test_uat_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     
     // Initialize ResourceManager
-    resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    resourceManager = await ResourceManager.getResourceManager();
     
     // Create MongoDB connection
     const mongoUrl = resourceManager.get('env.MONGODB_URL') || 'mongodb://localhost:27017';
@@ -167,7 +166,7 @@ describe('User Acceptance Tests', () => {
 
       // Register the module
       const db = mongoClient.db(testDbName);
-      await db.collection('module_registry').insertOne({
+      await db.collection('module-registry').insertOne({
         name: 'CalculatorModule',
         path: modulePath,
         type: 'class'
@@ -556,7 +555,7 @@ describe('User Acceptance Tests', () => {
       await fs.writeFile(modulePath, validatorModule);
 
       const db = mongoClient.db(testDbName);
-      await db.collection('module_registry').insertOne({
+      await db.collection('module-registry').insertOne({
         name: 'ValidatorModule',
         path: modulePath,
         type: 'class'

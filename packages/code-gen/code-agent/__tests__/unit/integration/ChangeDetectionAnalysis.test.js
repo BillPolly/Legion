@@ -19,7 +19,7 @@ describe('Change Detection and Analysis', () => {
   let tempDir;
 
   beforeAll(async () => {
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     // Register test environment variables

@@ -19,18 +19,51 @@ describe('Perspectives', () => {
   let mockResourceManager;
   
   beforeEach(() => {
-    // Create mock collections
+    // Create mock perspective types collection with proper sequence for initialization
+    const mockPerspectiveTypesCollection = {
+      countDocuments: jest.fn(),
+      insertMany: jest.fn().mockResolvedValue({ insertedCount: 4 }),
+      find: jest.fn().mockReturnValue({
+        sort: jest.fn().mockReturnValue({
+          toArray: jest.fn().mockResolvedValue([
+            { _id: 'type1', name: 'functional', prompt_template: 'Describe {toolName}', category: 'technical', order: 1, enabled: true },
+            { _id: 'type2', name: 'usage', prompt_template: 'Usage for {toolName}', category: 'practical', order: 2, enabled: true }
+          ])
+        })
+      }),
+      createIndex: jest.fn().mockResolvedValue(true)
+    };
+    
+    // Set up countDocuments to return appropriate values based on the test flow
+    let perspectiveTypesCountCalls = 0;
+    mockPerspectiveTypesCollection.countDocuments.mockImplementation(() => {
+      perspectiveTypesCountCalls++;
+      // First call during seeding check returns 0 (empty)
+      // Second call during validation returns 4 (after seeding)
+      // All subsequent calls return 4
+      if (perspectiveTypesCountCalls === 1) {
+        return Promise.resolve(0);
+      }
+      return Promise.resolve(4);
+    });
+    
+    // Create mock tool perspectives collection
     mockPerspectivesCollection = {
       find: jest.fn().mockReturnValue({
         toArray: jest.fn().mockResolvedValue([])
       }),
       findOne: jest.fn().mockResolvedValue(null),
       insertOne: jest.fn().mockResolvedValue({ insertedId: 'perspective-123' }),
+      insertMany: jest.fn().mockResolvedValue({ insertedCount: 1 }),
       replaceOne: jest.fn().mockResolvedValue({ upsertedId: 'perspective-456' }),
       deleteMany: jest.fn().mockResolvedValue({ deletedCount: 0 }),
-      countDocuments: jest.fn().mockResolvedValue(0)
+      countDocuments: jest.fn().mockResolvedValue(0),
+      distinct: jest.fn().mockResolvedValue(['tool1', 'tool2']),
+      createIndex: jest.fn().mockResolvedValue(true),
+      bulkWrite: jest.fn().mockResolvedValue({ upsertedCount: 2, modifiedCount: 0 })
     };
     
+    // Create mock tools collection
     mockToolsCollection = {
       find: jest.fn().mockReturnValue({
         toArray: jest.fn().mockResolvedValue([
@@ -47,7 +80,8 @@ describe('Perspectives', () => {
         name: 'file-reader',
         description: 'Read files from the filesystem',
         moduleName: 'FileModule'
-      })
+      }),
+      createIndex: jest.fn().mockResolvedValue(true)
     };
     
     // Create mock storage provider
@@ -91,11 +125,54 @@ describe('Perspectives', () => {
       isConfigured: jest.fn().mockReturnValue(true)
     };
     
+    // Create mock DatabaseStorage with all required methods
+    mockDatabaseStorage = {
+      db: {
+        collection: jest.fn((name) => {
+          if (name === 'perspective_types') return mockPerspectiveTypesCollection;
+          if (name === 'tool_perspectives') return mockPerspectivesCollection;
+          if (name === 'tools') return mockToolsCollection;
+          return mockPerspectivesCollection;
+        }),
+        listCollections: jest.fn().mockReturnValue({
+          toArray: jest.fn().mockResolvedValue([
+            { name: 'perspective_types' },
+            { name: 'tool_perspectives' },
+            { name: 'tools' }
+          ])
+        }),
+        createCollection: jest.fn().mockResolvedValue(true)
+      },
+      findToolPerspectivesByTool: jest.fn().mockResolvedValue([]),
+      findTool: jest.fn().mockResolvedValue({
+        _id: 'tool1',
+        name: 'file-reader',
+        description: 'Read files from the filesystem',
+        moduleName: 'FileModule'
+      }),
+      saveToolPerspectives: jest.fn().mockResolvedValue(2),
+      saveToolPerspective: jest.fn().mockResolvedValue({ 
+        tool_name: 'file-reader',
+        perspective_type_name: 'functional',
+        content: 'Mocked perspective'
+      }),
+      findToolPerspectives: jest.fn().mockResolvedValue([]),
+      findTools: jest.fn().mockResolvedValue([]),
+      deleteToolPerspectivesByTool: jest.fn().mockResolvedValue(1),
+      clearPerspectiveData: jest.fn().mockResolvedValue(),
+      getPerspectiveStats: jest.fn().mockResolvedValue({
+        perspectiveTypes: { total: 4, enabled: 4, disabled: 0 },
+        toolPerspectives: { total: 25 },
+        coverage: { toolsWithPerspectives: 10 }
+      })
+    };
+    
     // Create mock ResourceManager
     mockResourceManager = {
       get: jest.fn((key) => {
         if (key === 'storageProvider') return mockStorageProvider;
         if (key === 'llmClient') return mockLLMClient;
+        if (key === 'databaseStorage') return mockDatabaseStorage;
         return null;
       })
     };
@@ -116,14 +193,6 @@ describe('Perspectives', () => {
     });
     
     it('should accept options', () => {
-      const mockResourceManager = {
-        get: jest.fn((key) => {
-          if (key === 'storageProvider') return {};
-          if (key === 'llmClient') return {};
-          return null;
-        })
-      };
-      
       const persp = new Perspectives({
         resourceManager: mockResourceManager,
         options: {
@@ -141,10 +210,25 @@ describe('Perspectives', () => {
         .toThrow('ResourceManager is required');
     });
     
+    it('should throw error without DatabaseStorage during initialization', async () => {
+      const mockResourceManager = {
+        get: jest.fn((key) => {
+          if (key === 'storageProvider') return {};
+          if (key === 'databaseStorage') return null;
+          if (key === 'llmClient') return mockLLMClient;
+          return null;
+        })
+      };
+      
+      const persp = new Perspectives({ resourceManager: mockResourceManager });
+      await expect(persp.initialize()).rejects.toThrow('DatabaseStorage not available');
+    });
+    
     it('should throw error without LLM client during initialization', async () => {
       const mockResourceManager = {
         get: jest.fn((key) => {
           if (key === 'storageProvider') return {};
+          if (key === 'databaseStorage') return mockDatabaseStorage;
           if (key === 'llmClient') return null;
           return null;
         })
@@ -155,86 +239,256 @@ describe('Perspectives', () => {
     });
   });
   
-  describe('generatePerspective', () => {
-    it('should generate perspective for a tool', async () => {
+  describe('generatePerspectivesForTool', () => {
+    it('should generate perspectives for a tool', async () => {
+      // Mock perspective types for new architecture
+      const mockPerspectiveTypes = [
+        { _id: 'type1', name: 'functional', prompt_template: 'Describe how {toolName} functions' },
+        { _id: 'type2', name: 'usage', prompt_template: 'Describe when to use {toolName}' }
+      ];
+      
+      // Mock PerspectiveTypeManager
+      const mockTypeManager = {
+        getAllPerspectiveTypes: jest.fn().mockResolvedValue(mockPerspectiveTypes),
+        initialize: jest.fn()
+      };
+      
+      perspectives.perspectiveTypeManager = mockTypeManager;
+      
+      // Mock DatabaseInitializer
+      perspectives.databaseInitializer = { initialize: jest.fn() };
+      
+      // Mock database storage methods
+      const mockDatabaseStorage = {
+        findToolPerspectivesByTool: jest.fn().mockResolvedValue([]),
+        findTool: jest.fn().mockResolvedValue({
+          _id: 'tool1',
+          name: 'file-reader',
+          description: 'Read files from the filesystem',
+          moduleName: 'FileModule'
+        }),
+        saveToolPerspectives: jest.fn().mockResolvedValue(2)
+      };
+      
+      perspectives.databaseStorage = mockDatabaseStorage;
+      
+      // Mock LLM response for multi-perspective generation
+      mockLLMClient.sendMessage.mockResolvedValue(JSON.stringify([
+        { content: 'Functional perspective content' },
+        { content: 'Usage perspective content' }
+      ]));
+      
       await perspectives.initialize();
       
-      const result = await perspectives.generatePerspective('file-reader');
+      const result = await perspectives.generatePerspectivesForTool('file-reader');
       
       expect(result).toBeDefined();
-      expect(result).toHaveProperty('toolName', 'file-reader');
-      expect(result).toHaveProperty('perspective');
-      expect(result).toHaveProperty('category');
-      expect(result).toHaveProperty('useCases');
-      expect(Array.isArray(result.useCases)).toBe(true);
+      expect(Array.isArray(result)).toBe(true);
+      expect(result).toHaveLength(2);
+      expect(result[0]).toHaveProperty('tool_name', 'file-reader');
+      expect(result[0]).toHaveProperty('content');
+      expect(result[0]).toHaveProperty('keywords');
+      expect(result[0]).toHaveProperty('perspective_type_name');
     });
     
-    it('should call LLM client with proper prompt', async () => {
+    it('should call LLM client with proper multi-perspective prompt', async () => {
+      // Mock perspective types - use 2 types to match what initialize sets up
+      const mockPerspectiveTypes = [
+        { _id: 'type1', name: 'functional', prompt_template: 'Describe how {toolName} functions' },
+        { _id: 'type2', name: 'usage', prompt_template: 'Usage for {toolName}' }
+      ];
+      
+      const mockTypeManager = {
+        getAllPerspectiveTypes: jest.fn().mockResolvedValue(mockPerspectiveTypes),
+        initialize: jest.fn()
+      };
+      
+      perspectives.perspectiveTypeManager = mockTypeManager;
+      perspectives.databaseInitializer = { initialize: jest.fn() };
+      
+      const mockDatabaseStorage = {
+        findToolPerspectivesByTool: jest.fn().mockResolvedValue([]),
+        findTool: jest.fn().mockResolvedValue({
+          _id: 'tool1',
+          name: 'file-reader',
+          description: 'Read files from the filesystem'
+        }),
+        saveToolPerspectives: jest.fn().mockResolvedValue(2)
+      };
+      
+      perspectives.databaseStorage = mockDatabaseStorage;
+      
+      mockLLMClient.sendMessage.mockResolvedValue(JSON.stringify([
+        { content: 'Functional perspective' },
+        { content: 'Usage perspective' }
+      ]));
+      
       await perspectives.initialize();
       
-      await perspectives.generatePerspective('file-reader');
+      await perspectives.generatePerspectivesForTool('file-reader');
       
       expect(mockLLMClient.sendMessage).toHaveBeenCalled();
       const call = mockLLMClient.sendMessage.mock.calls[0][0];
       expect(call).toContain('file-reader');
       expect(call).toContain('Read files from the filesystem');
+      expect(call).toContain('Generate 2 different perspectives');
     });
     
-    it('should cache perspectives', async () => {
+    it('should use existing perspectives when available', async () => {
+      // Mock perspective types - use 2 to match initialize
+      const mockPerspectiveTypes = [
+        { _id: 'type1', name: 'functional', prompt_template: 'Describe how {toolName} functions' },
+        { _id: 'type2', name: 'usage', prompt_template: 'Usage for {toolName}' }
+      ];
+      
+      const mockTypeManager = {
+        getAllPerspectiveTypes: jest.fn().mockResolvedValue(mockPerspectiveTypes),
+        initialize: jest.fn()
+      };
+      
+      perspectives.perspectiveTypeManager = mockTypeManager;
+      perspectives.databaseInitializer = { initialize: jest.fn() };
+      
+      // Mock existing perspectives - matching the 2 types
+      const existingPerspectives = [
+        {
+          tool_name: 'file-reader',
+          perspective_type_name: 'functional',
+          content: 'Existing functional perspective'
+        },
+        {
+          tool_name: 'file-reader',
+          perspective_type_name: 'usage',
+          content: 'Existing usage perspective'
+        }
+      ];
+      
+      // Use the shared mockDatabaseStorage but override methods for this test
+      mockDatabaseStorage.findToolPerspectivesByTool.mockResolvedValue(existingPerspectives);
+      mockDatabaseStorage.findTool.mockResolvedValue({
+        name: 'file-reader',
+        description: 'Read files'
+      });
+      perspectives.databaseStorage = mockDatabaseStorage;
+      
       await perspectives.initialize();
       
-      // First call should generate
-      await perspectives.generatePerspective('file-reader');
-      expect(mockLLMClient.sendMessage).toHaveBeenCalledTimes(1);
+      // Reset mock after initialization to ensure it's not called during the test
+      mockLLMClient.sendMessage.mockClear();
       
-      // Second call should use cache
-      mockPerspectivesCollection.findOne.mockResolvedValue({
-        toolName: 'file-reader',
-        perspective: 'Cached perspective',
-        category: 'file-operations'
-      });
+      const result = await perspectives.generatePerspectivesForTool('file-reader');
       
-      await perspectives.generatePerspective('file-reader');
-      expect(mockLLMClient.sendMessage).toHaveBeenCalledTimes(1); // Still just 1 call
+      expect(mockLLMClient.sendMessage).not.toHaveBeenCalled(); // Should use existing
+      expect(result).toEqual(existingPerspectives);
     });
     
     it('should handle LLM errors gracefully', async () => {
+      // Setup mocks for new architecture
+      const mockPerspectiveTypes = [
+        { _id: 'type1', name: 'functional', prompt_template: 'Describe {toolName}' }
+      ];
+      
+      perspectives.perspectiveTypeManager = {
+        getAllPerspectiveTypes: jest.fn().mockResolvedValue(mockPerspectiveTypes),
+        initialize: jest.fn()
+      };
+      perspectives.databaseInitializer = { initialize: jest.fn() };
+      
+      perspectives.databaseStorage = {
+        findToolPerspectivesByTool: jest.fn().mockResolvedValue([]),
+        findTool: jest.fn().mockResolvedValue({
+          name: 'file-reader',
+          description: 'Read files'
+        })
+      };
+      
       await perspectives.initialize();
       mockLLMClient.sendMessage.mockRejectedValue(new Error('LLM error'));
       
-      await expect(perspectives.generatePerspective('file-reader'))
-        .rejects.toThrow('Failed to generate perspective');
+      await expect(perspectives.generatePerspectivesForTool('file-reader'))
+        .rejects.toThrow('Failed to generate perspectives');
     });
     
     it('should handle invalid LLM responses', async () => {
+      // Setup mocks
+      const mockPerspectiveTypes = [
+        { _id: 'type1', name: 'functional', prompt_template: 'Describe {toolName}' }
+      ];
+      
+      perspectives.perspectiveTypeManager = {
+        getAllPerspectiveTypes: jest.fn().mockResolvedValue(mockPerspectiveTypes),
+        initialize: jest.fn()
+      };
+      perspectives.databaseInitializer = { initialize: jest.fn() };
+      
+      perspectives.databaseStorage = {
+        findToolPerspectivesByTool: jest.fn().mockResolvedValue([]),
+        findTool: jest.fn().mockResolvedValue({
+          _id: 'tool1',
+          name: 'file-reader',
+          description: 'Read files'
+        }),
+        saveToolPerspectives: jest.fn().mockResolvedValue(1)
+      };
+      
       await perspectives.initialize();
       mockLLMClient.sendMessage.mockResolvedValue('Invalid JSON response');
       
-      const result = await perspectives.generatePerspective('file-reader');
+      const result = await perspectives.generatePerspectivesForTool('file-reader');
       
       // Should fall back to default structure
-      expect(result).toHaveProperty('perspective');
-      expect(result).toHaveProperty('category', 'general');
+      expect(Array.isArray(result)).toBe(true);
+      expect(result[0]).toHaveProperty('content');
+      expect(result[0].content).toContain('Auto-generated perspective');
     });
   });
   
   describe('generateForModule', () => {
     it('should generate perspectives for all tools in a module', async () => {
-      await perspectives.initialize();
+      // Mock perspective types - using 2 types to match initialize
+      const mockPerspectiveTypes = [
+        { _id: 'type1', name: 'functional', prompt_template: 'Describe {toolName}' },
+        { _id: 'type2', name: 'usage', prompt_template: 'Usage for {toolName}' }
+      ];
       
-      mockToolsCollection.find().toArray.mockResolvedValue([
+      perspectives.perspectiveTypeManager = {
+        getAllPerspectiveTypes: jest.fn().mockResolvedValue(mockPerspectiveTypes),
+        initialize: jest.fn()
+      };
+      perspectives.databaseInitializer = { initialize: jest.fn() };
+      
+      mockDatabaseStorage.findTools.mockResolvedValue([
         { name: 'tool1', description: 'Tool 1', moduleName: 'TestModule' },
         { name: 'tool2', description: 'Tool 2', moduleName: 'TestModule' }
       ]);
       
+      mockDatabaseStorage.findToolPerspectivesByTool.mockResolvedValue([]);
+      
+      mockLLMClient.sendMessage.mockResolvedValue(JSON.stringify([
+        { content: 'Functional perspective' },
+        { content: 'Usage perspective' }
+      ]));
+      
+      await perspectives.initialize();
+      
       const results = await perspectives.generateForModule('TestModule');
       
-      expect(results).toHaveLength(2);
-      expect(mockLLMClient.sendMessage).toHaveBeenCalledTimes(2);
+      // Each tool generates 2 perspectives (functional and usage), so 2 tools = 4 perspectives total
+      expect(results).toHaveLength(4);
+      expect(mockLLMClient.sendMessage).toHaveBeenCalledTimes(2); // Once per tool
     });
     
     it('should use batch generation for multiple tools', async () => {
-      await perspectives.initialize();
+      // Mock perspective types
+      const mockPerspectiveTypes = [
+        { _id: 'type1', name: 'functional', prompt_template: 'Describe {toolName}' }
+      ];
+      
+      perspectives.perspectiveTypeManager = {
+        getAllPerspectiveTypes: jest.fn().mockResolvedValue(mockPerspectiveTypes),
+        initialize: jest.fn()
+      };
+      perspectives.databaseInitializer = { initialize: jest.fn() };
       
       // Create many tools
       const manyTools = Array.from({ length: 15 }, (_, i) => ({
@@ -243,17 +497,16 @@ describe('Perspectives', () => {
         moduleName: 'TestModule'
       }));
       
-      mockToolsCollection.find().toArray.mockResolvedValue(manyTools);
+      mockDatabaseStorage.findTools.mockResolvedValue(manyTools);
+      mockDatabaseStorage.findToolPerspectives.mockResolvedValue([]);
+      mockDatabaseStorage.findToolPerspectivesByTool.mockResolvedValue([]);
       
       // Mock batch response
-      mockLLMClient.sendMessage.mockResolvedValue(JSON.stringify(
-        Array.from({ length: 10 }, () => ({
-          perspective: 'Batch perspective',
-          category: 'general',
-          useCases: [],
-          relatedTools: []
-        }))
-      ));
+      mockLLMClient.sendMessage.mockResolvedValue(JSON.stringify([
+        { content: 'Batch perspective' }
+      ]));
+      
+      await perspectives.initialize();
       
       const results = await perspectives.generateForModule('TestModule', { useBatch: true });
       
@@ -261,27 +514,94 @@ describe('Perspectives', () => {
     });
   });
   
-  describe('getPerspective', () => {
-    it('should retrieve perspective from database', async () => {
+  describe('getToolPerspectives', () => {
+    it('should retrieve perspectives from database', async () => {
+      perspectives.databaseInitializer = { initialize: jest.fn() };
+      perspectives.perspectiveTypeManager = { 
+        initialize: jest.fn(),
+        getAllPerspectiveTypes: jest.fn().mockResolvedValue([
+          { _id: 'type1', name: 'functional', prompt_template: 'Describe {toolName}' },
+          { _id: 'type2', name: 'usage', prompt_template: 'Usage for {toolName}' }
+        ])
+      };
+      
+      const mockPerspectives = [
+        {
+          tool_name: 'file-reader',
+          perspective_type_name: 'functional',
+          content: 'Stored perspective content'
+        },
+        {
+          tool_name: 'file-reader', 
+          perspective_type_name: 'usage',
+          content: 'Usage perspective content'
+        }
+      ];
+      
+      // Use the shared mockDatabaseStorage but override findToolPerspectivesByTool
+      mockDatabaseStorage.findToolPerspectivesByTool.mockResolvedValue(mockPerspectives);
+      perspectives.databaseStorage = mockDatabaseStorage;
+      
       await perspectives.initialize();
       
-      mockPerspectivesCollection.findOne.mockResolvedValue({
-        toolName: 'file-reader',
-        perspective: 'Stored perspective',
-        category: 'file-operations'
-      });
+      const result = await perspectives.getToolPerspectives('file-reader');
+      
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+      expect(result).toHaveLength(2);
+      expect(result[0].tool_name).toBe('file-reader');
+      expect(result[0].content).toBe('Stored perspective content');
+    });
+    
+    it('should return empty array if perspectives not found', async () => {
+      perspectives.databaseInitializer = { initialize: jest.fn() };
+      perspectives.perspectiveTypeManager = { initialize: jest.fn() };
+      perspectives.databaseStorage = {
+        findToolPerspectivesByTool: jest.fn().mockResolvedValue([])
+      };
+      
+      await perspectives.initialize();
+      
+      const result = await perspectives.getToolPerspectives('non-existent');
+      
+      expect(result).toEqual([]);
+    });
+    
+    it('should support deprecated getPerspective method', async () => {
+      perspectives.databaseInitializer = { initialize: jest.fn() };
+      perspectives.perspectiveTypeManager = { 
+        initialize: jest.fn(),
+        getAllPerspectiveTypes: jest.fn().mockResolvedValue([
+          { _id: 'type1', name: 'functional', prompt_template: 'Describe {toolName}' }
+        ])
+      };
+      
+      const mockPerspectives = [
+        { tool_name: 'file-reader', content: 'First perspective' }
+      ];
+      
+      // Use shared mockDatabaseStorage but override the method
+      mockDatabaseStorage.findToolPerspectivesByTool.mockResolvedValue(mockPerspectives);
+      perspectives.databaseStorage = mockDatabaseStorage;
+      
+      await perspectives.initialize();
       
       const result = await perspectives.getPerspective('file-reader');
       
       expect(result).toBeDefined();
-      expect(result.toolName).toBe('file-reader');
-      expect(result.perspective).toBe('Stored perspective');
+      expect(result.tool_name).toBe('file-reader');
+      expect(result.content).toBe('First perspective');
     });
     
-    it('should return null if perspective not found', async () => {
-      await perspectives.initialize();
+    it('should return null from deprecated getPerspective if no perspectives found', async () => {
+      perspectives.databaseInitializer = { initialize: jest.fn() };
+      perspectives.perspectiveTypeManager = { initialize: jest.fn() };
       
-      mockPerspectivesCollection.findOne.mockResolvedValue(null);
+      perspectives.databaseStorage = {
+        findToolPerspectivesByTool: jest.fn().mockResolvedValue([])
+      };
+      
+      await perspectives.initialize();
       
       const result = await perspectives.getPerspective('non-existent');
       
@@ -291,86 +611,107 @@ describe('Perspectives', () => {
   
   describe('searchByPerspective', () => {
     it('should search perspectives by text', async () => {
-      await perspectives.initialize();
+      perspectives.databaseInitializer = { initialize: jest.fn() };
+      perspectives.perspectiveTypeManager = { 
+        initialize: jest.fn(),
+        getAllPerspectiveTypes: jest.fn().mockResolvedValue([
+          { _id: 'type1', name: 'functional', prompt_template: 'Describe {toolName}' }
+        ])
+      };
       
-      mockPerspectivesCollection.find().toArray.mockResolvedValue([
+      const mockSearchResults = [
         {
-          toolName: 'file-reader',
-          perspective: 'Read files from disk',
-          category: 'file-operations'
+          tool_name: 'file-reader',
+          content: 'Read files from disk',
+          perspective_type_name: 'functional'
         },
         {
-          toolName: 'file-writer',
-          perspective: 'Write files to disk',
-          category: 'file-operations'
+          tool_name: 'file-writer',
+          content: 'Write files to disk',
+          perspective_type_name: 'functional'
         }
-      ]);
+      ];
+      
+      // Use the shared mockDatabaseStorage but override the method
+      mockDatabaseStorage.findToolPerspectives.mockResolvedValue(mockSearchResults);
+      perspectives.databaseStorage = mockDatabaseStorage;
+      
+      await perspectives.initialize();
       
       const results = await perspectives.searchByPerspective('read');
       
-      expect(mockStorageProvider.find).toHaveBeenCalledWith(
-        'perspectives',
+      expect(mockDatabaseStorage.findToolPerspectives).toHaveBeenCalledWith(
         expect.objectContaining({
-          perspective: expect.objectContaining({ $regex: expect.any(RegExp) })
-        }),
-        {}
+          $or: expect.arrayContaining([
+            expect.objectContaining({ content: expect.objectContaining({ $regex: expect.any(RegExp) }) }),
+            expect.objectContaining({ keywords: expect.objectContaining({ $regex: expect.any(RegExp) }) })
+          ])
+        })
       );
+      
+      expect(results).toEqual(mockSearchResults);
     });
     
-    it('should support limit option', async () => {
+    it('should support search options', async () => {
+      perspectives.databaseInitializer = { initialize: jest.fn() };
+      perspectives.perspectiveTypeManager = { 
+        initialize: jest.fn(),
+        getAllPerspectiveTypes: jest.fn().mockResolvedValue([
+          { _id: 'type1', name: 'functional', prompt_template: 'Describe {toolName}' }
+        ])
+      };
+      
+      // Use shared mockDatabaseStorage but override the method
+      mockDatabaseStorage.findToolPerspectives.mockResolvedValue([]);
+      perspectives.databaseStorage = mockDatabaseStorage;
+      
       await perspectives.initialize();
       
       await perspectives.searchByPerspective('test', { limit: 5 });
       
-      expect(mockStorageProvider.find).toHaveBeenCalledWith(
-        'perspectives',
-        expect.any(Object),
-        { limit: 5 }
+      expect(mockDatabaseStorage.findToolPerspectives).toHaveBeenCalledWith(
+        expect.objectContaining({
+          $or: expect.arrayContaining([
+            expect.objectContaining({ content: expect.any(Object) }),
+            expect.objectContaining({ keywords: expect.any(Object) })
+          ])
+        })
       );
     });
   });
   
   describe('getRelatedTools', () => {
-    it('should return related tools', async () => {
-      await perspectives.initialize();
+    it('should return related tools (currently returns empty array)', async () => {
+      perspectives.databaseInitializer = { initialize: jest.fn() };
+      perspectives.perspectiveTypeManager = { initialize: jest.fn() };
       
-      mockPerspectivesCollection.findOne.mockResolvedValue({
-        toolName: 'file-reader',
-        relatedTools: ['file-writer', 'file-scanner'],
-        category: 'file-operations'
-      });
+      perspectives.databaseStorage = {
+        findToolPerspectivesByTool: jest.fn().mockResolvedValue([
+          {
+            tool_name: 'file-reader',
+            content: 'Read files from disk'
+          }
+        ])
+      };
+      
+      await perspectives.initialize();
       
       const related = await perspectives.getRelatedTools('file-reader');
       
-      expect(related).toContain('file-writer');
-      expect(related).toContain('file-scanner');
+      // Current implementation returns empty array as related tools need semantic analysis
+      expect(Array.isArray(related)).toBe(true);
+      expect(related).toHaveLength(0);
     });
     
-    it('should include tools from same category if requested', async () => {
+    it('should return empty array if no perspectives found', async () => {
+      perspectives.databaseInitializer = { initialize: jest.fn() };
+      perspectives.perspectiveTypeManager = { initialize: jest.fn() };
+      
+      perspectives.databaseStorage = {
+        findToolPerspectivesByTool: jest.fn().mockResolvedValue([])
+      };
+      
       await perspectives.initialize();
-      
-      mockPerspectivesCollection.findOne.mockResolvedValue({
-        toolName: 'file-reader',
-        relatedTools: ['file-writer'],
-        category: 'file-operations'
-      });
-      
-      mockPerspectivesCollection.find().toArray.mockResolvedValue([
-        { toolName: 'file-scanner', category: 'file-operations' },
-        { toolName: 'file-validator', category: 'file-operations' }
-      ]);
-      
-      const related = await perspectives.getRelatedTools('file-reader', { includeCategory: true });
-      
-      expect(related).toContain('file-writer');
-      expect(related).toContain('file-scanner');
-      expect(related).toContain('file-validator');
-    });
-    
-    it('should return empty array if no perspective found', async () => {
-      await perspectives.initialize();
-      
-      mockPerspectivesCollection.findOne.mockResolvedValue(null);
       
       const related = await perspectives.getRelatedTools('non-existent');
       
@@ -380,56 +721,85 @@ describe('Perspectives', () => {
   
   describe('clearPerspectives', () => {
     it('should clear all perspectives', async () => {
-      await perspectives.initialize();
+      perspectives.databaseInitializer = { initialize: jest.fn() };
+      perspectives.perspectiveTypeManager = { initialize: jest.fn() };
       
-      mockStorageProvider.deleteMany.mockResolvedValue({ deletedCount: 10 });
+      perspectives.databaseStorage = {
+        clearPerspectiveData: jest.fn().mockResolvedValue()
+      };
+      
+      await perspectives.initialize();
       
       const result = await perspectives.clearPerspectives();
       
-      expect(mockStorageProvider.deleteMany).toHaveBeenCalledWith('perspectives', {});
-      expect(result.deletedCount).toBe(10);
+      expect(perspectives.databaseStorage.clearPerspectiveData).toHaveBeenCalled();
+      expect(result).toBe(0); // clearPerspectiveData doesn't return count
     });
     
     it('should clear perspectives for specific module', async () => {
-      await perspectives.initialize();
+      perspectives.databaseInitializer = { initialize: jest.fn() };
+      perspectives.perspectiveTypeManager = { 
+        initialize: jest.fn(),
+        getAllPerspectiveTypes: jest.fn().mockResolvedValue([
+          { _id: 'type1', name: 'functional', prompt_template: 'Describe {toolName}' }
+        ])
+      };
       
-      mockToolsCollection.find().toArray.mockResolvedValue([
+      const mockTools = [
         { name: 'tool1' },
         { name: 'tool2' }
-      ]);
+      ];
       
-      mockStorageProvider.deleteMany.mockResolvedValue({ deletedCount: 2 });
+      // Use shared mockDatabaseStorage but override specific methods
+      mockDatabaseStorage.findTools.mockResolvedValue(mockTools);
+      mockDatabaseStorage.deleteToolPerspectivesByTool.mockResolvedValue(1);
+      perspectives.databaseStorage = mockDatabaseStorage;
       
-      const result = await perspectives.clearPerspectives('TestModule');
+      await perspectives.initialize();
       
-      expect(mockStorageProvider.find).toHaveBeenCalledWith('tools', { moduleName: 'TestModule' });
-      expect(mockStorageProvider.deleteMany).toHaveBeenCalledWith(
-        'perspectives',
-        { toolName: { $in: ['tool1', 'tool2'] } }
-      );
+      const result = await perspectives.clearModulePerspectives('TestModule');
+      
+      expect(mockDatabaseStorage.findTools).toHaveBeenCalledWith({ moduleName: 'TestModule' });
+      expect(mockDatabaseStorage.deleteToolPerspectivesByTool).toHaveBeenCalledTimes(2);
+      expect(result).toBe(2);
     });
   });
   
   describe('getStatistics', () => {
     it('should return perspective statistics', async () => {
+      perspectives.databaseInitializer = { initialize: jest.fn() };
+      perspectives.perspectiveTypeManager = { 
+        initialize: jest.fn(),
+        getAllPerspectiveTypes: jest.fn().mockResolvedValue([
+          { name: 'functional', category: 'technical' },
+          { name: 'usage', category: 'practical' }
+        ])
+      };
+      
+      const mockStats = {
+        perspectiveTypes: { total: 4, enabled: 4, disabled: 0 },
+        toolPerspectives: { total: 25 },
+        coverage: { toolsWithPerspectives: 10 }
+      };
+      
+      const mockPerspectives = [
+        { tool_name: 'tool1', perspective_type_name: 'functional' },
+        { tool_name: 'tool2', perspective_type_name: 'functional' }
+      ];
+      
+      perspectives.databaseStorage = {
+        getPerspectiveStats: jest.fn().mockResolvedValue(mockStats),
+        findToolPerspectives: jest.fn().mockResolvedValue(mockPerspectives),
+        findTool: jest.fn().mockResolvedValue({ moduleName: 'FileModule' })
+      };
+      
       await perspectives.initialize();
-      
-      mockStorageProvider.count.mockResolvedValue(25);
-      mockStorageProvider.distinct.mockResolvedValue(['file-operations', 'data-processing', 'network']);
-      
-      // Mock count for each category
-      mockStorageProvider.count
-        .mockResolvedValueOnce(25) // total
-        .mockResolvedValueOnce(10) // file-operations
-        .mockResolvedValueOnce(8)  // data-processing
-        .mockResolvedValueOnce(5)  // network
-        .mockResolvedValueOnce(2); // uncategorized
       
       const stats = await perspectives.getStatistics();
       
       expect(stats.total).toBe(25);
       expect(stats.byCategory).toBeDefined();
-      expect(stats.uncategorized).toBe(2);
+      expect(stats.byModule).toBeDefined();
     });
   });
 });

@@ -40,8 +40,7 @@ async function processTaskThroughBridge(taskDescription) {
     try {
         // Initialize dependencies
         console.log('\n📋 Initializing components...');
-        const resourceManager = new ResourceManager();
-        await resourceManager.initialize();
+        const resourceManager = await ResourceManager.getResourceManager();
         
         // Initialize LLM client (prefer Anthropic)
         let llmClient = null;

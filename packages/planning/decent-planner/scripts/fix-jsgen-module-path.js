@@ -13,8 +13,7 @@ async function fixJSGeneratorModulePath() {
 
     try {
         // Initialize ResourceManager
-        const resourceManager = new ResourceManager();
-        await resourceManager.initialize();
+        const resourceManager = await ResourceManager.getResourceManager();
         
         // Create provider
         const provider = await MongoDBToolRegistryProvider.create(

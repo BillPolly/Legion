@@ -28,8 +28,7 @@ async function debugBackend() {
     console.log(`📁 Debug directory: ${projectDir}`);
     
     // Setup ResourceManager
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = await ResourceManager.getResourceManager();
     
     // Configure CodeAgent for a backend-only project
     agent = new CodeAgent({

@@ -14,8 +14,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Initialize ResourceManager to get environment variables
-const resourceManager = new ResourceManager();
-await resourceManager.initialize();
+const resourceManager = await ResourceManager.getResourceManager();
 
 // Get API tokens from ResourceManager
 const RAILWAY_API_TOKEN = resourceManager.env.RAILWAY_API_TOKEN;

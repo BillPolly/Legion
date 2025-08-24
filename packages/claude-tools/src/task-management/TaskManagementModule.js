@@ -7,7 +7,7 @@ import { TaskTool } from './TaskTool.js';
 import { TodoWriteTool } from './TodoWriteTool.js';
 import { ExitPlanModeTool } from './ExitPlanModeTool.js';
 
-export class TaskManagementModule extends Module {
+class TaskManagementModule extends Module {
   constructor() {
     super();
     this.name = 'task-management';
@@ -64,3 +64,5 @@ export class TaskManagementModule extends Module {
     };
   }
 }
+
+export default TaskManagementModule;

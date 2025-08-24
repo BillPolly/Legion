@@ -6,8 +6,7 @@ import { ResourceManager } from '../tools/src/ResourceManager.js';
 async function startServer() {
   console.log('🚀 Starting Storage Actor Server...');
   
-  const resourceManager = new ResourceManager();
-  await resourceManager.initialize();
+  const resourceManager = await ResourceManager.getResourceManager();
   
   const server = new StorageActorServer({ 
     resourceManager,

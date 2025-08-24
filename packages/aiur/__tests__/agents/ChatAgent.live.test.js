@@ -13,7 +13,7 @@ describe('ChatAgent Live Integration Tests', () => {
   
   beforeAll(async () => {
     // Initialize ResourceManager to get API key from .env
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     // Get API key from ResourceManager - note the env. prefix!

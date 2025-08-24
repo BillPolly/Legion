@@ -37,7 +37,7 @@ describe('Example2 Full Workflow', () => {
     console.log('='.repeat(80));
     
     // Initialize ResourceManager
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     // Get tokens from ResourceManager

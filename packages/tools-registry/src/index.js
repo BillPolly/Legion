@@ -10,6 +10,8 @@ export { ToolRegistry } from './integration/ToolRegistry.js';
 
 // Core functionality
 export { Module } from './core/Module.js';
+export { Tool } from './core/Tool.js';
+export { ToolResult } from './core/ToolResult.js';
 export { ModuleLoader } from './core/ModuleLoader.js';
 export { ModuleDiscovery } from './core/ModuleDiscovery.js';
 export { ModuleRegistry } from './core/ModuleRegistry.js';
@@ -46,12 +48,13 @@ export async function createModuleDiscovery(resourceManager, searchPaths = []) {
   });
 }
 
-export async function createPerspectives(databaseStorage, llmClient, options = {}) {
-  return new Perspectives({
-    databaseStorage,
-    llmClient,
-    ...options
+export async function createPerspectives(resourceManager, options = {}) {
+  const perspectives = new Perspectives({
+    resourceManager,
+    options
   });
+  await perspectives.initialize();
+  return perspectives;
 }
 
 export async function createVectorStore(embeddingService, vectorDatabase, options = {}) {

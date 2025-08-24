@@ -43,8 +43,7 @@ async function processTaskWithJudgment(taskDescription) {
     try {
         // Initialize dependencies
         console.log('\n📋 Initializing components...');
-        const resourceManager = new ResourceManager();
-        await resourceManager.initialize();
+        const resourceManager = await ResourceManager.getResourceManager();
         
         // Initialize LLM client
         let llmClient = null;

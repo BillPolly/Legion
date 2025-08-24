@@ -282,3 +282,14 @@ export class VectorStoreError extends ToolRegistryError {
     this.details = details;
   }
 }
+
+/**
+ * Error thrown when vector database operations fail
+ */
+export class VectorDatabaseError extends ToolRegistryError {
+  constructor(message, code = 'VECTOR_DATABASE_ERROR', details = {}) {
+    super(message, code);
+    this.name = 'VectorDatabaseError';
+    this.details = details;
+  }
+}

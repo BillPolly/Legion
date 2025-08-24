@@ -76,8 +76,7 @@ async function initializeServices() {
     console.log('🔧 Initializing services...');
     
     // Initialize ResourceManager
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = await ResourceManager.getResourceManager();
     
     // Initialize MongoDB provider
     const mongoProvider = new MongoDBProvider(resourceManager);

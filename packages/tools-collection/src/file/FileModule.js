@@ -1040,8 +1040,5 @@ class FileModule extends Module {
   }
 }
 
-// Export the module as the default
-export default FileModule;
 
-// Also export the tool class for direct usage
-export { FileOperationsTool, FileModule };
+export default FileModule;

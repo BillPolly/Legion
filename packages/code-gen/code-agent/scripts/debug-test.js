@@ -5,7 +5,7 @@ import { ResourceManager } from '@legion/tools-registry';
 console.log('Starting debug test...');
 
 try {
-  const resourceManager = new ResourceManager();
+  const resourceManager = ResourceManager.getInstance();
   console.log('ResourceManager created');
   
   await resourceManager.initialize();

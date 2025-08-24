@@ -12,7 +12,7 @@ describe('Agent Injection Simple Tests', () => {
   let resourceManager;
 
   beforeEach(async () => {
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     // Create monitor without starting WebSocket server to speed up tests

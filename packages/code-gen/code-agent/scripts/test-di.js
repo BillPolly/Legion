@@ -22,8 +22,7 @@ async function testDI() {
     
     // Step 1: Initialize ResourceManager
     console.log('1️⃣ Initializing ResourceManager...');
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = await ResourceManager.getResourceManager();
     console.log('✅ ResourceManager initialized');
     
     // Step 2: Check environment variables

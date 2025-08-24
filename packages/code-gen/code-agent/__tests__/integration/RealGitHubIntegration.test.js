@@ -34,7 +34,7 @@ describe('Real GitHub Integration Test', () => {
   
   beforeAll(async () => {
     // Initialize ResourceManager to access environment variables
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     // Try to get GitHub PAT from ResourceManager (it uses .env)

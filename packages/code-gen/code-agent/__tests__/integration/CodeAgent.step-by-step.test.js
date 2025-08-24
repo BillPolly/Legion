@@ -19,8 +19,7 @@ describe('CodeAgent Step-by-Step Integration Tests', () => {
   let apiKey;
   
   beforeAll(async () => {
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = await ResourceManager.getResourceManager();
     apiKey = resourceManager.env.ANTHROPIC_API_KEY;
     
     if (!apiKey) {

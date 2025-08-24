@@ -34,7 +34,7 @@ describe('Picture Analysis Integration Tests', () => {
     fs.writeFileSync(path.join(testFilesDir, 'larger.png'), largerData);
     
     // Create REAL ResourceManager and initialize it to load .env file
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     // Check for available API keys - prefer Anthropic but fall back to OpenAI

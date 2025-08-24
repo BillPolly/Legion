@@ -35,7 +35,7 @@ describe('Live GitHub Integration Tests', () => {
       return;
     }
 
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     // Register environment variables

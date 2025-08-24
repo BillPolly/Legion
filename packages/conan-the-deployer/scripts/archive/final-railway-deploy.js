@@ -3,8 +3,7 @@
 import RailwayProvider from '../../../railway/src/providers/RailwayProvider.js';
 import { ResourceManager } from '../../../module-loader/src/index.js';
 
-const resourceManager = new ResourceManager();
-await resourceManager.initialize();
+const resourceManager = await ResourceManager.getResourceManager();
 const RAILWAY_API_TOKEN = resourceManager.env.RAILWAY_API_TOKEN;
 
 const railwayProvider = new RailwayProvider(RAILWAY_API_TOKEN);

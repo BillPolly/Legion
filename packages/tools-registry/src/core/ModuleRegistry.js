@@ -408,10 +408,15 @@ export class ModuleRegistry extends EventEmitter {
       return this.metadataCache.get(name);
     }
     
-    // Get from database
+    // Get from database - check loaded modules first
     if (this.databaseOperations.databaseStorage && 
         typeof this.databaseOperations.databaseStorage.findModule === 'function') {
-      const metadata = await this.databaseOperations.databaseStorage.findModule(name);
+      let metadata = await this.databaseOperations.databaseStorage.findModule(name);
+      
+      // If not found in loaded modules, check module-registry
+      if (!metadata && typeof this.databaseOperations.databaseStorage.findDiscoveredModule === 'function') {
+        metadata = await this.databaseOperations.databaseStorage.findDiscoveredModule(name);
+      }
       
       if (metadata) {
         // Cache metadata

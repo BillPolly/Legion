@@ -38,7 +38,7 @@ describe('StorageBrowser End-to-End Integration', () => {
     container = dom.window.document.getElementById('container');
 
     // Initialize ResourceManager with test environment
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     
     // Mock environment variables for testing
     process.env.MONGODB_URL = 'memory://test';

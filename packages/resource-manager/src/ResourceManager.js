@@ -143,6 +143,11 @@ export class ResourceManager {
    * @returns {Promise<void>}
    */
   async initialize() {
+    // Guard against multiple initializations
+    if (this.initialized) {
+      return;
+    }
+    
     try {
       // Load dotenv for environment variables
       const dotenv = await import('dotenv');
@@ -152,14 +157,20 @@ export class ResourceManager {
       // Find project root with .env file
       const { envPath, envResult } = this._findProjectEnv(dotenv, fs, path);
       
-      console.log(`ResourceManager: Loading .env from ${envPath}`);
+      const verbose = process.env.DEBUG_RESOURCE_MANAGER === 'true';
+      
+      if (verbose) {
+        console.log(`ResourceManager: Loading .env from ${envPath}`);
+      }
       const result = envResult;
       
       if (result.error) {
         throw new Error(`ResourceManager: Failed to load .env file: ${result.error.message}`);
       }
       
-      console.log(`ResourceManager: Successfully loaded ${Object.keys(result.parsed || {}).length} environment variables`);
+      if (verbose) {
+        console.log(`ResourceManager: Successfully loaded ${Object.keys(result.parsed || {}).length} environment variables`);
+      }
       
       // Store environment variables under 'env' namespace for dot notation access
       if (result.parsed) {
@@ -167,7 +178,9 @@ export class ResourceManager {
         const envVars = {};
         for (const [key, value] of Object.entries(result.parsed)) {
           envVars[key] = value;
-          console.log(`ResourceManager: Loaded env var: ${key}`);
+          if (verbose) {
+            console.log(`ResourceManager: Loaded env var: ${key}`);
+          }
         }
         this._resources.set('env', envVars);
       }

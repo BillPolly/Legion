@@ -8,7 +8,7 @@
 
 import { PlanSynthesizer } from '../src/core/PlanSynthesizer.js';
 import { ToolDiscoveryAdapter } from '../src/core/ToolDiscoveryAdapter.js';
-import { createSemanticToolDiscovery } from '@legion/tools-registry';
+// import { createSemanticToolDiscovery } from '@legion/tools-registry'; // TODO: Fix this
 import { ResourceManager } from '@legion/resource-manager';
 
 // Create a simple mock setup
@@ -95,14 +95,13 @@ async function demonstrateImprovement() {
     process.exit(1);
   }
   
-  // Create REAL semantic tool discovery
-  const semanticDiscovery = await createSemanticToolDiscovery(resourceManager, {
-    toolRegistry: toolRegistryProvider
-  });
-  
-  // Wrap in adapter for interface compatibility
-  const toolDiscovery = new ToolDiscoveryAdapter(semanticDiscovery, toolRegistryProvider);
-  await toolDiscovery.initialize();
+  // TODO: Fix to use ToolRegistry properly
+  // For now, create a minimal tool discovery
+  const toolDiscovery = {
+    discoverTools: async () => [],
+    getToolByName: async (name) => null,
+    initialize: async () => {}
+  };
   
   const synthesizer = new PlanSynthesizer({
     llmClient: mockLLMClient,

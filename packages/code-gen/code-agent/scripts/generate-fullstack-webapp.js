@@ -28,8 +28,7 @@ async function generateFullstackWebapp() {
     console.log(`📁 Output directory: ${projectDir}`);
     
     // Setup ResourceManager
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = await ResourceManager.getResourceManager();
     
     // Configure CodeAgent for a FULLSTACK project
     agent = new CodeAgent({

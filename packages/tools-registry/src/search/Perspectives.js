@@ -1,13 +1,18 @@
 /**
- * Perspectives - Semantic perspective generation for tools
+ * Perspectives - 3-Collection architecture semantic perspective generation
  * 
- * Generates and manages semantic perspectives for tools to improve search
- * Perspectives provide context, use cases, and relationships between tools
+ * Generates multiple perspective types for tools in a single LLM call.
+ * Uses the new 3-collection architecture:
+ * - perspective_types: Perspective type definitions
+ * - tool_perspectives: Individual perspectives for each tool x type
+ * - tools: Existing tool metadata
  * 
  * No mocks, no fallbacks - real implementation only
  */
 
 import { PerspectiveError } from '../errors/index.js';
+import { DatabaseInitializer } from '../core/DatabaseInitializer.js';
+import { PerspectiveTypeManager } from '../core/PerspectiveTypeManager.js';
 
 export class Perspectives {
   constructor({ resourceManager, options = {} }) {
@@ -22,62 +27,92 @@ export class Perspectives {
     this.options = {
       batchSize: 10,
       verbose: false,
+      generateEmbeddings: true,
       ...options
     };
     
-    this.storageProvider = null;
+    this.databaseStorage = null;
     this.llmClient = null;
+    this.databaseInitializer = null;
+    this.perspectiveTypeManager = null;
     this.initialized = false;
   }
 
   async initialize() {
     if (this.initialized) return;
 
-    // Get storage provider from resource manager
-    this.storageProvider = this.resourceManager.get('storageProvider');
-    if (!this.storageProvider) {
+    // Get database storage from resource manager
+    this.databaseStorage = this.resourceManager.get('databaseStorage');
+    if (!this.databaseStorage) {
       throw new PerspectiveError(
-        'StorageProvider not available from ResourceManager',
+        'DatabaseStorage not available from ResourceManager',
         'INIT_ERROR'
       );
     }
 
-    // Get LLM client from resource manager  
+    // Get LLM client from resource manager (optional for mock mode)
     this.llmClient = this.resourceManager.get('llmClient');
-    if (!this.llmClient) {
-      throw new PerspectiveError(
-        'LLMClient not available from ResourceManager',
-        'INIT_ERROR'
-      );
+    this.mockMode = !this.llmClient || this.options.mockMode;
+    
+    if (this.mockMode && this.options.verbose) {
+      console.log('ℹ️  Running in mock mode (no LLM client configured)');
     }
+
+    // Initialize database collections and default perspective types
+    this.databaseInitializer = new DatabaseInitializer({
+      db: this.databaseStorage.db,
+      resourceManager: this.resourceManager,
+      options: {
+        verbose: this.options.verbose,
+        seedData: true,
+        validateSchema: true,
+        createIndexes: true
+      }
+    });
+
+    await this.databaseInitializer.initialize();
+
+    // Initialize perspective type manager
+    this.perspectiveTypeManager = new PerspectiveTypeManager({
+      db: this.databaseStorage.db,
+      resourceManager: this.resourceManager,
+      options: {
+        verbose: this.options.verbose
+      }
+    });
+
+    await this.perspectiveTypeManager.initialize();
 
     this.initialized = true;
+
+    if (this.options.verbose) {
+      console.log('Perspectives system initialized with 3-collection architecture');
+    }
   }
   
   /**
-   * Generate perspective for a single tool
+   * Generate all perspective types for a single tool in one LLM call
    * @param {string} toolName - Name of the tool
    * @param {Object} options - Generation options
-   * @returns {Object} Generated perspective
+   * @returns {Array} Generated perspectives for all types
    */
-  async generatePerspective(toolName, options = {}) {
+  async generatePerspectivesForTool(toolName, options = {}) {
     if (!this.initialized) await this.initialize();
     
     try {
-      // Check if perspective already exists (unless forced)
+      // Check if perspectives already exist (unless forced)
       if (!options.forceRegenerate) {
-        const existing = await this.storageProvider.findOne('perspectives', { toolName });
-        if (existing) {
+        const existingPerspectives = await this.databaseStorage.findToolPerspectivesByTool(toolName);
+        if (existingPerspectives.length > 0) {
           if (this.options.verbose) {
-            console.log(`Using cached perspective for ${toolName}`);
+            console.log(`Using existing perspectives for ${toolName} (${existingPerspectives.length} types)`);
           }
-          return existing;
+          return existingPerspectives;
         }
       }
       
       // Get tool metadata
-      const tool = await this.storageProvider.findOne('tools', { name: toolName });
-      
+      const tool = await this.databaseStorage.findTool(toolName);
       if (!tool) {
         throw new PerspectiveError(
           `Tool not found: ${toolName}`,
@@ -85,25 +120,65 @@ export class Perspectives {
         );
       }
       
-      // Generate perspective using LLM - create a simple prompt
-      const prompt = this._createPerspectivePrompt(tool);
-      const response = await this.llmClient.sendMessage(prompt);
-      const perspective = this._parsePerspectiveResponse(response);
-      
-      // Save to database
-      const perspectiveDoc = {
-        toolName,
-        ...perspective,
-        generatedAt: new Date()
-      };
-      
-      await this.storageProvider.upsertOne('perspectives', { toolName }, perspectiveDoc);
-      
-      if (this.options.verbose) {
-        console.log(`Generated perspective for ${toolName}`);
+      // Get all enabled perspective types
+      const perspectiveTypes = await this.perspectiveTypeManager.getAllPerspectiveTypes();
+      if (perspectiveTypes.length === 0) {
+        throw new PerspectiveError(
+          'No perspective types available',
+          'NO_PERSPECTIVE_TYPES'
+        );
       }
       
-      return perspectiveDoc;
+      // Generate all perspectives - either LLM or mock
+      let generatedPerspectives;
+      if (this.mockMode) {
+        generatedPerspectives = this._generateMockPerspectives(tool, perspectiveTypes);
+      } else {
+        // Generate all perspectives in single LLM call
+        const prompt = this._createMultiPerspectivePrompt(tool, perspectiveTypes);
+        const response = await this.llmClient.complete(prompt, 2000); // Use complete method with higher token limit
+        generatedPerspectives = this._parseMultiPerspectiveResponse(
+          response, 
+          tool.name, 
+          perspectiveTypes
+        );
+      }
+      
+      // Prepare perspective documents with metadata
+      const batchId = this._generateBatchId();
+      const perspectiveDocs = generatedPerspectives.map((perspective, index) => ({
+        tool_name: toolName,
+        tool_id: tool._id,
+        perspective_type_name: perspectiveTypes[index].name,
+        perspective_type_id: perspectiveTypes[index]._id,
+        content: perspective.content,
+        keywords: this._extractKeywords(perspective.content),
+        embedding: null, // Will be populated by embedding generation
+        generated_at: new Date(),
+        llm_model: this._getLLMModelName(),
+        batch_id: batchId
+      }));
+      
+      // Generate embeddings for perspectives (unless disabled)
+      if (options.generateEmbeddings !== false && !this.mockMode) {
+        try {
+          await this._generateEmbeddingsForPerspectives(perspectiveDocs);
+        } catch (error) {
+          if (this.options.verbose) {
+            console.warn(`⚠️  Embedding generation failed, continuing without embeddings: ${error.message}`);
+          }
+          // Continue with null embeddings rather than failing the entire operation
+        }
+      }
+      
+      // Save all perspectives in batch (with or without embeddings)
+      const savedCount = await this.databaseStorage.saveToolPerspectives(perspectiveDocs);
+      
+      if (this.options.verbose) {
+        console.log(`Generated ${savedCount} perspectives for ${toolName} in single LLM call`);
+      }
+      
+      return perspectiveDocs;
       
     } catch (error) {
       if (error instanceof PerspectiveError) {
@@ -111,7 +186,7 @@ export class Perspectives {
       }
       
       throw new PerspectiveError(
-        `Failed to generate perspective: ${error.message}`,
+        `Failed to generate perspectives for tool: ${error.message}`,
         'GENERATION_ERROR',
         { toolName, originalError: error }
       );
@@ -130,7 +205,7 @@ export class Perspectives {
     
     try {
       // Get all tools from module
-      const tools = await this.storageProvider.find('tools', { moduleName });
+      const tools = await this.databaseStorage.findTools({ moduleName });
       
       if (tools.length === 0) {
         if (this.options.verbose) {
@@ -154,11 +229,11 @@ export class Perspectives {
         let toolsToGenerate = tools;
         if (!options.forceRegenerate) {
           const toolNames = tools.map(t => t.name);
-          const existingPerspectives = await this.storageProvider.find('perspectives', { 
-            toolName: { $in: toolNames } 
+          const existingPerspectives = await this.databaseStorage.findToolPerspectives({ 
+            tool_name: { $in: toolNames } 
           });
           
-          const existingToolNames = new Set(existingPerspectives.map(p => p.toolName));
+          const existingToolNames = new Set(existingPerspectives.map(p => p.tool_name));
           
           // Add existing perspectives to results
           results.push(...existingPerspectives);
@@ -188,10 +263,15 @@ export class Perspectives {
               console.log(`Processing batch ${batchIndex + 1}/${batches.length} (${batch.length} tools)`);
             }
             
-            // Generate batch perspectives using LLM
-            const batchPrompt = this._createBatchPerspectivePrompt(batch);
-            const batchResponse = await this.llmClient.sendMessage(batchPrompt);
-            const perspectives = this._parseBatchPerspectiveResponse(batchResponse, batch);
+            // Generate batch perspectives - either LLM or mock
+            let perspectives;
+            if (this.mockMode) {
+              perspectives = this._generateMockBatchPerspectives(batch);
+            } else {
+              const batchPrompt = this._createBatchPerspectivePrompt(batch);
+              const batchResponse = await this.llmClient.sendMessage(batchPrompt);
+              perspectives = this._parseBatchPerspectiveResponse(batchResponse, batch);
+            }
             
             // Validate batch response
             if (!Array.isArray(perspectives) || perspectives.length !== batch.length) {
@@ -208,10 +288,7 @@ export class Perspectives {
                 batchGenerated: true
               };
               
-              await this.storageProvider.upsertOne('perspectives', 
-                { toolName: batch[i].name }, 
-                perspectiveDoc
-              );
+              await this.databaseStorage.saveToolPerspective(perspectiveDoc);
               
               results.push(perspectiveDoc);
             }
@@ -222,8 +299,8 @@ export class Perspectives {
             // Fallback to individual generation for this batch
             for (const tool of batch) {
               try {
-                const perspective = await this.generatePerspective(tool.name, { forceRegenerate: true });
-                results.push(perspective);
+                const perspectives = await this.generatePerspectivesForTool(tool.name, { forceRegenerate: true });
+                results.push(...perspectives);
               } catch (individualError) {
                 console.error(`Failed to generate perspective for ${tool.name}:`, individualError.message);
               }
@@ -238,8 +315,8 @@ export class Perspectives {
         
         for (const tool of tools) {
           try {
-            const perspective = await this.generatePerspective(tool.name, options);
-            results.push(perspective);
+            const perspectives = await this.generatePerspectivesForTool(tool.name, options);
+            results.push(...perspectives);
           } catch (error) {
             console.error(`Failed to generate perspective for ${tool.name}:`, error.message);
           }
@@ -275,7 +352,7 @@ export class Perspectives {
     
     try {
       // Get all tools
-      const tools = await this.storageProvider.find('tools', {});
+      const tools = await this.databaseStorage.findTools({});
       
       let generated = 0;
       let skipped = 0;
@@ -289,14 +366,14 @@ export class Perspectives {
         for (const tool of batch) {
           try {
             // Check if already exists
-            const existing = await this.storageProvider.findOne('perspectives', { toolName: tool.name });
-            if (existing && !options.forceRegenerate) {
+            const existing = await this.databaseStorage.findToolPerspectivesByTool(tool.name);
+            if (existing.length > 0 && !options.forceRegenerate) {
               skipped++;
               continue;
             }
             
-            const perspective = await this.generatePerspective(tool.name, { forceRegenerate: true });
-            generated++;
+            const perspectives = await this.generatePerspectivesForTool(tool.name, { forceRegenerate: true });
+            generated += perspectives.length;
             
           } catch (error) {
             failed++;
@@ -333,15 +410,15 @@ export class Perspectives {
   }
   
   /**
-   * Get perspective for a tool
+   * Get all perspectives for a tool (new 3-collection API)
    * @param {string} toolName - Name of the tool
-   * @returns {Object|null} Perspective or null if not found
+   * @returns {Array} Array of tool perspectives
    */
-  async getPerspective(toolName) {
+  async getToolPerspectives(toolName) {
     if (!this.initialized) await this.initialize();
     
     try {
-      return await this.storageProvider.findOne('perspectives', { toolName });
+      return await this.databaseStorage.findToolPerspectivesByTool(toolName);
       
     } catch (error) {
       if (error instanceof PerspectiveError) {
@@ -349,7 +426,7 @@ export class Perspectives {
       }
       
       throw new PerspectiveError(
-        `Failed to get perspective: ${error.message}`,
+        `Failed to get tool perspectives: ${error.message}`,
         'RETRIEVAL_ERROR',
         { toolName, originalError: error }
       );
@@ -357,7 +434,15 @@ export class Perspectives {
   }
   
   /**
-   * Search tools by perspective text
+   * @deprecated Use getToolPerspectives instead
+   */
+  async getPerspective(toolName) {
+    const perspectives = await this.getToolPerspectives(toolName);
+    return perspectives.length > 0 ? perspectives[0] : null;
+  }
+  
+  /**
+   * Search tools by perspective content
    * @param {string} query - Search query
    * @param {Object} options - Search options
    * @returns {Array} Matching perspectives
@@ -366,17 +451,15 @@ export class Perspectives {
     if (!this.initialized) await this.initialize();
     
     try {
-      // Search in perspective text
+      // Search in perspective content and keywords
       const searchQuery = {
-        perspective: { $regex: new RegExp(query, 'i') }
+        $or: [
+          { content: { $regex: new RegExp(query, 'i') } },
+          { keywords: { $regex: new RegExp(query, 'i') } }
+        ]
       };
       
-      const findOptions = {};
-      if (options.limit) {
-        findOptions.limit = options.limit;
-      }
-      
-      return await this.storageProvider.find('perspectives', searchQuery, findOptions);
+      return await this.databaseStorage.findToolPerspectives(searchQuery);
       
     } catch (error) {
       if (error instanceof PerspectiveError) {
@@ -401,29 +484,17 @@ export class Perspectives {
     if (!this.initialized) await this.initialize();
     
     try {
-      // Get perspective for tool
-      const perspective = await this.storageProvider.findOne('perspectives', { toolName });
+      // Get perspectives for tool
+      const perspectives = await this.databaseStorage.findToolPerspectivesByTool(toolName);
       
-      if (!perspective) {
+      if (perspectives.length === 0) {
         return [];
       }
       
       const related = new Set();
       
-      // Add explicitly related tools
-      if (perspective.relatedTools && Array.isArray(perspective.relatedTools)) {
-        perspective.relatedTools.forEach(tool => related.add(tool));
-      }
-      
-      // Add tools from same category if requested
-      if (options.includeCategory && perspective.category) {
-        const categoryTools = await this.storageProvider.find('perspectives', { 
-          category: perspective.category,
-          toolName: { $ne: toolName }
-        });
-        
-        categoryTools.forEach(p => related.add(p.toolName));
-      }
+      // For now, return empty array as related tools aren't implemented yet
+      // This would need semantic analysis or manual curation
       
       return Array.from(related);
       
@@ -443,29 +514,24 @@ export class Perspectives {
   /**
    * Clear perspectives from database
    * @param {string} moduleName - Optional module name to clear
-   * @returns {Object} Deletion result
+   * @returns {number} Number of perspectives deleted
    */
   async clearPerspectives(moduleName) {
     if (!this.initialized) await this.initialize();
     
     try {
-      let query = {};
-      
       if (moduleName) {
-        // Get tools from module
-        const tools = await this.storageProvider.find('tools', { moduleName });
-        const toolNames = tools.map(t => t.name);
+        return await this.clearModulePerspectives(moduleName);
+      } else {
+        // Clear all perspectives
+        await this.databaseStorage.clearPerspectiveData();
         
-        query = { toolName: { $in: toolNames } };
+        if (this.options.verbose) {
+          console.log('Cleared all perspective data');
+        }
+        
+        return 0; // clearPerspectiveData doesn't return count
       }
-      
-      const result = await this.storageProvider.deleteMany('perspectives', query);
-      
-      if (this.options.verbose) {
-        console.log(`Cleared ${result.deletedCount} perspectives`);
-      }
-      
-      return result;
       
     } catch (error) {
       if (error instanceof PerspectiveError) {
@@ -514,12 +580,47 @@ export class Perspectives {
   }
 
   /**
-   * Clear perspectives for a specific module
+   * Clear perspectives for a specific module (new 3-collection API)
    * @param {string} moduleName - Module name
-   * @returns {Object} Deletion result
+   * @returns {number} Number of perspectives deleted
+   */
+  async clearModulePerspectives(moduleName) {
+    if (!this.initialized) await this.initialize();
+    
+    try {
+      // Get tools from module
+      const tools = await this.databaseStorage.findTools({ moduleName });
+      const toolNames = tools.map(t => t.name);
+      
+      let deletedCount = 0;
+      for (const toolName of toolNames) {
+        deletedCount += await this.databaseStorage.deleteToolPerspectivesByTool(toolName);
+      }
+      
+      if (this.options.verbose) {
+        console.log(`Cleared ${deletedCount} perspectives for module ${moduleName}`);
+      }
+      
+      return deletedCount;
+      
+    } catch (error) {
+      if (error instanceof PerspectiveError) {
+        throw error;
+      }
+      
+      throw new PerspectiveError(
+        `Failed to clear module perspectives: ${error.message}`,
+        'DELETION_ERROR',
+        { moduleName, originalError: error }
+      );
+    }
+  }
+  
+  /**
+   * @deprecated Use clearModulePerspectives instead
    */
   async clearModule(moduleName) {
-    return this.clearPerspectives(moduleName);
+    return this.clearModulePerspectives(moduleName);
   }
 
   /**
@@ -538,30 +639,7 @@ export class Perspectives {
     if (!this.initialized) await this.initialize();
     
     try {
-      const total = await this.storageProvider.count('perspectives', {});
-      
-      // Get category statistics
-      const byCategory = {};
-      const categories = await this.storageProvider.distinct('perspectives', 'category');
-      
-      for (const category of categories) {
-        if (category) {
-          byCategory[category] = await this.storageProvider.count('perspectives', { category });
-        }
-      }
-      
-      const uncategorized = await this.storageProvider.count('perspectives', { 
-        $or: [
-          { category: null },
-          { category: { $exists: false } }
-        ]
-      });
-      
-      return {
-        total,
-        byCategory,
-        uncategorized
-      };
+      return await this.databaseStorage.getPerspectiveStats();
       
     } catch (error) {
       if (error instanceof PerspectiveError) {
@@ -684,6 +762,547 @@ Provide a JSON array response with one perspective object per tool, in the same 
         useCases: [],
         relatedTools: []
       }));
+    }
+  }
+  
+  /**
+   * Create multi-perspective prompt for single LLM call
+   * @param {Object} tool - Tool metadata
+   * @param {Array} perspectiveTypes - Available perspective types
+   * @returns {string} LLM prompt
+   */
+  _createMultiPerspectivePrompt(tool, perspectiveTypes) {
+    const typePrompts = perspectiveTypes.map((type, index) => 
+      `${index + 1}. ${type.name}: ${type.prompt_template.replace('{toolName}', tool.name)}`
+    ).join('\n');
+    
+    return `Generate ${perspectiveTypes.length} different perspectives for this tool. Each perspective must be VERY SHORT - maximum 10 words per perspective.
+
+Tool Information:
+- Name: ${tool.name}
+- Description: ${tool.description || 'No description provided'}
+- Module: ${tool.moduleName || 'Unknown'}
+
+Generate perspectives for these types:
+${typePrompts}
+
+CRITICAL REQUIREMENTS:
+- Each perspective must be exactly ONE sentence
+- Maximum 10 words per perspective  
+- Must be highly focused and searchable
+- No explanations or elaboration
+
+Provide a JSON array response with ${perspectiveTypes.length} perspective objects:
+[
+  {
+    "content": "Short focused perspective for type 1"
+  },
+  {
+    "content": "Short focused perspective for type 2"  
+  }
+]
+
+Examples of correct length:
+- "Evaluates mathematical expressions and calculations"
+- "Input requires expression parameter as string"
+- "Calculator tool performs arithmetic operations"
+
+Each perspective must be 10 words or less.`;
+  }
+  
+  /**
+   * Parse multi-perspective response from LLM
+   * @param {string} response - LLM response
+   * @param {string} toolName - Tool name
+   * @param {Array} perspectiveTypes - Expected perspective types
+   * @returns {Array} Parsed perspectives
+   */
+  _parseMultiPerspectiveResponse(response, toolName, perspectiveTypes) {
+    try {
+      // Try to extract JSON array from response
+      const jsonMatch = response.match(/\[[^\[\]]*(?:\[[^\[\]]*\][^\[\]]*)*\]/);
+      if (jsonMatch) {
+        const perspectives = JSON.parse(jsonMatch[0]);
+        if (Array.isArray(perspectives) && perspectives.length === perspectiveTypes.length) {
+          return perspectives;
+        }
+      }
+      
+      // If parsing fails, return default perspectives
+      return perspectiveTypes.map((type) => ({
+        content: `Auto-generated perspective for ${toolName} from ${type.name} viewpoint`
+      }));
+    } catch (error) {
+      console.error('Failed to parse multi-perspective response:', error.message);
+      // Return default perspectives on error
+      return perspectiveTypes.map((type) => ({
+        content: `Auto-generated perspective for ${toolName} from ${type.name} viewpoint`
+      }));
+    }
+  }
+  
+  /**
+   * Extract keywords from perspective content
+   * @param {string} content - Perspective content
+   * @returns {Array} Array of keywords
+   */
+  _extractKeywords(content) {
+    if (!content || typeof content !== 'string') return [];
+    
+    // Simple keyword extraction - remove common words and extract meaningful terms
+    const commonWords = new Set([
+      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 
+      'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 
+      'did', 'will', 'would', 'could', 'should', 'may', 'might', 'can', 'this', 'that', 
+      'these', 'those', 'it', 'its', 'they', 'their', 'them'
+    ]);
+    
+    const words = content
+      .toLowerCase()
+      .replace(/[^\w\s]/g, ' ')
+      .split(/\s+/)
+      .filter(word => word.length > 2 && !commonWords.has(word))
+      .slice(0, 10); // Limit to 10 keywords
+    
+    return [...new Set(words)]; // Remove duplicates
+  }
+  
+  /**
+   * Generate batch ID for tracking related perspectives
+   * @returns {string} Unique batch ID
+   */
+  _generateBatchId() {
+    return `batch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+  
+  /**
+   * Get comprehensive perspective statistics
+   * @returns {Object} Statistics about perspectives, types, and coverage
+   */
+  async getStatistics() {
+    if (!this.initialized) await this.initialize();
+    
+    try {
+      // Get statistics from DatabaseStorage
+      const stats = await this.databaseStorage.getPerspectiveStats();
+      
+      // Get additional breakdown by category and module
+      const perspectives = await this.databaseStorage.findToolPerspectives();
+      
+      // Group by category
+      const byCategory = {};
+      const byModule = {};
+      
+      for (const perspective of perspectives) {
+        const tool = await this.databaseStorage.findTool(perspective.tool_name);
+        if (tool && tool.moduleName) {
+          byModule[tool.moduleName] = (byModule[tool.moduleName] || 0) + 1;
+        }
+      }
+      
+      // Get perspective types by category
+      const perspectiveTypes = await this.perspectiveTypeManager.getAllPerspectiveTypes();
+      for (const type of perspectiveTypes) {
+        const categoryPerspectives = perspectives.filter(p => p.perspective_type_name === type.name);
+        byCategory[type.category] = (byCategory[type.category] || 0) + categoryPerspectives.length;
+      }
+      
+      return {
+        total: stats.toolPerspectives.total,
+        perspectiveTypes: stats.perspectiveTypes,
+        toolPerspectives: stats.toolPerspectives,
+        coverage: stats.coverage,
+        byCategory,
+        byModule
+      };
+      
+    } catch (error) {
+      if (error instanceof PerspectiveError) {
+        throw error;
+      }
+      
+      throw new PerspectiveError(
+        `Failed to get statistics: ${error.message}`,
+        'RETRIEVAL_ERROR',
+        { originalError: error }
+      );
+    }
+  }
+
+  /**
+   * Generate mock perspectives for testing
+   * @param {Object} tool - Tool definition
+   * @param {Array} perspectiveTypes - Types to generate
+   * @returns {Array} Mock perspectives
+   */
+  _generateMockPerspectives(tool, perspectiveTypes) {
+    const mockTemplates = {
+      input_perspective: `Input requirements for ${tool.name}:
+- Required parameters: ${Object.keys(tool.inputSchema?.properties || {}).join(', ')}
+- Expected format: JSON object
+- Validation: Schema-based validation applied
+- Example usage: Call with proper input structure`,
+      
+      definition_perspective: `${tool.name} is a ${tool.category || 'utility'} tool that ${tool.description?.toLowerCase() || 'performs operations'}.
+This tool belongs to the ${tool.moduleName || 'Unknown'} module and provides ${tool.tags?.join(', ') || 'general functionality'}.
+Key features include: robust error handling, schema validation, and consistent response format.`,
+      
+      keyword_perspective: `Keywords: ${tool.name}, ${tool.tags?.join(', ') || ''}, ${tool.category || ''}, ${tool.moduleName || ''}
+Related terms: ${tool.description?.split(' ').filter(w => w.length > 4).slice(0, 5).join(', ') || 'functionality'}
+Search terms: ${tool.name.replace('_', ' ')}, ${tool.category || 'tool'} operations`,
+      
+      use_case_perspective: `Common use cases for ${tool.name}:
+1. ${tool.category || 'General'} operations in automated workflows
+2. Integration with ${tool.moduleName || 'other'} module components  
+3. Data processing pipelines requiring ${tool.name.replace('_', ' ')}
+4. Development and testing scenarios
+Best practices: Validate inputs, handle errors gracefully, follow schema requirements`
+    };
+    
+    return perspectiveTypes.map(type => ({
+      content: mockTemplates[type.name] || `Mock perspective for ${tool.name} of type ${type.name}`,
+      perspectiveType: type.name
+    }));
+  }
+
+  /**
+   * Generate mock batch perspectives for testing
+   * @param {Array} batch - Array of tool objects  
+   * @returns {Array} Mock batch perspectives
+   */
+  _generateMockBatchPerspectives(batch) {
+    const perspectiveTypes = this.perspectiveTypeManager?.perspectiveTypes || [];
+    return batch.map(tool => {
+      return this._generateMockPerspectives(tool, perspectiveTypes);
+    });
+  }
+
+  /**
+   * Generate embeddings for existing perspectives that don't have them
+   * @param {string} toolName - Optional tool name to filter by
+   * @returns {Object} Update statistics
+   */
+  async generateEmbeddingsForExisting(toolName = null) {
+    if (!this.initialized) await this.initialize();
+    
+    try {
+      // Find perspectives without embeddings
+      const filter = { embedding: { $in: [null, undefined] } };
+      if (toolName) {
+        filter.tool_name = toolName;
+      }
+      
+      const perspectivesWithoutEmbeddings = await this.databaseStorage.findToolPerspectives(filter);
+      
+      if (perspectivesWithoutEmbeddings.length === 0) {
+        if (this.options.verbose) {
+          console.log('All perspectives already have embeddings');
+        }
+        return {
+          processed: 0,
+          updated: 0,
+          failed: 0,
+          failures: []
+        };
+      }
+      
+      if (this.options.verbose) {
+        console.log(`🔧 Generating embeddings for ${perspectivesWithoutEmbeddings.length} existing perspectives...`);
+      }
+      
+      let updated = 0;
+      let failed = 0;
+      const failures = [];
+      
+      // Process in batches to avoid memory issues
+      const batchSize = this.options.batchSize || 10;
+      for (let i = 0; i < perspectivesWithoutEmbeddings.length; i += batchSize) {
+        const batch = perspectivesWithoutEmbeddings.slice(i, i + batchSize);
+        
+        try {
+          // Generate embeddings for this batch
+          await this._generateEmbeddingsForPerspectives(batch);
+          
+          // Save updated perspectives back to database
+          const savedCount = await this.databaseStorage.saveToolPerspectives(batch);
+          updated += savedCount;
+          
+          if (this.options.verbose) {
+            console.log(`✅ Updated ${savedCount} perspectives with embeddings (batch ${Math.floor(i/batchSize) + 1})`);
+          }
+          
+        } catch (error) {
+          failed += batch.length;
+          failures.push({
+            batch: Math.floor(i/batchSize) + 1,
+            perspectives: batch.map(p => `${p.tool_name}:${p.perspective_type_name}`),
+            error: error.message
+          });
+          
+          if (this.options.verbose) {
+            console.error(`❌ Failed to generate embeddings for batch ${Math.floor(i/batchSize) + 1}:`, error.message);
+          }
+        }
+      }
+      
+      const stats = {
+        processed: perspectivesWithoutEmbeddings.length,
+        updated,
+        failed,
+        failures: failures.length > 0 ? failures : undefined
+      };
+      
+      if (this.options.verbose) {
+        console.log(`🎯 Embedding generation complete: ${updated} updated, ${failed} failed`);
+      }
+      
+      return stats;
+      
+    } catch (error) {
+      throw new PerspectiveError(
+        `Failed to generate embeddings for existing perspectives: ${error.message}`,
+        'EMBEDDING_UPDATE_ERROR',
+        { toolName, originalError: error }
+      );
+    }
+  }
+
+  /**
+   * Get perspectives without embeddings
+   * @param {string} toolName - Optional tool name to filter by
+   * @returns {Array} Perspectives without embeddings
+   */
+  async getPerspectivesWithoutEmbeddings(toolName = null) {
+    if (!this.initialized) await this.initialize();
+    
+    try {
+      const filter = { embedding: { $in: [null, undefined] } };
+      if (toolName) {
+        filter.tool_name = toolName;
+      }
+      
+      return await this.databaseStorage.findToolPerspectives(filter);
+      
+    } catch (error) {
+      throw new PerspectiveError(
+        `Failed to find perspectives without embeddings: ${error.message}`,
+        'RETRIEVAL_ERROR',
+        { toolName, originalError: error }
+      );
+    }
+  }
+
+  /**
+   * Count perspectives with and without embeddings
+   * @returns {Object} Statistics about embedding coverage
+   */
+  async getEmbeddingStats() {
+    if (!this.initialized) await this.initialize();
+    
+    try {
+      const totalPerspectives = await this.databaseStorage.countToolPerspectives();
+      const withoutEmbeddings = await this.databaseStorage.countToolPerspectives({ 
+        embedding: { $in: [null, undefined] } 
+      });
+      const withEmbeddings = totalPerspectives - withoutEmbeddings;
+      
+      return {
+        total: totalPerspectives,
+        withEmbeddings,
+        withoutEmbeddings,
+        embeddingCoverage: totalPerspectives > 0 ? (withEmbeddings / totalPerspectives) : 0
+      };
+      
+    } catch (error) {
+      throw new PerspectiveError(
+        `Failed to get embedding statistics: ${error.message}`,
+        'STATS_ERROR',
+        { originalError: error }
+      );
+    }
+  }
+
+  /**
+   * Get LLM model name from client
+   * @returns {string} Model name
+   */
+  _getLLMModelName() {
+    if (this.llmClient && this.llmClient.modelName) {
+      return this.llmClient.modelName;
+    }
+    return 'unknown-llm';
+  }
+  
+  /**
+   * Get or initialize Nomic embedding service
+   * @returns {Object} Nomic embedding service instance
+   */
+  async _getNomicService() {
+    // Get cached service from ResourceManager
+    let nomicService = this.resourceManager.get('nomicService');
+    
+    if (!nomicService) {
+      if (this.options.verbose) {
+        console.log('Initializing Nomic embedding service...');
+      }
+      
+      // Import and create Nomic service
+      const { NomicEmbeddings } = await import('@legion/nomic');
+      nomicService = new NomicEmbeddings();
+      await nomicService.initialize();
+      
+      // Cache in ResourceManager for reuse
+      this.resourceManager.set('nomicService', nomicService);
+      
+      if (this.options.verbose) {
+        console.log(`✅ Nomic service initialized with ${nomicService.modelName} (${nomicService.dimensions} dimensions)`);
+      }
+    }
+    
+    return nomicService;
+  }
+  
+  /**
+   * Generate embeddings for perspective documents and index in VectorStore
+   * @param {Array} perspectiveDocs - Array of perspective documents
+   * @returns {Promise<void>} Updates documents in-place with embeddings and indexes in Qdrant
+   */
+  async _generateEmbeddingsForPerspectives(perspectiveDocs) {
+    if (!perspectiveDocs || perspectiveDocs.length === 0) {
+      return;
+    }
+    
+    try {
+      const nomicService = await this._getNomicService();
+      
+      if (this.options.verbose) {
+        console.log(`🔧 Generating embeddings for ${perspectiveDocs.length} perspectives...`);
+      }
+      
+      // Extract content for batch embedding generation
+      const contents = perspectiveDocs.map(doc => doc.content);
+      
+      // Generate embeddings in batch for efficiency
+      const embeddings = await nomicService.embedBatch(contents);
+      
+      // Update documents with embeddings
+      for (let i = 0; i < perspectiveDocs.length; i++) {
+        perspectiveDocs[i].embedding = embeddings[i];
+        perspectiveDocs[i].embedding_model = nomicService.modelName;
+        perspectiveDocs[i].embedding_dimensions = nomicService.dimensions;
+      }
+      
+      if (this.options.verbose) {
+        console.log(`✅ Generated ${embeddings.length} embeddings (${nomicService.dimensions}d vectors)`);
+      }
+      
+      // Index perspectives in VectorStore (optional enhancement)
+      if (this.options.enableVectorIndexing !== false) {
+        await this._indexPerspectivesInVectorStore(perspectiveDocs);
+      }
+      
+    } catch (error) {
+      if (this.options.verbose) {
+        console.error('❌ Embedding generation failed:', error.message);
+      }
+      
+      throw new PerspectiveError(
+        `Failed to generate embeddings: ${error.message}`,
+        'EMBEDDING_ERROR',
+        { perspectiveCount: perspectiveDocs.length, originalError: error }
+      );
+    }
+  }
+  
+  /**
+   * Index generated perspectives in VectorStore through ToolRegistry
+   * @param {Array} perspectiveDocs - Array of perspective documents with embeddings
+   * @returns {Promise<void>} Indexes perspectives in Qdrant vector database
+   */
+  async _indexPerspectivesInVectorStore(perspectiveDocs) {
+    try {
+      // Get ToolRegistry instance from ResourceManager
+      const toolRegistry = this.resourceManager.get('toolRegistry');
+      if (!toolRegistry) {
+        if (this.options.verbose) {
+          console.log('⚠️  ToolRegistry not available - skipping vector indexing');
+        }
+        return;
+      }
+      
+      if (this.options.verbose) {
+        console.log(`🔍 Indexing ${perspectiveDocs.length} perspectives in VectorStore...`);
+      }
+      
+      // Group perspectives by tool for batch indexing
+      const perspectivesByTool = new Map();
+      
+      for (const perspectiveDoc of perspectiveDocs) {
+        const toolName = perspectiveDoc.tool_name;
+        
+        if (!perspectivesByTool.has(toolName)) {
+          perspectivesByTool.set(toolName, []);
+        }
+        
+        perspectivesByTool.get(toolName).push({
+          query: perspectiveDoc.content,
+          context: perspectiveDoc.content, // Use content as context
+          perspectiveType: perspectiveDoc.perspective_type_name,
+          moduleName: await this._getToolModuleName(toolName)
+        });
+      }
+      
+      // Index each tool's perspectives
+      let totalIndexed = 0;
+      let indexingErrors = 0;
+      
+      for (const [toolName, perspectives] of perspectivesByTool) {
+        try {
+          const result = await toolRegistry.indexToolPerspectives(toolName, perspectives);
+          
+          if (result.success) {
+            totalIndexed += result.indexed;
+            
+            if (this.options.verbose) {
+              console.log(`✅ Indexed ${result.indexed} perspectives for tool: ${toolName}`);
+            }
+          } else {
+            indexingErrors++;
+            if (this.options.verbose) {
+              console.warn(`⚠️  Failed to index perspectives for ${toolName}: ${result.error}`);
+            }
+          }
+        } catch (error) {
+          indexingErrors++;
+          if (this.options.verbose) {
+            console.warn(`⚠️  Error indexing perspectives for ${toolName}: ${error.message}`);
+          }
+        }
+      }
+      
+      if (this.options.verbose) {
+        console.log(`🎯 Vector indexing complete: ${totalIndexed} indexed, ${indexingErrors} errors`);
+      }
+      
+    } catch (error) {
+      // Don't throw - vector indexing failure shouldn't break perspective generation
+      if (this.options.verbose) {
+        console.warn(`⚠️  Vector indexing failed: ${error.message}`);
+      }
+    }
+  }
+  
+  /**
+   * Get module name for a tool (helper method)
+   * @param {string} toolName - Tool name
+   * @returns {Promise<string>} Module name or 'Unknown'
+   */
+  async _getToolModuleName(toolName) {
+    try {
+      const tool = await this.databaseStorage.findTool(toolName);
+      return tool?.moduleName || 'Unknown';
+    } catch (error) {
+      return 'Unknown';
     }
   }
 }

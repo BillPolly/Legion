@@ -15,7 +15,7 @@ import { GenerateUnitTestsTool } from './tools/GenerateUnitTestsTool.js';
 import { ValidateJavaScriptSyntaxTool } from './tools/ValidateJavaScriptSyntaxTool.js';
 import { GenerateHTMLPageTool } from './tools/GenerateHTMLPageTool.js';
 
-export class JSGeneratorModule extends Module {
+class JSGeneratorModule extends Module {
   constructor() {
     super();
     this.name = 'js-generator';

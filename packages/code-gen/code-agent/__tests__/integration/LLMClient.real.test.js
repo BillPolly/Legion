@@ -11,7 +11,7 @@ describe('LLMClient Real Integration Tests', () => {
   let apiKey;
   
   beforeAll(async () => {
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     apiKey = resourceManager.env.ANTHROPIC_API_KEY;
     

@@ -14,8 +14,7 @@ describe('ComplexityClassifier Live Integration', () => {
 
   beforeAll(async () => {
     // Initialize ResourceManager
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = await ResourceManager.getResourceManager();
     
     // Check for API key
     const apiKey = resourceManager.get('env.ANTHROPIC_API_KEY');

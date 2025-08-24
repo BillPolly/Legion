@@ -18,7 +18,7 @@ describe('MongoDB Schemas Integration', () => {
 
   beforeAll(async () => {
     // Initialize real MongoDB connection
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     mongoProvider = new MongoDBProvider(resourceManager);

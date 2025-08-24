@@ -18,7 +18,7 @@ describe('PlaywrightWrapper Integration Tests', () => {
 
   beforeAll(async () => {
     // Set up for potential integration tests
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     moduleFactory = new ModuleFactory(resourceManager);
   });
@@ -199,7 +199,7 @@ describe('JSON Module Integration', () => {
   let resourceManager;
   
   beforeAll(async () => {
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     moduleFactory = new ModuleFactory(resourceManager);
   });

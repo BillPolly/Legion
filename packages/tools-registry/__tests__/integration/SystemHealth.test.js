@@ -38,8 +38,7 @@ describe('SystemHealth Integration Tests', () => {
     testDbName = `test_health_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     
     // Initialize ResourceManager
-    resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    resourceManager = await ResourceManager.getResourceManager();
     
     // Create MongoDB connection
     const mongoUrl = resourceManager.get('env.MONGODB_URL') || 'mongodb://localhost:27017';

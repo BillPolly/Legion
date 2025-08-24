@@ -43,8 +43,7 @@ async function main() {
   console.log('⚠️  This action cannot be undone!\n');
   
   // Initialize ResourceManager
-  const resourceManager = new ResourceManager();
-  await resourceManager.initialize();
+  const resourceManager = await ResourceManager.getResourceManager();
   
   // Get GitHub PAT
   let githubPat;

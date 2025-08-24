@@ -60,7 +60,11 @@ export class EmbeddingService {
     }
 
     // Verify LLM client has embedding capabilities
-    if (!this.llmClient.isAvailable || !this.llmClient.isAvailable()) {
+    const isAvailable = typeof this.llmClient.isAvailable === 'function' 
+      ? this.llmClient.isAvailable() 
+      : this.llmClient.isAvailable;
+      
+    if (!isAvailable) {
       throw new EmbeddingError(
         'LLM client is not available for embedding generation',
         'SERVICE_UNAVAILABLE'

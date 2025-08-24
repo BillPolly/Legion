@@ -5,8 +5,7 @@ import { ResourceManager } from '@legion/tools-registry';
 async function main() {
   console.log('Checking environment variables...\n');
   
-  const resourceManager = new ResourceManager();
-  await resourceManager.initialize();
+  const resourceManager = await ResourceManager.getResourceManager();
   
   const vars = [
     'GITHUB_PAT',

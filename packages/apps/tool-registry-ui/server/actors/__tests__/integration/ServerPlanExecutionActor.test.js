@@ -25,7 +25,7 @@ describe('ServerPlanExecutionActor Integration', () => {
 
   beforeAll(async () => {
     // Initialize real services
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     // Initialize MongoDB provider

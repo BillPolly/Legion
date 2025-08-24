@@ -656,7 +656,7 @@ WORKFLOW TIP: Use this after run_jest_tests to understand failures, or periodica
 /**
  * Main Jester Module for Legion integration
  */
-export class JesterModule extends Module {
+class JesterModule extends Module {
   constructor() {
     super();
     this.name = 'jester';
@@ -757,3 +757,5 @@ export class JesterModule extends Module {
     };
   }
 }
+
+export default JesterModule;

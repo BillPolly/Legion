@@ -28,8 +28,7 @@ async function debugAPIHang() {
     console.log(`📁 Debug directory: ${projectDir}`);
     
     // Setup ResourceManager
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = await ResourceManager.getResourceManager();
     
     // Configure CodeAgent for a fullstack project
     agent = new CodeAgent({

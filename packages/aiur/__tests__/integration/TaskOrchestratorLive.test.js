@@ -41,8 +41,7 @@ describe('ProfilePlanner and Plan Validation', () => {
     console.log('\n========== TEST: Direct Plan Creation and Execution ==========');
     
     // Initialize ResourceManager to get API key
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = await ResourceManager.getResourceManager();
     const apiKey = resourceManager.get('ANTHROPIC_API_KEY');
     
     if (!apiKey) {

@@ -256,7 +256,7 @@ describe('StorageBrowser Integration Tests', () => {
     container = document.getElementById('app');
 
     // Initialize ResourceManager and ActorHost
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     actorHost = new StorageActorHost(resourceManager);

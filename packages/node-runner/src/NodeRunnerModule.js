@@ -14,7 +14,7 @@ import { SearchLogsTool } from './tools/SearchLogsTool.js';
 import { ListSessionsTool } from './tools/ListSessionsTool.js';
 import { ServerHealthTool } from './tools/ServerHealthTool.js';
 
-export class NodeRunnerModule extends Module {
+class NodeRunnerModule extends Module {
   constructor() {
     super();
     this.name = 'node-runner';
@@ -71,3 +71,5 @@ export class NodeRunnerModule extends Module {
     }
   }
 }
+
+export default NodeRunnerModule;

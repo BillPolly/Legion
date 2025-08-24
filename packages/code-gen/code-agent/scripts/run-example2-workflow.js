@@ -32,7 +32,7 @@ async function runExample2Workflow() {
     console.log('='.repeat(80));
     
     // Initialize ResourceManager for dependency injection
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     // Get tokens from ResourceManager

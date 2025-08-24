@@ -27,7 +27,7 @@ describe('AIGenerationModule - Live Integration Tests', () => {
 
   beforeAll(async () => {
     // Initialize ResourceManager to load .env file
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     // Check if we have the API key

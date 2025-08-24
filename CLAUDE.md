@@ -4,6 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Never use .sh files, we only use javasrcipt or jest to run things
 
+THE resource manager is a singleton! it must not be created outside its package!
+
+NO tests must ever skip, they must fail!
+
 
 ## Project Overview
 

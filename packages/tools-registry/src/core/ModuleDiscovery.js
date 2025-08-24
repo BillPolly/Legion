@@ -71,6 +71,14 @@ export class ModuleDiscovery {
       } else if (entry.isFile()) {
         // Check if it matches module pattern
         if (this.options.modulePattern.test(entry.name)) {
+          // Skip base Module.js classes (not actual modules)
+          if (entry.name === 'Module.js' && (
+            fullPath.includes('/tools-registry/src/core/Module.js') ||  // Base class
+            fullPath.includes('/node-runner/src/base/Module.js') ||     // Base class
+            fullPath.includes('/tools-registry-obsolete/')               // Obsolete package
+          )) {
+            continue;
+          }
           const moduleInfo = this.getModuleInfo(fullPath);
           modules.push(moduleInfo);
         }
@@ -267,29 +275,30 @@ export class ModuleDiscovery {
   }
   
   /**
-   * Save discovered modules to database
+   * Save discovered modules to module-registry collection
    * @param {Array} modules - Modules to save
    * @returns {number} Number of modules saved
    */
-  async saveModulesToDatabase(modules) {
+  async saveToModuleRegistry(modules) {
     if (!this.databaseStorage || !this.databaseStorage.db) {
       throw new DatabaseError(
         'Database operation failed: No database connection',
         'save',
-        'modules',
+        'module-registry',
         new Error('Database storage not initialized')
       );
     }
     
     let savedCount = 0;
-    const collection = this.databaseStorage.db.collection('modules');
+    const collection = this.databaseStorage.db.collection('module-registry');
     
     for (const module of modules) {
       try {
         // Add lastUpdated timestamp
         const moduleDoc = {
           ...module,
-          lastUpdated: new Date().toISOString()
+          lastUpdated: new Date().toISOString(),
+          status: 'discovered'  // Mark as discovered but not loaded
         };
         
         // Upsert - update if exists, insert if not
@@ -309,6 +318,13 @@ export class ModuleDiscovery {
     }
     
     return savedCount;
+  }
+  
+  /**
+   * @deprecated Use saveToModuleRegistry instead
+   */
+  async saveModulesToDatabase(modules) {
+    return this.saveToModuleRegistry(modules);
   }
   
   /**

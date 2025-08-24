@@ -13,7 +13,7 @@ describe('Real FullStackMonitor Log Capture', () => {
   let monitor;
   
   beforeEach(async () => {
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     monitor = await FullStackMonitor.create(resourceManager);
   });

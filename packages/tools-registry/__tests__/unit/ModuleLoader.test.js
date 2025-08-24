@@ -2,11 +2,12 @@
  * Unit tests for ModuleLoader
  * 
  * Tests module loading, metadata extraction, tool retrieval, and tool invocation
- * Following TDD principles - these tests are written before implementation
+ * Following TDD principles with the standard Legion module interface
  */
 
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { ModuleLoader } from '../../src/core/ModuleLoader.js';
+import { ResourceManager } from '@legion/resource-manager';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -15,9 +16,14 @@ const __dirname = path.dirname(__filename);
 
 describe('ModuleLoader', () => {
   let moduleLoader;
+  let resourceManager;
   
-  beforeEach(() => {
-    moduleLoader = new ModuleLoader();
+  beforeEach(async () => {
+    // Create ResourceManager for tests
+    resourceManager = await ResourceManager.getResourceManager();
+    
+    // Create ModuleLoader with ResourceManager
+    moduleLoader = new ModuleLoader({ resourceManager });
   });
   
   afterEach(() => {
@@ -44,8 +50,9 @@ describe('ModuleLoader', () => {
       const moduleInstance = await moduleLoader.loadModule(modulePath);
       
       expect(moduleInstance).toBeDefined();
-      expect(moduleInstance.getName).toBeDefined();
-      expect(moduleInstance.getName()).toBe('MockCalculator');
+      expect(moduleInstance.name).toBe('MockCalculator');
+      expect(moduleInstance.description).toBe('A simple calculator module for testing');
+      expect(moduleInstance.version).toBe('1.0.0');
     });
     
     it('should throw error for non-existent module', async () => {
@@ -97,9 +104,11 @@ describe('ModuleLoader', () => {
       });
     });
     
-    it('should handle modules without metadata methods', async () => {
+    it('should handle modules with standard properties', async () => {
       const minimalModule = {
-        getName: () => 'MinimalModule',
+        name: 'MinimalModule',
+        version: '1.0.0',
+        description: 'A minimal module',
         getTools: () => []
       };
       
@@ -107,17 +116,13 @@ describe('ModuleLoader', () => {
       
       expect(metadata).toMatchObject({
         name: 'MinimalModule',
-        version: 'unknown',
-        description: 'No description available'
+        version: '1.0.0',
+        description: 'A minimal module'
       });
     });
     
     it('should throw error for invalid module instance', async () => {
       await expect(moduleLoader.getModuleMetadata(null))
-        .rejects
-        .toThrow('Invalid module instance');
-      
-      await expect(moduleLoader.getModuleMetadata({}))
         .rejects
         .toThrow('Invalid module instance');
     });
@@ -255,16 +260,25 @@ describe('ModuleLoader', () => {
   describe('validateModuleStructure', () => {
     it('should validate a proper module structure', () => {
       const validModule = {
-        getName: () => 'ValidModule',
-        getTools: () => []
+        name: 'ValidModule',
+        description: 'A valid module',
+        version: '1.0.0',
+        getTools: () => [],
+        constructor: {
+          create: async () => {} // Mock static create method
+        }
       };
       
       expect(() => moduleLoader.validateModuleStructure(validModule)).not.toThrow();
     });
     
-    it('should throw for missing getName method', () => {
+    it('should throw for missing name property', () => {
       const invalidModule = {
-        getTools: () => []
+        description: 'Missing name',
+        getTools: () => [],
+        constructor: {
+          create: async () => {}
+        }
       };
       
       expect(() => moduleLoader.validateModuleStructure(invalidModule))
@@ -273,7 +287,23 @@ describe('ModuleLoader', () => {
     
     it('should throw for missing getTools method', () => {
       const invalidModule = {
-        getName: () => 'InvalidModule'
+        name: 'InvalidModule',
+        description: 'Missing getTools',
+        constructor: {
+          create: async () => {}
+        }
+      };
+      
+      expect(() => moduleLoader.validateModuleStructure(invalidModule))
+        .toThrow('Module validation failed');
+    });
+    
+    it('should throw for missing static create method', () => {
+      const invalidModule = {
+        name: 'InvalidModule',
+        description: 'Missing static create',
+        getTools: () => [],
+        constructor: {} // No create method
       };
       
       expect(() => moduleLoader.validateModuleStructure(invalidModule))

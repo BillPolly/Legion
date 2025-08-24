@@ -1,31 +1,40 @@
 /**
  * Mock Calculator Module for Testing
  * 
- * A simple Legion module that follows the expected interface
+ * A simple Legion module that follows the standard interface
  * for testing the ModuleLoader and other components.
  */
 
-export default class MockCalculatorModule {
+import { Module } from '../../src/core/Module.js';
+
+export default class MockCalculatorModule extends Module {
   constructor() {
+    super();
     this.name = 'MockCalculator';
     this.version = '1.0.0';
     this.description = 'A simple calculator module for testing';
   }
 
-  getName() {
-    return this.name;
+  /**
+   * Static async factory method following the standard interface
+   * @param {ResourceManager} resourceManager - The resource manager for dependency injection
+   * @returns {Promise<MockCalculatorModule>} Initialized module instance
+   */
+  static async create(resourceManager) {
+    const module = new MockCalculatorModule();
+    module.resourceManager = resourceManager;
+    await module.initialize();
+    return module;
   }
 
-  getVersion() {
-    return this.version;
-  }
-
-  getDescription() {
-    return this.description;
-  }
-
-  getTools() {
-    return [
+  /**
+   * Initialize the module
+   */
+  async initialize() {
+    await super.initialize();
+    
+    // Register all calculator tools
+    const tools = [
       {
         name: 'add',
         description: 'Add two numbers together',
@@ -154,17 +163,10 @@ export default class MockCalculatorModule {
         }
       }
     ];
-  }
-
-  // Optional: Module metadata for advanced use cases
-  getMetadata() {
-    return {
-      category: 'Mathematics',
-      tags: ['calculator', 'arithmetic', 'math'],
-      author: 'Test Suite',
-      license: 'MIT',
-      dependencies: [],
-      capabilities: ['add', 'subtract', 'multiply', 'divide']
-    };
+    
+    // Register each tool with the module
+    for (const tool of tools) {
+      this.registerTool(tool.name, tool);
+    }
   }
 }

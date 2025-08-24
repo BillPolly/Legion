@@ -28,8 +28,7 @@ async function generateSimpleServer() {
     console.log(`📁 Output directory: ${projectDir}`);
     
     // Setup ResourceManager
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = await ResourceManager.getResourceManager();
     
     // Configure CodeAgent for a simple backend project
     agent = new CodeAgent({

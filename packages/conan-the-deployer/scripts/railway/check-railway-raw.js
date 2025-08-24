@@ -5,8 +5,7 @@ import { ResourceManager } from '@legion/tools-registry';
 console.log('🚂 RAW RAILWAY API CHECK\n');
 
 async function checkRailwayRaw() {
-  const resourceManager = new ResourceManager();
-  await resourceManager.initialize();
+  const resourceManager = await ResourceManager.getResourceManager();
   
   const apiKey = resourceManager.env.RAILWAY_API_TOKEN || 
                  resourceManager.env.RAILWAY;

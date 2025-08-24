@@ -18,7 +18,7 @@ describe('Proper Debug Test with ResourceManager', () => {
   
   beforeAll(async () => {
     // Initialize ResourceManager - it automatically loads all .env variables
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     // Get the API key from ResourceManager

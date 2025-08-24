@@ -9,8 +9,7 @@ import { UnifiedPlanner } from './src/planning/llm/UnifiedPlanner.js';
 
 async function testSpreadError() {
   try {
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = await ResourceManager.getResourceManager();
     
     // Create a mock LLM client that returns bad data
     const mockLLMClient = {

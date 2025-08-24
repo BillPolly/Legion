@@ -93,7 +93,7 @@ describe('ChatAgent Actor Interface Test', () => {
   
   beforeAll(async () => {
     // Initialize ResourceManager and ModuleLoader
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     await resourceManager.initialize();
     
     moduleLoader = new ModuleLoader(resourceManager);

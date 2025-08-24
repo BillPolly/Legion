@@ -12,8 +12,7 @@ async function main() {
   console.log('🚀 DecentPlanner Example\n');
   
   // Initialize ResourceManager
-  const resourceManager = new ResourceManager();
-  await resourceManager.initialize();
+  const resourceManager = await ResourceManager.getResourceManager();
   
   // ResourceManager will supply all dependencies through getOrInitialize
   // This ensures proper singleton pattern and lazy initialization

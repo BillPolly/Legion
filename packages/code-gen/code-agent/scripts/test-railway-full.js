@@ -15,8 +15,7 @@ async function main() {
   console.log('🚀 Starting full Railway deployment test...\n');
   
   // Initialize ResourceManager
-  const resourceManager = new ResourceManager();
-  await resourceManager.initialize();
+  const resourceManager = await ResourceManager.getResourceManager();
   
   // Check credentials
   const githubToken = resourceManager.env.GITHUB_PAT;

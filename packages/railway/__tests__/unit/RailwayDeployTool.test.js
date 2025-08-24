@@ -12,7 +12,7 @@ describe('RailwayDeployTool', () => {
       deployWithDomain: jest.fn()
     };
 
-    resourceManager = new ResourceManager();
+    resourceManager = ResourceManager.getInstance();
     resourceManager.register('railwayProvider', mockProvider);
     
     tool = new RailwayDeployTool(resourceManager);
@@ -128,7 +128,7 @@ describe('RailwayDeployTool', () => {
     });
 
     it('should throw error if provider not initialized', async () => {
-      const rmWithoutProvider = new ResourceManager();
+      const rmWithoutProvider = ResourceManager.getInstance();
       const toolWithoutProvider = new RailwayDeployTool(rmWithoutProvider);
 
       await expect(toolWithoutProvider.execute({

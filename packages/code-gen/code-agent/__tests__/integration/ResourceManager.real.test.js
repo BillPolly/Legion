@@ -7,8 +7,7 @@ import { ResourceManager } from '@legion/tools-registry';
 
 describe('ResourceManager Environment Loading', () => {
   test('should load ANTHROPIC_API_KEY from .env file', async () => {
-    const resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    const resourceManager = await ResourceManager.getResourceManager();
     
     const apiKey = resourceManager.env.ANTHROPIC_API_KEY;
     

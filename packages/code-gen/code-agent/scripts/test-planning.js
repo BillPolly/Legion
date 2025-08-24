@@ -9,8 +9,7 @@ import { CodeAgent } from '../src/agent/CodeAgent.js';
 import { LLMClient } from '@legion/llm';
 
 async function test() {
-  const resourceManager = new ResourceManager();
-  await resourceManager.initialize();
+  const resourceManager = await ResourceManager.getResourceManager();
   
   // Register LLM factory
   resourceManager.registerFactory('llmClient', async (config, rm) => {

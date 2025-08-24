@@ -9,7 +9,7 @@ import { GenerateVoiceTool } from './tools/GenerateVoiceTool.js';
  * Provides speech-to-text and text-to-speech capabilities through
  * a provider architecture. Currently supports OpenAI (Whisper + TTS).
  */
-export class VoiceModule extends Module {
+class VoiceModule extends Module {
   constructor() {
     super();
     this.name = 'voice';

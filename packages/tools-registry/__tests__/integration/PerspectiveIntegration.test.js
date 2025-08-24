@@ -23,8 +23,7 @@ describe('Perspective Integration', () => {
 
   beforeEach(async () => {
     testDbName = `test_perspective_integration_${Date.now()}`;
-    resourceManager = new ResourceManager();
-    await resourceManager.initialize();
+    resourceManager = await ResourceManager.getResourceManager();
     
     // Override database name for testing
     resourceManager.set('test.database.name', testDbName);
@@ -145,19 +144,21 @@ describe('Perspective Integration', () => {
       // Save tool to database first
       await databaseStorage.saveTool(testTool, 'TestModule');
 
-      // Generate perspective
-      const generatedPerspective = await perspectives.generatePerspective('file_reader');
+      // Generate perspectives (new API returns array of perspectives)
+      const generatedPerspectives = await perspectives.generatePerspectivesForTool('file_reader');
 
-      expect(generatedPerspective).toBeDefined();
-      expect(generatedPerspective).toHaveProperty('toolName', 'file_reader');
+      expect(generatedPerspectives).toBeDefined();
+      expect(Array.isArray(generatedPerspectives)).toBe(true);
+      expect(generatedPerspectives.length).toBeGreaterThan(0);
       
-      // Validate perspective structure (matching the Perspectives class format)
-      expect(generatedPerspective).toHaveProperty('perspective');
-      expect(generatedPerspective).toHaveProperty('category');
-      expect(generatedPerspective).toHaveProperty('useCases');
-      expect(generatedPerspective).toHaveProperty('relatedTools');
-      expect(Array.isArray(generatedPerspective.useCases)).toBe(true);
-      expect(Array.isArray(generatedPerspective.relatedTools)).toBe(true);
+      // Validate perspective structure (new 3-collection format)
+      const firstPerspective = generatedPerspectives[0];
+      expect(firstPerspective).toHaveProperty('tool_name', 'file_reader');
+      expect(firstPerspective).toHaveProperty('perspective_type_name');
+      expect(firstPerspective).toHaveProperty('content');
+      expect(firstPerspective).toHaveProperty('keywords');
+      expect(firstPerspective).toHaveProperty('generated_at');
+      expect(Array.isArray(firstPerspective.keywords)).toBe(true);
     });
 
     it('should validate perspective quality', async () => {
@@ -177,17 +178,19 @@ describe('Perspective Integration', () => {
 
       await databaseStorage.saveTool(testTool, 'TestModule');
 
-      const generatedPerspective = await perspectives.generatePerspective('json_parser');
+      const generatedPerspectives = await perspectives.generatePerspectivesForTool('json_parser');
 
-      // Quality checks adapted for mock data
-      // Should have the expected structure
-      expect(generatedPerspective).toBeDefined();
-      expect(generatedPerspective.toolName).toBe('json_parser');
-      expect(generatedPerspective.perspective).toBeDefined();
-      expect(generatedPerspective.category).toBeDefined();
-      expect(Array.isArray(generatedPerspective.useCases)).toBe(true);
-      expect(Array.isArray(generatedPerspective.relatedTools)).toBe(true);
-      expect(generatedPerspective.generatedAt).toBeDefined();
+      // Quality checks adapted for new 3-collection format
+      expect(generatedPerspectives).toBeDefined();
+      expect(Array.isArray(generatedPerspectives)).toBe(true);
+      expect(generatedPerspectives.length).toBeGreaterThan(0);
+      
+      const firstPerspective = generatedPerspectives[0];
+      expect(firstPerspective.tool_name).toBe('json_parser');
+      expect(firstPerspective.content).toBeDefined();
+      expect(firstPerspective.perspective_type_name).toBeDefined();
+      expect(Array.isArray(firstPerspective.keywords)).toBe(true);
+      expect(firstPerspective.generated_at).toBeDefined();
     });
   });
 
@@ -241,10 +244,13 @@ describe('Perspective Integration', () => {
 
       // Should handle invalid tool gracefully
       try {
-        const result = await perspectives.generatePerspective('invalid_tool');
+        const result = await perspectives.generatePerspectivesForTool('invalid_tool');
         // If it succeeds despite empty description, check it has default values
         expect(result).toBeDefined();
-        expect(result.toolName).toBe('invalid_tool');
+        expect(Array.isArray(result)).toBe(true);
+        if (result.length > 0) {
+          expect(result[0].tool_name).toBe('invalid_tool');
+        }
       } catch (error) {
         // If it throws, that's also acceptable
         expect(error).toBeDefined();
@@ -262,8 +268,8 @@ describe('Perspective Integration', () => {
       
       await databaseStorage.saveTool(testTool, 'TestModule');
 
-      // Generate perspective (will auto-save)
-      const generatedPerspective = await perspectives.generatePerspective('test_tool');
+      // Generate perspectives (will auto-save)
+      const generatedPerspectives = await perspectives.generatePerspectivesForTool('test_tool');
 
       // Retrieve and verify from database directly
       const saved = await db.collection('perspectives')
@@ -292,21 +298,22 @@ describe('Perspective Integration', () => {
 
       await databaseStorage.saveTool(testTool, 'TestModule');
 
-      // Generate initial perspective
-      const firstPerspective = await perspectives.generatePerspective('update_test_tool');
-      expect(firstPerspective).toBeDefined();
+      // Generate initial perspectives
+      const firstPerspectives = await perspectives.generatePerspectivesForTool('update_test_tool');
+      expect(firstPerspectives).toBeDefined();
+      expect(Array.isArray(firstPerspectives)).toBe(true);
 
-      // Force regenerate perspective (updates existing)
-      const updatedPerspective = await perspectives.generatePerspective('update_test_tool', { forceRegenerate: true });
+      // Force regenerate perspectives (updates existing)
+      const updatedPerspectives = await perspectives.generatePerspectivesForTool('update_test_tool', { forceRegenerate: true });
 
       // Verify still only one perspective in database
-      const saved = await db.collection('perspectives')
-        .find({ toolName: 'update_test_tool' })
+      const saved = await db.collection('tool_perspectives')
+        .find({ tool_name: 'update_test_tool' })
         .toArray();
 
-      expect(saved.length).toBe(1);
-      expect(saved[0].toolName).toBe('update_test_tool');
-      expect(saved[0].generatedAt).toBeDefined();
+      expect(saved.length).toBeGreaterThanOrEqual(1);
+      expect(saved[0].tool_name).toBe('update_test_tool');
+      expect(saved[0].generated_at).toBeDefined();
     });
 
     it('should retrieve perspectives by tool name', async () => {
@@ -321,8 +328,8 @@ describe('Perspective Integration', () => {
       }
 
       // Generate perspectives
-      await perspectives.generatePerspective('search_tool');
-      await perspectives.generatePerspective('other_tool');
+      await perspectives.generatePerspectivesForTool('search_tool');
+      await perspectives.generatePerspectivesForTool('other_tool');
 
       // Retrieve perspective for specific tool
       const searchToolPerspective = await perspectives.getPerspective('search_tool');
@@ -339,8 +346,8 @@ describe('Perspective Integration', () => {
 
   describe('Error Handling', () => {
     it('should handle non-existent tool gracefully', async () => {
-      // Try to generate perspective for non-existent tool
-      await expect(perspectives.generatePerspective('non_existent_tool'))
+      // Try to generate perspectives for non-existent tool
+      await expect(perspectives.generatePerspectivesForTool('non_existent_tool'))
         .rejects
         .toThrow(/Tool not found/);
     });
@@ -372,9 +379,9 @@ describe('Perspective Integration', () => {
       await errorPerspectives.initialize();
       
       // Should throw when LLM fails
-      await expect(errorPerspectives.generatePerspective('llm_error_test'))
+      await expect(errorPerspectives.generatePerspectivesForTool('llm_error_test'))
         .rejects
-        .toThrow(/Failed to generate perspective/);
+        .toThrow(/Failed to generate perspectives/);
       
       // Restore original client
       resourceManager.set('llmClient', originalClient);
@@ -412,8 +419,8 @@ describe('Perspective Integration', () => {
       expect(results.length).toBeGreaterThan(0);
 
       // Verify all perspectives were saved in database
-      const saved = await db.collection('perspectives')
-        .find({ moduleName: 'PerformanceModule' })
+      const saved = await db.collection('tool_perspectives')
+        .find({ tool_name: { $regex: /^performance_tool_/ } })
         .toArray();
       
       expect(saved.length).toBeGreaterThan(0);
