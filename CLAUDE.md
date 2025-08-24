@@ -8,6 +8,8 @@ THE resource manager is a singleton! it must not be created outside its package!
 
 NO tests must ever skip, they must fail!
 
+ALL resources are available, real llm, mon
+
 
 ## Project Overview
 

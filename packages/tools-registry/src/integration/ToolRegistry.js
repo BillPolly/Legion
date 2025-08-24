@@ -29,7 +29,11 @@ export class ToolRegistry {
     if (!ToolRegistry._instance) {
       const { ResourceManager } = await import('@legion/resource-manager');
       const resourceManager = await ResourceManager.getResourceManager();
-      ToolRegistry._instance = new ToolRegistry({ resourceManager });
+      ToolRegistry._instance = new ToolRegistry({ 
+        resourceManager,
+        enablePerspectives: true,
+        enableVectorSearch: true
+      });
       await ToolRegistry._instance.initialize();
       ToolRegistry._isInitialized = true;
     }
@@ -47,7 +51,7 @@ export class ToolRegistry {
     }
   }
 
-  constructor({ resourceManager, options = {} }) {
+  constructor({ resourceManager, ...options }) {
     // Prevent direct instantiation except for singleton
     if (ToolRegistry._instance) {
       throw new Error('ToolRegistry is a singleton. Use ToolRegistry.getInstance() instead.');
@@ -109,6 +113,9 @@ export class ToolRegistry {
         connectionPool: this.connectionPool
       });
       await this.databaseStorage.initialize();
+      
+      // Store DatabaseStorage in ResourceManager for other components
+      this.resourceManager.set('databaseStorage', this.databaseStorage);
 
       // Initialize core components
       this.moduleLoader = new ModuleLoader({
@@ -133,47 +140,35 @@ export class ToolRegistry {
 
       // Initialize LLM and embedding clients if enabled
       if (this.options.enablePerspectives) {
-        this.llmClient = new LLMClient({
-          resourceManager: this.resourceManager
-        });
+        // Use ResourceManager's createLLMClient method which stores the client
+        this.llmClient = await this.resourceManager.createLLMClient();
 
         this.perspectives = new Perspectives({
           resourceManager: this.resourceManager
         });
+        await this.perspectives.initialize();
       }
 
       if (this.options.enableVectorSearch) {
-        // Check if we have LLM client for embeddings
-        const hasLLMClient = this.resourceManager.get('env.ANTHROPIC_API_KEY');
+        // Always use Nomic embeddings for vector search
+        const { NomicEmbeddings } = await import('@legion/nomic');
+        const nomicService = new NomicEmbeddings();
+        await nomicService.initialize();
         
-        if (hasLLMClient && this.options.enablePerspectives) {
-          // Use LLM-based EmbeddingService when available
-          this.embeddingService = new EmbeddingService({
-            resourceManager: this.resourceManager,
-            options: { dimensions: 768 }
-          });
-          await this.embeddingService.initialize();
-        } else {
-          // Fall back to Nomic embeddings when no LLM client
-          const { NomicEmbeddings } = await import('@legion/nomic');
-          const nomicService = new NomicEmbeddings();
-          await nomicService.initialize();
-          
-          // Create adapter for VectorStore compatibility
-          this.embeddingService = {
-            generateEmbedding: async (text) => {
-              return await nomicService.embed(text);
-            },
-            generateEmbeddings: async (texts) => {
-              return await nomicService.embedBatch(texts);
-            },
-            generateBatch: async (texts) => {
-              return await nomicService.embedBatch(texts);
-            },
-            // Store reference to actual service for cleanup
-            _nomicService: nomicService
-          };
-        }
+        // Create adapter for VectorStore compatibility
+        this.embeddingService = {
+          generateEmbedding: async (text) => {
+            return await nomicService.embed(text);
+          },
+          generateEmbeddings: async (texts) => {
+            return await nomicService.embedBatch(texts);
+          },
+          generateBatch: async (texts) => {
+            return await nomicService.embedBatch(texts);
+          },
+          // Store reference to actual service for cleanup
+          _nomicService: nomicService
+        };
 
         this.vectorStore = new VectorStore({
           embeddingClient: this.embeddingService,
@@ -503,7 +498,8 @@ export class ToolRegistry {
     }
 
     if (this.vectorStore) {
-      stats.vectors = await this.vectorStore.countVectors();
+      const vectorStats = await this.vectorStore.getStatistics();
+      stats.vectors = vectorStats.vectors_count;
     }
 
     return stats;
@@ -541,7 +537,8 @@ export class ToolRegistry {
 
       // Check vector store
       if (this.vectorStore) {
-        await this.vectorStore.countVectors();
+        const vectorStats = await this.vectorStore.getStatistics();
+        vectorStats.vectors_count;
         health.vectorStore = true;
       }
     } catch (error) {
@@ -1800,7 +1797,7 @@ export class ToolRegistry {
     
     for (const tool of tools) {
       try {
-        await this.perspectives.generatePerspectives(tool);
+        await this.perspectives.generatePerspectivesForTool(tool.name);
         results.generated++;
         if (verbose) {
           console.log(`✅ Generated perspectives for ${tool.name}`);

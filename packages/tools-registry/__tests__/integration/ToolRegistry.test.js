@@ -253,10 +253,10 @@ describe('ToolRegistry Integration Tests', () => {
         verbose: false
       });
       
-      expect(result).toHaveProperty('tools');
-      expect(result).toHaveProperty('perspectives');
-      expect(result.tools).toHaveProperty('processed');
-      expect(result.perspectives).toHaveProperty('processed');
+      expect(result).toHaveProperty('total');
+      expect(result).toHaveProperty('embedded');
+      expect(result).toHaveProperty('failed');
+      expect(result).toHaveProperty('errors');
     });
   });
   
@@ -268,7 +268,8 @@ describe('ToolRegistry Integration Tests', () => {
       
       expect(result).toHaveProperty('indexed');
       expect(result).toHaveProperty('failed');
-      expect(result).toHaveProperty('skipped');
+      expect(result).toHaveProperty('total');
+      expect(result).toHaveProperty('errors');
     });
     
     it('should rebuild vector collection', async () => {

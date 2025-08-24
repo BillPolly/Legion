@@ -274,7 +274,9 @@ export class VectorStore {
       // Transform results to expected format with flat structure
       return filtered.map(result => ({
         score: result.score,
-        toolName: result.metadata?.toolName || result.id,
+        tool_name: result.metadata?.toolName || result.id,  // Changed to tool_name for consistency
+        toolName: result.metadata?.toolName || result.id,   // Keep both for compatibility
+        name: result.metadata?.toolName || result.id,       // Add name field
         description: result.metadata?.description || '',
         moduleName: result.metadata?.moduleName || '',
         category: result.metadata?.category || '',

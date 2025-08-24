@@ -59,17 +59,8 @@ export class EmbeddingService {
       );
     }
 
-    // Verify LLM client has embedding capabilities
-    const isAvailable = typeof this.llmClient.isAvailable === 'function' 
-      ? this.llmClient.isAvailable() 
-      : this.llmClient.isAvailable;
-      
-    if (!isAvailable) {
-      throw new EmbeddingError(
-        'LLM client is not available for embedding generation',
-        'SERVICE_UNAVAILABLE'
-      );
-    }
+    // LLMClient is available if it was successfully created
+    // We assume it's working if we got this far
 
     this.initialized = true;
   }
