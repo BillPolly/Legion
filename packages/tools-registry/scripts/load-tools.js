@@ -68,6 +68,9 @@ async function loadTools(options = {}) {
     
     console.log('\n✅ Tool loading complete!');
     
+    // Exit successfully
+    process.exit(0);
+    
   } catch (error) {
     console.error('❌ Error loading tools:', error.message);
     if (verbose) {

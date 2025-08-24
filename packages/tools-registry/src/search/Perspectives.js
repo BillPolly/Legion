@@ -92,32 +92,63 @@ export class Perspectives {
   
   /**
    * Generate all perspective types for a single tool in one LLM call
-   * @param {string} toolName - Name of the tool
-   * @param {Object} options - Generation options
+   * @param {string|Object} toolIdentifier - Tool name, tool ID, or tool object
+   * @param {Object} options - Generation options (including toolId override)
    * @returns {Array} Generated perspectives for all types
    */
-  async generatePerspectivesForTool(toolName, options = {}) {
+  async generatePerspectivesForTool(toolIdentifier, options = {}) {
     if (!this.initialized) await this.initialize();
     
+    // Declare variables outside try block so they're accessible in catch
+    let tool;
+    let toolId;
+    let toolName;
+    
     try {
-      // Check if perspectives already exist (unless forced)
-      if (!options.forceRegenerate) {
-        const existingPerspectives = await this.databaseStorage.findToolPerspectivesByTool(toolName);
-        if (existingPerspectives.length > 0) {
-          if (this.options.verbose) {
-            console.log(`Using existing perspectives for ${toolName} (${existingPerspectives.length} types)`);
-          }
-          return existingPerspectives;
+      
+      // Handle different input types
+      if (typeof toolIdentifier === 'object' && toolIdentifier !== null) {
+        // Tool object passed directly
+        tool = toolIdentifier;
+        toolId = tool._id || tool.id;
+        toolName = tool.name;
+      } else if (typeof toolIdentifier === 'string') {
+        // Could be tool name or tool ID - for now assume name for backwards compatibility
+        toolName = toolIdentifier;
+        
+        // If toolId is provided in options, use it
+        if (options.toolId) {
+          toolId = options.toolId;
+          tool = await this.databaseStorage.db.collection('tools').findOne({ _id: toolId });
+        } else {
+          // Try to find by name (backwards compatibility)
+          tool = await this.databaseStorage.findTool(toolName);
+          toolId = tool?._id || tool?.id;
         }
       }
       
-      // Get tool metadata
-      const tool = await this.databaseStorage.findTool(toolName);
       if (!tool) {
         throw new PerspectiveError(
-          `Tool not found: ${toolName}`,
+          `Tool not found: ${toolIdentifier}`,
           'TOOL_NOT_FOUND'
         );
+      }
+      
+      // Ensure toolName is always set
+      if (!toolName && tool) {
+        toolName = tool.name;
+      }
+      
+      // IMPORTANT: Check if perspectives already exist BY TOOL ID, not name!
+      if (!options.forceRegenerate && toolId) {
+        const existingPerspectives = await this.databaseStorage.db.collection('tool_perspectives')
+          .find({ tool_id: toolId }).toArray();
+        if (existingPerspectives.length > 0) {
+          if (this.options.verbose) {
+            console.log(`Using existing perspectives for ${toolName} (ID: ${toolId}, ${existingPerspectives.length} types)`);
+          }
+          return existingPerspectives;
+        }
       }
       
       // Get all enabled perspective types

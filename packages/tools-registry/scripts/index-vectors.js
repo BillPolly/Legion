@@ -43,9 +43,25 @@ async function indexVectors(options = {}) {
     
     // Display results
     console.log('\n📊 Vector Indexing Results:');
-    console.log(`  Points indexed: ${result.indexed}`);
-    console.log(`  Points failed: ${result.failed}`);
-    console.log(`  Points skipped: ${result.skipped}`);
+    console.log(`  Total perspectives: ${result.total || 0}`);
+    console.log(`  Points indexed: ${result.indexed || 0}`);
+    console.log(`  Points failed: ${result.failed || 0}`);
+    console.log(`  Points skipped: ${result.skipped || (result.total - result.indexed - result.failed) || 0}`);
+    
+    // Show errors if any
+    if (result.errors && result.errors.length > 0) {
+      console.log('\n⚠️  Errors:');
+      result.errors.slice(0, 5).forEach(err => {
+        if (typeof err === 'string') {
+          console.log(`  - ${err}`);
+        } else {
+          console.log(`  - ${err.tool}: ${err.error}`);
+        }
+      });
+      if (result.errors.length > 5) {
+        console.log(`  ... and ${result.errors.length - 5} more errors`);
+      }
+    }
     
     if (result.collections) {
       console.log('\n📦 Collections:');
@@ -77,6 +93,9 @@ async function indexVectors(options = {}) {
     }
     
     console.log('\n✅ Vector indexing complete!');
+    
+    // Exit successfully
+    process.exit(0);
     
   } catch (error) {
     console.error('❌ Error indexing vectors:', error.message);

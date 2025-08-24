@@ -11,7 +11,22 @@
     "test:unit": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest __tests__/unit --runInBand",
     "test:integration": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest __tests__/integration --runInBand",
     "lint": "eslint src/",
-    "lint:fix": "eslint src/ --fix"
+    "lint:fix": "eslint src/ --fix",
+    "status": "NODE_OPTIONS=--experimental-vm-modules node scripts/check-status.js",
+    "status:verbose": "NODE_OPTIONS=--experimental-vm-modules node scripts/check-status.js --verbose",
+    "discover": "NODE_OPTIONS=--experimental-vm-modules node scripts/discover-modules.js",
+    "load": "NODE_OPTIONS=--experimental-vm-modules node scripts/load-tools.js",
+    "load:complete": "NODE_OPTIONS=--experimental-vm-modules node scripts/load-complete-pipeline.js",
+    "perspectives": "NODE_OPTIONS=--experimental-vm-modules node scripts/generate-perspectives.js",
+    "embeddings": "NODE_OPTIONS=--experimental-vm-modules node scripts/generate-embeddings.js",
+    "vectors": "NODE_OPTIONS=--experimental-vm-modules node scripts/index-vectors.js",
+    "search": "NODE_OPTIONS=--experimental-vm-modules node scripts/semantic-search.js",
+    "verify": "NODE_OPTIONS=--experimental-vm-modules node scripts/verify-pipeline.js",
+    "reset": "NODE_OPTIONS=--experimental-vm-modules node scripts/reset-database.js",
+    "clear": "NODE_OPTIONS=--experimental-vm-modules node scripts/clear-database.js",
+    "clear:force": "NODE_OPTIONS=--experimental-vm-modules node scripts/clear-database.js --force",
+    "clear:all": "NODE_OPTIONS=--experimental-vm-modules node scripts/clear-database.js --include-registry",
+    "clear:all:force": "NODE_OPTIONS=--experimental-vm-modules node scripts/clear-database.js --force --include-registry"
   },
   "keywords": [
     "legion",

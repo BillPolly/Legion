@@ -52,6 +52,9 @@ async function generatePerspectives(options = {}) {
     
     console.log('\n✅ Perspective generation complete!');
     
+    // Exit successfully
+    process.exit(0);
+    
   } catch (error) {
     console.error('❌ Error generating perspectives:', error.message);
     if (verbose) {

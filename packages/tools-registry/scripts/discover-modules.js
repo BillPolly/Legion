@@ -48,6 +48,9 @@ async function discoverModules(options = {}) {
     
     console.log('\n✅ Discovery complete!');
     
+    // Exit successfully
+    process.exit(0);
+    
   } catch (error) {
     console.error('❌ Error discovering modules:', error.message);
     if (verbose) {

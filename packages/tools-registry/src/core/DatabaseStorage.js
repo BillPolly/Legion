@@ -750,7 +750,7 @@ export class DatabaseStorage {
       
       await collection.replaceOne(
         { 
-          tool_name: toolPerspective.tool_name,
+          tool_id: toolPerspective.tool_id,
           perspective_type_name: toolPerspective.perspective_type_name
         },
         perspectiveDoc,
@@ -796,7 +796,7 @@ export class DatabaseStorage {
       const bulkOps = perspectiveDocs.map(doc => ({
         replaceOne: {
           filter: { 
-            tool_name: doc.tool_name,
+            tool_id: doc.tool_id,
             perspective_type_name: doc.perspective_type_name
           },
           replacement: doc,
@@ -1126,9 +1126,10 @@ export class DatabaseStorage {
       // New indexes for tool_perspectives collection
       const toolPerspectivesCollection = this.getCollection('tool_perspectives');
       await toolPerspectivesCollection.createIndex({ tool_name: 1 });
+      await toolPerspectivesCollection.createIndex({ tool_id: 1 });
       await toolPerspectivesCollection.createIndex({ perspective_type_name: 1 });
       await toolPerspectivesCollection.createIndex(
-        { tool_name: 1, perspective_type_name: 1 }, 
+        { tool_id: 1, perspective_type_name: 1 }, 
         { unique: true }
       );
       await toolPerspectivesCollection.createIndex({ perspective_type_id: 1 });

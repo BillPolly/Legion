@@ -159,8 +159,9 @@ const COLLECTION_INDEXES = {
   
   tool_perspectives: [
     { key: { tool_name: 1 } },
+    { key: { tool_id: 1 } },
     { key: { perspective_type_name: 1 } },
-    { key: { tool_name: 1, perspective_type_name: 1 }, options: { unique: true } },
+    { key: { tool_id: 1, perspective_type_name: 1 }, options: { unique: true } },
     { key: { perspective_type_id: 1 } },
     { key: { batch_id: 1 } },
     { key: { generated_at: 1 } },
