@@ -173,6 +173,7 @@ export class ToolRegistry {
         this.vectorStore = new VectorStore({
           embeddingClient: this.embeddingService,
           vectorDatabase: await this._getVectorDatabase(),
+          collectionName: 'tool_perspectives',  // Fixed: Use correct collection name
           dimensions: 768  // Use 768 dimensions for Nomic embeddings
         });
         await this.vectorStore.initialize();
@@ -1558,6 +1559,12 @@ export class ToolRegistry {
         status.collections.tools = await db.collection('tools').countDocuments();
         status.collections.toolPerspectives = await db.collection('tool_perspectives').countDocuments();
         status.collections.modules = await db.collection('modules').countDocuments();
+        status.collections.moduleRegistry = await db.collection('module-registry').countDocuments();
+        
+        // Count perspectives with embeddings (must be an array with length > 0)
+        status.collections.perspectivesWithEmbeddings = await db.collection('tool_perspectives').countDocuments({
+          embedding: { $exists: true, $type: 'array', $ne: [] }
+        });
         
         // Tools by module
         if (status.collections.tools > 0) {
@@ -1596,6 +1603,27 @@ export class ToolRegistry {
           status.samples.perspectives = await db.collection('tool_perspectives')
             .aggregate([{ $sample: { size: 2 } }])
             .toArray();
+        }
+      }
+      
+      // Check Qdrant vector store
+      if (this.vectorStore) {
+        try {
+          const vectorStats = await this.vectorStore.getStatistics();
+          status.qdrant.connected = true;
+          status.qdrant.vectors = vectorStats.vectors_count || 0;
+          status.qdrant.dimensions = vectorStats.dimensions || 768;
+          
+          // Try to get collection info for more details
+          if (this.vectorStore.getCollectionInfo) {
+            const collectionInfo = await this.vectorStore.getCollectionInfo();
+            if (collectionInfo && collectionInfo.vectors_count !== undefined) {
+              status.qdrant.vectors = collectionInfo.vectors_count;
+            }
+          }
+        } catch (error) {
+          status.qdrant.connected = false;
+          status.qdrant.error = error.message;
         }
       }
       
@@ -1642,13 +1670,18 @@ export class ToolRegistry {
       errors: []
     };
     
-    // Module loading logic from load-complete-pipeline.js
-    const ALL_MODULES = [
-      'calculator', 'file', 'json', 'command-executor', 'system',
-      'ai-generation', 'file-analysis', 'github', 'serper'
-    ];
-    
-    const modulesToLoad = moduleName ? [moduleName] : ALL_MODULES;
+    // Get modules from the module-registry instead of hardcoded list
+    let modulesToLoad;
+    if (moduleName) {
+      modulesToLoad = [moduleName];
+    } else {
+      // Load ALL discovered modules from the registry
+      const discoveredModules = await this.databaseStorage.findDiscoveredModules();
+      modulesToLoad = discoveredModules.map(m => m.name);
+      if (verbose) {
+        console.log(`📦 Found ${modulesToLoad.length} modules in registry to load`);
+      }
+    }
     
     for (const modName of modulesToLoad) {
       try {
@@ -1681,20 +1714,20 @@ export class ToolRegistry {
    */
   async loadSingleModule(moduleName, options = {}) {
     const { verbose = false } = options;
-    const path = await import('path');
-    const { fileURLToPath } = await import('url');
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filename);
     
     try {
-      // Construct module path
-      const modulePath = path.resolve(
-        __dirname, 
-        `../../../tools-collection/src/${moduleName}/index.js`
-      );
+      // Get module info from registry
+      const moduleInfo = await this.databaseStorage.findDiscoveredModule(moduleName);
+      if (!moduleInfo) {
+        throw new Error(`Module ${moduleName} not found in registry`);
+      }
       
-      // Load module dynamically
-      const moduleFile = await import(modulePath);
+      if (verbose) {
+        console.log(`  Loading ${moduleName} from ${moduleInfo.path}`);
+      }
+      
+      // Load module dynamically using the path from registry
+      const moduleFile = await import(moduleInfo.path);
       const ModuleClass = moduleFile.default;
       
       if (!ModuleClass) {
@@ -1722,6 +1755,23 @@ export class ToolRegistry {
       
       const tools = moduleInstance.getTools();
       const toolCount = Array.isArray(tools) ? tools.length : 0;
+      
+      // Store module in modules collection
+      const moduleDoc = {
+        name: moduleName,
+        path: moduleInfo.path,
+        type: moduleInfo.type || 'unknown',
+        toolCount: toolCount,
+        tools: tools.map(t => t.name),
+        loadedAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      await this.databaseStorage.db.collection('modules').replaceOne(
+        { name: moduleName },
+        moduleDoc,
+        { upsert: true }
+      );
       
       // Store tools in database
       for (const tool of tools) {
@@ -1775,36 +1825,76 @@ export class ToolRegistry {
   }
 
   /**
-   * Generate perspectives for all tools
+   * Generate perspectives for all tools (without embeddings by default)
    */
   async generatePerspectives(options = {}) {
-    const { toolName, verbose = false } = options;
+    const { 
+      toolName, 
+      moduleName,
+      forceRegenerate = false,
+      verbose = false,
+      dryRun = false,
+      generateEmbeddings = false  // Default to false for separate step
+    } = options;
     
     if (!this.perspectives) {
       throw new Error('Perspectives system not initialized. Ensure LLM client is configured.');
     }
     
-    const tools = toolName 
-      ? await this.databaseStorage.db.collection('tools').find({ name: toolName }).toArray()
-      : await this.databaseStorage.listTools();
+    // Get tools based on filters
+    let tools;
+    if (toolName) {
+      tools = await this.databaseStorage.db.collection('tools').find({ name: toolName }).toArray();
+    } else if (moduleName) {
+      tools = await this.databaseStorage.db.collection('tools').find({ moduleName }).toArray();
+    } else {
+      tools = await this.databaseStorage.listTools();
+    }
     
     const results = {
       total: tools.length,
       generated: 0,
+      skipped: 0,
       failed: 0,
-      errors: []
+      failures: []
     };
     
     for (const tool of tools) {
       try {
-        await this.perspectives.generatePerspectivesForTool(tool.name);
+        // Check if perspectives exist and skip if not forcing
+        if (!forceRegenerate) {
+          const existing = await this.databaseStorage.db.collection('tool_perspectives')
+            .findOne({ tool_name: tool.name });
+          if (existing) {
+            results.skipped++;
+            if (verbose) {
+              console.log(`⏭️  Skipping ${tool.name} - perspectives already exist`);
+            }
+            continue;
+          }
+        }
+        
+        if (dryRun) {
+          console.log(`Would generate perspectives for ${tool.name}`);
+          results.generated++;
+          continue;
+        }
+        
+        // Generate perspectives without embeddings by default
+        await this.perspectives.generatePerspectivesForTool(tool.name, {
+          generateEmbeddings: generateEmbeddings
+        });
+        
         results.generated++;
         if (verbose) {
           console.log(`✅ Generated perspectives for ${tool.name}`);
         }
       } catch (error) {
         results.failed++;
-        results.errors.push({ tool: tool.name, error: error.message });
+        results.failures.push({ 
+          toolName: tool.name, 
+          error: error.message 
+        });
         if (verbose) {
           console.log(`❌ Failed to generate perspectives for ${tool.name}: ${error.message}`);
         }
@@ -1815,10 +1905,233 @@ export class ToolRegistry {
   }
 
   /**
+   * Generate embeddings for existing perspectives (separate step)
+   */
+  async generateEmbeddings(options = {}) {
+    const { 
+      toolName, 
+      moduleName,
+      forceRegenerate = false,
+      verbose = false,
+      validate = false
+    } = options;
+    
+    if (!this.perspectives) {
+      throw new Error('Perspectives system not initialized. Ensure LLM client is configured.');
+    }
+    
+    // Build base filter for perspectives (tool/module)
+    let baseFilter = {};
+    
+    // Add tool/module filter if specified
+    if (toolName) {
+      baseFilter.tool_name = toolName;
+    } else if (moduleName) {
+      // Get tools for module first
+      const tools = await this.databaseStorage.db.collection('tools')
+        .find({ moduleName }).toArray();
+      const toolNames = tools.map(t => t.name);
+      baseFilter.tool_name = { $in: toolNames };
+    }
+    
+    // Get ALL perspectives matching base filter
+    const allPerspectives = await this.databaseStorage.db.collection('tool_perspectives')
+      .find(baseFilter).toArray();
+    
+    // Separate perspectives by embedding status
+    const withEmbeddings = [];
+    const withoutEmbeddings = [];
+    
+    for (const perspective of allPerspectives) {
+      if (perspective.embedding && Array.isArray(perspective.embedding) && perspective.embedding.length > 0) {
+        withEmbeddings.push(perspective);
+      } else {
+        withoutEmbeddings.push(perspective);
+      }
+    }
+    
+    // Determine what to process
+    let toProcess = [];
+    if (forceRegenerate) {
+      // Force mode: process ALL perspectives
+      toProcess = allPerspectives;
+    } else {
+      // Normal mode: only process those without embeddings
+      toProcess = withoutEmbeddings;
+    }
+    
+    // Initialize results
+    const results = {
+      totalPerspectives: allPerspectives.length,
+      generated: 0,
+      skipped: forceRegenerate ? 0 : withEmbeddings.length,  // In force mode, nothing is skipped
+      failed: 0,
+      failures: []
+    };
+    
+    if (toProcess.length === 0) {
+      if (verbose) {
+        console.log(`All ${allPerspectives.length} perspectives already have embeddings`);
+      }
+      return results;
+    }
+    
+    if (verbose) {
+      console.log(`Processing ${toProcess.length} perspectives...`);
+      if (forceRegenerate) {
+        console.log(`Force regenerating embeddings (${withEmbeddings.length} already had embeddings)`);
+      }
+    }
+    
+    // Process in batches
+    const batchSize = 10;
+    for (let i = 0; i < toProcess.length; i += batchSize) {
+      const batch = toProcess.slice(i, i + batchSize);
+      const batchNum = Math.floor(i/batchSize) + 1;
+      const totalBatches = Math.ceil(toProcess.length / batchSize);
+      
+      try {
+        // Generate embeddings for batch
+        await this.perspectives._generateEmbeddingsForPerspectives(batch);
+        
+        // Update perspectives in database
+        let successCount = 0;
+        for (const perspective of batch) {
+          if (perspective.embedding && perspective.embedding.length > 0) {
+            await this.databaseStorage.db.collection('tool_perspectives').updateOne(
+              { _id: perspective._id },
+              { $set: { embedding: perspective.embedding } }
+            );
+            successCount++;
+          }
+        }
+        
+        results.generated += successCount;
+        
+        if (verbose) {
+          console.log(`✅ Generated embeddings for batch ${batchNum}/${totalBatches} (${successCount} perspectives)`);
+        }
+        
+      } catch (error) {
+        results.failed += batch.length;
+        results.failures.push({
+          batch: batchNum,
+          count: batch.length,
+          error: error.message
+        });
+        
+        if (verbose) {
+          console.error(`❌ Failed batch ${batchNum}/${totalBatches}: ${error.message}`);
+        }
+      }
+    }
+    
+    // When force regenerating, update the skipped count to reflect what already had embeddings
+    if (forceRegenerate) {
+      results.skipped = withEmbeddings.length;
+    }
+    
+    if (verbose) {
+      console.log(`\n📊 Final results:`);
+      console.log(`  Total: ${results.totalPerspectives}`);
+      console.log(`  Generated: ${results.generated}`);
+      console.log(`  Already had embeddings: ${results.skipped}`);
+      console.log(`  Failed: ${results.failed}`);
+    }
+    
+    return results;
+  }
+
+  /**
+   * Validate embeddings for quality and correctness
+   */
+  async validateEmbeddings(options = {}) {
+    const { toolName, moduleName, verbose = false } = options;
+    
+    // Build filter
+    const filter = { 
+      embedding: { $exists: true, $ne: null }
+    };
+    
+    if (toolName) {
+      filter.tool_name = toolName;
+    } else if (moduleName) {
+      const tools = await this.databaseStorage.db.collection('tools')
+        .find({ moduleName }).toArray();
+      const toolNames = tools.map(t => t.name);
+      filter.tool_name = { $in: toolNames };
+    }
+    
+    const perspectives = await this.databaseStorage.db.collection('tool_perspectives')
+      .find(filter).toArray();
+    
+    const results = {
+      total: perspectives.length,
+      valid: 0,
+      invalid: 0,
+      empty: 0,
+      invalidDetails: []
+    };
+    
+    for (const perspective of perspectives) {
+      // Check if embedding exists and is valid
+      if (!perspective.embedding) {
+        results.empty++;
+        continue;
+      }
+      
+      // Validate embedding structure (should be 768-dimensional for Nomic)
+      if (!Array.isArray(perspective.embedding)) {
+        results.invalid++;
+        results.invalidDetails.push({
+          id: perspective._id,
+          reason: 'Embedding is not an array'
+        });
+      } else if (perspective.embedding.length === 0) {
+        results.empty++;
+      } else if (perspective.embedding.length !== 768) {
+        results.invalid++;
+        results.invalidDetails.push({
+          id: perspective._id,
+          reason: `Wrong dimension: ${perspective.embedding.length} (expected 768)`
+        });
+      } else if (perspective.embedding.some(v => typeof v !== 'number' || isNaN(v))) {
+        results.invalid++;
+        results.invalidDetails.push({
+          id: perspective._id,
+          reason: 'Contains non-numeric or NaN values'
+        });
+      } else {
+        // Check if embedding is all zeros (invalid)
+        const isAllZeros = perspective.embedding.every(v => v === 0);
+        if (isAllZeros) {
+          results.invalid++;
+          results.invalidDetails.push({
+            id: perspective._id,
+            reason: 'All values are zero'
+          });
+        } else {
+          results.valid++;
+        }
+      }
+    }
+    
+    if (verbose) {
+      console.log('\n📊 Embedding Validation Results:');
+      console.log(`  Total: ${results.total}`);
+      console.log(`  Valid: ${results.valid}`);
+      console.log(`  Invalid: ${results.invalid}`);
+      console.log(`  Empty: ${results.empty}`);
+    }
+    
+    return results;
+  }
+
+  /**
    * Index tools in vector store
    */
   async indexVectors(options = {}) {
-    const { clear = false, verbose = false } = options;
+    const { clear = true, verbose = false } = options;
     
     if (!this.vectorStore) {
       throw new Error('Vector store not initialized');
@@ -1879,32 +2192,36 @@ export class ToolRegistry {
   /**
    * Clear all data from database and vector store
    */
-  async clearAllData() {
+  async clearAllData(options = {}) {
+    const { includeRegistry = false, verbose = false } = options;
+    
     const results = {
-      tools: 0,
-      modules: 0,
-      perspectives: 0,
-      collections: [],
-      vectorStore: false
+      mongodb: {},
+      vectorStore: false,
+      cache: { cleared: 0 }
     };
     
     // Clear database collections and count deleted documents
     const collections = ['tools', 'modules', 'tool_perspectives', 'perspective_types'];
+    
+    // Add module-registry if includeRegistry is true
+    if (includeRegistry) {
+      collections.push('module-registry');
+    }
+    
     for (const collection of collections) {
       try {
         const deleteResult = await this.databaseStorage.db.collection(collection).deleteMany({});
-        results.collections.push(collection);
+        results.mongodb[collection] = deleteResult.deletedCount || 0;
         
-        // Map collection names to result properties
-        if (collection === 'tools') {
-          results.tools = deleteResult.deletedCount || 0;
-        } else if (collection === 'modules') {
-          results.modules = deleteResult.deletedCount || 0;
-        } else if (collection === 'tool_perspectives') {
-          results.perspectives = deleteResult.deletedCount || 0;
+        if (verbose) {
+          console.log(`  Cleared ${collection}: ${deleteResult.deletedCount || 0} documents`);
         }
       } catch (error) {
         // Collection might not exist
+        if (verbose) {
+          console.log(`  Skipped ${collection}: ${error.message}`);
+        }
       }
     }
     
@@ -1919,8 +2236,10 @@ export class ToolRegistry {
     }
     
     // Clear caches
+    const cacheSize = this.cache.size + this.moduleCache.size;
     this.cache.clear();
     this.moduleCache.clear();
+    results.cache.cleared = cacheSize;
     
     return results;
   }
@@ -1986,15 +2305,22 @@ export class ToolRegistry {
   }
 
   /**
-   * Run complete pipeline
+   * Run complete pipeline with separated embedding generation
    */
   async runCompletePipeline(options = {}) {
-    const { clear = false, verify = false, verbose = false } = options;
+    const { 
+      clear = false, 
+      verify = false, 
+      verbose = false,
+      skipEmbeddings = false,
+      skipVectors = false 
+    } = options;
     const startTime = Date.now();
     
     const results = {
       modules: {},
       perspectives: {},
+      embeddings: {},
       vectors: {},
       search: {},
       duration: 0,
@@ -2003,35 +2329,61 @@ export class ToolRegistry {
     
     try {
       if (!verify) {
-        // Load modules
-        if (verbose) console.log('📦 Loading modules...');
+        // Phase 1: Load modules
+        if (verbose) console.log('📦 Phase 1: Loading modules...');
         results.modules = await this.loadAllModules({ clear, verbose });
         
-        // Generate perspectives (if LLM available)
+        // Phase 2: Generate perspectives (without embeddings)
         if (this.perspectives) {
-          if (verbose) console.log('🧠 Generating perspectives...');
-          results.perspectives = await this.generatePerspectives({ verbose });
+          if (verbose) console.log('📝 Phase 2: Generating perspectives (without embeddings)...');
+          results.perspectives = await this.generatePerspectives({ 
+            verbose,
+            generateEmbeddings: false  // Don't generate embeddings yet
+          });
         }
         
-        // Index vectors
-        if (this.vectorStore) {
-          if (verbose) console.log('🔍 Indexing vectors...');
+        // Phase 3: Generate embeddings (separate step for better error visibility)
+        if (this.perspectives && !skipEmbeddings) {
+          if (verbose) console.log('🔮 Phase 3: Generating embeddings for perspectives...');
+          results.embeddings = await this.generateEmbeddings({ 
+            verbose,
+            validate: true  // Validate after generation
+          });
+          
+          if (results.embeddings.failed > 0 && verbose) {
+            console.log(`⚠️  ${results.embeddings.failed} embeddings failed to generate`);
+          }
+        }
+        
+        // Phase 4: Index vectors in Qdrant
+        if (this.vectorStore && !skipVectors) {
+          if (verbose) console.log('🔍 Phase 4: Indexing vectors in Qdrant...');
           results.vectors = await this.indexVectors({ verbose });
         }
       }
       
-      // Test search
+      // Phase 5: Test search
       if (this.vectorStore) {
-        if (verbose) console.log('🧪 Testing semantic search...');
+        if (verbose) console.log('🧪 Phase 5: Testing semantic search...');
         results.search = await this.testSemanticSearch(null, { verbose });
       }
       
       results.duration = Date.now() - startTime;
       results.success = true;
       
+      // Enhanced results for the script
+      results.modulesLoaded = results.modules.successful || 0;
+      results.modulesFailed = results.modules.failed || 0;
+      results.toolsLoaded = results.modules.tools || 0;
+      results.perspectives = results.perspectives.generated || 0;
+      results.vectors = results.vectors.indexed || 0;
+      results.searchWorking = results.search.success || false;
+      results.totalTime = results.duration;
+      
     } catch (error) {
       results.error = error.message;
       results.duration = Date.now() - startTime;
+      results.totalTime = results.duration;
     }
     
     return results;
@@ -2056,15 +2408,40 @@ export class ToolRegistry {
       });
     }
     
-    const searchPath = path || '../tools-collection';
-    const modules = await this.moduleDiscovery.discoverModules(searchPath, { 
-      pattern, 
-      verbose 
-    });
+    // Use discoverInMonorepo to search the entire packages directory
+    let allModules = [];
+    
+    if (path) {
+      // If a specific path is provided, use it
+      if (verbose) console.log(`🔍 Searching in ${path}...`);
+      const modules = await this.moduleDiscovery.discoverModules(path, { 
+        pattern, 
+        verbose 
+      });
+      allModules = modules;
+      if (verbose) console.log(`  Found ${modules.length} modules in ${path}`);
+    } else {
+      // Otherwise, search the entire monorepo packages directory
+      if (verbose) console.log(`🔍 Searching in entire monorepo packages directory...`);
+      allModules = await this.moduleDiscovery.discoverInMonorepo();
+      if (verbose) console.log(`  Found ${allModules.length} modules in monorepo`);
+      
+      // Apply pattern filter if provided
+      if (pattern) {
+        const regex = new RegExp(pattern);
+        allModules = allModules.filter(m => regex.test(m.name));
+        if (verbose) console.log(`  After pattern filter: ${allModules.length} modules`);
+      }
+    }
+    
+    // Remove duplicates based on module name
+    const uniqueModules = Array.from(
+      new Map(allModules.map(m => [m.name, m])).values()
+    );
     
     const results = {
-      discovered: modules.length,
-      modules: modules.map(m => ({
+      discovered: uniqueModules.length,
+      modules: uniqueModules.map(m => ({
         name: m.name,
         path: m.path,
         type: m.type,
@@ -2073,12 +2450,12 @@ export class ToolRegistry {
     };
     
     if (save) {
-      results.saved = await this.saveDiscoveredModules(modules, { verbose });
+      results.saved = await this.saveDiscoveredModules(uniqueModules, { verbose });
     }
     
     if (verbose) {
-      console.log(`📦 Discovered ${modules.length} modules`);
-      modules.forEach(m => {
+      console.log(`\n📦 Total discovered ${uniqueModules.length} unique modules`);
+      uniqueModules.forEach(m => {
         console.log(`  - ${m.name} (${m.type}) at ${m.path}`);
       });
     }
@@ -2126,87 +2503,6 @@ export class ToolRegistry {
     return saved;
   }
 
-  /**
-   * Generate embeddings for tools
-   * @param {Object} options - Embedding options
-   * @returns {Object} Embedding generation results
-   */
-  async generateEmbeddings(options = {}) {
-    const { moduleName, toolName, force = false, batchSize = 50, verbose = false } = options;
-    
-    if (!this.embeddingService) {
-      return {
-        tools: { processed: 0, failed: 0, errors: [] },
-        perspectives: { processed: 0, failed: 0, errors: [] },
-        error: 'Embedding service not initialized'
-      };
-    }
-    
-    // Get perspectives to embed
-    let query = {};
-    if (toolName) {
-      query.tool_name = toolName;
-    } else if (moduleName) {
-      const tools = await this.databaseStorage.db
-        .collection('tools')
-        .find({ moduleName })
-        .toArray();
-      query.tool_name = { $in: tools.map(t => t.name) };
-    }
-    
-    if (!force) {
-      query.embedding = { $exists: false };
-    }
-    
-    const perspectives = await this.databaseStorage.db
-      .collection('tool_perspectives')
-      .find(query)
-      .toArray();
-    
-    const results = {
-      total: perspectives.length,
-      embedded: 0,
-      failed: 0,
-      errors: []
-    };
-    
-    // Process in batches
-    for (let i = 0; i < perspectives.length; i += batchSize) {
-      const batch = perspectives.slice(i, i + batchSize);
-      const texts = batch.map(p => p.content);
-      
-      try {
-        const embeddings = await this.embeddingService.generateEmbeddings(texts);
-        
-        // Update perspectives with embeddings
-        for (let j = 0; j < batch.length; j++) {
-          await this.databaseStorage.db
-            .collection('tool_perspectives')
-            .updateOne(
-              { _id: batch[j]._id },
-              { $set: { embedding: embeddings[j] } }
-            );
-          results.embedded++;
-        }
-        
-        if (verbose) {
-          console.log(`✅ Embedded batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(perspectives.length / batchSize)}`);
-        }
-      } catch (error) {
-        results.failed += batch.length;
-        results.errors.push({
-          batch: Math.floor(i / batchSize) + 1,
-          error: error.message
-        });
-        
-        if (verbose) {
-          console.log(`❌ Failed batch ${Math.floor(i / batchSize) + 1}: ${error.message}`);
-        }
-      }
-    }
-    
-    return results;
-  }
 
   /**
    * Index vectors in Qdrant with enhanced options
@@ -2214,7 +2510,7 @@ export class ToolRegistry {
    * @returns {Object} Indexing results
    */
   async indexVectorsEnhanced(options = {}) {
-    const { moduleName, rebuild = false, verify = false, verbose = false } = options;
+    const { moduleName, rebuild = false, clear = true, verify = false, verbose = false } = options;
     
     if (!this.vectorStore) {
       return {
@@ -2228,6 +2524,9 @@ export class ToolRegistry {
     if (rebuild) {
       if (verbose) console.log('🔄 Rebuilding vector collection...');
       await this.rebuildVectorCollection({ verbose });
+    } else if (clear) {
+      if (verbose) console.log('🧹 Clearing existing vectors...');
+      await this.vectorStore.clear();
     }
     
     // Get perspectives with embeddings
@@ -2252,25 +2551,75 @@ export class ToolRegistry {
       errors: []
     };
     
-    for (const perspective of perspectives) {
+    // Process in batches for better performance
+    const batchSize = 50;
+    for (let i = 0; i < perspectives.length; i += batchSize) {
+      const batch = perspectives.slice(i, i + batchSize);
+      
       try {
-        await this.vectorStore.index({
-          id: perspective._id.toString(),
-          vector: perspective.embedding,
-          metadata: {
-            toolName: perspective.tool_name,
-            moduleName: perspective.module_name,
-            perspectiveType: perspective.perspective_type_name,
-            content: perspective.content
+        // Check if VectorStore has the right method
+        if (this.vectorStore.vectorDatabase && this.vectorStore.vectorDatabase.insertBatch) {
+          // Use insertBatch method - store MongoDB ID in metadata
+          const docs = batch.map(perspective => ({
+            vector: perspective.embedding,
+            metadata: {
+              perspectiveId: perspective._id.toString(),
+              toolId: perspective.tool_id?.toString(),
+              toolName: perspective.tool_name,
+              moduleName: perspective.module_name,
+              perspectiveType: perspective.perspective_type_name,
+              content: perspective.content,
+              keywords: perspective.keywords || []
+            }
+          }));
+          
+          await this.vectorStore.vectorDatabase.insertBatch('tool_perspectives', docs);
+          
+          results.indexed += batch.length;
+        } else {
+          // Fallback to individual indexing
+          for (const perspective of batch) {
+            try {
+              // Create a tool-like object for indexTool method
+              const toolData = {
+                name: perspective.tool_name,
+                description: perspective.content,
+                moduleName: perspective.module_name
+              };
+              
+              const perspectiveData = {
+                perspective: perspective.content,
+                category: perspective.perspective_type_name
+              };
+              
+              await this.vectorStore.indexTool(toolData, perspectiveData);
+              results.indexed++;
+            } catch (error) {
+              results.failed++;
+              results.errors.push({
+                tool: perspective.tool_name,
+                error: error.message
+              });
+            }
           }
-        });
-        results.indexed++;
+        }
+        
+        if (verbose && results.indexed > 0) {
+          console.log(`✅ Indexed batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(perspectives.length/batchSize)} (${Math.min(batchSize, batch.length)} perspectives)`);
+        }
+        
       } catch (error) {
-        results.failed++;
+        // Batch failed, record all as failed
+        results.failed += batch.length;
         results.errors.push({
-          tool: perspective.tool_name,
+          batch: Math.floor(i/batchSize) + 1,
+          count: batch.length,
           error: error.message
         });
+        
+        if (verbose) {
+          console.error(`❌ Failed batch ${Math.floor(i/batchSize) + 1}: ${error.message}`);
+        }
       }
     }
     
@@ -2369,8 +2718,8 @@ export class ToolRegistry {
     try {
       // Get collection info
       const collectionInfo = await this.vectorStore.getCollectionInfo();
-      results.stats.vectorCount = collectionInfo.vectors_count;
-      results.stats.dimensions = collectionInfo.config.params.vectors.size;
+      results.stats.vectorCount = collectionInfo.vectors_count || 0;
+      results.stats.dimensions = collectionInfo.config?.params?.vectors?.size || 768;
       
       // Count perspectives with embeddings
       const perspectiveCount = await this.databaseStorage.db
@@ -2385,6 +2734,97 @@ export class ToolRegistry {
         results.issues.push({
           type: 'count_mismatch',
           message: `Vector count (${results.stats.vectorCount}) doesn't match perspective count (${results.stats.perspectiveCount})`
+        });
+      }
+      
+      // CRUCIAL CHECK: Verify Qdrant metadata matches MongoDB records
+      try {
+        // Get a sample of vectors from Qdrant with their metadata
+        // Use a dummy search to get sample vectors with their payload
+        const dummyVector = new Array(this.options.dimensions || 768).fill(0.1);
+        const sampleVectors = await this.vectorStore.vectorDatabase.search(
+          'tool_perspectives',
+          dummyVector,
+          {
+            limit: 10,
+            withPayload: true
+          }
+        );
+        
+        if (sampleVectors && sampleVectors.length > 0) {
+          let metadataMatchCount = 0;
+          let metadataMismatchCount = 0;
+          const { ObjectId } = await import('mongodb');
+          
+          for (const vector of sampleVectors) {
+            if (vector.metadata && vector.metadata.perspectiveId) {
+              // Check if this perspectiveId exists in MongoDB
+              let perspectiveId;
+              try {
+                perspectiveId = ObjectId.isValid(vector.metadata.perspectiveId) 
+                  ? new ObjectId(vector.metadata.perspectiveId)
+                  : vector.metadata.perspectiveId;
+              } catch {
+                perspectiveId = vector.metadata.perspectiveId;
+              }
+              
+              const dbRecord = await this.databaseStorage.db
+                .collection('tool_perspectives')
+                .findOne({ _id: perspectiveId });
+              
+              if (dbRecord) {
+                // Verify metadata matches
+                const metadataMatches = (
+                  vector.metadata.toolName === dbRecord.tool_name &&
+                  vector.metadata.moduleName === dbRecord.module_name &&
+                  vector.metadata.perspectiveType === dbRecord.perspective_type_name
+                );
+                
+                if (metadataMatches) {
+                  metadataMatchCount++;
+                } else {
+                  metadataMismatchCount++;
+                  if (verbose) {
+                    console.log(`  ⚠️  Metadata mismatch for ${vector.metadata.perspectiveId}`);
+                    console.log(`    Qdrant: ${vector.metadata.toolName}/${vector.metadata.moduleName}/${vector.metadata.perspectiveType}`);
+                    console.log(`    MongoDB: ${dbRecord.tool_name}/${dbRecord.module_name}/${dbRecord.perspective_type_name}`);
+                  }
+                }
+              } else {
+                metadataMismatchCount++;
+                if (verbose) {
+                  console.log(`  ❌ Vector ${vector.metadata.perspectiveId} not found in MongoDB`);
+                }
+              }
+            }
+          }
+          
+          results.stats.sampleSize = sampleVectors.length;
+          results.stats.metadataMatches = metadataMatchCount;
+          results.stats.metadataMismatches = metadataMismatchCount;
+          
+          // Calculate valid points based on metadata verification
+          if (sampleVectors.length > 0) {
+            const validPercentage = metadataMatchCount / sampleVectors.length;
+            results.validPoints = Math.round(results.stats.vectorCount * validPercentage);
+          } else {
+            // No vectors found for sampling, assume none are valid
+            results.validPoints = 0;
+          }
+          
+          if (metadataMismatchCount > 0) {
+            results.valid = false;
+            results.issues.push({
+              type: 'metadata_mismatch',
+              message: `${metadataMismatchCount}/${sampleVectors.length} vectors have metadata that doesn't match MongoDB records`
+            });
+          }
+        }
+      } catch (error) {
+        results.valid = false;
+        results.issues.push({
+          type: 'metadata_verification_error',
+          message: `Metadata verification failed: ${error.message}`
         });
       }
       
@@ -2404,6 +2844,9 @@ export class ToolRegistry {
         console.log('📊 Vector Index Stats:');
         console.log(`  Vectors: ${results.stats.vectorCount}`);
         console.log(`  Perspectives: ${results.stats.perspectiveCount}`);
+        console.log(`  Metadata verification: ${results.stats.sampleSize || 0} samples checked`);
+        console.log(`  Metadata matches: ${results.stats.metadataMatches || 0}`);
+        console.log(`  Metadata mismatches: ${results.stats.metadataMismatches || 0}`);
         console.log(`  Search: ${results.stats.searchWorking ? '✅' : '❌'}`);
         console.log(`  Valid: ${results.valid ? '✅' : '❌'}`);
       }
@@ -2431,6 +2874,7 @@ export class ToolRegistry {
       valid: true,
       verified: 0,
       issues: 0,
+      totalTools: 0,  // Add total tool count
       modules: {
         total: 0,
         valid: 0,
@@ -2509,6 +2953,11 @@ export class ToolRegistry {
         });
       }
     }
+    
+    // Count total tools across all modules
+    results.totalTools = await this.databaseStorage.db
+      .collection('tools')
+      .countDocuments({});
     
     return results;
   }
