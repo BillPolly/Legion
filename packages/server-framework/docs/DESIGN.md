@@ -2,46 +2,565 @@
 
 ## Overview
 
-The Legion Server Framework provides a reusable foundation for creating Legion applications with standardized Express + WebSocket servers and automatic actor-based communication. The framework eliminates boilerplate by automatically handling the connection between server-side and client-side actors.
+The Legion Server Framework provides a **configuration-driven, zero-boilerplate** foundation for creating Legion applications with standardized Express + WebSocket servers and automatic actor-based communication. The framework eliminates complexity by providing:
+
+- **Configuration-driven development** using `legion-serve` CLI and config files
+- **Modular resource serving** via Resource Provider pattern for customizable static assets
+- **Automatic actor handshake protocol** with proper lifecycle management
+- **Flux pattern state management** preventing race conditions and timing issues
+- **Clean Architecture principles** with Dependency Inversion and separation of concerns
 
 ## Problem Statement
 
-Currently, Legion applications (tool-registry-ui, tool-registry-server, aiur-ui) duplicate significant server setup code:
+Previously, Legion applications required significant boilerplate and suffered from common issues:
 
-- Express app configuration with similar middleware stacks
-- WebSocket server setup with actor space management
-- Static file serving with `/legion/packagename` patterns
-- Manual actor pairing and message routing
-- Service initialization (ResourceManager, ToolRegistry, etc.)
-- Health check and API route patterns
-- Graceful shutdown handling
+**Before Framework (Problems Solved):**
+- 🔴 **Manual server setup** - 200+ lines of Express/WebSocket configuration per app  
+- 🔴 **Actor handshake bugs** - "unknown local target GUID" errors from improper protocol
+- 🔴 **Race condition issues** - Async/await in actor interfaces causing timing problems
+- 🔴 **Static resource complexity** - Manual serving of HTML, CSS, JS, favicons
+- 🔴 **Configuration boilerplate** - Repeated middleware, CORS, health checks
+- 🔴 **Debugging difficulty** - Complex server setup obscuring actor logic issues
 
-This duplication makes it difficult to maintain consistency and adds complexity for developers who just want to create actor pairs.
+**After Framework (Solutions Provided):**
+- ✅ **Configuration-driven** - Define apps with simple config files, no manual setup
+- ✅ **Proper handshake protocol** - Automatic actor pairing with error-free communication
+- ✅ **Flux pattern enforcement** - State management preventing race conditions  
+- ✅ **Resource Provider pattern** - Modular, customizable static asset serving
+- ✅ **Zero boilerplate** - Focus on actor logic, not infrastructure
+- ✅ **Built-in debugging** - Clear error messages and protocol visibility
 
 ## Solution Architecture
 
 ### Core Philosophy
 
-The framework follows a **"route + actor pair"** philosophy where developers simply register:
+The framework follows a **"configuration-driven development"** philosophy with three key principles:
 
-1. **Route path** (where the application lives, e.g., `/tools`)
-2. **Server actor factory** (function that creates a new server actor per connection)
-3. **Client actor file path** (JavaScript file that exports the client actor as default)
-4. **Port** (optional, defaults to 8080)
+#### 1. Configuration Over Code
+Developers define applications declaratively using simple config files:
+```javascript
+// actor-server.config.js - Complete app definition
+export default {
+  name: 'todo-app',
+  routes: [{
+    path: '/todos',
+    serverActor: './ServerTodoActor.js',
+    clientActor: './ClientTodoActor.js', 
+    port: 8081
+  }]
+};
+```
 
-The framework automatically:
-- Generates HTML pages with the client actor script and WebSocket handling
-- Creates a new server actor instance for each connection using the factory
-- Serves the client actor JavaScript file
-- Handles WebSocket connection and actor pairing
+#### 2. Hollywood Principle ("Don't call us, we'll call you")
+The framework asks server actors for customization instead of forcing global configuration:
+```javascript
+// Server actors can provide custom resources
+export default function createTodoActor(services) { /* ... */ }
+
+// Framework calls this static method to get resource customization
+createTodoActor.createResourceProvider = (defaultProvider) => {
+  return new TodoResourceProvider(defaultProvider);
+};
+```
+
+#### 3. Flux Pattern State Management
+Actors use synchronous state updates with asynchronous I/O to prevent race conditions:
+- State updates are immediate and synchronous
+- Client notifications happen immediately  
+- File I/O and external operations happen asynchronously in background
+- **No async/await in actor `receive()` methods**
+
+### Framework Automation
+
+The framework automatically handles:
+1. **HTML page generation** with embedded WebSocket and actor initialization
+2. **Client actor serving** as ES modules with proper MIME types
+3. **Server actor creation** using factory pattern for connection isolation
+4. **Actor handshake protocol** with proper sequencing and error handling
+5. **Resource customization** through Resource Provider pattern
+6. **Legion package serving** with automatic import rewriting for browsers
+
+## Resource Provider Architecture
+
+### Overview
+
+The Resource Provider pattern follows **Clean Architecture principles** to enable modular, customizable static resource serving without framework changes. This solves the problem of how server actors can provide custom HTML, CSS, JavaScript, favicons, and other static assets.
+
+### Design Principles
+
+#### 1. Dependency Inversion Principle
+The framework depends on abstract `ResourceProvider` interface, not concrete implementations:
+
+```javascript
+// src/resources/ResourceProvider.js - Abstract base class
+export class ResourceProvider {
+  async getResource(path, req) {
+    throw new Error('ResourceProvider.getResource() must be implemented');
+  }
+}
+```
+
+#### 2. Strategy Pattern
+Different resource providers can be swapped without changing framework code:
+
+```javascript
+// Framework uses any ResourceProvider implementation
+const resourceProvider = serverActor.createResourceProvider 
+  ? serverActor.createResourceProvider(defaultProvider)
+  : defaultProvider;
+```
+
+#### 3. Composite Pattern
+Resource providers can be chained using `CompositeResourceProvider`:
+
+```javascript
+export class CompositeResourceProvider extends ResourceProvider {
+  constructor(providers) {
+    super();
+    this.providers = providers; // Array of providers to try in order
+  }
+  
+  async getResource(path, req) {
+    for (const provider of this.providers) {
+      const resource = await provider.getResource(path, req);
+      if (resource) return resource;
+    }
+    return null;
+  }
+}
+```
+
+### Provider Implementations
+
+#### DefaultResourceProvider
+Provides minimal HTML template, favicon, and client.js with proper actor handshake protocol:
+
+```javascript
+export class DefaultResourceProvider extends ResourceProvider {
+  async getResource(path, req) {
+    switch (path) {
+      case this.config.route: // Main HTML page
+        return {
+          content: this.generateHTML(),
+          contentType: 'text/html'
+        };
+        
+      case `${this.config.route}/client.js`: // Client actor
+        return {
+          content: await fs.readFile(this.config.clientActorFile, 'utf8'),
+          contentType: 'application/javascript'
+        };
+        
+      case `${this.config.route}/favicon.ico`: // Default favicon
+        return {
+          content: await fs.readFile('./assets/default-favicon.ico'),
+          contentType: 'image/x-icon'
+        };
+    }
+    return null;
+  }
+  
+  generateHTML() {
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <title>${this.config.title}</title>
+  <link rel="icon" href="${this.config.route}/favicon.ico">
+</head>
+<body>
+  <div id="${this.config.clientContainer}"></div>
+  <script type="module">
+    import ClientActor from '${this.config.clientActorPath}';
+    import { ActorSpace } from '/legion/actors/ActorSpace.js';
+    
+    // Initialize client actor and WebSocket connection
+    const ws = new WebSocket('${this.config.wsEndpoint}');
+    const clientActor = new ClientActor();
+    const actorSpace = new ActorSpace('client');
+    
+    actorSpace.register(clientActor, 'client-root');
+    window.__legionActorSpace = actorSpace;
+    
+    ws.onopen = () => {
+      const channel = actorSpace.addChannel(ws);
+      
+      // CRITICAL: Proper handshake protocol
+      const handshake = {
+        type: 'actor_handshake',
+        clientRootActor: 'client-root',
+        route: '${this.config.route}'
+      };
+      ws.send(JSON.stringify(handshake));
+    };
+    
+    // Handle handshake acknowledgment
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      if (message.type === 'actor_handshake_ack') {
+        const remoteActor = channel.makeRemote(message.serverRootActor);
+        clientActor.setRemoteActor(remoteActor);
+      }
+    };
+  </script>
+</body>
+</html>`;
+  }
+}
+```
+
+#### Custom Application Providers
+Applications can provide their own resources by implementing the interface:
+
+```javascript
+// examples/todo-app/TodoResourceProvider.js
+export class TodoResourceProvider extends ResourceProvider {
+  constructor(defaultProvider) {
+    super();
+    this.defaultProvider = defaultProvider;
+  }
+  
+  async getResource(path, req) {
+    switch (path) {
+      case '/todos/styles.css':
+        return {
+          content: `
+            .todo-app { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .todo-header h1 { color: #2c3e50; text-align: center; }
+            .todo-input { 
+              width: 100%; 
+              padding: 15px; 
+              font-size: 16px;
+              border: 2px solid #3498db;
+              border-radius: 8px;
+            }
+          `,
+          contentType: 'text/css'
+        };
+        
+      case '/todos/favicon.ico':
+        return {
+          content: Buffer.from(base64TodoIcon, 'base64'),
+          contentType: 'image/x-icon'
+        };
+        
+      default:
+        // Delegate to default provider for HTML, client.js, etc.
+        return this.defaultProvider.getResource(path, req);
+    }
+  }
+}
+```
+
+### Integration with Framework
+
+#### Server Actor Factory Integration
+Server actors can provide resource customization via static method:
+
+```javascript
+// ServerTodoActor.js
+import { TodoResourceProvider } from './TodoResourceProvider.js';
+
+export default function createTodoActor(services) {
+  return {
+    // ... actor implementation
+  };
+}
+
+// Framework calls this method to get custom resource provider
+createTodoActor.createResourceProvider = (defaultProvider) => {
+  return new TodoResourceProvider(defaultProvider);
+};
+```
+
+#### Framework Integration Flow
+1. **ConfigurableActorServer** checks if server actor factory has `createResourceProvider` method
+2. If present, calls method with `defaultProvider` to get custom provider
+3. Uses custom provider; otherwise falls back to `defaultProvider`
+4. Provider handles all resource requests for the route
+
+```javascript
+// src/ConfigurableActorServer.js
+setupRoute(routeConfig) {
+  const { serverActor, clientActor, path, port, title } = routeConfig;
+  
+  // Create default provider with proper configuration
+  const defaultProvider = new DefaultResourceProvider({
+    title: title || 'Legion App',
+    clientActorFile: clientActor,
+    clientActorPath: `${path}/client.js`,
+    route: path,
+    // ... other config
+  });
+  
+  // Check if server actor provides custom resources
+  const factory = await import(serverActor);
+  const resourceProvider = factory.default.createResourceProvider
+    ? factory.default.createResourceProvider(defaultProvider)
+    : defaultProvider;
+    
+  // Use provider for all route resources
+  this.server.use(path, async (req, res, next) => {
+    const resource = await resourceProvider.getResource(req.path, req);
+    if (resource) {
+      res.setHeader('Content-Type', resource.contentType);
+      res.send(resource.content);
+    } else {
+      next();
+    }
+  });
+}
+```
+
+### Benefits of Resource Provider Pattern
+
+1. **🔧 Modularity** - Each application can customize resources without framework changes
+2. **🎨 Flexibility** - Support any static asset type (HTML, CSS, JS, images, fonts)
+3. **🏗️ Clean Architecture** - Dependency Inversion prevents framework coupling
+4. **🔄 Composability** - Providers can be chained and combined
+5. **✅ Testability** - Easy to unit test providers in isolation
+6. **🚀 Performance** - Resources served directly without file system lookups
 
 ### Core Components
 
-#### 1. BaseServer Class
+## Actor Protocol and State Management
 
-The `BaseServer` class provides the foundational Express + WebSocket server with a simplified API:
+### Critical Protocol Rules
+
+Based on extensive debugging and implementation experience, the actor protocol must follow these **critical rules** to prevent errors:
+
+#### 🚨 Rule 1: No Race Conditions - Actors Handle Their Own State
+- **Problem**: Using async/await in actor `receive()` methods causes timing issues
+- **Solution**: Use Flux pattern with immediate synchronous state updates
 
 ```javascript
+// ❌ BAD - Race conditions and timing issues
+async receive(messageType, data) {
+  const result = await this.loadFromDatabase();  // Async operation blocks
+  this.updateState(result);                      // State update delayed
+  this.notifyClients();                         // Notifications delayed
+}
+
+// ✅ GOOD - Flux pattern prevents race conditions  
+receive(messageType, data) {
+  switch (messageType) {
+    case 'add_todo':
+      // 1. Update state immediately (synchronous)
+      this.todos.push({ id: ++this.nextId, text: data.text });
+      
+      // 2. Notify clients immediately (synchronous)
+      this.clients.forEach(client => client.sendTodos());
+      
+      // 3. Handle I/O asynchronously without blocking
+      setImmediate(async () => {
+        await this.saveToFile(); // Background operation
+      });
+      break;
+  }
+}
+```
+
+#### 🚨 Rule 2: Server Sends First Message AFTER Handshake
+- **Problem**: Sending messages before handshake completion causes "unknown local target GUID" errors
+- **Solution**: Wait for handshake acknowledgment before any communication
+
+```javascript
+// ✅ GOOD - Proper handshake sequence
+1. Client sends: { type: 'actor_handshake', clientRootActor: 'client-root' }
+2. Server responds: { type: 'actor_handshake_ack', serverRootActor: 'server-123' }  
+3. Both sides set remote references
+4. NOW actors can send messages freely
+```
+
+#### 🚨 Rule 3: Never Bypass ActorSpace Protocol
+- **Problem**: Manual WebSocket handling breaks actor pairing
+- **Solution**: Always use ActorSpace.register() and proper handshake
+
+### Fixed Handshake Protocol Implementation
+
+The handshake protocol was debugged and fixed to prevent "unknown local target GUID" errors:
+
+#### Client-Side Handshake (Fixed in DefaultResourceProvider)
+```javascript
+// CRITICAL: This is the correct client handshake implementation
+ws.onopen = () => {
+  const channel = actorSpace.addChannel(ws);
+  
+  // Send handshake to initiate actor connection  
+  const handshake = {
+    type: 'actor_handshake',
+    clientRootActor: 'client-root',
+    route: '${this.config.route}'
+  };
+  console.log('[CLIENT] Sending handshake:', handshake);
+  ws.send(JSON.stringify(handshake));
+};
+
+// Handle server acknowledgment
+ws.onmessage = (event) => {
+  const message = JSON.parse(event.data);
+  if (message.type === 'actor_handshake_ack') {
+    console.log('[CLIENT] Received handshake ack:', message);
+    const remoteActor = channel.makeRemote(message.serverRootActor);
+    clientActor.setRemoteActor(remoteActor);
+  }
+};
+```
+
+#### Server-Side Handshake (Fixed in ActorSpaceManager)  
+```javascript
+// Handle incoming handshake messages
+ws.on('message', (data) => {
+  try {
+    const message = JSON.parse(data.toString());
+    if (message.type === 'actor_handshake') {
+      console.log('[SERVER] Received actor handshake:', message);
+      this.handleHandshake(ws, message);
+    }
+  } catch (error) {
+    // Not a JSON message, let ActorSpace handle normally
+  }
+});
+
+handleHandshake(ws, message) {
+  const { route } = message;
+  const routeConfig = this.routes.get(route);
+  
+  // Create server actor using factory
+  const serverActor = routeConfig.factory(this.services);
+  const actorId = `server-root-${Date.now()}`;
+  
+  // Register in ActorSpace
+  connection.actorSpace.register(serverActor, actorId);
+  
+  // Set up remote reference to client
+  const remoteActor = connection.channel.makeRemote('client-root');
+  serverActor.setRemoteActor(remoteActor);
+  
+  // Send acknowledgment
+  ws.send(JSON.stringify({
+    type: 'actor_handshake_ack',
+    serverRootActor: actorId,
+    route: route
+  }));
+}
+```
+
+### Flux Pattern Implementation
+
+#### State Management Pattern
+```javascript
+// Shared state across all connections (for multi-user apps)
+const sharedState = {
+  todos: [],
+  nextId: 1,
+  clients: new Set(),
+  initialized: false,
+  loading: false
+};
+
+function createTodoActor(services) {
+  return {
+    remoteActor: null,
+    
+    setRemoteActor(remoteActor) {
+      this.remoteActor = remoteActor;
+      sharedState.clients.add(this);
+      
+      // Load data if not already loaded
+      loadTodos();
+      
+      // Send current state if already initialized
+      if (sharedState.initialized) {
+        this.sendTodos();
+      }
+    },
+    
+    // Flux pattern: no async/await, immediate state updates
+    receive(messageType, data) {
+      switch (messageType) {
+        case 'add_todo':
+          // 1. Update state immediately
+          const newTodo = {
+            id: ++sharedState.nextId,
+            text: data.text,
+            completed: false,
+            createdAt: new Date().toISOString()
+          };
+          sharedState.todos.push(newTodo);
+          
+          // 2. Notify all clients immediately
+          sharedState.clients.forEach(client => client.sendTodos());
+          
+          // 3. Persist asynchronously without blocking
+          persistTodos();
+          break;
+      }
+    },
+    
+    sendTodos() {
+      if (this.remoteActor) {
+        this.remoteActor.receive('todos_updated', {
+          todos: sharedState.todos,
+          stats: calculateStats()
+        });
+      }
+    }
+  };
+}
+
+// Background data loading with message passing
+function loadTodos() {
+  if (sharedState.loading || sharedState.initialized) return;
+  
+  sharedState.loading = true;
+  setImmediate(async () => {
+    try {
+      const data = await fs.readFile('./data/todos.json', 'utf8');
+      const parsed = JSON.parse(data);
+      
+      sharedState.todos = parsed.todos || [];
+      sharedState.nextId = parsed.nextId || 1;
+      sharedState.initialized = true;
+      sharedState.loading = false;
+      
+      // Notify all waiting clients
+      sharedState.clients.forEach(client => client.sendTodos());
+    } catch (error) {
+      console.error('Failed to load todos:', error);
+      sharedState.initialized = true;
+      sharedState.loading = false;
+    }
+  });
+}
+```
+
+### Common Mistakes and Solutions
+
+#### ❌ Mistake 1: "unknown local target GUID" Errors
+**Root Cause**: Bypassing the handshake protocol or corrupting it
+
+**Fix**: Never override the handshake JavaScript in resource providers. Use DefaultResourceProvider as reference.
+
+#### ❌ Mistake 2: Client remoteActor is null  
+**Root Cause**: Handshake didn't complete properly
+
+**Debug**:
+```javascript
+// Check in browser console
+console.log('Actor space:', window.__legionActorSpace);
+console.log('Remote actor:', clientActor.remoteActor);
+```
+
+#### ❌ Mistake 3: Persistence not working
+**Root Cause**: Using async/await in actor interfaces
+
+**Fix**: Use Flux pattern with background I/O operations
+
+### Core Components
+
+#### 1. ConfigurableActorServer Class
+
+The `ConfigurableActorServer` class provides configuration-driven server setup:
 class BaseServer {
   constructor() {
     this.app = express();
@@ -928,24 +1447,170 @@ packages/server-framework/
 - **One-line integration** - Add any Legion package with `registerRoute()`
 - **Simplified deployment** - Standard server pattern for all apps
 
-## Implementation Notes
+## Lessons Learned and Anti-Patterns
 
-### MVP Scope
-This design focuses on the core "route + actor pair" pattern. The framework should:
-- Handle actor serving and pairing automatically
-- Provide the simplest possible developer interface
-- Work with existing Legion actor patterns
-- Support the current tool-registry and aiur-ui use cases
+### 🎯 Key Insights from Implementation
 
-### Key Simplifications
-- **No complex plugins** - Just direct actor registration
-- **No manual WebSocket handling** - Framework does it all
-- **No Express route setup** - Automatic from actor registration
-- **No actor space management** - Handled transparently
+#### 1. Configuration-Driven Development Works
+**What we learned**: Moving from imperative server setup to declarative config files dramatically reduced complexity and bugs.
 
-### Development Path
-1. Create BaseServer with `registerRoute()` method
-2. Implement automatic client actor serving
-3. Implement automatic server actor creation and pairing
-4. Add `/legion/*` package serving
-5. Migrate existing servers to validate the approach
+**Before**: 200+ lines of Express setup, WebSocket handling, static serving per app  
+**After**: 10 lines of config, zero boilerplate, focus on actor logic
+
+#### 2. Resource Provider Pattern Enables Modularity  
+**What we learned**: Server actors providing their own resources through static methods follows Clean Architecture and enables customization without framework changes.
+
+**Key insight**: The framework "asks" actors for customization (Hollywood Principle) rather than requiring global configuration.
+
+#### 3. Handshake Protocol Must Be Bulletproof
+**What we learned**: The "unknown local target GUID" errors were caused by bypassing or corrupting the ActorSpace handshake protocol.
+
+**Critical fix**: DefaultResourceProvider must implement the EXACT handshake sequence from the working htmlTemplate.js.
+
+#### 4. Flux Pattern Prevents Race Conditions
+**What we learned**: Using async/await in actor `receive()` methods breaks the actor model and causes timing issues.
+
+**Solution**: Immediate synchronous state updates with background asynchronous I/O operations.
+
+#### 5. Message Passing for Data Loading
+**What we learned**: Loading data synchronously in constructors blocks the entire system.
+
+**Solution**: Load data asynchronously and notify clients via message passing when ready.
+
+### 🚨 Anti-Patterns to Avoid
+
+#### ❌ Anti-Pattern 1: Bypassing ActorSpace Protocol
+```javascript
+// ❌ NEVER DO THIS - Manual WebSocket handling breaks actor pairing
+ws.onmessage = (event) => {
+  // Direct message handling without ActorSpace
+  this.handleMessage(JSON.parse(event.data));
+};
+```
+
+#### ❌ Anti-Pattern 2: Async/Await in Actor Interfaces  
+```javascript
+// ❌ NEVER DO THIS - Breaks Flux pattern and causes race conditions
+async receive(messageType, data) {
+  const result = await this.database.save(data);
+  this.updateState(result);
+}
+```
+
+#### ❌ Anti-Pattern 3: Overriding Handshake JavaScript
+```javascript
+// ❌ NEVER DO THIS - Custom HTML that skips proper handshake
+generateHTML() {
+  return `<script>
+    // Custom WebSocket code that doesn't follow handshake protocol
+    const ws = new WebSocket('ws://localhost:8080/ws');
+    ws.onopen = () => { /* custom logic */ };
+  </script>`;
+}
+```
+
+#### ❌ Anti-Pattern 4: Synchronous File I/O in Constructors
+```javascript
+// ❌ NEVER DO THIS - Blocks entire application startup
+constructor() {
+  this.data = fs.readFileSync('./data.json');  // Blocking
+}
+```
+
+### ✅ Proven Patterns to Follow
+
+#### ✅ Pattern 1: Configuration-First Development
+```javascript
+// ✅ ALWAYS DO THIS - Define apps declaratively
+export default {
+  name: 'my-app',
+  routes: [{ 
+    path: '/app', 
+    serverActor: './ServerActor.js', 
+    clientActor: './ClientActor.js' 
+  }]
+};
+```
+
+#### ✅ Pattern 2: Resource Provider with Delegation
+```javascript  
+// ✅ ALWAYS DO THIS - Delegate to default provider for standard resources
+export class CustomResourceProvider extends ResourceProvider {
+  async getResource(path, req) {
+    switch (path) {
+      case '/app/styles.css':
+        return { content: myCustomCSS, contentType: 'text/css' };
+      default:
+        return this.defaultProvider.getResource(path, req); // Delegate
+    }
+  }
+}
+```
+
+#### ✅ Pattern 3: Flux State Management with Background I/O
+```javascript
+// ✅ ALWAYS DO THIS - Immediate state updates, background persistence
+receive(messageType, data) {
+  // Synchronous state update
+  this.state.items.push(data);
+  this.notifyClients();
+  
+  // Background persistence  
+  setImmediate(() => this.persistState());
+}
+```
+
+#### ✅ Pattern 4: Message Passing for Data Loading
+```javascript
+// ✅ ALWAYS DO THIS - Load data asynchronously, notify when ready
+setRemoteActor(remoteActor) {
+  this.remoteActor = remoteActor;
+  
+  if (sharedState.initialized) {
+    this.sendData(); // Data already loaded
+  } else {
+    loadData(); // Will notify all clients when ready
+  }
+}
+```
+
+## Production Considerations
+
+### Performance Optimizations
+1. **Connection pooling** - BaseServer reuses connections per port
+2. **Resource caching** - DefaultResourceProvider caches generated HTML
+3. **Memory management** - Proper cleanup on WebSocket disconnect
+
+### Monitoring and Debugging  
+1. **Actor lifecycle logging** - Handshake, connection, disconnection events
+2. **Resource provider metrics** - Cache hits, generation time
+3. **WebSocket connection health** - Connection count, message throughput
+
+### Error Handling
+1. **Graceful degradation** - Fallback to DefaultResourceProvider on errors
+2. **Actor isolation** - One actor failure doesn't affect others  
+3. **Resource validation** - MIME type validation, content sanitization
+
+## Migration Path
+
+### From Manual Express Setup
+1. **Extract actor logic** from existing server code
+2. **Create config file** defining routes and actors  
+3. **Replace Express setup** with `legion-serve` CLI
+4. **Add resource provider** for custom assets (optional)
+
+### From Socket.IO Applications  
+1. **Replace Socket.IO events** with actor `receive()` methods
+2. **Convert to factory pattern** for server-side isolation
+3. **Use Flux pattern** for state management
+4. **Follow handshake protocol** for proper connection setup
+
+## Implementation Complete
+
+The Legion Server Framework has been successfully implemented with:
+- ✅ **Configuration-driven development** via `legion-serve` CLI
+- ✅ **Resource Provider architecture** following Clean Architecture
+- ✅ **Fixed actor handshake protocol** preventing "unknown local target GUID" errors
+- ✅ **Flux pattern state management** eliminating race conditions
+- ✅ **Working examples** - todo app and counter demonstrating all patterns
+- ✅ **Comprehensive documentation** - never debug these issues again

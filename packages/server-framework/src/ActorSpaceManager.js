@@ -37,9 +37,24 @@ export class ActorSpaceManager {
     };
     this.connections.set(ws, connectionInfo);
     
-    // Set up message handler
-    // Set up ActorSpace immediately for this connection
-    this.setupActorSpace(ws);
+    // Set up message handler to handle handshake protocol
+    ws.on('message', (data) => {
+      try {
+        const message = JSON.parse(data.toString());
+        
+        // Handle actor handshake
+        if (message.type === 'actor_handshake') {
+          console.log('[SERVER] Received actor handshake:', message);
+          this.handleHandshake(ws, message);
+        } else {
+          // Let ActorSpace handle other messages
+          console.log('[SERVER] Received non-handshake message:', message.type);
+        }
+      } catch (error) {
+        // Not a JSON message, let ActorSpace handle it normally
+        console.log('[SERVER] Received non-JSON message, ignoring');
+      }
+    });
     
     // Set up close handler
     ws.on('close', () => {
@@ -154,72 +169,6 @@ export class ActorSpaceManager {
     console.log(`[SERVER] Handshake completed for route ${route}, server actor: ${serverActorId}`);
   }
 
-  /**
-   * Set up ActorSpace for a WebSocket connection
-   * @param {WebSocket} ws - WebSocket connection
-   */
-  setupActorSpace(ws) {
-    console.log('[SERVER] Setting up ActorSpace for new connection');
-    
-    // Get connection info
-    const connectionInfo = this.connections.get(ws);
-    if (!connectionInfo) {
-      console.error('[SERVER] Connection not found for ActorSpace setup');
-      return;
-    }
-    
-    // Determine route from stored connection info
-    const route = connectionInfo.route;
-    console.log('[SERVER] Using route from connection:', route);
-    const serverActor = this.createServerActor(route);
-    if (!serverActor) {
-      console.error('[SERVER] Failed to create server actor for route:', route);
-      return;
-    }
-    
-    // Generate server actor ID
-    const serverActorId = `server-root-${Date.now()}`;
-    
-    try {
-      console.log('[SERVER] Registering server actor with ID:', serverActorId);
-      // Register server actor in ActorSpace
-      connectionInfo.actorSpace.register(serverActor, serverActorId);
-      connectionInfo.serverActor = serverActor;
-      console.log('[SERVER] Server actor registered successfully');
-      
-      // Set up channel for WebSocket
-      console.log('[SERVER] Setting up WebSocket channel...');
-      const channel = connectionInfo.actorSpace.addChannel(ws);
-      connectionInfo.channel = channel;
-      console.log('[SERVER] Channel created successfully');
-      
-      // Create remote reference to client actor
-      console.log('[SERVER] Creating remote reference to client actor: client-root');
-      const remoteClientActor = channel.makeRemote('client-root');
-      console.log('[SERVER] Remote client actor created:', remoteClientActor);
-      
-      // Give remote actor to server actor
-      if (typeof serverActor.setRemoteActor === 'function') {
-        console.log('[SERVER] Setting remote actor on server actor...');
-        try {
-          serverActor.setRemoteActor(remoteClientActor);
-          console.log('[SERVER] Remote actor set on server actor successfully');
-        } catch (error) {
-          console.warn('[SERVER] Error setting remote actor on server actor:', error);
-        }
-      } else {
-        console.log('[SERVER] Server actor does not have setRemoteActor method');
-      }
-      
-      // Send server actor info to client using ActorSpace protocol
-      console.log('[SERVER] Sending server actor info to client via ActorSpace...');
-      remoteClientActor.receive('server_actor_ready', { serverActorId });
-      console.log('[SERVER] Server actor info sent to client');
-      
-    } catch (error) {
-      console.error('[SERVER] Error during ActorSpace setup:', error);
-    }
-  }
 
   /**
    * Create server actor from factory

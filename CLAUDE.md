@@ -12,6 +12,11 @@ ALL resources are available, real llm, mon
 
 ALL UI components must be MVVM and work with the actor framework only. 
 HTML must be dynamically generated and have incremental 2 way mapping to the state for easy updating and event dispatch.
+Whenever possible use and improve generic compoents.
+
+When running webapp clients and servers prefere the MCP tool as that enables you to look at all logs and interact with the web page and really debug it.
+
+
 
 
 ## Project Overview

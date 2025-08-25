@@ -1,79 +1,74 @@
 /**
- * HTML template generation for Legion applications
- * Generates HTML with embedded WebSocket and actor initialization
+ * DefaultResourceProvider - Lightweight default resource provider
+ * Provides minimal HTML, favicon, and client JavaScript
  */
 
-/**
- * Escape HTML special characters to prevent XSS
- */
-function escapeHtml(str) {
-  const htmlEscapes = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  };
-  return str.replace(/[&<>"']/g, char => htmlEscapes[char]);
-}
+import { ResourceProvider, ResourceResponse } from './ResourceProvider.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-/**
- * Extract and validate template variables
- */
-export function getTemplateVariables(options) {
-  if (!options.clientActorPath) {
-    throw new Error('clientActorPath is required');
-  }
-  if (!options.wsEndpoint) {
-    throw new Error('wsEndpoint is required');
-  }
-  if (!options.route) {
-    throw new Error('route is required');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export class DefaultResourceProvider extends ResourceProvider {
+  constructor(config = {}) {
+    super();
+    this.config = {
+      title: config.title || 'Legion App',
+      clientContainer: config.clientContainer || null, // e.g., 'app'
+      clientActorPath: config.clientActorPath || '/client.js',
+      wsEndpoint: config.wsEndpoint || 'ws://localhost:8080/ws',
+      route: config.route || '/',
+      ...config
+    };
   }
 
-  return {
-    title: options.title || 'Legion App',
-    clientActorPath: options.clientActorPath,
-    wsEndpoint: options.wsEndpoint,
-    route: options.route
-  };
-}
+  async getResource(path, req) {
+    switch (path) {
+      case '/':
+        return new ResourceResponse({
+          type: 'text/html',
+          content: this.generateHTML(),
+          cache: false
+        });
 
-/**
- * Generate HTML page with embedded WebSocket and actor setup
- * @param {Object} options - Template options
- * @param {string} options.title - Page title
- * @param {string} options.clientActorPath - Path to client actor JavaScript file
- * @param {string} options.wsEndpoint - WebSocket endpoint URL
- * @param {string} options.route - Route path for this application
- * @returns {string} Generated HTML
- */
-export function generateHTML(options) {
-  const vars = getTemplateVariables(options);
-  
-  // Escape title for HTML but not paths in JavaScript
-  const safeTitle = escapeHtml(vars.title);
-  
-  return `<!DOCTYPE html>
-<html>
+      case '/favicon.ico':
+        return new ResourceResponse({
+          type: 'image/x-icon',
+          file: this.getDefaultFaviconPath(),
+          cache: '1 year'
+        });
+
+      case '/client.js':
+        if (this.config.clientActorFile) {
+          return new ResourceResponse({
+            type: 'application/javascript',
+            file: this.config.clientActorFile,
+            cache: false
+          });
+        }
+        break;
+
+      default:
+        return null; // Not found
+    }
+
+    return null;
+  }
+
+  generateHTML() {
+    return `<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${safeTitle}</title>
+  <title>${this.config.title}</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    body { 
+      margin: 0; 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #f5f5f5;
-      min-height: 100vh;
-    }
-    #app {
-      width: 100%;
-      min-height: 100vh;
     }
     .connection-status {
       position: fixed;
@@ -99,8 +94,8 @@ export function generateHTML(options) {
     }
   </style>
   <script type="module">
-    // Import the client actor (must export as default)
-    import ClientActor from '${vars.clientActorPath}';
+    // Import client actor from the route-specific path
+    import ClientActor from '${this.config.clientActorPath}';
     import { ActorSpace } from '/legion/actors/ActorSpace.js';
     
     // Connection status indicator
@@ -122,7 +117,7 @@ export function generateHTML(options) {
       updateConnectionStatus('connecting');
       
       // Establish WebSocket connection
-      const ws = new WebSocket('${vars.wsEndpoint}');
+      const ws = new WebSocket('${this.config.wsEndpoint}');
       
       // Create client actor instance
       const clientActor = new ClientActor();
@@ -137,7 +132,7 @@ export function generateHTML(options) {
       
       // Set up channel when connected
       ws.onopen = () => {
-        console.log('[CLIENT] WebSocket connected to ${vars.wsEndpoint}');
+        console.log('[CLIENT] WebSocket connected to ${this.config.wsEndpoint}');
         updateConnectionStatus('connected');
         
         channel = actorSpace.addChannel(ws);
@@ -148,7 +143,7 @@ export function generateHTML(options) {
         const handshake = {
           type: 'actor_handshake',
           clientRootActor: 'client-root',
-          route: '${vars.route}'
+          route: '${this.config.route}'
         };
         console.log('[CLIENT] Sending handshake:', handshake);
         ws.send(JSON.stringify(handshake));
@@ -201,7 +196,21 @@ export function generateHTML(options) {
   </script>
 </head>
 <body>
-  <div id="app"></div>
+  ${this.config.clientContainer ? `<div id="${this.config.clientContainer}"></div>` : '<div id="app"></div>'}
 </body>
 </html>`;
+  }
+
+  getDefaultFaviconPath() {
+    // Return path to default favicon in framework assets
+    return path.join(__dirname, '../assets/favicon.ico');
+  }
+
+  async listResources() {
+    const resources = ['/', '/favicon.ico'];
+    if (this.config.clientActorFile) {
+      resources.push('/client.js');
+    }
+    return resources;
+  }
 }

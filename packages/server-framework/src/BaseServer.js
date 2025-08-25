@@ -11,6 +11,7 @@ import { ResourceManager } from '@legion/resource-manager';
 import { ActorSpaceManager } from './ActorSpaceManager.js';
 import { PackageDiscovery } from './utils/PackageDiscovery.js';
 import { ImportRewriter } from './utils/ImportRewriter.js';
+import { DefaultResourceProvider, CompositeResourceProvider } from './resources/index.js';
 
 export class BaseServer {
   constructor() {
@@ -103,8 +104,9 @@ export class BaseServer {
    * @param {Function} serverActorFactory - Factory function to create server actor instances
    * @param {string} clientActorFile - Path to client actor JavaScript file
    * @param {number} port - Port to run on (defaults to 8080)
+   * @param {Object} additionalConfig - Additional configuration for the route
    */
-  registerRoute(route, serverActorFactory, clientActorFile, port = 8080) {
+  registerRoute(route, serverActorFactory, clientActorFile, port = 8080, additionalConfig = {}) {
     // Validate inputs
     if (!route || typeof route !== 'string') {
       throw new Error('Route is required and must be a string');
@@ -125,11 +127,13 @@ export class BaseServer {
       throw new Error('Port must be between 1024 and 65535');
     }
 
-    // Store route information
+    // Store route information with additional config
     this.routes.set(route, {
+      route: route,
       factory: serverActorFactory,
       clientFile: clientActorFile,
-      port: port
+      port: port,
+      ...additionalConfig
     });
 
     console.log(`Registered route ${route} on port ${port}`);
@@ -296,34 +300,150 @@ export class BaseServer {
   }
   
   /**
-   * Set up individual route with HTML and client actor serving
+   * Set up individual route with resource provider system
    * @private
    */
   async setupRoute(app, routeConfig) {
     const { route, factory, clientFile, port } = routeConfig;
     
-    // Import HTML template generator
-    const { generateHTML } = await import('./htmlTemplate.js');
+    // 1. Create default resource provider
+    const defaultProvider = this.createDefaultResourceProvider(routeConfig);
     
-    // Serve HTML page at route
-    app.get(route, (req, res) => {
-      // Generate title from route name
-      const title = route.substring(1).charAt(0).toUpperCase() + route.substring(2) || 'Legion App';
-      
-      const html = generateHTML({
-        title: title,
-        clientActorPath: `${route}/client.js`,
-        wsEndpoint: `ws://${this.host}:${port}/ws?route=${encodeURIComponent(route)}`,
-        route: route
-      });
-      
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      res.send(html);
+    // 2. Ask server actor if it wants to customize resources (dependency inversion)
+    const resourceProvider = await this.createResourceProvider(routeConfig, defaultProvider);
+    
+    // 3. Set up resource serving middleware
+    this.setupResourceMiddleware(app, route, resourceProvider);
+    
+    console.log(`Set up route ${route} on port ${port} with resource provider`);
+  }
+
+  /**
+   * Create default resource provider for a route
+   * @private
+   */
+  createDefaultResourceProvider(routeConfig) {
+    const { route, clientFile, port } = routeConfig;
+    
+    // Generate title from route name
+    const title = route.substring(1).charAt(0).toUpperCase() + route.substring(2) || 'Legion App';
+    
+    return new DefaultResourceProvider({
+      title: title,
+      clientActorFile: clientFile,
+      clientActorPath: `${route}/client.js`,  // Use route-specific path
+      wsEndpoint: `ws://${this.host}:${port}/ws?route=${encodeURIComponent(route)}`,
+      route: route,
+      // Allow configuration customization
+      clientContainer: routeConfig.clientContainer || 'app'
     });
-    
-    // Serve client actor JavaScript file
+  }
+
+  /**
+   * Create resource provider (ask server actor for customization)
+   * @private
+   */
+  async createResourceProvider(routeConfig, defaultProvider) {
+    try {
+      // Load server actor module to check for resource customization
+      const serverActorPath = routeConfig.serverActor;
+      let serverActorModule;
+      
+      if (serverActorPath.startsWith('./') || serverActorPath.startsWith('../')) {
+        // Relative path from config file location
+        const configDir = routeConfig.__dirname || process.cwd();
+        const absolutePath = path.resolve(configDir, serverActorPath);
+        const { pathToFileURL } = await import('url');
+        const fileUrl = pathToFileURL(absolutePath).href;
+        serverActorModule = await import(fileUrl);
+      } else {
+        // Absolute path or npm package
+        serverActorModule = await import(serverActorPath);
+      }
+      
+      const ServerActorClass = serverActorModule.default || serverActorModule;
+      
+      // Check if server actor provides a custom resource provider
+      if (ServerActorClass && typeof ServerActorClass.createResourceProvider === 'function') {
+        console.log(`Route ${routeConfig.route} using custom resource provider`);
+        const customProvider = ServerActorClass.createResourceProvider(defaultProvider);
+        return customProvider || defaultProvider;
+      }
+      
+      // Use default provider
+      return defaultProvider;
+      
+    } catch (error) {
+      console.warn(`Could not load server actor for resource customization: ${error.message}`);
+      return defaultProvider;
+    }
+  }
+
+  /**
+   * Set up resource serving middleware
+   * @private
+   */
+  setupResourceMiddleware(app, route, resourceProvider) {
+    // Handle all requests under this route
+    app.use(route, async (req, res, next) => {
+      try {
+        const requestPath = req.path === '/' ? '/' : req.path;
+        const resource = await resourceProvider.getResource(requestPath, req);
+        
+        if (resource) {
+          // Set response headers
+          if (resource.status) {
+            res.status(resource.status);
+          }
+          
+          if (resource.headers) {
+            for (const [key, value] of Object.entries(resource.headers)) {
+              res.setHeader(key, value);
+            }
+          }
+          
+          // Set content type
+          res.setHeader('Content-Type', resource.type);
+          
+          // Handle cache headers
+          if (resource.cache) {
+            if (typeof resource.cache === 'string') {
+              res.setHeader('Cache-Control', `public, max-age=${this.parseMaxAge(resource.cache)}`);
+            } else if (resource.cache === true) {
+              res.setHeader('Cache-Control', 'public, max-age=300'); // 5 minutes default
+            }
+          } else {
+            res.setHeader('Cache-Control', 'no-cache');
+          }
+          
+          // Send response
+          if (resource.file) {
+            // Serve from file
+            res.sendFile(path.resolve(resource.file));
+          } else if (resource.content) {
+            // Send content directly
+            res.send(resource.content);
+          } else {
+            res.status(500).send('Invalid resource response');
+          }
+        } else {
+          // Resource not found, continue to next middleware
+          next();
+        }
+      } catch (error) {
+        console.error(`Error serving resource for ${route}${req.path}:`, error);
+        res.status(500).send('Resource serving error');
+      }
+    });
+
+    // Special handling for client.js with import rewriting
     app.get(`${route}/client.js`, async (req, res) => {
       try {
+        const clientFile = resourceProvider.config?.clientActorFile;
+        if (!clientFile) {
+          return res.status(404).send('Client actor file not configured');
+        }
+
         const content = await import('fs').then(fs => 
           fs.promises.readFile(clientFile, 'utf8')
         );
@@ -332,14 +452,37 @@ export class BaseServer {
         const rewritten = this.importRewriter.rewrite(content);
         
         res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache');
         res.send(rewritten);
       } catch (error) {
-        console.error(`Error serving client file ${clientFile}:`, error);
+        console.error(`Error serving client file:`, error);
         res.status(404).send('Client actor file not found');
       }
     });
+  }
+
+  /**
+   * Parse cache max-age from string
+   * @private
+   */
+  parseMaxAge(cacheString) {
+    const units = {
+      's': 1,
+      'm': 60,
+      'h': 3600,
+      'd': 86400,
+      'w': 604800,
+      'y': 31536000
+    };
     
-    console.log(`Set up route ${route} on port ${port}`);
+    const match = cacheString.match(/^(\d+)\s*([smhdwy]?)$/);
+    if (match) {
+      const value = parseInt(match[1]);
+      const unit = match[2] || 's';
+      return value * (units[unit] || 1);
+    }
+    
+    return 300; // Default 5 minutes
   }
 
   /**
