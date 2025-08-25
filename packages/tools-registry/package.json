@@ -45,9 +45,9 @@
     "jest": "^29.7.0"
   },
   "dependencies": {
-    "@legion/resource-manager": "workspace:*",
-    "@legion/storage": "workspace:*",
-    "@legion/llm": "workspace:*"
+    "@legion/resource-manager": "*",
+    "@legion/storage": "*",
+    "@legion/llm": "*"
   },
   "engines": {
     "node": ">=18.0.0"
