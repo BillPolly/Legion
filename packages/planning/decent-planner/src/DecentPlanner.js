@@ -5,14 +5,26 @@
 import { InformalPlanner } from './core/informal/index.js';
 import { Planner } from '@legion/planner';
 import { BTValidator } from '@legion/bt-validator';
+import { ResourceManager } from '@legion/resource-manager';
 
 export class DecentPlanner {
   constructor(llmClient, options = {}) {
+    // If no llmClient provided, get it from ResourceManager
     if (!llmClient) {
-      throw new Error('LLM client is required');
+      const resourceManager = ResourceManager.getInstance();
+      const llmClientOrPromise = resourceManager.get('llmClient');
+      
+      if (!llmClientOrPromise) {
+        throw new Error('LLM client is required but not available from ResourceManager');
+      }
+      
+      // Store the client or promise - will be resolved in initialize()
+      this.llmClientPromise = llmClientOrPromise;
+      this.llmClient = null; // Will be set in initialize()
+    } else {
+      this.llmClient = llmClient;
+      this.llmClientPromise = null;
     }
-    
-    this.llmClient = llmClient;
     this.toolRegistry = null; // Will be initialized lazily
     this.informalPlanner = null; // Will be initialized lazily
     
@@ -41,6 +53,24 @@ export class DecentPlanner {
    * Initialize the planner with ToolRegistry singleton
    */
   async initialize() {
+    // Resolve llmClient if it was a promise
+    if (this.llmClientPromise && !this.llmClient) {
+      if (typeof this.llmClientPromise.then === 'function') {
+        this.llmClient = await this.llmClientPromise;
+      } else {
+        this.llmClient = this.llmClientPromise;
+      }
+      
+      if (!this.llmClient) {
+        throw new Error('Failed to get LLM client from ResourceManager');
+      }
+      
+      // Update formal planner with resolved client
+      if (this.options.enableFormalPlanning && this.formalPlanner) {
+        this.formalPlanner = new Planner({ llmClient: this.llmClient });
+      }
+    }
+    
     if (!this.toolRegistry) {
       const { ToolRegistry } = await import('@legion/tools-registry');
       this.toolRegistry = await ToolRegistry.getInstance();

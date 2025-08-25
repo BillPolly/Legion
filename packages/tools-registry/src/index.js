@@ -12,3 +12,4 @@ export { ToolRegistry } from './integration/ToolRegistry.js';
 export { Module } from './core/Module.js';
 export { Tool } from './core/Tool.js';
 export { ToolResult } from './core/ToolResult.js';
+export { SimpleEmitter } from './core/SimpleEmitter.js';

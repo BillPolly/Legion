@@ -2,26 +2,72 @@
  * ToolFeasibilityChecker - Discovers and validates tools for SIMPLE tasks
  */
 
-import { EventEmitter } from 'events';
+import { SimpleEmitter } from '@legion/tools-registry';
+import { ResourceManager } from '@legion/resource-manager';
 
-export class ToolFeasibilityChecker extends EventEmitter {
-  constructor(toolRegistry, llmClient, options = {}) {
-    super(); // Call EventEmitter constructor
+export class ToolFeasibilityChecker extends SimpleEmitter {
+  constructor(toolRegistry, llmClientOrOptions, options = {}) {
+    super(); // Call SimpleEmitter constructor
     
     if (!toolRegistry) {
       throw new Error('ToolRegistry is required');
     }
     
-    if (!llmClient) {
-      throw new Error('LLM client is required for tool description generation');
+    // Handle overloaded constructor signature for backward compatibility
+    let llmClient = null;
+    let actualOptions = options;
+    
+    if (llmClientOrOptions && typeof llmClientOrOptions === 'object') {
+      // Check if it's an options object or an LLM client
+      if (llmClientOrOptions.complete && typeof llmClientOrOptions.complete === 'function') {
+        // It's an LLM client
+        llmClient = llmClientOrOptions;
+      } else {
+        // It's an options object
+        actualOptions = llmClientOrOptions;
+        // LLM client will be initialized on first use
+        llmClient = null;
+      }
+    } else {
+      // No second parameter or it's not an object
+      actualOptions = llmClientOrOptions || {};
+      // LLM client will be initialized on first use
+      llmClient = null;
     }
     
     this.toolRegistry = toolRegistry;
     this.llmClient = llmClient;
-    this.confidenceThreshold = options.confidenceThreshold || 0.3; // Lower threshold for semantic search
-    this.maxTools = options.maxTools || 20; // Allow more tools for curated sets
-    this.maxDescriptions = options.maxDescriptions || 8; // Max tool descriptions (both general and specific)
-    this.minDescriptions = options.minDescriptions || 5; // Min tool descriptions to generate
+    this.confidenceThreshold = actualOptions.confidenceThreshold || 0.3; // Lower threshold for semantic search
+    this.maxTools = actualOptions.maxTools || 20; // Allow more tools for curated sets
+    this.maxDescriptions = actualOptions.maxDescriptions || 8; // Max tool descriptions (both general and specific)
+    this.minDescriptions = actualOptions.minDescriptions || 5; // Min tool descriptions to generate
+  }
+  
+  /**
+   * Get LLM client, creating it if necessary
+   * @returns {Promise<Object>} LLM client
+   */
+  async getLLMClient() {
+    if (!this.llmClient) {
+      const resourceManager = ResourceManager.getInstance();
+      const llmClientOrPromise = resourceManager.get('llmClient');
+      
+      if (!llmClientOrPromise) {
+        throw new Error('LLM client is required but not available from ResourceManager');
+      }
+      
+      // If it's a promise, await it
+      if (llmClientOrPromise && typeof llmClientOrPromise.then === 'function') {
+        this.llmClient = await llmClientOrPromise;
+      } else {
+        this.llmClient = llmClientOrPromise;
+      }
+      
+      if (!this.llmClient) {
+        throw new Error('Failed to get LLM client from ResourceManager');
+      }
+    }
+    return this.llmClient;
   }
 
   /**
@@ -69,7 +115,8 @@ Example for task "Create REST API endpoint for user authentication":
 IMPORTANT: Include descriptions for BOTH code/file generation AND specific operations.`;
 
     try {
-      const response = await this.llmClient.complete(prompt);
+      const llmClient = await this.getLLMClient();
+      const response = await llmClient.complete(prompt);
       
       // Parse JSON response
       const jsonMatch = response.match(/\[[\s\S]*\]/);
@@ -98,9 +145,8 @@ IMPORTANT: Include descriptions for BOTH code/file generation AND specific opera
       return validDescriptions;
       
     } catch (error) {
-      console.warn(`Failed to generate tool descriptions: ${error.message}`);
-      // Fallback: use the task description itself
-      return [taskDescription];
+      // No fallback - LLM is required
+      throw new Error(`Failed to generate tool descriptions: ${error.message}`);
     }
   }
 
@@ -118,11 +164,42 @@ IMPORTANT: Include descriptions for BOTH code/file generation AND specific opera
         this.emit('searchStarted', description);
         
         // Use semantic search for better matching
-        const searchResult = await this.toolRegistry.semanticToolSearch(description, {
+        const tools = await this.toolRegistry.searchTools(description, {
           limit: 5, // Get top 5 per description
-          minConfidence: this.confidenceThreshold,
-          includeExecutable: true
+          threshold: this.confidenceThreshold
         });
+        
+        // Load full tool instances to get execute functions
+        const fullTools = await Promise.all(
+          tools.map(async (tool) => {
+            try {
+              const fullTool = await this.toolRegistry.getTool(tool.name);
+              if (fullTool) {
+                return {
+                  ...tool,
+                  ...fullTool,
+                  confidence: tool.score || tool.confidence || 0.5,
+                  available: true,
+                  executable: typeof fullTool.execute === 'function'
+                };
+              }
+            } catch (error) {
+              console.warn(`Failed to load tool ${tool.name}:`, error.message);
+            }
+            // Return original tool if loading fails
+            return {
+              ...tool,
+              confidence: tool.score || tool.confidence || 0.5,
+              available: false,
+              executable: false
+            };
+          })
+        );
+        
+        // Convert to expected format
+        const searchResult = {
+          tools: fullTools
+        };
         
         // Emit search completed event
         const maxConfidence = searchResult.tools.length > 0 ? 

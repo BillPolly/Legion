@@ -11,12 +11,11 @@ import { describe, it, expect, beforeAll, afterAll, jest } from '@jest/globals';
 import { PlanSynthesizer } from '../../src/core/PlanSynthesizer.js';
 import { ToolDiscoveryAdapter } from '../../src/core/ToolDiscoveryAdapter.js';
 import { ResourceManager } from '@legion/resource-manager';
-import { ToolRegistry, SemanticToolDiscovery } from '@legion/tools-registry';
+import { ToolRegistry } from '@legion/tools-registry';
 
 describe('LIVE Tool Discovery Integration', () => {
   let resourceManager;
   let toolRegistry;
-  let semanticDiscovery;
   let toolDiscoveryAdapter;
   let planSynthesizer;
   let isLive = false;
@@ -31,17 +30,21 @@ describe('LIVE Tool Discovery Integration', () => {
       
       console.log('✅ ResourceManager initialized');
       
-      // Use ToolRegistry singleton
+      // Use ToolRegistry singleton which now includes semantic search
       toolRegistry = await ToolRegistry.getInstance();
       
-      console.log('✅ ToolRegistry initialized with provider');
+      console.log('✅ ToolRegistry initialized with built-in semantic search');
       
-      // Create semantic tool discovery with live Nomic embeddings
-      semanticDiscovery = await SemanticToolDiscovery.createForTools(resourceManager, {
-        collectionName: 'tool_perspectives'
-      });
-      
-      console.log('✅ SemanticToolDiscovery created with Nomic embeddings');
+      // Create a semantic discovery wrapper that uses ToolRegistry's searchSimilarTools
+      const semanticDiscovery = {
+        findRelevantTools: async (query, options = {}) => {
+          // Use ToolRegistry's semantic search
+          return await toolRegistry.searchSimilarTools(query, {
+            limit: options.limit || 10,
+            minScore: options.minScore || 0.3
+          });
+        }
+      };
       
       // Create the adapter that bridges to PlanSynthesizer
       toolDiscoveryAdapter = new ToolDiscoveryAdapter(semanticDiscovery, toolRegistry);

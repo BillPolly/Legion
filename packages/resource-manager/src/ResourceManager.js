@@ -47,6 +47,14 @@ export class ResourceManager {
           return Reflect.get(target, prop, receiver);
         }
         
+        // Special handling for llmClient - create it lazily if needed
+        if (prop === 'llmClient' && !target._resources.has('llmClient')) {
+          // Return a promise that will create the client
+          // Note: This is synchronous access, so we need to handle it carefully
+          // The caller should use await resourceManager.get('llmClient') for async creation
+          return undefined; // Will be handled by get() method
+        }
+        
         // Otherwise, get the resource
         return target._resources.get(prop);
       },
@@ -255,6 +263,17 @@ export class ResourceManager {
    * @returns {*} The resource value
    */
   get(name) {
+    // Special handling for llmClient - create it if it doesn't exist
+    if (name === 'llmClient' && !this._resources.has('llmClient')) {
+      // Create the LLM client synchronously by blocking on the promise
+      // This is not ideal but maintains backward compatibility
+      // Better to use getOrInitialize for async resources
+      const promise = this.createLLMClient();
+      // Store the promise so multiple calls don't create multiple clients
+      this._resources.set('llmClient', promise);
+      return promise;
+    }
+    
     // Handle dot notation (e.g., 'env.ANTHROPIC_API_KEY')
     if (name.includes('.')) {
       const parts = name.split('.');

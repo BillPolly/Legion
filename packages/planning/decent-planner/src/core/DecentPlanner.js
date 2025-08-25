@@ -11,38 +11,37 @@ import { PlanSynthesizer } from './PlanSynthesizer.js';
 import { Planner } from '@legion/planner';
 import { BTValidator } from '@legion/bt-validator';
 import { ToolRegistry } from '@legion/tools-registry';
+import { ResourceManager } from '@legion/resource-manager';
 
 export class DecentPlanner {
   constructor(llmClient, options = {}) {
+    // If no llmClient provided, get it from ResourceManager
     if (!llmClient) {
-      throw new Error('LLM client is required');
+      const resourceManager = ResourceManager.getInstance();
+      const llmClientOrPromise = resourceManager.get('llmClient');
+      
+      if (!llmClientOrPromise) {
+        throw new Error('LLM client is required but not available from ResourceManager');
+      }
+      
+      // Store the client or promise - will be resolved in initialize()
+      this.llmClientPromise = llmClientOrPromise;
+      this.llmClient = null; // Will be set in initialize()
+    } else {
+      this.llmClient = llmClient;
+      this.llmClientPromise = null;
     }
-    
-    this.llmClient = llmClient;
     this.toolRegistry = null; // Will be initialized lazily
     this.options = options;
     
-    // Initialize components
-    this.decomposer = new TaskDecomposer(this.llmClient);
+    // Initialize components (will be completed in initialize() if llmClient is a promise)
+    this.decomposer = null;
     this.contextHints = new ContextHints();
-    
-    // Will be initialized in async init method
     this.toolDiscovery = null;
+    this.synthesizer = null;
+    this.planner = null;
     
-    // Initialize the bottom-up synthesizer
-    this.synthesizer = new PlanSynthesizer({
-      llmClient: this.llmClient,
-      toolDiscovery: this.toolDiscovery,
-      contextHints: this.contextHints
-    });
-    
-    // Initialize the underlying planner (kept for backward compatibility)
-    this.planner = new Planner({
-      llmClient: this.llmClient,
-      tools: null // Will provide tools per task
-    });
-    
-    // Initialize validator
+    // Initialize validator (doesn't need llmClient)
     this.validator = new BTValidator({
       strictMode: true,
       validateTools: true
@@ -59,6 +58,39 @@ export class DecentPlanner {
    * Must be called before using the planner
    */
   async initialize() {
+    // Resolve llmClient if it was a promise
+    if (this.llmClientPromise && !this.llmClient) {
+      if (typeof this.llmClientPromise.then === 'function') {
+        this.llmClient = await this.llmClientPromise;
+      } else {
+        this.llmClient = this.llmClientPromise;
+      }
+      
+      if (!this.llmClient) {
+        throw new Error('Failed to get LLM client from ResourceManager');
+      }
+    }
+    
+    // Now initialize components that need llmClient
+    if (!this.decomposer) {
+      this.decomposer = new TaskDecomposer(this.llmClient);
+    }
+    
+    if (!this.synthesizer) {
+      this.synthesizer = new PlanSynthesizer({
+        llmClient: this.llmClient,
+        toolDiscovery: this.toolDiscovery,
+        contextHints: this.contextHints
+      });
+    }
+    
+    if (!this.planner) {
+      this.planner = new Planner({
+        llmClient: this.llmClient,
+        tools: null // Will provide tools per task
+      });
+    }
+    
     if (!this.toolRegistry) {
       // Use ToolRegistry singleton
       this.toolRegistry = await ToolRegistry.getInstance();
@@ -66,7 +98,11 @@ export class DecentPlanner {
       // Initialize tool discovery
       this.toolDiscovery = {
         discoverTools: async (query, options = {}) => {
-          return await this.toolRegistry.searchTools(query, options);
+          // Handle both string and object queries
+          const searchQuery = typeof query === 'string' 
+            ? query 
+            : (query?.description || String(query));
+          return await this.toolRegistry.searchTools(searchQuery, options);
         },
         getToolByName: async (name) => {
           return await this.toolRegistry.getTool(name);

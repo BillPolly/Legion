@@ -57,9 +57,15 @@ export class MockToolDiscovery {
     // Get executable tools
     const executableTools = [];
     for (const tool of matchedTools.slice(0, limit)) {
-      const execTool = await this.toolProvider.getTool(tool.name);
-      if (execTool) {
-        executableTools.push(execTool);
+      // Check if toolProvider has getTool method
+      if (typeof this.toolProvider.getTool === 'function') {
+        const execTool = await this.toolProvider.getTool(tool.name);
+        if (execTool) {
+          executableTools.push(execTool);
+        }
+      } else {
+        // If no getTool method, use the tool as-is
+        executableTools.push(tool);
       }
     }
     

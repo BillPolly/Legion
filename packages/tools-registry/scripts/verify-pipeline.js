@@ -101,6 +101,10 @@ async function verifyPipeline(options = {}) {
     
     console.log(`  Modules verified: ${results.modules.verified}`);
     console.log(`  Modules with issues: ${results.modules.issues}`);
+    console.log(`  Total tools: ${results.modules.totalTools}`);
+    if (results.modules.toolsWithoutExecute > 0) {
+      console.log(`  ⚠️  Tools without execute(): ${results.modules.toolsWithoutExecute}`);
+    }
     if (results.modules.errors?.length > 0 && verbose) {
       results.modules.errors.forEach(err => {
         console.log(`    ⚠️  ${err}`);

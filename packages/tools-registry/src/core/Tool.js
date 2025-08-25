@@ -5,8 +5,11 @@
  * Following CLEAN architecture principles
  */
 
-export class Tool {
+import { SimpleEmitter } from './SimpleEmitter.js';
+
+export class Tool extends SimpleEmitter {
   constructor(config = {}) {
+    super();
     this.name = config.name || null;
     this.description = config.description || null;
     this.schema = config.schema || {
@@ -20,12 +23,54 @@ export class Tool {
   }
   
   /**
+   * Emit a progress event
+   * Tools can call this to emit progress updates
+   * @param {string} message - Progress message
+   * @param {number} percentage - Progress percentage (0-100)
+   * @param {Object} data - Additional data
+   */
+  progress(message, percentage = 0, data = {}) {
+    this.emit('progress', { message, percentage, data });
+  }
+  
+  /**
+   * Emit an info event
+   * @param {string} message - Info message
+   * @param {Object} data - Additional data
+   */
+  info(message, data = {}) {
+    this.emit('info', { message, data });
+  }
+  
+  /**
+   * Emit a warning event
+   * @param {string} message - Warning message
+   * @param {Object} data - Additional data
+   */
+  warning(message, data = {}) {
+    this.emit('warning', { message, data });
+  }
+  
+  /**
+   * Emit an error event
+   * @param {string} message - Error message
+   * @param {Object} data - Additional data
+   */
+  error(message, data = {}) {
+    this.emit('error', { message, data });
+  }
+  
+  /**
    * Execute the tool with given parameters
    * Must be implemented by subclasses
    * @param {Object} params - Tool parameters
    * @returns {Promise<Object>} Tool execution result
    */
   async execute(params) {
+    // Support both patterns: override execute() or set _execute
+    if (this._execute && typeof this._execute === 'function') {
+      return await this._execute(params);
+    }
     throw new Error(`Tool ${this.name} must implement execute() method`);
   }
   

@@ -123,7 +123,8 @@ export class ToolRegistry {
       });
 
       this.moduleRegistry = new ModuleRegistry({
-        databaseStorage: this.databaseStorage
+        databaseStorage: this.databaseStorage,
+        moduleLoader: this.moduleLoader
       });
       await this.moduleRegistry.initialize();
 
@@ -333,17 +334,34 @@ export class ToolRegistry {
     const tool = tools.find(t => t.name === toolName);
 
     if (tool) {
-      // Enhance with metadata (tool properties take precedence over metadata)
-      const enhancedTool = {
-        ...toolMeta,
-        ...tool,
-        execute: tool.execute.bind(module)
-      };
+      // If tool is an instance with methods like subscribe, preserve it
+      // Just add metadata properties directly to the tool instance
+      if (tool.constructor && tool.constructor.name !== 'Object') {
+        // It's a class instance, enhance it in place
+        Object.assign(tool, {
+          moduleName: toolMeta.moduleName,
+          moduleId: toolMeta.moduleId,
+          description: tool.description || toolMeta.description,
+          inputSchema: tool.inputSchema || toolMeta.inputSchema,
+          outputSchema: tool.outputSchema || toolMeta.outputSchema
+        });
+        
+        // Cache the tool instance
+        this.cache.set(toolName, tool);
+        return tool;
+      } else {
+        // It's a plain object, create enhanced version
+        const enhancedTool = {
+          ...toolMeta,
+          ...tool,
+          execute: tool.execute.bind(tool),  // Bind to tool, not module
+          _execute: tool._execute  // Preserve _execute if it exists
+        };
 
-      // Cache the tool
-      this.cache.set(toolName, enhancedTool);
-      
-      return enhancedTool;
+        // Cache the tool
+        this.cache.set(toolName, enhancedTool);
+        return enhancedTool;
+      }
     }
 
     return null;
@@ -2875,6 +2893,7 @@ export class ToolRegistry {
       verified: 0,
       issues: 0,
       totalTools: 0,  // Add total tool count
+      toolsWithoutExecute: 0,  // Tools missing execute function
       modules: {
         total: 0,
         valid: 0,
@@ -2913,6 +2932,33 @@ export class ToolRegistry {
       
       if (toolCount === 0) {
         issues.push('no_tools');
+      } else {
+        // Verify each tool has an execute function
+        try {
+          const moduleInstance = await this.moduleRegistry.getModule(module.name);
+          if (moduleInstance) {
+            const tools = moduleInstance.getTools ? moduleInstance.getTools() : [];
+            let toolsWithoutExecute = 0;
+            
+            for (const tool of tools) {
+              if (typeof tool.execute !== 'function') {
+                toolsWithoutExecute++;
+                results.toolsWithoutExecute++;
+                if (verbose) {
+                  console.log(`  ⚠️  Tool '${tool.name}' in module '${module.name}' missing execute function`);
+                }
+              }
+            }
+            
+            if (toolsWithoutExecute > 0) {
+              issues.push(`${toolsWithoutExecute}_tools_without_execute`);
+            }
+          }
+        } catch (error) {
+          if (verbose) {
+            console.log(`  ⚠️  Could not verify tools for module ${module.name}: ${error.message}`);
+          }
+        }
       }
       
       if (issues.length === 0) {
@@ -2946,6 +2992,9 @@ export class ToolRegistry {
     
     if (verbose) {
       console.log(`📦 Modules: ${results.modules.valid}/${results.modules.total} valid`);
+      if (results.toolsWithoutExecute > 0) {
+        console.log(`⚠️  Tools without execute function: ${results.toolsWithoutExecute}`);
+      }
       if (results.modules.issues.length > 0) {
         console.log('Issues:');
         results.modules.issues.forEach(m => {
