@@ -10,7 +10,7 @@ import { ToolDiscoveryAdapter } from './ToolDiscoveryAdapter.js';
 import { PlanSynthesizer } from './PlanSynthesizer.js';
 import { Planner } from '@legion/planner';
 import { BTValidator } from '@legion/bt-validator';
-import { ToolRegistry } from '@legion/tools-registry';
+import toolRegistry from '@legion/tools-registry';
 import { ResourceManager } from '@legion/resource-manager';
 
 export class DecentPlanner {
@@ -93,7 +93,7 @@ export class DecentPlanner {
     
     if (!this.toolRegistry) {
       // Use ToolRegistry singleton
-      this.toolRegistry = await ToolRegistry.getInstance();
+      this.toolRegistry = toolRegistry;
       
       // Initialize tool discovery
       this.toolDiscovery = {

@@ -10,6 +10,9 @@ NO tests must ever skip, they must fail!
 
 ALL resources are available, real llm, mon
 
+ALL UI components must be MVVM and work with the actor framework only. 
+HTML must be dynamically generated and have incremental 2 way mapping to the state for easy updating and event dispatch.
+
 
 ## Project Overview
 

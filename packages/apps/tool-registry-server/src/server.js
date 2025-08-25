@@ -59,20 +59,15 @@ async function initializeServices() {
   try {
     console.log('🚀 Initializing Tool Registry Server...');
     
-    // Initialize ToolRegistry singleton
-    console.log('  📦 Initializing ToolRegistry singleton...');
-    await toolRegistry.initialize();
-    console.log('  ✅ ToolRegistry initialized');
-    
-    // Create service wrappers
+    // Create service wrappers (this initializes ToolRegistry singleton)
     console.log('  🔧 Creating service wrappers...');
     registryService = await ToolRegistryService.getInstance();
     actorManager = new ActorSpaceManager(registryService);
     console.log('  ✅ Services created');
     
-    // Verify loader is available
-    const loader = await toolRegistry.getLoader();
-    console.log('  📊 Loader pipeline state:', loader.getPipelineState());
+    // Verify registry is available
+    const registry = registryService.getRegistry();
+    console.log('  📊 Registry status: initialized');
     
     console.log('✅ All services initialized successfully');
     return true;
@@ -166,8 +161,9 @@ async function shutdown(signal) {
       console.log('  ✅ ToolRegistry cleaned up');
     }
     
-    // Cleanup singleton
+    // Cleanup singleton (done via ToolRegistryService)
     console.log('  🧹 Cleaning up singleton...');
+    // toolRegistry is already the initialized singleton instance
     await toolRegistry.cleanup();
     console.log('  ✅ Singleton cleaned up');
     

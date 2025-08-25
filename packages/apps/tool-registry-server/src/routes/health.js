@@ -32,19 +32,13 @@ healthRoutes.get('/detailed', async (req, res) => {
     
     // Check registry status
     try {
+      // toolRegistry is already the initialized singleton instance
       health.checks.registry = {
-        status: toolRegistry.initialized ? 'healthy' : 'unhealthy',
-        initialized: toolRegistry.initialized
+        status: 'healthy',
+        initialized: true
       };
-    } catch (error) {
-      health.checks.registry = {
-        status: 'unhealthy',
-        error: error.message
-      };
-    }
-    
-    // Check database connection
-    try {
+      
+      // Check database connection
       const provider = toolRegistry.provider;
       if (provider && provider.db) {
         await provider.db.admin().ping();
@@ -58,15 +52,8 @@ healthRoutes.get('/detailed', async (req, res) => {
           error: 'No database connection'
         };
       }
-    } catch (error) {
-      health.checks.database = {
-        status: 'unhealthy',
-        error: error.message
-      };
-    }
-    
-    // Check loader status
-    try {
+      
+      // Check loader status
       const loader = await toolRegistry.getLoader();
       const pipelineState = loader.getPipelineState();
       health.checks.loader = {
@@ -74,9 +61,17 @@ healthRoutes.get('/detailed', async (req, res) => {
         pipeline: pipelineState
       };
     } catch (error) {
-      health.checks.loader = {
+      health.checks.registry = {
         status: 'unhealthy',
         error: error.message
+      };
+      health.checks.database = {
+        status: 'unhealthy',
+        error: 'Registry unavailable'
+      };
+      health.checks.loader = {
+        status: 'unhealthy',
+        error: 'Registry unavailable'
       };
     }
     
@@ -100,9 +95,8 @@ healthRoutes.get('/detailed', async (req, res) => {
 healthRoutes.get('/ready', async (req, res) => {
   try {
     // Check if all critical services are ready
-    const isReady = 
-      toolRegistry.initialized &&
-      toolRegistry.provider !== null;
+    // toolRegistry is already the initialized singleton instance
+    const isReady = toolRegistry.provider !== null;
     
     if (isReady) {
       res.json({ ready: true });

@@ -11,14 +11,13 @@
  *   node scripts/check-status.js --verbose # Show detailed status with samples
  */
 
-import { ToolRegistry } from '../src/index.js';
+import toolRegistry from '../src/index.js';
 
 async function checkStatus(options = {}) {
   const { verbose = false } = options;
   
   try {
-    // Get ToolRegistry singleton
-    const toolRegistry = await ToolRegistry.getInstance();
+    // toolRegistry is already the initialized singleton instance
     
     // Get system status through the singleton
     const status = await toolRegistry.getSystemStatus({ verbose });

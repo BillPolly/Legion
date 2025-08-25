@@ -18,9 +18,7 @@ export default {
   },
   collectCoverageFrom: [
     'src/**/*.js',
-    'server/**/*.js',
-    '!src/index.js',
-    '!server/server.js'
+    '!src/index.js'
   ],
   coverageThreshold: {
     global: {

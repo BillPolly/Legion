@@ -13,14 +13,14 @@
  *   node scripts/discover-modules.js --save                   # Save to registry
  */
 
-import { ToolRegistry } from '../src/index.js';
+import toolRegistry from '../src/index.js';
 
 async function discoverModules(options = {}) {
   const { path, pattern, save = false, verbose = false } = options;
   
   try {
     // Get ToolRegistry singleton
-    const toolRegistry = await ToolRegistry.getInstance();
+    // toolRegistry is already the initialized singleton instance
     
     console.log('🔍 Discovering modules...\n');
     

@@ -32,13 +32,9 @@ export class ToolRegistryService {
     if (this.initialized) return;
     
     try {
-      // Ensure registry is initialized
-      if (!this.registry.initialized) {
-        await this.registry.initialize();
-      }
-      
-      // Get loader reference
-      this.loader = await this.registry.getLoader();
+      // toolRegistry is already the initialized singleton instance
+      // No separate loader needed - ToolRegistry has the methods directly
+      this.loader = this.registry; // Use registry as loader since it has the methods
       
       this.initialized = true;
       console.log('  ✅ ToolRegistryService initialized');
@@ -109,7 +105,7 @@ export class ToolRegistryService {
    */
   async loadAllModulesFromFileSystem() {
     const loader = await this.getLoader();
-    const result = await loader.loadModules();
+    const result = await loader.loadAllModules();
     return result;
   }
   
@@ -125,13 +121,9 @@ export class ToolRegistryService {
    * Get registry statistics
    */
   async getRegistryStats() {
-    const stats = await this.registry.getUsageStats();
+    const stats = await this.registry.getStatistics();
     
-    // Add loader pipeline state
-    const loader = await this.getLoader();
-    const pipelineState = loader.getPipelineState();
-    
-    // Get counts from provider
+    // Get counts from provider (if available)
     const provider = this.getProvider();
     let counts = {
       modules: 0,
@@ -141,12 +133,7 @@ export class ToolRegistryService {
     
     if (provider) {
       try {
-        const [modules, tools] = await Promise.all([
-          provider.listModules({ limit: 1 }),
-          this.registry.listTools({ limit: 1 })
-        ]);
-        
-        counts.modules = modules?.length || 0;
+        const tools = await this.registry.listTools({ limit: 1 });
         counts.tools = tools?.length || 0;
       } catch (error) {
         console.error('Error getting counts:', error);
@@ -155,7 +142,6 @@ export class ToolRegistryService {
     
     return {
       ...stats,
-      pipeline: pipelineState,
       counts
     };
   }
@@ -185,21 +171,14 @@ export class ToolRegistryService {
    * Get registry usage stats (alias for getRegistryStats)
    */
   async getStats() {
-    return await this.registry.getUsageStats();
+    return await this.registry.getStatistics();
   }
 
   /**
    * Generate perspectives for tools
    */
   async generatePerspectives() {
-    const loader = await this.getLoader();
-    
-    // Check if perspective generation is available
-    if (!loader.generatePerspectives) {
-      throw new Error('Perspective generation not available in loader');
-    }
-    
-    const result = await loader.generatePerspectives();
+    const result = await this.registry.generatePerspectives();
     return result;
   }
   

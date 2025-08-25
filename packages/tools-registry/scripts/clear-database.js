@@ -13,7 +13,7 @@
  *   node scripts/clear-database.js --force   # Clear without confirmation
  */
 
-import { ToolRegistry } from '../src/index.js';
+import toolRegistry from '../src/index.js';
 import readline from 'readline';
 
 async function clearDatabase(options = {}) {
@@ -21,7 +21,7 @@ async function clearDatabase(options = {}) {
   
   try {
     // Get ToolRegistry singleton
-    const toolRegistry = await ToolRegistry.getInstance();
+    // toolRegistry is already the initialized singleton instance
     
     // Get current status before clearing
     const statusBefore = await toolRegistry.getSystemStatus();

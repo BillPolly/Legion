@@ -15,14 +15,14 @@
  *   node scripts/load-tools.js --validate               # Validate after loading
  */
 
-import { ToolRegistry } from '../src/index.js';
+import toolRegistry from '../src/index.js';
 
 async function loadTools(options = {}) {
   const { modules, path, clear = false, validate = false, verbose = false } = options;
   
   try {
     // Get ToolRegistry singleton
-    const toolRegistry = await ToolRegistry.getInstance();
+    // toolRegistry is already the initialized singleton instance
     
     console.log('🔧 Tool Loading Pipeline\n');
     

@@ -1,12 +1,15 @@
 /**
  * Main entry point for the tools-registry package
  * 
- * ToolRegistry is a singleton that provides the ONLY entry point
- * to all tools-registry functionality
+ * Exports the initialized ToolRegistry singleton instance as default
+ * This prevents incorrect usage and ensures proper singleton pattern
  */
 
-// Main singleton entry point
-export { ToolRegistry } from './integration/ToolRegistry.js';
+import { ToolRegistry } from './integration/ToolRegistry.js';
+
+// Initialize and export the singleton instance
+const toolRegistry = await ToolRegistry.getInstance();
+export default toolRegistry;
 
 // Base classes for external modules to extend
 export { Module } from './core/Module.js';

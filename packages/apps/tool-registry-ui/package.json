@@ -4,8 +4,8 @@
   "type": "module",
   "description": "Comprehensive UI for Legion Tool Registry management with semantic search",
   "scripts": {
-    "start": "node server/server.js",
-    "dev": "NODE_ENV=development node server/server.js",
+    "start": "cd ../tool-registry-server && npm start",
+    "dev": "cd ../tool-registry-server && npm run dev",
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
     "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/unit",
     "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/integration",

@@ -19,7 +19,7 @@
  *   node scripts/load-complete-pipeline.js --verbose         # Detailed output
  */
 
-import { ToolRegistry } from '../src/index.js';
+import toolRegistry from '../src/index.js';
 
 async function runCompletePipeline(options = {}) {
   const { 
@@ -32,8 +32,7 @@ async function runCompletePipeline(options = {}) {
   } = options;
   
   try {
-    // Get ToolRegistry singleton
-    const toolRegistry = await ToolRegistry.getInstance();
+    // toolRegistry is already the initialized singleton instance
     
     console.log('🚀 Starting Complete Pipeline...\n');
     

@@ -11,9 +11,7 @@ export const apiRoutes = Router();
 // Get registry statistics
 apiRoutes.get('/stats', async (req, res, next) => {
   try {
-    const stats = await toolRegistry.getUsageStats();
-    const loader = await toolRegistry.getLoader();
-    const pipelineState = loader.getPipelineState();
+    const stats = await toolRegistry.getStatistics();
     
     // Get counts from database
     const provider = toolRegistry.provider;
@@ -33,7 +31,6 @@ apiRoutes.get('/stats', async (req, res, next) => {
     
     res.json({
       ...stats,
-      pipeline: pipelineState,
       counts,
       timestamp: new Date().toISOString()
     });
@@ -58,10 +55,20 @@ apiRoutes.get('/tools', async (req, res, next) => {
     
     const tools = await toolRegistry.listTools(options);
     
+    // Get total count if provider is available
+    let totalCount = tools.length;
+    try {
+      if (toolRegistry.provider && toolRegistry.provider.db) {
+        totalCount = await toolRegistry.provider.db.collection('tools').countDocuments();
+      }
+    } catch (error) {
+      console.warn('Could not get total count from database:', error.message);
+    }
+    
     res.json({
       tools,
       count: tools.length,
-      total: await toolRegistry.provider.db.collection('tools').countDocuments()
+      total: totalCount
     });
   } catch (error) {
     next(error);
@@ -160,14 +167,13 @@ apiRoutes.get('/modules', async (req, res, next) => {
 // Load modules from filesystem
 apiRoutes.post('/modules/load', async (req, res, next) => {
   try {
-    const loader = await toolRegistry.getLoader();
-    const result = await loader.loadModules();
+    const result = await toolRegistry.loadAllModules();
     
     res.json({
-      loaded: result.summary.loaded,
-      failed: result.summary.failed,
-      total: result.summary.total,
-      modules: result.loaded.map(m => m.config.name)
+      loaded: result.loaded || 0,
+      failed: result.failed || 0,
+      total: result.total || 0,
+      modules: result.modules || []
     });
   } catch (error) {
     next(error);
@@ -184,8 +190,7 @@ apiRoutes.delete('/database/clear', async (req, res, next) => {
       });
     }
     
-    const loader = await toolRegistry.getLoader();
-    await loader.clearAll();
+    await toolRegistry.clearAll();
     
     res.json({
       message: 'Database cleared successfully'
