@@ -43,10 +43,21 @@ export class TextSearch {
       const collection = this.databaseStorage.getCollection('tools');
       
       // Try to check for existing indexes - if collection doesn't exist, skip gracefully
-      let indexExists = false;
+      let textIndexExists = false;
+      let existingTextIndexName = null;
       try {
         const indexes = await collection.indexes();
-        indexExists = indexes.some(idx => idx.name === this.options.indexName);
+        // Check for ANY text index, not just one with our preferred name
+        const textIndex = indexes.find(idx => idx.key && idx.key._fts === 'text');
+        if (textIndex) {
+          textIndexExists = true;
+          existingTextIndexName = textIndex.name;
+          // Update our index name to use the existing one
+          this.options.indexName = existingTextIndexName;
+          if (this.options.verbose) {
+            console.log(`Using existing text index: ${existingTextIndexName}`);
+          }
+        }
       } catch (error) {
         if (error.code === 26 || error.message.includes('ns does not exist')) {
           if (this.options.verbose) {
@@ -58,7 +69,7 @@ export class TextSearch {
         }
       }
       
-      if (!indexExists) {
+      if (!textIndexExists) {
         try {
           // Create text index on name and description fields
           await collection.createIndex(

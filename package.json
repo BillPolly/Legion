@@ -83,6 +83,7 @@
     "url": "https://github.com/maxximus-dev/Legion.git"
   },
   "dependencies": {
+    "@qdrant/js-client-rest": "^1.15.1",
     "ajv-formats": "^3.0.1"
   }
 }
