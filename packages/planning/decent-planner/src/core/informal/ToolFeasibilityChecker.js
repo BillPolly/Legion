@@ -37,7 +37,7 @@ export class ToolFeasibilityChecker extends SimpleEmitter {
     
     this.toolRegistry = toolRegistry;
     this.llmClient = llmClient;
-    this.confidenceThreshold = actualOptions.confidenceThreshold || 0.3; // Lower threshold for semantic search
+    this.confidenceThreshold = actualOptions.confidenceThreshold || 0.6; // Set to 60% to catch JavaScript tools
     this.maxTools = actualOptions.maxTools || 20; // Allow more tools for curated sets
     this.maxDescriptions = actualOptions.maxDescriptions || 8; // Max tool descriptions (both general and specific)
     this.minDescriptions = actualOptions.minDescriptions || 5; // Min tool descriptions to generate
@@ -270,34 +270,152 @@ IMPORTANT: Include descriptions for BOTH code/file generation AND specific opera
       return {
         feasible: true,
         tools: [],
-        reason: 'COMPLEX tasks do not require tools directly'
+        reason: 'COMPLEX tasks do not require tools directly',
+        debug: {
+          taskDescription: task.description,
+          taskComplexity: 'COMPLEX',
+          step1_descriptions: [],
+          step2_discoveries: [],
+          step3_merged: [],
+          final_feasible: true
+        }
       };
     }
     
+    const debug = {
+      taskDescription: task.description,
+      taskComplexity: task.complexity,
+      step1_descriptions: [],
+      step2_discoveries: [],
+      step3_merged: [],
+      final_feasible: false,
+      error: null
+    };
+    
     try {
       // Step 1: Generate tool descriptions from the task
+      console.log(`🔍 Step 1: Generating tool descriptions for: "${task.description}"`);
       const toolDescriptions = await this.generateToolDescriptions(task.description);
+      debug.step1_descriptions = toolDescriptions;
+      console.log(`📝 Generated ${toolDescriptions.length} tool descriptions:`, toolDescriptions);
       
       // Step 2: Discover tools using semantic search on descriptions
-      const qualifiedTools = await this.discoverToolsFromDescriptions(toolDescriptions);
+      console.log(`🔍 Step 2: Discovering tools for each description...`);
+      const discoveryResults = [];
+      
+      for (const description of toolDescriptions) {
+        console.log(`  🔎 Searching for: "${description}"`);
+        
+        try {
+          // First get all tools without threshold filtering to show what was found
+          const allTools = await this.toolRegistry.searchTools(description, {
+            limit: 5
+            // No threshold - get everything
+          });
+          
+          // Then filter by our confidence threshold
+          const filteredTools = allTools.filter(tool => 
+            (tool.score || tool.confidence || 0) >= this.confidenceThreshold
+          );
+          
+          // Load full tool instances for the filtered tools
+          const fullTools = await Promise.all(
+            filteredTools.map(async (tool) => {
+              try {
+                const fullTool = await this.toolRegistry.getTool(tool.name);
+                if (fullTool) {
+                  return {
+                    ...tool,
+                    ...fullTool,
+                    confidence: tool.score || tool.confidence || 0.5,
+                    available: true,
+                    executable: typeof fullTool.execute === 'function'
+                  };
+                }
+                return null;
+              } catch (error) {
+                console.warn(`Failed to load tool ${tool.name}:`, error.message);
+                return null;
+              }
+            })
+          );
+          
+          const validTools = fullTools.filter(tool => tool !== null);
+          
+          // Create detailed discovery result with all information
+          discoveryResults.push({
+            description,
+            toolsFound: allTools.length,
+            toolsFiltered: filteredTools.length,
+            tools: allTools.map(tool => ({
+              name: tool.name,
+              confidence: tool.score || tool.confidence || 0,
+              filtered: (tool.score || tool.confidence || 0) < this.confidenceThreshold
+            })),
+            validTools,
+            threshold: this.confidenceThreshold
+          });
+          
+          console.log(`    ✅ Found ${allTools.length} tools, ${filteredTools.length} after filtering:`, validTools.map(t => `${t.name} (${t.confidence})`));
+          
+        } catch (error) {
+          console.warn(`  ❌ Search failed for "${description}":`, error.message);
+          discoveryResults.push({
+            description,
+            toolsFound: 0,
+            tools: [],
+            error: error.message
+          });
+        }
+      }
+      
+      debug.step2_discoveries = discoveryResults;
+      
+      // Step 3: Merge and deduplicate tools from all descriptions
+      console.log(`🔍 Step 3: Merging and deduplicating tools...`);
+      const allToolsFound = new Map(); // name -> best tool data
+      
+      for (const result of discoveryResults) {
+        for (const tool of result.tools || []) {
+          const existing = allToolsFound.get(tool.name);
+          if (!existing || tool.confidence > existing.confidence) {
+            allToolsFound.set(tool.name, tool);
+          }
+        }
+      }
+      
+      const qualifiedTools = Array.from(allToolsFound.values())
+        .filter(tool => tool.confidence >= this.confidenceThreshold)
+        .sort((a, b) => b.confidence - a.confidence)
+        .slice(0, this.maxTools);
+      
+      debug.step3_merged = qualifiedTools;
+      console.log(`🔧 Final merged tools (${qualifiedTools.length}):`, 
+        qualifiedTools.map(t => `${t.name} (${t.confidence})`));
       
       // Determine feasibility
       const feasible = qualifiedTools.length > 0;
+      debug.final_feasible = feasible;
       
       // Annotate task with tool information
       task.tools = qualifiedTools;
       task.feasible = feasible;
       
-      return {
+      const result = {
         feasible,
         tools: qualifiedTools,
         reason: feasible 
           ? `Found ${qualifiedTools.length} suitable tools via tool description bridge`
-          : 'No suitable tools found through semantic search'
+          : 'No suitable tools found through semantic search',
+        debug
       };
       
+      console.log(`${feasible ? '✅' : '❌'} Task "${task.description}" feasibility: ${feasible}`);
+      return result;
+      
     } catch (error) {
-      console.warn(`Tool discovery failed for task "${task.description}": ${error.message}`);
+      console.error(`Tool discovery failed for task "${task.description}":`, error);
+      debug.error = error.message;
       
       // Annotate task as infeasible
       task.tools = [];
@@ -306,7 +424,8 @@ IMPORTANT: Include descriptions for BOTH code/file generation AND specific opera
       return {
         feasible: false,
         tools: [],
-        reason: `Tool discovery error: ${error.message}`
+        reason: `Tool discovery error: ${error.message}`,
+        debug
       };
     }
   }

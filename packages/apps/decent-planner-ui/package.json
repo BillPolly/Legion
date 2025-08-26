@@ -1,0 +1,20 @@
+{
+  "name": "@legion/decent-planner-ui",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "MVVM-based UI for Decent Planner using actor framework",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest"
+  },
+  "dependencies": {
+    "@legion/server-framework": "*",
+    "@legion/decent-planner": "*",
+    "@legion/resource-manager": "*",
+    "@legion/components": "*",
+    "@legion/actors": "*"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

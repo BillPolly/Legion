@@ -2,12 +2,6 @@
  * ComplexityClassifier - Determines if a task is SIMPLE or COMPLEX
  */
 
-import { PromptManager } from '@legion/prompt-manager';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 export class ComplexityClassifier {
   constructor(llmClient) {
@@ -16,10 +10,6 @@ export class ComplexityClassifier {
     }
     
     this.llmClient = llmClient;
-    
-    // Initialize PromptManager with templates from prompt-manager package
-    const templatesDir = path.join(__dirname, '..', '..', '..', '..', 'prompt-manager', 'templates');
-    this.promptManager = new PromptManager(templatesDir);
   }
 
   /**
@@ -33,13 +23,8 @@ export class ComplexityClassifier {
       throw new Error('Task description is required');
     }
 
-    // Use PromptManager to generate prompt
-    const prompt = await this.promptManager.render('complexity-classification', {
-      taskDescription,
-      context: context.domain || context.parentTask ? context : null,
-      domain: context.domain,
-      parentTask: context.parentTask
-    });
+    // Use the inline prompt directly since template doesn't exist
+    const prompt = this.generateClassificationPrompt(taskDescription, context);
     
     const response = await this.llmClient.complete(prompt);
     return this.parseClassificationResponse(response);
@@ -68,30 +53,39 @@ Task: ${taskDescription}`;
 
 Classification Guidelines:
 
+IMPORTANT: Technical difficulty does NOT determine classification. A task can be technically challenging (like implementing complex algorithms or authentication) but still be SIMPLE if it only involves a few focused steps.
+
 SIMPLE tasks:
-- Can be accomplished with a focused set of tools (typically 1-10)
-- Have clear, well-defined scope
-- Don't require architectural decisions
-- May include sequences, conditionals, loops, retries
+- Can be accomplished in a few focused steps (typically 1-10 distinct actions)
+- Even if technically difficult, they don't require many separate subtasks
+- Have clear, well-defined scope that can be tackled directly
+- May include sequences, conditionals, loops, retries within those steps
 - Examples:
-  - "Write content to a file"
-  - "Parse JSON data"
-  - "Create database connection"
-  - "Install npm packages"
-  - "Create a database table with validation"
+  - "Implement user authentication" (technically difficult but few steps)
+  - "Create database connection with connection pooling"
+  - "Write a sorting algorithm"
+  - "Parse and validate JSON data"
+  - "Configure webpack with custom plugins"
+  - "Implement JWT token validation"
+  - "Create encrypted password storage"
+  - "Write recursive function"
+  - "Set up OAuth integration"
+  - "Implement caching layer"
 
-COMPLEX tasks:
-- Require coordination between multiple subsystems
-- Too broad to plan directly with tools
-- Need architectural decisions or design choices
-- Involve multiple domains or areas of concern
+COMPLEX tasks (needs decomposition):
+- Require MANY separate subtasks (typically 10+ distinct operations)
+- Too broad to tackle directly - needs breaking down
+- Involve coordinating multiple separate components or subsystems
+- Would result in an overwhelming number of individual steps if done directly
 - Examples:
-  - "Build a web application"
-  - "Create authentication system"
-  - "Set up CI/CD pipeline"
-  - "Build REST API with multiple endpoints"
+  - "Build entire web application from scratch"
+  - "Create complete e-commerce platform"
+  - "Set up full CI/CD pipeline with multiple environments"
+  - "Build entire microservices architecture"
 
-Analyze the task and determine if it can be accomplished with a focused set of tools (SIMPLE) or if it needs to be broken down into smaller subtasks (COMPLEX).
+CRITICAL RULE: If this task is already a subtask from a previous decomposition, it should almost always be SIMPLE. Only mark subtasks as COMPLEX if they truly require 10+ separate operations.
+
+Key question: Can this be done in a few focused steps (even if difficult), or does it need to be broken into many separate subtasks?
 
 Return your classification as JSON:
 {

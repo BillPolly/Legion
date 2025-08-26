@@ -4,12 +4,6 @@
 
 import { TaskNode } from './types/TaskNode.js';
 import { ComplexityClassifier } from './ComplexityClassifier.js';
-import { PromptManager } from '@legion/prompt-manager';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 export class TaskDecomposer {
   constructor(llmClient, complexityClassifier) {
@@ -23,10 +17,6 @@ export class TaskDecomposer {
     
     this.llmClient = llmClient;
     this.classifier = complexityClassifier;
-    
-    // Initialize PromptManager with templates from prompt-manager package
-    const templatesDir = path.join(__dirname, '..', '..', '..', '..', 'prompt-manager', 'templates');
-    this.promptManager = new PromptManager(templatesDir);
   }
 
   /**
@@ -40,12 +30,8 @@ export class TaskDecomposer {
       throw new Error('Task description is required');
     }
 
-    // Get decomposition from LLM using PromptManager
-    const prompt = await this.promptManager.render('task-decomposition', {
-      taskDescription,
-      domain: context.domain,
-      parentOutputs: context.parentOutputs
-    });
+    // Use inline prompt directly since template doesn't exist
+    const prompt = this.generateDecompositionPrompt(taskDescription, context);
     
     const response = await this.llmClient.complete(prompt);
     const decomposition = this.parseDecompositionResponse(response);
@@ -75,15 +61,18 @@ export class TaskDecomposer {
    * @returns {Promise<TaskNode>} Complete hierarchy as TaskNode tree
    */
   async decomposeRecursively(taskDescription, context = {}, options = {}) {
-    const { maxDepth = 5 } = options;
+    const { maxDepth = 5, progressCallback = null, cancellationChecker = null } = options;
     
-    return this._decomposeNode(taskDescription, context, 0, maxDepth);
+    return this._decomposeNode(taskDescription, context, 0, maxDepth, progressCallback, cancellationChecker);
   }
 
   /**
    * Private: Recursively decompose a single node
    */
-  async _decomposeNode(taskDescription, context, currentDepth, maxDepth) {
+  async _decomposeNode(taskDescription, context, currentDepth, maxDepth, progressCallback = null, cancellationChecker = null) {
+    // Check for cancellation at start of each decomposition
+    if (cancellationChecker) cancellationChecker();
+    
     // At max depth, force everything to be SIMPLE
     if (currentDepth >= maxDepth) {
       return new TaskNode({
@@ -96,10 +85,19 @@ export class TaskDecomposer {
     }
     
     // First, classify this task
+    if (progressCallback) {
+      progressCallback(`🔍 Analyzing: "${taskDescription}"`);
+    }
     const classification = await this.classifier.classify(taskDescription, context);
+    
+    // Check for cancellation after classification
+    if (cancellationChecker) cancellationChecker();
     
     // If SIMPLE, return as leaf node
     if (classification.complexity === 'SIMPLE') {
+      if (progressCallback) {
+        progressCallback(`✅ Simple task identified: "${taskDescription}"`);
+      }
       return new TaskNode({
         description: taskDescription,
         complexity: 'SIMPLE',
@@ -110,7 +108,21 @@ export class TaskDecomposer {
     }
     
     // If COMPLEX, decompose and recurse
+    if (progressCallback) {
+      progressCallback(`🌳 Breaking down complex task: "${taskDescription}"`);
+    }
+    
+    // Check for cancellation before decomposing
+    if (cancellationChecker) cancellationChecker();
+    
     const decomposition = await this.decompose(taskDescription, context);
+    
+    // Check for cancellation after decomposition
+    if (cancellationChecker) cancellationChecker();
+    
+    if (progressCallback) {
+      progressCallback(`📝 Found ${decomposition.subtasks.length} subtasks for: "${taskDescription}"`);
+    }
     
     // Create the parent node
     const parentNode = new TaskNode({
@@ -122,7 +134,11 @@ export class TaskDecomposer {
     });
     
     // Process each subtask
-    for (const subtask of decomposition.subtasks) {
+    for (let i = 0; i < decomposition.subtasks.length; i++) {
+      const subtask = decomposition.subtasks[i];
+      if (progressCallback) {
+        progressCallback(`🔄 Processing subtask ${i + 1}/${decomposition.subtasks.length}: "${subtask.description}"`);
+      }
       const childContext = {
         ...context,
         parentTask: taskDescription,
@@ -156,7 +172,9 @@ export class TaskDecomposer {
           subtask.description,
           childContext,
           currentDepth + 1,
-          maxDepth
+          maxDepth,
+          progressCallback,
+          cancellationChecker
         );
         // Preserve the ID and I/O hints from decomposition
         if (subtask.id) childNode.id = subtask.id;
@@ -200,11 +218,16 @@ For each subtask, provide:
 3. Suggested outputs (what it produces)
 4. Brief reasoning for why this subtask is needed
 
-The inputs and outputs should be informal natural language descriptions that:
-- Help understand task dependencies
-- Show data flow between tasks
-- Guide further decomposition if needed
-- Provide hints for tool discovery
+The inputs and outputs should be concrete file types and artifacts like:
+- Files: "HTML file", "CSS stylesheet", "JavaScript module", "JSON config", "README file"
+- Data: "User credentials", "Form data", "API response", "Database schema"
+- Components: "React component", "Vue template", "Express route", "Database table"
+- Assets: "Logo image", "Icon set", "Font files", "Color palette"
+
+Examples of good inputs/outputs:
+- Input: "User requirements document", Output: "HTML wireframe"
+- Input: "Design mockup", Output: "CSS stylesheet" 
+- Input: "API specification", Output: "JavaScript fetch functions"
 
 Return the decomposition as JSON:
 {

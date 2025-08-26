@@ -60,6 +60,7 @@ export function generateHTML(options) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${safeTitle}</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
   <style>
     * {
       margin: 0;
@@ -119,6 +120,7 @@ export function generateHTML(options) {
     
     // Initialize on DOM ready
     document.addEventListener('DOMContentLoaded', () => {
+      console.log('[CLIENT] HTML Template Version: 2.0 - Fixed handshake');
       updateConnectionStatus('connecting');
       
       // Establish WebSocket connection
@@ -134,17 +136,14 @@ export function generateHTML(options) {
       clientActor.__channel = null;
       
       let channel = null;
+      let handshakeCompleted = false;
       
       // Set up channel when connected
       ws.onopen = () => {
         console.log('[CLIENT] WebSocket connected to ${vars.wsEndpoint}');
         updateConnectionStatus('connected');
         
-        channel = actorSpace.addChannel(ws);
-        clientActor.__channel = channel; // Store channel reference for later use
-        console.log('[CLIENT] ActorSpace channel created, waiting for server actor...');
-        
-        // Send handshake to initiate actor connection
+        // Send handshake BEFORE creating channel
         const handshake = {
           type: 'actor_handshake',
           clientRootActor: 'client-root',
@@ -154,30 +153,42 @@ export function generateHTML(options) {
         ws.send(JSON.stringify(handshake));
       };
       
-      // Handle incoming messages
+      // Handle incoming messages - ONLY for handshake protocol
       ws.onmessage = (event) => {
-        try {
-          const message = JSON.parse(event.data);
-          
-          // Handle handshake acknowledgment
-          if (message.type === 'actor_handshake_ack') {
-            console.log('[CLIENT] Received handshake ack:', message);
+        // Only process messages until handshake is complete
+        if (!handshakeCompleted) {
+          try {
+            const message = JSON.parse(event.data);
             
-            if (message.serverRootActor && channel) {
-              // Create remote reference to server actor
-              const remoteServerActor = channel.makeRemote(message.serverRootActor);
+            // Handle handshake acknowledgment
+            if (message.type === 'actor_handshake_ack') {
+              console.log('[CLIENT] Received handshake ack:', message);
+              handshakeCompleted = true;
               
-              // Set the remote actor on the client actor
-              if (typeof clientActor.setRemoteActor === 'function') {
-                console.log('[CLIENT] Setting remote server actor...');
-                clientActor.setRemoteActor(remoteServerActor);
-                console.log('[CLIENT] Remote server actor set successfully');
+              // NOW create the channel after handshake is complete
+              channel = actorSpace.addChannel(ws);
+              clientActor.__channel = channel;
+              console.log('[CLIENT] ActorSpace channel created after handshake');
+              
+              if (message.serverRootActor && channel) {
+                // Create remote reference to server actor
+                const remoteServerActor = channel.makeRemote(message.serverRootActor);
+                
+                // Set the remote actor on the client actor
+                if (typeof clientActor.setRemoteActor === 'function') {
+                  console.log('[CLIENT] Setting remote server actor...');
+                  clientActor.setRemoteActor(remoteServerActor);
+                  console.log('[CLIENT] Remote server actor set successfully');
+                }
               }
+              
+              // Channel now owns the WebSocket - it will handle all further messages
             }
+          } catch (error) {
+            console.error('[CLIENT] Error processing handshake message:', error);
           }
-        } catch (error) {
-          // Not a JSON message, let ActorSpace handle it
         }
+        // After handshake, the Channel's handler processes all messages
       };
       
       // Handle errors

@@ -46,9 +46,10 @@ export class InformalPlanner {
    * Main planning method - orchestrates the entire informal planning process
    * @param {string} goal - The goal to plan for
    * @param {Object} context - Optional context (domain, constraints, etc.)
+   * @param {Function} progressCallback - Optional callback for progress updates
    * @returns {Promise<Object>} Complete planning result with hierarchy, validation, and statistics
    */
-  async plan(goal, context = {}) {
+  async plan(goal, context = {}, progressCallback = null, cancellationChecker = null) {
     if (!goal || goal.trim() === '') {
       throw new Error('Goal description is required');
     }
@@ -56,19 +57,41 @@ export class InformalPlanner {
     const startTime = Date.now();
     
     try {
+      // Check for cancellation before starting
+      if (cancellationChecker) {
+        console.log('🔍 InformalPlanner: Calling cancellationChecker at start...');
+        cancellationChecker();
+      }
+      
       // Step 1: Classify the goal
+      if (progressCallback) progressCallback('🔍 Classifying task complexity...');
       const classification = await this.classifier.classify(goal, context);
+      
+      // Check for cancellation after classification
+      if (cancellationChecker) {
+        console.log('🔍 InformalPlanner: Calling cancellationChecker after classification...');
+        cancellationChecker();
+      }
       
       // Step 2: Decompose if COMPLEX, or create single node if SIMPLE
       let hierarchy;
       if (classification.complexity === 'COMPLEX') {
+        if (progressCallback) progressCallback('🌳 Decomposing complex task into subtasks...');
+        // Check for cancellation before decomposition
+        if (cancellationChecker) cancellationChecker();
+        
         // Recursively decompose
         hierarchy = await this.decomposer.decomposeRecursively(
           goal, 
           context,
-          { maxDepth: this.options.maxDepth }
+          { 
+            maxDepth: this.options.maxDepth,
+            progressCallback: progressCallback,
+            cancellationChecker: cancellationChecker
+          }
         );
       } else {
+        if (progressCallback) progressCallback('✅ Simple task identified - no decomposition needed');
         // Create single SIMPLE task node
         hierarchy = new TaskNode({
           description: goal,
@@ -77,17 +100,15 @@ export class InformalPlanner {
         });
       }
       
-      // Step 3: Discover tools for all SIMPLE tasks
-      await this.discoverTools(hierarchy);
+      // Check for cancellation after decomposition
+      if (cancellationChecker) cancellationChecker();
       
-      // Step 4: Validate the decomposition
-      const validation = this.validator.validate(hierarchy, {
-        strictDependencies: this.options.strictValidation,
-        minSubtasks: this.options.minSubtasks,
-        maxDepth: this.options.maxDepth
-      });
+      // Step 3: Validate the decomposition structure only (no tools/feasibility)
+      if (progressCallback) progressCallback('✔️ Validating task hierarchy structure...');
+      const validation = this.validateStructureOnly(hierarchy);
       
       // Step 5: Generate statistics
+      if (progressCallback) progressCallback('📊 Generating planning statistics...');
       const statistics = this.generateStatistics(hierarchy);
       
       // Step 6: Create metadata
@@ -192,6 +213,33 @@ export class InformalPlanner {
     stats.uniqueTools = Array.from(stats.uniqueTools);
     
     return stats;
+  }
+
+  /**
+   * Validate only structure and dependencies (no feasibility)
+   * @private
+   */
+  validateStructureOnly(hierarchy) {
+    const structure = this.validator.validateStructure(hierarchy);
+    const dependencies = this.validator.validateDependencies(hierarchy, {
+      strictDependencies: false // More lenient for informal phase
+    });
+    const completeness = this.validator.validateCompleteness(hierarchy, {
+      minSubtasks: this.options.minSubtasks || 2
+    });
+
+    const valid = structure.valid && dependencies.valid && completeness.valid;
+
+    return {
+      valid,
+      structure,
+      dependencies,
+      completeness,
+      feasibility: {
+        overallFeasible: null, // Not checked in informal phase
+        message: 'Feasibility checking deferred to formal phase'
+      }
+    };
   }
 
   /**

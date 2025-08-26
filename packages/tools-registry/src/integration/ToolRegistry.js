@@ -387,7 +387,8 @@ export class ToolRegistry {
       try {
         const vectorResults = await this.vectorStore.search(query, options);
         if (vectorResults.length > 0) {
-          return vectorResults;
+          // Aggregate perspective results into unique tools with confidence scores
+          return await this._aggregateSearchResults(vectorResults, options);
         }
       } catch (error) {
         console.warn('Vector search failed, falling back to text search:', error.message);
@@ -395,7 +396,119 @@ export class ToolRegistry {
     }
 
     // Fall back to text search
-    return this.textSearch.search(query, options);
+    const textResults = await this.textSearch.search(query, options);
+    return this._formatTextSearchResults(textResults);
+  }
+
+  /**
+   * Aggregate vector search results (which contain perspectives) into unique tools
+   * with calculated confidence scores
+   */
+  async _aggregateSearchResults(vectorResults, options = {}) {
+    const toolMap = new Map();
+    
+    // Group results by tool name and collect confidence scores
+    for (const result of vectorResults) {
+      // Try different ways to get the tool name
+      const toolName = result.payload?.toolName || result.toolName || result.tool_name || result.name;
+      if (!toolName) {
+        console.warn('Vector result missing tool name:', result);
+        continue;
+      }
+      
+      if (toolMap.has(toolName)) {
+        const existing = toolMap.get(toolName);
+        existing.scores.push(result.score);
+        existing.perspectives.push({
+          context: result.payload?.context || result.context || '',
+          perspective: result.payload?.perspective || result.perspective || '',
+          score: result.score
+        });
+      } else {
+        toolMap.set(toolName, {
+          toolName,
+          scores: [result.score],
+          perspectives: [{
+            context: result.payload?.context || result.context || '',
+            perspective: result.payload?.perspective || result.perspective || '',
+            score: result.score
+          }]
+        });
+      }
+    }
+    
+    // Get tool metadata from database for all unique tools
+    const toolNames = Array.from(toolMap.keys());
+    const collection = this.databaseStorage.getCollection('tools');
+    const toolsFromDB = await collection.find({
+      name: { $in: toolNames }
+    }).toArray();
+    
+    // Create lookup map
+    const toolDBMap = new Map(toolsFromDB.map(tool => [tool.name, tool]));
+    
+    // Calculate confidence and create tool results
+    const results = [];
+    for (const [toolName, aggregated] of toolMap) {
+      try {
+        // Get tool metadata from database
+        const toolFromDB = toolDBMap.get(toolName);
+        if (!toolFromDB) {
+          console.warn(`Tool ${toolName} not found in database`);
+          continue;
+        }
+        
+        // Calculate confidence score (max score among perspectives)
+        const maxScore = Math.max(...aggregated.scores);
+        const avgScore = aggregated.scores.reduce((a, b) => a + b, 0) / aggregated.scores.length;
+        
+        // Use max score but adjust based on number of matching perspectives
+        const perspectiveBonus = Math.min(0.1, aggregated.perspectives.length * 0.02);
+        const confidence = Math.min(1.0, maxScore + perspectiveBonus);
+        
+        // Create enhanced tool result with database info and confidence
+        const tool = {
+          ...toolFromDB,
+          confidence,
+          maxScore,
+          avgScore,
+          perspectiveCount: aggregated.perspectives.length,
+          perspectives: aggregated.perspectives.sort((a, b) => b.score - a.score)
+        };
+        
+        results.push(tool);
+      } catch (error) {
+        console.warn(`Failed to process tool ${toolName}:`, error.message);
+      }
+    }
+    
+    // Apply confidence threshold filtering if specified
+    let filteredResults = results;
+    if (options.threshold !== undefined && options.threshold !== null) {
+      filteredResults = results.filter(tool => tool.confidence >= options.threshold);
+      console.log(`[ToolRegistry] Filtered by confidence threshold ${options.threshold}: ${results.length} -> ${filteredResults.length} tools`);
+    }
+    
+    // Sort by confidence score descending
+    filteredResults.sort((a, b) => b.confidence - a.confidence);
+    
+    // Apply limit
+    const limit = options.limit || 20;
+    return filteredResults.slice(0, limit);
+  }
+
+  /**
+   * Format text search results to match the semantic search format
+   */
+  _formatTextSearchResults(textResults) {
+    return textResults.map(tool => ({
+      ...tool,
+      confidence: 0.5, // Default confidence for text search
+      maxScore: 0.5,
+      avgScore: 0.5,
+      perspectiveCount: 0,
+      perspectives: []
+    }));
   }
 
   /**

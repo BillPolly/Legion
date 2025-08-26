@@ -37,29 +37,23 @@ export class ToolDiscoveryAdapter {
     const threshold = context.threshold || 0.3;
     
     try {
-      // Use real semantic search
-      const searchResults = await this.semanticDiscovery.findRelevantTools(query, {
-        limit: limit,
-        minScore: threshold,
-        includeMetadata: true
+      // Use the same searchTools method as manual search (with our fixed aggregation)
+      const searchResults = await this.toolRegistry.searchTools(query, {
+        limit: limit
       });
       
       console.log(`[ToolDiscoveryAdapter] Search found ${searchResults.length} matching tools:`, 
-        searchResults.map(r => r.name || r.tool?.name).filter(Boolean));
+        searchResults.map(r => r.name).filter(Boolean));
 
-      // Get executable tools from registry
-      const executableTools = [];
-      for (const result of searchResults.slice(0, limit)) {
-        const toolName = result.name || result.tool?.name;
-        if (toolName) {
-          const tool = await this.toolRegistry.getTool(toolName);
-          if (tool) {
-            executableTools.push(tool);
-          }
-        }
-      }
-
-      return executableTools.slice(0, limit);
+      // Filter by confidence threshold and return tools that already have execute functions
+      const filteredTools = searchResults.filter(tool => {
+        const confidence = tool.confidence || 0;
+        return confidence >= threshold;
+      });
+      
+      console.log(`[ToolDiscoveryAdapter] After confidence filtering (>=${threshold}): ${filteredTools.length} tools`);
+      
+      return filteredTools.slice(0, limit);
     } catch (error) {
       console.error('[ToolDiscoveryAdapter] Error in semantic search:', error.message);
       // Fallback to empty array on error
