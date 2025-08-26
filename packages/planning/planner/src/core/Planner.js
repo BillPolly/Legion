@@ -141,10 +141,23 @@ export class Planner {
     // Get the initial prompt from Prompt class
     const prompt = this.prompt.getInitialPrompt(requirements, tools);
     
-    // Add debug prompt logging
-    if (options.debugPrompt) {
-      console.log('[Planner] Create plan prompt:', prompt.substring(0, 500) + '...');
+    // Save prompt to file for debugging
+    if (options.saveDebugFiles) {
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      const timestamp = Date.now();
+      const debugDir = path.join(process.cwd(), '__tests__', 'debug');
+      await fs.mkdir(debugDir, { recursive: true });
+      
+      const promptFile = path.join(debugDir, `prompt-${timestamp}.txt`);
+      await fs.writeFile(promptFile, prompt, 'utf-8');
+      console.log(`[DEBUG] Prompt saved to: ${promptFile}`);
     }
+    
+    // Add debug prompt logging
+    console.log('\n=== FULL PROMPT SENT TO LLM ===');
+    console.log(prompt);
+    console.log('=== END PROMPT ===\n');
     
     // Merge LLM options with any overrides
     const llmOptions = {
@@ -153,6 +166,23 @@ export class Planner {
     };
     
     const response = await this.llmClient.complete(prompt, llmOptions.maxTokens);
+    
+    // Save response to file for debugging
+    if (options.saveDebugFiles) {
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      const timestamp = Date.now();
+      const debugDir = path.join(process.cwd(), '__tests__', 'debug');
+      
+      const responseFile = path.join(debugDir, `response-${timestamp}.txt`);
+      await fs.writeFile(responseFile, response, 'utf-8');
+      console.log(`[DEBUG] Response saved to: ${responseFile}`);
+    }
+    
+    // Always log the full response during debugging
+    console.log('\n=== FULL LLM RESPONSE ===');
+    console.log(response);
+    console.log('=== END LLM RESPONSE ===\n');
     
     if (options.debugResponse) {
       console.log('[Planner] LLM response:', response.substring(0, 500) + '...');

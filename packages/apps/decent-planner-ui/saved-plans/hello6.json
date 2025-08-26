@@ -1,0 +1,351 @@
+{
+  "name": "hello6",
+  "savedAt": "2025-08-26T09:19:56.140Z",
+  "informalResult": {
+    "goal": "please write a hello world program in javascript\n",
+    "context": {},
+    "phase": "informal",
+    "informal": {
+      "hierarchy": {
+        "id": "task-1756199957018-t3d1a6di0",
+        "description": "please write a hello world program in javascript\n",
+        "complexity": "SIMPLE",
+        "reasoning": "Writing a hello world program in JavaScript requires only 1-2 steps: writing a console.log() statement or using an alert(). Even for complete beginners, it's a single focused task that can be accomplished directly without needing decomposition into subtasks.",
+        "suggestedInputs": [],
+        "suggestedOutputs": []
+      },
+      "validation": {
+        "valid": true,
+        "structure": {
+          "valid": true,
+          "errors": []
+        },
+        "dependencies": {
+          "valid": true,
+          "warnings": [],
+          "errors": []
+        },
+        "completeness": {
+          "valid": true,
+          "stats": {
+            "totalTasks": 1,
+            "complexTasks": 0,
+            "simpleTasks": 1,
+            "maxDepthReached": 0,
+            "fullyDecomposed": true
+          },
+          "issues": [],
+          "warnings": []
+        },
+        "feasibility": {
+          "overallFeasible": null,
+          "message": "Feasibility checking deferred to formal phase"
+        }
+      },
+      "statistics": {
+        "totalTasks": 1,
+        "simpleTasks": 1,
+        "complexTasks": 0,
+        "feasibleTasks": 0,
+        "infeasibleTasks": 0,
+        "maxDepth": 0,
+        "averageSubtasks": 0,
+        "totalTools": 0,
+        "uniqueTools": [],
+        "uniqueToolsCount": 0
+      },
+      "metadata": {
+        "timestamp": "2025-08-26T09:19:17.020Z",
+        "plannerVersion": "1.0.0",
+        "processingTime": 2742,
+        "options": {
+          "maxDepth": 5,
+          "confidenceThreshold": 0.5,
+          "strictValidation": true,
+          "minSubtasks": 2,
+          "maxTools": 10
+        },
+        "context": "[Circular]"
+      }
+    },
+    "success": true,
+    "validation": "[Circular]",
+    "processingTime": 2743,
+    "summary": {
+      "goal": "please write a hello world program in javascript\n",
+      "success": true,
+      "phase": "informal",
+      "informal": {
+        "totalTasks": 1,
+        "simpleTasks": 1,
+        "complexTasks": 0,
+        "feasibleTasks": 0,
+        "maxDepth": 0,
+        "valid": true
+      },
+      "processingTime": 2743
+    }
+  },
+  "formalResult": {
+    "goal": "please write a hello world program in javascript\n",
+    "context": {},
+    "phase": "formal",
+    "informalResult": {
+      "goal": "please write a hello world program in javascript\n",
+      "context": "[Circular]",
+      "phase": "informal",
+      "informal": {
+        "hierarchy": {
+          "id": "task-1756199957018-t3d1a6di0",
+          "description": "please write a hello world program in javascript\n",
+          "complexity": "SIMPLE",
+          "reasoning": "Writing a hello world program in JavaScript requires only 1-2 steps: writing a console.log() statement or using an alert(). Even for complete beginners, it's a single focused task that can be accomplished directly without needing decomposition into subtasks.",
+          "suggestedInputs": [],
+          "suggestedOutputs": [],
+          "feasible": true,
+          "tools": [
+            {
+              "name": "run_node",
+              "confidence": 0.67058877,
+              "filtered": false
+            },
+            {
+              "name": "file_write",
+              "confidence": 0.66661147,
+              "filtered": false
+            },
+            {
+              "name": "search_logs",
+              "confidence": 0.65788585,
+              "filtered": false
+            },
+            {
+              "name": "json_stringify",
+              "confidence": 0.6366138,
+              "filtered": false
+            },
+            {
+              "name": "directory_create",
+              "confidence": 0.6279566,
+              "filtered": false
+            },
+            {
+              "name": "railway_logs",
+              "confidence": 0.61177675,
+              "filtered": false
+            },
+            {
+              "name": "greet",
+              "confidence": 0.6022078,
+              "filtered": false
+            },
+            {
+              "name": "file_read",
+              "confidence": 0.5910073499999999,
+              "filtered": false
+            },
+            {
+              "name": "railway_update_env",
+              "confidence": 0.5036703,
+              "filtered": false
+            }
+          ]
+        },
+        "validation": {
+          "valid": true,
+          "structure": {
+            "valid": true,
+            "errors": []
+          },
+          "dependencies": {
+            "valid": true,
+            "warnings": [],
+            "errors": []
+          },
+          "completeness": {
+            "valid": true,
+            "stats": {
+              "totalTasks": 1,
+              "complexTasks": 0,
+              "simpleTasks": 1,
+              "maxDepthReached": 0,
+              "fullyDecomposed": true
+            },
+            "issues": [],
+            "warnings": []
+          },
+          "feasibility": {
+            "overallFeasible": null,
+            "message": "Feasibility checking deferred to formal phase"
+          }
+        },
+        "statistics": {
+          "totalTasks": 1,
+          "simpleTasks": 1,
+          "complexTasks": 0,
+          "feasibleTasks": 0,
+          "infeasibleTasks": 0,
+          "maxDepth": 0,
+          "averageSubtasks": 0,
+          "totalTools": 0,
+          "uniqueTools": [],
+          "uniqueToolsCount": 0
+        },
+        "metadata": {
+          "timestamp": "2025-08-26T09:19:17.020Z",
+          "plannerVersion": "1.0.0",
+          "processingTime": 2742,
+          "options": {
+            "maxDepth": 5,
+            "confidenceThreshold": 0.5,
+            "strictValidation": true,
+            "minSubtasks": 2,
+            "maxTools": 10
+          },
+          "context": "[Circular]"
+        }
+      },
+      "success": true,
+      "validation": "[Circular]",
+      "processingTime": 2743,
+      "summary": {
+        "goal": "please write a hello world program in javascript\n",
+        "success": true,
+        "phase": "informal",
+        "informal": {
+          "totalTasks": 1,
+          "simpleTasks": 1,
+          "complexTasks": 0,
+          "feasibleTasks": 0,
+          "maxDepth": 0,
+          "valid": true
+        },
+        "processingTime": 2743
+      }
+    },
+    "formal": {
+      "behaviorTrees": [
+        {
+          "id": "hello-world-js",
+          "description": "Create and run a Hello World JavaScript program",
+          "type": "sequence",
+          "children": [
+            {
+              "type": "retry",
+              "id": "retry-create-dir",
+              "description": "Create project directory with retry",
+              "maxAttempts": 3,
+              "child": {
+                "type": "sequence",
+                "id": "create-dir-sequence",
+                "description": "Create directory and verify",
+                "children": [
+                  {
+                    "type": "action",
+                    "id": "create-project-dir",
+                    "tool": "directory_create",
+                    "description": "Create project directory",
+                    "outputVariable": "dirResult",
+                    "params": {
+                      "path": "./hello-world"
+                    }
+                  },
+                  {
+                    "type": "condition",
+                    "id": "check-dir-created",
+                    "description": "Verify directory was created",
+                    "check": "context.artifacts['dirResult'].success === true"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "retry",
+              "id": "retry-write-file",
+              "description": "Write JavaScript file with retry",
+              "maxAttempts": 3,
+              "child": {
+                "type": "sequence",
+                "id": "write-file-sequence",
+                "description": "Write file and verify",
+                "children": [
+                  {
+                    "type": "action",
+                    "id": "write-js-file",
+                    "tool": "file_write",
+                    "description": "Write Hello World JavaScript code",
+                    "outputVariable": "fileResult",
+                    "params": {
+                      "filepath": "./hello-world/hello.js",
+                      "content": "console.log('Hello, World!');"
+                    }
+                  },
+                  {
+                    "type": "condition",
+                    "id": "check-file-written",
+                    "description": "Verify file was written",
+                    "check": "context.artifacts['fileResult'].success === true"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "retry",
+              "id": "retry-run-program",
+              "description": "Execute JavaScript program with retry",
+              "maxAttempts": 3,
+              "child": {
+                "type": "sequence",
+                "id": "run-program-sequence",
+                "description": "Run program and verify output",
+                "children": [
+                  {
+                    "type": "action",
+                    "id": "execute-js",
+                    "tool": "run_node",
+                    "description": "Execute the JavaScript file",
+                    "outputVariable": "execResult",
+                    "params": {
+                      "script": "./hello-world/hello.js"
+                    }
+                  },
+                  {
+                    "type": "condition",
+                    "id": "check-execution",
+                    "description": "Verify program executed successfully",
+                    "check": "context.artifacts['execResult'].success === true"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "count": 1,
+      "status": "synthesized",
+      "validation": {
+        "allValid": true,
+        "results": [
+          {
+            "id": "hello-world-js",
+            "valid": true,
+            "errors": []
+          }
+        ]
+      }
+    },
+    "success": true,
+    "processingTime": 15004,
+    "summary": {
+      "goal": "please write a hello world program in javascript\n",
+      "success": true,
+      "phase": "formal",
+      "formal": {
+        "status": "synthesized",
+        "behaviorTrees": 1
+      },
+      "processingTime": 15004
+    }
+  },
+  "toolsUsed": []
+}

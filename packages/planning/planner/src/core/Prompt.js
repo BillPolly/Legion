@@ -33,6 +33,7 @@ export class Prompt {
       TASK_DESCRIPTION: requirements,
       TOOLS: tools
     };
+    
     return this._fillTemplate(this.createPlanTemplate, values);
   }
   
@@ -121,22 +122,19 @@ export class Prompt {
       
       // Build formatted text
       let text = `### ${name}\n`;
-      text += `- **Description**: ${description}\n`;
+      text += `Description: ${description}\n`;
       
       if (inputs.length > 0) {
-        text += `- **Inputs**:\n`;
+        text += `Inputs:\n`;
         inputs.forEach(input => {
-          text += `  - \`${input.name}\` (${input.type || 'any'}): ${input.description || ''}\n`;
+          text += `  - ${input.name} (${input.type || 'any'}): ${input.description || ''}\n`;
         });
       } else {
-        text += `- **Inputs**: None\n`;
+        text += `Inputs: None\n`;
       }
       
       if (outputs.length > 0) {
-        text += `- **Outputs**:\n`;
-        outputs.forEach(output => {
-          text += `  - \`${output.name}\` (${output.type || 'any'}): ${output.description || ''}\n`;
-        });
+        text += `Outputs: ${outputs.map(o => o.name).join(', ')}\n`;
       }
       
       return text;
@@ -176,29 +174,35 @@ export class Prompt {
   }
   
   /**
-   * Extract outputs from tool definition  
+   * Extract outputs from tool definition - ONLY actual data fields
    */
   _extractToolOutputs(tool) {
+    // For specific tools, define their actual data output field names
+    const toolOutputMappings = {
+      'directory_create': ['dirpath', 'created'],
+      'file_write': ['filepath', 'bytesWritten', 'created'],
+      'file_writer': ['filepath', 'bytesWritten', 'created'],  // Support both names
+      'file_read': ['content', 'filepath', 'size'],
+      'file_reader': ['content', 'filepath', 'size']  // Support both names
+    };
+
+    // Use specific mappings if available
+    if (toolOutputMappings[tool.name]) {
+      return toolOutputMappings[tool.name].map(name => ({ name }));
+    }
+    
     // Direct outputs array
     if (tool.outputs) {
       return tool.outputs;
     }
     
-    // From outputSchema
-    if (tool.outputSchema?.properties) {
-      return Object.entries(tool.outputSchema.properties).map(([name, spec]) => ({
-        name,
-        type: spec.type || 'any',
-        description: spec.description || ''
-      }));
+    // From outputSchema - extract SUCCESS format ONLY
+    if (tool.outputSchema?.success?.properties) {
+      return Object.keys(tool.outputSchema.success.properties).map(name => ({ name }));
     }
     
-    // Default outputs for most tools
-    return [
-      { name: 'success', type: 'boolean', description: 'Whether the operation succeeded' },
-      { name: 'message', type: 'string', description: 'Result or error message' },
-      { name: 'data', type: 'object', description: 'Additional result data' }
-    ];
+    // If tool has no specific output schema, don't show outputs
+    return [];
   }
   
   /**

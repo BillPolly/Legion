@@ -97,6 +97,9 @@ export class FormalPlanner {
         return result;
       }
       
+      // Enrich behavior tree with tool IDs before returning
+      await this.enrichBehaviorTreeWithToolIds(rootBT);
+      
       // Aggregate results
       return this.aggregateResults(levelResults, rootBT);
       
@@ -248,5 +251,71 @@ export class FormalPlanner {
     result.errors = [];
     
     return result;
+  }
+
+  /**
+   * Post-processing step to enrich behavior tree with tool IDs
+   * Recursively finds action nodes and adds tool_id field based on tool name lookup
+   */
+  async enrichBehaviorTreeWithToolIds(behaviorTree) {
+    if (!behaviorTree || !this.toolRegistry) {
+      return;
+    }
+
+    console.log('[FormalPlanner] Enriching behavior tree with tool IDs...');
+    
+    // Create a tool name -> tool ID mapping
+    const toolNameToId = new Map();
+    
+    try {
+      // Get all tools from registry
+      const allTools = await this.toolRegistry.searchTools('') || [];
+      for (const tool of allTools) {
+        if (tool.name && tool._id) {
+          toolNameToId.set(tool.name, tool._id);
+        }
+      }
+      
+      console.log(`[FormalPlanner] Found ${toolNameToId.size} tools for ID mapping`);
+      
+      // Recursively enrich the tree
+      this.enrichNodeWithToolIds(behaviorTree, toolNameToId);
+      
+      console.log('[FormalPlanner] ✅ Behavior tree enriched with tool IDs');
+      
+    } catch (error) {
+      console.error('[FormalPlanner] ❌ Failed to enrich behavior tree with tool IDs:', error);
+      // Don't throw - this is a non-critical enhancement
+    }
+  }
+
+  /**
+   * Recursively enrich a node and its children with tool IDs
+   */
+  enrichNodeWithToolIds(node, toolNameToId) {
+    if (!node) return;
+
+    // If this is an action node with a tool, add the tool_id
+    if (node.type === 'action' && node.tool) {
+      const toolId = toolNameToId.get(node.tool);
+      if (toolId) {
+        node.tool_id = toolId;
+        console.log(`[FormalPlanner] ✅ Enriched action '${node.id}': ${node.tool} -> ${toolId}`);
+      } else {
+        console.log(`[FormalPlanner] ❌ Tool ID not found for: ${node.tool}`);
+      }
+    }
+
+    // Recursively process children
+    if (node.children) {
+      for (const child of node.children) {
+        this.enrichNodeWithToolIds(child, toolNameToId);
+      }
+    }
+
+    // Process single child (for retry nodes)
+    if (node.child) {
+      this.enrichNodeWithToolIds(node.child, toolNameToId);
+    }
   }
 }

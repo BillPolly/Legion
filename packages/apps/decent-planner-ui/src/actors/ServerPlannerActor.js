@@ -6,6 +6,7 @@
 import { DecentPlanner } from '@legion/decent-planner';
 import { ResourceManager } from '@legion/resource-manager';
 import { ServerExecutionActor } from './ServerExecutionActor.js';
+import PlanFileService from '../services/PlanFileService.js';
 
 export default class ServerPlannerActor {
   constructor(services) {
@@ -61,6 +62,13 @@ export default class ServerPlannerActor {
     
     console.log('Got LLM client from ResourceManager');
     
+    // Set up LLM event listener to forward to client
+    if (llmClient && this.remoteActor) {
+      llmClient.on('interaction', (event) => {
+        this.remoteActor.receive('llm-interaction', event);
+      });
+    }
+    
     // Create DecentPlanner with the REAL LLM client
     this.decentPlanner = new DecentPlanner(llmClient, {
       maxDepth: 5,
@@ -72,12 +80,19 @@ export default class ServerPlannerActor {
     // Initialize it (this loads toolRegistry)
     await this.decentPlanner.initialize();
     
+    // Also listen to the formal planner's LLM client if it exists
+    if (this.decentPlanner.formalPlanner && this.decentPlanner.formalPlanner.llmClient && this.remoteActor) {
+      this.decentPlanner.formalPlanner.llmClient.on('interaction', (event) => {
+        this.remoteActor.receive('llm-interaction', event);
+      });
+    }
+    
     // Get the tool registry for direct access
     this.toolRegistry = this.decentPlanner.toolRegistry;
     
     // Pass toolRegistry to execution actor
     if (this.executionActor && this.toolRegistry) {
-      this.executionActor.toolRegistry = this.toolRegistry;
+      this.executionActor.setToolRegistry(this.toolRegistry);
     }
     
     // Load all modules for the tool registry
@@ -132,9 +147,7 @@ export default class ServerPlannerActor {
         
       // Execution messages - forward to execution actor
       case 'load-execution-tree':
-        if (this.executionActor) {
-          this.executionActor.receive('load-tree', data, this.remoteActor);
-        }
+        this.handleLoadExecutionTreeRequest(data);
         break;
         
       case 'execution-step':
@@ -178,6 +191,19 @@ export default class ServerPlannerActor {
         console.log('🛑 About to call this.cancelPlanning()...');
         this.cancelPlanning();
         console.log('✅ Called this.cancelPlanning() successfully');
+        break;
+        
+      // Plan file operations
+      case 'save-plan':
+        this.handleSavePlanRequest(data);
+        break;
+        
+      case 'load-plan':
+        this.handleLoadPlanRequest(data);
+        break;
+        
+      case 'list-saved-plans':
+        this.handleListSavedPlansRequest();
         break;
         
       default:
@@ -350,6 +376,7 @@ export default class ServerPlannerActor {
       });
       
       // Execute tool discovery with progress callback - use server's stored hierarchy!
+      console.log('🔍 [SERVER] Starting tool discovery...');
       const result = await this.decentPlanner.discoverToolsForHierarchy(
         this.currentInformalResult.informal.hierarchy, 
         (message) => {
@@ -360,10 +387,16 @@ export default class ServerPlannerActor {
           });
         }
       );
+      console.log('🔍 [SERVER] Tool discovery completed, result keys:', Object.keys(result || {}));
+      
+      // Enhance result with full tool metadata from ToolRegistry
+      console.log('🔍 [SERVER] About to enhance tool discovery result...');
+      const enhancedResult = await this.enhanceToolDiscoveryWithMetadata(result);
+      console.log('🔍 [SERVER] Enhancement completed.');
       
       // Send result
       this.remoteActor.receive('toolsDiscoveryComplete', {
-        result,
+        result: enhancedResult,
         timestamp: new Date().toISOString()
       });
       
@@ -383,6 +416,104 @@ export default class ServerPlannerActor {
         });
       }
     }
+  }
+  
+  async enhanceToolDiscoveryWithMetadata(result) {
+    console.log('🔍 [ENHANCE] Starting metadata enhancement...');
+    console.log('🔍 [ENHANCE] Result structure:', Object.keys(result || {}));
+    
+    if (!result) {
+      console.log('🔍 [ENHANCE] No result provided, returning original');
+      return result;
+    }
+    
+    const enhancedResult = JSON.parse(JSON.stringify(result)); // Deep copy
+    
+    // Function to enhance tools with metadata
+    const enhanceTools = async (tools) => {
+      console.log('🔍 [ENHANCE] Enhancing tools:', tools ? tools.length : 'none');
+      if (!Array.isArray(tools)) return;
+      
+      for (const tool of tools) {
+        console.log(`🔍 [ENHANCE] Processing tool: ${tool.name}`);
+        try {
+          // Get full tool metadata from registry
+          console.log(`🔍 [ENHANCE] Calling getTool for: ${tool.name}`);
+          const fullToolData = await this.toolRegistry.getTool(tool.name);
+          console.log(`🔍 [ENHANCE] Tool data for ${tool.name}:`, fullToolData ? Object.keys(fullToolData) : 'null');
+          
+          if (fullToolData) {
+            // Add the full metadata to the tool in a metadata field like a sensible dev!
+            tool.metadata = {
+              description: fullToolData.description || '',
+              inputSchema: fullToolData.inputSchema || {},
+              outputSchema: fullToolData.outputSchema || {},
+              category: fullToolData.category || '',
+              version: fullToolData.version || '',
+              author: fullToolData.author || '',
+              moduleName: fullToolData.moduleName || '',
+              tags: fullToolData.tags || [],
+              examples: fullToolData.examples || []
+            };
+            console.log(`✅ [ENHANCE] Added metadata to ${tool.name}`);
+          } else {
+            console.warn(`❌ [ENHANCE] No tool data found for ${tool.name}`);
+            tool.metadata = {
+              description: `Tool: ${tool.name}`,
+              inputSchema: {},
+              outputSchema: {},
+              category: 'unknown',
+              version: '1.0.0',
+              author: 'unknown',
+              moduleName: 'unknown',
+              tags: [],
+              examples: []
+            };
+          }
+        } catch (error) {
+          console.warn(`❌ [ENHANCE] Failed to get metadata for tool ${tool.name}:`, error.message);
+          tool.metadata = {
+            description: `Tool: ${tool.name}`,
+            inputSchema: {},
+            outputSchema: {},
+            category: 'unknown',
+            version: '1.0.0',
+            author: 'unknown',
+            moduleName: 'unknown', 
+            tags: [],
+            examples: []
+          };
+        }
+      }
+    };
+    
+    // Enhance tools in all possible locations where they might appear
+    console.log('🔍 [ENHANCE] Checking hierarchy.tools...');
+    if (enhancedResult.hierarchy && enhancedResult.hierarchy.tools) {
+      console.log('🔍 [ENHANCE] Found hierarchy.tools, enhancing...');
+      await enhanceTools(enhancedResult.hierarchy.tools);
+    }
+    
+    console.log('🔍 [ENHANCE] Checking informal.hierarchy.tools...');
+    if (enhancedResult.informal && enhancedResult.informal.hierarchy && enhancedResult.informal.hierarchy.tools) {
+      console.log('🔍 [ENHANCE] Found informal.hierarchy.tools, enhancing...');
+      await enhanceTools(enhancedResult.informal.hierarchy.tools);
+    }
+    
+    // Also enhance tools in toolDiscovery array if present
+    console.log('🔍 [ENHANCE] Checking toolDiscovery array...');
+    if (enhancedResult.toolDiscovery && Array.isArray(enhancedResult.toolDiscovery)) {
+      console.log(`🔍 [ENHANCE] Found toolDiscovery with ${enhancedResult.toolDiscovery.length} items`);
+      for (const taskResult of enhancedResult.toolDiscovery) {
+        if (taskResult.discoveryResult && taskResult.discoveryResult.tools) {
+          console.log(`🔍 [ENHANCE] Enhancing tools in task: ${taskResult.taskId}`);
+          await enhanceTools(taskResult.discoveryResult.tools);
+        }
+      }
+    }
+    
+    console.log('🔍 [ENHANCE] Enhancement complete, returning result');
+    return enhancedResult;
   }
   
   /**
@@ -500,6 +631,179 @@ export default class ServerPlannerActor {
     } catch (error) {
       console.error('Failed to get registry stats:', error);
       this.remoteActor.receive('registryStatsError', {
+        error: error.message
+      });
+    }
+  }
+  
+  /**
+   * Handle load execution tree request - enrich with tool IDs before forwarding
+   */
+  async handleLoadExecutionTreeRequest(data) {
+    try {
+      if (!this.executionActor) {
+        throw new Error('Execution actor not initialized');
+      }
+      
+      if (!this.toolRegistry) {
+        throw new Error('Tool registry not initialized');
+      }
+      
+      const { tree } = data;
+      if (!tree) {
+        throw new Error('No behavior tree provided');
+      }
+      
+      console.log('[ServerPlannerActor] Enriching behavior tree with tool IDs...');
+      
+      // Create a copy of the tree to avoid modifying the original
+      const enrichedTree = JSON.parse(JSON.stringify(tree));
+      
+      // Enrich the tree with tool IDs
+      await this.enrichBehaviorTreeWithToolIds(enrichedTree);
+      
+      console.log('[ServerPlannerActor] ✅ Tree enriched, forwarding to execution actor');
+      
+      // Forward the enriched tree to the execution actor
+      this.executionActor.receive('load-tree', { tree: enrichedTree }, this.remoteActor);
+      
+    } catch (error) {
+      console.error('[ServerPlannerActor] Failed to load execution tree:', error);
+      
+      // Send error back to client
+      this.remoteActor.receive('load-tree-response', {
+        success: false,
+        error: error.message
+      });
+    }
+  }
+  
+  /**
+   * Enrich behavior tree with tool IDs (same logic as FormalPlanner)
+   */
+  async enrichBehaviorTreeWithToolIds(behaviorTree) {
+    if (!behaviorTree || !this.toolRegistry) {
+      return;
+    }
+
+    console.log('[ServerPlannerActor] Creating tool name -> ID mapping...');
+    
+    // Create a tool name -> tool ID mapping
+    const toolNameToId = new Map();
+    
+    try {
+      // Get all tools from registry  
+      const allTools = await this.toolRegistry.listTools() || [];
+      for (const tool of allTools) {
+        if (tool.name && tool._id) {
+          toolNameToId.set(tool.name, tool._id);
+        }
+      }
+      
+      console.log(`[ServerPlannerActor] Found ${toolNameToId.size} tools for ID mapping`);
+      
+      // Recursively enrich the tree
+      this.enrichNodeWithToolIds(behaviorTree, toolNameToId);
+      
+      console.log('[ServerPlannerActor] ✅ Behavior tree enriched with tool IDs');
+      
+    } catch (error) {
+      console.error('[ServerPlannerActor] ❌ Failed to enrich behavior tree with tool IDs:', error);
+      // Don't throw - this is a non-critical enhancement
+    }
+  }
+
+  /**
+   * Recursively enrich a node and its children with tool IDs
+   */
+  enrichNodeWithToolIds(node, toolNameToId) {
+    if (!node) return;
+
+    // If this is an action node with a tool, add the tool_id
+    if (node.type === 'action' && node.tool) {
+      const toolId = toolNameToId.get(node.tool);
+      if (toolId) {
+        node.tool_id = toolId;
+        console.log(`[ServerPlannerActor] ✅ Enriched action '${node.id}': ${node.tool} -> ${toolId}`);
+      } else {
+        console.log(`[ServerPlannerActor] ❌ Tool ID not found for: ${node.tool}`);
+      }
+    }
+
+    // Recursively process children
+    if (node.children) {
+      for (const child of node.children) {
+        this.enrichNodeWithToolIds(child, toolNameToId);
+      }
+    }
+
+    // Process single child (for retry nodes)
+    if (node.child) {
+      this.enrichNodeWithToolIds(node.child, toolNameToId);
+    }
+  }
+  
+  // Plan Save/Load handlers
+  async handleSavePlanRequest(data) {
+    try {
+      const { name, informalResult, formalResult } = data;
+      
+      if (!name || !name.trim()) {
+        throw new Error('Plan name is required');
+      }
+      
+      const result = await PlanFileService.savePlan(name.trim(), informalResult, formalResult);
+      
+      this.remoteActor.receive('planSaveComplete', {
+        success: true,
+        filename: result.filename,
+        message: `Plan "${name}" saved successfully`
+      });
+      
+    } catch (error) {
+      console.error('Failed to save plan:', error);
+      this.remoteActor.receive('planSaveError', {
+        error: error.message
+      });
+    }
+  }
+  
+  async handleLoadPlanRequest(data) {
+    try {
+      const { filename } = data;
+      
+      if (!filename) {
+        throw new Error('Filename is required');
+      }
+      
+      const planData = await PlanFileService.loadPlan(filename);
+      
+      this.remoteActor.receive('planLoadComplete', {
+        success: true,
+        planData,
+        message: `Plan "${planData.name}" loaded successfully`
+      });
+      
+    } catch (error) {
+      console.error('Failed to load plan:', error);
+      this.remoteActor.receive('planLoadError', {
+        error: error.message
+      });
+    }
+  }
+  
+  async handleListSavedPlansRequest() {
+    try {
+      const plans = await PlanFileService.listPlans();
+      
+      this.remoteActor.receive('planListComplete', {
+        success: true,
+        plans
+      });
+      
+    } catch (error) {
+      console.error('Failed to list saved plans:', error);
+      this.remoteActor.receive('planListError', {
         error: error.message
       });
     }

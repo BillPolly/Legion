@@ -18,6 +18,7 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
     this.toolRegistry = toolRegistry;
     this.nodeTypes = new Map();
     this.executionContext = {};
+    this.resolvedTools = new Map(); // toolName -> tool instance
     
     // Debug-specific state
     this.executionMode = 'step'; // 'step', 'run', 'paused'
@@ -47,6 +48,9 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
     this.nodeStates.clear();
     this.executionStack = [];
     
+    // Resolve and cache all tools needed by the tree - fail fast if any are missing
+    await this.resolveAllTreeTools(treeConfig);
+    
     // Create root node from configuration
     this.rootNode = await this.createNode(treeConfig);
     
@@ -68,6 +72,86 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
       treeId: treeConfig.id,
       nodeCount: this.countNodes(treeConfig)
     };
+  }
+
+  /**
+   * Recursively find all tools needed by the tree and resolve them
+   * Fail fast if any tools are missing
+   */
+  async resolveAllTreeTools(node) {
+    if (!this.toolRegistry) {
+      throw new Error('No tool registry provided to executor');
+    }
+
+    const toolsNeeded = new Set();
+    this.findAllToolIds(node, toolsNeeded);
+    
+    console.log(`[BT-EXECUTOR] Found ${toolsNeeded.size} unique tools needed:`, Array.from(toolsNeeded));
+    
+    // Resolve all tools upfront
+    const missingTools = [];
+    
+    for (const toolId of toolsNeeded) {
+      try {
+        // Convert ObjectId to string if needed
+        const toolIdString = toolId.toString();
+        
+        // Get the actual executable tool from registry using ID
+        const tool = await this.toolRegistry.getToolById(toolIdString);
+        
+        if (tool && tool.execute) {
+          this.resolvedTools.set(toolIdString, tool);
+          console.log(`[BT-EXECUTOR] ✅ Resolved executable tool: ${toolIdString} (${tool.name})`);
+        } else if (tool) {
+          // Tool exists but doesn't have execute method - this is the problem
+          console.log(`[BT-EXECUTOR] ❌ Tool ${toolIdString} exists but has no execute method. Available methods:`, Object.keys(tool));
+          missingTools.push(toolIdString);
+        } else {
+          missingTools.push(toolIdString);
+          console.log(`[BT-EXECUTOR] ❌ Missing tool: ${toolIdString}`);
+        }
+      } catch (error) {
+        const toolIdString = toolId.toString();
+        missingTools.push(toolIdString);
+        console.log(`[BT-EXECUTOR] ❌ Error resolving tool ${toolIdString}:`, error.message);
+      }
+    }
+    
+    // Fail fast if any tools are missing
+    if (missingTools.length > 0) {
+      throw new Error(`Missing required tools: ${missingTools.join(', ')}`);
+    }
+    
+    console.log(`[BT-EXECUTOR] ✅ All ${toolsNeeded.size} tools resolved successfully`);
+  }
+  
+  /**
+   * Recursively find all tool IDs used in the tree
+   */
+  findAllToolIds(node, toolsSet) {
+    if (!node) return;
+    
+    // If this is an action node with a tool_id or tool, add it to the set
+    if (node.type === 'action') {
+      // Check both node.tool_id and node.config.tool_id
+      const toolId = node.tool_id || node.config?.tool_id || node.tool || node.config?.tool;
+      if (toolId) {
+        // Convert ObjectId to string if needed for consistent handling
+        toolsSet.add(toolId.toString());
+      }
+    }
+    
+    // Recursively check children
+    if (node.children) {
+      for (const child of node.children) {
+        this.findAllToolIds(child, toolsSet);
+      }
+    }
+    
+    // Check single child (for retry nodes)
+    if (node.child) {
+      this.findAllToolIds(node.child, toolsSet);
+    }
   }
 
   /**
@@ -93,13 +177,11 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
       throw new Error('Tree not initialized');
     }
     
-    // If we're starting fresh
+    // Start at root if no current node
     if (!this.currentNode) {
       this.currentNode = this.rootNode;
-      this.executionStack = [this.rootNode];
     }
     
-    // Execute current node
     const node = this.currentNode;
     const nodeId = node.config?.id || node.id;
     const nodeType = node.config?.type || 'unknown';
@@ -108,126 +190,102 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
     this.emit('node:step', {
       nodeId,
       nodeType,
-      nodeName: node.config?.name || nodeId,
-      depth: this.executionStack.length
+      nodeName: node.config?.name || nodeId
     });
     
-    // Update node state to running
-    this.nodeStates.set(nodeId, 'running');
-    this.emit('node:state', { nodeId, state: 'running' });
-    
     try {
-      // For composite nodes (sequence, selector, retry), don't execute them directly
-      // Just navigate to their children
+      // Composite nodes - navigate to first pending child
       if (['sequence', 'selector', 'retry'].includes(nodeType)) {
-        // Mark composite node as running
         this.nodeStates.set(nodeId, 'running');
         
-        // Find first child to execute
-        let childToExecute = null;
-        
-        if (nodeType === 'retry' && node.child) {
-          // Retry nodes have a single child
-          childToExecute = node.child;
-        } else if (node.children && node.children.length > 0) {
-          // Find first pending child
-          for (const child of node.children) {
-            const childId = child.config?.id || child.id;
-            if (this.nodeStates.get(childId) === 'pending') {
-              childToExecute = child;
-              break;
-            }
+        // Find first pending child
+        const children = nodeType === 'retry' && node.child ? [node.child] : node.children || [];
+        for (const child of children) {
+          const childId = child.config?.id || child.id;
+          if (this.nodeStates.get(childId) === 'pending') {
+            this.currentNode = child;
+            return { complete: false, currentNode: childId };
           }
         }
         
-        if (childToExecute) {
-          this.currentNode = childToExecute;
-          this.executionStack.push(childToExecute);
-          return {
-            complete: false,
-            currentNode: childToExecute.config?.id,
-            lastResult: { status: NodeStatus.SUCCESS }
-          };
-        } else {
-          // All children processed, determine composite node status
-          const compositeStatus = this.determineCompositeStatus(node);
-          this.nodeStates.set(nodeId, compositeStatus === NodeStatus.SUCCESS ? 'success' : 'failure');
-          
-          // Move to next
-          this.currentNode = this.getNextNode(node, compositeStatus);
-          if (this.currentNode) {
-            return {
-              complete: false,
-              currentNode: this.currentNode.config?.id,
-              lastResult: { status: compositeStatus }
-            };
-          } else {
-            return {
-              complete: true,
-              success: compositeStatus === NodeStatus.SUCCESS,
-              history: this.executionHistory
-            };
-          }
+        // No pending children - composite is done, move to next
+        const status = this.determineCompositeStatus(node);
+        this.nodeStates.set(nodeId, status === NodeStatus.SUCCESS ? 'success' : 'failure');
+        this.currentNode = this.findNextNode();
+        
+        if (!this.currentNode) {
+          return { complete: true, success: status === NodeStatus.SUCCESS };
         }
+        return { complete: false, currentNode: this.currentNode.config?.id };
       }
       
-      // Execute action or condition nodes
+      // Leaf nodes - execute them
       const result = await this.executeNode(node);
-      
-      // Update node state based on result
-      const finalState = result.status === NodeStatus.SUCCESS ? 'success' : 
-                         result.status === NodeStatus.FAILURE ? 'failure' : 'running';
+      const finalState = result.status === NodeStatus.SUCCESS ? 'success' : 'failure';
       this.nodeStates.set(nodeId, finalState);
       
-      // Add to history
       this.executionHistory.push({
-        nodeId,
-        nodeType: node.config?.type,
-        status: result.status,
-        timestamp: Date.now(),
-        result: result.data
+        nodeId, nodeType, status: result.status, timestamp: Date.now(), result: result.data
       });
       
-      // Emit completion event
-      this.emit('node:complete', {
-        nodeId,
-        status: result.status,
-        data: result.data,
-        state: finalState
-      });
+      this.emit('node:complete', { nodeId, status: result.status, data: result.data });
       
-      // Determine next node
-      this.currentNode = this.getNextNode(node, result.status);
+      // Move to next node
+      this.currentNode = this.findNextNode();
       
       if (!this.currentNode) {
-        // Execution complete
-        this.emit('tree:complete', {
-          success: result.status === NodeStatus.SUCCESS,
-          history: this.executionHistory
-        });
-        return {
-          complete: true,
-          success: result.status === NodeStatus.SUCCESS,
-          history: this.executionHistory
-        };
+        this.emit('tree:complete', { success: result.status === NodeStatus.SUCCESS });
+        return { complete: true, success: result.status === NodeStatus.SUCCESS };
       }
       
-      this.executionStack = this.buildExecutionStack(this.currentNode);
-      
-      return {
-        complete: false,
-        currentNode: this.currentNode.config?.id,
-        lastResult: result
-      };
+      return { complete: false, currentNode: this.currentNode.config?.id, lastResult: result };
       
     } catch (error) {
       this.nodeStates.set(nodeId, 'error');
-      this.emit('node:error', {
-        nodeId,
-        error: error.message
-      });
+      this.emit('node:error', { nodeId, error: error.message });
       throw error;
     }
+  }
+  
+  /**
+   * Find next node to execute from current position
+   */
+  findNextNode() {
+    let node = this.currentNode;
+    
+    while (node) {
+      // Try next sibling
+      if (node.parent) {
+        const siblings = node.parent.children || [];
+        const myIndex = siblings.indexOf(node);
+        
+        for (let i = myIndex + 1; i < siblings.length; i++) {
+          const siblingId = siblings[i].config?.id || siblings[i].id;
+          if (this.nodeStates.get(siblingId) === 'pending') {
+            return siblings[i];
+          }
+        }
+        
+        // No more siblings - check if parent needs finalization
+        const parent = node.parent;
+        const parentId = parent.config?.id || parent.id;
+        const parentType = parent.config?.type;
+        const parentState = this.nodeStates.get(parentId);
+        
+        if (['sequence', 'selector', 'retry'].includes(parentType) && parentState === 'running') {
+          // Parent composite needs to be finalized
+          return parent;
+        }
+        
+        // Move up to parent
+        node = parent;
+      } else {
+        // At root with no more work
+        return null;
+      }
+    }
+    
+    return null;
   }
   
   /**
@@ -430,111 +488,6 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
     }
   }
 
-  /**
-   * Get next node to execute based on current node and result
-   */
-  getNextNode(currentNode, status) {
-    const nodeType = currentNode.config?.type;
-    const nodeId = currentNode.config?.id || currentNode.id;
-    
-    // Handle based on node type and status
-    switch (nodeType) {
-      case 'sequence':
-        // Sequence: execute children in order, stop on failure
-        if (status === NodeStatus.FAILURE) {
-          // Sequence failed, move to parent's next sibling
-          return this.getParentNextSibling(currentNode);
-        }
-        // Find next child to execute
-        if (currentNode.children) {
-          for (const child of currentNode.children) {
-            const childId = child.config?.id || child.id;
-            if (this.nodeStates.get(childId) === 'pending') {
-              return child;
-            }
-          }
-        }
-        // All children complete, move to parent's next sibling
-        return this.getParentNextSibling(currentNode);
-        
-      case 'selector':
-        // Selector: try children until one succeeds
-        if (status === NodeStatus.SUCCESS) {
-          // Selector succeeded, move to parent's next sibling
-          return this.getParentNextSibling(currentNode);
-        }
-        // Find next child to try
-        if (currentNode.children) {
-          for (const child of currentNode.children) {
-            const childId = child.config?.id || child.id;
-            if (this.nodeStates.get(childId) === 'pending') {
-              return child;
-            }
-          }
-        }
-        // All children failed, move to parent's next sibling
-        return this.getParentNextSibling(currentNode);
-        
-      case 'retry':
-        // Retry: repeat child on failure up to maxAttempts
-        const maxAttempts = currentNode.config?.maxAttempts || 3;
-        const attempts = currentNode.attempts || 0;
-        
-        if (status === NodeStatus.FAILURE && attempts < maxAttempts - 1) {
-          // Reset child for retry
-          currentNode.attempts = attempts + 1;
-          if (currentNode.child) {
-            this.resetNodeAndChildren(currentNode.child);
-            return currentNode.child;
-          } else if (currentNode.children && currentNode.children[0]) {
-            this.resetNodeAndChildren(currentNode.children[0]);
-            return currentNode.children[0];
-          }
-        }
-        // Success or max attempts reached
-        return this.getParentNextSibling(currentNode);
-        
-      case 'action':
-      case 'condition':
-        // Leaf nodes - move to parent's next sibling
-        return this.getParentNextSibling(currentNode);
-        
-      default:
-        // For any node with children, try to execute them
-        if (currentNode.children && currentNode.children.length > 0) {
-          for (const child of currentNode.children) {
-            const childId = child.config?.id || child.id;
-            if (this.nodeStates.get(childId) === 'pending') {
-              return child;
-            }
-          }
-        }
-        return this.getParentNextSibling(currentNode);
-    }
-  }
-  
-  /**
-   * Get parent's next sibling for navigation
-   */
-  getParentNextSibling(node) {
-    if (!node.parent) return null;
-    
-    const parent = node.parent;
-    const parentChildren = parent.children || [];
-    const nodeIndex = parentChildren.indexOf(node);
-    
-    // Find next sibling
-    for (let i = nodeIndex + 1; i < parentChildren.length; i++) {
-      const sibling = parentChildren[i];
-      const siblingId = sibling.config?.id || sibling.id;
-      if (this.nodeStates.get(siblingId) === 'pending') {
-        return sibling;
-      }
-    }
-    
-    // No more siblings, recurse to parent
-    return this.getParentNextSibling(parent);
-  }
   
   /**
    * Reset node and all its children to pending
@@ -565,32 +518,56 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
     
     switch (nodeType) {
       case 'action':
-        // Execute action node with tool
-        if (node.config?.tool && this.toolRegistry) {
+        // Execute action node with pre-resolved tool
+        const toolId = node.config?.tool_id || node.config?.config?.tool_id || node.config?.tool;
+        console.log(`[BT-EXECUTOR] Executing action node: ${node.config?.name}, toolId: ${toolId}`);
+        if (toolId) {
           try {
-            const tool = await this.toolRegistry.getTool(node.config.tool);
-            if (tool) {
-              const params = this.resolveParams(node.config.params || {});
-              const result = await tool.execute(params);
-              
-              // Store output in context if outputVariable specified
-              if (node.config.outputVariable && result.success) {
-                this.executionContext.artifacts = this.executionContext.artifacts || {};
-                this.executionContext.artifacts[node.config.outputVariable] = result.data || {};
-                this.executionContext.artifacts[node.config.outputVariable].success = result.success;
-              }
-              
-              return {
-                status: result.success ? NodeStatus.SUCCESS : NodeStatus.FAILURE,
-                data: result.data || {},
-                error: result.error
-              };
-            } else {
+            // Convert ObjectId to string if needed for consistent lookup
+            const toolIdString = toolId.toString();
+            const tool = this.resolvedTools.get(toolIdString);
+            if (!tool) {
+              // This should never happen if resolveAllTreeTools worked correctly
+              console.log(`[BT-EXECUTOR] ERROR: Tool not found in resolved tools`);
               return {
                 status: NodeStatus.FAILURE,
-                data: { error: `Tool '${node.config.tool}' not found` }
+                data: { error: `Tool '${node.tool || node.config?.tool}' (ID: ${toolIdString}) not found in resolved tools` }
               };
             }
+            
+            console.log(`[BT-EXECUTOR] Found tool: ${tool.name}`);
+            // The inputs are in node.config.config.inputs due to the nested structure
+            const inputs = this.resolveParams(node.config?.config?.inputs || node.config?.inputs || {});
+            console.log(`[BT-EXECUTOR] Resolved inputs:`, inputs);
+            const result = await tool.execute(inputs);
+            
+            console.log(`[BT-EXECUTOR] Tool result for ${node.tool || node.config?.tool}:`, result);
+            
+            // Handle outputs format ONLY
+            const outputs = node.config?.config?.outputs || node.config?.outputs;
+            
+            this.executionContext.artifacts = this.executionContext.artifacts || {};
+            
+            if (outputs && typeof outputs === 'object') {
+              // Map specific tool data outputs to variable names
+              console.log(`[BT-EXECUTOR] Mapping outputs:`, outputs);
+              console.log(`[BT-EXECUTOR] Tool result.data:`, result.data);
+              
+              for (const [outputField, variableName] of Object.entries(outputs)) {
+                if (result.data && result.data.hasOwnProperty(outputField)) {
+                  this.executionContext.artifacts[variableName] = result.data[outputField];
+                  console.log(`[BT-EXECUTOR] Mapped data.${outputField} -> ${variableName}:`, result.data[outputField]);
+                }
+              }
+            } else {
+              console.log(`[BT-EXECUTOR] No outputs mapping specified - not storing artifacts`);
+            }
+            
+            return {
+              status: result.success ? NodeStatus.SUCCESS : NodeStatus.FAILURE,
+              data: result.data || {},
+              error: result.error
+            };
           } catch (error) {
             return {
               status: NodeStatus.FAILURE,
@@ -727,10 +704,17 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
     if (!treeConfig) return 0;
     
     let count = 1;
+    
+    // Count children (for sequence, selector, etc.)
     if (treeConfig.children && Array.isArray(treeConfig.children)) {
       for (const child of treeConfig.children) {
         count += this.countNodes(child);
       }
+    }
+    
+    // Count single child (for retry nodes)
+    if (treeConfig.child) {
+      count += this.countNodes(treeConfig.child);
     }
     
     return count;

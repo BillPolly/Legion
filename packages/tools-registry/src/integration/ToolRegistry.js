@@ -17,6 +17,17 @@ import { EmbeddingService } from '../search/EmbeddingService.js';
 import { LRUCache } from '../utils/LRUCache.js';
 import { ConnectionPool } from '../utils/ConnectionPool.js';
 
+/**
+ * ToolRegistry - Singleton class for tool management
+ * 
+ * WARNING: DO NOT INSTANTIATE DIRECTLY!
+ * This class should ONLY be accessed via getInstance() to ensure singleton pattern.
+ * 
+ * For production code: import the default export from '@legion/tools-registry'
+ * For tests only: import { ToolRegistry } from this file and use ToolRegistry.getInstance()
+ * 
+ * Direct instantiation will throw an error to prevent misuse.
+ */
 export class ToolRegistry {
   static _instance = null;
   static _isInitialized = false;
@@ -252,15 +263,7 @@ export class ToolRegistry {
         await this.databaseStorage.saveTool(tool, moduleName);
       }
 
-      // Generate perspectives if enabled
-      if (this.options.enablePerspectives && this.perspectives) {
-        await this.perspectives.generateForModule(moduleName);
-      }
-
-      // Index for vector search if enabled
-      if (this.options.enableVectorSearch && this.vectorStore) {
-        await this.vectorStore.indexModule(moduleName);
-      }
+      // DO NOT generate perspectives or do vector indexing during module loading!
 
       return { success: true, toolCount: tools.length };
     } catch (error) {
@@ -296,6 +299,33 @@ export class ToolRegistry {
     }
 
     return { loaded, failed, errors };
+  }
+
+  /**
+   * Get tool by database ID
+   * @param {string} toolId - Tool database ID (_id field)
+   * @returns {Object|null} Tool with execute function
+   */
+  async getToolById(toolId) {
+    if (!this.initialized) await this.initialize();
+    
+    // Convert to string if needed
+    const toolIdString = toolId.toString ? toolId.toString() : toolId;
+    
+    // Find tool in database by _id
+    const tools = await this.databaseStorage.listTools();
+    const toolMeta = tools.find(t => 
+      t._id === toolIdString || 
+      (t._id && t._id.toString && t._id.toString() === toolIdString)
+    );
+    
+    if (!toolMeta) {
+      console.log(`[ToolRegistry] Tool not found by ID: ${toolIdString}`);
+      return null;
+    }
+    
+    // Use existing getTool method with the tool's name
+    return await this.getTool(toolMeta.name);
   }
 
   /**
@@ -1806,9 +1836,9 @@ export class ToolRegistry {
     if (moduleName) {
       modulesToLoad = [moduleName];
     } else {
-      // Load ALL discovered modules from the registry
-      const discoveredModules = await this.databaseStorage.findDiscoveredModules();
-      modulesToLoad = discoveredModules.map(m => m.name);
+      // Load ALL modules from the registry - use findModules() NOT findDiscoveredModules()
+      const modules = await this.databaseStorage.findModules();
+      modulesToLoad = modules.map(m => m.name);
       if (verbose) {
         console.log(`📦 Found ${modulesToLoad.length} modules in registry to load`);
       }
@@ -1847,8 +1877,8 @@ export class ToolRegistry {
     const { verbose = false } = options;
     
     try {
-      // Get module info from registry
-      const moduleInfo = await this.databaseStorage.findDiscoveredModule(moduleName);
+      // Get module info from registry - use findModule() NOT findDiscoveredModule()
+      const moduleInfo = await this.databaseStorage.findModule(moduleName);
       if (!moduleInfo) {
         throw new Error(`Module ${moduleName} not found in registry`);
       }
@@ -1857,56 +1887,21 @@ export class ToolRegistry {
         console.log(`  Loading ${moduleName} from ${moduleInfo.path}`);
       }
       
-      // Load module dynamically using the path from registry
-      const moduleFile = await import(moduleInfo.path);
-      const ModuleClass = moduleFile.default;
+      // Use the existing loadModule method which properly handles caching and loading
+      const result = await this.loadModule(moduleName, moduleInfo);
       
-      if (!ModuleClass) {
-        throw new Error('No default export found');
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to load module');
       }
       
-      // Instantiate module
-      let moduleInstance;
-      if (ModuleClass.create && typeof ModuleClass.create === 'function') {
-        moduleInstance = await ModuleClass.create(this.resourceManager);
-      } else {
-        moduleInstance = new ModuleClass();
-        if (moduleInstance.resourceManager === undefined) {
-          moduleInstance.resourceManager = this.resourceManager;
-        }
-        if (moduleInstance.initialize && typeof moduleInstance.initialize === 'function') {
-          await moduleInstance.initialize();
-        }
-      }
+      // loadModule already handles storing tools and registering the module
+      // Just get the tool count for reporting
+      const moduleInstance = this.moduleCache.get(moduleName);
+      let toolCount = 0;
       
-      // Get tools
-      if (!moduleInstance.getTools || typeof moduleInstance.getTools !== 'function') {
-        throw new Error('Module does not implement getTools() method');
-      }
-      
-      const tools = moduleInstance.getTools();
-      const toolCount = Array.isArray(tools) ? tools.length : 0;
-      
-      // Store module in modules collection
-      const moduleDoc = {
-        name: moduleName,
-        path: moduleInfo.path,
-        type: moduleInfo.type || 'unknown',
-        toolCount: toolCount,
-        tools: tools.map(t => t.name),
-        loadedAt: new Date(),
-        updatedAt: new Date()
-      };
-      
-      await this.databaseStorage.db.collection('modules').replaceOne(
-        { name: moduleName },
-        moduleDoc,
-        { upsert: true }
-      );
-      
-      // Store tools in database
-      for (const tool of tools) {
-        await this.storeTool(tool, moduleName, moduleInstance);
+      if (moduleInstance && moduleInstance.getTools) {
+        const tools = moduleInstance.getTools();
+        toolCount = Array.isArray(tools) ? tools.length : 0;
       }
       
       if (verbose) {

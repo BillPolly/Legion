@@ -623,6 +623,8 @@ export default class ClientPlannerActor {
       informalPlanning: false,
       formalPlanning: false,
       cancelling: false,
+      expandedToolsMetadata: new Set(), // For tracking expanded tool metadata in discovery panel
+      llmInteractions: [], // Store prompt/response pairs
       goal: '',
       result: null,
       informalResult: null,
@@ -686,6 +688,10 @@ export default class ClientPlannerActor {
         
       case 'planCancelled':
         this.handlePlanCancelled(data);
+        break;
+        
+      case 'llm-interaction':
+        this.handleLLMInteraction(data);
         break;
         
       case 'toolsDiscoveryStarted':
@@ -755,6 +761,45 @@ export default class ClientPlannerActor {
       case 'registryStatsError':
         if (this.searchComponent) {
           this.searchComponent.receiveMessage(messageType, data);
+        }
+        break;
+        
+      // Plan save/load responses
+      case 'planSaveComplete':
+        this.handlePlanSaveComplete(data);
+        break;
+        
+      case 'planSaveError':
+        this.handlePlanSaveError(data);
+        break;
+        
+      case 'planLoadComplete':
+        this.handlePlanLoadComplete(data);
+        break;
+        
+      case 'planLoadError':
+        this.handlePlanLoadError(data);
+        break;
+        
+      case 'planListComplete':
+        this.handlePlanListComplete(data);
+        break;
+        
+      case 'planListError':
+        this.handlePlanListError(data);
+        break;
+        
+      case 'load-tree-response':
+        // Handle tree loading response from execution component
+        console.log('Tree loaded successfully:', data);
+        break;
+        
+      case 'step-response':
+        // Handle step execution response
+        console.log('Step completed:', data);
+        if (this.executionComponent && data.data?.state) {
+          this.executionComponent.updateExecutionState(data.data.state);
+          this.state.executionState = data.data.state;
         }
         break;
         
@@ -925,8 +970,11 @@ export default class ClientPlannerActor {
       this.tabsComponent.enableTab('execution', true);
     }
     
-    // Load tree into execution component if on execution tab
-    if (this.state.activeTab === 'execution' && this.executionComponent && data.result?.formal?.behaviorTrees?.[0]) {
+    // Refresh plans tab to show current plan
+    this.renderPlansContent();
+    
+    // Load tree into execution component whenever formal planning completes
+    if (this.executionComponent && data.result?.formal?.behaviorTrees?.[0]) {
       this.loadExecutionTree(data.result.formal.behaviorTrees[0]);
     }
     
@@ -1352,9 +1400,12 @@ export default class ClientPlannerActor {
                   <h5>Step 3: Final Merged Tools (${item.discoveryResult.debug.step3_merged.length})</h5>
                   <div class="final-tools">
                     ${item.discoveryResult.debug.step3_merged.length > 0 ? `
-                      ${item.discoveryResult.debug.step3_merged.map(tool => `
+                      ${item.discoveryResult.debug.step3_merged.map((tool, index) => {
+                        const isExpanded = this.state.expandedToolsMetadata.has(`${item.discoveryResult.hierarchyIndex}-${index}`);
+                        return `
                         <div class="final-tool">
-                          <div class="tool-header">
+                          <div class="tool-header clickable" data-tool-key="${item.discoveryResult.hierarchyIndex}-${index}">
+                            <span class="tool-expand-icon">${isExpanded ? '▼' : '▶️'}</span>
                             <span class="tool-name">${tool.name}</span>
                             <span class="tool-confidence confidence-${this.getConfidenceClass(tool.confidence)}">
                               ${(tool.confidence * 100).toFixed(1)}%
@@ -1366,9 +1417,38 @@ export default class ClientPlannerActor {
                               ${tool.available ? '✅ Available' : '❌ Unavailable'} | 
                               ${tool.executable ? '🔧 Executable' : '❌ Not Executable'}
                             </div>
+                            ${isExpanded ? `
+                              <div class="tool-full-metadata">
+                                <h6>Full Tool Metadata:</h6>
+                                ${tool.metadata ? `
+                                  <div class="metadata-section">
+                                    <div class="metadata-field">
+                                      <strong>Description:</strong> ${tool.metadata.description || 'None'}
+                                    </div>
+                                    <div class="metadata-field">
+                                      <strong>Category:</strong> ${tool.metadata.category || 'None'}
+                                    </div>
+                                    <div class="metadata-field">
+                                      <strong>Version:</strong> ${tool.metadata.version || 'None'}
+                                    </div>
+                                    <div class="metadata-field">
+                                      <strong>Author:</strong> ${tool.metadata.author || 'None'}
+                                    </div>
+                                    <div class="metadata-field">
+                                      <strong>Input Schema:</strong>
+                                      <pre class="schema-json">${JSON.stringify(tool.metadata.inputSchema || {}, null, 2)}</pre>
+                                    </div>
+                                    <div class="metadata-field">
+                                      <strong>Output Schema:</strong>
+                                      <pre class="schema-json">${JSON.stringify(tool.metadata.outputSchema || {}, null, 2)}</pre>
+                                    </div>
+                                  </div>
+                                ` : '<div class="no-metadata">No metadata available</div>'}
+                              </div>
+                            ` : ''}
                           </div>
-                        </div>
-                      `).join('')}
+                        </div>`;
+                      }).join('')}
                     ` : `<div class="no-final-tools">No tools met the confidence threshold</div>`}
                   </div>
                 </div>
@@ -1410,6 +1490,77 @@ export default class ClientPlannerActor {
     return html;
   }
 
+  renderLLMDebugTab() {
+    const interactions = this.state.llmInteractions || [];
+    
+    if (interactions.length === 0) {
+      return `
+        <div class="llm-debug-placeholder">
+          <h2>🧠 LLM Debug</h2>
+          <p>No LLM interactions yet. Start planning to see prompts and responses.</p>
+        </div>
+      `;
+    }
+    
+    return `
+      <div class="llm-debug-container">
+        <h2>🧠 LLM Debug (${interactions.length} interactions)</h2>
+        
+        <div class="interactions-list">
+          ${interactions.map((interaction, index) => `
+            <div class="interaction-item ${interaction.collapsed ? 'collapsed' : 'expanded'}" data-interaction-id="${interaction.id}">
+              <div class="interaction-header" onclick="toggleInteraction('${interaction.id}')">
+                <span class="expand-icon">${interaction.collapsed ? '▶️' : '🔽'}</span>
+                <span class="interaction-info">
+                  <strong>#${index + 1}</strong>
+                  <span class="model-info">${interaction.provider}/${interaction.model}</span>
+                  <span class="timestamp">${new Date(interaction.timestamp).toLocaleTimeString()}</span>
+                  <span class="status">
+                    ${interaction.response ? '✅ Complete' : interaction.error ? '❌ Error' : '🔄 Pending'}
+                  </span>
+                </span>
+              </div>
+              
+              ${!interaction.collapsed ? `
+                <div class="interaction-details">
+                  <div class="prompt-section">
+                    <h4>📝 Prompt</h4>
+                    <pre class="prompt-content">${interaction.prompt}</pre>
+                  </div>
+                  
+                  ${interaction.response ? `
+                    <div class="response-section">
+                      <h4>💬 Response</h4>
+                      <pre class="response-content">${interaction.response}</pre>
+                    </div>
+                  ` : ''}
+                  
+                  ${interaction.error ? `
+                    <div class="error-section">
+                      <h4>❌ Error</h4>
+                      <pre class="error-content">${interaction.error}</pre>
+                    </div>
+                  ` : ''}
+                  
+                  <div class="interaction-metadata">
+                    <div class="metadata-item">
+                      <strong>Max Tokens:</strong> ${interaction.maxTokens}
+                    </div>
+                    ${interaction.responseTimestamp ? `
+                      <div class="metadata-item">
+                        <strong>Response Time:</strong> ${new Date(interaction.responseTimestamp).toLocaleTimeString()}
+                      </div>
+                    ` : ''}
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
   initializeUI() {
     // Wait for DOM if needed
     if (document.readyState === 'loading') {
@@ -1448,22 +1599,132 @@ export default class ClientPlannerActor {
     // Create tabs component
     this.tabsComponent = new TabsComponent(container, {
       tabs: [
+        { id: 'plans', label: 'Plans', icon: '📁' },
         { id: 'planning', label: 'Planning', icon: '📋' },
         { id: 'tools', label: 'Tool Discovery', icon: '🔧', disabled: !this.state.informalResult },
         { id: 'formal', label: 'Formal Planning', icon: '🏗️', disabled: !this.state.toolsResult },
         { id: 'execution', label: 'Execution', icon: '▶️', disabled: !this.state.formalResult },
-        { id: 'search', label: 'Semantic Search', icon: '🔍' }
+        { id: 'search', label: 'Semantic Search', icon: '🔍' },
+        { id: 'llm', label: 'LLM Debug', icon: '🧠' }
       ],
       activeTab: 'planning',
       onTabChange: (tabId) => this.handleTabChange(tabId)
     });
     
     // Initialize tab contents
+    this.initializePlansTab();
     this.initializePlanningTab();
     this.initializeToolsTab();
     this.initializeFormalTab();
     this.initializeExecutionTab();
     this.initializeSearchTab();
+    this.initializeLLMTab();
+  }
+  
+  initializePlansTab() {
+    const container = this.tabsComponent.getContentContainer('plans');
+    if (!container) return;
+    
+    this.renderPlansContent();
+  }
+  
+  renderPlansContent() {
+    const container = this.tabsComponent.getContentContainer('plans');
+    if (!container) return;
+    
+    container.innerHTML = `
+      <div class="plans-content">
+        <h2>📁 Saved Plans</h2>
+        
+        <div class="load-section">
+          <div class="load-controls">
+            <select id="load-plan-select">
+              <option value="">Choose a saved plan to load...</option>
+            </select>
+            <button id="load-plan-button" disabled>📂 Load Plan</button>
+            <button id="refresh-plans-button">🔄 Refresh</button>
+          </div>
+        </div>
+        
+        <div id="current-plan-display">
+          ${this.state.formalResult ? this.renderCurrentPlan() : '<p>No plan loaded. Create a plan using the Planning tab.</p>'}
+        </div>
+      </div>
+    `;
+    
+    // Attach event listeners
+    const loadPlanSelect = document.getElementById('load-plan-select');
+    const loadPlanButton = document.getElementById('load-plan-button');
+    const refreshPlansButton = document.getElementById('refresh-plans-button');
+    
+    if (loadPlanSelect) {
+      loadPlanSelect.addEventListener('change', (e) => {
+        loadPlanButton.disabled = !e.target.value;
+      });
+    }
+    
+    if (loadPlanButton) {
+      loadPlanButton.addEventListener('click', () => {
+        this.handleLoadPlan();
+      });
+    }
+    
+    if (refreshPlansButton) {
+      refreshPlansButton.addEventListener('click', () => {
+        this.refreshSavedPlans();
+      });
+    }
+    
+    // Load available plans on render
+    this.refreshSavedPlans();
+  }
+  
+  renderCurrentPlan() {
+    if (!this.state.formalResult) {
+      return '<p>No plan loaded.</p>';
+    }
+    
+    const behaviorTrees = this.state.formalResult.formal?.behaviorTrees || [];
+    const firstTree = behaviorTrees[0];
+    
+    if (!firstTree) {
+      return '<p>No behavior tree found in plan.</p>';
+    }
+    
+    return `
+      <div class="current-plan">
+        <h3>📋 Current Plan: ${firstTree.id || 'Unnamed'}</h3>
+        <div class="plan-description">
+          <strong>Description:</strong> ${firstTree.description || 'No description'}
+        </div>
+        <div class="plan-details">
+          <div class="plan-stats">
+            <span class="stat">🌳 ${behaviorTrees.length} behavior tree(s)</span>
+            <span class="stat">📊 ${this.countPlanNodes(firstTree)} nodes</span>
+            <span class="stat">🎯 Goal: "${this.state.goal}"</span>
+          </div>
+          <details>
+            <summary>View Tree Structure</summary>
+            <pre class="plan-tree">${JSON.stringify(firstTree, null, 2)}</pre>
+          </details>
+        </div>
+      </div>
+    `;
+  }
+  
+  countPlanNodes(tree) {
+    if (!tree) return 0;
+    
+    let count = 1;
+    if (tree.children) {
+      tree.children.forEach(child => {
+        count += this.countPlanNodes(child);
+      });
+    }
+    if (tree.child) {
+      count += this.countPlanNodes(tree.child);
+    }
+    return count;
   }
   
   initializePlanningTab() {
@@ -1565,6 +1826,7 @@ export default class ClientPlannerActor {
         this.cancelPlanning();
       });
     }
+    
   }
   
   initializeToolsTab() {
@@ -1596,7 +1858,7 @@ export default class ClientPlannerActor {
       onBreakpoint: (nodeId, enabled) => this.handleBreakpoint(nodeId, enabled)
     });
     
-    // Load tree if we have formal planning results
+    // Check if there's already a formal result available and load it
     if (this.state.formalResult?.formal?.behaviorTrees?.[0]) {
       this.loadExecutionTree(this.state.formalResult.formal.behaviorTrees[0]);
     }
@@ -1610,6 +1872,34 @@ export default class ClientPlannerActor {
     this.searchComponent = new SearchComponent(container, {
       remoteActor: this.remoteActor
     });
+  }
+  
+  initializeLLMTab() {
+    const container = this.tabsComponent.getContentContainer('llm');
+    if (!container) return;
+    
+    // Initial render of LLM debug content
+    this.renderLLMDebugContent();
+  }
+  
+  renderLLMDebugContent() {
+    const container = this.tabsComponent.getContentContainer('llm');
+    if (!container) return;
+    
+    container.innerHTML = this.renderLLMDebugTab();
+    
+    // Add global toggle function for interactions
+    if (!window.toggleInteraction) {
+      window.toggleInteraction = (interactionId) => {
+        const interactions = [...this.state.llmInteractions];
+        const interaction = interactions.find(i => i.id === interactionId);
+        if (interaction) {
+          interaction.collapsed = !interaction.collapsed;
+          this.updateState({ llmInteractions: interactions });
+          this.renderLLMDebugContent(); // Re-render the tab
+        }
+      };
+    }
   }
   
   handleTabChange(tabId) {
@@ -2039,6 +2329,224 @@ export default class ClientPlannerActor {
         color: #666;
         padding: 20px;
       }
+      
+      /* Plan Management Styles */
+      .plan-management {
+        background: #f8f9fa;
+        border: 1px solid #e1e5e9;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+      }
+      
+      .load-section, .save-section {
+        margin-bottom: 15px;
+      }
+      
+      .load-section:last-child, .save-section:last-child {
+        margin-bottom: 0;
+      }
+      
+      .load-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-top: 5px;
+      }
+      
+      .load-controls select {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        background: white;
+      }
+      
+      .load-controls button {
+        padding: 8px 16px;
+        font-size: 14px;
+        margin: 0;
+        white-space: nowrap;
+      }
+      
+      .planning-divider {
+        border-top: 1px solid #e1e5e9;
+        margin: 20px 0;
+      }
+      
+      #save-plan-button {
+        background: #28a745;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-size: 14px;
+      }
+      
+      #save-plan-button:hover {
+        background: #218838;
+      }
+      
+      #load-plan-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      
+      #refresh-plans-button {
+        background: #6c757d;
+        color: white;
+        padding: 8px 12px;
+        font-size: 14px;
+      }
+      
+      #refresh-plans-button:hover {
+        background: #5a6268;
+      }
+      
+      /* Plans Tab Styles */
+      .plans-content {
+        padding: 20px;
+      }
+      
+      .plans-content h2 {
+        margin-top: 0;
+        color: #333;
+      }
+      
+      .current-plan {
+        margin-top: 30px;
+        padding: 20px;
+        border: 1px solid #e1e5e9;
+        border-radius: 8px;
+        background: white;
+      }
+      
+      .plan-description {
+        margin: 10px 0;
+        color: #666;
+      }
+      
+      .plan-stats {
+        display: flex;
+        gap: 15px;
+        margin: 15px 0;
+        flex-wrap: wrap;
+      }
+      
+      .plan-tree {
+        background: #f8f9fa;
+        border: 1px solid #e1e5e9;
+        border-radius: 4px;
+        padding: 15px;
+        font-size: 12px;
+        overflow-x: auto;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      
+      /* Save Plan Button in Formal Tab */
+      .save-plan-btn {
+        background: #28a745 !important;
+        color: white !important;
+        padding: 8px 16px !important;
+        border: none !important;
+        border-radius: 4px !important;
+        font-size: 14px !important;
+        margin: 0 !important;
+        cursor: pointer !important;
+      }
+      
+      .save-plan-btn:hover {
+        background: #218838 !important;
+      }
+      
+      /* Tool Metadata Styles */
+      .tool-header.clickable {
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      .tool-header.clickable:hover {
+        background-color: #f5f5f5;
+      }
+      
+      .tool-expand-icon {
+        font-size: 12px;
+        width: 16px;
+        text-align: center;
+      }
+      
+      .tool-full-metadata {
+        margin-top: 15px;
+        padding: 15px;
+        background: #fafafa;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+      }
+      
+      .tool-full-metadata h6 {
+        margin: 0 0 10px 0;
+        color: #333;
+        font-size: 14px;
+        font-weight: bold;
+      }
+      
+      .metadata-section {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      
+      .metadata-field {
+        background: white;
+        padding: 10px;
+        border-radius: 4px;
+        border: 1px solid #e5e5e5;
+      }
+      
+      .metadata-field strong {
+        display: block;
+        margin-bottom: 5px;
+        color: #555;
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+      
+      .schema-json {
+        background: #f8f8f8;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        padding: 8px;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: 11px;
+        max-height: 200px;
+        overflow-y: auto;
+        margin: 5px 0 0 0;
+      }
+      
+      .no-metadata {
+        padding: 10px;
+        color: #999;
+        font-style: italic;
+        text-align: center;
+        background: #f9f9f9;
+        border-radius: 4px;
+      }
+      
+      .final-tool {
+        margin-bottom: 10px;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      
+      .final-tool .tool-meta {
+        padding: 8px;
+      }
     `;
     document.head.appendChild(style);
   }
@@ -2101,6 +2609,12 @@ export default class ClientPlannerActor {
               ${!this.state.informalResult ? 'disabled' : ''}
             >
               🔧 Tool Discovery
+            </button>
+            <button 
+              class="tab-btn ${this.state.activeTab === 'llm' ? 'active' : ''}" 
+              id="llm-tab-btn"
+            >
+              🧠 LLM Debug
             </button>
           </div>
           
@@ -2241,6 +2755,11 @@ export default class ClientPlannerActor {
           <!-- Tools Tab Content -->
           <div class="tab-content ${this.state.activeTab === 'tools' ? 'active' : 'hidden'}" id="tools-tab">
             ${this.renderToolsTab()}
+          </div>
+          
+          <!-- LLM Debug Tab Content -->
+          <div class="tab-content ${this.state.activeTab === 'llm' ? 'active' : 'hidden'}" id="llm-tab">
+            ${this.renderLLMDebugTab()}
           </div>
         </div>
       `;
@@ -2486,8 +3005,131 @@ export default class ClientPlannerActor {
           .failure-reason {
             color: #c00;
           }
+          
+          /* LLM Debug Styles */
+          .llm-debug-container {
+            padding: 20px;
+          }
+          
+          .llm-debug-placeholder {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+          }
+          
+          .interactions-list {
+            margin-top: 20px;
+          }
+          
+          .interaction-item {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            border-radius: 5px;
+            background: #f9f9f9;
+          }
+          
+          .interaction-header {
+            padding: 12px;
+            cursor: pointer;
+            background: #f0f0f0;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          }
+          
+          .interaction-header:hover {
+            background: #e8e8e8;
+          }
+          
+          .expand-icon {
+            font-size: 14px;
+            width: 20px;
+          }
+          
+          .interaction-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+          }
+          
+          .model-info {
+            font-family: monospace;
+            background: #e3f2fd;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+          }
+          
+          .timestamp {
+            color: #666;
+            font-size: 12px;
+          }
+          
+          .status {
+            font-size: 12px;
+            font-weight: bold;
+          }
+          
+          .interaction-details {
+            padding: 15px;
+            background: white;
+          }
+          
+          .prompt-section, .response-section, .error-section {
+            margin: 15px 0;
+          }
+          
+          .prompt-section h4, .response-section h4, .error-section h4 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+          }
+          
+          .prompt-content, .response-content, .error-content {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 12px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            line-height: 1.4;
+          }
+          
+          .error-content {
+            background: #ffeaea;
+            border-color: #ffcdd2;
+          }
+          
+          .interaction-metadata {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 20px;
+          }
+          
+          .metadata-item {
+            font-size: 12px;
+            color: #666;
+          }
         `;
         document.head.appendChild(style);
+      }
+      
+      // Add global function for interaction toggling
+      if (!window.toggleInteraction) {
+        window.toggleInteraction = (interactionId) => {
+          const interactions = [...this.state.llmInteractions];
+          const interaction = interactions.find(i => i.id === interactionId);
+          if (interaction) {
+            interaction.collapsed = !interaction.collapsed;
+            this.updateState({ llmInteractions: interactions });
+          }
+        };
       }
       
       // Set up event handlers
@@ -2526,6 +3168,7 @@ export default class ClientPlannerActor {
       // Tab navigation buttons
       const planningTabBtn = document.getElementById('planning-tab-btn');
       const toolsTabBtn = document.getElementById('tools-tab-btn');
+      const llmTabBtn = document.getElementById('llm-tab-btn');
       
       if (planningTabBtn) {
         planningTabBtn.addEventListener('click', () => {
@@ -2536,6 +3179,12 @@ export default class ClientPlannerActor {
       if (toolsTabBtn) {
         toolsTabBtn.addEventListener('click', () => {
           this.switchTab('tools');
+        });
+      }
+      
+      if (llmTabBtn) {
+        llmTabBtn.addEventListener('click', () => {
+          this.switchTab('llm');
         });
       }
       
@@ -2550,6 +3199,23 @@ export default class ClientPlannerActor {
           this.toggleProgressCollapse();
         });
       }
+      
+      // Tool metadata expansion handlers
+      document.addEventListener('click', (e) => {
+        const toolHeader = e.target.closest('.tool-header.clickable');
+        if (toolHeader && toolHeader.dataset.toolKey) {
+          const toolKey = toolHeader.dataset.toolKey;
+          const expandedTools = new Set(this.state.expandedToolsMetadata);
+          
+          if (expandedTools.has(toolKey)) {
+            expandedTools.delete(toolKey);
+          } else {
+            expandedTools.add(toolKey);
+          }
+          
+          this.updateState({ expandedToolsMetadata: expandedTools });
+        }
+      });
     };
     
     // Initial render
@@ -2619,6 +3285,154 @@ export default class ClientPlannerActor {
           this.executionComponent.updateExecutionState(data.state);
         }
         break;
+    }
+  }
+  
+  // Plan Save/Load functionality
+  refreshSavedPlans() {
+    if (!this.remoteActor) return;
+    this.remoteActor.receive('list-saved-plans', {});
+  }
+  
+  handleLoadPlan() {
+    const select = document.getElementById('load-plan-select');
+    if (!select || !select.value || !this.remoteActor) return;
+    
+    this.remoteActor.receive('load-plan', { filename: select.value });
+  }
+  
+  handleSavePlan() {
+    if (!this.state.formalResult) {
+      console.error('No formal result to save');
+      return;
+    }
+    
+    const name = prompt('Enter a name for this plan:');
+    if (!name || !name.trim() || !this.remoteActor) {
+      return;
+    }
+    
+    this.remoteActor.receive('save-plan', {
+      name: name.trim(),
+      informalResult: this.state.informalResult,
+      formalResult: this.state.formalResult
+    });
+  }
+  
+  // Server response handlers
+  handlePlanSaveComplete(data) {
+    console.log(`✅ ${data.message}`);
+    // Refresh the plans list
+    this.refreshSavedPlans();
+  }
+  
+  handlePlanSaveError(data) {
+    console.error('Failed to save plan:', data.error);
+    this.updateState({ error: `Failed to save plan: ${data.error}` });
+  }
+  
+  handlePlanLoadComplete(data) {
+    const planData = data.planData;
+    
+    // Load the plan data into current state
+    this.updateState({
+      goal: planData.informalResult?.informal?.goal || '',
+      informalResult: planData.informalResult,
+      formalResult: planData.formalResult,
+      toolsResult: planData.informalResult // Tool results are part of informal result
+    });
+    
+    // Enable appropriate tabs
+    if (this.tabsComponent) {
+      if (planData.informalResult) {
+        this.tabsComponent.enableTab('tools', true);
+      }
+      if (planData.formalResult) {
+        this.tabsComponent.enableTab('formal', true);
+        this.tabsComponent.enableTab('execution', true);
+      }
+    }
+    
+    // Update formal planning component with loaded result
+    if (planData.formalResult && this.formalPlanningComponent) {
+      this.formalPlanningComponent.setResult(planData.formalResult);
+    }
+    
+    // Update UI components
+    this.renderPlanningContent();
+    this.renderPlansContent();
+    
+    // Load tree into execution if available
+    if (planData.formalResult?.formal?.behaviorTrees?.[0] && this.executionComponent) {
+      this.loadExecutionTree(planData.formalResult.formal.behaviorTrees[0]);
+    }
+    
+    console.log(`✅ ${data.message}`);
+  }
+  
+  handlePlanLoadError(data) {
+    console.error('Failed to load plan:', data.error);
+    this.updateState({ error: `Failed to load plan: ${data.error}` });
+  }
+  
+  handlePlanListComplete(data) {
+    const select = document.getElementById('load-plan-select');
+    if (select) {
+      // Keep the first default option
+      select.innerHTML = '<option value="">Choose a saved plan...</option>';
+      
+      data.plans.forEach(plan => {
+        const option = document.createElement('option');
+        option.value = plan.filename;
+        option.textContent = `${plan.name} (${new Date(plan.savedAt).toLocaleDateString()})`;
+        select.appendChild(option);
+      });
+    }
+  }
+  
+  handlePlanListError(data) {
+    console.error('Failed to list saved plans:', data.error);
+  }
+
+  handleLLMInteraction(data) {
+    console.log('🧠 LLM Interaction:', data.type, data.id);
+    
+    const interactions = [...this.state.llmInteractions];
+    
+    if (data.type === 'request') {
+      // Start a new interaction
+      interactions.push({
+        id: data.id,
+        timestamp: data.timestamp,
+        prompt: data.prompt,
+        response: null,
+        model: data.model,
+        provider: data.provider,
+        maxTokens: data.maxTokens,
+        collapsed: true // Start collapsed
+      });
+    } else if (data.type === 'response') {
+      // Find matching request and add response
+      const interaction = interactions.find(i => i.id === data.id);
+      if (interaction) {
+        interaction.response = data.response;
+        interaction.responseTimestamp = data.timestamp;
+      }
+    } else if (data.type === 'error') {
+      // Find matching request and add error
+      const interaction = interactions.find(i => i.id === data.id);
+      if (interaction) {
+        interaction.error = data.error;
+        interaction.errorTimestamp = data.timestamp;
+      }
+    }
+    
+    this.updateState({ llmInteractions: interactions });
+    
+    // Re-render LLM debug tab if it's currently active
+    const currentTab = this.tabsComponent?.model?.activeTab;
+    if (currentTab === 'llm') {
+      this.renderLLMDebugContent();
     }
   }
 }

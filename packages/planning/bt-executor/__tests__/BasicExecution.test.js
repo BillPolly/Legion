@@ -58,7 +58,7 @@ describe('Basic Execution', () => {
     // Initialize
     const init = await executor.initializeTree(tree);
     expect(init.success).toBe(true);
-    expect(init.nodeCount).toBe(7); // root + retry1 + seq1 + action1 + cond1 + action2 = 6 + child counted in retry
+    expect(init.nodeCount).toBe(6); // root + retry1 + seq1 + action1 + cond1 + action2 = 6
     
     // Execute
     executor.setMode('run');

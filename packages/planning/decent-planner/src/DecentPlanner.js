@@ -251,8 +251,8 @@ export class DecentPlanner {
           });
           
           if (discoveryResult && discoveryResult.feasible && discoveryResult.debug && discoveryResult.debug.step3_merged) {
-            // Add the discovered tools directly to the task node
-            task.tools = discoveryResult.debug.step3_merged || [];
+            // Use the FULL tool objects that already have inputSchema
+            task.tools = discoveryResult.debug.step3_merged;
             task.feasible = true;
             
             console.log(`✅ [TOOL DISCOVERY] Added ${task.tools.length} tools to task "${task.description}"`);
@@ -498,15 +498,23 @@ export class DecentPlanner {
         console.log(`🎯 [FORMAL PLANNING] Planning for task: "${node.description}"`);
         console.log(`🎯 [FORMAL PLANNING] Available tools:`, node.tools.map(t => t.name));
         
+        // Debug the tool schemas being passed to planner
+        const toolsForPlanner = node.tools.map(t => ({
+          name: t.name,
+          confidence: t.confidence,
+          description: t.description || '',
+          inputSchema: t.inputSchema,  // CRITICAL: preserve inputSchema for LLM prompt
+          outputSchema: t.outputSchema, // Also preserve outputSchema
+          schema: t.schema              // Preserve legacy schema field too
+        }));
+        
+        console.log(`🔧 [FORMAL PLANNING] Tools being passed to planner:`, JSON.stringify(toolsForPlanner, null, 2));
+        
         try {
           // Use the real planner to create a proper plan
           const plan = await this.formalPlanner.makePlan(
             node.description,
-            node.tools.map(t => ({
-              name: t.name,
-              confidence: t.confidence,
-              description: t.description || ''
-            }))
+            toolsForPlanner
           );
           
           console.log(`🎯 [FORMAL PLANNING] Generated plan:`, JSON.stringify(plan, null, 2));

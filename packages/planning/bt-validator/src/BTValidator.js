@@ -180,9 +180,9 @@ export class BTValidator {
       );
     }
 
-    // Ensure params object exists for action nodes
-    if (result.type === 'action' && !result.params) {
-      result.params = {};
+    // Ensure inputs object exists for action nodes
+    if (result.type === 'action' && !result.inputs) {
+      result.inputs = {};
     }
 
     return result;
@@ -334,17 +334,14 @@ export class BTValidator {
     const toolMap = new Map(tools.map(tool => [tool.name, tool]));
 
     await this.traverseNodes(node, async (currentNode) => {
-      if (currentNode.type === 'action' && currentNode.tool && currentNode.params) {
+      if (currentNode.type === 'action' && currentNode.tool && currentNode.inputs) {
         const tool = toolMap.get(currentNode.tool);
-        if (tool && tool.getMetadata) {
+        if (tool && tool.inputSchema) {
           try {
-            const metadata = await tool.getMetadata();
-            if (metadata.input) {
-              await this.validateNodeParameters(currentNode, metadata.input, result);
-            }
+            await this.validateNodeParameters(currentNode, tool.inputSchema, result);
           } catch (error) {
-            result.addWarning('TOOL_METADATA_ERROR', 
-              `Could not validate parameters for tool '${currentNode.tool}': ${error.message}`,
+            result.addWarning('TOOL_SCHEMA_ERROR', 
+              `Could not validate inputs for tool '${currentNode.tool}': ${error.message}`,
               currentNode.id);
           }
         }
@@ -365,7 +362,7 @@ export class BTValidator {
         coerce: this.coerceTypes
       });
 
-      const validation = validator.validate(node.params);
+      const validation = validator.validate(node.inputs);
       
       if (!validation.valid) {
         validation.errors.forEach(error => {
@@ -427,13 +424,13 @@ export class BTValidator {
     this.traverseNodesSync(bt, (node) => {
       // Check for action nodes that write variables
       if (node.type === 'action') {
-        // Check for outputVariable or storeResult
-        if (node.outputVariable) {
-          variablesWritten.set(node.outputVariable, node.id);
-        } else if (node.storeResult) {
-          variablesWritten.set(node.storeResult, node.id);
+        // Check for outputs object (ONLY format supported)
+        if (node.outputs && typeof node.outputs === 'object') {
+          for (const variableName of Object.values(node.outputs)) {
+            variablesWritten.set(variableName, node.id);
+          }
         }
-        // Note: Actions without outputVariable are stored in context[node.id] but NOT in artifacts
+        // Note: Actions without outputs are stored in context[node.id] but NOT in artifacts
       }
       
       // Check for condition nodes that read variables
@@ -486,7 +483,7 @@ export class BTValidator {
         result.addError(
           'INVALID_ARTIFACT_REFERENCE',
           `Condition '${read.nodeId}' references artifacts['${read.variable}'] but action '${read.variable}' does not store its result in artifacts. ` +
-          `Either: 1) Add outputVariable:'${read.variable}' to the action node, or 2) Change condition to check context['${read.variable}'].status === 'SUCCESS'`,
+          `Either: 1) Add outputs:{"success":"${read.variable}"} to the action node, or 2) Change condition to check context['${read.variable}'].status === 'SUCCESS'`,
           read.nodeId,
           {
             condition: read.condition,

@@ -41,6 +41,50 @@ export class ModuleLoader {
       fullPath = path.resolve(this.monorepoRoot, modulePath);
     }
     
+    // Check if it's a directory and append index.js if needed
+    try {
+      const stat = await fs.stat(fullPath);
+      if (stat.isDirectory()) {
+        // First try index.js
+        const indexPath = path.join(fullPath, 'index.js');
+        try {
+          await fs.access(indexPath);
+          fullPath = indexPath;
+        } catch {
+          // If index.js doesn't exist, try the module name with .js extension
+          const moduleNamePath = fullPath + '.js';
+          try {
+            await fs.access(moduleNamePath);
+            fullPath = moduleNamePath;
+          } catch {
+            throw new Error(`No index.js or module.js found in directory: ${fullPath}`);
+          }
+        }
+      }
+    } catch (error) {
+      // If the path doesn't exist as-is, try appending .js
+      if (!fullPath.endsWith('.js')) {
+        const jsPath = fullPath + '.js';
+        try {
+          await fs.access(jsPath);
+          fullPath = jsPath;
+        } catch {
+          // Original path doesn't exist and neither does .js version
+          throw new ModuleLoadError(
+            `Module path not found: ${modulePath}`,
+            modulePath,
+            error
+          );
+        }
+      } else {
+        throw new ModuleLoadError(
+          `Module path not found: ${modulePath}`,
+          modulePath,
+          error
+        );
+      }
+    }
+    
     // Check cache first (unless forcing reload)
     if (!options.forceReload && this.moduleCache.has(fullPath)) {
       return this.moduleCache.get(fullPath);
@@ -52,7 +96,7 @@ export class ModuleLoader {
     }
     
     try {
-      // Check if file exists
+      // Check if file exists (should already be verified above)
       await fs.access(fullPath);
       
       // Convert to file URL for dynamic import (Windows compatibility)

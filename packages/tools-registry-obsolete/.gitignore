@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Test artifacts and temporary files
+tmp/
+test-results.db
+*.db
+__tests__/results/
+__tests__/artifacts/
+
+# Log files
+*.log
+
+# Environment files
+.env
+.env.local
+
+# Coverage reports
+coverage/
+
+# Build artifacts
+dist/
+build/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

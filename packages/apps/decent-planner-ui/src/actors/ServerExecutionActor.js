@@ -12,6 +12,9 @@ export class ServerExecutionActor {
     this.currentTree = null;
     this.toolRegistry = services.toolRegistry || null;
     
+    console.log('[ServerExecutionActor] Constructor - toolRegistry exists:', !!this.toolRegistry);
+    console.log('[ServerExecutionActor] Services keys:', Object.keys(services || {}));
+    
     // Bind message handlers
     this.handlers = {
       'load-tree': this.handleLoadTree.bind(this),
@@ -66,22 +69,31 @@ export class ServerExecutionActor {
       throw new Error('No tree provided');
     }
     
-    // Create new executor
-    this.executor = new DebugBehaviorTreeExecutor(this.toolRegistry);
-    
-    // Set up event listeners
-    this.setupExecutorListeners();
-    
-    // Initialize tree
-    this.currentTree = tree;
-    const result = await this.executor.initializeTree(tree);
-    
-    return {
-      loaded: true,
-      treeId: result.treeId,
-      nodeCount: result.nodeCount,
-      state: this.executor.getExecutionState()
-    };
+    try {
+      // Create new executor
+      this.executor = new DebugBehaviorTreeExecutor(this.toolRegistry);
+      
+      // Set up event listeners
+      this.setupExecutorListeners();
+      
+      // Initialize tree
+      this.currentTree = tree;
+      const result = await this.executor.initializeTree(tree);
+      
+      return {
+        loaded: true,
+        treeId: result.treeId,
+        nodeCount: result.nodeCount,
+        state: this.executor.getExecutionState()
+      };
+    } catch (error) {
+      console.error('[ServerExecutionActor] Error loading tree:', error.message);
+      // Return error response instead of crashing
+      return {
+        loaded: false,
+        error: error.message
+      };
+    }
   }
   
   async handleStep() {
@@ -271,5 +283,10 @@ export class ServerExecutionActor {
   
   setRemoteActor(remoteActor) {
     this.remoteActor = remoteActor;
+  }
+  
+  setToolRegistry(toolRegistry) {
+    this.toolRegistry = toolRegistry;
+    console.log('[ServerExecutionActor] Tool registry updated - exists:', !!this.toolRegistry);
   }
 }

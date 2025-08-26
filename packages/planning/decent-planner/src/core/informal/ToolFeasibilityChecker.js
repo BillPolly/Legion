@@ -212,7 +212,7 @@ IMPORTANT: Include descriptions for BOTH code/file generation AND specific opera
         
         // Add found tools to the collection
         for (const toolResult of searchResult.tools) {
-          const toolName = toolResult.name;
+          const toolId = toolResult._id || toolResult.id;
           
           // Only include executable tools
           if (!toolResult.available || !toolResult.executable) {
@@ -220,17 +220,9 @@ IMPORTANT: Include descriptions for BOTH code/file generation AND specific opera
           }
           
           // Keep the best confidence score if we see this tool multiple times
-          if (!allToolsFound.has(toolName) || 
-              toolResult.confidence > allToolsFound.get(toolName).confidence) {
-            allToolsFound.set(toolName, {
-              name: toolResult.name,
-              description: toolResult.description,
-              confidence: toolResult.confidence,
-              executable: toolResult.executable,
-              category: toolResult.category,
-              tags: toolResult.tags,
-              searchedFor: description
-            });
+          if (!allToolsFound.has(toolId) || 
+              toolResult.confidence > allToolsFound.get(toolId).confidence) {
+            allToolsFound.set(toolId, toolResult);
           }
         }
         

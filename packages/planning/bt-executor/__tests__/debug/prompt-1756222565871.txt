@@ -1,0 +1,85 @@
+# Behavior Tree Generation Task
+
+You are an expert Behavior Tree planner. Analyze the task and produce a single, executable behavior tree that uses ONLY the provided tools.
+
+## Task
+please write a simple hello world program in javascript
+
+## Available Tools (the ONLY tools you may use)
+### file_writer
+Description: Write content to a file
+Inputs:
+  - filePath (string): Path where file should be written
+  - content (string): Content to write
+Outputs: filepath, bytesWritten, created
+
+### run_node
+Description: Execute JavaScript file using Node.js
+Inputs:
+  - projectPath (string): Project directory path
+  - command (string): Command to execute
+
+
+## Conventions
+
+**JSON only**: Return ONLY valid JSON. No markdown, no code blocks, no comments, no explanations, no trailing commas.
+
+**Node types**:
+- `sequence`: Run children in order, stops on first failure
+- `action`: Execute a tool with specific inputs and optional outputs
+
+**Variables**:
+- Store outputs with unique variable names: `"outputs": {"toolField": "unique_var_name"}`  
+- Reference stored variables: `"context.artifacts['varName']"`
+- All variable names must be globally unique
+
+**Actions**:
+- Use ONLY exact tool names from Available Tools
+- Use ONLY exact parameter names from tool specifications  
+- Map only the output fields you need later
+- Do not invent tools, parameters, or output fields
+
+## Output Format
+
+Return ONLY this JSON structure:
+
+{
+  "type": "sequence",
+  "id": "root",
+  "description": "Main task",
+  "children": []
+}
+
+## Node Schemas
+
+Action node:
+{
+  "type": "action",
+  "id": "descriptive-id",
+  "tool": "exact_tool_name",
+  "description": "What this does",
+  "inputs": {
+    "paramName": "literal_value_or_context.artifacts['varName']"
+  },
+  "outputs": {
+    "toolOutputField": "unique_variable_name"
+  }
+}
+
+Sequence node:
+{
+  "type": "sequence",
+  "id": "descriptive-id", 
+  "description": "What these steps accomplish",
+  "children": []
+}
+
+## Rules
+
+1. Use kebab-case for IDs
+2. Keep variable names meaningful (user_id, output_path)
+3. Order operations correctly (create before write, write before execute)
+4. Only store outputs you will use
+5. Prefer simple, direct solutions
+
+Generate the JSON now:

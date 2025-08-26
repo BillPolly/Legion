@@ -3,6 +3,10 @@
  * 
  * Exports the initialized ToolRegistry singleton instance as default
  * This prevents incorrect usage and ensures proper singleton pattern
+ * 
+ * IMPORTANT: DO NOT EXPORT THE CLASS!
+ * Only the singleton instance should be used throughout the entire application.
+ * For tests, use ToolRegistry.getInstance() by importing from the integration file directly.
  */
 
 import { ToolRegistry } from './integration/ToolRegistry.js';

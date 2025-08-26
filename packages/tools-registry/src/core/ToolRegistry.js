@@ -112,6 +112,30 @@ export class ToolRegistry extends EventEmitter {
   }
   
   /**
+   * Get tool by database ID
+   * @param {string} toolId - Tool database ID
+   * @param {Object} options - Options (forceReload)
+   * @returns {Object|null} Tool with execute function
+   */
+  async getToolById(toolId, options = {}) {
+    // First try to find the tool in the database by ID
+    const toolsCollection = this.databaseStorage.getCollection('tools');
+    const toolDoc = await toolsCollection.findOne({ 
+      _id: toolId.toString ? toolId.toString() : toolId 
+    });
+    
+    if (!toolDoc) {
+      if (this.options.verbose) {
+        console.log(`Tool not found by ID: ${toolId}`);
+      }
+      return null;
+    }
+    
+    // Now use the existing getTool method with the name
+    return await this.getTool(toolDoc.name, options);
+  }
+
+  /**
    * Get multiple tools by names
    * @param {Array<string>} names - Tool names
    * @returns {Array} Array of tools (excludes failed ones)

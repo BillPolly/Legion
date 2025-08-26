@@ -99,7 +99,7 @@ export class TreeExecutionComponent {
     const historyCollapsible = new CollapsibleSectionComponent(historyContainer, {
       title: 'Execution History',
       icon: '📜',
-      defaultExpanded: false
+      defaultExpanded: true  // Changed to true to keep expanded by default
     });
     
     const historyContent = document.createElement('div');
@@ -133,7 +133,7 @@ export class TreeExecutionComponent {
     const contextCollapsible = new CollapsibleSectionComponent(contextContainer, {
       title: 'Execution Context',
       icon: '🔍',
-      defaultExpanded: false
+      defaultExpanded: true  // Changed to true to keep expanded by default
     });
     
     const contextContent = document.createElement('div');

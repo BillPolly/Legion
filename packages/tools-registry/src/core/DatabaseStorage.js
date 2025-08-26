@@ -339,7 +339,7 @@ export class DatabaseStorage {
   async findModule(name) {
     try {
       const collection = this.getCollection('modules');
-      return await collection.findOne({ _id: name });
+      return await collection.findOne({ name: name });
       
     } catch (error) {
       throw new DatabaseError(

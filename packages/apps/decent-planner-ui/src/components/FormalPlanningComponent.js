@@ -110,13 +110,29 @@ export class FormalPlanningComponent {
     const mainResultsContainer = document.createElement('div');
     mainResultsContainer.className = 'formal-planning-results';
     
-    // Title section
+    // Title section with save button
     const titleSection = document.createElement('div');
     titleSection.className = 'formal-planning-title';
+    titleSection.style.display = 'flex';
+    titleSection.style.justifyContent = 'space-between';
+    titleSection.style.alignItems = 'center';
+    titleSection.style.marginBottom = '16px';
+    
     const titleH3 = document.createElement('h3');
     titleH3.textContent = '🏗️ Formal Planning Results';
-    titleH3.style.marginBottom = '16px';
+    titleH3.style.margin = '0';
     titleSection.appendChild(titleH3);
+    
+    const saveButton = document.createElement('button');
+    saveButton.id = 'formal-save-plan-button';
+    saveButton.className = 'save-plan-btn';
+    saveButton.innerHTML = '💾 Save Plan';
+    saveButton.onclick = () => {
+      // Dispatch event to parent ClientPlannerActor
+      window.clientActor?.handleSavePlan();
+    };
+    titleSection.appendChild(saveButton);
+    
     mainResultsContainer.appendChild(titleSection);
     
     // Create results content
