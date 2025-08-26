@@ -102,11 +102,12 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
     // Execute current node
     const node = this.currentNode;
     const nodeId = node.config?.id || node.id;
+    const nodeType = node.config?.type || 'unknown';
     
     // Emit step event
     this.emit('node:step', {
       nodeId,
-      nodeType: node.config?.type || 'unknown',
+      nodeType,
       nodeName: node.config?.name || nodeId,
       depth: this.executionStack.length
     });
@@ -116,7 +117,61 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
     this.emit('node:state', { nodeId, state: 'running' });
     
     try {
-      // Execute the node
+      // For composite nodes (sequence, selector, retry), don't execute them directly
+      // Just navigate to their children
+      if (['sequence', 'selector', 'retry'].includes(nodeType)) {
+        // Mark composite node as running
+        this.nodeStates.set(nodeId, 'running');
+        
+        // Find first child to execute
+        let childToExecute = null;
+        
+        if (nodeType === 'retry' && node.child) {
+          // Retry nodes have a single child
+          childToExecute = node.child;
+        } else if (node.children && node.children.length > 0) {
+          // Find first pending child
+          for (const child of node.children) {
+            const childId = child.config?.id || child.id;
+            if (this.nodeStates.get(childId) === 'pending') {
+              childToExecute = child;
+              break;
+            }
+          }
+        }
+        
+        if (childToExecute) {
+          this.currentNode = childToExecute;
+          this.executionStack.push(childToExecute);
+          return {
+            complete: false,
+            currentNode: childToExecute.config?.id,
+            lastResult: { status: NodeStatus.SUCCESS }
+          };
+        } else {
+          // All children processed, determine composite node status
+          const compositeStatus = this.determineCompositeStatus(node);
+          this.nodeStates.set(nodeId, compositeStatus === NodeStatus.SUCCESS ? 'success' : 'failure');
+          
+          // Move to next
+          this.currentNode = this.getNextNode(node, compositeStatus);
+          if (this.currentNode) {
+            return {
+              complete: false,
+              currentNode: this.currentNode.config?.id,
+              lastResult: { status: compositeStatus }
+            };
+          } else {
+            return {
+              complete: true,
+              success: compositeStatus === NodeStatus.SUCCESS,
+              history: this.executionHistory
+            };
+          }
+        }
+      }
+      
+      // Execute action or condition nodes
       const result = await this.executeNode(node);
       
       // Update node state based on result
@@ -157,6 +212,8 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
         };
       }
       
+      this.executionStack = this.buildExecutionStack(this.currentNode);
+      
       return {
         complete: false,
         currentNode: this.currentNode.config?.id,
@@ -171,6 +228,47 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
       });
       throw error;
     }
+  }
+  
+  /**
+   * Determine status of composite node based on children
+   */
+  determineCompositeStatus(node) {
+    const nodeType = node.config?.type;
+    const children = node.children || [];
+    
+    if (nodeType === 'sequence') {
+      // All must succeed
+      for (const child of children) {
+        const childId = child.config?.id || child.id;
+        const childState = this.nodeStates.get(childId);
+        if (childState === 'failure') return NodeStatus.FAILURE;
+      }
+      return NodeStatus.SUCCESS;
+    } else if (nodeType === 'selector') {
+      // Any must succeed
+      for (const child of children) {
+        const childId = child.config?.id || child.id;
+        const childState = this.nodeStates.get(childId);
+        if (childState === 'success') return NodeStatus.SUCCESS;
+      }
+      return NodeStatus.FAILURE;
+    }
+    
+    return NodeStatus.SUCCESS;
+  }
+  
+  /**
+   * Build execution stack for current node
+   */
+  buildExecutionStack(node) {
+    const stack = [];
+    let current = node;
+    while (current) {
+      stack.unshift(current);
+      current = current.parent;
+    }
+    return stack;
   }
 
   /**
@@ -325,90 +423,298 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
         this.initializeNodeStates(child);
       }
     }
+    
+    // Initialize single child (for retry nodes)
+    if (node.child) {
+      this.initializeNodeStates(node.child);
+    }
   }
 
   /**
    * Get next node to execute based on current node and result
    */
   getNextNode(currentNode, status) {
-    // This is a simplified version - in reality would need to handle:
-    // - Sequence nodes (next child or parent)
-    // - Selector nodes (next child on failure or parent)
-    // - Parallel nodes (all children)
-    // - Retry nodes (repeat on failure)
+    const nodeType = currentNode.config?.type;
+    const nodeId = currentNode.config?.id || currentNode.id;
     
-    // For now, just traverse children in order
-    if (currentNode.children && currentNode.children.length > 0) {
-      // Find first unexecuted child
-      for (const child of currentNode.children) {
-        const childId = child.config?.id || child.id;
-        const childState = this.nodeStates.get(childId);
-        if (childState === 'pending') {
-          return child;
+    // Handle based on node type and status
+    switch (nodeType) {
+      case 'sequence':
+        // Sequence: execute children in order, stop on failure
+        if (status === NodeStatus.FAILURE) {
+          // Sequence failed, move to parent's next sibling
+          return this.getParentNextSibling(currentNode);
         }
+        // Find next child to execute
+        if (currentNode.children) {
+          for (const child of currentNode.children) {
+            const childId = child.config?.id || child.id;
+            if (this.nodeStates.get(childId) === 'pending') {
+              return child;
+            }
+          }
+        }
+        // All children complete, move to parent's next sibling
+        return this.getParentNextSibling(currentNode);
+        
+      case 'selector':
+        // Selector: try children until one succeeds
+        if (status === NodeStatus.SUCCESS) {
+          // Selector succeeded, move to parent's next sibling
+          return this.getParentNextSibling(currentNode);
+        }
+        // Find next child to try
+        if (currentNode.children) {
+          for (const child of currentNode.children) {
+            const childId = child.config?.id || child.id;
+            if (this.nodeStates.get(childId) === 'pending') {
+              return child;
+            }
+          }
+        }
+        // All children failed, move to parent's next sibling
+        return this.getParentNextSibling(currentNode);
+        
+      case 'retry':
+        // Retry: repeat child on failure up to maxAttempts
+        const maxAttempts = currentNode.config?.maxAttempts || 3;
+        const attempts = currentNode.attempts || 0;
+        
+        if (status === NodeStatus.FAILURE && attempts < maxAttempts - 1) {
+          // Reset child for retry
+          currentNode.attempts = attempts + 1;
+          if (currentNode.child) {
+            this.resetNodeAndChildren(currentNode.child);
+            return currentNode.child;
+          } else if (currentNode.children && currentNode.children[0]) {
+            this.resetNodeAndChildren(currentNode.children[0]);
+            return currentNode.children[0];
+          }
+        }
+        // Success or max attempts reached
+        return this.getParentNextSibling(currentNode);
+        
+      case 'action':
+      case 'condition':
+        // Leaf nodes - move to parent's next sibling
+        return this.getParentNextSibling(currentNode);
+        
+      default:
+        // For any node with children, try to execute them
+        if (currentNode.children && currentNode.children.length > 0) {
+          for (const child of currentNode.children) {
+            const childId = child.config?.id || child.id;
+            if (this.nodeStates.get(childId) === 'pending') {
+              return child;
+            }
+          }
+        }
+        return this.getParentNextSibling(currentNode);
+    }
+  }
+  
+  /**
+   * Get parent's next sibling for navigation
+   */
+  getParentNextSibling(node) {
+    if (!node.parent) return null;
+    
+    const parent = node.parent;
+    const parentChildren = parent.children || [];
+    const nodeIndex = parentChildren.indexOf(node);
+    
+    // Find next sibling
+    for (let i = nodeIndex + 1; i < parentChildren.length; i++) {
+      const sibling = parentChildren[i];
+      const siblingId = sibling.config?.id || sibling.id;
+      if (this.nodeStates.get(siblingId) === 'pending') {
+        return sibling;
       }
     }
     
-    // No more children, execution complete for now
-    return null;
+    // No more siblings, recurse to parent
+    return this.getParentNextSibling(parent);
+  }
+  
+  /**
+   * Reset node and all its children to pending
+   */
+  resetNodeAndChildren(node) {
+    const nodeId = node.config?.id || node.id;
+    this.nodeStates.set(nodeId, 'pending');
+    
+    if (node.children) {
+      for (const child of node.children) {
+        this.resetNodeAndChildren(child);
+      }
+    }
+    if (node.child) {
+      this.resetNodeAndChildren(node.child);
+    }
   }
 
   /**
    * Execute a single node
    */
   async executeNode(node) {
-    // Simplified execution - in real implementation would handle all node types
     const nodeType = node.config?.type || 'unknown';
+    const nodeId = node.config?.id || node.id;
     
     // Simulate execution delay for debugging
     await new Promise(resolve => setTimeout(resolve, 100));
     
-    // For action nodes with tools
-    if (nodeType === 'action' && node.config?.tool) {
-      if (this.toolRegistry) {
-        try {
-          const tool = await this.toolRegistry.getTool(node.config.tool);
-          if (tool) {
-            const params = node.config.params || {};
-            const result = await tool.execute(params);
+    switch (nodeType) {
+      case 'action':
+        // Execute action node with tool
+        if (node.config?.tool && this.toolRegistry) {
+          try {
+            const tool = await this.toolRegistry.getTool(node.config.tool);
+            if (tool) {
+              const params = this.resolveParams(node.config.params || {});
+              const result = await tool.execute(params);
+              
+              // Store output in context if outputVariable specified
+              if (node.config.outputVariable && result.success) {
+                this.executionContext.artifacts = this.executionContext.artifacts || {};
+                this.executionContext.artifacts[node.config.outputVariable] = result.data || {};
+                this.executionContext.artifacts[node.config.outputVariable].success = result.success;
+              }
+              
+              return {
+                status: result.success ? NodeStatus.SUCCESS : NodeStatus.FAILURE,
+                data: result.data || {},
+                error: result.error
+              };
+            } else {
+              return {
+                status: NodeStatus.FAILURE,
+                data: { error: `Tool '${node.config.tool}' not found` }
+              };
+            }
+          } catch (error) {
             return {
-              status: result.success ? NodeStatus.SUCCESS : NodeStatus.FAILURE,
-              data: result.data || {}
+              status: NodeStatus.FAILURE,
+              data: { error: error.message }
             };
           }
-        } catch (error) {
-          return {
-            status: NodeStatus.FAILURE,
-            data: { error: error.message }
-          };
         }
+        return {
+          status: NodeStatus.SUCCESS,
+          data: { message: `Action ${nodeId} completed` }
+        };
+        
+      case 'condition':
+        // Evaluate condition expression
+        if (node.config?.check) {
+          try {
+            // Create evaluation context
+            const context = this.executionContext;
+            // Use Function constructor for safer eval
+            const checkFn = new Function('context', `return ${node.config.check}`);
+            const result = checkFn(context);
+            
+            return {
+              status: result ? NodeStatus.SUCCESS : NodeStatus.FAILURE,
+              data: { checkResult: result, expression: node.config.check }
+            };
+          } catch (error) {
+            return {
+              status: NodeStatus.FAILURE,
+              data: { error: `Condition evaluation failed: ${error.message}` }
+            };
+          }
+        }
+        return {
+          status: NodeStatus.SUCCESS,
+          data: { message: 'No condition specified' }
+        };
+        
+      case 'sequence':
+        // Sequence nodes succeed if all children succeed
+        // The actual child execution is handled by stepNext
+        return {
+          status: NodeStatus.SUCCESS,
+          data: { message: `Sequence ${nodeId} processing` }
+        };
+        
+      case 'selector':
+        // Selector nodes succeed if any child succeeds
+        return {
+          status: NodeStatus.SUCCESS,
+          data: { message: `Selector ${nodeId} processing` }
+        };
+        
+      case 'retry':
+        // Retry nodes manage their child's execution
+        return {
+          status: NodeStatus.SUCCESS,
+          data: { message: `Retry ${nodeId} processing` }
+        };
+        
+      default:
+        return {
+          status: NodeStatus.SUCCESS,
+          data: { message: `Node ${nodeId} executed` }
+        };
+    }
+  }
+  
+  /**
+   * Resolve parameters with context substitution
+   */
+  resolveParams(params) {
+    // Simple parameter resolution - could be enhanced
+    const resolved = {};
+    for (const [key, value] of Object.entries(params)) {
+      if (typeof value === 'string' && value.startsWith('${') && value.endsWith('}')) {
+        // Context variable reference
+        const varPath = value.slice(2, -1);
+        resolved[key] = this.getContextValue(varPath);
+      } else {
+        resolved[key] = value;
       }
     }
-    
-    // Default success for now
-    return {
-      status: NodeStatus.SUCCESS,
-      data: { message: `Node ${node.config?.id} executed` }
-    };
+    return resolved;
+  }
+  
+  /**
+   * Get value from context by path
+   */
+  getContextValue(path) {
+    const parts = path.split('.');
+    let value = this.executionContext;
+    for (const part of parts) {
+      value = value?.[part];
+    }
+    return value;
   }
 
   /**
    * Create node instance from configuration
-   * Simplified version for debugging
    */
-  async createNode(config) {
+  async createNode(config, parent = null) {
     const node = {
-      id: config.id || `node-${Date.now()}`,
+      id: config.id || `node-${Date.now()}-${Math.random()}`,
       config: config,
-      children: []
+      parent: parent,
+      children: [],
+      child: null,
+      attempts: 0
     };
     
     // Create children recursively
     if (config.children && Array.isArray(config.children)) {
       for (const childConfig of config.children) {
-        const child = await this.createNode(childConfig);
+        const child = await this.createNode(childConfig, node);
         node.children.push(child);
       }
+    }
+    
+    // Handle single child (for retry nodes)
+    if (config.child) {
+      node.child = await this.createNode(config.child, node);
+      // Also add to children array for uniform handling
+      node.children = [node.child];
     }
     
     return node;
