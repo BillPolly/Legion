@@ -45,11 +45,13 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
     this.executionContext = { ...context, artifacts: context.artifacts || {} };
     this.executionHistory = [];
     this.nodeStates.clear();
-    this.currentNode = null;
     this.executionStack = [];
     
     // Create root node from configuration
     this.rootNode = await this.createNode(treeConfig);
+    
+    // Set current node to root for first step
+    this.currentNode = this.rootNode;
     
     // Initialize all node states to pending
     this.initializeNodeStates(this.rootNode);
