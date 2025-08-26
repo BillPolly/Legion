@@ -93,7 +93,7 @@ export class LLMClient extends EventEmitter {
   /**
    * Standard completion with retry logic and error handling
    */
-  async complete(prompt, maxTokens = 1000) {
+  async complete(prompt, maxTokens = 4000) {
     const interactionId = `llm-${++this.interactionCounter}-${Date.now()}`;
     const timestamp = new Date().toISOString();
     

@@ -5,6 +5,7 @@
 
 import { DecentPlanner } from '@legion/decent-planner';
 import { ResourceManager } from '@legion/resource-manager';
+import { ServerExecutionActor } from './ServerExecutionActor.js';
 
 export default class ServerPlannerActor {
   constructor(services) {
@@ -13,11 +14,17 @@ export default class ServerPlannerActor {
     this.decentPlanner = null;
     this.toolRegistry = null;
     this.isReady = false;
+    this.currentInformalResult = null;  // Store the plan on the server!
+    this.executionActor = null;  // Server execution actor for BT debugging
   }
 
   async setRemoteActor(remoteActor) {
     this.remoteActor = remoteActor;
     console.log('🎭 Server planner actor connected');
+    
+    // Initialize execution actor
+    this.executionActor = new ServerExecutionActor(this.services);
+    this.executionActor.setRemoteActor(remoteActor);
     
     // Initialize DecentPlanner
     try {
@@ -59,7 +66,7 @@ export default class ServerPlannerActor {
       maxDepth: 5,
       confidenceThreshold: 0.5,
       strictValidation: true,
-      enableFormalPlanning: false
+      enableFormalPlanning: true
     });
     
     // Initialize it (this loads toolRegistry)
@@ -67,6 +74,11 @@ export default class ServerPlannerActor {
     
     // Get the tool registry for direct access
     this.toolRegistry = this.decentPlanner.toolRegistry;
+    
+    // Pass toolRegistry to execution actor
+    if (this.executionActor && this.toolRegistry) {
+      this.executionActor.toolRegistry = this.toolRegistry;
+    }
     
     // Load all modules for the tool registry
     if (this.toolRegistry) {
@@ -116,6 +128,49 @@ export default class ServerPlannerActor {
         
       case 'ping':
         this.remoteActor.receive('pong', { timestamp: Date.now() });
+        break;
+        
+      // Execution messages - forward to execution actor
+      case 'load-execution-tree':
+        if (this.executionActor) {
+          this.executionActor.receive('load-tree', data, this.remoteActor);
+        }
+        break;
+        
+      case 'execution-step':
+        if (this.executionActor) {
+          this.executionActor.receive('step', data, this.remoteActor);
+        }
+        break;
+        
+      case 'execution-run':
+        if (this.executionActor) {
+          this.executionActor.receive('run', data, this.remoteActor);
+        }
+        break;
+        
+      case 'execution-pause':
+        if (this.executionActor) {
+          this.executionActor.receive('pause', data, this.remoteActor);
+        }
+        break;
+        
+      case 'execution-reset':
+        if (this.executionActor) {
+          this.executionActor.receive('reset', data, this.remoteActor);
+        }
+        break;
+        
+      case 'execution-set-breakpoint':
+        if (this.executionActor) {
+          this.executionActor.receive('set-breakpoint', data, this.remoteActor);
+        }
+        break;
+        
+      case 'execution-remove-breakpoint':
+        if (this.executionActor) {
+          this.executionActor.receive('remove-breakpoint', data, this.remoteActor);
+        }
         break;
         
       case 'cancel':
@@ -217,6 +272,9 @@ export default class ServerPlannerActor {
         });
       });
       
+      // Store the result on the server!
+      this.currentInformalResult = result;
+      
       // Send result
       this.remoteActor.receive('informalPlanComplete', {
         goal,
@@ -243,11 +301,10 @@ export default class ServerPlannerActor {
   }
 
   async handleFormalPlanRequest(data) {
-    const { informalResult } = data;
-    
-    if (!informalResult) {
+    // Use the server's stored result which now has tools!
+    if (!this.currentInformalResult) {
       this.remoteActor.receive('formalPlanError', {
-        error: 'Informal result is required'
+        error: 'No informal planning result found on server'
       });
       return;
     }
@@ -255,16 +312,16 @@ export default class ServerPlannerActor {
     try {
       // Send formal planning started
       this.remoteActor.receive('formalPlanStarted', {
-        goal: informalResult.goal,
+        goal: this.currentInformalResult.goal,
         timestamp: new Date().toISOString()
       });
       
-      // Execute formal planning
-      const result = await this.decentPlanner.planFormal(informalResult);
+      // Execute formal planning with the server's stored (and tool-modified) result
+      const result = await this.decentPlanner.planFormal(this.currentInformalResult);
       
       // Send result
       this.remoteActor.receive('formalPlanComplete', {
-        goal: informalResult.goal,
+        goal: this.currentInformalResult.goal,
         result,
         timestamp: new Date().toISOString()
       });
@@ -278,11 +335,10 @@ export default class ServerPlannerActor {
   }
 
   async handleDiscoverToolsRequest(data) {
-    const { informalResult } = data;
-    
-    if (!informalResult || !informalResult.informal || !informalResult.informal.hierarchy) {
+    // Use the stored result, not data from client!
+    if (!this.currentInformalResult || !this.currentInformalResult.informal || !this.currentInformalResult.informal.hierarchy) {
       this.remoteActor.receive('toolsDiscoveryError', {
-        error: 'Informal result with hierarchy is required'
+        error: 'No informal planning result found on server'
       });
       return;
     }
@@ -293,9 +349,9 @@ export default class ServerPlannerActor {
         timestamp: new Date().toISOString()
       });
       
-      // Execute tool discovery with progress callback
+      // Execute tool discovery with progress callback - use server's stored hierarchy!
       const result = await this.decentPlanner.discoverToolsForHierarchy(
-        informalResult.informal.hierarchy, 
+        this.currentInformalResult.informal.hierarchy, 
         (message) => {
           // Send progress update to client
           this.remoteActor.receive('toolsDiscoveryProgress', {

@@ -1,0 +1,33 @@
+{
+  "name": "@legion/bt-executor",
+  "version": "1.0.0",
+  "description": "Behavior tree execution and debugging for Legion framework",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest"
+  },
+  "dependencies": {
+    "@legion/actor-bt": "file:../../shared/actor-BT",
+    "@legion/tools-registry": "file:../../tools-registry",
+    "@legion/resource-manager": "file:../../core/resource-manager"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "keywords": [
+    "legion",
+    "behavior-tree",
+    "execution",
+    "debugging",
+    "bt"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

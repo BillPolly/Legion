@@ -10,6 +10,7 @@
   "dependencies": {
     "@legion/server-framework": "*",
     "@legion/decent-planner": "*",
+    "@legion/bt-executor": "*",
     "@legion/resource-manager": "*",
     "@legion/components": "*",
     "@legion/actors": "*"

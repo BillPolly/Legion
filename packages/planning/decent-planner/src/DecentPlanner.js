@@ -243,16 +243,32 @@ export class DecentPlanner {
           const discoveryResult = await this.informalPlanner.feasibilityChecker.checkTaskFeasibility(task);
           
           // ADD DISCOVERED TOOLS TO THE TASK NODE - This was missing!
+          console.log(`🔧 [TOOL DISCOVERY] discoveryResult for task "${task.description}":`, {
+            feasible: discoveryResult?.feasible,
+            hasDebug: !!discoveryResult?.debug,
+            hasStep3Merged: !!discoveryResult?.debug?.step3_merged,
+            toolCount: discoveryResult?.debug?.step3_merged?.length || 0
+          });
+          
           if (discoveryResult && discoveryResult.feasible && discoveryResult.debug && discoveryResult.debug.step3_merged) {
             // Add the discovered tools directly to the task node
             task.tools = discoveryResult.debug.step3_merged || [];
             task.feasible = true;
             
-            console.log(`[DecentPlanner] Added ${task.tools.length} tools to task "${task.description}"`);
+            console.log(`✅ [TOOL DISCOVERY] Added ${task.tools.length} tools to task "${task.description}"`);
+            console.log(`✅ [TOOL DISCOVERY] Tools added:`, task.tools.map(t => t.name || t));
+            console.log(`✅ [TOOL DISCOVERY] Task object after adding tools:`, {
+              id: task.id,
+              description: task.description,
+              feasible: task.feasible,
+              hasTools: !!task.tools,
+              toolCount: task.tools?.length
+            });
           } else {
             // No tools found or task not feasible
             task.tools = [];
             task.feasible = false;
+            console.log(`❌ [TOOL DISCOVERY] No tools found or task not feasible for "${task.description}"`);
           }
           
           // Store detailed results for debugging
@@ -336,8 +352,12 @@ export class DecentPlanner {
       // Phase 2: Formal Planning (Behavior Tree Synthesis)
       if (this.options.enableFormalPlanning) {
         console.log('Starting formal planning phase...');
+        console.log('📊 [FORMAL] enableFormalPlanning is:', this.options.enableFormalPlanning);
+        console.log('📊 [FORMAL] informalResult.informal exists:', !!informalResult.informal);
+        console.log('📊 [FORMAL] informalResult.informal.hierarchy exists:', !!informalResult.informal.hierarchy);
         try {
           const formalResult = await this.synthesizeFormalPlan(informalResult.informal.hierarchy);
+          console.log('📊 [FORMAL] synthesizeFormalPlan returned:', formalResult);
           result.formal = formalResult;
           
           // Validate behavior trees if enabled
@@ -464,36 +484,65 @@ export class DecentPlanner {
    * @private
    */
   async synthesizeFormalPlan(hierarchy) {
-    // This will use the @legion/planner package to create behavior trees
-    // For now, we'll create a placeholder structure
+    console.log('🎯 [FORMAL PLANNING] Starting synthesizeFormalPlan...');
+    
+    if (!this.formalPlanner) {
+      throw new Error('Formal planner not initialized');
+    }
     
     const behaviorTrees = [];
     
-    // Convert each SIMPLE task to a behavior tree
-    this.traverseHierarchy(hierarchy, (node) => {
+    // Process each SIMPLE task with the real planner
+    await this.traverseHierarchyAsync(hierarchy, async (node) => {
       if (node.complexity === 'SIMPLE' && node.feasible && node.tools) {
-        // Create a simple behavior tree for this task
-        const bt = {
-          id: node.id || `task-${Date.now()}`,
-          description: node.description,
-          type: 'sequence',
-          children: node.tools.map(tool => ({
-            type: 'action',
-            tool: tool.name,
-            confidence: tool.confidence,
-            inputs: node.suggestedInputs || [],
-            outputs: node.suggestedOutputs || []
-          }))
-        };
-        behaviorTrees.push(bt);
+        console.log(`🎯 [FORMAL PLANNING] Planning for task: "${node.description}"`);
+        console.log(`🎯 [FORMAL PLANNING] Available tools:`, node.tools.map(t => t.name));
+        
+        try {
+          // Use the real planner to create a proper plan
+          const plan = await this.formalPlanner.makePlan(
+            node.description,
+            node.tools.map(t => ({
+              name: t.name,
+              confidence: t.confidence,
+              description: t.description || ''
+            }))
+          );
+          
+          console.log(`🎯 [FORMAL PLANNING] Generated plan:`, JSON.stringify(plan, null, 2));
+          
+          if (plan && plan.success && plan.data && plan.data.plan) {
+            behaviorTrees.push({
+              id: node.id || `task-${Date.now()}`,
+              description: node.description,
+              ...plan.data.plan
+            });
+            console.log(`🎯 [FORMAL PLANNING] Added behavior tree for task: "${node.description}"`);
+          } else {
+            console.log(`🎯 [FORMAL PLANNING] No valid plan generated for task: "${node.description}"`);
+          }
+        } catch (error) {
+          console.error(`Failed to plan for task "${node.description}":`, error);
+        }
       }
     });
+    
+    console.log(`🎯 [FORMAL PLANNING] Created ${behaviorTrees.length} behavior trees`);
     
     return {
       behaviorTrees,
       count: behaviorTrees.length,
       status: 'synthesized'
     };
+  }
+  
+  async traverseHierarchyAsync(node, callback) {
+    await callback(node);
+    if (node.subtasks && node.subtasks.length > 0) {
+      for (const subtask of node.subtasks) {
+        await this.traverseHierarchyAsync(subtask, callback);
+      }
+    }
   }
 
   /**

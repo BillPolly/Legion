@@ -7,6 +7,7 @@ import { SearchComponent } from '/src/components/SearchComponent.js';
 import { TabsComponent } from '/src/components/TabsComponent.js';
 import { ToolDiscoveryComponent } from '/src/components/ToolDiscoveryComponent.js';
 import { FormalPlanningComponent } from '/src/components/FormalPlanningComponent.js';
+import { TreeExecutionComponent } from '/src/components/TreeExecutionComponent.js';
 
 // All components are now properly imported from separate files
 
@@ -613,6 +614,7 @@ export default class ClientPlannerActor {
     this.toolDiscoveryComponent = null;
     this.formalPlanningComponent = null;
     this.searchComponent = null;
+    this.executionComponent = null;
     
     // State for MVVM binding
     this.state = {
@@ -641,7 +643,12 @@ export default class ClientPlannerActor {
       formalResult: null,
       
       // UI state
-      activeTab: 'planning' // 'planning', 'tools', 'formal', or 'search'
+      activeTab: 'planning', // 'planning', 'tools', 'formal', 'execution', or 'search'
+      
+      // Execution state
+      executionTree: null,
+      executionState: null,
+      executionMode: 'step'
     };
   }
 
@@ -723,6 +730,10 @@ export default class ClientPlannerActor {
         
       case 'formalPlanError':
         this.handleFormalPlanError(data);
+        break;
+        
+      case 'execution-event':
+        this.handleExecutionEvent(data);
         break;
         
       case 'error':
@@ -909,6 +920,16 @@ export default class ClientPlannerActor {
       this.formalPlanningComponent.setResult(data.result);
     }
     
+    // Enable execution tab
+    if (this.tabsComponent) {
+      this.tabsComponent.enableTab('execution', true);
+    }
+    
+    // Load tree into execution component if on execution tab
+    if (this.state.activeTab === 'execution' && this.executionComponent && data.result?.formal?.behaviorTrees?.[0]) {
+      this.loadExecutionTree(data.result.formal.behaviorTrees[0]);
+    }
+    
     // Enable further tabs if needed
     if (this.tabsComponent) {
       // Future: enable execution tab if we add one
@@ -1069,9 +1090,8 @@ export default class ClientPlannerActor {
     }
     
     this.updateState({ error: null });
-    this.remoteActor.receive('plan-formal', { 
-      informalResult: this.state.informalResult 
-    });
+    // Just send command - server has the data!
+    this.remoteActor.receive('plan-formal', {});
   }
 
   submitToolsDiscovery() {
@@ -1095,9 +1115,8 @@ export default class ClientPlannerActor {
       activeTab: 'tools' // Switch to tools tab when starting discovery
     });
     
-    this.remoteActor.receive('discover-tools', { 
-      informalResult: this.state.informalResult 
-    });
+    // Just send command - server has the data!
+    this.remoteActor.receive('discover-tools', {});
   }
 
   submitFormalPlanning() {
@@ -1119,9 +1138,8 @@ export default class ClientPlannerActor {
       activeTab: 'formal' // Switch to formal tab when starting planning
     });
     
-    this.remoteActor.receive('plan-formal', { 
-      informalResult: this.state.informalResult 
-    });
+    // Just send command - server has the data!
+    this.remoteActor.receive('plan-formal', {});
   }
 
   switchTab(tabName) {
@@ -1433,6 +1451,7 @@ export default class ClientPlannerActor {
         { id: 'planning', label: 'Planning', icon: '📋' },
         { id: 'tools', label: 'Tool Discovery', icon: '🔧', disabled: !this.state.informalResult },
         { id: 'formal', label: 'Formal Planning', icon: '🏗️', disabled: !this.state.toolsResult },
+        { id: 'execution', label: 'Execution', icon: '▶️', disabled: !this.state.formalResult },
         { id: 'search', label: 'Semantic Search', icon: '🔍' }
       ],
       activeTab: 'planning',
@@ -1443,6 +1462,7 @@ export default class ClientPlannerActor {
     this.initializePlanningTab();
     this.initializeToolsTab();
     this.initializeFormalTab();
+    this.initializeExecutionTab();
     this.initializeSearchTab();
   }
   
@@ -1561,6 +1581,25 @@ export default class ClientPlannerActor {
     
     // Create formal planning component
     this.formalPlanningComponent = new FormalPlanningComponent(container);
+  }
+  
+  initializeExecutionTab() {
+    const container = this.tabsComponent.getContentContainer('execution');
+    if (!container) return;
+    
+    // Create execution component
+    this.executionComponent = new TreeExecutionComponent(container, {
+      onStep: () => this.handleExecutionStep(),
+      onRun: () => this.handleExecutionRun(),
+      onPause: () => this.handleExecutionPause(),
+      onReset: () => this.handleExecutionReset(),
+      onBreakpoint: (nodeId, enabled) => this.handleBreakpoint(nodeId, enabled)
+    });
+    
+    // Load tree if we have formal planning results
+    if (this.state.formalResult?.formal?.behaviorTrees?.[0]) {
+      this.loadExecutionTree(this.state.formalResult.formal.behaviorTrees[0]);
+    }
   }
   
   initializeSearchTab() {
@@ -2515,5 +2554,71 @@ export default class ClientPlannerActor {
     
     // Initial render
     this.render();
+  }
+  
+  // Execution methods
+  loadExecutionTree(tree) {
+    if (!this.executionComponent) return;
+    
+    // Send tree to server
+    if (this.remoteActor) {
+      this.remoteActor.receive('load-execution-tree', { tree });
+    }
+    
+    // Update component
+    this.executionComponent.setTree(tree);
+    this.state.executionTree = tree;
+  }
+  
+  handleExecutionStep() {
+    if (!this.remoteActor) return;
+    this.remoteActor.receive('execution-step', {});
+  }
+  
+  handleExecutionRun() {
+    if (!this.remoteActor) return;
+    this.remoteActor.receive('execution-run', {});
+  }
+  
+  handleExecutionPause() {
+    if (!this.remoteActor) return;
+    this.remoteActor.receive('execution-pause', {});
+  }
+  
+  handleExecutionReset() {
+    if (!this.remoteActor) return;
+    this.remoteActor.receive('execution-reset', {});
+  }
+  
+  handleBreakpoint(nodeId, enabled) {
+    if (!this.remoteActor) return;
+    const messageType = enabled ? 'execution-set-breakpoint' : 'execution-remove-breakpoint';
+    this.remoteActor.receive(messageType, { nodeId });
+  }
+  
+  handleExecutionEvent(data) {
+    if (!this.executionComponent) return;
+    
+    switch (data.type) {
+      case 'node:step':
+      case 'node:complete':
+      case 'node:error':
+      case 'tree:complete':
+      case 'execution:paused':
+      case 'execution:resumed':
+        // Update execution state
+        if (data.state) {
+          this.executionComponent.updateExecutionState(data.state);
+          this.state.executionState = data.state;
+        }
+        break;
+        
+      case 'breakpoint:hit':
+        console.log('Breakpoint hit at node:', data.data.nodeId);
+        if (data.state) {
+          this.executionComponent.updateExecutionState(data.state);
+        }
+        break;
+    }
   }
 }

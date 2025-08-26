@@ -152,7 +152,7 @@ export class Planner {
       ...(options.llmOptions || {})
     };
     
-    const response = await this.llmClient.complete(prompt, llmOptions);
+    const response = await this.llmClient.complete(prompt, llmOptions.maxTokens);
     
     if (options.debugResponse) {
       console.log('[Planner] LLM response:', response.substring(0, 500) + '...');
@@ -179,7 +179,7 @@ export class Planner {
       ...(options.llmOptions || {})
     };
     
-    const response = await this.llmClient.complete(prompt, llmOptions);
+    const response = await this.llmClient.complete(prompt, llmOptions.maxTokens);
     
     if (options.debugResponse) {
       console.log('[Planner] Fix response:', response.substring(0, 500) + '...');
