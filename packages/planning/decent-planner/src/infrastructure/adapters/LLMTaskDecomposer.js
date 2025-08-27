@@ -41,10 +41,23 @@ Task: ${taskDescription}`;
 
 Guidelines:
 1. Break down the task into 2-8 logical subtasks
-2. Each subtask should be a clear, actionable step
-3. Subtasks should be ordered logically (dependencies considered)
-4. For each subtask, suggest informal inputs and outputs
-5. Make subtasks as independent as possible
+2. Each subtask should be a SIMPLE, actionable step that can be completed with a single tool or very few tools
+3. AVOID creating subtasks that would need further decomposition
+4. Make each subtask as atomic and specific as possible
+5. Subtasks should be ordered logically (dependencies considered)
+6. For each subtask, suggest informal inputs and outputs
+7. Make subtasks as independent as possible
+
+IMPORTANT: Focus on creating SIMPLE subtasks that don't require further breakdown. Examples of SIMPLE subtasks:
+- "Write content to a specific file"
+- "Read data from a database table"
+- "Send an HTTP GET request to an API endpoint"  
+- "Parse a JSON string and extract a field"
+
+AVOID complex subtasks like:
+- "Set up authentication system" (too complex)
+- "Build user interface" (too complex)
+- "Configure database" (too complex)
 
 Return the decomposition as JSON:
 {

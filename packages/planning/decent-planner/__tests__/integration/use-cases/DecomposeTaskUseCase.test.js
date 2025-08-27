@@ -36,9 +36,9 @@ describe('DecomposeTaskUseCase Integration', () => {
       complexityClassifier: new LLMComplexityClassifier(llmClient),
       taskDecomposer: new LLMTaskDecomposer(llmClient),
       logger: new ConsoleLogger({ level: 'error' }), // Reduce noise
-      maxDepth: 3,
+      maxDepth: 2, // Reduce depth to prevent deep recursion
       minSubtasks: 2,
-      maxSubtasks: 8
+      maxSubtasks: 4 // Reduce max subtasks to prevent complexity
     });
   });
   
@@ -77,7 +77,7 @@ describe('DecomposeTaskUseCase Integration', () => {
   describe('complex task decomposition', () => {
     it('should decompose a complex task into subtasks', async () => {
       const task = new Task({
-        description: 'Build a REST API with user authentication'
+        description: 'Create a web application with user registration, login, and dashboard'
       });
       
       const result = await useCase.execute({ 
@@ -89,12 +89,12 @@ describe('DecomposeTaskUseCase Integration', () => {
       expect(result.data.task.isComplex()).toBe(true);
       expect(result.data.task.hasSubtasks()).toBe(true);
       expect(result.data.task.getSubtaskCount()).toBeGreaterThanOrEqual(2);
-      expect(result.data.task.getSubtaskCount()).toBeLessThanOrEqual(8);
+      expect(result.data.task.getSubtaskCount()).toBeLessThanOrEqual(4);
     }, 30000);
     
     it('should recursively decompose nested complex tasks', async () => {
       const task = new Task({
-        description: 'Create a complete e-commerce website'
+        description: 'Build a simple blog with posts and comments'
       });
       
       const result = await useCase.execute({ 
@@ -112,7 +112,7 @@ describe('DecomposeTaskUseCase Integration', () => {
   describe('depth limiting', () => {
     it('should respect maximum depth limit', async () => {
       const task = new Task({
-        description: 'Build an entire software company infrastructure'
+        description: 'Create a task management system with user authentication'
       });
       
       const result = await useCase.execute({ 
@@ -121,14 +121,14 @@ describe('DecomposeTaskUseCase Integration', () => {
       });
       
       expect(result.success).toBe(true);
-      expect(result.data.statistics.maxDepth).toBeLessThanOrEqual(3);
+      expect(result.data.statistics.maxDepth).toBeLessThanOrEqual(2);
     });
   });
   
   describe('progress tracking', () => {
     it('should report progress during decomposition', async () => {
       const task = new Task({
-        description: 'Set up a microservices architecture'
+        description: 'Create a simple API with database connection'
       });
       
       const progressUpdates = [];

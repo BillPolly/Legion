@@ -29,23 +29,30 @@ export class Serper extends Tool {
   async execute(args) {
     // Check if initialized
     if (!this.apiKey) {
-      return ToolResult.failure(
-        'Serper tool not initialized. Please provide SERPER_API_KEY in environment.',
-        {
+      throw new Error('Serper tool not initialized. Please provide SERPER_API_KEY in environment.', {
+        cause: {
           query: args.query || 'unknown',
           errorType: 'not_initialized'
         }
-      );
+      });
     }
 
     // Validate required parameters
     if (!args.query) {
-      return ToolResult.failure(
-        'Missing required parameter: query',
-        {
+      throw new Error('Missing required parameter: query', {
+        cause: {
           errorType: 'validation_error'
         }
-      );
+      });
+    }
+
+    // Validate empty query
+    if (args.query.trim() === '') {
+      throw new Error('Query cannot be empty', {
+        cause: {
+          errorType: 'validation_error'
+        }
+      });
     }
 
     // Perform the search
@@ -81,8 +88,7 @@ export class Serper extends Tool {
           required: ['query']
         },
         output: {
-          success: {
-            type: 'object',
+          type: 'object',
             properties: {
               query: {
                 type: 'string',
@@ -119,26 +125,6 @@ export class Serper extends Tool {
               }
             },
             required: ['query', 'organic']
-          },
-          failure: {
-            type: 'object',
-            properties: {
-              query: {
-                type: 'string',
-                description: 'The search query that failed'
-              },
-              errorType: {
-                type: 'string',
-                enum: ['not_initialized', 'api_error', 'network_error', 'validation_error'],
-                description: 'Type of error that occurred'
-              },
-              statusCode: {
-                type: 'number',
-                description: 'HTTP status code if API error'
-              }
-            },
-            required: ['errorType']
-          }
         }
       }
     };
@@ -173,15 +159,14 @@ export class Serper extends Tool {
       });
 
       if (!response.ok) {
-        const error = await response.text();
-        return ToolResult.failure(
-          `Serper API error: ${error}`,
-          {
+        const errorText = await response.text();
+        throw new Error(`Serper API error: ${errorText}`, {
+          cause: {
             query: query,
             errorType: 'api_error',
             statusCode: response.status
           }
-        );
+        });
       }
 
       const data = await response.json();
@@ -198,7 +183,7 @@ export class Serper extends Tool {
 
       console.log(`Found ${results.organic.length} search results`);
       
-      return ToolResult.success(results);
+      return results;
     } catch (error) {
       if (error.message.includes('fetch is not defined')) {
         // Fallback for Node.js versions without fetch
@@ -227,23 +212,22 @@ export class Serper extends Tool {
             res.on('end', () => {
               if (res.statusCode === 200) {
                 const parsed = JSON.parse(data);
-                resolve(ToolResult.success({
+                resolve({
                   query: query,
                   searchInformation: parsed.searchInformation,
                   organic: parsed.organic || [],
                   answerBox: parsed.answerBox || null,
                   knowledgeGraph: parsed.knowledgeGraph || null,
                   relatedSearches: parsed.relatedSearches || []
-                }));
+                });
               } else {
-                resolve(ToolResult.failure(
-                  `Serper API error: ${data}`,
-                  {
+                reject(new Error(`Serper API error: ${data}`, {
+                  cause: {
                     query: query,
                     errorType: 'api_error',
                     statusCode: res.statusCode
                   }
-                ));
+                }));
               }
             });
           });
@@ -253,13 +237,13 @@ export class Serper extends Tool {
           req.end();
         });
       }
-      return ToolResult.failure(
-        `Failed to search: ${error.message}`,
-        {
+      throw new Error(`Failed to search: ${error.message}`, {
+        cause: {
           query: query,
-          errorType: error.message.includes('API error') ? 'api_error' : 'network_error'
+          errorType: error.message.includes('API error') ? 'api_error' : 'network_error',
+          details: error.stack
         }
-      );
+      });
     }
   }
 
@@ -267,10 +251,6 @@ export class Serper extends Tool {
    * Legacy search method for CLI compatibility
    */
   async search(query, num = 10, dateRange = null) {
-    const result = await this.performSearch(query, num, dateRange);
-    if (!result.success) {
-      throw new Error(result.error);
-    }
-    return result.data;
+    return await this.performSearch(query, num, dateRange);
   }
 }

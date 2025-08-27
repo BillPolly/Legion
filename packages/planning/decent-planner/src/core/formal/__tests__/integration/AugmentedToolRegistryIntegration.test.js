@@ -6,7 +6,7 @@ import { describe, it, expect, beforeAll, beforeEach } from '@jest/globals';
 import { AugmentedToolRegistry } from '../../AugmentedToolRegistry.js';
 import { SyntheticTool } from '../../SyntheticTool.js';
 import { ResourceManager } from '@legion/resource-manager';
-import ToolRegistry from '@legion/tools-registry';
+import { ToolRegistry } from '@legion/tools-registry';
 
 describe('AugmentedToolRegistry Integration', () => {
   let registry;
@@ -17,8 +17,8 @@ describe('AugmentedToolRegistry Integration', () => {
     // NEW API: getInstance() is now async and returns fully initialized instance
     resourceManager = await ResourceManager.getInstance();
     
-    // ToolRegistry default export is already the singleton instance
-    realRegistry = ToolRegistry;
+    // Get the ToolRegistry singleton instance
+    realRegistry = await ToolRegistry.getInstance();
     
     // Create augmented registry
     registry = new AugmentedToolRegistry(realRegistry);
