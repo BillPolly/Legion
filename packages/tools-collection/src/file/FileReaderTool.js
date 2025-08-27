@@ -1,5 +1,4 @@
-import { Tool } from '../../../tools-registry/src/modules/Tool.js';
-import { ToolResult } from '../compatibility.js';
+import { Tool } from '@legion/tools-registry';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -8,6 +7,10 @@ import path from 'path';
  */
 class FileReaderTool extends Tool {
   constructor({ basePath, encoding = 'utf-8', maxFileSize = 10 * 1024 * 1024 }) {
+    if (!basePath) {
+      throw new Error('basePath is required');
+    }
+    
     super({
       name: 'file_reader',
       shortName: 'read',
@@ -24,42 +27,20 @@ class FileReaderTool extends Tool {
           required: ['filePath']
         },
         output: {
-          success: {
-            type: 'object',
-            properties: {
-              content: {
-                type: 'string',
-                description: 'The contents of the file'
-              },
-              path: {
-                type: 'string',
-                description: 'The resolved path of the file'
-              }
+          type: 'object',
+          properties: {
+            content: {
+              type: 'string',
+              description: 'The contents of the file'
             },
-            required: ['content', 'path']
+            path: {
+              type: 'string',
+              description: 'The resolved path of the file'
+            }
           },
-          failure: {
-            type: 'object',
-            properties: {
-              filePath: {
-                type: 'string',
-                description: 'The path that was attempted'
-              },
-              errorType: {
-                type: 'string',
-                enum: ['file_not_found', 'access_denied', 'invalid_path', 'read_error'],
-                description: 'The type of error that occurred'
-              },
-              details: {
-                type: 'string',
-                description: 'Additional error details'
-              }
-            },
-            required: ['filePath', 'errorType']
-          }
+          required: ['content', 'path']
         }
-      },
-      execute: async (args) => this.readFile(args)
+      }
     });
 
     // Store dependencies
@@ -71,32 +52,38 @@ class FileReaderTool extends Tool {
   /**
    * Execute the file reader tool
    * @param {Object} args - The arguments for reading the file
-   * @returns {Promise<ToolResult>} The result of reading the file
+   * @returns {Promise<Object>} The result of reading the file
    */
-  async readFile(args) {
+  async execute(args) {
     try {
       const { filePath } = args;
 
       // Validate input
       if (typeof filePath !== 'string') {
-        return ToolResult.failure('File path must be a string', {
-          filePath: String(filePath),
-          errorType: 'invalid_path'
+        throw new Error('File path must be a string', {
+          cause: {
+            filePath: String(filePath),
+            errorType: 'invalid_path'
+          }
         });
       }
 
       if (filePath.trim() === '') {
-        return ToolResult.failure('File path cannot be empty', {
-          filePath: filePath,
-          errorType: 'invalid_path'
+        throw new Error('File path cannot be empty', {
+          cause: {
+            filePath: filePath,
+            errorType: 'invalid_path'
+          }
         });
       }
 
       // Check for null bytes (security)
       if (filePath.includes('\0')) {
-        return ToolResult.failure('Invalid file path', {
-          filePath: filePath,
-          errorType: 'invalid_path'
+        throw new Error('Invalid file path', {
+          cause: {
+            filePath: filePath,
+            errorType: 'invalid_path'
+          }
         });
       }
 
@@ -105,9 +92,11 @@ class FileReaderTool extends Tool {
 
       // Check if path is within allowed basePath
       if (!this.isPathAllowed(resolvedPath)) {
-        return ToolResult.failure('Access denied: Path is outside allowed directory', {
-          filePath: filePath,
-          errorType: 'access_denied'
+        throw new Error('Access denied: Path is outside allowed directory', {
+          cause: {
+            filePath: filePath,
+            errorType: 'access_denied'
+          }
         });
       }
 
@@ -115,25 +104,30 @@ class FileReaderTool extends Tool {
       try {
         await fs.access(resolvedPath);
       } catch (error) {
-        return ToolResult.failure('File not found or not accessible', {
-          filePath: filePath,
-          errorType: 'file_not_found'
+        throw new Error('File not found or not accessible', {
+          cause: {
+            filePath: filePath,
+            errorType: 'file_not_found'
+          }
         });
       }
 
       // Read the file
       const content = await fs.readFile(resolvedPath, this.encoding);
 
-      return ToolResult.success({
+      return {
         content,
         path: resolvedPath
-      });
+      };
     } catch (error) {
       // Handle any unexpected errors
-      return ToolResult.failure(error.message || 'Failed to read file', {
-        filePath: args?.filePath || 'unknown',
-        errorType: 'read_error',
-        details: error.stack
+      const cause = error.cause || {};
+      throw new Error(error.message || 'Failed to read file', {
+        cause: {
+          filePath: args?.filePath || 'unknown',
+          errorType: cause.errorType || 'read_error',
+          details: error.stack
+        }
       });
     }
   }

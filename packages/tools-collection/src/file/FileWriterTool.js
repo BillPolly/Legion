@@ -1,5 +1,4 @@
-import { Tool } from '../../../tools-registry/src/modules/Tool.js';
-import { ToolResult } from '../compatibility.js';
+import { Tool } from '@legion/tools-registry';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -8,6 +7,10 @@ import path from 'path';
  */
 class FileWriterTool extends Tool {
   constructor({ basePath, encoding = 'utf-8', createDirectories = false }) {
+    if (!basePath) {
+      throw new Error('basePath is required');
+    }
+    
     super({
       name: 'file_writer',
       shortName: 'write',
@@ -32,42 +35,20 @@ class FileWriterTool extends Tool {
           required: ['filePath', 'content']
         },
         output: {
-          success: {
-            type: 'object',
-            properties: {
-              path: {
-                type: 'string',
-                description: 'The resolved path where the file was written'
-              },
-              bytesWritten: {
-                type: 'number',
-                description: 'Number of bytes written to the file'
-              }
+          type: 'object',
+          properties: {
+            path: {
+              type: 'string',
+              description: 'The resolved path where the file was written'
             },
-            required: ['path', 'bytesWritten']
+            bytesWritten: {
+              type: 'number',
+              description: 'Number of bytes written to the file'
+            }
           },
-          failure: {
-            type: 'object',
-            properties: {
-              filePath: {
-                type: 'string',
-                description: 'The path that was attempted'
-              },
-              errorType: {
-                type: 'string',
-                enum: ['invalid_path', 'access_denied', 'directory_not_found', 'write_error'],
-                description: 'The type of error that occurred'
-              },
-              details: {
-                type: 'string',
-                description: 'Additional error details'
-              }
-            },
-            required: ['filePath', 'errorType']
-          }
+          required: ['path', 'bytesWritten']
         }
-      },
-      execute: async (args) => this.writeFile(args)
+      }
     });
 
     // Store dependencies
@@ -79,9 +60,9 @@ class FileWriterTool extends Tool {
   /**
    * Execute the file writer tool
    * @param {Object} args - The arguments for writing the file
-   * @returns {Promise<ToolResult>} The result of writing the file
+   * @returns {Promise<Object>} The result of writing the file
    */
-  async writeFile(args) {
+  async execute(args) {
     try {
       let { filePath, content, append = false } = args;
       
@@ -92,24 +73,30 @@ class FileWriterTool extends Tool {
 
       // Validate input
       if (typeof filePath !== 'string') {
-        return ToolResult.failure('File path must be a string', {
-          filePath: String(filePath),
-          errorType: 'invalid_path'
+        throw new Error('File path must be a string', {
+          cause: {
+            filePath: String(filePath),
+            errorType: 'invalid_path'
+          }
         });
       }
 
       if (filePath.trim() === '') {
-        return ToolResult.failure('File path cannot be empty', {
-          filePath: filePath,
-          errorType: 'invalid_path'
+        throw new Error('File path cannot be empty', {
+          cause: {
+            filePath: filePath,
+            errorType: 'invalid_path'
+          }
         });
       }
 
       // Check for null bytes (security)
       if (filePath.includes('\0')) {
-        return ToolResult.failure('Invalid file path', {
-          filePath: filePath,
-          errorType: 'invalid_path'
+        throw new Error('Invalid file path', {
+          cause: {
+            filePath: filePath,
+            errorType: 'invalid_path'
+          }
         });
       }
 
@@ -118,9 +105,11 @@ class FileWriterTool extends Tool {
 
       // Check if path is within allowed basePath
       if (!this.isPathAllowed(resolvedPath)) {
-        return ToolResult.failure('Access denied: Path is outside allowed directory', {
-          filePath: filePath,
-          errorType: 'access_denied'
+        throw new Error('Access denied: Path is outside allowed directory', {
+          cause: {
+            filePath: filePath,
+            errorType: 'access_denied'
+          }
         });
       }
 
@@ -139,9 +128,11 @@ class FileWriterTool extends Tool {
         try {
           await fs.access(dir);
         } catch (error) {
-          return ToolResult.failure('Directory does not exist', {
-            filePath: filePath,
-            errorType: 'directory_not_found'
+          throw new Error('Directory does not exist', {
+            cause: {
+              filePath: filePath,
+              errorType: 'directory_not_found'
+            }
           });
         }
       }
@@ -150,16 +141,19 @@ class FileWriterTool extends Tool {
       const flag = append ? 'a' : 'w';
       await fs.writeFile(resolvedPath, content, { encoding: this.encoding, flag });
 
-      return ToolResult.success({
+      return {
         path: resolvedPath,
         bytesWritten: content.length
-      });
+      };
     } catch (error) {
       // Handle any unexpected errors
-      return ToolResult.failure(error.message || 'Failed to write file', {
-        filePath: args?.filePath || 'unknown',
-        errorType: 'write_error',
-        details: error.stack
+      const cause = error.cause || {};
+      throw new Error(error.message || 'Failed to write file', {
+        cause: {
+          filePath: args?.filePath || 'unknown',
+          errorType: cause.errorType || 'write_error',
+          details: error.stack
+        }
       });
     }
   }

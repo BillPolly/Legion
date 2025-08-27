@@ -1,5 +1,4 @@
-import { Tool } from '../../../tools-registry/src/modules/Tool.js';
-import { ToolResult } from '../compatibility.js';
+import { Tool } from '@legion/tools-registry';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -8,6 +7,10 @@ import path from 'path';
  */
 class DirectoryCreatorTool extends Tool {
   constructor({ basePath, permissions = 0o755 }) {
+    if (!basePath) {
+      throw new Error('basePath is required');
+    }
+    
     super({
       name: 'directory_creator',
       shortName: 'mkdir',
@@ -29,42 +32,20 @@ class DirectoryCreatorTool extends Tool {
           required: ['directoryPath']
         },
         output: {
-          success: {
-            type: 'object',
-            properties: {
-              path: {
-                type: 'string',
-                description: 'The resolved path of the created directory'
-              },
-              created: {
-                type: 'boolean',
-                description: 'Whether a new directory was created (false if it already existed)'
-              }
+          type: 'object',
+          properties: {
+            path: {
+              type: 'string',
+              description: 'The resolved path of the created directory'
             },
-            required: ['path', 'created']
+            created: {
+              type: 'boolean',
+              description: 'Whether a new directory was created (false if it already existed)'
+            }
           },
-          failure: {
-            type: 'object',
-            properties: {
-              directoryPath: {
-                type: 'string',
-                description: 'The path that was attempted'
-              },
-              errorType: {
-                type: 'string',
-                enum: ['invalid_path', 'access_denied', 'path_exists_not_dir', 'parent_not_found', 'permission_denied', 'create_error'],
-                description: 'The type of error that occurred'
-              },
-              details: {
-                type: 'string',
-                description: 'Additional error details'
-              }
-            },
-            required: ['directoryPath', 'errorType']
-          }
+          required: ['path', 'created']
         }
-      },
-      execute: async (args) => this.createDirectory(args)
+      }
     });
 
     // Store dependencies
@@ -75,32 +56,38 @@ class DirectoryCreatorTool extends Tool {
   /**
    * Execute the directory creator tool
    * @param {Object} args - The arguments for creating the directory
-   * @returns {Promise<ToolResult>} The result of creating the directory
+   * @returns {Promise<Object>} The result of creating the directory
    */
-  async createDirectory(args) {
+  async execute(args) {
     try {
       const { directoryPath, recursive = true } = args;
 
       // Validate input
       if (typeof directoryPath !== 'string') {
-        return ToolResult.failure('Directory path must be a string', {
-          directoryPath: String(directoryPath),
-          errorType: 'invalid_path'
+        throw new Error('Directory path must be a string', {
+          cause: {
+            directoryPath: String(directoryPath),
+            errorType: 'invalid_path'
+          }
         });
       }
 
       if (directoryPath.trim() === '') {
-        return ToolResult.failure('Directory path cannot be empty', {
-          directoryPath: directoryPath,
-          errorType: 'invalid_path'
+        throw new Error('Directory path cannot be empty', {
+          cause: {
+            directoryPath: directoryPath,
+            errorType: 'invalid_path'
+          }
         });
       }
 
       // Check for null bytes (security)
       if (directoryPath.includes('\0')) {
-        return ToolResult.failure('Invalid directory path', {
-          directoryPath: directoryPath,
-          errorType: 'invalid_path'
+        throw new Error('Invalid directory path', {
+          cause: {
+            directoryPath: directoryPath,
+            errorType: 'invalid_path'
+          }
         });
       }
 
@@ -109,9 +96,11 @@ class DirectoryCreatorTool extends Tool {
 
       // Check if path is within allowed basePath
       if (!this.isPathAllowed(resolvedPath)) {
-        return ToolResult.failure('Access denied: Path is outside allowed directory', {
-          directoryPath: directoryPath,
-          errorType: 'access_denied'
+        throw new Error('Access denied: Path is outside allowed directory', {
+          cause: {
+            directoryPath: directoryPath,
+            errorType: 'access_denied'
+          }
         });
       }
 
@@ -122,10 +111,10 @@ class DirectoryCreatorTool extends Tool {
           mode: this.permissions 
         });
 
-        return ToolResult.success({
+        return {
           path: resolvedPath,
           created: true
-        });
+        };
       } catch (error) {
         // Handle specific error codes
         if (error.code === 'EEXIST') {
@@ -134,32 +123,40 @@ class DirectoryCreatorTool extends Tool {
             await fs.access(resolvedPath);
             const stats = await fs.stat(resolvedPath);
             if (stats.isDirectory()) {
-              return ToolResult.success({
+              return {
                 path: resolvedPath,
                 created: false
-              });
+              };
             } else {
-              return ToolResult.failure('Path exists but is not a directory', {
-                directoryPath: directoryPath,
-                errorType: 'path_exists_not_dir'
+              throw new Error('Path exists but is not a directory', {
+                cause: {
+                  directoryPath: directoryPath,
+                  errorType: 'path_exists_not_dir'
+                }
               });
             }
           } catch (accessError) {
             // If we can't access the path to verify, return the error
-            return ToolResult.failure('Path exists but is not a directory', {
-              directoryPath: directoryPath,
-              errorType: 'path_exists_not_dir'
+            throw new Error('Path exists but is not a directory', {
+              cause: {
+                directoryPath: directoryPath,
+                errorType: 'path_exists_not_dir'
+              }
             });
           }
         } else if (error.code === 'ENOENT' && !recursive) {
-          return ToolResult.failure('Parent directory does not exist', {
-            directoryPath: directoryPath,
-            errorType: 'parent_not_found'
+          throw new Error('Parent directory does not exist', {
+            cause: {
+              directoryPath: directoryPath,
+              errorType: 'parent_not_found'
+            }
           });
         } else if (error.code === 'EACCES') {
-          return ToolResult.failure('Permission denied', {
-            directoryPath: directoryPath,
-            errorType: 'permission_denied'
+          throw new Error('Permission denied', {
+            cause: {
+              directoryPath: directoryPath,
+              errorType: 'permission_denied'
+            }
           });
         } else {
           throw error;
@@ -167,10 +164,13 @@ class DirectoryCreatorTool extends Tool {
       }
     } catch (error) {
       // Handle any unexpected errors
-      return ToolResult.failure(error.message || 'Failed to create directory', {
-        directoryPath: args?.directoryPath || 'unknown',
-        errorType: 'create_error',
-        details: error.stack
+      const cause = error.cause || {};
+      throw new Error(error.message || 'Failed to create directory', {
+        cause: {
+          directoryPath: args?.directoryPath || 'unknown',
+          errorType: cause.errorType || 'create_error',
+          details: error.stack
+        }
       });
     }
   }
