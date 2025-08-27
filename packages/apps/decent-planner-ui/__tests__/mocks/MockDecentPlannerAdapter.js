@@ -23,15 +23,42 @@ export class MockDecentPlannerAdapter extends PlannerService {
   async planInformal(goal, context = {}, progressCallback = null) {
     this.calls.push({ method: 'planInformal', args: [goal, context] });
     
-    if (this.cancelled) {
-      throw new Error('Planning cancelled');
-    }
+    // Check for cancellation during execution
+    const checkCancellation = () => {
+      if (this.cancelled) {
+        throw new Error('Planning cancelled');
+      }
+    };
     
-    // Simulate progress updates
+    // Simulate progress updates with cancellation checks
     if (progressCallback) {
       progressCallback('Starting informal planning...');
+      checkCancellation();
+      
+      // Add delay to allow cancellation to occur
+      await new Promise(resolve => setTimeout(resolve, 10));
+      checkCancellation();
+      
       progressCallback('Analyzing goal...');
+      checkCancellation();
+      
+      await new Promise(resolve => setTimeout(resolve, 10));
+      checkCancellation();
+      
       progressCallback('Decomposing into tasks...');
+      checkCancellation();
+      
+      // Final delay and check
+      await new Promise(resolve => setTimeout(resolve, 10));
+      checkCancellation();
+    } else {
+      // Even without progress callback, add cancellation points
+      await new Promise(resolve => setTimeout(resolve, 10));
+      checkCancellation();
+      await new Promise(resolve => setTimeout(resolve, 10));
+      checkCancellation();
+      await new Promise(resolve => setTimeout(resolve, 10));
+      checkCancellation();
     }
     
     // Return mock informal planning result
@@ -231,6 +258,7 @@ export class MockDecentPlannerAdapter extends PlannerService {
   reset() {
     this.calls = [];
     this.cancelled = false;
+    this.initialized = false;
     this.mockResponses = this.getDefaultResponses();
   }
   

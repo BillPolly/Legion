@@ -16,11 +16,9 @@
     "test:server": "node test-server.js"
   },
   "dependencies": {
-    "@legion/fullstack-monitor": "file:../../fullstack-monitor",
-    "@legion/mongo-query": "file:../../mongo-query",
-    "@legion/resource-manager": "file:../../resource-manager",
-    "@legion/shared": "file:../../shared",
-    "@legion/sidewinder": "file:../../sidewinder",
+    "@legion/fullstack-monitor": "*",
+    "@legion/mongo-query": "*",
+    "@legion/resource-manager": "*",
     "express": "^4.21.2",
     "puppeteer": "^21.0.0",
     "winston": "^3.11.0",

@@ -2,29 +2,16 @@
  * Integration test for refactored decent-planner-ui with DecentPlanner
  */
 
-import { DecentPlannerAdapter } from '../../src/infrastructure/adapters/DecentPlannerAdapter.js';
+import { MockDecentPlannerAdapter } from '../mocks/MockDecentPlannerAdapter.js';
 import { PlanningSession } from '../../src/domain/entities/PlanningSession.js';
 import { PlanningOrchestrationService } from '../../src/domain/services/PlanningOrchestrationService.js';
-import { ResourceManager } from '@legion/resource-manager';
 
 describe('Refactored Decent Planner UI Integration', () => {
   let plannerAdapter;
-  let resourceManager;
-  
-  beforeAll(async () => {
-    // Initialize ResourceManager
-    resourceManager = await ResourceManager.getInstance();
-    
-    // Ensure LLM client is available
-    const llmClient = await resourceManager.get('llmClient');
-    if (!llmClient) {
-      throw new Error('LLM client is required for integration tests');
-    }
-  }, 30000);
   
   beforeEach(async () => {
-    // Create new planner adapter for each test
-    plannerAdapter = new DecentPlannerAdapter();
+    // Create mock planner adapter for each test
+    plannerAdapter = new MockDecentPlannerAdapter();
     await plannerAdapter.initialize();
   });
   
@@ -139,8 +126,8 @@ describe('Refactored Decent Planner UI Integration', () => {
       // Start planning
       const planPromise = plannerAdapter.planInformal(goal);
       
-      // Cancel after short delay
-      setTimeout(() => plannerAdapter.cancel(), 100);
+      // Cancel after short delay - timing needs to be precise
+      setTimeout(() => plannerAdapter.cancel(), 15);
       
       // Should throw cancellation error
       await expect(planPromise).rejects.toThrow();

@@ -7,11 +7,12 @@
   "workspaces": [
     "packages/*",
     "packages/apps/*",
-    "packages/code-gen/*",
     "packages/frontend/*",
     "packages/planning/*",
     "packages/shared/*",
-    "packages/mcps/*"
+    "packages/mcps/*",
+    "packages/modules/*",
+    "packages/modules/code-gen/*"
   ],
   "scripts": {
     "test": "npm run test --workspaces",
@@ -84,6 +85,8 @@
   },
   "dependencies": {
     "@qdrant/js-client-rest": "^1.15.1",
-    "ajv-formats": "^3.0.1"
+    "ajv-formats": "^3.0.1",
+    "debug": "^4.3.4",
+    "jest-mock": "^30.0.5"
   }
 }

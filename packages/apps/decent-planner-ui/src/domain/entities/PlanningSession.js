@@ -124,6 +124,34 @@ export class PlanningSession {
   canDiscoverTools() {
     return this.mode === PlanningMode.INFORMAL_COMPLETE;
   }
+
+  hasInformalResult() {
+    return this.informalResult !== null;
+  }
+
+  hasToolDiscoveryResult() {
+    return this.toolDiscoveryResult !== null;
+  }
+
+  hasFormalResult() {
+    return this.formalResult !== null;
+  }
+
+  getSummary() {
+    return {
+      id: this.id.toString(),
+      goal: this.goal.toString(),
+      mode: this.mode,
+      startedAt: this.startedAt,
+      completedAt: this.completedAt,
+      duration: this.getDuration(),
+      hasInformalResult: this.hasInformalResult(),
+      hasToolDiscoveryResult: this.hasToolDiscoveryResult(),
+      hasFormalResult: this.hasFormalResult(),
+      progressMessageCount: this.progressMessages.length,
+      hasError: this.error !== null
+    };
+  }
   
   toJSON() {
     return {

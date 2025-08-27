@@ -1,0 +1,51 @@
+{
+  "name": "@legion/voice",
+  "version": "1.0.0",
+  "description": "Voice services module for speech-to-text and text-to-speech",
+  "type": "module",
+  "main": "./src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+  },
+  "keywords": [
+    "voice",
+    "speech",
+    "transcription",
+    "tts",
+    "whisper",
+    "openai",
+    "legion"
+  ],
+  "author": "Legion",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "src",
+    "module.json",
+    "README.md"
+  ],
+  "dependencies": {
+    "openai": "^4.0.0",
+    "@legion/tools-registry": "^1.0.0",
+    "@legion/schema": "file:../schema"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/**/*.test.js"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ]
+  }
+}

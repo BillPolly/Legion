@@ -3,11 +3,12 @@
  * Components are properly imported from separate files
  */
 
-import { SearchComponent } from '/src/components/SearchComponent.js';
-import { TabsComponent } from '/src/components/TabsComponent.js';
-import { ToolDiscoveryComponent } from '/src/components/ToolDiscoveryComponent.js';
-import { FormalPlanningComponent } from '/src/components/FormalPlanningComponent.js';
-import { TreeExecutionComponent } from '/src/components/TreeExecutionComponent.js';
+import { ProtocolActor } from './ProtocolActor.js';
+import { SearchComponent } from '../components/SearchComponent.js';
+import { TabsComponent } from '../components/TabsComponent.js';
+import { ToolDiscoveryComponent } from '../components/ToolDiscoveryComponent.js';
+import { FormalPlanningComponent } from '../components/FormalPlanningComponent.js';
+import { TreeExecutionComponent } from '../components/TreeExecutionComponent.js';
 
 // All components are now properly imported from separate files
 
@@ -604,8 +605,9 @@ class SearchComponent_OLD {
 }
 */
 
-export default class ClientPlannerActor {
+export default class ClientPlannerActor extends ProtocolActor {
   constructor() {
+    super(); // This initializes state from protocol.state.initial
     this.remoteActor = null;
     this.plannerComponent = null;
     
@@ -616,13 +618,9 @@ export default class ClientPlannerActor {
     this.searchComponent = null;
     this.executionComponent = null;
     
-    // State for MVVM binding
-    this.state = {
-      connected: false,
-      planning: false,
-      informalPlanning: false,
-      formalPlanning: false,
-      cancelling: false,
+    // Merge additional state properties with the protocol-initialized state
+    // Don't override the entire state object - just add additional properties
+    Object.assign(this.state, {
       expandedToolsMetadata: new Set(), // For tracking expanded tool metadata in discovery panel
       llmInteractions: [], // Store prompt/response pairs
       goal: '',
@@ -654,6 +652,206 @@ export default class ClientPlannerActor {
     };
   }
 
+  getProtocol() {
+    return {
+      name: "ClientPlannerActor",
+      version: "1.0.0",
+      
+      state: {
+        schema: {
+          connected: { type: 'boolean', required: true },
+          planning: { type: 'boolean', required: true },
+          informalPlanning: { type: 'boolean', required: true },
+          formalPlanning: { type: 'boolean', required: true },
+          toolsDiscovering: { type: 'boolean', required: true },
+          cancelling: { type: 'boolean', required: true },
+          goal: { type: 'string', required: true },
+          result: { type: 'object', properties: {}, additionalProperties: true },
+          informalResult: { type: 'object', properties: {}, additionalProperties: true },
+          formalResult: { type: 'object', properties: {}, additionalProperties: true },
+          toolsResult: { type: 'object', properties: {}, additionalProperties: true },
+          error: { type: 'string' },
+          mode: { type: 'string', required: true },
+          progressMessage: { type: 'string' },
+          activeTab: { type: 'string', required: true },
+          executionTree: { type: 'object' },
+          executionState: { type: 'object' },
+          executionMode: { type: 'string', required: true }
+        },
+        initial: {
+          connected: false,
+          planning: false,
+          informalPlanning: false,
+          formalPlanning: false,
+          toolsDiscovering: false,
+          cancelling: false,
+          goal: '',
+          result: null,
+          informalResult: null,
+          formalResult: null,
+          toolsResult: null,
+          error: null,
+          mode: 'manual',
+          progressMessage: null,
+          activeTab: 'planning',
+          executionTree: null,
+          executionState: null,
+          executionMode: 'step'
+        }
+      },
+      
+      messages: {
+        receives: {
+          "ready": {
+            schema: {
+              timestamp: { type: 'string' }
+            },
+            preconditions: ["state.connected === false"],
+            postconditions: ["state.connected === true"]
+          },
+          
+          "informalPlanStarted": {
+            schema: {
+              goal: { type: 'string', required: true }
+            },
+            preconditions: ["state.informalPlanning === false"],
+            postconditions: ["state.informalPlanning === true"]
+          },
+          
+          "informalPlanProgress": {
+            schema: {
+              message: { type: 'string', required: true },
+              percentage: { type: 'number', minimum: 0, maximum: 100 }
+            },
+            preconditions: ["state.informalPlanning === true"]
+          },
+          
+          "informalPlanComplete": {
+            schema: {
+              result: { type: 'object', properties: {}, additionalProperties: true, required: true },
+              goal: { type: 'string', required: true }
+            },
+            preconditions: ["state.informalPlanning === true"],
+            postconditions: [
+              "state.informalPlanning === false",
+              "state.informalResult !== null"
+            ]
+          },
+          
+          "informalPlanError": {
+            schema: {
+              error: { type: 'string', required: true }
+            },
+            preconditions: ["state.informalPlanning === true"],
+            postconditions: [
+              "state.informalPlanning === false",
+              "state.error !== null"
+            ]
+          },
+          
+          "toolsDiscoveryStarted": {
+            schema: {},
+            preconditions: ["state.toolsDiscovering === false"],
+            postconditions: ["state.toolsDiscovering === true"]
+          },
+          
+          "toolsDiscoveryProgress": {
+            schema: {
+              message: { type: 'string', required: true }
+            },
+            preconditions: ["state.toolsDiscovering === true"]
+          },
+          
+          "toolsDiscoveryComplete": {
+            schema: {
+              tools: { type: 'array', items: { type: 'object', properties: {}, additionalProperties: true }, required: true }
+            },
+            preconditions: ["state.toolsDiscovering === true"],
+            postconditions: [
+              "state.toolsDiscovering === false",
+              "state.toolsResult !== null"
+            ]
+          },
+          
+          "toolsDiscoveryError": {
+            schema: {
+              error: { type: 'string', required: true }
+            },
+            preconditions: ["state.toolsDiscovering === true"],
+            postconditions: [
+              "state.toolsDiscovering === false",
+              "state.error !== null"
+            ]
+          },
+          
+          "formalPlanStarted": {
+            schema: {},
+            preconditions: ["state.formalPlanning === false"],
+            postconditions: ["state.formalPlanning === true"]
+          },
+          
+          "formalPlanProgress": {
+            schema: {
+              message: { type: 'string', required: true }
+            },
+            preconditions: ["state.formalPlanning === true"]
+          },
+          
+          "formalPlanComplete": {
+            schema: {
+              result: { type: 'object', properties: {}, additionalProperties: true, required: true }
+            },
+            preconditions: ["state.formalPlanning === true"],
+            postconditions: [
+              "state.formalPlanning === false",
+              "state.formalResult !== null"
+            ]
+          },
+          
+          "formalPlanError": {
+            schema: {
+              error: { type: 'string', required: true }
+            },
+            preconditions: ["state.formalPlanning === true"],
+            postconditions: [
+              "state.formalPlanning === false",
+              "state.error !== null"
+            ]
+          },
+          
+          "llm-interaction": {
+            schema: {
+              type: { type: 'string', required: true },
+              data: { type: 'object', properties: {}, additionalProperties: true, required: true }
+            }
+          }
+        },
+        
+        sends: {
+          "plan-informal": {
+            schema: {
+              goal: { type: 'string', minLength: 1, required: true }
+            },
+            preconditions: ["state.connected === true"],
+            triggers: ["informalPlanStarted", "informalPlanProgress", "informalPlanComplete", "informalPlanError"]
+          },
+          
+          "discover-tools": {
+            schema: {},
+            preconditions: ["state.connected === true", "state.informalResult !== null"],
+            triggers: ["toolsDiscoveryStarted", "toolsDiscoveryProgress", "toolsDiscoveryComplete", "toolsDiscoveryError"]
+          },
+          
+          "plan-formal": {
+            schema: {},
+            preconditions: ["state.connected === true", "state.toolsResult !== null"],
+            triggers: ["formalPlanStarted", "formalPlanProgress", "formalPlanComplete", "formalPlanError"]
+          }
+        }
+      }
+    };
+  }
+
   setRemoteActor(remoteActor) {
     this.remoteActor = remoteActor;
     console.log('🎭 Client actor connected to server');
@@ -666,8 +864,8 @@ export default class ClientPlannerActor {
     this.initializeUI();
   }
 
-  receive(messageType, data) {
-    console.log('📨 Client received:', messageType);
+  handleMessage(messageType, data) {
+    console.log('📨 Client handling:', messageType);
     
     switch (messageType) {
       case 'ready':
@@ -806,6 +1004,13 @@ export default class ClientPlannerActor {
       default:
         console.warn('Unknown message type:', messageType);
     }
+  }
+
+  doSend(messageType, data) {
+    if (this.remoteActor) {
+      return this.remoteActor.receive(messageType, data);
+    }
+    throw new Error('No remote actor connected');
   }
 
   handleReady(data) {

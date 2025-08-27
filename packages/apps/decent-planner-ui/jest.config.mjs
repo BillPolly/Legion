@@ -4,14 +4,15 @@
  */
 
 export default {
-  testEnvironment: 'jsdom',
+  testEnvironment: 'node',
   
   // Handle ES modules
   transform: {},
   
   // Module resolution
   moduleNameMapper: {
-    '^@legion/(.*)$': '<rootDir>/../../$1/src/index.js',
+    '^@legion/decent-planner$': '<rootDir>/../../planning/decent-planner/src/index.js',
+    '^@legion/resource-manager$': '<rootDir>/../../resource-manager/src/index.js',
     '^(\\.{1,2}/.*)\\.js$': '$1'
   },
   

@@ -23,10 +23,10 @@ class MockWebSocket {
     this.messages = [];
     
     // Simulate connection
-    setTimeout(() => {
+    setImmediate(() => {
       this.readyState = MockWebSocket.OPEN;
       if (this.onopen) this.onopen({ type: 'open' });
-    }, 0);
+    });
   }
   
   send(data) {

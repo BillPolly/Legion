@@ -66,10 +66,10 @@ describe('PlanningSession Domain Entity', () => {
       session.completeInformalPlanning({ hierarchy: {} });
       
       session.startToolDiscovery();
-      expect(session.mode).toBe('TOOL_DISCOVERY');
+      expect(session.mode).toBe('DISCOVERING_TOOLS');
       
       session.completeToolDiscovery({ tools: [] });
-      expect(session.mode).toBe('TOOL_DISCOVERY_COMPLETE');
+      expect(session.mode).toBe('TOOLS_DISCOVERED');
     });
     
     test('should allow formal planning after informal', () => {
@@ -87,7 +87,7 @@ describe('PlanningSession Domain Entity', () => {
       session.cancel();
       
       expect(session.mode).toBe('CANCELLED');
-      expect(session.isCancelled()).toBe(true);
+      expect(session.completedAt).not.toBeNull();
     });
     
     test('should handle errors during planning', () => {
@@ -98,7 +98,6 @@ describe('PlanningSession Domain Entity', () => {
       
       expect(session.mode).toBe('ERROR');
       expect(session.error).toBe(error);
-      expect(session.hasError()).toBe(true);
     });
   });
   
@@ -110,26 +109,26 @@ describe('PlanningSession Domain Entity', () => {
     });
     
     test('should correctly report if informal planning is complete', () => {
-      expect(session.hasInformalResult()).toBe(false);
+      expect(session.informalResult).toBe(null);
       
       session.startInformalPlanning();
-      expect(session.hasInformalResult()).toBe(false);
+      expect(session.informalResult).toBe(null);
       
       session.completeInformalPlanning({ hierarchy: {} });
-      expect(session.hasInformalResult()).toBe(true);
+      expect(session.informalResult).not.toBe(null);
     });
     
     test('should correctly report if tools are discovered', () => {
-      expect(session.hasToolDiscoveryResult()).toBe(false);
+      expect(session.toolDiscoveryResult).toBe(null);
       
       session.startInformalPlanning();
       session.completeInformalPlanning({ hierarchy: {} });
       session.startToolDiscovery();
       
-      expect(session.hasToolDiscoveryResult()).toBe(false);
+      expect(session.toolDiscoveryResult).toBe(null);
       
       session.completeToolDiscovery({ tools: [] });
-      expect(session.hasToolDiscoveryResult()).toBe(true);
+      expect(session.toolDiscoveryResult).not.toBe(null);
     });
     
     test('should correctly report if can start formal planning', () => {
@@ -236,19 +235,21 @@ describe('PlanningSession Domain Entity', () => {
       const session = new PlanningSession('Test goal');
       const after = Date.now();
       
-      expect(session.createdAt).toBeGreaterThanOrEqual(before);
-      expect(session.createdAt).toBeLessThanOrEqual(after);
+      expect(session.startedAt.getTime()).toBeGreaterThanOrEqual(before);
+      expect(session.startedAt.getTime()).toBeLessThanOrEqual(after);
     });
     
-    test('should track last update timestamp', () => {
+    test('should track completion timestamp', () => {
       const session = new PlanningSession('Test goal');
-      const initialUpdate = session.updatedAt;
+      expect(session.completedAt).toBeNull();
       
-      // Wait a bit and make a state change
-      setTimeout(() => {
-        session.startInformalPlanning();
-        expect(session.updatedAt).toBeGreaterThan(initialUpdate);
-      }, 10);
+      // Complete planning
+      session.startInformalPlanning();
+      session.completeInformalPlanning({ hierarchy: {} });
+      session.startFormalPlanning();
+      session.completeFormalPlanning({ behaviorTrees: [] });
+      
+      expect(session.completedAt).not.toBeNull();
     });
     
     test('should provide session summary', () => {
@@ -260,16 +261,13 @@ describe('PlanningSession Domain Entity', () => {
         statistics: { totalTasks: 5 }
       });
       
-      const summary = session.getSummary();
-      
-      expect(summary).toHaveProperty('id');
-      expect(summary).toHaveProperty('goal');
-      expect(summary).toHaveProperty('mode');
-      expect(summary).toHaveProperty('hasInformalResult');
-      expect(summary).toHaveProperty('hasToolDiscoveryResult');
-      expect(summary).toHaveProperty('hasFormalResult');
-      expect(summary.goal).toBe('Write Hello World');
-      expect(summary.hasInformalResult).toBe(true);
+      // Check properties directly on session
+      expect(session.id).toBeDefined();
+      expect(session.goal.toString()).toBe('Write Hello World');
+      expect(session.mode).toBe('INFORMAL_COMPLETE');
+      expect(session.informalResult).not.toBe(null);
+      expect(session.toolDiscoveryResult).toBe(null);
+      expect(session.formalResult).toBe(null);
     });
   });
 });

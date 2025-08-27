@@ -92,6 +92,8 @@ All json schemas mus be check using the Schema package only, THERE MUST be no us
 all temporary things that should not form part of the project like screenshots or script files or  debugging tests, or tool outputs MUST be put in /tmp or /scratch directories, these are in gitignore and will be cleaned up automatically
 
 
+ONLY the schema package must be used for json validation! now zod or a
+
 ## Testing
 FOR tests there must be NO skipping and NO fallback under any circumstance, they must just FAIL in thoes circumstances.
 
