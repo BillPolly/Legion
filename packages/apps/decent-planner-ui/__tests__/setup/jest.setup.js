@@ -21,9 +21,10 @@ class MockWebSocket {
     this.onerror = null;
     this.onclose = null;
     this.messages = [];
+    this._openTimeout = null;
     
     // Simulate connection
-    setImmediate(() => {
+    this._openTimeout = setImmediate(() => {
       this.readyState = MockWebSocket.OPEN;
       if (this.onopen) this.onopen({ type: 'open' });
     });
@@ -38,6 +39,10 @@ class MockWebSocket {
   
   close(code = 1000, reason = '') {
     this.readyState = MockWebSocket.CLOSED;
+    if (this._openTimeout) {
+      clearImmediate(this._openTimeout);
+      this._openTimeout = null;
+    }
     if (this.onclose) {
       this.onclose({ type: 'close', code, reason });
     }
@@ -92,4 +97,11 @@ beforeAll(() => {
 
 afterAll(() => {
   console.error = originalError;
+});
+
+// Clear all timers after each test to prevent leaks
+afterEach(() => {
+  // Clear all timers and immediates
+  jest.clearAllTimers();
+  jest.useRealTimers();
 });

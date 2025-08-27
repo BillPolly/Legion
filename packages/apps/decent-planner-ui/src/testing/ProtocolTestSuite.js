@@ -4,7 +4,7 @@
  */
 
 import { ProtocolActor } from '../actors/ProtocolActor.js';
-import schema from 'schema';
+// Note: ProtocolActor now uses simplified validation, no external schema needed
 
 export class ProtocolTestSuite {
   /**

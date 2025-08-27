@@ -66,7 +66,7 @@ export default class PictureAnalysisModule extends Module {
       const apiKey = this.resourceManager.get(apiKeyPath);
       
       if (!apiKey) {
-        throw new Error(`API key not found for provider ${provider}. Please set ${apiKeyPath.replace('env.', '')} in your .env file.`);
+        throw new Error(`ANTHROPIC_API_KEY environment variable is required`);
       }
       
       // Import and create LLM client

@@ -82,9 +82,12 @@ export class LSTool extends Tool {
           },
           required: ['path', 'entries', 'total_entries']
         }
-      },
-      execute: async (input) => this.listDirectory(input)
+      }
     });
+  }
+
+  async execute(input) {
+    return await this.listDirectory(input);
   }
 
   /**

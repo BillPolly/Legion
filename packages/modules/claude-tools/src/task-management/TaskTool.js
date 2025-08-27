@@ -95,9 +95,12 @@ export class TaskTool extends Tool {
           },
           required: ['task_id', 'description', 'agent_type', 'result', 'metadata']
         }
-      },
-      execute: async (input) => this.executeTask(input)
+      }
     });
+  }
+
+  async execute(input) {
+    return await this.executeTask(input);
   }
 
   /**

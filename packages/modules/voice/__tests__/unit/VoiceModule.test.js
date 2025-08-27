@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { VoiceModule } from '../../src/VoiceModule.js';
+import VoiceModule from '../../src/VoiceModule.js';
 import { OpenAIVoiceProvider } from '../../src/providers/OpenAIVoiceProvider.js';
 import { TranscribeAudioTool } from '../../src/tools/TranscribeAudioTool.js';
 import { GenerateVoiceTool } from '../../src/tools/GenerateVoiceTool.js';

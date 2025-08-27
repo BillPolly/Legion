@@ -27,6 +27,7 @@ describe('Gmail Send/Receive Integration Tests', () => {
     
     // Initialize Gmail module
     gmailModule = new GmailModule();
+    gmailModule.resourceManager = resourceManager;
     await gmailModule.initialize();
 
     console.log('Gmail integration tests initialized');

@@ -85,9 +85,12 @@ export class MultiEditTool extends Tool {
           },
           required: ['file_path', 'total_edits', 'successful_edits', 'edit_summary']
         }
-      },
-      execute: async (input) => this.multiEditFile(input)
+      }
     });
+  }
+
+  async execute(input) {
+    return await this.multiEditFile(input);
   }
 
   /**

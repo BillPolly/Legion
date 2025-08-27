@@ -3,7 +3,7 @@
  */
 
 import { jest } from '@jest/globals';
-import { ProtocolTestSuite } from '../../../src/testing/ProtocolTestSuite.js';
+// import { ProtocolTestSuite } from '../../../src/testing/ProtocolTestSuite.js'; // Disabled due to schema dependencies
 import ClientPlannerActor from '../../../src/actors/ClientPlannerActor.js';
 
 // Mock DOM dependencies
@@ -232,8 +232,10 @@ describe('ClientPlannerActor Protocol Compliance', () => {
       };
       actor.remoteActor = mockRemoteActor;
       
-      // Mock UI methods to prevent errors
-      actor.updateState = jest.fn();
+      // Mock UI methods to prevent errors, but keep updateState functional
+      actor.updateState = jest.fn((updates) => {
+        Object.assign(actor.state, updates);
+      });
       actor.initializeUI = jest.fn();
       actor.enableToolsTab = jest.fn();
       

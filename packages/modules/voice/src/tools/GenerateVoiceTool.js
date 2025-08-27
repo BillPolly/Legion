@@ -99,108 +99,113 @@ const generateVoiceToolOutputSchema = {
 
 export class GenerateVoiceTool extends Tool {
   constructor(provider) {
-
     super({
       name: 'generate_voice',
       description: 'Convert text to speech audio',
-      inputSchema: generateVoiceToolInputSchema,
-      outputSchema: generateVoiceToolOutputSchema,
-      execute: async (params) => {
-        try {
-          this.progress('Starting text-to-speech generation...', 0, {
-            status: 'Starting text-to-speech generation...'
-          });
-          
-          // Check text length
-          const wordCount = params.text.split(' ').length;
-          const charCount = params.text.length;
-          
-          this.info(`Processing ${wordCount} words (${charCount} characters)`, {
-            data: { wordCount, charCount }
-          });
-          
-          this.progress('Preparing synthesis options...', 20, {
-            status: 'Preparing synthesis options...'
-          });
-          
-          // Prepare synthesis options
-          const options = {
-            voice: params.voice || 'alloy',
-            model: params.model || 'tts-1',
-            speed: params.speed || 1.0,
-            format: params.format || 'mp3'
-          };
-          
-          // Call provider to synthesize
-          this.progress(`Generating speech with ${options.voice} voice...`, 40, {
-            status: `Generating speech with ${options.voice} voice...`
-          });
-          
-          const result = await this.provider.synthesize(params.text, options);
-          
-          this.progress('Processing audio data...', 80, {
-            status: 'Processing audio data...'
-          });
-          
-          // Convert buffer to base64
-          const base64Audio = result.audio.toString('base64');
-          
-          // Save to file if requested
-          let filePath;
-          if (params.outputPath) {
-            this.progress('Saving audio file...', 90, {
-              status: 'Saving audio file...'
-            });
-            
-            try {
-              // Ensure directory exists
-              const dir = path.dirname(params.outputPath);
-              await fs.mkdir(dir, { recursive: true });
-              
-              // Save the audio file
-              await fs.writeFile(params.outputPath, result.audio);
-              filePath = params.outputPath;
-              
-              this.info(`Audio saved to ${params.outputPath}`, {
-                data: { filePath: params.outputPath }
-              });
-            } catch (error) {
-              this.warning(`Failed to save audio file: ${error.message}`, {
-                error: error
-              });
-            }
-          }
-          
-          this.progress('Text-to-speech generation complete', 100, {
-            status: 'Text-to-speech generation complete'
-          });
-          
-          return {
-            audio: base64Audio,
-            format: result.format,
-            voice: result.voice,
-            model: result.model,
-            duration: result.duration,
-            size: result.audio.length,
-            filePath: filePath,
-            provider: result.provider
-          };
-          
-        } catch (error) {
-          this.error(`Speech synthesis failed: ${error.message}`, {
-            error: error
-          });
-          throw error;
-        }
-      },
-      getMetadata: () => ({
-        description: 'Convert text to speech audio',
+      schema: {
         input: generateVoiceToolInputSchema,
         output: generateVoiceToolOutputSchema
-      })
+      }
     });
     
     this.provider = provider;
+  }
+  
+  async execute(params) {
+    try {
+      this.progress('Starting text-to-speech generation...', 0, {
+        status: 'Starting text-to-speech generation...'
+      });
+      
+      // Check text length
+      const wordCount = params.text.split(' ').length;
+      const charCount = params.text.length;
+      
+      this.info(`Processing ${wordCount} words (${charCount} characters)`, {
+        data: { wordCount, charCount }
+      });
+      
+      this.progress('Preparing synthesis options...', 20, {
+        status: 'Preparing synthesis options...'
+      });
+      
+      // Prepare synthesis options
+      const options = {
+        voice: params.voice || 'alloy',
+        model: params.model || 'tts-1',
+        speed: params.speed || 1.0,
+        format: params.format || 'mp3'
+      };
+      
+      // Call provider to synthesize
+      this.progress(`Generating speech with ${options.voice} voice...`, 40, {
+        status: `Generating speech with ${options.voice} voice...`
+      });
+      
+      const result = await this.provider.synthesize(params.text, options);
+      
+      this.progress('Processing audio data...', 80, {
+        status: 'Processing audio data...'
+      });
+      
+      // Convert buffer to base64
+      const base64Audio = result.audio.toString('base64');
+      
+      // Save to file if requested
+      let filePath;
+      if (params.outputPath) {
+        this.progress('Saving audio file...', 90, {
+          status: 'Saving audio file...'
+        });
+        
+        try {
+          // Ensure directory exists
+          const dir = path.dirname(params.outputPath);
+          await fs.mkdir(dir, { recursive: true });
+          
+          // Save the audio file
+          await fs.writeFile(params.outputPath, result.audio);
+          filePath = params.outputPath;
+          
+          this.info(`Audio saved to ${params.outputPath}`, {
+            data: { filePath: params.outputPath }
+          });
+        } catch (error) {
+          this.warning(`Failed to save audio file: ${error.message}`, {
+            error: error
+          });
+        }
+      }
+      
+      this.progress('Text-to-speech generation complete', 100, {
+        status: 'Text-to-speech generation complete'
+      });
+      
+      return {
+        audio: base64Audio,
+        format: result.format,
+        voice: result.voice,
+        model: result.model,
+        duration: result.duration,
+        size: result.audio.length,
+        filePath: filePath,
+        provider: result.provider
+      };
+      
+    } catch (error) {
+      this.error(`Speech synthesis failed: ${error.message}`, {
+        error: error
+      });
+      throw error;
+    }
+  }
+  
+  getMetadata() {
+    return {
+      description: 'Convert text to speech audio',
+      input: generateVoiceToolInputSchema,
+      output: generateVoiceToolOutputSchema
+    };
   }
 
 }

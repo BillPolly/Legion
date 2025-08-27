@@ -45,9 +45,15 @@ export class WriteTool extends Tool {
           },
           required: ['file_path', 'bytes_written', 'created']
         }
-      },
-      execute: async (input) => this.writeFile(input)
+      }
     });
+  }
+
+  /**
+   * Execute the Write tool
+   */
+  async execute(input) {
+    return await this.writeFile(input);
   }
 
   /**

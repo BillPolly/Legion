@@ -649,7 +649,7 @@ export default class ClientPlannerActor extends ProtocolActor {
       executionTree: null,
       executionState: null,
       executionMode: 'step'
-    };
+    });
   }
 
   getProtocol() {

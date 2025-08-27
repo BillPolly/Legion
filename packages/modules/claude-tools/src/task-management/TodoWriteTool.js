@@ -101,12 +101,15 @@ export class TodoWriteTool extends Tool {
           },
           required: ['todos', 'summary', 'message', 'timestamp']
         }
-      },
-      execute: async (input) => this.manageTodos(input)
+      }
     });
     
     // In-memory storage for MVP
     this.todoList = new Map();
+  }
+
+  async execute(input) {
+    return await this.manageTodos(input);
   }
 
   /**

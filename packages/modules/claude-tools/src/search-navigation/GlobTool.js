@@ -78,9 +78,12 @@ export class GlobTool extends Tool {
           },
           required: ['pattern', 'matches', 'total_matches', 'search_time_ms']
         }
-      },
-      execute: async (input) => this.findFiles(input)
+      }
     });
+  }
+
+  async execute(input) {
+    return await this.findFiles(input);
   }
 
   /**

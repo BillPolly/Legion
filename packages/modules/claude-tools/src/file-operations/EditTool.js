@@ -53,9 +53,15 @@ export class EditTool extends Tool {
           },
           required: ['file_path', 'replacements_made', 'preview']
         }
-      },
-      execute: async (input) => this.editFile(input)
+      }
     });
+  }
+
+  /**
+   * Execute the Edit tool
+   */
+  async execute(input) {
+    return await this.editFile(input);
   }
 
   /**

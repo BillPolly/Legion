@@ -64,9 +64,12 @@ export class NotebookEditTool extends Tool {
           },
           required: ['notebook_path', 'cell_modified', 'operation', 'notebook_metadata']
         }
-      },
-      execute: async (input) => this.editNotebook(input)
+      }
     });
+  }
+
+  async execute(input) {
+    return await this.editNotebook(input);
   }
 
   /**

@@ -7,7 +7,7 @@
  * Example: node deploy-from-github.js AgentResults/test-express-railway my-app
  */
 
-import { ResourceManager } from '@legion/tools-registry';
+import { ResourceManager } from '@legion/resource-manager';
 import { RailwayProvider } from '../src/index.js';
 
 const args = process.argv.slice(2);

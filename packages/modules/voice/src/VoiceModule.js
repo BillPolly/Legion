@@ -10,14 +10,23 @@ import { GenerateVoiceTool } from './tools/GenerateVoiceTool.js';
  * a provider architecture. Currently supports OpenAI (Whisper + TTS).
  */
 class VoiceModule extends Module {
-  constructor() {
+  constructor(config = null) {
     super();
     this.name = 'voice';
     this.description = 'Voice services module providing speech-to-text and text-to-speech capabilities';
     this.version = '1.0.0';
     this.resourceManager = null;
     this.provider = null;
-    this.config = {};
+    this.config = config || {};
+    this.tools = [];
+    this.transcribeTool = null;
+    this.generateTool = null;
+    
+    // If config provided directly (for testing), initialize immediately
+    if (config) {
+      this.provider = this.initializeProvider(config);
+      this._createTools();
+    }
   }
 
   /**
@@ -38,6 +47,11 @@ class VoiceModule extends Module {
   async initialize() {
     await super.initialize();
     
+    // If already initialized (direct config), skip
+    if (this.provider) {
+      return this;
+    }
+    
     // Get OpenAI API key from ResourceManager
     const apiKey = this.resourceManager.get('env.OPENAI_API_KEY');
     if (!apiKey) {
@@ -53,14 +67,25 @@ class VoiceModule extends Module {
     this.provider = this.initializeProvider(this.config);
     
     // Create and register tools
-    const transcribeTool = new TranscribeAudioTool(this.provider);
-    const generateTool = new GenerateVoiceTool(this.provider);
-    
-    this.registerTool(transcribeTool.name, transcribeTool);
-    this.registerTool(generateTool.name, generateTool);
+    this._createTools();
     
     console.log(`VoiceModule initialized with ${this.config.provider || 'openai'} provider`);
     return this;
+  }
+  
+  /**
+   * Create and register tools
+   */
+  _createTools() {
+    this.transcribeTool = new TranscribeAudioTool(this.provider);
+    this.generateTool = new GenerateVoiceTool(this.provider);
+    
+    // Store tools in array for compatibility
+    this.tools = [this.transcribeTool, this.generateTool];
+    
+    // Register tools in the Module's tool registry
+    this.registerTool(this.transcribeTool.name, this.transcribeTool);
+    this.registerTool(this.generateTool.name, this.generateTool);
   }
 
   /**
@@ -122,6 +147,13 @@ class VoiceModule extends Module {
     return this.provider.getCapabilities();
   }
 
+  /**
+   * Get tools array for compatibility
+   */
+  getTools() {
+    return this.tools;
+  }
+  
   /**
    * Get module information
    */

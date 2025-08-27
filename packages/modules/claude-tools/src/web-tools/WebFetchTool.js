@@ -83,9 +83,12 @@ export class WebFetchTool extends Tool {
           },
           required: ['prompt', 'content_summary', 'analysis', 'metadata']
         }
-      },
-      execute: async (input) => this.fetchAndProcess(input)
+      }
     });
+  }
+
+  async execute(input) {
+    return await this.fetchAndProcess(input);
   }
 
   /**

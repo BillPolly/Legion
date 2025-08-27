@@ -117,9 +117,12 @@ export class GrepTool extends Tool {
             }
           }
         }
-      },
-      execute: async (input) => this.searchContent(input)
+      }
     });
+  }
+
+  async execute(input) {
+    return await this.searchContent(input);
   }
 
   /**

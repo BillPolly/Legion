@@ -68,9 +68,15 @@ export class ReadTool extends Tool {
           },
           required: ['content', 'file_path', 'size', 'encoding', 'metadata']
         }
-      },
-      execute: async (input) => this.readFile(input)
+      }
     });
+  }
+
+  /**
+   * Execute the Read tool
+   */
+  async execute(input) {
+    return await this.readFile(input);
   }
 
   /**

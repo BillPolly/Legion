@@ -12,33 +12,54 @@ import {
  */
 export class PictureAnalysisTool extends Tool {
   constructor(dependencies = {}) {
+    const inputSchema = {
+      type: 'object',
+      properties: {
+        file_path: {
+          type: 'string',
+          minLength: 1,
+          description: 'File path is required'
+        },
+        prompt: {
+          type: 'string',
+          minLength: 10,
+          maxLength: 2000,
+          description: 'Prompt must be between 10 and 2000 characters'
+        }
+      },
+      required: ['file_path', 'prompt']
+    };
+    
     super({
       name: 'analyse_picture',
       description: 'Analyze images using AI vision models. Accepts image file paths and natural language prompts to provide detailed visual analysis, descriptions, and insights.',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          file_path: {
-            type: 'string',
-            minLength: 1,
-            description: 'File path is required'
-          },
-          prompt: {
-            type: 'string',
-            minLength: 10,
-            maxLength: 2000,
-            description: 'Prompt must be between 10 and 2000 characters'
-          }
-        },
-        required: ['file_path', 'prompt']
-      }
+      inputSchema
     });
+    
+    // Create validator for Legion framework compatibility
+    // Schema validation is handled by the base Tool class
+    
+    // Add event API compatibility for tests
+    this.eventListeners = new Map();
     
     this.llmClient = dependencies.llmClient;
     
     if (!this.llmClient) {
       throw new Error('LLM client is required for PictureAnalysisTool');
     }
+  }
+  
+  // Event API compatibility for tests
+  on(eventName, callback) {
+    if (!this.eventListeners.has(eventName)) {
+      this.eventListeners.set(eventName, []);
+    }
+    this.eventListeners.get(eventName).push(callback);
+  }
+  
+  emit(eventName, ...args) {
+    const listeners = this.eventListeners.get(eventName) || [];
+    listeners.forEach(callback => callback(...args));
   }
 
   async execute(input) {

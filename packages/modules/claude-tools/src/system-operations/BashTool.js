@@ -84,9 +84,12 @@ export class BashTool extends Tool {
           },
           required: ['command', 'exit_code', 'stdout', 'stderr', 'execution_time_ms', 'working_directory', 'timeout_occurred']
         }
-      },
-      execute: async (input) => this.executeCommand(input)
+      }
     });
+  }
+
+  async execute(input) {
+    return await this.executeCommand(input);
   }
 
   /**

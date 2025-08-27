@@ -58,12 +58,15 @@ export class ExitPlanModeTool extends Tool {
           },
           required: ['plan', 'message', 'timestamp', 'metadata']
         }
-      },
-      execute: async (input) => this.exitPlanMode(input)
+      }
     });
     
     // Track planning mode state
     this.isInPlanMode = false;
+  }
+
+  async execute(input) {
+    return await this.exitPlanMode(input);
   }
 
   /**

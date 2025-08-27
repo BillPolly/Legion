@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { ResourceManager } from '@legion/tools-registry';
+import { ResourceManager } from '@legion/resource-manager';
 
 console.log('🚂 COMPLETE RAILWAY DEPLOYMENT STATUS\n');
 

@@ -86,7 +86,6 @@
   "dependencies": {
     "@qdrant/js-client-rest": "^1.15.1",
     "ajv-formats": "^3.0.1",
-    "debug": "^4.3.4",
     "jest-mock": "^30.0.5"
   }
 }

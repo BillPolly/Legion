@@ -22,9 +22,6 @@ describe('ProtocolActor', () => {
   
   describe('Static Methods', () => {
     test('should cache protocol schema validator', () => {
-      // Mock getProtocolSchema
-      ProtocolActor.getProtocolSchema = jest.fn(() => ({ type: 'object' }));
-      
       // Clear any cached validator
       ProtocolActor._validator = null;
       
@@ -32,7 +29,7 @@ describe('ProtocolActor', () => {
       const validator2 = ProtocolActor.getValidator();
       
       expect(validator1).toBe(validator2);
-      expect(mockCreateValidatorFunction).toHaveBeenCalledTimes(1);
+      expect(typeof validator1).toBe('function');
     });
     
     test('should validate protocol structure', () => {
@@ -49,34 +46,20 @@ describe('ProtocolActor', () => {
         }
       };
       
-      // Mock getProtocolSchema to return the schema
-      ProtocolActor.getProtocolSchema = jest.fn(() => ({ type: 'object' }));
-      ProtocolActor._validator = null; // Reset cache
-      
-      mockValidator.mockReturnValue({ valid: true, errors: [] });
-      
       const result = ProtocolActor.validateProtocol(mockProtocol);
       
       expect(result.valid).toBe(true);
-      expect(mockValidator).toHaveBeenCalledWith(mockProtocol);
+      expect(result.errors).toEqual([]);
     });
     
     test('should return validation errors for invalid protocol', () => {
       const invalidProtocol = { invalid: true };
       
-      // Mock getProtocolSchema to return the schema
-      ProtocolActor.getProtocolSchema = jest.fn(() => ({ type: 'object' }));
-      ProtocolActor._validator = null; // Reset cache
-      
-      mockValidator.mockReturnValue({ 
-        valid: false, 
-        errors: ['name is required', 'version is required'] 
-      });
-      
       const result = ProtocolActor.validateProtocol(invalidProtocol);
       
       expect(result.valid).toBe(false);
-      expect(result.errors).toHaveLength(2);
+      expect(result.errors).toHaveLength(1); // Only one error: missing name
+      expect(result.errors[0]).toContain('name');
     });
   });
   
@@ -124,23 +107,25 @@ describe('ProtocolActor', () => {
     });
     
     test('should throw error for invalid protocol', () => {
-      mockValidator.mockReturnValue({ 
-        valid: false, 
-        errors: ['Invalid protocol structure'] 
-      });
+      // Create a test actor with invalid protocol (missing name)
+      class InvalidProtocolActor extends ProtocolActor {
+        getProtocol() {
+          return { invalid: true }; // Missing name and version
+        }
+        handleMessage() {}
+        doSend() {}
+      }
       
       expect(() => {
-        new TestProtocolActor();
-      }).toThrow('Invalid protocol for TestProtocolActor: Invalid protocol structure');
+        new InvalidProtocolActor();
+      }).toThrow('Invalid protocol for InvalidProtocolActor: Protocol must have a name string');
     });
     
     test('should setup message validators', () => {
-      mockValidator.mockReturnValue({ valid: true, errors: [] });
-      
       const actor = new TestProtocolActor();
       
       expect(actor.messageValidators.has('test-message')).toBe(true);
-      expect(mockCreateValidatorFunction).toHaveBeenCalledWith({ data: { type: 'string', required: true } });
+      expect(actor.messageValidators.get('test-message')).toBeInstanceOf(Function);
     });
   });
   

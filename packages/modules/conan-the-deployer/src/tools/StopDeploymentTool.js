@@ -1,6 +1,6 @@
 import { Tool } from '@legion/tools-registry';
 import DeploymentManager from '../DeploymentManager.js';
-import ResourceManager from '../core/ResourceManager.js';
+import { ResourceManager } from '@legion/resource-manager';
 
 /**
  * StopDeploymentTool - Stop running deployments with graceful shutdown options

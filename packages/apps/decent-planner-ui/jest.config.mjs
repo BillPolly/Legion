@@ -42,5 +42,9 @@ export default {
   // Clear mocks between tests
   clearMocks: true,
   resetMocks: true,
-  restoreMocks: true
+  restoreMocks: true,
+  
+  // Force exit to prevent hanging on async operations
+  forceExit: true,
+  detectOpenHandles: true
 };

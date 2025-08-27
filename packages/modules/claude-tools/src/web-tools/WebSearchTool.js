@@ -96,9 +96,12 @@ export class WebSearchTool extends Tool {
           },
           required: ['query', 'results', 'search_metadata']
         }
-      },
-      execute: async (input) => this.searchWeb(input)
+      }
     });
+  }
+
+  async execute(input) {
+    return await this.searchWeb(input);
   }
 
   /**

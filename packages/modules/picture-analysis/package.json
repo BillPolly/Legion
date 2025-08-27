@@ -16,7 +16,8 @@
     "@legion/llm": "file:../llm",
     "@legion/resource-manager": "file:../resource-manager",
     "@legion/tools-registry": "file:../tools-registry",
-    "@legion/schema": "file:../schema"
+    "@legion/schema": "file:../schema",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
