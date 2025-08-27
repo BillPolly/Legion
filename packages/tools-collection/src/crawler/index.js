@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 import puppeteer from 'puppeteer';
 
 class Crawler extends Tool {
@@ -40,31 +40,67 @@ class Crawler extends Tool {
   }
 
   /**
-   * Invokes the crawler with the given tool call
+   * Execute the tool with the given parameters
+   * This is the main entry point for single-function tools
+   */
+  async execute(args) {
+    // Validate required parameters
+    if (!args.url) {
+      throw new Error('Missing required parameter: url', {
+        cause: {
+          errorType: 'validation_error'
+        }
+      });
+    }
+    
+    // Validate empty URL
+    if (args.url.trim() === '') {
+      throw new Error('URL cannot be empty', {
+        cause: {
+          errorType: 'validation_error'
+        }
+      });
+    }
+    
+    // Validate URL format
+    try {
+      new URL(args.url);
+    } catch (e) {
+      throw new Error('Invalid URL format', {
+        cause: {
+          url: args.url,
+          errorType: 'validation_error'
+        }
+      });
+    }
+    
+    try {
+      // Crawl the webpage
+      const result = await this.crawl(args.url, args.waitForSelector, args.limit || 100);
+      
+      // Return result directly
+      return result;
+    } catch (error) {
+      // Throw error with cause
+      throw new Error(error.message || 'Failed to crawl webpage', {
+        cause: {
+          url: args.url,
+          errorType: 'crawl_error',
+          details: error.stack
+        }
+      });
+    }
+  }
+  
+  /**
+   * Legacy invoke method for compatibility
    */
   async invoke(toolCall) {
-    let args;
     try {
-      // Parse the arguments
-      args = this.parseArguments(toolCall.function.arguments);
-      
-      // Validate required parameters
-      this.validateRequiredParameters(args, ['url']);
-      
-      // Crawl the webpage
-      const result = await this.crawl(args.url, args.waitForSelector, args.limit);
-      
-      // Return success response
-      return ToolResult.success(result);
+      const args = this.parseArguments(toolCall.function.arguments);
+      return await this.execute(args);
     } catch (error) {
-      // Return error response
-      return ToolResult.failure(
-        error.message || 'Failed to crawl webpage',
-        {
-          url: args?.url || 'unknown',
-          errorType: 'crawl_error'
-        }
-      );
+      throw error;
     }
   }
 
@@ -165,7 +201,6 @@ class Crawler extends Tool {
       
       return {
         url: url,
-        success: true,
         content: content.text.substring(0, 5000), // Limit text content
         links: content.links,
         images: content.images,
