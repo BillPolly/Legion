@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 import puppeteer from 'puppeteer';
 
 class WebPageToMarkdown extends Tool {
@@ -48,24 +48,42 @@ class WebPageToMarkdown extends Tool {
   }
 
   /**
-   * Invokes the webpage to markdown converter with the given tool call
+   * Execute the tool with the given parameters
+   * This is the main entry point for single-function tools
    */
-  async invoke(toolCall) {
-    let args;
-    try {
-      // Parse the arguments
-      args = this.parseArguments(toolCall.function.arguments);
-      
-      // Validate required parameters
-      this.validateRequiredParameters(args, ['url']);
-      
-      // Emit progress event
-      this.emitProgress(`Starting webpage conversion: ${args.url}`, {
-        url: args.url,
-        includeImages: args.includeImages !== false,
-        includeLinks: args.includeLinks !== false
+  async execute(args) {
+    // Validate required parameters
+    if (!args.url) {
+      throw new Error('Missing required parameter: url', {
+        cause: {
+          errorType: 'validation_error'
+        }
       });
-      
+    }
+    
+    // Validate empty URL
+    if (args.url.trim() === '') {
+      throw new Error('URL cannot be empty', {
+        cause: {
+          errorType: 'validation_error'
+        }
+      });
+    }
+    
+    // Validate URL format
+    try {
+      new URL(args.url);
+    } catch (e) {
+      throw new Error('Invalid URL format', {
+        cause: {
+          url: args.url,
+          errorType: 'validation_error'
+        }
+      });
+    }
+    
+    
+    try {
       // Convert the webpage
       const result = await this.convertToMarkdown(
         args.url,
@@ -75,30 +93,31 @@ class WebPageToMarkdown extends Tool {
         args.waitForSelector
       );
       
-      // Emit success event
-      this.emitInfo(`Successfully converted webpage to markdown`, {
-        url: args.url,
-        markdownLength: result.length,
-        truncated: result.truncated
-      });
       
-      // Return success response
-      return ToolResult.success(result);
+      // Return result directly
+      return result;
     } catch (error) {
-      // Emit error event
-      this.emitError(`Failed to convert webpage: ${error.message}`, {
-        url: args?.url || 'unknown',
-        error: error.message
-      });
       
-      // Return error response
-      return ToolResult.failure(
-        error.message || 'Failed to convert webpage to markdown',
-        {
-          url: args?.url || 'unknown',
-          errorType: 'conversion_error'
+      // Throw error with cause
+      throw new Error(error.message || 'Failed to convert webpage to markdown', {
+        cause: {
+          url: args.url,
+          errorType: 'conversion_error',
+          details: error.stack
         }
-      );
+      });
+    }
+  }
+  
+  /**
+   * Legacy invoke method for compatibility
+   */
+  async invoke(toolCall) {
+    try {
+      const args = this.parseArguments(toolCall.function.arguments);
+      return await this.execute(args);
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -109,10 +128,6 @@ class WebPageToMarkdown extends Tool {
     let browser = null;
     
     try {
-      // Emit progress for browser launch
-      this.emitProgress('Launching browser', {
-        stage: 'browser_launch'
-      });
       
       // Launch browser
       browser = await puppeteer.launch({
@@ -125,11 +140,6 @@ class WebPageToMarkdown extends Tool {
       // Set user agent
       await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
       
-      // Emit progress for navigation
-      this.emitProgress(`Navigating to ${url}`, {
-        stage: 'navigation',
-        url: url
-      });
       
       // Navigate to the page
       const response = await page.goto(url, { 
@@ -138,26 +148,13 @@ class WebPageToMarkdown extends Tool {
       });
       
       if (!response.ok()) {
-        this.emitWarning(`Page returned status ${response.status()}`, {
-          status: response.status(),
-          statusText: response.statusText()
-        });
         throw new Error(`Failed to load page: ${response.status()} ${response.statusText()}`);
       }
       
       // Wait for specific selector if provided
       if (waitForSelector) {
-        this.emitProgress(`Waiting for selector: ${waitForSelector}`, {
-          stage: 'wait_selector',
-          selector: waitForSelector
-        });
         await page.waitForSelector(waitForSelector, { timeout: 10000 });
       }
-      
-      // Emit progress for content extraction
-      this.emitProgress('Extracting and converting content', {
-        stage: 'content_extraction'
-      });
       
       // Extract content and convert to markdown
       const markdown = await page.evaluate((includeImgs, includeAnchors) => {
@@ -272,20 +269,9 @@ class WebPageToMarkdown extends Tool {
       let finalMarkdown = markdown;
       if (markdown.length > maxLength) {
         finalMarkdown = markdown.substring(0, maxLength) + '\n\n... (truncated)';
-        this.emitWarning(`Markdown truncated to ${maxLength} characters`, {
-          originalLength: markdown.length,
-          maxLength: maxLength
-        });
       }
       
-      this.emitInfo(`Conversion complete`, {
-        url: url,
-        markdownLength: finalMarkdown.length,
-        truncated: markdown.length > maxLength
-      });
-      
       return {
-        success: true,
         url: url,
         markdown: finalMarkdown,
         length: finalMarkdown.length,
