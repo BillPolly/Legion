@@ -56,13 +56,13 @@ const bt = {
       type: 'action',
       id: 'write',
       tool: 'writeFile',
-      params: { path: 'test.txt', content: 'Hello World' }
+      inputs: { path: 'test.txt', content: 'Hello World' }
     },
     {
       type: 'action', 
       id: 'verify',
       tool: 'readFile',
-      params: { path: 'test.txt' }
+      inputs: { path: 'test.txt' }
     }
   ]
 };
@@ -85,8 +85,8 @@ The validator automatically converts legacy plan arrays to BT format:
 ```javascript
 // Legacy plan array format
 const legacyPlan = [
-  { id: 'step1', tool: 'writeFile', params: { path: 'test.txt', content: 'data' } },
-  { id: 'step2', tool: 'readFile', params: { path: 'test.txt' } }
+  { id: 'step1', tool: 'writeFile', inputs: { path: 'test.txt', content: 'data' } },
+  { id: 'step2', tool: 'readFile', inputs: { path: 'test.txt' } }
 ];
 
 // Automatically converted to BT structure during validation
@@ -102,8 +102,8 @@ The validator applies intelligent defaults:
 // Minimal BT specification
 const minimalBT = {
   children: [
-    { tool: 'writeFile', params: { path: 'test.txt', content: 'data' } },  // → type: 'action'
-    { tool: 'readFile', params: { path: 'test.txt' } }                     // → type: 'action'
+    { tool: 'writeFile', inputs: { path: 'test.txt', content: 'data' } },  // → type: 'action'
+    { tool: 'readFile', inputs: { path: 'test.txt' } }                     // → type: 'action'
   ]
   // → type: 'sequence' (has children, no type specified)
 };
@@ -174,7 +174,7 @@ Result object containing validation status and details.
   children: [...],                 // For composite nodes (sequence, selector, parallel)
   child: {...},                   // For decorator nodes (retry)
   tool: 'toolName',               // For action nodes
-  params: { ... },                // For action nodes: tool parameters
+  inputs: { ... },                // For action nodes: tool input parameters
   maxRetries: 3,                  // For retry nodes
   timeout: 5000                   // Optional: execution timeout
 }
@@ -248,8 +248,8 @@ const complexBT = {
       id: 'primary',
       description: 'Primary approach',
       children: [
-        { type: 'action', id: 'fetch', tool: 'httpRequest', params: { url: 'https://api.primary.com/data' } },
-        { type: 'action', id: 'process', tool: 'processJson', params: { format: 'csv' } }
+        { type: 'action', id: 'fetch', tool: 'httpRequest', inputs: { url: 'https://api.primary.com/data' } },
+        { type: 'action', id: 'process', tool: 'processJson', inputs: { format: 'csv' } }
       ]
     },
     {
@@ -261,7 +261,7 @@ const complexBT = {
         type: 'action',
         id: 'backup-fetch',
         tool: 'httpRequest',
-        params: { url: 'https://api.backup.com/data' }
+        inputs: { url: 'https://api.backup.com/data' }
       }
     }
   ]
@@ -278,9 +278,9 @@ const parallelBT = {
   id: 'concurrent-tasks',
   description: 'Execute multiple tasks concurrently',
   children: [
-    { type: 'action', id: 'task1', tool: 'processDataA', params: { input: 'dataA' } },
-    { type: 'action', id: 'task2', tool: 'processDataB', params: { input: 'dataB' } },
-    { type: 'action', id: 'task3', tool: 'processDataC', params: { input: 'dataC' } }
+    { type: 'action', id: 'task1', tool: 'processDataA', inputs: { input: 'dataA' } },
+    { type: 'action', id: 'task2', tool: 'processDataB', inputs: { input: 'dataB' } },
+    { type: 'action', id: 'task3', tool: 'processDataC', inputs: { input: 'dataC' } }
   ]
 };
 ```

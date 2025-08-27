@@ -4,7 +4,7 @@
  * Tools only define schemas as plain JSON Schema objects.
  */
 
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 import puppeteer from 'puppeteer';
 
 // Input schema for PageScreenshot
