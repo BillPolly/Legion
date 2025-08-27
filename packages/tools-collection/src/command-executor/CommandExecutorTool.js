@@ -52,13 +52,66 @@ export class CommandExecutor extends Tool {
               type: 'string',
               enum: ['timeout', 'exit_code', 'execution_error', 'dangerous_command'],
               description: 'Type of error that occurred (if any)'
+            },
+            error: {
+              type: 'string',
+              description: 'Error message if execution failed'
             }
           },
           required: ['success', 'command']
         }
-      },
-      execute: async (args) => this.executeCommand(args.command, args.timeout)
+      }
     });
+  }
+
+  getMetadata() {
+    return {
+      name: this.name,
+      description: this.description,
+      inputSchema: this.schema.input,
+      outputSchema: this.schema.output,
+      version: '1.0.0',
+      category: 'system',
+      tags: ['command', 'execution', 'bash'],
+      security: { evaluation: 'restricted' }
+    };
+  }
+
+  validate(params) {
+    const errors = [];
+    const warnings = [];
+    
+    if (!params || typeof params !== 'object') {
+      errors.push('Parameters must be an object');
+      return { valid: false, errors, warnings };
+    }
+    
+    if (params.command === undefined || params.command === null) {
+      errors.push('command is required for execution');
+    }
+    
+    if (params.command !== undefined && typeof params.command !== 'string') {
+      errors.push('command must be a string');
+    }
+    
+    if (params.timeout !== undefined && typeof params.timeout !== 'number') {
+      errors.push('timeout must be a number');
+    }
+    
+    return { valid: errors.length === 0, errors, warnings };
+  }
+
+  async execute(params) {
+    // Validate required parameters
+    if (!params || typeof params !== 'object') {
+      throw new Error('Parameters must be an object');
+    }
+    
+    if (params.command === undefined || params.command === null) {
+      throw new Error('command parameter is required');
+    }
+    
+    return this.executeCommand(params.command, params.timeout);
   }
 
 
@@ -67,7 +120,18 @@ export class CommandExecutor extends Tool {
    */
   async executeCommand(command, timeout = 30000) {
     try {
-      console.log(`Executing command: ${command}`);
+      // Handle empty command
+      if (!command || command.trim() === '') {
+        return {
+          success: true,
+          stdout: '',
+          stderr: '',
+          command: command || '',
+          exitCode: 0
+        };
+      }
+      
+      // Note: Removed console.log for production - use proper logging via ResourceManager
       
       // Security check for truly dangerous commands
       const dangerousPatterns = [
@@ -83,7 +147,7 @@ export class CommandExecutor extends Tool {
       const isDangerous = dangerousPatterns.some(pattern => pattern.test(command));
       
       if (isDangerous) {
-        console.warn('WARNING: Potentially dangerous command detected');
+        // Note: Removed console.warn for production - use proper logging
         return {
           success: false,
           command: command,
@@ -118,7 +182,7 @@ export class CommandExecutor extends Tool {
               error: error.message
             });
           } else {
-            console.log('Command executed successfully');
+            // Note: Removed console.log for production
             
             resolve({
               success: true,

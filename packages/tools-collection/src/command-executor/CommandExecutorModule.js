@@ -10,7 +10,7 @@ import { CommandExecutor } from './CommandExecutorTool.js';
 class CommandExecutorModule extends Module {
   constructor() {
     super();
-    this.name = 'CommandExecutorModule';
+    this.name = 'command-executor';
     this.description = 'Command execution tools for running bash commands';
     this.version = '1.0.0';
   }
