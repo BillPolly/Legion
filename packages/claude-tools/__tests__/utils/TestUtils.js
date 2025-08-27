@@ -83,7 +83,7 @@ export function createMockTool(name, executeFunc) {
   return new Tool({
     name,
     description: `Mock tool: ${name}`,
-    execute: executeFunc || (async (input) => ToolResult.success({ input })),
+    execute: executeFunc || (async (input) => ({ input })),
     getMetadata: () => ({
       name,
       description: `Mock tool: ${name}`,
