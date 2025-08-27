@@ -195,6 +195,9 @@ export class ResourceManager {
         this._resources.set('env', envVars);
       }
       
+      // Ensure required services are running
+      await this._ensureServicesRunning();
+      
       // Mark as initialized
       this.initialized = true;
     } catch (error) {
@@ -424,6 +427,138 @@ export class ResourceManager {
     this.llmClient = llmClient;
 
     return llmClient;
+  }
+
+  /**
+   * Ensure required services are running (Docker, Qdrant, MongoDB)
+   * @private
+   */
+  async _ensureServicesRunning() {
+    const { execSync } = await import('child_process');
+    
+    try {
+      // Check if Docker is running
+      try {
+        execSync('docker ps', { stdio: 'pipe' });
+      } catch (dockerError) {
+        console.log('Docker not running, attempting to start...');
+        
+        // Try to start colima (Docker for Mac)
+        try {
+          execSync('colima start --cpu 2 --memory 2', { 
+            stdio: 'pipe',
+            timeout: 60000 // 1 minute timeout
+          });
+          console.log('Docker started successfully via colima');
+        } catch (colimaError) {
+          // Try docker desktop
+          try {
+            execSync('open -a Docker', { stdio: 'pipe' });
+            // Wait for Docker to be ready
+            let retries = 30;
+            while (retries > 0) {
+              try {
+                execSync('docker ps', { stdio: 'pipe' });
+                console.log('Docker started successfully');
+                break;
+              } catch {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                retries--;
+              }
+            }
+            if (retries === 0) {
+              throw new Error('Docker failed to start in time');
+            }
+          } catch (dockerDesktopError) {
+            console.warn('Warning: Could not start Docker. Some features may not work.');
+            console.warn('Please start Docker manually.');
+          }
+        }
+      }
+      
+      // Check if Qdrant is running
+      const qdrantUrl = this.get('env.QDRANT_URL');
+      if (qdrantUrl) {
+        try {
+          // Check if Qdrant container exists and is running
+          const qdrantStatus = execSync('docker ps --format "{{.Names}}" | grep -i qdrant', { 
+            stdio: 'pipe' 
+          }).toString().trim();
+          
+          if (!qdrantStatus) {
+            // Check if container exists but is stopped
+            const stoppedQdrant = execSync('docker ps -a --format "{{.Names}}" | grep -i qdrant || echo ""', { 
+              stdio: 'pipe' 
+            }).toString().trim();
+            
+            if (stoppedQdrant) {
+              console.log('Starting existing Qdrant container...');
+              execSync(`docker start ${stoppedQdrant.split('\n')[0]}`, { stdio: 'pipe' });
+            } else {
+              // Create and start new Qdrant container
+              console.log('Creating new Qdrant container...');
+              execSync(
+                'docker run -d --name legion-qdrant -p 6333:6333 -p 6334:6334 ' +
+                '-v $(pwd)/qdrant_storage:/qdrant/storage:z qdrant/qdrant:latest',
+                { stdio: 'pipe' }
+              );
+            }
+            
+            // Wait for Qdrant to be ready
+            console.log('Waiting for Qdrant to be ready...');
+            let retries = 10;
+            while (retries > 0) {
+              try {
+                const fetch = (await import('node-fetch')).default;
+                const response = await fetch(`${qdrantUrl}/collections`);
+                if (response.ok) {
+                  console.log('Qdrant is ready');
+                  break;
+                }
+              } catch {
+                // Still starting up
+              }
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              retries--;
+            }
+          }
+        } catch (error) {
+          console.warn('Warning: Could not verify Qdrant status:', error.message);
+        }
+      }
+      
+      // Check if MongoDB is running (if needed)
+      const mongoUrl = this.get('env.MONGODB_URL');
+      if (mongoUrl) {
+        try {
+          // Check if MongoDB container is running
+          const mongoStatus = execSync('docker ps --format "{{.Names}}" | grep -i mongo || echo ""', { 
+            stdio: 'pipe' 
+          }).toString().trim();
+          
+          if (!mongoStatus) {
+            // Check if we should start MongoDB
+            const stoppedMongo = execSync('docker ps -a --format "{{.Names}}" | grep -i mongo || echo ""', { 
+              stdio: 'pipe' 
+            }).toString().trim();
+            
+            if (stoppedMongo) {
+              console.log('Starting existing MongoDB container...');
+              execSync(`docker start ${stoppedMongo.split('\n')[0]}`, { stdio: 'pipe' });
+            }
+            // Note: Not creating new MongoDB container automatically as it may need specific setup
+          }
+        } catch (error) {
+          // MongoDB might be running locally, not in Docker
+          console.log('MongoDB status check skipped (might be running locally)');
+        }
+      }
+      
+    } catch (error) {
+      console.error('Error ensuring services are running:', error.message);
+      // Don't throw - allow ResourceManager to initialize even if services aren't available
+      // Tests should fail appropriately if they need these services
+    }
   }
 }
 

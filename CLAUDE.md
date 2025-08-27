@@ -50,7 +50,6 @@ When running webapp clients and servers prefere the MCP tool as that enables you
 
 
 
-
 ## Project Overview
 
 Legion is a modular framework for building AI agent tools with consistent interfaces. It's organized as a monorepo using npm workspaces with packages for core infrastructure, AI/LLM services, tool collections, and applications.
@@ -86,3 +85,14 @@ Always use TDD methodolgy but without the refactor phase, try and get it right f
 All tests must be passing before moving on to next phase. 
 Always follow uncle Bob's CLEAN architecture principles
 Alwasy follow uncle Bob's CLEAN code principles
+
+All json schemas mus be check using the Schema package only, THERE MUST be no use of zod outside of this package.
+
+
+all temporary things that should not form part of the project like screenshots or script files or  debugging tests, or tool outputs MUST be put in /tmp or /scratch directories, these are in gitignore and will be cleaned up automatically
+
+
+## Testing
+FOR tests there must be NO skipping and NO fallback under any circumstance, they must just FAIL in thoes circumstances.
+
+unless you are speicifically testing their functionality Resource manager and tool registry singletons should be got onece at the beginning of the test suite with no timeout and then just reused.

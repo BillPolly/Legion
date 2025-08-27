@@ -38,8 +38,12 @@ export class DiscoverToolsUseCase {
         feasibleTasks: 0,
         infeasibleTasks: 0,
         totalTools: 0,
+        uniqueToolsCount: 0,
         taskResults: []
       };
+      
+      // Track unique tool names
+      const uniqueTools = new Set();
       
       // Process each SIMPLE task
       for (let i = 0; i < simpleTasks.length; i++) {
@@ -66,6 +70,10 @@ export class DiscoverToolsUseCase {
             const toolsToAdd = discoveryResult.tools.slice(0, this.maxToolsPerTask);
             for (const tool of toolsToAdd) {
               task.addTool(tool);
+              // Track unique tools by name
+              if (tool.name) {
+                uniqueTools.add(tool.name);
+              }
             }
             results.feasibleTasks++;
             results.totalTools += toolsToAdd.length;
@@ -102,6 +110,9 @@ export class DiscoverToolsUseCase {
           });
         }
       }
+      
+      // Set the unique tools count
+      results.uniqueToolsCount = uniqueTools.size;
       
       this.logger.info('Tool discovery completed', results);
       

@@ -56,9 +56,9 @@ describe('Prompt', () => {
       const result = prompt.getInitialPrompt(requirements, tools);
       
       expect(result).toContain('### file_write');
-      expect(result).toContain('- **Description**: Write a file');
+      expect(result).toContain('Description: Write a file');
       expect(result).toContain('### file_read');
-      expect(result).toContain('- **Description**: Read a file');
+      expect(result).toContain('Description: Read a file');
       expect(result).not.toContain('{{TOOLS}}');
     });
 
@@ -82,8 +82,8 @@ describe('Prompt', () => {
       
       expect(result).toContain('file_write');
       expect(result).toContain('Write a file');
-      expect(result).toContain('- **Inputs**:');
-      expect(result).toContain('`path` (string)');
+      expect(result).toContain('Inputs:');
+      expect(result).toContain('path (string)');
     });
 
     it('should handle tools with getMetadata method', () => {

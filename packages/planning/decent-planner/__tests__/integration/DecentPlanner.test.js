@@ -6,16 +6,21 @@
 // Test functions are provided by the test runner as globals
 import { DecentPlanner } from '../../src/DecentPlanner.js';
 import { ResourceManager } from '@legion/resource-manager';
+import { ToolRegistry } from '@legion/tools-registry';
 import { TaskComplexity } from '../../src/domain/value-objects/TaskComplexity.js';
 import { PlanStatus } from '../../src/domain/value-objects/PlanStatus.js';
 
 describe('DecentPlanner Integration Tests', () => {
   let planner;
   let resourceManager;
+  let toolRegistry;
 
   beforeAll(async () => {
-    // Use real ResourceManager and real LLM client
+    // Initialize singletons in beforeAll
     resourceManager = await ResourceManager.getInstance();
+    toolRegistry = await ToolRegistry.getInstance();
+    
+    // Use real ResourceManager and real LLM client
     
     const llmClient = await resourceManager.get('llmClient');
     

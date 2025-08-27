@@ -58,9 +58,9 @@ export class DecentPlanner {
       throw new Error('LLM client is required but not available');
     }
     
-    // Get tool registry
-    const toolRegistryModule = await import('@legion/tools-registry');
-    const toolRegistry = toolRegistryModule.default;
+    // Get tool registry - use the proper singleton instance
+    const { ToolRegistry } = await import('@legion/tools-registry');
+    const toolRegistry = await ToolRegistry.getInstance();
     
     // Create adapters
     const logger = new ConsoleLogger(this.config.logging);

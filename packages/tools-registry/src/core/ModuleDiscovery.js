@@ -9,6 +9,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import fsSync from 'fs';
 import { ModuleLoader } from './ModuleLoader.js';
+import { MetadataManager } from '../verification/MetadataManager.js';
 import { 
   DiscoveryError,
   ModuleValidationError,
@@ -21,11 +22,13 @@ export class ModuleDiscovery {
       verbose: false,
       ignoreDirs: ['node_modules', '.git', 'dist', 'build', 'coverage', '__tests__'],
       modulePattern: /Module\.js$/,  // Files ending with Module.js
+      validateMetadata: true,  // Enable metadata validation
       ...options
     };
     
     this.databaseStorage = options.databaseStorage;
     this.moduleLoader = new ModuleLoader();
+    this.metadataManager = new MetadataManager();
     this.monorepoRoot = this.findMonorepoRoot();
   }
   
@@ -124,6 +127,55 @@ export class ModuleDiscovery {
   }
   
   /**
+   * Discover and validate modules with compliance checking
+   * @returns {Object} Discovery result with modules and validation details
+   */
+  async discoverAndValidate() {
+    const modules = await this.discoverInMonorepo();
+    const results = {
+      discovered: modules.length,
+      validated: [],
+      invalid: [],
+      summary: {
+        total: modules.length,
+        valid: 0,
+        invalid: 0,
+        averageScore: 0,
+        warnings: 0,
+        errors: 0
+      }
+    };
+    
+    let totalScore = 0;
+    
+    for (const module of modules) {
+      const validation = await this.validateModule(module.path);
+      
+      const moduleResult = {
+        ...module,
+        validation
+      };
+      
+      if (validation.valid) {
+        results.validated.push(moduleResult);
+        results.summary.valid++;
+      } else {
+        results.invalid.push(moduleResult);
+        results.summary.invalid++;
+      }
+      
+      totalScore += validation.score;
+      results.summary.warnings += validation.warnings.length;
+      results.summary.errors += validation.errors.length;
+    }
+    
+    results.summary.averageScore = modules.length > 0 ? 
+      Math.round(totalScore / modules.length) : 0;
+    
+    return results;
+  }
+  
+  /**
    * Discover modules in a specific package
    * @param {string} packageName - Package name to search
    * @returns {Array} Array of module information
@@ -152,9 +204,17 @@ export class ModuleDiscovery {
   /**
    * Validate a module file
    * @param {string} modulePath - Path to module file
-   * @returns {boolean} True if valid, false otherwise
+   * @returns {Object} Validation result with score and details
    */
   async validateModule(modulePath) {
+    const result = {
+      valid: false,
+      score: 0,
+      errors: [],
+      warnings: [],
+      metadata: null
+    };
+    
     try {
       // Use the ResourceManager singleton for proper module loading
       if (!this.resourceManager) {
@@ -173,7 +233,38 @@ export class ModuleDiscovery {
         
         // The ModuleLoader already validates the structure
         // If we get here, the module is valid according to the expected interface
-        return true;
+        result.valid = true;
+        result.score = 70; // Base score for loadable module
+        
+        // If metadata validation is enabled, check metadata
+        if (this.options.validateMetadata && moduleInstance) {
+          try {
+            // Try to get module metadata
+            let metadata = null;
+            if (typeof moduleInstance.getMetadata === 'function') {
+              metadata = await moduleInstance.getMetadata();
+            } else if (moduleInstance.metadata) {
+              metadata = moduleInstance.metadata;
+            }
+            
+            if (metadata) {
+              // Validate metadata using MetadataManager
+              const metadataValidation = this.metadataManager.validateModuleMetadata(metadata);
+              result.metadata = metadata;
+              result.score = metadataValidation.score;
+              result.errors.push(...metadataValidation.errors);
+              result.warnings.push(...metadataValidation.warnings);
+              result.valid = metadataValidation.valid && result.valid;
+            } else {
+              result.warnings.push('Module does not provide metadata');
+              result.score = 60;
+            }
+          } catch (metaError) {
+            result.warnings.push(`Could not validate metadata: ${metaError.message}`);
+          }
+        }
+        
+        return result;
         
       } catch (importError) {
         // Try a simpler approach - just check if module can be imported and has expected interface
@@ -185,7 +276,10 @@ export class ModuleDiscovery {
           if (typeof TestClass === 'function') {
             // Check if it has static create method
             if (typeof TestClass.create === 'function') {
-              return true; // Module with async factory pattern
+              result.valid = true;
+              result.score = 50; // Lower score for uninstantiable modules
+              result.warnings.push('Module uses async factory pattern');
+              return result;
             }
             
             // Try to create a temporary instance to check interface
@@ -204,27 +298,35 @@ export class ModuleDiscovery {
               const hasGetTools = typeof testInstance.getTools === 'function';
               const hasListTools = typeof testInstance.listTools === 'function';
               
-              return hasNameGetTools || (hasNameProperty && (hasGetTools || hasListTools));
+              if (hasNameGetTools || (hasNameProperty && (hasGetTools || hasListTools))) {
+                result.valid = true;
+                result.score = 60; // Basic interface compliance
+                return result;
+              } else {
+                result.errors.push('Module does not have required interface methods');
+              }
               
             } catch (constructorError) {
-              // Constructor failed, but module structure might still be valid
-              return false;
+              result.errors.push(`Module constructor failed: ${constructorError.message}`);
             }
+          } else {
+            result.errors.push('Module does not export a class or function');
           }
         } catch (secondError) {
-          // Both approaches failed
+          result.errors.push(`Module import failed: ${importError.message}`);
           if (this.options.verbose) {
             console.log(`Module validation failed for ${modulePath}: ${importError.message}`);
           }
-          return false;
         }
       }
     } catch (error) {
+      result.errors.push(`Could not read module file: ${error.message}`);
       if (this.options.verbose) {
         console.log(`Could not read module file ${modulePath}: ${error.message}`);
       }
-      return false;
     }
+    
+    return result;
   }
   
   /**

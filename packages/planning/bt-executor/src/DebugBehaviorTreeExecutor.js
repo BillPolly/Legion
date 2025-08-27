@@ -543,8 +543,9 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
             
             console.log(`[BT-EXECUTOR] Tool result for ${node.tool || node.config?.tool}:`, result);
             
-            // Handle outputs format ONLY
+            // Handle outputs format OR outputVariable (legacy support)
             const outputs = node.config?.config?.outputs || node.config?.outputs;
+            const outputVariable = node.outputVariable || node.config?.outputVariable;
             
             this.executionContext.artifacts = this.executionContext.artifacts || {};
             
@@ -559,6 +560,10 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
                   console.log(`[BT-EXECUTOR] Mapped data.${outputField} -> ${variableName}:`, result.data[outputField]);
                 }
               }
+            } else if (outputVariable) {
+              // Legacy support: store entire tool result in outputVariable
+              this.executionContext.artifacts[outputVariable] = result;
+              console.log(`[BT-EXECUTOR] Stored entire result in ${outputVariable}:`, result);
             } else {
               console.log(`[BT-EXECUTOR] No outputs mapping specified - not storing artifacts`);
             }

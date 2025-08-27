@@ -166,7 +166,7 @@ describe('Complex Hierarchy Integration', () => {
     // Root BT should reference synthetic tools
     expect(result.rootBT).toBeDefined();
     expect(result.rootBT.type).toBeDefined();
-  }, 60000);
+  }, 120000); // 2 minutes for complex hierarchy with multiple LLM calls
 
   it('should handle mixed SIMPLE and COMPLEX at same level', async () => {
     if (!llmClient) {
@@ -239,7 +239,7 @@ describe('Complex Hierarchy Integration', () => {
     
     // Root BT should exist
     expect(result.rootBT).toBeDefined();
-  }, 60000);
+  }, 120000); // 2 minutes for complex hierarchy with multiple LLM calls
 
   it('should handle deeply nested hierarchy', async () => {
     if (!llmClient) {
@@ -309,7 +309,7 @@ describe('Complex Hierarchy Integration', () => {
     expect(level2Tool.executionPlan).toBeDefined();
     
     expect(result.rootBT).toBeDefined();
-  }, 60000);
+  }, 120000); // 2 minutes for complex hierarchy with multiple LLM calls
 
   it('should handle single SIMPLE root task', async () => {
     if (!llmClient) {

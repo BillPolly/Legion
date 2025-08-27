@@ -9,9 +9,17 @@ describe('Basic Execution', () => {
     // Mock tool registry that just succeeds
     const toolRegistry = {
       getTool: async (name) => ({
+        name: name,
         execute: async (params) => ({ 
           success: true, 
           data: { tool: name, params } 
+        })
+      }),
+      getToolById: async (id) => ({
+        name: id,
+        execute: async (params) => ({ 
+          success: true, 
+          data: { tool: id, params } 
         })
       })
     };
@@ -80,7 +88,12 @@ describe('Basic Execution', () => {
   
   test('step execution works correctly', async () => {
     const toolRegistry = {
-      getTool: async () => ({
+      getTool: async (name) => ({
+        name: name,
+        execute: async () => ({ success: true, data: {} })
+      }),
+      getToolById: async (id) => ({
+        name: id,
         execute: async () => ({ success: true, data: {} })
       })
     };

@@ -17,8 +17,8 @@ describe('AugmentedToolRegistry Integration', () => {
     // NEW API: getInstance() is now async and returns fully initialized instance
     resourceManager = await ResourceManager.getInstance();
     
-    // Create real ToolRegistry and initialize it
-    realRegistry = await ToolRegistry.getInstance();
+    // ToolRegistry default export is already the singleton instance
+    realRegistry = ToolRegistry;
     
     // Create augmented registry
     registry = new AugmentedToolRegistry(realRegistry);

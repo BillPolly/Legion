@@ -27,12 +27,9 @@ if (missingVars.length > 0) {
   console.warn(`   Some tests may be skipped. Check ${envPath}`);
 }
 
-// Set test timeout for live tests
-if (process.env.LIVE_TESTS === 'true') {
-  jest.setTimeout(60000); // 60 seconds for live LLM tests
-} else {
-  jest.setTimeout(10000); // 10 seconds for unit tests
-}
+// Set test timeout - use config value or default to 60 seconds for all tests
+// since many integration tests make real LLM calls
+jest.setTimeout(60000); // 60 seconds default for all tests
 
 // Suppress console.log in tests unless DEBUG is set
 if (process.env.DEBUG !== 'true') {

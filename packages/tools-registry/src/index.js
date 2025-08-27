@@ -11,12 +11,35 @@
 
 import { ToolRegistry } from './integration/ToolRegistry.js';
 
-// Initialize and export the singleton instance
-const toolRegistry = await ToolRegistry.getInstance();
-export default toolRegistry;
+// Export a lazy-loaded singleton getter instead of initializing at import time
+// This prevents initialization issues during testing
+let _toolRegistryInstance = null;
+
+export async function getToolRegistry() {
+  if (!_toolRegistryInstance) {
+    _toolRegistryInstance = await ToolRegistry.getInstance();
+  }
+  return _toolRegistryInstance;
+}
+
+// Default export for backward compatibility
+export default { getToolRegistry };
 
 // Base classes for external modules to extend
 export { Module } from './core/Module.js';
 export { Tool } from './core/Tool.js';
 export { ToolResult } from './core/ToolResult.js';
 export { SimpleEmitter } from './core/SimpleEmitter.js';
+
+// Export ToolRegistry class for tests (not the singleton)
+export { ToolRegistry } from './integration/ToolRegistry.js';
+
+// Verification framework exports
+export { 
+  MetadataManager,
+  ToolValidator,
+  ToolTester,
+  TestRunner,
+  ReportGenerator,
+  AutoFixer 
+} from './verification/index.js';

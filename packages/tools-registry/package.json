@@ -26,7 +26,20 @@
     "clear": "NODE_OPTIONS=--experimental-vm-modules node scripts/clear-database.js",
     "clear:force": "NODE_OPTIONS=--experimental-vm-modules node scripts/clear-database.js --force",
     "clear:all": "NODE_OPTIONS=--experimental-vm-modules node scripts/clear-database.js --include-registry",
-    "clear:all:force": "NODE_OPTIONS=--experimental-vm-modules node scripts/clear-database.js --force --include-registry"
+    "clear:all:force": "NODE_OPTIONS=--experimental-vm-modules node scripts/clear-database.js --force --include-registry",
+    "verify:modules": "NODE_OPTIONS=--experimental-vm-modules node scripts/verify-modules.js",
+    "verify:modules:fix": "NODE_OPTIONS=--experimental-vm-modules node scripts/verify-modules.js --fix",
+    "verify:modules:dry-run": "NODE_OPTIONS=--experimental-vm-modules node scripts/verify-modules.js --fix --dry-run",
+    "test:tools": "NODE_OPTIONS=--experimental-vm-modules node scripts/test-tools.js",
+    "test:tools:performance": "NODE_OPTIONS=--experimental-vm-modules node scripts/test-tools.js --performance",
+    "test:tools:integration": "NODE_OPTIONS=--experimental-vm-modules node scripts/test-tools.js --integration",
+    "test:tools:coverage": "NODE_OPTIONS=--experimental-vm-modules node scripts/test-tools.js --coverage",
+    "report": "NODE_OPTIONS=--experimental-vm-modules node scripts/generate-report.js",
+    "report:html": "NODE_OPTIONS=--experimental-vm-modules node scripts/generate-report.js --format html",
+    "report:all": "NODE_OPTIONS=--experimental-vm-modules node scripts/generate-report.js --format all",
+    "report:history": "NODE_OPTIONS=--experimental-vm-modules node scripts/generate-report.js --history",
+    "verify:complete": "NODE_OPTIONS=--experimental-vm-modules node scripts/generate-report.js --integration",
+    "verify:fix": "NODE_OPTIONS=--experimental-vm-modules node scripts/verify-modules.js --fix && npm run verify:complete"
   },
   "keywords": [
     "legion",
@@ -47,7 +60,8 @@
   "dependencies": {
     "@legion/resource-manager": "*",
     "@legion/storage": "*",
-    "@legion/llm": "*"
+    "@legion/llm": "*",
+    "@legion/schema": "*"
   },
   "engines": {
     "node": ">=18.0.0"

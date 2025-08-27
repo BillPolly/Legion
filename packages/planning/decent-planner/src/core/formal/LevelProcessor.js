@@ -24,8 +24,10 @@ export class LevelProcessor {
     
     for (const node of nodes) {
       try {
-        // Only process SIMPLE nodes
-        if (node.complexity !== 'SIMPLE') {
+        // Process both SIMPLE nodes and COMPLEX nodes with children
+        // COMPLEX nodes with children should become synthetic tools for parent levels
+        if (node.complexity === 'COMPLEX' && (!node.children || node.children.length === 0)) {
+          // Skip COMPLEX nodes without children (they should have been decomposed)
           result.skippedNodes.push(node);
           continue;
         }

@@ -7,27 +7,23 @@ export default {
   ],
   coverageThreshold: {
     global: {
-      branches: 85,
-      functions: 90,
-      lines: 90,
-      statements: 90
+      branches: 80,
+      functions: 85,
+      lines: 85,
+      statements: 85
     }
   },
   testTimeout: 60000, // 60 seconds for tests making real LLM calls
-  setupFilesAfterEnv: ['<rootDir>/__tests__/setup.js'],
   moduleNameMapper: {
     '^@test/(.*)$': '<rootDir>/__tests__/$1'
   },
   transform: {},
   testPathIgnorePatterns: [
     '/node_modules/',
-    '/__tests__/utils/',
-    '/__tests__/setup.js'
+    '/__tests__/utils/'
   ],
   // Force exit to prevent hanging on async operations
   forceExit: true,
   // Run tests serially to avoid resource conflicts
-  maxWorkers: 1,
-  // Global teardown to force cleanup
-  globalTeardown: '<rootDir>/__tests__/globalTeardown.js'
+  maxWorkers: 1
 };

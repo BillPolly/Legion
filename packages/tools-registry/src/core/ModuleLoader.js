@@ -11,6 +11,8 @@ import path from 'path';
 import fs from 'fs/promises';
 import fsSync from 'fs';
 import { pathToFileURL } from 'url';
+import { MetadataManager } from '../verification/MetadataManager.js';
+import { ToolValidator } from '../verification/ToolValidator.js';
 import { 
   ModuleLoadError, 
   ModuleValidationError, 
@@ -21,10 +23,21 @@ import {
 
 export class ModuleLoader {
   constructor(options = {}) {
-    this.options = options;
+    this.options = {
+      validateMetadata: true,
+      validateTools: true,
+      strictMode: false,  // When true, fail on any validation warning
+      ...options
+    };
     this.moduleCache = new Map(); // Cache loaded module instances
     this.monorepoRoot = options.monorepoRoot || this.findMonorepoRoot();
     this.resourceManager = options.resourceManager;
+    
+    // Initialize validators if validation is enabled
+    if (this.options.validateMetadata || this.options.validateTools) {
+      this.metadataManager = new MetadataManager();
+      this.toolValidator = new ToolValidator();
+    }
   }
   
   /**
@@ -166,6 +179,11 @@ export class ModuleLoader {
       
       // Validate the module structure
       this.validateModuleStructure(moduleInstance);
+      
+      // Enhanced validation if enabled
+      if (this.options.validateMetadata) {
+        await this.performEnhancedValidation(moduleInstance, fullPath);
+      }
       
       // Cache the instance
       this.moduleCache.set(fullPath, moduleInstance);
@@ -486,6 +504,124 @@ export class ModuleLoader {
         }
       }
     }
+  }
+  
+  /**
+   * Perform enhanced validation using MetadataManager and ToolValidator
+   * @param {Object} moduleInstance - Module instance to validate
+   * @param {string} modulePath - Path to the module file
+   */
+  async performEnhancedValidation(moduleInstance, modulePath) {
+    const validationResults = {
+      metadata: null,
+      tools: [],
+      overallScore: 0,
+      errors: [],
+      warnings: []
+    };
+    
+    // Validate module metadata
+    try {
+      const metadata = await this.getModuleMetadata(moduleInstance);
+      const metadataValidation = this.metadataManager.validateModuleMetadata(metadata);
+      validationResults.metadata = metadataValidation;
+      
+      if (!metadataValidation.valid && this.options.strictMode) {
+        throw new ModuleValidationError(
+          `Module metadata validation failed for ${modulePath}`,
+          modulePath,
+          metadataValidation.errors
+        );
+      }
+      
+      validationResults.errors.push(...metadataValidation.errors);
+      validationResults.warnings.push(...metadataValidation.warnings);
+      
+    } catch (error) {
+      if (this.options.strictMode) {
+        throw error;
+      }
+      validationResults.warnings.push(`Could not validate metadata: ${error.message}`);
+    }
+    
+    // Validate tools if requested
+    if (this.options.validateTools) {
+      try {
+        const tools = await this.getTools(moduleInstance);
+        
+        for (const tool of tools) {
+          // Validate tool interface and metadata
+          const toolValidation = await this.toolValidator.validateComplete(tool);
+          validationResults.tools.push({
+            name: tool.name,
+            validation: toolValidation
+          });
+          
+          if (!toolValidation.interface.valid && this.options.strictMode) {
+            throw new ToolValidationError(
+              `Tool validation failed for ${tool.name}`,
+              tool.name,
+              toolValidation.interface.errors
+            );
+          }
+          
+          // Aggregate errors and warnings
+          if (toolValidation.interface.errors) {
+            validationResults.errors.push(...toolValidation.interface.errors.map(e => `${tool.name}: ${e}`));
+          }
+          if (toolValidation.recommendations) {
+            validationResults.warnings.push(...toolValidation.recommendations);
+          }
+        }
+      } catch (error) {
+        if (this.options.strictMode) {
+          throw error;
+        }
+        validationResults.warnings.push(`Could not validate tools: ${error.message}`);
+      }
+    }
+    
+    // Calculate overall score
+    let totalScore = 0;
+    let scoreCount = 0;
+    
+    if (validationResults.metadata) {
+      totalScore += validationResults.metadata.score || 0;
+      scoreCount++;
+    }
+    
+    for (const toolResult of validationResults.tools) {
+      if (toolResult.validation && toolResult.validation.combinedScore !== undefined) {
+        totalScore += toolResult.validation.combinedScore;
+        scoreCount++;
+      }
+    }
+    
+    validationResults.overallScore = scoreCount > 0 ? Math.round(totalScore / scoreCount) : 0;
+    
+    // Log warnings in verbose mode
+    if (this.options.verbose && validationResults.warnings.length > 0) {
+      console.log(`Validation warnings for ${modulePath}:`);
+      validationResults.warnings.forEach(w => console.log(`  - ${w}`));
+    }
+    
+    // Store validation results on the module instance for later retrieval
+    moduleInstance.__validationResults = validationResults;
+    
+    return validationResults;
+  }
+  
+  /**
+   * Get validation results for a cached module
+   * @param {string} modulePath - Path to the module
+   * @returns {Object|null} Validation results if available
+   */
+  getValidationResults(modulePath) {
+    const fullPath = path.isAbsolute(modulePath) ? 
+      modulePath : path.resolve(this.monorepoRoot, modulePath);
+    
+    const moduleInstance = this.moduleCache.get(fullPath);
+    return moduleInstance ? moduleInstance.__validationResults : null;
   }
   
   /**

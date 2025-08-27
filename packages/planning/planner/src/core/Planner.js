@@ -154,10 +154,12 @@ export class Planner {
       console.log(`[DEBUG] Prompt saved to: ${promptFile}`);
     }
     
-    // Add debug prompt logging
-    console.log('\n=== FULL PROMPT SENT TO LLM ===');
-    console.log(prompt);
-    console.log('=== END PROMPT ===\n');
+    // Add debug prompt logging (only if debug option is enabled)
+    if (options.debug) {
+      console.log('\n=== FULL PROMPT SENT TO LLM ===');
+      console.log(prompt);
+      console.log('=== END PROMPT ===\n');
+    }
     
     // Merge LLM options with any overrides
     const llmOptions = {
@@ -165,7 +167,7 @@ export class Planner {
       ...(options.llmOptions || {})
     };
     
-    const response = await this.llmClient.complete(prompt, llmOptions.maxTokens);
+    const response = await this.llmClient.complete(prompt, llmOptions);
     
     // Save response to file for debugging
     if (options.saveDebugFiles) {
@@ -179,10 +181,12 @@ export class Planner {
       console.log(`[DEBUG] Response saved to: ${responseFile}`);
     }
     
-    // Always log the full response during debugging
-    console.log('\n=== FULL LLM RESPONSE ===');
-    console.log(response);
-    console.log('=== END LLM RESPONSE ===\n');
+    // Always log the full response during debugging (only if debug option is enabled)
+    if (options.debug) {
+      console.log('\n=== FULL LLM RESPONSE ===');
+      console.log(response);
+      console.log('=== END LLM RESPONSE ===\n');
+    }
     
     if (options.debugResponse) {
       console.log('[Planner] LLM response:', response.substring(0, 500) + '...');
@@ -209,7 +213,7 @@ export class Planner {
       ...(options.llmOptions || {})
     };
     
-    const response = await this.llmClient.complete(prompt, llmOptions.maxTokens);
+    const response = await this.llmClient.complete(prompt, llmOptions);
     
     if (options.debugResponse) {
       console.log('[Planner] Fix response:', response.substring(0, 500) + '...');

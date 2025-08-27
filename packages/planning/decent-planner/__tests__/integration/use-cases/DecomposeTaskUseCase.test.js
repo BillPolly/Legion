@@ -17,11 +17,11 @@ describe('DecomposeTaskUseCase Integration', () => {
   let useCase;
   let taskRepository;
   let llmClient;
+  let resourceManager;
   
   beforeAll(async () => {
-    // NEW API: getInstance() is now async and returns fully initialized instance
-    // No need to call initialize() separately anymore
-    const resourceManager = await ResourceManager.getInstance();
+    // Initialize singleton in beforeAll
+    resourceManager = await ResourceManager.getInstance();
     llmClient = await resourceManager.get('llmClient');
     
     if (!llmClient) {
@@ -90,7 +90,7 @@ describe('DecomposeTaskUseCase Integration', () => {
       expect(result.data.task.hasSubtasks()).toBe(true);
       expect(result.data.task.getSubtaskCount()).toBeGreaterThanOrEqual(2);
       expect(result.data.task.getSubtaskCount()).toBeLessThanOrEqual(8);
-    });
+    }, 30000);
     
     it('should recursively decompose nested complex tasks', async () => {
       const task = new Task({
@@ -106,7 +106,7 @@ describe('DecomposeTaskUseCase Integration', () => {
       expect(result.data.statistics.totalTasks).toBeGreaterThan(1);
       expect(result.data.statistics.maxDepth).toBeGreaterThanOrEqual(1);
       expect(result.data.statistics.simpleTasks).toBeGreaterThan(0);
-    });
+    }, 30000);
   });
   
   describe('depth limiting', () => {
@@ -179,7 +179,7 @@ describe('DecomposeTaskUseCase Integration', () => {
       expect(result.success).toBe(true);
       expect(result.data.validation.valid).toBe(true);
       expect(result.data.validation.errors).toEqual([]);
-    });
+    }, 30000);
   });
   
   describe('error handling', () => {
@@ -211,7 +211,7 @@ describe('DecomposeTaskUseCase Integration', () => {
       expect(result.success).toBe(true);
       // Context should influence decomposition
       expect(result.data.task).toBeDefined();
-    });
+    }, 30000);
   });
   
   describe('inputs and outputs', () => {
@@ -227,6 +227,6 @@ describe('DecomposeTaskUseCase Integration', () => {
       expect(result.success).toBe(true);
       expect(result.data.task.inputs).toEqual(['csv_file', 'report_template']);
       expect(result.data.task.outputs).toEqual(['report_pdf', 'summary_json']);
-    });
+    }, 30000);
   });
 });

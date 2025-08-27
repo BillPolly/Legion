@@ -1,0 +1,576 @@
+{
+  "timestamp": "2025-08-27T08:19:00.341Z",
+  "duration": 0,
+  "environment": {
+    "nodeVersion": "v22.17.1",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "summary": {
+    "totalModules": 27,
+    "totalTools": 92,
+    "complianceScore": 39,
+    "testCoverage": 0,
+    "successRate": 0,
+    "criticalIssues": 4,
+    "warnings": 51,
+    "performance": {
+      "avgExecutionTime": 0,
+      "avgMemoryUsage": 0
+    }
+  },
+  "modules": [
+    {
+      "name": "ClaudeToolsModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/claude-tools/src/ClaudeToolsModule.js",
+      "packageName": "claude-tools",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.344Z"
+    },
+    {
+      "name": "FileOperationsModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/claude-tools/src/file-operations/FileOperationsModule.js",
+      "packageName": "claude-tools",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.344Z"
+    },
+    {
+      "name": "SearchNavigationModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/claude-tools/src/search-navigation/SearchNavigationModule.js",
+      "packageName": "claude-tools",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.344Z"
+    },
+    {
+      "name": "SystemOperationsModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/claude-tools/src/system-operations/SystemOperationsModule.js",
+      "packageName": "claude-tools",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.344Z"
+    },
+    {
+      "name": "TaskManagementModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/claude-tools/src/task-management/TaskManagementModule.js",
+      "packageName": "claude-tools",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.344Z"
+    },
+    {
+      "name": "WebToolsModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/claude-tools/src/web-tools/WebToolsModule.js",
+      "packageName": "claude-tools",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.344Z"
+    },
+    {
+      "name": "CodeAnalysisModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/code-gen/code-analysis/src/CodeAnalysisModule.js",
+      "packageName": "code-gen",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.346Z"
+    },
+    {
+      "name": "JesterModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/code-gen/jester/src/JesterModule.js",
+      "packageName": "code-gen",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.346Z"
+    },
+    {
+      "name": "JSGeneratorModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/code-gen/js-generator/src/JSGeneratorModule.js",
+      "packageName": "code-gen",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.346Z"
+    },
+    {
+      "name": "GmailModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/gmail/src/GmailModule.js",
+      "packageName": "gmail",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.351Z"
+    },
+    {
+      "name": "MongoQueryModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/mongo-query/src/MongoQueryModule.js",
+      "packageName": "mongo-query",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.351Z"
+    },
+    {
+      "name": "NodeRunnerModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/node-runner/src/NodeRunnerModule.js",
+      "packageName": "node-runner",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.352Z"
+    },
+    {
+      "name": "PictureAnalysisModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/picture-analysis/src/PictureAnalysisModule.js",
+      "packageName": "picture-analysis",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.352Z"
+    },
+    {
+      "name": "RailwayModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/railway/src/RailwayModule.js",
+      "packageName": "railway",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.354Z"
+    },
+    {
+      "name": "SDModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/sd/src/SDModule.js",
+      "packageName": "sd",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.354Z"
+    },
+    {
+      "name": "AIGenerationModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/tools-collection/src/ai-generation/AIGenerationModule.js",
+      "packageName": "tools-collection",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.356Z"
+    },
+    {
+      "name": "CalculatorModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/tools-collection/src/calculator/CalculatorModule.js",
+      "packageName": "tools-collection",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.356Z"
+    },
+    {
+      "name": "CommandExecutorModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/tools-collection/src/command-executor/CommandExecutorModule.js",
+      "packageName": "tools-collection",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.356Z"
+    },
+    {
+      "name": "EncodeModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/tools-collection/src/encode/EncodeModule.js",
+      "packageName": "tools-collection",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.356Z"
+    },
+    {
+      "name": "FileModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/tools-collection/src/file/FileModule.js",
+      "packageName": "tools-collection",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.356Z"
+    },
+    {
+      "name": "FileAnalysisModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/tools-collection/src/file-analysis/FileAnalysisModule.js",
+      "packageName": "tools-collection",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.356Z"
+    },
+    {
+      "name": "GitHubModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/tools-collection/src/github/GitHubModule.js",
+      "packageName": "tools-collection",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.356Z"
+    },
+    {
+      "name": "JsonModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/tools-collection/src/json/JsonModule.js",
+      "packageName": "tools-collection",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.356Z"
+    },
+    {
+      "name": "SerperModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/tools-collection/src/serper/SerperModule.js",
+      "packageName": "tools-collection",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.356Z"
+    },
+    {
+      "name": "ServerStarterModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/tools-collection/src/server-starter/ServerStarterModule.js",
+      "packageName": "tools-collection",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.356Z"
+    },
+    {
+      "name": "SystemModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/tools-collection/src/system/SystemModule.js",
+      "packageName": "tools-collection",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.356Z"
+    },
+    {
+      "name": "VoiceModule",
+      "path": "/Users/williampearson/Documents/p/agents/Legion/packages/voice/src/VoiceModule.js",
+      "packageName": "voice",
+      "status": "discovered",
+      "discoveredAt": "2025-08-27T08:19:00.357Z"
+    }
+  ],
+  "validation": {
+    "summary": {
+      "totalModules": 27,
+      "validModules": 23,
+      "totalTools": 92,
+      "validTools": 0,
+      "averageModuleScore": 77.5925925925926,
+      "averageToolScore": 0
+    },
+    "modules": [
+      {
+        "name": "ClaudeToolsModule",
+        "score": 80,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "good"
+      },
+      {
+        "name": "FileOperationsModule",
+        "score": 80,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "good"
+      },
+      {
+        "name": "SearchNavigationModule",
+        "score": 80,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "good"
+      },
+      {
+        "name": "SystemOperationsModule",
+        "score": 80,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "good"
+      },
+      {
+        "name": "TaskManagementModule",
+        "score": 80,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "good"
+      },
+      {
+        "name": "WebToolsModule",
+        "score": 80,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "good"
+      },
+      {
+        "name": "CodeAnalysisModule",
+        "score": 85,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)"
+        ],
+        "status": "good"
+      },
+      {
+        "name": "JesterModule",
+        "score": 85,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)"
+        ],
+        "status": "good"
+      },
+      {
+        "name": "JSGeneratorModule",
+        "score": 85,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)"
+        ],
+        "status": "good"
+      },
+      {
+        "name": "GmailModule",
+        "score": 80,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "good"
+      },
+      {
+        "name": "MongoQueryModule",
+        "score": 80,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "good"
+      },
+      {
+        "name": "NodeRunnerModule",
+        "score": 80,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "good"
+      },
+      {
+        "name": "PictureAnalysisModule",
+        "score": 80,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "good"
+      },
+      {
+        "name": "RailwayModule",
+        "score": 80,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "good"
+      },
+      {
+        "name": "SDModule",
+        "score": 80,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "good"
+      },
+      {
+        "name": "AIGenerationModule",
+        "score": 60,
+        "valid": false,
+        "errors": [
+          {
+            "path": "name",
+            "message": "Invalid",
+            "code": "invalid_string"
+          }
+        ],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "fair"
+      },
+      {
+        "name": "CalculatorModule",
+        "score": 80,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "good"
+      },
+      {
+        "name": "CommandExecutorModule",
+        "score": 60,
+        "valid": false,
+        "errors": [
+          {
+            "path": "name",
+            "message": "Invalid",
+            "code": "invalid_string"
+          }
+        ],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "fair"
+      },
+      {
+        "name": "EncodeModule",
+        "score": 80,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "good"
+      },
+      {
+        "name": "FileModule",
+        "score": 80,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "good"
+      },
+      {
+        "name": "FileAnalysisModule",
+        "score": 60,
+        "valid": false,
+        "errors": [
+          {
+            "path": "name",
+            "message": "Invalid",
+            "code": "invalid_string"
+          }
+        ],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "fair"
+      },
+      {
+        "name": "GitHubModule",
+        "score": 80,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "good"
+      },
+      {
+        "name": "JsonModule",
+        "score": 80,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "good"
+      },
+      {
+        "name": "SerperModule",
+        "score": 60,
+        "valid": false,
+        "errors": [
+          {
+            "path": "name",
+            "message": "Invalid",
+            "code": "invalid_string"
+          }
+        ],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "fair"
+      },
+      {
+        "name": "ServerStarterModule",
+        "score": 80,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "good"
+      },
+      {
+        "name": "SystemModule",
+        "score": 80,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "good"
+      },
+      {
+        "name": "VoiceModule",
+        "score": 80,
+        "valid": true,
+        "errors": [],
+        "warnings": [
+          "Too few keywords (recommended: 3+ keywords)",
+          "Missing author information"
+        ],
+        "status": "good"
+      }
+    ],
+    "tools": []
+  },
+  "tests": null,
+  "integration": null,
+  "recommendations": [
+    {
+      "priority": "critical",
+      "category": "compliance",
+      "issue": "Overall compliance score is 39%",
+      "solution": "Review and fix metadata issues in modules and tools",
+      "autoFixable": true
+    },
+    {
+      "priority": "critical",
+      "category": "validation",
+      "issue": "4 critical validation issues found",
+      "solution": "Address validation errors immediately",
+      "autoFixable": false
+    },
+    {
+      "priority": "high",
+      "category": "testing",
+      "issue": "Test success rate is only 0%",
+      "solution": "Fix failing tests and improve error handling",
+      "autoFixable": false
+    },
+    {
+      "priority": "medium",
+      "category": "coverage",
+      "issue": "Test coverage is 0%",
+      "solution": "Add more test cases for uncovered tools",
+      "autoFixable": true
+    }
+  ]
+}

@@ -5,16 +5,21 @@
 
 import { DecentPlanner } from '../../src/DecentPlanner.js';
 import { ResourceManager } from '@legion/resource-manager';
+import { ToolRegistry } from '@legion/tools-registry';
 
 describe('Tool Schema Debug', () => {
   let decentPlanner;
   let resourceManager;
+  let toolRegistry;
 
   beforeAll(async () => {
-    // NEW API: getInstance() is now async and returns fully initialized instance
-    // No need to call initialize() separately anymore
+    // Get singletons once in beforeAll with proper timeout
+    console.log('Initializing ResourceManager...');
     resourceManager = await ResourceManager.getInstance();
-    
+    console.log('Initializing ToolRegistry...');
+    toolRegistry = await ToolRegistry.getInstance();
+    console.log('Both singletons initialized');
+
     // Create planner with configuration
     decentPlanner = new DecentPlanner({
       maxDepth: 3,
@@ -22,7 +27,7 @@ describe('Tool Schema Debug', () => {
       enableFormalPlanning: true
     });
     await decentPlanner.initialize();
-  });
+  }, 120000); // 2 minute timeout for initialization
 
   test('Simple hook into formal planner to see tools', async () => {
     const goal = "please write a hello world program in javascript";

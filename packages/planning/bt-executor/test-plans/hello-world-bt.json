@@ -1,0 +1,29 @@
+{
+  "type": "sequence",
+  "id": "root",
+  "description": "Write hello world to file and run it",
+  "children": [
+    {
+      "type": "action",
+      "id": "write-hello-world",
+      "tool": "file_write",
+      "description": "Write hello world JavaScript file",
+      "inputs": {
+        "filepath": "hello.js",
+        "content": "console.log('Hello, World!');"
+      },
+      "outputs": {
+        "filepath": "created_file_path"
+      }
+    },
+    {
+      "type": "action", 
+      "id": "run-hello-world",
+      "tool": "node_run",
+      "description": "Execute the hello world script",
+      "inputs": {
+        "filepath": "context.artifacts['created_file_path']"
+      }
+    }
+  ]
+}
