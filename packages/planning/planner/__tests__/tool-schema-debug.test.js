@@ -2,13 +2,13 @@
  * Test to debug what tool schemas are returned from the registry
  */
 
-import { ToolRegistry } from '@legion/tools-registry/src/integration/ToolRegistry.js';
+import { getToolRegistry } from '@legion/tools-registry';
 
 describe('Tool Schema Debug', () => {
   let toolRegistry;
   
   beforeAll(async () => {
-    toolRegistry = await ToolRegistry.getInstance();
+    toolRegistry = await getToolRegistry();
   });
   
   test('should check if tools are available in registry', async () => {

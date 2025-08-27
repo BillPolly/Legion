@@ -11,7 +11,7 @@
  */
 
 import { ResourceManager } from '@legion/resource-manager';
-import { ToolRegistry } from '@legion/tools-registry';
+import { getToolRegistry } from '@legion/tools-registry';
 import { ToolFeasibilityChecker } from '../src/core/informal/ToolFeasibilityChecker.js';
 import { Anthropic } from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
@@ -84,19 +84,7 @@ async function processTaskWithJudgment(taskDescription) {
         
         // Initialize ToolRegistry
         console.log('  Initializing ToolRegistry...');
-        const toolRegistry = await resourceManager.getOrInitialize('toolRegistry', async () => {
-            const provider = await resourceManager.getOrInitialize('toolRegistryProvider', async () => {
-                const { MongoDBToolRegistryProvider } = await import('@legion/tools-registry/src/providers/MongoDBToolRegistryProvider.js');
-                return await MongoDBToolRegistryProvider.create(
-                    resourceManager,
-                    { enableSemanticSearch: true }
-                );
-            });
-            
-            const registry = new ToolRegistry({ provider });
-            await registry.initialize();
-            return registry;
-        });
+        const toolRegistry = await getToolRegistry();
         
         // Create ToolFeasibilityChecker with instrumentation
         const checker = new ToolFeasibilityChecker(toolRegistry, llmClient);

@@ -155,14 +155,15 @@ describe('TaskTool', () => {
 
       expect(metadata.name).toBe('Task');
       expect(metadata.description).toBe('Launch a new agent to handle complex, multi-step tasks autonomously');
-      expect(metadata.input).toBeDefined();
-      expect(metadata.input.description).toBeDefined();
-      expect(metadata.input.description.required).toBe(true);
-      expect(metadata.input.prompt).toBeDefined();
-      expect(metadata.input.subagent_type).toBeDefined();
-      expect(metadata.input.subagent_type.enum).toBeInstanceOf(Array);
-      expect(metadata.output).toBeDefined();
-      expect(metadata.output.task_id).toBeDefined();
+      expect(metadata.inputSchema).toBeDefined();
+      expect(metadata.inputSchema.properties).toBeDefined();
+      expect(metadata.inputSchema.properties.description).toBeDefined();
+      expect(metadata.inputSchema.required).toContain('description');
+      expect(metadata.inputSchema.properties.prompt).toBeDefined();
+      expect(metadata.inputSchema.properties.subagent_type).toBeDefined();
+      expect(metadata.inputSchema.properties.subagent_type.enum).toBeInstanceOf(Array);
+      expect(metadata.outputSchema).toBeDefined();
+      expect(metadata.outputSchema.properties.task_id).toBeDefined();
     });
   });
 });

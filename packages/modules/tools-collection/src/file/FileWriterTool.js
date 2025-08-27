@@ -66,6 +66,16 @@ class FileWriterTool extends Tool {
     try {
       let { filePath, content, append = false } = args;
       
+      // Validate that content is provided
+      if (content === undefined || content === null) {
+        throw new Error('Content parameter is required', {
+          cause: {
+            filePath: String(filePath),
+            errorType: 'invalid_input'
+          }
+        });
+      }
+
       // Convert content to string if needed (handles objects like package.json)
       if (typeof content !== 'string') {
         content = typeof content === 'object' ? JSON.stringify(content, null, 2) : String(content);

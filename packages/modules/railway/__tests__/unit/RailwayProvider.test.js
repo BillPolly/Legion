@@ -89,9 +89,9 @@ describe('RailwayProvider', () => {
     it('should make successful GraphQL request', async () => {
       const mockResponse = {
         ok: true,
-        json: jest.fn().mockResolvedValue({
+        text: jest.fn().mockResolvedValue(JSON.stringify({
           data: { test: 'result' }
-        })
+        }))
       };
       fetch.mockResolvedValue(mockResponse);
 
@@ -116,7 +116,8 @@ describe('RailwayProvider', () => {
       const mockResponse = {
         ok: false,
         status: 401,
-        statusText: 'Unauthorized'
+        statusText: 'Unauthorized',
+        text: jest.fn().mockResolvedValue('Unauthorized')
       };
       fetch.mockResolvedValue(mockResponse);
 
@@ -129,9 +130,9 @@ describe('RailwayProvider', () => {
     it('should handle GraphQL errors', async () => {
       const mockResponse = {
         ok: true,
-        json: jest.fn().mockResolvedValue({
+        text: jest.fn().mockResolvedValue(JSON.stringify({
           errors: [{ message: 'GraphQL error occurred' }]
-        })
+        }))
       };
       fetch.mockResolvedValue(mockResponse);
 
@@ -162,7 +163,7 @@ describe('RailwayProvider', () => {
 
       fetch.mockResolvedValue({
         ok: true,
-        json: jest.fn().mockResolvedValue({ data: mockProjects })
+        text: jest.fn().mockResolvedValue(JSON.stringify({ data: mockProjects }))
       });
 
       const result = await provider.listProjects();

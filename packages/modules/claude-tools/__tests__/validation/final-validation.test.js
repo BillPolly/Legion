@@ -14,7 +14,7 @@ describe('Final Validation - All Tools Working', () => {
   let testDir;
 
   beforeEach(async () => {
-    resourceManager = ResourceManager.getInstance();
+    resourceManager = await ResourceManager.getInstance();
     module = await ClaudeToolsModule.create(resourceManager);
     
     testDir = path.join(os.tmpdir(), `validation-${Date.now()}`);
@@ -55,8 +55,8 @@ describe('Final Validation - All Tools Working', () => {
       
       const metadata = tool.getMetadata();
       expect(metadata.name).toBe(toolName);
-      expect(metadata.input).toBeDefined();
-      expect(metadata.output).toBeDefined();
+      expect(metadata.inputSchema).toBeDefined();
+      expect(metadata.outputSchema).toBeDefined();
     }
   });
 

@@ -15,20 +15,27 @@ import { ListSessionsTool } from './tools/ListSessionsTool.js';
 import { ServerHealthTool } from './tools/ServerHealthTool.js';
 
 class NodeRunnerModule extends Module {
-  constructor() {
+  constructor(dependencies = {}) {
     super();
     this.name = 'node-runner';
     this.description = 'Node.js process management and logging tools';
     this.version = '1.0.0';
     
-    this.processManager = null;
-    this.serverManager = null;
-    this.packageManager = null;
-    this.logStorage = null;
-    this.logSearch = null;
-    this.sessionManager = null;
-    this.frontendInjector = null;
-    this.webSocketServer = null;
+    // Accept injected dependencies for testing, or initialize as null
+    this.processManager = dependencies.processManager || null;
+    this.serverManager = dependencies.serverManager || null;
+    this.packageManager = dependencies.packageManager || null;
+    this.logStorage = dependencies.logStorage || null;
+    this.logSearch = dependencies.logSearch || null;
+    this.sessionManager = dependencies.sessionManager || null;
+    this.frontendInjector = dependencies.frontendInjector || null;
+    this.webSocketServer = dependencies.webSocketServer || null;
+    
+    // If dependencies are provided, mark as initialized for testing
+    if (Object.keys(dependencies).length > 0) {
+      this.initialized = true;
+      this.initializeTools();
+    }
   }
 
   static async create(resourceManager) {
@@ -41,16 +48,29 @@ class NodeRunnerModule extends Module {
   async initialize() {
     await super.initialize();
     
-    // Get providers from ResourceManager if available
-    const StorageProvider = this.resourceManager?.get('StorageProvider') || null;
-    const SemanticSearchProvider = this.resourceManager?.get('SemanticSearchProvider') || null;
-    
-    // Create core components
-    this.logStorage = new LogStorage(StorageProvider);
-    this.sessionManager = new SessionManager(StorageProvider);
-    this.processManager = new ProcessManager(this.logStorage, this.sessionManager);
-    this.serverManager = new ServerManager(this.processManager, this.logStorage);
-    this.logSearch = new LogSearch(SemanticSearchProvider, this.logStorage);
+    // Only create components if they weren't injected
+    if (!this.logStorage || !this.sessionManager || !this.processManager) {
+      // Get providers from ResourceManager if available
+      const StorageProvider = this.resourceManager?.get('StorageProvider') || null;
+      const SemanticSearchProvider = this.resourceManager?.get('SemanticSearchProvider') || null;
+      
+      // Create core components if not injected
+      if (!this.logStorage) {
+        this.logStorage = new LogStorage(StorageProvider);
+      }
+      if (!this.sessionManager) {
+        this.sessionManager = new SessionManager(StorageProvider);
+      }
+      if (!this.processManager) {
+        this.processManager = new ProcessManager(this.logStorage, this.sessionManager);
+      }
+      if (!this.serverManager) {
+        this.serverManager = new ServerManager(this.processManager, this.logStorage);
+      }
+      if (!this.logSearch) {
+        this.logSearch = new LogSearch(SemanticSearchProvider, this.logStorage);
+      }
+    }
     
     // Initialize tools
     this.initializeTools();

@@ -2,7 +2,7 @@
  * Test that verifies tools passed to planner have inputSchema
  */
 
-import { ToolRegistry } from '@legion/tools-registry/src/integration/ToolRegistry.js';
+import { getToolRegistry } from '@legion/tools-registry';
 import { Planner } from '../src/core/Planner.js';
 import { LLMClient } from '@legion/llm';
 
@@ -12,7 +12,7 @@ describe('Planner InputSchema Fix', () => {
   let planner;
   
   beforeAll(async () => {
-    toolRegistry = await ToolRegistry.getInstance();
+    toolRegistry = await getToolRegistry();
     
     // Mock LLM client
     llmClient = {

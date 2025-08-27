@@ -15,7 +15,7 @@ describe('ClaudeToolsModule Integration', () => {
   let testDir;
 
   beforeEach(async () => {
-    resourceManager = ResourceManager.getInstance();
+    resourceManager = await ResourceManager.getInstance();
     module = await ClaudeToolsModule.create(resourceManager);
     
     // Create test directory
@@ -250,8 +250,8 @@ describe('ClaudeToolsModule Integration', () => {
         const metadata = tool.getMetadata();
         expect(metadata.name).toBe(toolName);
         expect(metadata.description).toBeDefined();
-        expect(metadata.input).toBeDefined();
-        expect(metadata.output).toBeDefined();
+        expect(metadata.inputSchema).toBeDefined();
+        expect(metadata.outputSchema).toBeDefined();
       }
     });
   });

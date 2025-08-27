@@ -2,7 +2,7 @@
  * @fileoverview RunNodeTool - Execute Node.js processes with comprehensive logging
  */
 
-import { Tool } from '../base/Tool.js';
+import { Tool } from '@legion/tools-registry';
 import { jsonSchemaToZod } from '@legion/schema';
 import { existsSync } from 'fs';
 
@@ -11,7 +11,8 @@ export class RunNodeTool extends Tool {
     super({
       name: 'run_node',
       description: 'Execute Node.js process with comprehensive logging, capturing both backend and frontend logs, with automatic session management and optional dependency installation',
-      inputSchema: {
+      schema: {
+        input: {
         type: 'object',
         properties: {
           projectPath: {
@@ -60,6 +61,7 @@ export class RunNodeTool extends Tool {
         },
         required: ['projectPath', 'command'],
         additionalProperties: false
+        }
       }
     });
     

@@ -21,10 +21,10 @@ describe('Live GitHub Repository Operations', () => {
     
     // Register GitHub environment variables
     if (resourceManager.has('env.GITHUB_PAT')) {
-      resourceManager.register('GITHUB_PAT', resourceManager.env.GITHUB_PAT);
+      resourceManager.set('GITHUB_PAT', resourceManager.env.GITHUB_PAT);
     }
     if (resourceManager.has('env.GITHUB_AGENT_ORG')) {
-      resourceManager.register('GITHUB_AGENT_ORG', resourceManager.env.GITHUB_AGENT_ORG);
+      resourceManager.set('GITHUB_AGENT_ORG', resourceManager.env.GITHUB_AGENT_ORG);
     }
     
     // Initialize GitHub authentication

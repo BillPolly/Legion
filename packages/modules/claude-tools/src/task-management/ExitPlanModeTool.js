@@ -9,7 +9,7 @@ export class ExitPlanModeTool extends Tool {
   constructor() {
     super({
       name: 'ExitPlanMode',
-      description: 'Use when finished presenting your plan and ready to code. This will prompt the user to exit plan mode.',
+      description: 'Exit plan mode and present implementation plan to user for approval',
       schema: {
         input: {
           type: 'object',
@@ -75,6 +75,18 @@ export class ExitPlanModeTool extends Tool {
   async exitPlanMode(input) {
     try {
       const { plan } = input;
+
+      // Validate plan is not empty
+      if (!plan || plan.trim().length === 0) {
+        return {
+          success: false,
+          error: {
+            code: 'INVALID_INPUT',
+            message: 'Plan cannot be empty',
+            field: 'plan'
+          }
+        };
+      }
 
       // Format the plan
       const formattedPlan = this.formatPlan(plan);

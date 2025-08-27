@@ -109,6 +109,29 @@ export class TaskTool extends Tool {
   async executeTask(input) {
     try {
       const { description, prompt, subagent_type } = input;
+      
+      // Validate input
+      if (!description || description.length < 3) {
+        return {
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Description must be at least 3 characters long',
+            field: 'description'
+          }
+        };
+      }
+      
+      if (!['general-purpose', 'context-fetcher', 'file-creator', 'git-workflow', 'test-runner'].includes(subagent_type)) {
+        return {
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid subagent_type. Must be one of: general-purpose, context-fetcher, file-creator, git-workflow, test-runner',
+            field: 'subagent_type'
+          }
+        };
+      }
 
       // Generate task ID
       const taskId = uuidv4();

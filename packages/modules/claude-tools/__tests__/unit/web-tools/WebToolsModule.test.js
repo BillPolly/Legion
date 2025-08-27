@@ -11,7 +11,7 @@ describe('WebToolsModule', () => {
   let resourceManager;
 
   beforeEach(async () => {
-    resourceManager = ResourceManager.getInstance();
+    resourceManager = await ResourceManager.getInstance();
     module = await WebToolsModule.create(resourceManager);
   });
 

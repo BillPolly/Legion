@@ -8,8 +8,8 @@ import { ResourceManager } from '@legion/resource-manager';
 /**
  * Create a test ResourceManager with default configuration
  */
-export function createTestResourceManager(config = {}) {
-  const resourceManager = ResourceManager.getInstance();
+export async function createTestResourceManager(config = {}) {
+  const resourceManager = await ResourceManager.getInstance();
   
   // Set test configuration
   const testConfig = {

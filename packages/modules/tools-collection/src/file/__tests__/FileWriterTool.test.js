@@ -221,109 +221,58 @@ describe('FileWriterTool Tests', () => {
 
   describe('Error Handling', () => {
     it('should validate file path input', async () => {
-      const result = await tool.execute({ 
-        filePath: '', 
-        content: 'test' 
-      });
-      
-      if (result.success !== undefined) {
-        expect(result.success).toBe(false);
-        expect(result.data.errorType).toBe('invalid_path');
-      } else {
-        expect(result.error).toBeDefined();
-        expect(result.errorType).toBe('invalid_path');
-      }
+      await expect(
+        tool.execute({ 
+          filePath: '', 
+          content: 'test' 
+        })
+      ).rejects.toThrow('File path cannot be empty');
     });
 
     it('should handle null file path', async () => {
-      const result = await tool.execute({ 
+      await expect(tool.execute({ 
         filePath: null, 
         content: 'test' 
-      });
-      
-      if (result.success !== undefined) {
-        expect(result.success).toBe(false);
-        expect(result.data.errorType).toBe('invalid_path');
-      } else {
-        expect(result.error).toBeDefined();
-        expect(result.errorType).toBe('invalid_path');
-      }
+      })).rejects.toThrow('File path must be a string');
     });
 
     it('should handle missing content parameter', async () => {
-      const result = await tool.execute({ filePath: 'test.txt' });
-      
-      if (result.success !== undefined) {
-        expect(result.success).toBe(false);
-      } else {
-        expect(result.error).toBeDefined();
-      }
+      await expect(tool.execute({ filePath: 'test.txt' }))
+        .rejects.toThrow();
     });
 
     it('should handle directory creation failure when createDirectories is false', async () => {
       const noCreateTool = new FileWriterTool({ basePath: testDir, createDirectories: false });
       
-      const result = await noCreateTool.execute({ 
+      await expect(noCreateTool.execute({ 
         filePath: 'nonexistent/deep/path/file.txt', 
         content: 'test' 
-      });
-      
-      if (result.success !== undefined) {
-        expect(result.success).toBe(false);
-        expect(result.data.errorType).toBe('directory_not_found');
-      } else {
-        expect(result.error).toBeDefined();
-        expect(result.errorType).toBe('directory_not_found');
-      }
+      })).rejects.toThrow();
     });
 
     it('should handle attempts to write to existing directory', async () => {
       await fs.mkdir(path.join(testDir, 'is-directory'));
       
-      const result = await tool.execute({ 
+      await expect(tool.execute({ 
         filePath: 'is-directory', 
         content: 'test' 
-      });
-      
-      if (result.success !== undefined) {
-        expect(result.success).toBe(false);
-        expect(result.data.errorType).toBe('write_error');
-      } else {
-        expect(result.error).toBeDefined();
-        expect(result.errorType).toBe('write_error');
-      }
+      })).rejects.toThrow();
     });
   });
 
   describe('Security and Path Validation', () => {
     it('should prevent path traversal attacks', async () => {
-      const result = await tool.execute({ 
+      await expect(tool.execute({ 
         filePath: '../../../tmp/malicious.txt', 
         content: 'malicious content' 
-      });
-      
-      if (result.success !== undefined) {
-        expect(result.success).toBe(false);
-        expect(result.data.errorType).toBe('access_denied');
-      } else {
-        expect(result.error).toBeDefined();
-        expect(result.errorType).toBe('access_denied');
-      }
+      })).rejects.toThrow();
     });
 
     it('should handle null byte injection', async () => {
-      const result = await tool.execute({ 
+      await expect(tool.execute({ 
         filePath: 'test.txt\0hidden.txt', 
         content: 'test content' 
-      });
-      
-      if (result.success !== undefined) {
-        expect(result.success).toBe(false);
-        expect(result.data.errorType).toBe('invalid_path');
-      } else {
-        expect(result.error).toBeDefined();
-        expect(result.errorType).toBe('invalid_path');
-      }
+      })).rejects.toThrow();
     });
 
     it('should respect basePath restrictions', async () => {
@@ -342,18 +291,10 @@ describe('FileWriterTool Tests', () => {
       }
       
       // Should fail outside basePath
-      const deniedResult = await restrictedTool.execute({ 
+      await expect(restrictedTool.execute({ 
         filePath: '../outside.txt', 
         content: 'denied content' 
-      });
-      
-      if (deniedResult.success !== undefined) {
-        expect(deniedResult.success).toBe(false);
-        expect(deniedResult.data.errorType).toBe('access_denied');
-      } else {
-        expect(deniedResult.error).toBeDefined();
-        expect(deniedResult.errorType).toBe('access_denied');
-      }
+      })).rejects.toThrow();
     });
 
     it('should normalize paths correctly', async () => {

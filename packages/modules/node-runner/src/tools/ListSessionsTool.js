@@ -2,7 +2,7 @@
  * @fileoverview ListSessionsTool - List and filter run sessions with statistics
  */
 
-import { Tool } from '../base/Tool.js';
+import { Tool } from '@legion/tools-registry';
 import { jsonSchemaToZod } from '@legion/schema';
 
 export class ListSessionsTool extends Tool {
@@ -10,7 +10,8 @@ export class ListSessionsTool extends Tool {
     super({
       name: 'list_sessions',
       description: 'List and filter run sessions with optional statistics and sorting',
-      inputSchema: {
+      schema: {
+        input: {
         type: 'object',
         properties: {
           status: {
@@ -65,6 +66,7 @@ export class ListSessionsTool extends Tool {
           }
         },
         additionalProperties: false
+        }
       }
     });
     

@@ -84,8 +84,46 @@ export class ReadTool extends Tool {
    */
   async readFile(input) {
     try {
-      // Input is already validated by Tool base class via the schema
       const { file_path, limit, offset = 0 } = input;
+      
+      // Validate required inputs
+      if (!file_path) {
+        return {
+          success: false,
+          error: {
+            code: 'EXECUTION_ERROR',
+            message: 'file_path is required',
+            errorMessage: 'file_path is required',
+            field: 'file_path'
+          }
+        };
+      }
+      
+      // Validate offset
+      if (offset < 0) {
+        return {
+          success: false,
+          error: {
+            code: 'EXECUTION_ERROR',
+            message: 'offset must be greater than or equal to 0',
+            errorMessage: 'offset must be greater than or equal to 0',
+            field: 'offset'
+          }
+        };
+      }
+      
+      // Validate limit
+      if (limit !== undefined && limit <= 0) {
+        return {
+          success: false,
+          error: {
+            code: 'EXECUTION_ERROR',
+            message: 'limit must be greater than 0',
+            errorMessage: 'limit must be greater than 0',
+            field: 'limit'
+          }
+        };
+      }
 
       // Check if file exists
       try {

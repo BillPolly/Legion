@@ -10,7 +10,7 @@ export class TodoWriteTool extends Tool {
   constructor() {
     super({
       name: 'TodoWrite',
-      description: 'Create and manage a structured task list to track progress and organize complex tasks',
+      description: 'Create and manage a structured task list for your current coding session',
       schema: {
         input: {
           type: 'object',
@@ -118,6 +118,32 @@ export class TodoWriteTool extends Tool {
   async manageTodos(input) {
     try {
       const { todos } = input;
+      
+      // Validate todos
+      const validStatuses = ['pending', 'in_progress', 'completed'];
+      for (const todo of todos) {
+        if (!todo.content || todo.content.trim().length === 0) {
+          return {
+            success: false,
+            error: {
+              code: 'VALIDATION_ERROR',
+              message: 'Todo content cannot be empty',
+              field: 'content'
+            }
+          };
+        }
+        
+        if (!validStatuses.includes(todo.status)) {
+          return {
+            success: false,
+            error: {
+              code: 'VALIDATION_ERROR',
+              message: `Invalid status '${todo.status}'. Must be one of: ${validStatuses.join(', ')}`,
+              field: 'status'
+            }
+          };
+        }
+      }
 
       // Clear and update the todo list
       this.todoList.clear();

@@ -1,9 +1,9 @@
-import { ResourceManager } from '/Users/williampearson/Documents/p/agents/Legion/packages/resource-manager/src/ResourceManager.js';
-import { ToolRegistry } from '/Users/williampearson/Documents/p/agents/Legion/packages/tools-registry/src/integration/ToolRegistry.js';
+import { ResourceManager } from '@legion/resource-manager';
+import { getToolRegistry } from '@legion/tools-registry';
 
 console.log('Getting singletons at module level...');
 const resourceManager = await ResourceManager.getInstance();
-const toolRegistry = await ToolRegistry.getInstance();
+const toolRegistry = await getToolRegistry();
 console.log('✅ Got singletons successfully');
 
 describe('Minimal Test', () => {

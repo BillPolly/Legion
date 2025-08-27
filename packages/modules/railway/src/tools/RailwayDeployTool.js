@@ -90,23 +90,32 @@ class RailwayDeployTool extends Tool {
       name: 'railway_deploy',
       description: 'Deploy an application to Railway from GitHub repository or Docker image',
       inputSchema: railwayDeployToolInputSchema,
-      outputSchema: railwayDeployToolOutputSchema,
-      execute: async (input) => {
-        // Get provider from resourceManager or module's provider
+      outputSchema: railwayDeployToolOutputSchema
+    });
+    
+    this.resourceManager = resourceManager;
+    
+    // Set the execute function
+    this._execute = async (input) => {
+        // Get provider from resourceManager
         let provider;
-        if (this.resourceManager && typeof this.resourceManager.get === 'function') {
-          provider = this.resourceManager.railwayProvider;
+        if (this.resourceManager) {
+          if (typeof this.resourceManager.get === 'function') {
+            provider = this.resourceManager.get('railwayProvider');
+          } else {
+            provider = this.resourceManager.railwayProvider;
+          }
         }
         
         if (!provider) {
           throw new Error('Railway provider not initialized');
         }
 
-        // Prepare deployment configuration
+        // Prepare deployment configuration with defaults
         const config = {
           name: input.projectName,
-          serviceName: input.serviceName,
-          environment: input.environmentVariables
+          serviceName: input.serviceName || 'app',
+          environment: input.environmentVariables || {}
         };
 
         // Configure source based on type
@@ -133,14 +142,7 @@ class RailwayDeployTool extends Tool {
           status: result.status,
           message: `Successfully deployed ${input.projectName} to Railway`
         };
-      },
-      getMetadata: () => ({
-        description: 'Deploy an application to Railway from GitHub repository or Docker image',
-        input: railwayDeployToolInputSchema,
-        output: railwayDeployToolOutputSchema
-      })
-    });
-    this.resourceManager = resourceManager;
+    };
   }
 
   // Remove old execute method since it's now in constructor

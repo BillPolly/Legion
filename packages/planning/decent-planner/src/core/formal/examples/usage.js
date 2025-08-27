@@ -13,7 +13,7 @@ import { SyntheticToolExecutor } from '../SyntheticToolExecutor.js';
 import { Planner } from '@legion/planner';
 import { BTValidator } from '@legion/bt-validator';
 import { BehaviorTreeExecutor } from '@legion/shared/actor-BT';
-import { ToolRegistry } from '@legion/tools-registry';
+import { getToolRegistry } from '@legion/tools-registry';
 import { ResourceManager } from '@legion/resource-manager';
 
 async function main() {

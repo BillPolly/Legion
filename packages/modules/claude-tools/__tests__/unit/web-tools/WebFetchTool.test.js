@@ -92,15 +92,16 @@ describe('WebFetchTool', () => {
 
       expect(metadata.name).toBe('WebFetch');
       expect(metadata.description).toBe('Fetch content from a URL and process it with a prompt');
-      expect(metadata.input).toBeDefined();
-      expect(metadata.input.url).toBeDefined();
-      expect(metadata.input.url.required).toBe(true);
-      expect(metadata.input.prompt).toBeDefined();
-      expect(metadata.input.prompt.required).toBe(true);
-      expect(metadata.input.headers).toBeDefined();
-      expect(metadata.input.headers.required).toBe(false);
-      expect(metadata.output).toBeDefined();
-      expect(metadata.output.analysis).toBeDefined();
+      expect(metadata.inputSchema).toBeDefined();
+      expect(metadata.inputSchema.properties).toBeDefined();
+      expect(metadata.inputSchema.properties.url).toBeDefined();
+      expect(metadata.inputSchema.required).toContain('url');
+      expect(metadata.inputSchema.properties.prompt).toBeDefined();
+      expect(metadata.inputSchema.required).toContain('prompt');
+      expect(metadata.inputSchema.properties.headers).toBeDefined();
+      expect(metadata.inputSchema.required).not.toContain('headers');
+      expect(metadata.outputSchema).toBeDefined();
+      expect(metadata.outputSchema.properties.analysis).toBeDefined();
     });
   });
 });

@@ -33,24 +33,20 @@ describe('MongoQueryModule - Integration', () => {
 
   describe('Module Structure', () => {
     it('should create module with constructor', () => {
-      const mockProvider = {
-        find: jest.fn(),
-        databaseName: 'test'
-      };
-      
-      const module = new MongoQueryModule({ mongoProvider: mockProvider });
+      const module = new MongoQueryModule();
       
       expect(module).toBeInstanceOf(Module);
       expect(module.name).toBe('mongo-query');
       expect(module.description).toBe('MongoDB query and manipulation tools');
-      expect(module.mongoProvider).toBe(mockProvider);
+      expect(module.mongoProvider).toBe(null); // Initially null until initialized
     });
 
     it('should have correct module properties', () => {
-      const module = new MongoQueryModule({ mongoProvider: {} });
+      const module = new MongoQueryModule();
       
       expect(module.name).toBe('mongo-query');
       expect(module.description).toContain('MongoDB');
+      expect(module.version).toBe('1.0.0');
     });
   });
 

@@ -11,7 +11,7 @@ describe('TaskManagementModule', () => {
   let resourceManager;
 
   beforeEach(async () => {
-    resourceManager = ResourceManager.getInstance();
+    resourceManager = await ResourceManager.getInstance();
     module = await TaskManagementModule.create(resourceManager);
   });
 

@@ -16,15 +16,17 @@ import {
 
 describe('Foundation Test Infrastructure', () => {
   describe('ResourceManager Integration', () => {
-    test('should access ResourceManager singleton', () => {
-      const resourceManager = ResourceManager.getInstance();
+    test('should access ResourceManager singleton', async () => {
+      const resourceManager = await ResourceManager.getInstance();
       expect(resourceManager).toBeDefined();
     });
 
-    test('should configure ResourceManager for tests', () => {
-      const resourceManager = createTestResourceManager({
-        TEST_KEY: 'test_value'
-      });
+    test('should configure ResourceManager for tests', async () => {
+      const resourceManager = await ResourceManager.getInstance();
+      
+      // Set test configuration
+      resourceManager.set('TEST_KEY', 'test_value');
+      resourceManager.set('BASE_PATH', process.cwd());
       
       expect(resourceManager.get('TEST_KEY')).toBe('test_value');
       expect(resourceManager.get('BASE_PATH')).toBeDefined();

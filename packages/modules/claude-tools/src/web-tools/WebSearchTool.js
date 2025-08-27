@@ -9,7 +9,7 @@ export class WebSearchTool extends Tool {
   constructor() {
     super({
       name: 'WebSearch',
-      description: 'Search the web and use the results to provide up-to-date information beyond Claude\'s knowledge cutoff',
+      description: 'Search the web for current information',
       schema: {
         input: {
           type: 'object',
@@ -110,6 +110,20 @@ export class WebSearchTool extends Tool {
   async searchWeb(input) {
     try {
       const { query, allowed_domains = [], blocked_domains = [] } = input;
+      
+      // Validate query length
+      if (!query || query.length < 2) {
+        return {
+          success: false,
+          data: {
+            error: {
+              code: 'VALIDATION_ERROR',
+              message: 'Query must be at least 2 characters long',
+              field: 'query'
+            }
+          }
+        };
+      }
 
       // MVP: Return mock search results
       // In production, this would integrate with a search API

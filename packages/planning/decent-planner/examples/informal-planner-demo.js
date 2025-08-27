@@ -217,8 +217,8 @@ async function main() {
   try {
     // Get ToolRegistry singleton
     console.log('Getting ToolRegistry singleton...');
-    const { ToolRegistry } = await import('@legion/tools-registry');
-    const toolRegistry = await ToolRegistry.getInstance();
+    const { getToolRegistry } = await import('@legion/tools-registry');
+    const toolRegistry = await getToolRegistry();
     
     // Create demo LLM client
     console.log('Creating demo LLM client...');

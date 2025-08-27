@@ -11,7 +11,7 @@ export class WebFetchTool extends Tool {
   constructor() {
     super({
       name: 'WebFetch',
-      description: 'Fetches content from a specified URL and processes it using an AI model',
+      description: 'Fetch content from a URL and process it with a prompt',
       schema: {
         input: {
           type: 'object',
@@ -102,6 +102,29 @@ export class WebFetchTool extends Tool {
         headers = {},
         timeout = 10000
       } = input;
+      
+      // Validate input
+      if (!prompt || prompt.trim().length === 0) {
+        return {
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Prompt is required and cannot be empty',
+            field: 'prompt'
+          }
+        };
+      }
+      
+      if (timeout > 60000) {
+        return {
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Timeout must be less than or equal to 60000ms',
+            field: 'timeout'
+          }
+        };
+      }
 
       // Fetch the content
       const response = await axios.get(url, {

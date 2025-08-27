@@ -35,13 +35,13 @@ describe('Live GitHub Integration Tests', () => {
       return;
     }
 
-    resourceManager = ResourceManager.getInstance();
+    resourceManager = await ResourceManager.getInstance();
     await resourceManager.initialize();
     
     // Register environment variables
-    resourceManager.register('GITHUB_USER', githubUser);
-    resourceManager.register('GITHUB_PAT', githubPat);
-    resourceManager.register('GITHUB_AGENT_ORG', githubOrg);
+    resourceManager.set('GITHUB_USER', githubUser);
+    resourceManager.set('GITHUB_PAT', githubPat);
+    resourceManager.set('GITHUB_AGENT_ORG', githubOrg);
 
     console.log(`✅ Live GitHub testing enabled for user: ${githubUser}, org: ${githubOrg}`);
   });

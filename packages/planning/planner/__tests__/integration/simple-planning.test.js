@@ -37,8 +37,8 @@ describe('Planner Integration', () => {
     };
     
     // Get tools from ToolRegistry singleton - check what's available
-    const { ToolRegistry } = await import('@legion/tools-registry');
-    const toolRegistry = await ToolRegistry.getInstance();
+    const { getToolRegistry } = await import('@legion/tools-registry');
+    const toolRegistry = await getToolRegistry();
     
     // Check available tools first
     const allTools = await toolRegistry.listTools();

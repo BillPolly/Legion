@@ -15,7 +15,7 @@ describe('Claude Tools End-to-End', () => {
   let testDir;
 
   beforeEach(async () => {
-    resourceManager = ResourceManager.getInstance();
+    resourceManager = await ResourceManager.getInstance();
     module = await ClaudeToolsModule.create(resourceManager);
     
     // Create test directory

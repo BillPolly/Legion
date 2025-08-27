@@ -105,15 +105,14 @@ describe('Write Operations - Real MongoDB Integration', () => {
 
     it('should handle insert validation errors gracefully', async () => {
       // Try to insert with invalid params - missing document field
-      const result = await tool.execute({
-        database: testDatabase,
-        collection: testCollection,
-        command: 'insertOne',
-        params: { notDocument: 'test' }  // Wrong field name
-      });
-
-      await expect(tool.execute(input)).rejects.toThrow();
-      expect(result.data.errorMessage).toBeDefined();
+      await expect(
+        tool.execute({
+          database: testDatabase,
+          collection: testCollection,
+          command: 'insertOne',
+          params: { notDocument: 'test' }  // Wrong field name
+        })
+      ).rejects.toThrow('Document is required for insertOne operation');
     });
   });
 

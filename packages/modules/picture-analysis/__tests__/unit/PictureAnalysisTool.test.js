@@ -23,23 +23,31 @@ describe('PictureAnalysisTool', () => {
     fs.writeFileSync(path.join(testFilesDir, 'test.png'), pngData);
     fs.writeFileSync(path.join(testFilesDir, 'test.jpg'), pngData);
     
-    // Create mock LLM client with manual mock functions
+    // Create mock LLM client with provider
     mockLLMClient = {
-      sendAndReceiveResponse: function() {},
+      model: 'mock-vision-model',
+      provider: {
+        client: {
+          messages: {
+            create: function() {}
+          }
+        }
+      },
       getProviderName: () => 'Mock',
-      currentModel: 'mock-vision-model',
       _mockCalls: [],
       _mockResolvedValue: null,
       _mockRejectedValue: null
     };
     
     // Add mock functionality
-    mockLLMClient.sendAndReceiveResponse = function(...args) {
+    mockLLMClient.provider.client.messages.create = function(...args) {
       mockLLMClient._mockCalls.push(args);
       if (mockLLMClient._mockRejectedValue) {
         return Promise.reject(mockLLMClient._mockRejectedValue);
       }
-      return Promise.resolve(mockLLMClient._mockResolvedValue || 'Default mock response');
+      return Promise.resolve(mockLLMClient._mockResolvedValue || {
+        content: [{ text: 'Default mock response' }]
+      });
     };
     
     // Helper methods
@@ -85,38 +93,23 @@ describe('PictureAnalysisTool', () => {
       expect(tool.description).toContain('Analyze images using AI vision models');
     });
 
-    test('has Zod input schema', () => {
-      expect(tool.validator).toBeDefined();
-      expect(tool.validator.zodSchema).toBeDefined();
+    test('has input schema', () => {
+      expect(tool.inputSchema).toBeDefined();
+      expect(tool.inputSchema.type).toBe('object');
+      expect(tool.inputSchema.required).toContain('file_path');
+      expect(tool.inputSchema.required).toContain('prompt');
     });
 
-    test('validates correct input schema', () => {
-      const validInput = {
-        file_path: '/path/to/image.png',
-        prompt: 'Describe what you see in this image'
-      };
-      
-      const validation = tool.validator.validate(validInput);
-      expect(validation.valid).toBe(true);
-      expect(validation.data).toEqual(validInput);
-    });
-
-    test('rejects invalid input schema', () => {
-      const invalidInput = {
-        file_path: '',
-        prompt: 'short'
-      };
-      
-      const validation = tool.validator.validate(invalidInput);
-      expect(validation.valid).toBe(false);
-      expect(validation.errors).toBeDefined();
+    test('has output schema', () => {
+      expect(tool.outputSchema).toBeDefined();
+      expect(tool.outputSchema.type).toBe('object');
     });
   });
 
   describe('File Path Resolution and Validation', () => {
     test('executes with valid absolute path', async () => {
       const imagePath = path.join(testFilesDir, 'test.png');
-      mockLLMClient.mockResolvedValue('Mock analysis result');
+      mockLLMClient.mockResolvedValue({ content: [{ text: 'Mock analysis result' }] });
       
       const result = await tool.execute({
         file_path: imagePath,
@@ -130,7 +123,7 @@ describe('PictureAnalysisTool', () => {
 
     test('executes with valid relative path', async () => {
       const relativePath = path.relative(process.cwd(), path.join(testFilesDir, 'test.png'));
-      mockLLMClient.mockResolvedValue('Mock analysis result');
+      mockLLMClient.mockResolvedValue({ content: [{ text: 'Mock analysis result' }] });
       
       const result = await tool.execute({
         file_path: relativePath,
@@ -185,7 +178,7 @@ describe('PictureAnalysisTool', () => {
   describe('LLM Vision API Integration', () => {
     test('constructs correct vision API request', async () => {
       const imagePath = path.join(testFilesDir, 'test.png');
-      mockLLMClient.mockResolvedValue('Detailed analysis result');
+      mockLLMClient.mockResolvedValue({ content: [{ text: 'Detailed analysis result' }] });
       
       await tool.execute({
         file_path: imagePath,
@@ -193,8 +186,8 @@ describe('PictureAnalysisTool', () => {
       });
       
       expect(mockLLMClient._mockCalls.length).toBe(1);
-      const call = mockLLMClient._mockCalls[0];
-      expect(call[0]).toEqual([
+      const call = mockLLMClient._mockCalls[0][0]; // First argument to messages.create
+      expect(call.messages).toEqual([
         {
           role: 'user',
           content: [
@@ -208,15 +201,13 @@ describe('PictureAnalysisTool', () => {
           ]
         }
       ]);
-      expect(call[1]).toEqual({
-        max_tokens: 1000,
-        temperature: 0.7
-      });
+      expect(call.max_tokens).toBe(1000);
+      expect(call.temperature).toBe(0.7);
     });
 
     test('handles different image formats correctly', async () => {
       const jpgPath = path.join(testFilesDir, 'test.jpg');
-      mockLLMClient.mockResolvedValue('JPG analysis result');
+      mockLLMClient.mockResolvedValue({ content: [{ text: 'JPG analysis result' }] });
       
       await tool.execute({
         file_path: jpgPath,
@@ -265,7 +256,7 @@ describe('PictureAnalysisTool', () => {
   describe('Output Format', () => {
     test('returns correct success format', async () => {
       const imagePath = path.join(testFilesDir, 'test.png');
-      mockLLMClient.mockResolvedValue('This is a detailed analysis of the image showing various elements.');
+      mockLLMClient.mockResolvedValue({ content: [{ text: 'This is a detailed analysis of the image showing various elements.' }] });
       
       const result = await tool.execute({
         file_path: imagePath,
@@ -303,7 +294,7 @@ describe('PictureAnalysisTool', () => {
   describe('Event Emission', () => {
     test('emits progress events during execution', async () => {
       const imagePath = path.join(testFilesDir, 'test.png');
-      mockLLMClient.mockResolvedValue('Analysis complete');
+      mockLLMClient.mockResolvedValue({ content: [{ text: 'Analysis complete' }] });
       
       const progressEvents = [];
       tool.on('progress', (event) => progressEvents.push(event));

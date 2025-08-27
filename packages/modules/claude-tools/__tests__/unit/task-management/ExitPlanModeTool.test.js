@@ -170,12 +170,13 @@ describe('ExitPlanModeTool', () => {
 
       expect(metadata.name).toBe('ExitPlanMode');
       expect(metadata.description).toBe('Exit plan mode and present implementation plan to user for approval');
-      expect(metadata.input).toBeDefined();
-      expect(metadata.input.plan).toBeDefined();
-      expect(metadata.input.plan.required).toBe(true);
-      expect(metadata.output).toBeDefined();
-      expect(metadata.output.plan).toBeDefined();
-      expect(metadata.output.metadata).toBeDefined();
+      expect(metadata.inputSchema).toBeDefined();
+      expect(metadata.inputSchema.properties).toBeDefined();
+      expect(metadata.inputSchema.properties.plan).toBeDefined();
+      expect(metadata.inputSchema.required).toContain('plan');
+      expect(metadata.outputSchema).toBeDefined();
+      expect(metadata.outputSchema.properties.plan).toBeDefined();
+      expect(metadata.outputSchema.properties.metadata).toBeDefined();
     });
   });
 });

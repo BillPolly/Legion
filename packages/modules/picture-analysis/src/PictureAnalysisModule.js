@@ -81,13 +81,8 @@ export default class PictureAnalysisModule extends Module {
       this.resourceManager.set('llmClient', this.llmClient);
     }
 
-    // Verify the client supports vision (if supportsVision method exists)
-    if (typeof this.llmClient.supportsVision === 'function') {
-      const visionSupport = await this.llmClient.supportsVision();
-      if (!visionSupport) {
-        throw new Error('LLM client does not support vision capabilities required for picture analysis');
-      }
-    }
+    // Claude 3 models support vision by default
+    // No need to check for vision support
   }
 
   /**

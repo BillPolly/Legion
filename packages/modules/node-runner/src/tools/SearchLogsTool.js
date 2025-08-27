@@ -2,7 +2,7 @@
  * @fileoverview SearchLogsTool - Search and retrieve logs with multiple search modes
  */
 
-import { Tool } from '../base/Tool.js';
+import { Tool } from '@legion/tools-registry';
 import { jsonSchemaToZod } from '@legion/schema';
 
 export class SearchLogsTool extends Tool {
@@ -10,7 +10,8 @@ export class SearchLogsTool extends Tool {
     super({
       name: 'search_logs',
       description: 'Search across all captured logs using keyword, semantic, or regex search with comprehensive filtering options',
-      inputSchema: {
+      schema: {
+        input: {
         type: 'object',
         properties: {
           query: {
@@ -60,6 +61,7 @@ export class SearchLogsTool extends Tool {
         },
         required: ['query'],
         additionalProperties: false
+        }
       }
     });
     

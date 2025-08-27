@@ -15,5 +15,6 @@ export default {
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   verbose: true,
-  testTimeout: 30000 // 30 seconds for integration tests
+  testTimeout: 30000, // 30 seconds for integration tests
+  maxWorkers: 1 // Run tests sequentially to avoid file operation race conditions
 };

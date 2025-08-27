@@ -30,6 +30,11 @@ describe('Gmail Send/Receive Integration Tests', () => {
     gmailModule.resourceManager = resourceManager;
     await gmailModule.initialize();
 
+    // Check if the module was properly initialized with valid credentials
+    if (!gmailModule.transporter) {
+      throw new Error('Gmail module failed to initialize. Check GMAIL_USER and GMAIL_APP_PASSWORD environment variables.');
+    }
+
     console.log('Gmail integration tests initialized');
     console.log(`Test results will be saved to: ${testResultsDir}`);
   }, 30000);

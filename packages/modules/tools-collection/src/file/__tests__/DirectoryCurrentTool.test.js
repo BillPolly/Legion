@@ -30,6 +30,9 @@ describe('DirectoryCurrentTool Tests', () => {
     testDir = path.join(os.tmpdir(), 'legion-directory-current-tests', Date.now().toString());
     await fs.mkdir(testDir, { recursive: true });
     
+    // Resolve symlinks to handle /private prefix on macOS
+    testDir = await fs.realpath(testDir);
+    
     if (DirectoryCurrentTool) {
       tool = new DirectoryCurrentTool({ basePath: testDir });
     }
@@ -115,7 +118,6 @@ describe('DirectoryCurrentTool Tests', () => {
       
       const result = await tool.execute({ relative: true });
       
-      expect(result.success).toBe(true);
       expect(result.basePath).toBe(testDir);
       expect(result.relativePath).toBeDefined();
       expect(result.relativePath).toBe('current-test');
@@ -133,7 +135,6 @@ describe('DirectoryCurrentTool Tests', () => {
       
       const result = await tool.execute({ relative: true });
       
-      expect(result.success).toBe(true);
       expect(result.relativePath).toBe('.');
       expect(result.currentPath).toBe(testDir);
     });
@@ -146,7 +147,6 @@ describe('DirectoryCurrentTool Tests', () => {
       
       const result = await tool.execute({ includeMetadata: true });
       
-      expect(result.success).toBe(true);
       expect(result.metadata).toBeDefined();
       expect(result.metadata.exists).toBe(true);
       expect(result.metadata.readable).toBe(true);
@@ -164,14 +164,14 @@ describe('DirectoryCurrentTool Tests', () => {
       
       // Get initial directory
       const initial = await tool.execute({});
-      expect(initial.currentPath).toBe(testDir);
+      expect(initial.currentPath).toBe(await fs.realpath(testDir));
       
       // Change directory
       process.chdir(path.join(testDir, 'current-test'));
       
       // Check new directory
       const changed = await tool.execute({});
-      expect(changed.currentPath).toBe(path.join(testDir, 'current-test'));
+      expect(changed.currentPath).toBe(await fs.realpath(path.join(testDir, 'current-test')));
       expect(changed.currentPath).not.toBe(initial.currentPath);
     });
 
@@ -183,7 +183,6 @@ describe('DirectoryCurrentTool Tests', () => {
       
       const result = await tool.execute({ format: 'unix' });
       
-      expect(result.success).toBe(true);
       expect(result.currentPath).toBeDefined();
       
       // Should use forward slashes for Unix format
@@ -211,7 +210,6 @@ describe('DirectoryCurrentTool Tests', () => {
       
       const result = await tool.execute({ analyzeComponents: true });
       
-      expect(result.success).toBe(true);
       expect(result.components).toBeDefined();
       expect(Array.isArray(result.components)).toBe(true);
       expect(result.components.length).toBeGreaterThan(0);
@@ -230,7 +228,6 @@ describe('DirectoryCurrentTool Tests', () => {
       
       const result = await tool.execute({ calculateDepth: true });
       
-      expect(result.success).toBe(true);
       expect(result.depth).toBeDefined();
       expect(typeof result.depth).toBe('number');
       expect(result.depth).toBe(3); // analysis-test/deep/nested = 3 levels
@@ -249,7 +246,6 @@ describe('DirectoryCurrentTool Tests', () => {
       
       const result = await tool.execute({ detectType: true });
       
-      expect(result.success).toBe(true);
       expect(result.directoryType).toBeDefined();
       expect(result.indicators).toBeDefined();
       expect(Array.isArray(result.indicators)).toBe(true);
@@ -268,7 +264,6 @@ describe('DirectoryCurrentTool Tests', () => {
       // Should work within basePath
       process.chdir(testDir);
       const result = await restrictedTool.execute({ relative: true });
-      expect(result.success).toBe(true);
       expect(result.relativePath).toBe('.');
     });
 
@@ -280,7 +275,6 @@ describe('DirectoryCurrentTool Tests', () => {
       
       const result = await tool.execute({ checkPermissions: true });
       
-      expect(result.success).toBe(true);
       expect(result.permissions).toBeDefined();
       expect(result.permissions.read).toBeDefined();
       expect(result.permissions.write).toBeDefined();
@@ -305,7 +299,6 @@ describe('DirectoryCurrentTool Tests', () => {
       // Try to get current directory status
       const result = await tool.execute({ validateExists: true });
       
-      expect(result.success).toBe(true);
       expect(result.exists).toBe(true); // Should be true since we're back in testDir
     });
   });
@@ -334,7 +327,6 @@ describe('DirectoryCurrentTool Tests', () => {
       });
       const duration = Date.now() - startTime;
       
-      expect(result.success).toBe(true);
       expect(result.depth).toBe(10);
       expect(duration).toBeLessThan(1000); // Should complete within 1 second
     });
@@ -354,7 +346,6 @@ describe('DirectoryCurrentTool Tests', () => {
       
       // All operations should succeed and return consistent results
       results.forEach(result => {
-        expect(result.success).toBe(true);
         expect(result.currentPath).toBe(results[0].currentPath);
       });
     });
@@ -372,7 +363,6 @@ describe('DirectoryCurrentTool Tests', () => {
       
       const result = await tool.execute({ relative: true });
       
-      expect(result.success).toBe(true);
       expect(result.relativePath).toBe('special dir-with_chars');
     });
 
@@ -389,7 +379,6 @@ describe('DirectoryCurrentTool Tests', () => {
       
       // All results should be identical
       results.forEach(result => {
-        expect(result.success).toBe(true);
         expect(result.currentPath).toBe(results[0].currentPath);
       });
     });

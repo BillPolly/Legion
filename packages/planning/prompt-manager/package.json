@@ -11,7 +11,9 @@
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch"
   },
-  "dependencies": {},
+  "dependencies": {
+    "stdout-update": "^4.0.1"
+  },
   "devDependencies": {
     "jest": "^29.0.0"
   },

@@ -17,33 +17,33 @@ describe('GitIntegrationManager Resource Integration', () => {
   let gitIntegrationManager;
 
   beforeAll(async () => {
-    resourceManager = ResourceManager.getInstance();
+    resourceManager = await ResourceManager.getInstance();
     await resourceManager.initialize();
     
     // Register GitHub environment variables
     if (resourceManager.has('env.GITHUB_PAT')) {
-      resourceManager.register('GITHUB_PAT', resourceManager.env.GITHUB_PAT);
+      resourceManager.set('GITHUB_PAT', resourceManager.env.GITHUB_PAT);
     }
     if (resourceManager.has('env.GITHUB_AGENT_ORG')) {
-      resourceManager.register('GITHUB_AGENT_ORG', resourceManager.env.GITHUB_AGENT_ORG);
+      resourceManager.set('GITHUB_AGENT_ORG', resourceManager.env.GITHUB_AGENT_ORG);
     }
     if (resourceManager.has('env.GITHUB_USER')) {
-      resourceManager.register('GITHUB_USER', resourceManager.env.GITHUB_USER);
+      resourceManager.set('GITHUB_USER', resourceManager.env.GITHUB_USER);
     }
     
     // Register CodeAgent-like resources
-    resourceManager.register('llmClient', {
+    resourceManager.set('llmClient', {
       generateResponse: async (prompt) => `Generated response for: ${prompt}`,
       sendAndReceiveResponse: async (messages) => 'Mock LLM response'
     });
     
-    resourceManager.register('fileOperations', {
+    resourceManager.set('fileOperations', {
       readFile: async (path) => 'file content',
       writeFile: async (path, content) => true,
       listFiles: async (dir) => ['file1.js', 'file2.js']
     });
     
-    resourceManager.register('moduleLoader', {
+    resourceManager.set('moduleLoader', {
       loadModule: async (name) => ({ name, loaded: true })
     });
   });

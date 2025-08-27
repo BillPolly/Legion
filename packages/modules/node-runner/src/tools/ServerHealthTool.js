@@ -2,7 +2,7 @@
  * @fileoverview ServerHealthTool - System health monitoring and reporting
  */
 
-import { Tool } from '../base/Tool.js';
+import { Tool } from '@legion/tools-registry';
 import { jsonSchemaToZod } from '@legion/schema';
 import os from 'os';
 
@@ -11,7 +11,8 @@ export class ServerHealthTool extends Tool {
     super({
       name: 'server_health',
       description: 'Check health status of running processes, servers, and system resources',
-      inputSchema: {
+      schema: {
+        input: {
         type: 'object',
         properties: {
           includeProcesses: {
@@ -46,6 +47,7 @@ export class ServerHealthTool extends Tool {
           }
         },
         additionalProperties: false
+        }
       }
     });
     

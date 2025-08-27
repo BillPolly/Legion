@@ -19,12 +19,12 @@ describe('BranchManager Branch Name Generation', () => {
   let tempDir;
 
   beforeAll(async () => {
-    resourceManager = ResourceManager.getInstance();
+    resourceManager = await ResourceManager.getInstance();
     await resourceManager.initialize();
     
     // Register test environment variables
-    resourceManager.register('GITHUB_USER', 'TestUser');
-    resourceManager.register('GITHUB_PAT', 'ghp_test_token');
+    resourceManager.set('GITHUB_USER', 'TestUser');
+    resourceManager.set('GITHUB_PAT', 'ghp_test_token');
   });
 
   beforeEach(async () => {

@@ -59,8 +59,8 @@ export class DecentPlanner {
     }
     
     // Get tool registry - use the proper singleton instance
-    const { ToolRegistry } = await import('@legion/tools-registry');
-    const toolRegistry = await ToolRegistry.getInstance();
+    const { getToolRegistry } = await import('@legion/tools-registry');
+    const toolRegistry = await getToolRegistry();
     
     // Create adapters
     const logger = new ConsoleLogger(this.config.logging);

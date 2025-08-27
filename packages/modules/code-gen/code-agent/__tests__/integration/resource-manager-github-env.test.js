@@ -16,13 +16,13 @@ describe('Resource Manager GitHub Environment Access', () => {
     // Register GitHub environment variables directly for easy access
     // (This is what the Git integration will do)
     if (resourceManager.has('env.GITHUB_PAT')) {
-      resourceManager.register('GITHUB_PAT', resourceManager.env.GITHUB_PAT);
+      resourceManager.set('GITHUB_PAT', resourceManager.env.GITHUB_PAT);
     }
     if (resourceManager.has('env.GITHUB_AGENT_ORG')) {
-      resourceManager.register('GITHUB_AGENT_ORG', resourceManager.env.GITHUB_AGENT_ORG);
+      resourceManager.set('GITHUB_AGENT_ORG', resourceManager.env.GITHUB_AGENT_ORG);
     }
     if (resourceManager.has('env.GITHUB_USER')) {
-      resourceManager.register('GITHUB_USER', resourceManager.env.GITHUB_USER);
+      resourceManager.set('GITHUB_USER', resourceManager.env.GITHUB_USER);
     }
   });
 

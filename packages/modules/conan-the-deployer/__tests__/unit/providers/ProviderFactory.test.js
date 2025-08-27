@@ -30,8 +30,10 @@ describe('ProviderFactory', () => {
 
   describe('Custom Provider Registration', () => {
     class CustomProvider extends BaseProvider {
-      constructor(config) {
+      constructor(resourceManager, config) {
         super(config);
+        this.resourceManager = resourceManager;
+        this.config = config;
         this.name = 'custom';
       }
     }

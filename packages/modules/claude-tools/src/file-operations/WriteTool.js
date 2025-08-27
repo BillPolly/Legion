@@ -61,8 +61,32 @@ export class WriteTool extends Tool {
    */
   async writeFile(input) {
     try {
-      // Input is already validated by Tool base class via the schema
       const { file_path, content } = input;
+      
+      // Validate required inputs
+      if (!file_path) {
+        return {
+          success: false,
+          error: {
+            code: 'EXECUTION_ERROR',
+            message: 'file_path is required',
+            errorMessage: 'file_path is required',
+            field: 'file_path'
+          }
+        };
+      }
+      
+      if (content === undefined || content === null) {
+        return {
+          success: false,
+          error: {
+            code: 'EXECUTION_ERROR',
+            message: 'content is required',
+            errorMessage: 'content is required',
+            field: 'content'
+          }
+        };
+      }
 
       // Check if path is a directory
       try {

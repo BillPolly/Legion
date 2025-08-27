@@ -144,7 +144,10 @@ class DirectoryCurrentTool extends Tool {
       // Add relative path information
       if (relative) {
         result.basePath = this.basePath;
-        result.relativePath = path.relative(this.basePath, currentPath) || '.';
+        // Resolve symlinks to handle /private prefix issues on macOS
+        const realBase = await fs.realpath(this.basePath);
+        const realCurrent = await fs.realpath(currentPath);
+        result.relativePath = path.relative(realBase, realCurrent) || '.';
       }
 
       // Format path according to requested format
@@ -164,7 +167,7 @@ class DirectoryCurrentTool extends Tool {
 
       // Calculate depth from base path
       if (calculateDepth) {
-        result.depth = this.calculateDepthFromBase(currentPath);
+        result.depth = await this.calculateDepthFromBase(currentPath);
       }
 
       // Detect directory type/purpose
@@ -268,9 +271,12 @@ class DirectoryCurrentTool extends Tool {
    * @param {string} currentPath - The current path
    * @returns {number} Depth from base path
    */
-  calculateDepthFromBase(currentPath) {
-    const relativePath = path.relative(this.basePath, currentPath);
-    if (relativePath === '') return 0;
+  async calculateDepthFromBase(currentPath) {
+    // Resolve symlinks to handle /private prefix issues on macOS
+    const realBase = await fs.realpath(this.basePath);
+    const realCurrent = await fs.realpath(currentPath);
+    const relativePath = path.relative(realBase, realCurrent);
+    if (relativePath === '' || relativePath === '.') return 0;
     return relativePath.split(path.sep).length;
   }
 

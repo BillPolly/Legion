@@ -127,13 +127,14 @@ describe('WebSearchTool', () => {
 
       expect(metadata.name).toBe('WebSearch');
       expect(metadata.description).toBe('Search the web for current information');
-      expect(metadata.input).toBeDefined();
-      expect(metadata.input.query).toBeDefined();
-      expect(metadata.input.query.required).toBe(true);
-      expect(metadata.input.allowed_domains).toBeDefined();
-      expect(metadata.input.allowed_domains.required).toBe(false);
-      expect(metadata.output).toBeDefined();
-      expect(metadata.output.results).toBeDefined();
+      expect(metadata.inputSchema).toBeDefined();
+      expect(metadata.inputSchema.properties).toBeDefined();
+      expect(metadata.inputSchema.properties.query).toBeDefined();
+      expect(metadata.inputSchema.required).toContain('query');
+      expect(metadata.inputSchema.properties.allowed_domains).toBeDefined();
+      expect(metadata.inputSchema.required).not.toContain('allowed_domains');
+      expect(metadata.outputSchema).toBeDefined();
+      expect(metadata.outputSchema.properties.results).toBeDefined();
     });
   });
 });

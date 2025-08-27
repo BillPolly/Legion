@@ -5,7 +5,7 @@
 
 import { DecentPlanner } from '../../src/DecentPlanner.js';
 import { ResourceManager } from '@legion/resource-manager';
-import { ToolRegistry } from '@legion/tools-registry';
+import { getToolRegistry } from '@legion/tools-registry';
 
 describe('Tool Schema Debug', () => {
   let decentPlanner;
@@ -17,7 +17,7 @@ describe('Tool Schema Debug', () => {
     console.log('Initializing ResourceManager...');
     resourceManager = await ResourceManager.getInstance();
     console.log('Initializing ToolRegistry...');
-    toolRegistry = await ToolRegistry.getInstance();
+    toolRegistry = await getToolRegistry();
     console.log('Both singletons initialized');
 
     // Create planner with configuration

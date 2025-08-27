@@ -68,6 +68,13 @@ describe('DirectoryListTool Tests', () => {
 
   describe('Directory Listing', () => {
     beforeEach(async () => {
+      // Clean up any existing test structure
+      try {
+        await fs.rm(path.join(testDir, 'list-test'), { recursive: true, force: true });
+      } catch (e) {
+        // Directory might not exist, that's ok
+      }
+      
       // Setup test directory structure
       await fs.mkdir(path.join(testDir, 'list-test'), { recursive: true });
       await fs.writeFile(path.join(testDir, 'list-test', 'file1.txt'), 'content1');
@@ -84,8 +91,7 @@ describe('DirectoryListTool Tests', () => {
       
       const result = await tool.execute({ directoryPath: 'list-test' });
       
-      expect(result.success).toBe(true);
-      expect(Array.isArray(result.items)).toBe(true);
+            expect(Array.isArray(result.items)).toBe(true);
       expect(result.items.length).toBe(3);
       
       const names = result.items.map(item => item.name);
@@ -102,8 +108,7 @@ describe('DirectoryListTool Tests', () => {
       
       const result = await tool.execute({ directoryPath: 'list-test' });
       
-      expect(result.success).toBe(true);
-      
+            
       const file = result.items.find(item => item.name === 'file1.txt');
       expect(file.type).toBe('file');
       expect(file.size).toBeGreaterThan(0);
@@ -126,8 +131,7 @@ describe('DirectoryListTool Tests', () => {
         filter: '*.txt'
       });
       
-      expect(result.success).toBe(true);
-      expect(result.items.length).toBe(1);
+            expect(result.items.length).toBe(1);
       expect(result.items[0].name).toBe('file1.txt');
     });
 
@@ -142,8 +146,7 @@ describe('DirectoryListTool Tests', () => {
         recursive: true
       });
       
-      expect(result.success).toBe(true);
-      expect(result.items.length).toBeGreaterThan(3);
+            expect(result.items.length).toBeGreaterThan(3);
       
       const nestedFile = result.items.find(item => item.name === 'nested.txt');
       expect(nestedFile).toBeDefined();
@@ -157,11 +160,8 @@ describe('DirectoryListTool Tests', () => {
         return;
       }
       
-      const result = await tool.execute({ directoryPath: 'nonexistent-dir' });
-      
-      expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
-      expect(result.errorType).toBe('directory_not_found');
+      await expect(tool.execute({ directoryPath: 'nonexistent-dir' }))
+        .rejects.toThrow('Directory not found or not accessible');
     });
 
     it('should validate input parameters', async () => {
@@ -170,10 +170,8 @@ describe('DirectoryListTool Tests', () => {
         return;
       }
       
-      const result = await tool.execute({ directoryPath: '' });
-      
-      expect(result.success).toBe(false);
-      expect(result.errorType).toBe('invalid_path');
+      await expect(tool.execute({ directoryPath: '' }))
+        .rejects.toThrow('Directory path cannot be empty');
     });
 
     it('should handle permission denied errors', async () => {
@@ -183,10 +181,8 @@ describe('DirectoryListTool Tests', () => {
       }
       
       // Try to access outside allowed basePath
-      const result = await tool.execute({ directoryPath: '../../../etc' });
-      
-      expect(result.success).toBe(false);
-      expect(result.errorType).toBe('access_denied');
+      await expect(tool.execute({ directoryPath: '../../../etc' }))
+        .rejects.toThrow('Access denied: Path is outside allowed directory');
     });
 
     it('should handle null byte injection', async () => {
@@ -195,10 +191,8 @@ describe('DirectoryListTool Tests', () => {
         return;
       }
       
-      const result = await tool.execute({ directoryPath: 'test\0hidden' });
-      
-      expect(result.success).toBe(false);
-      expect(result.errorType).toBe('invalid_path');
+      await expect(tool.execute({ directoryPath: 'test\0hidden' }))
+        .rejects.toThrow('Invalid directory path');
     });
   });
 
@@ -214,12 +208,11 @@ describe('DirectoryListTool Tests', () => {
       // Should work within basePath
       await fs.mkdir(path.join(testDir, 'allowed'));
       const allowedResult = await restrictedTool.execute({ directoryPath: 'allowed' });
-      expect(allowedResult.success).toBe(true);
+      expect(allowedResult.items).toBeDefined();
       
       // Should fail outside basePath
-      const deniedResult = await restrictedTool.execute({ directoryPath: '../../../' });
-      expect(deniedResult.success).toBe(false);
-      expect(deniedResult.errorType).toBe('access_denied');
+      await expect(restrictedTool.execute({ directoryPath: '../../../' }))
+        .rejects.toThrow('Access denied: Path is outside allowed directory');
     });
 
     it('should normalize paths correctly', async () => {
@@ -232,8 +225,7 @@ describe('DirectoryListTool Tests', () => {
       
       const result = await tool.execute({ directoryPath: './normalize-test' });
       
-      expect(result.success).toBe(true);
-      expect(result.path).not.toContain('./');
+            expect(result.path).not.toContain('./');
     });
   });
 
@@ -259,8 +251,7 @@ describe('DirectoryListTool Tests', () => {
       const result = await tool.execute({ directoryPath: 'large-dir' });
       const duration = Date.now() - startTime;
       
-      expect(result.success).toBe(true);
-      expect(result.items.length).toBe(100);
+            expect(result.items.length).toBe(100);
       expect(duration).toBeLessThan(2000); // Should complete within 2 seconds
     });
   });

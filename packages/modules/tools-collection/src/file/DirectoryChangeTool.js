@@ -171,9 +171,9 @@ class DirectoryChangeTool extends Tool {
       resolvedPath = process.cwd();
     }
 
-    // If still relative, resolve against current working directory
+    // If still relative, resolve against basePath
     if (!path.isAbsolute(resolvedPath)) {
-      resolvedPath = path.resolve(process.cwd(), resolvedPath);
+      resolvedPath = path.resolve(this.basePath, resolvedPath);
     }
 
     return path.normalize(resolvedPath);

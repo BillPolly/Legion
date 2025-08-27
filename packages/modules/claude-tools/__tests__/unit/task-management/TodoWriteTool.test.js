@@ -184,12 +184,13 @@ describe('TodoWriteTool', () => {
 
       expect(metadata.name).toBe('TodoWrite');
       expect(metadata.description).toBe('Create and manage a structured task list for your current coding session');
-      expect(metadata.input).toBeDefined();
-      expect(metadata.input.todos).toBeDefined();
-      expect(metadata.input.todos.required).toBe(true);
-      expect(metadata.input.todos.items).toBeDefined();
-      expect(metadata.output).toBeDefined();
-      expect(metadata.output.summary).toBeDefined();
+      expect(metadata.inputSchema).toBeDefined();
+      expect(metadata.inputSchema.properties).toBeDefined();
+      expect(metadata.inputSchema.properties.todos).toBeDefined();
+      expect(metadata.inputSchema.required).toContain('todos');
+      expect(metadata.inputSchema.properties.todos.items).toBeDefined();
+      expect(metadata.outputSchema).toBeDefined();
+      expect(metadata.outputSchema.properties.summary).toBeDefined();
     });
   });
 });

@@ -8,7 +8,7 @@
 
 import { DecentPlanner } from '../../src/DecentPlanner.js';
 import { ResourceManager } from '@legion/resource-manager';
-import { ToolRegistry } from '@legion/tools-registry';
+import { getToolRegistry } from '@legion/tools-registry';
 
 describe('Complete Planning Workflow E2E Tests (Clean Architecture)', () => {
   let planner;
@@ -26,7 +26,7 @@ describe('Complete Planning Workflow E2E Tests (Clean Architecture)', () => {
       
       console.log('Step 2: Initializing ToolRegistry...');
       const toolStartTime = Date.now();
-      toolRegistry = await ToolRegistry.getInstance();
+      toolRegistry = await getToolRegistry();
       console.log(`✅ ToolRegistry initialized in ${Date.now() - toolStartTime}ms`);
       
       console.log('Step 3: Getting LLM client...');

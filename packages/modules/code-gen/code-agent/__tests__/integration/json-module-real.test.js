@@ -27,7 +27,7 @@ describe('CodeAgent JSON Module Real Integration', () => {
     await fs.mkdir(testDir, { recursive: true });
 
     // Setup ResourceManager
-    resourceManager = ResourceManager.getInstance();
+    resourceManager = await ResourceManager.getInstance();
     await resourceManager.initialize();
 
     // Create ModuleFactory

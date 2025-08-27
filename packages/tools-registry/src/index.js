@@ -31,9 +31,6 @@ export { Tool } from './core/Tool.js';
 export { ToolResult } from './core/ToolResult.js';
 export { SimpleEmitter } from './core/SimpleEmitter.js';
 
-// Export ToolRegistry class for tests (not the singleton)
-export { ToolRegistry } from './integration/ToolRegistry.js';
-
 // Verification framework exports
 export { 
   MetadataManager,

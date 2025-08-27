@@ -20,6 +20,49 @@ export class Tool extends SimpleEmitter {
     // Aliases for schema compatibility
     this.inputSchema = this.schema.input;
     this.outputSchema = this.schema.output;
+    
+    // EventEmitter compatibility - track listeners by event name
+    this._eventListeners = new Map();
+  }
+  
+  /**
+   * EventEmitter-compatible on method
+   * @param {string} eventName - Name of the event
+   * @param {Function} listener - Event listener function
+   */
+  on(eventName, listener) {
+    if (!this._eventListeners.has(eventName)) {
+      this._eventListeners.set(eventName, new Set());
+    }
+    this._eventListeners.get(eventName).add(listener);
+    
+    // Subscribe once for this event type if not already subscribed
+    if (!this._eventSubscriber) {
+      this._eventSubscriber = this.subscribe((name, data) => {
+        if (this._eventListeners.has(name)) {
+          for (const listener of this._eventListeners.get(name)) {
+            listener(data);
+          }
+        }
+      });
+    }
+    
+    return this;
+  }
+  
+  /**
+   * EventEmitter-compatible off method
+   * @param {string} eventName - Name of the event
+   * @param {Function} listener - Event listener function
+   */
+  off(eventName, listener) {
+    if (this._eventListeners.has(eventName)) {
+      this._eventListeners.get(eventName).delete(listener);
+      if (this._eventListeners.get(eventName).size === 0) {
+        this._eventListeners.delete(eventName);
+      }
+    }
+    return this;
   }
   
   /**

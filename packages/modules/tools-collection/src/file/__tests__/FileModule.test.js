@@ -113,10 +113,15 @@ describe('FileModule Integration Tests', () => {
       const moduleResult = await fileModule.invoke('file_read', { filePath: 'test.txt' });
       const toolResult = await fileReaderTool.execute({ filePath: 'test.txt' });
       
-      expect(moduleResult.success).toBe(toolResult.success);
+      // Both should succeed - compare the actual data
       if (moduleResult.success) {
-        expect(moduleResult.data.content).toBe(toolResult.data.content);
-        expect(moduleResult.data.path).toBe(toolResult.data.path);
+        // Module returns wrapped results
+        expect(moduleResult.data.content).toBe(toolResult.content);
+        expect(moduleResult.data.path).toBe(toolResult.path);
+      } else {
+        // Direct comparison if module also returns direct results
+        expect(moduleResult.content).toBe(toolResult.content);
+        expect(moduleResult.path).toBe(toolResult.path);
       }
     });
   });
@@ -197,9 +202,13 @@ describe('FileModule Integration Tests', () => {
         content: testContent 
       });
       
-      expect(moduleResult.success).toBe(toolResult.success);
-      if (moduleResult.success && toolResult.success) {
-        expect(moduleResult.data.bytesWritten).toBe(toolResult.data.bytesWritten);
+      // Both should succeed - compare the actual data
+      if (moduleResult.success) {
+        // Module returns wrapped results
+        expect(moduleResult.data.bytesWritten).toBe(toolResult.bytesWritten);
+      } else {
+        // Direct comparison if module also returns direct results
+        expect(moduleResult.bytesWritten).toBe(toolResult.bytesWritten);
       }
     });
   });
@@ -263,15 +272,26 @@ describe('FileModule Integration Tests', () => {
         directoryPath: 'compare-dir-tool' 
       });
       
-      expect(moduleResult.success).toBe(toolResult.success);
-      if (moduleResult.success && toolResult.success) {
-        expect(moduleResult.data.created).toBe(toolResult.data.created);
+      // Both should succeed - compare the actual data
+      if (moduleResult.success) {
+        // Module returns wrapped results
+        expect(moduleResult.data.created).toBe(toolResult.created);
+      } else {
+        // Direct comparison if module also returns direct results
+        expect(moduleResult.created).toBe(toolResult.created);
       }
     });
   });
 
   describe('Directory List Operations', () => {
     beforeEach(async () => {
+      // Clean up any existing test structure
+      try {
+        await fs.rm(path.join(testDir, 'list-test'), { recursive: true, force: true });
+      } catch (e) {
+        // Directory might not exist, that's ok
+      }
+      
       // Setup test directory structure
       await fs.mkdir(path.join(testDir, 'list-test'));
       await fs.writeFile(path.join(testDir, 'list-test', 'file1.txt'), 'content1');
@@ -333,9 +353,19 @@ describe('FileModule Integration Tests', () => {
 
   describe('Directory Change Operations', () => {
     beforeEach(async () => {
+      // Clean up any existing test structure
+      try {
+        await fs.rm(path.join(testDir, 'change-test'), { recursive: true, force: true });
+      } catch (e) {
+        // Directory might not exist, that's ok
+      }
+      
       // Setup test directories
       await fs.mkdir(path.join(testDir, 'change-test'));
       await fs.mkdir(path.join(testDir, 'change-test', 'subdir'));
+      
+      // Reset working directory to testDir
+      process.chdir(testDir);
     });
 
     it('should change current working directory', async () => {

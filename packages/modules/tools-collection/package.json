@@ -17,6 +17,17 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "transform": {}
+    "transform": {},
+    "testMatch": [
+      "**/__tests__/**/*.test.js",
+      "src/**/__tests__/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/**/index.js",
+      "!src/**/__tests__/**"
+    ],
+    "verbose": true,
+    "testTimeout": 30000
   }
 }

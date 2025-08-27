@@ -120,10 +120,16 @@ describe('EditTool', () => {
       
       expect(metadata.name).toBe('Edit');
       expect(metadata.description).toContain('string replacements');
-      expect(metadata.input.file_path.required).toBe(true);
-      expect(metadata.input.old_string.required).toBe(true);
-      expect(metadata.input.new_string.required).toBe(true);
-      expect(metadata.input.replace_all.required).toBe(false);
+      expect(metadata.inputSchema).toBeDefined();
+      expect(metadata.inputSchema.properties).toBeDefined();
+      expect(metadata.inputSchema.properties.file_path).toBeDefined();
+      expect(metadata.inputSchema.properties.old_string).toBeDefined();
+      expect(metadata.inputSchema.properties.new_string).toBeDefined();
+      expect(metadata.inputSchema.properties.replace_all).toBeDefined();
+      expect(metadata.inputSchema.required).toContain('file_path');
+      expect(metadata.inputSchema.required).toContain('old_string');
+      expect(metadata.inputSchema.required).toContain('new_string');
+      expect(metadata.inputSchema.required).not.toContain('replace_all');
     });
   });
 });

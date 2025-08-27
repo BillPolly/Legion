@@ -138,18 +138,10 @@ describe('DirectoryCreatorTool Tests', () => {
     });
 
     it('should fail non-recursive mode when parent does not exist', async () => {
-      const result = await tool.execute({ 
+      await expect(tool.execute({ 
         directoryPath: 'nonexistent-parent/child',
         recursive: false
-      });
-      
-      if (result.success !== undefined) {
-        expect(result.success).toBe(false);
-        expect(result.data.errorType).toBe('parent_not_found');
-      } else {
-        expect(result.error).toBeDefined();
-        expect(result.errorType).toBe('parent_not_found');
-      }
+      })).rejects.toThrow('Parent directory does not exist');
     });
 
     it('should handle relative paths correctly', async () => {
@@ -169,53 +161,26 @@ describe('DirectoryCreatorTool Tests', () => {
 
   describe('Error Handling', () => {
     it('should validate directory path input', async () => {
-      const result = await tool.execute({ directoryPath: '' });
-      
-      if (result.success !== undefined) {
-        expect(result.success).toBe(false);
-        expect(result.data.errorType).toBe('invalid_path');
-      } else {
-        expect(result.error).toBeDefined();
-        expect(result.errorType).toBe('invalid_path');
-      }
+      await expect(tool.execute({ directoryPath: '' }))
+        .rejects.toThrow('Directory path cannot be empty');
     });
 
     it('should handle null directory path', async () => {
-      const result = await tool.execute({ directoryPath: null });
-      
-      if (result.success !== undefined) {
-        expect(result.success).toBe(false);
-        expect(result.data.errorType).toBe('invalid_path');
-      } else {
-        expect(result.error).toBeDefined();
-        expect(result.errorType).toBe('invalid_path');
-      }
+      await expect(tool.execute({ directoryPath: null }))
+        .rejects.toThrow('Directory path must be a string');
     });
 
     it('should handle undefined directory path', async () => {
-      const result = await tool.execute({});
-      
-      if (result.success !== undefined) {
-        expect(result.success).toBe(false);
-        expect(result.error).toBeDefined();
-      } else {
-        expect(result.error).toBeDefined();
-      }
+      await expect(tool.execute({}))
+        .rejects.toThrow('Directory path must be a string');
     });
 
     it('should handle file exists at target path', async () => {
       // Create a file where we want to create a directory
       await fs.writeFile(path.join(testDir, 'file-not-dir.txt'), 'content');
       
-      const result = await tool.execute({ directoryPath: 'file-not-dir.txt' });
-      
-      if (result.success !== undefined) {
-        expect(result.success).toBe(false);
-        expect(result.data.errorType).toBe('path_exists_not_dir');
-      } else {
-        expect(result.error).toBeDefined();
-        expect(result.errorType).toBe('path_exists_not_dir');
-      }
+      await expect(tool.execute({ directoryPath: 'file-not-dir.txt' }))
+        .rejects.toThrow();
     });
 
     it('should handle permission denied scenarios', async () => {
@@ -226,14 +191,9 @@ describe('DirectoryCreatorTool Tests', () => {
           permissions: 0o755
         });
         
-        const result = await restrictedTool.execute({ directoryPath: 'restricted-dir' });
-        
-        if (result.success !== undefined) {
-          // May succeed or fail depending on system - just check error type if it fails
-          if (!result.success) {
-            expect(['permission_denied', 'access_denied']).toContain(result.data.errorType);
-          }
-        }
+        // Expect this to throw due to permission denied
+        await expect(restrictedTool.execute({ directoryPath: 'restricted-dir' }))
+          .rejects.toThrow();
       } else {
         // On Windows, just verify the test structure is correct
         expect(tool).toBeDefined();
@@ -243,27 +203,13 @@ describe('DirectoryCreatorTool Tests', () => {
 
   describe('Security and Path Validation', () => {
     it('should prevent path traversal attacks', async () => {
-      const result = await tool.execute({ directoryPath: '../../../tmp/malicious' });
-      
-      if (result.success !== undefined) {
-        expect(result.success).toBe(false);
-        expect(result.data.errorType).toBe('access_denied');
-      } else {
-        expect(result.error).toBeDefined();
-        expect(result.errorType).toBe('access_denied');
-      }
+      await expect(tool.execute({ directoryPath: '../../../tmp/malicious' }))
+        .rejects.toThrow('Access denied: Path is outside allowed directory');
     });
 
     it('should handle null byte injection', async () => {
-      const result = await tool.execute({ directoryPath: 'test\0hidden' });
-      
-      if (result.success !== undefined) {
-        expect(result.success).toBe(false);
-        expect(result.data.errorType).toBe('invalid_path');
-      } else {
-        expect(result.error).toBeDefined();
-        expect(result.errorType).toBe('invalid_path');
-      }
+      await expect(tool.execute({ directoryPath: 'test\0hidden' }))
+        .rejects.toThrow('Invalid directory path');
     });
 
     it('should respect basePath restrictions', async () => {
@@ -279,15 +225,8 @@ describe('DirectoryCreatorTool Tests', () => {
       }
       
       // Should fail outside basePath
-      const deniedResult = await restrictedTool.execute({ directoryPath: '../outside-dir' });
-      
-      if (deniedResult.success !== undefined) {
-        expect(deniedResult.success).toBe(false);
-        expect(deniedResult.data.errorType).toBe('access_denied');
-      } else {
-        expect(deniedResult.error).toBeDefined();
-        expect(deniedResult.errorType).toBe('access_denied');
-      }
+      await expect(restrictedTool.execute({ directoryPath: '../outside-dir' }))
+        .rejects.toThrow('Access denied: Path is outside allowed directory');
     });
 
     it('should normalize paths correctly', async () => {

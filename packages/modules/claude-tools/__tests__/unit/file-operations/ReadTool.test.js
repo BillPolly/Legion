@@ -165,10 +165,11 @@ describe('ReadTool', () => {
       
       expect(metadata.name).toBe('Read');
       expect(metadata.description).toContain('Read files');
-      expect(metadata.input).toBeDefined();
-      expect(metadata.input.file_path).toBeDefined();
-      expect(metadata.input.file_path.required).toBe(true);
-      expect(metadata.output).toBeDefined();
+      expect(metadata.inputSchema).toBeDefined();
+      expect(metadata.inputSchema.properties).toBeDefined();
+      expect(metadata.inputSchema.properties.file_path).toBeDefined();
+      expect(metadata.inputSchema.required).toContain('file_path');
+      expect(metadata.outputSchema).toBeDefined();
     });
   });
 });

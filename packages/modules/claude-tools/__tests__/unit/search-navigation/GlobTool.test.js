@@ -81,7 +81,11 @@ describe('GlobTool', () => {
       
       expect(metadata.name).toBe('Glob');
       expect(metadata.description).toContain('pattern matching');
-      expect(metadata.input.pattern.required).toBe(true);
+      expect(metadata.inputSchema).toBeDefined();
+      expect(metadata.inputSchema.properties).toBeDefined();
+      expect(metadata.inputSchema.properties.pattern).toBeDefined();
+      expect(metadata.inputSchema.required).toContain('pattern');
+      expect(metadata.outputSchema).toBeDefined();
     });
   });
 });

@@ -19,7 +19,7 @@ describe('Live GitHub Rate Limiting', () => {
     
     // Register GitHub environment variables
     if (resourceManager.has('env.GITHUB_PAT')) {
-      resourceManager.register('GITHUB_PAT', resourceManager.env.GITHUB_PAT);
+      resourceManager.set('GITHUB_PAT', resourceManager.env.GITHUB_PAT);
     }
     
     // Initialize GitHub authentication

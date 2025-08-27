@@ -30,10 +30,36 @@ export class PictureAnalysisTool extends Tool {
       required: ['file_path', 'prompt']
     };
     
+    const outputSchema = {
+      type: 'object',
+      properties: {
+        analysis: {
+          type: 'string',
+          description: 'The AI analysis of the image'
+        },
+        file_path: {
+          type: 'string',
+          description: 'The resolved file path'
+        },
+        prompt: {
+          type: 'string',
+          description: 'The prompt used for analysis'
+        },
+        processing_time_ms: {
+          type: 'number',
+          description: 'Processing time in milliseconds'
+        }
+      },
+      required: ['analysis', 'file_path', 'prompt', 'processing_time_ms']
+    };
+    
     super({
       name: 'analyse_picture',
       description: 'Analyze images using AI vision models. Accepts image file paths and natural language prompts to provide detailed visual analysis, descriptions, and insights.',
-      inputSchema
+      schema: {
+        input: inputSchema,
+        output: outputSchema
+      }
     });
     
     // Create validator for Legion framework compatibility
@@ -61,8 +87,56 @@ export class PictureAnalysisTool extends Tool {
     const listeners = this.eventListeners.get(eventName) || [];
     listeners.forEach(callback => callback(...args));
   }
+  
+  // Override progress to emit with tool name
+  progress(message, percentage = 0, data = {}) {
+    this.emit('progress', { 
+      tool: this.name,
+      message, 
+      percentage, 
+      ...data 
+    });
+  }
+  
+  // Override error to emit with tool name
+  error(message, data = {}) {
+    this.emit('error', { 
+      tool: this.name,
+      message, 
+      ...data 
+    });
+  }
+  
+  // Override info to emit with tool name
+  info(message, data = {}) {
+    this.emit('info', { 
+      tool: this.name,
+      message, 
+      ...data 
+    });
+  }
 
   async execute(input) {
+    try {
+      const result = await this._executeInternal(input);
+      return {
+        success: true,
+        data: result
+      };
+    } catch (error) {
+      const errorCode = error.cause?.errorCode || 'EXECUTION_ERROR';
+      return {
+        success: false,
+        data: {
+          errorCode: errorCode,
+          errorMessage: error.message,
+          file_path: error.cause?.file_path || input?.file_path
+        }
+      };
+    }
+  }
+
+  async _executeInternal(input) {
     const startTime = Date.now();
     
     try {
@@ -161,7 +235,14 @@ export class PictureAnalysisTool extends Tool {
       this.progress('Analyzing image with AI vision...', 70);
       let analysisResult;
       try {
-        analysisResult = await this.llmClient.sendAndReceiveResponse(visionRequest, requestOptions);
+        // Call the provider's messages API directly for vision support
+        const response = await this.llmClient.provider.client.messages.create({
+          model: this.llmClient.model || 'claude-3-5-sonnet-20241022',
+          max_tokens: requestOptions.max_tokens,
+          temperature: requestOptions.temperature,
+          messages: visionRequest
+        });
+        analysisResult = response.content[0].text;
       } catch (error) {
         this.error(`LLM API call failed: ${error.message}`);
         throw new Error(`Vision analysis failed: ${error.message}`, {

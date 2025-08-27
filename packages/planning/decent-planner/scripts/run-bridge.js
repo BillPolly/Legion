@@ -11,7 +11,7 @@
  */
 
 import { ResourceManager } from '@legion/resource-manager';
-import { ToolRegistry } from '@legion/tools-registry';
+import { getToolRegistry } from '@legion/tools-registry';
 import { ToolFeasibilityChecker } from '../src/core/informal/ToolFeasibilityChecker.js';
 import { Anthropic } from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
@@ -81,21 +81,7 @@ async function processTaskThroughBridge(taskDescription) {
         
         // Initialize ToolRegistry with semantic search
         console.log('  Initializing ToolRegistry...');
-        const toolRegistry = await resourceManager.getOrInitialize('toolRegistry', async () => {
-            // First ensure we have a tool registry provider
-            const provider = await resourceManager.getOrInitialize('toolRegistryProvider', async () => {
-                const { MongoDBToolRegistryProvider } = await import('@legion/tools-registry/src/providers/MongoDBToolRegistryProvider.js');
-                return await MongoDBToolRegistryProvider.create(
-                    resourceManager,
-                    { enableSemanticSearch: true }
-                );
-            });
-            
-            // Create and initialize the registry
-            const registry = new ToolRegistry({ provider });
-            await registry.initialize();
-            return registry;
-        });
+        const toolRegistry = await getToolRegistry();
         
         // Test if tools are available
         try {

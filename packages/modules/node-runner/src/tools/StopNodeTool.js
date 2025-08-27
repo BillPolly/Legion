@@ -2,7 +2,7 @@
  * @fileoverview StopNodeTool - Stop Node.js processes with graceful shutdown
  */
 
-import { Tool } from '../base/Tool.js';
+import { Tool } from '@legion/tools-registry';
 import { jsonSchemaToZod } from '@legion/schema';
 
 export class StopNodeTool extends Tool {
@@ -10,7 +10,8 @@ export class StopNodeTool extends Tool {
     super({
       name: 'stop_node',
       description: 'Stop running Node.js processes by process ID, session ID, or all processes with configurable termination behavior',
-      inputSchema: {
+      schema: {
+        input: {
         type: 'object',
         properties: {
           processId: {
@@ -47,6 +48,7 @@ export class StopNodeTool extends Tool {
           { required: ['sessionId'] },
           { required: ['stopAll'] }
         ]
+        }
       }
     });
     

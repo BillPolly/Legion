@@ -23,7 +23,7 @@ describeIf('SD Package - Legion Planning Integration (Live)', () => {
 
   beforeEach(async () => {
     // Use REAL ResourceManager - no mocks
-    resourceManager = ResourceManager.getInstance();
+    resourceManager = await ResourceManager.getInstance();
     
     // Verify required environment variables exist
     const anthropicKey = resourceManager.get('env.ANTHROPIC_API_KEY');
