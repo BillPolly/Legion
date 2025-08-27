@@ -252,7 +252,7 @@ export class GenerateUnitTestsTool extends Tool {
         ? JSON.parse(toolCall.function.arguments)
         : toolCall.function.arguments;
     } catch (error) {
-      return throw new Error(error.message || 'Tool execution failed', {
+      throw new Error(error.message || 'Tool execution failed', {
         toolName: this.name,
         error: error.toString(, {
         cause: {
@@ -268,7 +268,7 @@ export class GenerateUnitTestsTool extends Tool {
       const result = await this.execute(args);
       return result;
     } catch (error) {
-      return throw new Error(error.message || 'Tool execution failed', {
+      throw new Error(error.message || 'Tool execution failed', {
         toolName: this.name,
         error: error.toString(, {
         cause: {

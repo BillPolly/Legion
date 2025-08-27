@@ -222,7 +222,7 @@ export class AggregateDesignTool extends Tool {
       // Validate all aggregates
       const validation = this.validateAggregates(allAggregates);
       if (!validation.valid) {
-        return throw new Error(`Invalid aggregates: ${validation.errors.join(', ', {
+        throw new Error(`Invalid aggregates: ${validation.errors.join(', ', {
         cause: {
           errorType: 'operation_error'
         }
@@ -247,7 +247,7 @@ export class AggregateDesignTool extends Tool {
       };
       
     } catch (error) {
-      return throw new Error(`Failed to design aggregates: ${error.message}`, {
+      throw new Error(`Failed to design aggregates: ${error.message}`, {
         cause: {
           errorType: 'operation_error'
         }

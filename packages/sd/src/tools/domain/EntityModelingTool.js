@@ -194,7 +194,7 @@ export class EntityModelingTool extends Tool {
       // Validate all entities
       const validation = this.validateEntities(allEntities);
       if (!validation.valid) {
-        return throw new Error(`Invalid entities: ${validation.errors.join(', ', {
+        throw new Error(`Invalid entities: ${validation.errors.join(', ', {
         cause: {
           errorType: 'operation_error'
         }
@@ -219,7 +219,7 @@ export class EntityModelingTool extends Tool {
       };
       
     } catch (error) {
-      return throw new Error(`Failed to model entities: ${error.message}`, {
+      throw new Error(`Failed to model entities: ${error.message}`, {
         cause: {
           errorType: 'operation_error'
         }

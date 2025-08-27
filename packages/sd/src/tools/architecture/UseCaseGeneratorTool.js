@@ -84,7 +84,7 @@ export class UseCaseGeneratorTool extends Tool {
       
       return { useCases };
     } catch (error) {
-      return throw new Error(`Failed to generate use cases: ${error.message}`, {
+      throw new Error(`Failed to generate use cases: ${error.message}`, {
         cause: {
           errorType: 'operation_error'
         }

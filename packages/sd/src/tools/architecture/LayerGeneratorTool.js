@@ -76,7 +76,7 @@ export class LayerGeneratorTool extends Tool {
       
       return { layers };
     } catch (error) {
-      return throw new Error(`Failed to design layers: ${error.message}`, {
+      throw new Error(`Failed to design layers: ${error.message}`, {
         cause: {
           errorType: 'operation_error'
         }

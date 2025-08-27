@@ -92,7 +92,7 @@ export class DatabaseConnectionTool extends Tool {
       };
       
     } catch (error) {
-      return throw new Error(`Failed to connect to database: ${error.message}`, {
+      throw new Error(`Failed to connect to database: ${error.message}`, {
         cause: {
           errorType: 'operation_error'
         }

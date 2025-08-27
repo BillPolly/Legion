@@ -78,7 +78,7 @@ export class InterfaceDesignTool extends Tool {
       
       return { interfaces };
     } catch (error) {
-      return throw new Error(`Failed to design interfaces: ${error.message}`, {
+      throw new Error(`Failed to design interfaces: ${error.message}`, {
         cause: {
           errorType: 'operation_error'
         }

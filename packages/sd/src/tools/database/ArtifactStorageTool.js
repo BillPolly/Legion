@@ -92,7 +92,7 @@ export class ArtifactStorageTool extends Tool {
       };
       
     } catch (error) {
-      return throw new Error(`Failed to store artifact: ${error.message}`, {
+      throw new Error(`Failed to store artifact: ${error.message}`, {
         cause: {
           errorType: 'operation_error'
         }

@@ -103,7 +103,7 @@ export class UserStoryGeneratorTool extends Tool {
       };
       
     } catch (error) {
-      return throw new Error(`Failed to generate user stories: ${error.message}`, {
+      throw new Error(`Failed to generate user stories: ${error.message}`, {
         cause: {
           errorType: 'operation_error'
         }

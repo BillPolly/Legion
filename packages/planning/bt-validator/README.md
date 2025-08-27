@@ -163,6 +163,7 @@ Result object containing validation status and details.
 - **parallel**: Execute children concurrently
 - **action**: Execute a tool with parameters
 - **retry**: Retry child node on failure
+- **condition**: Evaluate a boolean expression to control flow
 
 ### Node Structure
 
@@ -175,7 +176,9 @@ Result object containing validation status and details.
   child: {...},                   // For decorator nodes (retry)
   tool: 'toolName',               // For action nodes
   inputs: { ... },                // For action nodes: tool input parameters
+  outputs: { ... },               // For action nodes: output variable mappings
   maxRetries: 3,                  // For retry nodes
+  check: 'expression',            // For condition nodes: boolean expression
   timeout: 5000                   // Optional: execution timeout
 }
 ```
@@ -212,6 +215,13 @@ The validator automatically applies these defaults:
 - Checks for circular references
 - Validates parent-child relationships
 
+### Variable Reference Validation
+- Validates artifact references in condition nodes
+- Checks that referenced variables are defined
+- Warns about unused variable outputs
+- Ensures proper context references
+- Detects forward references (using variables before they're defined)
+
 ### Schema Validation
 - Uses `@legion/schema` for comprehensive parameter validation
 - Supports type checking, constraints, and formats
@@ -232,6 +242,13 @@ The validator reports different types of errors:
 - `SCHEMA_VALIDATION_ERROR`: Parameter validation failed
 - `DUPLICATE_NODE_ID`: Duplicate node ID detected
 - `CIRCULAR_REFERENCE`: Circular reference in tree structure
+- `INVALID_NODE`: Node structure is invalid
+- `INVALID_RETRY_STRUCTURE`: Retry node doesn't have exactly one child
+- `MISSING_CONDITION`: Condition node missing check expression
+- `UNDEFINED_VARIABLE`: Referenced variable is not defined
+- `INVALID_ARTIFACT_REFERENCE`: Invalid artifact reference in condition
+- `UNUSED_VARIABLE`: Variable output is never used (warning)
+- `VALIDATION_ERROR`: General validation error occurred
 
 ## Examples
 
@@ -281,6 +298,37 @@ const parallelBT = {
     { type: 'action', id: 'task1', tool: 'processDataA', inputs: { input: 'dataA' } },
     { type: 'action', id: 'task2', tool: 'processDataB', inputs: { input: 'dataB' } },
     { type: 'action', id: 'task3', tool: 'processDataC', inputs: { input: 'dataC' } }
+  ]
+};
+```
+
+### Condition Nodes with Variable References
+
+```javascript
+const conditionalBT = {
+  type: 'sequence',
+  id: 'conditional-flow',
+  description: 'Process with conditional logic',
+  children: [
+    {
+      type: 'action',
+      id: 'fetch-data',
+      tool: 'fetchData',
+      inputs: { source: 'api' },
+      outputs: { data: 'apiData' } // Store result in artifact 'apiData'
+    },
+    {
+      type: 'condition',
+      id: 'check-data',
+      check: "artifacts['apiData'] !== null && artifacts['apiData'].length > 0",
+      description: 'Check if data was fetched successfully'
+    },
+    {
+      type: 'action',
+      id: 'process-data',
+      tool: 'processData',
+      inputs: { data: "{{apiData}}" } // Reference the artifact
+    }
   ]
 };
 ```

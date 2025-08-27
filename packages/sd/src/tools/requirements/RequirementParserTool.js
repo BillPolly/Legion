@@ -124,7 +124,7 @@ export class RequirementParserTool extends Tool {
       // Validate parsed requirements
       const validation = this.validateParsedRequirements(parsedRequirements);
       if (!validation.valid) {
-        return throw new Error(`Invalid parsed requirements: ${validation.errors.join(', ', {
+        throw new Error(`Invalid parsed requirements: ${validation.errors.join(', ', {
         cause: {
           errorType: 'operation_error'
         }
@@ -151,7 +151,7 @@ export class RequirementParserTool extends Tool {
       };
       
     } catch (error) {
-      return throw new Error(`Failed to parse requirements: ${error.message}`, {
+      throw new Error(`Failed to parse requirements: ${error.message}`, {
         cause: {
           errorType: 'operation_error'
         }

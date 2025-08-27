@@ -91,7 +91,7 @@ export class AcceptanceCriteriaGeneratorTool extends Tool {
       return { acceptanceCriteria: criteriaMap };
       
     } catch (error) {
-      return throw new Error(`Failed to generate acceptance criteria: ${error.message}`, {
+      throw new Error(`Failed to generate acceptance criteria: ${error.message}`, {
         cause: {
           errorType: 'operation_error'
         }

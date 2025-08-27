@@ -80,7 +80,7 @@ export class DomainEventExtractorTool extends Tool {
       
       return { domainEvents };
     } catch (error) {
-      return throw new Error(`Failed to extract domain events: ${error.message}`, {
+      throw new Error(`Failed to extract domain events: ${error.message}`, {
         cause: {
           errorType: 'operation_error'
         }

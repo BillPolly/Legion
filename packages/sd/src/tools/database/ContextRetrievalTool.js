@@ -95,7 +95,7 @@ export class ContextRetrievalTool extends Tool {
       return { context };
       
     } catch (error) {
-      return throw new Error(`Failed to retrieve context: ${error.message}`, {
+      throw new Error(`Failed to retrieve context: ${error.message}`, {
         cause: {
           errorType: 'operation_error'
         }

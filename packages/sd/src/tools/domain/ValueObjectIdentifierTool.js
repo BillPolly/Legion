@@ -175,7 +175,7 @@ export class ValueObjectIdentifierTool extends Tool {
       // Validate all value objects
       const validation = this.validateValueObjects(allValueObjects);
       if (!validation.valid) {
-        return throw new Error(`Invalid value objects: ${validation.errors.join(', ', {
+        throw new Error(`Invalid value objects: ${validation.errors.join(', ', {
         cause: {
           errorType: 'operation_error'
         }
@@ -200,7 +200,7 @@ export class ValueObjectIdentifierTool extends Tool {
       };
       
     } catch (error) {
-      return throw new Error(`Failed to identify value objects: ${error.message}`, {
+      throw new Error(`Failed to identify value objects: ${error.message}`, {
         cause: {
           errorType: 'operation_error'
         }
