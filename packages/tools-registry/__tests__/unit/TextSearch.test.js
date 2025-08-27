@@ -97,7 +97,7 @@ describe('TextSearch', () => {
     
     it('should not create index if it already exists', async () => {
       mockToolsCollection.indexes.mockResolvedValue([
-        { name: 'tool_text_index', key: { name: 'text', description: 'text' } }
+        { name: 'tool_text_index', key: { _fts: 'text', name: 'text', description: 'text' } }
       ]);
       
       await textSearch.initialize();

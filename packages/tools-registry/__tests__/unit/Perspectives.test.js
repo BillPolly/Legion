@@ -347,9 +347,13 @@ describe('Perspectives', () => {
         }
       ];
       
-      // Use the shared mockDatabaseStorage but override methods for this test
-      mockDatabaseStorage.findToolPerspectivesByTool.mockResolvedValue(existingPerspectives);
+      // Mock the direct collection query that the implementation uses
+      mockPerspectivesCollection.find.mockReturnValue({
+        toArray: jest.fn().mockResolvedValue(existingPerspectives)
+      });
+      
       mockDatabaseStorage.findTool.mockResolvedValue({
+        _id: 'tool1',  // Need an ID for the lookup to work
         name: 'file-reader',
         description: 'Read files'
       });

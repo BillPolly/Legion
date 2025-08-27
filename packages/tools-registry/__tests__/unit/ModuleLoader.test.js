@@ -60,7 +60,7 @@ describe('ModuleLoader', () => {
       
       await expect(moduleLoader.loadModule(modulePath))
         .rejects
-        .toThrow('Failed to load module');
+        .toThrow('Module path not found');
     });
     
     it('should throw error for invalid module structure', async () => {

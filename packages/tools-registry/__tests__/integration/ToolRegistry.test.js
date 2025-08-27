@@ -170,11 +170,13 @@ describe('ToolRegistry Integration Tests', () => {
     it('should clear all data when requested', async () => {
       const result = await toolRegistry.clearAllData();
       
-      expect(result).toHaveProperty('tools');
-      expect(result).toHaveProperty('modules');
-      expect(result).toHaveProperty('perspectives');
-      expect(typeof result.tools).toBe('number');
-      expect(typeof result.modules).toBe('number');
+      expect(result).toHaveProperty('cache');
+      expect(result).toHaveProperty('mongodb');
+      expect(result).toHaveProperty('vectorStore');
+      expect(result.mongodb).toHaveProperty('tools');
+      expect(result.mongodb).toHaveProperty('modules');
+      expect(typeof result.mongodb.tools).toBe('number');
+      expect(typeof result.mongodb.modules).toBe('number');
     });
   });
   
@@ -253,10 +255,13 @@ describe('ToolRegistry Integration Tests', () => {
         verbose: false
       });
       
-      expect(result).toHaveProperty('total');
-      expect(result).toHaveProperty('embedded');
+      expect(result).toHaveProperty('generated');
       expect(result).toHaveProperty('failed');
-      expect(result).toHaveProperty('errors');
+      expect(result).toHaveProperty('failures');
+      expect(result).toHaveProperty('skipped');
+      expect(result).toHaveProperty('totalPerspectives');
+      expect(typeof result.generated).toBe('number');
+      expect(typeof result.failed).toBe('number');
     });
   });
   

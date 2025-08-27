@@ -244,7 +244,7 @@ describe('DatabaseInitializer', () => {
       expect(toolNameIndex).toBeDefined();
 
       const compositeIndex = tpIndexes.find(idx => 
-        idx.key.tool_name === 1 && idx.key.perspective_type_name === 1
+        idx.key.tool_id === 1 && idx.key.perspective_type_name === 1
       );
       expect(compositeIndex).toBeDefined();
       expect(compositeIndex.unique).toBe(true);

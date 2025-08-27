@@ -5,7 +5,7 @@
  * Following TDD principles - these tests are written before implementation
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { ModuleDiscovery } from '../../src/core/ModuleDiscovery.js';
 import path from 'path';
 import fs from 'fs/promises';
@@ -20,6 +20,13 @@ describe('ModuleDiscovery', () => {
   
   beforeEach(async () => {
     moduleDiscovery = new ModuleDiscovery();
+    
+    // Set a mock resourceManager on the instance for testing
+    const mockResourceManager = {
+      initialize: jest.fn().mockResolvedValue(true),
+      get: jest.fn().mockReturnValue(undefined)
+    };
+    moduleDiscovery.resourceManager = mockResourceManager;
     
     // Create a test directory structure
     testDir = path.join(__dirname, '../tmp/discovery-test');
@@ -215,8 +222,10 @@ export default class ValidModule {
   getTools() { return []; }
 }`);
       
-      const isValid = await moduleDiscovery.validateModule(validModulePath);
-      expect(isValid).toBe(true);
+      const validationResult = await moduleDiscovery.validateModule(validModulePath);
+      
+      expect(validationResult.valid).toBe(true);
+      expect(validationResult.errors.length).toBe(0);
     });
     
     it('should reject invalid module structure', async () => {
@@ -226,8 +235,9 @@ export default class InvalidModule {
   // Missing required methods
 }`);
       
-      const isValid = await moduleDiscovery.validateModule(invalidModulePath);
-      expect(isValid).toBe(false);
+      const validationResult = await moduleDiscovery.validateModule(invalidModulePath);
+      expect(validationResult.valid).toBe(false);
+      expect(validationResult.errors.length).toBeGreaterThan(0);
     });
     
   });
