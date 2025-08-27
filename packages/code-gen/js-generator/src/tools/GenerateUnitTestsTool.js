@@ -11,7 +11,7 @@
  * mocking, assertions, and test organization patterns.
  */
 
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -252,9 +252,13 @@ export class GenerateUnitTestsTool extends Tool {
         ? JSON.parse(toolCall.function.arguments)
         : toolCall.function.arguments;
     } catch (error) {
-      return ToolResult.failure(error.message || 'Tool execution failed', {
+      return throw new Error(error.message || 'Tool execution failed', {
         toolName: this.name,
-        error: error.toString(),
+        error: error.toString(, {
+        cause: {
+          errorType: 'operation_error'
+        }
+      }),
         stack: error.stack
       });
     }
@@ -262,11 +266,15 @@ export class GenerateUnitTestsTool extends Tool {
     // Execute the tool with parsed arguments
     try {
       const result = await this.execute(args);
-      return ToolResult.success(result);
+      return result;
     } catch (error) {
-      return ToolResult.failure(error.message || 'Tool execution failed', {
+      return throw new Error(error.message || 'Tool execution failed', {
         toolName: this.name,
-        error: error.toString(),
+        error: error.toString(, {
+        cause: {
+          errorType: 'operation_error'
+        }
+      }),
         stack: error.stack
       });
     }

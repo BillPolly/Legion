@@ -8,7 +8,7 @@
  * DomainEventExtractorTool - Extracts domain events from entities
  */
 
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 
 // Input schema as plain JSON Schema
 const domainEventExtractorToolInputSchema = {
@@ -78,9 +78,13 @@ export class DomainEventExtractorTool extends Tool {
       
       this.emit('progress', { percentage: 100, status: 'Domain events extracted' });
       
-      return ToolResult.success({ domainEvents });
+      return { domainEvents };
     } catch (error) {
-      return ToolResult.failure(`Failed to extract domain events: ${error.message}`);
+      return throw new Error(`Failed to extract domain events: ${error.message}`, {
+        cause: {
+          errorType: 'operation_error'
+        }
+      })
     }
   }
 }

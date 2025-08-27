@@ -8,7 +8,7 @@
  * InterfaceDesignTool - Designs interfaces for boundaries
  */
 
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 
 // Input schema as plain JSON Schema
 const interfaceDesignToolInputSchema = {
@@ -76,9 +76,13 @@ export class InterfaceDesignTool extends Tool {
       
       this.emit('progress', { percentage: 100, status: 'Interfaces designed' });
       
-      return ToolResult.success({ interfaces });
+      return { interfaces };
     } catch (error) {
-      return ToolResult.failure(`Failed to design interfaces: ${error.message}`);
+      return throw new Error(`Failed to design interfaces: ${error.message}`, {
+        cause: {
+          errorType: 'operation_error'
+        }
+      })
     }
   }
 }

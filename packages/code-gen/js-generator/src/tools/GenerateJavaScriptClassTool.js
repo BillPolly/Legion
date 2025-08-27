@@ -11,7 +11,7 @@
  * and JSDoc documentation following modern ES6+ patterns.
  */
 
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 import fs from 'fs/promises';
 import path from 'path';
 

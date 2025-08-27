@@ -8,7 +8,7 @@
  * UseCaseGeneratorTool - Generates use cases from requirements
  */
 
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 
 // Input schema as plain JSON Schema
 const useCaseGeneratorToolInputSchema = {
@@ -82,9 +82,13 @@ export class UseCaseGeneratorTool extends Tool {
       
       this.emit('progress', { percentage: 100, status: 'Use cases generated' });
       
-      return ToolResult.success({ useCases });
+      return { useCases };
     } catch (error) {
-      return ToolResult.failure(`Failed to generate use cases: ${error.message}`);
+      return throw new Error(`Failed to generate use cases: ${error.message}`, {
+        cause: {
+          errorType: 'operation_error'
+        }
+      })
     }
   }
 }

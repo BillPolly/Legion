@@ -8,7 +8,7 @@
  * LayerGeneratorTool - Generates clean architecture layers
  */
 
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 
 // Input schema as plain JSON Schema
 const layerGeneratorToolInputSchema = {
@@ -74,9 +74,13 @@ export class LayerGeneratorTool extends Tool {
       
       this.emit('progress', { percentage: 100, status: 'Layers designed' });
       
-      return ToolResult.success({ layers });
+      return { layers };
     } catch (error) {
-      return ToolResult.failure(`Failed to design layers: ${error.message}`);
+      return throw new Error(`Failed to design layers: ${error.message}`, {
+        cause: {
+          errorType: 'operation_error'
+        }
+      })
     }
   }
 }

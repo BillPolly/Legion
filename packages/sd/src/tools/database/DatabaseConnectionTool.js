@@ -8,7 +8,7 @@
  * DatabaseConnectionTool - Manages MongoDB connection for design database
  */
 
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 import { MongoClient } from 'mongodb';
 
 // Input schema as plain JSON Schema
@@ -85,14 +85,18 @@ export class DatabaseConnectionTool extends Tool {
       
       this.emit('progress', { percentage: 100, status: 'Connected to database' });
       
-      return ToolResult.success({
+      return {
         connected: true,
         uri: uri.replace(/\/\/.*@/, '//***@'), // Hide credentials
         database: dbName
-      });
+      };
       
     } catch (error) {
-      return ToolResult.failure(`Failed to connect to database: ${error.message}`);
+      return throw new Error(`Failed to connect to database: ${error.message}`, {
+        cause: {
+          errorType: 'operation_error'
+        }
+      })
     }
   }
   

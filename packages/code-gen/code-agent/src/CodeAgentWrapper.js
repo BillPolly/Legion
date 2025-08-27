@@ -100,7 +100,11 @@ class CodeAgentWrapper {
                         error.message.includes('Fix') ? 'fixing' : 'unknown';
       
       // GenericTool expects the error to be thrown, not an object
-      // The error message will be used by ToolResult.failure()
+      // The error message will be used by throw new Error(, {
+        cause: {
+          errorType: 'operation_error'
+        }
+      })
       throw new Error(error.message);
     }
   }
@@ -150,7 +154,11 @@ class CodeAgentWrapper {
                         error.message.includes('Quality') ? 'quality' : 'unknown';
       
       // GenericTool expects the error to be thrown, not an object
-      // The error message will be used by ToolResult.failure()
+      // The error message will be used by throw new Error(, {
+        cause: {
+          errorType: 'operation_error'
+        }
+      })
       throw new Error(error.message);
     }
   }

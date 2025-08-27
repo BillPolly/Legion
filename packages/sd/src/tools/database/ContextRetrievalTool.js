@@ -8,7 +8,7 @@
  * ContextRetrievalTool - Retrieves context from design database
  */
 
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 
 // Input schema as plain JSON Schema
 const contextRetrievalToolInputSchema = {
@@ -92,10 +92,14 @@ export class ContextRetrievalTool extends Tool {
       
       this.emit('progress', { percentage: 100, status: 'Context retrieved' });
       
-      return ToolResult.success({ context });
+      return { context };
       
     } catch (error) {
-      return ToolResult.failure(`Failed to retrieve context: ${error.message}`);
+      return throw new Error(`Failed to retrieve context: ${error.message}`, {
+        cause: {
+          errorType: 'operation_error'
+        }
+      })
     }
   }
 }

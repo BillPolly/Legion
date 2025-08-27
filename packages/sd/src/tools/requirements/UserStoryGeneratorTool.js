@@ -8,7 +8,7 @@
  * UserStoryGeneratorTool - Generates user stories from parsed requirements
  */
 
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 
 // Input schema as plain JSON Schema
 const userStoryGeneratorToolInputSchema = {
@@ -97,13 +97,17 @@ export class UserStoryGeneratorTool extends Tool {
       
       this.emit('progress', { percentage: 100, status: 'User stories generated' });
       
-      return ToolResult.success({
+      return {
         userStories,
         count: userStories.length
-      });
+      };
       
     } catch (error) {
-      return ToolResult.failure(`Failed to generate user stories: ${error.message}`);
+      return throw new Error(`Failed to generate user stories: ${error.message}`, {
+        cause: {
+          errorType: 'operation_error'
+        }
+      })
     }
   }
 }

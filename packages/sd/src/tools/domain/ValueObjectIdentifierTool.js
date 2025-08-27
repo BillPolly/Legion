@@ -8,7 +8,7 @@
  * ValueObjectIdentifierTool - Identifies value objects in domain model using LLM
  */
 
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 
 // Input schema as plain JSON Schema
 const valueObjectIdentifierToolInputSchema = {
@@ -175,7 +175,11 @@ export class ValueObjectIdentifierTool extends Tool {
       // Validate all value objects
       const validation = this.validateValueObjects(allValueObjects);
       if (!validation.valid) {
-        return ToolResult.failure(`Invalid value objects: ${validation.errors.join(', ')}`);
+        return throw new Error(`Invalid value objects: ${validation.errors.join(', ', {
+        cause: {
+          errorType: 'operation_error'
+        }
+      })}`);
       }
       
       // Store value objects
@@ -183,7 +187,7 @@ export class ValueObjectIdentifierTool extends Tool {
       
       this.emit('progress', { percentage: 100, status: 'Value object identification completed' });
       
-      return ToolResult.success({
+      return {
         valueObjects: allValueObjects,
         artifactId: storedArtifact.id,
         summary: {
@@ -193,10 +197,14 @@ export class ValueObjectIdentifierTool extends Tool {
             valueObjectCount: allValueObjects.filter(vo => vo.entityId === e.id).length
           }))
         }
-      });
+      };
       
     } catch (error) {
-      return ToolResult.failure(`Failed to identify value objects: ${error.message}`);
+      return throw new Error(`Failed to identify value objects: ${error.message}`, {
+        cause: {
+          errorType: 'operation_error'
+        }
+      })
     }
   }
 

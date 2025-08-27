@@ -8,7 +8,7 @@
  * AggregateDesignTool - Designs aggregates and aggregate roots using LLM
  */
 
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 
 // Input schema as plain JSON Schema
 const aggregateDesignToolInputSchema = {
@@ -222,7 +222,11 @@ export class AggregateDesignTool extends Tool {
       // Validate all aggregates
       const validation = this.validateAggregates(allAggregates);
       if (!validation.valid) {
-        return ToolResult.failure(`Invalid aggregates: ${validation.errors.join(', ')}`);
+        return throw new Error(`Invalid aggregates: ${validation.errors.join(', ', {
+        cause: {
+          errorType: 'operation_error'
+        }
+      })}`);
       }
       
       // Store aggregates
@@ -230,7 +234,7 @@ export class AggregateDesignTool extends Tool {
       
       this.emit('progress', { percentage: 100, status: 'Aggregate design completed' });
       
-      return ToolResult.success({
+      return {
         aggregates: allAggregates,
         artifactId: storedArtifact.id,
         summary: {
@@ -240,10 +244,14 @@ export class AggregateDesignTool extends Tool {
             aggregateCount: allAggregates.filter(a => a.boundedContext === c.id).length
           }))
         }
-      });
+      };
       
     } catch (error) {
-      return ToolResult.failure(`Failed to design aggregates: ${error.message}`);
+      return throw new Error(`Failed to design aggregates: ${error.message}`, {
+        cause: {
+          errorType: 'operation_error'
+        }
+      })
     }
   }
 

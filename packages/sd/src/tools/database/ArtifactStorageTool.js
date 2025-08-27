@@ -8,7 +8,7 @@
  * ArtifactStorageTool - Stores artifacts in the design database
  */
 
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 
 // Input schema as plain JSON Schema
 const artifactStorageToolInputSchema = {
@@ -86,13 +86,17 @@ export class ArtifactStorageTool extends Tool {
       
       this.emit('progress', { percentage: 100, status: 'Artifact stored' });
       
-      return ToolResult.success({
+      return {
         storedArtifact,
         id: storedArtifact.id
-      });
+      };
       
     } catch (error) {
-      return ToolResult.failure(`Failed to store artifact: ${error.message}`);
+      return throw new Error(`Failed to store artifact: ${error.message}`, {
+        cause: {
+          errorType: 'operation_error'
+        }
+      })
     }
   }
 }

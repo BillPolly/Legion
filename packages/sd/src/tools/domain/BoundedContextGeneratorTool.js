@@ -8,7 +8,7 @@
  * BoundedContextGeneratorTool - Generates bounded contexts using DDD with LLM
  */
 
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 
 // Input schema as plain JSON Schema
 const boundedContextGeneratorToolInputSchema = {
@@ -166,7 +166,11 @@ export class BoundedContextGeneratorTool extends Tool {
       // Validate bounded contexts
       const validation = this.validateBoundedContexts(boundedContexts);
       if (!validation.valid) {
-        return ToolResult.failure(`Invalid bounded contexts: ${validation.errors.join(', ')}`);
+        return throw new Error(`Invalid bounded contexts: ${validation.errors.join(', ', {
+        cause: {
+          errorType: 'operation_error'
+        }
+      })}`);
       }
       
       // Enrich with relationships
@@ -179,7 +183,7 @@ export class BoundedContextGeneratorTool extends Tool {
       
       this.emit('progress', { percentage: 100, status: 'Bounded contexts identified successfully' });
       
-      return ToolResult.success({
+      return {
         boundedContexts: enrichedContexts,
         artifactId: storedArtifact.id,
         summary: {
@@ -188,10 +192,14 @@ export class BoundedContextGeneratorTool extends Tool {
           supportingDomains: enrichedContexts.filter(c => !c.isCore).map(c => c.name)
         },
         llmReasoning: boundedContexts.reasoning
-      });
+      };
       
     } catch (error) {
-      return ToolResult.failure(`Failed to identify bounded contexts: ${error.message}`);
+      return throw new Error(`Failed to identify bounded contexts: ${error.message}`, {
+        cause: {
+          errorType: 'operation_error'
+        }
+      })
     }
   }
 

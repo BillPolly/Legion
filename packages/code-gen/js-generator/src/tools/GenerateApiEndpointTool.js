@@ -11,7 +11,7 @@
  * middleware integration, and proper HTTP response patterns.
  */
 
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 
 // Input schema as plain JSON Schema
 const generateApiEndpointToolInputSchema = {
@@ -215,9 +215,13 @@ export class GenerateApiEndpointTool extends Tool {
         ? JSON.parse(toolCall.function.arguments)
         : toolCall.function.arguments;
     } catch (error) {
-      return ToolResult.failure(error.message || 'Tool execution failed', {
+      return throw new Error(error.message || 'Tool execution failed', {
         toolName: this.name,
-        error: error.toString(),
+        error: error.toString(, {
+        cause: {
+          errorType: 'operation_error'
+        }
+      }),
         stack: error.stack
       });
     }

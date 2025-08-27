@@ -8,7 +8,7 @@
  * EntityModelingTool - Models domain entities with DDD principles using LLM
  */
 
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 
 // Input schema as plain JSON Schema
 const entityModelingToolInputSchema = {
@@ -194,7 +194,11 @@ export class EntityModelingTool extends Tool {
       // Validate all entities
       const validation = this.validateEntities(allEntities);
       if (!validation.valid) {
-        return ToolResult.failure(`Invalid entities: ${validation.errors.join(', ')}`);
+        return throw new Error(`Invalid entities: ${validation.errors.join(', ', {
+        cause: {
+          errorType: 'operation_error'
+        }
+      })}`);
       }
       
       // Store entities
@@ -202,7 +206,7 @@ export class EntityModelingTool extends Tool {
       
       this.emit('progress', { percentage: 100, status: 'Entity modeling completed' });
       
-      return ToolResult.success({
+      return {
         entities: allEntities,
         artifactId: storedArtifact.id,
         summary: {
@@ -212,10 +216,14 @@ export class EntityModelingTool extends Tool {
             entityCount: allEntities.filter(e => e.boundedContext === c.id).length
           }))
         }
-      });
+      };
       
     } catch (error) {
-      return ToolResult.failure(`Failed to model entities: ${error.message}`);
+      return throw new Error(`Failed to model entities: ${error.message}`, {
+        cause: {
+          errorType: 'operation_error'
+        }
+      })
     }
   }
 

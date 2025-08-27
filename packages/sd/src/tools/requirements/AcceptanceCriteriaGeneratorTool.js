@@ -8,7 +8,7 @@
  * AcceptanceCriteriaGeneratorTool - Generates acceptance criteria for user stories
  */
 
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 
 // Input schema as plain JSON Schema
 const acceptanceCriteriaGeneratorToolInputSchema = {
@@ -88,10 +88,14 @@ export class AcceptanceCriteriaGeneratorTool extends Tool {
       
       this.emit('progress', { percentage: 100, status: 'Acceptance criteria generated' });
       
-      return ToolResult.success({ acceptanceCriteria: criteriaMap });
+      return { acceptanceCriteria: criteriaMap };
       
     } catch (error) {
-      return ToolResult.failure(`Failed to generate acceptance criteria: ${error.message}`);
+      return throw new Error(`Failed to generate acceptance criteria: ${error.message}`, {
+        cause: {
+          errorType: 'operation_error'
+        }
+      })
     }
   }
 }

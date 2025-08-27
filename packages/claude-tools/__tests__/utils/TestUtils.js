@@ -2,7 +2,7 @@
  * Test utilities for Claude Tools testing
  */
 
-import { Tool, Module, ToolResult } from '@legion/tools-registry';
+import { Tool, Module } from '@legion/tools-registry';
 import { ResourceManager } from '@legion/resource-manager';
 
 /**
@@ -30,21 +30,15 @@ export function createTestResourceManager(config = {}) {
 
 /**
  * Validate tool result structure
+ * With modern error handling, successful results return data directly,
+ * and errors are thrown as exceptions
  */
 export function validateToolResult(result) {
   expect(result).toBeDefined();
   expect(typeof result).toBe('object');
-  expect('success' in result).toBe(true);
-  expect(typeof result.success).toBe('boolean');
   
-  if (result.success) {
-    expect(result.data).toBeDefined();
-    // Don't check for undefined error - it might be null
-  } else {
-    // Tool base class returns errors in data field with error structure
-    // Our tools return errors in error field
-    expect(result.data || result.error).toBeDefined();
-  }
+  // Modern tools return data directly on success
+  // Errors are thrown as exceptions and should be caught in tests
   
   return result;
 }

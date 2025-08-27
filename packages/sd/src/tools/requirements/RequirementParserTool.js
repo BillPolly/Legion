@@ -11,7 +11,7 @@
  * structured information using LLM for intelligent analysis
  */
 
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 
 // Input schema as plain JSON Schema
 const requirementParserToolInputSchema = {
@@ -124,7 +124,11 @@ export class RequirementParserTool extends Tool {
       // Validate parsed requirements
       const validation = this.validateParsedRequirements(parsedRequirements);
       if (!validation.valid) {
-        return ToolResult.failure(`Invalid parsed requirements: ${validation.errors.join(', ')}`);
+        return throw new Error(`Invalid parsed requirements: ${validation.errors.join(', ', {
+        cause: {
+          errorType: 'operation_error'
+        }
+      })}`);
       }
       
       this.emit('progress', { percentage: 80, status: 'Storing parsed requirements...' });
@@ -134,7 +138,7 @@ export class RequirementParserTool extends Tool {
       
       this.emit('progress', { percentage: 100, status: 'Requirements parsed successfully' });
       
-      return ToolResult.success({
+      return {
         parsedRequirements,
         artifactId: storedArtifact.id,
         summary: {
@@ -144,10 +148,14 @@ export class RequirementParserTool extends Tool {
           assumptionCount: parsedRequirements.assumptions?.length || 0
         },
         llmReasoning: parsedRequirements.reasoning
-      });
+      };
       
     } catch (error) {
-      return ToolResult.failure(`Failed to parse requirements: ${error.message}`);
+      return throw new Error(`Failed to parse requirements: ${error.message}`, {
+        cause: {
+          errorType: 'operation_error'
+        }
+      })
     }
   }
 
