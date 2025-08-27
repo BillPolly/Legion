@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 import MonitoringSystem from '../MonitoringSystem.js';
 import DeploymentManager from '../DeploymentManager.js';
 import ResourceManager from '../core/ResourceManager.js';
@@ -161,47 +161,57 @@ class MonitorDeploymentTool extends Tool {
       
       // Validate action
       if (!this.validActions.includes(args.action)) {
-        const invalidActionResult = ToolResult.failure(
-          `Invalid action: ${args.action}. Must be one of: ${this.validActions.join(', ')}`
-        );
-        invalidActionResult.deploymentId = args.deploymentId;
-        invalidActionResult.action = args.action;
-        invalidActionResult.suggestions = ['Use one of the supported actions: start, stop, status, metrics, logs, health'];
-        return invalidActionResult;
+        throw new Error(`Invalid action: ${args.action}. Must be one of: ${this.validActions.join(', ')}`, {
+        cause: {
+          errorType: 'operation_error',
+          deploymentId: args.deploymentId,
+          action: args.action,
+          suggestions: ['Use one of the supported actions: start, stop, status, metrics, logs, health']
+        }
+      });
       }
       
       // Validate action-specific parameters
       const validationResult = this.validateActionParameters(args);
       if (!validationResult.valid) {
-        const validationFailureResult = ToolResult.failure(validationResult.error);
-        validationFailureResult.deploymentId = args.deploymentId;
-        validationFailureResult.action = args.action;
-        validationFailureResult.suggestions = validationResult.suggestions;
-        return validationFailureResult;
+        throw new Error(validationResult.error, {
+      cause: {
+        errorType: 'operation_error',
+        deploymentId: args.deploymentId,
+        action: args.action,
+        suggestions: validationResult.suggestions
+      }
+    });
       }
       
       // Get systems
       const { deploymentManager, monitoringSystem } = await this.getSystems();
       if (!deploymentManager || !monitoringSystem) {
-        const systemsNotAvailableResult = ToolResult.failure('Deployment or monitoring system not available. Please initialize the system first.');
-        systemsNotAvailableResult.deploymentId = args.deploymentId;
-        systemsNotAvailableResult.suggestions = ['Initialize the deployment and monitoring systems'];
-        return systemsNotAvailableResult;
+        throw new Error('Deployment or monitoring system not available. Please initialize the system first.', {
+      cause: {
+        errorType: 'operation_error',
+        deploymentId: args.deploymentId,
+        suggestions: ['Initialize the deployment and monitoring systems']
+      }
+    });
       }
       
       // Verify deployment exists
       const deployment = await deploymentManager.getDeployment(args.deploymentId);
       if (!deployment) {
-        const deploymentNotFoundResult = ToolResult.failure(`Deployment not found: ${args.deploymentId}`);
-        deploymentNotFoundResult.deploymentId = args.deploymentId;
-        deploymentNotFoundResult.suggestions = [
+        throw new Error(`Deployment not found: ${args.deploymentId}`, {
+      cause: {
+        errorType: 'operation_error',
+        deploymentId: args.deploymentId,
+        suggestions: [
           'Verify the deployment ID is correct',
           'Use list_deployments to see available deployments'
-        ];
-        return deploymentNotFoundResult;
+        ]
+      }
+    });
       }
       
-      this.emitProgress(`Executing ${args.action} monitoring action`, { 
+      // this.emitProgress(`Executing ${args.action} monitoring action`, { 
         deploymentId: args.deploymentId,
         action: args.action
       });
@@ -210,12 +220,12 @@ class MonitorDeploymentTool extends Tool {
       const result = await this.executeAction(args, deployment, monitoringSystem);
       
       if (result.success) {
-        this.emitInfo(`Successfully executed ${args.action} for ${args.deploymentId}`, {
+        // this.emitInfo(`Successfully executed ${args.action} for ${args.deploymentId}`, {
           deploymentId: args.deploymentId,
           action: args.action
         });
         
-        return ToolResult.success({
+        return {
           deployment: {
             id: deployment.id,
             name: deployment.name,
@@ -225,29 +235,33 @@ class MonitorDeploymentTool extends Tool {
           ...result.data,
           summary: result.summary,
           nextSteps: this.getNextSteps(args.action, result.data)
-        });
+        };
       } else {
-        this.emitError(`Failed to execute ${args.action}: ${result.error}`, {
+        // this.emitError(`Failed to execute ${args.action}: ${result.error}`, {
           deploymentId: args.deploymentId,
           action: args.action,
           error: result.error
         });
         
-        const actionFailureResult = ToolResult.failure(result.error);
-        actionFailureResult.deploymentId = args.deploymentId;
-        actionFailureResult.action = args.action;
-        actionFailureResult.suggestions = this.getFailureSuggestions(args.action, result);
-        return actionFailureResult;
+        throw new Error(result.error, {
+      cause: {
+        errorType: 'operation_error',
+        deploymentId: args.deploymentId,
+        action: args.action,
+        suggestions: this.getFailureSuggestions(args.action, result)
+      }
+    });
       }
       
     } catch (error) {
-      this.emitError(`Monitor deployment tool error: ${error.message}`, { error: error.stack });
+      // this.emitError(`Monitor deployment tool error: ${error.message}`, { error: error.stack });
       
-      const errorResult = ToolResult.failure(
-        error.message.includes('JSON') ? `Invalid JSON in arguments: ${error.message}` : `Monitoring failed: ${error.message}`
-      );
-      errorResult.suggestions = ['Check your parameters and try again'];
-      return errorResult;
+      throw new Error(error.message.includes('JSON') ? `Invalid JSON in arguments: ${error.message}` : `Monitoring failed: ${error.message}`, {
+        cause: {
+          errorType: 'operation_error',
+          suggestions: ['Check your parameters and try again']
+        }
+      });
     }
   }
 
@@ -324,7 +338,6 @@ class MonitorDeploymentTool extends Tool {
     
     if (result.success) {
       return {
-        success: true,
         data: {
           monitoring: {
             id: result.monitoringId,
@@ -352,7 +365,6 @@ class MonitorDeploymentTool extends Tool {
     
     if (result.success) {
       return {
-        success: true,
         data: {
           monitoring: {
             status: 'stopped'
@@ -374,7 +386,6 @@ class MonitorDeploymentTool extends Tool {
   async getMonitoringStatus(args, deployment, monitoringSystem) {
     // This would get the current monitoring status
     return {
-      success: true,
       data: {
         monitoring: {
           status: 'active', // This would come from the monitoring system
@@ -398,7 +409,6 @@ class MonitorDeploymentTool extends Tool {
     const metrics = await monitoringSystem.getMetrics(deployment.id, options);
     
     return {
-      success: true,
       data: {
         metrics: metrics
       },
@@ -420,7 +430,6 @@ class MonitorDeploymentTool extends Tool {
     
     if (result.success) {
       return {
-        success: true,
         data: {
           logs: result.logs
         },
@@ -441,7 +450,6 @@ class MonitorDeploymentTool extends Tool {
     const health = await monitoringSystem.getHealthStatus(deployment.id);
     
     return {
-      success: true,
       data: {
         health: health
       },

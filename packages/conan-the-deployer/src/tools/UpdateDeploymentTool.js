@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 import DeploymentManager from '../DeploymentManager.js';
 import ResourceManager from '../core/ResourceManager.js';
 
@@ -174,56 +174,69 @@ class UpdateDeploymentTool extends Tool {
       
       // Validate updates is object
       if (typeof args.updates !== 'object' || args.updates === null) {
-        const updatesObjectResult = ToolResult.failure('Updates must be an object');
-        updatesObjectResult.deploymentId = args.deploymentId;
-        updatesObjectResult.suggestions = ['Provide updates as a JSON object with the configuration changes'];
-        return updatesObjectResult;
+        throw new Error('Updates must be an object', {
+      cause: {
+        errorType: 'operation_error',
+        deploymentId: args.deploymentId,
+        suggestions: ['Provide updates as a JSON object with the configuration changes']
+      }
+    });
       }
       
       // Validate strategy
       const strategy = args.strategy || 'rolling';
       if (!this.validStrategies.includes(strategy)) {
-        const invalidStrategyResult = ToolResult.failure(
-          `Invalid update strategy: ${strategy}. Must be one of: ${this.validStrategies.join(', ')}`
-        );
-        invalidStrategyResult.deploymentId = args.deploymentId;
-        invalidStrategyResult.strategy = strategy;
-        invalidStrategyResult.suggestions = ['Use one of the supported strategies: rolling, blue-green, recreate, scaling, config'];
-        return invalidStrategyResult;
+        throw new Error(`Invalid update strategy: ${strategy}. Must be one of: ${this.validStrategies.join(', ')}`, {
+        cause: {
+          errorType: 'operation_error',
+          deploymentId: args.deploymentId,
+          strategy: strategy,
+          suggestions: ['Use one of the supported strategies: rolling, blue-green, recreate, scaling, config']
+        }
+      });
       }
       
       // Validate strategy-specific parameters
       const validationResult = this.validateStrategyParameters(args, strategy);
       if (!validationResult.valid) {
-        const validationFailureResult = ToolResult.failure(validationResult.error);
-        validationFailureResult.deploymentId = args.deploymentId;
-        validationFailureResult.strategy = strategy;
-        validationFailureResult.suggestions = validationResult.suggestions;
-        return validationFailureResult;
+        throw new Error(validationResult.error, {
+      cause: {
+        errorType: 'operation_error',
+        deploymentId: args.deploymentId,
+        strategy: strategy,
+        suggestions: validationResult.suggestions
+      }
+    });
       }
       
       // Get deployment manager
       const deploymentManager = await this.getDeploymentManager();
       if (!deploymentManager) {
-        const managerNotAvailableResult = ToolResult.failure('Deployment manager not available. Please initialize the system first.');
-        managerNotAvailableResult.deploymentId = args.deploymentId;
-        managerNotAvailableResult.suggestions = ['Initialize the deployment system before updating deployments'];
-        return managerNotAvailableResult;
+        throw new Error('Deployment manager not available. Please initialize the system first.', {
+      cause: {
+        errorType: 'operation_error',
+        deploymentId: args.deploymentId,
+        suggestions: ['Initialize the deployment system before updating deployments']
+      }
+    });
       }
       
       // Verify deployment exists
       const deployment = await deploymentManager.getDeployment(args.deploymentId);
       if (!deployment) {
-        const deploymentNotFoundResult = ToolResult.failure(`Deployment not found: ${args.deploymentId}`);
-        deploymentNotFoundResult.deploymentId = args.deploymentId;
-        deploymentNotFoundResult.suggestions = [
+        throw new Error(`Deployment not found: ${args.deploymentId}`, {
+      cause: {
+        errorType: 'operation_error',
+        deploymentId: args.deploymentId,
+        suggestions: [
           'Verify the deployment ID is correct',
           'Use list_deployments to see available deployments'
-        ];
-        return deploymentNotFoundResult;
+        ]
+      }
+    });
       }
       
-      this.emitProgress(`Starting ${strategy} update for ${args.deploymentId}`, { 
+      // this.emitProgress(`Starting ${strategy} update for ${args.deploymentId}`, { 
         deploymentId: args.deploymentId,
         strategy: strategy
       });
@@ -235,13 +248,13 @@ class UpdateDeploymentTool extends Tool {
       const result = await deploymentManager.updateDeployment(args.deploymentId, args.updates, updateOptions);
       
       if (result.success) {
-        this.emitInfo(`Successfully updated ${args.deploymentId} using ${strategy} strategy`, {
+        // this.emitInfo(`Successfully updated ${args.deploymentId} using ${strategy} strategy`, {
           deploymentId: args.deploymentId,
           strategy: strategy,
           updateId: result.id
         });
         
-        return ToolResult.success({
+        return {
           deployment: {
             id: deployment.id,
             name: deployment.name,
@@ -268,31 +281,35 @@ class UpdateDeploymentTool extends Tool {
           },
           summary: this.buildSummary(result, strategy, deployment),
           nextSteps: this.getNextSteps(strategy, result)
-        });
+        };
       } else {
-        this.emitError(`Update failed: ${result.error}`, {
+        // this.emitError(`Update failed: ${result.error}`, {
           deploymentId: args.deploymentId,
           strategy: strategy,
           error: result.error
         });
         
-        const failureResult = ToolResult.failure(result.error || 'Update failed');
-        failureResult.deploymentId = args.deploymentId;
-        failureResult.strategy = strategy;
-        failureResult.rolledBack = result.rolledBack || false;
-        failureResult.rollbackId = result.rollbackId;
-        failureResult.suggestions = this.getFailureSuggestions(strategy, result);
-        return failureResult;
+        throw new Error(result.error || 'Update failed', {
+      cause: {
+        errorType: 'operation_error',
+        deploymentId: args.deploymentId,
+        strategy: strategy,
+        rolledBack: result.rolledBack || false,
+        rollbackId: result.rollbackId,
+        suggestions: this.getFailureSuggestions(strategy, result)
+      }
+    });
       }
       
     } catch (error) {
-      this.emitError(`Update deployment tool error: ${error.message}`, { error: error.stack });
+      // this.emitError(`Update deployment tool error: ${error.message}`, { error: error.stack });
       
-      const errorResult = ToolResult.failure(
-        error.message.includes('JSON') ? `Invalid JSON in arguments: ${error.message}` : `Update failed: ${error.message}`
-      );
-      errorResult.suggestions = ['Check your parameters and try again'];
-      return errorResult;
+      throw new Error(error.message.includes('JSON') ? `Invalid JSON in arguments: ${error.message}` : `Update failed: ${error.message}`, {
+        cause: {
+          errorType: 'operation_error',
+          suggestions: ['Check your parameters and try again']
+        }
+      });
     }
   }
 

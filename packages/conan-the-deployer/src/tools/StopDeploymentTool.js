@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 import DeploymentManager from '../DeploymentManager.js';
 import ResourceManager from '../core/ResourceManager.js';
 
@@ -143,29 +143,36 @@ class StopDeploymentTool extends Tool {
       
       // Validate timeout
       if (args.timeout !== undefined && (args.timeout < 1000 || args.timeout > 300000)) {
-        const timeoutValidationResult = ToolResult.failure('Timeout must be a positive number between 1000ms and 300000ms');
-        timeoutValidationResult.deploymentId = args.deploymentId;
-        timeoutValidationResult.suggestions = ['Use a timeout between 1 second and 5 minutes'];
-        return timeoutValidationResult;
+        throw new Error('Timeout must be a positive number between 1000ms and 300000ms', {
+      cause: {
+        errorType: 'operation_error',
+        deploymentId: args.deploymentId,
+        suggestions: ['Use a timeout between 1 second and 5 minutes']
+      }
+    });
       }
       
       // Validate provider (when stopping all)
       if (args.deploymentId === 'all' && args.provider && !this.validProviders.includes(args.provider)) {
-        const invalidProviderResult = ToolResult.failure(
-          `Invalid provider: ${args.provider}. Must be one of: ${this.validProviders.join(', ')}`
-        );
-        invalidProviderResult.deploymentId = args.deploymentId;
-        invalidProviderResult.suggestions = ['Use one of: local, docker, railway'];
-        return invalidProviderResult;
+        throw new Error(`Invalid provider: ${args.provider}. Must be one of: ${this.validProviders.join(', ')}`, {
+        cause: {
+          errorType: 'operation_error',
+          deploymentId: args.deploymentId,
+          suggestions: ['Use one of: local, docker, railway']
+        }
+      });
       }
       
       // Get deployment manager
       const deploymentManager = await this.getDeploymentManager();
       if (!deploymentManager) {
-        const managerNotAvailableResult = ToolResult.failure('Deployment manager not available. Please initialize the system first.');
-        managerNotAvailableResult.deploymentId = args.deploymentId;
-        managerNotAvailableResult.suggestions = ['Initialize the deployment system before stopping deployments'];
-        return managerNotAvailableResult;
+        throw new Error('Deployment manager not available. Please initialize the system first.', {
+      cause: {
+        errorType: 'operation_error',
+        deploymentId: args.deploymentId,
+        suggestions: ['Initialize the deployment system before stopping deployments']
+      }
+    });
       }
       
       // Handle "stop all" case
@@ -176,28 +183,34 @@ class StopDeploymentTool extends Tool {
       // Verify deployment exists and is running
       const deployment = await deploymentManager.getDeployment(args.deploymentId);
       if (!deployment) {
-        const deploymentNotFoundResult = ToolResult.failure(`Deployment not found: ${args.deploymentId}`);
-        deploymentNotFoundResult.deploymentId = args.deploymentId;
-        deploymentNotFoundResult.suggestions = [
+        throw new Error(`Deployment not found: ${args.deploymentId}`, {
+      cause: {
+        errorType: 'operation_error',
+        deploymentId: args.deploymentId,
+        suggestions: [
           'Verify the deployment ID is correct',
           'Use list_deployments to see available deployments'
-        ];
-        return deploymentNotFoundResult;
+        ]
+      }
+    });
       }
       
       // Check if deployment is already stopped
       if (deployment.status === 'stopped' || deployment.status === 'failed') {
-        const alreadyStoppedResult = ToolResult.failure(`Deployment ${args.deploymentId} is already stopped (status: ${deployment.status})`);
-        alreadyStoppedResult.deploymentId = args.deploymentId;
-        alreadyStoppedResult.provider = deployment.provider;
-        alreadyStoppedResult.suggestions = [
+        throw new Error(`Deployment ${args.deploymentId} is already stopped (status: ${deployment.status})`, {
+      cause: {
+        errorType: 'operation_error',
+        deploymentId: args.deploymentId,
+        provider: deployment.provider,
+        suggestions: [
           'Use list_deployments to see current deployment statuses',
           'Start the deployment again if needed with deploy_application'
-        ];
-        return alreadyStoppedResult;
+        ]
+      }
+    });
       }
       
-      this.emitProgress(`Stopping deployment ${args.deploymentId}`, { 
+      // this.emitProgress(`Stopping deployment ${args.deploymentId}`, { 
         deploymentId: args.deploymentId,
         provider: deployment.provider,
         graceful: args.graceful !== false
@@ -210,14 +223,14 @@ class StopDeploymentTool extends Tool {
       const result = await deploymentManager.stopDeployment(args.deploymentId, stopOptions);
       
       if (result.success) {
-        this.emitInfo(`Successfully stopped ${args.deploymentId}`, {
+        // this.emitInfo(`Successfully stopped ${args.deploymentId}`, {
           deploymentId: args.deploymentId,
           provider: deployment.provider,
           graceful: result.graceful,
           shutdownTime: result.shutdownTime
         });
         
-        return ToolResult.success({
+        return {
           deployment: {
             id: deployment.id,
             name: deployment.name,
@@ -238,29 +251,33 @@ class StopDeploymentTool extends Tool {
           },
           summary: this.buildSummary(result, deployment),
           nextSteps: this.getNextSteps(deployment.provider, result)
-        });
+        };
       } else {
-        this.emitError(`Failed to stop deployment: ${result.error}`, {
+        // this.emitError(`Failed to stop deployment: ${result.error}`, {
           deploymentId: args.deploymentId,
           provider: deployment.provider,
           error: result.error
         });
         
-        const stopFailureResult = ToolResult.failure(result.error || 'Failed to stop deployment');
-        stopFailureResult.deploymentId = args.deploymentId;
-        stopFailureResult.provider = deployment.provider;
-        stopFailureResult.suggestions = this.getFailureSuggestions(deployment.provider, result);
-        return stopFailureResult;
+        throw new Error(result.error || 'Failed to stop deployment', {
+      cause: {
+        errorType: 'operation_error',
+        deploymentId: args.deploymentId,
+        provider: deployment.provider,
+        suggestions: this.getFailureSuggestions(deployment.provider, result)
+      }
+    });
       }
       
     } catch (error) {
-      this.emitError(`Stop deployment tool error: ${error.message}`, { error: error.stack });
+      // this.emitError(`Stop deployment tool error: ${error.message}`, { error: error.stack });
       
-      const errorResult = ToolResult.failure(
-        error.message.includes('JSON') ? `Invalid JSON in arguments: ${error.message}` : `Stop failed: ${error.message}`
-      );
-      errorResult.suggestions = ['Check your parameters and try again'];
-      return errorResult;
+      throw new Error(error.message.includes('JSON') ? `Invalid JSON in arguments: ${error.message}` : `Stop failed: ${error.message}`, {
+        cause: {
+          errorType: 'operation_error',
+          suggestions: ['Check your parameters and try again']
+        }
+      });
     }
   }
 
@@ -275,7 +292,7 @@ class StopDeploymentTool extends Tool {
       const result = await deploymentManager.stopDeployment('all', { ...stopOptions, ...filterOptions });
       
       if (result.success) {
-        return ToolResult.success({
+        return {
           stop: {
             totalStopped: result.totalStopped || result.stopped?.length || 0,
             stopped: result.stopped,
@@ -286,16 +303,22 @@ class StopDeploymentTool extends Tool {
             'Use list_deployments to verify all deployments are stopped',
             'Deploy new applications as needed with deploy_application'
           ]
-        });
+        };
       } else {
-        const stopAllFailureResult = ToolResult.failure(result.error || 'Failed to stop deployments');
-        stopAllFailureResult.suggestions = ['Try stopping deployments individually', 'Check system status and logs'];
-        return stopAllFailureResult;
+        throw new Error(result.error || 'Failed to stop deployments', {
+      cause: {
+        errorType: 'operation_error',
+        suggestions: ['Try stopping deployments individually', 'Check system status and logs']
+      }
+    });
       }
     } catch (error) {
-      const stopAllErrorResult = ToolResult.failure(`Failed to stop all deployments: ${error.message}`);
-      stopAllErrorResult.suggestions = ['Try stopping deployments individually'];
-      return stopAllErrorResult;
+      throw new Error(`Failed to stop all deployments: ${error.message}`, {
+      cause: {
+        errorType: 'operation_error',
+        suggestions: ['Try stopping deployments individually']
+      }
+    });
     }
   }
 

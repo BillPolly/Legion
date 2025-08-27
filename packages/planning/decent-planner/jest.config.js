@@ -22,9 +22,7 @@ export default {
   testPathIgnorePatterns: [
     '/node_modules/',
     '/__tests__/utils/',
-    '/__tests__/setup.js',
-    // Skip the problematic DecomposeTaskUseCase test that causes infinite loops
-    'DecomposeTaskUseCase.test.js'
+    '/__tests__/setup.js'
   ],
   // Force exit to prevent hanging on async operations
   forceExit: true,

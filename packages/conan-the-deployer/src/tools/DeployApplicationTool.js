@@ -1,4 +1,4 @@
-import { Tool, ToolResult, ResourceManager } from '@legion/tools-registry';
+import { Tool, ResourceManager } from '@legion/tools-registry';
 import DeploymentManager from '../DeploymentManager.js';
 
 /**
@@ -158,43 +158,53 @@ class DeployApplicationTool extends Tool {
       
       // Validate provider
       if (!this.validProviders.includes(args.provider)) {
-        const invalidProviderResult = ToolResult.failure(
-          `Invalid provider: ${args.provider}. Must be one of: ${this.validProviders.join(', ')}`
-        );
-        invalidProviderResult.provider = args.provider;
-        invalidProviderResult.suggestions = ['Use one of the supported providers: local, docker, railway'];
-        invalidProviderResult.examples = this.getConfigurationExamples();
-        return invalidProviderResult;
+        throw new Error(`Invalid provider: ${args.provider}. Must be one of: ${this.validProviders.join(', ')}`, {
+          cause: {
+            provider: args.provider,
+            errorType: 'validation_error',
+            suggestions: ['Use one of the supported providers: local, docker, railway'],
+            examples: this.getConfigurationExamples()
+          }
+        });
       }
       
       // Validate config is object
       if (typeof args.config !== 'object' || args.config === null) {
-        const configObjectResult = ToolResult.failure('Config must be an object');
-        configObjectResult.provider = args.provider;
-        configObjectResult.suggestions = ['Provide configuration as a JSON object'];
-        configObjectResult.examples = this.getConfigurationExamples();
-        return configObjectResult;
+        throw new Error('Config must be an object', {
+          cause: {
+            provider: args.provider,
+            errorType: 'validation_error',
+            suggestions: ['Provide configuration as a JSON object'],
+            examples: this.getConfigurationExamples()
+          }
+        });
       }
       
       // Validate config has required name field
       if (!args.config.name) {
-        const missingNameResult = ToolResult.failure('Missing required parameter: config.name');
-        missingNameResult.provider = args.provider;
-        missingNameResult.suggestions = ['Add a name field to your config object'];
-        missingNameResult.examples = this.getConfigurationExamples();
-        return missingNameResult;
+        throw new Error('Missing required parameter: config.name', {
+          cause: {
+            provider: args.provider,
+            errorType: 'validation_error',
+            suggestions: ['Add a name field to your config object'],
+            examples: this.getConfigurationExamples()
+          }
+        });
       }
       
       // Get deployment manager
       const deploymentManager = await this.getDeploymentManager();
       if (!deploymentManager) {
-        const managerNotAvailableResult = ToolResult.failure('Deployment manager not available. Please initialize the system first.');
-        managerNotAvailableResult.provider = args.provider;
-        managerNotAvailableResult.suggestions = ['Initialize the deployment system before deploying applications'];
-        return managerNotAvailableResult;
+        throw new Error('Deployment manager not available. Please initialize the system first.', {
+          cause: {
+            provider: args.provider,
+            errorType: 'initialization_error',
+            suggestions: ['Initialize the deployment system before deploying applications']
+          }
+        });
       }
       
-      this.emitProgress(`Starting deployment to ${args.provider}`, { 
+      // this.emitProgress(`Starting deployment to ${args.provider}`, { 
         provider: args.provider, 
         appName: args.config.name 
       });
@@ -217,13 +227,13 @@ class DeployApplicationTool extends Tool {
       const result = await deploymentManager.deploy(deploymentConfig);
       
       if (result.success) {
-        this.emitInfo(`Successfully deployed ${args.config.name} to ${args.provider}`, {
+        // this.emitInfo(`Successfully deployed ${args.config.name} to ${args.provider}`, {
           deploymentId: result.id,
           provider: args.provider,
           url: result.url
         });
         
-        return ToolResult.success({
+        return {
           deployment: {
             id: result.id,
             provider: result.provider,
@@ -233,31 +243,42 @@ class DeployApplicationTool extends Tool {
           },
           summary: `Successfully deployed "${args.config.name}" to ${args.provider} provider. ${result.url ? `Available at: ${result.url}` : 'No URL available yet.'}`,
           nextSteps: this.getNextSteps(args.provider, result)
-        });
+        };
       } else {
-        this.emitError(`Deployment failed: ${result.error}`, {
+        // this.emitError(`Deployment failed: ${result.error}`, {
           provider: args.provider,
           error: result.error
         });
         
-        const failureResult = ToolResult.failure(
-          result.error || 'Deployment failed'
-        );
-        failureResult.provider = args.provider;
-        failureResult.suggestions = this.getFailureSuggestions(args.provider, result);
-        failureResult.examples = this.getConfigurationExamples();
-        return failureResult;
+        throw new Error(result.error || 'Deployment failed', {
+          cause: {
+            provider: args.provider,
+            errorType: 'deployment_error',
+            suggestions: this.getFailureSuggestions(args.provider, result),
+            examples: this.getConfigurationExamples()
+          }
+        });
       }
       
     } catch (error) {
-      this.emitError(`Deployment tool error: ${error.message}`, { error: error.stack });
+      // this.emitError(`Deployment tool error: ${error.message}`, { error: error.stack });
       
-      const errorResult = ToolResult.failure(
-        error.message.includes('JSON') ? `Invalid JSON in arguments: ${error.message}` : `Deployment failed: ${error.message}`
+      // Re-throw if already has proper structure
+      if (error.cause && error.cause.errorType) {
+        throw error;
+      }
+      
+      // Wrap other errors
+      throw new Error(
+        error.message.includes('JSON') ? `Invalid JSON in arguments: ${error.message}` : `Deployment failed: ${error.message}`,
+        {
+          cause: {
+            errorType: error.message.includes('JSON') ? 'validation_error' : 'deployment_error',
+            suggestions: ['Check your configuration and try again'],
+            examples: this.getConfigurationExamples()
+          }
+        }
       );
-      errorResult.suggestions = ['Check your configuration and try again'];
-      errorResult.examples = this.getConfigurationExamples();
-      return errorResult;
     }
   }
 

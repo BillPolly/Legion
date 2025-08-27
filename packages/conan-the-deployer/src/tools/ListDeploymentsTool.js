@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 import DeploymentManager from '../DeploymentManager.js';
 import ResourceManager from '../core/ResourceManager.js';
 
@@ -145,41 +145,47 @@ class ListDeploymentsTool extends Tool {
       
       // Validate provider filter
       if (args.provider && !this.validProviders.includes(args.provider)) {
-        const invalidProviderResult = ToolResult.failure(
-          `Invalid provider: ${args.provider}. Must be one of: ${this.validProviders.join(', ')}`
-        );
-        invalidProviderResult.suggestions = ['Use one of: local, docker, railway'];
-        return invalidProviderResult;
+        throw new Error(`Invalid provider: ${args.provider}. Must be one of: ${this.validProviders.join(', ')}`, {
+          cause: {
+            errorType: 'validation_error',
+            suggestions: ['Use one of: local, docker, railway']
+          }
+        });
       }
       
       // Validate status filter
       if (args.status && !this.validStatuses.includes(args.status)) {
-        const invalidStatusResult = ToolResult.failure(
-          `Invalid status: ${args.status}. Must be one of: ${this.validStatuses.join(', ')}`
-        );
-        invalidStatusResult.suggestions = ['Use one of: running, stopped, building, failed, pending'];
-        return invalidStatusResult;
+        throw new Error(`Invalid status: ${args.status}. Must be one of: ${this.validStatuses.join(', ')}`, {
+          cause: {
+            errorType: 'validation_error',
+            suggestions: ['Use one of: running, stopped, building, failed, pending']
+          }
+        });
       }
       
       // Validate format
       const format = args.format || 'table';
       if (!this.validFormats.includes(format)) {
-        const invalidFormatResult = ToolResult.failure(
-          `Invalid format: ${format}. Must be one of: ${this.validFormats.join(', ')}`
-        );
-        invalidFormatResult.suggestions = ['Use one of: table, json, summary'];
-        return invalidFormatResult;
+        throw new Error(`Invalid format: ${format}. Must be one of: ${this.validFormats.join(', ')}`, {
+          cause: {
+            errorType: 'validation_error',
+            suggestions: ['Use one of: table, json, summary']
+          }
+        });
       }
       
       // Get deployment manager
       const deploymentManager = await this.getDeploymentManager();
       if (!deploymentManager) {
-        const managerNotAvailableResult = ToolResult.failure('Deployment manager not available. Please initialize the system first.');
-        managerNotAvailableResult.suggestions = ['Initialize the deployment system before listing deployments'];
-        return managerNotAvailableResult;
+        throw new Error('Deployment manager not available. Please initialize the system first.', {
+      cause: {
+        errorType: 'operation_error',
+        suggestions: ['Initialize the deployment system before listing deployments']
+      }
+    });
       }
       
-      this.emitProgress('Retrieving deployments', { 
+      // this.emitProgress('Retrieving deployments', { 
         provider: args.provider || 'all',
         status: args.status || 'all'
       });
@@ -214,7 +220,7 @@ class ListDeploymentsTool extends Tool {
         // Format output
         const formattedData = this.formatOutput(paginatedDeployments, format, summary, pagination, args);
         
-        return ToolResult.success({
+        return {
           deployments: paginatedDeployments,
           summary: summary,
           format: format,
@@ -222,25 +228,38 @@ class ListDeploymentsTool extends Tool {
           table: formattedData.table,
           message: deployments.length === 0 ? 'No deployments found matching the specified criteria' : undefined,
           nextSteps: this.getNextSteps(deployments.length, format)
-        });
+        };
       } else {
-        this.emitError(`Failed to list deployments: ${result.error}`, {
+        // this.emitError(`Failed to list deployments: ${result.error}`, {
           error: result.error
         });
         
-        const listFailureResult = ToolResult.failure(result.error || 'Failed to list deployments');
-        listFailureResult.suggestions = this.getFailureSuggestions(result);
-        return listFailureResult;
+        throw new Error(result.error || 'Failed to list deployments', {
+      cause: {
+        errorType: 'operation_error',
+        suggestions: this.getFailureSuggestions(result)
+      }
+    });
       }
       
     } catch (error) {
-      this.emitError(`List deployments tool error: ${error.message}`, { error: error.stack });
+      // this.emitError(`List deployments tool error: ${error.message}`, { error: error.stack });
       
-      const errorResult = ToolResult.failure(
-        error.message.includes('JSON') ? `Invalid JSON in arguments: ${error.message}` : `Failed to list deployments: ${error.message}`
+      // Re-throw if already has proper structure
+      if (error.cause && error.cause.errorType) {
+        throw error;
+      }
+      
+      // Wrap other errors
+      throw new Error(
+        error.message.includes('JSON') ? `Invalid JSON in arguments: ${error.message}` : `Failed to list deployments: ${error.message}`,
+        {
+          cause: {
+            errorType: error.message.includes('JSON') ? 'validation_error' : 'operation_error',
+            suggestions: ['Check your filter parameters and try again']
+          }
+        }
       );
-      errorResult.suggestions = ['Check your filter parameters and try again'];
-      return errorResult;
     }
   }
 

@@ -64,7 +64,7 @@ class CheckDeploymentTool extends Tool {
       expectedStatus = 200
     } = params;
 
-    this.emitInfo(`🔍 Checking deployment at ${url}`);
+    // this.emitInfo(`🔍 Checking deployment at ${url}`);
 
     const results = {
       url,
@@ -78,7 +78,7 @@ class CheckDeploymentTool extends Tool {
     // Try to connect with retries
     for (let attempt = 1; attempt <= retries; attempt++) {
       results.attempts = attempt;
-      this.emitProgress(`Attempt ${attempt}/${retries}...`);
+      // this.emitProgress(`Attempt ${attempt}/${retries}...`);
 
       try {
         // Test main URL first
@@ -111,17 +111,17 @@ class CheckDeploymentTool extends Tool {
           await new Promise(resolve => setTimeout(resolve, retryDelay));
         } else {
           results.finalStatus = response.status;
-          this.emitWarning(`Unexpected status: ${response.status}`);
+          // this.emitWarning(`Unexpected status: ${response.status}`);
         }
       } catch (error) {
         if (error.name === 'AbortError') {
-          this.emitWarning(`Request timed out after ${timeout}ms`);
+          // this.emitWarning(`Request timed out after ${timeout}ms`);
         } else {
-          this.emitWarning(`Connection error: ${error.message}`);
+          // this.emitWarning(`Connection error: ${error.message}`);
         }
         
         if (attempt < retries) {
-          this.emitProgress(`Waiting ${retryDelay/1000} seconds before retry...`);
+          // this.emitProgress(`Waiting ${retryDelay/1000} seconds before retry...`);
           await new Promise(resolve => setTimeout(resolve, retryDelay));
         }
       }
@@ -129,28 +129,28 @@ class CheckDeploymentTool extends Tool {
 
     // Final summary
     if (results.isLive) {
-      this.emitInfo('\n📊 Deployment Check Summary:');
-      this.emitInfo(`   URL: ${url}`);
-      this.emitInfo(`   Status: Live ✅`);
-      this.emitInfo(`   Attempts: ${results.attempts}`);
+      // this.emitInfo('\n📊 Deployment Check Summary:');
+      // this.emitInfo(`   URL: ${url}`);
+      // this.emitInfo(`   Status: Live ✅`);
+      // this.emitInfo(`   Attempts: ${results.attempts}`);
       
       if (Object.keys(results.endpoints).length > 0) {
-        this.emitInfo('\n   Endpoint Results:');
+        // this.emitInfo('\n   Endpoint Results:');
         for (const [endpoint, data] of Object.entries(results.endpoints)) {
           const status = data.success ? '✅' : '❌';
-          this.emitInfo(`   ${status} ${endpoint} - Status: ${data.status}`);
+          // this.emitInfo(`   ${status} ${endpoint} - Status: ${data.status}`);
           if (data.contentType) {
-            this.emitInfo(`      Content-Type: ${data.contentType}`);
+            // this.emitInfo(`      Content-Type: ${data.contentType}`);
           }
           if (data.sample) {
-            this.emitInfo(`      Response: ${data.sample}`);
+            // this.emitInfo(`      Response: ${data.sample}`);
           }
         }
       }
     } else {
-      this.emitError(`\n❌ Deployment not accessible after ${results.attempts} attempts`);
-      this.emitError(`   Last status: ${results.finalStatus || 'No response'}`);
-      this.emitError(`   The deployment may still be building or there may be an issue.`);
+      // this.emitError(`\n❌ Deployment not accessible after ${results.attempts} attempts`);
+      // this.emitError(`   Last status: ${results.finalStatus || 'No response'}`);
+      // this.emitError(`   The deployment may still be building or there may be an issue.`);
     }
 
     return {

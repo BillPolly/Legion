@@ -1,4 +1,4 @@
-import { Tool, ToolResult } from '@legion/tools-registry';
+import { Tool } from '@legion/tools-registry';
 import DeploymentManager from '../DeploymentManager.js';
 import ResourceManager from '../core/ResourceManager.js';
 
@@ -146,70 +146,87 @@ class GetDeploymentLogsTool extends Tool {
       
       // Validate lines parameter
       if (args.lines !== undefined && (args.lines < 0 || args.lines > 10000)) {
-        const linesValidationResult = ToolResult.failure('Lines must be a positive number between 0 and 10000');
-        linesValidationResult.deploymentId = args.deploymentId;
-        linesValidationResult.suggestions = ['Use a lines value between 0 and 10000'];
-        return linesValidationResult;
+        throw new Error('Lines must be a positive number between 0 and 10000', {
+      cause: {
+        errorType: 'operation_error',
+        deploymentId: args.deploymentId,
+        suggestions: ['Use a lines value between 0 and 10000']
+      }
+    });
       }
       
       // Validate timestamp formats
       if (args.since && !this.isValidTimestamp(args.since)) {
-        const sinceValidationResult = ToolResult.failure(`Invalid since timestamp format: ${args.since}. Use ISO 8601 format (e.g., 2024-01-01T10:00:00Z)`);
-        sinceValidationResult.deploymentId = args.deploymentId;
-        sinceValidationResult.suggestions = ['Use ISO 8601 timestamp format: YYYY-MM-DDTHH:mm:ss.sssZ'];
-        return sinceValidationResult;
+        throw new Error(`Invalid since timestamp format: ${args.since}. Use ISO 8601 format (e.g., 2024-01-01T10:00:00Z)`, {
+      cause: {
+        errorType: 'operation_error',
+        deploymentId: args.deploymentId,
+        suggestions: ['Use ISO 8601 timestamp format: YYYY-MM-DDTHH:mm:ss.sssZ']
+      }
+    });
       }
       
       if (args.until && !this.isValidTimestamp(args.until)) {
-        const untilValidationResult = ToolResult.failure(`Invalid until timestamp format: ${args.until}. Use ISO 8601 format`);
-        untilValidationResult.deploymentId = args.deploymentId;
-        untilValidationResult.suggestions = ['Use ISO 8601 timestamp format: YYYY-MM-DDTHH:mm:ss.sssZ'];
-        return untilValidationResult;
+        throw new Error(`Invalid until timestamp format: ${args.until}. Use ISO 8601 format`, {
+      cause: {
+        errorType: 'operation_error',
+        deploymentId: args.deploymentId,
+        suggestions: ['Use ISO 8601 timestamp format: YYYY-MM-DDTHH:mm:ss.sssZ']
+      }
+    });
       }
       
       // Validate level filter
       if (args.level && !this.validLevels.includes(args.level)) {
-        const levelValidationResult = ToolResult.failure(
-          `Invalid log level: ${args.level}. Must be one of: ${this.validLevels.join(', ')}`
-        );
-        levelValidationResult.deploymentId = args.deploymentId;
-        levelValidationResult.suggestions = ['Use one of: debug, info, warn, error, fatal'];
-        return levelValidationResult;
+        throw new Error(`Invalid log level: ${args.level}. Must be one of: ${this.validLevels.join(', ')}`, {
+        cause: {
+          errorType: 'operation_error',
+          deploymentId: args.deploymentId,
+          suggestions: ['Use one of: debug, info, warn, error, fatal']
+        }
+      });
       }
       
       // Validate format
       const format = args.format || 'structured';
       if (!this.validFormats.includes(format)) {
-        const formatValidationResult = ToolResult.failure(
-          `Invalid format: ${format}. Must be one of: ${this.validFormats.join(', ')}`
-        );
-        formatValidationResult.deploymentId = args.deploymentId;
-        formatValidationResult.suggestions = ['Use one of: structured, raw'];
-        return formatValidationResult;
+        throw new Error(`Invalid format: ${format}. Must be one of: ${this.validFormats.join(', ')}`, {
+        cause: {
+          errorType: 'operation_error',
+          deploymentId: args.deploymentId,
+          suggestions: ['Use one of: structured, raw']
+        }
+      });
       }
       
       // Get deployment manager
       const deploymentManager = await this.getDeploymentManager();
       if (!deploymentManager) {
-        const managerNotAvailableResult = ToolResult.failure('Deployment manager not available. Please initialize the system first.');
-        managerNotAvailableResult.deploymentId = args.deploymentId;
-        managerNotAvailableResult.suggestions = ['Initialize the deployment system before retrieving logs'];
-        return managerNotAvailableResult;
+        throw new Error('Deployment manager not available. Please initialize the system first.', {
+      cause: {
+        errorType: 'operation_error',
+        deploymentId: args.deploymentId,
+        suggestions: ['Initialize the deployment system before retrieving logs']
+      }
+    });
       }
       
       // Verify deployment exists
       const deployment = await deploymentManager.getDeployment(args.deploymentId);
       if (!deployment) {
-        const deploymentNotFoundResult = ToolResult.failure(`Deployment not found: ${args.deploymentId}`);
-        deploymentNotFoundResult.deploymentId = args.deploymentId;
-        deploymentNotFoundResult.suggestions = [
+        throw new Error(`Deployment not found: ${args.deploymentId}`, {
+      cause: {
+        errorType: 'operation_error',
+        deploymentId: args.deploymentId,
+        suggestions: [
           'Verify the deployment ID is correct',
           'Use list_deployments to see available deployments'
-        ];
-        return deploymentNotFoundResult;
+        ]
+      }
+    });
       }
       
-      this.emitProgress(`Retrieving logs for deployment ${args.deploymentId}`, { 
+      // this.emitProgress(`Retrieving logs for deployment ${args.deploymentId}`, { 
         deploymentId: args.deploymentId,
         provider: deployment.provider,
         follow: args.follow || false,
@@ -223,7 +240,7 @@ class GetDeploymentLogsTool extends Tool {
       const result = await deploymentManager.getDeploymentLogs(args.deploymentId, logOptions);
       
       if (result.success) {
-        this.emitInfo(`Retrieved ${result.totalLines || result.logs.length} log lines`, {
+        // this.emitInfo(`Retrieved ${result.totalLines || result.logs.length} log lines`, {
           deploymentId: args.deploymentId,
           provider: deployment.provider,
           totalLines: result.totalLines || result.logs.length,
@@ -233,7 +250,7 @@ class GetDeploymentLogsTool extends Tool {
         // Generate summary
         const summary = this.generateSummary(result, deployment, args);
         
-        return ToolResult.success({
+        return {
           deployment: {
             id: deployment.id,
             name: deployment.name,
@@ -247,29 +264,33 @@ class GetDeploymentLogsTool extends Tool {
           followHandle: result.followHandle,
           message: this.getDisplayMessage(result, args),
           nextSteps: this.getNextSteps(result, deployment, args)
-        });
+        };
       } else {
-        this.emitError(`Failed to retrieve logs: ${result.error}`, {
+        // this.emitError(`Failed to retrieve logs: ${result.error}`, {
           deploymentId: args.deploymentId,
           provider: deployment.provider,
           error: result.error
         });
         
-        const logRetrievalFailureResult = ToolResult.failure(result.error || 'Failed to retrieve deployment logs');
-        logRetrievalFailureResult.deploymentId = args.deploymentId;
-        logRetrievalFailureResult.provider = deployment.provider;
-        logRetrievalFailureResult.suggestions = this.getFailureSuggestions(deployment.provider, result);
-        return logRetrievalFailureResult;
+        throw new Error(result.error || 'Failed to retrieve deployment logs', {
+      cause: {
+        errorType: 'operation_error',
+        deploymentId: args.deploymentId,
+        provider: deployment.provider,
+        suggestions: this.getFailureSuggestions(deployment.provider, result)
+      }
+    });
       }
       
     } catch (error) {
-      this.emitError(`Get deployment logs tool error: ${error.message}`, { error: error.stack });
+      // this.emitError(`Get deployment logs tool error: ${error.message}`, { error: error.stack });
       
-      const errorResult = ToolResult.failure(
-        error.message.includes('JSON') ? `Invalid JSON in arguments: ${error.message}` : `Log retrieval failed: ${error.message}`
-      );
-      errorResult.suggestions = ['Check your parameters and try again'];
-      return errorResult;
+      throw new Error(error.message.includes('JSON') ? `Invalid JSON in arguments: ${error.message}` : `Log retrieval failed: ${error.message}`, {
+        cause: {
+          errorType: 'operation_error',
+          suggestions: ['Check your parameters and try again']
+        }
+      });
     }
   }
 
