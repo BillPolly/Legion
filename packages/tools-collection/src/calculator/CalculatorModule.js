@@ -8,35 +8,98 @@ class CalculatorTool extends Tool {
     super({
       name: 'calculator',
       description: 'Evaluates mathematical expressions and performs calculations',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          expression: {
-            type: ['string', 'number'],
-            description: 'JavaScript mathematical expression to evaluate (e.g., "784*566", "Math.sqrt(16)", "(10+5)*3/5")'
-          }
-        },
-        required: ['expression']
-      },
-      outputSchema: {
-        type: 'object',
-        properties: {
-          result: {
-            type: 'number',
-            description: 'The result of the calculation'
+      schema: {
+        input: {
+          type: 'object',
+          properties: {
+            expression: {
+              type: ['string', 'number'],
+              description: 'JavaScript mathematical expression to evaluate (e.g., "784*566", "Math.sqrt(16)", "(10+5)*3/5")'
+            }
           },
-          expression: {
-            type: 'string',
-            description: 'The expression that was evaluated'
-          }
+          required: ['expression']
         },
-        required: ['result', 'expression']
+        output: {
+          type: 'object',
+          properties: {
+            result: {
+              type: 'number',
+              description: 'The result of the calculation'
+            },
+            expression: {
+              type: 'string',
+              description: 'The expression that was evaluated'
+            }
+          },
+          required: ['result', 'expression']
+        }
       }
     });
     this.shortName = 'calc';
     
     // Override _execute instead of execute to use base class error handling
     this._execute = async (params) => this._executeCalculation(params);
+  }
+
+  /**
+   * Get tool metadata - required for compliance
+   * @returns {Object} Tool metadata
+   */
+  getMetadata() {
+    return {
+      name: this.name,
+      description: this.description,
+      shortName: this.shortName,
+      inputSchema: this.inputSchema,
+      outputSchema: this.outputSchema,
+      version: '1.0.0',
+      category: 'mathematical',
+      tags: ['math', 'calculation', 'evaluation'],
+      security: {
+        dangerousKeywords: ['import', 'require', 'process', 'fs', 'child_process', 'exec', 'spawn'],
+        evaluation: 'safe'
+      }
+    };
+  }
+
+  /**
+   * Validate input parameters - required for compliance
+   * @param {Object} params - Parameters to validate
+   * @returns {Object} Validation result
+   */
+  validate(params) {
+    const errors = [];
+    const warnings = [];
+    
+    // Check required fields
+    if (!params || typeof params !== 'object') {
+      errors.push('Parameters must be an object');
+      return { valid: false, errors, warnings };
+    }
+    
+    if (!params.expression) {
+      errors.push('Expression is required');
+    }
+    
+    if (params.expression && typeof params.expression !== 'string' && typeof params.expression !== 'number') {
+      errors.push('Expression must be a string or number');
+    }
+    
+    // Check for dangerous keywords
+    if (params.expression && typeof params.expression === 'string') {
+      const dangerous = ['import', 'require', 'process', 'fs', 'child_process', 'exec', 'spawn'];
+      for (const keyword of dangerous) {
+        if (params.expression.includes(keyword)) {
+          errors.push(`Expression contains forbidden keyword: ${keyword}`);
+        }
+      }
+    }
+    
+    return {
+      valid: errors.length === 0,
+      errors,
+      warnings
+    };
   }
 
   /**
