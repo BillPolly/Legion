@@ -2,7 +2,7 @@
  * Unit tests for DecompositionValidator
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+// Test functions are provided by the test runner as globals
 import { DecompositionValidator } from '../../../src/core/informal/DecompositionValidator.js';
 import { TaskNode } from '../../../src/core/informal/types/TaskNode.js';
 import { TaskHierarchy } from '../../../src/core/informal/types/TaskHierarchy.js';

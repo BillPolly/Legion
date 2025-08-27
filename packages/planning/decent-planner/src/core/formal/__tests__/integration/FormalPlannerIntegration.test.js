@@ -18,9 +18,8 @@ describe('FormalPlanner Integration', () => {
   let llmClient;
 
   beforeAll(async () => {
-    // Initialize ResourceManager
-    resourceManager = ResourceManager.getInstance();
-    await resourceManager.initialize();
+    // NEW API: getInstance() is now async and returns fully initialized instance
+    resourceManager = await ResourceManager.getInstance();
     
     // Get API key and create LLM client
     const anthropicKey = resourceManager.get('env.ANTHROPIC_API_KEY');

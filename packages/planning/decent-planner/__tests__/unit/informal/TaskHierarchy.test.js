@@ -2,7 +2,7 @@
  * Unit tests for TaskHierarchy structure
  */
 
-import { describe, it, expect } from '@jest/globals';
+// Test functions are provided by the test runner as globals
 import { TaskHierarchy } from '../../../src/core/informal/types/TaskHierarchy.js';
 import { TaskNode } from '../../../src/core/informal/types/TaskNode.js';
 

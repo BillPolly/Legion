@@ -45,17 +45,12 @@ describe('REAL LLM Outputs Integration Test', () => {
       throw new Error(`Missing essential tools. file_write: ${hasFileWrite}, directory_create: ${hasDirCreate}`);
     }
 
-    // Initialize REAL LLM planner - get LLM client first
-    const llmClient = resourceManager.getLLMClient();
-    
-    planner = new DecentPlanner(llmClient, {
-      enableInformalPlanning: true,
-      enableFormalPlanning: true,
+    // Initialize REAL planner with refactored architecture
+    planner = new DecentPlanner({
       maxDepth: 5,
       confidenceThreshold: 0.5,
-      strictValidation: true,
-      minSubtasks: 2,
-      maxTools: 10
+      enableFormalPlanning: true,
+      validateBehaviorTrees: true
     });
     
     await planner.initialize();

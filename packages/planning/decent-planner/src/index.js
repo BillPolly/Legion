@@ -18,13 +18,11 @@ export {
   TaskHierarchy
 } from './core/informal/index.js';
 
-// Legacy exports (to maintain compatibility)
-export { DecentPlanner as DecentPlanner_Legacy } from './core/DecentPlanner.js';
-export { TaskDecomposer as TaskDecomposer_Legacy } from './core/TaskDecomposer.js';
+// Core components still in use
 export { ContextHints } from './core/ContextHints.js';
 export { ToolDiscoveryAdapter } from './core/ToolDiscoveryAdapter.js';
 export { PlanSynthesizer } from './core/PlanSynthesizer.js';
 export { ValidatedSubtree } from './core/ValidatedSubtree.js';
 
 // Export types
-export { TaskNode as TaskNode_Legacy, DecompositionResult, PlanResult } from './types.js';
+export { DecompositionResult, PlanResult } from './types.js';

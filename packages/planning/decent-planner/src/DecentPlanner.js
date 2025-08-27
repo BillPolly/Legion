@@ -1,65 +1,149 @@
 /**
- * DecentPlanner - Main planner that orchestrates informal and formal planning phases
+ * DecentPlanner - Thin orchestrator following Clean Architecture
+ * Coordinates use cases and manages dependencies
  */
 
-import { InformalPlanner } from './core/informal/index.js';
-import { Planner } from '@legion/planner';
-import { BTValidator } from '@legion/bt-validator';
+import { CreatePlanUseCase } from './application/use-cases/CreatePlanUseCase.js';
+import { DecomposeTaskUseCase } from './application/use-cases/DecomposeTaskUseCase.js';
+import { DiscoverToolsUseCase } from './application/use-cases/DiscoverToolsUseCase.js';
+import { GenerateBehaviorTreeUseCase } from './application/use-cases/GenerateBehaviorTreeUseCase.js';
+import { ValidatePlanUseCase } from './application/use-cases/ValidatePlanUseCase.js';
+
+import { LLMComplexityClassifier } from './infrastructure/adapters/LLMComplexityClassifier.js';
+import { LLMTaskDecomposer } from './infrastructure/adapters/LLMTaskDecomposer.js';
+import { RegistryToolDiscoveryService } from './infrastructure/adapters/RegistryToolDiscoveryService.js';
+import { ConsoleLogger } from './infrastructure/adapters/ConsoleLogger.js';
+import { InMemoryPlanRepository } from './infrastructure/adapters/InMemoryPlanRepository.js';
+import { InMemoryTaskRepository } from './infrastructure/adapters/InMemoryTaskRepository.js';
+
+import { PlannerConfiguration } from './config/PlannerConfiguration.js';
 import { ResourceManager } from '@legion/resource-manager';
 
 export class DecentPlanner {
-  constructor(llmClient, options = {}) {
-    // If no llmClient provided, get it from ResourceManager
-    if (!llmClient) {
-      const resourceManager = ResourceManager.getInstance();
-      const llmClientOrPromise = resourceManager.get('llmClient');
-      
-      if (!llmClientOrPromise) {
-        throw new Error('LLM client is required but not available from ResourceManager');
-      }
-      
-      // Store the client or promise - will be resolved in initialize()
-      this.llmClientPromise = llmClientOrPromise;
-      this.llmClient = null; // Will be set in initialize()
-    } else {
-      this.llmClient = llmClient;
-      this.llmClientPromise = null;
-    }
-    this.toolRegistry = null; // Will be initialized lazily
-    this.informalPlanner = null; // Will be initialized lazily
-    
-    // Cancellation support
+  constructor(options = {}) {
+    this.config = new PlannerConfiguration(options);
     this.cancelled = false;
+    this.initialized = false;
     
-    // Options
-    this.options = {
-      // Informal planner options
-      maxDepth: options.maxDepth || 5,
-      confidenceThreshold: options.confidenceThreshold || 0.7,
-      strictValidation: options.strictValidation !== false,
-      
-      // Formal planner options
-      enableFormalPlanning: options.enableFormalPlanning !== false,
-      validateBehaviorTrees: options.validateBehaviorTrees !== false,
-      
-      ...options
-    };
-    
-    // Initialize formal planner (from @legion/planner package)
-    if (this.options.enableFormalPlanning) {
-      this.formalPlanner = new Planner({ llmClient });
-      this.btValidator = new BTValidator();
+    // Will be initialized in initialize()
+    this.dependencies = null;
+    this.useCases = null;
+  }
+
+  async initialize() {
+    if (this.initialized) {
+      return;
     }
+
+    // Get or create dependencies
+    this.dependencies = await this.createDependencies();
+    
+    // Create use cases with dependencies
+    this.useCases = this.createUseCases(this.dependencies);
+    
+    this.initialized = true;
+    this.dependencies.logger.info('DecentPlanner initialized');
+  }
+
+  async createDependencies() {
+    const resourceManager = await ResourceManager.getInstance();
+    
+    // Get LLM client
+    const llmClientOrPromise = resourceManager.get('llmClient');
+    const llmClient = typeof llmClientOrPromise.then === 'function' 
+      ? await llmClientOrPromise 
+      : llmClientOrPromise;
+    
+    if (!llmClient) {
+      throw new Error('LLM client is required but not available');
+    }
+    
+    // Get tool registry
+    const toolRegistryModule = await import('@legion/tools-registry');
+    const toolRegistry = toolRegistryModule.default;
+    
+    // Create adapters
+    const logger = new ConsoleLogger(this.config.logging);
+    const planRepository = new InMemoryPlanRepository();
+    const taskRepository = new InMemoryTaskRepository();
+    const complexityClassifier = new LLMComplexityClassifier(llmClient);
+    const taskDecomposer = new LLMTaskDecomposer(llmClient);
+    const toolDiscoveryService = new RegistryToolDiscoveryService(
+      toolRegistry,
+      llmClient,
+      this.config.toolDiscovery
+    );
+    
+    // Get external planners if enabled
+    let behaviorTreePlanner = null;
+    let behaviorTreeValidator = null;
+    
+    if (this.config.formalPlanning.enabled) {
+      const { Planner } = await import('@legion/planner');
+      const { BTValidator } = await import('@legion/bt-validator');
+      behaviorTreePlanner = new Planner({ llmClient });
+      behaviorTreeValidator = new BTValidator();
+    }
+    
+    return {
+      logger,
+      planRepository,
+      taskRepository,
+      complexityClassifier,
+      taskDecomposer,
+      toolDiscoveryService,
+      behaviorTreePlanner,
+      behaviorTreeValidator,
+      llmClient,
+      toolRegistry
+    };
+  }
+
+  createUseCases(dependencies) {
+    return {
+      createPlan: new CreatePlanUseCase({
+        planRepository: dependencies.planRepository,
+        taskRepository: dependencies.taskRepository,
+        logger: dependencies.logger
+      }),
+      
+      decomposeTask: new DecomposeTaskUseCase({
+        taskRepository: dependencies.taskRepository,
+        complexityClassifier: dependencies.complexityClassifier,
+        taskDecomposer: dependencies.taskDecomposer,
+        logger: dependencies.logger,
+        ...this.config.decomposition
+      }),
+      
+      discoverTools: new DiscoverToolsUseCase({
+        taskRepository: dependencies.taskRepository,
+        toolDiscoveryService: dependencies.toolDiscoveryService,
+        logger: dependencies.logger,
+        ...this.config.toolDiscovery
+      }),
+      
+      generateBehaviorTree: dependencies.behaviorTreePlanner ? 
+        new GenerateBehaviorTreeUseCase({
+          taskRepository: dependencies.taskRepository,
+          behaviorTreePlanner: dependencies.behaviorTreePlanner,
+          logger: dependencies.logger
+        }) : null,
+      
+      validatePlan: dependencies.behaviorTreeValidator ?
+        new ValidatePlanUseCase({
+          planRepository: dependencies.planRepository,
+          behaviorTreeValidator: dependencies.behaviorTreeValidator,
+          logger: dependencies.logger
+        }) : null
+    };
   }
 
   /**
    * Cancel the current planning operation
    */
   cancel() {
-    console.log('🛑🛑🛑 DecentPlanner.cancel() called 🛑🛑🛑');
-    console.log('🛑 Setting cancelled flag to true...');
+    this.dependencies?.logger.info('Planning cancelled');
     this.cancelled = true;
-    console.log('✅ DecentPlanner cancelled flag set to:', this.cancelled);
   }
 
   /**
@@ -70,680 +154,173 @@ export class DecentPlanner {
   }
 
   /**
-   * Check if planning has been cancelled and throw error if so
+   * Check if planning has been cancelled
    */
   checkCancellation() {
-    console.log('🔍 Checking cancellation, cancelled flag is:', this.cancelled);
     if (this.cancelled) {
-      console.log('🛑 THROWING CANCELLATION ERROR - Planning was cancelled');
       throw new Error('Planning operation was cancelled');
     }
   }
 
   /**
-   * Initialize the planner with ToolRegistry singleton
+   * Main planning method - orchestrates the planning process
    */
-  async initialize() {
-    // Resolve llmClient if it was a promise
-    if (this.llmClientPromise && !this.llmClient) {
-      if (typeof this.llmClientPromise.then === 'function') {
-        this.llmClient = await this.llmClientPromise;
-      } else {
-        this.llmClient = this.llmClientPromise;
-      }
-      
-      if (!this.llmClient) {
-        throw new Error('Failed to get LLM client from ResourceManager');
-      }
-      
-      // Update formal planner with resolved client
-      if (this.options.enableFormalPlanning && this.formalPlanner) {
-        this.formalPlanner = new Planner({ llmClient: this.llmClient });
-      }
-    }
-    
-    if (!this.toolRegistry) {
-      const toolRegistryModule = await import('@legion/tools-registry');
-      this.toolRegistry = toolRegistryModule.default; // It's already the singleton instance
-      
-      // Initialize informal planner now that we have toolRegistry
-      this.informalPlanner = new InformalPlanner(this.llmClient, this.toolRegistry, {
-        maxDepth: this.options.maxDepth,
-        confidenceThreshold: this.options.confidenceThreshold,
-        strictValidation: this.options.strictValidation
-      });
-    }
-  }
-
-  /**
-   * Run only the informal planning phase
-   * @param {string} goal - The goal to achieve
-   * @param {Object} context - Optional context
-   * @param {Function} progressCallback - Optional callback for progress updates
-   * @returns {Promise<Object>} Informal planning result
-   */
-  async planInformalOnly(goal, context = {}, progressCallback = null) {
-    if (!goal || goal.trim() === '') {
-      throw new Error('Goal is required');
-    }
-    
-    // Ensure planner is initialized
+  async plan(goal, context = {}, progressCallback = null) {
     await this.initialize();
+    this.resetCancellation();
     
     const startTime = Date.now();
-    const result = {
-      goal,
-      context,
-      phase: 'informal'
-    };
     
     try {
-      // Reset cancellation flag at start of new planning
-      this.resetCancellation();
-      
-      // Phase 1: Informal Planning (Decomposition)
-      console.log('Starting informal planning phase...');
-      if (progressCallback) {
-        progressCallback('Starting task decomposition...');
-      }
-      
-      // Check for cancellation before starting
+      // Step 1: Create plan
+      if (progressCallback) progressCallback('Creating plan...');
       this.checkCancellation();
       
-      const informalResult = await this.informalPlanner.plan(goal, context, progressCallback, () => this.checkCancellation());
+      const planResult = await this.useCases.createPlan.execute({ goal, context });
+      if (!planResult.success) {
+        throw new Error(planResult.error);
+      }
       
-      // Check for cancellation after completion
+      const plan = planResult.data;
+      
+      // Step 2: Decompose task
+      if (progressCallback) progressCallback('Decomposing tasks...');
       this.checkCancellation();
       
-      result.informal = informalResult;
-      
-      if (progressCallback) {
-        progressCallback('Task decomposition completed. Validating results...');
-      }
-      
-      // Always mark informal planning as successful if we got a hierarchy
-      // The validation results are just informational for the formal phase
-      result.success = true;
-      result.validation = informalResult.validation;
-      result.processingTime = Date.now() - startTime;
-      result.summary = this.generateInformalSummary(result);
-      
-      return result;
-      
-    } catch (error) {
-      result.success = false;
-      result.error = error.message;
-      result.processingTime = Date.now() - startTime;
-      throw new Error(`Informal planning failed: ${error.message}`);
-    }
-  }
-
-  /**
-   * Discover tools for all SIMPLE tasks in a hierarchy
-   * @param {Object} hierarchy - Task hierarchy from informal planning
-   * @param {Function} progressCallback - Optional callback for progress updates
-   * @returns {Promise<Object>} Tool discovery results with detailed debug info
-   */
-  async discoverToolsForHierarchy(hierarchy, progressCallback = null) {
-    if (!hierarchy) {
-      throw new Error('Hierarchy is required for tool discovery');
-    }
-    
-    // Ensure planner is initialized
-    await this.initialize();
-    
-    const startTime = Date.now();
-    const results = {
-      hierarchy,
-      toolDiscovery: [],
-      statistics: {
-        totalSimpleTasks: 0,
-        feasibleTasks: 0,
-        infeasibleTasks: 0,
-        totalTools: 0,
-        uniqueTools: new Set()
-      }
-    };
-    
-    try {
-      // Reset cancellation flag
-      this.resetCancellation();
-      
-      if (progressCallback) {
-        progressCallback('🔧 Starting tool discovery for SIMPLE tasks...');
-      }
-      
-      // Find all SIMPLE tasks in hierarchy
-      const simpleTasks = [];
-      this.traverseHierarchy(hierarchy, (node) => {
-        if (node.complexity === 'SIMPLE') {
-          simpleTasks.push(node);
+      const decomposeResult = await this.useCases.decomposeTask.execute({
+        task: plan.rootTask,
+        context,
+        progressCallback: (msg) => {
+          this.checkCancellation();
+          if (progressCallback) progressCallback(msg);
         }
       });
       
-      results.statistics.totalSimpleTasks = simpleTasks.length;
-      
-      if (progressCallback) {
-        progressCallback(`Found ${simpleTasks.length} SIMPLE tasks to process`);
+      if (!decomposeResult.success) {
+        throw new Error(decomposeResult.error);
       }
       
-      // Process each SIMPLE task
-      for (let i = 0; i < simpleTasks.length; i++) {
-        const task = simpleTasks[i];
-        
-        // Check for cancellation
+      plan.rootTask = decomposeResult.data.task;
+      plan.updateStatistics(decomposeResult.data.statistics);
+      
+      // Step 3: Discover tools
+      if (progressCallback) progressCallback('Discovering tools...');
+      this.checkCancellation();
+      
+      const toolsResult = await this.useCases.discoverTools.execute({
+        rootTask: plan.rootTask,
+        progressCallback: (msg) => {
+          this.checkCancellation();
+          if (progressCallback) progressCallback(msg);
+        }
+      });
+      
+      if (!toolsResult.success) {
+        throw new Error(toolsResult.error);
+      }
+      
+      plan.updateStatistics({
+        toolDiscovery: toolsResult.data
+      });
+      
+      // Step 4: Generate behavior trees (if enabled)
+      if (this.config.formalPlanning.enabled && this.useCases.generateBehaviorTree) {
+        if (progressCallback) progressCallback('Generating behavior trees...');
         this.checkCancellation();
         
-        if (progressCallback) {
-          progressCallback(`🔧 Discovering tools for task ${i + 1}/${simpleTasks.length}: "${task.description}"`);
-        }
+        const btResult = await this.useCases.generateBehaviorTree.execute({
+          rootTask: plan.rootTask
+        });
         
-        try {
-          // Get detailed tool discovery info
-          const discoveryResult = await this.informalPlanner.feasibilityChecker.checkTaskFeasibility(task);
-          
-          // ADD DISCOVERED TOOLS TO THE TASK NODE - This was missing!
-          console.log(`🔧 [TOOL DISCOVERY] discoveryResult for task "${task.description}":`, {
-            feasible: discoveryResult?.feasible,
-            hasDebug: !!discoveryResult?.debug,
-            hasStep3Merged: !!discoveryResult?.debug?.step3_merged,
-            toolCount: discoveryResult?.debug?.step3_merged?.length || 0
-          });
-          
-          if (discoveryResult && discoveryResult.feasible && discoveryResult.debug && discoveryResult.debug.step3_merged) {
-            // Use the FULL tool objects that already have inputSchema
-            task.tools = discoveryResult.debug.step3_merged;
-            task.feasible = true;
-            
-            console.log(`✅ [TOOL DISCOVERY] Added ${task.tools.length} tools to task "${task.description}"`);
-            console.log(`✅ [TOOL DISCOVERY] Tools added:`, task.tools.map(t => t.name || t));
-            console.log(`✅ [TOOL DISCOVERY] Task object after adding tools:`, {
-              id: task.id,
-              description: task.description,
-              feasible: task.feasible,
-              hasTools: !!task.tools,
-              toolCount: task.tools?.length
-            });
-          } else {
-            // No tools found or task not feasible
-            task.tools = [];
-            task.feasible = false;
-            console.log(`❌ [TOOL DISCOVERY] No tools found or task not feasible for "${task.description}"`);
-          }
-          
-          // Store detailed results for debugging
-          results.toolDiscovery.push({
-            taskId: task.id || `task-${i}`,
-            taskDescription: task.description,
-            discoveryResult
-          });
-          
-          // Update statistics
-          if (task.feasible) {
-            results.statistics.feasibleTasks++;
-            if (task.tools) {
-              results.statistics.totalTools += task.tools.length;
-              task.tools.forEach(tool => results.statistics.uniqueTools.add(tool.name));
-            }
-          } else {
-            results.statistics.infeasibleTasks++;
-          }
-          
-        } catch (error) {
-          console.error(`Tool discovery failed for task "${task.description}":`, error);
-          
-          // Mark as infeasible and store error
-          task.tools = [];
-          task.feasible = false;
-          results.statistics.infeasibleTasks++;
-          
-          results.toolDiscovery.push({
-            taskId: task.id || `task-${i}`,
-            taskDescription: task.description,
-            error: error.message,
-            discoveryResult: null
-          });
+        if (btResult.success) {
+          plan.behaviorTrees = btResult.data.behaviorTrees;
         }
       }
       
-      // Finalize statistics
-      results.statistics.uniqueToolsCount = results.statistics.uniqueTools.size;
-      results.statistics.uniqueTools = Array.from(results.statistics.uniqueTools);
-      results.processingTime = Date.now() - startTime;
-      results.success = true;
-      
-      if (progressCallback) {
-        progressCallback(`✅ Tool discovery completed: ${results.statistics.feasibleTasks}/${results.statistics.totalSimpleTasks} tasks feasible`);
+      // Step 5: Validate plan (if enabled)
+      if (this.config.formalPlanning.validateBehaviorTrees && this.useCases.validatePlan) {
+        if (progressCallback) progressCallback('Validating plan...');
+        this.checkCancellation();
+        
+        const validationResult = await this.useCases.validatePlan.execute({
+          plan
+        });
+        
+        plan.setValidation(validationResult.data);
       }
       
-      return results;
+      // Update plan status
+      plan.updateStatus('VALIDATED');
+      await this.dependencies.planRepository.update(plan);
+      
+      const duration = Date.now() - startTime;
+      this.dependencies.logger.info('Planning completed', { 
+        planId: plan.id.toString(),
+        duration 
+      });
+      
+      return {
+        success: true,
+        data: plan,
+        duration
+      };
       
     } catch (error) {
-      results.success = false;
-      results.error = error.message;
-      results.processingTime = Date.now() - startTime;
-      throw new Error(`Tool discovery failed: ${error.message}`);
+      this.dependencies?.logger.error('Planning failed', { 
+        error: error.message 
+      });
+      
+      return {
+        success: false,
+        error: error.message,
+        duration: Date.now() - startTime
+      };
     }
   }
 
   /**
-   * Run the formal planning phase using informal results
-   * @param {Object} informalResult - Result from planInformalOnly()
-   * @returns {Promise<Object>} Formal planning result
+   * Run only informal planning (decomposition + tool discovery)
    */
-  async planFormal(informalResult) {
-    if (!informalResult || !informalResult.informal) {
-      throw new Error('Valid informal result is required for formal planning');
-    }
-    
-    if (!informalResult.success) {
-      throw new Error('Cannot run formal planning on failed informal result');
-    }
-    
-    const startTime = Date.now();
-    const result = {
-      goal: informalResult.goal,
-      context: informalResult.context,
-      phase: 'formal',
-      informalResult
-    };
+  async planInformalOnly(goal, context = {}, progressCallback = null) {
+    const originalConfig = this.config.formalPlanning.enabled;
+    this.config.formalPlanning.enabled = false;
     
     try {
-      // Phase 2: Formal Planning (Behavior Tree Synthesis)
-      if (this.options.enableFormalPlanning) {
-        console.log('Starting formal planning phase...');
-        console.log('📊 [FORMAL] enableFormalPlanning is:', this.options.enableFormalPlanning);
-        console.log('📊 [FORMAL] informalResult.informal exists:', !!informalResult.informal);
-        console.log('📊 [FORMAL] informalResult.informal.hierarchy exists:', !!informalResult.informal.hierarchy);
-        try {
-          const formalResult = await this.synthesizeFormalPlan(informalResult.informal.hierarchy);
-          console.log('📊 [FORMAL] synthesizeFormalPlan returned:', formalResult);
-          result.formal = formalResult;
-          
-          // Validate behavior trees if enabled
-          if (this.options.validateBehaviorTrees && formalResult.behaviorTrees) {
-            const validationResults = await this.validateBehaviorTrees(
-              formalResult.behaviorTrees,
-              informalResult.informal.hierarchy
-            );
-            result.formal.validation = validationResults;
-          }
-        } catch (error) {
-          console.warn('Formal planning not fully implemented yet:', error.message);
-          result.formal = {
-            status: 'not_implemented',
-            message: 'Formal planning phase is pending implementation'
-          };
-        }
-      } else {
-        result.formal = {
-          status: 'disabled',
-          message: 'Formal planning is disabled in options'
-        };
-      }
-      
-      // Success
-      result.success = true;
-      result.processingTime = Date.now() - startTime;
-      result.summary = this.generateFormalSummary(result);
-      
-      return result;
-      
-    } catch (error) {
-      result.success = false;
-      result.error = error.message;
-      result.processingTime = Date.now() - startTime;
-      throw new Error(`Formal planning failed: ${error.message}`);
+      return await this.plan(goal, context, progressCallback);
+    } finally {
+      this.config.formalPlanning.enabled = originalConfig;
     }
   }
 
   /**
-   * Main planning method - runs both informal and formal planning
-   * @param {string} goal - The goal to achieve
-   * @param {Object} context - Optional context
-   * @returns {Promise<Object>} Complete planning result
+   * Generate report for a plan
    */
-  async plan(goal, context = {}) {
-    if (!goal || goal.trim() === '') {
-      throw new Error('Goal is required');
-    }
-    
-    // Ensure planner is initialized
-    await this.initialize();
-    
-    const startTime = Date.now();
-    const result = {
-      goal,
-      context,
-      phases: {}
-    };
-    
-    try {
-      // Phase 1: Informal Planning (Decomposition)
-      console.log('Starting informal planning phase...');
-      const informalResult = await this.informalPlanner.plan(goal, context);
-      result.phases.informal = informalResult;
-      
-      // Check if informal planning succeeded
-      if (!informalResult.validation.valid) {
-        result.success = false;
-        result.reason = 'Informal planning validation failed';
-        result.errors = this.extractValidationErrors(informalResult.validation);
-        return result;
-      }
-      
-      // Check feasibility
-      if (!informalResult.validation.feasibility.overallFeasible) {
-        result.success = false;
-        result.reason = 'Goal is not feasible with available tools';
-        result.infeasibleTasks = informalResult.validation.feasibility.infeasibleTasks;
-        return result;
-      }
-      
-      // Phase 2: Formal Planning (Behavior Tree Synthesis)
-      if (this.options.enableFormalPlanning) {
-        console.log('Starting formal planning phase...');
-        try {
-          const formalResult = await this.synthesizeFormalPlan(informalResult.hierarchy);
-          result.phases.formal = formalResult;
-          
-          // Validate behavior trees if enabled
-          if (this.options.validateBehaviorTrees && formalResult.behaviorTrees) {
-            const validationResults = await this.validateBehaviorTrees(
-              formalResult.behaviorTrees,
-              informalResult.hierarchy
-            );
-            result.phases.formal.validation = validationResults;
-          }
-        } catch (error) {
-          console.warn('Formal planning not fully implemented yet:', error.message);
-          result.phases.formal = {
-            status: 'not_implemented',
-            message: 'Formal planning phase is pending implementation'
-          };
-        }
-      }
-      
-      // Success
-      result.success = true;
-      result.processingTime = Date.now() - startTime;
-      result.summary = this.generateSummary(result);
-      
-      return result;
-      
-    } catch (error) {
-      result.success = false;
-      result.error = error.message;
-      result.processingTime = Date.now() - startTime;
-      throw new Error(`Planning failed: ${error.message}`);
-    }
-  }
-
-  /**
-   * Synthesize formal plan from informal hierarchy
-   * @private
-   */
-  async synthesizeFormalPlan(hierarchy) {
-    console.log('🎯 [FORMAL PLANNING] Starting synthesizeFormalPlan...');
-    
-    if (!this.formalPlanner) {
-      throw new Error('Formal planner not initialized');
-    }
-    
-    const behaviorTrees = [];
-    
-    // Process each SIMPLE task with the real planner
-    await this.traverseHierarchyAsync(hierarchy, async (node) => {
-      if (node.complexity === 'SIMPLE' && node.feasible && node.tools) {
-        console.log(`🎯 [FORMAL PLANNING] Planning for task: "${node.description}"`);
-        console.log(`🎯 [FORMAL PLANNING] Available tools:`, node.tools.map(t => t.name));
-        
-        // Debug the tool schemas being passed to planner
-        const toolsForPlanner = node.tools.map(t => ({
-          name: t.name,
-          confidence: t.confidence,
-          description: t.description || '',
-          inputSchema: t.inputSchema,  // CRITICAL: preserve inputSchema for LLM prompt
-          outputSchema: t.outputSchema, // Also preserve outputSchema
-          schema: t.schema              // Preserve legacy schema field too
-        }));
-        
-        console.log(`🔧 [FORMAL PLANNING] Tools being passed to planner:`, JSON.stringify(toolsForPlanner, null, 2));
-        
-        try {
-          // Use the real planner to create a proper plan
-          const plan = await this.formalPlanner.makePlan(
-            node.description,
-            toolsForPlanner
-          );
-          
-          console.log(`🎯 [FORMAL PLANNING] Generated plan:`, JSON.stringify(plan, null, 2));
-          
-          if (plan && plan.success && plan.data && plan.data.plan) {
-            behaviorTrees.push({
-              id: node.id || `task-${Date.now()}`,
-              description: node.description,
-              ...plan.data.plan
-            });
-            console.log(`🎯 [FORMAL PLANNING] Added behavior tree for task: "${node.description}"`);
-          } else {
-            console.log(`🎯 [FORMAL PLANNING] No valid plan generated for task: "${node.description}"`);
-          }
-        } catch (error) {
-          console.error(`Failed to plan for task "${node.description}":`, error);
-        }
-      }
-    });
-    
-    console.log(`🎯 [FORMAL PLANNING] Created ${behaviorTrees.length} behavior trees`);
-    
-    return {
-      behaviorTrees,
-      count: behaviorTrees.length,
-      status: 'synthesized'
-    };
-  }
-  
-  async traverseHierarchyAsync(node, callback) {
-    await callback(node);
-    if (node.subtasks && node.subtasks.length > 0) {
-      for (const subtask of node.subtasks) {
-        await this.traverseHierarchyAsync(subtask, callback);
-      }
-    }
-  }
-
-  /**
-   * Validate behavior trees
-   * @private
-   */
-  async validateBehaviorTrees(behaviorTrees, hierarchy) {
-    const results = [];
-    
-    for (const bt of behaviorTrees) {
-      try {
-        // Use BTValidator from @legion/bt-validator
-        const validation = await this.btValidator.validate(bt);
-        results.push({
-          id: bt.id,
-          valid: validation.valid,
-          errors: validation.errors || []
-        });
-      } catch (error) {
-        results.push({
-          id: bt.id,
-          valid: false,
-          errors: [error.message]
-        });
-      }
-    }
-    
-    return {
-      allValid: results.every(r => r.valid),
-      results
-    };
-  }
-
-  /**
-   * Extract validation errors from informal result
-   * @private
-   */
-  extractValidationErrors(validation) {
-    const errors = [];
-    
-    if (!validation.structure.valid) {
-      errors.push(...validation.structure.errors);
-    }
-    
-    if (!validation.dependencies.valid) {
-      errors.push(...(validation.dependencies.errors || []));
-    }
-    
-    if (!validation.completeness.valid) {
-      errors.push(...(validation.completeness.issues || []));
-    }
-    
-    return errors;
-  }
-
-  /**
-   * Traverse hierarchy helper
-   * @private
-   */
-  traverseHierarchy(node, callback) {
-    callback(node);
-    if (node.subtasks && node.subtasks.length > 0) {
-      for (const subtask of node.subtasks) {
-        this.traverseHierarchy(subtask, callback);
-      }
-    }
-  }
-
-  /**
-   * Generate planning summary
-   * @private
-   */
-  generateSummary(result) {
-    const summary = {
-      goal: result.goal,
-      success: result.success
-    };
-    
-    if (result.phases.informal) {
-      const informal = result.phases.informal;
-      summary.informal = {
-        totalTasks: informal.statistics.totalTasks,
-        simpleTasks: informal.statistics.simpleTasks,
-        complexTasks: informal.statistics.complexTasks,
-        feasibleTasks: informal.statistics.feasibleTasks,
-        maxDepth: informal.statistics.maxDepth,
-        valid: informal.validation.valid
-      };
-    }
-    
-    if (result.phases.formal) {
-      summary.formal = {
-        status: result.phases.formal.status,
-        behaviorTrees: result.phases.formal.count || 0
-      };
-    }
-    
-    summary.processingTime = result.processingTime;
-    
-    return summary;
-  }
-
-  /**
-   * Generate summary for informal-only results
-   * @private
-   */
-  generateInformalSummary(result) {
-    const summary = {
-      goal: result.goal,
-      success: result.success,
-      phase: 'informal'
-    };
-    
-    if (result.informal) {
-      const informal = result.informal;
-      summary.informal = {
-        totalTasks: informal.statistics.totalTasks,
-        simpleTasks: informal.statistics.simpleTasks,
-        complexTasks: informal.statistics.complexTasks,
-        feasibleTasks: informal.statistics.feasibleTasks,
-        maxDepth: informal.statistics.maxDepth,
-        valid: informal.validation.valid
-      };
-    }
-    
-    summary.processingTime = result.processingTime;
-    
-    return summary;
-  }
-
-  /**
-   * Generate summary for formal-only results
-   * @private
-   */
-  generateFormalSummary(result) {
-    const summary = {
-      goal: result.goal,
-      success: result.success,
-      phase: 'formal'
-    };
-    
-    if (result.formal) {
-      summary.formal = {
-        status: result.formal.status,
-        behaviorTrees: result.formal.count || 0
-      };
-    }
-    
-    summary.processingTime = result.processingTime;
-    
-    return summary;
-  }
-
-  /**
-   * Generate human-readable report
-   * @param {Object} planResult - Result from plan()
-   * @returns {string} Formatted report
-   */
-  generateReport(planResult) {
+  generateReport(plan) {
     const lines = [
       '=== DECENT Planning Report ===',
       '',
-      `Goal: ${planResult.goal}`,
-      `Success: ${planResult.success ? 'YES' : 'NO'}`,
-      `Processing Time: ${planResult.processingTime}ms`,
+      `Goal: ${plan.goal}`,
+      `Status: ${plan.status}`,
+      `Created: ${plan.createdAt.toISOString()}`,
       ''
     ];
     
-    // Informal phase report
-    if (planResult.phases.informal) {
-      lines.push('## Informal Planning Phase');
-      const informalReport = this.informalPlanner.generateReport(planResult.phases.informal);
-      lines.push(...informalReport.split('\n').map(line => '  ' + line));
+    if (plan.statistics) {
+      lines.push('## Statistics');
+      lines.push(JSON.stringify(plan.statistics, null, 2));
       lines.push('');
     }
     
-    // Formal phase report
-    if (planResult.phases.formal) {
-      lines.push('## Formal Planning Phase');
-      lines.push(`  Status: ${planResult.phases.formal.status}`);
-      if (planResult.phases.formal.behaviorTrees) {
-        lines.push(`  Behavior Trees Generated: ${planResult.phases.formal.count}`);
-        if (planResult.phases.formal.validation) {
-          lines.push(`  Validation: ${planResult.phases.formal.validation.allValid ? 'PASSED' : 'FAILED'}`);
-        }
-      }
+    if (plan.validation) {
+      lines.push('## Validation');
+      lines.push(JSON.stringify(plan.validation, null, 2));
       lines.push('');
     }
     
-    // Summary
-    if (planResult.summary) {
-      lines.push('## Summary');
-      lines.push(JSON.stringify(planResult.summary, null, 2).split('\n').map(line => '  ' + line).join('\n'));
+    if (plan.behaviorTrees && plan.behaviorTrees.length > 0) {
+      lines.push('## Behavior Trees');
+      lines.push(`Generated ${plan.behaviorTrees.length} behavior trees`);
+      lines.push('');
     }
     
     return lines.join('\n');

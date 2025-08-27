@@ -21,6 +21,7 @@
  */
 export class ResourceManager {
   static _instance = null;
+  static _initPromise = null;
   
   constructor(initialResources = {}) {
     // Implement singleton pattern
@@ -122,27 +123,28 @@ export class ResourceManager {
   }
   
   /**
-   * Get the singleton instance of ResourceManager
-   * @returns {ResourceManager} The singleton instance
+   * Get the singleton instance of ResourceManager (auto-initializes)
+   * @returns {Promise<ResourceManager>} The initialized singleton instance
    */
-  static getInstance() {
+  static async getInstance() {
     if (!ResourceManager._instance) {
       ResourceManager._instance = new ResourceManager();
+      // Start initialization immediately
+      ResourceManager._initPromise = ResourceManager._instance.initialize();
     }
+    
+    // Always wait for initialization to complete
+    await ResourceManager._initPromise;
     return ResourceManager._instance;
   }
   
   /**
-   * Get the singleton ResourceManager, initialized and ready to use
-   * This is the preferred way to get ResourceManager - it auto-initializes
+   * Deprecated: Use getInstance() instead
+   * @deprecated getInstance() now auto-initializes
    * @returns {Promise<ResourceManager>} The initialized singleton instance
    */
   static async getResourceManager() {
-    const instance = ResourceManager.getInstance();
-    if (!instance.initialized) {
-      await instance.initialize();
-    }
-    return instance;
+    return ResourceManager.getInstance();
   }
   
   /**

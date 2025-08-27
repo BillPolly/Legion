@@ -189,6 +189,14 @@ export class SyntheticToolFactory {
       };
     }
     
+    // If no outputs were found, add a default success output
+    if (Object.keys(outputSchema).length === 0) {
+      outputSchema.success = {
+        type: 'boolean',
+        description: 'Whether the synthetic tool execution succeeded'
+      };
+    }
+    
     return { inputSchema, outputSchema };
   }
 }

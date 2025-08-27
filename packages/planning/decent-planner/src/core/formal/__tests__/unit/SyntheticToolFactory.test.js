@@ -271,7 +271,13 @@ describe('SyntheticToolFactory', () => {
       const schemas = factory.generateSchemas(interface_);
 
       expect(schemas.inputSchema).toEqual({});
-      expect(schemas.outputSchema).toEqual({});
+      // Should have default success output when no outputs are specified
+      expect(schemas.outputSchema).toEqual({
+        success: {
+          type: 'boolean',
+          description: 'Whether the synthetic tool execution succeeded'
+        }
+      });
     });
   });
 

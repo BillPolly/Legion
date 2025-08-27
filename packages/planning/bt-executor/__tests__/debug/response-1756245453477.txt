@@ -1,0 +1,30 @@
+{
+  "type": "sequence",
+  "id": "root",
+  "description": "Create and run hello world JavaScript program",
+  "children": [
+    {
+      "type": "action",
+      "id": "write-hello-world",
+      "tool": "file_writer",
+      "description": "Create hello world JavaScript file",
+      "inputs": {
+        "filePath": "hello.js",
+        "content": "console.log('Hello World!');"
+      },
+      "outputs": {
+        "filepath": "js_file_path"
+      }
+    },
+    {
+      "type": "action",
+      "id": "execute-program",
+      "tool": "run_node",
+      "description": "Execute the JavaScript program",
+      "inputs": {
+        "projectPath": ".",
+        "command": "node hello.js"
+      }
+    }
+  ]
+}

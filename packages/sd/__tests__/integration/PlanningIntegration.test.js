@@ -43,8 +43,7 @@ describeIf('SD Package - Legion Planning Integration (Live)', () => {
 
   describe('DecentPlanner Integration', () => {
     it('should initialize SDModule with DecentPlanner', async () => {
-      sdModule = new SDModule({ resourceManager });
-      await sdModule.initialize();
+      sdModule = await SDModule.create(resourceManager);
       
       expect(sdModule.decentPlanner).toBeDefined();
       expect(sdModule.decentPlanner).toBeInstanceOf(DecentPlanner);
@@ -52,8 +51,7 @@ describeIf('SD Package - Legion Planning Integration (Live)', () => {
     });
 
     it('should have proper planner configuration', async () => {
-      sdModule = new SDModule({ resourceManager });
-      await sdModule.initialize();
+      sdModule = await SDModule.create(resourceManager);
       
       const metadata = sdModule.getMetadata();
       expect(metadata.hasPlanner).toBe(true);
@@ -61,8 +59,7 @@ describeIf('SD Package - Legion Planning Integration (Live)', () => {
     });
 
     it('should plan software development goals', async () => {
-      sdModule = new SDModule({ resourceManager });
-      await sdModule.initialize();
+      sdModule = await SDModule.create(resourceManager);
       
       // Test REAL planning - no mocks
       const goal = 'Build a simple user authentication system';
@@ -87,8 +84,7 @@ describeIf('SD Package - Legion Planning Integration (Live)', () => {
 
   describe('Planning Profile Integration', () => {
     it('should integrate profiles with DecentPlanner', async () => {
-      sdModule = new SDModule({ resourceManager });
-      await sdModule.initialize();
+      sdModule = await SDModule.create(resourceManager);
       
       const profiles = sdModule.getProfiles();
       expect(Array.isArray(profiles)).toBe(true);
@@ -100,8 +96,7 @@ describeIf('SD Package - Legion Planning Integration (Live)', () => {
     });
 
     it('should provide SD methodology context hints', async () => {
-      sdModule = new SDModule({ resourceManager });
-      await sdModule.initialize();
+      sdModule = await SDModule.create(resourceManager);
       
       const contextHints = sdModule.profileManager.getContextHints();
       expect(contextHints).toBeDefined();
@@ -111,8 +106,7 @@ describeIf('SD Package - Legion Planning Integration (Live)', () => {
     });
 
     it('should plan with specific profile', async () => {
-      sdModule = new SDModule({ resourceManager });
-      await sdModule.initialize();
+      sdModule = await SDModule.create(resourceManager);
       
       // Test REAL profile-based planning - no mocks
       const goal = 'Parse requirements for user management system';

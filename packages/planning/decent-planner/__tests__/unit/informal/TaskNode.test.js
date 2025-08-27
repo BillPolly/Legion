@@ -2,7 +2,7 @@
  * Unit tests for TaskNode structure
  */
 
-import { describe, it, expect } from '@jest/globals';
+// Test functions are provided by the test runner as globals
 import { TaskNode } from '../../../src/core/informal/types/TaskNode.js';
 
 describe('TaskNode', () => {

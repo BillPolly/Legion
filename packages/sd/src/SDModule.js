@@ -66,13 +66,14 @@ export default class SDModule extends Module {
     // Register all tools first (needed for planner)
     await this.registerTools();
     
-    // Initialize Legion's DecentPlanner with tool registry
-    this.decentPlanner = new DecentPlanner(this.llmClient, this, {
+    // Initialize Legion's DecentPlanner
+    this.decentPlanner = new DecentPlanner({
       maxDepth: 6, // SD workflows can be deep
       confidenceThreshold: 0.8, // High confidence for software development
       enableFormalPlanning: true,
       validateBehaviorTrees: true
     });
+    await this.decentPlanner.initialize();
     
     // Initialize planning profiles
     this.profileManager = new SDPlanningProfile(this.decentPlanner);
@@ -186,7 +187,7 @@ export default class SDModule extends Module {
   }
 
   /**
-   * Plan a software development goal using Legion's DecentPlanner
+   * Plan a software development goal using Legion's DecentPlannerRefactored
    * @param {string} goal - Development goal (e.g., "Build a user authentication system")
    * @param {Object} context - Additional context for planning
    * @returns {Promise<Object>} Planning result with decomposition and behavior trees
@@ -208,8 +209,8 @@ export default class SDModule extends Module {
   }
 
   /**
-   * Get the DecentPlanner instance for direct access
-   * @returns {DecentPlanner} The planner instance
+   * Get the DecentPlannerRefactored instance for direct access
+   * @returns {DecentPlannerRefactored} The planner instance
    */
   getPlanner() {
     return this.decentPlanner;
@@ -224,7 +225,7 @@ export default class SDModule extends Module {
     return {
       name: 'sd',
       version: '1.0.0',
-      description: 'Software Development autonomous agent system with Legion DecentPlanner integration',
+      description: 'Software Development autonomous agent system with Legion DecentPlannerRefactored integration',
       toolCount: this.getTools().length,
       profileCount: this.profileManager ? this.profileManager.listProfiles().length : 0,
       hasPlanner: !!this.decentPlanner,

@@ -4,7 +4,39 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Never use .sh files, we only use javasrcipt or jest to run things
 
-THE resource manager is a singleton! it must not be created outside its package!
+## ResourceManager Usage (CRITICAL)
+
+**THE ResourceManager is a singleton that MUST be used for ALL environment variables and configuration!**
+
+### How to use ResourceManager:
+```javascript
+// ALWAYS get ResourceManager like this (it auto-initializes):
+const resourceManager = await ResourceManager.getInstance();
+
+// Get environment variables:
+const apiKey = resourceManager.get('env.API_KEY');
+const mongoUri = resourceManager.get('env.MONGO_URI');
+
+// Get LLM client:
+const llmClient = await resourceManager.get('llmClient');
+```
+
+### NEVER DO THIS:
+```javascript
+// ❌ NEVER use process.env directly
+const apiKey = process.env.API_KEY;  // WRONG!
+
+// ❌ NEVER create new ResourceManager instances
+const rm = new ResourceManager();  // WRONG!
+
+// ❌ NEVER use dotenv directly
+require('dotenv').config();  // WRONG!
+```
+
+**ALL environment values MUST ALWAYS come from ResourceManager and NOWHERE ELSE!**
+- ResourceManager automatically loads the .env file from the monorepo root
+- It is a singleton - only ONE instance exists across the entire application
+- It self-initializes on first access - no manual initialization needed
 
 NO tests must ever skip, they must fail!
 
@@ -23,9 +55,7 @@ When running webapp clients and servers prefere the MCP tool as that enables you
 
 Legion is a modular framework for building AI agent tools with consistent interfaces. It's organized as a monorepo using npm workspaces with packages for core infrastructure, AI/LLM services, tool collections, and applications.
 
-ALWAYS use the resoruce manager singleton for any access to environment variables!
-
-All pakcages as far as possible should be self configureing with defaults that just work.
+All packages as far as possible should be self configuring with defaults that just work.
 
 Everything must all ways be done in a TDD way with all tests passing.
 
@@ -40,8 +70,8 @@ In implementation code THERE MUST NEVER be any mock implementations or fallbacks
 All tests must be under the __tests__ directories and all results and such should go under there as well, but they should be in directores and added to gitignore. 
 if a test is producing files and such it is better to clean up before rather than after as then the results can be viewed
 
-There must only every be one .env in the monorepo and it must only ever be accessed by the ResourceManager singleton
-The resouorce manager should supply anything needed, nothing should be set on it or registered with it. 
+There must only ever be one .env file in the monorepo root and it must ONLY EVER be accessed through the ResourceManager singleton.
+The ResourceManager should supply everything needed - NEVER access environment variables directly from process.env or dotenv! 
 
 We are making an MVP we dont care about NFRs or future extensions we just need to get it working
 

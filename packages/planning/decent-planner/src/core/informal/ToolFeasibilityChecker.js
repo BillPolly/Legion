@@ -49,7 +49,7 @@ export class ToolFeasibilityChecker extends SimpleEmitter {
    */
   async getLLMClient() {
     if (!this.llmClient) {
-      const resourceManager = ResourceManager.getInstance();
+      const resourceManager = await ResourceManager.getInstance();
       const llmClientOrPromise = resourceManager.get('llmClient');
       
       if (!llmClientOrPromise) {

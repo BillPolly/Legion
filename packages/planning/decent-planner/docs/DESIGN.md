@@ -650,66 +650,101 @@ const plan = await planner.plan(userGoal);
 const result = await orchestrator.executePlan(plan.data.executionPlan);
 ```
 
-## Configuration
+## Configuration (Clean Architecture)
 
-### Decomposition Configuration
+### Centralized Configuration Management
 
 ```javascript
-{
+import { PlannerConfiguration } from './config/PlannerConfiguration';
+
+const config = new PlannerConfiguration({
+  // Decomposition settings
   decomposition: {
     maxDepth: 5,              // Maximum recursion depth
-    maxWidth: 10,             // Max subtasks per level
-    llmModel: "claude-3-5-sonnet-20241022",
-    temperature: 0.3,
-    complexityGuidelines: {
-      // Guidelines provided to LLM for classification
-      simpleTaskExamples: [
-        "Create a database table",
-        "Process files in a directory",
-        "Set up Express server with error handling"
-      ],
-      complexTaskExamples: [
-        "Build authentication system",
-        "Create full web application",
-        "Set up CI/CD pipeline"
-      ]
-    }
+    minSubtasks: 2,           // Minimum subtasks for COMPLEX
+    maxSubtasks: 10           // Maximum subtasks for COMPLEX
+  },
+  
+  // Tool discovery settings
+  toolDiscovery: {
+    confidenceThreshold: 0.7,  // Minimum tool confidence
+    maxToolsPerTask: 10,      // Max tools per SIMPLE task
+    semanticSearchEnabled: true
+  },
+  
+  // Formal planning settings
+  formalPlanning: {
+    enabled: true,            // Generate behavior trees
+    validateBehaviorTrees: true  // Validate generated trees
+  },
+  
+  // Logging settings
+  logging: {
+    level: 'info',            // debug|info|warn|error
+    prefix: '[DecentPlanner]',
+    enableTimestamp: true
+  },
+  
+  // Performance settings
+  performance: {
+    timeout: 300000,          // 5 minute timeout
+    parallelExecution: true,  // Enable parallel processing
+    cacheEnabled: true        // Cache LLM responses
   }
-}
+});
 ```
 
-### Tool Discovery Configuration
+### Configuration Validation
+
+- All settings are validated on creation
+- Type checking for all values
+- Range validation for numeric settings
+- Immutable once created
+
+## Error Handling (Three-Layer Hierarchy)
+
+### Domain Errors (`src/domain/errors/`)
+
+- **ValidationError**: Domain validation failures
+- **TaskError**: Task-related business rule violations
+- **ComplexityError**: Invalid complexity classification
+- **DecompositionError**: Decomposition rule violations
+- **FeasibilityError**: Task feasibility issues
+- **PlanError**: Plan-related violations
+- **HierarchyError**: Invalid hierarchy structure
+
+### Application Errors (`src/application/errors/`)
+
+- **UseCaseError**: Use case execution failures
+- **RepositoryError**: Data access issues
+- **NotFoundError**: Entity not found
+- **ServiceError**: Service operation failures
+- **TimeoutError**: Operation timeouts
+- **CancellationError**: Operation cancelled
+
+### Infrastructure Errors (`src/infrastructure/errors/`)
+
+- **AdapterError**: Adapter-specific failures
+- **LLMError**: LLM communication issues
+- **LLMParseError**: Response parsing failures
+- **ToolRegistryError**: Tool registry issues
+- **StorageError**: Persistence failures
+- **NetworkError**: Network communication issues
+
+### Error Propagation
 
 ```javascript
-{
-  toolDiscovery: {
-    semanticThreshold: 0.3,   // Minimum similarity score
-    maxToolsPerTask: 10,      // Maximum tools to consider
-    preferredDomains: [],     // Prioritize tools from domains
-    excludedTools: []         // Never select these tools
-  }
+try {
+  // Domain layer throws domain errors
+  const task = new Task({ description: '' }); // ValidationError
+} catch (domainError) {
+  // Application layer wraps in application error
+  throw new UseCaseError('Failed to create task', domainError);
+} catch (appError) {
+  // Infrastructure layer handles and logs
+  logger.error('Task creation failed', appError);
 }
 ```
-
-## Error Handling
-
-### Decomposition Failures
-
-- **Circular dependencies**: Detected and broken
-- **Max depth exceeded**: Returns partial decomposition
-- **LLM errors**: Retry with exponential backoff
-
-### Tool Discovery Failures
-
-- **No tools found**: Suggests missing tool requirements
-- **Insufficient tools**: Attempts broader search
-- **Tool conflicts**: Resolves based on priority
-
-### Planning Failures
-
-- **Invalid BT structure**: Uses validator feedback to correct
-- **Missing artifacts**: Identifies and reports gaps
-- **Validation errors**: Attempts automatic correction
 
 ## Performance Considerations
 
@@ -731,54 +766,101 @@ const result = await orchestrator.executePlan(plan.data.executionPlan);
 - Merge similar simple tasks
 - Optimize tool collection sizes
 
-## Testing Strategy
+## Testing Strategy (TDD Approach)
 
-### Unit Tests
+### Clean Architecture Testing Principles
 
-- Test each component in isolation
-- Mock LLM responses for consistency
-- Validate artifact propagation logic
+**NO MOCKS IN INTEGRATION TESTS** - Following Uncle Bob's principles:
+- Use real LLM clients
+- Use real tool registries
+- Use real repositories
+- Tests must fail, never skip
 
-### Integration Tests
+### Unit Tests (Domain Layer)
 
-- Test complete decomposition → planning flow
-- Verify context management across levels
-- Validate tool discovery accuracy
+- Test entities and value objects in isolation
+- Test domain services without external dependencies
+- Validate business rules and invariants
+- No infrastructure concerns
 
-### End-to-End Tests
+### Integration Tests (Application Layer)
+
+- Test use cases with real adapters
+- Test complete workflows end-to-end
+- Verify proper layer interactions
+- Use real components throughout
+
+### End-to-End Tests (Full System)
 
 - Test real-world scenarios
 - Measure decomposition quality
 - Validate execution success rate
+- Performance and scalability tests
+
+## Clean Architecture Benefits
+
+### 1. Testability
+- Domain logic testable without external dependencies
+- Use cases testable with mock adapters if needed
+- Integration tests use real components
+- Clear test boundaries per layer
+
+### 2. Maintainability
+- Clear separation of concerns
+- Single Responsibility Principle (SRP)
+- Easy to locate and fix issues
+- Changes isolated to specific layers
+
+### 3. Flexibility
+- Easy to swap implementations
+- Add new features without modifying existing code
+- Framework-agnostic domain logic
+- Multiple storage backend support
+
+### 4. Scalability
+- Clear boundaries enable team separation
+- Independent layer evolution
+- Microservice-ready architecture
+- Event-driven capabilities
 
 ## Future Enhancements
 
-### 1. Learning System
+### Infrastructure Layer
+- MongoDB repository implementation
+- PostgreSQL repository implementation
+- Redis caching adapter
+- Kafka event streaming
+- GraphQL API layer
 
-- Learn from successful decompositions
-- Improve complexity classification over time
-- Optimize tool selection patterns
+### Application Layer
+- CQRS pattern implementation
+- Event sourcing for audit trails
+- Saga pattern for distributed transactions
+- WebSocket real-time updates
 
-### 2. Domain Specialization
+### Domain Layer
+- Machine learning for pattern recognition
+- Advanced plan optimization algorithms
+- Domain-specific languages (DSLs)
+- Rule engine integration
 
-- Domain-specific decomposition strategies
-- Specialized complexity rules per domain
-- Custom tool preferences by domain
-
-### 3. Interactive Planning
-
-- Allow user intervention during decomposition
-- Support plan modification and refinement
-- Provide decomposition alternatives
-
-### 4. Execution Feedback
-
-- Use execution results to improve planning
-- Detect and correct systematic failures
-- Adaptive replanning based on outcomes
+### Cross-Cutting Concerns
+- Distributed tracing
+- Metrics and monitoring
+- Multi-tenancy support
+- Security and authorization
 
 ## Conclusion
 
 The Descent-Planner provides a powerful abstraction for complex task achievement through hierarchical decomposition and intelligent planning. By leveraging existing Legion components (semantic search, planner, validator) and adding recursive decomposition with context management, it enables AI agents to tackle arbitrarily complex goals while maintaining coherency and correctness at all levels.
 
-The key innovation is the two-step process that separates the concerns of task understanding (decomposition) from execution planning (tool orchestration), connected by a robust context management system based on artifacts. This architecture is both powerful and extensible, supporting new domains and capabilities as they are added to the Legion ecosystem.
+**Clean Architecture Achievement**: The refactored system now follows Uncle Bob's Clean Code and Clean Architecture principles, providing:
+
+1. **Clear separation of concerns** across domain, application, and infrastructure layers
+2. **SOLID principles** throughout the codebase
+3. **Testability without mocks** using real components
+4. **Flexibility to change** without affecting core business logic
+5. **Professional error handling** with proper error hierarchies
+6. **Maintainable codebase** with small, focused classes and methods
+
+The key innovation remains the two-step process that separates task understanding (decomposition) from execution planning (tool orchestration), now implemented with clean boundaries and proper dependency inversion. This architecture is both powerful and maintainable, supporting new domains and capabilities while remaining easy to understand, test, and evolve.

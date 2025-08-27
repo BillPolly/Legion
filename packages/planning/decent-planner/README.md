@@ -2,6 +2,8 @@
 
 Hierarchical task decomposition and planning system for AI agents. Enables complex goal achievement through recursive decomposition into simple, executable tasks.
 
+**Now refactored following Uncle Bob's Clean Code and Clean Architecture principles.**
+
 ## Overview
 
 The Decent-Planner implements a two-phase planning approach:
@@ -36,6 +38,40 @@ npm install @legion/decent-planner
 
 ## Quick Start
 
+### Using the Refactored Clean Architecture Version (Recommended)
+
+```javascript
+import { DecentPlannerRefactored } from '@legion/decent-planner';
+
+// Create planner with configuration
+const planner = new DecentPlannerRefactored({
+  maxDepth: 5,
+  confidenceThreshold: 0.7,
+  enableFormalPlanning: true,
+  logLevel: 'info'
+});
+
+// Initialize (creates dependencies)
+await planner.initialize();
+
+// Plan a complex task
+const result = await planner.plan(
+  "Build a task management web application",
+  { domain: "web-development" }
+);
+
+if (result.success) {
+  console.log('Plan:', result.data);
+  console.log('Statistics:', result.data.statistics);
+  
+  // Generate human-readable report
+  const report = planner.generateReport(result.data);
+  console.log(report);
+}
+```
+
+### Using the Legacy Version (for backward compatibility)
+
 ```javascript
 import { DecentPlanner } from '@legion/decent-planner';
 
@@ -66,24 +102,43 @@ if (result.success) {
 
 ## Architecture
 
-### Components
+The package follows **Clean Architecture** with clear separation of concerns across four layers:
 
-#### Core Orchestrators
-1. **DecentPlanner**: Main orchestrator for both planning phases
-2. **InformalPlanner**: Orchestrates the informal planning phase
+### 1. Domain Layer (`src/domain/`)
+Pure business logic with no external dependencies:
+- **Entities**: `Task`, `Plan` - Core business models
+- **Value Objects**: `TaskComplexity`, `TaskStatus`, `PlanStatus` - Immutable domain values
+- **Domain Services**: `TaskHierarchyService` - Pure domain operations
+- **Domain Errors**: Specific error types for domain violations
 
-#### Informal Planning Components
-3. **ComplexityClassifier**: Classifies tasks as SIMPLE or COMPLEX using LLM
-4. **TaskDecomposer**: Recursively decomposes COMPLEX tasks with I/O hints
-5. **ToolFeasibilityChecker**: Discovers tools via semantic search on ToolRegistry
-6. **DecompositionValidator**: Validates structure, dependencies, completeness, and feasibility
+### 2. Application Layer (`src/application/`)
+Application-specific business rules:
+- **Use Cases**: 
+  - `CreatePlanUseCase` - Creates new planning sessions
+  - `DecomposeTaskUseCase` - Handles task decomposition
+  - `DiscoverToolsUseCase` - Manages tool discovery
+  - `GenerateBehaviorTreeUseCase` - Creates behavior trees
+  - `ValidatePlanUseCase` - Validates plans
+- **Ports**: Interface definitions for external dependencies
+- **Application Errors**: Use case and service errors
 
-#### Data Structures
-7. **TaskNode**: Represents individual tasks with complexity, tools, and I/O hints
-8. **TaskHierarchy**: Tree structure with traversal and statistics methods
+### 3. Infrastructure Layer (`src/infrastructure/`)
+External interface implementations:
+- **Adapters**:
+  - `LLMComplexityClassifier` - LLM-based classification
+  - `LLMTaskDecomposer` - LLM-based decomposition
+  - `RegistryToolDiscoveryService` - Tool discovery via registry
+  - `ConsoleLogger` - Logging implementation
+  - `InMemoryPlanRepository` - Plan storage
+  - `InMemoryTaskRepository` - Task storage
+- **Infrastructure Errors**: Adapter and external service errors
 
-#### Supporting Infrastructure
-9. **PromptManager** (@legion/prompt-manager): Template-based prompt management with markdown files
+### 4. Configuration Layer (`src/config/`)
+- **PlannerConfiguration**: Centralized configuration management
+
+### Legacy Components (for backward compatibility)
+- **DecentPlanner**: Original implementation (use `DecentPlannerRefactored` for new projects)
+- **InformalPlanner**: Legacy informal planning orchestrator
 
 ### Task Classification
 
@@ -115,7 +170,48 @@ The system uses a two-layer context approach:
 
 ## API Reference
 
-### DecentPlanner
+### DecentPlannerRefactored (Clean Architecture)
+
+```javascript
+// Create instance with configuration
+const planner = new DecentPlannerRefactored({
+  // Decomposition settings
+  maxDepth: 5,              // Maximum recursion depth
+  minSubtasks: 2,           // Minimum subtasks for COMPLEX
+  maxSubtasks: 10,          // Maximum subtasks for COMPLEX
+  
+  // Tool discovery settings
+  confidenceThreshold: 0.7,  // Minimum tool confidence
+  maxToolsPerTask: 10,      // Max tools per SIMPLE task
+  
+  // Formal planning settings
+  enableFormalPlanning: true,     // Generate behavior trees
+  validateBehaviorTrees: true,    // Validate generated trees
+  
+  // Logging settings
+  logLevel: 'info',         // debug|info|warn|error
+  
+  // Performance settings
+  timeout: 300000,          // Operation timeout (5 min)
+  parallelExecution: true   // Enable parallel processing
+});
+
+// Initialize dependencies
+await planner.initialize();
+
+// Plan a task
+const result = await planner.plan(goal, context, progressCallback);
+
+// Cancel operation
+planner.cancel();
+```
+
+**Context Options:**
+- `domain`: Task domain (e.g., 'web-development', 'data-analysis')
+- `inputs`: Expected inputs for the task
+- `outputs`: Expected outputs from the task
+
+### DecentPlanner (Legacy)
 
 ```javascript
 // Create instance
@@ -236,6 +332,9 @@ const tools = await semanticSearch.searchTools(
 # Run tests
 npm test
 
+# Run integration tests (requires real LLM)
+npm test -- __tests__/integration/
+
 # Run example
 node examples/basic-usage.js
 
@@ -243,12 +342,52 @@ node examples/basic-usage.js
 npm run build
 ```
 
+## Testing Philosophy
+
+Following TDD principles:
+- **No mocks in integration tests** - Use real LLM and tool registry
+- **Domain tests** - Pure unit tests with no external dependencies
+- **Use case tests** - Test with real adapters
+- **End-to-end tests** - Complete workflows with real components
+
+## Clean Architecture Benefits
+
+1. **Testability**: Domain logic testable without external dependencies
+2. **Maintainability**: Clear separation of concerns
+3. **Flexibility**: Easy to swap implementations (e.g., different LLM providers)
+4. **Scalability**: Clear boundaries enable team separation
+5. **Framework Agnostic**: Domain logic independent of frameworks
+
 ## Dependencies
 
 - `@legion/planner`: Behavior tree generation
 - `@legion/bt-validator`: Plan validation
 - `@legion/tools-registry`: Semantic tool search
-- `@legion/ai-agent-core`: LLM integration
+- `@legion/resource-manager`: Singleton resource management
+- `@legion/ai-agent-core`: LLM integration (via ResourceManager)
+
+## Migration Guide
+
+To migrate from legacy to Clean Architecture version:
+
+```javascript
+// Old
+import { DecentPlanner } from '@legion/decent-planner';
+const planner = new DecentPlanner(llmClient);
+
+// New
+import { DecentPlannerRefactored } from '@legion/decent-planner';
+const planner = new DecentPlannerRefactored();
+await planner.initialize();
+```
+
+The API is largely compatible, making migration straightforward.
+
+## Documentation
+
+- [Clean Architecture Documentation](./CLEAN_ARCHITECTURE.md) - Detailed architecture guide
+- [Design Document](./docs/DESIGN.md) - System design and concepts
+- [API Documentation](./docs/API.md) - Complete API reference
 
 ## License
 

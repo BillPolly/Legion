@@ -24,9 +24,8 @@ describe('Comprehensive Decent Planner', () => {
   beforeAll(async () => {
     console.log('=== SETUP: Initializing Real Components ===');
     
-    // Initialize ResourceManager
-    resourceManager = ResourceManager.getInstance();
-    await resourceManager.initialize();
+    // NEW API: getInstance() is now async and returns fully initialized instance
+    resourceManager = await ResourceManager.getInstance();
     console.log('✅ ResourceManager initialized');
     
     // Get API key and create LLM client

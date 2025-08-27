@@ -41,9 +41,8 @@ export class BaseServer {
       return;
     }
 
-    // Get ResourceManager singleton - NEVER create new one
-    this.resourceManager = ResourceManager.getInstance();
-    await this.resourceManager.initialize();
+    // Get ResourceManager singleton - auto-initializes
+    this.resourceManager = await ResourceManager.getInstance();
     
     // Store in services for actor access
     this.services.set('resourceManager', this.resourceManager);
