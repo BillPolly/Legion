@@ -1,0 +1,60 @@
+{
+  "timestamp": "2025-08-27T09:16:30.299Z",
+  "duration": 0,
+  "environment": {
+    "nodeVersion": "v22.17.1",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "summary": {
+    "totalModules": 0,
+    "totalTools": 0,
+    "complianceScore": 0,
+    "testCoverage": 0,
+    "successRate": 0,
+    "criticalIssues": 0,
+    "warnings": 0,
+    "performance": {
+      "avgExecutionTime": 0,
+      "avgMemoryUsage": 0
+    }
+  },
+  "modules": [],
+  "validation": {
+    "summary": {
+      "totalModules": 0,
+      "validModules": 0,
+      "totalTools": 0,
+      "validTools": 0,
+      "averageModuleScore": 0,
+      "averageToolScore": 0
+    },
+    "modules": [],
+    "tools": []
+  },
+  "tests": null,
+  "integration": null,
+  "recommendations": [
+    {
+      "priority": "critical",
+      "category": "compliance",
+      "issue": "Overall compliance score is 0%",
+      "solution": "Review and fix metadata issues in modules and tools",
+      "autoFixable": true
+    },
+    {
+      "priority": "high",
+      "category": "testing",
+      "issue": "Test success rate is only 0%",
+      "solution": "Fix failing tests and improve error handling",
+      "autoFixable": false
+    },
+    {
+      "priority": "medium",
+      "category": "coverage",
+      "issue": "Test coverage is 0%",
+      "solution": "Add more test cases for uncovered tools",
+      "autoFixable": true
+    }
+  ]
+}

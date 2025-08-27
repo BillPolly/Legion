@@ -1,0 +1,24 @@
+{
+  "type": "sequence",
+  "id": "root",
+  "description": "Simple file write operation",
+  "children": [
+    {
+      "type": "action",
+      "id": "create-file",
+      "tool": "file_write",
+      "description": "Create a test file",
+      "inputs": {
+        "filepath": "test-output.txt",
+        "content": "This is a test file created by BT executor"
+      },
+      "outputVariable": "file_result"
+    },
+    {
+      "type": "condition",
+      "id": "check-success", 
+      "description": "Check if file was created successfully",
+      "check": "context.artifacts['file_result'].success === true"
+    }
+  ]
+}

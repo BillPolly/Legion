@@ -3,41 +3,58 @@
  */
 
 import { DebugBehaviorTreeExecutor } from '../src/DebugBehaviorTreeExecutor.js';
-import { ResourceManager } from '@legion/resource-manager';
-import { ToolRegistry } from '@legion/tools-registry/src/integration/ToolRegistry.js';
 import fs from 'fs/promises';
 
 describe('Correct Output Mapping', () => {
   let executor;
-  let toolRegistry;
-  let resourceManager;
-
-  beforeAll(async () => {
-    resourceManager = ResourceManager.getInstance();
-    await resourceManager.initialize();
-    
-    toolRegistry = await ToolRegistry.getInstance();
-    await toolRegistry.loadAllModules();
-    
-    executor = new DebugBehaviorTreeExecutor(toolRegistry);
-  });
-
-  afterAll(async () => {
-    await toolRegistry.cleanup();
-  });
+  let mockToolRegistry;
 
   beforeEach(async () => {
     // Clean up test files
     try {
       await fs.unlink('correct_mapping_test.txt');
+      await fs.unlink('condition_test.txt');
+      await fs.unlink('partial_test.txt');
     } catch (error) {
       // Ignore if file doesn't exist
     }
+    
+    // Create mock tool registry
+    mockToolRegistry = {
+      getToolById: async (toolId) => {
+        if (toolId === 'file_write') {
+          return {
+            name: 'file_write',
+            execute: async (params) => {
+              try {
+                await fs.writeFile(params.filepath, params.content);
+                return {
+                  success: true,
+                  data: {
+                    filepath: params.filepath,
+                    content: params.content,
+                    bytesWritten: params.content.length,
+                    created: true
+                  }
+                };
+              } catch (error) {
+                return {
+                  success: false,
+                  error: error.message,
+                  data: { filepath: params.filepath, error: error.message }
+                };
+              }
+            }
+          };
+        }
+        return null;
+      }
+    };
+    
+    executor = new DebugBehaviorTreeExecutor(mockToolRegistry);
   });
 
   test('should map to actual tool data fields, not execution wrapper', async () => {
-    const fileWriteTool = await toolRegistry.getTool('file_write');
-    
     // Create BT that maps to actual tool output fields
     const behaviorTree = {
       type: 'action',
@@ -50,31 +67,29 @@ describe('Correct Output Mapping', () => {
         created: 'wasCreated'
       },
       inputs: {
-        operation: 'write',
         filepath: 'correct_mapping_test.txt',
         content: 'Test correct mapping'
       }
     };
-
-    behaviorTree.tool_id = fileWriteTool._id;
     
-    executor.setMode('run');
     await executor.initializeTree(behaviorTree);
+    executor.setMode('run');
     
-    const result = await executor.execute();
+    const result = await executor.runToCompletion();
     
     expect(result.complete).toBe(true);
     expect(result.success).toBe(true);
 
     // Verify artifacts map to ACTUAL tool data fields
-    expect(executor.executionContext.artifacts.createdPath).toBe('correct_mapping_test.txt');
-    expect(executor.executionContext.artifacts.fileSize).toBe(19); // "Test correct mapping".length
-    expect(executor.executionContext.artifacts.wasCreated).toBe(true);
+    const state = executor.getExecutionState();
+    expect(state.context.artifacts.createdPath).toBe('correct_mapping_test.txt');
+    expect(state.context.artifacts.fileSize).toBe(20); // "Test correct mapping".length
+    expect(state.context.artifacts.wasCreated).toBe(true);
 
     // Verify wrapper fields are NOT mapped
-    expect(executor.executionContext.artifacts.success).toBeUndefined();
-    expect(executor.executionContext.artifacts.data).toBeUndefined();
-    expect(executor.executionContext.artifacts.error).toBeUndefined();
+    expect(state.context.artifacts.success).toBeUndefined();
+    expect(state.context.artifacts.data).toBeUndefined();
+    expect(state.context.artifacts.error).toBeUndefined();
 
     // Verify file was actually created
     const fileExists = await fs.access('correct_mapping_test.txt')
@@ -84,8 +99,6 @@ describe('Correct Output Mapping', () => {
   });
 
   test('should work with condition checking mapped data fields', async () => {
-    const fileWriteTool = await toolRegistry.getTool('file_write');
-    
     const behaviorTree = {
       type: 'sequence',
       id: 'condition_test',
@@ -99,7 +112,6 @@ describe('Correct Output Mapping', () => {
             bytesWritten: 'resultSize'
           },
           inputs: {
-            operation: 'write',
             filepath: 'condition_test.txt',
             content: 'Condition test'
           }
@@ -118,13 +130,11 @@ describe('Correct Output Mapping', () => {
         }
       ]
     };
-
-    behaviorTree.children[0].tool_id = fileWriteTool._id;
     
-    executor.setMode('run');
     await executor.initializeTree(behaviorTree);
+    executor.setMode('run');
     
-    const result = await executor.execute();
+    const result = await executor.runToCompletion();
     
     expect(result.complete).toBe(true);
     expect(result.success).toBe(true);
@@ -134,8 +144,6 @@ describe('Correct Output Mapping', () => {
   });
 
   test('should handle partial output mapping', async () => {
-    const fileWriteTool = await toolRegistry.getTool('file_write');
-    
     const behaviorTree = {
       type: 'action',
       id: 'partial_mapping',
@@ -145,26 +153,24 @@ describe('Correct Output Mapping', () => {
         filepath: 'onlyPath'
       },
       inputs: {
-        operation: 'write',
         filepath: 'partial_test.txt',
         content: 'Partial mapping'
       }
     };
-
-    behaviorTree.tool_id = fileWriteTool._id;
     
-    executor.setMode('run');
     await executor.initializeTree(behaviorTree);
+    executor.setMode('run');
     
-    const result = await executor.execute();
+    const result = await executor.runToCompletion();
     
     expect(result.complete).toBe(true);
     expect(result.success).toBe(true);
 
     // Should only have the mapped field
-    expect(executor.executionContext.artifacts.onlyPath).toBe('partial_test.txt');
-    expect(executor.executionContext.artifacts.bytesWritten).toBeUndefined();
-    expect(executor.executionContext.artifacts.created).toBeUndefined();
+    const state = executor.getExecutionState();
+    expect(state.context.artifacts.onlyPath).toBe('partial_test.txt');
+    expect(state.context.artifacts.bytesWritten).toBeUndefined();
+    expect(state.context.artifacts.created).toBeUndefined();
 
     // Cleanup
     await fs.unlink('partial_test.txt').catch(() => {});

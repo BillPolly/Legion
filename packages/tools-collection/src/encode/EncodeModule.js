@@ -55,16 +55,51 @@ class Base64EncodeTool extends Tool {
     super({
       name: 'base64_encode',
       description: 'Encode data to base64 format',
-      inputSchema: base64EncodeToolInputSchema,
-      outputSchema: base64EncodeToolOutputSchema
+      schema: {
+        input: base64EncodeToolInputSchema,
+        output: base64EncodeToolOutputSchema
+      }
     });
+  }
+
+  getMetadata() {
+    return {
+      name: this.name,
+      description: this.description,
+      inputSchema: this.inputSchema,
+      outputSchema: this.outputSchema,
+      version: '1.0.0',
+      category: 'encoding',
+      tags: ['base64', 'encoding', 'string'],
+      security: { evaluation: 'safe' }
+    };
+  }
+
+  validate(params) {
+    const errors = [];
+    const warnings = [];
+    
+    if (!params || typeof params !== 'object') {
+      errors.push('Parameters must be an object');
+      return { valid: false, errors, warnings };
+    }
+    
+    if (params.data === undefined || params.data === null) {
+      errors.push('Data is required for encoding');
+    }
+    
+    if (params.inputEncoding && typeof params.inputEncoding !== 'string') {
+      errors.push('Input encoding must be a string');
+    }
+    
+    return { valid: errors.length === 0, errors, warnings };
   }
 
   async execute(params) {
     try {
       const { data, inputEncoding = 'utf8' } = params;
       
-      if (!data) {
+      if (data === undefined || data === null) {
         return {
           success: false,
           error: 'Data is required for encoding'
@@ -134,16 +169,51 @@ class Base64DecodeTool extends Tool {
     super({
       name: 'base64_decode',
       description: 'Decode base64 encoded data',
-      inputSchema: base64DecodeToolInputSchema,
-      outputSchema: base64DecodeToolOutputSchema
+      schema: {
+        input: base64DecodeToolInputSchema,
+        output: base64DecodeToolOutputSchema
+      }
     });
+  }
+
+  getMetadata() {
+    return {
+      name: this.name,
+      description: this.description,
+      inputSchema: this.inputSchema,
+      outputSchema: this.outputSchema,
+      version: '1.0.0',
+      category: 'decoding',
+      tags: ['base64', 'decoding', 'string'],
+      security: { evaluation: 'safe' }
+    };
+  }
+
+  validate(params) {
+    const errors = [];
+    const warnings = [];
+    
+    if (!params || typeof params !== 'object') {
+      errors.push('Parameters must be an object');
+      return { valid: false, errors, warnings };
+    }
+    
+    if (params.data === undefined || params.data === null) {
+      errors.push('Data is required for decoding');
+    }
+    
+    if (params.outputEncoding && typeof params.outputEncoding !== 'string') {
+      errors.push('Output encoding must be a string');
+    }
+    
+    return { valid: errors.length === 0, errors, warnings };
   }
 
   async execute(params) {
     try {
       const { data, outputEncoding = 'utf8' } = params;
       
-      if (!data) {
+      if (data === undefined || data === null) {
         return {
           success: false,
           error: 'Data is required for decoding'
@@ -216,16 +286,51 @@ class UrlEncodeTool extends Tool {
     super({
       name: 'url_encode',
       description: 'URL encode a string',
-      inputSchema: urlEncodeToolInputSchema,
-      outputSchema: urlEncodeToolOutputSchema
+      schema: {
+        input: urlEncodeToolInputSchema,
+        output: urlEncodeToolOutputSchema
+      }
     });
+  }
+
+  getMetadata() {
+    return {
+      name: this.name,
+      description: this.description,
+      inputSchema: this.inputSchema,
+      outputSchema: this.outputSchema,
+      version: '1.0.0',
+      category: 'encoding',
+      tags: ['url', 'encoding', 'string'],
+      security: { evaluation: 'safe' }
+    };
+  }
+
+  validate(params) {
+    const errors = [];
+    const warnings = [];
+    
+    if (!params || typeof params !== 'object') {
+      errors.push('Parameters must be an object');
+      return { valid: false, errors, warnings };
+    }
+    
+    if (params.data === undefined || params.data === null) {
+      errors.push('Data is required for encoding');
+    }
+    
+    if (params.data !== undefined && typeof params.data !== 'string') {
+      errors.push('Data must be a string');
+    }
+    
+    return { valid: errors.length === 0, errors, warnings };
   }
 
   async execute(params) {
     try {
       const { data } = params;
       
-      if (!data) {
+      if (data === undefined || data === null) {
         return {
           success: false,
           error: 'Data is required for encoding'
@@ -297,16 +402,51 @@ class UrlDecodeTool extends Tool {
     super({
       name: 'url_decode',
       description: 'URL decode a string',
-      inputSchema: urlDecodeToolInputSchema,
-      outputSchema: urlDecodeToolOutputSchema
+      schema: {
+        input: urlDecodeToolInputSchema,
+        output: urlDecodeToolOutputSchema
+      }
     });
+  }
+
+  getMetadata() {
+    return {
+      name: this.name,
+      description: this.description,
+      inputSchema: this.inputSchema,
+      outputSchema: this.outputSchema,
+      version: '1.0.0',
+      category: 'decoding',
+      tags: ['url', 'decoding', 'string'],
+      security: { evaluation: 'safe' }
+    };
+  }
+
+  validate(params) {
+    const errors = [];
+    const warnings = [];
+    
+    if (!params || typeof params !== 'object') {
+      errors.push('Parameters must be an object');
+      return { valid: false, errors, warnings };
+    }
+    
+    if (params.data === undefined || params.data === null) {
+      errors.push('Data is required for decoding');
+    }
+    
+    if (params.data !== undefined && typeof params.data !== 'string') {
+      errors.push('Data must be a string');
+    }
+    
+    return { valid: errors.length === 0, errors, warnings };
   }
 
   async execute(params) {
     try {
       const { data } = params;
       
-      if (!data) {
+      if (data === undefined || data === null) {
         return {
           success: false,
           error: 'Data is required for decoding'
