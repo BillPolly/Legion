@@ -288,12 +288,12 @@ class DeployApplicationTool extends Tool {
   async getDeploymentManager() {
     try {
       // Try to get from resource manager first
-      const resourceManager = await ResourceManager.getResourceManager();
+      const resourceManager = await ResourceManager.getInstance();
       
       let deploymentManager;
       
-      if (resourceManager.has('deployment-manager')) {
-        deploymentManager = resourceManager.deployment-manager;
+      if (resourceManager.get('deployment-manager')) {
+        deploymentManager = resourceManager.get('deployment-manager');
       } else {
         // Create new deployment manager if not available
         deploymentManager = new DeploymentManager({ resourceManager });

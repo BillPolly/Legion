@@ -212,9 +212,9 @@ class MonitorDeploymentTool extends Tool {
       }
       
       // this.emitProgress(`Executing ${args.action} monitoring action`, { 
-        deploymentId: args.deploymentId,
-        action: args.action
-      });
+      //   deploymentId: args.deploymentId,
+      //   action: args.action
+      // });
       
       // Execute action
       const result = await this.executeAction(args, deployment, monitoringSystem);
@@ -462,10 +462,10 @@ class MonitorDeploymentTool extends Tool {
    */
   async getSystems() {
     try {
-      const resourceManager = await ResourceManager.getResourceManager();
+      const resourceManager = await ResourceManager.getInstance();
       
-      let monitoringSystem = resourceManager.monitoring-system;
-      let deploymentManager = resourceManager.deployment-manager;
+      let monitoringSystem = resourceManager.get('monitoring-system');
+      let deploymentManager = resourceManager.get('deployment-manager');
       
       if (!monitoringSystem) {
         monitoringSystem = new MonitoringSystem(resourceManager);

@@ -186,9 +186,9 @@ class ListDeploymentsTool extends Tool {
       }
       
       // this.emitProgress('Retrieving deployments', { 
-        provider: args.provider || 'all',
-        status: args.status || 'all'
-      });
+      //   provider: args.provider || 'all',
+      //   status: args.status || 'all'
+      // });
       
       // Build filter options
       const filterOptions = this.buildFilterOptions(args);
@@ -211,11 +211,11 @@ class ListDeploymentsTool extends Tool {
         // Generate summary
         const summary = this.generateSummary(deployments);
         
-        this.emitInfo(`Retrieved ${deployments.length} deployments`, {
-          total: deployments.length,
-          providers: Object.keys(summary.byProvider),
-          statuses: Object.keys(summary.byStatus)
-        });
+        // this.emitInfo(`Retrieved ${deployments.length} deployments`, {
+        //   total: deployments.length,
+        //   providers: Object.keys(summary.byProvider),
+        //   statuses: Object.keys(summary.byStatus)
+        // });
         
         // Format output
         const formattedData = this.formatOutput(paginatedDeployments, format, summary, pagination, args);
@@ -231,8 +231,8 @@ class ListDeploymentsTool extends Tool {
         };
       } else {
         // this.emitError(`Failed to list deployments: ${result.error}`, {
-          error: result.error
-        });
+        //   error: result.error
+        // });
         
         throw new Error(result.error || 'Failed to list deployments', {
       cause: {
@@ -445,9 +445,9 @@ class ListDeploymentsTool extends Tool {
    */
   async getDeploymentManager() {
     try {
-      const resourceManager = await ResourceManager.getResourceManager();
+      const resourceManager = await ResourceManager.getInstance();
       
-      let deploymentManager = resourceManager.deployment-manager;
+      let deploymentManager = resourceManager.get('deployment-manager');
       
       if (!deploymentManager) {
         deploymentManager = new DeploymentManager(resourceManager);

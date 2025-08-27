@@ -399,9 +399,9 @@ class UpdateDeploymentTool extends Tool {
    */
   async getDeploymentManager() {
     try {
-      const resourceManager = await ResourceManager.getResourceManager();
+      const resourceManager = await ResourceManager.getInstance();
       
-      let deploymentManager = resourceManager.deployment-manager;
+      let deploymentManager = resourceManager.get('deployment-manager');
       
       if (!deploymentManager) {
         deploymentManager = new DeploymentManager(resourceManager);
