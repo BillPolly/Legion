@@ -20,6 +20,7 @@ export class SearchService {
     this.embeddingService = dependencies.embeddingService;
     this.vectorStore = dependencies.vectorStore;
     this.toolRepository = dependencies.toolRepository;
+    this.moduleService = dependencies.moduleService; // NEW: Access to in-memory modules
     this.eventBus = dependencies.eventBus;
   }
 
@@ -135,9 +136,61 @@ export class SearchService {
    * Single responsibility: Perspective generation coordination
    */
   async generatePerspectives(options = {}) {
+    console.log('[SearchService] generatePerspectives called with options:', options);
     const { moduleFilter, forceRegenerate = false } = options;
     
-    const tools = await this.toolRepository.listAll({ module: moduleFilter });
+    console.log('[SearchService] toolRepository exists:', !!this.toolRepository);
+    console.log('[SearchService] toolRepository type:', this.toolRepository?.constructor?.name);
+    
+    // WORKAROUND: Instead of getting tools from database (which is empty),
+    // get tools from the loaded modules via the module service
+    console.log('[SearchService] Attempting to get tools from loaded modules...');
+    
+    let tools = [];
+    try {
+      // Try database first (original approach)
+      tools = await this.toolRepository.listTools({ module: moduleFilter });
+      console.log('[SearchService] Got tools from database:', tools?.length || 0);
+      
+      if (!tools || tools.length === 0) {
+        console.log('[SearchService] Database empty, trying in-memory registry...');
+        
+        // FALLBACK: Get tools from in-memory loaded modules
+        // We need access to module service to get this
+        if (this.moduleService) {
+          const moduleStats = await this.moduleService.getModuleStatistics();
+          console.log('[SearchService] Loaded modules:', moduleStats.loadedModules?.length || 0);
+          
+          tools = [];
+          for (const moduleName of moduleStats.loadedModules || []) {
+            try {
+              const moduleInstance = await this.moduleService.getModule(moduleName);
+              const moduleTools = moduleInstance.getTools();
+              
+              // Convert tool instances to tool metadata
+              for (const tool of moduleTools) {
+                tools.push({
+                  name: tool.name,
+                  description: tool.description,
+                  inputSchema: tool.inputSchema,
+                  outputSchema: tool.outputSchema,
+                  category: tool.category,
+                  tags: tool.tags,
+                  moduleName: moduleName
+                });
+              }
+            } catch (error) {
+              console.log(`[SearchService] Error getting tools from ${moduleName}:`, error.message);
+            }
+          }
+          
+          console.log(`[SearchService] Got ${tools.length} tools from in-memory modules`);
+        }
+      }
+    } catch (error) {
+      console.log('[SearchService] Error accessing tools:', error.message);
+      tools = [];
+    }
     const results = {
       processed: 0,
       generated: 0,

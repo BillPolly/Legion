@@ -69,6 +69,7 @@ export class ServiceOrchestrator {
     });
 
     // Search service is optional - only initialize if needed
+    console.log('[ServiceOrchestrator] enableVectorSearch:', this.options.enableVectorSearch);
     this.searchService = this.options.enableVectorSearch ? new SearchService({
       textSearch: dependencies.textSearch,
       semanticSearch: dependencies.semanticSearch,
@@ -76,8 +77,10 @@ export class ServiceOrchestrator {
       embeddingService: dependencies.embeddingService,
       vectorStore: dependencies.vectorStore,
       toolRepository: dependencies.toolRepository,
+      moduleService: this.moduleService, // NEW: Access to in-memory modules
       eventBus: dependencies.eventBus
     }) : null;
+    console.log('[ServiceOrchestrator] SearchService created:', !!this.searchService);
 
     this.systemService = new SystemService({
       moduleService: this.moduleService,
@@ -376,6 +379,12 @@ export class ServiceOrchestrator {
     const eventBus = new SimpleEmitter();
     const cache = new LRUCache(this.options.cacheSize);
     const databaseService = new DatabaseStorage({ resourceManager: this.resourceManager });
+    
+    // Initialize database connection for search operations
+    console.log('[ServiceOrchestrator] Initializing DatabaseStorage for toolRepository...');
+    await databaseService.initialize();
+    console.log('[ServiceOrchestrator] DatabaseStorage initialized, connected:', databaseService._isConnected);
+    
     const moduleLoader = new ModuleLoader({ resourceManager: this.resourceManager });
     const moduleDiscovery = new ModuleDiscovery({ resourceManager: this.resourceManager });
     const textSearch = new TextSearch({ databaseStorage: databaseService });

@@ -66,6 +66,7 @@ export class DatabaseStorage {
    * Initialize database connection and setup 3-collection architecture
    */
   async initialize() {
+    console.log('[DatabaseStorage] initialize() called');
     try {
       if (this.db) {
         // Direct db injection for tests - still need to initialize 3-collection architecture
@@ -77,6 +78,9 @@ export class DatabaseStorage {
       // Get MongoDB URL from ResourceManager
       const mongoUrl = this.resourceManager.get('env.MONGODB_URL') || 'mongodb://localhost:27017';
       const testDbName = this.resourceManager.get('test.database.name');
+      console.log(`[DatabaseStorage] MongoDB URL: ${mongoUrl}`);
+      console.log(`[DatabaseStorage] Test DB name: ${testDbName}`);
+      console.log(`[DatabaseStorage] ResourceManager exists: ${!!this.resourceManager}`);
       
       // Use test database name if provided
       if (testDbName) {
@@ -184,7 +188,13 @@ export class DatabaseStorage {
    * @returns {Collection} MongoDB collection
    */
   getCollection(name) {
+    console.log(`[DatabaseStorage] getCollection('${name}') called`);
+    console.log(`[DatabaseStorage] _isConnected: ${this._isConnected}`);
+    console.log(`[DatabaseStorage] db exists: ${!!this.db}`);
+    console.log(`[DatabaseStorage] client exists: ${!!this.client}`);
+    
     if (!this._isConnected || !this.db) {
+      console.log(`[DatabaseStorage] ERROR: Database not connected for collection '${name}'`);
       throw new DatabaseError(
         'Database not connected',
         'getCollection',
