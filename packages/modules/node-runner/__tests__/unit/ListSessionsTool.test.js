@@ -126,8 +126,8 @@ describe('ListSessionsTool', () => {
 
       expect(mockModule.sessionManager.listSessions).toHaveBeenCalled();
       expect(result.success).toBe(true);
-      expect(result.sessions).toHaveLength(3);
-      expect(result.totalCount).toBe(3);
+      expect(result.data.sessions).toHaveLength(3);
+      expect(result.data.totalCount).toBe(3);
     });
 
     it('should filter sessions by status', async () => {
@@ -138,8 +138,8 @@ describe('ListSessionsTool', () => {
       const result = await listSessionsTool.execute(input);
 
       expect(result.success).toBe(true);
-      expect(result.sessions).toHaveLength(1);
-      expect(result.sessions[0].status).toBe('active');
+      expect(result.data.sessions).toHaveLength(1);
+      expect(result.data.sessions[0].status).toBe('active');
     });
 
     it('should filter sessions by project path', async () => {
@@ -150,8 +150,8 @@ describe('ListSessionsTool', () => {
       const result = await listSessionsTool.execute(input);
 
       expect(result.success).toBe(true);
-      expect(result.sessions).toHaveLength(1);
-      expect(result.sessions[0].projectPath).toBe('/test/project1');
+      expect(result.data.sessions).toHaveLength(1);
+      expect(result.data.sessions[0].projectPath).toBe('/test/project1');
     });
 
     it('should filter sessions by time range', async () => {
@@ -163,7 +163,7 @@ describe('ListSessionsTool', () => {
       const result = await listSessionsTool.execute(input);
 
       expect(result.success).toBe(true);
-      expect(result.sessions).toHaveLength(2); // session-123 and session-456
+      expect(result.data.sessions).toHaveLength(2); // session-123 and session-456
     });
   });
 
@@ -176,7 +176,7 @@ describe('ListSessionsTool', () => {
       const result = await listSessionsTool.execute(input);
 
       expect(result.success).toBe(true);
-      expect(result.sessions[0]).toHaveProperty('statistics');
+      expect(result.data.sessions[0]).toHaveProperty('statistics');
       expect(mockModule.sessionManager.getSessionStatistics).toHaveBeenCalled();
     });
 
@@ -186,7 +186,7 @@ describe('ListSessionsTool', () => {
       const result = await listSessionsTool.execute(input);
 
       expect(result.success).toBe(true);
-      expect(result.sessions[0]).not.toHaveProperty('statistics');
+      expect(result.data.sessions[0]).not.toHaveProperty('statistics');
     });
 
     it('should include log counts in statistics', async () => {
@@ -196,9 +196,9 @@ describe('ListSessionsTool', () => {
 
       const result = await listSessionsTool.execute(input);
 
-      expect(result.sessions[0].statistics).toHaveProperty('totalLogs');
-      expect(result.sessions[0].statistics).toHaveProperty('errorLogs');
-      expect(result.sessions[0].statistics).toHaveProperty('warningLogs');
+      expect(result.data.sessions[0].statistics).toHaveProperty('totalLogs');
+      expect(result.data.sessions[0].statistics).toHaveProperty('errorLogs');
+      expect(result.data.sessions[0].statistics).toHaveProperty('warningLogs');
     });
   });
 
@@ -208,9 +208,9 @@ describe('ListSessionsTool', () => {
 
       const result = await listSessionsTool.execute(input);
 
-      expect(result.sessions[0].sessionId).toBe('session-123'); // Most recent
-      expect(result.sessions[1].sessionId).toBe('session-456');
-      expect(result.sessions[2].sessionId).toBe('session-789'); // Oldest
+      expect(result.data.sessions[0].sessionId).toBe('session-123'); // Most recent
+      expect(result.data.sessions[1].sessionId).toBe('session-456');
+      expect(result.data.sessions[2].sessionId).toBe('session-789'); // Oldest
     });
 
     it('should sort sessions by specified field', async () => {
@@ -232,8 +232,8 @@ describe('ListSessionsTool', () => {
 
       const result = await listSessionsTool.execute(input);
 
-      expect(result.sessions[0].sessionId).toBe('session-789'); // Oldest
-      expect(result.sessions[2].sessionId).toBe('session-123'); // Most recent
+      expect(result.data.sessions[0].sessionId).toBe('session-789'); // Oldest
+      expect(result.data.sessions[2].sessionId).toBe('session-123'); // Most recent
     });
   });
 
@@ -246,9 +246,9 @@ describe('ListSessionsTool', () => {
       const result = await listSessionsTool.execute(input);
 
       expect(result.success).toBe(true);
-      expect(result.sessions).toHaveLength(2);
-      expect(result.totalCount).toBe(3);
-      expect(result.pagination.hasMore).toBe(true);
+      expect(result.data.sessions).toHaveLength(2);
+      expect(result.data.totalCount).toBe(3);
+      expect(result.data.pagination.hasMore).toBe(true);
     });
 
     it('should handle offset for pagination', async () => {
@@ -260,8 +260,8 @@ describe('ListSessionsTool', () => {
       const result = await listSessionsTool.execute(input);
 
       expect(result.success).toBe(true);
-      expect(result.sessions).toHaveLength(2);
-      expect(result.sessions[0].sessionId).toBe('session-456');
+      expect(result.data.sessions).toHaveLength(2);
+      expect(result.data.sessions[0].sessionId).toBe('session-456');
     });
 
     it('should use default limit when not specified', async () => {
@@ -270,7 +270,7 @@ describe('ListSessionsTool', () => {
       const result = await listSessionsTool.execute(input);
 
       expect(result.success).toBe(true);
-      expect(result.sessions.length).toBeLessThanOrEqual(100); // Default limit
+      expect(result.data.sessions.length).toBeLessThanOrEqual(100); // Default limit
     });
   });
 
@@ -280,7 +280,9 @@ describe('ListSessionsTool', () => {
 
       const input = {};
 
-      await expect(listSessionsTool.execute(input)).rejects.toThrow('Database error');
+      const result = await listSessionsTool.execute(input);
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Database error');
     });
 
     it('should handle statistics retrieval failure gracefully', async () => {
@@ -293,7 +295,7 @@ describe('ListSessionsTool', () => {
       const result = await listSessionsTool.execute(input);
 
       expect(result.success).toBe(true);
-      expect(result.sessions[0].statistics).toBeUndefined();
+      expect(result.data.sessions[0].statistics).toBeUndefined();
     });
 
     it('should validate date formats', async () => {
@@ -301,7 +303,9 @@ describe('ListSessionsTool', () => {
         startedAfter: 'invalid-date'
       };
 
-      await expect(listSessionsTool.execute(input)).rejects.toThrow();
+      const result = await listSessionsTool.execute(input);
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
   });
 
@@ -346,13 +350,15 @@ describe('ListSessionsTool', () => {
       expect(result).toEqual(
         expect.objectContaining({
           success: true,
-          sessions: expect.any(Array),
-          totalCount: expect.any(Number),
-          filters: expect.any(Object),
-          pagination: expect.objectContaining({
-            limit: expect.any(Number),
-            offset: expect.any(Number),
-            hasMore: expect.any(Boolean)
+          data: expect.objectContaining({
+            sessions: expect.any(Array),
+            totalCount: expect.any(Number),
+            filters: expect.any(Object),
+            pagination: expect.objectContaining({
+              limit: expect.any(Number),
+              offset: expect.any(Number),
+              hasMore: expect.any(Boolean)
+            })
           })
         })
       );
@@ -363,7 +369,7 @@ describe('ListSessionsTool', () => {
 
       const result = await listSessionsTool.execute(input);
 
-      const session = result.sessions[0];
+      const session = result.data.sessions[0];
       expect(session).toHaveProperty('sessionId');
       expect(session).toHaveProperty('projectPath');
       expect(session).toHaveProperty('command');
@@ -376,7 +382,7 @@ describe('ListSessionsTool', () => {
 
       const result = await listSessionsTool.execute(input);
 
-      const session = result.sessions[0];
+      const session = result.data.sessions[0];
       expect(typeof session.startTime).toBe('string');
       expect(session.startTime).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     });
@@ -393,8 +399,8 @@ describe('ListSessionsTool', () => {
       const result = await listSessionsTool.execute(input);
 
       expect(result.success).toBe(true);
-      expect(result.sessions).toHaveLength(1);
-      expect(result.sessions[0].status).toBe('completed');
+      expect(result.data.sessions).toHaveLength(1);
+      expect(result.data.sessions[0].status).toBe('completed');
     });
 
     it('should handle empty filter results', async () => {
@@ -406,8 +412,8 @@ describe('ListSessionsTool', () => {
       const result = await listSessionsTool.execute(input);
 
       expect(result.success).toBe(true);
-      expect(result.sessions).toHaveLength(0);
-      expect(result.totalCount).toBe(0);
+      expect(result.data.sessions).toHaveLength(0);
+      expect(result.data.totalCount).toBe(0);
     });
   });
 });

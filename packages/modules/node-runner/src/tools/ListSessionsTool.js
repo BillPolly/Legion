@@ -74,7 +74,7 @@ export class ListSessionsTool extends Tool {
     this.validator = jsonSchemaToZod(this.inputSchema);
   }
 
-  async execute(args = {}) {
+  async _execute(args = {}) {
     // Validate input
     const validatedArgs = this.validator.parse(args);
     
@@ -142,7 +142,6 @@ export class ListSessionsTool extends Tool {
       });
       
       return {
-        success: true,
         sessions: formattedSessions,
         totalCount,
         filters,

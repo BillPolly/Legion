@@ -11,8 +11,7 @@
     "packages/planning/*",
     "packages/shared/*",
     "packages/mcps/*",
-    "packages/modules/*",
-    "packages/modules/code-gen/*"
+    "packages/modules/*"
   ],
   "scripts": {
     "test": "npm run test --workspaces",
@@ -30,6 +29,11 @@
     "test:components": "npm run test --workspace=@legion/components",
     "test:aiur-ui": "npm run test --workspace=@legion/aiur-ui",
     "test:planning-integration": "npm run test --workspace=@legion/planning-integration-tests",
+    "test:jester": "npm run test --workspace=@legion/jester",
+    "test:cerebrate": "npm run test --workspace=@legion/cerebrate",
+    "test:code-analysis": "npm run test --workspace=@legion/code-analysis",
+    "test:js-generator": "npm run test --workspace=@legion/js-generator",
+    "test:code-agent": "npm run test --workspace=@legion/code-agent",
     "test:watch": "npm run test:watch --workspaces",
     "test:coverage": "npm run test:coverage --workspaces",
     "lint": "eslint packages/*/src/**/*.js",

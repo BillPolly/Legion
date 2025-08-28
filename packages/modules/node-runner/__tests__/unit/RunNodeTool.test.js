@@ -99,8 +99,10 @@ describe('RunNodeTool', () => {
         command: 'npm start'
       };
 
-      // This should not throw
-      await expect(runNodeTool.execute(validInput)).resolves.toBeDefined();
+      // This should succeed
+      const result = await runNodeTool.execute(validInput);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
     });
 
     it('should accept valid complete input', async () => {
@@ -114,7 +116,9 @@ describe('RunNodeTool', () => {
         timeout: 30000
       };
 
-      await expect(runNodeTool.execute(validInput)).resolves.toBeDefined();
+      const result = await runNodeTool.execute(validInput);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
     });
 
     it('should validate projectPath is required', async () => {
@@ -123,7 +127,9 @@ describe('RunNodeTool', () => {
         // Missing projectPath
       };
 
-      await expect(runNodeTool.execute(invalidInput)).rejects.toThrow();
+      const result = await runNodeTool.execute(invalidInput);
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
 
     it('should validate command is required', async () => {
@@ -132,7 +138,9 @@ describe('RunNodeTool', () => {
         // Missing command
       };
 
-      await expect(runNodeTool.execute(invalidInput)).rejects.toThrow();
+      const result = await runNodeTool.execute(invalidInput);
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
 
     it('should validate args is array if provided', async () => {
@@ -142,7 +150,9 @@ describe('RunNodeTool', () => {
         args: 'invalid-string-args' // Should be array
       };
 
-      await expect(runNodeTool.execute(invalidInput)).rejects.toThrow();
+      const result = await runNodeTool.execute(invalidInput);
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
 
     it('should validate timeout constraints', async () => {
@@ -152,7 +162,9 @@ describe('RunNodeTool', () => {
         timeout: -1000 // Invalid negative timeout
       };
 
-      await expect(runNodeTool.execute(invalidInput)).rejects.toThrow();
+      const result = await runNodeTool.execute(invalidInput);
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
 
     it('should validate env is object if provided', async () => {
@@ -162,7 +174,9 @@ describe('RunNodeTool', () => {
         env: 'invalid-env' // Should be object
       };
 
-      await expect(runNodeTool.execute(invalidInput)).rejects.toThrow();
+      const result = await runNodeTool.execute(invalidInput);
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
   });
 
@@ -228,12 +242,14 @@ describe('RunNodeTool', () => {
 
       expect(result).toEqual({
         success: true,
-        sessionId: 'test-session-123',
-        processId: 'test-process-123',
-        message: expect.stringContaining('started successfully'),
-        projectPath: process.cwd(),
-        command: 'npm start',
-        args: []
+        data: {
+          sessionId: 'test-session-123',
+          processId: 'test-process-123',
+          message: expect.stringContaining('started successfully'),
+          projectPath: process.cwd(),
+          command: 'npm start',
+          args: []
+        }
       });
     });
   });
@@ -247,7 +263,9 @@ describe('RunNodeTool', () => {
         command: 'npm start'
       };
 
-      await expect(runNodeTool.execute(input)).rejects.toThrow('Session creation failed');
+      const result = await runNodeTool.execute(input);
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Session creation failed');
     });
 
     it('should handle dependency installation failure', async () => {
@@ -259,7 +277,9 @@ describe('RunNodeTool', () => {
         installDependencies: true
       };
 
-      await expect(runNodeTool.execute(input)).rejects.toThrow('Install failed');
+      const result = await runNodeTool.execute(input);
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Install failed');
     });
 
     it('should handle process start failure', async () => {
@@ -270,7 +290,9 @@ describe('RunNodeTool', () => {
         command: 'npm start'
       };
 
-      await expect(runNodeTool.execute(input)).rejects.toThrow('Process start failed');
+      const result = await runNodeTool.execute(input);
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Process start failed');
     });
 
     it('should validate project path exists', async () => {
@@ -279,7 +301,9 @@ describe('RunNodeTool', () => {
         command: 'npm start'
       };
 
-      await expect(runNodeTool.execute(input)).rejects.toThrow('Project path does not exist');
+      const result = await runNodeTool.execute(input);
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Project path does not exist');
     });
   });
 
@@ -331,7 +355,8 @@ describe('RunNodeTool', () => {
         command: 'npm start'
       };
 
-      await expect(runNodeTool.execute(input)).rejects.toThrow();
+      const result = await runNodeTool.execute(input);
+      expect(result.success).toBe(false);
       expect(errorEvents.length).toBeGreaterThan(0);
     });
   });

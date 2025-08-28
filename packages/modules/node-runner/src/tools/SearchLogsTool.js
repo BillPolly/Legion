@@ -69,7 +69,7 @@ export class SearchLogsTool extends Tool {
     this.validator = jsonSchemaToZod(this.inputSchema);
   }
 
-  async execute(args) {
+  async _execute(args) {
     // Validate input
     const validatedArgs = this.validator.parse(args);
     
@@ -84,15 +84,7 @@ export class SearchLogsTool extends Tool {
       if (validatedArgs.sessionId) {
         const session = await this.module.sessionManager.getSession(validatedArgs.sessionId);
         if (!session) {
-          return {
-            success: false,
-            logs: [],
-            totalResults: 0,
-            searchMode,
-            sessionId: validatedArgs.sessionId,
-            query: validatedArgs.query,
-            message: `Session not found: ${validatedArgs.sessionId}`
-          };
+          throw new Error(`Session not found: ${validatedArgs.sessionId}`);
         }
         filters.sessionId = validatedArgs.sessionId;
       }
@@ -130,7 +122,6 @@ export class SearchLogsTool extends Tool {
           logs = await this.performKeywordSearch(validatedArgs, filters);
           
           return {
-            success: true,
             logs: this.paginateLogs(logs, validatedArgs.limit, validatedArgs.offset),
             totalResults: logs.length,
             searchMode,
@@ -192,7 +183,6 @@ export class SearchLogsTool extends Tool {
       });
       
       return {
-        success: true,
         logs: paginatedLogs,
         totalResults: logs.length,
         searchMode,

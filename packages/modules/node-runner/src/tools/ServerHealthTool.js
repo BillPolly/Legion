@@ -56,7 +56,7 @@ export class ServerHealthTool extends Tool {
     this.startTime = Date.now();
   }
 
-  async execute(args = {}) {
+  async _execute(args = {}) {
     // Validate input
     const validatedArgs = this.validator.parse(args);
     
@@ -64,7 +64,6 @@ export class ServerHealthTool extends Tool {
     
     const issues = [];
     const healthReport = {
-      success: true,
       overallStatus: 'healthy',
       timestamp: new Date().toISOString(),
       uptime: Date.now() - this.startTime,

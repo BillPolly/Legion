@@ -105,22 +105,22 @@ describe('ServerHealthTool', () => {
       const result = await serverHealthTool.execute({});
 
       expect(result.success).toBe(true);
-      expect(result.overallStatus).toBeDefined();
-      expect(['healthy', 'degraded', 'unhealthy']).toContain(result.overallStatus);
+      expect(result.data.overallStatus).toBeDefined();
+      expect(['healthy', 'degraded', 'unhealthy']).toContain(result.data.overallStatus);
     });
 
     it('should include timestamp in response', async () => {
       const result = await serverHealthTool.execute({});
 
-      expect(result.timestamp).toBeDefined();
-      expect(result.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      expect(result.data.timestamp).toBeDefined();
+      expect(result.data.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     });
 
     it('should calculate uptime correctly', async () => {
       const result = await serverHealthTool.execute({});
 
-      expect(result.uptime).toBeDefined();
-      expect(result.uptime).toBeGreaterThanOrEqual(0);
+      expect(result.data.uptime).toBeDefined();
+      expect(result.data.uptime).toBeGreaterThanOrEqual(0);
     });
   });
 
@@ -132,9 +132,9 @@ describe('ServerHealthTool', () => {
 
       const result = await serverHealthTool.execute(input);
 
-      expect(result.processes).toBeDefined();
-      expect(result.processes.running).toBe(2);
-      expect(result.processes.details).toHaveLength(2);
+      expect(result.data.processes).toBeDefined();
+      expect(result.data.processes.running).toBe(2);
+      expect(result.data.processes.details).toHaveLength(2);
     });
 
     it('should include process resource usage', async () => {
@@ -144,7 +144,7 @@ describe('ServerHealthTool', () => {
 
       const result = await serverHealthTool.execute(input);
 
-      const processDetail = result.processes.details[0];
+      const processDetail = result.data.processes.details[0];
       expect(processDetail).toHaveProperty('cpuUsage');
       expect(processDetail).toHaveProperty('memoryUsage');
       expect(processDetail).toHaveProperty('pid');
@@ -157,7 +157,7 @@ describe('ServerHealthTool', () => {
 
       const result = await serverHealthTool.execute(input);
 
-      expect(result.processes).toBeUndefined();
+      expect(result.data.processes).toBeUndefined();
     });
   });
 
@@ -169,10 +169,10 @@ describe('ServerHealthTool', () => {
 
       const result = await serverHealthTool.execute(input);
 
-      expect(result.sessions).toBeDefined();
-      expect(result.sessions.total).toBe(2);
-      expect(result.sessions.active).toBe(1);
-      expect(result.sessions.completed).toBe(1);
+      expect(result.data.sessions).toBeDefined();
+      expect(result.data.sessions.total).toBe(2);
+      expect(result.data.sessions.active).toBe(1);
+      expect(result.data.sessions.completed).toBe(1);
     });
 
     it('should categorize sessions by status', async () => {
@@ -182,9 +182,9 @@ describe('ServerHealthTool', () => {
 
       const result = await serverHealthTool.execute(input);
 
-      expect(result.sessions.byStatus).toBeDefined();
-      expect(result.sessions.byStatus.active).toBe(1);
-      expect(result.sessions.byStatus.completed).toBe(1);
+      expect(result.data.sessions.byStatus).toBeDefined();
+      expect(result.data.sessions.byStatus.active).toBe(1);
+      expect(result.data.sessions.byStatus.completed).toBe(1);
     });
   });
 
@@ -196,10 +196,10 @@ describe('ServerHealthTool', () => {
 
       const result = await serverHealthTool.execute(input);
 
-      expect(result.storage).toBeDefined();
-      expect(result.storage.totalLogs).toBe(10000);
-      expect(result.storage.totalSize).toBe(52428800);
-      expect(result.storage.formattedSize).toBe('50.00 MB');
+      expect(result.data.storage).toBeDefined();
+      expect(result.data.storage.totalLogs).toBe(10000);
+      expect(result.data.storage.totalSize).toBe(52428800);
+      expect(result.data.storage.formattedSize).toBe('50.00 MB');
     });
 
     it('should include log time range', async () => {
@@ -209,8 +209,8 @@ describe('ServerHealthTool', () => {
 
       const result = await serverHealthTool.execute(input);
 
-      expect(result.storage.oldestLog).toBeDefined();
-      expect(result.storage.newestLog).toBeDefined();
+      expect(result.data.storage.oldestLog).toBeDefined();
+      expect(result.data.storage.newestLog).toBeDefined();
     });
   });
 
@@ -222,9 +222,9 @@ describe('ServerHealthTool', () => {
 
       const result = await serverHealthTool.execute(input);
 
-      expect(result.servers).toBeDefined();
-      expect(result.servers.running).toBe(1);
-      expect(result.servers.details).toHaveLength(1);
+      expect(result.data.servers).toBeDefined();
+      expect(result.data.servers.running).toBe(1);
+      expect(result.data.servers.details).toHaveLength(1);
     });
 
     it('should include health check status', async () => {
@@ -234,7 +234,7 @@ describe('ServerHealthTool', () => {
 
       const result = await serverHealthTool.execute(input);
 
-      const serverDetail = result.servers.details[0];
+      const serverDetail = result.data.servers.details[0];
       expect(serverDetail.healthCheck).toBeDefined();
       expect(serverDetail.healthCheck.status).toBe('healthy');
     });
@@ -248,8 +248,8 @@ describe('ServerHealthTool', () => {
 
       const result = await serverHealthTool.execute(input);
 
-      expect(result.servers.running).toBe(0);
-      expect(result.servers.details).toHaveLength(0);
+      expect(result.data.servers.running).toBe(0);
+      expect(result.data.servers.details).toHaveLength(0);
     });
   });
 
@@ -261,10 +261,10 @@ describe('ServerHealthTool', () => {
 
       const result = await serverHealthTool.execute(input);
 
-      expect(result.webSocket).toBeDefined();
-      expect(result.webSocket.running).toBe(true);
-      expect(result.webSocket.port).toBe(8080);
-      expect(result.webSocket.connectedClients).toBe(2);
+      expect(result.data.webSocket).toBeDefined();
+      expect(result.data.webSocket.running).toBe(true);
+      expect(result.data.webSocket.port).toBe(8080);
+      expect(result.data.webSocket.connectedClients).toBe(2);
     });
 
     it('should handle WebSocket not running', async () => {
@@ -276,8 +276,8 @@ describe('ServerHealthTool', () => {
 
       const result = await serverHealthTool.execute(input);
 
-      expect(result.webSocket.running).toBe(false);
-      expect(result.webSocket.connectedClients).toBe(0);
+      expect(result.data.webSocket.running).toBe(false);
+      expect(result.data.webSocket.connectedClients).toBe(0);
     });
   });
 
@@ -289,11 +289,11 @@ describe('ServerHealthTool', () => {
 
       const result = await serverHealthTool.execute(input);
 
-      expect(result.systemResources).toBeDefined();
-      expect(result.systemResources).toHaveProperty('totalMemory');
-      expect(result.systemResources).toHaveProperty('freeMemory');
-      expect(result.systemResources).toHaveProperty('usedMemory');
-      expect(result.systemResources).toHaveProperty('memoryUsagePercent');
+      expect(result.data.systemResources).toBeDefined();
+      expect(result.data.systemResources).toHaveProperty('totalMemory');
+      expect(result.data.systemResources).toHaveProperty('freeMemory');
+      expect(result.data.systemResources).toHaveProperty('usedMemory');
+      expect(result.data.systemResources).toHaveProperty('memoryUsagePercent');
     });
 
     it('should not include system resources by default', async () => {
@@ -301,7 +301,7 @@ describe('ServerHealthTool', () => {
 
       const result = await serverHealthTool.execute(input);
 
-      expect(result.systemResources).toBeUndefined();
+      expect(result.data.systemResources).toBeUndefined();
     });
   });
 
@@ -309,8 +309,8 @@ describe('ServerHealthTool', () => {
     it('should report healthy when all components are running', async () => {
       const result = await serverHealthTool.execute({});
 
-      expect(result.overallStatus).toBe('healthy');
-      expect(result.issues).toHaveLength(0);
+      expect(result.data.overallStatus).toBe('healthy');
+      expect(result.data.issues).toHaveLength(0);
     });
 
     it('should report degraded when some components have issues', async () => {
@@ -322,8 +322,8 @@ describe('ServerHealthTool', () => {
 
       const result = await serverHealthTool.execute({});
 
-      expect(result.overallStatus).toBe('degraded');
-      expect(result.issues.length).toBeGreaterThan(0);
+      expect(result.data.overallStatus).toBe('degraded');
+      expect(result.data.issues.length).toBeGreaterThan(0);
     });
 
     it('should report unhealthy when critical components fail', async () => {
@@ -332,8 +332,8 @@ describe('ServerHealthTool', () => {
 
       const result = await serverHealthTool.execute({});
 
-      expect(result.overallStatus).toBe('unhealthy');
-      expect(result.issues).toContain('No processes running');
+      expect(result.data.overallStatus).toBe('unhealthy');
+      expect(result.data.issues).toContain('No processes running');
     });
   });
 
@@ -346,8 +346,8 @@ describe('ServerHealthTool', () => {
       const result = await serverHealthTool.execute({});
 
       expect(result.success).toBe(true);
-      expect(result.overallStatus).toBe('degraded');
-      expect(result.issues).toContain('Failed to check processes: Process check failed');
+      expect(result.data.overallStatus).toBe('degraded');
+      expect(result.data.issues).toContain('Failed to check processes: Process check failed');
     });
 
     it('should continue checking other components on failure', async () => {
@@ -356,8 +356,8 @@ describe('ServerHealthTool', () => {
       const result = await serverHealthTool.execute({});
 
       expect(result.success).toBe(true);
-      expect(result.processes).toBeDefined(); // Other checks should still run
-      expect(result.storage).toBeDefined();
+      expect(result.data.processes).toBeDefined(); // Other checks should still run
+      expect(result.data.storage).toBeDefined();
     });
   });
 
@@ -400,10 +400,12 @@ describe('ServerHealthTool', () => {
       expect(result).toEqual(
         expect.objectContaining({
           success: true,
-          overallStatus: expect.any(String),
-          timestamp: expect.any(String),
-          uptime: expect.any(Number),
-          issues: expect.any(Array)
+          data: expect.objectContaining({
+            overallStatus: expect.any(String),
+            timestamp: expect.any(String),
+            uptime: expect.any(Number),
+            issues: expect.any(Array)
+          })
         })
       );
     });
@@ -415,9 +417,9 @@ describe('ServerHealthTool', () => {
 
       const result = await serverHealthTool.execute(input);
 
-      if (result.systemResources) {
-        expect(result.systemResources.formattedTotalMemory).toMatch(/^\d+\.\d{2} [KMGT]B$/);
-        expect(result.systemResources.formattedFreeMemory).toMatch(/^\d+\.\d{2} [KMGT]B$/);
+      if (result.data.systemResources) {
+        expect(result.data.systemResources.formattedTotalMemory).toMatch(/^\d+\.\d{2} [KMGT]B$/);
+        expect(result.data.systemResources.formattedFreeMemory).toMatch(/^\d+\.\d{2} [KMGT]B$/);
       }
     });
   });

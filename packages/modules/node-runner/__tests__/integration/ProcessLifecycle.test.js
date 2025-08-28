@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import { NodeRunnerModule } from '../../src/NodeRunnerModule.js';
+import NodeRunnerModule from '../../src/NodeRunnerModule.js';
 import { ProcessManager } from '../../src/managers/ProcessManager.js';
 import { SessionManager } from '../../src/managers/SessionManager.js';
 import { LogStorage } from '../../src/storage/LogStorage.js';

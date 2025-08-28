@@ -69,7 +69,7 @@ export class RunNodeTool extends Tool {
     this.validator = jsonSchemaToZod(this.inputSchema);
   }
 
-  async execute(args) {
+  async _execute(args) {
     // Validate input
     const validatedArgs = this.validator.parse(args);
     
@@ -86,7 +86,7 @@ export class RunNodeTool extends Tool {
       // Create new session
       const session = await this.module.sessionManager.createSession({
         projectPath: validatedArgs.projectPath,
-        command: `${validatedArgs.command} ${validatedArgs.args.join(' ')}`.trim(),
+        command: `${validatedArgs.command} ${(validatedArgs.args || []).join(' ')}`.trim(),
         description: validatedArgs.description || `Running ${validatedArgs.command}`,
         tags: ['node-runner', 'execution']
       });
@@ -144,13 +144,12 @@ export class RunNodeTool extends Tool {
       });
       
       return {
-        success: true,
         sessionId: session.sessionId,
         processId: processResult.processId,
         message: `Node.js process started successfully in ${validatedArgs.projectPath}`,
         projectPath: validatedArgs.projectPath,
         command: validatedArgs.command,
-        args: validatedArgs.args
+        args: validatedArgs.args || []
       };
       
     } catch (error) {

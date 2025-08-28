@@ -56,7 +56,7 @@ export class StopNodeTool extends Tool {
     this.validator = jsonSchemaToZod(this.inputSchema);
   }
 
-  async execute(args) {
+  async _execute(args) {
     // Validate input
     const validatedArgs = this.validator.parse(args);
     
@@ -79,18 +79,12 @@ export class StopNodeTool extends Tool {
           this.emit('progress', { percentage: 100, status: 'Process stopped successfully' });
           
           return {
-            success: true,
+            message: `Process ${validatedArgs.processId} stopped successfully`,
             stoppedProcesses,
-            terminationType,
-            message: `Process ${validatedArgs.processId} stopped successfully`
+            terminationType
           };
         } else {
-          return {
-            success: false,
-            stoppedProcesses: [],
-            terminationType,
-            message: `Process ${validatedArgs.processId} not found or already stopped`
-          };
+          throw new Error(`Process ${validatedArgs.processId} not found or already stopped`);
         }
         
       } else if (validatedArgs.sessionId) {
@@ -100,12 +94,7 @@ export class StopNodeTool extends Tool {
         
         const session = await this.module.sessionManager.getSession(validatedArgs.sessionId);
         if (!session) {
-          return {
-            success: false,
-            stoppedProcesses: [],
-            terminationType,
-            message: `Session not found: ${validatedArgs.sessionId}`
-          };
+          throw new Error(`Session not found: ${validatedArgs.sessionId}`);
         }
         
         this.emit('info', { message: `Stopping all processes in session: ${validatedArgs.sessionId}` });
@@ -139,7 +128,6 @@ export class StopNodeTool extends Tool {
         this.emit('progress', { percentage: 100, status: 'Session stopped successfully' });
         
         return {
-          success: true,
           stoppedProcesses,
           terminationType,
           message: `Session ${validatedArgs.sessionId} stopped with ${stoppedProcesses.length} processes terminated`
@@ -160,7 +148,6 @@ export class StopNodeTool extends Tool {
         this.emit('progress', { percentage: 100, status: 'All processes stopped' });
         
         return {
-          success: true,
           stoppedProcesses,
           terminationType,
           message: `All processes stopped (${stoppedProcesses.length} processes terminated)`

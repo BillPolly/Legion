@@ -121,8 +121,8 @@ describe('SearchLogsTool', () => {
 
       expect(mockModule.logSearch.keywordSearch).toHaveBeenCalled();
       expect(result.success).toBe(true);
-      expect(result.logs).toBeDefined();
-      expect(result.searchMode).toBe('keyword');
+      expect(result.data.logs).toBeDefined();
+      expect(result.data.searchMode).toBe('keyword');
     });
 
     it('should perform semantic search', async () => {
@@ -135,7 +135,7 @@ describe('SearchLogsTool', () => {
 
       expect(mockModule.logSearch.semanticSearch).toHaveBeenCalled();
       expect(result.success).toBe(true);
-      expect(result.searchMode).toBe('semantic');
+      expect(result.data.searchMode).toBe('semantic');
     });
 
     it('should perform regex search', async () => {
@@ -147,7 +147,7 @@ describe('SearchLogsTool', () => {
       const result = await searchLogsTool.execute(input);
 
       expect(result.success).toBe(true);
-      expect(result.searchMode).toBe('regex');
+      expect(result.data.searchMode).toBe('regex');
     });
 
     it('should default to keyword search mode', async () => {
@@ -158,7 +158,7 @@ describe('SearchLogsTool', () => {
 
       const result = await searchLogsTool.execute(input);
 
-      expect(result.searchMode).toBe('keyword');
+      expect(result.data.searchMode).toBe('keyword');
     });
   });
 
@@ -173,7 +173,7 @@ describe('SearchLogsTool', () => {
 
       expect(mockModule.logSearch.keywordSearch).toHaveBeenCalledWith('test', 'session-123', 100);
       expect(result.success).toBe(true);
-      expect(result.sessionId).toBe('session-123');
+      expect(result.data.sessionId).toBe('session-123');
     });
 
     it('should search across all sessions when not specified', async () => {
@@ -184,7 +184,7 @@ describe('SearchLogsTool', () => {
       const result = await searchLogsTool.execute(input);
 
       expect(result.success).toBe(true);
-      expect(result.sessionId).toBeUndefined();
+      expect(result.data.sessionId).toBeUndefined();
     });
 
     it('should validate session exists', async () => {
@@ -198,7 +198,7 @@ describe('SearchLogsTool', () => {
       const result = await searchLogsTool.execute(input);
 
       expect(result.success).toBe(false);
-      expect(result.message).toContain('Session not found');
+      expect(result.error).toContain('Session not found');
     });
   });
 
@@ -233,7 +233,7 @@ describe('SearchLogsTool', () => {
       const result = await searchLogsTool.execute(input);
 
       expect(result.success).toBe(true);
-      expect(result.filters).toHaveProperty('startTime');
+      expect(result.data.filters).toHaveProperty('startTime');
     });
 
     it('should handle end time only', async () => {
@@ -245,7 +245,7 @@ describe('SearchLogsTool', () => {
       const result = await searchLogsTool.execute(input);
 
       expect(result.success).toBe(true);
-      expect(result.filters).toHaveProperty('endTime');
+      expect(result.data.filters).toHaveProperty('endTime');
     });
   });
 
@@ -261,7 +261,7 @@ describe('SearchLogsTool', () => {
 
       expect(mockModule.logStorage.getLogsBySource).toHaveBeenCalledWith('session-123', 'stderr');
       expect(result.success).toBe(true);
-      expect(result.filters).toHaveProperty('source', 'stderr');
+      expect(result.data.filters).toHaveProperty('source', 'stderr');
     });
 
     it('should validate source type', async () => {
@@ -270,7 +270,9 @@ describe('SearchLogsTool', () => {
         source: 'invalid-source'
       };
 
-      await expect(searchLogsTool.execute(input)).rejects.toThrow();
+      const result = await searchLogsTool.execute(input);
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
   });
 
@@ -293,8 +295,8 @@ describe('SearchLogsTool', () => {
       const result = await searchLogsTool.execute(input);
 
       expect(result.success).toBe(true);
-      expect(result.logs.length).toBeLessThanOrEqual(10);
-      expect(result.totalResults).toBeGreaterThanOrEqual(10); // Now based on LogSearch results
+      expect(result.data.logs.length).toBeLessThanOrEqual(10);
+      expect(result.data.totalResults).toBeGreaterThanOrEqual(10); // Now based on LogSearch results
     });
 
     it('should handle offset for pagination', async () => {
@@ -307,7 +309,7 @@ describe('SearchLogsTool', () => {
       const result = await searchLogsTool.execute(input);
 
       expect(result.success).toBe(true);
-      expect(result.pagination).toEqual({
+      expect(result.data.pagination).toEqual({
         limit: 10,
         offset: 20,
         hasMore: expect.any(Boolean)
@@ -322,7 +324,7 @@ describe('SearchLogsTool', () => {
       const result = await searchLogsTool.execute(input);
 
       expect(result.success).toBe(true);
-      expect(result.logs.length).toBeLessThanOrEqual(100); // Default limit
+      expect(result.data.logs.length).toBeLessThanOrEqual(100); // Default limit
     });
   });
 
@@ -334,7 +336,9 @@ describe('SearchLogsTool', () => {
         query: 'test'
       };
 
-      await expect(searchLogsTool.execute(input)).rejects.toThrow('Search failed');
+      const result = await searchLogsTool.execute(input);
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Search failed');
     });
 
     it('should handle semantic search unavailable', async () => {
@@ -349,8 +353,8 @@ describe('SearchLogsTool', () => {
       const result = await searchLogsTool.execute(input);
 
       expect(result.success).toBe(true);
-      expect(result.searchMode).toBe('keyword');
-      expect(result.warning).toContain('Falling back to keyword search');
+      expect(result.data.searchMode).toBe('keyword');
+      expect(result.data.warning).toContain('Falling back to keyword search');
     });
 
     it('should require query parameter', async () => {
@@ -359,7 +363,9 @@ describe('SearchLogsTool', () => {
         // Missing query
       };
 
-      await expect(searchLogsTool.execute(input)).rejects.toThrow();
+      const result = await searchLogsTool.execute(input);
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
   });
 
@@ -410,11 +416,13 @@ describe('SearchLogsTool', () => {
       expect(result).toEqual(
         expect.objectContaining({
           success: true,
-          logs: expect.any(Array),
-          totalResults: expect.any(Number),
-          searchMode: expect.any(String),
-          sessionId: 'session-123',
-          query: 'test'
+          data: expect.objectContaining({
+            logs: expect.any(Array),
+            totalResults: expect.any(Number),
+            searchMode: expect.any(String),
+            sessionId: 'session-123',
+            query: 'test'
+          })
         })
       );
     });
@@ -426,10 +434,10 @@ describe('SearchLogsTool', () => {
 
       const result = await searchLogsTool.execute(input);
 
-      if (result.logs.length > 0) {
-        expect(result.logs[0]).toHaveProperty('logId');
-        expect(result.logs[0]).toHaveProperty('message');
-        expect(result.logs[0]).toHaveProperty('timestamp');
+      if (result.data.logs.length > 0) {
+        expect(result.data.logs[0]).toHaveProperty('logId');
+        expect(result.data.logs[0]).toHaveProperty('message');
+        expect(result.data.logs[0]).toHaveProperty('timestamp');
       }
     });
   });
