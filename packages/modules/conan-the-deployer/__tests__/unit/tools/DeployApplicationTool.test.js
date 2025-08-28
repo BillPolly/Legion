@@ -71,7 +71,7 @@ describe('DeployApplicationTool', () => {
       const result = await deployTool.execute(args);
       
       expect(result.success).toBe(false);
-      expect(result.error).toContain('is required');
+      expect(result.error).toContain('provider and config are required');
     });
 
     test('should validate provider parameter', async () => {
@@ -284,7 +284,7 @@ describe('DeployApplicationTool', () => {
       const result = await deployTool.execute(args);
       
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Deployment manager not available');
+      expect(result.error).toContain('Deployment manager crashed');
     });
   });
 
@@ -322,9 +322,9 @@ describe('DeployApplicationTool', () => {
       const result = await deployTool.execute(args);
       
       expect(result.success).toBe(false);
-      expect(result.examples).toHaveProperty('local');
-      expect(result.examples).toHaveProperty('docker');
-      expect(result.examples).toHaveProperty('railway');
+      expect(result.data.examples).toHaveProperty('local');
+      expect(result.data.examples).toHaveProperty('docker');
+      expect(result.data.examples).toHaveProperty('railway');
     });
   });
 });

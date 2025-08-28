@@ -28,9 +28,13 @@ const mockMonitoringSystem = {
   getLogs: jest.fn()
 };
 
+// Create ResourceManager mock with getInstance static method
+const MockResourceManager = jest.fn(() => mockResourceManager);
+MockResourceManager.getInstance = jest.fn(async () => mockResourceManager);
+
 jest.unstable_mockModule('@legion/resource-manager', () => ({
-  ResourceManager: jest.fn(() => mockResourceManager),
-  default: jest.fn(() => mockResourceManager)
+  ResourceManager: MockResourceManager,
+  default: MockResourceManager
 }));
 
 jest.unstable_mockModule('../../src/DeploymentManager.js', () => ({

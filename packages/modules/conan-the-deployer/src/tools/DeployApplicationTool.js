@@ -207,22 +207,23 @@ class DeployApplicationTool extends Tool {
       //   appName: args.config.name 
       // });
       
-      // Transform config to match DeploymentConfig schema
+      // Extract provider-specific config
       const deploymentConfig = {
-        provider: args.provider,
         name: args.config.name,
-        env: args.config.environment,
+        command: args.config.command,
+        port: args.config.port,
+        environment: args.config.environment,
         source: args.config.source,
         branch: args.config.branch,
         projectPath: args.config.projectPath,
-        port: args.config.port,
-        startCommand: args.config.command,
-        railway: args.config.railway,
-        docker: args.config.docker
+        ...args.config // Include any other config properties
       };
       
-      // Execute deployment
-      const result = await deploymentManager.deploy(deploymentConfig);
+      // Remove provider from config if it exists
+      delete deploymentConfig.provider;
+      
+      // Execute deployment with provider and config as separate arguments
+      const result = await deploymentManager.deploy(args.provider, deploymentConfig);
       
       if (result.success) {
         // this.emitInfo(`Successfully deployed ${args.config.name} to ${args.provider}`, {

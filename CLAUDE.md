@@ -98,3 +98,5 @@ ONLY the schema package must be used for json validation! now zod or a
 FOR tests there must be NO skipping and NO fallback under any circumstance, they must just FAIL in thoes circumstances.
 
 unless you are speicifically testing their functionality Resource manager and tool registry singletons should be got onece at the beginning of the test suite with no timeout and then just reused.
+
+NOTHING should be setting anything on resoruce mangeer! it provides values it does nothing else

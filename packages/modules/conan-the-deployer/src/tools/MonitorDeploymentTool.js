@@ -8,9 +8,10 @@ import { ResourceManager } from '@legion/resource-manager';
  */
 class MonitorDeploymentTool extends Tool {
   constructor() {
-    super();
-    this.name = 'monitor_deployment';
-    this.description = 'Monitor deployment health, metrics, and logs in real-time with configurable alerts and persistence';
+    super({
+      name: 'monitor_deployment',
+      description: 'Monitor deployment health, metrics, and logs in real-time with configurable alerts and persistence'
+    });
     
     // Valid monitoring actions
     this.validActions = ['start', 'stop', 'status', 'metrics', 'logs', 'health'];
@@ -240,7 +241,7 @@ class MonitorDeploymentTool extends Tool {
         //   error: result.error
         // });
         
-        throw new Error(result.error, {
+        throw new Error(result.error || `Failed to execute ${args.action}`, {
       cause: {
         errorType: 'operation_error',
         deploymentId: args.deploymentId,
@@ -252,8 +253,10 @@ class MonitorDeploymentTool extends Tool {
       
     } catch (error) {
       // this.emitError(`Monitor deployment tool error: ${error.message}`, { error: error.stack });
+      console.error('MonitorDeploymentTool error:', error);
+      const errorMessage = error.message || error.toString() || 'Unknown error';
       
-      throw new Error(error.message.includes('JSON') ? `Invalid JSON in arguments: ${error.message}` : `Monitoring failed: ${error.message}`, {
+      throw new Error(errorMessage.includes('JSON') ? `Invalid JSON in arguments: ${errorMessage}` : `Monitoring failed: ${errorMessage}`, {
         cause: {
           errorType: 'operation_error',
           suggestions: ['Check your parameters and try again']
@@ -335,6 +338,7 @@ class MonitorDeploymentTool extends Tool {
     
     if (result.success) {
       return {
+        success: true,
         data: {
           monitoring: {
             id: result.monitoringId,
@@ -362,6 +366,7 @@ class MonitorDeploymentTool extends Tool {
     
     if (result.success) {
       return {
+        success: true,
         data: {
           monitoring: {
             status: 'stopped'
@@ -383,6 +388,7 @@ class MonitorDeploymentTool extends Tool {
   async getMonitoringStatus(args, deployment, monitoringSystem) {
     // This would get the current monitoring status
     return {
+      success: true,
       data: {
         monitoring: {
           status: 'active', // This would come from the monitoring system
@@ -406,6 +412,7 @@ class MonitorDeploymentTool extends Tool {
     const metrics = await monitoringSystem.getMetrics(deployment.id, options);
     
     return {
+      success: true,
       data: {
         metrics: metrics
       },
@@ -427,6 +434,7 @@ class MonitorDeploymentTool extends Tool {
     
     if (result.success) {
       return {
+        success: true,
         data: {
           logs: result.logs
         },
@@ -447,6 +455,7 @@ class MonitorDeploymentTool extends Tool {
     const health = await monitoringSystem.getHealthStatus(deployment.id);
     
     return {
+      success: true,
       data: {
         health: health
       },
