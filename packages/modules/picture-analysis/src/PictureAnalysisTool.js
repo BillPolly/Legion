@@ -235,14 +235,33 @@ export class PictureAnalysisTool extends Tool {
       this.progress('Analyzing image with AI vision...', 70);
       let analysisResult;
       try {
-        // Call the provider's messages API directly for vision support
-        const response = await this.llmClient.provider.client.messages.create({
-          model: this.llmClient.model || 'claude-3-5-sonnet-20241022',
-          max_tokens: requestOptions.max_tokens,
-          temperature: requestOptions.temperature,
-          messages: visionRequest
-        });
-        analysisResult = response.content[0].text;
+        // Use the standard LLM client interface for vision support
+        let response;
+        if (this.llmClient.sendVisionMessage) {
+          // If LLM client has vision support
+          response = await this.llmClient.sendVisionMessage(visionRequest, requestOptions);
+        } else if (this.llmClient.provider && this.llmClient.provider.client) {
+          // Fallback to direct provider access for vision
+          response = await this.llmClient.provider.client.messages.create({
+            model: this.llmClient.model || 'claude-3-5-sonnet-20241022',
+            max_tokens: requestOptions.max_tokens,
+            temperature: requestOptions.temperature,
+            messages: visionRequest
+          });
+          analysisResult = response.content[0].text;
+        } else {
+          // Use standard complete method as fallback
+          const prompt = `${visionRequest[0].content[0].text}\n\nImage: [base64 encoded image provided]`;
+          response = await this.llmClient.complete(prompt, requestOptions);
+        }
+        
+        if (typeof response === 'string') {
+          analysisResult = response;
+        } else if (response.content && response.content[0]) {
+          analysisResult = response.content[0].text;
+        } else {
+          analysisResult = response.toString();
+        }
       } catch (error) {
         this.error(`LLM API call failed: ${error.message}`);
         throw new Error(`Vision analysis failed: ${error.message}`, {

@@ -9,13 +9,13 @@ import { Module } from '@legion/tools-registry';
 import { PictureAnalysisTool } from './PictureAnalysisTool.js';
 
 export default class PictureAnalysisModule extends Module {
-  constructor() {
+  constructor(dependencies = {}) {
     super();
     this.name = 'picture-analysis';
     this.description = 'AI-powered image analysis using vision models';
     this.version = '1.0.0';
-    this.resourceManager = null;
-    this.llmClient = null;
+    this.resourceManager = dependencies.resourceManager || null;
+    this.llmClient = dependencies.llmClient || null;
   }
 
   /**
@@ -34,8 +34,13 @@ export default class PictureAnalysisModule extends Module {
   async initialize() {
     await super.initialize();
     
-    // Get LLM client with vision capabilities
-    await this._setupLLMClient();
+    // Get LLM client with vision capabilities (only if not already provided)
+    if (!this.llmClient) {
+      await this._setupLLMClient();
+    }
+    
+    // Emit initialization event
+    this.emit('info', { message: 'Initialized picture analysis module with vision support' });
     
     // Create and register the picture analysis tool
     const pictureAnalysisTool = new PictureAnalysisTool({ 
@@ -66,7 +71,7 @@ export default class PictureAnalysisModule extends Module {
       const apiKey = this.resourceManager.get(apiKeyPath);
       
       if (!apiKey) {
-        throw new Error(`ANTHROPIC_API_KEY environment variable is required`);
+        throw new Error(`ANTHROPIC_API_KEY environment variable is required for picture analysis`);
       }
       
       // Import and create LLM client
@@ -81,8 +86,28 @@ export default class PictureAnalysisModule extends Module {
       this.resourceManager.set('llmClient', this.llmClient);
     }
 
+    // Verify vision support if client has the method
+    if (this.llmClient.supportsVision && typeof this.llmClient.supportsVision === 'function') {
+      const hasVision = await this.llmClient.supportsVision();
+      if (!hasVision) {
+        throw new Error('LLM client does not support vision capabilities required for picture analysis');
+      }
+    }
     // Claude 3 models support vision by default
-    // No need to check for vision support
+  }
+
+  /**
+   * Get a specific tool by name
+   * @param {string} name - Tool name
+   * @returns {Object} The tool instance
+   * @throws {Error} If tool not found
+   */
+  getTool(name) {
+    const tool = super.getTool(name);
+    if (!tool) {
+      throw new Error(`Tool '${name}' not found in module`);
+    }
+    return tool;
   }
 
   /**
@@ -94,7 +119,13 @@ export default class PictureAnalysisModule extends Module {
       name: 'picture-analysis',
       version: '1.0.0',
       description: 'AI-powered image analysis using vision models',
-      toolCount: this.getTools().length,
+      toolCount: (() => {
+        try {
+          return this.getTools().length;
+        } catch {
+          return 0;
+        }
+      })(),
       requiredDependencies: ['ANTHROPIC_API_KEY'],
       supportedFormats: ['.png', '.jpg', '.jpeg', '.gif', '.webp'],
       maxFileSize: '20MB',

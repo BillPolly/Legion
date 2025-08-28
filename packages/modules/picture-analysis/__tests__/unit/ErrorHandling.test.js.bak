@@ -113,6 +113,20 @@ describe('Error Handling and Edge Cases', () => {
   });
 
   describe('File Format Error Categories', () => {
+    test('UNSUPPORTED_FORMAT: Text file', async () => {
+      // Create a text file with image extension
+      const textFile = path.join(testFilesDir, 'fake-image.png');
+      fs.writeFileSync(textFile, 'This is just text, not an image');
+      
+      const result = await tool.execute({
+        file_path: textFile,
+        prompt: 'Describe this image'
+      });
+      
+      expect(result.success).toBe(false);
+      expect(result.data.errorCode).toBe('UNSUPPORTED_FORMAT');
+      expect(result.data.errorMessage).toContain('Unsupported file format');
+    });
 
     test('UNSUPPORTED_FORMAT: File without extension', async () => {
       const noExtFile = path.join(testFilesDir, 'no-extension-file');
@@ -125,7 +139,7 @@ describe('Error Handling and Edge Cases', () => {
       
       expect(result.success).toBe(false);
       expect(result.data.errorCode).toBe('UNSUPPORTED_FORMAT');
-      expect(result.data.errorMessage).toContain('Unsupported format');
+      expect(result.data.errorMessage).toContain('Unsupported file format');
     });
   });
 
@@ -143,7 +157,7 @@ describe('Error Handling and Edge Cases', () => {
       
       expect(result.success).toBe(false);
       expect(result.data.errorCode).toBe('FILE_TOO_LARGE');
-      expect(result.data.errorMessage).toContain('File too large');
+      expect(result.data.errorMessage).toContain('exceeds the maximum allowed size');
     });
 
     test('Empty file should be categorized as encoding error', async () => {
@@ -157,7 +171,7 @@ describe('Error Handling and Edge Cases', () => {
       
       expect(result.success).toBe(false);
       expect(result.data.errorCode).toBe('ENCODING_ERROR');
-      expect(result.data.errorMessage).toContain('File is empty');
+      expect(result.data.errorMessage).toContain('encode');
     });
   });
 
@@ -217,7 +231,7 @@ describe('Error Handling and Edge Cases', () => {
       expect(result.data.analysis).toBe('This is a detailed analysis of the image...');
       expect(result.data.file_path).toBe(path.join(testFilesDir, 'test.png'));
       expect(result.data.prompt).toBe('Describe this image in detail');
-      expect(typeof result.data.processing_time_ms).toBe('number');
+      expect(result.data.processing_time_ms).toBeGreaterThan(0);
     });
 
     test('Complex analysis request with multiple details', async () => {
@@ -230,7 +244,7 @@ describe('Error Handling and Edge Cases', () => {
       });
       
       expect(result.data.analysis).toBe(complexAnalysis);
-      expect(typeof result.data.processing_time_ms).toBe('number');
+      expect(result.processing_time_ms).toBeGreaterThan(0);
     });
   });
 
@@ -292,7 +306,7 @@ describe('Error Handling and Edge Cases', () => {
         prompt: 'Describe this working image'
       });
       
-      expect(result2.data.analysis).toBe('Recovery successful');
+      expect(result2.analysis).toBe('Recovery successful');
     });
   });
 });

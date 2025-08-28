@@ -231,7 +231,7 @@ describe('Package Integration Tests', () => {
       // Tool should have required properties
       expect(tool.name).toBeDefined();
       expect(tool.description).toBeDefined();
-      expect(tool.validator).toBeDefined();
+      expect(tool.schema || tool.inputSchema).toBeDefined();
       
       // Tool should have required methods
       expect(typeof tool.execute).toBe('function');

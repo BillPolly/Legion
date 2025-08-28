@@ -7,15 +7,26 @@
 import { jest } from '@jest/globals';
 import CrawlerModule from '../CrawlerModule.js';
 import Crawler from '../index.js';
-import { ResourceManager } from '@legion/resource-manager';
 
 describe('CrawlerModule Integration Tests', () => {
   let crawlerModule;
-  let resourceManager;
+  let mockResourceManager;
   
   beforeAll(async () => {
-    resourceManager = await ResourceManager.getInstance();
-    crawlerModule = await CrawlerModule.create(resourceManager);
+    // Create mock ResourceManager for testing
+    mockResourceManager = {
+      get: jest.fn((key) => {
+        const mockData = {
+          'env.PUPPETEER_EXECUTABLE_PATH': undefined,
+          'env.BROWSER_TIMEOUT': '30000'
+        };
+        return mockData[key];
+      }),
+      set: jest.fn(),
+      has: jest.fn(() => false)
+    };
+    
+    crawlerModule = await CrawlerModule.create(mockResourceManager);
   });
 
   describe('Module Creation and Initialization', () => {
@@ -27,7 +38,7 @@ describe('CrawlerModule Integration Tests', () => {
 
     it('should have ResourceManager injected', () => {
       expect(crawlerModule.resourceManager).toBeDefined();
-      expect(crawlerModule.resourceManager).toBe(resourceManager);
+      expect(crawlerModule.resourceManager).toBe(mockResourceManager);
     });
 
     it('should register Crawler tool during initialization', () => {

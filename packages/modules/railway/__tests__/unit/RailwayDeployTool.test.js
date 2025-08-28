@@ -61,11 +61,12 @@ describe('RailwayDeployTool', () => {
         branch: 'main'
       });
 
-      expect(result.deploymentId).toBe('deploy123');
-      expect(result.projectId).toBe('proj123');
-      expect(result.serviceId).toBe('svc123');
-      expect(result.deploymentUrl).toBe('https://test.railway.app');
-      expect(result.message).toBe('Successfully deployed test-project to Railway');
+      expect(result.success).toBe(true);
+      expect(result.data.deploymentId).toBe('deploy123');
+      expect(result.data.projectId).toBe('proj123');
+      expect(result.data.serviceId).toBe('svc123');
+      expect(result.data.deploymentUrl).toBe('https://test.railway.app');
+      expect(result.data.message).toBe('Successfully deployed test-project to Railway');
     });
 
     it('should deploy Docker image successfully', async () => {
@@ -94,8 +95,9 @@ describe('RailwayDeployTool', () => {
         image: 'node:18-alpine'
       });
 
-      expect(result.deploymentId).toBe('deploy456');
-      expect(result.deploymentUrl).toBe('Deployment deploy456 created');
+      expect(result.success).toBe(true);
+      expect(result.data.deploymentId).toBe('deploy456');
+      expect(result.data.deploymentUrl).toBe('Deployment deploy456 created');
     });
 
     it('should handle deployment failure', async () => {
@@ -112,7 +114,10 @@ describe('RailwayDeployTool', () => {
         error: 'Invalid repository'
       });
 
-      await expect(tool.execute(input)).rejects.toThrow('Invalid repository');
+      const result = await tool.execute(input);
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Invalid repository');
     });
 
     it('should handle invalid source type', async () => {
@@ -139,7 +144,8 @@ describe('RailwayDeployTool', () => {
       
       // The provider will be called without proper source config
       expect(mockProvider.deployWithDomain).toHaveBeenCalled();
-      expect(result.deploymentId).toBe('deploy123');
+      expect(result.success).toBe(true);
+      expect(result.data.deploymentId).toBe('deploy123');
     });
 
     it('should throw error if provider not initialized', async () => {
@@ -148,10 +154,13 @@ describe('RailwayDeployTool', () => {
       };
       const toolWithoutProvider = new RailwayDeployTool(rmWithoutProvider);
 
-      await expect(toolWithoutProvider.execute({
+      const result = await toolWithoutProvider.execute({
         projectName: 'test',
         source: { type: 'github', repository: 'user/repo' }
-      })).rejects.toThrow('Railway provider not initialized');
+      });
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Railway provider not initialized');
     });
   });
 });

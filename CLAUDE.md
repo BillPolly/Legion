@@ -100,3 +100,6 @@ FOR tests there must be NO skipping and NO fallback under any circumstance, they
 unless you are speicifically testing their functionality Resource manager and tool registry singletons should be got onece at the beginning of the test suite with no timeout and then just reused.
 
 NOTHING should be setting anything on resoruce mangeer! it provides values it does nothing else
+
+
+ALWAYS run tests with nmp test ....selection to run

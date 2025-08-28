@@ -36,11 +36,10 @@ describe('SDAgentBase', () => {
     
     // Mock database service for unit tests (mocks are allowed in unit tests)
     const mockDatabaseService = {
-      storeArtifact: jest.fn().mockResolvedValue({ 
-        id: 'test-artifact-id', 
-        type: 'test', 
-        timestamp: new Date().toISOString() 
-      }),
+      storeArtifact: jest.fn().mockImplementation((artifact) => Promise.resolve({
+        ...artifact,  // Return the enriched artifact that was passed in
+        id: 'test-artifact-id'
+      })),
       retrieveArtifacts: jest.fn().mockResolvedValue([])
     };
     
@@ -60,8 +59,22 @@ describe('SDAgentBase', () => {
     };
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.clearAllMocks();
+    // Close any open database connections
+    if (agent && agent.designDatabase && typeof agent.designDatabase.close === 'function') {
+      try {
+        await agent.designDatabase.close();
+      } catch (error) {
+        // Ignore close errors
+      }
+    }
+    agent = null;
+  });
+
+  afterAll(async () => {
+    // Force close any remaining connections
+    await new Promise(resolve => setTimeout(resolve, 100));
   });
 
   describe('constructor', () => {

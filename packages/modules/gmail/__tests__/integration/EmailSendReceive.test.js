@@ -69,7 +69,7 @@ describe('Gmail Send/Receive Integration Tests', () => {
     const emailWithContent = await gmailModule.getEmailWithContent(foundEmail.seqno);
     
     expect(emailWithContent.content.text).toContain(testBody);
-    expect(emailWithContent.from).toContain(recipient);
+    expect(emailWithContent.from.toLowerCase()).toContain(recipient.toLowerCase());
     
     // Save test results for inspection
     const testResult = {
