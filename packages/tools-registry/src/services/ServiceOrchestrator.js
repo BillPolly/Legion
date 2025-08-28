@@ -71,6 +71,11 @@ export class ServiceOrchestrator {
     // Search service is optional - only initialize if needed
     this.searchService = this.options.enableVectorSearch ? new SearchService({
       textSearch: dependencies.textSearch,
+      semanticSearch: dependencies.semanticSearch,
+      perspectiveService: dependencies.perspectiveService,
+      embeddingService: dependencies.embeddingService,
+      vectorStore: dependencies.vectorStore,
+      toolRepository: dependencies.toolRepository,
       eventBus: dependencies.eventBus
     }) : null;
 
