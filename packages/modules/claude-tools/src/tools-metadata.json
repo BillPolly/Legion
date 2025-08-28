@@ -1,0 +1,18 @@
+{
+  "module": {
+    "name": "claude-tools",
+    "description": "Complete suite of Claude Code tools for the Legion framework",
+    "version": "1.0.0",
+    "author": "Legion Team",
+    "category": "meta-collection"
+  },
+  "tools": {},
+  "note": "This is a meta-module that aggregates tools from 5 sub-modules",
+  "subModules": [
+    "FileOperationsModule",
+    "SearchNavigationModule", 
+    "SystemOperationsModule",
+    "WebToolsModule",
+    "TaskManagementModule"
+  ]
+}

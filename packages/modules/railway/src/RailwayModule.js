@@ -1,4 +1,7 @@
 import { Module } from '@legion/tools-registry';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { readFileSync } from 'fs';
 import RailwayDeployTool from './tools/RailwayDeployTool.js';
 import RailwayStatusTool from './tools/RailwayStatusTool.js';
 import RailwayLogsTool from './tools/RailwayLogsTool.js';
@@ -15,6 +18,15 @@ class RailwayModule extends Module {
     this.version = '1.0.0';
     this.resourceManager = null;
     this.provider = null;
+    // NEW: Set metadata path for automatic loading
+    this.metadataPath = './tools-metadata.json';
+  }
+
+  /**
+   * Override getModulePath to support proper path resolution
+   */
+  getModulePath() {
+    return fileURLToPath(import.meta.url);
   }
 
   /**
@@ -28,12 +40,36 @@ class RailwayModule extends Module {
   }
   
   initializeTools() {
-    // Initialize tools dictionary
-    this.tools = {};
-    
-    // Create and register all Railway tools
-    const tools = [
-      new RailwayDeployTool(this.resourceManager),
+    // NEW APPROACH: Create tools using metadata
+    if (this.metadata) {
+      const tools = [
+        { key: 'railway_deploy', class: RailwayDeployTool },
+        { key: 'railway_status', class: RailwayStatusTool },
+        { key: 'railway_logs', class: RailwayLogsTool },
+        { key: 'railway_update_env', class: RailwayUpdateEnvTool },
+        { key: 'railway_remove', class: RailwayRemoveTool },
+        { key: 'railway_list_projects', class: RailwayListProjectsTool }
+      ];
+
+      for (const { key, class: ToolClass } of tools) {
+        try {
+          const tool = this.createToolFromMetadata(key, ToolClass);
+          tool.provider = this.provider;
+          tool.resourceManager = this.resourceManager;
+          this.registerTool(tool.name, tool);
+        } catch (error) {
+          console.warn(`Failed to create metadata tool ${key}, falling back to legacy: ${error.message}`);
+          
+          // Fallback to legacy constructor
+          const legacyTool = new ToolClass(this.resourceManager);
+          if (legacyTool.setProvider) legacyTool.setProvider(this.provider);
+          this.registerTool(legacyTool.name, legacyTool);
+        }
+      }
+    } else {
+      // FALLBACK: Old approach for backwards compatibility  
+      const tools = [
+        new RailwayDeployTool(this.resourceManager),
       new RailwayStatusTool(this.resourceManager),
       new RailwayLogsTool(this.resourceManager),
       new RailwayUpdateEnvTool(this.resourceManager),
@@ -43,6 +79,7 @@ class RailwayModule extends Module {
     
     for (const tool of tools) {
       this.registerTool(tool.name, tool);
+    }
     }
   }
   

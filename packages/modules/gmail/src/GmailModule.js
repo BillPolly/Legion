@@ -3,6 +3,7 @@ import Imap from 'imap';
 import { simpleParser } from 'mailparser';
 import { Module } from '@legion/tools-registry';
 import { createValidator } from '@legion/schema';
+import { fileURLToPath } from 'url';
 
 const gmailConfigSchema = {
   type: 'object',
@@ -63,10 +64,21 @@ class GmailModule extends Module {
     this.name = 'gmail';
     this.description = 'Gmail integration module for sending and receiving emails';
     this.version = '1.0.0';
+    
+    // NEW: Set metadata path for automatic loading
+    this.metadataPath = './tools-metadata.json';
+    
     this.resourceManager = null;
     this.config = null;
     this.transporter = null;
     this.imap = null;
+  }
+
+  /**
+   * Override getModulePath to support proper path resolution
+   */
+  getModulePath() {
+    return fileURLToPath(import.meta.url);
   }
 
   /**

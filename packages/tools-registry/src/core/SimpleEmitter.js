@@ -3,9 +3,12 @@
  * All events go through a single callback per subscriber
  */
 
+import { Logger } from '../utils/Logger.js';
+
 export class SimpleEmitter {
   constructor() {
     this.subscribers = new Set();
+    this.logger = Logger.create('SimpleEmitter');
   }
 
   /**
@@ -37,7 +40,7 @@ export class SimpleEmitter {
         callback(eventName, eventData);
       } catch (error) {
         // Log but don't throw - one subscriber's error shouldn't affect others
-        console.error(`Subscriber error for event ${eventName}:`, error);
+        this.logger.error(`Subscriber error for event ${eventName}: ${error.message}`);
       }
     }
   }

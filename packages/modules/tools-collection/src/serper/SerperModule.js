@@ -1,5 +1,6 @@
 import { Module } from '@legion/tools-registry';
 import { Serper } from './Serper.js';
+import { fileURLToPath } from 'url';
 
 /**
  * SerperModule - Module wrapper for Serper tool with proper initialization
@@ -10,6 +11,7 @@ export default class SerperModule extends Module {
     this.name = 'SerperModule';
     this.description = 'Google search using Serper API';
     this.version = '1.0.0';
+    this.metadataPath = './tools-metadata.json';
   }
 
   /**
@@ -22,11 +24,32 @@ export default class SerperModule extends Module {
     return module;
   }
 
+  getModulePath() {
+    return fileURLToPath(import.meta.url);
+  }
+
   async initialize() {
     await super.initialize();
     
-    // Get SERPER API key from environment via ResourceManager
+    // Get API key first (needed for both modes)
     const serperKey = this.resourceManager.get('env.SERPER_API_KEY');
+    
+    // NEW APPROACH: Create tools using metadata
+    if (this.metadata) {
+      try {
+        const tool = this.createToolFromMetadata('google_search', Serper);
+        if (serperKey) {
+          tool.apiKey = serperKey;
+        }
+        this.registerTool(tool.name, tool);
+        console.log('SerperModule: Initialized using metadata-driven architecture');
+        return;
+      } catch (error) {
+        console.warn('SerperModule: Metadata-driven initialization failed, falling back to legacy mode:', error.message);
+      }
+    }
+    
+    // FALLBACK: Legacy initialization
     if (!serperKey) {
       // Create module without API key - tool will fail at runtime
       console.warn('SERPER_API_KEY environment variable not found - tool will require initialization');
@@ -44,5 +67,21 @@ export default class SerperModule extends Module {
     
     // Register the tool
     this.registerTool(serperTool.name, serperTool);
+  }
+
+  // Metadata-driven tool implementations
+  async google_search(params) {
+    // Get SERPER API key from environment via ResourceManager
+    const serperKey = this.resourceManager.get('env.SERPER_API_KEY');
+    if (!serperKey) {
+      throw new Error('SERPER_API_KEY environment variable is required for Google search');
+    }
+    
+    // Create and configure Serper tool
+    const serperTool = new Serper();
+    serperTool.apiKey = serperKey;
+    
+    // Execute the search
+    return await serperTool.execute(params);
   }
 }

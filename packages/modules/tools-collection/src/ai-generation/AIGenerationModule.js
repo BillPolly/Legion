@@ -1,10 +1,11 @@
 import { Module } from '@legion/tools-registry';
 import { LLMClient } from '@legion/llm';
 import { ImageGenerationTool } from './ImageGenerationTool.js';
+import { fileURLToPath } from 'url';
 
 /**
- * AIGenerationModule - Module for AI-powered content generation
- * Currently supports DALL-E 3 image generation via LLMClient
+ * AIGenerationModule - NEW metadata-driven architecture
+ * Metadata comes from tools-metadata.json, tools contain pure logic only
  */
 export default class AIGenerationModule extends Module {
   constructor() {
@@ -12,7 +13,18 @@ export default class AIGenerationModule extends Module {
     this.name = 'AIGenerationModule';
     this.description = 'AI-powered content generation tools including DALL-E 3 image generation';
     this.version = '1.0.0';
+    
+    // NEW: Set metadata path for automatic loading
+    this.metadataPath = './tools-metadata.json';
+    
     this.llmClient = null;
+  }
+
+  /**
+   * Override getModulePath to support proper path resolution
+   */
+  getModulePath() {
+    return fileURLToPath(import.meta.url);
   }
 
   /**
@@ -282,11 +294,31 @@ export default class AIGenerationModule extends Module {
    * Initialize tools for this module
    */
   initializeTools() {
-    // Create and register the image generation tool
-    const imageGenTool = new ImageGenerationTool({
-      llmClient: this.llmClient,  // Pass only the LLM client, not the whole module
-      generateImage: this.generateImage.bind(this)  // Pass the method but bound to this context
-    });
-    this.registerTool(imageGenTool.name, imageGenTool);
+    // NEW APPROACH: Create tools using metadata
+    if (this.metadata) {
+      try {
+        const tool = this.createToolFromMetadata('generate_image', ImageGenerationTool);
+        // Pass the required dependencies
+        tool.llmClient = this.llmClient;
+        tool.generateImage = this.generateImage.bind(this);
+        this.registerTool(tool.name, tool);
+      } catch (error) {
+        console.warn(`Failed to create metadata tool generate_image, falling back to legacy: ${error.message}`);
+        
+        // Fallback to legacy
+        const imageGenTool = new ImageGenerationTool({
+          llmClient: this.llmClient,
+          generateImage: this.generateImage.bind(this)
+        });
+        this.registerTool(imageGenTool.name, imageGenTool);
+      }
+    } else {
+      // FALLBACK: Old approach for backwards compatibility
+      const imageGenTool = new ImageGenerationTool({
+        llmClient: this.llmClient,
+        generateImage: this.generateImage.bind(this)
+      });
+      this.registerTool(imageGenTool.name, imageGenTool);
+    }
   }
 }

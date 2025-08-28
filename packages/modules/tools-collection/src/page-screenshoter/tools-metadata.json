@@ -1,0 +1,114 @@
+{
+  "module": {
+    "name": "page-screenshoter",
+    "description": "Web page screenshot capture tool",
+    "version": "1.0.0",
+    "author": "Legion Team",
+    "category": "web"
+  },
+  "tools": {
+    "page_screenshot": {
+      "name": "page_screenshot",
+      "description": "Takes screenshots of web pages",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The URL of the webpage to screenshot"
+          },
+          "fullPage": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether to capture the full page or just the viewport"
+          },
+          "width": {
+            "type": "number",
+            "default": 1280,
+            "minimum": 100,
+            "maximum": 3840,
+            "description": "Viewport width in pixels"
+          },
+          "height": {
+            "type": "number",
+            "default": 720,
+            "minimum": 100,
+            "maximum": 2160,
+            "description": "Viewport height in pixels"
+          },
+          "waitForSelector": {
+            "type": "string",
+            "description": "Optional CSS selector to wait for before taking screenshot"
+          }
+        },
+        "required": ["url"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the screenshot was successful"
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL that was screenshotted"
+          },
+          "image": {
+            "type": "string",
+            "description": "Base64 encoded screenshot image"
+          },
+          "isImage": {
+            "type": "boolean",
+            "description": "Indicates this is an image result"
+          },
+          "mimeType": {
+            "type": "string",
+            "description": "MIME type of the image"
+          },
+          "fullPage": {
+            "type": "boolean",
+            "description": "Whether full page was captured"
+          },
+          "dimensions": {
+            "type": "object",
+            "properties": {
+              "width": {"type": "number"},
+              "height": {"type": ["number", "string"]}
+            },
+            "description": "Screenshot dimensions"
+          }
+        },
+        "required": ["success", "url", "image"]
+      },
+      "category": "web",
+      "tags": ["web", "screenshot", "capture", "browser", "puppeteer"],
+      "security": {
+        "evaluation": "safe",
+        "requiresNetwork": true
+      },
+      "examples": [
+        {
+          "input": {
+            "url": "https://example.com",
+            "fullPage": false,
+            "width": 1280,
+            "height": 720
+          },
+          "output": {
+            "success": true,
+            "url": "https://example.com",
+            "image": "iVBORw0KGgoAAAANSUhEUgAA...",
+            "isImage": true,
+            "mimeType": "image/png",
+            "fullPage": false,
+            "dimensions": {
+              "width": 1280,
+              "height": 720
+            }
+          }
+        }
+      ]
+    }
+  }
+}

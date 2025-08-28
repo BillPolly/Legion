@@ -10,6 +10,7 @@ import fs from 'fs/promises';
 import fsSync from 'fs';
 import { ModuleLoader } from './ModuleLoader.js';
 import { MetadataManager } from '../verification/MetadataManager.js';
+import { Logger } from '../utils/Logger.js';
 import { 
   DiscoveryError,
   ModuleValidationError,
@@ -27,9 +28,11 @@ export class ModuleDiscovery {
     };
     
     this.databaseStorage = options.databaseStorage;
-    this.moduleLoader = new ModuleLoader();
+    this.resourceManager = options.resourceManager;
+    this.moduleLoader = new ModuleLoader({ resourceManager: this.resourceManager });
     this.metadataManager = new MetadataManager();
     this.monorepoRoot = this.findMonorepoRoot();
+    this.logger = Logger.create('ModuleDiscovery', { verbose: this.options.verbose });
   }
   
   /**
@@ -109,9 +112,7 @@ export class ModuleDiscovery {
       }
     } catch (error) {
       // Packages directory might not exist
-      if (this.options.verbose) {
-        console.log('No packages directory found');
-      }
+      this.logger.verbose('No packages directory found');
     }
     
     // Also scan src directory if it exists
@@ -206,124 +207,181 @@ export class ModuleDiscovery {
    * @param {string} modulePath - Path to module file
    * @returns {Object} Validation result with score and details
    */
+  /**
+   * Validate module by attempting to load and check interface
+   * Single Responsibility: Orchestrate module validation process
+   */
   async validateModule(modulePath) {
-    const result = {
+    const result = this._createValidationResult();
+    
+    try {
+      await this._ensureResourceManager();
+      
+      // Try primary validation path
+      const moduleLoader = await this._createModuleLoader();
+      const validationResult = await this._validateWithModuleLoader(moduleLoader, modulePath, result);
+      if (validationResult) return validationResult;
+      
+      // Fallback validation
+      return await this._validateWithDirectImport(modulePath, result);
+      
+    } catch (error) {
+      result.errors.push(`Could not read module file: ${error.message}`);
+      this.logger.verbose(`Could not read module file ${modulePath}: ${error.message}`);
+    }
+    
+    return result;
+  }
+
+  /**
+   * Create initial validation result structure
+   * Single Responsibility: Result initialization
+   */
+  _createValidationResult() {
+    return {
       valid: false,
       score: 0,
       errors: [],
       warnings: [],
       metadata: null
     };
-    
+  }
+
+  /**
+   * Ensure ResourceManager is available
+   * Single Responsibility: Resource management initialization
+   */
+  async _ensureResourceManager() {
+    if (!this.resourceManager) {
+      const { ResourceManager } = await import('@legion/resource-manager');
+      this.resourceManager = ResourceManager.getInstance();
+      await this.resourceManager.initialize();
+    }
+  }
+
+  /**
+   * Create ModuleLoader instance
+   * Single Responsibility: ModuleLoader creation
+   */
+  async _createModuleLoader() {
+    const ModuleLoaderClass = (await import('./ModuleLoader.js')).ModuleLoader;
+    return new ModuleLoaderClass(this.resourceManager);
+  }
+
+  /**
+   * Validate module using ModuleLoader
+   * Single Responsibility: Primary validation path
+   */
+  async _validateWithModuleLoader(moduleLoader, modulePath, result) {
     try {
-      // Use the ResourceManager singleton for proper module loading
-      if (!this.resourceManager) {
-        const { ResourceManager } = await import('@legion/resource-manager');
-        this.resourceManager = ResourceManager.getInstance();
-        await this.resourceManager.initialize();
+      const moduleInstance = await moduleLoader.loadModule(modulePath);
+      
+      result.valid = true;
+      result.score = 70; // Base score for loadable module
+      
+      // Validate metadata if enabled
+      if (this.options.validateMetadata && moduleInstance) {
+        await this._validateModuleMetadata(moduleInstance, result);
       }
       
-      // Create ModuleLoader with proper resourceManager
-      const moduleLoader = new (await import('./ModuleLoader.js')).ModuleLoader({
-        resourceManager: this.resourceManager
-      });
+      return result;
       
-      try {
-        const moduleInstance = await moduleLoader.loadModule(modulePath);
+    } catch (importError) {
+      // Return null to indicate fallback needed
+      return null;
+    }
+  }
+
+  /**
+   * Validate module metadata
+   * Single Responsibility: Metadata validation
+   */
+  async _validateModuleMetadata(moduleInstance, result) {
+    try {
+      let metadata = null;
+      if (typeof moduleInstance.getMetadata === 'function') {
+        metadata = await moduleInstance.getMetadata();
+      } else if (moduleInstance.metadata) {
+        metadata = moduleInstance.metadata;
+      }
+      
+      if (metadata) {
+        const metadataValidation = this.metadataManager.validateModuleMetadata(metadata);
+        result.metadata = metadata;
+        result.score = metadataValidation.score;
+        result.errors.push(...metadataValidation.errors);
+        result.warnings.push(...metadataValidation.warnings);
+        result.valid = metadataValidation.valid && result.valid;
+      } else {
+        result.warnings.push('Module does not provide metadata');
+        result.score = 60;
+      }
+    } catch (metaError) {
+      result.warnings.push(`Could not validate metadata: ${metaError.message}`);
+    }
+  }
+
+  /**
+   * Validate module using direct import as fallback
+   * Single Responsibility: Fallback validation path
+   */
+  async _validateWithDirectImport(modulePath, result) {
+    try {
+      const ModuleClass = await import(modulePath);
+      const TestClass = ModuleClass.default || ModuleClass.Module || ModuleClass;
+      
+      if (typeof TestClass === 'function') {
+        // Check for static create method
+        if (typeof TestClass.create === 'function') {
+          result.valid = true;
+          result.score = 50;
+          result.warnings.push('Module uses async factory pattern');
+          return result;
+        }
         
-        // The ModuleLoader already validates the structure
-        // If we get here, the module is valid according to the expected interface
+        // Try interface validation
+        return this._validateModuleInterface(TestClass, result);
+      } else {
+        result.errors.push('Module does not export a class or function');
+      }
+    } catch (secondError) {
+      result.errors.push(`Module import failed: ${secondError.message}`);
+      this.logger.verbose(`Module validation failed for ${modulePath}: ${secondError.message}`);
+    }
+    
+    return result;
+  }
+
+  /**
+   * Validate module interface by instantiation
+   * Single Responsibility: Interface compliance checking
+   */
+  _validateModuleInterface(TestClass, result) {
+    try {
+      let testInstance;
+      if (this.resourceManager) {
+        testInstance = new TestClass(this.resourceManager);
+      } else {
+        testInstance = new TestClass();
+      }
+      
+      // Check for valid interfaces
+      const hasNameGetTools = typeof testInstance.getName === 'function' && 
+                            typeof testInstance.getTools === 'function';
+      const hasNameProperty = typeof testInstance.name === 'string';
+      const hasGetTools = typeof testInstance.getTools === 'function';
+      const hasListTools = typeof testInstance.listTools === 'function';
+      
+      if (hasNameGetTools || (hasNameProperty && (hasGetTools || hasListTools))) {
         result.valid = true;
-        result.score = 70; // Base score for loadable module
-        
-        // If metadata validation is enabled, check metadata
-        if (this.options.validateMetadata && moduleInstance) {
-          try {
-            // Try to get module metadata
-            let metadata = null;
-            if (typeof moduleInstance.getMetadata === 'function') {
-              metadata = await moduleInstance.getMetadata();
-            } else if (moduleInstance.metadata) {
-              metadata = moduleInstance.metadata;
-            }
-            
-            if (metadata) {
-              // Validate metadata using MetadataManager
-              const metadataValidation = this.metadataManager.validateModuleMetadata(metadata);
-              result.metadata = metadata;
-              result.score = metadataValidation.score;
-              result.errors.push(...metadataValidation.errors);
-              result.warnings.push(...metadataValidation.warnings);
-              result.valid = metadataValidation.valid && result.valid;
-            } else {
-              result.warnings.push('Module does not provide metadata');
-              result.score = 60;
-            }
-          } catch (metaError) {
-            result.warnings.push(`Could not validate metadata: ${metaError.message}`);
-          }
-        }
-        
+        result.score = 60; // Basic interface compliance
         return result;
-        
-      } catch (importError) {
-        // Try a simpler approach - just check if module can be imported and has expected interface
-        try {
-          const ModuleClass = await import(modulePath);
-          const TestClass = ModuleClass.default || ModuleClass.Module || ModuleClass;
-          
-          // Quick structure check without full instantiation
-          if (typeof TestClass === 'function') {
-            // Check if it has static create method
-            if (typeof TestClass.create === 'function') {
-              result.valid = true;
-              result.score = 50; // Lower score for uninstantiable modules
-              result.warnings.push('Module uses async factory pattern');
-              return result;
-            }
-            
-            // Try to create a temporary instance to check interface
-            try {
-              let testInstance;
-              if (this.resourceManager) {
-                testInstance = new TestClass(this.resourceManager);
-              } else {
-                testInstance = new TestClass();
-              }
-              
-              // Check for valid interfaces
-              const hasNameGetTools = typeof testInstance.getName === 'function' && 
-                                    typeof testInstance.getTools === 'function';
-              const hasNameProperty = typeof testInstance.name === 'string';
-              const hasGetTools = typeof testInstance.getTools === 'function';
-              const hasListTools = typeof testInstance.listTools === 'function';
-              
-              if (hasNameGetTools || (hasNameProperty && (hasGetTools || hasListTools))) {
-                result.valid = true;
-                result.score = 60; // Basic interface compliance
-                return result;
-              } else {
-                result.errors.push('Module does not have required interface methods');
-              }
-              
-            } catch (constructorError) {
-              result.errors.push(`Module constructor failed: ${constructorError.message}`);
-            }
-          } else {
-            result.errors.push('Module does not export a class or function');
-          }
-        } catch (secondError) {
-          result.errors.push(`Module import failed: ${importError.message}`);
-          if (this.options.verbose) {
-            console.log(`Module validation failed for ${modulePath}: ${importError.message}`);
-          }
-        }
+      } else {
+        result.errors.push('Module does not have required interface methods');
       }
-    } catch (error) {
-      result.errors.push(`Could not read module file: ${error.message}`);
-      if (this.options.verbose) {
-        console.log(`Could not read module file ${modulePath}: ${error.message}`);
-      }
+      
+    } catch (constructorError) {
+      result.errors.push(`Module constructor failed: ${constructorError.message}`);
     }
     
     return result;
@@ -412,9 +470,7 @@ export class ModuleDiscovery {
         
         savedCount++;
       } catch (error) {
-        if (this.options.verbose) {
-          console.error(`Failed to save module ${module.name}: ${error.message}`);
-        }
+        this.logger.warn(`Failed to save module ${module.name}: ${error.message}`);
         // Continue with other modules even if one fails
       }
     }

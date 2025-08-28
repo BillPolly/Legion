@@ -2,6 +2,8 @@
  * Standardized result format for tool executions
  * All tools MUST return a ToolResult instance from their invoke method
  */
+import { Logger } from '../utils/Logger.js';
+
 export class ToolResult {
   /**
    * Creates a new ToolResult
@@ -17,6 +19,7 @@ export class ToolResult {
     this.success = success;
     this.data = data || {};
     this.error = error;
+    this.logger = Logger.create('ToolResult');
     
     // Ensure error is a string if provided
     if (this.error !== null && typeof this.error !== 'string') {
@@ -76,18 +79,34 @@ export class ToolResult {
       return true; // No schema for this result type
     }
 
-    try {
-      this._validateAgainstSchema(this.data, schema);
-      
-      // For failures, also validate that error exists
-      if (!this.success && !this.error) {
-        throw new Error('Failure results must include an error message');
-      }
-      
-      return true;
-    } catch (error) {
-      console.warn(`ToolResult validation failed: ${error.message}`);
+    // Use explicit validation instead of exception control flow
+    const validationResult = this._performValidation(this.data, schema);
+    
+    if (!validationResult.isValid) {
+      this.logger.warn(`Validation failed`, { error: validationResult.error });
       return false;
+    }
+    
+    // For failures, also validate that error exists
+    if (!this.success && !this.error) {
+      this.logger.warn(`Validation failed`, { error: 'Failure results must include an error message' });
+      return false;
+    }
+    
+    return true;
+  }
+
+  /**
+   * Perform validation and return result
+   * @private
+   * @returns {Object} Validation result with isValid and error properties
+   */
+  _performValidation(data, schema) {
+    try {
+      this._validateAgainstSchema(data, schema);
+      return { isValid: true, error: null };
+    } catch (error) {
+      return { isValid: false, error: error.message };
     }
   }
 

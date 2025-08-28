@@ -1,0 +1,91 @@
+{
+  "module": {
+    "name": "picture-analysis",
+    "description": "AI-powered image analysis using vision models",
+    "version": "1.0.0",
+    "author": "Legion Team",
+    "category": "ai"
+  },
+  "tools": {
+    "analyse_picture": {
+      "name": "analyse_picture",
+      "description": "Analyze images using AI vision models. Accepts image file paths and natural language prompts to provide detailed visual analysis, descriptions, and insights.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file_path": {
+            "type": "string",
+            "minLength": 1,
+            "description": "File path to the image to analyze"
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 2000,
+            "description": "Natural language prompt describing what to analyze about the image"
+          }
+        },
+        "required": ["file_path", "prompt"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "The AI analysis of the image"
+          },
+          "file_path": {
+            "type": "string",
+            "description": "The resolved file path"
+          },
+          "prompt": {
+            "type": "string",
+            "description": "The prompt used for analysis"
+          },
+          "processing_time_ms": {
+            "type": "number",
+            "description": "Processing time in milliseconds"
+          }
+        },
+        "required": ["analysis", "file_path", "prompt", "processing_time_ms"]
+      },
+      "category": "ai",
+      "tags": ["ai", "vision", "image", "analysis", "ocr", "description"],
+      "security": {
+        "evaluation": "safe",
+        "requiresAuth": true,
+        "requiresNetwork": true
+      },
+      "formats": {
+        "supportedImageFormats": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
+        "maxFileSize": "20MB"
+      },
+      "examples": [
+        {
+          "input": {
+            "file_path": "/path/to/image.jpg",
+            "prompt": "Describe what you see in this image"
+          },
+          "output": {
+            "analysis": "This image shows a scenic mountain landscape with a lake in the foreground...",
+            "file_path": "/absolute/path/to/image.jpg",
+            "prompt": "Describe what you see in this image",
+            "processing_time_ms": 1500
+          }
+        },
+        {
+          "input": {
+            "file_path": "./photo.png",
+            "prompt": "Extract any text visible in this image"
+          },
+          "output": {
+            "analysis": "The image contains the following text: 'Welcome to our store' displayed on a blue sign...",
+            "file_path": "/current/directory/photo.png",
+            "prompt": "Extract any text visible in this image",
+            "processing_time_ms": 1200
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "module": {
+    "name": "conan-the-deployer",
+    "description": "Comprehensive deployment management tools for deploying and monitoring applications",
+    "version": "1.0.0",
+    "author": "Legion Team",
+    "category": "deployment"
+  },
+  "tools": {
+    "deploy_application": {
+      "name": "deploy_application",
+      "description": "Deploy application to cloud platform",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectPath": {
+            "type": "string",
+            "description": "Path to project to deploy"
+          },
+          "provider": {
+            "type": "string",
+            "description": "Deployment provider"
+          }
+        },
+        "required": ["projectPath"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "deploymentId": {
+            "type": "string",
+            "description": "Deployment ID"
+          },
+          "url": {
+            "type": "string",
+            "description": "Deployed application URL"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Deployment success status"
+          }
+        },
+        "required": ["success"]
+      },
+      "category": "deployment",
+      "tags": ["deploy", "cloud", "application"]
+    },
+    "check_deployment": {
+      "name": "check_deployment",
+      "description": "Check deployment status and health",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "deploymentId": {
+            "type": "string",
+            "description": "Deployment ID to check"
+          }
+        },
+        "required": ["deploymentId"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Deployment status"
+          },
+          "healthy": {
+            "type": "boolean",
+            "description": "Whether deployment is healthy"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Check success status"
+          }
+        },
+        "required": ["success"]
+      },
+      "category": "deployment",
+      "tags": ["check", "status", "health"]
+    }
+  }
+}

@@ -6,6 +6,7 @@
 
 import { Module } from '@legion/tools-registry';
 import { CommandExecutor } from './CommandExecutorTool.js';
+import { fileURLToPath } from 'url';
 
 class CommandExecutorModule extends Module {
   constructor() {
@@ -13,6 +14,16 @@ class CommandExecutorModule extends Module {
     this.name = 'command-executor';
     this.description = 'Command execution tools for running bash commands';
     this.version = '1.0.0';
+    
+    // NEW: Set metadata path for automatic loading
+    this.metadataPath = './tools-metadata.json';
+  }
+
+  /**
+   * Override getModulePath to support proper path resolution
+   */
+  getModulePath() {
+    return fileURLToPath(import.meta.url);
   }
 
   /**
@@ -26,14 +37,28 @@ class CommandExecutorModule extends Module {
   }
 
   /**
-   * Initialize the module
+   * Initialize the module - NEW metadata-driven approach
    */
   async initialize() {
-    await super.initialize();
+    await super.initialize(); // This will load metadata automatically
     
-    // Create and register the command executor tool
-    const commandExecutor = new CommandExecutor();
-    this.registerTool(commandExecutor.name, commandExecutor);
+    // NEW APPROACH: Create tools using metadata
+    if (this.metadata) {
+      try {
+        const tool = this.createToolFromMetadata('command_executor', CommandExecutor);
+        this.registerTool(tool.name, tool);
+      } catch (error) {
+        console.warn(`Failed to create metadata tool command_executor, falling back to legacy: ${error.message}`);
+        
+        // Fallback to legacy
+        const commandExecutor = new CommandExecutor();
+        this.registerTool(commandExecutor.name, commandExecutor);
+      }
+    } else {
+      // FALLBACK: Old approach for backwards compatibility
+      const commandExecutor = new CommandExecutor();
+      this.registerTool(commandExecutor.name, commandExecutor);
+    }
   }
 
   /**

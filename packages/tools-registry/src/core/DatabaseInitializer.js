@@ -8,6 +8,7 @@
  */
 
 import { DatabaseError, ValidationError } from '../errors/index.js';
+import { Logger } from '../utils/Logger.js';
 
 // Default perspective types that will be auto-seeded
 const DEFAULT_PERSPECTIVE_TYPES = [
@@ -190,6 +191,7 @@ export class DatabaseInitializer {
     };
     
     this.initialized = false;
+    this.logger = Logger.create('DatabaseInitializer', { verbose: this.options.verbose });
   }
   
   /**
@@ -200,9 +202,7 @@ export class DatabaseInitializer {
     if (this.initialized) return;
     
     try {
-      if (this.options.verbose) {
-        console.log('Initializing database collections and data...');
-      }
+      this.logger.verbose('Initializing database collections and data...');
       
       // 1. Ensure collections exist with proper schemas
       await this.ensureCollectionsExist();
@@ -224,9 +224,7 @@ export class DatabaseInitializer {
       
       this.initialized = true;
       
-      if (this.options.verbose) {
-        console.log('Database initialization complete');
-      }
+      this.logger.verbose('Database initialization complete');
       
     } catch (error) {
       throw new DatabaseError(
@@ -284,9 +282,7 @@ export class DatabaseInitializer {
         await this.db.createCollection(collectionName);
       }
       
-      if (this.options.verbose) {
-        console.log(`Created collection: ${collectionName}`);
-      }
+      this.logger.verbose(`Created collection: ${collectionName}`);
       
     } catch (error) {
       // If collection already exists, that's okay
@@ -315,9 +311,7 @@ export class DatabaseInitializer {
         
         const result = await collection.insertMany(typesToInsert);
         
-        if (this.options.verbose) {
-          console.log(`Seeded ${result.insertedCount} default perspective types`);
-        }
+        this.logger.verbose(`Seeded ${result.insertedCount} default perspective types`);
         
         return result.insertedCount;
       }
@@ -348,19 +342,17 @@ export class DatabaseInitializer {
           } catch (error) {
             // Index might already exist, which is fine
             if (error.code !== 85) {
-              console.warn(`Failed to create index on ${collectionName}:`, error.message);
+              this.logger.warn(`Failed to create index on ${collectionName}: ${error.message}`);
             }
           }
         }
       }
       
-      if (this.options.verbose) {
-        console.log('Created performance indexes');
-      }
+      this.logger.verbose('Created performance indexes');
       
     } catch (error) {
       // Index creation failures are not critical for basic functionality
-      console.warn(`Index creation warning: ${error.message}`);
+      this.logger.warn(`Index creation warning: ${error.message}`);
     }
   }
   
@@ -392,9 +384,7 @@ export class DatabaseInitializer {
         }
       }
       
-      if (this.options.verbose) {
-        console.log(`Validation complete: ${perspectiveTypesCount} perspective types available`);
-      }
+      this.logger.verbose(`Validation complete: ${perspectiveTypesCount} perspective types available`);
       
     } catch (error) {
       throw new DatabaseError(
@@ -425,9 +415,7 @@ export class DatabaseInitializer {
       // Re-seed perspective types
       await this.seedPerspectiveTypes();
       
-      if (this.options.verbose) {
-        console.log('Reset perspective collections and re-seeded data');
-      }
+      this.logger.verbose('Reset perspective collections and re-seeded data');
       
     } catch (error) {
       throw new DatabaseError(

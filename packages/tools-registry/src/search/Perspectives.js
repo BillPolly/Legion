@@ -13,6 +13,7 @@
 import { PerspectiveError } from '../errors/index.js';
 import { DatabaseInitializer } from '../core/DatabaseInitializer.js';
 import { PerspectiveTypeManager } from '../core/PerspectiveTypeManager.js';
+import { Logger } from '../utils/Logger.js';
 
 export class Perspectives {
   constructor({ resourceManager, options = {} }) {
@@ -36,6 +37,7 @@ export class Perspectives {
     this.databaseInitializer = null;
     this.perspectiveTypeManager = null;
     this.initialized = false;
+    this.logger = Logger.create('Perspectives', { verbose: this.options.verbose });
   }
 
   async initialize() {
@@ -55,7 +57,7 @@ export class Perspectives {
     this.mockMode = !this.llmClient || this.options.mockMode;
     
     if (this.mockMode && this.options.verbose) {
-      console.log('ℹ️  Running in mock mode (no LLM client configured)');
+      this.logger.info('Running in mock mode (no LLM client configured)');
     }
 
     // Initialize database collections and default perspective types
@@ -86,7 +88,7 @@ export class Perspectives {
     this.initialized = true;
 
     if (this.options.verbose) {
-      console.log('Perspectives system initialized with 3-collection architecture');
+      this.logger.info('Perspectives system initialized with 3-collection architecture');
     }
   }
   
@@ -145,7 +147,7 @@ export class Perspectives {
           .find({ tool_id: toolId }).toArray();
         if (existingPerspectives.length > 0) {
           if (this.options.verbose) {
-            console.log(`Using existing perspectives for ${toolName} (ID: ${toolId}, ${existingPerspectives.length} types)`);
+            this.logger.verbose(`Using existing perspectives for ${toolName} (ID: ${toolId}, ${existingPerspectives.length} types)`);
           }
           return existingPerspectives;
         }
@@ -196,7 +198,7 @@ export class Perspectives {
           await this._generateEmbeddingsForPerspectives(perspectiveDocs);
         } catch (error) {
           if (this.options.verbose) {
-            console.warn(`⚠️  Embedding generation failed, continuing without embeddings: ${error.message}`);
+            this.logger.warn(`Embedding generation failed, continuing without embeddings: ${error.message}`);
           }
           // Continue with null embeddings rather than failing the entire operation
         }
@@ -206,7 +208,7 @@ export class Perspectives {
       const savedCount = await this.databaseStorage.saveToolPerspectives(perspectiveDocs);
       
       if (this.options.verbose) {
-        console.log(`Generated ${savedCount} perspectives for ${toolName} in single LLM call`);
+        this.logger.verbose(`Generated ${savedCount} perspectives for ${toolName} in single LLM call`);
       }
       
       return perspectiveDocs;
@@ -240,7 +242,7 @@ export class Perspectives {
       
       if (tools.length === 0) {
         if (this.options.verbose) {
-          console.log(`No tools found for module: ${moduleName}`);
+          this.logger.verbose(`No tools found for module: ${moduleName}`);
         }
         return [];
       }
@@ -253,7 +255,7 @@ export class Perspectives {
       if (shouldUseBatch) {
         // Phase 5.3: Optimized batch generation with error handling
         if (this.options.verbose) {
-          console.log(`Using batch generation for ${tools.length} tools in ${moduleName}`);
+          this.logger.verbose(`Using batch generation for ${tools.length} tools in ${moduleName}`);
         }
         
         // Filter out tools that already have perspectives (unless forcing)
@@ -275,7 +277,7 @@ export class Perspectives {
         
         if (toolsToGenerate.length === 0) {
           if (this.options.verbose) {
-            console.log(`All perspectives already exist for module ${moduleName}`);
+            this.logger.verbose(`All perspectives already exist for module ${moduleName}`);
           }
           return results;
         }
@@ -291,7 +293,7 @@ export class Perspectives {
           
           try {
             if (this.options.verbose) {
-              console.log(`Processing batch ${batchIndex + 1}/${batches.length} (${batch.length} tools)`);
+              this.logger.verbose(`Processing batch ${batchIndex + 1}/${batches.length} (${batch.length} tools)`);
             }
             
             // Generate batch perspectives - either LLM or mock
@@ -325,7 +327,7 @@ export class Perspectives {
             }
             
           } catch (error) {
-            console.warn(`Batch ${batchIndex + 1} failed, falling back to individual generation:`, error.message);
+            this.logger.warn(`Batch ${batchIndex + 1} failed, falling back to individual generation: ${error.message}`);
             
             // Fallback to individual generation for this batch
             for (const tool of batch) {
@@ -333,7 +335,7 @@ export class Perspectives {
                 const perspectives = await this.generatePerspectivesForTool(tool.name, { forceRegenerate: true });
                 results.push(...perspectives);
               } catch (individualError) {
-                console.error(`Failed to generate perspective for ${tool.name}:`, individualError.message);
+                this.logger.error(`Failed to generate perspective for ${tool.name}: ${individualError.message}`);
               }
             }
           }
@@ -341,7 +343,7 @@ export class Perspectives {
       } else {
         // Individual generation
         if (this.options.verbose) {
-          console.log(`Using individual generation for ${tools.length} tools in ${moduleName}`);
+          this.logger.verbose(`Using individual generation for ${tools.length} tools in ${moduleName}`);
         }
         
         for (const tool of tools) {
@@ -349,13 +351,13 @@ export class Perspectives {
             const perspectives = await this.generatePerspectivesForTool(tool.name, options);
             results.push(...perspectives);
           } catch (error) {
-            console.error(`Failed to generate perspective for ${tool.name}:`, error.message);
+            this.logger.error(`Failed to generate perspective for ${tool.name}: ${error.message}`);
           }
         }
       }
       
       if (this.options.verbose) {
-        console.log(`Generated ${results.length} perspectives for module ${moduleName} (${shouldUseBatch ? 'batch' : 'individual'} mode)`);
+        this.logger.verbose(`Generated ${results.length} perspectives for module ${moduleName} (${shouldUseBatch ? 'batch' : 'individual'} mode)`);
       }
       
       return results;
@@ -417,7 +419,7 @@ export class Perspectives {
       }
       
       if (this.options.verbose) {
-        console.log(`Perspective generation complete: ${generated} generated, ${skipped} skipped, ${failed} failed`);
+        this.logger.verbose(`Perspective generation complete: ${generated} generated, ${skipped} skipped, ${failed} failed`);
       }
       
       return {
@@ -558,7 +560,7 @@ export class Perspectives {
         await this.databaseStorage.clearPerspectiveData();
         
         if (this.options.verbose) {
-          console.log('Cleared all perspective data');
+          this.logger.verbose('Cleared all perspective data');
         }
         
         return 0; // clearPerspectiveData doesn't return count
@@ -629,7 +631,7 @@ export class Perspectives {
       }
       
       if (this.options.verbose) {
-        console.log(`Cleared ${deletedCount} perspectives for module ${moduleName}`);
+        this.logger.verbose(`Cleared ${deletedCount} perspectives for module ${moduleName}`);
       }
       
       return deletedCount;
@@ -729,7 +731,7 @@ Response format:
         relatedTools: []
       };
     } catch (error) {
-      console.error('Failed to parse perspective response:', error.message);
+      this.logger.error(`Failed to parse perspective response: ${error.message}`);
       return {
         perspective: response.trim(),
         category: 'general',
@@ -785,7 +787,7 @@ Provide a JSON array response with one perspective object per tool, in the same 
         relatedTools: []
       }));
     } catch (error) {
-      console.error('Failed to parse batch perspective response:', error.message);
+      this.logger.error(`Failed to parse batch perspective response: ${error.message}`);
       // Return individual defaults on error
       return tools.map(() => ({
         perspective: 'Generated perspective not available',
@@ -864,7 +866,7 @@ Each perspective must be 10 words or less.`;
         content: `Auto-generated perspective for ${toolName} from ${type.name} viewpoint`
       }));
     } catch (error) {
-      console.error('Failed to parse multi-perspective response:', error.message);
+      this.logger.error(`Failed to parse multi-perspective response: ${error.message}`);
       // Return default perspectives on error
       return perspectiveTypes.map((type) => ({
         content: `Auto-generated perspective for ${toolName} from ${type.name} viewpoint`
@@ -1027,7 +1029,7 @@ Best practices: Validate inputs, handle errors gracefully, follow schema require
       
       if (perspectivesWithoutEmbeddings.length === 0) {
         if (this.options.verbose) {
-          console.log('All perspectives already have embeddings');
+          this.logger.verbose('All perspectives already have embeddings');
         }
         return {
           processed: 0,
@@ -1038,7 +1040,7 @@ Best practices: Validate inputs, handle errors gracefully, follow schema require
       }
       
       if (this.options.verbose) {
-        console.log(`🔧 Generating embeddings for ${perspectivesWithoutEmbeddings.length} existing perspectives...`);
+        this.logger.info(`Generating embeddings for ${perspectivesWithoutEmbeddings.length} existing perspectives...`);
       }
       
       let updated = 0;
@@ -1059,7 +1061,7 @@ Best practices: Validate inputs, handle errors gracefully, follow schema require
           updated += savedCount;
           
           if (this.options.verbose) {
-            console.log(`✅ Updated ${savedCount} perspectives with embeddings (batch ${Math.floor(i/batchSize) + 1})`);
+            this.logger.verbose(`Updated ${savedCount} perspectives with embeddings (batch ${Math.floor(i/batchSize) + 1})`);
           }
           
         } catch (error) {
@@ -1071,7 +1073,7 @@ Best practices: Validate inputs, handle errors gracefully, follow schema require
           });
           
           if (this.options.verbose) {
-            console.error(`❌ Failed to generate embeddings for batch ${Math.floor(i/batchSize) + 1}:`, error.message);
+            this.logger.error(`Failed to generate embeddings for batch ${Math.floor(i/batchSize) + 1}: ${error.message}`);
           }
         }
       }
@@ -1084,7 +1086,7 @@ Best practices: Validate inputs, handle errors gracefully, follow schema require
       };
       
       if (this.options.verbose) {
-        console.log(`🎯 Embedding generation complete: ${updated} updated, ${failed} failed`);
+        this.logger.info(`Embedding generation complete: ${updated} updated, ${failed} failed`);
       }
       
       return stats;
@@ -1174,7 +1176,7 @@ Best practices: Validate inputs, handle errors gracefully, follow schema require
     
     if (!nomicService) {
       if (this.options.verbose) {
-        console.log('Initializing Nomic embedding service...');
+        this.logger.verbose('Initializing Nomic embedding service...');
       }
       
       // Import and create Nomic service
@@ -1186,7 +1188,7 @@ Best practices: Validate inputs, handle errors gracefully, follow schema require
       this.resourceManager.set('nomicService', nomicService);
       
       if (this.options.verbose) {
-        console.log(`✅ Nomic service initialized with ${nomicService.modelName} (${nomicService.dimensions} dimensions)`);
+        this.logger.info(`Nomic service initialized with ${nomicService.modelName} (${nomicService.dimensions} dimensions)`);
       }
     }
     
@@ -1207,7 +1209,7 @@ Best practices: Validate inputs, handle errors gracefully, follow schema require
       const nomicService = await this._getNomicService();
       
       if (this.options.verbose) {
-        console.log(`🔧 Generating embeddings for ${perspectiveDocs.length} perspectives...`);
+        this.logger.verbose(`Generating embeddings for ${perspectiveDocs.length} perspectives...`);
       }
       
       // Extract content for batch embedding generation
@@ -1224,7 +1226,7 @@ Best practices: Validate inputs, handle errors gracefully, follow schema require
       }
       
       if (this.options.verbose) {
-        console.log(`✅ Generated ${embeddings.length} embeddings (${nomicService.dimensions}d vectors)`);
+        this.logger.verbose(`Generated ${embeddings.length} embeddings (${nomicService.dimensions}d vectors)`);
       }
       
       // Index perspectives in VectorStore (optional enhancement)
@@ -1234,7 +1236,7 @@ Best practices: Validate inputs, handle errors gracefully, follow schema require
       
     } catch (error) {
       if (this.options.verbose) {
-        console.error('❌ Embedding generation failed:', error.message);
+        this.logger.error(`Embedding generation failed: ${error.message}`);
       }
       
       throw new PerspectiveError(
@@ -1256,13 +1258,13 @@ Best practices: Validate inputs, handle errors gracefully, follow schema require
       const toolRegistry = this.resourceManager.get('toolRegistry');
       if (!toolRegistry) {
         if (this.options.verbose) {
-          console.log('⚠️  ToolRegistry not available - skipping vector indexing');
+          this.logger.warn('ToolRegistry not available - skipping vector indexing');
         }
         return;
       }
       
       if (this.options.verbose) {
-        console.log(`🔍 Indexing ${perspectiveDocs.length} perspectives in VectorStore...`);
+        this.logger.verbose(`Indexing ${perspectiveDocs.length} perspectives in VectorStore...`);
       }
       
       // Group perspectives by tool for batch indexing
@@ -1295,30 +1297,30 @@ Best practices: Validate inputs, handle errors gracefully, follow schema require
             totalIndexed += result.indexed;
             
             if (this.options.verbose) {
-              console.log(`✅ Indexed ${result.indexed} perspectives for tool: ${toolName}`);
+              this.logger.verbose(`Indexed ${result.indexed} perspectives for tool: ${toolName}`);
             }
           } else {
             indexingErrors++;
             if (this.options.verbose) {
-              console.warn(`⚠️  Failed to index perspectives for ${toolName}: ${result.error}`);
+              this.logger.warn(`Failed to index perspectives for ${toolName}: ${result.error}`);
             }
           }
         } catch (error) {
           indexingErrors++;
           if (this.options.verbose) {
-            console.warn(`⚠️  Error indexing perspectives for ${toolName}: ${error.message}`);
+            this.logger.warn(`Error indexing perspectives for ${toolName}: ${error.message}`);
           }
         }
       }
       
       if (this.options.verbose) {
-        console.log(`🎯 Vector indexing complete: ${totalIndexed} indexed, ${indexingErrors} errors`);
+        this.logger.info(`Vector indexing complete: ${totalIndexed} indexed, ${indexingErrors} errors`);
       }
       
     } catch (error) {
       // Don't throw - vector indexing failure shouldn't break perspective generation
       if (this.options.verbose) {
-        console.warn(`⚠️  Vector indexing failed: ${error.message}`);
+        this.logger.warn(`Vector indexing failed: ${error.message}`);
       }
     }
   }

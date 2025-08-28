@@ -13,6 +13,9 @@
  */
 
 import { Module, Tool, ToolResult } from '@legion/tools-registry';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { readFileSync } from 'fs';
 import { JestAgentWrapper } from './core/JestAgentWrapper.js';
 import { AgentTDDHelper } from './agents/AgentTDDHelper.js';
 import { GenerateTestReportTool } from './tools/GenerateTestReportTool.js';
@@ -671,6 +674,33 @@ class JesterModule extends Module {
     this.description = 'Powerful Jest testing tools with session management and intelligent analysis';
     this.version = '2.0.0';
     this.jestWrapper = null;
+    this.metadataPath = './tools-metadata.json';
+    
+    // Try to load metadata
+    try {
+      const metadata = this.loadMetadata();
+      if (metadata) {
+        this.metadata = metadata;
+      }
+    } catch (error) {
+      // Will fall back to legacy approach
+      this.metadata = null;
+    }
+  }
+
+  getModulePath() {
+    return fileURLToPath(import.meta.url);
+  }
+
+  loadMetadata() {
+    try {
+      const modulePath = dirname(this.getModulePath());
+      const metadataPath = join(modulePath, this.metadataPath);
+      const metadataContent = readFileSync(metadataPath, 'utf8');
+      return JSON.parse(metadataContent);
+    } catch (error) {
+      return null;
+    }
   }
 
   /**
@@ -708,10 +738,49 @@ class JesterModule extends Module {
       throw new Error('JesterModule must be initialized before getting tools');
     }
 
+    // Try metadata-driven tool creation first
+    if (this.metadata && this.metadata.tools) {
+      try {
+        const tools = [];
+        for (const [toolKey, toolMeta] of Object.entries(this.metadata.tools)) {
+          tools.push(this.createMetadataTool(toolMeta));
+        }
+        return tools;
+      } catch (error) {
+        console.warn(`Jester module metadata tool creation failed: ${error.message}, falling back to legacy`);
+      }
+    }
+
+    // Fallback to legacy approach
     return [
       new RunJestTestsTool(this.jestWrapper),
       new QueryJestResultsTool(this.jestWrapper)
     ];
+  }
+
+  createMetadataTool(toolMeta) {
+    // Create a tool proxy that routes to legacy implementations
+    return {
+      name: toolMeta.name,
+      description: toolMeta.description,
+      schema: {
+        input: toolMeta.inputSchema,
+        output: toolMeta.outputSchema
+      },
+      execute: async (args) => {
+        // Route to appropriate legacy tool based on name
+        switch (toolMeta.name) {
+          case 'run_jest_tests':
+            const runTool = new RunJestTestsTool(this.jestWrapper);
+            return await runTool._execute(args);
+          case 'query_jest_results':
+            const queryTool = new QueryJestResultsTool(this.jestWrapper);
+            return await queryTool._execute(args);
+          default:
+            throw new Error(`Unknown Jester tool: ${toolMeta.name}`);
+        }
+      }
+    };
   }
 
   /**

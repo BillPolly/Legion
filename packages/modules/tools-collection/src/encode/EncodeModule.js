@@ -9,6 +9,7 @@
  */
 
 import { Module, Tool } from '@legion/tools-registry';
+import { fileURLToPath } from 'url';
 
 // Input schema for Base64EncodeTool
 const base64EncodeToolInputSchema = {
@@ -435,6 +436,16 @@ export default class EncodeModule extends Module {
     this.name = 'encode';
     this.description = 'Encoding and decoding utilities for various formats';
     this.version = '1.0.0';
+    
+    // NEW: Set metadata path for automatic loading
+    this.metadataPath = './tools-metadata.json';
+  }
+
+  /**
+   * Override getModulePath to support proper path resolution
+   */
+  getModulePath() {
+    return fileURLToPath(import.meta.url);
   }
 
   /**
@@ -448,16 +459,56 @@ export default class EncodeModule extends Module {
   }
 
   /**
-   * Initialize the module
+   * Initialize the module - NEW metadata-driven approach
    */
   async initialize() {
-    await super.initialize();
+    await super.initialize(); // This will load metadata automatically
     
-    // Register tools
-    this.registerTool('base64_encode', new Base64EncodeTool());
-    this.registerTool('base64_decode', new Base64DecodeTool());
-    this.registerTool('url_encode', new UrlEncodeTool());
-    this.registerTool('url_decode', new UrlDecodeTool());
+    // NEW APPROACH: Create tools using metadata
+    if (this.metadata) {
+      const tools = [
+        { key: 'base64_encode', class: Base64EncodeTool },
+        { key: 'base64_decode', class: Base64DecodeTool },
+        { key: 'url_encode', class: UrlEncodeTool },
+        { key: 'url_decode', class: UrlDecodeTool }
+      ];
+
+      for (const { key, class: ToolClass } of tools) {
+        try {
+          const tool = this.createToolFromMetadata(key, ToolClass);
+          this.registerTool(tool.name, tool);
+        } catch (error) {
+          console.warn(`Failed to create metadata tool ${key}, falling back to legacy: ${error.message}`);
+          
+          // Fallback to legacy constructor
+          let legacyTool;
+          switch (key) {
+            case 'base64_encode':
+              legacyTool = new Base64EncodeTool();
+              break;
+            case 'base64_decode':
+              legacyTool = new Base64DecodeTool();
+              break;
+            case 'url_encode':
+              legacyTool = new UrlEncodeTool();
+              break;
+            case 'url_decode':
+              legacyTool = new UrlDecodeTool();
+              break;
+          }
+          
+          if (legacyTool) {
+            this.registerTool(legacyTool.name, legacyTool);
+          }
+        }
+      }
+    } else {
+      // FALLBACK: Old approach for backwards compatibility
+      this.registerTool('base64_encode', new Base64EncodeTool());
+      this.registerTool('base64_decode', new Base64DecodeTool());
+      this.registerTool('url_encode', new UrlEncodeTool());
+      this.registerTool('url_decode', new UrlDecodeTool());
+    }
   }
 }
 

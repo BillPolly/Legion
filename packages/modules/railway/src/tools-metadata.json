@@ -1,0 +1,391 @@
+{
+  "module": {
+    "name": "railway",
+    "description": "Deploy and manage applications on Railway cloud platform",
+    "version": "1.0.0",
+    "author": "Legion Team",
+    "category": "deployment"
+  },
+  "tools": {
+    "railway_deploy": {
+      "name": "railway_deploy",
+      "description": "Deploy an application to Railway cloud platform",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectPath": {
+            "type": "string",
+            "description": "Local path to the project directory to deploy"
+          },
+          "serviceName": {
+            "type": "string",
+            "description": "Name for the Railway service (optional, will use project name if not provided)"
+          },
+          "environment": {
+            "type": "string",
+            "enum": ["production", "staging", "development"],
+            "default": "production",
+            "description": "Deployment environment"
+          },
+          "environmentVariables": {
+            "type": "object",
+            "description": "Environment variables to set for the deployment",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["projectPath"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the deployment was successful"
+          },
+          "deploymentId": {
+            "type": "string",
+            "description": "Unique identifier for the deployment"
+          },
+          "serviceId": {
+            "type": "string", 
+            "description": "Railway service identifier"
+          },
+          "url": {
+            "type": "string",
+            "description": "Public URL of the deployed application"
+          },
+          "status": {
+            "type": "string",
+            "description": "Current deployment status"
+          }
+        },
+        "required": ["success", "deploymentId", "serviceId", "status"]
+      },
+      "category": "deployment",
+      "tags": ["railway", "deploy", "cloud", "hosting"]
+    },
+    "railway_status": {
+      "name": "railway_status",
+      "description": "Get the status of Railway deployments and services",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "serviceId": {
+            "type": "string",
+            "description": "Railway service ID to check status for (optional, will list all if not provided)"
+          },
+          "projectId": {
+            "type": "string",
+            "description": "Railway project ID to filter services (optional)"
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "services": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Service identifier"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Service name"
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Current service status"
+                },
+                "url": {
+                  "type": "string",
+                  "description": "Service URL if available"
+                },
+                "lastDeployment": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "required": ["id", "name", "status"]
+            }
+          },
+          "totalServices": {
+            "type": "number",
+            "description": "Total number of services found"
+          }
+        },
+        "required": ["services", "totalServices"]
+      },
+      "category": "monitoring",
+      "tags": ["railway", "status", "monitoring", "health"]
+    },
+    "railway_logs": {
+      "name": "railway_logs",
+      "description": "Retrieve logs from Railway deployments",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "serviceId": {
+            "type": "string",
+            "description": "Railway service ID to get logs from"
+          },
+          "deploymentId": {
+            "type": "string",
+            "description": "Specific deployment ID to get logs from (optional, uses latest if not provided)"
+          },
+          "lines": {
+            "type": "number",
+            "default": 100,
+            "description": "Number of log lines to retrieve"
+          },
+          "follow": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether to follow logs in real-time"
+          },
+          "filter": {
+            "type": "string",
+            "description": "Filter logs by keyword or pattern"
+          }
+        },
+        "required": ["serviceId"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "logs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "timestamp": {
+                  "type": "string",
+                  "description": "Log entry timestamp"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "Log message content"
+                },
+                "level": {
+                  "type": "string",
+                  "description": "Log level (info, warn, error, etc.)"
+                }
+              },
+              "required": ["timestamp", "message"]
+            }
+          },
+          "totalLines": {
+            "type": "number",
+            "description": "Total number of log lines retrieved"
+          },
+          "serviceId": {
+            "type": "string",
+            "description": "Service ID the logs came from"
+          }
+        },
+        "required": ["logs", "totalLines", "serviceId"]
+      },
+      "category": "monitoring",
+      "tags": ["railway", "logs", "debugging", "monitoring"]
+    },
+    "railway_update_env": {
+      "name": "railway_update_env",
+      "description": "Update environment variables for a Railway service",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "serviceId": {
+            "type": "string",
+            "description": "Railway service ID to update"
+          },
+          "variables": {
+            "type": "object",
+            "description": "Environment variables to set or update",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "removeVariables": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of environment variable names to remove"
+          },
+          "environment": {
+            "type": "string",
+            "enum": ["production", "staging", "development"],
+            "default": "production",
+            "description": "Environment to update variables in"
+          }
+        },
+        "required": ["serviceId"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the environment update was successful"
+          },
+          "updatedVariables": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of variable names that were updated"
+          },
+          "removedVariables": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of variable names that were removed"
+          },
+          "serviceId": {
+            "type": "string",
+            "description": "Service ID that was updated"
+          }
+        },
+        "required": ["success", "updatedVariables", "serviceId"]
+      },
+      "category": "configuration",
+      "tags": ["railway", "environment", "variables", "config"]
+    },
+    "railway_remove": {
+      "name": "railway_remove",
+      "description": "Remove a Railway service or deployment",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "serviceId": {
+            "type": "string",
+            "description": "Railway service ID to remove"
+          },
+          "deploymentId": {
+            "type": "string",
+            "description": "Specific deployment ID to remove (optional, removes entire service if not provided)"
+          },
+          "confirm": {
+            "type": "boolean",
+            "default": false,
+            "description": "Confirmation flag to prevent accidental deletions"
+          }
+        },
+        "required": ["serviceId", "confirm"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the removal was successful"
+          },
+          "removedServiceId": {
+            "type": "string",
+            "description": "Service ID that was removed"
+          },
+          "removedDeploymentId": {
+            "type": "string",
+            "description": "Deployment ID that was removed (if specific deployment)"
+          },
+          "message": {
+            "type": "string",
+            "description": "Status message about the removal"
+          }
+        },
+        "required": ["success", "message"]
+      },
+      "category": "management",
+      "tags": ["railway", "remove", "delete", "cleanup"]
+    },
+    "railway_list_projects": {
+      "name": "railway_list_projects",
+      "description": "List all Railway projects and their services",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "includeServices": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether to include services for each project"
+          },
+          "filter": {
+            "type": "string",
+            "description": "Filter projects by name pattern"
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "projects": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Project identifier"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Project name"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Project description"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "description": "Project creation timestamp"
+                },
+                "services": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["id", "name", "status"]
+                  }
+                }
+              },
+              "required": ["id", "name", "createdAt"]
+            }
+          },
+          "totalProjects": {
+            "type": "number",
+            "description": "Total number of projects found"
+          }
+        },
+        "required": ["projects", "totalProjects"]
+      },
+      "category": "management",
+      "tags": ["railway", "projects", "list", "overview"]
+    }
+  }
+}

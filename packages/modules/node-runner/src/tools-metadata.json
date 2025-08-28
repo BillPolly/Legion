@@ -1,0 +1,444 @@
+{
+  "module": {
+    "name": "node-runner",
+    "description": "Node.js process management and logging tools",
+    "version": "1.0.0",
+    "author": "Legion Team",
+    "category": "process-management"
+  },
+  "tools": {
+    "run_node": {
+      "name": "run_node",
+      "description": "Run Node.js scripts and applications with session management",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "script": {
+            "type": "string",
+            "description": "Path to the Node.js script to run"
+          },
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Command line arguments to pass to the script"
+          },
+          "cwd": {
+            "type": "string",
+            "description": "Working directory to run the script from (defaults to script directory)"
+          },
+          "env": {
+            "type": "object",
+            "description": "Environment variables to set for the process",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "sessionName": {
+            "type": "string",
+            "description": "Custom name for this session for easier identification"
+          },
+          "detached": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether to run the process in detached mode"
+          }
+        },
+        "required": ["script"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the process started successfully"
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "Unique identifier for this execution session"
+          },
+          "pid": {
+            "type": "number",
+            "description": "Process ID of the running script"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["running", "completed", "failed", "killed"],
+            "description": "Current status of the process"
+          },
+          "startTime": {
+            "type": "string",
+            "description": "ISO timestamp when the process started"
+          }
+        },
+        "required": ["success", "sessionId", "status", "startTime"]
+      },
+      "category": "execution",
+      "tags": ["node", "run", "process", "execution"]
+    },
+    "stop_node": {
+      "name": "stop_node",
+      "description": "Stop running Node.js processes",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "description": "Session ID of the process to stop"
+          },
+          "pid": {
+            "type": "number",
+            "description": "Process ID to stop (alternative to sessionId)"
+          },
+          "signal": {
+            "type": "string",
+            "default": "SIGTERM",
+            "enum": ["SIGTERM", "SIGKILL", "SIGINT"],
+            "description": "Signal to send to the process"
+          },
+          "force": {
+            "type": "boolean",
+            "default": false,
+            "description": "Force kill the process if graceful termination fails"
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the process was successfully stopped"
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "Session ID of the stopped process"
+          },
+          "pid": {
+            "type": "number",
+            "description": "Process ID that was stopped"
+          },
+          "signal": {
+            "type": "string",
+            "description": "Signal that was sent to stop the process"
+          },
+          "exitCode": {
+            "type": "number",
+            "description": "Exit code of the process if available"
+          },
+          "endTime": {
+            "type": "string",
+            "description": "ISO timestamp when the process ended"
+          }
+        },
+        "required": ["success", "signal"]
+      },
+      "category": "management",
+      "tags": ["node", "stop", "kill", "terminate"]
+    },
+    "list_sessions": {
+      "name": "list_sessions",
+      "description": "List all active and recent Node.js execution sessions",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["running", "completed", "failed", "killed", "all"],
+            "default": "all",
+            "description": "Filter sessions by status"
+          },
+          "limit": {
+            "type": "number",
+            "default": 20,
+            "description": "Maximum number of sessions to return"
+          },
+          "includeDetails": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether to include detailed session information"
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "sessions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sessionId": {
+                  "type": "string",
+                  "description": "Unique session identifier"
+                },
+                "sessionName": {
+                  "type": "string",
+                  "description": "Custom session name if provided"
+                },
+                "script": {
+                  "type": "string",
+                  "description": "Path to the script being run"
+                },
+                "pid": {
+                  "type": "number",
+                  "description": "Process ID"
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Current session status"
+                },
+                "startTime": {
+                  "type": "string",
+                  "description": "Session start timestamp"
+                },
+                "endTime": {
+                  "type": "string",
+                  "description": "Session end timestamp (if completed)"
+                },
+                "duration": {
+                  "type": "number",
+                  "description": "Duration in milliseconds (if completed)"
+                }
+              },
+              "required": ["sessionId", "script", "status", "startTime"]
+            }
+          },
+          "totalSessions": {
+            "type": "number",
+            "description": "Total number of sessions matching the filter"
+          },
+          "activeSessions": {
+            "type": "number",
+            "description": "Number of currently running sessions"
+          }
+        },
+        "required": ["sessions", "totalSessions", "activeSessions"]
+      },
+      "category": "monitoring",
+      "tags": ["node", "list", "sessions", "status"]
+    },
+    "search_logs": {
+      "name": "search_logs",
+      "description": "Search through logs from Node.js execution sessions",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "description": "Session ID to search logs for (searches all sessions if not provided)"
+          },
+          "query": {
+            "type": "string",
+            "description": "Search query string or regex pattern"
+          },
+          "logLevel": {
+            "type": "string",
+            "enum": ["all", "stdout", "stderr", "error", "warn", "info", "debug"],
+            "default": "all",
+            "description": "Filter by log level or stream"
+          },
+          "limit": {
+            "type": "number",
+            "default": 100,
+            "description": "Maximum number of log entries to return"
+          },
+          "contextLines": {
+            "type": "number",
+            "default": 2,
+            "description": "Number of context lines around matches"
+          },
+          "timeRange": {
+            "type": "object",
+            "properties": {
+              "start": {
+                "type": "string",
+                "description": "Start time (ISO string)"
+              },
+              "end": {
+                "type": "string",
+                "description": "End time (ISO string)"
+              }
+            },
+            "description": "Filter logs by time range"
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "matches": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sessionId": {
+                  "type": "string",
+                  "description": "Session ID where the match was found"
+                },
+                "timestamp": {
+                  "type": "string",
+                  "description": "Log entry timestamp"
+                },
+                "level": {
+                  "type": "string",
+                  "description": "Log level or stream type"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "Log message content"
+                },
+                "context": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Context lines around the match"
+                },
+                "lineNumber": {
+                  "type": "number",
+                  "description": "Line number in the log file"
+                }
+              },
+              "required": ["sessionId", "timestamp", "level", "message"]
+            }
+          },
+          "totalMatches": {
+            "type": "number",
+            "description": "Total number of matches found"
+          },
+          "searchQuery": {
+            "type": "string",
+            "description": "The query that was searched"
+          },
+          "sessionsSearched": {
+            "type": "number",
+            "description": "Number of sessions that were searched"
+          }
+        },
+        "required": ["matches", "totalMatches", "searchQuery", "sessionsSearched"]
+      },
+      "category": "monitoring",
+      "tags": ["node", "logs", "search", "debugging"]
+    },
+    "server_health": {
+      "name": "server_health",
+      "description": "Check the health and status of running Node.js server processes",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "description": "Session ID of the server to check (checks all servers if not provided)"
+          },
+          "url": {
+            "type": "string",
+            "description": "URL to perform health check against"
+          },
+          "timeout": {
+            "type": "number",
+            "default": 5000,
+            "description": "Timeout for health check requests in milliseconds"
+          },
+          "includeMetrics": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether to include performance metrics"
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "servers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sessionId": {
+                  "type": "string",
+                  "description": "Server session identifier"
+                },
+                "pid": {
+                  "type": "number",
+                  "description": "Process ID of the server"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": ["healthy", "unhealthy", "unknown"],
+                  "description": "Health status of the server"
+                },
+                "uptime": {
+                  "type": "number",
+                  "description": "Server uptime in milliseconds"
+                },
+                "url": {
+                  "type": "string",
+                  "description": "Server URL if available"
+                },
+                "responseTime": {
+                  "type": "number",
+                  "description": "Response time for health check in milliseconds"
+                },
+                "memoryUsage": {
+                  "type": "object",
+                  "properties": {
+                    "rss": {
+                      "type": "number"
+                    },
+                    "heapTotal": {
+                      "type": "number"
+                    },
+                    "heapUsed": {
+                      "type": "number"
+                    }
+                  },
+                  "description": "Memory usage statistics"
+                },
+                "cpuUsage": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "number"
+                    },
+                    "system": {
+                      "type": "number"
+                    }
+                  },
+                  "description": "CPU usage statistics"
+                }
+              },
+              "required": ["sessionId", "pid", "status", "uptime"]
+            }
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "totalServers": {
+                "type": "number",
+                "description": "Total number of servers checked"
+              },
+              "healthyServers": {
+                "type": "number",
+                "description": "Number of healthy servers"
+              },
+              "unhealthyServers": {
+                "type": "number",
+                "description": "Number of unhealthy servers"
+              },
+              "averageResponseTime": {
+                "type": "number",
+                "description": "Average response time across all servers"
+              }
+            },
+            "required": ["totalServers", "healthyServers", "unhealthyServers"]
+          }
+        },
+        "required": ["servers", "summary"]
+      },
+      "category": "monitoring",
+      "tags": ["node", "server", "health", "monitoring", "metrics"]
+    }
+  }
+}

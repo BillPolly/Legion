@@ -2,7 +2,7 @@
  * CodeAgentModule - Legion module for code generation and testing
  * 
  * Provides tools for JavaScript code generation, validation, and project creation
- * without the complex factory registration system.
+ * using the metadata-driven architecture.
  */
 
 import { Module } from '@legion/tools-registry';
@@ -13,254 +13,163 @@ import { TestGenerator } from './generation/TestGenerator.js';
 import { ValidationUtils } from './utils/ValidationUtils.js';
 import { EslintConfigManager } from './config/EslintConfigManager.js';
 import { JestConfigManager } from './config/JestConfigManager.js';
+import { createReadStream } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 
 /**
- * Simple tool to generate HTML pages
- */
-class GenerateHTMLTool {
-  constructor() {
-    this.name = 'generate_html';
-    this.description = 'Generate HTML pages with templates and components';
-    this.schema = {
-      input: {
-        type: 'object',
-        properties: {
-          title: { type: 'string', description: 'Page title' },
-          content: { type: 'string', description: 'HTML content' },
-          template: { type: 'string', description: 'Template type', enum: ['basic', 'bootstrap', 'tailwind'] }
-        },
-        required: ['title', 'content']
-      },
-      output: {
-        type: 'object',
-        properties: {
-          html: { type: 'string', description: 'Generated HTML' },
-          filename: { type: 'string', description: 'Suggested filename' }
-        }
-      }
-    };
-  }
-
-  async _execute(params) {
-    const generator = new HTMLGenerator();
-    const html = await generator.generateHTML({
-      title: params.title,
-      body: { content: params.content },
-      template: params.template || 'basic'
-    });
-    
-    return {
-      html: html,
-      filename: `${params.title.toLowerCase().replace(/\s+/g, '-')}.html`
-    };
-  }
-
-  getMetadata() {
-    return {
-      name: this.name,
-      description: this.description,
-      input: this.schema.input,
-      output: this.schema.output
-    };
-  }
-}
-
-/**
- * Simple tool to generate JavaScript code
- */
-class GenerateJavaScriptTool {
-  constructor() {
-    this.name = 'generate_javascript';
-    this.description = 'Generate JavaScript functions, classes, and modules';
-    this.schema = {
-      input: {
-        type: 'object',
-        properties: {
-          type: { type: 'string', description: 'Code type', enum: ['function', 'class', 'module'] },
-          name: { type: 'string', description: 'Function/class/module name' },
-          parameters: { type: 'array', items: { type: 'string' }, description: 'Function parameters' },
-          description: { type: 'string', description: 'What the code should do' }
-        },
-        required: ['type', 'name']
-      },
-      output: {
-        type: 'object',
-        properties: {
-          code: { type: 'string', description: 'Generated JavaScript code' },
-          filename: { type: 'string', description: 'Suggested filename' }
-        }
-      }
-    };
-  }
-
-  async _execute(params) {
-    const generator = new JSGenerator();
-    let code;
-    
-    switch (params.type) {
-      case 'function':
-        code = await generator.generateFunction({
-          name: params.name,
-          parameters: params.parameters || [],
-          description: params.description || `${params.name} function`
-        });
-        break;
-      case 'class':
-        code = await generator.generateClass({
-          name: params.name,
-          description: params.description || `${params.name} class`
-        });
-        break;
-      case 'module':
-        code = await generator.generateModule({
-          name: params.name,
-          description: params.description || `${params.name} module`
-        });
-        break;
-      default:
-        throw new Error(`Unsupported code type: ${params.type}`);
-    }
-    
-    return {
-      code: code,
-      filename: `${params.name}.js`
-    };
-  }
-
-  getMetadata() {
-    return {
-      name: this.name,
-      description: this.description,
-      input: this.schema.input,
-      output: this.schema.output
-    };
-  }
-}
-
-/**
- * Simple tool to generate CSS styles
- */
-class GenerateCSSTool {
-  constructor() {
-    this.name = 'generate_css';
-    this.description = 'Generate CSS stylesheets with modern patterns';
-    this.schema = {
-      input: {
-        type: 'object',
-        properties: {
-          selector: { type: 'string', description: 'CSS selector' },
-          styles: { type: 'object', description: 'Style properties' },
-          framework: { type: 'string', description: 'CSS framework', enum: ['vanilla', 'flexbox', 'grid'] }
-        },
-        required: ['selector', 'styles']
-      },
-      output: {
-        type: 'object',
-        properties: {
-          css: { type: 'string', description: 'Generated CSS' },
-          filename: { type: 'string', description: 'Suggested filename' }
-        }
-      }
-    };
-  }
-
-  async _execute(params) {
-    const generator = new CSSGenerator();
-    const css = await generator.generateStylesheet({
-      selector: params.selector,
-      rules: params.styles,
-      framework: params.framework || 'vanilla'
-    });
-    
-    return {
-      css: css,
-      filename: 'styles.css'
-    };
-  }
-
-  getMetadata() {
-    return {
-      name: this.name,
-      description: this.description,
-      input: this.schema.input,
-      output: this.schema.output
-    };
-  }
-}
-
-/**
- * Simple tool to generate test files
- */
-class GenerateTestTool {
-  constructor() {
-    this.name = 'generate_test';
-    this.description = 'Generate Jest test files for JavaScript code';
-    this.schema = {
-      input: {
-        type: 'object',
-        properties: {
-          targetFile: { type: 'string', description: 'File to test' },
-          testType: { type: 'string', description: 'Test type', enum: ['unit', 'integration', 'e2e'] },
-          functions: { type: 'array', items: { type: 'string' }, description: 'Functions to test' }
-        },
-        required: ['targetFile']
-      },
-      output: {
-        type: 'object',
-        properties: {
-          test: { type: 'string', description: 'Generated test code' },
-          filename: { type: 'string', description: 'Test filename' }
-        }
-      }
-    };
-  }
-
-  async _execute(params) {
-    const generator = new TestGenerator();
-    const test = await generator.generateTest({
-      targetFile: params.targetFile,
-      testType: params.testType || 'unit',
-      functions: params.functions || []
-    });
-    
-    return {
-      test: test,
-      filename: `${params.targetFile.replace('.js', '')}.test.js`
-    };
-  }
-
-  getMetadata() {
-    return {
-      name: this.name,
-      description: this.description,
-      input: this.schema.input,
-      output: this.schema.output
-    };
-  }
-}
-
-/**
- * CodeAgentModule - Main Legion module
+ * CodeAgentModule - Main Legion module using metadata-driven architecture
  */
 export class CodeAgentModule extends Module {
   constructor() {
     super();
     this.name = 'code-agent';
-    this.description = 'Code generation and testing tools for JavaScript development';
+    this.description = 'Code generation tools for HTML, JavaScript, CSS, and tests';
     this.version = '1.0.0';
+    
+    // NEW: Set metadata path for automatic loading
+    this.metadataPath = './tools-metadata.json';
+    
+    this.generators = {
+      HTMLGenerator,
+      JSGenerator, 
+      CSSGenerator,
+      TestGenerator
+    };
   }
 
   /**
-   * Initialize the module
+   * Override getModulePath to support proper path resolution
+   */
+  getModulePath() {
+    return fileURLToPath(import.meta.url);
+  }
+
+  /**
+   * Initialize the module using metadata-driven architecture
    */
   async initialize() {
-    await super.initialize();
+    await super.initialize(); // This loads metadata automatically
     
-    // Create tools
-    this.registerTool('generate_html', new GenerateHTMLTool());
-    this.registerTool('generate_javascript', new GenerateJavaScriptTool());
-    this.registerTool('generate_css', new GenerateCSSTool());
-    this.registerTool('generate_test', new GenerateTestTool());
+    // NEW APPROACH: Create tools using metadata
+    if (this.metadata) {
+      const tools = [
+        { key: 'generate_html', generator: 'HTMLGenerator' },
+        { key: 'generate_javascript', generator: 'JSGenerator' },
+        { key: 'generate_css', generator: 'CSSGenerator' },
+        { key: 'generate_test', generator: 'TestGenerator' }
+      ];
+
+      for (const { key, generator } of tools) {
+        try {
+          const toolDef = this.metadata.tools[key];
+          if (toolDef) {
+            toolDef.implementation = { generator };
+            const tool = this.createToolFromMetadata(toolDef);
+            this.registerTool(toolDef.name, tool);
+          }
+        } catch (error) {
+          console.warn(`Failed to create metadata tool ${key}: ${error.message}`);
+        }
+      }
+    }
+    // No fallback needed - this module is metadata-driven only
+  }
+
+  /**
+   * Create a tool instance from metadata definition
+   */
+  createToolFromMetadata(toolDef) {
+    const module = this; // Capture module reference
+    
+    const tool = {
+      name: toolDef.name,
+      description: toolDef.description,
+      
+      _execute: async function(params) {
+        const implementation = toolDef.implementation;
+        const GeneratorClass = module.generators[implementation.generator];
+        const generator = new GeneratorClass();
+        
+        let result;
+        if (implementation.method === 'dynamic') {
+          // Handle dynamic logic for complex tools like generate_javascript
+          switch (params.type) {
+            case 'function':
+              result = await generator.generateFunction({
+                name: params.name,
+                parameters: params.parameters || [],
+                description: params.description || `${params.name} function`
+              });
+              break;
+            case 'class':
+              result = await generator.generateClass({
+                name: params.name,
+                description: params.description || `${params.name} class`
+              });
+              break;
+            case 'module':
+              result = await generator.generateModule({
+                name: params.name,
+                description: params.description || `${params.name} module`
+              });
+              break;
+            default:
+              throw new Error(`Unsupported code type: ${params.type}`);
+          }
+        } else {
+          // Handle standard mapping
+          const mapping = implementation.mapping;
+          const args = {};
+          for (const [key, value] of Object.entries(mapping)) {
+            if (typeof value === 'string' && value.includes('||')) {
+              // Handle default values like "template || 'basic'"
+              const [paramName, defaultValue] = value.split(' || ');
+              args[key] = params[paramName.trim()] || eval(defaultValue.trim());
+            } else if (typeof value === 'object') {
+              // Handle nested mapping like { "content": "content" }
+              args[key] = {};
+              for (const [nestedKey, nestedValue] of Object.entries(value)) {
+                args[key][nestedKey] = params[nestedValue];
+              }
+            } else {
+              args[key] = params[value] || eval(value);
+            }
+          }
+          result = await generator[implementation.method](args);
+        }
+        
+        // Format output according to metadata
+        const output = {};
+        for (const [key, value] of Object.entries(implementation.output)) {
+          if (value === 'result') {
+            output[key] = result;
+          } else if (value.startsWith('`')) {
+            // Handle template literals
+            output[key] = eval(value);
+          } else {
+            output[key] = eval(value);
+          }
+        }
+        
+        return output;
+      },
+      
+      getMetadata() {
+        return {
+          name: toolDef.name,
+          description: toolDef.description,
+          input: toolDef.input,
+          output: toolDef.output
+        };
+      }
+    };
+    
+    return tool;
   }
 
   /**
@@ -297,22 +206,10 @@ export class CodeAgentModule extends Module {
       name: this.name,
       description: this.description,
       version: this.version,
-      author: 'Legion Team',
+      author: this.author || 'Legion Team',
       tools: this.getTools().length,
-      capabilities: [
-        'HTML page generation with templates',
-        'JavaScript function, class, and module generation',
-        'CSS stylesheet generation with modern patterns',
-        'Jest test file generation for unit/integration/e2e testing',
-        'Code validation and linting'
-      ],
-      supportedFeatures: [
-        'Template-based HTML generation',
-        'ES6+ JavaScript code generation',
-        'Modern CSS with Flexbox/Grid support',
-        'Comprehensive test generation',
-        'Code quality validation'
-      ]
+      capabilities: this.capabilities || [],
+      supportedFeatures: this.supportedFeatures || []
     };
   }
 

@@ -9,6 +9,7 @@
  */
 
 import { DatabaseError, ValidationError } from '../errors/index.js';
+import { Logger } from '../utils/Logger.js';
 
 export class PerspectiveTypeManager {
   constructor({ db, resourceManager, options = {} }) {
@@ -29,6 +30,7 @@ export class PerspectiveTypeManager {
     
     this.collection = null;
     this.initialized = false;
+    this.logger = Logger.create('PerspectiveTypeManager', { verbose: this.options.verbose });
   }
   
   /**
@@ -42,7 +44,7 @@ export class PerspectiveTypeManager {
       this.initialized = true;
       
       if (this.options.verbose) {
-        console.log('PerspectiveTypeManager initialized');
+        this.logger.verbose('PerspectiveTypeManager initialized');
       }
       
     } catch (error) {
@@ -139,7 +141,7 @@ export class PerspectiveTypeManager {
       const result = await this.collection.insertOne(perspectiveTypeDoc);
       
       if (this.options.verbose) {
-        console.log(`Created perspective type: ${validatedData.name}`);
+        this.logger.verbose(`Created perspective type: ${validatedData.name}`);
       }
       
       return {
@@ -202,7 +204,7 @@ export class PerspectiveTypeManager {
       }
       
       if (this.options.verbose) {
-        console.log(`Updated perspective type: ${name}`);
+        this.logger.verbose(`Updated perspective type: ${name}`);
       }
       
       return await this.getPerspectiveType(name);
@@ -258,7 +260,7 @@ export class PerspectiveTypeManager {
       }
       
       if (this.options.verbose) {
-        console.log(`Deleted perspective type: ${name}`);
+        this.logger.verbose(`Deleted perspective type: ${name}`);
       }
       
       return true;
@@ -316,7 +318,7 @@ export class PerspectiveTypeManager {
       }
       
       if (this.options.verbose) {
-        console.log(`Set perspective type '${name}' enabled: ${enabled}`);
+        this.logger.verbose(`Set perspective type '${name}' enabled: ${enabled}`);
       }
       
       return await this.getPerspectiveType(name);
@@ -433,7 +435,7 @@ export class PerspectiveTypeManager {
       await this.collection.bulkWrite(bulkOps);
       
       if (this.options.verbose) {
-        console.log(`Reordered ${orderedNames.length} perspective types`);
+        this.logger.verbose(`Reordered ${orderedNames.length} perspective types`);
       }
       
       return await this.getAllPerspectiveTypes();

@@ -1,0 +1,467 @@
+{
+  "module": {
+    "name": "js-generator",
+    "description": "JavaScript code generation tools for creating modules, functions, classes, and API endpoints",
+    "version": "1.0.0",
+    "author": "Legion Team",
+    "category": "code-generation"
+  },
+  "tools": {
+    "generate_javascript_module": {
+      "name": "generate_javascript_module",
+      "description": "Generate a complete JavaScript module with imports, exports, functions, and classes",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the module"
+          },
+          "description": {
+            "type": "string",
+            "description": "Module description for header comment"
+          },
+          "imports": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "from": { "type": "string" },
+                "default": { "type": "string" },
+                "named": { "type": "array", "items": { "type": "string" } },
+                "namespace": { "type": "string" }
+              }
+            },
+            "description": "Array of import statements"
+          },
+          "functions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "params": { "type": "array", "items": {} },
+                "body": { "type": "string" },
+                "isAsync": { "type": "boolean" },
+                "isExport": { "type": "boolean" }
+              },
+              "required": ["name"]
+            },
+            "description": "Array of function definitions"
+          },
+          "classes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "extends": { "type": "string" },
+                "methods": { "type": "array", "items": {} },
+                "isExport": { "type": "boolean" }
+              },
+              "required": ["name"]
+            },
+            "description": "Array of class definitions"
+          },
+          "writeToFile": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether to write generated code to file"
+          }
+        },
+        "required": ["name"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Generated JavaScript module code"
+          },
+          "filename": {
+            "type": "string",
+            "description": "Suggested filename for the module"
+          },
+          "linesOfCode": {
+            "type": "number",
+            "description": "Number of lines generated"
+          }
+        },
+        "required": ["code", "filename", "linesOfCode"]
+      },
+      "category": "code-generation",
+      "tags": ["javascript", "module", "generation", "code"]
+    },
+    "generate_javascript_function": {
+      "name": "generate_javascript_function",
+      "description": "Generate a JavaScript function with JSDoc, parameters, and body",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Function name"
+          },
+          "params": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                { "type": "string" },
+                {
+                  "type": "object",
+                  "properties": {
+                    "name": { "type": "string" },
+                    "type": { "type": "string" },
+                    "default": {},
+                    "description": { "type": "string" }
+                  },
+                  "required": ["name"]
+                }
+              ]
+            },
+            "description": "Function parameters"
+          },
+          "body": {
+            "type": "string",
+            "description": "Function body code"
+          },
+          "returnType": {
+            "type": "string",
+            "description": "Return type for JSDoc"
+          },
+          "isAsync": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether function is async"
+          },
+          "isExport": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether to export the function"
+          }
+        },
+        "required": ["name", "body"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Generated function code"
+          },
+          "signature": {
+            "type": "string",
+            "description": "Function signature"
+          }
+        },
+        "required": ["code", "signature"]
+      },
+      "category": "code-generation",
+      "tags": ["javascript", "function", "generation", "code"]
+    },
+    "generate_javascript_class": {
+      "name": "generate_javascript_class",
+      "description": "Generate a JavaScript class with constructor, methods, and properties",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Class name"
+          },
+          "extends": {
+            "type": "string",
+            "description": "Parent class name"
+          },
+          "constructor": {
+            "type": "object",
+            "properties": {
+              "params": { "type": "array", "items": {} },
+              "body": { "type": "string" }
+            },
+            "description": "Constructor definition"
+          },
+          "methods": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "params": { "type": "array", "items": {} },
+                "body": { "type": "string" },
+                "isAsync": { "type": "boolean" },
+                "isStatic": { "type": "boolean" }
+              },
+              "required": ["name", "body"]
+            },
+            "description": "Class methods"
+          },
+          "isExport": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether to export the class"
+          }
+        },
+        "required": ["name"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Generated class code"
+          },
+          "className": {
+            "type": "string",
+            "description": "Class name"
+          }
+        },
+        "required": ["code", "className"]
+      },
+      "category": "code-generation",
+      "tags": ["javascript", "class", "generation", "code", "oop"]
+    },
+    "generate_api_endpoint": {
+      "name": "generate_api_endpoint",
+      "description": "Generate API endpoint code for Express.js or similar frameworks",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": ["GET", "POST", "PUT", "DELETE", "PATCH"],
+            "description": "HTTP method"
+          },
+          "path": {
+            "type": "string",
+            "description": "API path (e.g., '/users/:id')"
+          },
+          "handler": {
+            "type": "string",
+            "description": "Handler function body"
+          },
+          "middleware": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Middleware functions"
+          },
+          "validation": {
+            "type": "object",
+            "description": "Request validation schema"
+          }
+        },
+        "required": ["method", "path", "handler"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Generated API endpoint code"
+          },
+          "method": {
+            "type": "string",
+            "description": "HTTP method"
+          },
+          "path": {
+            "type": "string",
+            "description": "API path"
+          }
+        },
+        "required": ["code", "method", "path"]
+      },
+      "category": "code-generation",
+      "tags": ["javascript", "api", "endpoint", "express", "web"]
+    },
+    "generate_event_handler": {
+      "name": "generate_event_handler",
+      "description": "Generate event handler functions for DOM events or custom events",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "eventType": {
+            "type": "string",
+            "description": "Event type (e.g., 'click', 'submit', 'custom')"
+          },
+          "handlerName": {
+            "type": "string",
+            "description": "Handler function name"
+          },
+          "eventData": {
+            "type": "object",
+            "description": "Expected event data structure"
+          },
+          "isAsync": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether handler is async"
+          }
+        },
+        "required": ["eventType", "handlerName"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Generated event handler code"
+          },
+          "handlerName": {
+            "type": "string",
+            "description": "Handler function name"
+          }
+        },
+        "required": ["code", "handlerName"]
+      },
+      "category": "code-generation",
+      "tags": ["javascript", "event", "handler", "dom", "frontend"]
+    },
+    "generate_unit_tests": {
+      "name": "generate_unit_tests",
+      "description": "Generate unit tests for JavaScript functions and classes",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "targetFunction": {
+            "type": "string",
+            "description": "Function or class to test"
+          },
+          "testFramework": {
+            "type": "string",
+            "enum": ["jest", "mocha", "vitest"],
+            "default": "jest",
+            "description": "Testing framework"
+          },
+          "testCases": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "description": { "type": "string" },
+                "input": {},
+                "expected": {},
+                "shouldThrow": { "type": "boolean" }
+              },
+              "required": ["description"]
+            },
+            "description": "Test cases"
+          }
+        },
+        "required": ["targetFunction"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Generated unit test code"
+          },
+          "framework": {
+            "type": "string",
+            "description": "Testing framework used"
+          },
+          "testCount": {
+            "type": "number",
+            "description": "Number of tests generated"
+          }
+        },
+        "required": ["code", "framework", "testCount"]
+      },
+      "category": "code-generation",
+      "tags": ["javascript", "testing", "unit-tests", "jest", "mocha"]
+    },
+    "validate_javascript_syntax": {
+      "name": "validate_javascript_syntax",
+      "description": "Validate JavaScript code syntax and report errors",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "JavaScript code to validate"
+          },
+          "ecmaVersion": {
+            "type": "number",
+            "default": 2020,
+            "description": "ECMAScript version"
+          }
+        },
+        "required": ["code"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "valid": {
+            "type": "boolean",
+            "description": "Whether the code is syntactically valid"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "line": { "type": "number" },
+                "column": { "type": "number" },
+                "message": { "type": "string" }
+              }
+            },
+            "description": "Syntax errors found"
+          }
+        },
+        "required": ["valid", "errors"]
+      },
+      "category": "validation",
+      "tags": ["javascript", "validation", "syntax", "linting"]
+    },
+    "generate_html_page": {
+      "name": "generate_html_page",
+      "description": "Generate complete HTML pages with JavaScript integration",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Page title"
+          },
+          "body": {
+            "type": "string",
+            "description": "HTML body content"
+          },
+          "scripts": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "JavaScript code blocks"
+          },
+          "styles": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "CSS styles"
+          },
+          "includeFramework": {
+            "type": "string",
+            "enum": ["none", "jquery", "react", "vue"],
+            "default": "none",
+            "description": "JavaScript framework to include"
+          }
+        },
+        "required": ["title"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "html": {
+            "type": "string",
+            "description": "Generated HTML code"
+          },
+          "title": {
+            "type": "string",
+            "description": "Page title"
+          }
+        },
+        "required": ["html", "title"]
+      },
+      "category": "code-generation",
+      "tags": ["html", "javascript", "webpage", "frontend", "generation"]
+    }
+  }
+}

@@ -8,6 +8,7 @@ import SearchNavigationModule from './search-navigation/SearchNavigationModule.j
 import SystemOperationsModule from './system-operations/SystemOperationsModule.js';
 import WebToolsModule from './web-tools/WebToolsModule.js';
 import TaskManagementModule from './task-management/TaskManagementModule.js';
+import { fileURLToPath } from 'url';
 
 class ClaudeToolsModule extends Module {
   constructor() {
@@ -15,8 +16,19 @@ class ClaudeToolsModule extends Module {
     this.name = 'claude-tools';
     this.description = 'Complete suite of Claude Code tools for the Legion framework';
     this.version = '1.0.0';
+    
+    // NEW: Set metadata path for automatic loading
+    this.metadataPath = './tools-metadata.json';
+    
     this.resourceManager = null;
     this.subModules = new Map();
+  }
+
+  /**
+   * Override getModulePath to support proper path resolution
+   */
+  getModulePath() {
+    return fileURLToPath(import.meta.url);
   }
 
   /**

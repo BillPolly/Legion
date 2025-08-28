@@ -1,0 +1,10 @@
+{
+  "module": {
+    "name": "gmail",
+    "description": "Gmail integration module for sending and receiving emails",
+    "version": "1.0.0",
+    "author": "Legion Team",
+    "category": "email"
+  },
+  "tools": {}
+}

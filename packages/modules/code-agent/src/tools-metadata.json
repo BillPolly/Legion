@@ -1,0 +1,150 @@
+{
+  "module": {
+    "name": "code-agent",
+    "description": "Code generation tools for HTML, JavaScript, CSS, and tests",
+    "version": "1.0.0",
+    "author": "Legion Team",
+    "category": "code-generation"
+  },
+  "tools": {
+    "generate_html": {
+      "name": "generate_html",
+      "description": "Generate HTML pages with templates and content",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "template": {
+            "type": "string",
+            "description": "HTML template type"
+          },
+          "content": {
+            "type": "string",
+            "description": "Page content"
+          }
+        },
+        "required": ["content"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "html": {
+            "type": "string",
+            "description": "Generated HTML code"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Generation success status"
+          }
+        },
+        "required": ["html", "success"]
+      },
+      "category": "code-generation",
+      "tags": ["html", "generation", "web", "frontend"]
+    },
+    "generate_javascript": {
+      "name": "generate_javascript",
+      "description": "Generate JavaScript functions, classes, and modules",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["function", "class", "module"],
+            "description": "Type of JavaScript code to generate"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the function/class/module"
+          }
+        },
+        "required": ["type", "name"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Generated JavaScript code"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Generation success status"
+          }
+        },
+        "required": ["code", "success"]
+      },
+      "category": "code-generation", 
+      "tags": ["javascript", "generation", "code", "development"]
+    },
+    "generate_css": {
+      "name": "generate_css",
+      "description": "Generate CSS stylesheets with modern patterns",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "selectors": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "CSS selectors to style"
+          },
+          "framework": {
+            "type": "string",
+            "description": "CSS framework to use"
+          }
+        },
+        "required": ["selectors"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "css": {
+            "type": "string",
+            "description": "Generated CSS code"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Generation success status"
+          }
+        },
+        "required": ["css", "success"]
+      },
+      "category": "code-generation",
+      "tags": ["css", "generation", "styles", "frontend"]
+    },
+    "generate_test": {
+      "name": "generate_test",
+      "description": "Generate test files for JavaScript code",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "description": "Code to generate tests for"
+          },
+          "framework": {
+            "type": "string",
+            "default": "jest",
+            "description": "Testing framework"
+          }
+        },
+        "required": ["target"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "tests": {
+            "type": "string",
+            "description": "Generated test code"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Generation success status"
+          }
+        },
+        "required": ["tests", "success"]
+      },
+      "category": "testing",
+      "tags": ["testing", "generation", "jest", "unit-tests"]
+    }
+  }
+}

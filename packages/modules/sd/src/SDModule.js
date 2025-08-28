@@ -9,6 +9,7 @@ import { Module } from '@legion/tools-registry';
 import { DecentPlanner } from '@legion/decent-planner';
 import { SDPlanningProfile } from './profiles/SDPlanningProfile.js';
 import { DesignDatabaseService } from './services/DesignDatabaseService.js';
+import { fileURLToPath } from 'url';
 
 // Import tools (to be implemented)
 import { RequirementParserTool } from './tools/requirements/RequirementParserTool.js';
@@ -34,11 +35,22 @@ export default class SDModule extends Module {
     this.name = 'sd';
     this.description = 'Software Development autonomous agent system with Legion DecentPlanner integration';
     this.version = '1.0.0';
+    
+    // NEW: Set metadata path for automatic loading
+    this.metadataPath = './tools-metadata.json';
+    
     this.resourceManager = null;
     this.profileManager = null;
     this.llmClient = null;
     this.decentPlanner = null;
     this.designDatabase = null;
+  }
+
+  /**
+   * Override getModulePath to support proper path resolution
+   */
+  getModulePath() {
+    return fileURLToPath(import.meta.url);
   }
 
   /**
@@ -127,9 +139,17 @@ export default class SDModule extends Module {
   }
 
   /**
-   * Register all SD tools
+   * Register all SD tools - NEW metadata-driven approach
    */
   async registerTools() {
+    // NEW APPROACH: Try metadata-driven first
+    if (this.metadata) {
+      console.log('[SDModule] Using metadata-driven tool registration');
+      // For now, fall back to legacy since tools are complex
+      // TODO: Implement metadata-driven tool creation for SD tools
+    }
+    
+    // Current working implementation (keep for now)
     const toolDependencies = {
       resourceManager: this.resourceManager,
       llmClient: this.llmClient,

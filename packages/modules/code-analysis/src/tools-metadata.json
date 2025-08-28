@@ -1,0 +1,171 @@
+{
+  "module": {
+    "name": "code-analysis",
+    "description": "Code analysis tools for JavaScript and CSS validation, security scanning, and performance analysis",
+    "version": "1.0.0",
+    "author": "Legion Team",
+    "category": "development"
+  },
+  "tools": {
+    "validate_javascript": {
+      "name": "validate_javascript",
+      "description": "Validate JavaScript code for syntax and quality issues",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "JavaScript code to validate"
+          },
+          "filePath": {
+            "type": "string",
+            "description": "Path to JavaScript file to validate (alternative to code)"
+          },
+          "projectPath": {
+            "type": "string",
+            "description": "Project root directory for batch analysis of all JS files"
+          },
+          "includeAnalysis": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include code quality analysis"
+          },
+          "checkSecurity": {
+            "type": "boolean",
+            "default": true,
+            "description": "Check for security issues"
+          },
+          "checkPerformance": {
+            "type": "boolean",
+            "default": true,
+            "description": "Check for performance issues"
+          },
+          "filePattern": {
+            "type": "string",
+            "default": "**/*.{js,mjs,jsx}",
+            "description": "File pattern for batch analysis (when projectPath is provided)"
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "valid": {
+            "type": "boolean",
+            "description": "Whether the code is syntactically valid"
+          },
+          "errors": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Array of validation errors"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Array of code quality warnings"
+          },
+          "securityIssues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {"type": "string"},
+                "severity": {"type": "string"},
+                "message": {"type": "string"},
+                "line": {"type": "number"},
+                "file": {"type": "string"}
+              },
+              "required": ["type", "severity", "message"]
+            },
+            "description": "Security vulnerabilities found"
+          },
+          "performanceIssues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {"type": "string"},
+                "severity": {"type": "string"},
+                "message": {"type": "string"},
+                "suggestion": {"type": "string"},
+                "file": {"type": "string"}
+              },
+              "required": ["type", "severity", "message", "suggestion"]
+            },
+            "description": "Performance issues found"
+          },
+          "metrics": {
+            "type": "object",
+            "properties": {
+              "linesOfCode": {"type": "number"},
+              "complexity": {"type": "number"},
+              "maintainabilityIndex": {"type": "number"}
+            },
+            "required": ["linesOfCode", "complexity", "maintainabilityIndex"],
+            "description": "Code metrics"
+          }
+        },
+        "required": ["valid", "errors", "warnings", "securityIssues", "performanceIssues", "metrics"]
+      },
+      "category": "development",
+      "tags": ["code", "validation", "javascript", "security", "performance", "analysis"],
+      "security": {
+        "evaluation": "safe"
+      },
+      "capabilities": [
+        "JavaScript syntax validation",
+        "Security vulnerability scanning", 
+        "Performance bottleneck detection",
+        "Code complexity analysis",
+        "Maintainability assessment"
+      ],
+      "examples": [
+        {
+          "input": {
+            "code": "function hello() {\n  console.log('Hello, World!');\n}",
+            "includeAnalysis": true,
+            "checkSecurity": true,
+            "checkPerformance": true
+          },
+          "output": {
+            "valid": true,
+            "errors": [],
+            "warnings": [],
+            "securityIssues": [],
+            "performanceIssues": [],
+            "metrics": {
+              "linesOfCode": 3,
+              "complexity": 1,
+              "maintainabilityIndex": 165
+            }
+          }
+        },
+        {
+          "input": {
+            "code": "eval('alert(1)'); // Dangerous code",
+            "checkSecurity": true
+          },
+          "output": {
+            "valid": true,
+            "errors": [],
+            "warnings": [],
+            "securityIssues": [
+              {
+                "type": "codeInjection",
+                "severity": "critical",
+                "message": "Dangerous use of eval()",
+                "line": 1
+              }
+            ],
+            "performanceIssues": [],
+            "metrics": {
+              "linesOfCode": 1,
+              "complexity": 1,
+              "maintainabilityIndex": 169
+            }
+          }
+        }
+      ]
+    }
+  }
+}

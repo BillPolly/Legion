@@ -1,0 +1,10 @@
+{
+  "module": {
+    "name": "tools-collection",
+    "description": "Collection of utility tool modules including calculator, encoding, JSON, file operations, and more",
+    "version": "1.0.0",
+    "author": "Legion Team",
+    "category": "meta-collection"
+  },
+  "tools": {}
+}

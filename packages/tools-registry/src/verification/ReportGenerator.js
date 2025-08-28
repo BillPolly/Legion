@@ -6,6 +6,7 @@
 
 import { createValidator } from '@legion/schema';
 import { ComplianceReportSchema } from './schemas/index.js';
+import { Logger } from '../utils/Logger.js';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -17,11 +18,13 @@ export class ReportGenerator {
       includeDetails: options.includeDetails !== false,
       includeRecommendations: options.includeRecommendations !== false,
       includeHistory: options.includeHistory || false,
+      verbose: false,
       ...options
     };
     
     this.reportValidator = createValidator(ComplianceReportSchema);
     this.reportHistory = [];
+    this.logger = Logger.create('ReportGenerator', { verbose: this.options.verbose });
   }
   
   /**
@@ -50,7 +53,7 @@ export class ReportGenerator {
     // Validate report structure
     const validation = this.reportValidator.validate(report);
     if (!validation.valid) {
-      console.warn('Generated report does not match schema:', validation.errors);
+      this.logger.warn(`Generated report does not match schema: ${validation.errors.map(e => e.message).join(', ')}`);
     }
     
     // Store in history
@@ -484,7 +487,7 @@ export class ReportGenerator {
   async saveJsonReport(report, filename) {
     const filepath = path.join(this.options.outputDir, `${filename}.json`);
     await fs.writeFile(filepath, JSON.stringify(report, null, 2));
-    console.log(`Report saved to: ${filepath}`);
+    this.logger.verbose(`Report saved to: ${filepath}`);
   }
   
   /**
@@ -495,7 +498,7 @@ export class ReportGenerator {
     const html = this.generateHtmlReport(report);
     const filepath = path.join(this.options.outputDir, `${filename}.html`);
     await fs.writeFile(filepath, html);
-    console.log(`HTML report saved to: ${filepath}`);
+    this.logger.verbose(`HTML report saved to: ${filepath}`);
   }
   
   /**
@@ -764,7 +767,7 @@ export class ReportGenerator {
     const markdown = this.generateMarkdownReport(report);
     const filepath = path.join(this.options.outputDir, `${filename}.md`);
     await fs.writeFile(filepath, markdown);
-    console.log(`Markdown report saved to: ${filepath}`);
+    this.logger.verbose(`Markdown report saved to: ${filepath}`);
   }
   
   /**

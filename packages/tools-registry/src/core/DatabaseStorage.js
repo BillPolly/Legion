@@ -14,6 +14,7 @@ import {
   ValidationError 
 } from '../errors/index.js';
 import { DatabaseInitializer } from './DatabaseInitializer.js';
+import { Logger } from '../utils/Logger.js';
 
 export class DatabaseStorage {
   constructor(options = {}) {
@@ -36,6 +37,8 @@ export class DatabaseStorage {
         'DatabaseStorage'
       );
     }
+    
+    this.logger = Logger.create('DatabaseStorage', { verbose: this.options.verbose });
   }
   
   /**
@@ -154,6 +157,24 @@ export class DatabaseStorage {
         'DatabaseStorage',
         error
       );
+    }
+  }
+
+  /**
+   * Check if database connection is healthy
+   */
+  async isHealthy() {
+    try {
+      if (!this._isConnected || !this.db) {
+        return false;
+      }
+      
+      // Simple ping to check connection
+      await this.db.admin().ping();
+      return true;
+      
+    } catch (error) {
+      return false;
     }
   }
   
@@ -604,7 +625,7 @@ export class DatabaseStorage {
       
     } catch (error) {
       // Index creation failures are not critical
-      console.warn(`Failed to create indexes: ${error.message}`);
+      this.logger.warn(`Failed to create indexes: ${error.message}`);
     }
   }
 
@@ -1142,7 +1163,7 @@ export class DatabaseStorage {
       
     } catch (error) {
       // Index creation failures are not critical
-      console.warn(`Failed to create indexes: ${error.message}`);
+      this.logger.warn(`Failed to create indexes: ${error.message}`);
     }
   }
 }

@@ -1,0 +1,112 @@
+{
+  "module": {
+    "name": "crawler",
+    "description": "Web crawler for extracting content from webpages",
+    "version": "1.0.0",
+    "author": "Legion Team",
+    "category": "web"
+  },
+  "tools": {
+    "web_crawler": {
+      "name": "web_crawler",
+      "description": "Crawls web pages and extracts content including text, links, and metadata",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The URL of the webpage to crawl"
+          },
+          "waitForSelector": {
+            "type": "string",
+            "description": "Optional CSS selector to wait for before extracting content"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Optional limit for number of links to extract (default: 100)",
+            "minimum": 1,
+            "maximum": 1000
+          }
+        },
+        "required": ["url"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The URL that was crawled"
+          },
+          "content": {
+            "type": "string",
+            "description": "Text content extracted from the webpage (limited to 5000 characters)"
+          },
+          "links": {
+            "type": "array",
+            "description": "Array of links found on the page",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {"type": "string"},
+                "href": {"type": "string"},
+                "title": {"type": "string"}
+              }
+            }
+          },
+          "images": {
+            "type": "array",
+            "description": "Array of images found on the page",
+            "items": {
+              "type": "object",
+              "properties": {
+                "src": {"type": "string"},
+                "alt": {"type": "string"},
+                "title": {"type": "string"}
+              }
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Page metadata",
+            "properties": {
+              "title": {"type": "string"},
+              "description": {"type": "string"},
+              "keywords": {"type": "string"},
+              "author": {"type": "string"},
+              "ogTitle": {"type": "string"},
+              "ogImage": {"type": "string"},
+              "ogType": {"type": "string"}
+            }
+          }
+        },
+        "required": ["url", "content", "links", "images", "metadata"]
+      },
+      "category": "web",
+      "tags": ["web", "crawler", "scraper", "content", "extraction"],
+      "security": {
+        "evaluation": "safe",
+        "requiresNetwork": true
+      },
+      "examples": [
+        {
+          "input": { "url": "https://example.com" },
+          "output": {
+            "url": "https://example.com",
+            "content": "Example Domain...",
+            "links": [],
+            "images": [],
+            "metadata": {
+              "title": "Example Domain",
+              "description": "",
+              "keywords": "",
+              "author": "",
+              "ogTitle": "",
+              "ogImage": "",
+              "ogType": ""
+            }
+          }
+        }
+      ]
+    }
+  }
+}

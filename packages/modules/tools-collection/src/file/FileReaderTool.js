@@ -6,47 +6,63 @@ import path from 'path';
  * Tool for reading files from the file system
  */
 class FileReaderTool extends Tool {
-  constructor({ basePath, encoding = 'utf-8', maxFileSize = 10 * 1024 * 1024 }) {
-    if (!basePath) {
-      throw new Error('basePath is required');
-    }
-    
-    super({
-      name: 'file_reader',
-      shortName: 'read',
-      description: 'Reads the contents of a file from the file system',
-      schema: {
-        input: {
-          type: 'object',
-          properties: {
-            filePath: {
-              type: 'string',
-              description: 'The path to the file to read'
-            }
-          },
-          required: ['filePath']
-        },
-        output: {
-          type: 'object',
-          properties: {
-            content: {
-              type: 'string',
-              description: 'The contents of the file'
-            },
-            path: {
-              type: 'string',
-              description: 'The resolved path of the file'
-            }
-          },
-          required: ['content', 'path']
-        }
+  constructor(moduleOrConfig, toolName = null) {
+    // NEW PATTERN: Tool(module, toolName) - metadata comes from module
+    if (toolName && moduleOrConfig?.getToolMetadata) {
+      super(moduleOrConfig, toolName);
+      
+      // Get config from module
+      const config = moduleOrConfig.config || {};
+      this.basePath = config.basePath || process.cwd();
+      this.encoding = config.encoding || 'utf-8';
+      this.maxFileSize = config.maxFileSize || 10 * 1024 * 1024;
+      this.shortName = 'read';
+    } 
+    // OLD PATTERN: Tool(config) - backwards compatibility
+    else {
+      const { basePath, encoding = 'utf-8', maxFileSize = 10 * 1024 * 1024 } = moduleOrConfig || {};
+      
+      if (!basePath) {
+        throw new Error('basePath is required');
       }
-    });
+      
+      super({
+        name: 'file_read',
+        shortName: 'read',
+        description: 'Reads the contents of a file from the file system',
+        schema: {
+          input: {
+            type: 'object',
+            properties: {
+              filePath: {
+                type: 'string',
+                description: 'The path to the file to read'
+              }
+            },
+            required: ['filePath']
+          },
+          output: {
+            type: 'object',
+            properties: {
+              content: {
+                type: 'string',
+                description: 'The contents of the file'
+              },
+              path: {
+                type: 'string',
+                description: 'The resolved path of the file'
+              }
+            },
+            required: ['content', 'path']
+          }
+        }
+      });
 
-    // Store dependencies
-    this.basePath = basePath;
-    this.encoding = encoding;
-    this.maxFileSize = maxFileSize;
+      // Store dependencies
+      this.basePath = basePath;
+      this.encoding = encoding;
+      this.maxFileSize = maxFileSize;
+    }
   }
 
   /**

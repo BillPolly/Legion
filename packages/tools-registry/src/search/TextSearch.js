@@ -8,6 +8,7 @@
  */
 
 import { TextSearchError } from '../errors/index.js';
+import { Logger } from '../utils/Logger.js';
 
 export class TextSearch {
   constructor(options = {}) {
@@ -18,6 +19,7 @@ export class TextSearch {
     };
     
     this.databaseStorage = options.databaseStorage;
+    this.logger = Logger.create('TextSearch', { verbose: this.options.verbose });
     
     if (!this.databaseStorage) {
       throw new TextSearchError(
@@ -54,15 +56,11 @@ export class TextSearch {
           existingTextIndexName = textIndex.name;
           // Update our index name to use the existing one
           this.options.indexName = existingTextIndexName;
-          if (this.options.verbose) {
-            console.log(`Using existing text index: ${existingTextIndexName}`);
-          }
+          this.logger.verbose(`Using existing text index: ${existingTextIndexName}`);
         }
       } catch (error) {
         if (error.code === 26 || error.message.includes('ns does not exist')) {
-          if (this.options.verbose) {
-            console.log('Collection does not exist yet, index will be created when data is added');
-          }
+          this.logger.verbose('Collection does not exist yet, index will be created when data is added');
           return; // Skip index creation for non-existent collection
         } else {
           throw error;
@@ -83,15 +81,11 @@ export class TextSearch {
             }
           );
           
-          if (this.options.verbose) {
-            console.log(`Created text index: ${this.options.indexName}`);
-          }
+          this.logger.verbose(`Created text index: ${this.options.indexName}`);
         } catch (indexError) {
           // If collection doesn't exist yet, that's fine - index will be created when needed
           if (indexError.code === 26 || indexError.message.includes('ns does not exist')) {
-            if (this.options.verbose) {
-              console.log('Collection does not exist yet, index will be created when data is added');
-            }
+            this.logger.verbose('Collection does not exist yet, index will be created when data is added');
           } else {
             throw indexError;
           }
@@ -306,9 +300,7 @@ export class TextSearch {
         }
       );
       
-      if (this.options.verbose) {
-        console.log(`Rebuilt text index: ${this.options.indexName}`);
-      }
+      this.logger.verbose(`Rebuilt text index: ${this.options.indexName}`);
       
     } catch (error) {
       throw new TextSearchError(
@@ -349,13 +341,11 @@ export class TextSearch {
           }
         );
         
-        if (this.options.verbose) {
-          console.log(`Created text index on-demand: ${this.options.indexName}`);
-        }
+        this.logger.verbose(`Created text index on-demand: ${this.options.indexName}`);
       }
     } catch (error) {
       // If index creation fails, log warning but don't fail the search
-      console.warn(`Failed to ensure text index: ${error.message}`);
+      this.logger.warn(`Failed to ensure text index: ${error.message}`);
     }
   }
 

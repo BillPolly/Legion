@@ -1,0 +1,197 @@
+{
+  "module": {
+    "name": "voice",
+    "description": "Voice services module providing speech-to-text and text-to-speech capabilities through OpenAI and other providers",
+    "version": "1.0.0",
+    "author": "Legion Team",
+    "category": "audio"
+  },
+  "tools": {
+    "transcribe_audio": {
+      "name": "transcribe_audio",
+      "description": "Convert audio to text using speech recognition capabilities through OpenAI Whisper and other providers",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "audio": {
+            "type": "string",
+            "description": "Base64 encoded audio data or file path to audio file"
+          },
+          "format": {
+            "type": "string",
+            "enum": ["mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm"],
+            "default": "webm",
+            "description": "Audio format of the input"
+          },
+          "language": {
+            "type": "string",
+            "description": "Language code (e.g., 'en', 'es', 'fr'). Auto-detect if not specified"
+          },
+          "prompt": {
+            "type": "string",
+            "description": "Optional prompt to guide the transcription accuracy"
+          }
+        },
+        "required": ["audio"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Transcribed text from the audio"
+          },
+          "language": {
+            "type": "string",
+            "description": "Detected or specified language of the audio"
+          },
+          "duration": {
+            "type": "number",
+            "description": "Audio duration in seconds"
+          },
+          "confidence": {
+            "type": "number",
+            "description": "Transcription confidence score (0-1)",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "provider": {
+            "type": "string",
+            "description": "Provider used for transcription (e.g., 'openai')"
+          }
+        },
+        "required": ["text", "language", "provider"]
+      },
+      "category": "audio",
+      "tags": ["speech-to-text", "transcription", "audio", "whisper", "stt"],
+      "authentication": {
+        "required": true,
+        "type": "api_key",
+        "environmentVariable": "OPENAI_API_KEY"
+      },
+      "examples": [
+        {
+          "input": {
+            "audio": "base64encodedaudiodata...",
+            "format": "wav"
+          },
+          "output": {
+            "text": "Hello, this is a test transcription.",
+            "language": "en",
+            "duration": 3.5,
+            "confidence": 0.95,
+            "provider": "openai"
+          }
+        }
+      ]
+    },
+    "generate_voice": {
+      "name": "generate_voice",
+      "description": "Convert text to speech audio using natural-sounding AI voices through OpenAI TTS and other providers",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "Text to convert to speech"
+          },
+          "voice": {
+            "type": "string",
+            "enum": ["alloy", "echo", "fable", "onyx", "nova", "shimmer"],
+            "default": "alloy",
+            "description": "Voice to use for speech generation"
+          },
+          "model": {
+            "type": "string",
+            "enum": ["tts-1", "tts-1-hd"],
+            "default": "tts-1",
+            "description": "TTS model (tts-1 is faster, tts-1-hd is higher quality)"
+          },
+          "speed": {
+            "type": "number",
+            "minimum": 0.25,
+            "maximum": 4.0,
+            "default": 1.0,
+            "description": "Speech speed multiplier"
+          },
+          "format": {
+            "type": "string",
+            "enum": ["mp3", "opus", "aac", "flac"],
+            "default": "mp3",
+            "description": "Output audio format"
+          },
+          "outputPath": {
+            "type": "string",
+            "description": "Optional file path to save the generated audio"
+          }
+        },
+        "required": ["text"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "audio": {
+            "type": "string",
+            "description": "Base64 encoded audio data"
+          },
+          "format": {
+            "type": "string",
+            "description": "Audio format of the generated file"
+          },
+          "voice": {
+            "type": "string",
+            "description": "Voice used for generation"
+          },
+          "model": {
+            "type": "string",
+            "description": "Model used for synthesis"
+          },
+          "duration": {
+            "type": "number",
+            "description": "Audio duration in seconds"
+          },
+          "size": {
+            "type": "number",
+            "description": "Audio size in bytes"
+          },
+          "filePath": {
+            "type": "string",
+            "description": "File path if the audio was saved to disk"
+          },
+          "provider": {
+            "type": "string",
+            "description": "Provider used for synthesis (e.g., 'openai')"
+          }
+        },
+        "required": ["audio", "format", "voice", "model", "size", "provider"]
+      },
+      "category": "audio",
+      "tags": ["text-to-speech", "voice-generation", "audio", "tts", "synthesis"],
+      "authentication": {
+        "required": true,
+        "type": "api_key",
+        "environmentVariable": "OPENAI_API_KEY"
+      },
+      "examples": [
+        {
+          "input": {
+            "text": "Hello, this is a test of voice generation.",
+            "voice": "nova",
+            "format": "mp3"
+          },
+          "output": {
+            "audio": "base64encodedaudiodata...",
+            "format": "mp3",
+            "voice": "nova",
+            "model": "tts-1",
+            "duration": 3.2,
+            "size": 51200,
+            "provider": "openai"
+          }
+        }
+      ]
+    }
+  }
+}

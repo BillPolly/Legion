@@ -1,11 +1,10 @@
 /**
- * JSGeneratorModule - Legion module for JavaScript code generation
- * 
- * Provides tools for generating JavaScript modules, functions, classes, API endpoints,
- * event handlers, and validating JavaScript syntax.
+ * JSGeneratorModule - NEW metadata-driven architecture
+ * Metadata comes from tools-metadata.json, tools contain pure logic only
  */
 
 import { Module } from '@legion/tools-registry';
+import { fileURLToPath } from 'url';
 import { GenerateJavaScriptModuleTool } from './tools/GenerateJavaScriptModuleTool.js';
 import { GenerateJavaScriptFunctionTool } from './tools/GenerateJavaScriptFunctionTool.js';
 import { GenerateJavaScriptClassTool } from './tools/GenerateJavaScriptClassTool.js';
@@ -21,8 +20,19 @@ class JSGeneratorModule extends Module {
     this.name = 'js-generator';
     this.description = 'JavaScript code generation tools for creating modules, functions, classes, and API endpoints';
     this.version = '1.0.0';
+    
+    // NEW: Set metadata path for automatic loading
+    this.metadataPath = './tools-metadata.json';
+    
     this.config = {};
     this.resourceManager = null;
+  }
+
+  /**
+   * Override getModulePath to support proper path resolution
+   */
+  getModulePath() {
+    return fileURLToPath(import.meta.url);
   }
 
   /**
@@ -41,20 +51,77 @@ class JSGeneratorModule extends Module {
   async initialize() {
     await super.initialize();
     
-    // Create and register tools
-    const tools = [
-      new GenerateJavaScriptModuleTool(),
-      new GenerateJavaScriptFunctionTool(),
-      new GenerateJavaScriptClassTool(),
-      new GenerateApiEndpointTool(),
-      new GenerateEventHandlerTool(),
-      new GenerateUnitTestsTool(),
-      new ValidateJavaScriptSyntaxTool(),
-      new GenerateHTMLPageTool()
-    ];
-    
-    for (const tool of tools) {
-      this.registerTool(tool.name, tool);
+    // NEW APPROACH: Create tools using metadata
+    if (this.metadata) {
+      const tools = [
+        { key: 'generate_javascript_module', class: GenerateJavaScriptModuleTool },
+        { key: 'generate_javascript_function', class: GenerateJavaScriptFunctionTool },
+        { key: 'generate_javascript_class', class: GenerateJavaScriptClassTool },
+        { key: 'generate_api_endpoint', class: GenerateApiEndpointTool },
+        { key: 'generate_event_handler', class: GenerateEventHandlerTool },
+        { key: 'generate_unit_tests', class: GenerateUnitTestsTool },
+        { key: 'validate_javascript_syntax', class: ValidateJavaScriptSyntaxTool },
+        { key: 'generate_html_page', class: GenerateHTMLPageTool }
+      ];
+
+      for (const { key, class: ToolClass } of tools) {
+        try {
+          const tool = this.createToolFromMetadata(key, ToolClass);
+          tool.config = this.config;
+          this.registerTool(tool.name, tool);
+        } catch (error) {
+          console.warn(`Failed to create metadata tool ${key}, falling back to legacy: ${error.message}`);
+          
+          // Fallback to legacy constructor
+          let legacyTool;
+          switch (key) {
+            case 'generate_javascript_module':
+              legacyTool = new GenerateJavaScriptModuleTool();
+              break;
+            case 'generate_javascript_function':
+              legacyTool = new GenerateJavaScriptFunctionTool();
+              break;
+            case 'generate_javascript_class':
+              legacyTool = new GenerateJavaScriptClassTool();
+              break;
+            case 'generate_api_endpoint':
+              legacyTool = new GenerateApiEndpointTool();
+              break;
+            case 'generate_event_handler':
+              legacyTool = new GenerateEventHandlerTool();
+              break;
+            case 'generate_unit_tests':
+              legacyTool = new GenerateUnitTestsTool();
+              break;
+            case 'validate_javascript_syntax':
+              legacyTool = new ValidateJavaScriptSyntaxTool();
+              break;
+            case 'generate_html_page':
+              legacyTool = new GenerateHTMLPageTool();
+              break;
+          }
+          
+          if (legacyTool) {
+            this.registerTool(legacyTool.name, legacyTool);
+          }
+        }
+      }
+    } else {
+      // FALLBACK: Old approach for backwards compatibility
+      const tools = [
+        new GenerateJavaScriptModuleTool(),
+        new GenerateJavaScriptFunctionTool(),
+        new GenerateJavaScriptClassTool(),
+        new GenerateApiEndpointTool(),
+        new GenerateEventHandlerTool(),
+        new GenerateUnitTestsTool(),
+        new ValidateJavaScriptSyntaxTool(),
+        new GenerateHTMLPageTool()
+      ];
+
+      for (const tool of tools) {
+        this.registerTool(tool.name, tool);
+      }
     }
   }
 

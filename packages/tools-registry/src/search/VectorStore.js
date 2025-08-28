@@ -8,6 +8,7 @@
  */
 
 import { VectorStoreError } from '../errors/index.js';
+import { Logger } from '../utils/Logger.js';
 
 export class VectorStore {
   constructor(options = {}) {
@@ -20,6 +21,7 @@ export class VectorStore {
     
     this.embeddingClient = options.embeddingClient;
     this.vectorDatabase = options.vectorDatabase;
+    this.logger = Logger.create('VectorStore', { verbose: this.options.verbose });
     
     if (!this.embeddingClient) {
       throw new VectorStoreError(
@@ -52,7 +54,7 @@ export class VectorStore {
         });
         
         if (this.options.verbose) {
-          console.log(`Created vector collection: ${this.options.collectionName}`);
+          this.logger.verbose(`Created vector collection: ${this.options.collectionName}`);
         }
       }
     } catch (error) {
@@ -114,7 +116,7 @@ export class VectorStore {
       });
       
       if (this.options.verbose) {
-        console.log(`Indexed tool: ${tool.name}`);
+        this.logger.verbose(`Indexed tool: ${tool.name}`);
       }
       
       return result;
@@ -196,7 +198,7 @@ export class VectorStore {
       const results = await this.vectorDatabase.insertBatch(this.options.collectionName, documents);
       
       if (this.options.verbose) {
-        console.log(`Indexed ${tools.length} tools`);
+        this.logger.verbose(`Indexed ${tools.length} tools`);
       }
       
       return results;
@@ -352,7 +354,7 @@ export class VectorStore {
       );
       
       if (this.options.verbose) {
-        console.log(`Updated tool vector: ${toolName}`);
+        this.logger.verbose(`Updated tool vector: ${toolName}`);
       }
       
       return result;
@@ -391,7 +393,7 @@ export class VectorStore {
       );
       
       if (this.options.verbose) {
-        console.log(`Deleted tool vector: ${toolName}`);
+        this.logger.verbose(`Deleted tool vector: ${toolName}`);
       }
       
       return result;
@@ -430,7 +432,7 @@ export class VectorStore {
         : await this.vectorDatabase.clear(this.options.collectionName);
       
       if (this.options.verbose) {
-        console.log(`Cleared ${result.deletedCount} vectors`);
+        this.logger.verbose(`Cleared ${result.deletedCount} vectors`);
       }
       
       return result;
@@ -493,7 +495,7 @@ export class VectorStore {
       }
       
       if (this.options.verbose) {
-        console.log(`Rebuilt index: ${indexed} indexed, ${failed} failed`);
+        this.logger.verbose(`Rebuilt index: ${indexed} indexed, ${failed} failed`);
       }
       
       return {

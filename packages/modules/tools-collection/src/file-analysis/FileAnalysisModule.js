@@ -1,6 +1,7 @@
 import { Module } from '@legion/tools-registry';
 import { LLMClient } from '@legion/llm';
 import { FileConverter } from './utils/FileConverter.js';
+import { fileURLToPath } from 'url';
 
 /**
  * FileAnalysisModule - Module for analyzing files using AI vision capabilities
@@ -14,6 +15,7 @@ export default class FileAnalysisModule extends Module {
     this.version = '1.0.0';
     this.llmClient = null;
     this.openaiClient = null;
+    this.metadataPath = './tools-metadata.json';
   }
 
   /**
@@ -28,12 +30,28 @@ export default class FileAnalysisModule extends Module {
     return module;
   }
 
+  getModulePath() {
+    return fileURLToPath(import.meta.url);
+  }
+
   /**
    * Initialize the module
    */
   async initialize() {
     await super.initialize();
     
+    // Initialize clients first (needed for both metadata and legacy modes)
+    await this.initializeClients();
+    
+    // This module doesn't have separate tool classes - it uses module methods directly
+    // So we skip the metadata-driven tool creation and just ensure the module is ready
+    console.log('FileAnalysisModule: Initialized (module provides analyzeFile method directly)');
+  }
+
+  /**
+   * Initialize LLM clients
+   */
+  async initializeClients() {
     // Get API keys from environment using ResourceManager
     const anthropicKey = this.resourceManager.get('env.ANTHROPIC_API_KEY');
     const openaiKey = this.resourceManager.get('env.OPENAI_API_KEY');
@@ -55,9 +73,6 @@ export default class FileAnalysisModule extends Module {
         apiKey: openaiKey
       });
     }
-    
-    // Initialize tools dictionary
-    this.initializeTools();
   }
 
   /**
@@ -147,6 +162,11 @@ export default class FileAnalysisModule extends Module {
         file_path: file_path
       };
     }
+  }
+
+  // Metadata-driven tool implementation
+  async analyze_file(params) {
+    return await this.analyzeFile(params);
   }
 
   /**

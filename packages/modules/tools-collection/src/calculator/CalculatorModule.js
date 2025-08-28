@@ -1,111 +1,49 @@
 import { Tool, Module } from '@legion/tools-registry';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 /**
  * Calculator tool that evaluates mathematical expressions
+ * NEW: Pure logic implementation - metadata comes from tools-metadata.json
  */
 class CalculatorTool extends Tool {
-  constructor() {
-    super({
+  // NEW PATTERN: constructor(module, toolName)
+  constructor(module, toolName) {
+    super(module, toolName);
+    this.shortName = 'calc';
+  }
+
+  // BACKWARDS COMPATIBILITY: support old pattern during migration
+  static createLegacy() {
+    return new CalculatorTool({
       name: 'calculator',
       description: 'Evaluates mathematical expressions and performs calculations',
-      schema: {
-        input: {
-          type: 'object',
-          properties: {
-            expression: {
-              type: ['string', 'number'],
-              description: 'JavaScript mathematical expression to evaluate (e.g., "784*566", "Math.sqrt(16)", "(10+5)*3/5")'
-            }
-          },
-          required: ['expression']
+      inputSchema: {
+        type: 'object',
+        properties: {
+          expression: {
+            type: 'string',
+            description: 'JavaScript mathematical expression to evaluate'
+          }
         },
-        output: {
-          type: 'object',
-          properties: {
-            result: {
-              type: 'number',
-              description: 'The result of the calculation'
-            },
-            expression: {
-              type: 'string',
-              description: 'The expression that was evaluated'
-            }
-          },
-          required: ['result', 'expression']
-        }
+        required: ['expression']
+      },
+      outputSchema: {
+        type: 'object',
+        properties: {
+          result: { type: 'number', description: 'The result of the calculation' },
+          expression: { type: 'string', description: 'The expression that was evaluated' }
+        },
+        required: ['result', 'expression']
       }
     });
-    this.shortName = 'calc';
-    
-    // Override _execute instead of execute to use base class error handling
-    this._execute = async (params) => this._executeCalculation(params);
   }
 
   /**
-   * Get tool metadata - required for compliance
-   * @returns {Object} Tool metadata
+   * Pure business logic - no metadata, no validation
+   * Base Tool class handles all validation using metadata
    */
-  getMetadata() {
-    return {
-      name: this.name,
-      description: this.description,
-      shortName: this.shortName,
-      inputSchema: this.inputSchema,
-      outputSchema: this.outputSchema,
-      version: '1.0.0',
-      category: 'mathematical',
-      tags: ['math', 'calculation', 'evaluation'],
-      security: {
-        dangerousKeywords: ['import', 'require', 'process', 'fs', 'child_process', 'exec', 'spawn'],
-        evaluation: 'safe'
-      }
-    };
-  }
-
-  /**
-   * Validate input parameters - required for compliance
-   * @param {Object} params - Parameters to validate
-   * @returns {Object} Validation result
-   */
-  validate(params) {
-    const errors = [];
-    const warnings = [];
-    
-    // Check required fields
-    if (!params || typeof params !== 'object') {
-      errors.push('Parameters must be an object');
-      return { valid: false, errors, warnings };
-    }
-    
-    if (!params.expression) {
-      errors.push('Expression is required');
-    }
-    
-    if (params.expression && typeof params.expression !== 'string' && typeof params.expression !== 'number') {
-      errors.push('Expression must be a string or number');
-    }
-    
-    // Check for dangerous keywords
-    if (params.expression && typeof params.expression === 'string') {
-      const dangerous = ['import', 'require', 'process', 'fs', 'child_process', 'exec', 'spawn'];
-      for (const keyword of dangerous) {
-        if (params.expression.includes(keyword)) {
-          errors.push(`Expression contains forbidden keyword: ${keyword}`);
-        }
-      }
-    }
-    
-    return {
-      valid: errors.length === 0,
-      errors,
-      warnings
-    };
-  }
-
-  /**
-   * Execute the calculator - no validation, just execution
-   */
-  async _executeCalculation(params) {
+  async _execute(params) {
     // Convert expression to string if it's a number
     let { expression } = params;
     if (typeof expression === 'number') {
@@ -168,8 +106,8 @@ class CalculatorTool extends Tool {
 }
 
 /**
- * Calculator module that provides mathematical calculation tools
- * This is a self-contained module with no external dependencies
+ * Calculator module - NEW metadata-driven architecture
+ * Metadata comes from tools-metadata.json, tools contain pure logic only
  */
 class CalculatorModule extends Module {
   constructor() {
@@ -177,6 +115,16 @@ class CalculatorModule extends Module {
     this.name = 'calculator';
     this.description = 'Mathematical calculation tools for evaluating expressions and performing computations';
     this.version = '1.0.0';
+    
+    // NEW: Set metadata path for automatic loading
+    this.metadataPath = './tools-metadata.json';
+  }
+
+  /**
+   * Override getModulePath to support proper path resolution
+   */
+  getModulePath() {
+    return fileURLToPath(import.meta.url);
   }
 
   /**
@@ -190,14 +138,21 @@ class CalculatorModule extends Module {
   }
 
   /**
-   * Initialize the module
+   * Initialize the module - NEW metadata-driven approach
    */
   async initialize() {
-    await super.initialize();
+    await super.initialize(); // This will load metadata automatically
     
-    // Create and register the calculator tool
-    const calculatorTool = new CalculatorTool();
-    this.registerTool(calculatorTool.name, calculatorTool);
+    // NEW APPROACH: Create tools using metadata
+    if (this.metadata) {
+      // Create calculator tool using metadata
+      const calculatorTool = this.createToolFromMetadata('calculator', CalculatorTool);
+      this.registerTool(calculatorTool.name, calculatorTool);
+    } else {
+      // FALLBACK: Old approach for backwards compatibility
+      const calculatorTool = CalculatorTool.createLegacy();
+      this.registerTool(calculatorTool.name, calculatorTool);
+    }
   }
 }
 

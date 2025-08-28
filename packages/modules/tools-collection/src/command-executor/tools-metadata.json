@@ -1,0 +1,78 @@
+{
+  "module": {
+    "name": "command-executor",
+    "description": "Command execution tools for running bash commands",
+    "version": "1.0.0",
+    "author": "Legion Team",
+    "category": "system"
+  },
+  "tools": {
+    "command_executor": {
+      "name": "command_executor",
+      "description": "Execute a bash command in the terminal and return the output",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "The bash command to execute (e.g., 'ls -la', 'pwd', 'echo hello')"
+          },
+          "timeout": {
+            "type": "number",
+            "default": 30000,
+            "description": "Optional timeout in milliseconds (default: 30000ms)"
+          }
+        },
+        "required": ["command"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the command executed successfully"
+          },
+          "stdout": {
+            "type": "string",
+            "description": "Standard output from the command"
+          },
+          "stderr": {
+            "type": "string",
+            "description": "Standard error from the command"
+          },
+          "exitCode": {
+            "type": "number",
+            "description": "Exit code of the command"
+          },
+          "command": {
+            "type": "string",
+            "description": "The command that was executed"
+          }
+        },
+        "required": ["success", "stdout", "stderr", "exitCode", "command"]
+      },
+      "category": "system",
+      "tags": ["command", "bash", "terminal", "execution", "system"],
+      "security": {
+        "warning": "This tool executes arbitrary bash commands. Use with caution.",
+        "level": "high-risk"
+      },
+      "examples": [
+        {
+          "input": { "command": "echo 'Hello World'" },
+          "output": {
+            "success": true,
+            "stdout": "Hello World\n",
+            "stderr": "",
+            "exitCode": 0,
+            "command": "echo 'Hello World'"
+          }
+        },
+        {
+          "input": { "command": "ls -la", "timeout": 5000 },
+          "description": "List directory contents with custom timeout"
+        }
+      ]
+    }
+  }
+}

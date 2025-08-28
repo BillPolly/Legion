@@ -1,0 +1,90 @@
+{
+  "module": {
+    "name": "webpage-to-markdown",
+    "description": "Convert webpages to markdown format",
+    "version": "1.0.0",
+    "author": "Legion Team",
+    "category": "web"
+  },
+  "tools": {
+    "webpage_to_markdown": {
+      "name": "webpage_to_markdown",
+      "description": "Converts web pages to markdown format, preserving structure and formatting",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The URL of the webpage to convert"
+          },
+          "includeImages": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether to include image links in the markdown (default: true)"
+          },
+          "includeLinks": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether to preserve hyperlinks in the markdown (default: true)"
+          },
+          "maxLength": {
+            "type": "number",
+            "default": 50000,
+            "minimum": 1000,
+            "maximum": 200000,
+            "description": "Maximum length of the markdown output in characters (default: 50000)"
+          },
+          "waitForSelector": {
+            "type": "string",
+            "description": "Optional CSS selector to wait for before converting"
+          }
+        },
+        "required": ["url"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The URL that was converted"
+          },
+          "markdown": {
+            "type": "string",
+            "description": "The converted markdown content"
+          },
+          "length": {
+            "type": "number",
+            "description": "Length of the markdown content in characters"
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "Whether the content was truncated due to length limits"
+          }
+        },
+        "required": ["url", "markdown", "length", "truncated"]
+      },
+      "category": "web",
+      "tags": ["web", "markdown", "conversion", "scraping", "content"],
+      "security": {
+        "evaluation": "safe",
+        "requiresNetwork": true
+      },
+      "examples": [
+        {
+          "input": {
+            "url": "https://example.com",
+            "includeImages": true,
+            "includeLinks": true,
+            "maxLength": 10000
+          },
+          "output": {
+            "url": "https://example.com",
+            "markdown": "# Example Domain\n\n> Example description\n\n> URL: https://example.com\n\n---\n\nThis domain is for use in illustrative examples...",
+            "length": 120,
+            "truncated": false
+          }
+        }
+      ]
+    }
+  }
+}

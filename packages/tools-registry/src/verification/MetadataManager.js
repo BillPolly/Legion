@@ -11,6 +11,7 @@ import {
   ToolMetadataSchema,
   ValidationErrorSchema 
 } from './schemas/index.js';
+import { Logger } from '../utils/Logger.js';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -31,6 +32,7 @@ export class MetadataManager {
     // Track validation results
     this.validationCache = new Map();
     this.complianceScores = new Map();
+    this.logger = Logger.create('MetadataManager', { verbose: this.options.verbose });
   }
   
   /**
@@ -178,12 +180,27 @@ export class MetadataManager {
    * @private
    */
   isValidSchema(schema) {
-    try {
-      // Try to create a validator from the schema
-      jsonSchemaToZod(schema);
-      return true;
-    } catch {
+    // Check basic schema structure first
+    if (!schema || typeof schema !== 'object') {
       return false;
+    }
+    
+    // Validate schema can be converted to Zod
+    const validationResult = this._attemptSchemaConversion(schema);
+    return validationResult.isValid;
+  }
+
+  /**
+   * Attempt to convert schema to Zod and return result
+   * @private
+   * @returns {Object} Result with isValid property
+   */
+  _attemptSchemaConversion(schema) {
+    try {
+      jsonSchemaToZod(schema);
+      return { isValid: true };
+    } catch (error) {
+      return { isValid: false, error: error.message };
     }
   }
   
@@ -376,7 +393,7 @@ export class MetadataManager {
       
       return metadata;
     } catch (error) {
-      console.error(`Error inferring metadata from ${filePath}:`, error);
+      this.logger.error(`Error inferring metadata from ${filePath}: ${error.message}`);
       return {};
     }
   }

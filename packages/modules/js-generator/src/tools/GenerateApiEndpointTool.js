@@ -219,9 +219,9 @@ export class GenerateApiEndpointTool extends Tool {
         cause: {
           toolName: this.name,
           error: error.toString(),
-          errorType: 'operation_error'
-        }}),
-        stack: error.stack
+          errorType: 'operation_error',
+          stack: error.stack
+        }
       });
     }
     

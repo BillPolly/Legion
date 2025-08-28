@@ -1,6 +1,6 @@
 /**
- * FileModule - Modern file operations using individual tools
- * Refactored to use 6 separate tools following Clean Architecture
+ * FileModule - NEW metadata-driven architecture
+ * Metadata comes from tools-metadata.json, tools contain pure logic only
  */
 
 import { Module } from '@legion/tools-registry';
@@ -12,40 +12,129 @@ import DirectoryChangeTool from './DirectoryChangeTool.js';
 import DirectoryCurrentTool from './DirectoryCurrentTool.js';
 import path from 'path';
 import os from 'os';
+import { fileURLToPath } from 'url';
 
 /**
  * FileModule - Provides comprehensive file system operations
  */
 class FileModule extends Module {
   constructor({ basePath, encoding = 'utf-8', createDirectories = true } = {}) {
-    // Default basePath to current working directory if not provided
-    const defaultBasePath = basePath || process.cwd();
+    super();
     
-    super({
-      name: 'file-module',
-      description: 'Comprehensive file system operations including reading, writing, and directory management'
-    });
+    // Set required properties as expected by base Module class
+    this.name = 'file-module';
+    this.description = 'Comprehensive file system operations including reading, writing, and directory management';
+    
+    // NEW: Set metadata path for automatic loading
+    this.metadataPath = './tools-metadata.json';
+    
+    // Store configuration for tools
+    this.config = {
+      basePath: basePath || process.cwd(),
+      encoding,
+      createDirectories
+    };
+  }
 
-    // Initialize all 6 file operation tools
-    this.fileReader = new FileReaderTool({ basePath: defaultBasePath, encoding });
-    this.fileWriter = new FileWriterTool({ basePath: defaultBasePath, encoding, createDirectories });
-    this.directoryCreator = new DirectoryCreatorTool({ basePath: defaultBasePath });
-    this.directoryList = new DirectoryListTool({ basePath: defaultBasePath });
-    this.directoryChange = new DirectoryChangeTool({ basePath: defaultBasePath });
-    this.directoryCurrent = new DirectoryCurrentTool({ basePath: defaultBasePath });
+  /**
+   * Override getModulePath to support proper path resolution
+   */
+  getModulePath() {
+    return fileURLToPath(import.meta.url);
+  }
 
-    // Register all tools
-    this.registerTool(this.fileReader.name, this.fileReader);
-    this.registerTool(this.fileWriter.name, this.fileWriter);
-    this.registerTool(this.directoryCreator.name, this.directoryCreator);
-    this.registerTool(this.directoryList.name, this.directoryList);
-    this.registerTool(this.directoryChange.name, this.directoryChange);
-    this.registerTool(this.directoryCurrent.name, this.directoryCurrent);
+  /**
+   * Static async factory method following the standard interface
+   */
+  static async create(resourceManager) {
+    const module = new FileModule({});
+    module.resourceManager = resourceManager;
+    await module.initialize();
+    return module;
+  }
 
-    // Store configuration
-    this.basePath = defaultBasePath;
-    this.encoding = encoding;
-    this.createDirectories = createDirectories;
+  /**
+   * Initialize the module - NEW metadata-driven approach
+   */
+  async initialize() {
+    await super.initialize(); // This will load metadata automatically
+    
+    // NEW APPROACH: Create tools using metadata
+    if (this.metadata) {
+      // Create all 6 file tools using metadata
+      const tools = [
+        { key: 'file_read', class: FileReaderTool },
+        { key: 'file_write', class: FileWriterTool },
+        { key: 'directory_create', class: DirectoryCreatorTool },
+        { key: 'directory_list', class: DirectoryListTool },
+        { key: 'directory_change', class: DirectoryChangeTool },
+        { key: 'directory_current', class: DirectoryCurrentTool }
+      ];
+
+      for (const { key, class: ToolClass } of tools) {
+        try {
+          const tool = this.createToolFromMetadata(key, ToolClass);
+          // Pass configuration to tool after creation
+          if (tool.config !== undefined) {
+            Object.assign(tool, this.config);
+          } else {
+            tool.config = this.config;
+          }
+          this.registerTool(tool.name, tool);
+        } catch (error) {
+          console.warn(`Failed to create metadata tool ${key}, falling back to legacy: ${error.message}`);
+          
+          // Fallback to legacy constructor for this specific tool
+          const { basePath, encoding, createDirectories } = this.config;
+          let legacyTool;
+          
+          switch (key) {
+            case 'file_read':
+              legacyTool = new FileReaderTool({ basePath, encoding });
+              break;
+            case 'file_write':
+              legacyTool = new FileWriterTool({ basePath, encoding, createDirectories });
+              break;
+            case 'directory_create':
+              legacyTool = new DirectoryCreatorTool({ basePath });
+              break;
+            case 'directory_list':
+              legacyTool = new DirectoryListTool({ basePath });
+              break;
+            case 'directory_change':
+              legacyTool = new DirectoryChangeTool({ basePath });
+              break;
+            case 'directory_current':
+              legacyTool = new DirectoryCurrentTool({ basePath });
+              break;
+            default:
+              console.error(`Unknown tool: ${key}`);
+              continue;
+          }
+          
+          if (legacyTool) {
+            this.registerTool(legacyTool.name, legacyTool);
+          }
+        }
+      }
+    } else {
+      // FALLBACK: Old approach for backwards compatibility
+      const { basePath, encoding, createDirectories } = this.config;
+      
+      const fileReader = new FileReaderTool({ basePath, encoding });
+      const fileWriter = new FileWriterTool({ basePath, encoding, createDirectories });
+      const directoryCreator = new DirectoryCreatorTool({ basePath });
+      const directoryList = new DirectoryListTool({ basePath });
+      const directoryChange = new DirectoryChangeTool({ basePath });
+      const directoryCurrent = new DirectoryCurrentTool({ basePath });
+
+      this.registerTool(fileReader.name, fileReader);
+      this.registerTool(fileWriter.name, fileWriter);
+      this.registerTool(directoryCreator.name, directoryCreator);
+      this.registerTool(directoryList.name, directoryList);
+      this.registerTool(directoryChange.name, directoryChange);
+      this.registerTool(directoryCurrent.name, directoryCurrent);
+    }
   }
 
   /**

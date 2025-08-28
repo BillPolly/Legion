@@ -3,9 +3,13 @@
  * 
  * Provides standardized interface for all modules in the Legion framework.
  * All modules must extend this class and follow the defined patterns.
+ * 
+ * NEW: Supports metadata-driven tool creation via tools-metadata.json
  */
 
 import { EventEmitter } from 'events';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 export class Module extends EventEmitter {
   constructor() {
@@ -19,6 +23,10 @@ export class Module extends EventEmitter {
     // Internal tool storage
     this.tools = {};
     this.initialized = false;
+    
+    // NEW: Metadata management
+    this.metadata = null;       // Loaded from tools-metadata.json
+    this.metadataPath = null;   // Path to metadata file
   }
   
   /**
@@ -45,7 +53,110 @@ export class Module extends EventEmitter {
       throw new Error('Module description must be set in constructor');
     }
     
+    // Try to load metadata if metadataPath is set
+    if (this.metadataPath) {
+      await this.loadMetadata(this.metadataPath);
+    }
+    
     this.initialized = true;
+  }
+
+  /**
+   * Load tool metadata from JSON file
+   * @param {string} filePath - Path to tools-metadata.json file (relative to module)
+   * @returns {Promise<Object>} Loaded metadata
+   */
+  async loadMetadata(filePath) {
+    try {
+      // Resolve path relative to module file location
+      const fullPath = path.resolve(path.dirname(this.getModulePath()), filePath);
+      const content = await fs.readFile(fullPath, 'utf-8');
+      this.metadata = JSON.parse(content);
+      this.metadataPath = fullPath;
+      
+      // Validate metadata structure
+      this._validateMetadata();
+      
+      return this.metadata;
+    } catch (error) {
+      throw new Error(`Failed to load metadata from ${filePath}: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get tool metadata by name
+   * @param {string} toolName - Name of the tool
+   * @returns {Object|null} Tool metadata or null if not found
+   */
+  getToolMetadata(toolName) {
+    if (!this.metadata?.tools) {
+      return null;
+    }
+    return this.metadata.tools[toolName] || null;
+  }
+
+  /**
+   * Get all tool metadata
+   * @returns {Object} All tool metadata keyed by tool name
+   */
+  getAllToolMetadata() {
+    return this.metadata?.tools || {};
+  }
+
+  /**
+   * Create tool instance using metadata
+   * @param {string} toolName - Name of tool to create
+   * @param {Function} ToolClass - Tool class constructor
+   * @returns {Object} Tool instance
+   */
+  createToolFromMetadata(toolName, ToolClass) {
+    const metadata = this.getToolMetadata(toolName);
+    if (!metadata) {
+      throw new Error(`Tool metadata not found: ${toolName}`);
+    }
+    
+    // Use NEW pattern: Tool(module, toolName)
+    return new ToolClass(this, toolName);
+  }
+
+  /**
+   * Get module file path (to be overridden by subclasses if needed)
+   * @returns {string} Path to module file
+   */
+  getModulePath() {
+    // Default implementation - subclasses can override
+    return import.meta.url;
+  }
+
+  /**
+   * Validate metadata structure
+   * @private
+   */
+  _validateMetadata() {
+    if (!this.metadata) {
+      throw new Error('Metadata is null or undefined');
+    }
+    
+    if (!this.metadata.module) {
+      throw new Error('Metadata must have "module" section');
+    }
+    
+    if (!this.metadata.tools || typeof this.metadata.tools !== 'object') {
+      throw new Error('Metadata must have "tools" section as object');
+    }
+    
+    // Validate each tool has required properties
+    for (const [toolName, toolMeta] of Object.entries(this.metadata.tools)) {
+      if (!toolMeta.name) {
+        throw new Error(`Tool ${toolName} missing name in metadata`);
+      }
+      if (!toolMeta.description) {
+        throw new Error(`Tool ${toolName} missing description in metadata`);
+      }
+      if (!toolMeta.inputSchema) {
+        throw new Error(`Tool ${toolName} missing inputSchema in metadata`);
+      }
+    }
   }
   
   /**

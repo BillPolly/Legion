@@ -1,0 +1,219 @@
+{
+  "module": {
+    "name": "jester",
+    "description": "Powerful Jest testing tools with session management and intelligent analysis",
+    "version": "2.0.0",
+    "author": "Legion Team",
+    "category": "testing"
+  },
+  "tools": {
+    "run_jest_tests": {
+      "name": "run_jest_tests",
+      "description": "Execute Jest tests with intelligent session management and persistence",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pattern": {
+            "type": "string",
+            "description": "Test file pattern to match (e.g., \"**/*.test.js\", \"src/auth/**\"). If not specified, runs all tests."
+          },
+          "projectPath": {
+            "type": "string",
+            "default": "process.cwd()",
+            "description": "Project root directory where tests should be executed. Defaults to current directory."
+          },
+          "testRunId": {
+            "type": "string",
+            "description": "Custom identifier for this test run (e.g., \"pr-123\", \"fix-auth-bug\"). Useful for tracking and comparing specific test runs."
+          },
+          "clearPrevious": {
+            "type": "boolean",
+            "default": false,
+            "description": "Clear all previous test data before running. Use this for a fresh start. Default: false (preserves history)."
+          },
+          "config": {
+            "type": "object",
+            "properties": {
+              "collectCoverage": {
+                "type": "boolean",
+                "description": "Collect code coverage metrics"
+              },
+              "verbose": {
+                "type": "boolean",
+                "description": "Show detailed test output"
+              },
+              "bail": {
+                "type": "boolean",
+                "description": "Stop after first test failure"
+              },
+              "timeout": {
+                "type": "number",
+                "description": "Test timeout in milliseconds"
+              }
+            },
+            "description": "Jest configuration options"
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "description": "Unique identifier for this test session"
+          },
+          "projectPath": {
+            "type": "string",
+            "description": "Project path where tests were executed"
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "number",
+                "description": "Total number of tests"
+              },
+              "passed": {
+                "type": "number",
+                "description": "Number of passing tests"
+              },
+              "failed": {
+                "type": "number",
+                "description": "Number of failing tests"
+              },
+              "skipped": {
+                "type": "number",
+                "description": "Number of skipped tests"
+              },
+              "duration": {
+                "type": "number",
+                "description": "Total duration in milliseconds"
+              },
+              "success": {
+                "type": "boolean",
+                "description": "True if all tests passed"
+              }
+            },
+            "required": ["total", "passed", "failed", "skipped", "duration", "success"],
+            "description": "Test run summary statistics"
+          },
+          "failedTests": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of failed test names for quick reference"
+          },
+          "coverage": {
+            "type": "object",
+            "properties": {
+              "lines": { "type": "number" },
+              "statements": { "type": "number" },
+              "functions": { "type": "number" },
+              "branches": { "type": "number" }
+            },
+            "description": "Code coverage percentages if coverage was collected"
+          }
+        },
+        "required": ["sessionId", "projectPath", "summary", "failedTests"]
+      },
+      "category": "testing",
+      "tags": ["jest", "testing", "tdd", "sessions", "analysis"]
+    },
+    "query_jest_results": {
+      "name": "query_jest_results",
+      "description": "Query, analyze, and report on Jest test results from any session",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "queryType": {
+            "type": "string",
+            "enum": [
+              "failures",
+              "report", 
+              "sessions",
+              "comparison",
+              "trends",
+              "logs",
+              "performance"
+            ],
+            "description": "Type of query to perform: failures (analyze failed tests), report (generate comprehensive report), sessions (list sessions), comparison (compare sessions), trends (track performance), logs (search logs), performance (identify bottlenecks)"
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "Specific session ID to query. If not provided, uses the most recent session."
+          },
+          "sessionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Multiple session IDs for comparison or trend analysis. Used with comparison and trends queries."
+          },
+          "testName": {
+            "type": "string",
+            "description": "Specific test name for history or trend analysis. Used with trends query."
+          },
+          "searchQuery": {
+            "type": "string",
+            "description": "Search term for log queries. Used with logs query."
+          },
+          "limit": {
+            "type": "number",
+            "default": 10,
+            "description": "Maximum number of results to return. Default: 10"
+          },
+          "format": {
+            "type": "string",
+            "enum": ["json", "markdown", "summary"],
+            "default": "json",
+            "description": "Output format. JSON for structured data, markdown for reports, summary for concise overview."
+          }
+        },
+        "required": ["queryType"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "queryType": {
+            "type": "string",
+            "description": "The type of query that was performed"
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "The session ID that was queried"
+          },
+          "data": {
+            "description": "Query results (structure varies by query type)"
+          },
+          "insights": {
+            "type": "object",
+            "properties": {
+              "summary": {
+                "type": "string",
+                "description": "One-line summary of the findings"
+              },
+              "recommendations": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Actionable recommendations based on the query"
+              },
+              "priority": {
+                "type": "string",
+                "enum": ["high", "medium", "low"],
+                "description": "Priority level of recommendations"
+              }
+            },
+            "required": ["summary", "recommendations", "priority"],
+            "description": "AI-generated insights and recommendations"
+          }
+        },
+        "required": ["queryType", "data", "insights"]
+      },
+      "category": "testing",
+      "tags": ["jest", "analysis", "reporting", "tdd", "insights"]
+    }
+  }
+}

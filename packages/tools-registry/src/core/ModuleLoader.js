@@ -13,6 +13,7 @@ import fsSync from 'fs';
 import { pathToFileURL } from 'url';
 import { MetadataManager } from '../verification/MetadataManager.js';
 import { ToolValidator } from '../verification/ToolValidator.js';
+import { Logger } from '../utils/Logger.js';
 import { 
   ModuleLoadError, 
   ModuleValidationError, 
@@ -27,11 +28,13 @@ export class ModuleLoader {
       validateMetadata: true,
       validateTools: true,
       strictMode: false,  // When true, fail on any validation warning
+      verbose: false,
       ...options
     };
     this.moduleCache = new Map(); // Cache loaded module instances
     this.monorepoRoot = options.monorepoRoot || this.findMonorepoRoot();
     this.resourceManager = options.resourceManager;
+    this.logger = Logger.create('ModuleLoader', { verbose: this.options.verbose });
     
     // Initialize validators if validation is enabled
     if (this.options.validateMetadata || this.options.validateTools) {
@@ -600,9 +603,9 @@ export class ModuleLoader {
     validationResults.overallScore = scoreCount > 0 ? Math.round(totalScore / scoreCount) : 0;
     
     // Log warnings in verbose mode
-    if (this.options.verbose && validationResults.warnings.length > 0) {
-      console.log(`Validation warnings for ${modulePath}:`);
-      validationResults.warnings.forEach(w => console.log(`  - ${w}`));
+    if (validationResults.warnings.length > 0) {
+      this.logger.verbose(`Validation warnings for ${modulePath}`);
+      validationResults.warnings.forEach(w => this.logger.verbose(`  - ${w}`));
     }
     
     // Store validation results on the module instance for later retrieval

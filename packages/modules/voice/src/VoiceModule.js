@@ -2,6 +2,7 @@ import { Module } from '@legion/tools-registry';
 import { OpenAIVoiceProvider } from './providers/OpenAIVoiceProvider.js';
 import { TranscribeAudioTool } from './tools/TranscribeAudioTool.js';
 import { GenerateVoiceTool } from './tools/GenerateVoiceTool.js';
+import { fileURLToPath } from 'url';
 
 /**
  * VoiceModule - Legion module for voice services
@@ -21,6 +22,7 @@ class VoiceModule extends Module {
     this.tools = [];
     this.transcribeTool = null;
     this.generateTool = null;
+    this.metadataPath = './tools-metadata.json';
     
     // If config provided directly (for testing), initialize immediately
     if (config) {
@@ -41,6 +43,10 @@ class VoiceModule extends Module {
     return module;
   }
 
+  getModulePath() {
+    return fileURLToPath(import.meta.url);
+  }
+
   /**
    * Initialize the module
    */
@@ -52,6 +58,42 @@ class VoiceModule extends Module {
       return this;
     }
     
+    // Initialize provider first (needed for both modes)
+    await this.initializeProvider();
+    
+    // NEW APPROACH: Create tools using metadata
+    if (this.metadata) {
+      try {
+        const transcribeTool = this.createToolFromMetadata('transcribe_audio', TranscribeAudioTool);
+        const generateTool = this.createToolFromMetadata('generate_voice', GenerateVoiceTool);
+        
+        // Pass provider to tools
+        transcribeTool.provider = this.provider;
+        generateTool.provider = this.provider;
+        
+        this.registerTool(transcribeTool.name, transcribeTool);
+        this.registerTool(generateTool.name, generateTool);
+        
+        console.log('VoiceModule: Initialized using metadata-driven architecture');
+      } catch (error) {
+        console.warn('VoiceModule: Metadata-driven initialization failed, falling back to legacy mode:', error.message);
+        
+        // Fallback to legacy
+        this._createTools();
+      }
+    } else {
+      // FALLBACK: Old approach for backwards compatibility
+      this._createTools();
+    }
+    
+    console.log(`VoiceModule initialized with ${this.config?.provider || 'openai'} provider`);
+    return this;
+  }
+
+  /**
+   * Initialize the voice provider
+   */
+  async initializeProvider() {
     // Get OpenAI API key from ResourceManager
     const apiKey = this.resourceManager.get('env.OPENAI_API_KEY');
     if (!apiKey) {
@@ -64,13 +106,7 @@ class VoiceModule extends Module {
     };
     
     // Initialize provider based on configuration
-    this.provider = this.initializeProvider(this.config);
-    
-    // Create and register tools
-    this._createTools();
-    
-    console.log(`VoiceModule initialized with ${this.config.provider || 'openai'} provider`);
-    return this;
+    this.provider = this.createProvider(this.config);
   }
   
   /**
@@ -89,9 +125,9 @@ class VoiceModule extends Module {
   }
 
   /**
-   * Initialize the voice provider based on configuration
+   * Create voice provider based on configuration
    */
-  initializeProvider(config) {
+  createProvider(config) {
     const providerType = config.provider || 'openai';
     
     switch (providerType) {
@@ -114,6 +150,17 @@ class VoiceModule extends Module {
       default:
         throw new Error(`Unknown voice provider: ${providerType}`);
     }
+  }
+
+  // Metadata-driven tool implementations
+  async transcribe_audio(params) {
+    const transcribeTool = new TranscribeAudioTool(this.provider);
+    return await transcribeTool.execute(params);
+  }
+
+  async generate_voice(params) {
+    const generateTool = new GenerateVoiceTool(this.provider);
+    return await generateTool.execute(params);
   }
 
 

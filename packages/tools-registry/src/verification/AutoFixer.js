@@ -8,6 +8,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { MetadataManager } from './MetadataManager.js';
 import { jsonSchemaToZod } from '@legion/schema';
+import { Logger } from '../utils/Logger.js';
 
 export class AutoFixer {
   constructor(options = {}) {
@@ -26,6 +27,8 @@ export class AutoFixer {
       autoFix: true,
       inferMetadata: true
     });
+    
+    this.logger = Logger.create('AutoFixer', { verbose: this.options.verbose });
     
     this.fixedCount = 0;
     this.backups = [];
@@ -497,7 +500,7 @@ export class AutoFixer {
     try {
       jsonSchemaToZod(fixed);
     } catch (error) {
-      console.warn(`Schema validation failed after fix: ${error.message}`);
+      this.logger.warn(`Schema validation failed after fix`, { error: error.message });
     }
     
     return fixed;
@@ -720,9 +723,9 @@ export class AutoFixer {
       }
       
       if (this.options.verbose) {
-        console.log(`Fixed ${filepath}: ${result.fixed ? 'YES' : 'NO'}`);
+        this.logger.info(`Fixed ${filepath}: ${result.fixed ? 'YES' : 'NO'}`);
         if (result.changes.length > 0) {
-          console.log('  Changes:', result.changes.map(c => c.description).join(', '));
+          this.logger.info('  Changes:', { changes: result.changes.map(c => c.description).join(', ') });
         }
       }
     }
@@ -772,7 +775,7 @@ export class AutoFixer {
     await fs.writeFile(targetPath, content);
     
     if (this.options.verbose) {
-      console.log(`Restored ${targetPath} from ${backupPath}`);
+      this.logger.info(`Restored ${targetPath} from ${backupPath}`);
     }
   }
   
@@ -784,7 +787,7 @@ export class AutoFixer {
       try {
         await fs.unlink(backup);
       } catch (error) {
-        console.warn(`Failed to delete backup ${backup}: ${error.message}`);
+        this.logger.warn(`Failed to delete backup ${backup}`, { error: error.message });
       }
     }
     

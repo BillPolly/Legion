@@ -3,26 +3,91 @@
  * 
  * Provides a standard interface for tool implementation
  * Following CLEAN architecture principles
+ * 
+ * CRITICAL: Tools should provide schemas as METADATA ONLY.
+ * ALL validation happens here in the base class using @legion/schema
  */
 
 import { SimpleEmitter } from './SimpleEmitter.js';
+import { createValidator } from '@legion/schema';
 
 export class Tool extends SimpleEmitter {
-  constructor(config = {}) {
+  // Static schema validator - validates that schemas themselves are properly formed
+  static schemaValidator = createValidator({
+    type: 'object',
+    properties: {
+      type: { type: 'string' },
+      properties: { type: 'object' },
+      required: { type: 'array', items: { type: 'string' } },
+      description: { type: 'string' }
+    },
+    required: ['type']
+  });
+
+  constructor(moduleOrConfig, toolName = null) {
     super();
-    this.name = config.name || null;
-    this.description = config.description || null;
-    this.schema = config.schema || {
-      input: { type: 'object', properties: {} },
-      output: { type: 'object', properties: {} }
-    };
     
-    // Aliases for schema compatibility
-    this.inputSchema = this.schema.input;
-    this.outputSchema = this.schema.output;
+    // NEW PATTERN: Tool(module, toolName) - metadata comes from module
+    if (toolName && moduleOrConfig?.getToolMetadata) {
+      this.module = moduleOrConfig;
+      this.toolName = toolName;
+      const metadata = this.module.getToolMetadata(toolName);
+      
+      if (!metadata) {
+        throw new Error(`Tool metadata not found for '${toolName}' in module '${this.module.name}'`);
+      }
+      
+      this.name = metadata.name;
+      this.description = metadata.description;
+      this.inputSchema = metadata.inputSchema || { type: 'object', properties: {} };
+      this.outputSchema = metadata.outputSchema || { type: 'object', properties: {} };
+      this.category = metadata.category;
+      this.tags = metadata.tags || [];
+    } 
+    // OLD PATTERN: Tool(config) - backwards compatibility
+    else {
+      const config = moduleOrConfig || {};
+      this.module = null;
+      this.toolName = null;
+      this.name = config.name || null;
+      this.description = config.description || null;
+      
+      // Schemas are METADATA ONLY - not validation objects!
+      this.inputSchema = config.inputSchema || config.schema?.input || { 
+        type: 'object', 
+        properties: {} 
+      };
+      this.outputSchema = config.outputSchema || config.schema?.output || { 
+        type: 'object', 
+        properties: {} 
+      };
+      this.category = config.category;
+      this.tags = config.tags || [];
+    }
+    
+    // Validate that the schemas themselves are properly formed
+    this._validateSchemas();
     
     // EventEmitter compatibility - track listeners by event name
     this._eventListeners = new Map();
+  }
+
+  /**
+   * Validate that this tool's schemas are properly formed
+   * This is SCHEMA validation, not input validation
+   */
+  _validateSchemas() {
+    // Validate input schema structure
+    const inputValidation = Tool.schemaValidator.validate(this.inputSchema);
+    if (!inputValidation.valid) {
+      throw new Error(`Tool ${this.name} has invalid input schema: ${inputValidation.errors.map(e => e.message).join(', ')}`);
+    }
+
+    // Validate output schema structure  
+    const outputValidation = Tool.schemaValidator.validate(this.outputSchema);
+    if (!outputValidation.valid) {
+      throw new Error(`Tool ${this.name} has invalid output schema: ${outputValidation.errors.map(e => e.message).join(', ')}`);
+    }
   }
   
   /**
@@ -120,6 +185,12 @@ export class Tool extends SimpleEmitter {
    */
   async execute(params) {
     try {
+      // VALIDATE INPUT - This is the ONLY place input validation happens
+      const validation = this.validateInput(params);
+      if (!validation.valid) {
+        throw new Error(`Input validation failed: ${validation.errors.join(', ')}`);
+      }
+
       // Call the tool-specific implementation method
       if (this._execute && typeof this._execute === 'function') {
         const result = await this._execute(params);
@@ -179,64 +250,25 @@ export class Tool extends SimpleEmitter {
   
   /**
    * Validate input parameters against schema
+   * This is INPUT validation using @legion/schema
    * @param {Object} params - Parameters to validate
-   * @returns {Object} Validation result with success flag and errors
+   * @returns {Object} Validation result with valid flag and errors
    */
   validateInput(params) {
-    // Basic validation - can be extended with proper JSON schema validation
-    if (!this.inputSchema || !this.inputSchema.required) {
-      return { success: true };
-    }
-    
-    const errors = [];
-    
-    // Check required fields
-    for (const field of this.inputSchema.required) {
-      if (!(field in params)) {
-        errors.push(`Missing required field: ${field}`);
-      }
-    }
-    
-    // Check field types if properties defined
-    if (this.inputSchema.properties) {
-      for (const [field, schema] of Object.entries(this.inputSchema.properties)) {
-        if (field in params) {
-          const value = params[field];
-          const expectedType = schema.type;
-          
-          if (expectedType && !this.checkType(value, expectedType)) {
-            errors.push(`Invalid type for ${field}: expected ${expectedType}`);
-          }
-        }
-      }
-    }
-    
-    return {
-      success: errors.length === 0,
-      errors
-    };
-  }
-  
-  /**
-   * Check if value matches expected type
-   * @param {*} value - Value to check
-   * @param {string} expectedType - Expected type
-   * @returns {boolean} True if type matches
-   */
-  checkType(value, expectedType) {
-    switch (expectedType) {
-      case 'string':
-        return typeof value === 'string';
-      case 'number':
-        return typeof value === 'number';
-      case 'boolean':
-        return typeof value === 'boolean';
-      case 'object':
-        return typeof value === 'object' && value !== null;
-      case 'array':
-        return Array.isArray(value);
-      default:
-        return true;
+    try {
+      // Create validator from input schema and validate parameters
+      const validator = createValidator(this.inputSchema);
+      const result = validator.validate(params);
+      
+      return {
+        valid: result.valid,
+        errors: result.valid ? [] : result.errors.map(e => e.message)
+      };
+    } catch (error) {
+      return {
+        valid: false,
+        errors: [`Schema validation failed: ${error.message}`]
+      };
     }
   }
   

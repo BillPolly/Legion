@@ -1,0 +1,55 @@
+{
+  "module": {
+    "name": "calculator",
+    "description": "Mathematical calculation tools for evaluating expressions and performing computations",
+    "version": "1.0.0",
+    "author": "Legion Team",
+    "category": "mathematical"
+  },
+  "tools": {
+    "calculator": {
+      "name": "calculator",
+      "description": "Evaluates mathematical expressions and performs calculations",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "expression": {
+            "type": "string",
+            "description": "JavaScript mathematical expression to evaluate (e.g., '784*566', 'Math.sqrt(16)', '(10+5)*3/5')"
+          }
+        },
+        "required": ["expression"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "number",
+            "description": "The result of the calculation"
+          },
+          "expression": {
+            "type": "string",
+            "description": "The expression that was evaluated"
+          }
+        },
+        "required": ["result", "expression"]
+      },
+      "category": "mathematical",
+      "tags": ["math", "calculation", "evaluation", "arithmetic"],
+      "security": {
+        "dangerousKeywords": ["import", "require", "process", "fs", "child_process", "exec", "spawn"],
+        "evaluation": "safe"
+      },
+      "examples": [
+        {
+          "input": { "expression": "2 + 2" },
+          "output": { "result": 4, "expression": "2 + 2" }
+        },
+        {
+          "input": { "expression": "Math.sqrt(16)" },
+          "output": { "result": 4, "expression": "Math.sqrt(16)" }
+        }
+      ]
+    }
+  }
+}

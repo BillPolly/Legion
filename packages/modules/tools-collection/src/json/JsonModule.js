@@ -5,6 +5,7 @@
  */
 
 import { Tool, Module } from '@legion/tools-registry';
+import { fileURLToPath } from 'url';
 
 /**
  * JSON parsing tool with event support
@@ -619,6 +620,16 @@ class JsonModule extends Module {
     this.name = 'json';
     this.description = 'JSON manipulation and validation tools for parsing, stringifying, and extracting data from JSON structures';
     this.version = '1.0.0';
+    
+    // NEW: Set metadata path for automatic loading
+    this.metadataPath = './tools-metadata.json';
+  }
+
+  /**
+   * Override getModulePath to support proper path resolution
+   */
+  getModulePath() {
+    return fileURLToPath(import.meta.url);
   }
 
   /**
@@ -632,21 +643,61 @@ class JsonModule extends Module {
   }
 
   /**
-   * Initialize the module
+   * Initialize the module - NEW metadata-driven approach
    */
   async initialize() {
-    await super.initialize();
+    await super.initialize(); // This will load metadata automatically
     
-    // Create and register all JSON tools
-    const jsonParseTool = new JsonParseTool();
-    const jsonStringifyTool = new JsonStringifyTool();
-    const jsonValidateTool = new JsonValidateTool();
-    const jsonExtractTool = new JsonExtractTool();
-    
-    this.registerTool(jsonParseTool.name, jsonParseTool);
-    this.registerTool(jsonStringifyTool.name, jsonStringifyTool);
-    this.registerTool(jsonValidateTool.name, jsonValidateTool);
-    this.registerTool(jsonExtractTool.name, jsonExtractTool);
+    // NEW APPROACH: Create tools using metadata
+    if (this.metadata) {
+      const tools = [
+        { key: 'json_parse', class: JsonParseTool },
+        { key: 'json_stringify', class: JsonStringifyTool },
+        { key: 'json_validate', class: JsonValidateTool },
+        { key: 'json_extract', class: JsonExtractTool }
+      ];
+
+      for (const { key, class: ToolClass } of tools) {
+        try {
+          const tool = this.createToolFromMetadata(key, ToolClass);
+          this.registerTool(tool.name, tool);
+        } catch (error) {
+          console.warn(`Failed to create metadata tool ${key}, falling back to legacy: ${error.message}`);
+          
+          // Fallback to legacy constructor
+          let legacyTool;
+          switch (key) {
+            case 'json_parse':
+              legacyTool = new JsonParseTool();
+              break;
+            case 'json_stringify':
+              legacyTool = new JsonStringifyTool();
+              break;
+            case 'json_validate':
+              legacyTool = new JsonValidateTool();
+              break;
+            case 'json_extract':
+              legacyTool = new JsonExtractTool();
+              break;
+          }
+          
+          if (legacyTool) {
+            this.registerTool(legacyTool.name, legacyTool);
+          }
+        }
+      }
+    } else {
+      // FALLBACK: Old approach for backwards compatibility
+      const jsonParseTool = new JsonParseTool();
+      const jsonStringifyTool = new JsonStringifyTool();
+      const jsonValidateTool = new JsonValidateTool();
+      const jsonExtractTool = new JsonExtractTool();
+      
+      this.registerTool(jsonParseTool.name, jsonParseTool);
+      this.registerTool(jsonStringifyTool.name, jsonStringifyTool);
+      this.registerTool(jsonValidateTool.name, jsonValidateTool);
+      this.registerTool(jsonExtractTool.name, jsonExtractTool);
+    }
   }
 }
 

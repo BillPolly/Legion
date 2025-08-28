@@ -7,6 +7,8 @@
  * No mocks, no fallbacks - real implementation only
  */
 
+import { Logger } from './Logger.js';
+
 export class ConnectionPool {
   constructor({ resourceManager, maxConnections = 10, options = {} }) {
     if (!resourceManager) {
@@ -16,6 +18,7 @@ export class ConnectionPool {
     this.resourceManager = resourceManager;
     this.maxConnections = maxConnections;
     this.options = options;
+    this.logger = Logger.create('ConnectionPool', { verbose: options.verbose });
     
     // Simple pool tracking
     this.connections = new Map();
@@ -123,7 +126,7 @@ export class ConnectionPool {
       
       // Don't cleanup the storage provider directly since it's managed by ResourceManager
     } catch (error) {
-      console.error('ConnectionPool cleanup error:', error.message);
+      this.logger.error('ConnectionPool cleanup error', { error: error.message });
     }
   }
 }
