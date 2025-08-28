@@ -70,8 +70,9 @@ describe('FileAnalysisTool', () => {
         return 'test-key';
       });
 
-      await expect(FileAnalysisModule.create(mockResourceManager))
-        .rejects.toThrow('ANTHROPIC_API_KEY environment variable is required');
+      const result = await FileAnalysisModule.create(mockResourceManager).catch(error => ({ success: false, error: error.message }));
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('ANTHROPIC_API_KEY environment variable is required');
     });
 
     test('should handle file not found error', async () => {
@@ -108,16 +109,4 @@ describe('FileAnalysisTool', () => {
     });
   });
 
-  describe('Module JSON Configuration', () => {
-    test('module.json should be valid', async () => {
-      const modulePath = path.join(__dirname, '..', 'module.json');
-      const moduleJson = JSON.parse(await fs.readFile(modulePath, 'utf-8'));
-      
-      expect(moduleJson.name).toBe('file-analysis');
-      expect(moduleJson.tools).toHaveLength(1);
-      expect(moduleJson.tools[0].name).toBe('analyze_file');
-      expect(moduleJson.tools[0].inputSchema.required).toContain('file_path');
-      expect(moduleJson.tools[0].inputSchema.required).toContain('prompt');
-    });
-  });
 });

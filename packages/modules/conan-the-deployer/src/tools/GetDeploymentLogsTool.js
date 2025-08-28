@@ -132,12 +132,9 @@ class GetDeploymentLogsTool extends Tool {
   /**
    * Execute the log retrieval
    */
-  async execute(args) {
+  async _execute(args) {
     try {
-      // If args is a toolCall object, parse it
-      if (args.function && args.function.arguments) {
-        args = this.parseArguments(args.function.arguments);
-      }
+      // Args are already parsed by the base Tool class
       
       // Validate required parameters
       if (!args.deploymentId) {

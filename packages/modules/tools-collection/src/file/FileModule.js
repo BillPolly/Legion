@@ -198,44 +198,27 @@ class FileModule extends Module {
    * @returns {Promise<Object>} The result of the operation
    */
   async invoke(toolName, params) {
-    try {
-      let result;
-
-      switch (toolName) {
-        case 'file_read':
-          result = await this.fileReader.execute(params);
-          break;
-        case 'file_write':
-          result = await this.fileWriter.execute(params);
-          break;
-        case 'directory_create':
-          result = await this.directoryCreator.execute(params);
-          break;
-        case 'directory_list':
-          result = await this.directoryList.execute(params);
-          break;
-        case 'directory_change':
-          result = await this.directoryChange.execute(params);
-          break;
-        case 'directory_current':
-          result = await this.directoryCurrent.execute(params);
-          break;
-        default:
-          throw new Error(`Unknown tool: ${toolName}`);
-      }
-
-      // Return success result in legacy format for compatibility
-      return {
-        success: true,
-        data: result
-      };
-    } catch (error) {
-      // Return error result in legacy format for compatibility
-      return {
-        success: false,
-        error: error.message,
-        data: error.cause || {}
-      };
+    // Tools now return wrapped results via their execute() method,
+    // so we can return them directly without manual wrapping
+    switch (toolName) {
+      case 'file_read':
+        return await this.fileReader.execute(params);
+      case 'file_write':
+        return await this.fileWriter.execute(params);
+      case 'directory_create':
+        return await this.directoryCreator.execute(params);
+      case 'directory_list':
+        return await this.directoryList.execute(params);
+      case 'directory_change':
+        return await this.directoryChange.execute(params);
+      case 'directory_current':
+        return await this.directoryCurrent.execute(params);
+      default:
+        return {
+          success: false,
+          error: `Unknown tool: ${toolName}`,
+          data: {}
+        };
     }
   }
 

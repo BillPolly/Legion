@@ -28,7 +28,8 @@ const mockMonitoringSystem = {
   getLogs: jest.fn()
 };
 
-jest.unstable_mockModule('../../src/core/ResourceManager.js', () => ({
+jest.unstable_mockModule('@legion/resource-manager', () => ({
+  ResourceManager: jest.fn(() => mockResourceManager),
   default: jest.fn(() => mockResourceManager)
 }));
 
@@ -177,7 +178,7 @@ process.on('SIGTERM', () => {
         }
       };
 
-      const deployResult = await deployTool.invoke(deployToolCall);
+      const deployResult = await deployTool.execute(deployToolCall.function.arguments ? JSON.parse(deployToolCall.function.arguments) : {});
       
       expect(deployResult.success).toBe(true);
       expect(deployResult.data.deployment.id).toBe(deploymentId);
@@ -221,7 +222,7 @@ process.on('SIGTERM', () => {
         }
       };
 
-      const monitorResult = await monitorTool.invoke(monitorToolCall);
+      const monitorResult = await monitorTool.execute(monitorToolCall.function.arguments ? JSON.parse(monitorToolCall.function.arguments) : {});
       
       expect(monitorResult.success).toBe(true);
       expect(monitorResult.data.monitoring.status).toBe('active');
@@ -248,7 +249,7 @@ process.on('SIGTERM', () => {
         }
       };
 
-      const listResult = await listTool.invoke(listToolCall);
+      const listResult = await listTool.execute(listToolCall.function.arguments ? JSON.parse(listToolCall.function.arguments) : {});
       
       expect(listResult.success).toBe(true);
       expect(listResult.data.deployments).toHaveLength(1);
@@ -281,7 +282,7 @@ process.on('SIGTERM', () => {
         }
       };
 
-      const updateResult = await updateTool.invoke(updateToolCall);
+      const updateResult = await updateTool.execute(updateToolCall.function.arguments ? JSON.parse(updateToolCall.function.arguments) : {});
       
       expect(updateResult.success).toBe(true);
       expect(updateResult.data.update.strategy).toBe('rolling');
@@ -318,7 +319,7 @@ process.on('SIGTERM', () => {
         }
       };
 
-      const logsResult = await logsTool.invoke(logsToolCall);
+      const logsResult = await logsTool.execute(logsToolCall.function.arguments ? JSON.parse(logsToolCall.function.arguments) : {});
       
       expect(logsResult.success).toBe(true);
       expect(logsResult.data.logs).toHaveLength(2);
@@ -345,7 +346,7 @@ process.on('SIGTERM', () => {
         }
       };
 
-      const stopResult = await stopTool.invoke(stopToolCall);
+      const stopResult = await stopTool.execute(stopToolCall.function.arguments ? JSON.parse(stopToolCall.function.arguments) : {});
       
       expect(stopResult.success).toBe(true);
       expect(stopResult.data.stop.graceful).toBe(true);
@@ -381,7 +382,7 @@ process.on('SIGTERM', () => {
         }
       };
 
-      const localResult = await deployTool.invoke(localDeployCall);
+      const localResult = await deployTool.execute(localDeployCall.function.arguments ? JSON.parse(localDeployCall.function.arguments) : {});
       expect(localResult.success).toBe(true);
       expect(localResult.data.deployment.provider).toBe('local');
 
@@ -409,7 +410,7 @@ process.on('SIGTERM', () => {
         }
       };
 
-      const dockerResult = await deployTool.invoke(dockerDeployCall);
+      const dockerResult = await deployTool.execute(dockerDeployCall.function.arguments ? JSON.parse(dockerDeployCall.function.arguments) : {});
       expect(dockerResult.success).toBe(true);
       expect(dockerResult.data.deployment.provider).toBe('docker');
 
@@ -439,7 +440,7 @@ process.on('SIGTERM', () => {
         }
       };
 
-      const listResult = await listTool.invoke(listAllCall);
+      const listResult = await listTool.execute(listAllCall.function.arguments ? JSON.parse(listAllCall.function.arguments) : {});
       expect(listResult.success).toBe(true);
       expect(listResult.data.deployments).toHaveLength(2);
       expect(listResult.data.deployments.map(d => d.provider)).toEqual(['local', 'docker']);
@@ -468,7 +469,7 @@ process.on('SIGTERM', () => {
         }
       };
 
-      const stopResult = await stopTool.invoke(stopLocalCall);
+      const stopResult = await stopTool.execute(stopLocalCall.function.arguments ? JSON.parse(stopLocalCall.function.arguments) : {});
       expect(stopResult.success).toBe(true);
     });
   });
@@ -500,12 +501,12 @@ process.on('SIGTERM', () => {
         }
       };
 
-      const result = await deployTool.invoke(failedDeployCall);
+      const result = await deployTool.execute(failedDeployCall.function.arguments ? JSON.parse(failedDeployCall.function.arguments) : {});
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Port 3000 is already in use');
-      expect(result.suggestions).toBeDefined();
-      expect(Array.isArray(result.suggestions)).toBe(true);
+      expect(result.data.suggestions).toBeDefined();
+      expect(Array.isArray(result.data.suggestions)).toBe(true);
     });
 
     test('should handle invalid deployment configurations', async () => {
@@ -521,7 +522,7 @@ process.on('SIGTERM', () => {
         }
       };
 
-      const result = await deployTool.invoke(invalidConfigCall);
+      const result = await deployTool.execute(invalidConfigCall.function.arguments ? JSON.parse(invalidConfigCall.function.arguments) : {});
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Invalid provider');
@@ -550,7 +551,7 @@ process.on('SIGTERM', () => {
         }
       };
 
-      const result = await monitorTool.invoke(monitorCall);
+      const result = await monitorTool.execute(monitorCall.function.arguments ? JSON.parse(monitorCall.function.arguments) : {});
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Failed to connect to deployment');
@@ -589,7 +590,7 @@ process.on('SIGTERM', () => {
 
       // Execute all requests concurrently
       const results = await Promise.all(
-        logCalls.map(call => logsTool.invoke(call))
+        logCalls.map(call => logsTool.execute(call.function.arguments ? JSON.parse(call.function.arguments) : {}))
       );
 
       // All should succeed

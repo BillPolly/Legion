@@ -123,10 +123,22 @@ export default class AIGenerationModule extends Module {
       });
 
       console.log('[AIGenerationModule] Received response from LLMClient');
+      console.log('[AIGenerationModule] Raw response:', JSON.stringify(response, null, 2));
       
-      // Extract the generated image data (response is an array from provider)
-      const imageData = Array.isArray(response) ? response[0] : response;
+      // Extract the generated image data - OpenAI returns {created: ..., data: [...]}
+      let imageData;
+      if (response && response.data && Array.isArray(response.data)) {
+        // OpenAI format: {created: timestamp, data: [{b64_json: ...}, ...]}
+        imageData = response.data[0];
+      } else if (Array.isArray(response)) {
+        // Direct array format
+        imageData = response[0];
+      } else {
+        // Direct object
+        imageData = response;
+      }
       console.log('[AIGenerationModule] Image data type:', typeof imageData);
+      console.log('[AIGenerationModule] Image data keys:', Object.keys(imageData || {}));
       console.log('[AIGenerationModule] Has b64_json?', !!imageData.b64_json);
       console.log('[AIGenerationModule] Has url?', !!imageData.url);
       

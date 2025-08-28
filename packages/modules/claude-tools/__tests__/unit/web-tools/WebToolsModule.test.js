@@ -70,21 +70,17 @@ describe('WebToolsModule', () => {
       expect(result.data.results).toBeInstanceOf(Array);
     });
 
-    it('should execute WebFetch tool with mocked response', async () => {
-      // Since we're not mocking axios in the module test, we'll validate the input
+    it('should execute WebFetch tool with invalid URL', async () => {
+      // Since we're not mocking axios in the module test, we'll use an invalid URL
       const result = await module.executeTool('WebFetch', {
-        url: 'not-a-url', // Invalid URL to trigger validation
+        url: 'not-a-url', // Invalid URL to trigger axios error
         prompt: 'test'
       });
 
       expect(result.success).toBe(false);
-      expect(result.data).toBeDefined();
-      // The Tool base class puts validation errors in data.error
-      if (result.data.error) {
-        expect(result.data.error).toBeDefined();
-      } else if (result.error) {
-        expect(result.error).toBeDefined();
-      }
+      expect(result.error).toBeDefined();
+      expect(result.error.code).toBeDefined();
+      expect(result.error.message).toBeDefined();
     });
   });
 });

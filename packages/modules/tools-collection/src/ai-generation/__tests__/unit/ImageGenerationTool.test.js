@@ -18,8 +18,8 @@ describe('ImageGenerationTool', () => {
     
     // Track subscriber events
     subscriberCalls = [];
-    tool.subscribe((event) => {
-      subscriberCalls.push(event);
+    tool.subscribe((eventName, eventData) => {
+      subscriberCalls.push({ type: eventName, ...eventData });
     });
   });
 
@@ -115,11 +115,11 @@ describe('ImageGenerationTool', () => {
 
       // Check result structure
       expect(result.success).toBe(true);
-      expect(result.imageData).toBe('data:image/png;base64,abc123');
-      expect(result.artifact).toBeDefined();
-      expect(result.artifact.type).toBe('image');
-      expect(result.artifact.subtype).toBe('png');
-      expect(result.artifact.downloadable).toBe(true);
+      expect(result.data.imageData).toBe('data:image/png;base64,abc123');
+      expect(result.data.artifact).toBeDefined();
+      expect(result.data.artifact.type).toBe('image');
+      expect(result.data.artifact.subtype).toBe('png');
+      expect(result.data.artifact.downloadable).toBe(true);
     });
 
     test('should notify subscribers with progress events during execution', async () => {
@@ -168,7 +168,7 @@ describe('ImageGenerationTool', () => {
       // Check error handling
       expect(result.success).toBe(false);
       expect(result.error).toBe(errorMessage);
-      expect(result.code).toBe('IMAGE_GENERATION_ERROR');
+      expect(result.data.code).toBe('IMAGE_GENERATION_ERROR');
 
       // Check error event was notified to subscribers
       const errorEvents = subscriberCalls.filter(event => event.type === 'error');
@@ -176,7 +176,9 @@ describe('ImageGenerationTool', () => {
       expect(errorEvents[0]).toMatchObject({
         type: 'error',
         message: errorMessage,
-        code: 'IMAGE_GENERATION_ERROR'
+        data: {
+          code: 'IMAGE_GENERATION_ERROR'
+        }
       });
     });
 
@@ -185,8 +187,8 @@ describe('ImageGenerationTool', () => {
       
       // Set up new subscriber
       subscriberCalls = [];
-      tool.subscribe((event) => {
-        subscriberCalls.push(event);
+      tool.subscribe((eventName, eventData) => {
+        subscriberCalls.push({ type: eventName, ...eventData });
       });
 
       const result = await tool.execute({ prompt: 'test' });
@@ -230,9 +232,9 @@ describe('ImageGenerationTool', () => {
         response_format: 'url'
       });
 
-      expect(result.artifact.content).toBe('https://example.com/image.png');
-      expect(result.artifact.type).toBe('image');
-      expect(result.artifact.createdBy).toBe('generate_image');
+      expect(result.data.artifact.content).toBe('https://example.com/image.png');
+      expect(result.data.artifact.type).toBe('image');
+      expect(result.data.artifact.createdBy).toBe('generate_image');
     });
   });
 

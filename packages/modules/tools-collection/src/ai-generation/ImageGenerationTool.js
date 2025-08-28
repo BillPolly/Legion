@@ -86,17 +86,29 @@ export class ImageGenerationTool extends Tool {
       name: 'generate_image',
       description: 'Generate an image using DALL-E 3 AI model. Returns base64 encoded image data by default.',
       inputSchema: imageGenerationToolInputSchema,
-      outputSchema: imageGenerationToolOutputSchema
+      outputSchema: imageGenerationToolOutputSchema,
+      schema: {
+        input: imageGenerationToolInputSchema,
+        output: imageGenerationToolOutputSchema
+      }
     });
     
     this.dependencies = dependencies;
     this.config = dependencies;
     this.llmClient = dependencies.llmClient;
-    this.generateImage = dependencies.generateImage; // Direct reference to bound method
+    
+    // Handle both direct generateImage function and module instance
+    if (dependencies.generateImage) {
+      this.generateImage = dependencies.generateImage; // Direct reference to bound method
+    } else if (dependencies.module && dependencies.module.generateImage) {
+      this.generateImage = dependencies.module.generateImage.bind(dependencies.module);
+      this.module = dependencies.module;
+    }
   }
 
-  async execute(args) {
+  async _execute(args) {
     console.log('[ImageGenerationTool] Execute called');
+    
     try {
       // Emit progress event
       console.log('[ImageGenerationTool] Emitting progress: 10%');
@@ -109,14 +121,17 @@ export class ImageGenerationTool extends Tool {
 
       // Emit progress event
       console.log('[ImageGenerationTool] Emitting progress: 30%');
-      this.progress(`Generating image: "${args.prompt.substring(0, 50)}..."`, 30, {
-        status: `Generating image: "${args.prompt.substring(0, 50)}..."`
+      const promptText = args.prompt || 'image';
+      this.progress(`Generating image: "${promptText.substring(0, 50)}..."`, 30, {
+        status: `Generating image: "${promptText.substring(0, 50)}..."`
       });
 
       // Call the generateImage method directly
       if (!this.generateImage) {
         console.error('[ImageGenerationTool] generateImage method not available');
-        throw new Error('generateImage method not available');
+        const error = new Error('AIGenerationModule instance not available');
+        this.error(error.message, 'IMAGE_GENERATION_ERROR');
+        throw error;
       }
 
       console.log('[ImageGenerationTool] Calling generateImage()...');
@@ -130,7 +145,6 @@ export class ImageGenerationTool extends Tool {
 
       // Format the result for artifact detection
       const formattedResult = {
-        success: true,
         ...result,
         // Ensure artifact-friendly structure
         artifact: {
@@ -150,19 +164,15 @@ export class ImageGenerationTool extends Tool {
       });
 
       return formattedResult;
-
     } catch (error) {
+      console.error('[ImageGenerationTool] Error during execution:', error);
+      
       // Emit error event
-      this.error(error.message, {
-        code: 'IMAGE_GENERATION_ERROR'
-      });
-
-      // Return error result
-      return {
-        success: false,
-        error: error.message,
-        code: 'IMAGE_GENERATION_ERROR'
-      };
+      this.error(error.message, { code: 'IMAGE_GENERATION_ERROR' });
+      
+      // Re-throw with code in cause to be handled by base Tool class
+      error.cause = { ...error.cause, code: 'IMAGE_GENERATION_ERROR' };
+      throw error;
     }
   }
 

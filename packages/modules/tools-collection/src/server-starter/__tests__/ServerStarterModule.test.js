@@ -100,14 +100,14 @@ describe('ServerStarterModule', () => {
       });
       
       expect(result.success).toBe(true);
-      expect(result.command).toBe('echo "Hello Server"');
-      expect(['running', 'completed']).toContain(result.status);
-      expect(typeof result.pid).toBe('number');
+      expect(result.data.command).toBe('echo "Hello Server"');
+      expect(['running', 'completed']).toContain(result.data.status);
+      expect(typeof result.data.pid).toBe('number');
       
       // Clean up - stop the process
       await new Promise(resolve => setTimeout(resolve, 100));
-      if (result.process) {
-        result.process.kill('SIGKILL');
+      if (result.data.process) {
+        result.data.process.kill('SIGKILL');
       }
     }, 10000);
 
@@ -119,18 +119,19 @@ describe('ServerStarterModule', () => {
       });
       
       expect(result.success).toBe(true);
-      expect(result.cwd).toBe(testDir);
+      expect(result.data.cwd).toBe(testDir);
       
       // Clean up
       await new Promise(resolve => setTimeout(resolve, 100));
-      if (result.process) {
-        result.process.kill('SIGKILL');
+      if (result.data.process) {
+        result.data.process.kill('SIGKILL');
       }
     }, 10000);
 
     test('should handle missing command parameter', async () => {
-      await expect(tool.execute({}))
-        .rejects.toThrow();
+      const result = await tool.execute({});
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
 
     test('should handle invalid working directory', async () => {
@@ -155,8 +156,8 @@ describe('ServerStarterModule', () => {
       expect(result.success).toBe(true);
       
       // Clean up
-      if (result.process) {
-        result.process.kill('SIGKILL');
+      if (result.data.process) {
+        result.data.process.kill('SIGKILL');
       }
     }, 5000);
 
@@ -167,13 +168,13 @@ describe('ServerStarterModule', () => {
       });
       
       expect(result.success).toBe(true);
-      expect(typeof result.pid).toBe('number');
-      expect(result.process).toBeDefined();
-      expect(result.status).toBe('running');
+      expect(typeof result.data.pid).toBe('number');
+      expect(result.data.process).toBeDefined();
+      expect(result.data.status).toBe('running');
       
       // Clean up
-      if (result.process) {
-        result.process.kill('SIGKILL');
+      if (result.data.process) {
+        result.data.process.kill('SIGKILL');
       }
     }, 5000);
   });
@@ -210,17 +211,17 @@ describe('ServerStarterModule', () => {
       
       // Read the output
       const readResult = await tool.execute({ 
-        processId: startResult.pid,
+        processId: startResult.data.pid,
         lines: 10
       });
       
       expect(readResult.success).toBe(true);
-      expect(Array.isArray(readResult.output)).toBe(true);
-      expect(typeof readResult.lines).toBe('number');
+      expect(Array.isArray(readResult.data.output)).toBe(true);
+      expect(typeof readResult.data.lines).toBe('number');
       
       // Clean up
-      if (startResult.process) {
-        startResult.process.kill('SIGKILL');
+      if (startResult.data.process) {
+        startResult.data.process.kill('SIGKILL');
       }
     }, 10000);
 
@@ -235,8 +236,9 @@ describe('ServerStarterModule', () => {
     });
 
     test('should handle missing process ID parameter', async () => {
-      await expect(tool.execute({}))
-        .rejects.toThrow();
+      const result = await tool.execute({});
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
 
     test('should limit output lines correctly', async () => {
@@ -252,15 +254,15 @@ describe('ServerStarterModule', () => {
         
         // Read limited output
         const readResult = await tool.execute({ 
-          processId: startResult.pid,
+          processId: startResult.data.pid,
           lines: 5
         });
         
         expect(readResult.success).toBe(true);
-        expect(readResult.output.length).toBeLessThanOrEqual(5);
+        expect(readResult.data.output.length).toBeLessThanOrEqual(5);
         
         // Clean up
-        startResult.process.kill('SIGKILL');
+        startResult.data.process.kill('SIGKILL');
       }
     }, 10000);
   });
@@ -291,7 +293,7 @@ describe('ServerStarterModule', () => {
       });
       
       expect(startResult.success).toBe(true);
-      const pid = startResult.pid;
+      const pid = startResult.data.pid;
       
       // Wait a moment
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -302,8 +304,8 @@ describe('ServerStarterModule', () => {
       });
       
       expect(stopResult.success).toBe(true);
-      expect(stopResult.status).toBe('stopped');
-      expect(stopResult.processId).toBe(pid);
+      expect(stopResult.data.status).toBe('stopped');
+      expect(stopResult.data.processId).toBe(pid);
     }, 10000);
 
     test('should handle non-existent process ID', async () => {
@@ -316,8 +318,9 @@ describe('ServerStarterModule', () => {
     });
 
     test('should handle missing process ID parameter', async () => {
-      await expect(tool.execute({}))
-        .rejects.toThrow();
+      const result = await tool.execute({});
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
 
     test('should handle already terminated process', async () => {
@@ -329,10 +332,10 @@ describe('ServerStarterModule', () => {
       });
       
       if (startResult.success) {
-        const pid = startResult.pid;
+        const pid = startResult.data.pid;
         
         // Kill it directly (simulate external termination)
-        startResult.process.kill('SIGKILL');
+        startResult.data.process.kill('SIGKILL');
         await new Promise(resolve => setTimeout(resolve, 100));
         
         // Try to stop it via tool
@@ -354,7 +357,7 @@ describe('ServerStarterModule', () => {
       });
       
       if (startResult.success) {
-        const pid = startResult.pid;
+        const pid = startResult.data.pid;
         
         // Stop with graceful shutdown
         const stopResult = await tool.execute({ 
@@ -364,7 +367,7 @@ describe('ServerStarterModule', () => {
         });
         
         expect(stopResult.success).toBe(true);
-        expect(stopResult.method).toBeTruthy();
+        expect(stopResult.data.method).toBeTruthy();
       }
     }, 10000);
   });
@@ -382,7 +385,7 @@ describe('ServerStarterModule', () => {
       });
       
       expect(startResult.success).toBe(true);
-      const pid = startResult.pid;
+      const pid = startResult.data.pid;
       
       // Wait for output
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -422,7 +425,7 @@ describe('ServerStarterModule', () => {
       // Stop all servers
       const stopPromises = servers
         .filter(s => s.success)
-        .map(s => stopTool.execute({ processId: s.pid }));
+        .map(s => stopTool.execute({ processId: s.data.pid }));
       
       const stopResults = await Promise.all(stopPromises);
       stopResults.forEach(result => {
@@ -448,12 +451,12 @@ describe('ServerStarterModule', () => {
       
       expect(server1.success).toBe(true);
       expect(server2.success).toBe(true);
-      expect(server1.pid).not.toBe(server2.pid);
+      expect(server1.data.pid).not.toBe(server2.data.pid);
       
       // Clean up
       await Promise.all([
-        stopTool.execute({ processId: server1.pid }),
-        stopTool.execute({ processId: server2.pid })
+        stopTool.execute({ processId: server1.data.pid }),
+        stopTool.execute({ processId: server2.data.pid })
       ]);
     }, 10000);
   });
@@ -494,13 +497,10 @@ describe('ServerStarterModule', () => {
       ];
 
       for (const { tool, params } of tools) {
-        try {
-          await tool.execute(params);
-          fail('Should have thrown an error');
-        } catch (error) {
-          expect(error).toBeInstanceOf(Error);
-          expect(typeof error.message).toBe('string');
-        }
+        const result = await tool.execute(params);
+        expect(result.success).toBe(false);
+        expect(result.error).toBeDefined();
+        expect(typeof result.error).toBe('string');
       }
     });
   });
@@ -520,8 +520,8 @@ describe('ServerStarterModule', () => {
       expect(duration).toBeLessThan(2000); // Should start quickly
       
       // Clean up
-      if (result.process) {
-        result.process.kill('SIGKILL');
+      if (result.data && result.data.process) {
+        result.data.process.kill('SIGKILL');
       }
     }, 5000);
 
@@ -543,7 +543,7 @@ describe('ServerStarterModule', () => {
           await new Promise(resolve => setTimeout(resolve, 50));
           
           const stopResult = await stopTool.execute({ 
-            processId: startResult.pid
+            processId: startResult.data.pid
           });
           
           results.push({ start: startResult, stop: stopResult });

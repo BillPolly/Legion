@@ -8,15 +8,21 @@ const mockDeploymentManager = {
 
 const mockResourceManager = {
   get: jest.fn(),
-  initialize: jest.fn()
+  initialize: jest.fn(),
+  register: jest.fn()
 };
+
+// Mock the ResourceManager class with getInstance static method
+const MockResourceManager = jest.fn(() => mockResourceManager);
+MockResourceManager.getInstance = jest.fn(async () => mockResourceManager);
 
 jest.unstable_mockModule('../../../src/DeploymentManager.js', () => ({
   default: jest.fn(() => mockDeploymentManager)
 }));
 
 jest.unstable_mockModule('@legion/resource-manager', () => ({
-  default: jest.fn(() => mockResourceManager)
+  ResourceManager: MockResourceManager,
+  default: MockResourceManager
 }));
 
 // Import after mocking
@@ -59,50 +65,32 @@ describe('DeployApplicationTool', () => {
 
   describe('Parameter Validation', () => {
     test('should validate required parameters', async () => {
-      const toolCall = {
-        function: {
-          name: 'deploy_application',
-          arguments: JSON.stringify({
-            // Missing required parameters
-          })
-        }
-      };
-
-      const result = await deployTool.invoke(toolCall);
+      const args = {
+            // is requireds
+          };
+      const result = await deployTool.execute(args);
       
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Missing required parameter');
+      expect(result.error).toContain('is required');
     });
 
     test('should validate provider parameter', async () => {
-      const toolCall = {
-        function: {
-          name: 'deploy_application',
-          arguments: JSON.stringify({
+      const args = {
             provider: 'invalid-provider',
             config: { name: 'test-app' }
-          })
-        }
-      };
-
-      const result = await deployTool.invoke(toolCall);
+          };
+      const result = await deployTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Invalid provider');
     });
 
     test('should validate config parameter structure', async () => {
-      const toolCall = {
-        function: {
-          name: 'deploy_application',
-          arguments: JSON.stringify({
+      const args = {
             provider: 'local',
             config: 'invalid-config' // Should be object
-          })
-        }
-      };
-
-      const result = await deployTool.invoke(toolCall);
+          };
+      const result = await deployTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Config must be an object');
@@ -121,21 +109,15 @@ describe('DeployApplicationTool', () => {
 
       mockDeploymentManager.deploy.mockResolvedValue(mockDeployment);
 
-      const toolCall = {
-        function: {
-          name: 'deploy_application',
-          arguments: JSON.stringify({
+      const args = {
             provider: 'local',
             config: {
               name: 'test-app',
               command: 'npm start',
               port: 3000
             }
-          })
-        }
-      };
-
-      const result = await deployTool.invoke(toolCall);
+          };
+      const result = await deployTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.deployment.id).toBe('deploy-123');
@@ -160,10 +142,7 @@ describe('DeployApplicationTool', () => {
 
       mockDeploymentManager.deploy.mockResolvedValue(mockDeployment);
 
-      const toolCall = {
-        function: {
-          name: 'deploy_application',
-          arguments: JSON.stringify({
+      const args = {
             provider: 'docker',
             config: {
               name: 'test-container',
@@ -171,11 +150,8 @@ describe('DeployApplicationTool', () => {
               port: 8080,
               environment: { NODE_ENV: 'production' }
             }
-          })
-        }
-      };
-
-      const result = await deployTool.invoke(toolCall);
+          };
+      const result = await deployTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.deployment.id).toBe('container-456');
@@ -200,10 +176,7 @@ describe('DeployApplicationTool', () => {
 
       mockDeploymentManager.deploy.mockResolvedValue(mockDeployment);
 
-      const toolCall = {
-        function: {
-          name: 'deploy_application',
-          arguments: JSON.stringify({
+      const args = {
             provider: 'railway',
             config: {
               name: 'test-app',
@@ -211,11 +184,8 @@ describe('DeployApplicationTool', () => {
               repo: 'user/test-repo',
               branch: 'main'
             }
-          })
-        }
-      };
-
-      const result = await deployTool.invoke(toolCall);
+          };
+      const result = await deployTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.deployment.id).toBe('railway-789');
@@ -237,17 +207,11 @@ describe('DeployApplicationTool', () => {
 
       mockDeploymentManager.deploy.mockResolvedValue(mockDeployment);
 
-      const toolCall = {
-        function: {
-          name: 'deploy_application',
-          arguments: JSON.stringify({
+      const args = {
             provider: 'local',
             config: { name: 'test-app', command: 'npm start' }
-          })
-        }
-      };
-
-      const result = await deployTool.invoke(toolCall);
+          };
+      const result = await deployTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data).toHaveProperty('deployment');
@@ -270,22 +234,16 @@ describe('DeployApplicationTool', () => {
 
       mockDeploymentManager.deploy.mockResolvedValue(mockFailure);
 
-      const toolCall = {
-        function: {
-          name: 'deploy_application',
-          arguments: JSON.stringify({
+      const args = {
             provider: 'local',
             config: { name: 'test-app', command: 'npm start', port: 3000 }
-          })
-        }
-      };
-
-      const result = await deployTool.invoke(toolCall);
+          };
+      const result = await deployTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Port 3000 is already in use');
-      expect(result.provider).toBe('local');
-      expect(result.suggestions).toBeDefined();
+      expect(result.data.provider).toBe('local');
+      expect(result.data.suggestions).toBeDefined();
     });
   });
 
@@ -293,50 +251,37 @@ describe('DeployApplicationTool', () => {
     test('should handle deployment manager errors', async () => {
       mockDeploymentManager.deploy.mockRejectedValue(new Error('Deployment manager crashed'));
 
-      const toolCall = {
-        function: {
-          name: 'deploy_application',
-          arguments: JSON.stringify({
+      const args = {
             provider: 'local',
             config: { name: 'test-app' }
-          })
-        }
-      };
-
-      const result = await deployTool.invoke(toolCall);
+          };
+      const result = await deployTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Deployment manager crashed');
     });
 
     test('should handle invalid JSON arguments', async () => {
-      const toolCall = {
-        function: {
-          name: 'deploy_application',
-          arguments: 'invalid-json'
-        }
+      // Test with invalid arguments structure
+      const args = {
+        provider: null, // invalid provider
+        config: {}
       };
 
-      const result = await deployTool.invoke(toolCall);
+      const result = await deployTool.execute(args);
       
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Invalid JSON');
+      expect(result.error).toContain('provider and config are required');
     });
 
     test('should handle missing deployment manager', async () => {
       mockResourceManager.get.mockReturnValue(null);
 
-      const toolCall = {
-        function: {
-          name: 'deploy_application',
-          arguments: JSON.stringify({
+      const args = {
             provider: 'local',
             config: { name: 'test-app' }
-          })
-        }
-      };
-
-      const result = await deployTool.invoke(toolCall);
+          };
+      const result = await deployTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Deployment manager not available');
@@ -353,40 +298,28 @@ describe('DeployApplicationTool', () => {
 
       mockDeploymentManager.deploy.mockResolvedValue(mockFailure);
 
-      const toolCall = {
-        function: {
-          name: 'deploy_application',
-          arguments: JSON.stringify({
+      const args = {
             provider: 'local',
             config: {
               name: 'test-app',
               customDomain: 'example.com'
             }
-          })
-        }
-      };
-
-      const result = await deployTool.invoke(toolCall);
+          };
+      const result = await deployTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('does not support custom domains');
-      expect(result.suggestions).toContain('Use Docker or Railway provider for custom domain support');
+      expect(result.data.suggestions).toContain('Use Docker or Railway provider for custom domain support');
     });
   });
 
   describe('Configuration Examples', () => {
     test('should provide configuration examples in error responses', async () => {
-      const toolCall = {
-        function: {
-          name: 'deploy_application',
-          arguments: JSON.stringify({
+      const args = {
             provider: 'invalid-provider',
             config: {}
-          })
-        }
-      };
-
-      const result = await deployTool.invoke(toolCall);
+          };
+      const result = await deployTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.examples).toHaveProperty('local');

@@ -66,7 +66,7 @@ jest.unstable_mockModule('../../src/providers/DockerProvider.js', () => ({
   default: jest.fn(() => mockDockerProvider)
 }));
 
-jest.unstable_mockModule('../../src/providers/RailwayProvider.js', () => ({
+jest.unstable_mockModule('../../src/providers/RailwayProviderAdapter.js', () => ({
   default: jest.fn(() => mockRailwayProvider)
 }));
 

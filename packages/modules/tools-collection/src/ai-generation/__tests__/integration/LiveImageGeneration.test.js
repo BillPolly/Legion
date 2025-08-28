@@ -29,16 +29,10 @@ describe('AIGenerationModule - Live Integration Tests', () => {
     // Initialize ResourceManager (auto-initializes)
     resourceManager = await ResourceManager.getInstance();
     
-    // Check if we have the API key
-    try {
-      const apiKey = resourceManager.get('env.OPENAI_API_KEY');
-      if (!apiKey) {
-        console.log('⚠️  Skipping live tests: OPENAI_API_KEY not found in .env file');
-        return;
-      }
-    } catch (error) {
-      console.log('⚠️  Skipping live tests: OPENAI_API_KEY not found in .env file');
-      return;
+    // Check if we have the API key - fail if not available (no skipping per CLAUDE.md)
+    const apiKey = resourceManager.get('env.OPENAI_API_KEY');
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY not found in .env file - tests require real API key');
     }
 
     // Create test output directory for generated images

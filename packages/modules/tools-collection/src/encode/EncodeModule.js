@@ -95,32 +95,21 @@ class Base64EncodeTool extends Tool {
     return { valid: errors.length === 0, errors, warnings };
   }
 
-  async execute(params) {
-    try {
-      const { data, inputEncoding = 'utf8' } = params;
-      
-      if (data === undefined || data === null) {
-        return {
-          success: false,
-          error: 'Data is required for encoding'
-        };
-      }
-      
-      const buffer = Buffer.from(data, inputEncoding);
-      const encoded = buffer.toString('base64');
-      
-      return {
-        success: true,
-        result: encoded,
-        originalLength: data.length,
-        encodedLength: encoded.length
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message
-      };
+  async _execute(params) {
+    const { data, inputEncoding = 'utf8' } = params;
+    
+    if (data === undefined || data === null) {
+      throw new Error('Data is required for encoding');
     }
+    
+    const buffer = Buffer.from(data, inputEncoding);
+    const encoded = buffer.toString('base64');
+    
+    return {
+      result: encoded,
+      originalLength: data.length,
+      encodedLength: encoded.length
+    };
   }
 }
 
@@ -209,32 +198,21 @@ class Base64DecodeTool extends Tool {
     return { valid: errors.length === 0, errors, warnings };
   }
 
-  async execute(params) {
-    try {
-      const { data, outputEncoding = 'utf8' } = params;
-      
-      if (data === undefined || data === null) {
-        return {
-          success: false,
-          error: 'Data is required for decoding'
-        };
-      }
-      
-      const buffer = Buffer.from(data, 'base64');
-      const decoded = buffer.toString(outputEncoding);
-      
-      return {
-        success: true,
-        result: decoded,
-        originalLength: data.length,
-        decodedLength: decoded.length
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message
-      };
+  async _execute(params) {
+    const { data, outputEncoding = 'utf8' } = params;
+    
+    if (data === undefined || data === null) {
+      throw new Error('Data is required for decoding');
     }
+    
+    const buffer = Buffer.from(data, 'base64');
+    const decoded = buffer.toString(outputEncoding);
+    
+    return {
+      result: decoded,
+      originalLength: data.length,
+      decodedLength: decoded.length
+    };
   }
 }
 
@@ -326,31 +304,20 @@ class UrlEncodeTool extends Tool {
     return { valid: errors.length === 0, errors, warnings };
   }
 
-  async execute(params) {
-    try {
-      const { data } = params;
-      
-      if (data === undefined || data === null) {
-        return {
-          success: false,
-          error: 'Data is required for encoding'
-        };
-      }
-      
-      const encoded = encodeURIComponent(data);
-      
-      return {
-        success: true,
-        result: encoded,
-        originalLength: data.length,
-        encodedLength: encoded.length
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message
-      };
+  async _execute(params) {
+    const { data } = params;
+    
+    if (data === undefined || data === null) {
+      throw new Error('Data is required for encoding');
     }
+    
+    const encoded = encodeURIComponent(data);
+    
+    return {
+      result: encoded,
+      originalLength: data.length,
+      encodedLength: encoded.length
+    };
   }
 }
 
@@ -442,31 +409,20 @@ class UrlDecodeTool extends Tool {
     return { valid: errors.length === 0, errors, warnings };
   }
 
-  async execute(params) {
-    try {
-      const { data } = params;
-      
-      if (data === undefined || data === null) {
-        return {
-          success: false,
-          error: 'Data is required for decoding'
-        };
-      }
-      
-      const decoded = decodeURIComponent(data);
-      
-      return {
-        success: true,
-        result: decoded,
-        originalLength: data.length,
-        decodedLength: decoded.length
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message
-      };
+  async _execute(params) {
+    const { data } = params;
+    
+    if (data === undefined || data === null) {
+      throw new Error('Data is required for decoding');
     }
+    
+    const decoded = decodeURIComponent(data);
+    
+    return {
+      result: decoded,
+      originalLength: data.length,
+      decodedLength: decoded.length
+    };
   }
 }
 

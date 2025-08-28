@@ -63,13 +63,10 @@ export class ModuleListTool extends Tool {
     this.config = dependencies;
   }
 
-  async execute(args) {
+  async _execute(args) {
     const moduleLoader = this.config.moduleLoader;
     if (!moduleLoader) {
-      return {
-        success: false,
-        error: 'ModuleLoader not available'
-      };
+      throw new Error('ModuleLoader not available');
     }
 
     // Get loaded modules
@@ -117,7 +114,6 @@ export class ModuleListTool extends Tool {
     }
     
     return {
-      success: true,
       modules: {
         loaded: filteredLoaded,
         available: filteredAvailable,

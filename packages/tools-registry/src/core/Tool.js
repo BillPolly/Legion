@@ -104,17 +104,77 @@ export class Tool extends SimpleEmitter {
   }
   
   /**
-   * Execute the tool with given parameters
-   * Must be implemented by subclasses
+   * Execute the tool with given parameters - PUBLIC API
+   * 
+   * This is the main interface for tool execution. It always returns a consistent format:
+   * {
+   *   success: boolean,    // true if execution succeeded
+   *   data: Object,        // the actual tool results
+   *   error?: string       // error message if execution failed
+   * }
+   * 
+   * TOOL DEVELOPERS: Do NOT override this method. Instead, implement _execute() below.
+   * 
    * @param {Object} params - Tool parameters
-   * @returns {Promise<Object>} Tool execution result
+   * @returns {Promise<{success: boolean, data: Object, error?: string}>} Standardized tool result
    */
   async execute(params) {
-    // Support both patterns: override execute() or set _execute
-    if (this._execute && typeof this._execute === 'function') {
-      return await this._execute(params);
+    try {
+      // Call the tool-specific implementation method
+      if (this._execute && typeof this._execute === 'function') {
+        const result = await this._execute(params);
+        
+        // Wrap direct results in standard format
+        return {
+          success: true,
+          data: result
+        };
+      }
+      
+      // Backward compatibility: if tool overrides execute() directly
+      // This path should be deprecated in favor of _execute()
+      throw new Error(`Tool ${this.name} must implement _execute() method`);
+      
+    } catch (error) {
+      // Standardize error format
+      return {
+        success: false,
+        error: error.message,
+        data: error.cause || {}
+      };
     }
-    throw new Error(`Tool ${this.name} must implement execute() method`);
+  }
+  
+  /**
+   * Tool implementation method - IMPLEMENT THIS IN YOUR TOOL
+   * 
+   * This is where tool developers implement their core logic. This method should:
+   * 1. Take the input parameters
+   * 2. Perform the tool's operation  
+   * 3. Return the direct results (no wrapping needed)
+   * 4. Throw an error if something goes wrong
+   * 
+   * The execute() method will automatically wrap your results in the standard format.
+   * 
+   * EXAMPLE:
+   * ```javascript
+   * async _execute({filePath}) {
+   *   const content = await fs.readFile(filePath, 'utf-8');
+   *   return {
+   *     content: content,
+   *     path: filePath,
+   *     size: content.length
+   *   };
+   * }
+   * ```
+   * 
+   * DO NOT return {success: true, data: ...} - just return the data directly!
+   * 
+   * @param {Object} params - Tool parameters
+   * @returns {Promise<Object>} Direct tool results (will be wrapped automatically)
+   */
+  async _execute(params) {
+    throw new Error(`Tool ${this.name} must implement _execute() method`);
   }
   
   /**

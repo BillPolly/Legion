@@ -58,7 +58,7 @@ class DirectoryCreatorTool extends Tool {
    * @param {Object} args - The arguments for creating the directory
    * @returns {Promise<Object>} The result of creating the directory
    */
-  async execute(args) {
+  async _execute(args) {
     try {
       const { directoryPath, recursive = true } = args;
 

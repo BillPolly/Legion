@@ -170,23 +170,17 @@ describe('FileReaderTool Tests', () => {
     });
 
     it('should validate file path input', async () => {
-      try {
-        await tool.execute({ filePath: '' });
-        fail('Expected error to be thrown');
-      } catch (error) {
-        expect(error.message).toBeDefined();
-        expect(error.cause.errorType).toBe('invalid_path');
-      }
+      const result = await tool.execute({ filePath: '' });
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/File path cannot be empty/);
     });
 
     it('should handle null file path', async () => {
-      try {
-        await tool.execute({ filePath: null });
-        fail('Expected error to be thrown');
-      } catch (error) {
-        expect(error.message).toBeDefined();
-        expect(error.cause.errorType).toBe('invalid_path');
-      }
+      const result = await tool.execute({ filePath: null });
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/File path must be a string/);
     });
 
     it('should handle undefined file path', async () => {
@@ -201,35 +195,26 @@ describe('FileReaderTool Tests', () => {
     it('should handle directories instead of files', async () => {
       await fs.mkdir(path.join(testDir, 'is-directory'));
       
-      try {
-        await tool.execute({ filePath: 'is-directory' });
-        fail('Expected error to be thrown');
-      } catch (error) {
-        expect(error.message).toBeDefined();
-        expect(error.cause.errorType).toMatch(/^(read_error|file_not_found)$/);
-      }
+      const result = await tool.execute({ filePath: 'is-directory' });
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
   });
 
   describe('Security and Path Validation', () => {
     it('should prevent path traversal attacks', async () => {
-      try {
-        await tool.execute({ filePath: '../../../etc/passwd' });
-        fail('Expected error to be thrown');
-      } catch (error) {
-        expect(error.message).toBeDefined();
-        expect(error.cause.errorType).toBe('access_denied');
-      }
+      const result = await tool.execute({ filePath: '../../../etc/passwd' });
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/Access denied.*outside/);
     });
 
     it('should handle null byte injection', async () => {
-      try {
-        await tool.execute({ filePath: 'test.txt\0hidden.txt' });
-        fail('Expected error to be thrown');
-      } catch (error) {
-        expect(error.message).toBeDefined();
-        expect(error.cause.errorType).toBe('invalid_path');
-      }
+      const result = await tool.execute({ filePath: 'test.txt\0hidden.txt' });
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/Invalid file path/);
     });
 
     it('should respect basePath restrictions', async () => {
@@ -246,13 +231,10 @@ describe('FileReaderTool Tests', () => {
       }
       
       // Should fail outside basePath
-      try {
-        await restrictedTool.execute({ filePath: '../outside.txt' });
-        fail('Expected error to be thrown');
-      } catch (error) {
-        expect(error.message).toBeDefined();
-        expect(error.cause.errorType).toBe('access_denied');
-      }
+      const deniedResult = await restrictedTool.execute({ filePath: '../outside.txt' });
+      
+      expect(deniedResult.success).toBe(false);
+      expect(deniedResult.error).toMatch(/Access denied.*outside/);
     });
 
     it('should normalize paths correctly', async () => {
@@ -374,13 +356,10 @@ describe('FileReaderTool Tests', () => {
       await fs.unlink(path.join(testDir, 'delete-me.txt'));
       
       // Try to read deleted file
-      try {
-        await tool.execute({ filePath: 'delete-me.txt' });
-        fail('Expected error to be thrown');
-      } catch (error) {
-        expect(error.message).toBeDefined();
-        expect(error.cause.errorType).toBe('file_not_found');
-      }
+      const result = await tool.execute({ filePath: 'delete-me.txt' });
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
   });
 });

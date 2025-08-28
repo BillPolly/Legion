@@ -39,8 +39,14 @@ describe('DirectoryCurrentTool Tests', () => {
   });
   
   afterAll(async () => {
-    // Restore original working directory
-    process.chdir(originalCwd);
+    // Restore original working directory safely
+    try {
+      process.chdir(originalCwd);
+    } catch (error) {
+      // If original working directory doesn't exist or can't be accessed,
+      // change to a safe directory instead
+      process.chdir(os.homedir());
+    }
     
     // Cleanup test directory
     try {
@@ -101,10 +107,11 @@ describe('DirectoryCurrentTool Tests', () => {
       
       const result = await tool.execute({});
       
-      expect(result.currentPath).toBeDefined();
-      expect(typeof result.currentPath).toBe('string');
-      expect(path.isAbsolute(result.currentPath)).toBe(true);
-      expect(result.currentPath).toBe(process.cwd());
+      expect(result.success).toBe(true);
+      expect(result.data.currentPath).toBeDefined();
+      expect(typeof result.data.currentPath).toBe('string');
+      expect(path.isAbsolute(result.data.currentPath)).toBe(true);
+      expect(result.data.currentPath).toBe(process.cwd());
     });
 
     it('should return relative path when requested', async () => {
@@ -118,10 +125,11 @@ describe('DirectoryCurrentTool Tests', () => {
       
       const result = await tool.execute({ relative: true });
       
-      expect(result.basePath).toBe(testDir);
-      expect(result.relativePath).toBeDefined();
-      expect(result.relativePath).toBe('current-test');
-      expect(result.currentPath).toBe(path.join(testDir, 'current-test'));
+      expect(result.success).toBe(true);
+      expect(result.data.basePath).toBe(testDir);
+      expect(result.data.relativePath).toBeDefined();
+      expect(result.data.relativePath).toBe('current-test');
+      expect(result.data.currentPath).toBe(path.join(testDir, 'current-test'));
     });
 
     it('should handle root directory case', async () => {
@@ -135,8 +143,9 @@ describe('DirectoryCurrentTool Tests', () => {
       
       const result = await tool.execute({ relative: true });
       
-      expect(result.relativePath).toBe('.');
-      expect(result.currentPath).toBe(testDir);
+      expect(result.success).toBe(true);
+      expect(result.data.relativePath).toBe('.');
+      expect(result.data.currentPath).toBe(testDir);
     });
 
     it('should provide directory metadata', async () => {
@@ -147,13 +156,14 @@ describe('DirectoryCurrentTool Tests', () => {
       
       const result = await tool.execute({ includeMetadata: true });
       
-      expect(result.metadata).toBeDefined();
-      expect(result.metadata.exists).toBe(true);
-      expect(result.metadata.readable).toBe(true);
-      expect(result.metadata.writable).toBeDefined();
-      expect(result.metadata.size).toBeDefined();
-      expect(result.metadata.created).toBeDefined();
-      expect(result.metadata.modified).toBeDefined();
+      expect(result.success).toBe(true);
+      expect(result.data.metadata).toBeDefined();
+      expect(result.data.metadata.exists).toBe(true);
+      expect(result.data.metadata.readable).toBe(true);
+      expect(result.data.metadata.writable).toBeDefined();
+      expect(result.data.metadata.size).toBeDefined();
+      expect(result.data.metadata.created).toBeDefined();
+      expect(result.data.metadata.modified).toBeDefined();
     });
 
     it('should track directory changes', async () => {
@@ -164,15 +174,17 @@ describe('DirectoryCurrentTool Tests', () => {
       
       // Get initial directory
       const initial = await tool.execute({});
-      expect(initial.currentPath).toBe(await fs.realpath(testDir));
+      expect(initial.success).toBe(true);
+      expect(initial.data.currentPath).toBe(await fs.realpath(testDir));
       
       // Change directory
       process.chdir(path.join(testDir, 'current-test'));
       
       // Check new directory
       const changed = await tool.execute({});
-      expect(changed.currentPath).toBe(await fs.realpath(path.join(testDir, 'current-test')));
-      expect(changed.currentPath).not.toBe(initial.currentPath);
+      expect(changed.success).toBe(true);
+      expect(changed.data.currentPath).toBe(await fs.realpath(path.join(testDir, 'current-test')));
+      expect(changed.data.currentPath).not.toBe(initial.data.currentPath);
     });
 
     it('should format output consistently', async () => {
@@ -183,12 +195,13 @@ describe('DirectoryCurrentTool Tests', () => {
       
       const result = await tool.execute({ format: 'unix' });
       
-      expect(result.currentPath).toBeDefined();
+      expect(result.success).toBe(true);
+      expect(result.data.currentPath).toBeDefined();
       
       // Should use forward slashes for Unix format
       if (os.platform() === 'win32') {
-        expect(result.formattedPath).not.toContain('\\');
-        expect(result.formattedPath).toContain('/');
+        expect(result.data.formattedPath).not.toContain('\\');
+        expect(result.data.formattedPath).toContain('/');
       }
     });
   });
@@ -210,11 +223,12 @@ describe('DirectoryCurrentTool Tests', () => {
       
       const result = await tool.execute({ analyzeComponents: true });
       
-      expect(result.components).toBeDefined();
-      expect(Array.isArray(result.components)).toBe(true);
-      expect(result.components.length).toBeGreaterThan(0);
+      expect(result.success).toBe(true);
+      expect(result.data.components).toBeDefined();
+      expect(Array.isArray(result.data.components)).toBe(true);
+      expect(result.data.components.length).toBeGreaterThan(0);
       
-      const lastComponent = result.components[result.components.length - 1];
+      const lastComponent = result.data.components[result.data.components.length - 1];
       expect(lastComponent).toBe('deep');
     });
 
@@ -228,9 +242,10 @@ describe('DirectoryCurrentTool Tests', () => {
       
       const result = await tool.execute({ calculateDepth: true });
       
-      expect(result.depth).toBeDefined();
-      expect(typeof result.depth).toBe('number');
-      expect(result.depth).toBe(3); // analysis-test/deep/nested = 3 levels
+      expect(result.success).toBe(true);
+      expect(result.data.depth).toBeDefined();
+      expect(typeof result.data.depth).toBe('number');
+      expect(result.data.depth).toBe(3); // analysis-test/deep/nested = 3 levels
     });
 
     it('should identify directory type and purpose', async () => {
@@ -246,9 +261,10 @@ describe('DirectoryCurrentTool Tests', () => {
       
       const result = await tool.execute({ detectType: true });
       
-      expect(result.directoryType).toBeDefined();
-      expect(result.indicators).toBeDefined();
-      expect(Array.isArray(result.indicators)).toBe(true);
+      expect(result.success).toBe(true);
+      expect(result.data.directoryType).toBeDefined();
+      expect(result.data.indicators).toBeDefined();
+      expect(Array.isArray(result.data.indicators)).toBe(true);
     });
   });
 
@@ -264,7 +280,8 @@ describe('DirectoryCurrentTool Tests', () => {
       // Should work within basePath
       process.chdir(testDir);
       const result = await restrictedTool.execute({ relative: true });
-      expect(result.relativePath).toBe('.');
+      expect(result.success).toBe(true);
+      expect(result.data.relativePath).toBe('.');
     });
 
     it('should handle directory access permissions', async () => {
@@ -275,10 +292,11 @@ describe('DirectoryCurrentTool Tests', () => {
       
       const result = await tool.execute({ checkPermissions: true });
       
-      expect(result.permissions).toBeDefined();
-      expect(result.permissions.read).toBeDefined();
-      expect(result.permissions.write).toBeDefined();
-      expect(result.permissions.execute).toBeDefined();
+      expect(result.success).toBe(true);
+      expect(result.data.permissions).toBeDefined();
+      expect(result.data.permissions.read).toBeDefined();
+      expect(result.data.permissions.write).toBeDefined();
+      expect(result.data.permissions.execute).toBeDefined();
     });
 
     it('should validate current directory exists', async () => {
@@ -299,7 +317,8 @@ describe('DirectoryCurrentTool Tests', () => {
       // Try to get current directory status
       const result = await tool.execute({ validateExists: true });
       
-      expect(result.exists).toBe(true); // Should be true since we're back in testDir
+      expect(result.success).toBe(true);
+      expect(result.data.exists).toBe(true); // Should be true since we're back in testDir
     });
   });
 
@@ -327,7 +346,8 @@ describe('DirectoryCurrentTool Tests', () => {
       });
       const duration = Date.now() - startTime;
       
-      expect(result.depth).toBe(10);
+      expect(result.success).toBe(true);
+      expect(result.data.depth).toBe(10);
       expect(duration).toBeLessThan(1000); // Should complete within 1 second
     });
 
@@ -346,7 +366,8 @@ describe('DirectoryCurrentTool Tests', () => {
       
       // All operations should succeed and return consistent results
       results.forEach(result => {
-        expect(result.currentPath).toBe(results[0].currentPath);
+        expect(result.success).toBe(true);
+        expect(result.data.currentPath).toBe(results[0].data.currentPath);
       });
     });
 
@@ -363,7 +384,8 @@ describe('DirectoryCurrentTool Tests', () => {
       
       const result = await tool.execute({ relative: true });
       
-      expect(result.relativePath).toBe('special dir-with_chars');
+      expect(result.success).toBe(true);
+      expect(result.data.relativePath).toBe('special dir-with_chars');
     });
 
     it('should provide consistent results across multiple calls', async () => {

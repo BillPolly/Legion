@@ -95,42 +95,42 @@ describe('CommandExecutorModule', () => {
       const result = await tool.execute({ command: 'echo "Hello World"' });
       
       expect(result.success).toBe(true);
-      expect(result.stdout.trim()).toBe('Hello World');
-      expect(result.command).toBe('echo "Hello World"');
-      expect(result.exitCode).toBe(0);
-      expect(result.stderr).toBe('');
+      expect(result.data.stdout.trim()).toBe('Hello World');
+      expect(result.data.command).toBe('echo "Hello World"');
+      expect(result.data.exitCode).toBe(0);
+      expect(result.data.stderr).toBe('');
     });
 
     test('should execute pwd command successfully', async () => {
       const result = await tool.execute({ command: 'pwd' });
       
       expect(result.success).toBe(true);
-      expect(result.stdout).toContain('/');
-      expect(result.exitCode).toBe(0);
+      expect(result.data.stdout).toContain('/');
+      expect(result.data.exitCode).toBe(0);
     });
 
     test('should execute ls command successfully', async () => {
       const result = await tool.execute({ command: 'ls -la' });
       
       expect(result.success).toBe(true);
-      expect(result.stdout).toBeTruthy();
-      expect(result.exitCode).toBe(0);
+      expect(result.data.stdout).toBeTruthy();
+      expect(result.data.exitCode).toBe(0);
     });
 
     test('should handle commands with pipes', async () => {
       const result = await tool.execute({ command: 'echo "test line" | wc -l' });
       
       expect(result.success).toBe(true);
-      expect(result.stdout.trim()).toBe('1');
-      expect(result.exitCode).toBe(0);
+      expect(result.data.stdout.trim()).toBe('1');
+      expect(result.data.exitCode).toBe(0);
     });
 
     test('should handle commands with variables', async () => {
       const result = await tool.execute({ command: 'TEST_VAR="hello"; echo $TEST_VAR' });
       
       expect(result.success).toBe(true);
-      expect(result.stdout.trim()).toBe('hello');
-      expect(result.exitCode).toBe(0);
+      expect(result.data.stdout.trim()).toBe('hello');
+      expect(result.data.exitCode).toBe(0);
     });
 
     // File Operations Tests
@@ -149,7 +149,7 @@ describe('CommandExecutorModule', () => {
         command: `cat "${testFile}"` 
       });
       expect(readResult.success).toBe(true);
-      expect(readResult.stdout.trim()).toBe(testContent);
+      expect(readResult.data.stdout.trim()).toBe(testContent);
       
       // Cleanup
       await tool.execute({ command: `rm "${testFile}"` });
@@ -170,7 +170,7 @@ describe('CommandExecutorModule', () => {
         command: `cat "${testFile}"` 
       });
       expect(readResult.success).toBe(true);
-      expect(readResult.stdout.trim()).toBe(testContent);
+      expect(readResult.data.stdout.trim()).toBe(testContent);
       
       // Cleanup
       await tool.execute({ command: `rm "${testFile}"` });
@@ -181,8 +181,8 @@ describe('CommandExecutorModule', () => {
       const result = await tool.execute({ command: 'nonexistentcommand12345' });
       
       expect(result.success).toBe(false);
-      expect(result.errorType).toBe('exit_code');
-      expect(result.exitCode).toBeGreaterThan(0);
+      expect(result.data.errorType).toBe('exit_code');
+      expect(result.data.exitCode).toBeGreaterThan(0);
       expect(result.error).toBeTruthy();
     });
 
@@ -190,35 +190,37 @@ describe('CommandExecutorModule', () => {
       const result = await tool.execute({ command: 'ls /nonexistent/directory' });
       
       expect(result.success).toBe(false);
-      expect(result.errorType).toBe('exit_code');
-      expect(result.exitCode).toBeGreaterThan(0);
-      expect(result.stderr).toBeTruthy();
+      expect(result.data.errorType).toBe('exit_code');
+      expect(result.data.exitCode).toBeGreaterThan(0);
+      expect(result.data.stderr).toBeTruthy();
     });
 
     test('should handle commands that write to stderr but succeed', async () => {
       const result = await tool.execute({ command: 'echo "error message" >&2; echo "success"' });
       
       expect(result.success).toBe(true);
-      expect(result.stdout.trim()).toBe('success');
-      expect(result.stderr.trim()).toBe('error message');
-      expect(result.exitCode).toBe(0);
+      expect(result.data.stdout.trim()).toBe('success');
+      expect(result.data.stderr.trim()).toBe('error message');
+      expect(result.data.exitCode).toBe(0);
     });
 
     test('should handle missing command parameter', async () => {
-      await expect(tool.execute({}))
-        .rejects.toThrow();
+      const result = await tool.execute({});
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
 
     test('should handle null command parameter', async () => {
-      await expect(tool.execute({ command: null }))
-        .rejects.toThrow();
+      const result = await tool.execute({ command: null });
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
 
     test('should handle empty command parameter', async () => {
       const result = await tool.execute({ command: '' });
       
       expect(result.success).toBe(true); // Empty command succeeds in bash
-      expect(result.stdout).toBe('');
+      expect(result.data.stdout).toBe('');
     });
 
     // Timeout Tests
@@ -229,7 +231,7 @@ describe('CommandExecutorModule', () => {
       });
       
       expect(result.success).toBe(false);
-      expect(result.errorType).toBe('timeout');
+      expect(result.data.errorType).toBe('timeout');
       expect(result.error).toBeTruthy();
     }, 10000);
 
@@ -240,7 +242,7 @@ describe('CommandExecutorModule', () => {
       });
       
       expect(result.success).toBe(true);
-      expect(result.stdout.trim()).toBe('fast');
+      expect(result.data.stdout.trim()).toBe('fast');
     });
 
     // Security Tests - Dangerous Command Detection
@@ -248,7 +250,7 @@ describe('CommandExecutorModule', () => {
       const result = await tool.execute({ command: 'rm -rf /' });
       
       expect(result.success).toBe(false);
-      expect(result.errorType).toBe('dangerous_command');
+      expect(result.data.errorType).toBe('dangerous_command');
       expect(result.error).toContain('safety');
     });
 
@@ -256,28 +258,28 @@ describe('CommandExecutorModule', () => {
       const result = await tool.execute({ command: 'rm -rf  /  ' });
       
       expect(result.success).toBe(false);
-      expect(result.errorType).toBe('dangerous_command');
+      expect(result.data.errorType).toBe('dangerous_command');
     });
 
     test('should block disk wiping commands', async () => {
       const result = await tool.execute({ command: 'dd if=/dev/zero of=/dev/sda' });
       
       expect(result.success).toBe(false);
-      expect(result.errorType).toBe('dangerous_command');
+      expect(result.data.errorType).toBe('dangerous_command');
     });
 
     test('should block fork bomb commands', async () => {
       const result = await tool.execute({ command: ':(){ :|:& };:' });
       
       expect(result.success).toBe(false);
-      expect(result.errorType).toBe('dangerous_command');
+      expect(result.data.errorType).toBe('dangerous_command');
     });
 
     test('should block filesystem formatting commands', async () => {
       const result = await tool.execute({ command: 'mkfs.ext4 /dev/sda1' });
       
       expect(result.success).toBe(false);
-      expect(result.errorType).toBe('dangerous_command');
+      expect(result.data.errorType).toBe('dangerous_command');
     });
 
     test('should allow safe rm commands', async () => {
@@ -288,14 +290,14 @@ describe('CommandExecutorModule', () => {
       const result = await tool.execute({ command: `rm "${testFile}"` });
       
       expect(result.success).toBe(true);
-      expect(result.exitCode).toBe(0);
+      expect(result.data.exitCode).toBe(0);
     });
 
     test('should allow safe ls commands in root', async () => {
       const result = await tool.execute({ command: 'ls /' });
       
       expect(result.success).toBe(true);
-      expect(result.stdout).toBeTruthy();
+      expect(result.data.stdout).toBeTruthy();
     });
 
     // Performance and Stress Tests
@@ -305,7 +307,7 @@ describe('CommandExecutorModule', () => {
       });
       
       expect(result.success).toBe(true);
-      expect(result.stdout.split('\n').length).toBeGreaterThan(40);
+      expect(result.data.stdout.split('\n').length).toBeGreaterThan(40);
     });
 
     test('should handle multiple commands with &&', async () => {
@@ -314,9 +316,9 @@ describe('CommandExecutorModule', () => {
       });
       
       expect(result.success).toBe(true);
-      expect(result.stdout).toContain('first');
-      expect(result.stdout).toContain('second');
-      expect(result.stdout).toContain('third');
+      expect(result.data.stdout).toContain('first');
+      expect(result.data.stdout).toContain('second');
+      expect(result.data.stdout).toContain('third');
     });
 
     test('should handle command substitution', async () => {
@@ -325,8 +327,8 @@ describe('CommandExecutorModule', () => {
       });
       
       expect(result.success).toBe(true);
-      expect(result.stdout).toContain('Current date:');
-      expect(result.stdout).toMatch(/\d{4}/); // Should contain a year
+      expect(result.data.stdout).toContain('Current date:');
+      expect(result.data.stdout).toMatch(/\d{4}/); // Should contain a year
     });
 
     // Complex Command Tests
@@ -336,9 +338,9 @@ describe('CommandExecutorModule', () => {
       });
       
       expect(result.success).toBe(true);
-      expect(result.stdout).toContain('apple');
-      expect(result.stdout).toContain('banana');
-      expect(result.stdout).not.toContain('cherry');
+      expect(result.data.stdout).toContain('apple');
+      expect(result.data.stdout).toContain('banana');
+      expect(result.data.stdout).not.toContain('cherry');
     });
 
     test('should handle awk processing', async () => {
@@ -347,9 +349,9 @@ describe('CommandExecutorModule', () => {
       });
       
       expect(result.success).toBe(true);
-      expect(result.stdout).toContain('apple:5');
-      expect(result.stdout).toContain('banana:3');  
-      expect(result.stdout).toContain('cherry:1');
+      expect(result.data.stdout).toContain('apple:5');
+      expect(result.data.stdout).toContain('banana:3');  
+      expect(result.data.stdout).toContain('cherry:1');
     });
 
     test('should handle sort operations', async () => {
@@ -358,7 +360,7 @@ describe('CommandExecutorModule', () => {
       });
       
       expect(result.success).toBe(true);
-      const lines = result.stdout.trim().split('\n');
+      const lines = result.data.stdout.trim().split('\n');
       expect(lines).toEqual(['1', '2', '3', '4']);
     });
   });
@@ -380,7 +382,7 @@ describe('CommandExecutorModule', () => {
       expect(results).toHaveLength(3);
       results.forEach((result, index) => {
         expect(result.success).toBe(true);
-        expect(result.stdout.trim()).toBe(`test${index + 1}`);
+        expect(result.data.stdout.trim()).toBe(`test${index + 1}`);
       });
     });
 
@@ -396,7 +398,7 @@ describe('CommandExecutorModule', () => {
       expect(results).toHaveLength(5);
       results.forEach((result, index) => {
         expect(result.success).toBe(true);
-        expect(result.stdout.trim()).toBe(`concurrent${index}`);
+        expect(result.data.stdout.trim()).toBe(`concurrent${index}`);
       });
     });
 
@@ -410,7 +412,7 @@ describe('CommandExecutorModule', () => {
       // Try to access it in another command (should fail since they're isolated)
       const result2 = await tool.execute({ command: 'echo $TEST_VAR' });
       expect(result2.success).toBe(true);
-      expect(result2.stdout.trim()).toBe(''); // Variable not preserved
+      expect(result2.data.stdout.trim()).toBe(''); // Variable not preserved
     });
   });
 
@@ -425,7 +427,7 @@ describe('CommandExecutorModule', () => {
       const result = await tool.execute({ command: 'echo "unclosed quote' });
       
       expect(result.success).toBe(false);
-      expect(result.errorType).toBeTruthy();
+      expect(result.data.errorType).toBeTruthy();
     });
 
     test('should handle binary output commands', async () => {
@@ -436,7 +438,7 @@ describe('CommandExecutorModule', () => {
       const result = await tool.execute({ command: `cat "${testFile}"` });
       
       expect(result.success).toBe(true);
-      expect(result.stdout).toBeTruthy();
+      expect(result.data.stdout).toBeTruthy();
       
       // Cleanup
       await tool.execute({ command: `rm "${testFile}"` });
@@ -448,8 +450,8 @@ describe('CommandExecutorModule', () => {
       
       // Either succeeds or fails with permission error - both are valid
       if (!result.success) {
-        expect(result.errorType).toBe('exit_code');
-        expect(result.stderr).toBeTruthy();
+        expect(result.data.errorType).toBe('exit_code');
+        expect(result.data.stderr).toBeTruthy();
       }
     });
 
@@ -458,7 +460,7 @@ describe('CommandExecutorModule', () => {
       const result = await tool.execute({ command: `echo "${longString}"` });
       
       expect(result.success).toBe(true);
-      expect(result.stdout.trim()).toBe(longString);
+      expect(result.data.stdout.trim()).toBe(longString);
     });
 
     test('should handle special characters in commands', async () => {
@@ -468,7 +470,7 @@ describe('CommandExecutorModule', () => {
       });
       
       expect(result.success).toBe(true);
-      expect(result.stdout.trim()).toBe(specialChars);
+      expect(result.data.stdout.trim()).toBe(specialChars);
     });
 
     test('should maintain consistent error response format', async () => {
@@ -482,8 +484,8 @@ describe('CommandExecutorModule', () => {
         try {
           const result = await tool.execute({ command: cmd });
           if (!result.success) {
-            expect(result).toHaveProperty('command');
-            expect(result).toHaveProperty('errorType');
+            expect(result.data).toHaveProperty('command');
+            expect(result.data).toHaveProperty('errorType');
             expect(result).toHaveProperty('success', false);
           }
         } catch (error) {
@@ -542,7 +544,7 @@ describe('CommandExecutorModule', () => {
       const duration = Date.now() - start;
       
       expect(result.success).toBe(false);
-      expect(result.errorType).toBe('timeout');
+      expect(result.data.errorType).toBe('timeout');
       expect(duration).toBeLessThan(shortTimeout + 200); // Allow small buffer
     }, 10000);
   });

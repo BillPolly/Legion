@@ -100,25 +100,25 @@ describe('EncodeModule', () => {
       const result = await base64EncodeTool.execute({ data: 'hello world' });
       
       expect(result.success).toBe(true);
-      expect(result.result).toBe('aGVsbG8gd29ybGQ=');
-      expect(result.originalLength).toBe(11);
-      expect(result.encodedLength).toBe(16);
+      expect(result.data.result).toBe('aGVsbG8gd29ybGQ=');
+      expect(result.data.originalLength).toBe(11);
+      expect(result.data.encodedLength).toBe(16);
     });
 
     it('should encode empty string correctly', async () => {
       const result = await base64EncodeTool.execute({ data: '' });
       
       expect(result.success).toBe(true);
-      expect(result.result).toBe('');
-      expect(result.originalLength).toBe(0);
-      expect(result.encodedLength).toBe(0);
+      expect(result.data.result).toBe('');
+      expect(result.data.originalLength).toBe(0);
+      expect(result.data.encodedLength).toBe(0);
     });
 
     it('should encode unicode text correctly', async () => {
       const result = await base64EncodeTool.execute({ data: 'Hello 世界!' });
       
       expect(result.success).toBe(true);
-      expect(result.result).toBe('SGVsbG8g5LiW55WMIQ==');
+      expect(result.data.result).toBe('SGVsbG8g5LiW55WMIQ==');
     });
 
     it('should handle different input encodings', async () => {
@@ -128,7 +128,7 @@ describe('EncodeModule', () => {
       });
       
       expect(result.success).toBe(true);
-      expect(result.result).toBe('aGVsbG8=');
+      expect(result.data.result).toBe('aGVsbG8=');
     });
 
     it('should handle missing data parameter', async () => {
@@ -150,8 +150,8 @@ describe('EncodeModule', () => {
       const result = await base64EncodeTool.execute({ data: largeText });
       
       expect(result.success).toBe(true);
-      expect(result.originalLength).toBe(10000);
-      expect(result.encodedLength).toBeGreaterThan(10000);
+      expect(result.data.originalLength).toBe(10000);
+      expect(result.data.encodedLength).toBeGreaterThan(10000);
     });
   });
 
@@ -180,25 +180,25 @@ describe('EncodeModule', () => {
       const result = await base64DecodeTool.execute({ data: 'aGVsbG8gd29ybGQ=' });
       
       expect(result.success).toBe(true);
-      expect(result.result).toBe('hello world');
-      expect(result.originalLength).toBe(16);
-      expect(result.decodedLength).toBe(11);
+      expect(result.data.result).toBe('hello world');
+      expect(result.data.originalLength).toBe(16);
+      expect(result.data.decodedLength).toBe(11);
     });
 
     it('should decode empty base64 correctly', async () => {
       const result = await base64DecodeTool.execute({ data: '' });
       
       expect(result.success).toBe(true);
-      expect(result.result).toBe('');
-      expect(result.originalLength).toBe(0);
-      expect(result.decodedLength).toBe(0);
+      expect(result.data.result).toBe('');
+      expect(result.data.originalLength).toBe(0);
+      expect(result.data.decodedLength).toBe(0);
     });
 
     it('should decode unicode base64 correctly', async () => {
       const result = await base64DecodeTool.execute({ data: 'SGVsbG8g5LiW55WMIQ==' });
       
       expect(result.success).toBe(true);
-      expect(result.result).toBe('Hello 世界!');
+      expect(result.data.result).toBe('Hello 世界!');
     });
 
     it('should handle different output encodings', async () => {
@@ -208,7 +208,7 @@ describe('EncodeModule', () => {
       });
       
       expect(result.success).toBe(true);
-      expect(result.result).toBe('hello');
+      expect(result.data.result).toBe('hello');
     });
 
     it('should handle missing data parameter', async () => {
@@ -224,7 +224,7 @@ describe('EncodeModule', () => {
       const result = await base64DecodeTool.execute({ data: 'invalid!!!base64' });
       
       expect(result.success).toBe(true);
-      expect(result.result).toBeDefined();
+      expect(result.data.result).toBeDefined();
       // The decoded result will be something, but not meaningful
     });
 
@@ -237,10 +237,10 @@ describe('EncodeModule', () => {
       const encodeResult = await encodeTool.execute({ data: originalText });
       
       // Then decode
-      const decodeResult = await base64DecodeTool.execute({ data: encodeResult.result });
+      const decodeResult = await base64DecodeTool.execute({ data: encodeResult.data.result });
       
       expect(decodeResult.success).toBe(true);
-      expect(decodeResult.result).toBe(originalText);
+      expect(decodeResult.data.result).toBe(originalText);
     });
   });
 
@@ -269,32 +269,32 @@ describe('EncodeModule', () => {
       const result = await urlEncodeTool.execute({ data: 'hello world' });
       
       expect(result.success).toBe(true);
-      expect(result.result).toBe('hello%20world');
-      expect(result.originalLength).toBe(11);
-      expect(result.encodedLength).toBe(13);
+      expect(result.data.result).toBe('hello%20world');
+      expect(result.data.originalLength).toBe(11);
+      expect(result.data.encodedLength).toBe(13);
     });
 
     it('should encode special URL characters correctly', async () => {
       const result = await urlEncodeTool.execute({ data: 'key=value&param=test' });
       
       expect(result.success).toBe(true);
-      expect(result.result).toBe('key%3Dvalue%26param%3Dtest');
+      expect(result.data.result).toBe('key%3Dvalue%26param%3Dtest');
     });
 
     it('should encode unicode characters correctly', async () => {
       const result = await urlEncodeTool.execute({ data: 'Hello 世界!' });
       
       expect(result.success).toBe(true);
-      expect(result.result).toBe('Hello%20%E4%B8%96%E7%95%8C!');
+      expect(result.data.result).toBe('Hello%20%E4%B8%96%E7%95%8C!');
     });
 
     it('should encode empty string correctly', async () => {
       const result = await urlEncodeTool.execute({ data: '' });
       
       expect(result.success).toBe(true);
-      expect(result.result).toBe('');
-      expect(result.originalLength).toBe(0);
-      expect(result.encodedLength).toBe(0);
+      expect(result.data.result).toBe('');
+      expect(result.data.originalLength).toBe(0);
+      expect(result.data.encodedLength).toBe(0);
     });
 
     it('should handle missing data parameter', async () => {
@@ -309,7 +309,7 @@ describe('EncodeModule', () => {
       const result = await urlEncodeTool.execute({ data: queryString });
       
       expect(result.success).toBe(true);
-      expect(result.result).toBe('search%3Dhello%20world%26category%3Dtest%20%26%20demo%26lang%3Den');
+      expect(result.data.result).toBe('search%3Dhello%20world%26category%3Dtest%20%26%20demo%26lang%3Den');
     });
   });
 
@@ -338,32 +338,32 @@ describe('EncodeModule', () => {
       const result = await urlDecodeTool.execute({ data: 'hello%20world' });
       
       expect(result.success).toBe(true);
-      expect(result.result).toBe('hello world');
-      expect(result.originalLength).toBe(13);
-      expect(result.decodedLength).toBe(11);
+      expect(result.data.result).toBe('hello world');
+      expect(result.data.originalLength).toBe(13);
+      expect(result.data.decodedLength).toBe(11);
     });
 
     it('should decode special URL characters correctly', async () => {
       const result = await urlDecodeTool.execute({ data: 'key%3Dvalue%26param%3Dtest' });
       
       expect(result.success).toBe(true);
-      expect(result.result).toBe('key=value&param=test');
+      expect(result.data.result).toBe('key=value&param=test');
     });
 
     it('should decode unicode characters correctly', async () => {
       const result = await urlDecodeTool.execute({ data: 'Hello%20%E4%B8%96%E7%95%8C!' });
       
       expect(result.success).toBe(true);
-      expect(result.result).toBe('Hello 世界!');
+      expect(result.data.result).toBe('Hello 世界!');
     });
 
     it('should decode empty string correctly', async () => {
       const result = await urlDecodeTool.execute({ data: '' });
       
       expect(result.success).toBe(true);
-      expect(result.result).toBe('');
-      expect(result.originalLength).toBe(0);
-      expect(result.decodedLength).toBe(0);
+      expect(result.data.result).toBe('');
+      expect(result.data.originalLength).toBe(0);
+      expect(result.data.decodedLength).toBe(0);
     });
 
     it('should handle missing data parameter', async () => {
@@ -389,10 +389,10 @@ describe('EncodeModule', () => {
       const encodeResult = await encodeTool.execute({ data: originalText });
       
       // Then decode
-      const decodeResult = await urlDecodeTool.execute({ data: encodeResult.result });
+      const decodeResult = await urlDecodeTool.execute({ data: encodeResult.data.result });
       
       expect(decodeResult.success).toBe(true);
-      expect(decodeResult.result).toBe(originalText);
+      expect(decodeResult.data.result).toBe(originalText);
     });
   });
 
@@ -461,7 +461,7 @@ describe('EncodeModule', () => {
       const endTime = Date.now();
       
       expect(result.success).toBe(true);
-      expect(result.originalLength).toBe(50000);
+      expect(result.data.originalLength).toBe(50000);
       expect(endTime - startTime).toBeLessThan(200); // Should complete in <200ms
     });
 
@@ -474,11 +474,11 @@ describe('EncodeModule', () => {
       const encoded = await base64Encode.execute({ data: largeData });
       
       const startTime = Date.now();
-      const result = await base64Decode.execute({ data: encoded.result });
+      const result = await base64Decode.execute({ data: encoded.data.result });
       const endTime = Date.now();
       
       expect(result.success).toBe(true);
-      expect(result.result).toBe(largeData);
+      expect(result.data.result).toBe(largeData);
       expect(endTime - startTime).toBeLessThan(200); // Should complete in <200ms
     });
 

@@ -1,16 +1,6 @@
 import { jest } from '@jest/globals';
 import AIGenerationModule from '../../AIGenerationModule.js';
 
-// Mock LLMClient
-jest.mock('@legion/llm', () => {
-  return {
-    LLMClient: jest.fn().mockImplementation(() => ({
-      generateImage: jest.fn(),
-      supportsImageGeneration: jest.fn().mockReturnValue(true)
-    }))
-  };
-});
-
 describe('AIGenerationModule', () => {
   let mockResourceManager;
   
@@ -44,7 +34,7 @@ describe('AIGenerationModule', () => {
       mockResourceManager.get.mockImplementation(() => null);
       
       await expect(AIGenerationModule.create(mockResourceManager))
-        .rejects.toThrow('OPENAI_API_KEY environment variable is required');
+        .rejects.toThrow('OPENAI_API_KEY environment variable is required for AI generation module');
     });
 
     test('should initialize LLMClient during initialization', async () => {
@@ -61,14 +51,18 @@ describe('AIGenerationModule', () => {
     let mockGenerateImage;
 
     beforeEach(async () => {
-      const { LLMClient } = await import('@legion/llm');
-      mockGenerateImageImage = jest.fn();
-      LLMClient.mockImplementation(() => ({
+      // Create a mock LLMClient
+      mockGenerateImage = jest.fn();
+      const mockLLMClient = {
         generateImage: mockGenerateImage,
         supportsImageGeneration: jest.fn().mockReturnValue(true)
-      }));
+      };
       
+      // Create module
       module = await AIGenerationModule.create(mockResourceManager);
+      
+      // Replace the real llmClient with our mock after initialization
+      module.llmClient = mockLLMClient;
     });
 
     test('should generate image with default parameters', async () => {
@@ -76,13 +70,13 @@ describe('AIGenerationModule', () => {
         b64_json: 'base64encodedimage',
         revised_prompt: 'A detailed mountain landscape'
       }];
-      mockGenerateImageImage.mockResolvedValue(mockResponse);
+      mockGenerateImage.mockResolvedValue(mockResponse);
 
       const result = await module.generateImage({
         prompt: 'A mountain landscape'
       });
 
-      expect(mockGenerate).toHaveBeenCalledWith({
+      expect(mockGenerateImage).toHaveBeenCalledWith({
         model: 'dall-e-3',
         prompt: 'A mountain landscape',
         n: 1,
@@ -113,7 +107,7 @@ describe('AIGenerationModule', () => {
         style: 'natural'
       });
 
-      expect(mockGenerate).toHaveBeenCalledWith({
+      expect(mockGenerateImage).toHaveBeenCalledWith({
         model: 'dall-e-3',
         prompt: 'A sunset',
         n: 1,
@@ -173,11 +167,13 @@ describe('AIGenerationModule', () => {
   });
 
   describe('getTools', () => {
-    test('should return empty array for GenericModule compatibility', async () => {
+    test('should return array with registered tools', async () => {
       const module = await AIGenerationModule.create(mockResourceManager);
       const tools = module.getTools();
       
-      expect(tools).toEqual([]);
+      expect(tools).toHaveLength(1);
+      expect(tools[0].name).toBe('generate_image');
+      expect(tools[0].description).toContain('Generate an image using DALL-E 3');
     });
   });
 });

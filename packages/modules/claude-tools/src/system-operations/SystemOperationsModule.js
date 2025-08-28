@@ -60,3 +60,4 @@ class SystemOperationsModule extends Module {
 }
 
 export default SystemOperationsModule;
+export { SystemOperationsModule };

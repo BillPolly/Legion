@@ -114,9 +114,9 @@ describe.skip('Live File Analysis with Claude', () => {
     console.log('Tool execution result:', JSON.stringify(result, null, 2));
     
     expect(result.success).toBe(true);
-    expect(result.analysis).toBeTruthy();
-    expect(result.file.type).toBe('image');
-    expect(result.provider).toBe('anthropic');
+    expect(result.data.analysis).toBeTruthy();
+    expect(result.data.file.type).toBe('image');
+    expect(result.data.provider).toBe('anthropic');
   }, 30000);
 
   test('should analyze a markdown file', async () => {

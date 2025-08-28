@@ -6,7 +6,7 @@
  */
 
 import { jest } from '@jest/globals';
-import { ArtifactDetector } from '../../../../../aiur/src/agents-bt/artifacts/ArtifactDetector.js';
+import { ArtifactDetector } from '../../../../../../aiur/src/agents-bt/artifacts/ArtifactDetector.js';
 import AIGenerationModule from '../../AIGenerationModule.js';
 
 // Mock LLMClient for testing
@@ -49,8 +49,17 @@ describe('Image Generation Artifact Integration', () => {
       })
     };
 
-    // Create module and artifact detector
+    // Create module
     module = await AIGenerationModule.create(mockResourceManager);
+    
+    // Replace the real llmClient with our mock after initialization (same fix as unit tests)
+    const mockLLMClient = {
+      generateImage: mockGenerateImage,
+      supportsImageGeneration: mockSupportsImageGeneration
+    };
+    module.llmClient = mockLLMClient;
+    
+    // Create artifact detector
     artifactDetector = new ArtifactDetector();
   });
 

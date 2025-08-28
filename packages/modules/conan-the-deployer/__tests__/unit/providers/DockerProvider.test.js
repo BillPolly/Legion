@@ -18,6 +18,7 @@ const mockDockerClient = {
 };
 
 jest.unstable_mockModule('@legion/resource-manager', () => ({
+  ResourceManager: jest.fn(() => mockResourceManager),
   default: jest.fn(() => mockResourceManager)
 }));
 

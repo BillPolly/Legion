@@ -62,7 +62,7 @@ class FileWriterTool extends Tool {
    * @param {Object} args - The arguments for writing the file
    * @returns {Promise<Object>} The result of writing the file
    */
-  async execute(args) {
+  async _execute(args) {
     try {
       let { filePath, content, append = false } = args;
       

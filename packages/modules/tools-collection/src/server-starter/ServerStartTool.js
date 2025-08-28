@@ -112,7 +112,7 @@ export class ServerStartTool extends Tool {
     return { valid: errors.length === 0, errors, warnings };
   }
 
-  async execute(params) {
+  async _execute(params) {
     const { command, cwd = process.cwd(), timeout = 5000 } = params;
 
     // Validate required parameters
@@ -120,167 +120,130 @@ export class ServerStartTool extends Tool {
       throw new Error('command parameter is required');
     }
 
-    try {
-      // Validate working directory exists if specified
-      if (cwd !== process.cwd()) {
-        try {
-          const fs = await import('fs');
-          await fs.promises.access(cwd);
-        } catch (dirError) {
-          return {
-            success: false,
-            error: `Working directory does not exist: ${cwd}`,
-            command: command,
-            cwd: cwd
-          };
-        }
-      }
-
-      // Parse command into parts
-      const parts = command.split(' ');
-      const cmd = parts[0];
-      const args = parts.slice(1);
-
-      // Start the server process
-      let serverProcess;
+    // Validate working directory exists if specified
+    if (cwd !== process.cwd()) {
       try {
-        serverProcess = spawn(cmd, args, {
-          cwd: cwd,
-          shell: true,
-          env: { ...process.env },
-          stdio: ['pipe', 'pipe', 'pipe']
-        });
-      } catch (spawnError) {
-        return {
-          success: false,
-          error: `Failed to spawn process: ${spawnError.message}`,
-          command: command,
-          cwd: cwd
-        };
+        const fs = await import('fs');
+        await fs.promises.access(cwd);
+      } catch (dirError) {
+        throw new Error(`Working directory does not exist: ${cwd}`);
       }
+    }
 
-      const pid = serverProcess.pid;
-      
-      // Handle spawn errors
-      if (!pid) {
-        return {
-          success: false,
-          error: 'Failed to get process ID - process may not have started',
-          command: command,
-          cwd: cwd
-        };
-      }
+    // Parse command into parts
+    const parts = command.split(' ');
+    const cmd = parts[0];
+    const args = parts.slice(1);
 
-      // Set up output capturing
-      const outputLines = [];
-      const maxLines = 1000;
-
-      serverProcess.stdout.on('data', (data) => {
-        const lines = data.toString().split('\n').filter(line => line.trim());
-        outputLines.push(...lines);
-        if (outputLines.length > maxLines) {
-          outputLines.splice(0, outputLines.length - maxLines);
-        }
+    // Start the server process
+    let serverProcess;
+    try {
+      serverProcess = spawn(cmd, args, {
+        cwd: cwd,
+        shell: true,
+        env: { ...process.env },
+        stdio: ['pipe', 'pipe', 'pipe']
       });
+    } catch (spawnError) {
+      throw new Error(`Failed to spawn process: ${spawnError.message}`);
+    }
 
-      serverProcess.stderr.on('data', (data) => {
-        const lines = data.toString().split('\n').filter(line => line.trim());
-        outputLines.push(...lines);
-        if (outputLines.length > maxLines) {
-          outputLines.splice(0, outputLines.length - maxLines);
-        }
-      });
+    const pid = serverProcess.pid;
+    
+    // Handle spawn errors
+    if (!pid) {
+      throw new Error('Failed to get process ID - process may not have started');
+    }
 
-      // Handle process exit and errors
-      let processExited = false;
-      let exitError = null;
-      
-      serverProcess.on('exit', (code) => {
-        processExited = true;
-        processRegistry.delete(pid);
-        if (code !== 0) {
-          exitError = `Process exited with code ${code}`;
-        }
-      });
-      
-      serverProcess.on('error', (error) => {
-        processExited = true;
-        exitError = `Process error: ${error.message}`;
-        processRegistry.delete(pid);
-      });
+    // Set up output capturing
+    const outputLines = [];
+    const maxLines = 1000;
 
-      // Wait briefly to ensure process starts and check for immediate failures
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      // Check if process failed immediately with non-zero exit
-      if (processExited && exitError) {
-        return {
-          success: false,
-          error: exitError,
-          command: command,
-          cwd: cwd
-        };
+    serverProcess.stdout.on('data', (data) => {
+      const lines = data.toString().split('\n').filter(line => line.trim());
+      outputLines.push(...lines);
+      if (outputLines.length > maxLines) {
+        outputLines.splice(0, outputLines.length - maxLines);
       }
-      
-      // For processes that exit immediately with code 0 (like echo), this is normal
-      // We still register them and return success
-      if (processExited && !exitError) {
-        // Process completed successfully - still register for output reading
-        processRegistry.set(pid, {
-          process: serverProcess,
-          outputLines: outputLines,
-          command: command,
-          cwd: cwd,
-          startTime: Date.now(),
-          completed: true
-        });
-        
-        return {
-          success: true,
-          pid: pid,
-          command: command,
-          cwd: cwd,
-          status: 'completed',
-          process: serverProcess
-        };
-      }
-      
-      // Check if process was killed (different from natural completion)
-      if (serverProcess.killed) {
-        return {
-          success: false,
-          error: 'Process was killed immediately after start',
-          command: command,
-          cwd: cwd
-        };
-      }
+    });
 
-      // Register process for management
+    serverProcess.stderr.on('data', (data) => {
+      const lines = data.toString().split('\n').filter(line => line.trim());
+      outputLines.push(...lines);
+      if (outputLines.length > maxLines) {
+        outputLines.splice(0, outputLines.length - maxLines);
+      }
+    });
+
+    // Handle process exit and errors
+    let processExited = false;
+    let exitError = null;
+    
+    serverProcess.on('exit', (code) => {
+      processExited = true;
+      processRegistry.delete(pid);
+      if (code !== 0) {
+        exitError = `Process exited with code ${code}`;
+      }
+    });
+    
+    serverProcess.on('error', (error) => {
+      processExited = true;
+      exitError = `Process error: ${error.message}`;
+      processRegistry.delete(pid);
+    });
+
+    // Wait briefly to ensure process starts and check for immediate failures
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    // Check if process failed immediately with non-zero exit
+    if (processExited && exitError) {
+      throw new Error(exitError);
+    }
+    
+    // For processes that exit immediately with code 0 (like echo), this is normal
+    // We still register them and return success
+    if (processExited && !exitError) {
+      // Process completed successfully - still register for output reading
       processRegistry.set(pid, {
         process: serverProcess,
         outputLines: outputLines,
         command: command,
         cwd: cwd,
-        startTime: Date.now()
+        startTime: Date.now(),
+        completed: true
       });
-
+      
       return {
-        success: true,
         pid: pid,
         command: command,
         cwd: cwd,
-        status: 'running',
-        process: serverProcess // Include for immediate cleanup in tests
-      };
-
-    } catch (error) {
-      return {
-        success: false,
-        error: `Execution error: ${error.message}`,
-        command: command,
-        cwd: cwd
+        status: 'completed',
+        process: serverProcess
       };
     }
+    
+    // Check if process was killed (different from natural completion)
+    if (serverProcess.killed) {
+      throw new Error('Process was killed immediately after start');
+    }
+
+    // Register process for management
+    processRegistry.set(pid, {
+      process: serverProcess,
+      outputLines: outputLines,
+      command: command,
+      cwd: cwd,
+      startTime: Date.now()
+    });
+
+    return {
+      pid: pid,
+      command: command,
+      cwd: cwd,
+      status: 'running',
+      process: serverProcess // Include for immediate cleanup in tests
+    };
   }
 }
 

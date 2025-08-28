@@ -57,7 +57,7 @@ class DirectoryChangeTool extends Tool {
    * @param {Object} args - The arguments for changing directory
    * @returns {Promise<Object>} The result of changing directory
    */
-  async execute(args) {
+  async _execute(args) {
     try {
       const { directoryPath } = args;
       const previousPath = process.cwd();
@@ -95,7 +95,7 @@ class DirectoryChangeTool extends Tool {
       const resolvedPath = this.resolveSpecialPath(directoryPath);
 
       // Check if path is within allowed basePath
-      if (!this.isPathAllowed(resolvedPath)) {
+      if (!(await this.isPathAllowed(resolvedPath))) {
         throw new Error('Access denied: Path is outside allowed directory', {
           cause: {
             directoryPath: directoryPath,
@@ -171,9 +171,9 @@ class DirectoryChangeTool extends Tool {
       resolvedPath = process.cwd();
     }
 
-    // If still relative, resolve against basePath
+    // If still relative, resolve against current working directory
     if (!path.isAbsolute(resolvedPath)) {
-      resolvedPath = path.resolve(this.basePath, resolvedPath);
+      resolvedPath = path.resolve(process.cwd(), resolvedPath);
     }
 
     return path.normalize(resolvedPath);
@@ -184,14 +184,25 @@ class DirectoryChangeTool extends Tool {
    * @param {string} resolvedPath - The resolved absolute path
    * @returns {boolean} True if allowed, false otherwise
    */
-  isPathAllowed(resolvedPath) {
-    // Use path.relative to determine if resolvedPath is within basePath
-    const relative = path.relative(this.basePath, resolvedPath);
-    
-    // If the relative path starts with '..', it's outside the base path
-    // If it's an absolute path (on Windows, starts with a drive letter),
-    // it's also outside
-    return relative && !relative.startsWith('..') && !path.isAbsolute(relative);
+  async isPathAllowed(resolvedPath) {
+    try {
+      // Resolve real paths to handle symlinks (e.g., /tmp -> /private/tmp on macOS)
+      const realBasePath = await fs.realpath(this.basePath);
+      const realResolvedPath = await fs.realpath(resolvedPath);
+      
+      // Use path.relative to determine if resolvedPath is within basePath
+      const relative = path.relative(realBasePath, realResolvedPath);
+      
+      // If the relative path starts with '..', it's outside the base path
+      // If it's an absolute path (on Windows, starts with a drive letter),
+      // it's also outside
+      // Empty relative path means the resolved path IS the base path, which is allowed
+      return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+    } catch (error) {
+      // If we can't resolve the real paths, fall back to string comparison
+      const relative = path.relative(this.basePath, resolvedPath);
+      return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+    }
   }
 }
 

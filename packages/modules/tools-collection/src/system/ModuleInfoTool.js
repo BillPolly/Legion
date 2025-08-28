@@ -58,28 +58,19 @@ export class ModuleInfoTool extends Tool {
     this.config = dependencies;
   }
 
-  async execute(args) {
+  async _execute(args) {
     const moduleLoader = this.config.moduleLoader;
     if (!moduleLoader) {
-      return {
-        success: false,
-        error: 'ModuleLoader not available'
-      };
+      throw new Error('ModuleLoader not available');
     }
 
     if (!args.name) {
-      return {
-        success: false,
-        error: 'Module name is required'
-      };
+      throw new Error('Module name is required');
     }
     
     const module = moduleLoader.getModule(args.name);
     if (!module) {
-      return {
-        success: false,
-        error: `Module '${args.name}' not found`
-      };
+      throw new Error(`Module '${args.name}' not found`);
     }
     
     let tools = [];
@@ -89,7 +80,6 @@ export class ModuleInfoTool extends Tool {
     }
     
     return {
-      success: true,
       module: {
         name: args.name,
         description: module.description || 'No description',

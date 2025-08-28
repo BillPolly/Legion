@@ -109,7 +109,7 @@ export class ServerStopTool extends Tool {
     return { valid: errors.length === 0, errors, warnings };
   }
 
-  async execute(params) {
+  async _execute(params) {
     const { processId, graceful = true, timeout = 5000 } = params;
 
     // Validate required parameters
@@ -117,93 +117,66 @@ export class ServerStopTool extends Tool {
       throw new Error('processId parameter is required');
     }
 
-    try {
-      // Look up the process in the registry
-      const processInfo = processRegistry.get(processId);
-      
-      if (!processInfo) {
-        return {
-          success: false,
-          error: `Process with ID ${processId} not found or not managed by server starter`,
-          processId: processId
-        };
-      }
-
-      const { process: serverProcess, outputLines } = processInfo;
-      
-      // Check if process is already terminated
-      if (serverProcess.killed || serverProcess.exitCode !== null) {
-        processRegistry.delete(processId);
-        return {
-          success: false,
-          error: `Process with ID ${processId} is already terminated`,
-          processId: processId
-        };
-      }
-
-      let stopMethod = 'forced';
-      
-      try {
-        if (graceful) {
-          // Attempt graceful shutdown with SIGTERM
-          serverProcess.kill('SIGTERM');
-          stopMethod = 'graceful';
-          
-          // Wait for graceful shutdown with timeout
-          const gracefulPromise = new Promise((resolve, reject) => {
-            const timer = setTimeout(() => {
-              // Force kill if graceful timeout
-              try {
-                serverProcess.kill('SIGKILL');
-                stopMethod = 'forced';
-                resolve();
-              } catch (killError) {
-                reject(killError);
-              }
-            }, timeout);
-
-            serverProcess.on('exit', () => {
-              clearTimeout(timer);
-              resolve();
-            });
-          });
-          
-          await gracefulPromise;
-        } else {
-          // Force kill immediately
-          serverProcess.kill('SIGKILL');
-          stopMethod = 'forced';
-        }
-        
-        // Get final output
-        const finalOutput = outputLines.slice(-10);
-        
-        // Remove from registry
-        processRegistry.delete(processId);
-        
-        return {
-          success: true,
-          processId: processId,
-          status: 'stopped',
-          method: stopMethod,
-          finalOutput: finalOutput
-        };
-
-      } catch (killError) {
-        return {
-          success: false,
-          error: `Failed to stop process: ${killError.message}`,
-          processId: processId
-        };
-      }
-
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message,
-        processId: processId
-      };
+    // Look up the process in the registry
+    const processInfo = processRegistry.get(processId);
+    
+    if (!processInfo) {
+      throw new Error(`Process with ID ${processId} not found or not managed by server starter`);
     }
+
+    const { process: serverProcess, outputLines } = processInfo;
+    
+    // Check if process is already terminated
+    if (serverProcess.killed || serverProcess.exitCode !== null) {
+      processRegistry.delete(processId);
+      throw new Error(`Process with ID ${processId} is already terminated`);
+    }
+
+    let stopMethod = 'forced';
+    
+    if (graceful) {
+      // Attempt graceful shutdown with SIGTERM
+      serverProcess.kill('SIGTERM');
+      stopMethod = 'graceful';
+      
+      // Wait for graceful shutdown with timeout
+      const gracefulPromise = new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+          // Force kill if graceful timeout
+          try {
+            serverProcess.kill('SIGKILL');
+            stopMethod = 'forced';
+            resolve();
+          } catch (killError) {
+            reject(killError);
+          }
+        }, timeout);
+
+        serverProcess.on('exit', () => {
+          clearTimeout(timer);
+          resolve();
+        });
+      });
+      
+      await gracefulPromise;
+    } else {
+      // Force kill immediately
+      serverProcess.kill('SIGKILL');
+      stopMethod = 'forced';
+    }
+    
+    // Get final output
+    const finalOutput = outputLines.slice(-10);
+    
+    // Remove from registry
+    processRegistry.delete(processId);
+    
+    return {
+      processId: processId,
+      status: 'stopped',
+      method: stopMethod,
+      finalOutput: finalOutput
+    };
   }
 }
 

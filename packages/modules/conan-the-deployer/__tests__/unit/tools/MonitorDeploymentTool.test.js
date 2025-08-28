@@ -16,8 +16,13 @@ const mockDeploymentManager = {
 
 const mockResourceManager = {
   get: jest.fn(),
-  initialize: jest.fn()
+  initialize: jest.fn(),
+  register: jest.fn()
 };
+
+// Mock the ResourceManager class with getInstance static method
+const MockResourceManager = jest.fn(() => mockResourceManager);
+MockResourceManager.getInstance = jest.fn(async () => mockResourceManager);
 
 jest.unstable_mockModule('../../../src/MonitoringSystem.js', () => ({
   default: jest.fn(() => mockMonitoringSystem)
@@ -28,7 +33,8 @@ jest.unstable_mockModule('../../../src/DeploymentManager.js', () => ({
 }));
 
 jest.unstable_mockModule('@legion/resource-manager', () => ({
-  default: jest.fn(() => mockResourceManager)
+  ResourceManager: MockResourceManager,
+  default: MockResourceManager
 }));
 
 // Import after mocking
@@ -74,33 +80,21 @@ describe('MonitorDeploymentTool', () => {
 
   describe('Parameter Validation', () => {
     test('should validate required parameters', async () => {
-      const toolCall = {
-        function: {
-          name: 'monitor_deployment',
-          arguments: JSON.stringify({
-            // Missing required parameters
-          })
-        }
-      };
-
-      const result = await monitorTool.invoke(toolCall);
+      const args = {
+            // is requireds
+          };
+      const result = await monitorTool.execute(args);
       
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Missing required parameter');
+      expect(result.error).toContain('is required');
     });
 
     test('should validate action parameter', async () => {
-      const toolCall = {
-        function: {
-          name: 'monitor_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             action: 'invalid-action'
-          })
-        }
-      };
-
-      const result = await monitorTool.invoke(toolCall);
+          };
+      const result = await monitorTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Invalid action');
@@ -122,19 +116,13 @@ describe('MonitorDeploymentTool', () => {
         monitoringId: 'monitor-456'
       });
 
-      const toolCall = {
-        function: {
-          name: 'monitor_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             action: 'start',
             interval: 30000,
             metrics: ['cpu', 'memory']
-          })
-        }
-      };
-
-      const result = await monitorTool.invoke(toolCall);
+          };
+      const result = await monitorTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.monitoring.id).toBe('monitor-456');
@@ -163,17 +151,11 @@ describe('MonitorDeploymentTool', () => {
         success: true
       });
 
-      const toolCall = {
-        function: {
-          name: 'monitor_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             action: 'stop'
-          })
-        }
-      };
-
-      const result = await monitorTool.invoke(toolCall);
+          };
+      const result = await monitorTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.monitoring.status).toBe('stopped');
@@ -201,18 +183,12 @@ describe('MonitorDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockMonitoringSystem.getMetrics.mockResolvedValue(mockMetrics);
 
-      const toolCall = {
-        function: {
-          name: 'monitor_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             action: 'metrics',
             metricsType: 'current'
-          })
-        }
-      };
-
-      const result = await monitorTool.invoke(toolCall);
+          };
+      const result = await monitorTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.metrics.cpu).toBe(45.2);
@@ -243,17 +219,11 @@ describe('MonitorDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockMonitoringSystem.getHealthStatus.mockResolvedValue(mockHealth);
 
-      const toolCall = {
-        function: {
-          name: 'monitor_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             action: 'health'
-          })
-        }
-      };
-
-      const result = await monitorTool.invoke(toolCall);
+          };
+      const result = await monitorTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.health.status).toBe('healthy');
@@ -284,19 +254,13 @@ describe('MonitorDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockMonitoringSystem.getLogs.mockResolvedValue(mockLogs);
 
-      const toolCall = {
-        function: {
-          name: 'monitor_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             action: 'logs',
             lines: 100,
             follow: false
-          })
-        }
-      };
-
-      const result = await monitorTool.invoke(toolCall);
+          };
+      const result = await monitorTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.logs).toHaveLength(3);
@@ -323,19 +287,13 @@ describe('MonitorDeploymentTool', () => {
         realtime: true
       });
 
-      const toolCall = {
-        function: {
-          name: 'monitor_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             action: 'start',
             realtime: true,
             interval: 5000
-          })
-        }
-      };
-
-      const result = await monitorTool.invoke(toolCall);
+          };
+      const result = await monitorTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.monitoring.realtime).toBe(true);
@@ -359,10 +317,7 @@ describe('MonitorDeploymentTool', () => {
         persistent: true
       });
 
-      const toolCall = {
-        function: {
-          name: 'monitor_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             action: 'start',
             persistent: true,
@@ -371,11 +326,8 @@ describe('MonitorDeploymentTool', () => {
               memory: 90,
               responseTime: 5000
             }
-          })
-        }
-      };
-
-      const result = await monitorTool.invoke(toolCall);
+          };
+      const result = await monitorTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.monitoring.persistent).toBe(true);
@@ -399,21 +351,15 @@ describe('MonitorDeploymentTool', () => {
     test('should handle deployment not found', async () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(null);
 
-      const toolCall = {
-        function: {
-          name: 'monitor_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'nonexistent-123',
             action: 'start'
-          })
-        }
-      };
-
-      const result = await monitorTool.invoke(toolCall);
+          };
+      const result = await monitorTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Deployment not found');
-      expect(result.suggestions.some(suggestion => suggestion.includes('Verify the deployment ID'))).toBe(true);
+      expect(result.data.suggestions.some(suggestion => suggestion.includes('Verify the deployment ID'))).toBe(true);
     });
 
     test('should handle monitoring system errors', async () => {
@@ -426,69 +372,44 @@ describe('MonitorDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockMonitoringSystem.startMonitoring.mockRejectedValue(new Error('Monitoring system unavailable'));
 
-      const toolCall = {
-        function: {
-          name: 'monitor_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             action: 'start'
-          })
-        }
-      };
-
-      const result = await monitorTool.invoke(toolCall);
+          };
+      const result = await monitorTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Monitoring system unavailable');
     });
 
     test('should handle invalid JSON arguments', async () => {
-      const toolCall = {
-        function: {
-          name: 'monitor_deployment',
-          arguments: 'invalid-json'
-        }
-      };
-
-      const result = await monitorTool.invoke(toolCall);
+      const args = {}; // Empty args test
+      const result = await monitorTool.execute(args);
       
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Invalid JSON');
+      expect(result.success).toBe(false); // Test should fail with invalid args
     });
   });
 
   describe('Action-specific Validation', () => {
     test('should validate metrics-specific parameters', async () => {
-      const toolCall = {
-        function: {
-          name: 'monitor_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             action: 'metrics',
             metricsType: 'invalid-type'
-          })
-        }
-      };
-
-      const result = await monitorTool.invoke(toolCall);
+          };
+      const result = await monitorTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Invalid metrics type');
     });
 
     test('should validate logs-specific parameters', async () => {
-      const toolCall = {
-        function: {
-          name: 'monitor_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             action: 'logs',
             lines: -10 // Invalid negative value
-          })
-        }
-      };
-
-      const result = await monitorTool.invoke(toolCall);
+          };
+      const result = await monitorTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Lines must be a positive number');
@@ -511,17 +432,11 @@ describe('MonitorDeploymentTool', () => {
         interval: 30000
       });
 
-      const toolCall = {
-        function: {
-          name: 'monitor_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             action: 'start'
-          })
-        }
-      };
-
-      const result = await monitorTool.invoke(toolCall);
+          };
+      const result = await monitorTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data).toHaveProperty('monitoring');

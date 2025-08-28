@@ -66,3 +66,4 @@ class TaskManagementModule extends Module {
 }
 
 export default TaskManagementModule;
+export { TaskManagementModule };

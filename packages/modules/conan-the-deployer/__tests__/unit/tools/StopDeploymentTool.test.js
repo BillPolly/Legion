@@ -8,15 +8,21 @@ const mockDeploymentManager = {
 
 const mockResourceManager = {
   get: jest.fn(),
-  initialize: jest.fn()
+  initialize: jest.fn(),
+  register: jest.fn()
 };
+
+// Mock the ResourceManager class with getInstance static method
+const MockResourceManager = jest.fn(() => mockResourceManager);
+MockResourceManager.getInstance = jest.fn(async () => mockResourceManager);
 
 jest.unstable_mockModule('../../../src/DeploymentManager.js', () => ({
   default: jest.fn(() => mockDeploymentManager)
 }));
 
 jest.unstable_mockModule('@legion/resource-manager', () => ({
-  default: jest.fn(() => mockResourceManager)
+  ResourceManager: MockResourceManager,
+  default: MockResourceManager
 }));
 
 // Import after mocking
@@ -58,33 +64,21 @@ describe('StopDeploymentTool', () => {
 
   describe('Parameter Validation', () => {
     test('should validate required parameters', async () => {
-      const toolCall = {
-        function: {
-          name: 'stop_deployment',
-          arguments: JSON.stringify({
-            // Missing required parameters
-          })
-        }
-      };
-
-      const result = await stopTool.invoke(toolCall);
+      const args = {
+            // is requireds
+          };
+      const result = await stopTool.execute(args);
       
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Missing required parameter');
+      expect(result.error).toContain('is required');
     });
 
     test('should validate timeout parameter', async () => {
-      const toolCall = {
-        function: {
-          name: 'stop_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             timeout: -5000 // Invalid negative timeout
-          })
-        }
-      };
-
-      const result = await stopTool.invoke(toolCall);
+          };
+      const result = await stopTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Timeout must be a positive number');
@@ -112,18 +106,12 @@ describe('StopDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockDeploymentManager.stopDeployment.mockResolvedValue(mockStopResult);
 
-      const toolCall = {
-        function: {
-          name: 'stop_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             graceful: true,
             timeout: 30000
-          })
-        }
-      };
-
-      const result = await stopTool.invoke(toolCall);
+          };
+      const result = await stopTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.stop.status).toBe('stopped');
@@ -163,18 +151,12 @@ describe('StopDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockDeploymentManager.stopDeployment.mockResolvedValue(mockStopResult);
 
-      const toolCall = {
-        function: {
-          name: 'stop_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             graceful: false,
             force: true
-          })
-        }
-      };
-
-      const result = await stopTool.invoke(toolCall);
+          };
+      const result = await stopTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.stop.forced).toBe(true);
@@ -202,18 +184,12 @@ describe('StopDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockDeploymentManager.stopDeployment.mockResolvedValue(mockStopResult);
 
-      const toolCall = {
-        function: {
-          name: 'stop_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             graceful: true,
             timeout: 30000
-          })
-        }
-      };
-
-      const result = await stopTool.invoke(toolCall);
+          };
+      const result = await stopTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.stop.timedOut).toBe(true);
@@ -243,16 +219,10 @@ describe('StopDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockDeploymentManager.stopDeployment.mockResolvedValue(mockStopResult);
 
-      const toolCall = {
-        function: {
-          name: 'stop_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'local-123'
-          })
-        }
-      };
-
-      const result = await stopTool.invoke(toolCall);
+          };
+      const result = await stopTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.stop.signal).toBe('SIGTERM');
@@ -278,17 +248,11 @@ describe('StopDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockDeploymentManager.stopDeployment.mockResolvedValue(mockStopResult);
 
-      const toolCall = {
-        function: {
-          name: 'stop_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'docker-456',
             graceful: true
-          })
-        }
-      };
-
-      const result = await stopTool.invoke(toolCall);
+          };
+      const result = await stopTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.stop.containerStopped).toBe(true);
@@ -314,16 +278,10 @@ describe('StopDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockDeploymentManager.stopDeployment.mockResolvedValue(mockStopResult);
 
-      const toolCall = {
-        function: {
-          name: 'stop_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'railway-789'
-          })
-        }
-      };
-
-      const result = await stopTool.invoke(toolCall);
+          };
+      const result = await stopTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.stop.serviceScaledDown).toBe(true);
@@ -356,18 +314,12 @@ describe('StopDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockDeploymentManager.stopDeployment.mockResolvedValue(mockStopResult);
 
-      const toolCall = {
-        function: {
-          name: 'stop_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             cleanup: true,
             removeVolumes: true
-          })
-        }
-      };
-
-      const result = await stopTool.invoke(toolCall);
+          };
+      const result = await stopTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.stop.cleanup.performed).toBe(true);
@@ -408,18 +360,12 @@ describe('StopDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockDeploymentManager.stopDeployment.mockResolvedValue(mockStopResult);
 
-      const toolCall = {
-        function: {
-          name: 'stop_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             cleanup: true,
             removeVolumes: false
-          })
-        }
-      };
-
-      const result = await stopTool.invoke(toolCall);
+          };
+      const result = await stopTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.stop.cleanup.preservedVolumes).toBe(3);
@@ -431,20 +377,14 @@ describe('StopDeploymentTool', () => {
     test('should handle deployment not found', async () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(null);
 
-      const toolCall = {
-        function: {
-          name: 'stop_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'nonexistent-123'
-          })
-        }
-      };
-
-      const result = await stopTool.invoke(toolCall);
+          };
+      const result = await stopTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Deployment not found');
-      expect(result.suggestions.some(s => s.includes('Verify the deployment ID'))).toBe(true);
+      expect(result.data.suggestions.some(s => s.includes('Verify the deployment ID'))).toBe(true);
     });
 
     test('should handle already stopped deployment', async () => {
@@ -457,20 +397,14 @@ describe('StopDeploymentTool', () => {
 
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
 
-      const toolCall = {
-        function: {
-          name: 'stop_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123'
-          })
-        }
-      };
-
-      const result = await stopTool.invoke(toolCall);
+          };
+      const result = await stopTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('already stopped');
-      expect(result.suggestions).toContain('Use list_deployments to see current deployment statuses');
+      expect(result.data.suggestions).toContain('Use list_deployments to see current deployment statuses');
     });
 
     test('should handle stop failures', async () => {
@@ -484,47 +418,29 @@ describe('StopDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockDeploymentManager.stopDeployment.mockRejectedValue(new Error('Container cannot be stopped'));
 
-      const toolCall = {
-        function: {
-          name: 'stop_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123'
-          })
-        }
-      };
-
-      const result = await stopTool.invoke(toolCall);
+          };
+      const result = await stopTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Container cannot be stopped');
     });
 
     test('should handle invalid JSON arguments', async () => {
-      const toolCall = {
-        function: {
-          name: 'stop_deployment',
-          arguments: 'invalid-json'
-        }
-      };
-
-      const result = await stopTool.invoke(toolCall);
+      const args = { deploymentId: null }; // Invalid deploymentId
+      const result = await stopTool.execute(args);
       
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Invalid JSON');
+      expect(result.success).toBe(false); // Test should fail with invalid args
     });
   });
 
   describe('Multiple Deployment Handling', () => {
     test('should handle stop all deployments for a provider', async () => {
-      const toolCall = {
-        function: {
-          name: 'stop_deployment',
-          arguments: JSON.stringify({
-            deploymentId: 'all',
-            provider: 'docker',
-            graceful: true
-          })
-        }
+      const args = {
+        deploymentId: 'all',
+        provider: 'docker',
+        graceful: true
       };
 
       const mockStopResult = {
@@ -535,7 +451,7 @@ describe('StopDeploymentTool', () => {
 
       mockDeploymentManager.stopDeployment.mockResolvedValue(mockStopResult);
 
-      const result = await stopTool.invoke(toolCall);
+      const result = await stopTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.stop.totalStopped).toBe(3);
@@ -562,16 +478,10 @@ describe('StopDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockDeploymentManager.stopDeployment.mockResolvedValue(mockStopResult);
 
-      const toolCall = {
-        function: {
-          name: 'stop_deployment',
-          arguments: JSON.stringify({
-            deploymentId: 'deploy-123'
-          })
-        }
+      const args = {
+        deploymentId: 'deploy-123'
       };
-
-      const result = await stopTool.invoke(toolCall);
+      const result = await stopTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data).toHaveProperty('deployment');

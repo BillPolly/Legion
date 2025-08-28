@@ -8,15 +8,21 @@ const mockDeploymentManager = {
 
 const mockResourceManager = {
   get: jest.fn(),
-  initialize: jest.fn()
+  initialize: jest.fn(),
+  register: jest.fn()
 };
+
+// Mock the ResourceManager class with getInstance static method
+const MockResourceManager = jest.fn(() => mockResourceManager);
+MockResourceManager.getInstance = jest.fn(async () => mockResourceManager);
 
 jest.unstable_mockModule('../../../src/DeploymentManager.js', () => ({
   default: jest.fn(() => mockDeploymentManager)
 }));
 
 jest.unstable_mockModule('@legion/resource-manager', () => ({
-  default: jest.fn(() => mockResourceManager)
+  ResourceManager: MockResourceManager,
+  default: MockResourceManager
 }));
 
 // Import after mocking
@@ -90,14 +96,8 @@ describe('ListDeploymentsTool', () => {
         deployments: mockDeployments
       });
 
-      const toolCall = {
-        function: {
-          name: 'list_deployments',
-          arguments: JSON.stringify({})
-        }
-      };
-
-      const result = await listTool.invoke(toolCall);
+      const args = {};
+      const result = await listTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.deployments).toHaveLength(3);
@@ -132,16 +132,10 @@ describe('ListDeploymentsTool', () => {
         deployments: mockDeployments
       });
 
-      const toolCall = {
-        function: {
-          name: 'list_deployments',
-          arguments: JSON.stringify({
+      const args = {
             provider: 'docker'
-          })
-        }
-      };
-
-      const result = await listTool.invoke(toolCall);
+          };
+      const result = await listTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.deployments).toHaveLength(2);
@@ -174,16 +168,10 @@ describe('ListDeploymentsTool', () => {
         deployments: mockDeployments
       });
 
-      const toolCall = {
-        function: {
-          name: 'list_deployments',
-          arguments: JSON.stringify({
+      const args = {
             status: 'running'
-          })
-        }
-      };
-
-      const result = await listTool.invoke(toolCall);
+          };
+      const result = await listTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.deployments).toHaveLength(2);
@@ -211,14 +199,8 @@ describe('ListDeploymentsTool', () => {
         deployments: mockDeployments
       });
 
-      const toolCall = {
-        function: {
-          name: 'list_deployments',
-          arguments: JSON.stringify({})
-        }
-      };
-
-      const result = await listTool.invoke(toolCall);
+      const args = {};
+      const result = await listTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.format).toBe('table');
@@ -242,16 +224,10 @@ describe('ListDeploymentsTool', () => {
         deployments: mockDeployments
       });
 
-      const toolCall = {
-        function: {
-          name: 'list_deployments',
-          arguments: JSON.stringify({
+      const args = {
             format: 'json'
-          })
-        }
-      };
-
-      const result = await listTool.invoke(toolCall);
+          };
+      const result = await listTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.format).toBe('json');
@@ -271,16 +247,10 @@ describe('ListDeploymentsTool', () => {
         deployments: mockDeployments
       });
 
-      const toolCall = {
-        function: {
-          name: 'list_deployments',
-          arguments: JSON.stringify({
+      const args = {
             format: 'summary'
-          })
-        }
-      };
-
-      const result = await listTool.invoke(toolCall);
+          };
+      const result = await listTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.format).toBe('summary');
@@ -315,17 +285,11 @@ describe('ListDeploymentsTool', () => {
         deployments: mockDeployments
       });
 
-      const toolCall = {
-        function: {
-          name: 'list_deployments',
-          arguments: JSON.stringify({
+      const args = {
             sortBy: 'createdAt',
             sortOrder: 'desc'
-          })
-        }
-      };
-
-      const result = await listTool.invoke(toolCall);
+          };
+      const result = await listTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.deployments[0].name).toBe('newer-app');
@@ -347,17 +311,11 @@ describe('ListDeploymentsTool', () => {
         deployments: mockDeployments
       });
 
-      const toolCall = {
-        function: {
-          name: 'list_deployments',
-          arguments: JSON.stringify({
+      const args = {
             limit: 10,
             offset: 5
-          })
-        }
-      };
-
-      const result = await listTool.invoke(toolCall);
+          };
+      const result = await listTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.deployments).toHaveLength(10);
@@ -381,16 +339,10 @@ describe('ListDeploymentsTool', () => {
         deployments: mockDeployments
       });
 
-      const toolCall = {
-        function: {
-          name: 'list_deployments',
-          arguments: JSON.stringify({
+      const args = {
             search: 'frontend'
-          })
-        }
-      };
-
-      const result = await listTool.invoke(toolCall);
+          };
+      const result = await listTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.deployments).toHaveLength(2);
@@ -407,18 +359,12 @@ describe('ListDeploymentsTool', () => {
         deployments: mockDeployments
       });
 
-      const toolCall = {
-        function: {
-          name: 'list_deployments',
-          arguments: JSON.stringify({
+      const args = {
             provider: 'docker',
             status: 'running',
             search: 'docker'
-          })
-        }
-      };
-
-      const result = await listTool.invoke(toolCall);
+          };
+      const result = await listTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.deployments).toHaveLength(1);
@@ -435,14 +381,8 @@ describe('ListDeploymentsTool', () => {
     test('should handle deployment manager errors', async () => {
       mockDeploymentManager.listDeployments.mockRejectedValue(new Error('Database connection failed'));
 
-      const toolCall = {
-        function: {
-          name: 'list_deployments',
-          arguments: JSON.stringify({})
-        }
-      };
-
-      const result = await listTool.invoke(toolCall);
+      const args = {};
+      const result = await listTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Database connection failed');
@@ -454,14 +394,8 @@ describe('ListDeploymentsTool', () => {
         deployments: []
       });
 
-      const toolCall = {
-        function: {
-          name: 'list_deployments',
-          arguments: JSON.stringify({})
-        }
-      };
-
-      const result = await listTool.invoke(toolCall);
+      const args = {};
+      const result = await listTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.deployments).toHaveLength(0);
@@ -470,34 +404,24 @@ describe('ListDeploymentsTool', () => {
     });
 
     test('should handle invalid JSON arguments', async () => {
-      const toolCall = {
-        function: {
-          name: 'list_deployments',
-          arguments: 'invalid-json'
-        }
-      };
+      // This test is no longer relevant since base Tool class handles JSON parsing
+      // Testing with empty args to ensure tool handles missing parameters
+      const args = {};
 
-      const result = await listTool.invoke(toolCall);
+      const result = await listTool.execute(args);
       
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Invalid JSON');
+      expect(result.success).toBe(true); // List deployments should work with no filters
     });
 
     test('should validate invalid provider filter', async () => {
-      const toolCall = {
-        function: {
-          name: 'list_deployments',
-          arguments: JSON.stringify({
+      const args = {
             provider: 'invalid-provider'
-          })
-        }
-      };
-
-      const result = await listTool.invoke(toolCall);
+          };
+      const result = await listTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Invalid provider');
-      expect(result.suggestions).toContain('Use one of: local, docker, railway');
+      expect(result.data.suggestions).toContain('Use one of: local, docker, railway');
     });
   });
 
@@ -517,14 +441,8 @@ describe('ListDeploymentsTool', () => {
         deployments: mockDeployments
       });
 
-      const toolCall = {
-        function: {
-          name: 'list_deployments',
-          arguments: JSON.stringify({})
-        }
-      };
-
-      const result = await listTool.invoke(toolCall);
+      const args = {};
+      const result = await listTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data).toHaveProperty('deployments');

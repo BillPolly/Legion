@@ -63,3 +63,4 @@ class WebToolsModule extends Module {
 }
 
 export default WebToolsModule;
+export { WebToolsModule };

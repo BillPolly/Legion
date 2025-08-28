@@ -72,3 +72,4 @@ class FileOperationsModule extends Module {
 }
 
 export default FileOperationsModule;
+export { FileOperationsModule };

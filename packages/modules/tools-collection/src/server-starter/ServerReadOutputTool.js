@@ -96,7 +96,7 @@ export class ServerReadOutputTool extends Tool {
     return { valid: errors.length === 0, errors, warnings };
   }
 
-  async execute(params) {
+  async _execute(params) {
     const { processId, lines = 50 } = params;
 
     // Validate required parameters
@@ -104,35 +104,21 @@ export class ServerReadOutputTool extends Tool {
       throw new Error('processId parameter is required');
     }
 
-    try {
-      // Look up the process in the registry
-      const processInfo = processRegistry.get(processId);
-      
-      if (!processInfo) {
-        return {
-          success: false,
-          error: `Process with ID ${processId} not found or not managed by server starter`,
-          processId: processId
-        };
-      }
-
-      // Get the requested number of lines from the end
-      const outputLines = processInfo.outputLines.slice(-lines);
-      
-      return {
-        success: true,
-        processId: processId,
-        lines: outputLines.length,
-        output: outputLines
-      };
-
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message,
-        processId: processId
-      };
+    // Look up the process in the registry
+    const processInfo = processRegistry.get(processId);
+    
+    if (!processInfo) {
+      throw new Error(`Process with ID ${processId} not found or not managed by server starter`);
     }
+
+    // Get the requested number of lines from the end
+    const outputLines = processInfo.outputLines.slice(-lines);
+    
+    return {
+      processId: processId,
+      lines: outputLines.length,
+      output: outputLines
+    };
   }
 }
 

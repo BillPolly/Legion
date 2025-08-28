@@ -121,11 +121,11 @@ class DirectoryCurrentTool extends Tool {
   }
 
   /**
-   * Execute the directory current tool
+   * Implementation method - gets current directory information
    * @param {Object} args - The arguments for getting current directory
    * @returns {Promise<Object>} The result containing current directory information
    */
-  async execute(args = {}) {
+  async _execute(args = {}) {
     try {
       const {
         relative = false,

@@ -70,14 +70,9 @@ describe('FileWriterTool Tests', () => {
         content: testContent 
       });
       
-      if (result.success !== undefined) {
-        expect(result.success).toBe(true);
-        expect(result.data.path).toContain('write-test.txt');
-        expect(result.data.bytesWritten).toBe(testContent.length);
-      } else {
-        expect(result.path).toContain('write-test.txt');
-        expect(result.bytesWritten).toBe(testContent.length);
-      }
+      expect(result.success).toBe(true);
+      expect(result.data.path).toContain('write-test.txt');
+      expect(result.data.bytesWritten).toBe(testContent.length);
       
       // Verify file was actually written
       const written = await fs.readFile(path.join(testDir, 'write-test.txt'), 'utf-8');
@@ -91,12 +86,8 @@ describe('FileWriterTool Tests', () => {
         content: testObj 
       });
       
-      if (result.success !== undefined) {
-        expect(result.success).toBe(true);
-        expect(result.data.path).toContain('write-test.json');
-      } else {
-        expect(result.path).toContain('write-test.json');
-      }
+      expect(result.success).toBe(true);
+      expect(result.data.path).toContain('write-test.json');
       
       // Verify JSON was properly formatted
       const written = await fs.readFile(path.join(testDir, 'write-test.json'), 'utf-8');
@@ -111,12 +102,8 @@ describe('FileWriterTool Tests', () => {
         content: '' 
       });
       
-      if (result.success !== undefined) {
-        expect(result.success).toBe(true);
-        expect(result.data.bytesWritten).toBe(0);
-      } else {
-        expect(result.bytesWritten).toBe(0);
-      }
+      expect(result.success).toBe(true);
+      expect(result.data.bytesWritten).toBe(0);
       
       const written = await fs.readFile(path.join(testDir, 'empty-test.txt'), 'utf-8');
       expect(written).toBe('');
@@ -129,11 +116,8 @@ describe('FileWriterTool Tests', () => {
         content: unicodeContent 
       });
       
-      if (result.success !== undefined) {
-        expect(result.success).toBe(true);
-      } else {
-        expect(result.path).toContain('unicode-test.txt');
-      }
+      expect(result.success).toBe(true);
+      expect(result.data.path).toContain('unicode-test.txt');
       
       const written = await fs.readFile(path.join(testDir, 'unicode-test.txt'), 'utf-8');
       expect(written).toBe(unicodeContent);
@@ -145,11 +129,8 @@ describe('FileWriterTool Tests', () => {
         content: 'Nested content' 
       });
       
-      if (result.success !== undefined) {
-        expect(result.success).toBe(true);
-      } else {
-        expect(result.path).toContain('file.txt');
-      }
+      expect(result.success).toBe(true);
+      expect(result.data.path).toContain('file.txt');
       
       const written = await fs.readFile(path.join(testDir, 'nested/deep/structure/file.txt'), 'utf-8');
       expect(written).toBe('Nested content');
@@ -170,12 +151,8 @@ describe('FileWriterTool Tests', () => {
         append: true 
       });
       
-      if (result.success !== undefined) {
-        expect(result.success).toBe(true);
-        expect(result.data.bytesWritten).toBe(appendContent.length);
-      } else {
-        expect(result.bytesWritten).toBe(appendContent.length);
-      }
+      expect(result.success).toBe(true);
+      expect(result.data.bytesWritten).toBe(appendContent.length);
       
       const content = await fs.readFile(path.join(testDir, 'append-test.txt'), 'utf-8');
       expect(content).toBe('Initial content\nAppended content\n');
@@ -189,11 +166,8 @@ describe('FileWriterTool Tests', () => {
         append: false 
       });
       
-      if (result.success !== undefined) {
-        expect(result.success).toBe(true);
-      } else {
-        expect(result.path).toContain('append-test.txt');
-      }
+      expect(result.success).toBe(true);
+      expect(result.data.path).toContain('append-test.txt');
       
       const content = await fs.readFile(path.join(testDir, 'append-test.txt'), 'utf-8');
       expect(content).toBe(newContent);
@@ -221,58 +195,76 @@ describe('FileWriterTool Tests', () => {
 
   describe('Error Handling', () => {
     it('should validate file path input', async () => {
-      await expect(
-        tool.execute({ 
-          filePath: '', 
-          content: 'test' 
-        })
-      ).rejects.toThrow('File path cannot be empty');
+      const result = await tool.execute({ 
+        filePath: '', 
+        content: 'test' 
+      });
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/File path cannot be empty/);
     });
 
     it('should handle null file path', async () => {
-      await expect(tool.execute({ 
+      const result = await tool.execute({ 
         filePath: null, 
         content: 'test' 
-      })).rejects.toThrow('File path must be a string');
+      });
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/File path must be a string/);
     });
 
     it('should handle missing content parameter', async () => {
-      await expect(tool.execute({ filePath: 'test.txt' }))
-        .rejects.toThrow();
+      const result = await tool.execute({ filePath: 'test.txt' });
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/Content parameter is required/);
     });
 
     it('should handle directory creation failure when createDirectories is false', async () => {
       const noCreateTool = new FileWriterTool({ basePath: testDir, createDirectories: false });
       
-      await expect(noCreateTool.execute({ 
+      const result = await noCreateTool.execute({ 
         filePath: 'nonexistent/deep/path/file.txt', 
         content: 'test' 
-      })).rejects.toThrow();
+      });
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
 
     it('should handle attempts to write to existing directory', async () => {
       await fs.mkdir(path.join(testDir, 'is-directory'));
       
-      await expect(tool.execute({ 
+      const result = await tool.execute({ 
         filePath: 'is-directory', 
         content: 'test' 
-      })).rejects.toThrow();
+      });
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/EISDIR|illegal operation on a directory/);
     });
   });
 
   describe('Security and Path Validation', () => {
     it('should prevent path traversal attacks', async () => {
-      await expect(tool.execute({ 
+      const result = await tool.execute({ 
         filePath: '../../../tmp/malicious.txt', 
         content: 'malicious content' 
-      })).rejects.toThrow();
+      });
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/Access denied.*outside/);
     });
 
     it('should handle null byte injection', async () => {
-      await expect(tool.execute({ 
+      const result = await tool.execute({ 
         filePath: 'test.txt\0hidden.txt', 
         content: 'test content' 
-      })).rejects.toThrow();
+      });
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/Invalid file path/);
     });
 
     it('should respect basePath restrictions', async () => {
@@ -284,17 +276,17 @@ describe('FileWriterTool Tests', () => {
         content: 'allowed content' 
       });
       
-      if (allowedResult.success !== undefined) {
-        expect(allowedResult.success).toBe(true);
-      } else {
-        expect(allowedResult.path).toContain('allowed.txt');
-      }
+      expect(allowedResult.success).toBe(true);
+      expect(allowedResult.data.path).toContain('allowed.txt');
       
       // Should fail outside basePath
-      await expect(restrictedTool.execute({ 
+      const deniedResult = await restrictedTool.execute({ 
         filePath: '../outside.txt', 
         content: 'denied content' 
-      })).rejects.toThrow();
+      });
+      
+      expect(deniedResult.success).toBe(false);
+      expect(deniedResult.error).toMatch(/Access denied.*outside/);
     });
 
     it('should normalize paths correctly', async () => {
@@ -303,14 +295,9 @@ describe('FileWriterTool Tests', () => {
         content: 'normalized content' 
       });
       
-      if (result.success !== undefined) {
-        expect(result.success).toBe(true);
-        expect(result.data.path).not.toContain('./');
-        expect(result.data.path).not.toContain('../');
-      } else {
-        expect(result.path).not.toContain('./');
-        expect(result.path).not.toContain('../');
-      }
+      expect(result.success).toBe(true);
+      expect(result.data.path).not.toContain('./');
+      expect(result.data.path).not.toContain('../');
     });
   });
 
@@ -321,11 +308,8 @@ describe('FileWriterTool Tests', () => {
         content: 12345 
       });
       
-      if (result.success !== undefined) {
-        expect(result.success).toBe(true);
-      } else {
-        expect(result.path).toContain('number-test.txt');
-      }
+      expect(result.success).toBe(true);
+      expect(result.data.path).toContain('number-test.txt');
       
       const content = await fs.readFile(path.join(testDir, 'number-test.txt'), 'utf-8');
       expect(content).toBe('12345');
@@ -337,11 +321,8 @@ describe('FileWriterTool Tests', () => {
         content: true 
       });
       
-      if (result.success !== undefined) {
-        expect(result.success).toBe(true);
-      } else {
-        expect(result.path).toContain('boolean-test.txt');
-      }
+      expect(result.success).toBe(true);
+      expect(result.data.path).toContain('boolean-test.txt');
       
       const content = await fs.readFile(path.join(testDir, 'boolean-test.txt'), 'utf-8');
       expect(content).toBe('true');
@@ -360,11 +341,8 @@ describe('FileWriterTool Tests', () => {
         content: complexObj 
       });
       
-      if (result.success !== undefined) {
-        expect(result.success).toBe(true);
-      } else {
-        expect(result.path).toContain('complex-object.json');
-      }
+      expect(result.success).toBe(true);
+      expect(result.data.path).toContain('complex-object.json');
       
       const content = await fs.readFile(path.join(testDir, 'complex-object.json'), 'utf-8');
       const parsed = JSON.parse(content);
@@ -384,12 +362,8 @@ describe('FileWriterTool Tests', () => {
       });
       const duration = Date.now() - startTime;
       
-      if (result.success !== undefined) {
-        expect(result.success).toBe(true);
-        expect(result.data.bytesWritten).toBe(largeContent.length);
-      } else {
-        expect(result.bytesWritten).toBe(largeContent.length);
-      }
+      expect(result.success).toBe(true);
+      expect(result.data.bytesWritten).toBe(largeContent.length);
       
       expect(duration).toBeLessThan(5000); // Should complete within 5 seconds
       
@@ -415,12 +389,8 @@ describe('FileWriterTool Tests', () => {
       
       // All operations should succeed
       results.forEach((result, index) => {
-        if (result.success !== undefined) {
-          expect(result.success).toBe(true);
-          expect(result.data.path).toContain(`concurrent-${index}.txt`);
-        } else {
-          expect(result.path).toContain(`concurrent-${index}.txt`);
-        }
+        expect(result.success).toBe(true);
+        expect(result.data.path).toContain(`concurrent-${index}.txt`);
       });
       
       // Verify all files were created correctly
@@ -441,11 +411,8 @@ describe('FileWriterTool Tests', () => {
         content 
       });
       
-      if (result.success !== undefined) {
-        expect(result.success).toBe(true);
-      } else {
-        expect(result.path).toContain('ascii-test.txt');
-      }
+      expect(result.success).toBe(true);
+      expect(result.data.path).toContain('ascii-test.txt');
       
       // Read with same encoding to verify
       const written = await fs.readFile(path.join(testDir, 'ascii-test.txt'), 'ascii');
@@ -460,11 +427,8 @@ describe('FileWriterTool Tests', () => {
         content: utf8Content 
       });
       
-      if (result.success !== undefined) {
-        expect(result.success).toBe(true);
-      } else {
-        expect(result.path).toContain('utf8-test.txt');
-      }
+      expect(result.success).toBe(true);
+      expect(result.data.path).toContain('utf8-test.txt');
       
       const written = await fs.readFile(path.join(testDir, 'utf8-test.txt'), 'utf-8');
       expect(written).toBe(utf8Content);
@@ -483,11 +447,8 @@ describe('FileWriterTool Tests', () => {
         content: newContent 
       });
       
-      if (result.success !== undefined) {
-        expect(result.success).toBe(true);
-      } else {
-        expect(result.path).toContain('overwrite-test.txt');
-      }
+      expect(result.success).toBe(true);
+      expect(result.data.path).toContain('overwrite-test.txt');
       
       // Verify content was replaced
       const written = await fs.readFile(path.join(testDir, 'overwrite-test.txt'), 'utf-8');
@@ -500,11 +461,8 @@ describe('FileWriterTool Tests', () => {
         content: 'test content' 
       });
       
-      if (result.success !== undefined) {
-        expect(result.success).toBe(true);
-      } else {
-        expect(result.path).toContain('permission-test.txt');
-      }
+      expect(result.success).toBe(true);
+      expect(result.data.path).toContain('permission-test.txt');
       
       // Check file is readable and writable
       const filePath = path.join(testDir, 'permission-test.txt');

@@ -54,7 +54,7 @@ class FileReaderTool extends Tool {
    * @param {Object} args - The arguments for reading the file
    * @returns {Promise<Object>} The result of reading the file
    */
-  async execute(args) {
+  async _execute(args) {
     try {
       const { filePath } = args;
 

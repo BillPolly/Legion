@@ -124,3 +124,4 @@ class ClaudeToolsModule extends Module {
 }
 
 export default ClaudeToolsModule;
+export { ClaudeToolsModule };

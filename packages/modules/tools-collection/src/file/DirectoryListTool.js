@@ -80,7 +80,7 @@ class DirectoryListTool extends Tool {
    * @param {Object} args - The arguments for listing the directory
    * @returns {Promise<Object>} The result of listing the directory
    */
-  async execute(args) {
+  async _execute(args) {
     try {
       const { directoryPath, recursive = false, filter, includeHidden = false } = args;
 

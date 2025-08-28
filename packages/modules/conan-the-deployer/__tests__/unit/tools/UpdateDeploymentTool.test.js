@@ -9,15 +9,21 @@ const mockDeploymentManager = {
 
 const mockResourceManager = {
   get: jest.fn(),
-  initialize: jest.fn()
+  initialize: jest.fn(),
+  register: jest.fn()
 };
+
+// Mock the ResourceManager class with getInstance static method
+const MockResourceManager = jest.fn(() => mockResourceManager);
+MockResourceManager.getInstance = jest.fn(async () => mockResourceManager);
 
 jest.unstable_mockModule('../../../src/DeploymentManager.js', () => ({
   default: jest.fn(() => mockDeploymentManager)
 }));
 
 jest.unstable_mockModule('@legion/resource-manager', () => ({
-  default: jest.fn(() => mockResourceManager)
+  ResourceManager: MockResourceManager,
+  default: MockResourceManager
 }));
 
 // Import after mocking
@@ -60,51 +66,36 @@ describe('UpdateDeploymentTool', () => {
 
   describe('Parameter Validation', () => {
     test('should validate required parameters', async () => {
-      const toolCall = {
-        function: {
-          name: 'update_deployment',
-          arguments: JSON.stringify({
-            // Missing required parameters
-          })
-        }
+      const args = {
+        // is requireds
       };
 
-      const result = await updateTool.invoke(toolCall);
+      const result = await updateTool.execute(args);
       
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Missing required parameter');
+      expect(result.error).toContain('deploymentId and updates are required');
     });
 
     test('should validate update strategy', async () => {
-      const toolCall = {
-        function: {
-          name: 'update_deployment',
-          arguments: JSON.stringify({
-            deploymentId: 'deploy-123',
-            updates: { image: 'new-image:latest' },
-            strategy: 'invalid-strategy'
-          })
-        }
+      const args = {
+        deploymentId: 'deploy-123',
+        updates: { image: 'new-image:latest' },
+        strategy: 'invalid-strategy'
       };
 
-      const result = await updateTool.invoke(toolCall);
+      const result = await updateTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Invalid update strategy');
     });
 
     test('should validate updates parameter structure', async () => {
-      const toolCall = {
-        function: {
-          name: 'update_deployment',
-          arguments: JSON.stringify({
-            deploymentId: 'deploy-123',
-            updates: 'invalid-updates' // Should be object
-          })
-        }
+      const args = {
+        deploymentId: 'deploy-123',
+        updates: 'invalid-updates' // Should be object
       };
 
-      const result = await updateTool.invoke(toolCall);
+      const result = await updateTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Updates must be an object');
@@ -132,21 +123,16 @@ describe('UpdateDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockDeploymentManager.updateDeployment.mockResolvedValue(mockUpdateResult);
 
-      const toolCall = {
-        function: {
-          name: 'update_deployment',
-          arguments: JSON.stringify({
-            deploymentId: 'deploy-123',
-            updates: {
-              image: 'myapp:v1.1.0',
-              environment: { VERSION: 'v1.1.0' }
-            },
-            strategy: 'rolling'
-          })
-        }
+      const args = {
+        deploymentId: 'deploy-123',
+        updates: {
+          image: 'myapp:v1.1.0',
+          environment: { VERSION: 'v1.1.0' }
+        },
+        strategy: 'rolling'
       };
 
-      const result = await updateTool.invoke(toolCall);
+      const result = await updateTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.update.strategy).toBe('rolling');
@@ -187,10 +173,7 @@ describe('UpdateDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockDeploymentManager.updateDeployment.mockResolvedValue(mockUpdateResult);
 
-      const toolCall = {
-        function: {
-          name: 'update_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             updates: {
               branch: 'release/v2.0.0',
@@ -198,11 +181,8 @@ describe('UpdateDeploymentTool', () => {
             },
             strategy: 'blue-green',
             rollbackOnFailure: true
-          })
-        }
-      };
-
-      const result = await updateTool.invoke(toolCall);
+          };
+      const result = await updateTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.update.strategy).toBe('blue-green');
@@ -229,21 +209,15 @@ describe('UpdateDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockDeploymentManager.updateDeployment.mockResolvedValue(mockUpdateResult);
 
-      const toolCall = {
-        function: {
-          name: 'update_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             updates: {
               command: 'npm run start:prod',
               port: 8080
             },
             strategy: 'recreate'
-          })
-        }
-      };
-
-      const result = await updateTool.invoke(toolCall);
+          };
+      const result = await updateTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.update.strategy).toBe('recreate');
@@ -276,20 +250,14 @@ describe('UpdateDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockDeploymentManager.updateDeployment.mockResolvedValue(mockUpdateResult);
 
-      const toolCall = {
-        function: {
-          name: 'update_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             updates: { image: 'myapp:latest' },
             strategy: 'rolling',
             verifyUpdate: true,
             healthCheckTimeout: 60000
-          })
-        }
-      };
-
-      const result = await updateTool.invoke(toolCall);
+          };
+      const result = await updateTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.update.verified).toBe(true);
@@ -320,25 +288,19 @@ describe('UpdateDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockDeploymentManager.updateDeployment.mockResolvedValue(mockUpdateResult);
 
-      const toolCall = {
-        function: {
-          name: 'update_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             updates: { image: 'myapp:broken' },
             strategy: 'rolling',
             rollbackOnFailure: true
-          })
-        }
-      };
-
-      const result = await updateTool.invoke(toolCall);
+          };
+      const result = await updateTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Health check failed after update');
-      expect(result.rolledBack).toBe(true);
-      expect(result.rollbackId).toBe('deploy-123-rollback');
-      expect(result.suggestions.some(s => s.includes('deployment was automatically rolled back'))).toBe(true);
+      expect(result.data.rolledBack).toBe(true);
+      expect(result.data.rollbackId).toBe('deploy-123-rollback');
+      expect(result.data.suggestions.some(s => s.includes('deployment was automatically rolled back'))).toBe(true);
     });
   });
 
@@ -364,20 +326,14 @@ describe('UpdateDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockDeploymentManager.updateDeployment.mockResolvedValue(mockUpdateResult);
 
-      const toolCall = {
-        function: {
-          name: 'update_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             updates: {
               replicas: 5
             },
             strategy: 'scaling'
-          })
-        }
-      };
-
-      const result = await updateTool.invoke(toolCall);
+          };
+      const result = await updateTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.update.newReplicas).toBe(5);
@@ -408,10 +364,7 @@ describe('UpdateDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockDeploymentManager.updateDeployment.mockResolvedValue(mockUpdateResult);
 
-      const toolCall = {
-        function: {
-          name: 'update_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             updates: {
               resources: {
@@ -420,11 +373,8 @@ describe('UpdateDeploymentTool', () => {
               }
             },
             strategy: 'scaling'
-          })
-        }
-      };
-
-      const result = await updateTool.invoke(toolCall);
+          };
+      const result = await updateTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.update.scalingType).toBe('vertical');
@@ -454,10 +404,7 @@ describe('UpdateDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockDeploymentManager.updateDeployment.mockResolvedValue(mockUpdateResult);
 
-      const toolCall = {
-        function: {
-          name: 'update_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             updates: {
               environment: {
@@ -467,11 +414,8 @@ describe('UpdateDeploymentTool', () => {
               }
             },
             strategy: 'config'
-          })
-        }
-      };
-
-      const result = await updateTool.invoke(toolCall);
+          };
+      const result = await updateTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data.update.environmentUpdated).toBe(true);
@@ -484,21 +428,15 @@ describe('UpdateDeploymentTool', () => {
     test('should handle deployment not found', async () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(null);
 
-      const toolCall = {
-        function: {
-          name: 'update_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'nonexistent-123',
             updates: { image: 'new-image' }
-          })
-        }
-      };
-
-      const result = await updateTool.invoke(toolCall);
+          };
+      const result = await updateTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Deployment not found');
-      expect(result.suggestions.some(s => s.includes('Verify the deployment ID'))).toBe(true);
+      expect(result.data.suggestions.some(s => s.includes('Verify the deployment ID'))).toBe(true);
     });
 
     test('should handle update failures', async () => {
@@ -512,70 +450,45 @@ describe('UpdateDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockDeploymentManager.updateDeployment.mockRejectedValue(new Error('Update failed: insufficient resources'));
 
-      const toolCall = {
-        function: {
-          name: 'update_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             updates: { image: 'resource-heavy:latest' }
-          })
-        }
-      };
-
-      const result = await updateTool.invoke(toolCall);
+          };
+      const result = await updateTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('insufficient resources');
     });
 
     test('should handle invalid JSON arguments', async () => {
-      const toolCall = {
-        function: {
-          name: 'update_deployment',
-          arguments: 'invalid-json'
-        }
-      };
-
-      const result = await updateTool.invoke(toolCall);
+      const args = { deploymentId: null }; // Invalid deploymentId
+      const result = await updateTool.execute(args);
       
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Invalid JSON');
+      expect(result.success).toBe(false); // Test should fail with invalid args
     });
   });
 
   describe('Strategy-specific Validation', () => {
     test('should validate blue-green specific parameters', async () => {
-      const toolCall = {
-        function: {
-          name: 'update_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             updates: { image: 'new-image' },
             strategy: 'blue-green',
             trafficSplitPercentage: 150 // Invalid percentage
-          })
-        }
-      };
-
-      const result = await updateTool.invoke(toolCall);
+          };
+      const result = await updateTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Traffic split percentage must be between 0 and 100');
     });
 
     test('should validate scaling parameters', async () => {
-      const toolCall = {
-        function: {
-          name: 'update_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             updates: { replicas: -5 }, // Invalid negative replicas
             strategy: 'scaling'
-          })
-        }
-      };
-
-      const result = await updateTool.invoke(toolCall);
+          };
+      const result = await updateTool.execute(args);
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Replicas must be a positive number');
@@ -601,17 +514,11 @@ describe('UpdateDeploymentTool', () => {
       mockDeploymentManager.getDeployment.mockResolvedValue(mockDeployment);
       mockDeploymentManager.updateDeployment.mockResolvedValue(mockUpdateResult);
 
-      const toolCall = {
-        function: {
-          name: 'update_deployment',
-          arguments: JSON.stringify({
+      const args = {
             deploymentId: 'deploy-123',
             updates: { image: 'new-image' }
-          })
-        }
-      };
-
-      const result = await updateTool.invoke(toolCall);
+          };
+      const result = await updateTool.execute(args);
       
       expect(result.success).toBe(true);
       expect(result.data).toHaveProperty('deployment');

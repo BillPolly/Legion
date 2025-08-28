@@ -101,7 +101,7 @@ export class CommandExecutor extends Tool {
     return { valid: errors.length === 0, errors, warnings };
   }
 
-  async execute(params) {
+  async _execute(params) {
     // Validate required parameters
     if (!params || typeof params !== 'object') {
       throw new Error('Parameters must be an object');
@@ -111,7 +111,17 @@ export class CommandExecutor extends Tool {
       throw new Error('command parameter is required');
     }
     
-    return this.executeCommand(params.command, params.timeout);
+    const result = await this.executeCommand(params.command, params.timeout);
+    
+    // If command execution failed, throw error to trigger Tool base class error handling
+    if (!result.success) {
+      const error = new Error(result.error || 'Command execution failed');
+      error.cause = result; // Attach full result as error cause
+      throw error;
+    }
+    
+    // Return just the data part for successful execution
+    return result;
   }
 
 
@@ -135,13 +145,14 @@ export class CommandExecutor extends Tool {
       
       // Security check for truly dangerous commands
       const dangerousPatterns = [
-        /rm -rf \s*\/\s*$/,           // rm -rf / (root deletion)
-        /rm -rf \s*\/\s+/,            // rm -rf / something (root with args)
-        /dd if=\/dev\/zero/,          // disk wiping
-        /:(){ :|:& };:/,              // fork bomb
+        /rm\s+-rf\s*\/\s*$/,          // rm -rf / (root deletion)
+        /rm\s+-rf\s+\/\s*$/,          // rm -rf / with extra args
+        /rm\s+-rf\s*\/\s+/,           // rm -rf / something (root with args)
+        /dd\s+if=\/dev\/zero/,        // disk wiping
+        /:\(\)\{\s*:\|:\&\s*\};\:/,   // fork bomb
         /mkfs\./,                     // format filesystem
         /fdisk/,                      // disk partitioning
-        /> \/dev\/sd[a-z]/            // write to disk devices
+        />\s*\/dev\/sd[a-z]/          // write to disk devices
       ];
       
       const isDangerous = dangerousPatterns.some(pattern => pattern.test(command));

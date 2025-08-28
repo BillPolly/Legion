@@ -66,3 +66,4 @@ class SearchNavigationModule extends Module {
 }
 
 export default SearchNavigationModule;
+export { SearchNavigationModule };

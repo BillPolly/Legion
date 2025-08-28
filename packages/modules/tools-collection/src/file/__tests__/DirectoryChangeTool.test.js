@@ -39,8 +39,14 @@ describe('DirectoryChangeTool Tests', () => {
   });
   
   afterAll(async () => {
-    // Restore original working directory
-    process.chdir(originalCwd);
+    // Restore original working directory safely
+    try {
+      process.chdir(originalCwd);
+    } catch (error) {
+      // If original working directory doesn't exist or can't be accessed,
+      // change to a safe directory instead
+      process.chdir(os.homedir());
+    }
     
     // Cleanup test directory
     try {
@@ -103,8 +109,9 @@ describe('DirectoryChangeTool Tests', () => {
       
       const result = await tool.execute({ directoryPath: 'change-test' });
       
-      expect(result.previousPath).toBe(testDir);
-      expect(result.currentPath).toBe(path.join(testDir, 'change-test'));
+      expect(result.success).toBe(true);
+      expect(result.data.previousPath).toBe(testDir);
+      expect(result.data.currentPath).toBe(path.join(testDir, 'change-test'));
       expect(process.cwd()).toBe(path.join(testDir, 'change-test'));
     });
 
@@ -120,7 +127,8 @@ describe('DirectoryChangeTool Tests', () => {
       // Then change to a subdirectory using relative path
       const result = await tool.execute({ directoryPath: 'subdir' });
       
-            expect(result.currentPath).toBe(path.join(testDir, 'change-test', 'subdir'));
+      expect(result.success).toBe(true);
+      expect(result.data.currentPath).toBe(path.join(testDir, 'change-test', 'subdir'));
     });
 
     it('should handle absolute path changes', async () => {
@@ -132,7 +140,8 @@ describe('DirectoryChangeTool Tests', () => {
       const absolutePath = path.join(testDir, 'change-test');
       const result = await tool.execute({ directoryPath: absolutePath });
       
-            expect(result.currentPath).toBe(absolutePath);
+      expect(result.success).toBe(true);
+      expect(result.data.currentPath).toBe(absolutePath);
     });
 
     it('should support parent directory navigation', async () => {
@@ -147,7 +156,8 @@ describe('DirectoryChangeTool Tests', () => {
       // Go back to parent
       const result = await tool.execute({ directoryPath: '..' });
       
-            expect(result.currentPath).toBe(path.join(testDir, 'change-test'));
+      expect(result.success).toBe(true);
+      expect(result.data.currentPath).toBe(path.join(testDir, 'change-test'));
     });
 
     it('should support home directory shortcut', async () => {
@@ -162,7 +172,8 @@ describe('DirectoryChangeTool Tests', () => {
       // Use ~ to go to base directory (simulated home)
       const result = await tool.execute({ directoryPath: '~' });
       
-            expect(result.currentPath).toBe(testDir);
+      expect(result.success).toBe(true);
+      expect(result.data.currentPath).toBe(testDir);
     });
 
     it('should provide path history', async () => {
@@ -176,9 +187,10 @@ describe('DirectoryChangeTool Tests', () => {
       await tool.execute({ directoryPath: 'subdir' });
       const result = await tool.execute({ directoryPath: '..' });
       
-            expect(result.history).toBeDefined();
-      expect(Array.isArray(result.history)).toBe(true);
-      expect(result.history.length).toBeGreaterThan(0);
+      expect(result.success).toBe(true);
+      expect(result.data.history).toBeDefined();
+      expect(Array.isArray(result.data.history)).toBe(true);
+      expect(result.data.history.length).toBeGreaterThan(0);
     });
   });
 
@@ -189,8 +201,9 @@ describe('DirectoryChangeTool Tests', () => {
         return;
       }
       
-      await expect(tool.execute({ directoryPath: 'nonexistent-dir' }))
-        .rejects.toThrow();
+      const result = await tool.execute({ directoryPath: 'nonexistent-dir' });
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
 
     it('should validate input parameters', async () => {
@@ -199,8 +212,9 @@ describe('DirectoryChangeTool Tests', () => {
         return;
       }
       
-      await expect(tool.execute({ directoryPath: '' }))
-        .rejects.toThrow('Directory path cannot be empty');
+      const result = await tool.execute({ directoryPath: '' });
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/Directory path cannot be empty/);
     });
 
     it('should handle permission denied errors', async () => {
@@ -210,8 +224,9 @@ describe('DirectoryChangeTool Tests', () => {
       }
       
       // Try to access outside allowed basePath
-      await expect(tool.execute({ directoryPath: '../../../etc' }))
-        .rejects.toThrow('Access denied: Path is outside allowed directory');
+      const result = await tool.execute({ directoryPath: '../../../etc' });
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/Access denied.*outside/i);
     });
 
     it('should handle files instead of directories', async () => {
@@ -223,8 +238,9 @@ describe('DirectoryChangeTool Tests', () => {
       // Create a file
       await fs.writeFile(path.join(testDir, 'not-a-dir.txt'), 'content');
       
-      await expect(tool.execute({ directoryPath: 'not-a-dir.txt' }))
-        .rejects.toThrow();
+      const result = await tool.execute({ directoryPath: 'not-a-dir.txt' });
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/Directory not found|not a directory/i);
     });
 
     it('should handle null byte injection', async () => {
@@ -233,8 +249,9 @@ describe('DirectoryChangeTool Tests', () => {
         return;
       }
       
-      await expect(tool.execute({ directoryPath: 'test\0hidden' }))
-        .rejects.toThrow('Invalid directory path');
+      const result = await tool.execute({ directoryPath: 'test\0hidden' });
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/Invalid directory path/i);
     });
   });
 
@@ -247,13 +264,19 @@ describe('DirectoryChangeTool Tests', () => {
       
       const restrictedTool = new DirectoryChangeTool({ basePath: testDir });
       
+      // Create test directory first and change to testDir
+      await fs.mkdir(path.join(testDir, 'change-test'), { recursive: true });
+      process.chdir(testDir);
+      
       // Should work within basePath
       const allowedResult = await restrictedTool.execute({ directoryPath: 'change-test' });
-      expect(allowedResult.currentPath).toBeDefined();
+      expect(allowedResult.success).toBe(true);
+      expect(allowedResult.data.currentPath).toBeDefined();
       
       // Should fail outside basePath
-      await expect(restrictedTool.execute({ directoryPath: '../../../' }))
-        .rejects.toThrow('Access denied: Path is outside allowed directory');
+      const blockedResult = await restrictedTool.execute({ directoryPath: '../../../' });
+      expect(blockedResult.success).toBe(false);
+      expect(blockedResult.error).toMatch(/Access denied.*outside/i);
     });
 
     it('should normalize paths correctly', async () => {
@@ -262,11 +285,16 @@ describe('DirectoryChangeTool Tests', () => {
         return;
       }
       
+      // Create test directory first and change to testDir
+      await fs.mkdir(path.join(testDir, 'change-test'), { recursive: true });
+      process.chdir(testDir);
+      
       const result = await tool.execute({ directoryPath: './change-test/../change-test' });
       
-            expect(result.currentPath).not.toContain('./');
-      expect(result.currentPath).not.toContain('../');
-      expect(result.currentPath).toBe(path.join(testDir, 'change-test'));
+      expect(result.success).toBe(true);
+      expect(result.data.currentPath).not.toContain('./');
+      expect(result.data.currentPath).not.toContain('../');
+      expect(result.data.currentPath).toBe(path.join(testDir, 'change-test'));
     });
 
     it('should track directory changes across tool instances', async () => {
@@ -282,7 +310,8 @@ describe('DirectoryChangeTool Tests', () => {
       const newTool = new DirectoryChangeTool({ basePath: testDir });
       const result = await newTool.execute({ directoryPath: '.' });
       
-            expect(result.currentPath).toBe(path.join(testDir, 'change-test'));
+      expect(result.success).toBe(true);
+      expect(result.data.currentPath).toBe(path.join(testDir, 'change-test'));
     });
   });
 
@@ -293,6 +322,12 @@ describe('DirectoryChangeTool Tests', () => {
         return;
       }
       
+      // Create test directory structure first and change to testDir
+      await fs.mkdir(path.join(testDir, 'change-test'), { recursive: true });
+      await fs.mkdir(path.join(testDir, 'change-test', 'subdir'), { recursive: true });
+      await fs.mkdir(path.join(testDir, 'change-test', 'subdir', 'deep'), { recursive: true });
+      process.chdir(testDir);
+      
       // Make a series of directory changes
       const results = [];
       results.push(await tool.execute({ directoryPath: 'change-test' }));
@@ -302,10 +337,11 @@ describe('DirectoryChangeTool Tests', () => {
       
       // All operations should succeed
       results.forEach(result => {
-              });
+        expect(result.success).toBe(true);
+      });
       
       // Final location should be back at testDir/change-test
-      expect(results[3].currentPath).toBe(path.join(testDir, 'change-test'));
+      expect(results[3].data.currentPath).toBe(path.join(testDir, 'change-test'));
     });
 
     it('should handle rapid directory changes', async () => {
@@ -326,8 +362,13 @@ describe('DirectoryChangeTool Tests', () => {
       // All operations should complete (some may fail due to race conditions)
       results.forEach(result => {
         expect(result).toBeDefined();
-        expect(result.currentPath).toBeDefined();
-        expect(result.previousPath).toBeDefined();
+        // Successful operations should have wrapped results
+        if (result.success) {
+          expect(result.data.currentPath).toBeDefined();
+          expect(result.data.previousPath).toBeDefined();
+        } else {
+          expect(result.error).toBeDefined();
+        }
       });
     });
   });

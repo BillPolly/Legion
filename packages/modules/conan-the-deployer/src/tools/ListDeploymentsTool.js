@@ -136,12 +136,9 @@ class ListDeploymentsTool extends Tool {
   /**
    * Execute the listing
    */
-  async execute(args) {
+  async _execute(args) {
     try {
-      // If args is a toolCall object, parse it
-      if (args.function && args.function.arguments) {
-        args = this.parseArguments(args.function.arguments);
-      }
+      // Args are already parsed by the base Tool class
       
       // Validate provider filter
       if (args.provider && !this.validProviders.includes(args.provider)) {
