@@ -17,6 +17,7 @@ export class ModuleService {
     this.moduleDiscovery = dependencies.moduleDiscovery;
     this.moduleLoader = dependencies.moduleLoader;
     this.moduleCache = dependencies.moduleCache;
+    this.databaseService = dependencies.databaseService; // NEW: For Phase 2 tool persistence
     this.eventBus = dependencies.eventBus;
     
     // Store discovered modules for later loading
@@ -78,6 +79,18 @@ export class ModuleService {
       // Validation removed - moduleValidator dependency not provided
       
       await this.moduleCache.set(moduleName, moduleInstance);
+      
+      // PHASE 2: Save tools to database (the actual repository)
+      const moduleTools = moduleInstance.getTools();
+      if (moduleTools && moduleTools.length > 0 && this.databaseService) {
+        try {
+          await this.databaseService.saveTools(moduleTools, moduleName);
+          console.log(`[ModuleService] Saved ${moduleTools.length} tools from ${moduleName} to database`);
+        } catch (error) {
+          console.log(`[ModuleService] Failed to save tools for ${moduleName}:`, error.message);
+          // Don't fail module loading if tool saving fails
+        }
+      }
       
       this.eventBus.emit('module:loaded', {
         name: moduleName,

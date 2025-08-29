@@ -48,6 +48,8 @@ export class ServiceOrchestrator {
     // Initialize infrastructure dependencies first
     const dependencies = await this._initializeDependencies();
     
+    console.log('[ServiceOrchestrator] Dependencies created, databaseService connected:', dependencies.databaseService._isConnected);
+    
     // Initialize application services with minimal dependencies
     this.cacheService = new CacheService({
       cache: dependencies.cache,
@@ -59,8 +61,11 @@ export class ServiceOrchestrator {
       moduleDiscovery: dependencies.moduleDiscovery,
       moduleLoader: dependencies.moduleLoader,
       moduleCache: this.cacheService,
+      databaseService: dependencies.databaseService, // NEW: For Phase 2 tool persistence
       eventBus: dependencies.eventBus
     });
+    
+    console.log('[ServiceOrchestrator] ModuleService created with databaseService connected:', dependencies.databaseService._isConnected);
 
     this.toolService = new ToolService({
       toolCache: this.cacheService,
@@ -240,7 +245,8 @@ export class ServiceOrchestrator {
    * Orchestrates SystemService
    */
   async clearAllData(options = {}) {
-    return await this.systemService.shutdown(options);
+    // Clear data but keep database connections alive for continued operations
+    return await this.systemService.shutdown({ ...options, clearDataOnly: true });
   }
 
   /**

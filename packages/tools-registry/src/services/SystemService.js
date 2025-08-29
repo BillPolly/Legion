@@ -202,7 +202,7 @@ export class SystemService {
    * Single responsibility: System shutdown coordination
    */
   async shutdown(options = {}) {
-    const { timeout = 30000 } = options;
+    const { timeout = 30000, clearDataOnly = false } = options;
     
     const shutdown = {
       started: new Date().toISOString(),
@@ -218,12 +218,18 @@ export class SystemService {
         cleared: await this.cacheService.clear()
       });
 
-      // Close database connections
-      if (this.databaseService.close) {
+      // Close database connections only if full shutdown (not just clearing data)
+      if (!clearDataOnly && this.databaseService.close) {
         await this.databaseService.close();
         shutdown.steps.push({
           name: 'database-close',
           success: true
+        });
+      } else if (clearDataOnly) {
+        shutdown.steps.push({
+          name: 'database-kept-alive',
+          success: true,
+          note: 'Database connection maintained for continued operations'
         });
       }
 

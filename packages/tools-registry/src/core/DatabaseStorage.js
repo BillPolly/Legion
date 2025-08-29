@@ -319,9 +319,17 @@ export class DatabaseStorage {
       
       const collection = this.getCollection('tools');
       
-      // Prepare tool documents
+      // Prepare tool documents - extract only metadata, avoid circular references
       const toolDocs = tools.map(tool => ({
-        ...tool,
+        name: tool.name,
+        description: tool.description,
+        inputSchema: tool.inputSchema,
+        outputSchema: tool.outputSchema,
+        category: tool.category,
+        tags: tool.tags || [],
+        version: tool.version,
+        keywords: tool.keywords || [],
+        examples: tool.examples || [],
         moduleName,
         savedAt: new Date().toISOString(),
         _id: `${moduleName}:${tool.name}` // Composite key for uniqueness

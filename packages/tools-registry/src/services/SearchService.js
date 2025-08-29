@@ -201,21 +201,31 @@ export class SearchService {
     for (const tool of tools) {
       try {
         results.processed++;
+        console.log(`[SearchService] Processing tool: ${tool.name}`);
 
         if (!forceRegenerate && tool.perspectives?.length > 0) {
+          console.log(`[SearchService] Skipping ${tool.name} - already has perspectives`);
           results.skipped++;
           continue;
         }
 
+        console.log(`[SearchService] Generating perspectives for: ${tool.name}`);
         const perspectives = await this.perspectiveService.generatePerspectives({
           name: tool.name,
           description: tool.description,
           inputSchema: tool.inputSchema,
           outputSchema: tool.outputSchema
         });
+        
+        console.log(`[SearchService] Generated ${perspectives?.length || 0} perspectives for ${tool.name}`);
 
-        await this.toolRepository.updateToolPerspectives(tool.id, perspectives);
-        results.generated++;
+        if (perspectives && perspectives.length > 0) {
+          await this.toolRepository.updateToolPerspectives(tool.id || tool._id, perspectives);
+          results.generated++;
+          console.log(`[SearchService] Saved perspectives for ${tool.name}`);
+        } else {
+          console.log(`[SearchService] No perspectives generated for ${tool.name}`);
+        }
 
         this.eventBus.emit('perspectives:generated', {
           toolName: tool.name,
