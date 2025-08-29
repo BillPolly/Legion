@@ -6,55 +6,71 @@ import path from 'path';
  * Tool for writing files to the file system
  */
 class FileWriterTool extends Tool {
-  constructor({ basePath, encoding = 'utf-8', createDirectories = false }) {
-    if (!basePath) {
-      throw new Error('basePath is required');
-    }
-    
-    super({
-      name: 'file_writer',
-      shortName: 'write',
-      description: 'Writes content to a file in the file system',
-      schema: {
-        input: {
-          type: 'object',
-          properties: {
-            filePath: {
-              type: 'string',
-              description: 'The path where the file should be written'
-            },
-            content: {
-              description: 'The content to write to the file (string or object - objects will be JSON stringified)'
-            },
-            append: {
-              type: 'boolean',
-              description: 'Whether to append to existing file (default: false)',
-              default: false
-            }
-          },
-          required: ['filePath', 'content']
-        },
-        output: {
-          type: 'object',
-          properties: {
-            path: {
-              type: 'string',
-              description: 'The resolved path where the file was written'
-            },
-            bytesWritten: {
-              type: 'number',
-              description: 'Number of bytes written to the file'
-            }
-          },
-          required: ['path', 'bytesWritten']
-        }
+  constructor(moduleOrConfig, toolName = null) {
+    // NEW PATTERN: Tool(module, toolName) - metadata comes from module
+    if (toolName && moduleOrConfig?.getToolMetadata) {
+      super(moduleOrConfig, toolName);
+      
+      // Get config from module
+      const config = moduleOrConfig.config || {};
+      this.basePath = config.basePath || process.cwd();
+      this.encoding = config.encoding || 'utf-8';
+      this.createDirectories = config.createDirectories || false;
+      this.shortName = 'write';
+    } 
+    // OLD PATTERN: Tool(config) - backwards compatibility
+    else {
+      const { basePath, encoding = 'utf-8', createDirectories = false } = moduleOrConfig || {};
+      
+      if (!basePath) {
+        throw new Error('basePath is required');
       }
+      
+      super({
+        name: 'file_writer',
+        shortName: 'write',
+        description: 'Writes content to a file in the file system',
+        schema: {
+          input: {
+            type: 'object',
+            properties: {
+              filePath: {
+                type: 'string',
+                description: 'The path where the file should be written'
+              },
+              content: {
+                description: 'The content to write to the file (string or object - objects will be JSON stringified)'
+              },
+              append: {
+                type: 'boolean',
+                description: 'Whether to append to existing file (default: false)',
+                default: false
+              }
+            },
+            required: ['filePath', 'content']
+          },
+          output: {
+            type: 'object',
+            properties: {
+              path: {
+                type: 'string',
+                description: 'The resolved path where the file was written'
+              },
+              bytesWritten: {
+                type: 'number',
+                description: 'Number of bytes written to the file'
+              }
+            },
+            required: ['path', 'bytesWritten']
+          }
+        }
     });
 
-    // Store dependencies
-    this.basePath = basePath;
-    this.encoding = encoding;
-    this.createDirectories = createDirectories;
+      // Store dependencies
+      this.basePath = basePath;
+      this.encoding = encoding;
+      this.createDirectories = createDirectories;
+    }
   }
 
   /**

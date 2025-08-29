@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 
 /**
  * AIGenerationModule - NEW metadata-driven architecture
- * Metadata comes from tools-metadata.json, tools contain pure logic only
+ * Metadata comes from module.json, tools contain pure logic only
  */
 export default class AIGenerationModule extends Module {
   constructor() {
@@ -15,7 +15,7 @@ export default class AIGenerationModule extends Module {
     this.version = '1.0.0';
     
     // NEW: Set metadata path for automatic loading
-    this.metadataPath = './tools-metadata.json';
+    this.metadataPath = './module.json';
     
     this.llmClient = null;
   }
@@ -294,31 +294,11 @@ export default class AIGenerationModule extends Module {
    * Initialize tools for this module
    */
   initializeTools() {
-    // NEW APPROACH: Create tools using metadata
-    if (this.metadata) {
-      try {
-        const tool = this.createToolFromMetadata('generate_image', ImageGenerationTool);
-        // Pass the required dependencies
-        tool.llmClient = this.llmClient;
-        tool.generateImage = this.generateImage.bind(this);
-        this.registerTool(tool.name, tool);
-      } catch (error) {
-        console.warn(`Failed to create metadata tool generate_image, falling back to legacy: ${error.message}`);
-        
-        // Fallback to legacy
-        const imageGenTool = new ImageGenerationTool({
-          llmClient: this.llmClient,
-          generateImage: this.generateImage.bind(this)
-        });
-        this.registerTool(imageGenTool.name, imageGenTool);
-      }
-    } else {
-      // FALLBACK: Old approach for backwards compatibility
-      const imageGenTool = new ImageGenerationTool({
-        llmClient: this.llmClient,
-        generateImage: this.generateImage.bind(this)
-      });
-      this.registerTool(imageGenTool.name, imageGenTool);
-    }
+    // Create tool using metadata
+    const tool = this.createToolFromMetadata('generate_image', ImageGenerationTool);
+    // Pass the required dependencies
+    tool.llmClient = this.llmClient;
+    tool.generateImage = this.generateImage.bind(this);
+    this.registerTool(tool.name, tool);
   }
 }

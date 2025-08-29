@@ -4,6 +4,9 @@ import { simpleParser } from 'mailparser';
 import { Module } from '@legion/tools-registry';
 import { createValidator } from '@legion/schema';
 import { fileURLToPath } from 'url';
+import SendEmailTool from './SendEmailTool.js';
+import SendHtmlEmailTool from './SendHtmlEmailTool.js';
+import TestConnectionTool from './TestConnectionTool.js';
 
 const gmailConfigSchema = {
   type: 'object',
@@ -66,7 +69,7 @@ class GmailModule extends Module {
     this.version = '1.0.0';
     
     // NEW: Set metadata path for automatic loading
-    this.metadataPath = './tools-metadata.json';
+    this.metadataPath = './module.json';
     
     this.resourceManager = null;
     this.config = null;
@@ -116,7 +119,7 @@ class GmailModule extends Module {
   }
 
   async initialize() {
-    await super.initialize();
+    await super.initialize(); // This will load metadata automatically
     
     // Load config using resourceManager
     try {
@@ -138,6 +141,9 @@ class GmailModule extends Module {
         }
       };
     }
+    
+    // Initialize tools using metadata - NEW approach
+    this.initializeTools();
     
     try {
       // Only initialize if we have valid config
@@ -439,12 +445,32 @@ class GmailModule extends Module {
   }
 
   /**
+   * Initialize tools for this module - NEW metadata-driven approach
+   */
+  initializeTools() {
+    // Create tools using metadata - NO FALLBACKS
+    const tools = [
+      { key: 'send_email', class: SendEmailTool },
+      { key: 'send_html_email', class: SendHtmlEmailTool },
+      { key: 'test_connection', class: TestConnectionTool }
+    ];
+
+    for (const { key, class: ToolClass } of tools) {
+      const tool = this.createToolFromMetadata(key, ToolClass);
+      // Pass Gmail module reference to tool for execution
+      tool.gmailModule = this;
+      this.registerTool(tool.name, tool);
+    }
+  }
+
+  /**
    * Get all tools provided by this module
    * @returns {Array<Object>} Array of tool definitions
    */
   getTools() {
-    // Gmail module provides direct API methods instead of wrapped tools
-    return [];
+    // Return tools from the registry
+    const toolsMap = this.getToolsMap ? this.getToolsMap() : new Map();
+    return Array.from(toolsMap.values());
   }
 }
 

@@ -36,9 +36,10 @@ describe('FileWriterTool Tests', () => {
       expect(tool).toBeDefined();
       expect(tool.name).toBe('file_writer');
       expect(tool.description).toBeDefined();
-      expect(tool.schema).toBeDefined();
-      expect(tool.schema.input).toBeDefined();
-      expect(tool.schema.output).toBeDefined();
+      expect(tool.inputSchema).toBeDefined();
+      expect(tool.outputSchema).toBeDefined();
+      expect(tool.inputSchema.type).toBe('object');
+      expect(tool.outputSchema.type).toBe('object');
     });
 
     it('should require basePath parameter', () => {
@@ -211,7 +212,7 @@ describe('FileWriterTool Tests', () => {
       });
       
       expect(result.success).toBe(false);
-      expect(result.error).toMatch(/File path must be a string/);
+      expect(result.error).toContain('Input validation failed');
     });
 
     it('should handle missing content parameter', async () => {

@@ -66,9 +66,10 @@ describe('DirectoryChangeTool Tests', () => {
       expect(tool).toBeDefined();
       expect(tool.name).toBe('directory_change');
       expect(tool.description).toBeDefined();
-      expect(tool.schema).toBeDefined();
-      expect(tool.schema.input).toBeDefined();
-      expect(tool.schema.output).toBeDefined();
+      expect(tool.inputSchema).toBeDefined();
+      expect(tool.outputSchema).toBeDefined();
+      expect(tool.inputSchema.type).toBe('object');
+      expect(tool.outputSchema.type).toBe('object');
     });
 
     it('should require basePath parameter', () => {

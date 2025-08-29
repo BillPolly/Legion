@@ -38,7 +38,7 @@ describe('ServerStarterModule', () => {
   describe('Module Creation and Initialization', () => {
     test('should create module with correct metadata', () => {
       expect(serverStarterModule.name).toBe('server-starter');
-      expect(serverStarterModule.description).toContain('development servers');
+      expect(serverStarterModule.description).toContain('Server management');
       expect(serverStarterModule.version).toBe('1.0.0');
     });
 
@@ -211,12 +211,12 @@ describe('ServerStarterModule', () => {
       
       // Read the output
       const readResult = await tool.execute({ 
-        processId: startResult.data.pid,
+        pid: startResult.data.pid,
         lines: 10
       });
       
       expect(readResult.success).toBe(true);
-      expect(Array.isArray(readResult.data.output)).toBe(true);
+      expect(typeof readResult.data.output).toBe('string');
       expect(typeof readResult.data.lines).toBe('number');
       
       // Clean up
@@ -227,7 +227,7 @@ describe('ServerStarterModule', () => {
 
     test('should handle non-existent process ID', async () => {
       const result = await tool.execute({ 
-        processId: 999999,
+        pid: 999999,
         lines: 10
       });
       
@@ -254,12 +254,14 @@ describe('ServerStarterModule', () => {
         
         // Read limited output
         const readResult = await tool.execute({ 
-          processId: startResult.data.pid,
+          pid: startResult.data.pid,
           lines: 5
         });
         
         expect(readResult.success).toBe(true);
-        expect(readResult.data.output.length).toBeLessThanOrEqual(5);
+        // The output is a string, check number of lines by counting newlines
+        const outputLines = readResult.data.output.split('\n').filter(line => line.trim());
+        expect(outputLines.length).toBeLessThanOrEqual(5);
         
         // Clean up
         startResult.data.process.kill('SIGKILL');
@@ -300,17 +302,17 @@ describe('ServerStarterModule', () => {
       
       // Stop the server
       const stopResult = await tool.execute({ 
-        processId: pid
+        pid: pid
       });
       
       expect(stopResult.success).toBe(true);
-      expect(stopResult.data.status).toBe('stopped');
-      expect(stopResult.data.processId).toBe(pid);
+      expect(stopResult.data.signal).toBeDefined();
+      expect(stopResult.data.pid).toBe(pid);
     }, 10000);
 
     test('should handle non-existent process ID', async () => {
       const result = await tool.execute({ 
-        processId: 999999
+        pid: 999999
       });
       
       expect(result.success).toBe(false);
@@ -340,7 +342,7 @@ describe('ServerStarterModule', () => {
         
         // Try to stop it via tool
         const stopResult = await tool.execute({ 
-          processId: pid
+          pid: pid
         });
         
         expect(stopResult.success).toBe(false);
@@ -359,15 +361,14 @@ describe('ServerStarterModule', () => {
       if (startResult.success) {
         const pid = startResult.data.pid;
         
-        // Stop with graceful shutdown
+        // Stop with graceful shutdown (use force: false for graceful)
         const stopResult = await tool.execute({ 
-          processId: pid,
-          graceful: true,
-          timeout: 2000
+          pid: pid,
+          force: false
         });
         
         expect(stopResult.success).toBe(true);
-        expect(stopResult.data.method).toBeTruthy();
+        expect(stopResult.data.signal).toBeTruthy();
       }
     }, 10000);
   });
@@ -392,7 +393,7 @@ describe('ServerStarterModule', () => {
       
       // Read output
       const readResult = await readTool.execute({ 
-        processId: pid,
+        pid: pid,
         lines: 10
       });
       
@@ -400,7 +401,7 @@ describe('ServerStarterModule', () => {
       
       // Stop server
       const stopResult = await stopTool.execute({ 
-        processId: pid
+        pid: pid
       });
       
       expect(stopResult.success).toBe(true);
@@ -425,7 +426,7 @@ describe('ServerStarterModule', () => {
       // Stop all servers
       const stopPromises = servers
         .filter(s => s.success)
-        .map(s => stopTool.execute({ processId: s.data.pid }));
+        .map(s => stopTool.execute({ pid: s.data.pid }));
       
       const stopResults = await Promise.all(stopPromises);
       stopResults.forEach(result => {
@@ -455,8 +456,8 @@ describe('ServerStarterModule', () => {
       
       // Clean up
       await Promise.all([
-        stopTool.execute({ processId: server1.data.pid }),
-        stopTool.execute({ processId: server2.data.pid })
+        stopTool.execute({ pid: server1.data.pid }),
+        stopTool.execute({ pid: server2.data.pid })
       ]);
     }, 10000);
   });
@@ -543,7 +544,7 @@ describe('ServerStarterModule', () => {
           await new Promise(resolve => setTimeout(resolve, 50));
           
           const stopResult = await stopTool.execute({ 
-            processId: startResult.data.pid
+            pid: startResult.data.pid
           });
           
           results.push({ start: startResult, stop: stopResult });

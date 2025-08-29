@@ -5,61 +5,12 @@ import puppeteer from 'puppeteer';
 
 /**
  * PageScreenshot tool that captures screenshots of web pages
- * NEW: Pure logic implementation - metadata comes from tools-metadata.json
+ * Pure logic implementation - metadata comes from module.json
  */
 class PageScreenshotTool extends Tool {
-  // NEW PATTERN: constructor(module, toolName)
   constructor(module, toolName) {
     super(module, toolName);
     this.shortName = 'screenshot';
-  }
-
-  // BACKWARDS COMPATIBILITY: support old pattern during migration
-  static createLegacy() {
-    return new PageScreenshotTool({
-      name: 'page_screenshot',
-      description: 'Takes screenshots of web pages',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          url: {
-            type: 'string',
-            description: 'The URL of the webpage to screenshot'
-          },
-          fullPage: {
-            type: 'boolean',
-            default: false,
-            description: 'Whether to capture the full page or just the viewport'
-          },
-          width: {
-            type: 'number',
-            default: 1280,
-            description: 'Viewport width in pixels'
-          },
-          height: {
-            type: 'number',
-            default: 720,
-            description: 'Viewport height in pixels'
-          },
-          waitForSelector: {
-            type: 'string',
-            description: 'Optional CSS selector to wait for before taking screenshot'
-          }
-        },
-        required: ['url']
-      },
-      outputSchema: {
-        type: 'object',
-        properties: {
-          success: { type: 'boolean', description: 'Whether the screenshot was successful' },
-          url: { type: 'string', description: 'The URL that was screenshotted' },
-          image: { type: 'string', description: 'Base64 encoded screenshot image' },
-          isImage: { type: 'boolean', description: 'Indicates this is an image result' },
-          mimeType: { type: 'string', description: 'MIME type of the image' }
-        },
-        required: ['success', 'url', 'image']
-      }
-    });
   }
 
   /**
@@ -167,8 +118,8 @@ class PageScreenshotTool extends Tool {
 }
 
 /**
- * PageScreenshoterModule - NEW metadata-driven architecture
- * Metadata comes from tools-metadata.json, tools contain pure logic only
+ * PageScreenshoterModule - metadata-driven architecture
+ * Metadata comes from module.json, tools contain pure logic only
  */
 export default class PageScreenshoterModule extends Module {
   constructor() {
@@ -176,21 +127,13 @@ export default class PageScreenshoterModule extends Module {
     this.name = 'page-screenshoter';
     this.description = 'Web page screenshot capture tool';
     this.version = '1.0.0';
-    
-    // NEW: Set metadata path for automatic loading
-    this.metadataPath = './tools-metadata.json';
+    this.metadataPath = './module.json';
   }
 
-  /**
-   * Override getModulePath to support proper path resolution
-   */
   getModulePath() {
     return fileURLToPath(import.meta.url);
   }
 
-  /**
-   * Static async factory method following the standard interface
-   */
   static async create(resourceManager) {
     const module = new PageScreenshoterModule();
     module.resourceManager = resourceManager;
@@ -198,21 +141,11 @@ export default class PageScreenshoterModule extends Module {
     return module;
   }
 
-  /**
-   * Initialize the module - NEW metadata-driven approach
-   */
   async initialize() {
-    await super.initialize(); // This will load metadata automatically
+    await super.initialize();
     
-    // NEW APPROACH: Create tools using metadata
-    if (this.metadata) {
-      // Create page_screenshot tool using metadata
-      const screenshotTool = this.createToolFromMetadata('page_screenshot', PageScreenshotTool);
-      this.registerTool(screenshotTool.name, screenshotTool);
-    } else {
-      // FALLBACK: Old approach for backwards compatibility
-      const screenshotTool = PageScreenshotTool.createLegacy();
-      this.registerTool(screenshotTool.name, screenshotTool);
-    }
+    // Create tools using metadata
+    const screenshotTool = this.createToolFromMetadata('page_screenshot', PageScreenshotTool);
+    this.registerTool(screenshotTool.name, screenshotTool);
   }
 }

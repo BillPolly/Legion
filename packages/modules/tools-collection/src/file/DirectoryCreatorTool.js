@@ -6,16 +6,30 @@ import path from 'path';
  * Tool for creating directories in the file system
  */
 class DirectoryCreatorTool extends Tool {
-  constructor({ basePath, permissions = 0o755 }) {
-    if (!basePath) {
-      throw new Error('basePath is required');
-    }
-    
-    super({
-      name: 'directory_creator',
-      shortName: 'mkdir',
-      description: 'Creates directories in the file system',
-      schema: {
+  constructor(moduleOrConfig, toolName) {
+    // NEW PATTERN: Tool(module, toolName) - metadata comes from module
+    if (toolName && moduleOrConfig?.getToolMetadata) {
+      super(moduleOrConfig, toolName);
+      
+      // Get config from module
+      const config = moduleOrConfig.config || {};
+      this.basePath = config.basePath || process.cwd();
+      this.permissions = config.permissions || 0o755;
+      this.shortName = 'mkdir';
+    } 
+    // OLD PATTERN: Tool(config) - backwards compatibility
+    else {
+      const { basePath, permissions = 0o755 } = moduleOrConfig || {};
+      
+      if (!basePath) {
+        throw new Error('basePath is required');
+      }
+      
+      super({
+        name: 'directory_creator',
+        shortName: 'mkdir',
+        description: 'Creates directories in the file system',
+        schema: {
         input: {
           type: 'object',
           properties: {
@@ -48,9 +62,10 @@ class DirectoryCreatorTool extends Tool {
       }
     });
 
-    // Store dependencies
-    this.basePath = basePath;
-    this.permissions = permissions;
+      // Store dependencies
+      this.basePath = basePath;
+      this.permissions = permissions;
+    }
   }
 
   /**

@@ -6,7 +6,6 @@
 
 import { jest } from '@jest/globals';
 import WebPageToMarkdownModule from '../WebPageToMarkdownModule.js';
-import WebPageToMarkdown from '../index.js';
 import { ResourceManager } from '@legion/resource-manager';
 
 describe('WebPageToMarkdownModule Integration Tests', () => {
@@ -33,29 +32,27 @@ describe('WebPageToMarkdownModule Integration Tests', () => {
     it('should register WebPageToMarkdown tool during initialization', () => {
       const tool = webpageModule.getTool('webpage_to_markdown');
       expect(tool).toBeDefined();
-      expect(tool).toBeInstanceOf(WebPageToMarkdown);
+      expect(tool.name).toBe('webpage_to_markdown');
     });
   });
 
   describe('Tool Registration', () => {
-    it('should provide correct tool description', () => {
+    it('should provide correct tool schema', () => {
       const tool = webpageModule.getTool('webpage_to_markdown');
-      const description = tool.getToolDescription();
       
-      expect(description.type).toBe('function');
-      expect(description.function.name).toBe('webpage_to_markdown_convert');
-      expect(description.function.parameters.required).toContain('url');
+      expect(tool.inputSchema).toBeDefined();
+      expect(tool.inputSchema.properties.url).toBeDefined();
+      expect(tool.inputSchema.required).toContain('url');
     });
 
     it('should have proper schema definition', () => {
       const tool = webpageModule.getTool('webpage_to_markdown');
-      const description = tool.getToolDescription();
       
-      expect(description.function.parameters.properties.url).toBeDefined();
-      expect(description.function.parameters.properties.includeImages).toBeDefined();
-      expect(description.function.parameters.properties.includeLinks).toBeDefined();
-      expect(description.function.parameters.properties.maxLength).toBeDefined();
-      expect(description.function.parameters.properties.waitForSelector).toBeDefined();
+      expect(tool.inputSchema.properties.url).toBeDefined();
+      expect(tool.inputSchema.properties.includeImages).toBeDefined();
+      expect(tool.inputSchema.properties.includeLinks).toBeDefined();
+      expect(tool.inputSchema.properties.maxLength).toBeDefined();
+      expect(tool.inputSchema.properties.waitForSelector).toBeDefined();
     });
   });
 
@@ -63,35 +60,25 @@ describe('WebPageToMarkdownModule Integration Tests', () => {
     it('should validate required url parameter', async () => {
       const tool = webpageModule.getTool('webpage_to_markdown');
       
-      try {
-        await tool.execute({});
-        fail('Should have thrown error for missing URL');
-      } catch (error) {
-        expect(error.message).toContain('required parameter');
-        expect(error.cause.errorType).toBe('validation_error');
-      }
+      const result = await tool.execute({});
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Input validation failed');
     });
 
     it('should validate empty URL parameter', async () => {
       const tool = webpageModule.getTool('webpage_to_markdown');
       
-      try {
-        await tool.execute({ url: '' });
-        fail('Should have thrown error for empty URL');
-      } catch (error) {
-        expect(error.cause.errorType).toBe('validation_error');
-      }
+      const result = await tool.execute({ url: '' });
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
 
     it('should validate invalid URL format', async () => {
       const tool = webpageModule.getTool('webpage_to_markdown');
       
-      try {
-        await tool.execute({ url: 'not-a-valid-url' });
-        fail('Should have thrown error for invalid URL');
-      } catch (error) {
-        expect(error.cause.errorType).toBe('validation_error');
-      }
+      const result = await tool.execute({ url: 'not-a-valid-url' });
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
 
     it('should handle maxLength parameter', async () => {
@@ -111,8 +98,9 @@ describe('WebPageToMarkdownModule Integration Tests', () => {
         maxLength: 100
       });
       
-      expect(result).toBeDefined();
-      expect(result.truncated).toBe(false);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      expect(result.data.truncated).toBe(false);
       
       tool.convertToMarkdown = originalConvertToMarkdown;
     });
@@ -139,6 +127,7 @@ describe('WebPageToMarkdownModule Integration Tests', () => {
         includeLinks: false
       });
       
+      expect(result.success).toBe(true);
       expect(tool.convertToMarkdown).toHaveBeenCalledWith(
         'https://example.com',
         false,
@@ -161,15 +150,11 @@ describe('WebPageToMarkdownModule Integration Tests', () => {
         new Error('Failed to launch browser: Network error')
       );
       
-      try {
-        await tool.execute({ url: 'https://example.com' });
-        fail('Should have thrown network error');
-      } catch (error) {
-        expect(error.message).toContain('Failed to launch browser');
-        expect(error.cause.errorType).toBe('conversion_error');
-      } finally {
-        tool.convertToMarkdown = originalConvertToMarkdown;
-      }
+      const result = await tool.execute({ url: 'https://example.com' });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Failed to launch browser');
+      
+      tool.convertToMarkdown = originalConvertToMarkdown;
     });
 
     it('should handle page load errors', async () => {
@@ -181,15 +166,11 @@ describe('WebPageToMarkdownModule Integration Tests', () => {
         new Error('Failed to load page: 404 Not Found')
       );
       
-      try {
-        await tool.execute({ url: 'https://nonexistent.example.com' });
-        fail('Should have thrown page load error');
-      } catch (error) {
-        expect(error.message).toContain('Failed to load page');
-        expect(error.cause.errorType).toBe('conversion_error');
-      } finally {
-        tool.convertToMarkdown = originalConvertToMarkdown;
-      }
+      const result = await tool.execute({ url: 'https://nonexistent.example.com' });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Failed to load page');
+      
+      tool.convertToMarkdown = originalConvertToMarkdown;
     });
 
     it('should handle timeout errors', async () => {
@@ -201,18 +182,14 @@ describe('WebPageToMarkdownModule Integration Tests', () => {
         new Error('Navigation timeout exceeded')
       );
       
-      try {
-        await tool.execute({ 
-          url: 'https://slow-loading-site.com',
-          waitForSelector: '.never-appears'
-        });
-        fail('Should have thrown timeout error');
-      } catch (error) {
-        expect(error.message).toContain('timeout');
-        expect(error.cause.errorType).toBe('conversion_error');
-      } finally {
-        tool.convertToMarkdown = originalConvertToMarkdown;
-      }
+      const result = await tool.execute({ 
+        url: 'https://slow-loading-site.com',
+        waitForSelector: '.never-appears'
+      });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('timeout');
+      
+      tool.convertToMarkdown = originalConvertToMarkdown;
     });
   });
 
@@ -233,11 +210,13 @@ describe('WebPageToMarkdownModule Integration Tests', () => {
       
       const result = await tool.execute({ url: 'https://example.com' });
       
-      expect(result).toHaveProperty('url');
-      expect(result).toHaveProperty('markdown');
-      expect(result).toHaveProperty('length');
-      expect(result).toHaveProperty('truncated');
-      expect(result.url).toBe('https://example.com');
+      expect(result).toHaveProperty('success', true);
+      expect(result).toHaveProperty('data');
+      expect(result.data).toHaveProperty('url');
+      expect(result.data).toHaveProperty('markdown');
+      expect(result.data).toHaveProperty('length');
+      expect(result.data).toHaveProperty('truncated');
+      expect(result.data.url).toBe('https://example.com');
       
       tool.convertToMarkdown = originalConvertToMarkdown;
     });
@@ -261,8 +240,9 @@ describe('WebPageToMarkdownModule Integration Tests', () => {
         maxLength: 50000
       });
       
-      expect(result.truncated).toBe(true);
-      expect(result.length).toBeLessThanOrEqual(50100); // Allow for truncation message
+      expect(result.success).toBe(true);
+      expect(result.data.truncated).toBe(true);
+      expect(result.data.length).toBeLessThanOrEqual(50100); // Allow for truncation message
       
       tool.convertToMarkdown = originalConvertToMarkdown;
     });

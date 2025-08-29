@@ -9,87 +9,22 @@ import { fileURLToPath } from 'url';
 
 /**
  * JSON parsing tool with event support
+ * NEW: Pure logic implementation - metadata comes from module.json
  */
 class JsonParseTool extends Tool {
-  constructor() {
-    super({
-      name: 'json_parse',
-      description: 'Parse JSON string into JavaScript object',
-      schema: {
-        input: {
-          type: 'object',
-          properties: {
-            json_string: {
-              type: 'string',
-              description: 'The JSON string to parse',
-              default: '{"test": true}'
-            },
-            reviver: {
-              type: 'string',
-              description: 'Optional reviver function code (advanced use)'
-            }
-          },
-          required: ['json_string']
-        },
-        output: {
-          type: 'object',
-          properties: {
-            parsed: {
-              description: 'The parsed JavaScript object'
-            },
-            result: {
-              description: 'The parsed JavaScript object (duplicate for compatibility)'
-            },
-            type: {
-              type: 'string',
-              description: 'The type of the parsed result'
-            },
-            isArray: {
-              type: 'boolean',
-              description: 'Whether the parsed result is an array'
-            }
-          },
-          required: ['parsed', 'result', 'type', 'isArray']
-        }
-      }
-    });
-    
-    // Override _execute instead of execute to use base class error handling
-    this._execute = async (params) => this._executeJsonParse(params);
+  // NEW PATTERN: constructor(module, toolName)
+  constructor(module, toolName) {
+    super(module, toolName);
   }
 
-  getMetadata() {
-    return {
-      name: this.name,
-      description: this.description,
-      inputSchema: this.schema.input,
-      outputSchema: this.schema.output,
-      version: '1.0.0',
-      category: 'json',
-      tags: ['json', 'parse', 'string'],
-      security: { evaluation: 'safe' }
-    };
+  /**
+   * Pure business logic - no metadata, no validation
+   * Base Tool class handles all validation using metadata
+   */
+  async _execute(params) {
+    return this._executeJsonParse(params);
   }
 
-  validate(params) {
-    const errors = [];
-    const warnings = [];
-    
-    if (!params || typeof params !== 'object') {
-      errors.push('Parameters must be an object');
-      return { valid: false, errors, warnings };
-    }
-    
-    if (params.json_string === undefined || params.json_string === null) {
-      errors.push('json_string is required for JSON parsing');
-    }
-    
-    if (params.json_string !== undefined && typeof params.json_string !== 'string') {
-      errors.push('json_string must be a string');
-    }
-    
-    return { valid: errors.length === 0, errors, warnings };
-  }
 
   async _executeJsonParse(params) {
     const { json_string, reviver } = params;
@@ -117,94 +52,22 @@ class JsonParseTool extends Tool {
 
 /**
  * JSON stringify tool with event support
+ * NEW: Pure logic implementation - metadata comes from module.json
  */
 class JsonStringifyTool extends Tool {
-  constructor() {
-    super({
-      name: 'json_stringify',
-      description: 'Convert JavaScript object to JSON string',
-      schema: {
-        input: {
-          type: 'object',
-          properties: {
-            object: {
-              type: 'object',
-              description: 'The object to stringify'
-            },
-            indent: {
-              type: 'number',
-              default: 2,
-              description: 'Number of spaces for indentation (0 for compact)'
-            },
-            sort_keys: {
-              type: 'boolean',
-              default: false,
-              description: 'Whether to sort object keys alphabetically'
-            }
-          },
-          required: ['object']
-        },
-        output: {
-          type: 'object',
-          properties: {
-            json: {
-              type: 'string',
-              description: 'The stringified JSON'
-            },
-            result: {
-              type: 'string',
-              description: 'The stringified JSON (duplicate for compatibility)'
-            },
-            length: {
-              type: 'number',
-              description: 'Length of the JSON string'
-            },
-            sorted: {
-              type: 'boolean',
-              description: 'Whether keys were sorted'
-            }
-          },
-          required: ['json', 'result', 'length', 'sorted']
-        }
-      }
-    });
-    
-    // Override _execute instead of execute to use base class error handling
-    this._execute = async (params) => this._executeJsonStringify(params);
+  // NEW PATTERN: constructor(module, toolName)
+  constructor(module, toolName) {
+    super(module, toolName);
   }
 
-  getMetadata() {
-    return {
-      name: this.name,
-      description: this.description,
-      inputSchema: this.schema.input,
-      outputSchema: this.schema.output,
-      version: '1.0.0',
-      category: 'json',
-      tags: ['json', 'stringify', 'string'],
-      security: { evaluation: 'safe' }
-    };
+  /**
+   * Pure business logic - no metadata, no validation
+   * Base Tool class handles all validation using metadata
+   */
+  async _execute(params) {
+    return this._executeJsonStringify(params);
   }
 
-  validate(params) {
-    const errors = [];
-    const warnings = [];
-    
-    if (!params || typeof params !== 'object') {
-      errors.push('Parameters must be an object');
-      return { valid: false, errors, warnings };
-    }
-    
-    if (params.object === undefined) {
-      errors.push('object is required for JSON stringification');
-    }
-    
-    if (params.indent !== undefined && typeof params.indent !== 'number') {
-      errors.push('indent must be a number');
-    }
-    
-    return { valid: errors.length === 0, errors, warnings };
-  }
 
   async _executeJsonStringify(params) {
     const { object, indent = 2, sort_keys = false } = params;
@@ -250,113 +113,25 @@ class JsonStringifyTool extends Tool {
   }
 }
 
-// Input schema for JsonValidateTool
-const jsonValidateToolInputSchema = {
-  type: 'object',
-  properties: {
-    json_string: {
-      type: 'string',
-      description: 'The JSON string to validate',
-      default: '{"test": true}'
-    }
-  },
-  required: ['json_string']
-};
-
-// Output schema for JsonValidateTool
-const jsonValidateToolOutputSchema = {
-  type: 'object',
-  properties: {
-    valid: {
-      type: 'boolean',
-      description: 'Whether the JSON string is valid'
-    },
-    isValid: {
-      type: 'boolean',
-      description: 'Whether the JSON string is valid (duplicate for compatibility)'
-    },
-    type: {
-      type: 'string',
-      description: 'Type of the parsed result'
-    },
-    isArray: {
-      type: 'boolean',
-      description: 'Whether the parsed result is an array'
-    },
-    message: {
-      type: 'string',
-      description: 'Success or error message'
-    },
-    error: {
-      type: 'string',
-      description: 'Error message if validation failed'
-    },
-    position: {
-      type: 'number',
-      description: 'Position of error in string'
-    },
-    line: {
-      type: 'number',
-      description: 'Line number of error'
-    },
-    column: {
-      type: 'number',
-      description: 'Column number of error'
-    }
-  },
-  required: ['valid', 'isValid', 'message']
-};
 
 /**
  * JSON validation tool with event support
+ * NEW: Pure logic implementation - metadata comes from module.json
  */
 class JsonValidateTool extends Tool {
-  constructor() {
-    super({
-      name: 'json_validate',
-      description: 'Validate if a string is valid JSON and provide detailed error information',
-      schema: {
-        input: jsonValidateToolInputSchema,
-        output: jsonValidateToolOutputSchema
-      }
-    });
-    
-    // Override _execute instead of execute to use base class error handling
-    this._execute = async (params) => this._executeJsonValidate(params);
+  // NEW PATTERN: constructor(module, toolName)
+  constructor(module, toolName) {
+    super(module, toolName);
   }
 
-  getMetadata() {
-    return {
-      name: this.name,
-      description: this.description,
-      inputSchema: this.schema.input,
-      outputSchema: this.schema.output,
-      version: '1.0.0',
-      category: 'json',
-      tags: ['json', 'validate', 'syntax'],
-      security: { evaluation: 'safe' }
-    };
+  /**
+   * Pure business logic - no metadata, no validation
+   * Base Tool class handles all validation using metadata
+   */
+  async _execute(params) {
+    return this._executeJsonValidate(params);
   }
 
-  validate(params) {
-    const errors = [];
-    const warnings = [];
-    
-    if (!params || typeof params !== 'object') {
-      errors.push('Parameters must be an object');
-      return { valid: false, errors, warnings };
-    }
-    
-    if (params.json_string === undefined || params.json_string === null) {
-      errors.push('json_string is required for validation');
-    }
-    
-    if (params.json_string !== undefined && typeof params.json_string !== 'string') {
-      errors.push('json_string must be a string');
-    }
-    
-    return { valid: errors.length === 0, errors, warnings };
-  }
 
   async _executeJsonValidate(params) {
     const { json_string } = params;
@@ -431,100 +206,25 @@ class JsonValidateTool extends Tool {
   }
 }
 
-// Input schema for JsonExtractTool
-const jsonExtractToolInputSchema = {
-  type: 'object',
-  properties: {
-    json_object: {
-      type: 'object',
-      description: 'The JSON object to extract from'
-    },
-    path: {
-      type: 'string',
-      description: 'Dot notation path (e.g., "user.address.city" or "items[0].name")',
-      default: 'test'
-    },
-    default_value: {
-      type: 'string', 
-      description: 'Default value if path not found'
-    }
-  },
-  required: ['json_object', 'path']
-};
-
-// Output schema for JsonExtractTool
-const jsonExtractToolOutputSchema = {
-  type: 'object',
-  properties: {
-    value: {
-      description: 'The extracted value'
-    },
-    found: {
-      type: 'boolean',
-      description: 'Whether the value was found at the specified path'
-    },
-    path: {
-      type: 'string',
-      description: 'The path that was searched'
-    }
-  },
-  required: ['value', 'found', 'path']
-};
 
 /**
  * JSON path extraction tool with event support
+ * NEW: Pure logic implementation - metadata comes from module.json
  */
 class JsonExtractTool extends Tool {
-  constructor() {
-    super({
-      name: 'json_extract',
-      description: 'Extract a value from a JSON object using dot notation path',
-      schema: {
-        input: jsonExtractToolInputSchema,
-        output: jsonExtractToolOutputSchema
-      }
-    });
-    
-    // Override _execute instead of execute to use base class error handling
-    this._execute = async (params) => this._executeJsonExtract(params);
+  // NEW PATTERN: constructor(module, toolName)
+  constructor(module, toolName) {
+    super(module, toolName);
   }
 
-  getMetadata() {
-    return {
-      name: this.name,
-      description: this.description,
-      inputSchema: this.schema.input,
-      outputSchema: this.schema.output,
-      version: '1.0.0',
-      category: 'json',
-      tags: ['json', 'extract', 'path'],
-      security: { evaluation: 'safe' }
-    };
+  /**
+   * Pure business logic - no metadata, no validation
+   * Base Tool class handles all validation using metadata
+   */
+  async _execute(params) {
+    return this._executeJsonExtract(params);
   }
 
-  validate(params) {
-    const errors = [];
-    const warnings = [];
-    
-    if (!params || typeof params !== 'object') {
-      errors.push('Parameters must be an object');
-      return { valid: false, errors, warnings };
-    }
-    
-    if (params.json_object === undefined) {
-      errors.push('json_object is required for extraction');
-    }
-    
-    if (params.path === undefined || params.path === null) {
-      errors.push('path is required for extraction');
-    }
-    
-    if (params.path !== undefined && typeof params.path !== 'string') {
-      errors.push('path must be a string');
-    }
-    
-    return { valid: errors.length === 0, errors, warnings };
-  }
 
   async _executeJsonExtract(params) {
     const { json_object, path, default_value } = params;
@@ -622,7 +322,7 @@ class JsonModule extends Module {
     this.version = '1.0.0';
     
     // NEW: Set metadata path for automatic loading
-    this.metadataPath = './tools-metadata.json';
+    this.metadataPath = './module.json';
   }
 
   /**
@@ -648,56 +348,18 @@ class JsonModule extends Module {
   async initialize() {
     await super.initialize(); // This will load metadata automatically
     
-    // NEW APPROACH: Create tools using metadata
-    if (this.metadata) {
-      const tools = [
-        { key: 'json_parse', class: JsonParseTool },
-        { key: 'json_stringify', class: JsonStringifyTool },
-        { key: 'json_validate', class: JsonValidateTool },
-        { key: 'json_extract', class: JsonExtractTool }
-      ];
-
-      for (const { key, class: ToolClass } of tools) {
-        try {
-          const tool = this.createToolFromMetadata(key, ToolClass);
-          this.registerTool(tool.name, tool);
-        } catch (error) {
-          console.warn(`Failed to create metadata tool ${key}, falling back to legacy: ${error.message}`);
-          
-          // Fallback to legacy constructor
-          let legacyTool;
-          switch (key) {
-            case 'json_parse':
-              legacyTool = new JsonParseTool();
-              break;
-            case 'json_stringify':
-              legacyTool = new JsonStringifyTool();
-              break;
-            case 'json_validate':
-              legacyTool = new JsonValidateTool();
-              break;
-            case 'json_extract':
-              legacyTool = new JsonExtractTool();
-              break;
-          }
-          
-          if (legacyTool) {
-            this.registerTool(legacyTool.name, legacyTool);
-          }
-        }
-      }
-    } else {
-      // FALLBACK: Old approach for backwards compatibility
-      const jsonParseTool = new JsonParseTool();
-      const jsonStringifyTool = new JsonStringifyTool();
-      const jsonValidateTool = new JsonValidateTool();
-      const jsonExtractTool = new JsonExtractTool();
-      
-      this.registerTool(jsonParseTool.name, jsonParseTool);
-      this.registerTool(jsonStringifyTool.name, jsonStringifyTool);
-      this.registerTool(jsonValidateTool.name, jsonValidateTool);
-      this.registerTool(jsonExtractTool.name, jsonExtractTool);
-    }
+    // Create tools using metadata
+    const jsonParseTool = this.createToolFromMetadata('json_parse', JsonParseTool);
+    this.registerTool(jsonParseTool.name, jsonParseTool);
+    
+    const jsonStringifyTool = this.createToolFromMetadata('json_stringify', JsonStringifyTool);
+    this.registerTool(jsonStringifyTool.name, jsonStringifyTool);
+    
+    const jsonValidateTool = this.createToolFromMetadata('json_validate', JsonValidateTool);
+    this.registerTool(jsonValidateTool.name, jsonValidateTool);
+    
+    const jsonExtractTool = this.createToolFromMetadata('json_extract', JsonExtractTool);
+    this.registerTool(jsonExtractTool.name, jsonExtractTool);
   }
 }
 

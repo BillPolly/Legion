@@ -1,0 +1,164 @@
+{
+  "module": {
+    "name": "json", 
+    "description": "JSON manipulation and validation tools",
+    "version": "1.0.0"
+  },
+  "tools": {
+    "json_parse": {
+      "name": "json_parse",
+      "description": "Parse JSON string into JavaScript object",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "json_string": {
+            "type": "string",
+            "description": "The JSON string to parse",
+            "default": "{\"test\": true}"
+          },
+          "reviver": {
+            "type": "string",
+            "description": "Optional reviver function code (advanced use)"
+          }
+        },
+        "required": ["json_string"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "parsed": {
+            "description": "The parsed JavaScript object"
+          },
+          "result": {
+            "description": "The parsed JavaScript object (duplicate for compatibility)"
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the parsed result"
+          },
+          "isArray": {
+            "type": "boolean",
+            "description": "Whether the parsed result is an array"
+          }
+        },
+        "required": ["parsed", "result", "type", "isArray"]
+      }
+    },
+    "json_stringify": {
+      "name": "json_stringify", 
+      "description": "Convert JavaScript object to JSON string",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "description": "The object or array to stringify"
+          },
+          "indent": {
+            "type": "number",
+            "default": 2,
+            "description": "Number of spaces for indentation (0 for compact)"
+          },
+          "sort_keys": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether to sort object keys alphabetically"
+          }
+        },
+        "required": ["object"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "json": {
+            "type": "string",
+            "description": "The stringified JSON"
+          },
+          "result": {
+            "type": "string",
+            "description": "The stringified JSON (duplicate for compatibility)"
+          },
+          "length": {
+            "type": "number",
+            "description": "Length of the JSON string"
+          },
+          "sorted": {
+            "type": "boolean",
+            "description": "Whether keys were sorted"
+          }
+        },
+        "required": ["json", "result", "length", "sorted"]
+      }
+    },
+    "json_validate": {
+      "name": "json_validate",
+      "description": "Validate if a string is valid JSON and provide detailed error information", 
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "json_string": {
+            "type": "string",
+            "description": "The JSON string to validate",
+            "default": "{\"test\": true}"
+          }
+        },
+        "required": ["json_string"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "valid": {
+            "type": "boolean",
+            "description": "Whether the JSON string is valid"
+          },
+          "isValid": {
+            "type": "boolean",
+            "description": "Whether the JSON string is valid (duplicate for compatibility)"
+          },
+          "message": {
+            "type": "string",
+            "description": "Success or error message"
+          }
+        },
+        "required": ["valid", "isValid", "message"]
+      }
+    },
+    "json_extract": {
+      "name": "json_extract",
+      "description": "Extract a value from a JSON object using dot notation path",
+      "inputSchema": {
+        "type": "object", 
+        "properties": {
+          "json_object": {
+            "description": "The JSON object or array to extract from"
+          },
+          "path": {
+            "type": "string",
+            "description": "Dot notation path (e.g., \"user.address.city\" or \"items[0].name\")",
+            "default": "test"
+          },
+          "default_value": {
+            "description": "Default value if path not found"
+          }
+        },
+        "required": ["json_object", "path"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "description": "The extracted value"
+          },
+          "found": {
+            "type": "boolean",
+            "description": "Whether the value was found at the specified path"
+          },
+          "path": {
+            "type": "string",
+            "description": "The path that was searched"
+          }
+        },
+        "required": ["value", "found", "path"]
+      }
+    }
+  }
+}

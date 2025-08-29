@@ -9,108 +9,11 @@ import { spawn } from 'child_process';
 const processRegistry = new Map();
 
 export class ServerStartTool extends Tool {
-  constructor() {
-    super({
-      name: 'server_start',
-      description: 'Start a server process with the specified command',
-      schema: {
-        input: {
-          type: 'object',
-          properties: {
-            command: {
-              type: 'string',
-              description: 'The command to start the server (e.g., "npm start", "node server.js")',
-              default: 'echo "test server"'
-            },
-            cwd: {
-              type: 'string',
-              description: 'Working directory for the command (default: current directory)'
-            },
-            timeout: {
-              type: 'number',
-              description: 'Timeout in milliseconds to wait for server start confirmation',
-              default: 5000
-            }
-          },
-          required: ['command']
-        },
-        output: {
-          type: 'object',
-          properties: {
-            success: {
-              type: 'boolean',
-              description: 'Whether the server started successfully'
-            },
-            pid: {
-              type: 'number',
-              description: 'Process ID of the started server'
-            },
-            command: {
-              type: 'string',
-              description: 'The command that was executed'
-            },
-            cwd: {
-              type: 'string',
-              description: 'Working directory where command was executed'
-            },
-            status: {
-              type: 'string',
-              description: 'Current status of the server process'
-            },
-            process: {
-              description: 'Process reference for internal management'
-            },
-            error: {
-              type: 'string',
-              description: 'Error message if start failed'
-            }
-          },
-          required: ['success']
-        }
-      }
-    });
+  constructor(module, toolName) {
+    super(module, toolName);
+    this.shortName = 'start';
   }
 
-  getMetadata() {
-    return {
-      name: this.name,
-      description: this.description,
-      inputSchema: this.schema.input,
-      outputSchema: this.schema.output,
-      version: '1.0.0',
-      category: 'server',
-      tags: ['server', 'process', 'start'],
-      security: { evaluation: 'restricted' }
-    };
-  }
-
-  validate(params) {
-    const errors = [];
-    const warnings = [];
-    
-    if (!params || typeof params !== 'object') {
-      errors.push('Parameters must be an object');
-      return { valid: false, errors, warnings };
-    }
-    
-    if (params.command === undefined || params.command === null) {
-      errors.push('command is required for server start');
-    }
-    
-    if (params.command !== undefined && typeof params.command !== 'string') {
-      errors.push('command must be a string');
-    }
-    
-    if (params.cwd !== undefined && typeof params.cwd !== 'string') {
-      errors.push('cwd must be a string');
-    }
-    
-    if (params.timeout !== undefined && typeof params.timeout !== 'number') {
-      errors.push('timeout must be a number');
-    }
-    
-    return { valid: errors.length === 0, errors, warnings };
-  }
 
   async _execute(params) {
     const { command, cwd = process.cwd(), timeout = 5000 } = params;
@@ -215,6 +118,7 @@ export class ServerStartTool extends Tool {
       });
       
       return {
+        success: true,
         pid: pid,
         command: command,
         cwd: cwd,
@@ -238,6 +142,7 @@ export class ServerStartTool extends Tool {
     });
 
     return {
+      success: true,
       pid: pid,
       command: command,
       cwd: cwd,

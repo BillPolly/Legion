@@ -1,0 +1,142 @@
+{
+  "module": {
+    "name": "github",
+    "description": "GitHub tools for repository management and operations",
+    "version": "1.0.0"
+  },
+  "tools": {
+    "github": {
+      "name": "github",
+      "shortName": "gh",
+      "description": "Manage GitHub repositories and operations including create, push, list, and delete operations",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": ["create_repo", "push_to_repo", "create_and_push", "list_repos", "delete_repo", "list_orgs", "list_org_repos", "get_file"],
+            "description": "The GitHub operation to perform"
+          },
+          "repoName": {
+            "type": "string",
+            "description": "Name of the repository to create"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the repository"
+          },
+          "private": {
+            "type": "boolean",
+            "description": "Whether the repository should be private",
+            "default": false
+          },
+          "autoInit": {
+            "type": "boolean",
+            "description": "Initialize repository with README",
+            "default": false
+          },
+          "repoUrl": {
+            "type": "string",
+            "description": "Repository URL for push operations"
+          },
+          "branch": {
+            "type": "string",
+            "description": "Target branch name",
+            "default": "main"
+          },
+          "force": {
+            "type": "boolean",
+            "description": "Force push to repository",
+            "default": false
+          },
+          "owner": {
+            "type": "string",
+            "description": "Repository owner username"
+          },
+          "repo": {
+            "type": "string",
+            "description": "Repository name"
+          },
+          "org": {
+            "type": "string",
+            "description": "Organization name"
+          },
+          "path": {
+            "type": "string",
+            "description": "File path in repository"
+          },
+          "ref": {
+            "type": "string",
+            "description": "Git reference (branch, tag, or commit SHA)"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["all", "owner", "member"],
+            "description": "Repository type filter",
+            "default": "all"
+          },
+          "sort": {
+            "type": "string",
+            "enum": ["created", "updated", "pushed", "full_name"],
+            "description": "Sort repositories by",
+            "default": "created"
+          },
+          "per_page": {
+            "type": "number",
+            "description": "Number of results per page",
+            "default": 100,
+            "minimum": 1,
+            "maximum": 100
+          }
+        },
+        "required": ["operation"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation was successful"
+          },
+          "message": {
+            "type": "string",
+            "description": "Success or error message"
+          },
+          "name": {
+            "type": "string",
+            "description": "Repository name (for create operations)"
+          },
+          "url": {
+            "type": "string",
+            "description": "Repository URL"
+          },
+          "cloneUrl": {
+            "type": "string",
+            "description": "Clone URL for the repository"
+          },
+          "sshUrl": {
+            "type": "string",
+            "description": "SSH URL for the repository"
+          },
+          "repositories": {
+            "type": "array",
+            "description": "List of repositories (for list operations)"
+          },
+          "organizations": {
+            "type": "array",
+            "description": "List of organizations"
+          },
+          "count": {
+            "type": "number",
+            "description": "Number of items returned"
+          },
+          "file": {
+            "type": "object",
+            "description": "File information and content (for get_file operation)"
+          }
+        },
+        "required": ["success"]
+      }
+    }
+  }
+}

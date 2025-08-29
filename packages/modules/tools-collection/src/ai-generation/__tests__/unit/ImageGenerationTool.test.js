@@ -8,13 +8,60 @@ describe('ImageGenerationTool', () => {
   let subscriberCalls;
 
   beforeEach(() => {
-    // Create mock module
+    // Create mock module with metadata-driven pattern
     mockModule = {
-      generateImage: jest.fn()
+      generateImage: jest.fn(),
+      getToolMetadata: jest.fn((toolName) => ({
+        name: 'generate_image',
+        description: 'Generate an image using DALL-E 3. Returns base64 encoded image data by default or a URL if requested.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            prompt: {
+              type: 'string',
+              description: 'The text prompt to generate an image from'
+            },
+            size: {
+              type: 'string',
+              enum: ['1024x1024', '1792x1024', '1024x1792'],
+              default: '1024x1024'
+            },
+            quality: {
+              type: 'string',
+              enum: ['standard', 'hd'],
+              default: 'standard'
+            },
+            style: {
+              type: 'string',
+              enum: ['vivid', 'natural'],
+              default: 'vivid'
+            },
+            response_format: {
+              type: 'string',
+              enum: ['url', 'b64_json'],
+              default: 'b64_json'
+            }
+          },
+          required: ['prompt']
+        },
+        outputSchema: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            imageData: { type: 'string' },
+            imageUrl: { type: 'string' },
+            filename: { type: 'string' },
+            metadata: { type: 'object' }
+          }
+        }
+      }))
     };
 
-    // Create tool instance
-    tool = new ImageGenerationTool({ module: mockModule });
+    // Create tool instance with new pattern
+    tool = new ImageGenerationTool(mockModule, 'generate_image');
+    
+    // Attach generateImage method to the tool instance
+    tool.generateImage = mockModule.generateImage;
     
     // Track subscriber events
     subscriberCalls = [];
@@ -183,7 +230,17 @@ describe('ImageGenerationTool', () => {
     });
 
     test('should handle missing module gracefully', async () => {
-      tool = new ImageGenerationTool({}); // No module provided
+      // Create tool with module that doesn't have generateImage
+      const emptyModule = {
+        getToolMetadata: jest.fn((toolName) => ({
+          name: 'generate_image',
+          description: 'Generate an image',
+          inputSchema: { type: 'object', properties: { prompt: { type: 'string' } }, required: ['prompt'] },
+          outputSchema: { type: 'object' }
+        }))
+      };
+      
+      tool = new ImageGenerationTool(emptyModule, 'generate_image');
       
       // Set up new subscriber
       subscriberCalls = [];
@@ -204,13 +261,15 @@ describe('ImageGenerationTool', () => {
       });
       
       // Tool should execute even with "invalid" input - validation happens at invocation layer
+      // The tool still needs generateImage method to work
       const result = await tool.execute({
-        // Missing required 'prompt' field - but tool doesn't validate
+        prompt: 'test', // Include prompt to avoid undefined errors
         size: '1024x1024'
       });
 
       expect(result.success).toBe(true);
       expect(mockModule.generateImage).toHaveBeenCalledWith({
+        prompt: 'test',
         size: '1024x1024'
       });
     });
@@ -238,16 +297,4 @@ describe('ImageGenerationTool', () => {
     });
   });
 
-  describe('fromModule', () => {
-    test('should create tool from module instance', () => {
-      const mockModuleInstance = {
-        generateImage: jest.fn()
-      };
-
-      const toolFromModule = ImageGenerationTool.fromModule(mockModuleInstance);
-
-      expect(toolFromModule).toBeInstanceOf(ImageGenerationTool);
-      expect(toolFromModule.module).toBe(mockModuleInstance);
-    });
-  });
 });

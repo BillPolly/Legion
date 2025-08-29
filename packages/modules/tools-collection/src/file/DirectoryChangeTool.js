@@ -6,50 +6,66 @@ import path from 'path';
  * Tool for changing the current working directory
  */
 class DirectoryChangeTool extends Tool {
-  constructor({ basePath }) {
-    if (!basePath) {
-      throw new Error('basePath is required');
-    }
-    
-    super({
-      name: 'directory_change',
-      shortName: 'cd',
-      description: 'Changes the current working directory',
-      schema: {
-        input: {
-          type: 'object',
-          properties: {
-            directoryPath: {
-              type: 'string',
-              description: 'The path to change to (supports ~, ., .., absolute and relative paths)'
-            }
-          },
-          required: ['directoryPath']
-        },
-        output: {
-          type: 'object',
-          properties: {
-            previousPath: {
-              type: 'string',
-              description: 'The previous working directory'
-            },
-            currentPath: {
-              type: 'string',
-              description: 'The new current working directory'
-            },
-            history: {
-              type: 'array',
-              description: 'Directory change history',
-              items: { type: 'string' }
-            }
-          },
-          required: ['previousPath', 'currentPath']
-        }
+  constructor(moduleOrConfig, toolName = null) {
+    // NEW PATTERN: Tool(module, toolName) - metadata comes from module
+    if (toolName && moduleOrConfig?.getToolMetadata) {
+      super(moduleOrConfig, toolName);
+      
+      // Get config from module
+      const config = moduleOrConfig.config || {};
+      this.basePath = config.basePath || process.cwd();
+      this.history = [];
+      this.shortName = 'cd';
+    } 
+    // OLD PATTERN: Tool(config) - backwards compatibility
+    else {
+      const { basePath } = moduleOrConfig || {};
+      
+      if (!basePath) {
+        throw new Error('basePath is required');
       }
-    });
+      
+      super({
+        name: 'directory_change',
+        shortName: 'cd',
+        description: 'Changes the current working directory',
+        schema: {
+          input: {
+            type: 'object',
+            properties: {
+              directoryPath: {
+                type: 'string',
+                description: 'The path to change to (supports ~, ., .., absolute and relative paths)'
+              }
+            },
+            required: ['directoryPath']
+          },
+          output: {
+            type: 'object',
+            properties: {
+              previousPath: {
+                type: 'string',
+                description: 'The previous working directory'
+              },
+              currentPath: {
+                type: 'string',
+                description: 'The new current working directory'
+              },
+              history: {
+                type: 'array',
+                description: 'Directory change history',
+                items: { type: 'string' }
+              }
+            },
+            required: ['previousPath', 'currentPath']
+          }
+        }
+      });
 
-    this.basePath = basePath;
-    this.history = [];
+      // Store dependencies
+      this.basePath = basePath;
+      this.history = [];
+    }
   }
 
   /**

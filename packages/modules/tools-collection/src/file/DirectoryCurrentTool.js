@@ -6,118 +6,132 @@ import path from 'path';
  * Tool for getting the current working directory
  */
 class DirectoryCurrentTool extends Tool {
-  constructor({ basePath }) {
-    if (!basePath) {
-      throw new Error('basePath is required');
-    }
-    
-    super({
-      name: 'directory_current',
-      shortName: 'pwd',
-      description: 'Returns the current working directory',
-      schema: {
-        input: {
-          type: 'object',
-          properties: {
-            relative: {
-              type: 'boolean',
-              description: 'Whether to return path relative to base path (default: false)',
-              default: false
-            },
-            includeMetadata: {
-              type: 'boolean',
-              description: 'Whether to include directory metadata (default: false)',
-              default: false
-            },
-            analyzeComponents: {
-              type: 'boolean',
-              description: 'Whether to analyze path components (default: false)',
-              default: false
-            },
-            calculateDepth: {
-              type: 'boolean',
-              description: 'Whether to calculate depth from base path (default: false)',
-              default: false
-            },
-            detectType: {
-              type: 'boolean',
-              description: 'Whether to detect directory type/purpose (default: false)',
-              default: false
-            },
-            format: {
-              type: 'string',
-              enum: ['unix', 'windows', 'native'],
-              description: 'Path format to use (default: native)',
-              default: 'native'
-            },
-            checkPermissions: {
-              type: 'boolean',
-              description: 'Whether to check directory permissions (default: false)',
-              default: false
-            },
-            validateExists: {
-              type: 'boolean',
-              description: 'Whether to validate directory still exists (default: false)',
-              default: false
-            }
-          }
-        },
-        output: {
-          type: 'object',
-          properties: {
-            currentPath: {
-              type: 'string',
-              description: 'The current working directory path'
-            },
-            basePath: {
-              type: 'string',
-              description: 'The base path (when relative=true)'
-            },
-            relativePath: {
-              type: 'string',
-              description: 'Path relative to base (when relative=true)'
-            },
-            formattedPath: {
-              type: 'string',
-              description: 'Formatted path (when format specified)'
-            },
-            metadata: {
-              type: 'object',
-              description: 'Directory metadata (when includeMetadata=true)'
-            },
-            components: {
-              type: 'array',
-              items: { type: 'string' },
-              description: 'Path components (when analyzeComponents=true)'
-            },
-            depth: {
-              type: 'number',
-              description: 'Depth from base path (when calculateDepth=true)'
-            },
-            directoryType: {
-              type: 'string',
-              description: 'Detected directory type (when detectType=true)'
-            },
-            indicators: {
-              type: 'array',
-              items: { type: 'string' },
-              description: 'Type indicators found (when detectType=true)'
-            },
-            permissions: {
-              type: 'object',
-              description: 'Directory permissions (when checkPermissions=true)'
-            },
-            exists: {
-              type: 'boolean',
-              description: 'Whether directory exists (when validateExists=true)'
+  constructor(moduleOrConfig, toolName = null) {
+    // NEW PATTERN: Tool(module, toolName) - metadata comes from module
+    if (toolName && moduleOrConfig?.getToolMetadata) {
+      super(moduleOrConfig, toolName);
+      
+      // Get config from module
+      const config = moduleOrConfig.config || {};
+      this.basePath = config.basePath || process.cwd();
+      this.shortName = 'pwd';
+    } 
+    // OLD PATTERN: Tool(config) - backwards compatibility
+    else {
+      const { basePath } = moduleOrConfig || {};
+      
+      if (!basePath) {
+        throw new Error('basePath is required');
+      }
+      
+      super({
+        name: 'directory_current',
+        shortName: 'pwd',
+        description: 'Returns the current working directory',
+        schema: {
+          input: {
+            type: 'object',
+            properties: {
+              relative: {
+                type: 'boolean',
+                description: 'Whether to return path relative to base path (default: false)',
+                default: false
+              },
+              includeMetadata: {
+                type: 'boolean',
+                description: 'Whether to include directory metadata (default: false)',
+                default: false
+              },
+              analyzeComponents: {
+                type: 'boolean',
+                description: 'Whether to analyze path components (default: false)',
+                default: false
+              },
+              calculateDepth: {
+                type: 'boolean',
+                description: 'Whether to calculate depth from base path (default: false)',
+                default: false
+              },
+              detectType: {
+                type: 'boolean',
+                description: 'Whether to detect directory type/purpose (default: false)',
+                default: false
+              },
+              format: {
+                type: 'string',
+                enum: ['unix', 'windows', 'native'],
+                description: 'Path format to use (default: native)',
+                default: 'native'
+              },
+              checkPermissions: {
+                type: 'boolean',
+                description: 'Whether to check directory permissions (default: false)',
+                default: false
+              },
+              validateExists: {
+                type: 'boolean',
+                description: 'Whether to validate directory still exists (default: false)',
+                default: false
+              }
             }
           },
-          required: ['currentPath']
+          output: {
+            type: 'object',
+            properties: {
+              currentPath: {
+                type: 'string',
+                description: 'The current working directory path'
+              },
+              basePath: {
+                type: 'string',
+                description: 'The base path (when relative=true)'
+              },
+              relativePath: {
+                type: 'string',
+                description: 'Path relative to base (when relative=true)'
+              },
+              formattedPath: {
+                type: 'string',
+                description: 'Formatted path (when format specified)'
+              },
+              metadata: {
+                type: 'object',
+                description: 'Directory metadata (when includeMetadata=true)'
+              },
+              components: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Path components (when analyzeComponents=true)'
+              },
+              depth: {
+                type: 'number',
+                description: 'Depth from base path (when calculateDepth=true)'
+              },
+              directoryType: {
+                type: 'string',
+                description: 'Detected directory type (when detectType=true)'
+              },
+              indicators: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Type indicators found (when detectType=true)'
+              },
+              permissions: {
+                type: 'object',
+                description: 'Directory permissions (when checkPermissions=true)'
+              },
+              exists: {
+                type: 'boolean',
+                description: 'Whether directory exists (when validateExists=true)'
+              }
+            },
+            required: ['currentPath']
+          }
         }
-      }
-    });
+      });
 
-    this.basePath = basePath;
+      this.basePath = basePath;
+    }
   }
 
   /**

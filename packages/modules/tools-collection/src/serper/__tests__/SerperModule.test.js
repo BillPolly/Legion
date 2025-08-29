@@ -48,20 +48,21 @@ describe('SerperModule Integration Tests', () => {
   describe('Tool Registration', () => {
     it('should provide correct tool description', () => {
       const tool = serperModule.getTool('google_search');
-      const description = tool.getToolDescription();
       
-      expect(description.type).toBe('function');
-      expect(description.function.name).toBe('google_search');
-      expect(description.function.parameters.required).toContain('query');
+      // In new architecture, schemas come from metadata
+      expect(tool.inputSchema).toBeDefined();
+      expect(tool.inputSchema.properties.query).toBeDefined();
+      expect(tool.inputSchema.required).toContain('query');
     });
 
     it('should have proper schema definition', () => {
       const tool = serperModule.getTool('google_search');
-      const description = tool.getToolDescription();
       
-      expect(description.function.parameters.properties.query).toBeDefined();
-      expect(description.function.parameters.properties.num).toBeDefined();
-      expect(description.function.parameters.properties.dateRange).toBeDefined();
+      expect(tool.inputSchema.properties.query).toBeDefined();
+      expect(tool.inputSchema.properties.num).toBeDefined();
+      expect(tool.inputSchema.properties.dateRange).toBeDefined();
+      expect(tool.outputSchema).toBeDefined();
+      expect(tool.outputSchema.properties.success).toBeDefined();
     });
   });
 
@@ -76,13 +77,9 @@ describe('SerperModule Integration Tests', () => {
       const tool = serperModule.getTool('google_search');
       tool.apiKey = null; // Force no API key
       
-      try {
-        await tool.execute({ query: 'test search' });
-        fail('Should have thrown error for missing API key');
-      } catch (error) {
-        expect(error.message).toContain('not initialized');
-        expect(error.cause.errorType).toBe('not_initialized');
-      }
+      const result = await tool.execute({ query: 'test search' });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('not initialized');
     });
 
     it('should validate required query parameter', async () => {
@@ -90,13 +87,9 @@ describe('SerperModule Integration Tests', () => {
       // Set API key to test validation
       tool.apiKey = tool.apiKey || 'test-key';
       
-      try {
-        await tool.execute({});
-        fail('Should have thrown error for missing query');
-      } catch (error) {
-        expect(error.message).toContain('required parameter');
-        expect(error.cause.errorType).toBe('validation_error');
-      }
+      const result = await tool.execute({});
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Required');
     });
 
     it('should validate empty query parameter', async () => {
@@ -104,12 +97,10 @@ describe('SerperModule Integration Tests', () => {
       // Set API key to test validation
       tool.apiKey = tool.apiKey || 'test-key';
       
-      try {
-        await tool.execute({ query: '' });
-        fail('Should have thrown error for empty query');
-      } catch (error) {
-        expect(error.cause.errorType).toBe('validation_error');
-      }
+      const result = await tool.execute({ query: '' });
+      expect(result.success).toBe(false);
+      // Empty string passes schema validation but fails in _execute() method
+      expect(result.error).toContain('required parameter');
     });
 
     it('should validate num parameter range', async () => {
@@ -132,44 +123,22 @@ describe('SerperModule Integration Tests', () => {
     it('should validate dateRange parameter', async () => {
       const tool = serperModule.getTool('google_search');
       
-      // Invalid dateRange values are silently ignored (not added to payload)
-      // The code only adds valid dateRange values to the request
-      
-      // Test with a mock setup to avoid real API calls
+      // Test with invalid dateRange - should fail schema validation
       const originalApiKey = tool.apiKey;
-      const originalBaseUrl = tool.baseUrl;
       
       try {
-        if (hasApiKey) {
-          // Mock the URL to avoid real API calls
-          tool.baseUrl = 'https://invalid-test-domain.com/search';
-          
-          try {
-            await tool.execute({ 
-              query: 'test',
-              dateRange: 'invalid' // Should be ignored, not cause validation error
-            });
-            fail('Should have thrown network error due to invalid domain');
-          } catch (error) {
-            // Will get network/api error from invalid domain, not validation error
-            expect(error.cause.errorType).toMatch(/network_error|api_error/);
-          }
-        } else {
-          // Without API key, should fail with not_initialized
-          tool.apiKey = null;
-          try {
-            await tool.execute({ 
-              query: 'test',
-              dateRange: 'invalid'
-            });
-            fail('Should have thrown for missing API key');
-          } catch (error) {
-            expect(error.cause.errorType).toBe('not_initialized');
-          }
-        }
+        // Set API key to test validation (not initialization error)
+        tool.apiKey = 'test-key';
+        
+        const result = await tool.execute({ 
+          query: 'test',
+          dateRange: 'invalid' // Should fail enum validation
+        });
+        
+        expect(result.success).toBe(false);
+        expect(result.error).toContain('Invalid enum value');
       } finally {
         tool.apiKey = originalApiKey;
-        tool.baseUrl = originalBaseUrl;
       }
     });
 
@@ -187,16 +156,17 @@ describe('SerperModule Integration Tests', () => {
       });
       
       expect(result.query).toBe('OpenAI GPT-4');
-      expect(result.organic).toBeDefined();
-      expect(Array.isArray(result.organic)).toBe(true);
-      expect(result.organic.length).toBeLessThanOrEqual(5);
+      expect(result.results).toBeDefined();
+      expect(Array.isArray(result.results)).toBe(true);
+      expect(result.results.length).toBeLessThanOrEqual(5);
       
       // Check result structure
-      if (result.organic.length > 0) {
-        const firstResult = result.organic[0];
+      if (result.results.length > 0) {
+        const firstResult = result.results[0];
         expect(firstResult.title).toBeDefined();
         expect(firstResult.link).toBeDefined();
         expect(firstResult.snippet).toBeDefined();
+        expect(firstResult.position).toBeDefined();
       }
     });
 
@@ -214,7 +184,7 @@ describe('SerperModule Integration Tests', () => {
       });
       
       expect(result.query).toBe('AI news');
-      expect(result.organic).toBeDefined();
+      expect(result.results).toBeDefined();
       // Results should be from the past week
     });
   });
@@ -224,16 +194,18 @@ describe('SerperModule Integration Tests', () => {
       if (!hasApiKey) {
         // Mock a successful response structure
         const mockResult = {
+          success: true,
           query: 'test',
           searchInformation: {},
-          organic: [],
+          results: [],
           answerBox: null,
           knowledgeGraph: null,
           relatedSearches: []
         };
         
+        expect(mockResult).toHaveProperty('success');
         expect(mockResult).toHaveProperty('query');
-        expect(mockResult).toHaveProperty('organic');
+        expect(mockResult).toHaveProperty('results');
         expect(mockResult).toHaveProperty('searchInformation');
         return;
       }
@@ -241,8 +213,9 @@ describe('SerperModule Integration Tests', () => {
       const tool = serperModule.getTool('google_search');
       const result = await tool.execute({ query: 'test' });
       
+      expect(result).toHaveProperty('success');
       expect(result).toHaveProperty('query');
-      expect(result).toHaveProperty('organic');
+      expect(result).toHaveProperty('results');
       expect(result).toHaveProperty('searchInformation');
       expect(result).toHaveProperty('answerBox');
       expect(result).toHaveProperty('knowledgeGraph');
@@ -260,15 +233,11 @@ describe('SerperModule Integration Tests', () => {
       const originalUrl = tool.baseUrl;
       tool.baseUrl = 'https://invalid-domain-that-does-not-exist.com/search';
       
-      try {
-        await tool.execute({ query: 'test' });
-        fail('Should have thrown network error');
-      } catch (error) {
-        expect(error.message).toBeDefined();
-        expect(error.cause.errorType).toMatch(/network_error|api_error/);
-      } finally {
-        tool.baseUrl = originalUrl;
-      }
+      const result = await tool.execute({ query: 'test' });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Failed to search');
+      
+      tool.baseUrl = originalUrl;
     });
 
     it('should handle API errors gracefully', async () => {
@@ -283,15 +252,12 @@ describe('SerperModule Integration Tests', () => {
       const originalKey = tool.apiKey;
       tool.apiKey = 'invalid-api-key';
       
-      try {
-        await tool.execute({ query: 'test' });
-        fail('Should have thrown API error');
-      } catch (error) {
-        expect(error.cause.errorType).toBe('api_error');
-        expect(error.cause.statusCode).toBeDefined();
-      } finally {
-        tool.apiKey = originalKey;
-      }
+      const result = await tool.execute({ query: 'test' });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('API error');
+      expect(result.statusCode).toBeDefined();
+      
+      tool.apiKey = originalKey;
     });
 
     it('should handle malformed responses', async () => {

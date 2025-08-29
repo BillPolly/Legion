@@ -2,14 +2,13 @@
   "module": {
     "name": "page-screenshoter",
     "description": "Web page screenshot capture tool",
-    "version": "1.0.0",
-    "author": "Legion Team",
-    "category": "web"
+    "version": "1.0.0"
   },
   "tools": {
     "page_screenshot": {
       "name": "page_screenshot",
-      "description": "Takes screenshots of web pages",
+      "shortName": "screenshot",
+      "description": "Takes screenshots of web pages using Puppeteer browser automation",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -25,16 +24,16 @@
           "width": {
             "type": "number",
             "default": 1280,
-            "minimum": 100,
-            "maximum": 3840,
-            "description": "Viewport width in pixels"
+            "description": "Viewport width in pixels",
+            "minimum": 320,
+            "maximum": 3840
           },
           "height": {
             "type": "number",
             "default": 720,
-            "minimum": 100,
-            "maximum": 2160,
-            "description": "Viewport height in pixels"
+            "description": "Viewport height in pixels",
+            "minimum": 240,
+            "maximum": 2160
           },
           "waitForSelector": {
             "type": "string",
@@ -72,43 +71,11 @@
           },
           "dimensions": {
             "type": "object",
-            "properties": {
-              "width": {"type": "number"},
-              "height": {"type": ["number", "string"]}
-            },
             "description": "Screenshot dimensions"
           }
         },
         "required": ["success", "url", "image"]
-      },
-      "category": "web",
-      "tags": ["web", "screenshot", "capture", "browser", "puppeteer"],
-      "security": {
-        "evaluation": "safe",
-        "requiresNetwork": true
-      },
-      "examples": [
-        {
-          "input": {
-            "url": "https://example.com",
-            "fullPage": false,
-            "width": 1280,
-            "height": 720
-          },
-          "output": {
-            "success": true,
-            "url": "https://example.com",
-            "image": "iVBORw0KGgoAAAANSUhEUgAA...",
-            "isImage": true,
-            "mimeType": "image/png",
-            "fullPage": false,
-            "dimensions": {
-              "width": 1280,
-              "height": 720
-            }
-          }
-        }
-      ]
+      }
     }
   }
 }

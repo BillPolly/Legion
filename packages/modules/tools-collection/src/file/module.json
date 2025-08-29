@@ -2,14 +2,14 @@
   "module": {
     "name": "file-module",
     "description": "Comprehensive file system operations including reading, writing, and directory management",
-    "version": "1.0.0",
-    "author": "Legion Team",
-    "category": "filesystem"
+    "version": "1.0.0"
   },
   "tools": {
     "file_read": {
       "name": "file_read",
       "description": "Reads the contents of a file from the file system",
+      "category": "file",
+      "tags": ["file", "read", "filesystem"],
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -29,17 +29,25 @@
           },
           "path": {
             "type": "string", 
-            "description": "The resolved path of the file"
+            "description": "The resolved path of the file that was read"
+          },
+          "size": {
+            "type": "number",
+            "description": "Size of the file in bytes"
+          },
+          "encoding": {
+            "type": "string",
+            "description": "The encoding used to read the file"
           }
         },
-        "required": ["content", "path"]
-      },
-      "category": "filesystem",
-      "tags": ["file", "read", "io", "filesystem"]
+        "required": ["content", "path", "size", "encoding"]
+      }
     },
     "file_write": {
       "name": "file_write",
-      "description": "Writes content to a file in the file system",
+      "description": "Writes content to a file in the file system", 
+      "category": "file",
+      "tags": ["file", "write", "filesystem"],
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -48,8 +56,7 @@
             "description": "The path where the file should be written"
           },
           "content": {
-            "type": "string",
-            "description": "The content to write to the file"
+            "description": "The content to write to the file (string or object - objects will be JSON stringified)"
           },
           "append": {
             "type": "boolean",
@@ -64,21 +71,21 @@
         "properties": {
           "path": {
             "type": "string",
-            "description": "The path where the file was written"
+            "description": "The resolved path where the file was written"
           },
           "bytesWritten": {
-            "type": "number", 
-            "description": "Number of bytes written"
+            "type": "number",
+            "description": "Number of bytes written to the file"
           }
         },
         "required": ["path", "bytesWritten"]
-      },
-      "category": "filesystem",
-      "tags": ["file", "write", "io", "filesystem"]
+      }
     },
     "directory_create": {
-      "name": "directory_create", 
+      "name": "directory_create",
       "description": "Creates directories in the file system",
+      "category": "directory", 
+      "tags": ["directory", "create", "filesystem"],
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -99,36 +106,31 @@
         "properties": {
           "path": {
             "type": "string",
-            "description": "The path of the created directory"
+            "description": "The resolved path of the created directory"
           },
           "created": {
-            "type": "boolean",
-            "description": "Whether the directory was actually created (false if it already existed)"
+            "type": "boolean", 
+            "description": "Whether a new directory was created (false if it already existed)"
           }
         },
         "required": ["path", "created"]
-      },
-      "category": "filesystem",
-      "tags": ["directory", "create", "filesystem"]
+      }
     },
     "directory_list": {
       "name": "directory_list",
-      "description": "Lists the contents of a directory",
+      "description": "Lists files and directories in a directory",
+      "category": "directory",
+      "tags": ["directory", "list", "filesystem"],
       "inputSchema": {
         "type": "object",
         "properties": {
           "directoryPath": {
             "type": "string",
-            "description": "The path to the directory to list"
+            "description": "The path of the directory to list"
           },
-          "recursive": {
+          "includeStats": {
             "type": "boolean",
-            "description": "Whether to list contents recursively (default: false)",
-            "default": false
-          },
-          "includeHidden": {
-            "type": "boolean",
-            "description": "Whether to include hidden files (default: false)",
+            "description": "Whether to include file stats (default: false)",
             "default": false
           }
         },
@@ -137,38 +139,32 @@
       "outputSchema": {
         "type": "object",
         "properties": {
-          "files": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "name": {"type": "string"},
-                "path": {"type": "string"},
-                "type": {"type": "string"},
-                "size": {"type": "number"}
-              }
-            },
-            "description": "List of files and directories"
-          },
           "path": {
             "type": "string",
-            "description": "The directory path that was listed"
+            "description": "The resolved path of the directory"
+          },
+          "entries": {
+            "type": "array",
+            "description": "List of directory entries",
+            "items": {
+              "type": "object"
+            }
           }
         },
-        "required": ["files", "path"]
-      },
-      "category": "filesystem", 
-      "tags": ["directory", "list", "filesystem"]
+        "required": ["path", "entries"]
+      }
     },
     "directory_change": {
-      "name": "directory_change",
+      "name": "directory_change", 
       "description": "Changes the current working directory",
+      "category": "directory",
+      "tags": ["directory", "change", "filesystem"],
       "inputSchema": {
         "type": "object",
         "properties": {
           "directoryPath": {
             "type": "string",
-            "description": "The path to change to (supports ~, ., .., absolute and relative paths)"
+            "description": "The path to change to"
           }
         },
         "required": ["directoryPath"]
@@ -176,49 +172,57 @@
       "outputSchema": {
         "type": "object",
         "properties": {
-          "oldPath": {
+          "previousPath": {
             "type": "string",
             "description": "The previous working directory"
           },
-          "newPath": {
+          "currentPath": {
             "type": "string",
-            "description": "The new working directory"
+            "description": "The new current working directory"
           }
         },
-        "required": ["oldPath", "newPath"]
-      },
-      "category": "filesystem",
-      "tags": ["directory", "change", "cd", "filesystem"]
+        "required": ["previousPath", "currentPath"]
+      }
     },
     "directory_current": {
       "name": "directory_current",
-      "description": "Returns the current working directory",
+      "description": "Gets the current working directory",
+      "category": "directory",
+      "tags": ["directory", "current", "filesystem"],
       "inputSchema": {
         "type": "object",
         "properties": {
+          "relative": {
+            "type": "boolean",
+            "description": "Whether to return path relative to base path (default: false)",
+            "default": false
+          },
           "includeMetadata": {
             "type": "boolean",
             "description": "Whether to include directory metadata (default: false)",
             "default": false
           }
-        }
+        },
+        "additionalProperties": false
       },
       "outputSchema": {
-        "type": "object", 
+        "type": "object",
         "properties": {
-          "path": {
+          "currentPath": {
             "type": "string",
             "description": "The current working directory path"
           },
-          "metadata": {
-            "type": "object",
-            "description": "Directory metadata (if includeMetadata is true)"
+          "basePath": {
+            "type": "string",
+            "description": "The base path (when relative=true)"
+          },
+          "relativePath": {
+            "type": "string",
+            "description": "Path relative to base (when relative=true)"
           }
         },
-        "required": ["path"]
-      },
-      "category": "filesystem",
-      "tags": ["directory", "current", "pwd", "filesystem"]
+        "required": ["currentPath"]
+      }
     }
   }
 }

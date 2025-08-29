@@ -6,7 +6,6 @@
 
 import { jest } from '@jest/globals';
 import CrawlerModule from '../CrawlerModule.js';
-import Crawler from '../index.js';
 
 describe('CrawlerModule Integration Tests', () => {
   let crawlerModule;
@@ -32,7 +31,7 @@ describe('CrawlerModule Integration Tests', () => {
   describe('Module Creation and Initialization', () => {
     it('should create module with correct metadata', () => {
       expect(crawlerModule.name).toBe('CrawlerModule');
-      expect(crawlerModule.description).toBe('Web crawler for extracting content from webpages');
+      expect(crawlerModule.description).toBe('Web crawling tools for extracting content from web pages');
       expect(crawlerModule.version).toBe('1.0.0');
     });
 
@@ -44,27 +43,25 @@ describe('CrawlerModule Integration Tests', () => {
     it('should register Crawler tool during initialization', () => {
       const tool = crawlerModule.getTool('web_crawler');
       expect(tool).toBeDefined();
-      expect(tool).toBeInstanceOf(Crawler);
+      expect(tool.name).toBe('web_crawler');
     });
   });
 
   describe('Tool Registration', () => {
     it('should provide correct tool description', () => {
       const tool = crawlerModule.getTool('web_crawler');
-      const description = tool.getToolDescription();
       
-      expect(description.type).toBe('function');
-      expect(description.function.name).toBe('web_crawler_crawl');
-      expect(description.function.parameters.required).toContain('url');
+      expect(tool.inputSchema).toBeDefined();
+      expect(tool.inputSchema.properties.url).toBeDefined();
+      expect(tool.inputSchema.required).toContain('url');
     });
 
     it('should have proper schema definition', () => {
       const tool = crawlerModule.getTool('web_crawler');
-      const description = tool.getToolDescription();
       
-      expect(description.function.parameters.properties.url).toBeDefined();
-      expect(description.function.parameters.properties.waitForSelector).toBeDefined();
-      expect(description.function.parameters.properties.limit).toBeDefined();
+      expect(tool.inputSchema.properties.url).toBeDefined();
+      expect(tool.inputSchema.properties.waitForSelector).toBeDefined();
+      expect(tool.inputSchema.properties.limit).toBeDefined();
     });
   });
 
@@ -72,35 +69,25 @@ describe('CrawlerModule Integration Tests', () => {
     it('should validate required url parameter', async () => {
       const tool = crawlerModule.getTool('web_crawler');
       
-      try {
-        await tool.execute({});
-        fail('Should have thrown error for missing URL');
-      } catch (error) {
-        expect(error.message).toContain('required parameter');
-        expect(error.cause.errorType).toBe('validation_error');
-      }
+      const result = await tool.execute({});
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Input validation failed');
     });
 
     it('should validate empty URL parameter', async () => {
       const tool = crawlerModule.getTool('web_crawler');
       
-      try {
-        await tool.execute({ url: '' });
-        fail('Should have thrown error for empty URL');
-      } catch (error) {
-        expect(error.cause.errorType).toBe('validation_error');
-      }
+      const result = await tool.execute({ url: '' });
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
 
     it('should validate invalid URL format', async () => {
       const tool = crawlerModule.getTool('web_crawler');
       
-      try {
-        await tool.execute({ url: 'not-a-valid-url' });
-        fail('Should have thrown error for invalid URL');
-      } catch (error) {
-        expect(error.cause.errorType).toBe('validation_error');
-      }
+      const result = await tool.execute({ url: 'not-a-valid-url' });
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
 
     it('should handle limit parameter', async () => {
@@ -168,15 +155,11 @@ describe('CrawlerModule Integration Tests', () => {
         new Error('Failed to launch browser: Network error')
       );
       
-      try {
-        await tool.execute({ url: 'https://example.com' });
-        fail('Should have thrown browser launch error');
-      } catch (error) {
-        expect(error.message).toContain('Failed to launch browser');
-        expect(error.cause.errorType).toBe('crawl_error');
-      } finally {
-        tool.crawl = originalCrawl;
-      }
+      const result = await tool.execute({ url: 'https://example.com' });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Failed to launch browser');
+        
+      tool.crawl = originalCrawl;
     });
 
     it('should handle page load errors', async () => {
@@ -188,15 +171,11 @@ describe('CrawlerModule Integration Tests', () => {
         new Error('Failed to load page: 404 Not Found')
       );
       
-      try {
-        await tool.execute({ url: 'https://nonexistent.example.com' });
-        fail('Should have thrown page load error');
-      } catch (error) {
-        expect(error.message).toContain('Failed to load page');
-        expect(error.cause.errorType).toBe('crawl_error');
-      } finally {
-        tool.crawl = originalCrawl;
-      }
+      const result = await tool.execute({ url: 'https://nonexistent.example.com' });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Failed to load page');
+        
+      tool.crawl = originalCrawl;
     });
 
     it('should handle timeout errors', async () => {
@@ -208,18 +187,14 @@ describe('CrawlerModule Integration Tests', () => {
         new Error('Navigation timeout exceeded')
       );
       
-      try {
-        await tool.execute({ 
-          url: 'https://slow-loading-site.com',
-          waitForSelector: '.never-appears'
-        });
-        fail('Should have thrown timeout error');
-      } catch (error) {
-        expect(error.message).toContain('timeout');
-        expect(error.cause.errorType).toBe('crawl_error');
-      } finally {
-        tool.crawl = originalCrawl;
-      }
+      const result = await tool.execute({ 
+        url: 'https://slow-loading-site.com',
+        waitForSelector: '.never-appears'
+      });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('timeout');
+      
+      tool.crawl = originalCrawl;
     });
   });
 
@@ -248,14 +223,16 @@ describe('CrawlerModule Integration Tests', () => {
       
       const result = await tool.execute({ url: 'https://example.com' });
       
-      expect(result).toHaveProperty('url');
-      expect(result).toHaveProperty('content');
-      expect(result).toHaveProperty('links');
-      expect(result).toHaveProperty('images');
-      expect(result).toHaveProperty('metadata');
-      expect(result.url).toBe('https://example.com');
-      expect(Array.isArray(result.links)).toBe(true);
-      expect(Array.isArray(result.images)).toBe(true);
+      expect(result).toHaveProperty('success', true);
+      expect(result).toHaveProperty('data');
+      expect(result.data).toHaveProperty('url');
+      expect(result.data).toHaveProperty('content');
+      expect(result.data).toHaveProperty('links');
+      expect(result.data).toHaveProperty('images');
+      expect(result.data).toHaveProperty('metadata');
+      expect(result.data.url).toBe('https://example.com');
+      expect(Array.isArray(result.data.links)).toBe(true);
+      expect(Array.isArray(result.data.images)).toBe(true);
       
       tool.crawl = originalCrawl;
     });
@@ -284,8 +261,8 @@ describe('CrawlerModule Integration Tests', () => {
         limit: 50
       });
       
-      expect(result.links.length).toBeLessThanOrEqual(50);
-      expect(result.content.length).toBeLessThanOrEqual(5000); // Content is truncated to 5000
+      expect(result.data.links.length).toBeLessThanOrEqual(50);
+      expect(result.data.content.length).toBeLessThanOrEqual(5000); // Content is truncated to 5000
       
       tool.crawl = originalCrawl;
     });

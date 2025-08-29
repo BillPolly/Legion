@@ -1,6 +1,6 @@
 /**
  * FileModule - NEW metadata-driven architecture
- * Metadata comes from tools-metadata.json, tools contain pure logic only
+ * Metadata comes from module.json, tools contain pure logic only
  */
 
 import { Module } from '@legion/tools-registry';
@@ -26,7 +26,7 @@ class FileModule extends Module {
     this.description = 'Comprehensive file system operations including reading, writing, and directory management';
     
     // NEW: Set metadata path for automatic loading
-    this.metadataPath = './tools-metadata.json';
+    this.metadataPath = './module.json';
     
     // Store configuration for tools
     this.config = {
@@ -54,86 +54,30 @@ class FileModule extends Module {
   }
 
   /**
-   * Initialize the module - NEW metadata-driven approach
+   * Initialize the module - metadata-driven approach only
    */
   async initialize() {
     await super.initialize(); // This will load metadata automatically
     
-    // NEW APPROACH: Create tools using metadata
-    if (this.metadata) {
-      // Create all 6 file tools using metadata
-      const tools = [
-        { key: 'file_read', class: FileReaderTool },
-        { key: 'file_write', class: FileWriterTool },
-        { key: 'directory_create', class: DirectoryCreatorTool },
-        { key: 'directory_list', class: DirectoryListTool },
-        { key: 'directory_change', class: DirectoryChangeTool },
-        { key: 'directory_current', class: DirectoryCurrentTool }
-      ];
+    // Create all 6 file tools using metadata
+    const tools = [
+      { key: 'file_read', class: FileReaderTool },
+      { key: 'file_write', class: FileWriterTool },
+      { key: 'directory_create', class: DirectoryCreatorTool },
+      { key: 'directory_list', class: DirectoryListTool },
+      { key: 'directory_change', class: DirectoryChangeTool },
+      { key: 'directory_current', class: DirectoryCurrentTool }
+    ];
 
-      for (const { key, class: ToolClass } of tools) {
-        try {
-          const tool = this.createToolFromMetadata(key, ToolClass);
-          // Pass configuration to tool after creation
-          if (tool.config !== undefined) {
-            Object.assign(tool, this.config);
-          } else {
-            tool.config = this.config;
-          }
-          this.registerTool(tool.name, tool);
-        } catch (error) {
-          console.warn(`Failed to create metadata tool ${key}, falling back to legacy: ${error.message}`);
-          
-          // Fallback to legacy constructor for this specific tool
-          const { basePath, encoding, createDirectories } = this.config;
-          let legacyTool;
-          
-          switch (key) {
-            case 'file_read':
-              legacyTool = new FileReaderTool({ basePath, encoding });
-              break;
-            case 'file_write':
-              legacyTool = new FileWriterTool({ basePath, encoding, createDirectories });
-              break;
-            case 'directory_create':
-              legacyTool = new DirectoryCreatorTool({ basePath });
-              break;
-            case 'directory_list':
-              legacyTool = new DirectoryListTool({ basePath });
-              break;
-            case 'directory_change':
-              legacyTool = new DirectoryChangeTool({ basePath });
-              break;
-            case 'directory_current':
-              legacyTool = new DirectoryCurrentTool({ basePath });
-              break;
-            default:
-              console.error(`Unknown tool: ${key}`);
-              continue;
-          }
-          
-          if (legacyTool) {
-            this.registerTool(legacyTool.name, legacyTool);
-          }
-        }
+    for (const { key, class: ToolClass } of tools) {
+      const tool = this.createToolFromMetadata(key, ToolClass);
+      // Pass configuration to tool after creation
+      if (tool.config !== undefined) {
+        Object.assign(tool, this.config);
+      } else {
+        tool.config = this.config;
       }
-    } else {
-      // FALLBACK: Old approach for backwards compatibility
-      const { basePath, encoding, createDirectories } = this.config;
-      
-      const fileReader = new FileReaderTool({ basePath, encoding });
-      const fileWriter = new FileWriterTool({ basePath, encoding, createDirectories });
-      const directoryCreator = new DirectoryCreatorTool({ basePath });
-      const directoryList = new DirectoryListTool({ basePath });
-      const directoryChange = new DirectoryChangeTool({ basePath });
-      const directoryCurrent = new DirectoryCurrentTool({ basePath });
-
-      this.registerTool(fileReader.name, fileReader);
-      this.registerTool(fileWriter.name, fileWriter);
-      this.registerTool(directoryCreator.name, directoryCreator);
-      this.registerTool(directoryList.name, directoryList);
-      this.registerTool(directoryChange.name, directoryChange);
-      this.registerTool(directoryCurrent.name, directoryCurrent);
+      this.registerTool(tool.name, tool);
     }
   }
 
@@ -287,28 +231,18 @@ class FileModule extends Module {
    * @returns {Promise<Object>} The result of the operation
    */
   async invoke(toolName, params) {
-    // Tools now return wrapped results via their execute() method,
-    // so we can return them directly without manual wrapping
-    switch (toolName) {
-      case 'file_read':
-        return await this.fileReader.execute(params);
-      case 'file_write':
-        return await this.fileWriter.execute(params);
-      case 'directory_create':
-        return await this.directoryCreator.execute(params);
-      case 'directory_list':
-        return await this.directoryList.execute(params);
-      case 'directory_change':
-        return await this.directoryChange.execute(params);
-      case 'directory_current':
-        return await this.directoryCurrent.execute(params);
-      default:
-        return {
-          success: false,
-          error: `Unknown tool: ${toolName}`,
-          data: {}
-        };
+    // NEW PATTERN: Use getTool() to access tools from the registry
+    const tool = this.getTool(toolName);
+    if (!tool) {
+      return {
+        success: false,
+        error: `Unknown tool: ${toolName}`,
+        data: {}
+      };
     }
+    
+    // Tools return wrapped results via their execute() method
+    return await tool.execute(params);
   }
 
   /**
@@ -316,7 +250,7 @@ class FileModule extends Module {
    * @returns {string} The base path
    */
   getBasePath() {
-    return this.basePath;
+    return this.config.basePath;
   }
 
   /**
@@ -324,15 +258,20 @@ class FileModule extends Module {
    * @param {string} newBasePath - The new base path
    */
   setBasePath(newBasePath) {
-    this.basePath = newBasePath;
+    this.config.basePath = newBasePath;
     
-    // Update all tools with new base path
-    this.fileReader.basePath = newBasePath;
-    this.fileWriter.basePath = newBasePath;
-    this.directoryCreator.basePath = newBasePath;
-    this.directoryList.basePath = newBasePath;
-    this.directoryChange.basePath = newBasePath;
-    this.directoryCurrent.basePath = newBasePath;
+    // NEW PATTERN: Update all tools with new base path using tool registry
+    const toolNames = ['file_read', 'file_write', 'directory_create', 'directory_list', 'directory_change', 'directory_current'];
+    for (const toolName of toolNames) {
+      const tool = this.getTool(toolName);
+      if (tool) {
+        // Update both config and direct property to ensure compatibility
+        if (tool.config) {
+          tool.config.basePath = newBasePath;
+        }
+        tool.basePath = newBasePath; // Always update direct property too
+      }
+    }
   }
 
   /**
@@ -342,9 +281,9 @@ class FileModule extends Module {
   getStatistics() {
     return {
       toolCount: 6,
-      basePath: this.basePath,
-      encoding: this.encoding,
-      createDirectories: this.createDirectories,
+      basePath: this.config.basePath,
+      encoding: this.config.encoding,
+      createDirectories: this.config.createDirectories,
       tools: [
         'file_read',
         'file_write', 

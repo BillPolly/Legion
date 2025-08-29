@@ -16,7 +16,7 @@ class CommandExecutorModule extends Module {
     this.version = '1.0.0';
     
     // NEW: Set metadata path for automatic loading
-    this.metadataPath = './tools-metadata.json';
+    this.metadataPath = './module.json';
   }
 
   /**
@@ -37,28 +37,14 @@ class CommandExecutorModule extends Module {
   }
 
   /**
-   * Initialize the module - NEW metadata-driven approach
+   * Initialize the module - metadata-driven approach only
    */
   async initialize() {
     await super.initialize(); // This will load metadata automatically
     
-    // NEW APPROACH: Create tools using metadata
-    if (this.metadata) {
-      try {
-        const tool = this.createToolFromMetadata('command_executor', CommandExecutor);
-        this.registerTool(tool.name, tool);
-      } catch (error) {
-        console.warn(`Failed to create metadata tool command_executor, falling back to legacy: ${error.message}`);
-        
-        // Fallback to legacy
-        const commandExecutor = new CommandExecutor();
-        this.registerTool(commandExecutor.name, commandExecutor);
-      }
-    } else {
-      // FALLBACK: Old approach for backwards compatibility
-      const commandExecutor = new CommandExecutor();
-      this.registerTool(commandExecutor.name, commandExecutor);
-    }
+    // Create tool using metadata
+    const tool = this.createToolFromMetadata('command_executor', CommandExecutor);
+    this.registerTool(tool.name, tool);
   }
 
   /**

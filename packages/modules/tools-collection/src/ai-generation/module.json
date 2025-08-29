@@ -1,15 +1,17 @@
 {
   "module": {
-    "name": "AIGenerationModule",
+    "name": "ai-generation-module",
     "description": "AI-powered content generation tools including DALL-E 3 image generation",
-    "version": "1.0.0",
-    "author": "Legion Team",
-    "category": "ai-generation"
+    "version": "1.0.0"
   },
   "tools": {
     "generate_image": {
       "name": "generate_image",
-      "description": "Generate images using DALL-E 3 AI model from OpenAI",
+      "shortName": "imagen",
+      "description": "Generate an image using DALL-E 3 AI model. Returns base64 encoded image data by default.",
+      "category": "ai",
+      "tags": ["ai", "image", "generation", "dall-e", "openai"],
+      "version": "1.0.0",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -47,62 +49,50 @@
       "outputSchema": {
         "type": "object",
         "properties": {
-          "image": {
-            "type": "string",
-            "description": "Generated image data (base64 encoded or URL depending on response_format)"
+          "success": {
+            "type": "boolean",
+            "description": "Whether the generation was successful"
           },
-          "prompt": {
+          "imageData": {
             "type": "string",
-            "description": "The prompt that was used to generate the image"
+            "description": "Base64 encoded image data (data: URL format)"
           },
-          "size": {
+          "imageUrl": {
             "type": "string",
-            "description": "Size of the generated image"
+            "description": "URL to the generated image (when response_format is url)"
           },
-          "quality": {
-            "type": "string",
-            "description": "Quality setting used"
+          "metadata": {
+            "type": "object",
+            "description": "Generation metadata including prompt, model settings, and timestamp"
           },
-          "style": {
+          "filename": {
             "type": "string",
-            "description": "Style setting used"
+            "description": "Generated filename for the image"
           },
-          "response_format": {
+          "filePath": {
             "type": "string",
-            "description": "Format of the returned image data"
+            "description": "Local file path where the image was saved"
           },
-          "revised_prompt": {
+          "type": {
             "type": "string",
-            "description": "Revised prompt used by DALL-E (if different from input)"
+            "description": "File type identifier"
+          },
+          "subtype": {
+            "type": "string",
+            "description": "File format subtype"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "Tool identifier that created this content"
           }
         },
-        "required": ["image", "prompt", "size", "quality", "style", "response_format"]
+        "required": ["success", "metadata", "filename", "type", "createdBy"]
       },
-      "category": "ai-generation",
-      "tags": ["ai", "image", "generation", "dall-e", "openai", "art"],
-      "requirements": {
-        "apiKey": "OPENAI_API_KEY",
-        "llmClient": true
-      },
-      "examples": [
-        {
-          "input": {
-            "prompt": "A serene mountain landscape at sunset",
-            "size": "1024x1024",
-            "quality": "standard"
-          },
-          "description": "Generate a basic landscape image"
-        },
-        {
-          "input": {
-            "prompt": "A futuristic city with flying cars",
-            "size": "1792x1024", 
-            "quality": "hd",
-            "style": "vivid"
-          },
-          "description": "Generate a high-quality widescreen sci-fi scene"
-        }
-      ]
+      "security": {
+        "requiresApiKey": true,
+        "apiKeyEnvVar": "OPENAI_API_KEY",
+        "rateLimit": "50 per hour"
+      }
     }
   }
 }

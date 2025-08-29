@@ -1,0 +1,85 @@
+{
+  "module": {
+    "name": "FileAnalysisModule",
+    "description": "Analyze files including images, PDFs, and documents using AI",
+    "version": "1.0.0"
+  },
+  "tools": {
+    "analyze_file": {
+      "name": "analyze_file",
+      "description": "Analyze a file using AI vision capabilities to extract information, describe content, or answer questions about images, PDFs, and documents",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file_path": {
+            "type": "string",
+            "description": "Path to the file to analyze"
+          },
+          "prompt": {
+            "type": "string",
+            "description": "Analysis prompt or question about the file"
+          },
+          "provider": {
+            "type": "string",
+            "description": "LLM provider to use ('anthropic' or 'openai')",
+            "enum": ["anthropic", "openai"],
+            "default": "anthropic"
+          }
+        },
+        "required": ["file_path", "prompt"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the analysis was successful"
+          },
+          "analysis": {
+            "type": "string",
+            "description": "The AI analysis result"
+          },
+          "file": {
+            "type": "object",
+            "description": "File metadata",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "File name"
+              },
+              "type": {
+                "type": "string",
+                "description": "File type (image, document, text)"
+              },
+              "mimeType": {
+                "type": "string",
+                "description": "MIME type of the file"
+              },
+              "size": {
+                "type": "number",
+                "description": "File size in bytes"
+              }
+            }
+          },
+          "provider": {
+            "type": "string",
+            "description": "The LLM provider used"
+          },
+          "model": {
+            "type": "string",
+            "description": "The specific model used"
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message if analysis failed"
+          },
+          "file_path": {
+            "type": "string",
+            "description": "The input file path (returned on error)"
+          }
+        },
+        "required": ["success"]
+      }
+    }
+  }
+}

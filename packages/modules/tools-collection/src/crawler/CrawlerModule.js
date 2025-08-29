@@ -5,50 +5,12 @@ import puppeteer from 'puppeteer';
 
 /**
  * Crawler tool that crawls web pages and extracts content
- * NEW: Pure logic implementation - metadata comes from tools-metadata.json
+ * Pure logic implementation - metadata comes from module.json
  */
 class CrawlerTool extends Tool {
-  // NEW PATTERN: constructor(module, toolName)
   constructor(module, toolName) {
     super(module, toolName);
     this.shortName = 'crawler';
-  }
-
-  // BACKWARDS COMPATIBILITY: support old pattern during migration
-  static createLegacy() {
-    return new CrawlerTool({
-      name: 'web_crawler',
-      description: 'Crawls web pages and extracts content including text, links, and metadata',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          url: {
-            type: 'string',
-            description: 'The URL of the webpage to crawl'
-          },
-          waitForSelector: {
-            type: 'string',
-            description: 'Optional CSS selector to wait for before extracting content'
-          },
-          limit: {
-            type: 'number',
-            description: 'Optional limit for number of links to extract (default: 100)'
-          }
-        },
-        required: ['url']
-      },
-      outputSchema: {
-        type: 'object',
-        properties: {
-          url: { type: 'string', description: 'The URL that was crawled' },
-          content: { type: 'string', description: 'Text content extracted from the webpage' },
-          links: { type: 'array', description: 'Array of links found on the page' },
-          images: { type: 'array', description: 'Array of images found on the page' },
-          metadata: { type: 'object', description: 'Page metadata' }
-        },
-        required: ['url', 'content', 'links', 'images', 'metadata']
-      }
-    });
   }
 
   /**
@@ -184,18 +146,18 @@ class CrawlerTool extends Tool {
 }
 
 /**
- * CrawlerModule - NEW metadata-driven architecture
- * Metadata comes from tools-metadata.json, tools contain pure logic only
+ * CrawlerModule - metadata-driven architecture
+ * Metadata comes from module.json, tools contain pure logic only
  */
 export default class CrawlerModule extends Module {
   constructor() {
     super();
-    this.name = 'crawler';
-    this.description = 'Web crawler for extracting content from webpages';
+    this.name = 'CrawlerModule';
+    this.description = 'Web crawling tools for extracting content from web pages';
     this.version = '1.0.0';
     
-    // NEW: Set metadata path for automatic loading
-    this.metadataPath = './tools-metadata.json';
+    // Set metadata path for automatic loading
+    this.metadataPath = './module.json';
   }
 
   /**
@@ -216,20 +178,13 @@ export default class CrawlerModule extends Module {
   }
 
   /**
-   * Initialize the module - NEW metadata-driven approach
+   * Initialize the module - metadata-driven approach only
    */
   async initialize() {
     await super.initialize(); // This will load metadata automatically
     
-    // NEW APPROACH: Create tools using metadata
-    if (this.metadata) {
-      // Create web_crawler tool using metadata
-      const crawlerTool = this.createToolFromMetadata('web_crawler', CrawlerTool);
-      this.registerTool(crawlerTool.name, crawlerTool);
-    } else {
-      // FALLBACK: Old approach for backwards compatibility
-      const crawlerTool = CrawlerTool.createLegacy();
-      this.registerTool(crawlerTool.name, crawlerTool);
-    }
+    // Create web_crawler tool using metadata
+    const crawlerTool = this.createToolFromMetadata('web_crawler', CrawlerTool);
+    this.registerTool(crawlerTool.name, crawlerTool);
   }
 }

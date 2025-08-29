@@ -8,6 +8,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
+import { ResourceManager } from '@legion/resource-manager';
 import FileModule from '../FileModule.js';
 import FileReaderTool from '../FileReaderTool.js';
 import FileWriterTool from '../FileWriterTool.js';
@@ -16,6 +17,7 @@ import DirectoryCreatorTool from '../DirectoryCreatorTool.js';
 describe('FileModule Integration Tests', () => {
   let testDir;
   let fileModule;
+  let resourceManager;
   let fileReaderTool;
   let fileWriterTool;
   let directoryCreatorTool;
@@ -25,8 +27,14 @@ describe('FileModule Integration Tests', () => {
     testDir = path.join(os.tmpdir(), 'legion-file-tests', Date.now().toString());
     await fs.mkdir(testDir, { recursive: true });
     
-    // Initialize module and individual tools for comparison
-    fileModule = new FileModule({ basePath: testDir });
+    // Get ResourceManager instance  
+    resourceManager = await ResourceManager.getInstance();
+    
+    // NEW PATTERN: Initialize module using static create method
+    fileModule = await FileModule.create(resourceManager);
+    // Override basePath for testing
+    fileModule.config.basePath = testDir;
+    fileModule.setBasePath(testDir);
     
     fileReaderTool = new FileReaderTool({ basePath: testDir });
     fileWriterTool = new FileWriterTool({ basePath: testDir, createDirectories: true });

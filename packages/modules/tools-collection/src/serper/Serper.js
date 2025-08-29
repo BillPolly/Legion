@@ -2,133 +2,47 @@ import { Tool } from '@legion/tools-registry';
 import https from 'https';
 
 export class Serper extends Tool {
-  constructor(config = {}) {
-    super({
-      name: 'google_search',
-      description: 'Performs Google searches using the Serper API'
-    });
-    this.apiKey = config.apiKey || null;
+  constructor(module, toolName) {
+    super(module, toolName);
+    this.apiKey = null;
     this.baseUrl = 'https://google.serper.dev/search';
   }
 
-  /**
-   * Initialize the tool with API key
-   */
-  async initialize(config) {
-    if (!config || !config.apiKey) {
-      throw new Error('Serper API key is required. Please provide it in the config object.');
-    }
-    this.apiKey = config.apiKey;
-    return true;
-  }
 
   /**
    * Execute the tool with the given parameters
    * This is the main entry point for single-function tools
    */
-  async execute(args) {
+  async _execute(params) {
     // Check if initialized
     if (!this.apiKey) {
-      throw new Error('Serper tool not initialized. Please provide SERPER_API_KEY in environment.', {
-        cause: {
-          query: args.query || 'unknown',
-          errorType: 'not_initialized'
-        }
-      });
+      throw new Error('Serper tool not initialized. Please provide SERPER_API_KEY in environment.');
     }
 
     // Validate required parameters
-    if (!args.query) {
-      throw new Error('Missing required parameter: query', {
-        cause: {
-          errorType: 'validation_error'
-        }
-      });
+    if (!params.query) {
+      throw new Error('Missing required parameter: query');
     }
 
     // Validate empty query
-    if (args.query.trim() === '') {
-      throw new Error('Query cannot be empty', {
-        cause: {
-          errorType: 'validation_error'
-        }
-      });
+    if (params.query.trim() === '') {
+      throw new Error('Query cannot be empty');
     }
 
     // Perform the search
-    return await this.performSearch(args.query, args.num, args.dateRange);
+    const result = await this.performSearch(params.query, params.num, params.dateRange);
+    
+    // If performSearch returned an error, throw it
+    if (!result.success) {
+      const error = new Error(result.error);
+      error.cause = { query: params.query, statusCode: result.statusCode };
+      throw error;
+    }
+    
+    // Return just the data (not wrapped in success/data)
+    return result;
   }
 
-  /**
-   * Returns the tool description in standard function calling format
-   */
-  getToolDescription() {
-    return {
-      type: 'function',
-      function: {
-        name: 'google_search',
-        description: 'Search Google and get results',
-        parameters: {
-          type: 'object',
-          properties: {
-            query: {
-              type: 'string',
-              description: 'The search query to send to Google'
-            },
-            num: {
-              type: 'number',
-              description: 'Number of results to return (default: 10, max: 100)'
-            },
-            dateRange: {
-              type: 'string',
-              description: 'Filter results by date range',
-              enum: ['day', 'week', 'month', 'year']
-            }
-          },
-          required: ['query']
-        },
-        output: {
-          type: 'object',
-            properties: {
-              query: {
-                type: 'string',
-                description: 'The search query that was used'
-              },
-              searchInformation: {
-                type: 'object',
-                description: 'Information about the search results'
-              },
-              organic: {
-                type: 'array',
-                description: 'Organic search results',
-                items: {
-                  type: 'object',
-                  properties: {
-                    title: { type: 'string' },
-                    link: { type: 'string' },
-                    snippet: { type: 'string' }
-                  }
-                }
-              },
-              answerBox: {
-                type: 'object',
-                description: 'Featured snippet or answer box if available'
-              },
-              knowledgeGraph: {
-                type: 'object',
-                description: 'Knowledge graph data if available'
-              },
-              relatedSearches: {
-                type: 'array',
-                description: 'Related search suggestions',
-                items: { type: 'string' }
-              }
-            },
-            required: ['query', 'organic']
-        }
-      }
-    };
-  }
 
 
   /**
@@ -160,35 +74,40 @@ export class Serper extends Tool {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Serper API error: ${errorText}`, {
-          cause: {
-            query: query,
-            errorType: 'api_error',
-            statusCode: response.status
-          }
-        });
+        return {
+          success: false,
+          error: `Serper API error: ${errorText}`,
+          query: query,
+          statusCode: response.status
+        };
       }
 
       const data = await response.json();
       
-      // Format results
+      // Format results - now include success flag and convert organic to results
       const results = {
+        success: true,
         query: query,
         searchInformation: data.searchInformation,
-        organic: data.organic || [],
+        results: (data.organic || []).map((item, index) => ({
+          title: item.title,
+          link: item.link,
+          snippet: item.snippet,
+          position: index + 1
+        })),
         answerBox: data.answerBox || null,
         knowledgeGraph: data.knowledgeGraph || null,
         relatedSearches: data.relatedSearches || []
       };
 
-      console.log(`Found ${results.organic.length} search results`);
+      console.log(`Found ${results.results.length} search results`);
       
       return results;
     } catch (error) {
       if (error.message.includes('fetch is not defined')) {
         // Fallback for Node.js versions without fetch
         // https already imported at top
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
           const payload = JSON.stringify({
             q: query,
             num: Math.min(num || 10, 100),
@@ -213,37 +132,46 @@ export class Serper extends Tool {
               if (res.statusCode === 200) {
                 const parsed = JSON.parse(data);
                 resolve({
+                  success: true,
                   query: query,
                   searchInformation: parsed.searchInformation,
-                  organic: parsed.organic || [],
+                  results: (parsed.organic || []).map((item, index) => ({
+                    title: item.title,
+                    link: item.link,
+                    snippet: item.snippet,
+                    position: index + 1
+                  })),
                   answerBox: parsed.answerBox || null,
                   knowledgeGraph: parsed.knowledgeGraph || null,
                   relatedSearches: parsed.relatedSearches || []
                 });
               } else {
-                reject(new Error(`Serper API error: ${data}`, {
-                  cause: {
-                    query: query,
-                    errorType: 'api_error',
-                    statusCode: res.statusCode
-                  }
-                }));
+                resolve({
+                  success: false,
+                  error: `Serper API error: ${data}`,
+                  query: query,
+                  statusCode: res.statusCode
+                });
               }
             });
           });
 
-          req.on('error', reject);
+          req.on('error', (err) => {
+            resolve({
+              success: false,
+              error: `Network error: ${err.message}`,
+              query: query
+            });
+          });
           req.write(payload);
           req.end();
         });
       }
-      throw new Error(`Failed to search: ${error.message}`, {
-        cause: {
-          query: query,
-          errorType: error.message.includes('API error') ? 'api_error' : 'network_error',
-          details: error.stack
-        }
-      });
+      return {
+        success: false,
+        error: `Failed to search: ${error.message}`,
+        query: query
+      };
     }
   }
 

@@ -23,7 +23,7 @@ export default class ServerStarterModule extends Module {
     this.version = '1.0.0';
     
     // NEW: Set metadata path for automatic loading
-    this.metadataPath = './tools-metadata.json';
+    this.metadataPath = './module.json';
     
     this.toolClasses = {
       ServerStartTool,
@@ -50,40 +50,21 @@ export default class ServerStarterModule extends Module {
   }
 
   /**
-   * Initialize the module - NEW metadata-driven approach
+   * Initialize the module - metadata-driven approach only
    */
   async initialize() {
     await super.initialize(); // This loads metadata automatically
     
-    // NEW APPROACH: Create tools using metadata
-    if (this.metadata) {
-      const tools = [
-        { key: 'server_start', class: ServerStartTool },
-        { key: 'server_read_output', class: ServerReadOutputTool },
-        { key: 'server_stop', class: ServerStopTool }
-      ];
+    // Create tools using metadata
+    const tools = [
+      { key: 'server_start', class: ServerStartTool },
+      { key: 'server_read_output', class: ServerReadOutputTool },
+      { key: 'server_stop', class: ServerStopTool }
+    ];
 
-      for (const { key, class: ToolClass } of tools) {
-        try {
-          const tool = this.createToolFromMetadata(key, ToolClass);
-          this.registerTool(tool.name, tool);
-        } catch (error) {
-          console.warn(`Failed to create metadata tool ${key}, falling back to legacy: ${error.message}`);
-          
-          // Fallback to legacy
-          const legacyTool = new ToolClass();
-          this.registerTool(legacyTool.name, legacyTool);
-        }
-      }
-    } else {
-      // FALLBACK: Old approach for backwards compatibility
-      const startTool = new ServerStartTool();
-      const readTool = new ServerReadOutputTool();
-      const stopTool = new ServerStopTool();
-      
-      this.registerTool(startTool.name, startTool);
-      this.registerTool(readTool.name, readTool);
-      this.registerTool(stopTool.name, stopTool);
+    for (const { key, class: ToolClass } of tools) {
+      const tool = this.createToolFromMetadata(key, ToolClass);
+      this.registerTool(tool.name, tool);
     }
   }
 

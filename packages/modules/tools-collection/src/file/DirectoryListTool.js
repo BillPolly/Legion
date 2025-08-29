@@ -6,73 +6,88 @@ import path from 'path';
  * Tool for listing directory contents
  */
 class DirectoryListTool extends Tool {
-  constructor({ basePath }) {
-    if (!basePath) {
-      throw new Error('basePath is required');
-    }
-    
-    super({
-      name: 'directory_list',
-      shortName: 'ls',
-      description: 'Lists the contents of a directory',
-      schema: {
-        input: {
-          type: 'object',
-          properties: {
-            directoryPath: {
-              type: 'string',
-              description: 'The path to the directory to list'
-            },
-            recursive: {
-              type: 'boolean',
-              description: 'Whether to list contents recursively (default: false)',
-              default: false
-            },
-            filter: {
-              type: 'string',
-              description: 'Optional filter pattern (e.g., "*.txt")'
-            },
-            includeHidden: {
-              type: 'boolean',
-              description: 'Whether to include hidden files (default: false)',
-              default: false
-            }
-          },
-          required: ['directoryPath']
-        },
-        output: {
-          type: 'object',
-          properties: {
-            items: {
-              type: 'array',
-              description: 'List of directory items',
-              items: {
-                type: 'object',
-                properties: {
-                  name: { type: 'string' },
-                  path: { type: 'string' },
-                  type: { type: 'string', enum: ['file', 'directory'] },
-                  size: { type: 'number' },
-                  modified: { type: 'string' },
-                  created: { type: 'string' }
-                }
+  constructor(moduleOrConfig, toolName = null) {
+    // NEW PATTERN: Tool(module, toolName) - metadata comes from module
+    if (toolName && moduleOrConfig?.getToolMetadata) {
+      super(moduleOrConfig, toolName);
+      
+      // Get config from module
+      const config = moduleOrConfig.config || {};
+      this.basePath = config.basePath || process.cwd();
+      this.shortName = 'ls';
+    } 
+    // OLD PATTERN: Tool(config) - backwards compatibility
+    else {
+      const { basePath } = moduleOrConfig || {};
+      
+      if (!basePath) {
+        throw new Error('basePath is required');
+      }
+      
+      super({
+        name: 'directory_list',
+        shortName: 'ls',
+        description: 'Lists the contents of a directory',
+        schema: {
+          input: {
+            type: 'object',
+            properties: {
+              directoryPath: {
+                type: 'string',
+                description: 'The path to the directory to list'
+              },
+              recursive: {
+                type: 'boolean',
+                description: 'Whether to list contents recursively (default: false)',
+                default: false
+              },
+              filter: {
+                type: 'string',
+                description: 'Optional filter pattern (e.g., "*.txt")'
+              },
+              includeHidden: {
+                type: 'boolean',
+                description: 'Whether to include hidden files (default: false)',
+                default: false
               }
             },
-            path: {
-              type: 'string',
-              description: 'The resolved path of the listed directory'
-            },
-            totalItems: {
-              type: 'number',
-              description: 'Total number of items found'
-            }
+            required: ['directoryPath']
           },
-          required: ['items', 'path', 'totalItems']
+          output: {
+            type: 'object',
+            properties: {
+              items: {
+                type: 'array',
+                description: 'List of directory items',
+                items: {
+                  type: 'object',
+                  properties: {
+                    name: { type: 'string' },
+                    path: { type: 'string' },
+                    type: { type: 'string', enum: ['file', 'directory'] },
+                    size: { type: 'number' },
+                    modified: { type: 'string' },
+                    created: { type: 'string' }
+                  }
+                }
+              },
+              path: {
+                type: 'string',
+                description: 'The resolved path of the listed directory'
+              },
+              totalItems: {
+                type: 'number',
+                description: 'Total number of items found'
+              }
+            },
+            required: ['items', 'path', 'totalItems']
+          }
         }
-      }
-    });
+      });
 
-    this.basePath = basePath;
+      // Store dependencies
+      this.basePath = basePath;
+    }
   }
 
   /**

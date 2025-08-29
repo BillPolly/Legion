@@ -1,0 +1,90 @@
+{
+  "module": {
+    "name": "SerperModule",
+    "description": "Google search using Serper API",
+    "version": "1.0.0"
+  },
+  "tools": {
+    "google_search": {
+      "name": "google_search",
+      "description": "Performs Google searches using the Serper API",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "The search query to send to Google"
+          },
+          "num": {
+            "type": "number",
+            "description": "Number of results to return (default: 10, max: 100)",
+            "default": 10
+          },
+          "dateRange": {
+            "type": "string",
+            "description": "Filter results by date range",
+            "enum": ["day", "week", "month", "year"]
+          }
+        },
+        "required": ["query"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the search was successful"
+          },
+          "query": {
+            "type": "string",
+            "description": "The search query that was used"
+          },
+          "searchInformation": {
+            "type": "object",
+            "description": "Information about the search results",
+            "properties": {
+              "totalResults": {
+                "type": "string",
+                "description": "Total number of results found"
+              },
+              "searchTime": {
+                "type": "number",
+                "description": "Time taken to perform the search"
+              }
+            }
+          },
+          "results": {
+            "type": "array",
+            "description": "Array of search results",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "Title of the result"
+                },
+                "link": {
+                  "type": "string",
+                  "description": "URL of the result"
+                },
+                "snippet": {
+                  "type": "string",
+                  "description": "Brief description or snippet of the result"
+                },
+                "position": {
+                  "type": "number",
+                  "description": "Position of the result in the search results"
+                }
+              }
+            }
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message if search failed"
+          }
+        },
+        "required": ["success"]
+      }
+    }
+  }
+}

@@ -4,39 +4,13 @@ import { fileURLToPath } from 'url';
 
 /**
  * Calculator tool that evaluates mathematical expressions
- * NEW: Pure logic implementation - metadata comes from tools-metadata.json
+ * NEW: Pure logic implementation - metadata comes from module.json
  */
 class CalculatorTool extends Tool {
   // NEW PATTERN: constructor(module, toolName)
   constructor(module, toolName) {
     super(module, toolName);
     this.shortName = 'calc';
-  }
-
-  // BACKWARDS COMPATIBILITY: support old pattern during migration
-  static createLegacy() {
-    return new CalculatorTool({
-      name: 'calculator',
-      description: 'Evaluates mathematical expressions and performs calculations',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          expression: {
-            type: 'string',
-            description: 'JavaScript mathematical expression to evaluate'
-          }
-        },
-        required: ['expression']
-      },
-      outputSchema: {
-        type: 'object',
-        properties: {
-          result: { type: 'number', description: 'The result of the calculation' },
-          expression: { type: 'string', description: 'The expression that was evaluated' }
-        },
-        required: ['result', 'expression']
-      }
-    });
   }
 
   /**
@@ -48,11 +22,6 @@ class CalculatorTool extends Tool {
     let { expression } = params;
     if (typeof expression === 'number') {
       expression = String(expression);
-    }
-    
-    // Basic check - let execution fail if invalid
-    if (!expression) {
-      throw new Error('Expression is required');
     }
     
     // Emit progress event
@@ -107,7 +76,7 @@ class CalculatorTool extends Tool {
 
 /**
  * Calculator module - NEW metadata-driven architecture
- * Metadata comes from tools-metadata.json, tools contain pure logic only
+ * Metadata comes from module.json, tools contain pure logic only
  */
 class CalculatorModule extends Module {
   constructor() {
@@ -117,7 +86,7 @@ class CalculatorModule extends Module {
     this.version = '1.0.0';
     
     // NEW: Set metadata path for automatic loading
-    this.metadataPath = './tools-metadata.json';
+    this.metadataPath = './module.json';
   }
 
   /**
@@ -143,16 +112,9 @@ class CalculatorModule extends Module {
   async initialize() {
     await super.initialize(); // This will load metadata automatically
     
-    // NEW APPROACH: Create tools using metadata
-    if (this.metadata) {
-      // Create calculator tool using metadata
-      const calculatorTool = this.createToolFromMetadata('calculator', CalculatorTool);
-      this.registerTool(calculatorTool.name, calculatorTool);
-    } else {
-      // FALLBACK: Old approach for backwards compatibility
-      const calculatorTool = CalculatorTool.createLegacy();
-      this.registerTool(calculatorTool.name, calculatorTool);
-    }
+    // Create calculator tool using metadata
+    const calculatorTool = this.createToolFromMetadata('calculator', CalculatorTool);
+    this.registerTool(calculatorTool.name, calculatorTool);
   }
 }
 

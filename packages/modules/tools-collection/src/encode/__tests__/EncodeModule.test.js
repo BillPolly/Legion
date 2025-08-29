@@ -135,14 +135,16 @@ describe('EncodeModule', () => {
       const result = await base64EncodeTool.execute({});
       
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Data is required for encoding');
+      expect(result.error).toContain('Input validation failed');
+      expect(result.error).toContain('Required');
     });
 
     it('should handle null data parameter', async () => {
       const result = await base64EncodeTool.execute({ data: null });
       
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Data is required for encoding');
+      expect(result.error).toContain('Input validation failed');
+      expect(result.error).toContain('Expected string, received null');
     });
 
     it('should handle large text data', async () => {
@@ -215,7 +217,8 @@ describe('EncodeModule', () => {
       const result = await base64DecodeTool.execute({});
       
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Data is required for decoding');
+      expect(result.error).toContain('Input validation failed');
+      expect(result.error).toContain('Required');
     });
 
     it('should handle invalid base64 data gracefully', async () => {
@@ -301,7 +304,8 @@ describe('EncodeModule', () => {
       const result = await urlEncodeTool.execute({});
       
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Data is required for encoding');
+      expect(result.error).toContain('Input validation failed');
+      expect(result.error).toContain('Required');
     });
 
     it('should encode complex query string', async () => {
@@ -370,7 +374,8 @@ describe('EncodeModule', () => {
       const result = await urlDecodeTool.execute({});
       
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Data is required for decoding');
+      expect(result.error).toContain('Input validation failed');
+      expect(result.error).toContain('Required');
     });
 
     it('should handle malformed URL encoded data gracefully', async () => {

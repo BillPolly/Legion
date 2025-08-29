@@ -1,0 +1,155 @@
+{
+  "module": {
+    "name": "encode",
+    "description": "Encoding and decoding utilities for various formats",
+    "version": "1.0.0"
+  },
+  "tools": {
+    "base64_encode": {
+      "name": "base64_encode",
+      "description": "Encode data to base64 format",
+      "category": "encoding",
+      "tags": ["base64", "encoding", "binary"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string",
+            "description": "The data to encode"
+          },
+          "inputEncoding": {
+            "type": "string",
+            "default": "utf8",
+            "description": "Input encoding (default: utf8)"
+          }
+        },
+        "required": ["data"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "string",
+            "description": "Base64 encoded data"
+          },
+          "originalLength": {
+            "type": "number",
+            "description": "Length of original data"
+          },
+          "encodedLength": {
+            "type": "number",
+            "description": "Length of encoded data"
+          }
+        },
+        "required": ["result", "originalLength", "encodedLength"]
+      }
+    },
+    "base64_decode": {
+      "name": "base64_decode",
+      "description": "Decode base64 encoded data",
+      "category": "decoding",
+      "tags": ["base64", "decoding", "binary"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string",
+            "description": "The base64 encoded data to decode"
+          },
+          "outputEncoding": {
+            "type": "string",
+            "default": "utf8",
+            "description": "Output encoding (default: utf8)"
+          }
+        },
+        "required": ["data"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "string",
+            "description": "Base64 decoded data"
+          },
+          "originalLength": {
+            "type": "number",
+            "description": "Length of original encoded data"
+          },
+          "decodedLength": {
+            "type": "number",
+            "description": "Length of decoded data"
+          }
+        },
+        "required": ["result", "originalLength", "decodedLength"]
+      }
+    },
+    "url_encode": {
+      "name": "url_encode",
+      "description": "URL encode a string",
+      "category": "encoding",
+      "tags": ["url", "encoding", "web"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string",
+            "description": "The string to URL encode"
+          }
+        },
+        "required": ["data"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "string",
+            "description": "URL encoded data"
+          },
+          "originalLength": {
+            "type": "number",
+            "description": "Length of original data"
+          },
+          "encodedLength": {
+            "type": "number",
+            "description": "Length of encoded data"
+          }
+        },
+        "required": ["result", "originalLength", "encodedLength"]
+      }
+    },
+    "url_decode": {
+      "name": "url_decode",
+      "description": "URL decode a string",
+      "category": "decoding",
+      "tags": ["url", "decoding", "web"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string",
+            "description": "The URL encoded string to decode"
+          }
+        },
+        "required": ["data"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "string",
+            "description": "URL decoded data"
+          },
+          "originalLength": {
+            "type": "number",
+            "description": "Length of original encoded data"
+          },
+          "decodedLength": {
+            "type": "number",
+            "description": "Length of decoded data"
+          }
+        },
+        "required": ["result", "originalLength", "decodedLength"]
+      }
+    }
+  }
+}

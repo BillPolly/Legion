@@ -1,0 +1,68 @@
+{
+  "module": {
+    "name": "crawler-module",
+    "description": "Web crawling tools for extracting content from web pages",
+    "version": "1.0.0"
+  },
+  "tools": {
+    "web_crawler": {
+      "name": "web_crawler",
+      "shortName": "crawler",
+      "description": "Crawls web pages and extracts content including text, links, and metadata",
+      "category": "web",
+      "tags": ["web", "crawler", "scraping", "content"],
+      "version": "1.0.0",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The URL of the webpage to crawl"
+          },
+          "waitForSelector": {
+            "type": "string",
+            "description": "Optional CSS selector to wait for before extracting content"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Optional limit for number of links to extract (default: 100)",
+            "default": 100
+          }
+        },
+        "required": ["url"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The URL that was crawled"
+          },
+          "content": {
+            "type": "string",
+            "description": "Text content extracted from the webpage"
+          },
+          "links": {
+            "type": "array",
+            "description": "Array of links found on the page",
+            "items": {
+              "type": "object"
+            }
+          },
+          "images": {
+            "type": "array", 
+            "description": "Array of images found on the page",
+            "items": {
+              "type": "object"
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Page metadata including title, description, etc."
+          }
+        },
+        "required": ["url", "content", "links", "images", "metadata"]
+      }
+    }
+  }
+}

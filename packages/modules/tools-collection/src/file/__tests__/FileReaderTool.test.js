@@ -34,11 +34,12 @@ describe('FileReaderTool Tests', () => {
   describe('Tool Construction and Schema', () => {
     it('should create FileReaderTool with proper schema', () => {
       expect(tool).toBeDefined();
-      expect(tool.name).toBe('file_reader');
+      expect(tool.name).toBe('file_read');
       expect(tool.description).toBeDefined();
-      expect(tool.schema).toBeDefined();
-      expect(tool.schema.input).toBeDefined();
-      expect(tool.schema.output).toBeDefined();
+      expect(tool.inputSchema).toBeDefined();
+      expect(tool.outputSchema).toBeDefined();
+      expect(tool.inputSchema.type).toBe('object');
+      expect(tool.outputSchema.type).toBe('object');
     });
 
     it('should require basePath parameter', () => {
@@ -180,7 +181,7 @@ describe('FileReaderTool Tests', () => {
       const result = await tool.execute({ filePath: null });
       
       expect(result.success).toBe(false);
-      expect(result.error).toMatch(/File path must be a string/);
+      expect(result.error).toContain('Input validation failed');
     });
 
     it('should handle undefined file path', async () => {

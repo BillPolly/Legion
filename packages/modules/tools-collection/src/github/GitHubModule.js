@@ -9,52 +9,16 @@ const execAsync = promisify(exec);
 
 /**
  * GitHub tool that manages GitHub repositories and operations
- * NEW: Pure logic implementation - metadata comes from tools-metadata.json
+ * Pure logic implementation - metadata comes from module.json
  */
 class GitHubTool extends Tool {
-  // NEW PATTERN: constructor(module, toolName)
   constructor(module, toolName) {
     super(module, toolName);
-    this.shortName = 'github';
+    this.shortName = 'gh';
     this.config = module.config || {};
     this.githubApiBase = this.config.apiBase || 'api.github.com';
     this.token = this.config.token;
     this.org = this.config.org;
-  }
-
-  // BACKWARDS COMPATIBILITY: support old pattern during migration
-  static createLegacy(config) {
-    const tool = new GitHubTool({
-      name: 'github',
-      description: 'Creates GitHub repositories and manages git operations',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          operation: {
-            type: 'string',
-            enum: ['create_repo', 'push_to_repo', 'create_and_push', 'list_repos', 'delete_repo', 'list_orgs', 'list_org_repos', 'get_file'],
-            description: 'The GitHub operation to perform'
-          },
-          repoName: { type: 'string', description: 'Name of the repository to create' },
-          description: { type: 'string', description: 'Description of the repository' },
-          private: { type: 'boolean', description: 'Whether the repository should be private' }
-        },
-        required: ['operation']
-      },
-      outputSchema: {
-        type: 'object',
-        properties: {
-          success: { type: 'boolean', description: 'Whether the operation was successful' },
-          message: { type: 'string', description: 'Success or error message' }
-        },
-        required: ['success']
-      }
-    });
-    tool.config = config || {};
-    tool.githubApiBase = tool.config.apiBase || 'api.github.com';
-    tool.token = tool.config.token;
-    tool.org = tool.config.org;
-    return tool;
   }
 
   /**
@@ -586,8 +550,8 @@ class GitHubTool extends Tool {
 }
 
 /**
- * GitHubModule - NEW metadata-driven architecture
- * Metadata comes from tools-metadata.json, tools contain pure logic only
+ * GitHubModule - metadata-driven architecture
+ * Metadata comes from module.json, tools contain pure logic only
  */
 class GitHubModule extends Module {
   constructor() {
@@ -595,21 +559,13 @@ class GitHubModule extends Module {
     this.name = 'github';
     this.description = 'GitHub tools for repository management and operations';
     this.version = '1.0.0';
-    
-    // NEW: Set metadata path for automatic loading
-    this.metadataPath = './tools-metadata.json';
+    this.metadataPath = './module.json';
   }
 
-  /**
-   * Override getModulePath to support proper path resolution
-   */
   getModulePath() {
     return fileURLToPath(import.meta.url);
   }
 
-  /**
-   * Static async factory method following the standard interface
-   */
   static async create(resourceManager) {
     const module = new GitHubModule();
     module.resourceManager = resourceManager;
@@ -617,11 +573,8 @@ class GitHubModule extends Module {
     return module;
   }
 
-  /**
-   * Initialize the module - NEW metadata-driven approach
-   */
   async initialize() {
-    await super.initialize(); // This will load metadata automatically
+    await super.initialize();
     
     // Get GitHub configuration from ResourceManager
     const token = this.resourceManager.get('env.GITHUB_PAT');
@@ -632,18 +585,10 @@ class GitHubModule extends Module {
     // Store configuration for tools
     this.config = { token, org, user, apiBase };
     
-    // NEW APPROACH: Create tools using metadata
-    if (this.metadata) {
-      // Create github tool using metadata
-      const githubTool = this.createToolFromMetadata('github', GitHubTool);
-      this.registerTool(githubTool.name, githubTool);
-    } else {
-      // FALLBACK: Old approach for backwards compatibility
-      const githubTool = GitHubTool.createLegacy(this.config);
-      this.registerTool(githubTool.name, githubTool);
-    }
+    // Create tools using metadata
+    const githubTool = this.createToolFromMetadata('github', GitHubTool);
+    this.registerTool(githubTool.name, githubTool);
   }
-
 }
 
 export default GitHubModule;

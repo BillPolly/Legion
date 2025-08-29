@@ -1,0 +1,198 @@
+{
+  "module": {
+    "name": "gmail",
+    "description": "Gmail integration module for sending and receiving emails",
+    "version": "1.0.0",
+    "author": "Legion Team",
+    "category": "email"
+  },
+  "tools": {
+    "send_email": {
+      "name": "send_email",
+      "description": "Send an email via Gmail SMTP",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string",
+            "format": "email",
+            "description": "Recipient email address"
+          },
+          "subject": {
+            "type": "string",
+            "description": "Email subject line"
+          },
+          "body": {
+            "type": "string",
+            "description": "Email body content"
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "format": "email",
+                "description": "Sender email address (optional)"
+              },
+              "cc": {
+                "type": "string",
+                "format": "email",
+                "description": "CC recipient email address (optional)"
+              },
+              "bcc": {
+                "type": "string",
+                "format": "email",
+                "description": "BCC recipient email address (optional)"
+              },
+              "html": {
+                "type": "boolean",
+                "description": "Whether the body is HTML (default: false)",
+                "default": false
+              },
+              "attachments": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "filename": {
+                      "type": "string",
+                      "description": "Name of the attachment"
+                    },
+                    "path": {
+                      "type": "string",
+                      "description": "Path to the attachment file"
+                    }
+                  }
+                },
+                "description": "Email attachments (optional)"
+              }
+            },
+            "default": {}
+          }
+        },
+        "required": ["to", "subject", "body"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "description": "Unique message identifier"
+          },
+          "accepted": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Accepted email addresses"
+          },
+          "rejected": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Rejected email addresses"
+          }
+        }
+      }
+    },
+    "send_html_email": {
+      "name": "send_html_email",
+      "description": "Send an HTML email via Gmail SMTP",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string",
+            "format": "email",
+            "description": "Recipient email address"
+          },
+          "subject": {
+            "type": "string",
+            "description": "Email subject line"
+          },
+          "htmlBody": {
+            "type": "string",
+            "description": "HTML email body content"
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "format": "email",
+                "description": "Sender email address (optional)"
+              },
+              "cc": {
+                "type": "string",
+                "format": "email", 
+                "description": "CC recipient email address (optional)"
+              },
+              "bcc": {
+                "type": "string",
+                "format": "email",
+                "description": "BCC recipient email address (optional)"
+              },
+              "attachments": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "filename": {
+                      "type": "string",
+                      "description": "Name of the attachment"
+                    },
+                    "path": {
+                      "type": "string", 
+                      "description": "Path to the attachment file"
+                    }
+                  }
+                },
+                "description": "Email attachments (optional)"
+              }
+            },
+            "default": {}
+          }
+        },
+        "required": ["to", "subject", "htmlBody"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "description": "Unique message identifier"
+          },
+          "accepted": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Accepted email addresses"
+          },
+          "rejected": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Rejected email addresses"
+          }
+        }
+      }
+    },
+    "test_connection": {
+      "name": "test_connection",
+      "description": "Test Gmail SMTP connection",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the connection test succeeded"
+          },
+          "message": {
+            "type": "string",
+            "description": "Connection test result message"
+          }
+        }
+      }
+    }
+  }
+}

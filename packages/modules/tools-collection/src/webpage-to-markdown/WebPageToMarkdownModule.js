@@ -5,60 +5,12 @@ import puppeteer from 'puppeteer';
 
 /**
  * WebPageToMarkdown tool that converts web pages to markdown format
- * NEW: Pure logic implementation - metadata comes from tools-metadata.json
+ * Pure logic implementation - metadata comes from module.json
  */
 class WebPageToMarkdownTool extends Tool {
-  // NEW PATTERN: constructor(module, toolName)
   constructor(module, toolName) {
     super(module, toolName);
     this.shortName = 'web2md';
-  }
-
-  // BACKWARDS COMPATIBILITY: support old pattern during migration
-  static createLegacy() {
-    return new WebPageToMarkdownTool({
-      name: 'webpage_to_markdown',
-      description: 'Converts web pages to markdown format, preserving structure and formatting',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          url: {
-            type: 'string',
-            description: 'The URL of the webpage to convert'
-          },
-          includeImages: {
-            type: 'boolean',
-            default: true,
-            description: 'Whether to include image links in the markdown'
-          },
-          includeLinks: {
-            type: 'boolean',
-            default: true,
-            description: 'Whether to preserve hyperlinks in the markdown'
-          },
-          maxLength: {
-            type: 'number',
-            default: 50000,
-            description: 'Maximum length of the markdown output in characters'
-          },
-          waitForSelector: {
-            type: 'string',
-            description: 'Optional CSS selector to wait for before converting'
-          }
-        },
-        required: ['url']
-      },
-      outputSchema: {
-        type: 'object',
-        properties: {
-          url: { type: 'string', description: 'The URL that was converted' },
-          markdown: { type: 'string', description: 'The converted markdown content' },
-          length: { type: 'number', description: 'Length of the markdown content' },
-          truncated: { type: 'boolean', description: 'Whether content was truncated' }
-        },
-        required: ['url', 'markdown', 'length', 'truncated']
-      }
-    });
   }
 
   /**
@@ -252,18 +204,18 @@ class WebPageToMarkdownTool extends Tool {
 }
 
 /**
- * WebPageToMarkdownModule - NEW metadata-driven architecture
- * Metadata comes from tools-metadata.json, tools contain pure logic only
+ * WebPageToMarkdownModule - metadata-driven architecture
+ * Metadata comes from module.json, tools contain pure logic only
  */
 export default class WebPageToMarkdownModule extends Module {
   constructor() {
     super();
-    this.name = 'webpage-to-markdown';
+    this.name = 'WebPageToMarkdownModule';
     this.description = 'Convert webpages to markdown format';
     this.version = '1.0.0';
     
-    // NEW: Set metadata path for automatic loading
-    this.metadataPath = './tools-metadata.json';
+    // Set metadata path for automatic loading
+    this.metadataPath = './module.json';
   }
 
   /**
@@ -284,20 +236,13 @@ export default class WebPageToMarkdownModule extends Module {
   }
 
   /**
-   * Initialize the module - NEW metadata-driven approach
+   * Initialize the module - metadata-driven approach only
    */
   async initialize() {
     await super.initialize(); // This will load metadata automatically
     
-    // NEW APPROACH: Create tools using metadata
-    if (this.metadata) {
-      // Create webpage_to_markdown tool using metadata
-      const webpageTool = this.createToolFromMetadata('webpage_to_markdown', WebPageToMarkdownTool);
-      this.registerTool(webpageTool.name, webpageTool);
-    } else {
-      // FALLBACK: Old approach for backwards compatibility
-      const webpageTool = WebPageToMarkdownTool.createLegacy();
-      this.registerTool(webpageTool.name, webpageTool);
-    }
+    // Create webpage_to_markdown tool using metadata
+    const webpageTool = this.createToolFromMetadata('webpage_to_markdown', WebPageToMarkdownTool);
+    this.registerTool(webpageTool.name, webpageTool);
   }
 }

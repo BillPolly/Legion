@@ -1,0 +1,159 @@
+{
+  "module": {
+    "name": "server-starter",
+    "description": "Server management tools for starting, stopping, and monitoring server processes",
+    "version": "1.0.0"
+  },
+  "tools": {
+    "server_start": {
+      "name": "server_start",
+      "shortName": "start",
+      "description": "Start a server process with the specified command",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "The command to start the server (e.g., \"npm start\", \"node server.js\")",
+            "default": "echo \"test server\""
+          },
+          "cwd": {
+            "type": "string",
+            "description": "Working directory for the command (default: current directory)"
+          },
+          "timeout": {
+            "type": "number",
+            "description": "Timeout in milliseconds to wait for server start confirmation",
+            "default": 5000
+          }
+        },
+        "required": ["command"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the server started successfully"
+          },
+          "pid": {
+            "type": "number",
+            "description": "Process ID of the started server"
+          },
+          "command": {
+            "type": "string",
+            "description": "The command that was executed"
+          },
+          "cwd": {
+            "type": "string",
+            "description": "Working directory where command was executed"
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the server process"
+          },
+          "process": {
+            "description": "Process reference for internal management"
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message if start failed"
+          }
+        },
+        "required": ["success"]
+      }
+    },
+    "server_read_output": {
+      "name": "server_read_output",
+      "shortName": "readout",
+      "description": "Read output from a running server process",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pid": {
+            "type": "number",
+            "description": "Process ID of the server to read output from"
+          },
+          "lines": {
+            "type": "number",
+            "description": "Number of lines to read (default: 100)",
+            "default": 100
+          }
+        },
+        "required": ["pid"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the output was read successfully"
+          },
+          "output": {
+            "type": "string",
+            "description": "Server output (stdout and stderr combined)"
+          },
+          "pid": {
+            "type": "number",
+            "description": "Process ID of the server"
+          },
+          "lines": {
+            "type": "number",
+            "description": "Number of lines returned"
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message if read failed"
+          }
+        },
+        "required": ["success"]
+      }
+    },
+    "server_stop": {
+      "name": "server_stop",
+      "shortName": "stop",
+      "description": "Stop a running server process",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pid": {
+            "type": "number",
+            "description": "Process ID of the server to stop"
+          },
+          "force": {
+            "type": "boolean",
+            "description": "Force kill the process (SIGKILL instead of SIGTERM)",
+            "default": false
+          }
+        },
+        "required": ["pid"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the server was stopped successfully"
+          },
+          "pid": {
+            "type": "number",
+            "description": "Process ID of the stopped server"
+          },
+          "signal": {
+            "type": "string",
+            "description": "Signal used to stop the process"
+          },
+          "exitCode": {
+            "type": "number",
+            "description": "Exit code of the process"
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message if stop failed"
+          }
+        },
+        "required": ["success"]
+      }
+    }
+  }
+}

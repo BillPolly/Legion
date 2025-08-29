@@ -1,0 +1,180 @@
+{
+  "module": {
+    "name": "system",
+    "description": "System-level tools for module management and introspection",
+    "version": "1.0.0"
+  },
+  "tools": {
+    "module_list": {
+      "name": "module_list",
+      "shortName": "list",
+      "description": "List all loaded modules with their metadata and status",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "verbose": {
+            "type": "boolean",
+            "default": false,
+            "description": "Include detailed information about each module"
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation was successful"
+          },
+          "modules": {
+            "type": "array",
+            "description": "List of loaded modules"
+          },
+          "count": {
+            "type": "number",
+            "description": "Total number of modules"
+          }
+        },
+        "required": ["success", "modules"]
+      }
+    },
+    "module_info": {
+      "name": "module_info",
+      "shortName": "info",
+      "description": "Get detailed information about a specific module",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "module": {
+            "type": "string",
+            "description": "Name of the module to get information about"
+          }
+        },
+        "required": ["module"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation was successful"
+          },
+          "module": {
+            "type": "object",
+            "description": "Module information"
+          }
+        },
+        "required": ["success"]
+      }
+    },
+    "module_tools": {
+      "name": "module_tools",
+      "shortName": "tools",
+      "description": "List all tools provided by a specific module",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "module": {
+            "type": "string",
+            "description": "Name of the module to list tools for"
+          },
+          "detailed": {
+            "type": "boolean",
+            "default": false,
+            "description": "Include detailed tool information"
+          }
+        },
+        "required": ["module"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation was successful"
+          },
+          "module": {
+            "type": "string",
+            "description": "Module name"
+          },
+          "tools": {
+            "type": "array",
+            "description": "List of tools in the module"
+          }
+        },
+        "required": ["success", "module", "tools"]
+      }
+    },
+    "module_load": {
+      "name": "module_load",
+      "shortName": "load",
+      "description": "Load a module dynamically at runtime",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "module": {
+            "type": "string",
+            "description": "Name or path of the module to load"
+          },
+          "config": {
+            "type": "object",
+            "description": "Optional configuration for the module"
+          }
+        },
+        "required": ["module"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the module was loaded successfully"
+          },
+          "module": {
+            "type": "string",
+            "description": "Name of the loaded module"
+          },
+          "tools": {
+            "type": "number",
+            "description": "Number of tools loaded"
+          }
+        },
+        "required": ["success", "module"]
+      }
+    },
+    "module_unload": {
+      "name": "module_unload",
+      "shortName": "unload",
+      "description": "Unload a module and free its resources",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "module": {
+            "type": "string",
+            "description": "Name of the module to unload"
+          },
+          "force": {
+            "type": "boolean",
+            "default": false,
+            "description": "Force unload even if module is in use"
+          }
+        },
+        "required": ["module"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the module was unloaded successfully"
+          },
+          "module": {
+            "type": "string",
+            "description": "Name of the unloaded module"
+          }
+        },
+        "required": ["success", "module"]
+      }
+    }
+  }
+}

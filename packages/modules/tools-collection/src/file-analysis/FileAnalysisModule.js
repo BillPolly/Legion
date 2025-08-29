@@ -15,7 +15,7 @@ export default class FileAnalysisModule extends Module {
     this.version = '1.0.0';
     this.llmClient = null;
     this.openaiClient = null;
-    this.metadataPath = './tools-metadata.json';
+    this.metadataPath = './module.json';
   }
 
   /**
