@@ -15,7 +15,7 @@ export class SearchService {
   constructor(dependencies) {
     // Dependency Inversion: Depend on abstractions
     this.textSearch = dependencies.textSearch;
-    this.semanticSearch = dependencies.semanticSearch;
+    this.semanticSearchEngine = dependencies.semanticSearch; // FIXED: Don't overwrite method name
     this.perspectiveService = dependencies.perspectiveService;
     this.embeddingService = dependencies.embeddingService;
     this.vectorStore = dependencies.vectorStore;
