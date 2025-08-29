@@ -14,6 +14,7 @@ import { PerspectiveError } from '../errors/index.js';
 import { DatabaseInitializer } from '../core/DatabaseInitializer.js';
 import { PerspectiveTypeManager } from '../core/PerspectiveTypeManager.js';
 import { Logger } from '../utils/Logger.js';
+import { LLMClient } from '@legion/llm';
 
 export class Perspectives {
   constructor({ resourceManager, databaseStorage = null, options = {} }) {
@@ -53,13 +54,22 @@ export class Perspectives {
       }
     }
 
-    // Get LLM client from resource manager (optional for mock mode)
-    this.llmClient = this.resourceManager.get('llmClient');
-    this.mockMode = !this.llmClient || this.options.mockMode;
+    // Create LLM client from ResourceManager using API key
+    const anthropicKey = this.resourceManager.get('env.ANTHROPIC_API_KEY');
     
-    if (this.mockMode && this.options.verbose) {
-      this.logger.info('Running in mock mode (no LLM client configured)');
+    if (!anthropicKey) {
+      throw new PerspectiveError(
+        'ANTHROPIC_API_KEY environment variable is required for perspective generation',
+        'MISSING_API_KEY'
+      );
     }
+    
+    this.llmClient = new LLMClient({
+      provider: 'anthropic',
+      apiKey: anthropicKey,
+      model: 'claude-3-5-sonnet-20241022'  // Use current Sonnet model
+    });
+    
 
     // Initialize database collections and default perspective types
     this.databaseInitializer = new DatabaseInitializer({
@@ -163,20 +173,14 @@ export class Perspectives {
         );
       }
       
-      // Generate all perspectives - either LLM or mock
-      let generatedPerspectives;
-      if (this.mockMode) {
-        generatedPerspectives = this._generateMockPerspectives(tool, perspectiveTypes);
-      } else {
-        // Generate all perspectives in single LLM call
-        const prompt = this._createMultiPerspectivePrompt(tool, perspectiveTypes);
-        const response = await this.llmClient.complete(prompt, 2000); // Use complete method with higher token limit
-        generatedPerspectives = this._parseMultiPerspectiveResponse(
-          response, 
-          tool.name, 
-          perspectiveTypes
-        );
-      }
+      // Generate all perspectives using LLM
+      const prompt = this._createMultiPerspectivePrompt(tool, perspectiveTypes);
+      const response = await this.llmClient.complete(prompt, 2000); // Use complete method with higher token limit
+      const generatedPerspectives = this._parseMultiPerspectiveResponse(
+        response, 
+        tool.name, 
+        perspectiveTypes
+      );
       
       // Prepare perspective documents with metadata
       const batchId = this._generateBatchId();
@@ -194,7 +198,7 @@ export class Perspectives {
       }));
       
       // Generate embeddings for perspectives (unless disabled)
-      if (options.generateEmbeddings !== false && !this.mockMode) {
+      if (options.generateEmbeddings !== false) {
         try {
           await this._generateEmbeddingsForPerspectives(perspectiveDocs);
         } catch (error) {
@@ -297,15 +301,10 @@ export class Perspectives {
               this.logger.verbose(`Processing batch ${batchIndex + 1}/${batches.length} (${batch.length} tools)`);
             }
             
-            // Generate batch perspectives - either LLM or mock
-            let perspectives;
-            if (this.mockMode) {
-              perspectives = this._generateMockBatchPerspectives(batch);
-            } else {
-              const batchPrompt = this._createBatchPerspectivePrompt(batch);
-              const batchResponse = await this.llmClient.sendMessage(batchPrompt);
-              perspectives = this._parseBatchPerspectiveResponse(batchResponse, batch);
-            }
+            // Generate batch perspectives using LLM
+            const batchPrompt = this._createBatchPerspectivePrompt(batch);
+            const batchResponse = await this.llmClient.sendMessage(batchPrompt);
+            const perspectives = this._parseBatchPerspectiveResponse(batchResponse, batch);
             
             // Validate batch response
             if (!Array.isArray(perspectives) || perspectives.length !== batch.length) {
@@ -969,47 +968,6 @@ Each perspective must be 10 words or less.`;
    * @param {Array} perspectiveTypes - Types to generate
    * @returns {Array} Mock perspectives
    */
-  _generateMockPerspectives(tool, perspectiveTypes) {
-    const mockTemplates = {
-      input_perspective: `Input requirements for ${tool.name}:
-- Required parameters: ${Object.keys(tool.inputSchema?.properties || {}).join(', ')}
-- Expected format: JSON object
-- Validation: Schema-based validation applied
-- Example usage: Call with proper input structure`,
-      
-      definition_perspective: `${tool.name} is a ${tool.category || 'utility'} tool that ${tool.description?.toLowerCase() || 'performs operations'}.
-This tool belongs to the ${tool.moduleName || 'Unknown'} module and provides ${tool.tags?.join(', ') || 'general functionality'}.
-Key features include: robust error handling, schema validation, and consistent response format.`,
-      
-      keyword_perspective: `Keywords: ${tool.name}, ${tool.tags?.join(', ') || ''}, ${tool.category || ''}, ${tool.moduleName || ''}
-Related terms: ${tool.description?.split(' ').filter(w => w.length > 4).slice(0, 5).join(', ') || 'functionality'}
-Search terms: ${tool.name.replace('_', ' ')}, ${tool.category || 'tool'} operations`,
-      
-      use_case_perspective: `Common use cases for ${tool.name}:
-1. ${tool.category || 'General'} operations in automated workflows
-2. Integration with ${tool.moduleName || 'other'} module components  
-3. Data processing pipelines requiring ${tool.name.replace('_', ' ')}
-4. Development and testing scenarios
-Best practices: Validate inputs, handle errors gracefully, follow schema requirements`
-    };
-    
-    return perspectiveTypes.map(type => ({
-      content: mockTemplates[type.name] || `Mock perspective for ${tool.name} of type ${type.name}`,
-      perspectiveType: type.name
-    }));
-  }
-
-  /**
-   * Generate mock batch perspectives for testing
-   * @param {Array} batch - Array of tool objects  
-   * @returns {Array} Mock batch perspectives
-   */
-  _generateMockBatchPerspectives(batch) {
-    const perspectiveTypes = this.perspectiveTypeManager?.perspectiveTypes || [];
-    return batch.map(tool => {
-      return this._generateMockPerspectives(tool, perspectiveTypes);
-    });
-  }
 
   /**
    * Generate embeddings for existing perspectives that don't have them

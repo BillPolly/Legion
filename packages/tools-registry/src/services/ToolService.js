@@ -388,34 +388,32 @@ export class ToolService {
    */
   async getToolStatistics() {
     try {
-      const moduleStats = await this.moduleService.getModuleStatistics();
-      let totalTools = 0;
+      // Get real statistics from database instead of in-memory state
+      const totalTools = await this.toolRepository.countTools();
+      
+      // Count unique modules that have tools - use toolRepository method
+      const moduleCount = await this.toolRepository.countModulesWithTools();
+      
+      // For cached tools, we'll check our in-memory cache
       let cachedTools = 0;
-
-      // Count tools across all loaded modules
-      for (const moduleName of moduleStats.loadedModules) {
-        try {
-          const moduleInstance = await this.moduleService.getModule(moduleName);
-          const tools = moduleInstance.getTools();
-          totalTools += tools.length;
-
-          // Check which tools are cached
-          for (const tool of tools) {
-            const cached = await this.toolCache.get(tool.name);
-            if (cached) {
-              cachedTools++;
-            }
+      try {
+        // Get all tools from database and check cache
+        const allTools = await this.toolRepository.findTools({}, { projection: { name: 1 } });
+        for (const tool of allTools) {
+          const cached = await this.toolCache.get(tool.name);
+          if (cached) {
+            cachedTools++;
           }
-        } catch (error) {
-          // Continue with other modules
-          continue;
         }
+      } catch (cacheError) {
+        // If cache check fails, continue with other stats
+        console.warn('[ToolService] Cache check failed:', cacheError.message);
       }
       
       return {
         total: totalTools,
         cached: cachedTools,
-        modules: moduleStats.totalLoaded
+        modules: moduleCount || 0
       };
     } catch (error) {
       throw new Error(`Failed to get tool statistics: ${error.message}`);

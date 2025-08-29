@@ -156,6 +156,52 @@ export class VectorStore {
   }
   
   /**
+   * Index batch of perspective vectors directly (for semantic search pipeline)
+   * @param {Array} batch - Array of {id, vector, metadata} objects
+   * @returns {Promise} Index result
+   */
+  async indexBatch(batch) {
+    try {
+      if (!batch || batch.length === 0) {
+        return { indexed: 0 };
+      }
+      
+      // Check if database is connected
+      if (!this.vectorDatabase.isConnected) {
+        throw new VectorStoreError(
+          'Vector database not connected',
+          'CONNECTION_ERROR'
+        );
+      }
+      
+      // Prepare documents for vector database
+      const documents = batch.map(item => ({
+        id: item.id,
+        vector: item.vector,
+        metadata: {
+          ...item.metadata,
+          indexed_at: new Date().toISOString()
+        }
+      }));
+      
+      // Insert to vector database
+      await this.vectorDatabase.insertBatch(this.options.collectionName, documents);
+      
+      if (this.options.verbose) {
+        this.logger.verbose(`Indexed ${documents.length} vectors in batch`);
+      }
+      return { indexed: documents.length };
+      
+    } catch (error) {
+      throw new VectorStoreError(
+        `Failed to index batch: ${error.message}`,
+        'INDEX_BATCH_ERROR',
+        { batchSize: batch.length, originalError: error }
+      );
+    }
+  }
+
+  /**
    * Index multiple tools in batch
    * @param {Array} tools - Tools to index
    * @param {Array} perspectives - Optional perspectives

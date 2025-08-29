@@ -24,13 +24,9 @@ async function discoverModules(options = {}) {
     
     console.log('🔍 Discovering modules...\n');
     
-    // Discover modules through the singleton
-    const result = await toolRegistry.discoverModules({
-      path,
-      pattern,
-      save,
-      verbose
-    });
+    // Discover modules through the singleton (expects array of paths)
+    const searchPaths = path ? [path] : ['../modules'];
+    const result = await toolRegistry.discoverModules(searchPaths);
     
     // Display results
     console.log(`\n📦 Discovered ${result.discovered} modules`);

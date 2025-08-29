@@ -175,39 +175,26 @@ export class ModuleService {
    */
   async loadMultipleModules(moduleNames, options = {}) {
     const results = {
-      loaded: 0,
+      successful: 0,  // Changed from 'loaded' to 'successful' for API consistency
       failed: 0,
       errors: [],
       modules: []
     };
 
     for (const moduleName of moduleNames) {
-      // For module-centric approach, we assume moduleName is actually the path
-      // or we try to resolve it from discovered modules
-      let moduleConfig = {};
-      
-      // Try to find the module path from discovered modules if available
+      // Use getModule which has proper database lookup logic
       try {
-        const discoveredModules = await this.moduleDiscovery.getAllModuleNames?.() || [];
-        // This would need to be enhanced to actually return module info, not just names
-        moduleConfig = { path: moduleName }; // Fallback: assume moduleName is path
-      } catch (error) {
-        moduleConfig = { path: moduleName }; // Fallback: assume moduleName is path
-      }
-      
-      const result = await this.loadModule(moduleName, moduleConfig);
-      
-      if (result.success) {
-        results.loaded++;
+        const moduleInstance = await this.getModule(moduleName);
+        results.successful++;  // Changed from 'loaded' to 'successful'
         results.modules.push({
           name: moduleName,
-          toolCount: result.toolCount
+          toolCount: moduleInstance.getTools ? moduleInstance.getTools().length : 0
         });
-      } else {
+      } catch (error) {
         results.failed++;
         results.errors.push({
           module: moduleName,
-          error: result.error
+          error: error.message
         });
       }
     }

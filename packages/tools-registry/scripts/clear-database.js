@@ -13,27 +13,27 @@
  *   node scripts/clear-database.js --force   # Clear without confirmation
  */
 
-import toolRegistry from '../src/index.js';
+import { getToolManager } from '../src/index.js';
 import readline from 'readline';
 
 async function clearDatabase(options = {}) {
   const { force = false, verbose = false, includeRegistry = false } = options;
   
   try {
-    // Get ToolRegistry singleton
-    // toolRegistry is already the initialized singleton instance
+    // Get ToolManager instance for administrative operations
+    const toolManager = await getToolManager();
     
     // Get current status before clearing
-    const statusBefore = await toolRegistry.getSystemStatus();
+    const statusBefore = await toolManager.getStatistics();
     
     console.log('\n⚠️  WARNING: This will clear data from the tool registry!');
     console.log('\nCurrent data that will be deleted:');
-    console.log(`  • ${statusBefore.collections.modules || 0} loaded modules`);
-    console.log(`  • ${statusBefore.collections.tools || 0} tools`);
-    console.log(`  • ${statusBefore.collections.toolPerspectives || 0} tool perspectives`);
-    console.log(`  • ${statusBefore.collections.perspectiveTypes || 0} perspective types`);
+    console.log(`  • ${statusBefore.modules.totalLoaded || 0} loaded modules`);
+    console.log(`  • ${statusBefore.tools.total || 0} tools`);
+    console.log(`  • ${statusBefore.search.perspectivesGenerated || 0} tool perspectives`);
+    console.log(`  • ${statusBefore.search.vectorsIndexed || 0} indexed vectors`);
     if (includeRegistry) {
-      console.log(`  • ${statusBefore.collections.moduleRegistry || 0} discovered modules (registry)`);
+      console.log(`  • ${statusBefore.modules.totalDiscovered || 0} discovered modules (registry)`);
     }
     
     // Ask for confirmation unless --force is used
@@ -57,8 +57,8 @@ async function clearDatabase(options = {}) {
     
     console.log('\n🗑️  Clearing data...');
     
-    // Clear all data using the ToolRegistry method
-    const result = await toolRegistry.clearAllData({ 
+    // Clear all data using the ToolManager method
+    const result = await toolManager.clearAllData({ 
       verbose, 
       includeRegistry 
     });
@@ -80,15 +80,17 @@ async function clearDatabase(options = {}) {
     }
     
     // Verify everything is cleared
-    const statusAfter = await toolRegistry.getSystemStatus();
+    const statusAfter = await toolManager.getStatistics();
     console.log('\nVerification:');
-    console.log(`  • Modules remaining: ${statusAfter.collections.modules || 0}`);
-    console.log(`  • Tools remaining: ${statusAfter.collections.tools || 0}`);
-    console.log(`  • Perspectives remaining: ${statusAfter.collections.toolPerspectives || 0}`);
+    console.log(`  • Modules remaining: ${statusAfter.modules.totalLoaded || 0}`);
+    console.log(`  • Tools remaining: ${statusAfter.tools.total || 0}`);
+    console.log(`  • Perspectives remaining: ${statusAfter.search.perspectivesGenerated || 0}`);
+    console.log(`  • Vectors remaining: ${statusAfter.search.vectorsIndexed || 0}`);
     
-    if ((statusAfter.collections.modules || 0) === 0 && 
-        (statusAfter.collections.tools || 0) === 0 && 
-        (statusAfter.collections.toolPerspectives || 0) === 0) {
+    if ((statusAfter.modules.totalLoaded || 0) === 0 && 
+        (statusAfter.tools.total || 0) === 0 && 
+        (statusAfter.search.perspectivesGenerated || 0) === 0 &&
+        (statusAfter.search.vectorsIndexed || 0) === 0) {
       console.log('\n✅ All data successfully cleared!');
     } else {
       console.log('\n⚠️  Some data may not have been cleared completely');

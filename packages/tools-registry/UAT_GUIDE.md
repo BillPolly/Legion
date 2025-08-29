@@ -1,867 +1,359 @@
-# Legion Tools Registry - User Acceptance Testing Guide
+# ToolRegistry User Acceptance Testing (UAT) Guide
 
 ## Overview
-This UAT guide validates all critical functionality of the Legion Tools Registry system following Uncle Bob's Clean Architecture principles. It tests module loading, tool metadata, tool execution, semantic search, and infrastructure integration.
 
-## Prerequisites
+This UAT guide validates the complete ToolRegistry system functionality from module discovery through semantic search capabilities. The system is designed around a primary ToolRegistry singleton interface that handles all tool operations without artificial limits.
 
-### Environment Setup
-1. **MongoDB**: Running on localhost:27017
-2. **Qdrant**: Running on localhost:6333  
-3. **OpenAI API Key**: Set in `.env` file
-4. **All dependencies installed**: `npm install` in monorepo root
+## Architecture Overview
 
-### Environment Variables Required
+- **ToolRegistry**: The PRIMARY singleton interface - provides complete functionality for all users
+- **Module Loading**: Background infrastructure for loading tools from filesystem modules  
+- **Database Persistence**: Tools are stored in MongoDB for efficient retrieval
+- **Semantic Search**: 3-phase pipeline: Perspectives → Embeddings → Vector Indexing
+- **No Artificial Limits**: System returns all available tools/results unless specifically limited
+
+## Phase 1: Basic System Initialization
+
+**Purpose**: Verify core ToolRegistry singleton functionality and module loading.
+
+### Step 1.1: Initialize ToolRegistry
+```javascript
+import { getToolRegistry } from '@legion/tools-registry';
+
+// Get the primary singleton interface
+const toolRegistry = await getToolRegistry();
+console.log('✅ ToolRegistry initialized');
+```
+
+**Expected**: ToolRegistry instance created successfully.
+
+### Step 1.2: Verify Module Discovery
+```javascript
+const discovery = await toolRegistry.discoverModules();
+console.log(`✅ Discovered ${discovery.discovered} modules`);
+```
+
+**Expected**: Multiple modules discovered from the monorepo.
+
+### Step 1.3: Load All Modules
+```javascript
+const loading = await toolRegistry.loadModules();
+console.log(`✅ Loaded ${loading.successful} modules with ${loading.tools} tools`);
+```
+
+**Expected**: All discovered modules load successfully with their tools.
+
+## Phase 2: Tool Visibility and Access
+
+**Purpose**: Verify all tools are visible through the ToolRegistry interface without artificial limits.
+
+### Step 2.1: Count All Available Tools
+```javascript
+const allTools = await toolRegistry.listTools();
+console.log(`✅ Total tools available: ${allTools.length}`);
+```
+
+**Expected**: All loaded tools are visible (no 50-tool limit or other artificial restrictions).
+
+### Step 2.2: Verify Tool Retrieval by Name
+```javascript
+const testTools = ['calculator', 'file_write', 'json_parse'];
+for (const toolName of testTools) {
+    const tool = await toolRegistry.getTool(toolName);
+    console.log(`✅ ${toolName}: ${tool ? 'Found' : 'Not Found'}`);
+}
+```
+
+**Expected**: All common tools can be retrieved by name.
+
+### Step 2.3: Verify No Limits Applied
+```javascript
+// Test that search doesn't artificially limit results
+const searchResults = await toolRegistry.searchTools('file');
+console.log(`✅ Search results: ${searchResults.length} (no artificial limits)`);
+```
+
+**Expected**: Search returns all matching tools without artificial limits.
+
+## Phase 3: Tool Execution Testing
+
+**Purpose**: Verify tools can be executed and return expected results.
+
+### Step 3.1: Execute Calculator Tool
+```javascript
+const calc = await toolRegistry.getTool('calculator');
+const result = await calc.execute({ expression: '15 * 8' });
+console.log(`✅ Calculator: 15 * 8 = ${result.result}`);
+```
+
+**Expected**: Result should be 120.
+
+### Step 3.2: Execute File Operations
+```javascript
+const fileWrite = await toolRegistry.getTool('file_write');
+const testFile = '/tmp/uat-test-' + Date.now() + '.txt';
+const writeResult = await fileWrite.execute({
+    filepath: testFile,
+    content: 'UAT Test Content'
+});
+console.log('✅ File write:', writeResult.success ? 'SUCCESS' : 'FAILED');
+
+const fileRead = await toolRegistry.getTool('file_read');
+const readResult = await fileRead.execute({ filepath: testFile });
+console.log('✅ File read content:', readResult.content.trim());
+```
+
+**Expected**: File operations succeed, content matches what was written.
+
+### Step 3.3: Execute JSON Operations
+```javascript
+const jsonParse = await toolRegistry.getTool('json_parse');
+const parseResult = await jsonParse.execute({
+    jsonString: '{"name": "UAT Test", "version": 1, "active": true}'
+});
+console.log('✅ JSON parsed:', parseResult.result);
+```
+
+**Expected**: JSON parsing succeeds and returns the correct object.
+
+## Phase 4: Semantic Search Infrastructure Building
+
+**Purpose**: Build the infrastructure needed for semantic search (perspectives, embeddings, vectors).
+
+This phase builds the 3-phase pipeline that enables semantic search:
+1. **Perspectives**: Generate different viewpoints/descriptions for each tool
+2. **Embeddings**: Convert perspectives to vector representations using Nomic (768 dims)
+3. **Vector Indexing**: Store vectors in Qdrant for fast similarity search
+
+### Step 4.1: Generate Tool Perspectives
+```javascript
+// Generate perspectives for a subset of tools to test the pipeline
+const perspectiveResults = await toolRegistry.generatePerspectives({
+    limit: 5,  // Test with limited set
+    forceRegenerate: true
+});
+console.log(`✅ Generated perspectives: ${perspectiveResults.generated} tools processed`);
+console.log(`   Processed: ${perspectiveResults.processed}`);
+console.log(`   Skipped: ${perspectiveResults.skipped}`);
+console.log(`   Errors: ${perspectiveResults.errors.length}`);
+```
+
+**Expected**: Perspectives are generated and stored in database for the specified tools. Each tool should have multiple perspective types (functional, technical, use-case).
+
+### Step 4.2: Generate Embeddings for Perspectives  
+```javascript
+// Generate embeddings for the perspectives created in Step 4.1
+const embeddingResults = await toolRegistry.generateEmbeddings();
+console.log(`✅ Generated embeddings: ${embeddingResults.embedded} perspectives processed`);
+console.log(`   Processed: ${embeddingResults.processed}`);
+console.log(`   Errors: ${embeddingResults.errors.length}`);
+```
+
+**Expected**: Embeddings are created using Nomic local embeddings (768 dimensions) and stored in the database. Each perspective should now have a corresponding embedding vector.
+
+### Step 4.3: Index Vectors in Vector Store
+```javascript  
+// Index the embeddings into Qdrant vector store for search
+const indexResults = await toolRegistry.indexVectors();
+console.log(`✅ Indexed vectors: ${indexResults.indexed} vectors processed`);
+console.log(`   Errors: ${indexResults.errors.length}`);
+```
+
+**Expected**: Vectors are successfully indexed in Qdrant vector database. The system should now be ready for semantic search queries.
+
+### Step 4.4: Verify Infrastructure Components
+```javascript
+// Verify the complete infrastructure is working
+const stats = await toolRegistry.getStatistics();
+console.log('✅ Infrastructure Status:');
+console.log(`   Perspectives: ${stats.search?.perspectivesGenerated || 0}`);
+console.log(`   Embeddings: ${stats.search?.perspectivesWithEmbeddings || 0}`);  
+console.log(`   Vectors: ${stats.search?.vectorsIndexed || 0}`);
+```
+
+**Expected**: All infrastructure components show positive counts indicating successful setup of the semantic search pipeline.
+
+## Phase 5: Semantic Search Testing
+
+**Purpose**: Test the semantic search functionality using the infrastructure built in Phase 4.
+
+### Step 5.1: Basic Semantic Search Test
+```javascript
+const searchResults = await toolRegistry.testSemanticSearch([
+    'file operations',
+    'mathematical calculations', 
+    'data processing'
+]);
+console.log('✅ Semantic search test results:');
+console.log(`   Total queries: ${searchResults.totalQueries}`);
+console.log(`   Successful queries: ${searchResults.successfulQueries}`);
+console.log(`   Errors: ${searchResults.errors.length}`);
+```
+
+**Expected**: Semantic search returns relevant results for test queries with good success rate.
+
+### Step 5.2: Direct Semantic Query
+```javascript
+const fileResults = await toolRegistry.searchTools('file operations', { 
+    useSemanticSearch: true,
+    limit: 5
+});
+console.log(`✅ Semantic search for 'file operations': ${fileResults.length} results`);
+fileResults.slice(0, 3).forEach(result => {
+    console.log(`   - ${result.name}: similarity ${result.similarity?.toFixed(3) || result.score?.toFixed(3)}`);
+});
+```
+
+**Expected**: Returns tools related to file operations with similarity scores, ranked by relevance.
+
+### Step 5.3: Verify Search Quality
+```javascript
+const calcResults = await toolRegistry.searchTools('mathematical calculations', {
+    useSemanticSearch: true,
+    limit: 5
+});
+const hasCalculator = calcResults.some(r => r.name.toLowerCase().includes('calculator') || r.name.toLowerCase().includes('calc'));
+console.log(`✅ Math search finds calculator: ${hasCalculator}`);
+calcResults.forEach(result => {
+    console.log(`   - ${result.name}: ${result.description}`);
+});
+```
+
+**Expected**: Semantic search for mathematical terms finds calculator-related tools with high relevance.
+
+## Phase 6: Complete End-to-End Integration Testing
+
+**Purpose**: Verify the entire system works together seamlessly.
+
+### Step 6.1: Full System Pipeline
+```javascript
+// Test complete workflow: discovery → loading → perspectives → embeddings → vectors → search → execution
+console.log('🚀 Starting complete system pipeline test...');
+
+// 1. Fresh system start
+const toolRegistry = await getToolRegistry();
+
+// 2. Load all modules
+const moduleStats = await toolRegistry.loadModules();
+console.log(`✅ Loaded ${moduleStats.successful} modules with ${moduleStats.tools} tools`);
+
+// 3. Build search infrastructure
+console.log('Building semantic search infrastructure...');
+const perspectiveResults = await toolRegistry.generatePerspectives({ limit: 10 });
+console.log(`✅ Generated ${perspectiveResults.generated} perspectives`);
+
+const embeddingResults = await toolRegistry.generateEmbeddings();
+console.log(`✅ Generated ${embeddingResults.embedded} embeddings`);
+
+const indexResults = await toolRegistry.indexVectors();
+console.log(`✅ Indexed ${indexResults.indexed} vectors`);
+
+// 4. Test hybrid search (both text and semantic)
+const hybridResults = await toolRegistry.searchTools('file processing');
+console.log(`✅ Hybrid search: ${hybridResults.length} results`);
+
+// 5. Execute found tools
+if (hybridResults.length > 0) {
+    const topResult = hybridResults[0];
+    const tool = await toolRegistry.getTool(topResult.name);
+    console.log(`✅ Can execute found tool: ${tool ? 'YES' : 'NO'}`);
+}
+```
+
+**Expected**: Complete pipeline executes successfully with all components working together.
+
+### Step 6.2: System Health and Statistics
+```javascript
+const healthCheck = await toolRegistry.healthCheck();
+const systemStats = await toolRegistry.getStatistics();
+
+console.log('✅ System Health Check:');
+console.log(`   Overall Health: ${healthCheck.healthy ? 'HEALTHY' : 'UNHEALTHY'}`);
+console.log(`   Modules: ${systemStats.modules?.loaded || 0} loaded`);
+console.log(`   Tools: ${systemStats.tools?.total || 0} total`);
+console.log(`   Database: ${healthCheck.database ? 'CONNECTED' : 'DISCONNECTED'}`);
+console.log(`   Vector Search: ${healthCheck.vectorSearch ? 'ENABLED' : 'DISABLED'}`);
+```
+
+**Expected**: System reports healthy status with all components functioning.
+
+### Step 6.3: Performance and Scalability
+```javascript
+// Test system performance with realistic usage
+console.time('bulk-tool-retrieval');
+const bulkTools = await Promise.all([
+    toolRegistry.getTool('calculator'),
+    toolRegistry.getTool('file_write'),
+    toolRegistry.getTool('json_parse'),
+    toolRegistry.getTool('file_read'),
+    toolRegistry.getTool('json_stringify')
+]);
+console.timeEnd('bulk-tool-retrieval');
+
+const allRetrieved = bulkTools.every(tool => tool !== null);
+console.log(`✅ Bulk tool retrieval: ${allRetrieved ? 'SUCCESS' : 'FAILED'}`);
+
+// Test search performance
+console.time('semantic-search');
+const searchResults = await toolRegistry.searchTools('data processing', { 
+    useSemanticSearch: true, 
+    limit: 10 
+});
+console.timeEnd('semantic-search');
+console.log(`✅ Semantic search returned ${searchResults.length} results`);
+```
+
+**Expected**: System handles concurrent operations efficiently with acceptable performance.
+
+## Success Criteria
+
+For UAT to pass, all phases must complete successfully:
+
+1. **Phase 1**: ToolRegistry initializes and loads all discovered modules
+2. **Phase 2**: All tools are visible without artificial limits  
+3. **Phase 3**: Core tools execute correctly and return expected results
+4. **Phase 4**: Semantic search infrastructure builds successfully (perspectives → embeddings → vectors)
+5. **Phase 5**: Semantic search returns relevant results for test queries
+6. **Phase 6**: Complete system integration works with healthy status
+
+## Environment Requirements
+
+### Required Services
+- **MongoDB**: Running on localhost:27017 (or configured MONGODB_URL)
+- **Qdrant**: Running on localhost:6333 (or configured QDRANT_URL)
+
+### Environment Variables
 ```bash
 # In monorepo root .env file
-OPENAI_API_KEY=your_openai_api_key_here  # Optional - can use Nomic embeddings instead
-MONGO_URI=mongodb://localhost:27017
-MONGODB_URL=mongodb://localhost:27017     # Alternative MongoDB URL format
+MONGODB_URL=mongodb://localhost:27017
 QDRANT_URL=http://localhost:6333
-GMAIL_USER=your_gmail@gmail.com
-GMAIL_APP_PASSWORD=your_app_password
-USE_LOCAL_EMBEDDINGS=true                 # Set to use Nomic embeddings instead of OpenAI
+USE_LOCAL_EMBEDDINGS=true  # Uses Nomic 768-dim embeddings (recommended)
+# OPENAI_API_KEY=your_key   # Only if USE_LOCAL_EMBEDDINGS=false
 ```
 
-## UAT Test Phases
-
-### Phase 1: System Architecture Validation
-
-#### Test 1.1: Clean Architecture Interface Segregation
-```bash
-cd /Users/maxximus/Documents/max/pocs/Legion/packages/tools-registry
-npm test __tests__/integration/CompleteLiveSystemTest.test.js
-```
-
-**Expected Results:**
-- ✅ 30/30 modules loaded (100%)
-- ✅ ~100 tools available
-- ✅ Interface Segregation working (ToolConsumer vs ToolManager)
-- ✅ Shared system state (both interfaces see same tools)
-
-#### Test 1.2: Module Loading Debug
-```bash
-npm test __tests__/debug/ModuleLoadingDebug.test.js
-```
-
-**Expected Results:**
-- ✅ All modules load without syntax errors
-- ✅ JSGeneratorModule loads successfully with 8 tools
-- ✅ FileModule loads successfully with 6 tools
-- ✅ No "Unexpected token" errors
-
-### Phase 2: Tool Metadata Validation
-
-#### Test 2.1: Tool Metadata Retrieval
-Create and run this test script:
-```bash
-node -e "
-import { getToolConsumer } from './src/index.js';
-
-console.log('🔍 Testing Tool Metadata Retrieval...');
-
-const consumer = await getToolConsumer();
-
-// Load all modules first
-const toolManager = await import('./src/management/ToolManager.js').then(m => m.ToolManager.getInstance());
-await toolManager.clearAllData();
-await toolManager.discoverModules(['/Users/maxximus/Documents/max/pocs/Legion/packages/modules']);
-await toolManager.loadAllModules();
-
-// Test 1: Get available tools
-console.log('\\n📋 Available Tools:');
-const tools = await consumer.listTools();
-console.log(\`Found \${tools.length} tools\`);
-
-// Test 2: Get specific tool details
-console.log('\\n🔧 Testing Calculator Tool Metadata:');
-const calcTools = tools.filter(t => t.name.includes('calculate') || t.name.includes('math'));
-if (calcTools.length > 0) {
-  const calcTool = calcTools[0];
-  console.log(\`Tool Name: \${calcTool.name}\`);
-  console.log(\`Description: \${calcTool.description}\`);
-  console.log(\`Input Schema: \${JSON.stringify(calcTool.inputSchema, null, 2)}\`);
-  console.log(\`Output Schema: \${JSON.stringify(calcTool.outputSchema, null, 2)}\`);
-} else {
-  console.log('❌ No calculator tools found');
-}
-
-// Test 3: Get file operation tool details  
-console.log('\\n📁 Testing File Tool Metadata:');
-const fileTools = tools.filter(t => t.name.includes('file') || t.name.includes('read') || t.name.includes('write'));
-if (fileTools.length > 0) {
-  const fileTool = fileTools[0];
-  console.log(\`Tool Name: \${fileTool.name}\`);
-  console.log(\`Description: \${fileTool.description}\`);
-  console.log(\`Module: \${fileTool.moduleName}\`);
-  console.log(\`Has Input Schema: \${!!fileTool.inputSchema}\`);
-  console.log(\`Has Output Schema: \${!!fileTool.outputSchema}\`);
-} else {
-  console.log('❌ No file tools found');
-}
-
-await consumer.cleanup();
-"
-```
-
-**Expected Results:**
-- ✅ Tools list contains ~100 tools
-- ✅ Calculator tools have proper input/output schemas
-- ✅ File tools have proper metadata and schemas
-- ✅ No undefined or null metadata fields
-
-#### Test 2.2: Dual Validation Architecture
-```bash
-node -e "
-import { getToolConsumer } from './src/index.js';
-
-console.log('🔍 Testing Dual Validation Architecture...');
-
-const consumer = await getToolConsumer();
-const toolManager = await import('./src/management/ToolManager.js').then(m => m.ToolManager.getInstance());
-
-// Load system
-await toolManager.clearAllData();
-await toolManager.discoverModules(['/Users/maxximus/Documents/max/pocs/Legion/packages/modules']);
-await toolManager.loadAllModules();
-
-console.log('\\n1️⃣ Schema Validation (happens at tool construction):');
-console.log('   - Tool schemas validated as proper JSON Schema objects');
-console.log('   - Invalid schemas cause module loading to fail');
-console.log('   - This happens ONCE when tools are created');
-
-console.log('\\n2️⃣ Input Validation (happens at runtime):');
-const tools = await consumer.listTools();
-const testTool = tools[0]; // Get any tool
-
-if (testTool) {
-  console.log(\`   Testing with: \${testTool.name}\`);
-  console.log('   Schema:', JSON.stringify(testTool.inputSchema, null, 2));
-  
-  // This will trigger input validation in base Tool class
-  try {
-    await consumer.executeTool(testTool.name, {}); // Empty params should fail validation
-  } catch (error) {
-    console.log('   ✅ Input validation working:', error.message);
-  }
-}
-
-await consumer.cleanup();
-"
-```
-
-**Expected Results:**
-- ✅ Schema validation happens once during tool construction
-- ✅ Input validation happens on every tool execution
-- ✅ Both validations use @legion/schema centrally
-- ✅ Tools no longer have custom validation methods
-
-### Phase 3: Tool Execution Testing
-
-#### Test 3.1: Calculator Tool Execution
-```bash
-node -e "
-import { getToolConsumer } from './src/index.js';
-
-console.log('🧮 Testing Calculator Tool Execution...');
-
-const consumer = await getToolConsumer();
-
-// Load system
-const toolManager = await import('./src/management/ToolManager.js').then(m => m.ToolManager.getInstance());
-await toolManager.clearAllData();
-await toolManager.discoverModules(['/Users/maxximus/Documents/max/pocs/Legion/packages/modules']);
-await toolManager.loadAllModules();
-
-// Find calculator tool
-const tools = await consumer.listTools();
-const calcTool = tools.find(t => t.name.includes('calculate') || t.name.includes('math') || t.name.includes('calculator'));
-
-if (!calcTool) {
-  console.log('❌ No calculator tool found');
-  process.exit(1);
-}
-
-console.log(\`Found calculator tool: \${calcTool.name}\`);
-
-// Test basic calculation
-try {
-  const result = await consumer.executeTool(calcTool.name, {
-    expression: '2 + 2 * 3'
-  });
-  
-  console.log('Calculation result:', JSON.stringify(result, null, 2));
-  
-  if (result.success && result.result !== undefined) {
-    console.log('✅ Calculator tool execution successful');
-  } else {
-    console.log('❌ Calculator tool execution failed');
-  }
-} catch (error) {
-  console.log('❌ Calculator tool execution error:', error.message);
-}
-
-await consumer.cleanup();
-"
-```
-
-**Expected Results:**
-- ✅ Calculator tool found and identified
-- ✅ Mathematical expression evaluated correctly
-- ✅ Result returned in expected format
-- ✅ No execution errors
-
-#### Test 3.2: File Operation Tool Execution  
-```bash
-node -e "
-import { getToolConsumer } from './src/index.js';
-import fs from 'fs/promises';
-import path from 'path';
-
-console.log('📁 Testing File Operation Tool Execution...');
-
-const consumer = await getToolConsumer();
-
-// Load system
-const toolManager = await import('./src/management/ToolManager.js').then(m => m.ToolManager.getInstance());
-await toolManager.clearAllData();
-await toolManager.discoverModules(['/Users/maxximus/Documents/max/pocs/Legion/packages/modules']);
-await toolManager.loadAllModules();
-
-const tools = await consumer.listTools();
-
-// Test file write
-const writeTool = tools.find(t => t.name.includes('write') || t.name === 'file_write');
-if (writeTool) {
-  console.log(\`Found write tool: \${writeTool.name}\`);
-  
-  try {
-    const testFile = '/tmp/uat-test.txt';
-    const testContent = 'UAT Test Content - ' + new Date().toISOString();
-    
-    const writeResult = await consumer.executeTool(writeTool.name, {
-      filePath: testFile,
-      content: testContent
-    });
-    
-    console.log('Write result:', JSON.stringify(writeResult, null, 2));
-    
-    // Verify file was created
-    const fileExists = await fs.access(testFile).then(() => true).catch(() => false);
-    console.log(\`File created: \${fileExists}\`);
-    
-    if (writeResult.success && fileExists) {
-      console.log('✅ File write tool execution successful');
-      
-      // Test file read
-      const readTool = tools.find(t => t.name.includes('read') || t.name === 'file_read');
-      if (readTool) {
-        console.log(\`Found read tool: \${readTool.name}\`);
-        
-        const readResult = await consumer.executeTool(readTool.name, {
-          filePath: testFile
-        });
-        
-        console.log('Read result:', JSON.stringify(readResult, null, 2));
-        
-        if (readResult.success && readResult.content === testContent) {
-          console.log('✅ File read tool execution successful');
-        } else {
-          console.log('❌ File read tool execution failed');
-        }
-      }
-    } else {
-      console.log('❌ File write tool execution failed');
-    }
-    
-    // Cleanup
-    await fs.unlink(testFile).catch(() => {});
-    
-  } catch (error) {
-    console.log('❌ File tool execution error:', error.message);
-  }
-} else {
-  console.log('❌ No file write tool found');
-}
-
-await consumer.cleanup();
-"
-```
-
-**Expected Results:**
-- ✅ File write tool found and executes successfully
-- ✅ File read tool found and executes successfully  
-- ✅ Content written and read back correctly
-- ✅ No file operation errors
-
-### Phase 4: Semantic Search Infrastructure Testing
-
-#### Test 4.1: Database and Vector Store Connections
-```bash
-node -e "
-import { getToolManager } from './src/index.js';
-
-console.log('🔌 Testing Infrastructure Connections...');
-
-const manager = await getToolManager();
-
-// Test system health
-console.log('\\n🏥 System Health Check:');
-const health = await manager.healthCheck();
-console.log('Health Status:', JSON.stringify(health, null, 2));
-
-// Check database connection
-if (health.database?.connected) {
-  console.log('✅ Database connection successful');
-} else {
-  console.log('❌ Database connection failed:', health.database?.error);
-}
-
-// Check vector store connection  
-if (health.vectorStore?.connected) {
-  console.log('✅ Vector store connection successful');
-} else {
-  console.log('❌ Vector store connection failed:', health.vectorStore?.error);
-}
-
-await manager.cleanup();
-"
-```
-
-**Expected Results:**
-- ✅ Database connection successful
-- ✅ Vector store (Qdrant) connection successful
-- ✅ Overall system health is good
-
-#### Test 4.2: Perspectives Generation
-```bash
-node -e "
-import { getToolManager } from './src/index.js';
-
-console.log('🔍 Testing Perspectives Generation...');
-
-const manager = await getToolManager();
-
-// Clear and load system
-await manager.clearAllData();
-await manager.discoverModules(['/Users/maxximus/Documents/max/pocs/Legion/packages/modules']);
-await manager.loadAllModules();
-
-// Generate perspectives
-console.log('\\n📝 Generating Perspectives...');
-const perspectiveResult = await manager.generatePerspectives();
-console.log('Perspective Generation:', JSON.stringify(perspectiveResult, null, 2));
-
-if (perspectiveResult.success && perspectiveResult.generated > 0) {
-  console.log(\`✅ Generated \${perspectiveResult.generated} perspectives\`);
-} else {
-  console.log('❌ Perspective generation failed');
-}
-
-await manager.cleanup();
-"
-```
-
-**Expected Results:**
-- ✅ Perspectives generated for all tools
-- ✅ Multiple perspective types per tool (functional, technical, use-case)
-- ✅ No generation errors
-
-#### Test 4.3: Embeddings Generation
-```bash
-node -e "
-import { getToolManager } from './src/index.js';
-
-console.log('🧠 Testing Embeddings Generation...');
-
-const manager = await getToolManager();
-
-// Load system with perspectives
-await manager.clearAllData();
-await manager.discoverModules(['/Users/maxximus/Documents/max/pocs/Legion/packages/modules']);
-await manager.loadAllModules();
-await manager.generatePerspectives();
-
-// Generate embeddings
-console.log('\\n🔢 Generating Embeddings...');
-console.log('Using embeddings provider:', process.env.USE_LOCAL_EMBEDDINGS === 'true' ? 'Nomic (local)' : 'OpenAI');
-const embeddingResult = await manager.generateEmbeddings();
-console.log('Embedding Generation:', JSON.stringify(embeddingResult, null, 2));
-
-if (embeddingResult.success && embeddingResult.generated > 0) {
-  console.log(\`✅ Generated \${embeddingResult.generated} embeddings\`);
-  
-  // Verify embedding dimensions
-  if (process.env.USE_LOCAL_EMBEDDINGS === 'true') {
-    console.log('✅ Using Nomic embeddings (768 dimensions)');
-  } else {
-    console.log('✅ Using OpenAI embeddings');
-  }
-} else {
-  console.log('❌ Embedding generation failed:', embeddingResult.error);
-}
-
-await manager.cleanup();
-"
-```
-
-**Expected Results:**
-- ✅ Embeddings generated using configured provider (OpenAI or Nomic)
-- ✅ Vector embeddings for all perspectives
-- ✅ Nomic: 768-dimensional embeddings with real semantic understanding
-- ✅ OpenAI: Standard OpenAI embeddings (if API key available)
-- ✅ No API errors or rate limiting issues
-
-#### Test 4.3b: Nomic Embeddings Verification (Optional)
-```bash
-# Only run this test if using Nomic embeddings
-if [ "$USE_LOCAL_EMBEDDINGS" = "true" ]; then
-  cd /Users/maxximus/Documents/max/pocs/Legion/packages/nomic
-  npm test -- __tests__/integration/NomicFullIntegration.test.js
-fi
-```
-
-**Expected Results (when using Nomic):**
-- ✅ Real model file detected (nomic-embed-text-v1.5.Q4_K_M.gguf)
-- ✅ 768-dimensional embeddings generated
-- ✅ Semantic similarity working (cat/kitten > cat/airplane)
-- ✅ Search ranking by relevance
-- ✅ Context understanding verified
-
-#### Test 4.4: Vector Indexing
-```bash
-node -e "
-import { getToolManager } from './src/index.js';
-
-console.log('📊 Testing Vector Indexing...');
-
-const manager = await getToolManager();
-
-// Full pipeline
-await manager.clearAllData();
-await manager.discoverModules(['/Users/maxximus/Documents/max/pocs/Legion/packages/modules']);
-await manager.loadAllModules();
-await manager.generatePerspectives();
-await manager.generateEmbeddings();
-
-// Index vectors
-console.log('\\n🗂️ Indexing Vectors...');
-const indexResult = await manager.indexVectors();
-console.log('Vector Indexing:', JSON.stringify(indexResult, null, 2));
-
-if (indexResult.success && indexResult.indexed > 0) {
-  console.log(\`✅ Indexed \${indexResult.indexed} vectors\`);
-} else {
-  console.log('❌ Vector indexing failed:', indexResult.error);
-}
-
-await manager.cleanup();
-"
-```
-
-**Expected Results:**
-- ✅ Vectors indexed in Qdrant
-- ✅ Search index created successfully
-- ✅ No indexing errors
-
-### Phase 5: Semantic Search Testing
-
-#### Test 5.1: Complete Pipeline Setup
-```bash
-node -e "
-import { getToolManager } from './src/index.js';
-
-console.log('🚀 Running Complete Semantic Search Pipeline...');
-
-const manager = await getToolManager();
-
-// Run complete pipeline
-console.log('\\n⚡ Running Complete Pipeline...');
-const pipelineResult = await manager.runCompletePipeline({
-  searchPaths: ['/Users/maxximus/Documents/max/pocs/Legion/packages/modules'],
-  generatePerspectives: true,
-  generateEmbeddings: true,
-  indexVectors: true
-});
-
-console.log('Pipeline Result:', JSON.stringify(pipelineResult, null, 2));
-
-if (pipelineResult.success) {
-  console.log('✅ Complete semantic search pipeline successful');
-  
-  // Show pipeline steps
-  console.log('\\n📋 Pipeline Steps:');
-  pipelineResult.steps?.forEach((step, i) => {
-    console.log(\`  \${i + 1}. \${step.name}: \${step.success ? '✅' : '❌'}\`);
-  });
-} else {
-  console.log('❌ Pipeline failed:', pipelineResult.error);
-}
-
-await manager.cleanup();
-"
-```
-
-**Expected Results:**
-- ✅ All pipeline steps complete successfully
-- ✅ Modules loaded, perspectives generated, embeddings created, vectors indexed
-- ✅ System ready for semantic search
-
-#### Test 5.2: Semantic Search Queries
-```bash
-node -e "
-import { getToolConsumer } from './src/index.js';
-import { getToolManager } from './src/index.js';
-
-console.log('🔍 Testing Semantic Search Queries...');
-
-// Setup complete system
-const manager = await getToolManager();
-await manager.runCompletePipeline({
-  searchPaths: ['/Users/maxximus/Documents/max/pocs/Legion/packages/modules'],
-  generatePerspectives: true,
-  generateEmbeddings: true,
-  indexVectors: true
-});
-
-const consumer = await getToolConsumer();
-
-// Test semantic search queries
-const testQueries = [
-  'calculate mathematical expressions',
-  'read and write files',
-  'generate JavaScript code',
-  'send emails',
-  'deploy applications',
-  'analyze images',
-  'work with JSON data'
-];
-
-console.log('\\n🎯 Testing Search Queries:');
-
-for (const query of testQueries) {
-  try {
-    console.log(\`\\n Query: \"\${query}\"\`);
-    
-    const results = await consumer.searchTools(query, {
-      useSemanticSearch: true,
-      limit: 3,
-      minScore: 0.3
-    });
-    
-    console.log(\`  Found \${results.length} results\`);
-    results.forEach((result, i) => {
-      console.log(\`    \${i + 1}. \${result.name} (score: \${result.score?.toFixed(3) || 'N/A'})\`);
-    });
-    
-    if (results.length > 0) {
-      console.log('  ✅ Search successful');
-    } else {
-      console.log('  ❌ No results found');
-    }
-    
-  } catch (error) {
-    console.log(\`  ❌ Search failed: \${error.message}\`);
-  }
-}
-
-await consumer.cleanup();
-await manager.cleanup();
-"
-```
-
-**Expected Results:**
-- ✅ All search queries return relevant results
-- ✅ Semantic similarity scores are reasonable (>0.3)
-- ✅ Results are ranked by relevance
-- ✅ No search errors
-
-#### Test 5.3: Search vs Direct Tool Access Performance
-```bash
-node -e "
-import { getToolConsumer } from './src/index.js';
-import { getToolManager } from './src/index.js';
-
-console.log('⚡ Testing Search Performance...');
-
-// Setup system
-const manager = await getToolManager();
-await manager.runCompletePipeline({
-  searchPaths: ['/Users/maxximus/Documents/max/pocs/Legion/packages/modules']
-});
-
-const consumer = await getToolConsumer();
-
-// Performance test
-const startTime = Date.now();
-
-for (let i = 0; i < 10; i++) {
-  await consumer.searchTools('mathematical operations', { limit: 5 });
-}
-
-const searchTime = Date.now() - startTime;
-console.log(\`Search Performance: \${searchTime}ms for 10 queries (\${(searchTime/10).toFixed(1)}ms avg)\`);
-
-// Test direct tool access
-const directStart = Date.now();
-const allTools = await consumer.listTools();
-const directTime = Date.now() - directStart;
-
-console.log(\`Direct Access: \${directTime}ms to list \${allTools.length} tools\`);
-
-if (searchTime < 5000) {  // Should be under 5 seconds for 10 queries
-  console.log('✅ Search performance acceptable');
-} else {
-  console.log('❌ Search performance too slow');
-}
-
-await consumer.cleanup();
-await manager.cleanup();
-"
-```
-
-**Expected Results:**
-- ✅ Search performance under 500ms per query
-- ✅ Direct tool access faster than search
-- ✅ System handles multiple concurrent searches
-
-### Phase 6: Complete End-to-End Integration Testing
-
-#### Test 6.0: Complete Pipeline - Generate, Index, Search, Execute
-```bash
-# This is the COMPLETE end-to-end test that does everything
-node -e "
-import { getToolConsumer, getToolManager } from './src/index.js';
-
-console.log('🚀 COMPLETE END-TO-END TEST: Generate → Index → Search → Execute');
-console.log('=' + '='.repeat(60));
-
-const manager = await getToolManager();
-const consumer = await getToolConsumer();
-
-try {
-  // Step 1: Clear and load all modules
-  console.log('\\n1️⃣ CLEARING AND LOADING MODULES...');
-  await manager.clearAllData();
-  await manager.discoverModules(['/Users/maxximus/Documents/max/pocs/Legion/packages/modules']);
-  const loadResult = await manager.loadAllModules();
-  console.log(\`✅ Loaded \${loadResult.loaded} modules with \${loadResult.tools} tools\`);
-
-  // Step 2: Generate perspectives for all tools
-  console.log('\\n2️⃣ GENERATING PERSPECTIVES...');
-  const perspectiveResult = await manager.generatePerspectives();
-  console.log(\`✅ Generated \${perspectiveResult.generated} perspectives\`);
-
-  // Step 3: Generate embeddings using Nomic or OpenAI
-  console.log('\\n3️⃣ GENERATING EMBEDDINGS...');
-  console.log('Provider:', process.env.USE_LOCAL_EMBEDDINGS === 'true' ? 'Nomic (768 dims)' : 'OpenAI');
-  const embeddingResult = await manager.generateEmbeddings();
-  console.log(\`✅ Generated \${embeddingResult.generated} embeddings\`);
-
-  // Step 4: Index vectors in Qdrant
-  console.log('\\n4️⃣ INDEXING VECTORS IN QDRANT...');
-  const indexResult = await manager.indexVectors();
-  console.log(\`✅ Indexed \${indexResult.indexed} vectors\`);
-
-  // Step 5: Perform semantic search
-  console.log('\\n5️⃣ PERFORMING SEMANTIC SEARCH...');
-  const searchQuery = 'I need to perform mathematical calculations';
-  console.log(\`Query: \"\${searchQuery}\"\`);
-  
-  const searchResults = await consumer.searchTools(searchQuery, {
-    useSemanticSearch: true,
-    limit: 5,
-    minScore: 0.3
-  });
-
-  console.log(\`Found \${searchResults.length} relevant tools:\`);
-  searchResults.forEach((result, i) => {
-    console.log(\`  \${i + 1}. \${result.name} (score: \${result.score?.toFixed(3) || 'N/A'})\`);
-    console.log(\`     \${result.description}\`);
-  });
-
-  // Step 6: Execute the top result
-  if (searchResults.length > 0) {
-    console.log('\\n6️⃣ EXECUTING TOP SEARCH RESULT...');
-    const topTool = searchResults[0];
-    console.log(\`Executing: \${topTool.name}\`);
-
-    let execResult;
-    if (topTool.name === 'calculator' || topTool.name.includes('calc')) {
-      execResult = await consumer.executeTool(topTool.name, {
-        expression: '(10 + 5) * 3'
-      });
-      console.log('Expression: (10 + 5) * 3');
-      console.log('Result:', execResult.result);
-      
-      if (execResult.result === 45) {
-        console.log('✅ CORRECT! Calculator executed successfully');
-      } else {
-        console.log('❌ Incorrect result. Expected 45');
-      }
-    } else {
-      console.log('Tool is not calculator, showing execution signature:');
-      console.log('Input schema:', JSON.stringify(topTool.inputSchema, null, 2));
-    }
-  }
-
-  // Step 7: Test another search query
-  console.log('\\n7️⃣ TESTING ANOTHER SEMANTIC SEARCH...');
-  const fileQuery = 'I need to read and write files to the filesystem';
-  console.log(\`Query: \"\${fileQuery}\"\`);
-  
-  const fileResults = await consumer.searchTools(fileQuery, {
-    useSemanticSearch: true,
-    limit: 3
-  });
-
-  console.log(\`Found \${fileResults.length} file-related tools:\`);
-  fileResults.forEach((result, i) => {
-    console.log(\`  \${i + 1}. \${result.name} (score: \${result.score?.toFixed(3) || 'N/A'})\`);
-  });
-
-  // Final summary
-  console.log('\\n' + '=' + '='.repeat(60));
-  console.log('✅ COMPLETE END-TO-END TEST SUCCESSFUL!');
-  console.log('Summary:');
-  console.log(\`  • Modules loaded: \${loadResult.loaded}\`);
-  console.log(\`  • Tools available: \${loadResult.tools}\`);
-  console.log(\`  • Perspectives generated: \${perspectiveResult.generated}\`);
-  console.log(\`  • Embeddings created: \${embeddingResult.generated}\`);
-  console.log(\`  • Vectors indexed: \${indexResult.indexed}\`);
-  console.log(\`  • Semantic search: WORKING\`);
-  console.log(\`  • Tool execution: VERIFIED\`);
-
-} catch (error) {
-  console.error('\\n❌ TEST FAILED:', error.message);
-  console.error('Stack:', error.stack);
-} finally {
-  await consumer.cleanup();
-  await manager.cleanup();
-}
-"
-```
-
-**Expected Results:**
-- ✅ All modules loaded (30+)
-- ✅ Perspectives generated for all tools (300+)
-- ✅ Embeddings generated (Nomic: 768 dims or OpenAI)
-- ✅ Vectors indexed in Qdrant
-- ✅ Semantic search returns relevant tools with scores
-- ✅ Calculator found for math query
-- ✅ File tools found for file operations query
-- ✅ Tool execution produces correct results
-
-#### Test 6.1: Full Workflow Test
-```bash
-node -e "
-import { getToolConsumer, getToolManager } from './src/index.js';
-
-console.log('🔄 Testing Complete Workflow...');
-
-// 1. Setup system
-console.log('\\n1️⃣ Setting up system...');
-const manager = await getToolManager();
-const consumer = await getToolConsumer();
-
-await manager.runCompletePipeline({
-  searchPaths: ['/Users/maxximus/Documents/max/pocs/Legion/packages/modules']
-});
-
-// 2. Search for tool
-console.log('\\n2️⃣ Searching for calculator tool...');
-const calcResults = await consumer.searchTools('mathematical calculations', { limit: 1 });
-
-if (calcResults.length === 0) {
-  console.log('❌ No calculator tool found via search');
-  process.exit(1);
-}
-
-const calcTool = calcResults[0];
-console.log(\`Found: \${calcTool.name}\`);
-
-// 3. Execute tool  
-console.log('\\n3️⃣ Executing calculator tool...');
-const execResult = await consumer.executeTool(calcTool.name, {
-  expression: '(10 + 5) * 2'
-});
-
-console.log('Execution result:', execResult);
-
-// 4. Verify result
-if (execResult.success && execResult.result === 30) {
-  console.log('✅ Complete workflow successful: Search → Execute → Verify');
-} else {
-  console.log('❌ Workflow failed at execution step');
-}
-
-await consumer.cleanup();
-await manager.cleanup();
-"
-```
-
-**Expected Results:**
-- ✅ System setup completes successfully
-- ✅ Semantic search finds appropriate tool
-- ✅ Tool execution produces correct result
-- ✅ End-to-end workflow works seamlessly
-
-## UAT Acceptance Criteria
-
-### ✅ Must Pass (Critical)
-1. **Module Loading**: 30/30 modules load successfully (100%)
-2. **Tool Availability**: ~100 tools available across all categories
-3. **Clean Architecture**: Interface segregation working properly
-4. **Tool Execution**: Calculator and file tools execute correctly
-5. **Infrastructure**: Database and vector store connections working
-
-### ⚠️ Should Pass (Important)  
-1. **Semantic Search**: Search queries return relevant results
-2. **Perspectives**: Generated for all tools with multiple viewpoints
-3. **Embeddings**: Generated using OpenAI API without errors
-4. **Performance**: Search queries complete under 500ms
-5. **Error Handling**: Graceful error handling for invalid inputs
-
-### 🔍 Nice to Have (Enhancement)
-1. **Search Accuracy**: Semantic search scores >0.5 for relevant queries
-2. **Performance**: Sub-100ms search response times
-3. **Coverage**: All tool categories represented in search results
-4. **Robustness**: System handles concurrent operations
-
-## Running the Complete UAT
-
-Execute all tests in sequence:
-
-```bash
-# Navigate to tools-registry
-cd /Users/maxximus/Documents/max/pocs/Legion/packages/tools-registry
-
-# Set embedding provider (optional - defaults to OpenAI if not set)
-export USE_LOCAL_EMBEDDINGS=true  # Use Nomic embeddings instead of OpenAI
-
-# Run all UAT phases
-echo "=== PHASE 1: ARCHITECTURE ==="
-npm test __tests__/integration/CompleteLiveSystemTest.test.js
-
-echo "=== PHASE 2-6: FUNCTIONALITY ==="
-# Copy each test script above and run individually
-# Or run the automated UAT script:
-npm run uat  # If available
-
-echo "=== UAT COMPLETE ==="
-```
-
-## Expected Final State
-
-After successful UAT completion:
-
-- 🏗️ **Clean Architecture**: Uncle Bob's principles implemented
-- 📦 **30/30 Modules**: All modules loaded and functional  
-- 🔧 **100+ Tools**: All tools have proper metadata and execute correctly
-- 🔍 **Semantic Search**: Full-text and vector search working
-- 💾 **Infrastructure**: MongoDB + Qdrant + OpenAI integration complete
-- 🚀 **Production Ready**: Error handling, logging, performance tested
-
----
-
-**Please review this UAT guide and let me know if you'd like me to proceed with running these tests, or if you need any modifications to the testing approach.**
+## Failure Handling
+
+If any phase fails:
+1. Document the specific failure point and error message
+2. Check system logs for detailed error information
+3. Verify all dependencies are properly installed and configured
+4. Ensure database connections are active (MongoDB and Qdrant)
+5. Confirm vector database collection dimensions match embedding dimensions (768 for Nomic)
+
+## Key Differences from Previous Version
+
+1. **Phase 4 Correctly Described**: Now properly describes infrastructure building (perspectives → embeddings → vectors) rather than search testing
+2. **No Artificial Limits**: Emphasis on system returning all results without arbitrary limits
+3. **ToolRegistry Primary**: Focus on single ToolRegistry interface rather than multiple interfaces
+4. **Nomic Embeddings**: Default to local Nomic embeddings (768 dimensions) rather than OpenAI
+5. **Proper Pipeline**: Clear separation between infrastructure building (Phase 4) and search testing (Phase 5)
+6. **Real Implementation**: All components use real implementations, no mocks or fallbacks
+
+## Notes
+
+- The system uses **no artificial limits** - tools and search results are only limited by explicit parameters
+- **ToolRegistry** is the single point of access for all users
+- **Nomic embeddings** use 768 dimensions - this is automatically handled by the system
+- **MongoDB** is used for tool persistence, **Qdrant** for vector search
+- All components are designed to **fail fast** rather than fallback to mock implementations
+- **Phase 4** builds infrastructure, **Phase 5** tests search functionality - these are distinct phases

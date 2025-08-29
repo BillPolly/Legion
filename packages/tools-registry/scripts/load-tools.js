@@ -15,14 +15,14 @@
  *   node scripts/load-tools.js --validate               # Validate after loading
  */
 
-import toolRegistry from '../src/index.js';
+import { getToolRegistry } from '../src/index.js';
 
 async function loadTools(options = {}) {
   const { modules, path, clear = false, validate = false, verbose = false } = options;
   
   try {
     // Get ToolRegistry singleton
-    // toolRegistry is already the initialized singleton instance
+    const toolRegistry = await getToolRegistry();
     
     console.log('🔧 Tool Loading Pipeline\n');
     
@@ -47,8 +47,9 @@ async function loadTools(options = {}) {
     
     // Display results
     console.log('\n📊 Loading Results:');
-    console.log(`  Modules loaded: ${loadResult.modulesLoaded || 0}`);
-    console.log(`  Tools loaded: ${loadResult.toolsLoaded || 0}`);
+    console.log(`  Modules loaded: ${loadResult.loaded || 0}`);
+    const totalTools = loadResult.modules?.reduce((sum, m) => sum + (m.toolCount || 0), 0) || 0;
+    console.log(`  Tools loaded: ${totalTools}`);
     console.log(`  Errors: ${loadResult.errors?.length || 0}`);
     
     if (loadResult.errors?.length > 0 && verbose) {

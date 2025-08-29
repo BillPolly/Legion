@@ -103,3 +103,6 @@ NOTHING should be setting anything on resoruce mangeer! it provides values it do
 
 
 ALWAYS run tests with nmp test ....selection to run
+
+
+THERE is no problem getting real llm clients for testing!!!! always use them in integration tests when required.

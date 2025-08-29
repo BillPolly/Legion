@@ -246,8 +246,14 @@ export class ServiceOrchestrator {
    * Orchestrates SystemService
    */
   async clearAllData(options = {}) {
-    // Clear data but keep database connections alive for continued operations
-    return await this.systemService.shutdown({ ...options, clearDataOnly: true });
+    // Clear database AND keep connections alive for continued operations
+    return await this.systemService.shutdown({ 
+      ...options, 
+      clearDataOnly: true,  // Keep database connections alive
+      clearDatabase: true,  // Actually clear the database collections
+      clearCache: true,     // Clear cache as well
+      clearVectors: options.clearVectors !== false  // Clear vectors unless explicitly disabled
+    });
   }
 
   /**
@@ -438,9 +444,16 @@ export class ServiceOrchestrator {
    * Private helper for vector store initialization
    */
   async _createVectorDatabase() {
+    const { QdrantClient } = await import('@qdrant/js-client-rest');
     const { QdrantVectorDatabase } = await import('../search/QdrantVectorDatabase.js');
-    return new QdrantVectorDatabase({ 
-      resourceManager: this.resourceManager,
+    
+    // Create Qdrant client instance
+    const qdrantUrl = this.resourceManager.get('env.QDRANT_URL') || 'http://localhost:6333';
+    const qdrantClient = new QdrantClient({ url: qdrantUrl });
+    
+    // Create vector database wrapper with actual client
+    return new QdrantVectorDatabase(qdrantClient, { 
+      dimensions: 768, // Nomic embeddings dimension
       collectionName: 'tools'
     });
   }

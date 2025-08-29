@@ -520,6 +520,27 @@ export class DatabaseStorage {
   }
   
   /**
+   * Find a tool by MongoDB ObjectId
+   * @param {string} id - Tool ObjectId
+   * @returns {Object|null} Tool document or null
+   */
+  async findById(id) {
+    try {
+      const collection = this.getCollection('tools');
+      const { ObjectId } = await import('mongodb');
+      return await collection.findOne({ _id: new ObjectId(id) });
+      
+    } catch (error) {
+      throw new DatabaseError(
+        `Failed to find tool by ID: ${error.message}`,
+        'findById',
+        'tools', 
+        error
+      );
+    }
+  }
+  
+  /**
    * Get a tool by name (alias for findTool)
    * @param {string} name - Tool name
    * @returns {Object|null} Tool document or null
@@ -561,6 +582,29 @@ export class DatabaseStorage {
       throw new DatabaseError(
         `Failed to count tools: ${error.message}`,
         'countTools',
+        'tools',
+        error
+      );
+    }
+  }
+
+  /**
+   * Count unique modules that have tools
+   * @returns {number} Number of unique modules with tools
+   */
+  async countModulesWithTools() {
+    try {
+      const collection = this.getCollection('tools');
+      const result = await collection.aggregate([
+        { $group: { _id: '$moduleName' } },
+        { $count: 'uniqueModules' }
+      ]).toArray();
+      
+      return result.length > 0 ? result[0].uniqueModules : 0;
+    } catch (error) {
+      throw new DatabaseError(
+        `Failed to count modules with tools: ${error.message}`,
+        'countModulesWithTools',
         'tools',
         error
       );
@@ -1011,6 +1055,99 @@ export class DatabaseStorage {
       throw new DatabaseError(
         `Failed to delete tool perspectives by type: ${error.message}`,
         'deleteToolPerspectivesByType',
+        'tool_perspectives',
+        error
+      );
+    }
+  }
+
+  /**
+   * Get perspectives without embeddings (for embedding generation pipeline)
+   * @param {Object} query - Query filter 
+   * @returns {Array} Array of perspective documents without embeddings
+   */
+  async getPerspectivesWithoutEmbeddings(query = {}) {
+    try {
+      const collection = this.getCollection('tool_perspectives');
+      const filter = {
+        ...query,
+        $or: [
+          { embedding: { $exists: false } },
+          { embedding: null }
+        ]
+      };
+      
+      return await collection.find(filter).toArray();
+      
+    } catch (error) {
+      throw new DatabaseError(
+        `Failed to get perspectives without embeddings: ${error.message}`,
+        'getPerspectivesWithoutEmbeddings',
+        'tool_perspectives',
+        error
+      );
+    }
+  }
+
+  /**
+   * Get perspectives with embeddings (for vector indexing pipeline)
+   * @returns {Array} Array of perspective documents with embeddings
+   */
+  async getPerspectivesWithEmbeddings() {
+    try {
+      const collection = this.getCollection('tool_perspectives');
+      const filter = {
+        embedding: { $exists: true, $ne: null }
+      };
+      
+      return await collection.find(filter).toArray();
+      
+    } catch (error) {
+      throw new DatabaseError(
+        `Failed to get perspectives with embeddings: ${error.message}`,
+        'getPerspectivesWithEmbeddings',
+        'tool_perspectives',
+        error
+      );
+    }
+  }
+
+  /**
+   * Update perspective embedding
+   * @param {string} perspectiveId - Perspective document _id
+   * @param {Array} embedding - Embedding vector array
+   */
+  async updatePerspectiveEmbedding(perspectiveId, embedding) {
+    try {
+      const collection = this.getCollection('tool_perspectives');
+      const result = await collection.updateOne(
+        { _id: perspectiveId },
+        { 
+          $set: { 
+            embedding: embedding,
+            embedding_updated_at: new Date()
+          }
+        }
+      );
+      
+      if (result.matchedCount === 0) {
+        throw new DatabaseError(
+          `Perspective with id ${perspectiveId} not found`,
+          'updatePerspectiveEmbedding',
+          'tool_perspectives'
+        );
+      }
+      
+      return result;
+      
+    } catch (error) {
+      if (error instanceof DatabaseError) {
+        throw error;
+      }
+      
+      throw new DatabaseError(
+        `Failed to update perspective embedding: ${error.message}`,
+        'updatePerspectiveEmbedding',
         'tool_perspectives',
         error
       );

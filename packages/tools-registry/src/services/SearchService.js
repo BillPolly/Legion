@@ -71,16 +71,20 @@ export class SearchService {
         { threshold, limit }
       );
 
-      const enrichedResults = await Promise.all(
-        vectorResults.map(async (result) => {
-          const toolData = await this.toolRepository.findById(result.id);
-          return {
-            ...toolData,
-            similarity: result.similarity,
-            perspective: result.metadata?.perspective
-          };
-        })
-      );
+      // Instead of looking up tools by random vector IDs, use the metadata stored in vectors
+      const enrichedResults = vectorResults.map((result) => {
+        return {
+          name: result.metadata?.toolName || result.name || result.tool_name,
+          description: result.metadata?.content || result.description || '',
+          moduleName: result.metadata?.moduleName || result.moduleName || '',
+          similarity: result.score, // VectorStore returns 'score', SearchService expects 'similarity'
+          perspective: result.metadata?.perspective || result.metadata?.perspectiveType || '',
+          category: result.metadata?.category || '',
+          // Include additional metadata for debugging
+          perspectiveType: result.metadata?.perspectiveType || result.metadata?.perspective_type_name || '',
+          content: result.metadata?.content || ''
+        };
+      });
 
       this.eventBus.emit('search:semantic-performed', {
         query,
@@ -229,7 +233,7 @@ export class SearchService {
         console.log(`[SearchService] Generated ${perspectives?.length || 0} perspectives for ${tool.name}`);
 
         if (perspectives && perspectives.length > 0) {
-          await this.toolRepository.updateToolPerspectives(tool.id || tool._id, perspectives);
+          await this.toolRepository.saveToolPerspectives(perspectives);
           results.generated++;
           console.log(`[SearchService] Saved perspectives for ${tool.name}`);
         } else {
@@ -336,9 +340,11 @@ export class SearchService {
           id: p.id,
           vector: p.embedding,
           metadata: {
-            toolName: p.toolName,
-            perspective: p.perspective,
-            moduleName: p.moduleName
+            toolName: p.tool_name || p.toolName,  // Database uses tool_name
+            perspective: p.perspective_type_name || p.perspective, // Database uses perspective_type_name  
+            moduleName: p.module_name || p.moduleName, // Database uses module_name
+            content: p.content, // Include perspective content
+            perspectiveType: p.perspective_type_name
           }
         })));
 
@@ -369,14 +375,25 @@ export class SearchService {
    */
   async getSearchStatistics() {
     try {
-      // Fallback implementation until proper repository pattern is implemented
+      // Get real statistics from database
+      const perspectivesGenerated = await this.toolRepository.countToolPerspectives();
+      const perspectivesWithEmbeddings = await this.toolRepository.countToolPerspectives({
+        embedding: { $exists: true, $ne: null }
+      });
+      
+      // For vectorsIndexed, we'll use perspectivesWithEmbeddings as a proxy since
+      // each perspective with embedding should be indexed in vector store
+      const vectorsIndexed = perspectivesWithEmbeddings;
+      
       return {
-        vectorsIndexed: 0,
-        perspectivesGenerated: 0,
-        perspectivesWithEmbeddings: 0,
+        vectorsIndexed,
+        perspectivesGenerated,
+        perspectivesWithEmbeddings,
         averageEmbeddingDimensions: 768 // Nomic embeddings
       };
     } catch (error) {
+      // If database query fails, return zeros with error logged
+      console.error('[SearchService] Error getting search statistics:', error.message);
       return {
         vectorsIndexed: 0,
         perspectivesGenerated: 0,
