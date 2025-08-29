@@ -396,9 +396,18 @@ export class ServiceOrchestrator {
     const moduleDiscovery = new ModuleDiscovery({ resourceManager: this.resourceManager });
     const textSearch = new TextSearch({ databaseStorage: databaseService });
     const embeddingService = new EmbeddingService({ resourceManager: this.resourceManager });
+    
+    // Initialize embedding service to get dimensions
+    await embeddingService.initialize();
+    
     const vectorStore = this.options.enableVectorSearch 
       ? new VectorStore({ embeddingClient: embeddingService, vectorDatabase: await this._createVectorDatabase() }) 
       : null;
+      
+    // Set vector store dimensions based on embedding service
+    if (vectorStore) {
+      vectorStore.setDimensions(embeddingService.options.dimensions);
+    }
     const perspectiveService = new Perspectives({ 
       resourceManager: this.resourceManager,
       databaseStorage: databaseService 

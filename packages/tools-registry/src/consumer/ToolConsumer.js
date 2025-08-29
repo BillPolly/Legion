@@ -109,7 +109,7 @@ export class ToolConsumer {
 
     const searchOptions = {
       useSemanticSearch: true,
-      limit: options.limit || 10,
+      limit: options.limit,
       minScore: options.minScore || 0.5,
       ...options
     };
@@ -138,7 +138,7 @@ export class ToolConsumer {
     await this._ensureInitialized();
     
     const options = {
-      limit: filters.limit || 50,
+      limit: filters.limit,
       category: filters.category,
       module: filters.module,
       ...filters
@@ -260,7 +260,7 @@ export class ToolConsumer {
     
     try {
       const relatedTools = await this.toolRegistry.getRelatedTools(toolName, {
-        limit: options.limit || 5,
+        limit: options.limit,
         minSimilarity: options.minSimilarity || 0.6,
         ...options
       });

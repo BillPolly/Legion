@@ -165,7 +165,7 @@ export class ToolService {
    */
   async listTools(options = {}) {
     const {
-      limit = 100,
+      limit = null,
       category = null,
       module = null,
       includeMetadata = false
@@ -187,7 +187,7 @@ export class ToolService {
       const dbTools = await this.toolRepository.findTools(query);
       
       // Apply limit and format response
-      const limitedTools = dbTools.slice(0, limit);
+      const limitedTools = limit ? dbTools.slice(0, limit) : dbTools;
       
       const allTools = limitedTools.map(tool => {
         const toolInfo = {

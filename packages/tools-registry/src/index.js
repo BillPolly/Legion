@@ -1,19 +1,22 @@
 /**
  * Main entry point for the tools-registry package
  * 
- * Clean Architecture Interfaces:
- * - ToolConsumer: Production interface for fast tool operations
- * - ToolManager: Administrative interface for system management
+ * Primary Interface:
+ * - ToolRegistry: Main singleton interface for all tool operations
+ * 
+ * Specialized Interfaces (Optional):
+ * - ToolConsumer: Focused interface for production tool consumption
+ * - ToolManager: Focused interface for administrative operations
  * 
  * Uncle Bob's Clean Architecture:
- * - Interface Segregation: Separate consumer and management concerns
- * - Single Responsibility: Each interface serves one specific use case
- * - Dependency Inversion: Both depend on abstractions
+ * - ToolRegistry is the main singleton that everyone should use
+ * - ToolConsumer/ToolManager are optional facades for specific use cases
+ * - All interfaces share the same underlying ToolRegistry singleton
  * 
  * Usage:
- * - Production apps: Use getToolConsumer()
- * - Administrative tools: Use getToolManager()
- * - Legacy compatibility: Use getToolRegistry()
+ * - Recommended: Use getToolRegistry() for all operations
+ * - Specialized: Use getToolConsumer() for focused tool consumption
+ * - Administrative: Use getToolManager() for system administration
  */
 
 import { ToolConsumer } from './consumer/ToolConsumer.js';
@@ -29,8 +32,9 @@ let _toolRegistryInstance = null;
 let _sharedServiceOrchestrator = null;
 
 /**
- * Get ToolConsumer instance for production use
- * Fast tool operations: getTool, searchTools, executeTool
+ * Get ToolConsumer instance for specialized tool consumption
+ * Focused interface for: getTool, searchTools, executeTool
+ * Note: Consider using getToolRegistry() instead for full functionality
  */
 export async function getToolConsumer(options = {}) {
   if (!_toolConsumerInstance) {
@@ -40,8 +44,9 @@ export async function getToolConsumer(options = {}) {
 }
 
 /**
- * Get ToolManager instance for administrative use
- * System management: discoverModules, loadModule, generatePerspectives, etc.
+ * Get ToolManager instance for specialized administrative operations
+ * Focused interface for: discoverModules, loadModule, generatePerspectives, etc.
+ * Note: Consider using getToolRegistry() instead for full functionality
  */
 export async function getToolManager(options = {}) {
   if (!_toolManagerInstance) {
@@ -51,8 +56,9 @@ export async function getToolManager(options = {}) {
 }
 
 /**
- * Get ToolRegistry instance (legacy compatibility)
- * @deprecated Use getToolConsumer() or getToolManager() instead
+ * Get ToolRegistry instance - PRIMARY INTERFACE
+ * Complete functionality: All tool operations, module management, search, etc.
+ * This is the main singleton interface that provides full access to all features.
  */
 export async function getToolRegistry() {
   if (!_toolRegistryInstance) {
@@ -61,11 +67,11 @@ export async function getToolRegistry() {
   return _toolRegistryInstance;
 }
 
-// Default export with clean interfaces
+// Default export with primary interface first
 export default { 
-  getToolConsumer,
-  getToolManager,
-  getToolRegistry  // Legacy compatibility
+  getToolRegistry,  // Primary interface - recommended for all use cases
+  getToolConsumer,  // Specialized interface for tool consumption
+  getToolManager    // Specialized interface for administration
 };
 
 // Base classes for external modules to extend

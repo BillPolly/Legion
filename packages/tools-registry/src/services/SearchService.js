@@ -62,11 +62,11 @@ export class SearchService {
       return [];
     }
 
-    const { threshold = 0.7, limit = 10 } = options;
+    const { threshold = 0.7, limit = null } = options;
 
     try {
       const queryEmbedding = await this.embeddingService.generateEmbedding(query);
-      const vectorResults = await this.vectorStore.similaritySearch(
+      const vectorResults = await this.vectorStore.search(
         queryEmbedding,
         { threshold, limit }
       );
@@ -103,14 +103,14 @@ export class SearchService {
    * Single responsibility: Tool similarity discovery
    */
   async findSimilarTools(toolName, options = {}) {
-    const { limit = 5, threshold = 0.8 } = options;
+    const { limit = null, threshold = 0.8 } = options;
 
     const targetTool = await this.toolRepository.findByName(toolName);
     if (!targetTool.embedding) {
       throw new Error(`Tool ${toolName} has no embedding for similarity search`);
     }
 
-    const similarTools = await this.vectorStore.similaritySearch(
+    const similarTools = await this.vectorStore.search(
       targetTool.embedding,
       { threshold, limit: limit + 1 } // +1 to exclude self
     );
@@ -374,14 +374,14 @@ export class SearchService {
         vectorsIndexed: 0,
         perspectivesGenerated: 0,
         perspectivesWithEmbeddings: 0,
-        averageEmbeddingDimensions: 384 // Default for all-MiniLM-L6-v2
+        averageEmbeddingDimensions: 768 // Nomic embeddings
       };
     } catch (error) {
       return {
         vectorsIndexed: 0,
         perspectivesGenerated: 0,
         perspectivesWithEmbeddings: 0,
-        averageEmbeddingDimensions: 384
+        averageEmbeddingDimensions: 768
       };
     }
   }

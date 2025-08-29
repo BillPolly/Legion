@@ -22,7 +22,7 @@ export class EmbeddingService {
 
     this.resourceManager = resourceManager;
     this.options = {
-      dimensions: 384,      // Default embedding dimensions
+      dimensions: null,     // Will be set based on actual embedding model
       batchSize: 20,       // Default batch size for batch processing
       cacheSize: 1000,     // Default cache size
       maxTextLength: 8192, // Maximum text length for embedding
@@ -54,6 +54,11 @@ export class EmbeddingService {
     // Initialize Nomic local embeddings
     this.nomicEmbeddings = new NomicEmbeddings();
     await this.nomicEmbeddings.initialize();
+    
+    // Set dimensions based on actual Nomic model
+    if (!this.options.dimensions) {
+      this.options.dimensions = this.nomicEmbeddings.dimensions; // Nomic uses 768 dimensions
+    }
 
     this.initialized = true;
   }

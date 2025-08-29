@@ -14,7 +14,7 @@ export class VectorStore {
   constructor(options = {}) {
     this.options = {
       collectionName: 'tool_vectors',
-      dimensions: 384, // Default for all-MiniLM-L6-v2
+      dimensions: null, // Will be set based on embedding service dimensions
       verbose: false,
       ...options
     };
@@ -39,10 +39,31 @@ export class VectorStore {
   }
   
   /**
+   * Set dimensions for the vector store (call before initialize)
+   */
+  setDimensions(dimensions) {
+    if (!dimensions || typeof dimensions !== 'number' || dimensions <= 0) {
+      throw new VectorStoreError(
+        'Dimensions must be a positive number',
+        'INVALID_DIMENSIONS'
+      );
+    }
+    this.options.dimensions = dimensions;
+  }
+
+  /**
    * Initialize vector store by creating collection if needed
    */
   async initialize() {
     try {
+      // Ensure dimensions are set
+      if (!this.options.dimensions) {
+        throw new VectorStoreError(
+          'Dimensions must be set before initialization. Call setDimensions() first.',
+          'DIMENSIONS_NOT_SET'
+        );
+      }
+
       // Check if collection exists
       const exists = await this.vectorDatabase.hasCollection(this.options.collectionName);
       
@@ -54,7 +75,7 @@ export class VectorStore {
         });
         
         if (this.options.verbose) {
-          this.logger.verbose(`Created vector collection: ${this.options.collectionName}`);
+          this.logger.verbose(`Created vector collection: ${this.options.collectionName} with ${this.options.dimensions} dimensions`);
         }
       }
     } catch (error) {
@@ -629,7 +650,7 @@ export class VectorStore {
       return {
         collection: targetCollection,
         vectors_count: stats.vectors_count || 0,
-        dimensions: stats.dimensions || this.options.dimensions || 384,
+        dimensions: stats.dimensions || this.options.dimensions || 768,
         status: 'connected'
       };
       
