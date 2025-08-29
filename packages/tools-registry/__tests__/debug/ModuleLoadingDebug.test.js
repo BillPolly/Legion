@@ -22,7 +22,7 @@ describe('Module Loading Debug', () => {
     // Clear and discover
     await toolManager.clearAllData();
     const discovery = await toolManager.discoverModules([
-      '/Users/williampearson/Documents/p/agents/Legion/packages/modules'
+      'packages/modules'  // Use relative path instead of absolute
     ]);
     
     console.log(`Discovered ${discovery.discovered} modules`);

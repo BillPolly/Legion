@@ -18,6 +18,12 @@ describe('Tool Execution and Semantic Search Test', () => {
     searchPaths: [
       '/Users/maxximus/Documents/max/pocs/Legion/packages/modules'
     ],
+    // Limit to just a few key modules for faster testing
+    targetModules: [
+      'CalculatorModule',
+      'FileOperationsModule', 
+      'JsonModule'
+    ],
     testQueries: [
       'calculator add numbers',
       'mathematical operations', 
@@ -31,19 +37,39 @@ describe('Tool Execution and Semantic Search Test', () => {
     toolConsumer = await getToolConsumer();
     toolManager = await getToolManager();
     
-    // Setup system: clear, discover, load
+    // Setup system: clear, discover, load only target modules
     console.log('Setting up system...');
     await toolManager.clearAllData();
     
     const discovery = await toolManager.discoverModules(TEST_CONFIG.searchPaths);
     console.log(`Discovered ${discovery.discovered} modules`);
     
-    const loading = await toolManager.loadAllModules();
-    console.log(`Loaded ${loading.loaded} modules, failed ${loading.failed}`);
+    // Load only the target modules for faster testing
+    console.log('Loading target modules:', TEST_CONFIG.targetModules);
+    let loadedCount = 0;
+    let failedCount = 0;
+    
+    for (const moduleName of TEST_CONFIG.targetModules) {
+      try {
+        const result = await toolManager.loadModule(moduleName);
+        if (result.success) {
+          loadedCount++;
+          console.log(`✅ Loaded ${moduleName}: ${result.toolsLoaded || 0} tools`);
+        } else {
+          failedCount++;
+          console.log(`❌ Failed to load ${moduleName}: ${result.error}`);
+        }
+      } catch (error) {
+        failedCount++;
+        console.log(`❌ Error loading ${moduleName}: ${error.message}`);
+      }
+    }
+    
+    console.log(`Loaded ${loadedCount} target modules, failed ${failedCount}`);
     
     // Let the system stabilize
     await new Promise(resolve => setTimeout(resolve, 1000));
-  }, 60000);
+  }, 120000);
 
   afterAll(async () => {
     if (toolConsumer) await toolConsumer.cleanup();

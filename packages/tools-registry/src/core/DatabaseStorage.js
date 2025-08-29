@@ -251,6 +251,7 @@ export class DatabaseStorage {
   /**
    * Save discovered module to module-registry collection
    * @param {Object} module - Module data
+   * @returns {Object} The saved module document with _id
    */
   async saveDiscoveredModule(module) {
     try {
@@ -270,11 +271,17 @@ export class DatabaseStorage {
         status: 'discovered'
       };
       
-      await collection.replaceOne(
+      // Use replaceOne with upsert to get the document with _id
+      const result = await collection.replaceOne(
         { name: module.name },
         moduleDoc,
         { upsert: true }
       );
+      
+      // Fetch the saved document to get the _id
+      const savedModule = await collection.findOne({ name: module.name });
+      
+      return savedModule;
       
     } catch (error) {
       if (error instanceof DatabaseError) {
@@ -301,9 +308,10 @@ export class DatabaseStorage {
    * Save tools to database
    * @param {Array} tools - Array of tool objects
    * @param {string} moduleName - Module name that owns these tools
+   * @param {string} moduleId - Module ID (_id from module-registry)
    * @returns {number} Number of tools saved
    */
-  async saveTools(tools, moduleName) {
+  async saveTools(tools, moduleName, moduleId = null) {
     try {
       if (!moduleName) {
         throw new ValidationError(
@@ -331,6 +339,7 @@ export class DatabaseStorage {
         keywords: tool.keywords || [],
         examples: tool.examples || [],
         moduleName,
+        moduleId: moduleId || moduleName, // Use moduleId if provided, fallback to moduleName for backwards compatibility
         savedAt: new Date().toISOString(),
         _id: `${moduleName}:${tool.name}` // Composite key for uniqueness
       }));
@@ -391,7 +400,27 @@ export class DatabaseStorage {
   }
   
   /**
-   * Find module in module-registry (discovered modules)
+   * Find module in module-registry by ID
+   * @param {string} moduleId - Module _id
+   * @returns {Object|null} Module document or null if not found
+   */
+  async findDiscoveredModuleById(moduleId) {
+    try {
+      const collection = this.getCollection('module-registry');
+      return await collection.findOne({ _id: moduleId });
+      
+    } catch (error) {
+      throw new DatabaseError(
+        `Failed to find discovered module by ID: ${error.message}`,
+        'findDiscoveredModuleById',
+        'module-registry',
+        error
+      );
+    }
+  }
+
+  /**
+   * Find module in module-registry by name (DEPRECATED - use findDiscoveredModuleById)
    * @param {string} name - Module name
    * @returns {Object|null} Module document or null if not found
    */

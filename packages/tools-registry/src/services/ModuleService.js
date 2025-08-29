@@ -46,17 +46,31 @@ export class ModuleService {
       }
     }
     
-    // Store discovered modules for later loading
-    this.discoveredModules = allModules;
+    // Save discovered modules to module-registry and get their _id
+    const modulesWithIds = [];
+    for (const module of allModules) {
+      try {
+        // Save to module-registry which returns the document with _id
+        const savedModule = await this.databaseService.saveDiscoveredModule(module);
+        modulesWithIds.push(savedModule);
+      } catch (error) {
+        console.log(`[ModuleService] Failed to save discovered module ${module.name}:`, error.message);
+        // Still include the module even if save fails, but without _id
+        modulesWithIds.push(module);
+      }
+    }
+    
+    // Store discovered modules with their database _id for later loading
+    this.discoveredModules = modulesWithIds;
     
     this.eventBus.emit('modules:discovered', {
-      count: allModules.length,
-      modules: allModules
+      count: modulesWithIds.length,
+      modules: modulesWithIds
     });
 
     return {
-      discovered: allModules.length,
-      modules: allModules,
+      discovered: modulesWithIds.length,
+      modules: modulesWithIds,
       errors: errors
     };
   }
@@ -69,23 +83,58 @@ export class ModuleService {
     // Check cache first
     const cachedModule = await this.moduleCache.get(moduleName);
     if (cachedModule) {
-      return { success: true, cached: true, module: cachedModule };
+      return { 
+        success: true, 
+        cached: true, 
+        module: cachedModule,
+        toolsLoaded: cachedModule.getTools ? cachedModule.getTools().length : 0
+      };
     }
 
     try {
-      const modulePath = this._extractModulePath(moduleConfig);
+      // If no moduleConfig provided, look it up from discovered modules
+      let moduleId = null;
+      let modulePath = null;
+      
+      if (!moduleConfig || !moduleConfig.path) {
+        // Find the module in discovered modules (which should be in module-registry)
+        const discoveredModule = this.discoveredModules.find(m => m.name === moduleName);
+        if (!discoveredModule) {
+          throw new Error(`Module ${moduleName} not found in discovered modules - run discovery first`);
+        }
+        modulePath = discoveredModule.path;
+        moduleId = discoveredModule._id; // Use the discovery record's ID
+      } else {
+        modulePath = this._extractModulePath(moduleConfig);
+        moduleId = moduleConfig._id; // Use provided ID if available
+      }
+      
       const moduleInstance = await this.moduleLoader.loadModule(modulePath);
       
-      // Validation removed - moduleValidator dependency not provided
+      // Get module instance's actual name for consistency
+      const actualModuleName = moduleInstance.name || moduleInstance.getName?.() || moduleName;
       
-      await this.moduleCache.set(moduleName, moduleInstance);
+      // Add the module ID to the instance for later use
+      moduleInstance._id = moduleId;
       
-      // PHASE 2: Save tools to database (the actual repository)
+      // Cache module by its _id as the PRIMARY key
+      // This is the ONLY way modules should be retrieved
+      if (moduleId) {
+        await this.moduleCache.set(moduleId, moduleInstance);
+        console.log(`[ModuleService] Cached module with ID '${moduleId}' (name: ${moduleName})`);
+      } else {
+        console.log(`[ModuleService] WARNING: Module ${moduleName} has no _id - cannot cache by ID`);
+        // Fallback to caching by name for modules without ID (shouldn't happen)
+        await this.moduleCache.set(moduleName, moduleInstance);
+      }
+      
+      // PHASE 2: Save tools to database with proper module ID reference
       const moduleTools = moduleInstance.getTools();
       if (moduleTools && moduleTools.length > 0 && this.databaseService) {
         try {
-          await this.databaseService.saveTools(moduleTools, moduleName);
-          console.log(`[ModuleService] Saved ${moduleTools.length} tools from ${moduleName} to database`);
+          // Pass both module name and ID for proper linking
+          await this.databaseService.saveTools(moduleTools, moduleName, moduleId);
+          console.log(`[ModuleService] Saved ${moduleTools.length} tools from ${moduleName} (ID: ${moduleId}) to database`);
         } catch (error) {
           console.log(`[ModuleService] Failed to save tools for ${moduleName}:`, error.message);
           // Don't fail module loading if tool saving fails
@@ -94,6 +143,7 @@ export class ModuleService {
       
       this.eventBus.emit('module:loaded', {
         name: moduleName,
+        moduleId: moduleId,
         toolCount: moduleInstance.getTools().length
       });
 
@@ -101,7 +151,9 @@ export class ModuleService {
         success: true, 
         cached: false,
         module: moduleInstance,
-        toolCount: moduleInstance.getTools().length 
+        moduleId: moduleId,
+        toolCount: moduleInstance.getTools().length,
+        toolsLoaded: moduleInstance.getTools().length 
       };
 
     } catch (error) {
@@ -178,12 +230,7 @@ export class ModuleService {
       };
     }
 
-    // Extract module names and paths from discovered modules
-    const moduleConfigs = this.discoveredModules.map(module => ({
-      name: module.name,
-      path: module.path
-    }));
-
+    // Use discovered modules with their _id from module-registry
     const results = {
       loaded: 0,
       failed: 0,
@@ -191,19 +238,20 @@ export class ModuleService {
       modules: []
     };
 
-    for (const moduleConfig of moduleConfigs) {
-      const result = await this.loadModule(moduleConfig.name, { path: moduleConfig.path });
+    for (const discoveredModule of this.discoveredModules) {
+      // Pass the entire discovered module (which has _id from database)
+      const result = await this.loadModule(discoveredModule.name, discoveredModule);
       
       if (result.success) {
         results.loaded++;
         results.modules.push({
-          name: moduleConfig.name,
+          name: discoveredModule.name,
           toolCount: result.toolCount
         });
       } else {
         results.failed++;
         results.errors.push({
-          module: moduleConfig.name,
+          module: discoveredModule.name,
           error: result.error
         });
       }
@@ -214,23 +262,104 @@ export class ModuleService {
   }
 
   /**
-   * Get module by name
-   * Single responsibility: Module retrieval
+   * Get module by ID from module-registry
+   * Single responsibility: Module retrieval by database _id
+   * This is the PRIMARY method for retrieving modules
    */
-  async getModule(moduleName) {
-    // Try cache first
-    const cachedModule = await this.moduleCache.get(moduleName);
+  async getModuleById(moduleId) {
+    if (!moduleId) {
+      throw new Error('Module ID is required');
+    }
+
+    // Check cache by ID
+    const cachedModule = await this.moduleCache.get(moduleId);
     if (cachedModule) {
       return cachedModule;
     }
 
-    // Try to load if not cached
-    const result = await this.loadModule(moduleName);
+    // Look for module in module-registry by _id
+    if (!this.databaseService) {
+      throw new Error('Database service not available - cannot load module');
+    }
+
+    const moduleFromDb = await this.databaseService.findDiscoveredModuleById(moduleId);
+    if (!moduleFromDb) {
+      throw new Error(`Module not found with ID: ${moduleId}`);
+    }
+
+    console.log(`[ModuleService] Found module in module-registry: name=${moduleFromDb.name}, _id=${moduleFromDb._id}`);
+    
+    // Load the module from its path
+    const result = await this.loadModule(moduleFromDb.name, moduleFromDb);
+    if (!result.success) {
+      throw new Error(`Failed to load module ${moduleFromDb.name}: ${result.error}`);
+    }
+
+    // Cache by ID for future retrievals
+    await this.moduleCache.set(moduleId, result.module);
+    
+    return result.module;
+  }
+
+  /**
+   * DEPRECATED: Get module by name - use getModuleById instead
+   * Only kept for backwards compatibility during migration
+   */
+  async getModule(moduleNameOrId) {
+    // Try cache first - check both as name and as ID
+    const cachedModule = await this.moduleCache.get(moduleNameOrId);
+    if (cachedModule) {
+      return cachedModule;
+    }
+
+    // Module not cached - need to load it
+    // First check if it's in our discovered modules by name OR by _id
+    let discoveredModule = this.discoveredModules.find(m => 
+      m.name === moduleNameOrId || m._id === moduleNameOrId
+    );
+    
+    // If we found it by _id, we need to use the module's name for loading
+    if (discoveredModule) {
+      const moduleName = discoveredModule.name;
+      console.log(`[ModuleService] Found module in discovered modules: name=${moduleName}, _id=${discoveredModule._id}`);
+      
+      // Load it with the discovered module config
+      const result = await this.loadModule(moduleName, discoveredModule);
+      if (result.success) {
+        return result.module;
+      }
+    }
+    
+    // If not found in discovered modules, try loading from module-registry database
+    // This handles the case where modules are discovered but not yet in memory
+    if (this.databaseService) {
+      try {
+        // Try to find in module-registry by _id or name
+        const moduleFromDb = await this.databaseService.findDiscoveredModule(moduleNameOrId);
+        if (moduleFromDb) {
+          console.log(`[ModuleService] Found module in module-registry: name=${moduleFromDb.name}, _id=${moduleFromDb._id}`);
+          
+          // Add to discovered modules for future reference
+          this.discoveredModules.push(moduleFromDb);
+          
+          // Load it with the database module config
+          const result = await this.loadModule(moduleFromDb.name, moduleFromDb);
+          if (result.success) {
+            return result.module;
+          }
+        }
+      } catch (error) {
+        console.log(`[ModuleService] Database lookup failed for ${moduleNameOrId}: ${error.message}`);
+      }
+    }
+    
+    // Last resort: try to load without config (will look up from discovered modules internally)
+    const result = await this.loadModule(moduleNameOrId);
     if (result.success) {
       return result.module;
     }
 
-    throw new Error(`Module not found: ${moduleName}`);
+    throw new Error(`Module not found: ${moduleNameOrId}`);
   }
 
   /**
@@ -238,8 +367,16 @@ export class ModuleService {
    * Single responsibility: Module cleanup
    */
   async clearModule(moduleName) {
+    // Find the module in discovered modules to get its _id
+    const discoveredModule = this.discoveredModules.find(m => m.name === moduleName);
+    
+    // Clear from cache by _id (primary key)
+    if (discoveredModule && discoveredModule._id) {
+      await this.moduleCache.remove(discoveredModule._id);
+    }
+    
+    // Also try clearing by name for backwards compatibility
     await this.moduleCache.remove(moduleName);
-    // moduleRepository dependency not provided - cannot remove from repository
     
     this.eventBus.emit('module:cleared', { name: moduleName });
     
@@ -256,9 +393,19 @@ export class ModuleService {
       const loadedModuleNames = [];
       
       // Check discovered modules that are actually cached/loaded
+      // Must check by _id since that's how we cache them now
       for (const module of this.discoveredModules) {
         try {
-          const cached = await this.moduleCache.get(module.name);
+          // Check cache by _id (primary key) first, fallback to name for backwards compatibility
+          let cached = null;
+          if (module._id) {
+            cached = await this.moduleCache.get(module._id);
+          }
+          if (!cached && module.name) {
+            // Backwards compatibility check by name
+            cached = await this.moduleCache.get(module.name);
+          }
+          
           if (cached) {
             loadedModuleNames.push(module.name);
           }

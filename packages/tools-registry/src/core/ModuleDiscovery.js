@@ -37,23 +37,31 @@ export class ModuleDiscovery {
   
   /**
    * Discover modules in a specific directory
-   * @param {string} directory - Directory to search
+   * @param {string} directory - Directory to search (resolved relative to monorepo root if not absolute)
    * @returns {Array} Array of module information
    */
   async discoverModules(directory) {
+    // Resolve path relative to monorepo root if not absolute
+    let resolvedDirectory;
+    if (path.isAbsolute(directory)) {
+      resolvedDirectory = directory;
+    } else {
+      resolvedDirectory = path.resolve(this.monorepoRoot, directory);
+    }
+    
     try {
       // Check if directory exists
-      await fs.access(directory);
+      await fs.access(resolvedDirectory);
     } catch (error) {
       throw new DiscoveryError(
-        `Directory does not exist: ${directory}`,
-        directory,
+        `Directory does not exist: ${resolvedDirectory} (resolved from: ${directory})`,
+        resolvedDirectory,
         error
       );
     }
     
     const modules = [];
-    await this.scanDirectory(directory, modules);
+    await this.scanDirectory(resolvedDirectory, modules);
     
     return modules;
   }

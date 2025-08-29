@@ -16,6 +16,7 @@ export class ToolService {
     // Minimal dependencies - only what we actually use
     this.toolCache = dependencies.toolCache;
     this.moduleService = dependencies.moduleService;
+    this.toolRepository = dependencies.toolRepository; // Database access for tools
     this.eventBus = dependencies.eventBus;
   }
 
@@ -34,34 +35,69 @@ export class ToolService {
       return cachedTool;
     }
 
-    // Find tool in loaded modules
-    const moduleStats = await this.moduleService.getModuleStatistics();
-    
-    for (const moduleName of moduleStats.loadedModules) {
-      try {
-        const moduleInstance = await this.moduleService.getModule(moduleName);
-        const tools = moduleInstance.getTools();
-        
-        const tool = tools.find(t => t.name === toolName);
-        if (tool) {
-          // Cache the tool for future requests
-          await this.toolCache.set(toolName, tool);
-          
-          this.eventBus.emit('tool:retrieved', {
-            name: toolName,
-            moduleName,
-            cached: false
-          });
-          
-          return tool;
-        }
-      } catch (error) {
-        // Continue searching other modules
-        continue;
+    try {
+      // Phase 1: Find tool metadata in database
+      const toolMetadata = await this.toolRepository.findTool(toolName);
+      if (!toolMetadata) {
+        throw new Error(`Tool not found in database: ${toolName}`);
       }
-    }
 
-    throw new Error(`Tool not found: ${toolName}`);
+      console.log(`[ToolService] Found tool ${toolName} in database with moduleName: ${toolMetadata.moduleName}, moduleId: ${toolMetadata.moduleId || 'NO_MODULE_ID'}`);
+      
+      // Handle legacy tools that might not have moduleId
+      if (!toolMetadata.moduleId && toolMetadata.moduleName) {
+        console.log(`[ToolService] WARNING: Tool ${toolName} has no moduleId, falling back to moduleName lookup`);
+        // Try to find the module by name in discovered modules to get its _id
+        const moduleInstance = await this.moduleService.getModule(toolMetadata.moduleName);
+        const moduleTools = moduleInstance.getTools();
+        const executableTool = moduleTools.find(t => t.name === toolName);
+        
+        if (!executableTool) {
+          throw new Error(`Tool ${toolName} found in database but not in module ${toolMetadata.moduleName}`);
+        }
+        
+        // Cache the executable tool
+        await this.toolCache.set(toolName, executableTool);
+        
+        this.eventBus.emit('tool:retrieved', {
+          name: toolName,
+          moduleName: toolMetadata.moduleName,
+          moduleId: null,
+          cached: false
+        });
+        
+        return executableTool;
+      }
+
+      // Phase 2: Get module instance - this will auto-load from module-registry if needed
+      // Modules MUST be retrieved by their _id, not by name
+      if (!toolMetadata.moduleId) {
+        throw new Error(`Tool ${toolName} has no moduleId - database integrity error`);
+      }
+      
+      const moduleInstance = await this.moduleService.getModuleById(toolMetadata.moduleId);
+      const moduleTools = moduleInstance.getTools();
+      const executableTool = moduleTools.find(t => t.name === toolName);
+      
+      if (!executableTool) {
+        throw new Error(`Tool ${toolName} found in database but not in module ${toolMetadata.moduleName}`);
+      }
+
+      // Cache the executable tool for future requests
+      await this.toolCache.set(toolName, executableTool);
+      
+      this.eventBus.emit('tool:retrieved', {
+        name: toolName,
+        moduleName: toolMetadata.moduleName,
+        moduleId: toolMetadata.moduleId,
+        cached: false
+      });
+      
+      return executableTool;
+    } catch (error) {
+      console.error(`[ToolService] Error retrieving tool ${toolName}:`, error.message);
+      throw new Error(`Tool not found: ${toolName}`);
+    }
   }
 
   /**
@@ -125,7 +161,7 @@ export class ToolService {
 
   /**
    * List all available tools
-   * Single responsibility: Tool enumeration
+   * Single responsibility: Tool enumeration from database
    */
   async listTools(options = {}) {
     const {
@@ -135,63 +171,57 @@ export class ToolService {
       includeMetadata = false
     } = options;
 
-    const allTools = [];
-    const moduleStats = await this.moduleService.getModuleStatistics();
+    // Build database query
+    const query = {};
     
-    for (const moduleName of moduleStats.loadedModules) {
-      // Skip if module filter specified and doesn't match
-      if (module && moduleName !== module) {
-        continue;
-      }
-
-      try {
-        const moduleInstance = await this.moduleService.getModule(moduleName);
-        const tools = moduleInstance.getTools();
-        
-        for (const tool of tools) {
-          // Apply category filter if specified
-          if (category && tool.category !== category) {
-            continue;
-          }
-
-          const toolInfo = {
-            name: tool.name,
-            description: tool.description,
-            category: tool.category,
-            moduleName
-          };
-
-          if (includeMetadata) {
-            toolInfo.inputSchema = tool.inputSchema;
-            toolInfo.outputSchema = tool.outputSchema;
-            toolInfo.version = tool.version;
-            toolInfo.keywords = tool.keywords;
-            toolInfo.examples = tool.examples;
-          }
-
-          allTools.push(toolInfo);
-
-          // Apply limit if specified
-          if (allTools.length >= limit) {
-            break;
-          }
-        }
-
-        if (allTools.length >= limit) {
-          break;
-        }
-      } catch (error) {
-        // Continue with other modules
-        continue;
-      }
+    if (category) {
+      query.category = category;
+    }
+    
+    if (module) {
+      query.moduleName = module;
     }
 
-    this.eventBus.emit('tools:listed', {
-      count: allTools.length,
-      filters: { category, module, limit }
-    });
+    try {
+      // Query database directly instead of looking in memory
+      const dbTools = await this.toolRepository.findTools(query);
+      
+      // Apply limit and format response
+      const limitedTools = dbTools.slice(0, limit);
+      
+      const allTools = limitedTools.map(tool => {
+        const toolInfo = {
+          name: tool.name,
+          description: tool.description,
+          category: tool.category,
+          moduleName: tool.moduleName
+        };
 
-    return allTools;
+        if (includeMetadata) {
+          toolInfo.inputSchema = tool.inputSchema;
+          toolInfo.outputSchema = tool.outputSchema;
+          toolInfo.version = tool.version;
+          toolInfo.keywords = tool.keywords;
+          toolInfo.examples = tool.examples;
+        }
+
+        return toolInfo;
+      });
+
+      this.eventBus.emit('tools:listed', {
+        count: allTools.length,
+        filters: { category, module, limit }
+      });
+
+      return allTools;
+    } catch (error) {
+      console.error('[ToolService] Error listing tools from database:', error.message);
+      this.eventBus.emit('tools:list-error', {
+        error: error.message,
+        filters: { category, module, limit }
+      });
+      return [];
+    }
   }
 
   /**

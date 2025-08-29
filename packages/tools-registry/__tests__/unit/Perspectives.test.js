@@ -195,6 +195,14 @@ describe('Perspectives', () => {
     // Mark as initialized to prevent auto-initialization in tests
     perspectives.initialized = true;
     
+    // CRITICAL: Assign the mock database storage to the perspectives instance
+    // This ensures all tests have access to the mocked database operations
+    perspectives.databaseStorage = mockDatabaseStorage;
+    
+    // CRITICAL: Assign the mock LLM client to the perspectives instance
+    // This ensures all tests have access to the mocked LLM client
+    perspectives.llmClient = mockLLMClient;
+    
     // Mock the database initializer that would be created during initialize
     perspectives.databaseInitializer = { 
       initialize: jest.fn().mockResolvedValue(true)
@@ -254,19 +262,15 @@ describe('Perspectives', () => {
       // Update the mock to return the specific perspective types for this test
       perspectives.perspectiveTypeManager.getAllPerspectiveTypes.mockResolvedValue(mockPerspectiveTypes);
       
-      // Mock database storage methods
-      const mockDatabaseStorage = {
-        findToolPerspectivesByTool: jest.fn().mockResolvedValue([]),
-        findTool: jest.fn().mockResolvedValue({
-          _id: 'tool1',
-          name: 'file-reader',
-          description: 'Read files from the filesystem',
-          moduleName: 'FileModule'
-        }),
-        saveToolPerspectives: jest.fn().mockResolvedValue(2)
-      };
-      
-      perspectives.databaseStorage = mockDatabaseStorage;
+      // Override specific mock methods for this test
+      mockDatabaseStorage.findToolPerspectivesByTool.mockResolvedValue([]);
+      mockDatabaseStorage.findTool.mockResolvedValue({
+        _id: 'tool1',
+        name: 'file-reader',
+        description: 'Read files from the filesystem',
+        moduleName: 'FileModule'
+      });
+      mockDatabaseStorage.saveToolPerspectives.mockResolvedValue(2);
       
       // Mock LLM response for multi-perspective generation
       mockLLMClient.complete.mockResolvedValue(JSON.stringify([
@@ -300,17 +304,14 @@ describe('Perspectives', () => {
       perspectives.perspectiveTypeManager = mockTypeManager;
       perspectives.databaseInitializer = { initialize: jest.fn() };
       
-      const mockDatabaseStorage = {
-        findToolPerspectivesByTool: jest.fn().mockResolvedValue([]),
-        findTool: jest.fn().mockResolvedValue({
-          _id: 'tool1',
-          name: 'file-reader',
-          description: 'Read files from the filesystem'
-        }),
-        saveToolPerspectives: jest.fn().mockResolvedValue(2)
-      };
-      
-      perspectives.databaseStorage = mockDatabaseStorage;
+      // Override specific mock methods for this test
+      mockDatabaseStorage.findToolPerspectivesByTool.mockResolvedValue([]);
+      mockDatabaseStorage.findTool.mockResolvedValue({
+        _id: 'tool1',
+        name: 'file-reader',
+        description: 'Read files from the filesystem'
+      });
+      mockDatabaseStorage.saveToolPerspectives.mockResolvedValue(2);
       
       mockLLMClient.complete.mockResolvedValue(JSON.stringify([
         { content: 'Functional perspective' },
@@ -361,12 +362,12 @@ describe('Perspectives', () => {
         toArray: jest.fn().mockResolvedValue(existingPerspectives)
       });
       
+      // Override specific mock methods for this test
       mockDatabaseStorage.findTool.mockResolvedValue({
         _id: 'tool1',  // Need an ID for the lookup to work
         name: 'file-reader',
         description: 'Read files'
       });
-      perspectives.databaseStorage = mockDatabaseStorage;
       
       
       // Reset mock after initialization to ensure it's not called during the test
@@ -416,15 +417,14 @@ describe('Perspectives', () => {
       };
       perspectives.databaseInitializer = { initialize: jest.fn() };
       
-      perspectives.databaseStorage = {
-        findToolPerspectivesByTool: jest.fn().mockResolvedValue([]),
-        findTool: jest.fn().mockResolvedValue({
-          _id: 'tool1',
-          name: 'file-reader',
-          description: 'Read files'
-        }),
-        saveToolPerspectives: jest.fn().mockResolvedValue(1)
-      };
+      // Override specific mock methods for this test
+      mockDatabaseStorage.findToolPerspectivesByTool.mockResolvedValue([]);
+      mockDatabaseStorage.findTool.mockResolvedValue({
+        _id: 'tool1',
+        name: 'file-reader',
+        description: 'Read files'
+      });
+      mockDatabaseStorage.saveToolPerspectives.mockResolvedValue(1);
       
       mockLLMClient.complete.mockResolvedValue('Invalid JSON response');
       
@@ -532,7 +532,6 @@ describe('Perspectives', () => {
       
       // Use the shared mockDatabaseStorage but override findToolPerspectivesByTool
       mockDatabaseStorage.findToolPerspectivesByTool.mockResolvedValue(mockPerspectives);
-      perspectives.databaseStorage = mockDatabaseStorage;
       
       
       const result = await perspectives.getToolPerspectives('file-reader');
@@ -572,7 +571,6 @@ describe('Perspectives', () => {
       
       // Use shared mockDatabaseStorage but override the method
       mockDatabaseStorage.findToolPerspectivesByTool.mockResolvedValue(mockPerspectives);
-      perspectives.databaseStorage = mockDatabaseStorage;
       
       
       const result = await perspectives.getPerspective('file-reader');
@@ -622,7 +620,6 @@ describe('Perspectives', () => {
       
       // Use the shared mockDatabaseStorage but override the method
       mockDatabaseStorage.findToolPerspectives.mockResolvedValue(mockSearchResults);
-      perspectives.databaseStorage = mockDatabaseStorage;
       
       
       const results = await perspectives.searchByPerspective('read');
@@ -650,7 +647,6 @@ describe('Perspectives', () => {
       
       // Use shared mockDatabaseStorage but override the method
       mockDatabaseStorage.findToolPerspectives.mockResolvedValue([]);
-      perspectives.databaseStorage = mockDatabaseStorage;
       
       
       await perspectives.searchByPerspective('test', { limit: 5 });
@@ -736,7 +732,6 @@ describe('Perspectives', () => {
       // Use shared mockDatabaseStorage but override specific methods
       mockDatabaseStorage.findTools.mockResolvedValue(mockTools);
       mockDatabaseStorage.deleteToolPerspectivesByTool.mockResolvedValue(1);
-      perspectives.databaseStorage = mockDatabaseStorage;
       
       
       const result = await perspectives.clearModulePerspectives('TestModule');

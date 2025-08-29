@@ -325,7 +325,8 @@ export class ToolConsumer {
       return {
         tools: {
           total: stats.tools?.total || 0,
-          cached: stats.tools?.cached || 0
+          cached: stats.tools?.cached || 0,
+          modules: stats.tools?.modules || stats.modules?.totalLoaded || 0
         },
         cache: {
           size: stats.cache?.size || 0,

@@ -137,7 +137,7 @@ export class SearchService {
    */
   async generatePerspectives(options = {}) {
     console.log('[SearchService] generatePerspectives called with options:', options);
-    const { moduleFilter, forceRegenerate = false } = options;
+    const { moduleFilter, forceRegenerate = false, dryRun = false } = options;
     
     console.log('[SearchService] toolRepository exists:', !!this.toolRepository);
     console.log('[SearchService] toolRepository type:', this.toolRepository?.constructor?.name);
@@ -198,7 +198,11 @@ export class SearchService {
       errors: []
     };
 
-    for (const tool of tools) {
+    // Respect the limit parameter - only process specified number of tools
+    const toolsToProcess = options.limit ? tools.slice(0, options.limit) : tools;
+    console.log(`[SearchService] Processing ${toolsToProcess.length} tools (limit: ${options.limit || 'none'})`);
+
+    for (const tool of toolsToProcess) {
       try {
         results.processed++;
         console.log(`[SearchService] Processing tool: ${tool.name}`);
@@ -210,9 +214,17 @@ export class SearchService {
         }
 
         console.log(`[SearchService] Generating perspectives for: ${tool.name}`);
-        const perspectives = await this.perspectiveService.generatePerspectivesForTool(tool.name, {
-          forceRegenerate: true
-        });
+        
+        // Skip actual generation in dry run mode
+        let perspectives;
+        if (dryRun) {
+          console.log(`[SearchService] DRY RUN - Skipping actual perspective generation for ${tool.name}`);
+          perspectives = []; // Simulate empty perspectives in dry run
+        } else {
+          perspectives = await this.perspectiveService.generatePerspectivesForTool(tool.name, {
+            forceRegenerate: true
+          });
+        }
         
         console.log(`[SearchService] Generated ${perspectives?.length || 0} perspectives for ${tool.name}`);
 
@@ -238,6 +250,11 @@ export class SearchService {
     }
 
     this.eventBus.emit('perspectives:batch-generated', results);
+    
+    // Add success flag for dry run mode
+    if (dryRun) {
+      return { ...results, success: true, dryRun: true };
+    }
     return results;
   }
 

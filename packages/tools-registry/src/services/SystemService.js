@@ -202,7 +202,14 @@ export class SystemService {
    * Single responsibility: System shutdown coordination
    */
   async shutdown(options = {}) {
-    const { timeout = 30000, clearDataOnly = false } = options;
+    const { 
+      timeout = 30000, 
+      clearDataOnly = false,
+      clearDatabase = false,
+      clearCache = true,
+      clearVectors = false,
+      force = false
+    } = options;
     
     const shutdown = {
       started: new Date().toISOString(),
@@ -211,12 +218,58 @@ export class SystemService {
     };
 
     try {
-      // Clear caches
-      shutdown.steps.push({
-        name: 'cache-clear',
-        success: true,
-        cleared: await this.cacheService.clear()
-      });
+      // Clear database collections if requested
+      if (clearDatabase || force) {
+        try {
+          // DatabaseStorage has clearAll() method for clearing all collections
+          if (this.databaseService.clearAll) {
+            await this.databaseService.clearAll();
+            shutdown.steps.push({
+              name: 'database-clear-all',
+              success: true,
+              collections: ['modules', 'tools', 'perspective_types', 'tool_perspectives']
+            });
+          } else {
+            // Fallback to clearing individual collections
+            const clearedCollections = [];
+            
+            if (this.databaseService.clearCollection) {
+              const toolsDeleted = await this.databaseService.clearCollection('tools');
+              clearedCollections.push({ name: 'tools', deleted: toolsDeleted });
+              
+              const modulesDeleted = await this.databaseService.clearCollection('modules');
+              clearedCollections.push({ name: 'modules', deleted: modulesDeleted });
+              
+              const perspectiveTypesDeleted = await this.databaseService.clearCollection('perspective_types');
+              clearedCollections.push({ name: 'perspective_types', deleted: perspectiveTypesDeleted });
+              
+              const perspectivesDeleted = await this.databaseService.clearCollection('tool_perspectives');
+              clearedCollections.push({ name: 'tool_perspectives', deleted: perspectivesDeleted });
+            }
+            
+            shutdown.steps.push({
+              name: 'database-clear-collections',
+              success: true,
+              collections: clearedCollections
+            });
+          }
+        } catch (dbError) {
+          shutdown.steps.push({
+            name: 'database-clear',
+            success: false,
+            error: dbError.message
+          });
+        }
+      }
+
+      // Clear caches if requested
+      if (clearCache || force) {
+        shutdown.steps.push({
+          name: 'cache-clear',
+          success: true,
+          cleared: await this.cacheService.clear()
+        });
+      }
 
       // Close database connections only if full shutdown (not just clearing data)
       if (!clearDataOnly && this.databaseService.close) {

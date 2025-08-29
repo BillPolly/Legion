@@ -70,6 +70,7 @@ export class ServiceOrchestrator {
     this.toolService = new ToolService({
       toolCache: this.cacheService,
       moduleService: this.moduleService,
+      toolRepository: dependencies.toolRepository, // Database access for tools
       eventBus: dependencies.eventBus
     });
 
