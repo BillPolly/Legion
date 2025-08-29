@@ -20,7 +20,7 @@ describe('Complete Live System Test - NO MOCKING', () => {
   
   const TEST_CONFIG = {
     searchPaths: [
-      '/Users/williampearson/Documents/p/agents/Legion/packages/modules'
+      '/Users/maxximus/Documents/max/pocs/Legion/packages/modules'
     ],
     testQueries: [
       'calculator mathematical operations',

@@ -22,7 +22,7 @@ describe('CodeAgentModule', () => {
   describe('Legion Module Pattern Compliance', () => {
     test('should be properly configured as a Legion module', () => {
       expect(module.name).toBe('code-agent');
-      expect(module.description).toContain('Code generation and testing tools');
+      expect(module.description).toContain('Code generation tools');
       expect(module.version).toBe('1.0.0');
     });
 

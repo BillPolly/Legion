@@ -23,21 +23,16 @@ describe('ValidateJavaScriptTool', () => {
       expect(tool._execute).not.toBe(tool.execute); // Should be different (base class execute wraps _execute)
     });
 
-    test('should have getMetadata method', () => {
-      expect(typeof tool.getMetadata).toBe('function');
-      const metadata = tool.getMetadata();
-      expect(metadata).toHaveProperty('name', 'validate_javascript');
-      expect(metadata).toHaveProperty('description');
-      expect(metadata).toHaveProperty('input');
-      expect(metadata).toHaveProperty('output');
+    test('should have basic tool properties', () => {
+      expect(tool.name).toBe('validate_javascript');
+      expect(tool.description).toContain('JavaScript code');
     });
 
-    test('should have proper schema structure', () => {
-      expect(tool.schema).toBeDefined();
-      expect(tool.schema.input).toBeDefined();
-      expect(tool.schema.output).toBeDefined();
-      expect(tool.inputSchema).toBe(tool.schema.input);
-      expect(tool.outputSchema).toBe(tool.schema.output);
+    test('should have default schema structure from base Tool class', () => {
+      // Tools now have default empty schemas from base class, actual schemas come from metadata
+      expect(tool.schema).toBeUndefined(); // schema property not set
+      expect(tool.inputSchema).toEqual({ type: 'object', properties: {} }); // default from base class
+      expect(tool.outputSchema).toEqual({ type: 'object', properties: {} }); // default from base class
     });
   });
 

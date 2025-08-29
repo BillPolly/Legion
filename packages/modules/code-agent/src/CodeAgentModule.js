@@ -68,7 +68,10 @@ export class CodeAgentModule extends Module {
         try {
           const toolDef = this.metadata.tools[key];
           if (toolDef) {
-            toolDef.implementation = { generator };
+            // Don't override implementation if it exists in metadata
+            if (!toolDef.implementation) {
+              toolDef.implementation = { generator };
+            }
             const tool = this.createToolFromMetadata(toolDef);
             this.registerTool(toolDef.name, tool);
           }
@@ -94,6 +97,10 @@ export class CodeAgentModule extends Module {
         const implementation = toolDef.implementation;
         const GeneratorClass = module.generators[implementation.generator];
         const generator = new GeneratorClass();
+        
+        // Debug logging
+        console.log(`Executing tool ${toolDef.name} with method ${implementation.method}`);
+        console.log(`Available generator methods:`, Object.getOwnPropertyNames(Object.getPrototypeOf(generator)));
         
         let result;
         if (implementation.method === 'dynamic') {
@@ -122,25 +129,43 @@ export class CodeAgentModule extends Module {
               throw new Error(`Unsupported code type: ${params.type}`);
           }
         } else {
-          // Handle standard mapping
-          const mapping = implementation.mapping;
+          // Handle standard mapping (fallback to basic parameter passing)
+          const mapping = implementation.mapping || {};
           const args = {};
-          for (const [key, value] of Object.entries(mapping)) {
-            if (typeof value === 'string' && value.includes('||')) {
-              // Handle default values like "template || 'basic'"
-              const [paramName, defaultValue] = value.split(' || ');
-              args[key] = params[paramName.trim()] || eval(defaultValue.trim());
-            } else if (typeof value === 'object') {
-              // Handle nested mapping like { "content": "content" }
-              args[key] = {};
-              for (const [nestedKey, nestedValue] of Object.entries(value)) {
-                args[key][nestedKey] = params[nestedValue];
-              }
+          
+          // If no mapping defined, pass params directly to the method
+          if (Object.keys(mapping).length === 0) {
+            result = await generator[implementation.method](params);
+          } else {
+            // Special handling for specific tools that need structured specs
+            if (toolDef.name === 'generate_test') {
+              // Create minimal test spec structure for TestGenerator
+              args.target = params.targetFile;
+              args.testType = params.testType || 'unit';
+              args.functions = params.functions || [];
+              args.setup = undefined; // Explicitly set to undefined
+              args.imports = [];
+              args.framework = 'jest';
             } else {
-              args[key] = params[value] || eval(value);
+              // Standard mapping for other tools
+              for (const [key, value] of Object.entries(mapping)) {
+                if (typeof value === 'string' && value.includes('||')) {
+                  // Handle default values like "template || 'basic'"
+                  const [paramName, defaultValue] = value.split(' || ');
+                  args[key] = params[paramName.trim()] || eval(defaultValue.trim());
+                } else if (typeof value === 'object') {
+                  // Handle nested mapping like { "content": "content" }
+                  args[key] = {};
+                  for (const [nestedKey, nestedValue] of Object.entries(value)) {
+                    args[key][nestedKey] = params[nestedValue];
+                  }
+                } else {
+                  args[key] = params[value] || eval(value);
+                }
+              }
             }
+            result = await generator[implementation.method](args);
           }
-          result = await generator[implementation.method](args);
         }
         
         // Format output according to metadata
@@ -163,8 +188,8 @@ export class CodeAgentModule extends Module {
         return {
           name: toolDef.name,
           description: toolDef.description,
-          input: toolDef.input,
-          output: toolDef.output
+          input: toolDef.inputSchema,
+          output: toolDef.outputSchema
         };
       }
     };

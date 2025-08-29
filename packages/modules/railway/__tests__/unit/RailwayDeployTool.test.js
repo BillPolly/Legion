@@ -129,23 +129,15 @@ describe('RailwayDeployTool', () => {
         }
       };
 
-      // Mock the provider to return success even with invalid type
-      // (In reality it would fail, but we're testing the tool not the provider)
-      mockProvider.deployWithDomain.mockResolvedValue({
-        success: true,
-        deploymentId: 'deploy123',
-        projectId: 'proj123',
-        serviceId: 'svc123',
-        status: 'running'
-      });
-
-      // The tool won't validate but will pass through to provider
+      // Execute the tool with invalid input
       const result = await tool.execute(invalidInput);
       
-      // The provider will be called without proper source config
-      expect(mockProvider.deployWithDomain).toHaveBeenCalled();
-      expect(result.success).toBe(true);
-      expect(result.data.deploymentId).toBe('deploy123');
+      // The validation should fail at the Tool base class level
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Input validation failed');
+      
+      // The provider should NOT be called because validation failed
+      expect(mockProvider.deployWithDomain).not.toHaveBeenCalled();
     });
 
     it('should throw error if provider not initialized', async () => {

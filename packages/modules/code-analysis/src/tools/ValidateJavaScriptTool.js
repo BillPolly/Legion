@@ -14,160 +14,12 @@ import { Tool, ToolResult } from '@legion/tools-registry';
 import fs from 'fs/promises';
 import path from 'path';
 
-// Input schema as plain JSON Schema
-const validateJavaScriptToolInputSchema = {
-  type: 'object',
-  properties: {
-    code: {
-      type: 'string',
-      description: 'JavaScript code to validate'
-    },
-    filePath: {
-      type: 'string',
-      description: 'Path to JavaScript file to validate (alternative to code)'
-    },
-    projectPath: {
-      type: 'string',
-      description: 'Project root directory for batch analysis of all JS files'
-    },
-    includeAnalysis: {
-      type: 'boolean',
-      default: true,
-      description: 'Include code quality analysis'
-    },
-    checkSecurity: {
-      type: 'boolean',
-      default: true,
-      description: 'Check for security issues'
-    },
-    checkPerformance: {
-      type: 'boolean',
-      default: true,
-      description: 'Check for performance issues'
-    },
-    filePattern: {
-      type: 'string',
-      default: '**/*.{js,mjs,jsx}',
-      description: 'File pattern for batch analysis (when projectPath is provided)'
-    }
-  }
-};
-
-// Output schema as plain JSON Schema
-const validateJavaScriptToolOutputSchema = {
-  type: 'object',
-  properties: {
-    valid: {
-      type: 'boolean',
-      description: 'Whether the code is syntactically valid'
-    },
-    errors: {
-      type: 'array',
-      items: { type: 'string' },
-      description: 'Array of validation errors'
-    },
-    warnings: {
-      type: 'array',
-      items: { type: 'string' },
-      description: 'Array of code quality warnings'
-    },
-    securityIssues: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          type: { type: 'string' },
-          severity: { type: 'string' },
-          message: { type: 'string' },
-          line: { type: 'number' },
-          file: { type: 'string' }
-        },
-        required: ['type', 'severity', 'message']
-      },
-      description: 'Security vulnerabilities found'
-    },
-    performanceIssues: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          type: { type: 'string' },
-          severity: { type: 'string' },
-          message: { type: 'string' },
-          suggestion: { type: 'string' },
-          file: { type: 'string' }
-        },
-        required: ['type', 'severity', 'message', 'suggestion']
-      },
-      description: 'Performance issues found'
-    },
-    metrics: {
-      type: 'object',
-      properties: {
-        linesOfCode: { type: 'number' },
-        complexity: { type: 'number' },
-        maintainabilityIndex: { type: 'number' }
-      },
-      required: ['linesOfCode', 'complexity', 'maintainabilityIndex'],
-      description: 'Code metrics'
-    },
-    results: {
-      type: 'object',
-      properties: {
-        javascript: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              file: { type: 'string' },
-              valid: { type: 'boolean' },
-              errors: {
-                type: 'array',
-                items: { type: 'string' }
-              },
-              warnings: {
-                type: 'array',
-                items: { type: 'string' }
-              },
-              metrics: {
-                type: 'object',
-                properties: {
-                  linesOfCode: { type: 'number' },
-                  complexity: { type: 'number' },
-                  maintainabilityIndex: { type: 'number' }
-                },
-                required: ['linesOfCode', 'complexity', 'maintainabilityIndex']
-              }
-            },
-            required: ['file', 'valid', 'errors', 'warnings', 'metrics']
-          }
-        },
-        summary: {
-          type: 'object',
-          properties: {
-            totalFiles: { type: 'number' },
-            validFiles: { type: 'number' },
-            totalErrors: { type: 'number' },
-            totalWarnings: { type: 'number' },
-            securityIssues: { type: 'number' },
-            performanceIssues: { type: 'number' }
-          },
-          required: ['totalFiles', 'validFiles', 'totalErrors', 'totalWarnings', 'securityIssues', 'performanceIssues']
-        }
-      },
-      description: 'Batch analysis results (when projectPath is provided)'
-    }
-  },
-  required: ['valid', 'errors', 'warnings', 'securityIssues', 'performanceIssues', 'metrics']
-};
 
 export class ValidateJavaScriptTool extends Tool {
   constructor() {
     super({
       name: 'validate_javascript',
-      description: 'Validate JavaScript code for syntax and quality issues',
-      inputSchema: validateJavaScriptToolInputSchema,
-      outputSchema: validateJavaScriptToolOutputSchema
+      description: 'Validate JavaScript code for syntax and quality issues'
     });
 
     // Security patterns to detect
@@ -451,15 +303,4 @@ export class ValidateJavaScriptTool extends Tool {
     return suggestions[type] || 'Consider optimizing this code pattern';
   }
 
-  /**
-   * Get tool metadata
-   */
-  getMetadata() {
-    return {
-      name: this.name,
-      description: this.description,
-      input: this.schema.input,
-      output: this.schema.output
-    };
-  }
 }

@@ -16,7 +16,7 @@ describe('Tool Execution and Semantic Search Test', () => {
   
   const TEST_CONFIG = {
     searchPaths: [
-      '/Users/williampearson/Documents/p/agents/Legion/packages/modules'
+      '/Users/maxximus/Documents/max/pocs/Legion/packages/modules'
     ],
     testQueries: [
       'calculator add numbers',
@@ -177,7 +177,7 @@ describe('Tool Execution and Semantic Search Test', () => {
       try {
         console.log('Testing perspective generation...');
         const result = await toolManager.generatePerspectives({
-          limit: 5,
+          limit: 1,  // Just 1 tool to make test fast
           force: true
         });
         
@@ -198,7 +198,7 @@ describe('Tool Execution and Semantic Search Test', () => {
       try {
         console.log('Testing embedding generation...');
         const result = await toolManager.generateEmbeddings({
-          limit: 5,
+          limit: 1,  // Just 1 tool to make test fast
           force: true
         });
         

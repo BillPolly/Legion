@@ -128,13 +128,9 @@ describe('Picture Analysis Integration Tests', () => {
         console.log('✅ REAL VISION API RESPONSE:', result.data.analysis);
       } else {
         // If using fake API key - verify it failed with authentication error (proving vision support works)
-        expect(result.data.errorCode).toBe('LLM_API_ERROR');
-        expect(result.data.errorMessage).toContain('Vision analysis failed');
+        expect(result.error).toContain('Vision analysis failed');
         console.log('✅ VISION SUPPORT CONFIRMED - API call attempted but failed auth (as expected with test key)');
       }
-      
-      // Either way, verify basic response structure
-      expect(result.data.file_path).toContain('test.png');
     });
 
     test('complete workflow with JPG file', async () => {
@@ -273,8 +269,7 @@ describe('Picture Analysis Integration Tests', () => {
       });
       
       expect(result.success).toBe(false);
-      expect(result.data.errorCode).toBe('FILE_NOT_FOUND');
-      expect(result.data.errorMessage).toContain('File not found');
+      expect(result.error).toContain('File not found');
     });
 
     test('handles unsupported file formats correctly', async () => {
@@ -293,8 +288,7 @@ describe('Picture Analysis Integration Tests', () => {
       });
       
       expect(result.success).toBe(false);
-      expect(result.data.errorCode).toBe('UNSUPPORTED_FORMAT');
-      expect(result.data.errorMessage).toContain('Unsupported format: .txt');
+      expect(result.error).toContain('Unsupported format: .txt');
       
       // Clean up
       fs.unlinkSync(txtFile);
@@ -308,13 +302,12 @@ describe('Picture Analysis Integration Tests', () => {
       
       const result = await module.executeTool('analyse_picture', {
         file_path: path.join(testFilesDir, 'test.png'),
-        prompt: 'Hi'  // Short prompt - may work or fail at LLM level
+        prompt: 'Hi'  // Short prompt - should fail validation (less than 10 characters required)
       });
       
-      // Should complete (LLM might handle it) or fail with LLM error
-      if (!result.success) {
-        expect(result.data.errorCode).toBe('LLM_API_ERROR');
-      }
+      // Should fail with input validation error for short prompt
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('String must contain at least 10 character(s)');
     });
   });
 

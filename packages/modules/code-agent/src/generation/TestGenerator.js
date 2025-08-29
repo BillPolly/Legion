@@ -73,7 +73,7 @@ class TestGenerator {
 
     // Add test setup
     if (spec.setup || this.config.setup) {
-      parts.push(this._generateSetup(spec.setup));
+      parts.push(this._generateSetup(spec.setup || this.config.setup));
     }
 
     // Add mock definitions
@@ -409,6 +409,11 @@ class TestGenerator {
       return `beforeEach(() => {\n${this._indentCode(setup)}\n});`;
     }
     
+    // If setup is boolean true or undefined/null, provide default setup
+    if (!setup || typeof setup === 'boolean') {
+      return `beforeEach(() => {\n${this._indentCode('// Setup code here')}\n});`;
+    }
+    
     const setupCode = setup.code || '// Setup code here';
     const isAsync = setup.async || false;
     const asyncKeyword = isAsync ? 'async ' : '';
@@ -419,6 +424,11 @@ class TestGenerator {
   _generateTeardown(teardown) {
     if (typeof teardown === 'string') {
       return `afterEach(() => {\n${this._indentCode(teardown)}\n});`;
+    }
+    
+    // If teardown is boolean true or undefined/null, provide default teardown
+    if (!teardown || typeof teardown === 'boolean') {
+      return `afterEach(() => {\n${this._indentCode('// Teardown code here')}\n});`;
     }
     
     const teardownCode = teardown.code || '// Teardown code here';

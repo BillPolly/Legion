@@ -14,11 +14,13 @@ This UAT guide validates all critical functionality of the Legion Tools Registry
 ### Environment Variables Required
 ```bash
 # In monorepo root .env file
-OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here  # Optional - can use Nomic embeddings instead
 MONGO_URI=mongodb://localhost:27017
+MONGODB_URL=mongodb://localhost:27017     # Alternative MongoDB URL format
 QDRANT_URL=http://localhost:6333
 GMAIL_USER=your_gmail@gmail.com
 GMAIL_APP_PASSWORD=your_app_password
+USE_LOCAL_EMBEDDINGS=true                 # Set to use Nomic embeddings instead of OpenAI
 ```
 
 ## UAT Test Phases
@@ -27,7 +29,7 @@ GMAIL_APP_PASSWORD=your_app_password
 
 #### Test 1.1: Clean Architecture Interface Segregation
 ```bash
-cd /Users/williampearson/Documents/p/agents/Legion/packages/tools-registry
+cd /Users/maxximus/Documents/max/pocs/Legion/packages/tools-registry
 npm test __tests__/integration/CompleteLiveSystemTest.test.js
 ```
 
@@ -63,7 +65,7 @@ const consumer = await getToolConsumer();
 // Load all modules first
 const toolManager = await import('./src/management/ToolManager.js').then(m => m.ToolManager.getInstance());
 await toolManager.clearAllData();
-await toolManager.discoverModules(['/Users/williampearson/Documents/p/agents/Legion/packages/modules']);
+await toolManager.discoverModules(['/Users/maxximus/Documents/max/pocs/Legion/packages/modules']);
 await toolManager.loadAllModules();
 
 // Test 1: Get available tools
@@ -120,7 +122,7 @@ const toolManager = await import('./src/management/ToolManager.js').then(m => m.
 
 // Load system
 await toolManager.clearAllData();
-await toolManager.discoverModules(['/Users/williampearson/Documents/p/agents/Legion/packages/modules']);
+await toolManager.discoverModules(['/Users/maxximus/Documents/max/pocs/Legion/packages/modules']);
 await toolManager.loadAllModules();
 
 console.log('\\n1️⃣ Schema Validation (happens at tool construction):');
@@ -168,7 +170,7 @@ const consumer = await getToolConsumer();
 // Load system
 const toolManager = await import('./src/management/ToolManager.js').then(m => m.ToolManager.getInstance());
 await toolManager.clearAllData();
-await toolManager.discoverModules(['/Users/williampearson/Documents/p/agents/Legion/packages/modules']);
+await toolManager.discoverModules(['/Users/maxximus/Documents/max/pocs/Legion/packages/modules']);
 await toolManager.loadAllModules();
 
 // Find calculator tool
@@ -223,7 +225,7 @@ const consumer = await getToolConsumer();
 // Load system
 const toolManager = await import('./src/management/ToolManager.js').then(m => m.ToolManager.getInstance());
 await toolManager.clearAllData();
-await toolManager.discoverModules(['/Users/williampearson/Documents/p/agents/Legion/packages/modules']);
+await toolManager.discoverModules(['/Users/maxximus/Documents/max/pocs/Legion/packages/modules']);
 await toolManager.loadAllModules();
 
 const tools = await consumer.listTools();
@@ -342,7 +344,7 @@ const manager = await getToolManager();
 
 // Clear and load system
 await manager.clearAllData();
-await manager.discoverModules(['/Users/williampearson/Documents/p/agents/Legion/packages/modules']);
+await manager.discoverModules(['/Users/maxximus/Documents/max/pocs/Legion/packages/modules']);
 await manager.loadAllModules();
 
 // Generate perspectives
@@ -376,17 +378,25 @@ const manager = await getToolManager();
 
 // Load system with perspectives
 await manager.clearAllData();
-await manager.discoverModules(['/Users/williampearson/Documents/p/agents/Legion/packages/modules']);
+await manager.discoverModules(['/Users/maxximus/Documents/max/pocs/Legion/packages/modules']);
 await manager.loadAllModules();
 await manager.generatePerspectives();
 
 // Generate embeddings
 console.log('\\n🔢 Generating Embeddings...');
+console.log('Using embeddings provider:', process.env.USE_LOCAL_EMBEDDINGS === 'true' ? 'Nomic (local)' : 'OpenAI');
 const embeddingResult = await manager.generateEmbeddings();
 console.log('Embedding Generation:', JSON.stringify(embeddingResult, null, 2));
 
 if (embeddingResult.success && embeddingResult.generated > 0) {
   console.log(\`✅ Generated \${embeddingResult.generated} embeddings\`);
+  
+  // Verify embedding dimensions
+  if (process.env.USE_LOCAL_EMBEDDINGS === 'true') {
+    console.log('✅ Using Nomic embeddings (768 dimensions)');
+  } else {
+    console.log('✅ Using OpenAI embeddings');
+  }
 } else {
   console.log('❌ Embedding generation failed:', embeddingResult.error);
 }
@@ -396,9 +406,27 @@ await manager.cleanup();
 ```
 
 **Expected Results:**
-- ✅ Embeddings generated using OpenAI API
+- ✅ Embeddings generated using configured provider (OpenAI or Nomic)
 - ✅ Vector embeddings for all perspectives
+- ✅ Nomic: 768-dimensional embeddings with real semantic understanding
+- ✅ OpenAI: Standard OpenAI embeddings (if API key available)
 - ✅ No API errors or rate limiting issues
+
+#### Test 4.3b: Nomic Embeddings Verification (Optional)
+```bash
+# Only run this test if using Nomic embeddings
+if [ "$USE_LOCAL_EMBEDDINGS" = "true" ]; then
+  cd /Users/maxximus/Documents/max/pocs/Legion/packages/nomic
+  npm test -- __tests__/integration/NomicFullIntegration.test.js
+fi
+```
+
+**Expected Results (when using Nomic):**
+- ✅ Real model file detected (nomic-embed-text-v1.5.Q4_K_M.gguf)
+- ✅ 768-dimensional embeddings generated
+- ✅ Semantic similarity working (cat/kitten > cat/airplane)
+- ✅ Search ranking by relevance
+- ✅ Context understanding verified
 
 #### Test 4.4: Vector Indexing
 ```bash
@@ -411,7 +439,7 @@ const manager = await getToolManager();
 
 // Full pipeline
 await manager.clearAllData();
-await manager.discoverModules(['/Users/williampearson/Documents/p/agents/Legion/packages/modules']);
+await manager.discoverModules(['/Users/maxximus/Documents/max/pocs/Legion/packages/modules']);
 await manager.loadAllModules();
 await manager.generatePerspectives();
 await manager.generateEmbeddings();
@@ -450,7 +478,7 @@ const manager = await getToolManager();
 // Run complete pipeline
 console.log('\\n⚡ Running Complete Pipeline...');
 const pipelineResult = await manager.runCompletePipeline({
-  searchPaths: ['/Users/williampearson/Documents/p/agents/Legion/packages/modules'],
+  searchPaths: ['/Users/maxximus/Documents/max/pocs/Legion/packages/modules'],
   generatePerspectives: true,
   generateEmbeddings: true,
   indexVectors: true
@@ -490,7 +518,7 @@ console.log('🔍 Testing Semantic Search Queries...');
 // Setup complete system
 const manager = await getToolManager();
 await manager.runCompletePipeline({
-  searchPaths: ['/Users/williampearson/Documents/p/agents/Legion/packages/modules'],
+  searchPaths: ['/Users/maxximus/Documents/max/pocs/Legion/packages/modules'],
   generatePerspectives: true,
   generateEmbeddings: true,
   indexVectors: true
@@ -559,7 +587,7 @@ console.log('⚡ Testing Search Performance...');
 // Setup system
 const manager = await getToolManager();
 await manager.runCompletePipeline({
-  searchPaths: ['/Users/williampearson/Documents/p/agents/Legion/packages/modules']
+  searchPaths: ['/Users/maxximus/Documents/max/pocs/Legion/packages/modules']
 });
 
 const consumer = await getToolConsumer();
@@ -597,7 +625,132 @@ await manager.cleanup();
 - ✅ Direct tool access faster than search
 - ✅ System handles multiple concurrent searches
 
-### Phase 6: Integration Testing
+### Phase 6: Complete End-to-End Integration Testing
+
+#### Test 6.0: Complete Pipeline - Generate, Index, Search, Execute
+```bash
+# This is the COMPLETE end-to-end test that does everything
+node -e "
+import { getToolConsumer, getToolManager } from './src/index.js';
+
+console.log('🚀 COMPLETE END-TO-END TEST: Generate → Index → Search → Execute');
+console.log('=' + '='.repeat(60));
+
+const manager = await getToolManager();
+const consumer = await getToolConsumer();
+
+try {
+  // Step 1: Clear and load all modules
+  console.log('\\n1️⃣ CLEARING AND LOADING MODULES...');
+  await manager.clearAllData();
+  await manager.discoverModules(['/Users/maxximus/Documents/max/pocs/Legion/packages/modules']);
+  const loadResult = await manager.loadAllModules();
+  console.log(\`✅ Loaded \${loadResult.loaded} modules with \${loadResult.tools} tools\`);
+
+  // Step 2: Generate perspectives for all tools
+  console.log('\\n2️⃣ GENERATING PERSPECTIVES...');
+  const perspectiveResult = await manager.generatePerspectives();
+  console.log(\`✅ Generated \${perspectiveResult.generated} perspectives\`);
+
+  // Step 3: Generate embeddings using Nomic or OpenAI
+  console.log('\\n3️⃣ GENERATING EMBEDDINGS...');
+  console.log('Provider:', process.env.USE_LOCAL_EMBEDDINGS === 'true' ? 'Nomic (768 dims)' : 'OpenAI');
+  const embeddingResult = await manager.generateEmbeddings();
+  console.log(\`✅ Generated \${embeddingResult.generated} embeddings\`);
+
+  // Step 4: Index vectors in Qdrant
+  console.log('\\n4️⃣ INDEXING VECTORS IN QDRANT...');
+  const indexResult = await manager.indexVectors();
+  console.log(\`✅ Indexed \${indexResult.indexed} vectors\`);
+
+  // Step 5: Perform semantic search
+  console.log('\\n5️⃣ PERFORMING SEMANTIC SEARCH...');
+  const searchQuery = 'I need to perform mathematical calculations';
+  console.log(\`Query: \"\${searchQuery}\"\`);
+  
+  const searchResults = await consumer.searchTools(searchQuery, {
+    useSemanticSearch: true,
+    limit: 5,
+    minScore: 0.3
+  });
+
+  console.log(\`Found \${searchResults.length} relevant tools:\`);
+  searchResults.forEach((result, i) => {
+    console.log(\`  \${i + 1}. \${result.name} (score: \${result.score?.toFixed(3) || 'N/A'})\`);
+    console.log(\`     \${result.description}\`);
+  });
+
+  // Step 6: Execute the top result
+  if (searchResults.length > 0) {
+    console.log('\\n6️⃣ EXECUTING TOP SEARCH RESULT...');
+    const topTool = searchResults[0];
+    console.log(\`Executing: \${topTool.name}\`);
+
+    let execResult;
+    if (topTool.name === 'calculator' || topTool.name.includes('calc')) {
+      execResult = await consumer.executeTool(topTool.name, {
+        expression: '(10 + 5) * 3'
+      });
+      console.log('Expression: (10 + 5) * 3');
+      console.log('Result:', execResult.result);
+      
+      if (execResult.result === 45) {
+        console.log('✅ CORRECT! Calculator executed successfully');
+      } else {
+        console.log('❌ Incorrect result. Expected 45');
+      }
+    } else {
+      console.log('Tool is not calculator, showing execution signature:');
+      console.log('Input schema:', JSON.stringify(topTool.inputSchema, null, 2));
+    }
+  }
+
+  // Step 7: Test another search query
+  console.log('\\n7️⃣ TESTING ANOTHER SEMANTIC SEARCH...');
+  const fileQuery = 'I need to read and write files to the filesystem';
+  console.log(\`Query: \"\${fileQuery}\"\`);
+  
+  const fileResults = await consumer.searchTools(fileQuery, {
+    useSemanticSearch: true,
+    limit: 3
+  });
+
+  console.log(\`Found \${fileResults.length} file-related tools:\`);
+  fileResults.forEach((result, i) => {
+    console.log(\`  \${i + 1}. \${result.name} (score: \${result.score?.toFixed(3) || 'N/A'})\`);
+  });
+
+  // Final summary
+  console.log('\\n' + '=' + '='.repeat(60));
+  console.log('✅ COMPLETE END-TO-END TEST SUCCESSFUL!');
+  console.log('Summary:');
+  console.log(\`  • Modules loaded: \${loadResult.loaded}\`);
+  console.log(\`  • Tools available: \${loadResult.tools}\`);
+  console.log(\`  • Perspectives generated: \${perspectiveResult.generated}\`);
+  console.log(\`  • Embeddings created: \${embeddingResult.generated}\`);
+  console.log(\`  • Vectors indexed: \${indexResult.indexed}\`);
+  console.log(\`  • Semantic search: WORKING\`);
+  console.log(\`  • Tool execution: VERIFIED\`);
+
+} catch (error) {
+  console.error('\\n❌ TEST FAILED:', error.message);
+  console.error('Stack:', error.stack);
+} finally {
+  await consumer.cleanup();
+  await manager.cleanup();
+}
+"
+```
+
+**Expected Results:**
+- ✅ All modules loaded (30+)
+- ✅ Perspectives generated for all tools (300+)
+- ✅ Embeddings generated (Nomic: 768 dims or OpenAI)
+- ✅ Vectors indexed in Qdrant
+- ✅ Semantic search returns relevant tools with scores
+- ✅ Calculator found for math query
+- ✅ File tools found for file operations query
+- ✅ Tool execution produces correct results
 
 #### Test 6.1: Full Workflow Test
 ```bash
@@ -612,7 +765,7 @@ const manager = await getToolManager();
 const consumer = await getToolConsumer();
 
 await manager.runCompletePipeline({
-  searchPaths: ['/Users/williampearson/Documents/p/agents/Legion/packages/modules']
+  searchPaths: ['/Users/maxximus/Documents/max/pocs/Legion/packages/modules']
 });
 
 // 2. Search for tool
@@ -681,7 +834,10 @@ Execute all tests in sequence:
 
 ```bash
 # Navigate to tools-registry
-cd /Users/williampearson/Documents/p/agents/Legion/packages/tools-registry
+cd /Users/maxximus/Documents/max/pocs/Legion/packages/tools-registry
+
+# Set embedding provider (optional - defaults to OpenAI if not set)
+export USE_LOCAL_EMBEDDINGS=true  # Use Nomic embeddings instead of OpenAI
 
 # Run all UAT phases
 echo "=== PHASE 1: ARCHITECTURE ==="
@@ -689,6 +845,8 @@ npm test __tests__/integration/CompleteLiveSystemTest.test.js
 
 echo "=== PHASE 2-6: FUNCTIONALITY ==="
 # Copy each test script above and run individually
+# Or run the automated UAT script:
+npm run uat  # If available
 
 echo "=== UAT COMPLETE ==="
 ```

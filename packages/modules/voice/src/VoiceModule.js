@@ -26,7 +26,7 @@ class VoiceModule extends Module {
     
     // If config provided directly (for testing), initialize immediately
     if (config) {
-      this.provider = this.initializeProvider(config);
+      this.provider = this.createProvider(config);
       this._createTools();
     }
   }

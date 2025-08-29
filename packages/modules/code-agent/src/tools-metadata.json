@@ -39,7 +39,20 @@
         "required": ["html", "success"]
       },
       "category": "code-generation",
-      "tags": ["html", "generation", "web", "frontend"]
+      "tags": ["html", "generation", "web", "frontend"],
+      "implementation": {
+        "generator": "HTMLGenerator",
+        "method": "generateHTML",
+        "mapping": {
+          "title": "title",
+          "content": "content",
+          "template": "template || 'basic'"
+        },
+        "output": {
+          "html": "result || result.html",
+          "filename": "`${(params.title || 'page').toLowerCase().replace(/\\s+/g, '-')}.html`"
+        }
+      }
     },
     "generate_javascript": {
       "name": "generate_javascript",
@@ -74,7 +87,15 @@
         "required": ["code", "success"]
       },
       "category": "code-generation", 
-      "tags": ["javascript", "generation", "code", "development"]
+      "tags": ["javascript", "generation", "code", "development"],
+      "implementation": {
+        "generator": "JSGenerator",
+        "method": "dynamic",
+        "output": {
+          "code": "result.code || result",
+          "filename": "`${params.name}.js`"
+        }
+      }
     },
     "generate_css": {
       "name": "generate_css",
@@ -109,7 +130,20 @@
         "required": ["css", "success"]
       },
       "category": "code-generation",
-      "tags": ["css", "generation", "styles", "frontend"]
+      "tags": ["css", "generation", "styles", "frontend"],
+      "implementation": {
+        "generator": "CSSGenerator", 
+        "method": "generateComponent",
+        "mapping": {
+          "selector": "selector",
+          "styles": "styles",
+          "framework": "framework || 'vanilla'"
+        },
+        "output": {
+          "css": "result || result.css",
+          "filename": "`styles.css`"
+        }
+      }
     },
     "generate_test": {
       "name": "generate_test",
@@ -144,7 +178,20 @@
         "required": ["tests", "success"]
       },
       "category": "testing",
-      "tags": ["testing", "generation", "jest", "unit-tests"]
+      "tags": ["testing", "generation", "jest", "unit-tests"],
+      "implementation": {
+        "generator": "TestGenerator",
+        "method": "generateTestSuite",
+        "mapping": {
+          "target": "targetFile",
+          "testType": "testType",
+          "functions": "functions"
+        },
+        "output": {
+          "test": "result || result.test",
+          "filename": "`${(params.targetFile || 'test').replace(/\\.js$/, '')}.test.js`"
+        }
+      }
     }
   }
 }

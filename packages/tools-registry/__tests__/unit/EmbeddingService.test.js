@@ -18,7 +18,6 @@ import { EmbeddingError } from '../../src/errors/index.js';
 
 describe('EmbeddingService', () => {
   let mockResourceManager;
-  let mockLlmClient;
   let embeddingService;
 
   beforeEach(() => {
@@ -27,21 +26,8 @@ describe('EmbeddingService', () => {
       get: jest.fn()
     };
 
-    // Mock LLM client for embedding generation
-    mockLlmClient = {
-      generateEmbedding: jest.fn(),
-      generateEmbeddings: jest.fn(),
-      isAvailable: jest.fn(() => true)
-    };
-
-    mockResourceManager.get.mockImplementation((key) => {
-      switch (key) {
-        case 'llmClient':
-          return mockLlmClient;
-        default:
-          return null;
-      }
-    });
+    // Note: The actual implementation uses Nomic directly, not LLM client
+    // The mock for @legion/nomic is in __mocks__/@legion/nomic.js
   });
 
   afterEach(() => {
@@ -84,44 +70,51 @@ describe('EmbeddingService', () => {
       await embeddingService.initialize();
 
       expect(embeddingService.initialized).toBe(true);
-      expect(mockResourceManager.get).toHaveBeenCalledWith('llmClient');
+      // No longer checks for llmClient since it uses Nomic directly
+      expect(embeddingService.nomicEmbeddings).toBeDefined();
     });
 
-    test('should throw error if LLM client not available during initialization', async () => {
-      mockResourceManager.get.mockReturnValue(null);
-      
+    test('should initialize Nomic embeddings properly', async () => {
       embeddingService = new EmbeddingService({
         resourceManager: mockResourceManager
       });
 
-      await expect(embeddingService.initialize()).rejects.toThrow(EmbeddingError);
+      await embeddingService.initialize();
+      
+      expect(embeddingService.initialized).toBe(true);
+      expect(embeddingService.nomicEmbeddings).toBeDefined();
+      expect(embeddingService.nomicEmbeddings.initialized).toBe(true);
     });
   });
 
   describe('Single Embedding Generation', () => {
     beforeEach(async () => {
+      // Create service with 768 dimensions to match Nomic output
       embeddingService = new EmbeddingService({
-        resourceManager: mockResourceManager
+        resourceManager: mockResourceManager,
+        options: { dimensions: 768 }
       });
       await embeddingService.initialize();
     });
 
     test('should generate embedding for single text', async () => {
-      const mockEmbedding = new Array(384).fill(0).map(() => Math.random());
-      mockLlmClient.generateEmbedding.mockResolvedValue(mockEmbedding);
-
       const result = await embeddingService.generateEmbedding('test text');
 
-      expect(mockLlmClient.generateEmbedding).toHaveBeenCalledWith('test text');
-      expect(result).toEqual(mockEmbedding);
-      expect(result).toHaveLength(384);
+      // The mock returns 768-dimensional embeddings as per Nomic standard
+      expect(result).toHaveLength(768);
+      expect(result.every(v => typeof v === 'number')).toBe(true);
     });
 
     test('should validate embedding dimensions', async () => {
-      const wrongDimensions = new Array(256).fill(0).map(() => Math.random());
-      mockLlmClient.generateEmbedding.mockResolvedValue(wrongDimensions);
-
-      await expect(embeddingService.generateEmbedding('test text')).rejects.toThrow(EmbeddingError);
+      // Create a service expecting different dimensions
+      const service384 = new EmbeddingService({
+        resourceManager: mockResourceManager,
+        options: { dimensions: 384 }
+      });
+      await service384.initialize();
+      
+      // The mock always returns 768 dimensions, but service expects 384
+      await expect(service384.generateEmbedding('test text')).rejects.toThrow(EmbeddingError);
     });
 
     test('should handle empty text input', async () => {
@@ -132,25 +125,29 @@ describe('EmbeddingService', () => {
 
     test('should handle very long text input', async () => {
       const longText = 'a'.repeat(10000);
-      const mockEmbedding = new Array(384).fill(0).map(() => Math.random());
-      mockLlmClient.generateEmbedding.mockResolvedValue(mockEmbedding);
+      // Mock the embed function to avoid calling real implementation with long text
+      const originalEmbed = embeddingService.nomicEmbeddings.embed;
+      embeddingService.nomicEmbeddings.embed = jest.fn().mockResolvedValue(
+        new Array(768).fill(0).map(() => Math.random())
+      );
 
       const result = await embeddingService.generateEmbedding(longText);
 
-      expect(result).toEqual(mockEmbedding);
+      expect(result).toHaveLength(768);
       // Text should be truncated to maxTextLength (8192)
-      expect(mockLlmClient.generateEmbedding).toHaveBeenCalledWith('a'.repeat(8192));
+      expect(embeddingService.nomicEmbeddings.embed).toHaveBeenCalledWith('a'.repeat(8192));
+      embeddingService.nomicEmbeddings.embed = originalEmbed;
     });
 
     test('should cache embeddings for repeated text', async () => {
-      const mockEmbedding = new Array(384).fill(0).map(() => Math.random());
-      mockLlmClient.generateEmbedding.mockResolvedValue(mockEmbedding);
+      const spy = jest.spyOn(embeddingService.nomicEmbeddings, 'embed');
 
       const result1 = await embeddingService.generateEmbedding('test text');
       const result2 = await embeddingService.generateEmbedding('test text');
 
       expect(result1).toEqual(result2);
-      expect(mockLlmClient.generateEmbedding).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledTimes(1); // Should only call once due to caching
+      spy.mockRestore();
     });
   });
 
@@ -158,80 +155,77 @@ describe('EmbeddingService', () => {
     beforeEach(async () => {
       embeddingService = new EmbeddingService({
         resourceManager: mockResourceManager,
-        options: { batchSize: 5 }
+        options: { batchSize: 5, dimensions: 768 }
       });
       await embeddingService.initialize();
     });
 
     test('should generate embeddings for array of texts', async () => {
       const texts = ['text1', 'text2', 'text3'];
-      const mockEmbeddings = texts.map(() => 
-        new Array(384).fill(0).map(() => Math.random())
-      );
-      mockLlmClient.generateEmbeddings.mockResolvedValue(mockEmbeddings);
+      const spy = jest.spyOn(embeddingService.nomicEmbeddings, 'embedBatch');
 
       const results = await embeddingService.generateEmbeddings(texts);
 
-      expect(mockLlmClient.generateEmbeddings).toHaveBeenCalledWith(texts);
-      expect(results).toEqual(mockEmbeddings);
+      expect(spy).toHaveBeenCalledWith(texts);
       expect(results).toHaveLength(3);
+      results.forEach(embedding => {
+        expect(embedding).toHaveLength(768);
+        expect(embedding.every(v => typeof v === 'number')).toBe(true);
+      });
+      spy.mockRestore();
     });
 
     test('should handle batch processing for large arrays', async () => {
       const texts = new Array(12).fill(0).map((_, i) => `text${i}`);
-      const mockEmbeddings = texts.map(() => 
-        new Array(384).fill(0).map(() => Math.random())
-      );
-      
-      // Mock batch responses (5 + 5 + 2)
-      mockLlmClient.generateEmbeddings
-        .mockResolvedValueOnce(mockEmbeddings.slice(0, 5))
-        .mockResolvedValueOnce(mockEmbeddings.slice(5, 10))
-        .mockResolvedValueOnce(mockEmbeddings.slice(10, 12));
+      const spy = jest.spyOn(embeddingService.nomicEmbeddings, 'embedBatch');
 
       const results = await embeddingService.generateEmbeddings(texts);
 
-      expect(mockLlmClient.generateEmbeddings).toHaveBeenCalledTimes(3);
+      // Should be called 3 times: 5 + 5 + 2
+      expect(spy).toHaveBeenCalledTimes(3);
+      expect(spy).toHaveBeenNthCalledWith(1, texts.slice(0, 5));
+      expect(spy).toHaveBeenNthCalledWith(2, texts.slice(5, 10));
+      expect(spy).toHaveBeenNthCalledWith(3, texts.slice(10, 12));
       expect(results).toHaveLength(12);
-      expect(results).toEqual(mockEmbeddings);
+      spy.mockRestore();
     });
 
     test('should validate all embedding dimensions in batch', async () => {
       const texts = ['text1', 'text2'];
-      const mockEmbeddings = [
-        new Array(384).fill(0).map(() => Math.random()),
+      // Mock embedBatch to return wrong dimensions for second embedding
+      embeddingService.nomicEmbeddings.embedBatch = jest.fn().mockResolvedValue([
+        new Array(768).fill(0).map(() => Math.random()),
         new Array(256).fill(0).map(() => Math.random()) // Wrong dimension
-      ];
-      mockLlmClient.generateEmbeddings.mockResolvedValue(mockEmbeddings);
+      ]);
 
       await expect(embeddingService.generateEmbeddings(texts)).rejects.toThrow(EmbeddingError);
     });
 
     test('should handle partial batch failures gracefully', async () => {
       const texts = ['text1', 'text2', 'text3'];
-      mockLlmClient.generateEmbeddings.mockRejectedValue(new Error('API Error'));
+      embeddingService.nomicEmbeddings.embedBatch = jest.fn().mockRejectedValue(new Error('API Error'));
 
       await expect(embeddingService.generateEmbeddings(texts)).rejects.toThrow(EmbeddingError);
     });
 
     test('should handle empty array input', async () => {
+      const spy = jest.spyOn(embeddingService.nomicEmbeddings, 'embedBatch');
       const results = await embeddingService.generateEmbeddings([]);
       expect(results).toEqual([]);
-      expect(mockLlmClient.generateEmbeddings).not.toHaveBeenCalled();
+      expect(spy).not.toHaveBeenCalled();
+      spy.mockRestore();
     });
 
     test('should filter out invalid texts in batch', async () => {
       const texts = ['valid text', '', null, 'another valid text', undefined];
       const validTexts = ['valid text', 'another valid text'];
-      const mockEmbeddings = validTexts.map(() => 
-        new Array(384).fill(0).map(() => Math.random())
-      );
-      mockLlmClient.generateEmbeddings.mockResolvedValue(mockEmbeddings);
+      const spy = jest.spyOn(embeddingService.nomicEmbeddings, 'embedBatch');
 
       const results = await embeddingService.generateEmbeddings(texts);
 
-      expect(mockLlmClient.generateEmbeddings).toHaveBeenCalledWith(validTexts);
+      expect(spy).toHaveBeenCalledWith(validTexts);
       expect(results).toHaveLength(2);
+      spy.mockRestore();
     });
   });
 
@@ -280,46 +274,46 @@ describe('EmbeddingService', () => {
     beforeEach(async () => {
       embeddingService = new EmbeddingService({
         resourceManager: mockResourceManager,
-        options: { cacheSize: 3 }
+        options: { cacheSize: 3, dimensions: 768 }
       });
       await embeddingService.initialize();
     });
 
     test('should cache embeddings and retrieve from cache', async () => {
-      const mockEmbedding = new Array(384).fill(0).map(() => Math.random());
-      mockLlmClient.generateEmbedding.mockResolvedValue(mockEmbedding);
+      const spy = jest.spyOn(embeddingService.nomicEmbeddings, 'embed');
 
       // First call should generate
       const result1 = await embeddingService.generateEmbedding('test text');
-      expect(mockLlmClient.generateEmbedding).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledTimes(1);
 
       // Second call should use cache
       const result2 = await embeddingService.generateEmbedding('test text');
-      expect(mockLlmClient.generateEmbedding).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledTimes(1); // Still 1 due to cache
       expect(result1).toEqual(result2);
+      spy.mockRestore();
     });
 
     test('should evict oldest entries when cache is full', async () => {
-      const mockEmbedding = new Array(384).fill(0).map(() => Math.random());
-      mockLlmClient.generateEmbedding.mockResolvedValue(mockEmbedding);
+      const spy = jest.spyOn(embeddingService.nomicEmbeddings, 'embed');
 
       // Fill cache to capacity (cache size is 3)
       await embeddingService.generateEmbedding('text1'); // 1st
       await embeddingService.generateEmbedding('text2'); // 2nd
       await embeddingService.generateEmbedding('text3'); // 3rd
-      expect(mockLlmClient.generateEmbedding).toHaveBeenCalledTimes(3);
+      expect(spy).toHaveBeenCalledTimes(3);
 
       // Add one more - should evict oldest (text1)
       await embeddingService.generateEmbedding('text4'); // evicts text1
-      expect(mockLlmClient.generateEmbedding).toHaveBeenCalledTimes(4);
+      expect(spy).toHaveBeenCalledTimes(4);
 
       // text1 should be evicted, so this should generate again
       await embeddingService.generateEmbedding('text1');
-      expect(mockLlmClient.generateEmbedding).toHaveBeenCalledTimes(5);
+      expect(spy).toHaveBeenCalledTimes(5);
 
       // text3 should still be cached (don't access text2 as it would change LRU order)
       await embeddingService.generateEmbedding('text3');
-      expect(mockLlmClient.generateEmbedding).toHaveBeenCalledTimes(5);
+      expect(spy).toHaveBeenCalledTimes(5); // Still 5 due to cache
+      spy.mockRestore();
     });
 
     test('should provide cache statistics', () => {
@@ -333,32 +327,33 @@ describe('EmbeddingService', () => {
     });
 
     test('should clear cache when requested', async () => {
-      const mockEmbedding = new Array(384).fill(0).map(() => Math.random());
-      mockLlmClient.generateEmbedding.mockResolvedValue(mockEmbedding);
+      const spy = jest.spyOn(embeddingService.nomicEmbeddings, 'embed');
 
       // Generate and cache
       await embeddingService.generateEmbedding('test text');
-      expect(mockLlmClient.generateEmbedding).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledTimes(1);
 
       // Clear cache
       embeddingService.clearCache();
 
       // Should generate again
       await embeddingService.generateEmbedding('test text');
-      expect(mockLlmClient.generateEmbedding).toHaveBeenCalledTimes(2);
+      expect(spy).toHaveBeenCalledTimes(2);
+      spy.mockRestore();
     });
   });
 
   describe('Error Handling', () => {
     beforeEach(async () => {
       embeddingService = new EmbeddingService({
-        resourceManager: mockResourceManager
+        resourceManager: mockResourceManager,
+        options: { dimensions: 768 }
       });
       await embeddingService.initialize();
     });
 
-    test('should throw EmbeddingError for LLM service failures', async () => {
-      mockLlmClient.generateEmbedding.mockRejectedValue(new Error('LLM service unavailable'));
+    test('should throw EmbeddingError for embedding service failures', async () => {
+      embeddingService.nomicEmbeddings.embed = jest.fn().mockRejectedValue(new Error('Embedding service unavailable'));
 
       await expect(embeddingService.generateEmbedding('test text')).rejects.toThrow(EmbeddingError);
     });
@@ -377,7 +372,7 @@ describe('EmbeddingService', () => {
     test('should handle network timeout errors', async () => {
       const timeoutError = new Error('Request timeout');
       timeoutError.code = 'TIMEOUT';
-      mockLlmClient.generateEmbedding.mockRejectedValue(timeoutError);
+      embeddingService.nomicEmbeddings.embed = jest.fn().mockRejectedValue(timeoutError);
 
       await expect(embeddingService.generateEmbedding('test text')).rejects.toThrow(EmbeddingError);
     });
@@ -385,7 +380,7 @@ describe('EmbeddingService', () => {
     test('should handle rate limit errors', async () => {
       const rateLimitError = new Error('Rate limit exceeded');
       rateLimitError.status = 429;
-      mockLlmClient.generateEmbedding.mockRejectedValue(rateLimitError);
+      embeddingService.nomicEmbeddings.embed = jest.fn().mockRejectedValue(rateLimitError);
 
       await expect(embeddingService.generateEmbedding('test text')).rejects.toThrow(EmbeddingError);
     });
@@ -404,7 +399,7 @@ describe('EmbeddingService', () => {
     beforeEach(async () => {
       embeddingService = new EmbeddingService({
         resourceManager: mockResourceManager,
-        options: { batchSize: 10 }
+        options: { batchSize: 10, dimensions: 768 }
       });
       await embeddingService.initialize();
     });
@@ -412,22 +407,16 @@ describe('EmbeddingService', () => {
     test('should optimize batch size based on input length', async () => {
       const shortTexts = new Array(5).fill(0).map((_, i) => `short text ${i}`);
       const longTexts = new Array(5).fill(0).map((_, i) => 'long text '.repeat(100) + i);
-
-      const mockEmbedding = new Array(384).fill(0).map(() => Math.random());
-      mockLlmClient.generateEmbeddings.mockResolvedValue(
-        new Array(5).fill(mockEmbedding)
-      );
+      const spy = jest.spyOn(embeddingService.nomicEmbeddings, 'embedBatch');
 
       await embeddingService.generateEmbeddings(shortTexts);
       await embeddingService.generateEmbeddings(longTexts);
 
-      expect(mockLlmClient.generateEmbeddings).toHaveBeenCalledTimes(2);
+      expect(spy).toHaveBeenCalledTimes(2);
+      spy.mockRestore();
     });
 
     test('should track generation statistics', async () => {
-      const mockEmbedding = new Array(384).fill(0).map(() => Math.random());
-      mockLlmClient.generateEmbedding.mockResolvedValue(mockEmbedding);
-
       await embeddingService.generateEmbedding('test1');
       await embeddingService.generateEmbedding('test2');
 
@@ -438,8 +427,7 @@ describe('EmbeddingService', () => {
     });
 
     test('should handle concurrent embedding requests', async () => {
-      const mockEmbedding = new Array(384).fill(0).map(() => Math.random());
-      mockLlmClient.generateEmbedding.mockResolvedValue(mockEmbedding);
+      const spy = jest.spyOn(embeddingService.nomicEmbeddings, 'embed');
 
       const promises = [
         embeddingService.generateEmbedding('text1'),
@@ -450,46 +438,49 @@ describe('EmbeddingService', () => {
       const results = await Promise.all(promises);
 
       expect(results).toHaveLength(3);
-      expect(mockLlmClient.generateEmbedding).toHaveBeenCalledTimes(3);
+      expect(spy).toHaveBeenCalledTimes(3);
+      spy.mockRestore();
     });
   });
 
   describe('Text Preprocessing', () => {
     beforeEach(async () => {
       embeddingService = new EmbeddingService({
-        resourceManager: mockResourceManager
+        resourceManager: mockResourceManager,
+        options: { dimensions: 768 }
       });
       await embeddingService.initialize();
     });
 
     test('should normalize text before embedding generation', async () => {
-      const mockEmbedding = new Array(384).fill(0).map(() => Math.random());
-      mockLlmClient.generateEmbedding.mockResolvedValue(mockEmbedding);
+      const spy = jest.spyOn(embeddingService.nomicEmbeddings, 'embed');
 
       await embeddingService.generateEmbedding('  Text with extra spaces  \n\t');
 
-      expect(mockLlmClient.generateEmbedding).toHaveBeenCalledWith('Text with extra spaces');
+      expect(spy).toHaveBeenCalledWith('Text with extra spaces');
+      spy.mockRestore();
     });
 
     test('should handle special characters and unicode', async () => {
-      const mockEmbedding = new Array(384).fill(0).map(() => Math.random());
-      mockLlmClient.generateEmbedding.mockResolvedValue(mockEmbedding);
+      const spy = jest.spyOn(embeddingService.nomicEmbeddings, 'embed');
 
       const unicodeText = 'Text with émojis 🚀 and ünïcödé characters';
       await embeddingService.generateEmbedding(unicodeText);
 
-      expect(mockLlmClient.generateEmbedding).toHaveBeenCalledWith(unicodeText);
+      expect(spy).toHaveBeenCalledWith(unicodeText);
+      spy.mockRestore();
     });
 
     test('should truncate very long texts to maximum length', async () => {
-      const mockEmbedding = new Array(384).fill(0).map(() => Math.random());
-      mockLlmClient.generateEmbedding.mockResolvedValue(mockEmbedding);
+      const spy = jest.spyOn(embeddingService.nomicEmbeddings, 'embed');
 
       const veryLongText = 'word '.repeat(10000);
       await embeddingService.generateEmbedding(veryLongText);
 
-      const calledWith = mockLlmClient.generateEmbedding.mock.calls[0][0];
+      const calledWith = spy.mock.calls[0][0];
       expect(calledWith.length).toBeLessThan(veryLongText.length);
+      expect(calledWith.length).toBeLessThanOrEqual(8192); // maxTextLength
+      spy.mockRestore();
     });
   });
 
@@ -507,15 +498,16 @@ describe('EmbeddingService', () => {
 
     test('should handle graceful shutdown with pending requests', async () => {
       embeddingService = new EmbeddingService({
-        resourceManager: mockResourceManager
+        resourceManager: mockResourceManager,
+        options: { dimensions: 768 }
       });
       await embeddingService.initialize();
 
-      const mockEmbedding = new Array(384).fill(0).map(() => Math.random());
+      const mockEmbedding = new Array(768).fill(0).map(() => Math.random());
       const slowPromise = new Promise(resolve => 
         setTimeout(() => resolve(mockEmbedding), 1000)
       );
-      mockLlmClient.generateEmbedding.mockReturnValue(slowPromise);
+      embeddingService.nomicEmbeddings.embed = jest.fn().mockReturnValue(slowPromise);
 
       // Start a request but don't wait
       const embeddingPromise = embeddingService.generateEmbedding('test');

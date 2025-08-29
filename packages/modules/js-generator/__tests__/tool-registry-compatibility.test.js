@@ -55,7 +55,8 @@ describe('Tool Registry Pattern Compatibility', () => {
   });
 
   test('should check Tool base class inheritance', () => {
-    expect(tool.schema).toBeDefined();
+    // Schemas are now handled by module metadata, not tool instances
+    expect(tool.schema).toBeUndefined();
     expect(tool.name).toBe('generate_event_handler');
     expect(tool.description).toBeDefined();
   });

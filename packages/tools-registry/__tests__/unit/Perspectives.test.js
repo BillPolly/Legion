@@ -191,6 +191,23 @@ describe('Perspectives', () => {
     perspectives = new Perspectives({
       resourceManager: mockResourceManager
     });
+    
+    // Mark as initialized to prevent auto-initialization in tests
+    perspectives.initialized = true;
+    
+    // Mock the database initializer that would be created during initialize
+    perspectives.databaseInitializer = { 
+      initialize: jest.fn().mockResolvedValue(true)
+    };
+    
+    // Mock the perspective type manager with default perspective types
+    perspectives.perspectiveTypeManager = {
+      getAllPerspectiveTypes: jest.fn().mockResolvedValue([
+        { name: 'functional', prompt_template: 'Functional perspective for {toolName}', order: 1 },
+        { name: 'usage', prompt_template: 'Usage for {toolName}', order: 2 }
+      ]),
+      initialize: jest.fn().mockResolvedValue(true)
+    };
   });
   
   afterEach(() => {
@@ -234,16 +251,8 @@ describe('Perspectives', () => {
         { _id: 'type2', name: 'usage', prompt_template: 'Describe when to use {toolName}' }
       ];
       
-      // Mock PerspectiveTypeManager
-      const mockTypeManager = {
-        getAllPerspectiveTypes: jest.fn().mockResolvedValue(mockPerspectiveTypes),
-        initialize: jest.fn()
-      };
-      
-      perspectives.perspectiveTypeManager = mockTypeManager;
-      
-      // Mock DatabaseInitializer
-      perspectives.databaseInitializer = { initialize: jest.fn() };
+      // Update the mock to return the specific perspective types for this test
+      perspectives.perspectiveTypeManager.getAllPerspectiveTypes.mockResolvedValue(mockPerspectiveTypes);
       
       // Mock database storage methods
       const mockDatabaseStorage = {

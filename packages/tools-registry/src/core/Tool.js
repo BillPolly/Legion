@@ -273,10 +273,30 @@ export class Tool extends SimpleEmitter {
   }
   
   /**
+   * Validate input parameters - backwards compatibility alias for validateInput()
+   * @param {Object} params - Parameters to validate
+   * @returns {Object} Validation result with valid flag and errors/warnings
+   */
+  validate(params) {
+    const result = this.validateInput(params);
+    return {
+      valid: result.valid,
+      errors: result.errors,
+      warnings: [] // Legacy tests expect warnings array
+    };
+  }
+  
+  /**
    * Get tool metadata
    * @returns {Object} Tool metadata
    */
   getMetadata() {
+    // NEW PATTERN: Delegate to module for complete metadata
+    if (this.module && this.toolName) {
+      return this.module.getToolMetadata(this.toolName);
+    }
+    
+    // OLD PATTERN: Return basic metadata for backwards compatibility
     return {
       name: this.name,
       description: this.description,
