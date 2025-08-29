@@ -398,7 +398,10 @@ export class ServiceOrchestrator {
     const vectorStore = this.options.enableVectorSearch 
       ? new VectorStore({ embeddingClient: embeddingService, vectorDatabase: await this._createVectorDatabase() }) 
       : null;
-    const perspectiveService = new Perspectives({ resourceManager: this.resourceManager });
+    const perspectiveService = new Perspectives({ 
+      resourceManager: this.resourceManager,
+      databaseStorage: databaseService 
+    });
 
     return {
       eventBus,

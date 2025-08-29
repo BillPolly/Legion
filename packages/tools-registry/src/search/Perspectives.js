@@ -16,7 +16,7 @@ import { PerspectiveTypeManager } from '../core/PerspectiveTypeManager.js';
 import { Logger } from '../utils/Logger.js';
 
 export class Perspectives {
-  constructor({ resourceManager, options = {} }) {
+  constructor({ resourceManager, databaseStorage = null, options = {} }) {
     if (!resourceManager) {
       throw new PerspectiveError(
         'ResourceManager is required',
@@ -25,14 +25,13 @@ export class Perspectives {
     }
 
     this.resourceManager = resourceManager;
+    this.databaseStorage = databaseStorage; // NEW: Accept injected DatabaseStorage
     this.options = {
       batchSize: 10,
       verbose: false,
       generateEmbeddings: true,
       ...options
     };
-    
-    this.databaseStorage = null;
     this.llmClient = null;
     this.databaseInitializer = null;
     this.perspectiveTypeManager = null;
@@ -43,13 +42,15 @@ export class Perspectives {
   async initialize() {
     if (this.initialized) return;
 
-    // Get database storage from resource manager
-    this.databaseStorage = this.resourceManager.get('databaseStorage');
+    // Use injected databaseStorage if available, otherwise get from resource manager
     if (!this.databaseStorage) {
-      throw new PerspectiveError(
-        'DatabaseStorage not available from ResourceManager',
-        'INIT_ERROR'
-      );
+      this.databaseStorage = this.resourceManager.get('databaseStorage');
+      if (!this.databaseStorage) {
+        throw new PerspectiveError(
+          'DatabaseStorage not available from ResourceManager or injection',
+          'INIT_ERROR'
+        );
+      }
     }
 
     // Get LLM client from resource manager (optional for mock mode)

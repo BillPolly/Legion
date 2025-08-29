@@ -210,11 +210,8 @@ export class SearchService {
         }
 
         console.log(`[SearchService] Generating perspectives for: ${tool.name}`);
-        const perspectives = await this.perspectiveService.generatePerspectives({
-          name: tool.name,
-          description: tool.description,
-          inputSchema: tool.inputSchema,
-          outputSchema: tool.outputSchema
+        const perspectives = await this.perspectiveService.generatePerspectivesForTool(tool.name, {
+          forceRegenerate: true
         });
         
         console.log(`[SearchService] Generated ${perspectives?.length || 0} perspectives for ${tool.name}`);
