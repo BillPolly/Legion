@@ -9,6 +9,7 @@
 
 import { EmbeddingError, ParameterValidationError } from '../errors/index.js';
 import { LRUCache } from '../utils/LRUCache.js';
+import { NomicEmbeddings } from '@legion/nomic';
 
 export class EmbeddingService {
   constructor({ resourceManager, options = {} }) {
@@ -28,7 +29,7 @@ export class EmbeddingService {
       ...options
     };
 
-    this.llmClient = null;
+    this.nomicEmbeddings = null; // Use Nomic for local embeddings
     this.initialized = false;
     
     // Initialize cache for embeddings
@@ -45,22 +46,14 @@ export class EmbeddingService {
   }
 
   /**
-   * Initialize the service by getting LLM client from ResourceManager
+   * Initialize the service using Nomic local embeddings
    */
   async initialize() {
     if (this.initialized) return;
 
-    // Get LLM client from resource manager
-    this.llmClient = this.resourceManager.get('llmClient');
-    if (!this.llmClient) {
-      throw new EmbeddingError(
-        'LLMClient not available from ResourceManager',
-        'INIT_ERROR'
-      );
-    }
-
-    // LLMClient is available if it was successfully created
-    // We assume it's working if we got this far
+    // Initialize Nomic local embeddings
+    this.nomicEmbeddings = new NomicEmbeddings();
+    await this.nomicEmbeddings.initialize();
 
     this.initialized = true;
   }
@@ -92,8 +85,8 @@ export class EmbeddingService {
       
       this.stats.cacheMisses++;
 
-      // Generate embedding using LLM client
-      const embedding = await this.llmClient.generateEmbedding(processedText);
+      // Generate embedding using Nomic local embeddings
+      const embedding = await this.nomicEmbeddings.embed(processedText);
       
       // Validate generated embedding
       this._validateEmbedding(embedding);
@@ -345,7 +338,7 @@ export class EmbeddingService {
    */
   async _generateBatch(batch) {
     try {
-      const embeddings = await this.llmClient.generateEmbeddings(batch);
+      const embeddings = await this.nomicEmbeddings.embedBatch(batch);
       
       if (!Array.isArray(embeddings) || embeddings.length !== batch.length) {
         throw new Error(`Batch response mismatch: expected ${batch.length}, got ${embeddings?.length || 0}`);
@@ -424,6 +417,6 @@ export class EmbeddingService {
   async shutdown() {
     this.clearCache();
     this.initialized = false;
-    this.llmClient = null;
+    this.nomicEmbeddings = null;
   }
 }
