@@ -25,19 +25,19 @@ export class ModuleService {
   }
 
   /**
-   * Discover modules from filesystem paths
-   * Single responsibility: Only module discovery
+   * Discover modules from filesystem paths using proper workflow
+   * Single responsibility: find file → get path → load MODULE object → validate → store
    */
   async discoverModules(searchPaths) {
-    const allModules = [];
+    let discoveryResult;
     const errors = [];
     
-    // If no search paths provided, discover in the entire monorepo
     if (!searchPaths?.length) {
-      const modules = await this.moduleDiscovery.discoverInMonorepo();
-      allModules.push(...modules);
+      // Use discoverAndValidate for complete workflow: discover → load → validate
+      discoveryResult = await this.moduleDiscovery.discoverAndValidate();
     } else {
-      // ModuleDiscovery.discoverModules takes a single path, so process each path
+      // For specific search paths, discover and validate each path
+      const allModules = [];
       for (const searchPath of searchPaths) {
         try {
           const modules = await this.moduleDiscovery.discoverModules(searchPath);
@@ -46,33 +46,108 @@ export class ModuleService {
           errors.push({ path: searchPath, error: error.message });
         }
       }
+      
+      // Now validate the discovered modules using the proper workflow
+      const results = {
+        discovered: allModules.length,
+        validated: [],
+        invalid: [],
+        summary: { total: allModules.length, valid: 0, invalid: 0 }
+      };
+      
+      for (const module of allModules) {
+        try {
+          // Use reusable loading function: find file → get path → load MODULE object
+          const moduleObject = await this.moduleLoader.loadModule(module.path);
+          
+          // Validate the loaded MODULE object (not the path)
+          const validation = await this.moduleDiscovery.validateModule(moduleObject);
+          
+          const moduleResult = {
+            ...module,
+            validation,
+            moduleObject // Keep the loaded MODULE object
+          };
+          
+          if (validation.valid) {
+            results.validated.push(moduleResult);
+            results.summary.valid++;
+          } else {
+            results.invalid.push(moduleResult);
+            results.summary.invalid++;
+          }
+        } catch (loadError) {
+          const validation = {
+            valid: false,
+            score: 0,
+            toolsCount: 0,
+            errors: [`Failed to load module: ${loadError.message}`],
+            warnings: [],
+            metadata: null
+          };
+          
+          results.invalid.push({
+            ...module,
+            validation
+          });
+          results.summary.invalid++;
+        }
+      }
+      
+      discoveryResult = results;
     }
     
-    // Save discovered modules to module-registry and get their _id
+    // Process validated modules: save to database with complete information
     const modulesWithIds = [];
-    for (const module of allModules) {
+    for (const moduleResult of [...discoveryResult.validated, ...discoveryResult.invalid]) {
       try {
+        // Create module document with validation results and tool count
+        const moduleDoc = {
+          name: moduleResult.name,
+          path: moduleResult.path,
+          relativePath: moduleResult.relativePath,
+          packageName: moduleResult.packageName,
+          discoveredAt: moduleResult.discoveredAt,
+          toolsCount: moduleResult.validation?.toolsCount || 0,
+          valid: moduleResult.validation?.valid || false,
+          score: moduleResult.validation?.score || 0,
+          lastUpdated: new Date().toISOString(),
+          status: 'discovered'
+        };
+        
         // Save to module-registry which returns the document with _id
-        const savedModule = await this.databaseService.saveDiscoveredModule(module);
-        modulesWithIds.push(savedModule);
+        const savedModule = await this.databaseService.saveDiscoveredModule(moduleDoc);
+        modulesWithIds.push({
+          ...moduleResult,
+          _id: savedModule._id,
+          toolsCount: moduleDoc.toolsCount
+        });
       } catch (error) {
-        console.log(`[ModuleService] Failed to save discovered module ${module.name}:`, error.message);
+        console.log(`[ModuleService] Failed to save discovered module ${moduleResult.name}:`, error.message);
         // Still include the module even if save fails, but without _id
-        modulesWithIds.push(module);
+        modulesWithIds.push(moduleResult);
+        errors.push({ module: moduleResult.name, error: error.message });
       }
     }
     
-    // Store discovered modules with their database _id for later loading
+    // Store discovered modules with their database _id and MODULE objects for later use
     this.discoveredModules = modulesWithIds;
+    
+    // Calculate total tools discovered
+    const totalTools = modulesWithIds.reduce((sum, module) => sum + (module.toolsCount || 0), 0);
     
     this.eventBus.emit('modules:discovered', {
       count: modulesWithIds.length,
+      tools: totalTools,
       modules: modulesWithIds
     });
 
     return {
       discovered: modulesWithIds.length,
+      tools: totalTools,
       modules: modulesWithIds,
+      valid: discoveryResult.summary?.valid || 0,
+      invalid: discoveryResult.summary?.invalid || 0,
       errors: errors
     };
   }
@@ -99,13 +174,19 @@ export class ModuleService {
       let modulePath = null;
       
       if (!moduleConfig || !moduleConfig.path) {
-        // Find the module in discovered modules (which should be in module-registry)
-        const discoveredModule = this.discoveredModules.find(m => m.name === moduleName);
+        // Look up the module from the database
+        if (!this.databaseService) {
+          throw new Error(`Database service not available - cannot load module ${moduleName}`);
+        }
+        
+        const discoveredModule = await this.databaseService.getCollection('module-registry')
+          .findOne({ name: moduleName });
+          
         if (!discoveredModule) {
-          throw new Error(`Module ${moduleName} not found in discovered modules - run discovery first`);
+          throw new Error(`Module ${moduleName} not found in database - run discovery first`);
         }
         modulePath = discoveredModule.path;
-        moduleId = discoveredModule._id; // Use the discovery record's ID
+        moduleId = discoveredModule._id; // Use the database record's ID
       } else {
         modulePath = this._extractModulePath(moduleConfig);
         moduleId = moduleConfig._id; // Use provided ID if available
@@ -137,9 +218,23 @@ export class ModuleService {
           // Pass both module name and ID for proper linking
           await this.databaseService.saveTools(moduleTools, moduleName, moduleId);
           console.log(`[ModuleService] Saved ${moduleTools.length} tools from ${moduleName} (ID: ${moduleId}) to database`);
+          
+          // Update toolsCount in module-registry now that we know the actual count
+          if (moduleId) {
+            await this.databaseService.updateModuleToolsCount(moduleId, moduleTools.length);
+            console.log(`[ModuleService] Updated toolsCount to ${moduleTools.length} for ${moduleName}`);
+          }
         } catch (error) {
           console.log(`[ModuleService] Failed to save tools for ${moduleName}:`, error.message);
           // Don't fail module loading if tool saving fails
+        }
+      } else if (moduleId && this.databaseService) {
+        // Even if no tools, update the count to 0
+        try {
+          await this.databaseService.updateModuleToolsCount(moduleId, 0);
+          console.log(`[ModuleService] Updated toolsCount to 0 for ${moduleName}`);
+        } catch (error) {
+          console.log(`[ModuleService] Failed to update toolsCount for ${moduleName}:`, error.message);
         }
       }
       
@@ -210,16 +305,28 @@ export class ModuleService {
    * Single responsibility: Load all known modules
    */
   async loadAllModules(options = {}) {
-    if (this.discoveredModules.length === 0) {
+    if (!this.databaseService) {
       return {
         loaded: 0,
         failed: 0,
-        errors: ['No modules discovered - call discoverModules first'],
+        errors: ['Database service not available'],
         modules: []
       };
     }
 
-    // Use discovered modules with their _id from module-registry
+    // Get all discovered modules from database
+    const discoveredModules = await this.databaseService.getCollection('module-registry')
+      .find({ status: 'discovered' }).toArray();
+      
+    if (discoveredModules.length === 0) {
+      return {
+        loaded: 0,
+        failed: 0,
+        errors: ['No modules found in database - run discovery first'],
+        modules: []
+      };
+    }
+
     const results = {
       loaded: 0,
       failed: 0,
@@ -227,20 +334,20 @@ export class ModuleService {
       modules: []
     };
 
-    for (const discoveredModule of this.discoveredModules) {
-      // Pass the entire discovered module (which has _id from database)
-      const result = await this.loadModule(discoveredModule.name, discoveredModule);
+    for (const moduleRecord of discoveredModules) {
+      // Load the actual module using its path from the database record
+      const result = await this.loadModule(moduleRecord.name, moduleRecord);
       
       if (result.success) {
         results.loaded++;
         results.modules.push({
-          name: discoveredModule.name,
+          name: moduleRecord.name,
           toolCount: result.toolCount
         });
       } else {
         results.failed++;
         results.errors.push({
-          module: discoveredModule.name,
+          module: moduleRecord.name,
           error: result.error
         });
       }

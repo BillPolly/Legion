@@ -23,7 +23,7 @@ export class ModuleDiscovery {
       verbose: false,
       ignoreDirs: ['node_modules', '.git', 'dist', 'build', 'coverage', '__tests__'],
       modulePattern: /Module\.js$/,  // Files ending with Module.js
-      validateMetadata: true,  // Enable metadata validation
+      validateMetadata: false,  // Disable irrelevant metadata validation
       ...options
     };
     
@@ -137,6 +137,7 @@ export class ModuleDiscovery {
   
   /**
    * Discover and validate modules with compliance checking
+   * Uses reusable loading function and passes MODULE objects to validation
    * @returns {Object} Discovery result with modules and validation details
    */
   async discoverAndValidate() {
@@ -149,37 +150,56 @@ export class ModuleDiscovery {
         total: modules.length,
         valid: 0,
         invalid: 0,
-        averageScore: 0,
-        warnings: 0,
         errors: 0
       }
     };
     
-    let totalScore = 0;
+    // Ensure ResourceManager is available for loading
+    await this._ensureResourceManager();
     
     for (const module of modules) {
-      const validation = await this.validateModule(module.path);
-      
-      const moduleResult = {
-        ...module,
-        validation
-      };
-      
-      if (validation.valid) {
-        results.validated.push(moduleResult);
-        results.summary.valid++;
-      } else {
+      try {
+        // Use reusable loading function: find file → get path → load MODULE object
+        const moduleObject = await this.moduleLoader.loadModule(module.path);
+        
+        // Validate the loaded MODULE object (not the path)
+        const validation = await this.validateModule(moduleObject);
+        
+        const moduleResult = {
+          ...module,
+          validation,
+          moduleObject // Keep the loaded MODULE object for further processing
+        };
+        
+        if (validation.valid) {
+          results.validated.push(moduleResult);
+          results.summary.valid++;
+        } else {
+          results.invalid.push(moduleResult);
+          results.summary.invalid++;
+        }
+        
+        results.summary.errors += validation.errors.length;
+        
+      } catch (loadError) {
+        // If loading fails, create a failed validation result
+        const validation = {
+          valid: false,
+          toolsCount: 0,
+          errors: [`Failed to load module: ${loadError.message}`],
+          metadata: null
+        };
+        
+        const moduleResult = {
+          ...module,
+          validation
+        };
+        
         results.invalid.push(moduleResult);
         results.summary.invalid++;
+        results.summary.errors += validation.errors.length;
       }
-      
-      totalScore += validation.score;
-      results.summary.warnings += validation.warnings.length;
-      results.summary.errors += validation.errors.length;
     }
-    
-    results.summary.averageScore = modules.length > 0 ? 
-      Math.round(totalScore / modules.length) : 0;
     
     return results;
   }
@@ -216,26 +236,89 @@ export class ModuleDiscovery {
    * @returns {Object} Validation result with score and details
    */
   /**
-   * Validate module by attempting to load and check interface
-   * Single Responsibility: Orchestrate module validation process
+   * Validate an already-loaded module object
+   * Single Responsibility: Only validation, no loading
    */
-  async validateModule(modulePath) {
+  async validateModule(moduleObject) {
     const result = this._createValidationResult();
     
     try {
-      await this._ensureResourceManager();
-      
-      // Try primary validation path
-      const moduleLoader = await this._createModuleLoader();
-      const validationResult = await this._validateWithModuleLoader(moduleLoader, modulePath, result);
-      if (validationResult) return validationResult;
-      
-      // Fallback validation
-      return await this._validateWithDirectImport(modulePath, result);
+      if (!moduleObject) {
+        result.valid = false;
+        result.errors.push('Module object is null or undefined');
+        return result;
+      }
+
+      // Module must have getTools() method - REQUIRED
+      if (typeof moduleObject.getTools !== 'function') {
+        result.valid = false;
+        result.toolsCount = 0;
+        result.errors.push('Module does not have getTools() method - all modules must implement getTools()');
+        return result;
+      }
+
+      // Try to get tools and count them
+      try {
+        const tools = moduleObject.getTools();
+        result.toolsCount = Array.isArray(tools) ? tools.length : 0;
+        
+        // Check if tools have basic structure - these are ERRORS not warnings
+        if (Array.isArray(tools) && tools.length > 0) {
+          for (const tool of tools) {
+            if (!tool.name) {
+              result.valid = false;
+              result.errors.push(`Tool missing required name property`);
+            }
+            if (!tool.execute || typeof tool.execute !== 'function') {
+              result.valid = false;
+              result.errors.push(`Tool ${tool.name || 'unnamed'} missing required execute function`);
+            }
+          }
+        }
+      } catch (error) {
+        // If getTools() throws, module is invalid
+        result.valid = false;
+        result.toolsCount = 0;
+        result.errors.push(`getTools() failed: ${error.message}`);
+        return result;
+      }
+
+      // Validate metadata if available
+      if (typeof moduleObject.getMetadata === 'function' || moduleObject.metadata) {
+        try {
+          let metadata = null;
+          if (typeof moduleObject.getMetadata === 'function') {
+            metadata = await moduleObject.getMetadata();
+          } else if (moduleObject.metadata) {
+            metadata = moduleObject.metadata;
+          }
+          
+          if (metadata) {
+            const metadataValidation = this.metadataManager.validateModuleMetadata(metadata);
+            result.metadata = metadata;
+            // Add metadata errors to result
+            result.errors.push(...metadataValidation.errors);
+            // If metadata is invalid, module is invalid
+            if (!metadataValidation.valid) {
+              result.valid = false;
+            }
+          }
+        } catch (metaError) {
+          // Metadata errors are real errors
+          result.valid = false;
+          result.errors.push(`Metadata validation failed: ${metaError.message}`);
+        }
+      }
+
+      // If we got here with no errors, module is valid
+      if (result.errors.length === 0) {
+        result.valid = true;
+      }
       
     } catch (error) {
-      result.errors.push(`Could not read module file: ${error.message}`);
-      this.logger.verbose(`Could not read module file ${modulePath}: ${error.message}`);
+      result.valid = false;
+      result.errors.push(`Module validation failed: ${error.message}`);
+      this.logger.verbose(`Module validation failed: ${error.message}`);
     }
     
     return result;
@@ -248,9 +331,8 @@ export class ModuleDiscovery {
   _createValidationResult() {
     return {
       valid: false,
-      score: 0,
+      toolsCount: 0,  // Initialize toolsCount
       errors: [],
-      warnings: [],
       metadata: null
     };
   }
@@ -264,54 +346,6 @@ export class ModuleDiscovery {
       const { ResourceManager } = await import('@legion/resource-manager');
       this.resourceManager = ResourceManager.getInstance();
       await this.resourceManager.initialize();
-    }
-  }
-
-  /**
-   * Create ModuleLoader instance
-   * Single Responsibility: ModuleLoader creation
-   */
-  async _createModuleLoader() {
-    const ModuleLoaderClass = (await import('./ModuleLoader.js')).ModuleLoader;
-    return new ModuleLoaderClass(this.resourceManager);
-  }
-
-  /**
-   * Validate module using ModuleLoader
-   * Single Responsibility: Primary validation path
-   */
-  async _validateWithModuleLoader(moduleLoader, modulePath, result) {
-    try {
-      const moduleInstance = await moduleLoader.loadModule(modulePath);
-      
-      result.valid = true;
-      result.score = 70; // Base score for loadable module
-      
-      // Get tool count from the loaded module
-      if (moduleInstance && typeof moduleInstance.getTools === 'function') {
-        try {
-          const tools = moduleInstance.getTools();
-          result.toolsCount = Array.isArray(tools) ? tools.length : 0;
-        } catch (error) {
-          // If getTools() fails, default to 0
-          result.toolsCount = 0;
-          result.warnings.push(`Could not get tools count: ${error.message}`);
-        }
-      } else {
-        result.toolsCount = 0;
-        result.warnings.push('Module does not have getTools() method');
-      }
-      
-      // Validate metadata if enabled
-      if (this.options.validateMetadata && moduleInstance) {
-        await this._validateModuleMetadata(moduleInstance, result);
-      }
-      
-      return result;
-      
-    } catch (importError) {
-      // Return null to indicate fallback needed
-      return null;
     }
   }
 
@@ -344,71 +378,6 @@ export class ModuleDiscovery {
     }
   }
 
-  /**
-   * Validate module using direct import as fallback
-   * Single Responsibility: Fallback validation path
-   */
-  async _validateWithDirectImport(modulePath, result) {
-    try {
-      const ModuleClass = await import(modulePath);
-      const TestClass = ModuleClass.default || ModuleClass.Module || ModuleClass;
-      
-      if (typeof TestClass === 'function') {
-        // Check for static create method
-        if (typeof TestClass.create === 'function') {
-          result.valid = true;
-          result.score = 50;
-          result.warnings.push('Module uses async factory pattern');
-          return result;
-        }
-        
-        // Try interface validation
-        return this._validateModuleInterface(TestClass, result);
-      } else {
-        result.errors.push('Module does not export a class or function');
-      }
-    } catch (secondError) {
-      result.errors.push(`Module import failed: ${secondError.message}`);
-      this.logger.verbose(`Module validation failed for ${modulePath}: ${secondError.message}`);
-    }
-    
-    return result;
-  }
-
-  /**
-   * Validate module interface by instantiation
-   * Single Responsibility: Interface compliance checking
-   */
-  _validateModuleInterface(TestClass, result) {
-    try {
-      let testInstance;
-      if (this.resourceManager) {
-        testInstance = new TestClass(this.resourceManager);
-      } else {
-        testInstance = new TestClass();
-      }
-      
-      // Check for valid interfaces
-      const hasNameGetTools = typeof testInstance.getName === 'function' && 
-                            typeof testInstance.getTools === 'function';
-      const hasNameProperty = typeof testInstance.name === 'string';
-      const hasGetTools = typeof testInstance.getTools === 'function';
-      const hasListTools = typeof testInstance.listTools === 'function';
-      
-      if (hasNameGetTools || (hasNameProperty && (hasGetTools || hasListTools))) {
-        result.valid = true;
-        result.score = 60; // Basic interface compliance
-        return result;
-      } else {
-        result.errors.push('Module does not have required interface methods');
-      }
-      
-    } catch (constructorError) {
-      result.errors.push(`Module constructor failed: ${constructorError.message}`);
-    }
-    
-    return result;
-  }
   
   /**
    * Extract module information from file path

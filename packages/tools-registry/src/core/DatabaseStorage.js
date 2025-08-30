@@ -265,8 +265,13 @@ export class DatabaseStorage {
       
       const collection = this.getCollection('module-registry');
       
+      // toolsCount will be populated later when module is actually loaded
+      // During discovery, we just save 0 as placeholder
+      const toolsCount = module.validation?.toolsCount || module.toolsCount || 0;
+      
       const moduleDoc = {
         ...module,
+        toolsCount: toolsCount,  // Placeholder - will be updated when loaded
         savedAt: new Date().toISOString(),
         status: 'discovered'
       };
@@ -297,6 +302,42 @@ export class DatabaseStorage {
     }
   }
   
+  /**
+   * Update toolsCount for a discovered module after it's been loaded
+   * @param {string} moduleId - Module _id from module-registry
+   * @param {number} toolsCount - Number of tools found in the loaded module
+   */
+  async updateModuleToolsCount(moduleId, toolsCount) {
+    try {
+      const collection = this.getCollection('module-registry');
+      
+      const result = await collection.updateOne(
+        { _id: moduleId },
+        { 
+          $set: { 
+            toolsCount: toolsCount,
+            lastUpdated: new Date().toISOString(),
+            status: 'loaded'  // Mark as loaded
+          } 
+        }
+      );
+      
+      if (result.matchedCount === 0) {
+        throw new Error(`Module not found in registry: ${moduleId}`);
+      }
+      
+      return { success: true, updated: result.modifiedCount > 0 };
+      
+    } catch (error) {
+      throw new DatabaseError(
+        `Failed to update toolsCount for module ${moduleId}`,
+        'UPDATE_ERROR',
+        'module-registry',
+        error
+      );
+    }
+  }
+
   /**
    * @deprecated Use saveLoadedModule instead
    */

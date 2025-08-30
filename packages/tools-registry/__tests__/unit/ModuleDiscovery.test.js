@@ -19,14 +19,15 @@ describe('ModuleDiscovery', () => {
   let testDir;
   
   beforeEach(async () => {
-    moduleDiscovery = new ModuleDiscovery();
-    
-    // Set a mock resourceManager on the instance for testing
+    // Set up a mock resourceManager for testing
     const mockResourceManager = {
       initialize: jest.fn().mockResolvedValue(true),
       get: jest.fn().mockReturnValue(undefined)
     };
-    moduleDiscovery.resourceManager = mockResourceManager;
+    
+    moduleDiscovery = new ModuleDiscovery({
+      resourceManager: mockResourceManager
+    });
     
     // Create a test directory structure
     testDir = path.join(__dirname, '../tmp/discovery-test');
@@ -218,26 +219,93 @@ describe('ModuleDiscovery', () => {
       const validModulePath = path.join(testDir, 'ValidModule.js');
       await fs.writeFile(validModulePath, `
 export default class ValidModule {
+  static async create(resourceManager) {
+    return new ValidModule();
+  }
+  get name() { return 'ValidModule'; }
   getName() { return 'ValidModule'; }
   getTools() { return []; }
 }`);
       
-      const validationResult = await moduleDiscovery.validateModule(validModulePath);
+      // Load the module object first, then validate it
+      const moduleObject = await moduleDiscovery.moduleLoader.loadModule(validModulePath);
+      const validationResult = await moduleDiscovery.validateModule(moduleObject);
       
       expect(validationResult.valid).toBe(true);
       expect(validationResult.errors.length).toBe(0);
+      expect(validationResult.toolsCount).toBe(0); // Empty getTools() array
     });
     
     it('should reject invalid module structure', async () => {
       const invalidModulePath = path.join(testDir, 'InvalidModule.js');
       await fs.writeFile(invalidModulePath, `
 export default class InvalidModule {
-  // Missing required methods
+  static async create(resourceManager) {
+    return new InvalidModule();
+  }
+  get name() { return 'InvalidModule'; }
+  // Missing getTools method
 }`);
       
-      const validationResult = await moduleDiscovery.validateModule(invalidModulePath);
-      expect(validationResult.valid).toBe(false);
-      expect(validationResult.errors.length).toBeGreaterThan(0);
+      // Loading should fail because ModuleLoader validates the structure
+      // and requires getTools method
+      await expect(moduleDiscovery.moduleLoader.loadModule(invalidModulePath))
+        .rejects
+        .toThrow('Module validation failed - must follow standard Legion module interface');
+    });
+    
+    it('should count tools correctly for module with tools', async () => {
+      const moduleWithToolsPath = path.join(testDir, 'ModuleWithTools.js');
+      await fs.writeFile(moduleWithToolsPath, `
+export default class ModuleWithTools {
+  static async create(resourceManager) {
+    return new ModuleWithTools();
+  }
+  get name() { return 'ModuleWithTools'; }
+  getName() { return 'ModuleWithTools'; }
+  getTools() { 
+    return [
+      { name: 'tool1', description: 'Test tool 1', inputSchema: {}, outputSchema: {}, execute: () => {} },
+      { name: 'tool2', description: 'Test tool 2', inputSchema: {}, outputSchema: {}, execute: () => {} }
+    ]; 
+  }
+}`);
+      
+      // Load the module object first, then validate it
+      const moduleObject = await moduleDiscovery.moduleLoader.loadModule(moduleWithToolsPath);
+      const validationResult = await moduleDiscovery.validateModule(moduleObject);
+      
+      expect(validationResult.valid).toBe(true);
+      expect(validationResult.toolsCount).toBe(2);
+      // Score is 60 because metadata validation sets it to 60 when no metadata is provided
+      expect(validationResult.score).toBe(60); 
+      expect(validationResult.errors.length).toBe(0);
+    });
+    
+    it('should handle modules where getTools() throws error', async () => {
+      const errorModulePath = path.join(testDir, 'ErrorModule.js');
+      await fs.writeFile(errorModulePath, `
+export default class ErrorModule {
+  static async create(resourceManager) {
+    return new ErrorModule();
+  }
+  get name() { return 'ErrorModule'; }
+  getName() { return 'ErrorModule'; }
+  getTools() { 
+    throw new Error('Tools not available');
+  }
+}`);
+      
+      // Load the module object first, then validate it
+      const moduleObject = await moduleDiscovery.moduleLoader.loadModule(errorModulePath);
+      const validationResult = await moduleDiscovery.validateModule(moduleObject);
+      
+      expect(validationResult.valid).toBe(true); // Module loads, just tools fail
+      expect(validationResult.toolsCount).toBe(0); // Default to 0 when getTools fails
+      // Score is 60 because metadata validation sets it to 60 when no metadata is provided
+      // (overwriting the 50 that was set when getTools failed)
+      expect(validationResult.score).toBe(60); 
+      expect(validationResult.warnings.some(w => w.includes('Could not get tools count'))).toBe(true);
     });
     
   });
