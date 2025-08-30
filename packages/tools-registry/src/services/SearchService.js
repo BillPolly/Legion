@@ -317,6 +317,78 @@ export class SearchService {
   }
 
   /**
+   * Load vectors from perspectives into vector store (with clear option)
+   * Single responsibility: Vector loading with clear-first behavior
+   */
+  async loadVectors(options = {}) {
+    const { batchSize = 100, clearFirst = true, verbose = false } = options;
+    
+    const results = {
+      loaded: 0,
+      cleared: 0,
+      failed: 0,
+      errors: []
+    };
+
+    // Clear vector store first if requested (default behavior)
+    if (clearFirst && this.vectorStore) {
+      try {
+        const clearedCount = await this.vectorStore.clear();
+        results.cleared = clearedCount;
+        if (verbose) {
+          console.log(`🧹 Cleared ${clearedCount} existing vectors`);
+        }
+      } catch (error) {
+        console.warn(`Warning: Failed to clear vector store: ${error.message}`);
+      }
+    }
+
+    // Get perspectives with embeddings from MongoDB
+    const perspectivesWithEmbeddings = await this.toolRepository.getPerspectivesWithEmbeddings();
+    
+    if (verbose) {
+      console.log(`📊 Found ${perspectivesWithEmbeddings.length} perspectives with embeddings`);
+    }
+
+    // Load vectors in batches
+    for (let i = 0; i < perspectivesWithEmbeddings.length; i += batchSize) {
+      const batch = perspectivesWithEmbeddings.slice(i, i + batchSize);
+      
+      try {
+        await this.vectorStore.indexBatch(batch.map(p => ({
+          id: p._id || p.id,
+          vector: p.embedding,
+          metadata: {
+            toolName: p.tool_name || p.toolName,
+            toolId: p.tool_id,
+            perspective: p.perspective_type_name || p.perspective,
+            content: p.content,
+            perspectiveType: p.perspective_type_name
+          }
+        })));
+        
+        results.loaded += batch.length;
+        
+        if (verbose) {
+          console.log(`📥 Loaded batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(perspectivesWithEmbeddings.length/batchSize)} (${batch.length} vectors)`);
+        }
+      } catch (error) {
+        results.failed += batch.length;
+        results.errors.push({
+          batch: Math.floor(i/batchSize) + 1,
+          error: error.message
+        });
+        
+        if (verbose) {
+          console.error(`❌ Failed to load batch ${Math.floor(i/batchSize) + 1}: ${error.message}`);
+        }
+      }
+    }
+
+    return results;
+  }
+
+  /**
    * Index vectors in vector store
    * Single responsibility: Vector indexing coordination
    */

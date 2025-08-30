@@ -270,6 +270,34 @@ export class ToolManager {
   }
 
   /**
+   * Load vectors from perspectives into vector store (with clear option)
+   * Administrative operation for vector loading with clearing
+   * 
+   * @param {Object} options - Loading options (clearFirst, batchSize, verbose)
+   * @returns {Promise<Object>} Load results
+   */
+  async loadVectors(options = {}) {
+    await this._ensureInitialized();
+    
+    this.logger.info('Loading vectors from perspectives with clear option', { options });
+    
+    try {
+      const results = await this.toolRegistry.loadVectors(options);
+      
+      this.logger.info('Vector loading completed', {
+        loaded: results.loaded,
+        cleared: results.cleared,
+        failed: results.failed || 0
+      });
+      
+      return results;
+    } catch (error) {
+      this.logger.error('Vector loading failed', { error: error.message });
+      throw error;
+    }
+  }
+
+  /**
    * Run complete initialization pipeline
    * Administrative operation for full system setup
    * 

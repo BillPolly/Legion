@@ -33,8 +33,34 @@ async function main() {
   }
   
   try {
+    // For status command, suppress logging during initialization unless verbose requested
+    let originalLog, originalInfo, originalWarn, originalError;
+    const isStatusCommand = command.toLowerCase() === 'status';
+    const isVerbose = args.includes('--verbose') || args.includes('-v');
+    
+    if (isStatusCommand && !isVerbose) {
+      // Suppress ALL console output during ToolManager initialization
+      originalLog = console.log;
+      originalInfo = console.info;
+      originalWarn = console.warn;
+      originalError = console.error;
+      
+      console.log = () => {};
+      console.info = () => {};
+      console.warn = () => {};
+      console.error = () => {};
+    }
+    
     // Get ToolManager singleton - this handles all administrative operations
     const toolManager = await getToolManager();
+    
+    // Restore console methods if they were suppressed
+    if (isStatusCommand && !isVerbose) {
+      console.log = originalLog;
+      console.info = originalInfo;
+      console.warn = originalWarn;
+      console.error = originalError;
+    }
     
     switch (command.toLowerCase()) {
       case 'status':
@@ -63,6 +89,10 @@ async function main() {
         
       case 'vectors':
         await handleVectors(toolManager, args.slice(1));
+        break;
+        
+      case 'vectors:load':
+        await handleVectorsLoad(toolManager, args.slice(1));
         break;
         
       case 'pipeline':
@@ -97,14 +127,8 @@ async function main() {
 async function handleStatus(toolManager, args) {
   const verbose = args.includes('--verbose') || args.includes('-v');
   
-  // Suppress console logs during initialization unless verbose
-  const originalLog = console.log;
-  if (!verbose) {
-    console.log = () => {}; // Suppress all console.log output
-  }
-  
-  const status = await toolManager.getSystemStatus({ verbose });
-  console.log = originalLog; // Restore console.log
+  // Get status (logging is already suppressed at main level for non-verbose)
+  const status = await toolManager.getSystemStatus({ verbose: false });
   
   // Simple collection counts display
   console.log('\n📊 Collection Counts:');
@@ -127,11 +151,18 @@ async function handleStatus(toolManager, args) {
     const collections = await client.getCollections();
     qdrantStatus = '✅ Connected';
     
-    // Check if tools collection exists and get count
-    const hasToolsCollection = collections.collections.some(c => c.name === 'tools');
-    if (hasToolsCollection) {
-      const info = await client.getCollection('tools');
-      vectorCount = info.vectors_count || 0;
+    // Check if tool_vectors collection exists and get count (this is where vectors are actually stored)
+    const hasToolVectorsCollection = collections.collections.some(c => c.name === 'tool_vectors');
+    if (hasToolVectorsCollection) {
+      const info = await client.getCollection('tool_vectors');
+      vectorCount = info.points_count || 0;
+    } else {
+      // Fallback to check tool_perspectives collection
+      const hasToolPerspectivesCollection = collections.collections.some(c => c.name === 'tool_perspectives');
+      if (hasToolPerspectivesCollection) {
+        const info = await client.getCollection('tool_perspectives');
+        vectorCount = info.points_count || 0;
+      }
     }
   } catch (e) {
     qdrantStatus = '❌ Disconnected (not reachable)';
@@ -139,6 +170,12 @@ async function handleStatus(toolManager, args) {
   
   console.log(`  Status: ${qdrantStatus}`);
   console.log(`  Vectors: ${vectorCount}`);
+
+  // Test semantic search functionality if vectors are available
+  if (vectorCount > 0) {
+    console.log('\n🔍 Semantic Search Test:');
+    await testSemanticSearchFunctionality(toolManager, verbose);
+  }
   
   if (verbose) {
     console.log('\n📊 Database:');
@@ -291,6 +328,28 @@ async function handleVectors(toolManager, args) {
   }
 }
 
+async function handleVectorsLoad(toolManager, args) {
+  const verbose = args.includes('--verbose') || args.includes('-v');
+  const noClear = args.includes('--no-clear');
+  
+  console.log('🔄 Loading vectors from perspectives (with clear)...');
+  
+  const result = await toolManager.loadVectors({ 
+    verbose, 
+    clearFirst: !noClear // Default to clearing unless --no-clear is specified
+  });
+  
+  console.log(`✅ Loaded ${result.loaded} vectors`);
+  
+  if (result.cleared > 0) {
+    console.log(`🧹 Cleared ${result.cleared} existing vectors`);
+  }
+  
+  if (result.failed > 0) {
+    console.log(`⚠️  ${result.failed} failed`);
+  }
+}
+
 async function handlePipeline(toolManager, args) {
   const verbose = args.includes('--verbose') || args.includes('-v');
   
@@ -378,6 +437,190 @@ async function handleVerify(toolManager, args) {
   }
 }
 
+async function testSemanticSearchFunctionality(toolManager, verbose = false) {
+  try {
+    // Get the ToolRegistry to access database operations
+    const { getToolRegistry } = await import('../src/index.js');
+    const toolRegistry = await getToolRegistry();
+    
+    // Get a sample perspective from the database to use as test query
+    const samplePerspective = await getSamplePerspective(toolRegistry);
+    
+    if (!samplePerspective) {
+      console.log('  ⚠️  No perspectives found in database');
+      return;
+    }
+    
+    const testQuery = samplePerspective.content;
+    const expectedToolName = samplePerspective.tool_name;
+    
+    // Perform semantic search (suppress all output during search)
+    const originalLog = console.log;
+    const originalInfo = console.info;
+    const originalWarn = console.warn;
+    const originalError = console.error;
+    
+    console.log = () => {};
+    console.info = () => {};
+    console.warn = () => {};
+    console.error = () => {};
+    
+    const searchResults = await toolManager.testSemanticSearch([testQuery], { limit: 3 });
+    
+    // Restore console methods
+    console.log = originalLog;
+    console.info = originalInfo;
+    console.warn = originalWarn;
+    console.error = originalError;
+    
+    if (!searchResults || !searchResults.results || searchResults.results.length === 0) {
+      console.log('  ❌ Search failed or no results');
+      return;
+    }
+    
+    const queryResult = searchResults.results[0];
+    const topResult = queryResult.topResult;
+    
+    if (!topResult) {
+      console.log('  ❌ No top result found');
+      return;
+    }
+    
+    // Get the actual tool to show its description
+    let toolDescription = 'No description available';
+    try {
+      const tool = await toolRegistry.getTool(topResult.name);
+      if (tool && tool.description) {
+        toolDescription = tool.description;
+      }
+    } catch (error) {
+      // Fallback to topResult description if available
+      if (topResult.description) {
+        toolDescription = topResult.description;
+      }
+    }
+    
+    // Check if the search found the expected tool
+    const foundExpectedTool = topResult.name === expectedToolName;
+    const confidence = (topResult.similarity * 100).toFixed(1);
+    
+    console.log(`  Perspective: "${testQuery}"`);
+    console.log(`  Found Tool: ${topResult.name}`);
+    console.log(`  Description: ${toolDescription}`);
+    console.log(`  Confidence: ${confidence}%`);
+    console.log(`  Match: ${foundExpectedTool ? '✅ Correct' : '❌ Incorrect'}`);
+    
+    // Try to get and execute the found tool
+    if (foundExpectedTool) {
+      await testToolExecution(toolManager, topResult.name, verbose);
+    }
+    
+  } catch (error) {
+    console.log(`  ❌ Test failed: ${error.message}`);
+    if (verbose) {
+      console.log(`  Error details: ${error.stack}`);
+    }
+  }
+}
+
+async function getSamplePerspective(toolRegistry) {
+  try {
+    // Access the toolRepository through serviceOrchestrator to get perspectives with embeddings
+    const serviceOrchestrator = toolRegistry.serviceOrchestrator;
+    const toolRepository = serviceOrchestrator.systemService.databaseService;
+    
+    // Get all perspectives with embeddings
+    const perspectives = await toolRepository.getPerspectivesWithEmbeddings();
+    
+    if (!perspectives || perspectives.length === 0) {
+      return null;
+    }
+    
+    // Return the first perspective as our sample
+    return perspectives[0];
+  } catch (error) {
+    console.log(`  ⚠️  Failed to get sample perspective: ${error.message}`);
+    return null;
+  }
+}
+
+async function testToolExecution(toolManager, toolName, verbose = false) {
+  try {
+    console.log(`  Tool Execution Test:`);
+    
+    // Get the tool
+    const { getToolRegistry } = await import('../src/index.js');
+    const toolRegistry = await getToolRegistry();
+    const tool = await toolRegistry.getTool(toolName);
+    
+    if (!tool) {
+      console.log(`    ❌ Tool not found: ${toolName}`);
+      return;
+    }
+    
+    console.log(`    Tool Found: ✅ ${tool.name}`);
+    console.log(`    Has Execute Method: ${typeof tool.execute === 'function' ? '✅' : '❌'}`);
+    
+    if (typeof tool.execute === 'function') {
+      // Try to execute with minimal/safe parameters based on tool name
+      let testParams = getTestParametersForTool(toolName);
+      
+      if (testParams) {
+        if (verbose) {
+          console.log(`    Test Parameters: ${JSON.stringify(testParams)}`);
+        }
+        
+        const result = await tool.execute(testParams);
+        const executionSuccess = result && (result.success !== false);
+        
+        console.log(`    Execution: ${executionSuccess ? '✅ Success' : '❌ Failed'}`);
+        
+        if (verbose && result) {
+          console.log(`    Result: ${JSON.stringify(result, null, 2).substring(0, 200)}...`);
+        }
+      } else {
+        console.log(`    ⚠️  No safe test parameters available for ${toolName}`);
+      }
+    }
+    
+  } catch (error) {
+    console.log(`    ❌ Execution test failed: ${error.message}`);
+  }
+}
+
+function getTestParametersForTool(toolName) {
+  // Safe test parameters for common tools
+  const safeTestParams = {
+    // Calculator tools
+    'calculator': { expression: '2 + 2' },
+    'add': { a: 2, b: 3 },
+    'subtract': { a: 5, b: 2 },
+    'multiply': { a: 3, b: 4 },
+    'divide': { a: 10, b: 2 },
+    
+    // JSON tools
+    'json_parse': { jsonString: '{"test": "value"}' },
+    'json_stringify': { object: { test: 'value' } },
+    
+    // Text tools
+    'text_length': { text: 'hello world' },
+    'text_uppercase': { text: 'hello' },
+    'text_lowercase': { text: 'HELLO' },
+    
+    // Utility tools
+    'uuid_generate': {},
+    'timestamp': {},
+    'random_number': { min: 1, max: 10 },
+    
+    // Code analysis tools
+    'validate_javascript': { code: 'const x = 42; console.log(x);' },
+    'lint_javascript': { code: 'const unused = 1;' },
+    'format_javascript': { code: 'const x=42;console.log(x)' }
+  };
+  
+  return safeTestParams[toolName] || null;
+}
+
 function showHelp() {
   console.log(`
 Tool Registry Management Script
@@ -393,6 +636,7 @@ Commands:
   perspectives [--verbose]     Generate perspectives for tools
   embeddings [--verbose]       Generate embeddings for perspectives
   vectors [--verbose]          Index vectors in vector store
+  vectors:load [--verbose]     Load vectors from perspectives (clears first)
   pipeline [--verbose]         Run complete initialization pipeline
   search <query> [--limit N]   Test semantic search
   verify [--verbose]           Verify system integrity

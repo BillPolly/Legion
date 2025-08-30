@@ -316,6 +316,14 @@ export class ServiceOrchestrator {
   }
 
   /**
+   * Load vectors from perspectives into vector store (with clear option)
+   * Delegates to SearchService
+   */
+  async loadVectors(options = {}) {
+    return await this.searchService.loadVectors(options);
+  }
+
+  /**
    * Test semantic search functionality
    * Delegates to SearchService and enriches results with tool objects
    */

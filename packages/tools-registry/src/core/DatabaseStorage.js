@@ -188,13 +188,7 @@ export class DatabaseStorage {
    * @returns {Collection} MongoDB collection
    */
   getCollection(name) {
-    console.log(`[DatabaseStorage] getCollection('${name}') called`);
-    console.log(`[DatabaseStorage] _isConnected: ${this._isConnected}`);
-    console.log(`[DatabaseStorage] db exists: ${!!this.db}`);
-    console.log(`[DatabaseStorage] client exists: ${!!this.client}`);
-    
     if (!this._isConnected || !this.db) {
-      console.log(`[DatabaseStorage] ERROR: Database not connected for collection '${name}'`);
       throw new DatabaseError(
         'Database not connected',
         'getCollection',

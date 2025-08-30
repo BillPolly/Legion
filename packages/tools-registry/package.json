@@ -21,6 +21,7 @@
     "perspectives": "NODE_OPTIONS=--experimental-vm-modules node scripts/manage.js perspectives",
     "embeddings": "NODE_OPTIONS=--experimental-vm-modules node scripts/manage.js embeddings",
     "vectors": "NODE_OPTIONS=--experimental-vm-modules node scripts/manage.js vectors",
+    "vectors:load": "NODE_OPTIONS=--experimental-vm-modules node scripts/manage.js vectors:load",
     "search": "NODE_OPTIONS=--experimental-vm-modules node scripts/manage.js search",
     "verify": "NODE_OPTIONS=--experimental-vm-modules node scripts/manage.js verify",
     "pipeline": "NODE_OPTIONS=--experimental-vm-modules node scripts/manage.js pipeline",

@@ -288,6 +288,14 @@ export class ToolRegistry {
   }
 
   /**
+   * Load vectors from perspectives into vector store (with clear option)
+   */
+  async loadVectors(options = {}) {
+    await this._ensureInitialized();
+    return await this.serviceOrchestrator.loadVectors(options);
+  }
+
+  /**
    * Enhanced vector indexing (alias)
    */
   async indexVectorsEnhanced(options = {}) {
