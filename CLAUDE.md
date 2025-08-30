@@ -106,3 +106,5 @@ ALWAYS run tests with nmp test ....selection to run
 
 
 THERE is no problem getting real llm clients for testing!!!! always use them in integration tests when required.
+
+ALL temporary scripts must go in tmp/ directories

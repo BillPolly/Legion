@@ -4,7 +4,6 @@
  * Provides tools for deploying, monitoring, and managing applications across multiple providers.
  */
 
-import { Module } from '@legion/tools-registry';
 import DeployApplicationTool from './tools/DeployApplicationTool.js';
 import CheckDeploymentTool from './tools/CheckDeploymentTool.js';
 import ListDeploymentsTool from './tools/ListDeploymentsTool.js';
@@ -21,12 +20,13 @@ const __dirname = dirname(__filename);
 /**
  * ConanTheDeployerModule - Provides deployment management tools using metadata-driven architecture
  */
-export default class ConanTheDeployerModule extends Module {
+export default class ConanTheDeployerModule {
   constructor() {
-    super();
     this.name = 'conan-the-deployer';
     this.description = 'Comprehensive deployment management tools for deploying and monitoring applications';
     this.version = '1.0.0';
+    this.tools = {};
+    this.initialized = false;
     
     // NEW: Set metadata path for automatic loading
     this.metadataPath = './tools-metadata.json';
@@ -60,38 +60,28 @@ export default class ConanTheDeployerModule extends Module {
   }
 
   /**
-   * Initialize the module using metadata-driven architecture
+   * Initialize the module
    */
   async initialize() {
-    await super.initialize(); // This loads metadata automatically
-    
-    // NEW APPROACH: Create tools using metadata
-    if (this.metadata) {
-      const tools = [
-        { key: 'deploy_application', class: DeployApplicationTool },
-        { key: 'check_deployment', class: CheckDeploymentTool }
-      ];
-
-      for (const { key, class: ToolClass } of tools) {
-        try {
-          const tool = this.createToolFromMetadata(key, ToolClass);
-          this.registerTool(tool.name, tool);
-        } catch (error) {
-          console.warn(`Failed to create metadata tool ${key}, falling back to legacy: ${error.message}`);
-          
-          // Fallback to legacy
-          const legacyTool = new ToolClass();
-          this.registerTool(legacyTool.name, legacyTool);
-        }
-      }
-    } else {
-      // FALLBACK: Old approach for backwards compatibility
-      const deployTool = new DeployApplicationTool();
-      const checkTool = new CheckDeploymentTool();
-      
-      this.registerTool(deployTool.name, deployTool);
-      this.registerTool(checkTool.name, checkTool);
+    if (this.initialized) {
+      return;
     }
+    
+    // Create tools directly without metadata dependency
+    const deployTool = new DeployApplicationTool();
+    const checkTool = new CheckDeploymentTool();
+    
+    this.registerTool(deployTool.name, deployTool);
+    this.registerTool(checkTool.name, checkTool);
+    
+    this.initialized = true;
+  }
+  
+  /**
+   * Register a tool with the module
+   */
+  registerTool(name, tool) {
+    this.tools[name] = tool;
   }
 
   /**

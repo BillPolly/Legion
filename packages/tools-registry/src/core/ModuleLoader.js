@@ -51,11 +51,15 @@ export class ModuleLoader {
    * @returns {Object} Module instance
    */
   async loadModule(modulePath, options = {}) {
+    console.log(`[ModuleLoader] START loading: ${modulePath}`);
+    const startTime = Date.now();
+    
     // Resolve the full path
     let fullPath = modulePath;
     if (!path.isAbsolute(modulePath)) {
       fullPath = path.resolve(this.monorepoRoot, modulePath);
     }
+    console.log(`[ModuleLoader] Resolved path: ${fullPath}`);
     
     // Check if it's a directory and append index.js if needed
     try {
@@ -126,8 +130,12 @@ export class ModuleLoader {
       // Dynamic import of the module - may throw SyntaxError for invalid JS
       let importedModule;
       try {
+        console.log(`[ModuleLoader] Importing from URL: ${moduleUrl}`);
+        const importStart = Date.now();
         importedModule = await import(moduleUrl);
+        console.log(`[ModuleLoader] Import completed in ${Date.now() - importStart}ms`);
       } catch (importError) {
+        console.log(`[ModuleLoader] Import FAILED: ${importError.message}`);
         if (importError instanceof SyntaxError) {
           throw new ModuleLoadError(
             `Failed to load module at ${fullPath}: Syntax error in module`,
@@ -154,9 +162,11 @@ export class ModuleLoader {
       
       // Create instance using standard interface - all modules must have static create method
       let moduleInstance;
+      console.log(`[ModuleLoader] Creating instance...`);
       if (typeof ModuleClass === 'function') {
         // Standard interface requires static create method
         if (typeof ModuleClass.create === 'function') {
+          console.log(`[ModuleLoader] Using static create method`);
           if (!this.resourceManager) {
             throw new ModuleLoadError(
               `Module at ${fullPath} requires ResourceManager but none provided`,
@@ -191,6 +201,7 @@ export class ModuleLoader {
       // Cache the instance
       this.moduleCache.set(fullPath, moduleInstance);
       
+      console.log(`[ModuleLoader] COMPLETED loading ${modulePath} in ${Date.now() - startTime}ms`);
       return moduleInstance;
       
     } catch (error) {
