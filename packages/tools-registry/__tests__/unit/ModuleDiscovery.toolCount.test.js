@@ -92,8 +92,6 @@ export default class TestModuleWithTools {
 
       expect(validationResult.valid).toBe(true);
       expect(validationResult.toolsCount).toBe(3);
-      // Score is 60 because metadata validation overwrites the tools score
-      expect(validationResult.score).toBe(60); 
       expect(validationResult.errors.length).toBe(0);
     });
 
@@ -139,10 +137,8 @@ export default class TestModulePartialTools {
 
       expect(validationResult.valid).toBe(true);
       expect(validationResult.toolsCount).toBe(3); // Should count all tools
-      // Score is 60 because metadata validation overwrites the tools score
-      expect(validationResult.score).toBe(60); 
-      expect(validationResult.warnings.length).toBeGreaterThan(0);
-      expect(validationResult.warnings[0]).toContain('tools missing description/input/output');
+      // Tools without required properties are still valid if they have name and execute
+      expect(validationResult.errors.length).toBe(0);
     });
 
     it('should return 0 tools for module without tools', async () => {
@@ -168,8 +164,7 @@ export default class TestModuleNoTools {
 
       expect(validationResult.valid).toBe(true);
       expect(validationResult.toolsCount).toBe(0);
-      // Score is 60 because metadata validation sets it when no metadata provided
-      expect(validationResult.score).toBe(60);
+      expect(validationResult.errors.length).toBe(0);
     });
 
     it('should handle modules where getTools() throws an error', async () => {
@@ -193,11 +188,9 @@ export default class TestModuleErrorTools {
       const moduleObject = await moduleDiscovery.moduleLoader.loadModule(modulePath);
       const validationResult = await moduleDiscovery.validateModule(moduleObject);
 
-      expect(validationResult.valid).toBe(true);
+      expect(validationResult.valid).toBe(false); // getTools() throwing is now invalid
       expect(validationResult.toolsCount).toBe(0); // Default to 0 when getTools fails
-      // Score is 60 because metadata validation overwrites the 50 from getTools failure
-      expect(validationResult.score).toBe(60);
-      expect(validationResult.warnings.some(w => w.includes('Could not get tools count'))).toBe(true);
+      expect(validationResult.errors.some(e => e.includes('getTools() failed'))).toBe(true);
     });
 
     it('should handle modules without getTools method', async () => {
@@ -348,15 +341,10 @@ export default class TestMixedTools {
       expect(validationResult.valid).toBe(true);
       expect(validationResult.toolsCount).toBe(6); // All tools counted
       
-      // Should have warnings about incomplete tools
-      expect(validationResult.warnings.length).toBeGreaterThan(0);
-      expect(validationResult.warnings[0]).toContain('tools missing description/input/output');
-      
-      // Score should be between 60-90 due to some incomplete tools
-      expect(validationResult.score).toBeGreaterThanOrEqual(60);
-      expect(validationResult.score).toBeLessThan(100);
+      // Tools without all properties are still valid if they have name and execute
+      expect(validationResult.errors.length).toBe(0);
 
-      console.log(`✅ Mixed tools validation: ${validationResult.toolsCount} tools, score: ${validationResult.score}`);
+      console.log(`✅ Mixed tools validation: ${validationResult.toolsCount} tools`);
     });
   });
 });

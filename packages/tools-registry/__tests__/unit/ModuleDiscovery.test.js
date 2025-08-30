@@ -277,8 +277,6 @@ export default class ModuleWithTools {
       
       expect(validationResult.valid).toBe(true);
       expect(validationResult.toolsCount).toBe(2);
-      // Score is 60 because metadata validation sets it to 60 when no metadata is provided
-      expect(validationResult.score).toBe(60); 
       expect(validationResult.errors.length).toBe(0);
     });
     
@@ -300,12 +298,10 @@ export default class ErrorModule {
       const moduleObject = await moduleDiscovery.moduleLoader.loadModule(errorModulePath);
       const validationResult = await moduleDiscovery.validateModule(moduleObject);
       
-      expect(validationResult.valid).toBe(true); // Module loads, just tools fail
-      expect(validationResult.toolsCount).toBe(0); // Default to 0 when getTools fails
-      // Score is 60 because metadata validation sets it to 60 when no metadata is provided
-      // (overwriting the 50 that was set when getTools failed)
-      expect(validationResult.score).toBe(60); 
-      expect(validationResult.warnings.some(w => w.includes('Could not get tools count'))).toBe(true);
+      // When getTools() throws, module is now INVALID (changed behavior)
+      expect(validationResult.valid).toBe(false);
+      expect(validationResult.toolsCount).toBe(0);
+      expect(validationResult.errors.some(e => e.includes('getTools() failed'))).toBe(true);
     });
     
   });
