@@ -13,14 +13,14 @@
  *   node scripts/generate-perspectives.js --force            # Force regeneration
  */
 
-import { ToolRegistry } from '../src/index.js';
+import { getToolRegistry } from '../src/index.js';
 
 async function generatePerspectives(options = {}) {
   const { toolName, moduleName, force = false, verbose = false, dryRun = false } = options;
   
   try {
     // Get ToolRegistry singleton
-    const toolRegistry = await ToolRegistry.getInstance();
+    const toolRegistry = await getToolRegistry();
     
     console.log('🚀 Starting perspective generation...\n');
     

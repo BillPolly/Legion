@@ -12,14 +12,14 @@
  *   node scripts/reset-database.js --tools         # Reset only tools
  */
 
-import { ToolRegistry } from '../src/index.js';
+import { getToolRegistry } from '../src/index.js';
 
 async function resetDatabase(options = {}) {
   const { perspectives = false, tools = false, all = false, confirm = false } = options;
   
   try {
     // Get ToolRegistry singleton
-    const toolRegistry = await ToolRegistry.getInstance();
+    const toolRegistry = await getToolRegistry();
     
     console.log('🔄 Database Reset\n');
     console.log('=' + '='.repeat(50));

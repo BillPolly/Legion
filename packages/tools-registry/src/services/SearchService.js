@@ -22,6 +22,7 @@ export class SearchService {
     this.toolRepository = dependencies.toolRepository;
     this.moduleService = dependencies.moduleService; // NEW: Access to in-memory modules
     this.eventBus = dependencies.eventBus;
+    this.logger = dependencies.logger || { verbose: () => {} }; // Add logger with fallback
   }
 
   /**
@@ -56,6 +57,7 @@ export class SearchService {
   /**
    * Search tools using semantic/vector search
    * Single responsibility: Semantic tool search
+   * Returns only IDs and metadata - enrichment done at higher level
    */
   async semanticSearch(query, options = {}) {
     if (!query?.trim()) {
@@ -71,28 +73,23 @@ export class SearchService {
         { threshold, limit }
       );
 
-      // Instead of looking up tools by random vector IDs, use the metadata stored in vectors
-      const enrichedResults = vectorResults.map((result) => {
-        return {
-          name: result.metadata?.toolName || result.name || result.tool_name,
-          description: result.metadata?.content || result.description || '',
-          moduleName: result.metadata?.moduleName || result.moduleName || '',
-          similarity: result.score, // VectorStore returns 'score', SearchService expects 'similarity'
-          perspective: result.metadata?.perspective || result.metadata?.perspectiveType || '',
-          category: result.metadata?.category || '',
-          // Include additional metadata for debugging
-          perspectiveType: result.metadata?.perspectiveType || result.metadata?.perspective_type_name || '',
-          content: result.metadata?.content || ''
-        };
-      });
+      // Return simple results with just IDs and metadata
+      // Tool enrichment should be done at ToolRegistry/ServiceOrchestrator level
+      const results = vectorResults.map(result => ({
+        toolId: result.metadata?.toolId,
+        perspectiveId: result.id,
+        perspectiveText: result.metadata?.content || '',
+        perspectiveType: result.metadata?.perspectiveType || '',
+        confidence: result.score
+      }));
 
       this.eventBus.emit('search:semantic-performed', {
         query,
-        resultCount: enrichedResults.length,
-        averageSimilarity: enrichedResults.reduce((sum, r) => sum + r.similarity, 0) / enrichedResults.length
+        resultCount: results.length,
+        averageConfidence: results.reduce((sum, r) => sum + r.confidence, 0) / results.length
       });
 
-      return enrichedResults;
+      return results;
     } catch (error) {
       this.eventBus.emit('search:semantic-failed', {
         query,
@@ -336,13 +333,18 @@ export class SearchService {
       const batch = perspectivesWithEmbeddings.slice(i, i + batchSize);
       
       try {
+        // Debug: Log what we're indexing
+        if (batch.length > 0 && this.logger?.verbose) {
+          this.logger.verbose(`Indexing batch with first perspective having tool_id: ${batch[0].tool_id}`);
+        }
+        
         await this.vectorStore.indexBatch(batch.map(p => ({
-          id: p.id,
+          id: p._id || p.id,  // Use MongoDB _id if available
           vector: p.embedding,
           metadata: {
             toolName: p.tool_name || p.toolName,  // Database uses tool_name
+            toolId: p.tool_id, // Include tool ID for lookups
             perspective: p.perspective_type_name || p.perspective, // Database uses perspective_type_name  
-            moduleName: p.module_name || p.moduleName, // Database uses module_name
             content: p.content, // Include perspective content
             perspectiveType: p.perspective_type_name
           }
@@ -449,5 +451,33 @@ export class SearchService {
 
     this.eventBus.emit('search:test-complete', results);
     return results;
+  }
+
+  /**
+   * Clear all vectors from the vector store
+   * Single responsibility: Vector store cleanup
+   */
+  async clearVectors() {
+    try {
+      // Use VectorStore's clear method to clear all vectors
+      const result = await this.vectorStore.clear();
+      
+      this.eventBus.emit('search:vectors-cleared', {
+        clearedCount: result.deletedCount || 0,
+        collection: this.vectorStore.options?.collectionName || 'tool_vectors'
+      });
+      
+      return {
+        success: true,
+        clearedCount: result.deletedCount || 0,
+        collection: this.vectorStore.options?.collectionName || 'tool_vectors'
+      };
+    } catch (error) {
+      this.eventBus.emit('search:vectors-clear-failed', {
+        error: error.message
+      });
+      
+      throw new Error(`Failed to clear vectors: ${error.message}`);
+    }
   }
 }

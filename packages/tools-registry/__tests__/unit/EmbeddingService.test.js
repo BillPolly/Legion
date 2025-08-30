@@ -52,14 +52,19 @@ describe('EmbeddingService', () => {
       }).toThrow(EmbeddingError);
     });
 
-    test('should use default options when none provided', () => {
+    test('should use default options when none provided', async () => {
       embeddingService = new EmbeddingService({
         resourceManager: mockResourceManager
       });
 
-      expect(embeddingService.options.dimensions).toBe(384); // Default dimension
+      // Before initialization, dimensions should be null
+      expect(embeddingService.options.dimensions).toBe(null);
       expect(embeddingService.options.batchSize).toBe(20);
       expect(embeddingService.options.cacheSize).toBe(1000);
+      
+      // After initialization, dimensions should be set from Nomic (768)
+      await embeddingService.initialize();
+      expect(embeddingService.options.dimensions).toBe(768);
     });
 
     test('should initialize successfully with valid ResourceManager', async () => {
@@ -385,13 +390,24 @@ describe('EmbeddingService', () => {
       await expect(embeddingService.generateEmbedding('test text')).rejects.toThrow(EmbeddingError);
     });
 
-    test('should throw error when called before initialization', async () => {
+    test('should auto-initialize when called before explicit initialization', async () => {
       const uninitializedService = new EmbeddingService({
         resourceManager: mockResourceManager
       });
 
-      await expect(uninitializedService.generateEmbedding('test')).rejects.toThrow(EmbeddingError);
-      await expect(uninitializedService.generateEmbeddings(['test'])).rejects.toThrow(EmbeddingError);
+      // Service should auto-initialize rather than throw error
+      const embedding = await uninitializedService.generateEmbedding('test');
+      expect(embedding).toHaveLength(768); // Nomic dimensions
+      expect(uninitializedService.initialized).toBe(true);
+      
+      // Batch should also auto-initialize
+      const uninitializedService2 = new EmbeddingService({
+        resourceManager: mockResourceManager
+      });
+      const embeddings = await uninitializedService2.generateEmbeddings(['test']);
+      expect(embeddings).toHaveLength(1);
+      expect(embeddings[0]).toHaveLength(768);
+      expect(uninitializedService2.initialized).toBe(true);
     });
   });
 

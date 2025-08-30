@@ -29,20 +29,22 @@ export class ModuleService {
    * Single responsibility: Only module discovery
    */
   async discoverModules(searchPaths) {
-    if (!searchPaths?.length) {
-      throw new Error('Search paths are required for module discovery');
-    }
-
-    // ModuleDiscovery.discoverModules takes a single path, so process each path
     const allModules = [];
     const errors = [];
     
-    for (const searchPath of searchPaths) {
-      try {
-        const modules = await this.moduleDiscovery.discoverModules(searchPath);
-        allModules.push(...modules);
-      } catch (error) {
-        errors.push({ path: searchPath, error: error.message });
+    // If no search paths provided, discover in the entire monorepo
+    if (!searchPaths?.length) {
+      const modules = await this.moduleDiscovery.discoverInMonorepo();
+      allModules.push(...modules);
+    } else {
+      // ModuleDiscovery.discoverModules takes a single path, so process each path
+      for (const searchPath of searchPaths) {
+        try {
+          const modules = await this.moduleDiscovery.discoverModules(searchPath);
+          allModules.push(...modules);
+        } catch (error) {
+          errors.push({ path: searchPath, error: error.message });
+        }
       }
     }
     
@@ -376,12 +378,22 @@ export class ModuleService {
    */
    async getModuleStatistics() {
     try {
+      // Get discovered modules from database (not memory) using DatabaseStorage methods
+      const discoveredModules = await this.databaseService.findDiscoveredModules({});
+      const discoveredCount = discoveredModules.length;
+      
+      // Calculate total tools discovered
+      let totalToolsDiscovered = 0;
+      for (const module of discoveredModules) {
+        totalToolsDiscovered += module.toolsCount || 0;
+      }
+      
       // Get list of loaded modules from cache
       const loadedModuleNames = [];
       
       // Check discovered modules that are actually cached/loaded
-      // Must check by _id since that's how we cache them now
-      for (const module of this.discoveredModules) {
+      // Use database results, not memory array
+      for (const module of discoveredModules) {
         try {
           // Check cache by _id (primary key) first, fallback to name for backwards compatibility
           let cached = null;
@@ -403,10 +415,11 @@ export class ModuleService {
       }
       
       return {
-        totalDiscovered: this.discoveredModules.length,
+        totalDiscovered: discoveredCount,
+        totalToolsDiscovered: totalToolsDiscovered,
         totalLoaded: loadedModuleNames.length,
         loadedModules: loadedModuleNames,
-        discoveredModules: this.discoveredModules.map(m => m.name)
+        discoveredModules: discoveredModules.map(m => m.name)
       };
     } catch (error) {
       throw new Error(`Failed to get module statistics: ${error.message}`);

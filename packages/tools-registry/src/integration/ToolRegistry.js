@@ -214,7 +214,25 @@ export class ToolRegistry {
    */
   async getStatistics() {
     await this._ensureInitialized();
-    return await this.serviceOrchestrator.getStatistics();
+    const stats = await this.serviceOrchestrator.getStatistics();
+    
+    // Enhancement: Also get the real module-registry count from database
+    // This shows ALL discovered modules in database, not just ones discovered in this session
+    try {
+      const databaseService = this.serviceOrchestrator.databaseService;
+      if (databaseService && databaseService._isConnected) {
+        const collection = await databaseService.getCollection('module-registry');
+        if (collection) {
+          const registryCount = await collection.countDocuments();
+          // Add database registry count as a separate field for clarity
+          stats.modules.registryCount = registryCount;
+        }
+      }
+    } catch (error) {
+      // Non-critical - continue with existing stats
+    }
+    
+    return stats;
   }
 
   /**

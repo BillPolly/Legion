@@ -90,6 +90,8 @@ describe('VectorStore', () => {
   
   describe('initialize', () => {
     it('should create collection if it does not exist', async () => {
+      // Must set dimensions before initialization
+      vectorStore.setDimensions(384);
       await vectorStore.initialize();
       
       expect(mockVectorDatabase.hasCollection).toHaveBeenCalledWith('tool_vectors');
@@ -102,10 +104,17 @@ describe('VectorStore', () => {
     it('should not create collection if it already exists', async () => {
       mockVectorDatabase.hasCollection.mockResolvedValue(true);
       
+      // Must set dimensions before initialization
+      vectorStore.setDimensions(384);
       await vectorStore.initialize();
       
       expect(mockVectorDatabase.hasCollection).toHaveBeenCalled();
       expect(mockVectorDatabase.createCollection).not.toHaveBeenCalled();
+    });
+    
+    it('should throw error if dimensions not set', async () => {
+      // Don't set dimensions - should throw error
+      await expect(vectorStore.initialize()).rejects.toThrow('Dimensions must be set before initialization');
     });
   });
   
@@ -177,7 +186,7 @@ describe('VectorStore', () => {
       
       expect(results).toHaveLength(2);
       expect(results[0]).toHaveProperty('score', 0.95);
-      expect(results[0]).toHaveProperty('toolName', 'file-reader');
+      expect(results[0]).toHaveProperty('metadata.toolName', 'file-reader');
       expect(mockEmbeddingClient.generateEmbedding).toHaveBeenCalledWith('read files from disk');
       expect(mockVectorDatabase.search).toHaveBeenCalled();
     });

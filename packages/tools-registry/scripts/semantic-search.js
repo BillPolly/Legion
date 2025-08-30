@@ -13,7 +13,7 @@
  *   node scripts/semantic-search.js "file manipulation" --show-details
  */
 
-import { ToolRegistry } from '../src/index.js';
+import { getToolRegistry } from '../src/index.js';
 
 async function semanticSearch(query, options = {}) {
   const { limit = 10, verbose = false, showDetails = true } = options;
@@ -31,7 +31,7 @@ async function semanticSearch(query, options = {}) {
   
   try {
     // Get ToolRegistry singleton
-    const toolRegistry = await ToolRegistry.getInstance();
+    const toolRegistry = await getToolRegistry();
     
     console.log(`🔍 Searching for: "${query}"\n`);
     

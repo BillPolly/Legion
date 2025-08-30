@@ -14,14 +14,14 @@
  *   node scripts/generate-embeddings.js --validate       # Validate embeddings after generation
  */
 
-import { ToolRegistry } from '../src/index.js';
+import { getToolRegistry } from '../src/index.js';
 
 async function generateEmbeddings(options = {}) {
   const { toolName, moduleName, force = false, verbose = false, validate = false } = options;
   
   try {
     // Get ToolRegistry singleton
-    const toolRegistry = await ToolRegistry.getInstance();
+    const toolRegistry = await getToolRegistry();
     
     console.log('🚀 Starting embedding generation...\n');
     

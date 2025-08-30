@@ -13,20 +13,21 @@
  *   node scripts/discover-modules.js --save                   # Save to registry
  */
 
-import toolRegistryExport from '../src/index.js';
+import { getToolManager } from '../src/index.js';
 
 async function discoverModules(options = {}) {
   const { path, pattern, save = false, verbose = false } = options;
   
   try {
-    // Get ToolRegistry singleton instance
-    const toolRegistry = await toolRegistryExport.getToolRegistry();
+    // Get ToolManager singleton for module discovery operations
+    const toolManager = await getToolManager();
     
     console.log('🔍 Discovering modules...\n');
     
     // Discover modules through the singleton (expects array of paths)
-    const searchPaths = path ? [path] : ['../modules'];
-    const result = await toolRegistry.discoverModules(searchPaths);
+    // Default: search the entire 'packages' directory from monorepo root
+    const searchPaths = path ? [path] : ['packages'];
+    const result = await toolManager.discoverModules(searchPaths);
     
     // Display results
     console.log(`\n📦 Discovered ${result.discovered} modules`);

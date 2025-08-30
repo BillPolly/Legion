@@ -14,45 +14,25 @@
  */
 
 import { getToolManager } from '../src/index.js';
-import readline from 'readline';
 
 async function clearDatabase(options = {}) {
   const { force = false, verbose = false, includeRegistry = false } = options;
   
   try {
-    // Get ToolManager instance for administrative operations
+    // Get ToolManager singleton for administrative operations
     const toolManager = await getToolManager();
     
     // Get current status before clearing
     const statusBefore = await toolManager.getStatistics();
     
-    console.log('\n⚠️  WARNING: This will clear data from the tool registry!');
-    console.log('\nCurrent data that will be deleted:');
+    console.log('\n🗑️  Clearing data from the tool registry');
+    console.log('\nCurrent data to be deleted:');
     console.log(`  • ${statusBefore.modules.totalLoaded || 0} loaded modules`);
     console.log(`  • ${statusBefore.tools.total || 0} tools`);
     console.log(`  • ${statusBefore.search.perspectivesGenerated || 0} tool perspectives`);
     console.log(`  • ${statusBefore.search.vectorsIndexed || 0} indexed vectors`);
     if (includeRegistry) {
       console.log(`  • ${statusBefore.modules.totalDiscovered || 0} discovered modules (registry)`);
-    }
-    
-    // Ask for confirmation unless --force is used
-    if (!force) {
-      const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
-      });
-      
-      const answer = await new Promise(resolve => {
-        rl.question('\nAre you sure you want to clear all data? (yes/no): ', resolve);
-      });
-      
-      rl.close();
-      
-      if (answer.toLowerCase() !== 'yes' && answer.toLowerCase() !== 'y') {
-        console.log('❌ Clear operation cancelled');
-        process.exit(0);
-      }
     }
     
     console.log('\n🗑️  Clearing data...');

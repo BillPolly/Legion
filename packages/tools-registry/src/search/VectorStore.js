@@ -340,17 +340,11 @@ export class VectorStore {
         filtered = results.filter(r => r.score >= options.minScore);
       }
       
-      // Transform results to expected format with flat structure
+      // Return results with original structure including metadata
       return filtered.map(result => ({
+        id: result.id,  // The perspective ID
         score: result.score,
-        tool_name: result.metadata?.toolName || result.id,  // Changed to tool_name for consistency
-        toolName: result.metadata?.toolName || result.id,   // Keep both for compatibility
-        name: result.metadata?.toolName || result.id,       // Add name field
-        description: result.metadata?.description || '',
-        moduleName: result.metadata?.moduleName || '',
-        category: result.metadata?.category || '',
-        perspective: result.metadata?.perspective || '',
-        context: result.metadata?.context || ''
+        metadata: result.metadata || {}  // Preserve any metadata that was stored
       }));
       
     } catch (error) {

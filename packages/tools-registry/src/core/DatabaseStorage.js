@@ -613,11 +613,30 @@ export class DatabaseStorage {
 
   /**
    * Clear all data from database
+   * @param {Object} options - Clear options
+   * @param {boolean} options.includeRegistry - Whether to clear module-registry collection (default: false)
    */
-  async clearAll() {
+  async clearAll(options = {}) {
+    const { includeRegistry = false } = options;
+    
     try {
+      // Always clear these collections
       await this.clearCollection('modules');
       await this.clearCollection('tools');
+      await this.clearCollection('perspective_types');
+      await this.clearCollection('tool_perspectives');
+      
+      // Only clear module-registry if explicitly requested
+      if (includeRegistry) {
+        await this.clearCollection('module-registry');
+      }
+      
+      return {
+        success: true,
+        collections: includeRegistry 
+          ? ['modules', 'tools', 'perspective_types', 'tool_perspectives', 'module-registry']
+          : ['modules', 'tools', 'perspective_types', 'tool_perspectives']
+      };
     } catch (error) {
       throw new DatabaseError(
         `Failed to clear all data: ${error.message}`,
@@ -1249,25 +1268,6 @@ export class DatabaseStorage {
     }
   }
 
-  /**
-   * Enhanced clearAll to include perspective collections
-   */
-  async clearAll() {
-    try {
-      await this.clearCollection('modules');
-      await this.clearCollection('tools');
-      await this.clearCollection('perspective_types');
-      await this.clearCollection('tool_perspectives');
-      
-    } catch (error) {
-      throw new DatabaseError(
-        `Failed to clear all data: ${error.message}`,
-        'clearAll',
-        'database',
-        error
-      );
-    }
-  }
 
   /**
    * Enhanced clearModule to also clear tool perspectives

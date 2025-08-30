@@ -13,14 +13,14 @@
  *   node scripts/index-vectors.js --verify               # Verify after indexing
  */
 
-import { ToolRegistry } from '../src/index.js';
+import { getToolRegistry } from '../src/index.js';
 
 async function indexVectors(options = {}) {
   const { module, rebuild = false, verify = false, verbose = false } = options;
   
   try {
     // Get ToolRegistry singleton
-    const toolRegistry = await ToolRegistry.getInstance();
+    const toolRegistry = await getToolRegistry();
     
     console.log('🔍 Indexing vectors into Qdrant...\n');
     

@@ -287,6 +287,21 @@ export class ModuleDiscovery {
       result.valid = true;
       result.score = 70; // Base score for loadable module
       
+      // Get tool count from the loaded module
+      if (moduleInstance && typeof moduleInstance.getTools === 'function') {
+        try {
+          const tools = moduleInstance.getTools();
+          result.toolsCount = Array.isArray(tools) ? tools.length : 0;
+        } catch (error) {
+          // If getTools() fails, default to 0
+          result.toolsCount = 0;
+          result.warnings.push(`Could not get tools count: ${error.message}`);
+        }
+      } else {
+        result.toolsCount = 0;
+        result.warnings.push('Module does not have getTools() method');
+      }
+      
       // Validate metadata if enabled
       if (this.options.validateMetadata && moduleInstance) {
         await this._validateModuleMetadata(moduleInstance, result);
@@ -462,9 +477,13 @@ export class ModuleDiscovery {
     
     for (const module of modules) {
       try {
-        // Add lastUpdated timestamp
+        // Extract toolsCount from validation if available
+        const toolsCount = module.validation?.toolsCount || 0;
+        
+        // Add lastUpdated timestamp and toolsCount
         const moduleDoc = {
           ...module,
+          toolsCount: toolsCount,  // Add toolsCount field from validation
           lastUpdated: new Date().toISOString(),
           status: 'discovered'  // Mark as discovered but not loaded
         };

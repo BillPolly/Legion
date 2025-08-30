@@ -13,7 +13,7 @@
  *   node scripts/verify-pipeline.js --report           # Generate detailed report
  */
 
-import { ToolRegistry } from '../src/index.js';
+import { getToolRegistry } from '../src/index.js';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -81,7 +81,7 @@ async function verifyPipeline(options = {}) {
   
   try {
     // Get ToolRegistry singleton
-    const toolRegistry = await ToolRegistry.getInstance();
+    const toolRegistry = await getToolRegistry();
     
     console.log('🔬 Verifying complete pipeline...\n');
     
@@ -99,7 +99,12 @@ async function verifyPipeline(options = {}) {
       verbose
     });
     
-    console.log(`  Modules verified: ${results.modules.verified}`);
+    // Get module registry count from statistics (now includes database count)
+    const stats = await toolRegistry.getStatistics();
+    const discoveredCount = stats.modules?.registryCount || stats.modules?.totalDiscovered || 0;
+    
+    console.log(`  Modules discovered (registry): ${discoveredCount}`);
+    console.log(`  Modules loaded: ${results.modules.verified}`);
     console.log(`  Modules with issues: ${results.modules.issues}`);
     console.log(`  Total tools: ${results.modules.totalTools}`);
     if (results.modules.toolsWithoutExecute > 0) {

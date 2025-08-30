@@ -252,7 +252,8 @@ export class ServiceOrchestrator {
       clearDataOnly: true,  // Keep database connections alive
       clearDatabase: true,  // Actually clear the database collections
       clearCache: true,     // Clear cache as well
-      clearVectors: options.clearVectors !== false  // Clear vectors unless explicitly disabled
+      clearVectors: options.clearVectors !== false,  // Clear vectors unless explicitly disabled
+      clearRegistry: options.includeRegistry === true  // Only clear registry if explicitly requested
     });
   }
 
@@ -316,10 +317,56 @@ export class ServiceOrchestrator {
 
   /**
    * Test semantic search functionality
-   * Delegates to SearchService
+   * Delegates to SearchService and enriches results with tool objects
    */
   async testSemanticSearch(queries = null, options = {}) {
-    return await this.searchService.testSemanticSearch(queries, options);
+    // Get raw search results from SearchService
+    const searchResults = await this.searchService.testSemanticSearch(queries, options);
+    
+    // Enrich each result with actual tool objects
+    const enrichedResults = {
+      ...searchResults,
+      results: await Promise.all(searchResults.results.map(async (queryResult) => {
+        // For each query, enrich its top result with tool data
+        if (queryResult.topResult && queryResult.topResult.toolId) {
+          try {
+            // Get the actual tool object using toolId
+            const toolId = queryResult.topResult.toolId;
+            
+            // toolId format is "ModuleName:toolName" - extract both parts
+            const [moduleName, toolName] = toolId.split(':');
+            
+            if (toolName) {
+              // Get the actual tool object
+              const tool = await this.toolService.getTool(toolName);
+              
+              // The tool should have its module information
+              // If not, use the module name from the toolId
+              const actualModuleName = tool.moduleName || moduleName || '';
+              
+              // Return enriched result with tool and module information
+              return {
+                ...queryResult,
+                topResult: {
+                  name: tool.name,
+                  description: tool.description,
+                  moduleName: actualModuleName,
+                  similarity: queryResult.topResult.confidence,
+                  perspective: queryResult.topResult.perspectiveType
+                }
+              };
+            }
+          } catch (error) {
+            console.log(`[ServiceOrchestrator] Failed to enrich tool ${queryResult.topResult.toolId}: ${error.message}`);
+          }
+        }
+        
+        // Return original if enrichment fails
+        return queryResult;
+      }))
+    };
+    
+    return enrichedResults;
   }
 
   /**

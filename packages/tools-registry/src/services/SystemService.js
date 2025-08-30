@@ -208,6 +208,7 @@ export class SystemService {
       clearDatabase = false,
       clearCache = true,
       clearVectors = false,
+      clearRegistry = false,  // Do NOT clear module-registry by default
       force = false
     } = options;
     
@@ -221,43 +222,41 @@ export class SystemService {
       // Clear database collections if requested
       if (clearDatabase || force) {
         try {
-          // DatabaseStorage has clearAll() method for clearing all collections
-          if (this.databaseService.clearAll) {
-            await this.databaseService.clearAll();
-            shutdown.steps.push({
-              name: 'database-clear-all',
-              success: true,
-              collections: ['modules', 'tools', 'perspective_types', 'tool_perspectives']
-            });
-          } else {
-            // Fallback to clearing individual collections
-            const clearedCollections = [];
-            
-            if (this.databaseService.clearCollection) {
-              const toolsDeleted = await this.databaseService.clearCollection('tools');
-              clearedCollections.push({ name: 'tools', deleted: toolsDeleted });
-              
-              const modulesDeleted = await this.databaseService.clearCollection('modules');
-              clearedCollections.push({ name: 'modules', deleted: modulesDeleted });
-              
-              const perspectiveTypesDeleted = await this.databaseService.clearCollection('perspective_types');
-              clearedCollections.push({ name: 'perspective_types', deleted: perspectiveTypesDeleted });
-              
-              const perspectivesDeleted = await this.databaseService.clearCollection('tool_perspectives');
-              clearedCollections.push({ name: 'tool_perspectives', deleted: perspectivesDeleted });
-            }
-            
-            shutdown.steps.push({
-              name: 'database-clear-collections',
-              success: true,
-              collections: clearedCollections
-            });
-          }
+          // Use single clear path through DatabaseStorage.clearAll()
+          const clearResult = await this.databaseService.clearAll({ 
+            includeRegistry: clearRegistry 
+          });
+          
+          shutdown.steps.push({
+            name: 'database-clear-all',
+            success: clearResult.success,
+            collections: clearResult.collections
+          });
         } catch (dbError) {
           shutdown.steps.push({
             name: 'database-clear',
             success: false,
             error: dbError.message
+          });
+        }
+      }
+
+      // Clear vectors if requested
+      if (clearVectors || force) {
+        try {
+          // SearchService manages the VectorStore which has clear() method
+          const vectorClearResult = await this.searchService.clearVectors();
+          shutdown.steps.push({
+            name: 'vectors-clear',
+            success: true,
+            cleared: vectorClearResult.clearedCount || 0,
+            collection: vectorClearResult.collection || 'tool_vectors'
+          });
+        } catch (vectorError) {
+          shutdown.steps.push({
+            name: 'vectors-clear',
+            success: false,
+            error: vectorError.message
           });
         }
       }
