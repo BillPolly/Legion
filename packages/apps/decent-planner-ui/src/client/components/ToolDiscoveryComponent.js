@@ -88,7 +88,9 @@ export class ToolDiscoveryComponent {
   renderEmpty() {
     const emptyDiv = document.createElement('div');
     emptyDiv.className = 'tool-discovery-empty';
-    emptyDiv.innerHTML = '<p>Tool discovery will start automatically when you switch to this tab.</p>';
+    const p = document.createElement('p');
+    p.textContent = 'Tool discovery will start automatically when you switch to this tab.';
+    emptyDiv.appendChild(p);
     this.container.appendChild(emptyDiv);
   }
   
@@ -96,7 +98,13 @@ export class ToolDiscoveryComponent {
   renderError() {
     const errorDiv = document.createElement('div');
     errorDiv.className = 'tool-discovery-error';
-    errorDiv.innerHTML = `<h3>❌ Error</h3><p>${this.model.error}</p>`;
+    const h3 = document.createElement('h3');
+    h3.textContent = '❌ Error';
+    errorDiv.appendChild(h3);
+    
+    const p = document.createElement('p');
+    p.textContent = this.model.error;
+    errorDiv.appendChild(p);
     this.container.appendChild(errorDiv);
   }
   
