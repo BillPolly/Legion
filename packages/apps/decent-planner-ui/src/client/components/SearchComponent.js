@@ -317,19 +317,28 @@ export class SearchComponent {
         
         if (tool.confidence !== undefined) {
           const confidenceValue = document.createElement('p');
-          confidenceValue.innerHTML = `<strong>Overall Confidence:</strong> ${(tool.confidence * 100).toFixed(1)}%`;
+          const strongEl = document.createElement('strong');
+          strongEl.textContent = 'Overall Confidence:';
+          confidenceValue.appendChild(strongEl);
+          confidenceValue.appendChild(document.createTextNode(` ${(tool.confidence * 100).toFixed(1)}%`));
           confidenceDiv.appendChild(confidenceValue);
         }
         
         if (tool.maxScore !== undefined) {
           const maxScoreValue = document.createElement('p');
-          maxScoreValue.innerHTML = `<strong>Max Similarity:</strong> ${(tool.maxScore * 100).toFixed(1)}%`;
+          const strongEl = document.createElement('strong');
+          strongEl.textContent = 'Max Similarity:';
+          maxScoreValue.appendChild(strongEl);
+          maxScoreValue.appendChild(document.createTextNode(` ${(tool.maxScore * 100).toFixed(1)}%`));
           confidenceDiv.appendChild(maxScoreValue);
         }
         
         if (tool.perspectiveCount !== undefined) {
           const perspectiveValue = document.createElement('p');
-          perspectiveValue.innerHTML = `<strong>Matching Perspectives:</strong> ${tool.perspectiveCount}`;
+          const strongEl = document.createElement('strong');
+          strongEl.textContent = 'Matching Perspectives:';
+          perspectiveValue.appendChild(strongEl);
+          perspectiveValue.appendChild(document.createTextNode(` ${tool.perspectiveCount}`));
           confidenceDiv.appendChild(perspectiveValue);
         }
         
@@ -347,10 +356,17 @@ export class SearchComponent {
         tool.perspectives.slice(0, 3).forEach((perspective, i) => {
           const perspectiveItem = document.createElement('div');
           perspectiveItem.className = 'perspective-item';
-          perspectiveItem.innerHTML = `
-            <div class="perspective-score">${(perspective.score * 100).toFixed(1)}%</div>
-            <div class="perspective-context">${perspective.context}</div>
-          `;
+          
+          const scoreDiv = document.createElement('div');
+          scoreDiv.className = 'perspective-score';
+          scoreDiv.textContent = `${(perspective.score * 100).toFixed(1)}%`;
+          
+          const contextDiv = document.createElement('div');
+          contextDiv.className = 'perspective-context';
+          contextDiv.textContent = perspective.context;
+          
+          perspectiveItem.appendChild(scoreDiv);
+          perspectiveItem.appendChild(contextDiv);
           perspectivesDiv.appendChild(perspectiveItem);
         });
         
