@@ -25,16 +25,28 @@ export class ActorSerializer {
         return value;
       }
 
+      // --- Circular Reference Handling (moved up to check first) ---
+      if (visited.has(value)) {
+        console.warn(`ActorSerializer: Circular reference detected for key "${key}", object type: ${value?.constructor?.name || typeof value}, object keys: ${Object.keys(value || {}).slice(0, 5).join(',')}`);
+        return '[Circular]'; // Simple marker for circular refs
+      }
+
       // --- Object Self-Serialization ---
       // Check if object has a serialize method and delegate to it
+      // Do this BEFORE adding to visited set to avoid circular detection on serialized result
       if (typeof value.serialize === 'function') {
         try {
-          return value.serialize();
+          const serialized = value.serialize();
+          // Don't add the original object to visited set since we're returning its serialized form
+          return serialized;
         } catch (error) {
           console.warn(`ActorSerializer: Object serialize() method failed for key "${key}":`, error.message);
           // Fall through to default handling
         }
       }
+
+      // Add to visited set only after trying serialize method
+      visited.add(value);
 
       // --- Actor Handling ---
       if (value?.isActor === true) {
@@ -59,12 +71,6 @@ export class ActorSerializer {
         }
       }
       // If it's not an actor OR it's an unknown LocalActor passed as data OR a known RemoteActorPlaceholder, proceed.
-
-      // --- Circular Reference Handling ---
-      if (visited.has(value)) {
-        return '[Circular]'; // Simple marker for circular refs
-      }
-      visited.add(value);
 
       // Default handling for other objects/arrays
       return value;

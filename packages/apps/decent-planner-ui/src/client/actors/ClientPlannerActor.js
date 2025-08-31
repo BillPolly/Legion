@@ -3670,40 +3670,24 @@ export default class ClientPlannerActor extends ProtocolActor {
     
     const interactions = [...this.state.llmInteractions];
     
-    if (data.type === 'request') {
-      // Start a new interaction
+    // Handle complete interactions with both prompt and response
+    if (data.prompt && data.response) {
       interactions.push({
         id: data.id,
         timestamp: data.timestamp,
         prompt: data.prompt,
-        response: null,
+        response: data.response,
         model: data.model,
         provider: data.provider,
-        maxTokens: data.maxTokens,
-        collapsed: true // Start collapsed
+        requestTimestamp: data.requestTimestamp || data.timestamp,
+        responseTimestamp: data.responseTimestamp || data.timestamp,
+        collapsed: true
       });
-    } else if (data.type === 'response') {
-      // Find matching request and add response
-      const interaction = interactions.find(i => i.id === data.id);
-      if (interaction) {
-        interaction.response = data.response;
-        interaction.responseTimestamp = data.timestamp;
-      }
-    } else if (data.type === 'error') {
-      // Find matching request and add error
-      const interaction = interactions.find(i => i.id === data.id);
-      if (interaction) {
-        interaction.error = data.error;
-        interaction.errorTimestamp = data.timestamp;
-      }
     }
     
     this.updateState({ llmInteractions: interactions });
     
-    // Re-render LLM debug tab if it's currently active
-    const currentTab = this.tabsComponent?.model?.activeTab;
-    if (currentTab === 'llm') {
-      this.renderLLMDebugContent();
-    }
+    // Always re-render LLM debug content when interactions are updated
+    this.renderLLMDebugContent();
   }
 }

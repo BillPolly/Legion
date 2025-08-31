@@ -73,10 +73,14 @@ describe('TaskHierarchyService', () => {
       expect(visited).toEqual(['root', 'child1', 'child2', 'grandchild1', 'grandchild2']);
     });
     
-    it('should throw error for non-Task input', () => {
+    it('should throw error for non-object input', () => {
       expect(() => {
-        TaskHierarchyService.traverse({ description: 'Not a task' }, () => {});
-      }).toThrow('Root task must be a Task instance');
+        TaskHierarchyService.traverse(null, () => {});
+      }).toThrow('Root task must be an object');
+      
+      expect(() => {
+        TaskHierarchyService.traverse('string', () => {});
+      }).toThrow('Root task must be an object');
     });
   });
   

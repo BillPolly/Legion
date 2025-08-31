@@ -20,7 +20,8 @@ export class SearchService {
     this.embeddingService = dependencies.embeddingService;
     this.vectorStore = dependencies.vectorStore;
     this.toolRepository = dependencies.toolRepository;
-    this.moduleService = dependencies.moduleService; // NEW: Access to in-memory modules
+    this.moduleService = dependencies.moduleService;
+    this.toolService = dependencies.toolService; // Access to ToolService for getting Tool objects
     this.eventBus = dependencies.eventBus;
     this.logger = dependencies.logger || { verbose: () => {} }; // Add logger with fallback
   }
@@ -45,13 +46,32 @@ export class SearchService {
       resultCount: searchResults.length
     });
 
-    return searchResults.map(result => ({
-      name: result.name,
-      description: result.description,
-      moduleName: result.moduleName,
-      score: result.score,
-      matchedFields: result.matchedFields
-    }));
+    // Return result records with Tool objects
+    const results = [];
+    
+    for (const result of searchResults) {
+      if (result.name) {
+        try {
+          // Get the actual Tool object instance
+          const tool = await this.toolService.getTool(result.name);
+          
+          if (tool) {
+            // Create result record with Tool object
+            results.push({
+              tool: tool,
+              score: result.score,
+              matchedFields: result.matchedFields,
+              name: tool.name
+            });
+          }
+        } catch (error) {
+          // Skip tools that can't be loaded
+          console.warn(`Failed to load tool for ${result.name}:`, error.message);
+        }
+      }
+    }
+    
+    return results;
   }
 
   /**
@@ -73,15 +93,38 @@ export class SearchService {
         { threshold, limit }
       );
 
-      // Return simple results with just IDs and metadata
-      // Tool enrichment should be done at ToolRegistry/ServiceOrchestrator level
-      const results = vectorResults.map(result => ({
-        toolId: result.metadata?.toolId,
-        perspectiveId: result.id,
-        perspectiveText: result.metadata?.content || '',
-        perspectiveType: result.metadata?.perspectiveType || '',
-        confidence: result.score
-      }));
+      // Return result records with Tool objects
+      const results = [];
+      
+      for (const result of vectorResults) {
+        const toolId = result.metadata?.toolId;
+        if (toolId) {
+          try {
+            // Extract tool name from toolId (format: "ModuleName:toolName")
+            const [moduleName, toolName] = toolId.split(':');
+            
+            if (toolName) {
+              // Get the actual Tool object instance
+              const tool = await this.toolService.getTool(toolName);
+              
+              if (tool) {
+                // Create result record with Tool object
+                results.push({
+                  tool: tool,
+                  perspectiveId: result.id,
+                  perspectiveText: result.metadata?.content || '',
+                  perspectiveType: result.metadata?.perspectiveType || '',
+                  confidence: result.score,
+                  name: tool.name
+                });
+              }
+            }
+          } catch (error) {
+            // Skip tools that can't be loaded
+            console.warn(`Failed to load tool for ${toolId}:`, error.message);
+          }
+        }
+      }
 
       this.eventBus.emit('search:semantic-performed', {
         query,

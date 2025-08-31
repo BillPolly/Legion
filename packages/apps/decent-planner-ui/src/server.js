@@ -24,7 +24,7 @@ async function startServer() {
     }
   };
   
-  console.lot("about to start");
+  console.log("about to start");
   try {
   
     const server = await createConfigurableServer(config);

@@ -132,6 +132,26 @@ export class Task {
     };
   }
 
+  /**
+   * Serialize method for ActorSerializer - returns clean representation without circular references
+   */
+  serialize() {
+    return {
+      id: typeof this.id === 'object' ? this.id.toString() : this.id,
+      description: this.description,
+      complexity: typeof this.complexity === 'object' ? this.complexity.toString() : this.complexity,
+      status: typeof this.status === 'object' ? this.status.toString() : this.status,
+      parentId: this.parentId ? (typeof this.parentId === 'object' ? this.parentId.toString() : this.parentId) : null,
+      subtasks: this.subtasks.map(t => t.serialize ? t.serialize() : t),
+      inputs: this.inputs || [],
+      outputs: this.outputs || [],
+      tools: this.tools ? this.tools.map(tool => tool.serialize ? tool.serialize() : tool) : [],
+      feasible: this.feasible,
+      reasoning: this.reasoning,
+      depth: this.depth
+    };
+  }
+
   static fromJSON(json) {
     return new Task({
       ...json,

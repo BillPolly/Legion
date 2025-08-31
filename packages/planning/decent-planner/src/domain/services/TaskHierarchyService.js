@@ -3,7 +3,7 @@
  * Pure domain logic with no external dependencies
  */
 
-// No longer using Task entities - working with plain data objects
+import { Task } from '../entities/Task.js';
 
 export class TaskHierarchyService {
   /**
@@ -218,7 +218,11 @@ export class TaskHierarchyService {
     let foundTask = null;
     
     this.traverse(rootTask, (task) => {
-      if (task.id.equals(taskId)) {
+      // Handle both Task instances and plain objects
+      const taskIdStr = typeof task.id === 'object' && task.id.toString ? task.id.toString() : String(task.id);
+      const targetIdStr = typeof taskId === 'object' && taskId.toString ? taskId.toString() : String(taskId);
+      
+      if (taskIdStr === targetIdStr) {
         foundTask = task;
       }
     });

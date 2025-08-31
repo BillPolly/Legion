@@ -96,6 +96,8 @@ ONLY the schema package must be used for json validation! now zod
 
 NO fallbacks! FAIL FAST! raise an error
 
+WHEN you make changes you MUST fix up any tests and run full REGRESSION
+
 ## Testing
 FOR tests there must be NO skipping and NO fallback under any circumstance, they must just FAIL in thoes circumstances.
 
@@ -110,3 +112,5 @@ ALWAYS run tests with nmp test ....selection to run
 THERE is no problem getting real llm clients for testing!!!! always use them in integration tests when required.
 
 ALL temporary scripts must go in tmp/ directories
+
+ALL ways use the fullstack tool to debug a server front end and back end

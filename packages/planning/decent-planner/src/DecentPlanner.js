@@ -5,13 +5,11 @@
 
 import { CreatePlanUseCase } from './application/use-cases/CreatePlanUseCase.js';
 import { DecomposeTaskUseCase } from './application/use-cases/DecomposeTaskUseCase.js';
-import { DiscoverToolsUseCase } from './application/use-cases/DiscoverToolsUseCase.js';
 import { GenerateBehaviorTreeUseCase } from './application/use-cases/GenerateBehaviorTreeUseCase.js';
 import { ValidatePlanUseCase } from './application/use-cases/ValidatePlanUseCase.js';
 
 import { LLMComplexityClassifier } from './infrastructure/adapters/LLMComplexityClassifier.js';
 import { LLMTaskDecomposer } from './infrastructure/adapters/LLMTaskDecomposer.js';
-import { RegistryToolDiscoveryService } from './infrastructure/adapters/RegistryToolDiscoveryService.js';
 import { ConsoleLogger } from './infrastructure/adapters/ConsoleLogger.js';
 import { InMemoryPlanRepository } from './infrastructure/adapters/InMemoryPlanRepository.js';
 import { InMemoryTaskRepository } from './infrastructure/adapters/InMemoryTaskRepository.js';
@@ -28,6 +26,10 @@ export class DecentPlanner {
     // Will be initialized in initialize()
     this.dependencies = null;
     this.useCases = null;
+    
+    // Event forwarding callback for LLM interactions
+    this.eventForwardingCallback = null;
+    this.eventForwardingSetup = false;
   }
 
   async initialize() {
@@ -40,6 +42,9 @@ export class DecentPlanner {
     
     // Create use cases with dependencies
     this.useCases = this.createUseCases(this.dependencies);
+    
+    // Set up LLM event forwarding AFTER everything is initialized
+    this.setupLLMEventForwarding();
     
     this.initialized = true;
     this.dependencies.logger.info('DecentPlanner initialized');
@@ -68,11 +73,6 @@ export class DecentPlanner {
     const taskRepository = new InMemoryTaskRepository();
     const complexityClassifier = new LLMComplexityClassifier(llmClient);
     const taskDecomposer = new LLMTaskDecomposer(llmClient);
-    const toolDiscoveryService = new RegistryToolDiscoveryService(
-      toolRegistry,
-      llmClient,
-      this.config.toolDiscovery
-    );
     
     // Get external planners if enabled
     let behaviorTreePlanner = null;
@@ -91,7 +91,6 @@ export class DecentPlanner {
       taskRepository,
       complexityClassifier,
       taskDecomposer,
-      toolDiscoveryService,
       behaviorTreePlanner,
       behaviorTreeValidator,
       llmClient,
@@ -115,12 +114,6 @@ export class DecentPlanner {
         ...this.config.decomposition
       }),
       
-      discoverTools: new DiscoverToolsUseCase({
-        taskRepository: dependencies.taskRepository,
-        toolDiscoveryService: dependencies.toolDiscoveryService,
-        logger: dependencies.logger,
-        ...this.config.toolDiscovery
-      }),
       
       generateBehaviorTree: dependencies.behaviorTreePlanner ? 
         new GenerateBehaviorTreeUseCase({
@@ -136,6 +129,38 @@ export class DecentPlanner {
           logger: dependencies.logger
         }) : null
     };
+  }
+
+  /**
+   * Set callback for forwarding LLM interaction events
+   */
+  setLLMEventForwardingCallback(callback) {
+    console.log('[DEBUG] Setting LLM event forwarding callback');
+    this.eventForwardingCallback = callback;
+    
+    // If already initialized, set up forwarding immediately
+    if (this.initialized && this.dependencies) {
+      console.log('[DEBUG] Already initialized, setting up forwarding now');
+      this.setupLLMEventForwarding();
+    }
+  }
+
+  /**
+   * Set up LLM event forwarding for main LLM client only (all adapters share same instance)
+   */
+  setupLLMEventForwarding() {
+    if (!this.eventForwardingCallback || !this.dependencies) {
+      return;
+    }
+
+    if (this.dependencies.llmClient) {
+      this.dependencies.llmClient.on('interaction', (event) => {
+        // Only send response events (which include both prompt and response)
+        if (event.type === 'response') {
+          this.eventForwardingCallback(event);
+        }
+      });
+    }
   }
 
   /**
@@ -203,24 +228,31 @@ export class DecentPlanner {
       plan.rootTask = decomposeResult.data.task;
       plan.updateStatistics(decomposeResult.data.statistics);
       
-      // Step 3: Discover tools
+      // Step 3: Discover tools using tool registry directly
       if (progressCallback) progressCallback('Discovering tools...');
       this.checkCancellation();
       
-      const toolsResult = await this.useCases.discoverTools.execute({
-        rootTask: plan.rootTask,
-        progressCallback: (msg) => {
-          this.checkCancellation();
-          if (progressCallback) progressCallback(msg);
-        }
-      });
+      // Use tool registry searchTools directly - returns result records with Tool objects
+      const searchResults = await this.dependencies.toolRegistry.searchTools(
+        plan.rootTask.description,
+        { limit: 10 }
+      );
       
-      if (!toolsResult.success) {
-        throw new Error(toolsResult.error);
-      }
+      // Extract Tool objects from result records
+      const discoveredTools = searchResults.map(result => result.tool);
+      
+      // Add tools to the root task
+      plan.rootTask.tools = discoveredTools;
+      plan.rootTask.feasible = discoveredTools.length > 0;
       
       plan.updateStatistics({
-        toolDiscovery: toolsResult.data
+        toolDiscovery: {
+          totalTasks: 1,
+          feasibleTasks: discoveredTools.length > 0 ? 1 : 0,
+          infeasibleTasks: discoveredTools.length > 0 ? 0 : 1,
+          totalTools: discoveredTools.length,
+          uniqueToolsCount: discoveredTools.length
+        }
       });
       
       // Step 4: Generate behavior trees (if enabled)
@@ -374,20 +406,27 @@ export class DecentPlanner {
       if (progressCallback) progressCallback('Discovering tools...');
       this.checkCancellation();
       
-      const toolsResult = await this.useCases.discoverTools.execute({
-        plan: this.currentPlan,
-        progressCallback: (msg) => {
-          this.checkCancellation();
-          if (progressCallback) progressCallback(msg);
-        }
-      });
+      // Use tool registry searchTools directly - returns result records with Tool objects
+      const searchResults = await this.dependencies.toolRegistry.searchTools(
+        this.currentPlan.rootTask.description,
+        { limit: 10 }
+      );
       
-      if (!toolsResult.success) {
-        throw new Error(toolsResult.error);
-      }
+      // Extract Tool objects from result records
+      const discoveredTools = searchResults.map(result => result.tool);
+      
+      // Add tools to the root task
+      this.currentPlan.rootTask.tools = discoveredTools;
+      this.currentPlan.rootTask.feasible = discoveredTools.length > 0;
       
       this.currentPlan.updateStatistics({
-        toolDiscovery: toolsResult.data
+        toolDiscovery: {
+          totalTasks: 1,
+          feasibleTasks: discoveredTools.length > 0 ? 1 : 0,
+          infeasibleTasks: discoveredTools.length > 0 ? 0 : 1,
+          totalTools: discoveredTools.length,
+          uniqueToolsCount: discoveredTools.length
+        }
       });
       
       this.currentPlan.updateStatus('VALIDATED');

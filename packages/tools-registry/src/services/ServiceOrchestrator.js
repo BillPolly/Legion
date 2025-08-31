@@ -86,7 +86,8 @@ export class ServiceOrchestrator {
       embeddingService: dependencies.embeddingService,
       vectorStore: dependencies.vectorStore,
       toolRepository: dependencies.toolRepository,
-      moduleService: this.moduleService, // NEW: Access to in-memory modules
+      moduleService: this.moduleService,
+      toolService: this.toolService, // Add ToolService access
       eventBus: dependencies.eventBus
     }) : null;
     console.log('[ServiceOrchestrator] SearchService created:', !!this.searchService);
@@ -529,27 +530,25 @@ export class ServiceOrchestrator {
     const seen = new Set();
     const merged = [];
 
-    // Add semantic results first (usually more relevant)
+    // Add semantic results first (usually more relevant) - preserve Tool objects
     for (const result of semanticResults) {
       if (!seen.has(result.name)) {
         seen.add(result.name);
-        merged.push({
-          ...result,
-          searchType: 'semantic',
-          combinedScore: (result.similarity || 0) * 1.2 // Boost semantic
-        });
+        // Preserve the result record with Tool object, just add metadata
+        result.searchType = 'semantic';
+        result.combinedScore = (result.confidence || 0) * 1.2; // Boost semantic
+        merged.push(result);
       }
     }
 
-    // Add text results that weren't already included
+    // Add text results that weren't already included - preserve Tool objects  
     for (const result of textResults) {
       if (!seen.has(result.name)) {
         seen.add(result.name);
-        merged.push({
-          ...result,
-          searchType: 'text',
-          combinedScore: (result.score || 0) * 1.0
-        });
+        // Preserve the result record with Tool object, just add metadata
+        result.searchType = 'text';
+        result.combinedScore = (result.score || 0) * 1.0;
+        merged.push(result);
       }
     }
 

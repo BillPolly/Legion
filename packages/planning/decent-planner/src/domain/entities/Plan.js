@@ -118,6 +118,24 @@ export class Plan {
     };
   }
 
+  /**
+   * Serialize method for ActorSerializer - returns clean representation without circular references
+   */
+  serialize() {
+    return {
+      id: typeof this.id === 'object' ? this.id.toString() : this.id,
+      goal: this.goal,
+      rootTask: this.rootTask ? (this.rootTask.serialize ? this.rootTask.serialize() : this.rootTask) : null,
+      behaviorTrees: this.behaviorTrees,
+      status: typeof this.status === 'object' ? this.status.toString() : this.status,
+      createdAt: this.createdAt instanceof Date ? this.createdAt.toISOString() : this.createdAt,
+      completedAt: this.completedAt ? (this.completedAt instanceof Date ? this.completedAt.toISOString() : this.completedAt) : null,
+      context: this.context || {},
+      validation: this.validation,
+      statistics: this.statistics ? JSON.parse(JSON.stringify(this.statistics)) : {}
+    };
+  }
+
   static fromJSON(json) {
     return new Plan({
       ...json,

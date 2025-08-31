@@ -71,9 +71,9 @@ export default class ServerPlannerActor {
     // Get the tool registry from dependencies
     this.toolRegistry = this.decentPlanner.dependencies.toolRegistry;
     
-    // Set up LLM event listener to forward to client
-    if (this.decentPlanner.dependencies.llmClient && this.remoteActor) {
-      this.decentPlanner.dependencies.llmClient.on('interaction', (event) => {
+    // Set up LLM event forwarding for ALL LLM clients used by the planner
+    if (this.remoteActor) {
+      this.decentPlanner.setLLMEventForwardingCallback((event) => {
         this.remoteActor.receive('llm-interaction', event);
       });
     }
@@ -204,7 +204,7 @@ export default class ServerPlannerActor {
             goal,
             informal: {
               hierarchy: result.data,  // Send the complete plan object
-              statistics: result.data.statistics
+              statistics: result.data.statistics ? JSON.parse(JSON.stringify(result.data.statistics)) : {}
             },
             duration: result.duration
           },
@@ -261,13 +261,16 @@ export default class ServerPlannerActor {
         // Update stored plan
         this.currentPlan = result.data;
         
-        // Send result
+        // Send result with cleaned behavior trees to avoid circular references
+        const cleanBehaviorTrees = result.data.behaviorTrees ? 
+          result.data.behaviorTrees.map(tree => this.serializeBehaviorTreeForClient(tree)) : [];
+          
         this.remoteActor.receive('formalPlanComplete', {
           goal: this.currentPlan.goal,
           result: {
             success: true,
-            plan: result.data,  // Include complete plan data
-            behaviorTrees: result.data.behaviorTrees,
+            plan: result.data.serialize ? result.data.serialize() : result.data,  // Use serialize method if available
+            behaviorTrees: cleanBehaviorTrees,
             validation: result.data.validation,
             duration: result.duration
           },
@@ -309,12 +312,9 @@ export default class ServerPlannerActor {
       });
       
       if (result.success) {
-        // Enhance result with full tool metadata
-        const enhancedResult = await this.enhanceToolDiscoveryWithMetadata(result.data);
-        
-        // Send result
+        // Send result directly - Tool objects now have serialize() methods
         this.remoteActor.receive('toolsDiscoveryComplete', {
-          result: enhancedResult,
+          result: result.data,
           timestamp: new Date().toISOString()
         });
       } else {
@@ -521,8 +521,11 @@ export default class ServerPlannerActor {
       console.log('[SERVER] Using server-side behavior tree with tool objects');
       console.log('[SERVER] First action tool type:', typeof serverBehaviorTree.children?.[0]?.tool);
       
-      // Forward the server's tree (with actual tool objects) to execution actor
-      this.executionActor.receive('load-tree', { tree: serverBehaviorTree }, this.remoteActor);
+      // Create a clean version of the behavior tree for the client with serialized tools
+      const cleanBehaviorTree = this.serializeBehaviorTreeForClient(serverBehaviorTree);
+      
+      // Forward the clean tree to execution actor
+      this.executionActor.receive('load-tree', { tree: cleanBehaviorTree }, this.remoteActor);
       
     } catch (error) {
       console.error('Failed to load execution tree:', error);
@@ -532,6 +535,116 @@ export default class ServerPlannerActor {
         error: error.message
       });
     }
+  }
+
+  /**
+   * Create a clean version of the behavior tree for client consumption
+   * Replaces Tool objects with serialized representations to avoid circular references
+   */
+  serializeBehaviorTreeForClient(behaviorTree) {
+    if (!behaviorTree) return null;
+    
+    const cleanTree = {
+      id: behaviorTree.id,
+      taskDescription: behaviorTree.taskDescription,
+      type: behaviorTree.type,
+      description: behaviorTree.description
+    };
+    
+    if (behaviorTree.children) {
+      cleanTree.children = behaviorTree.children.map(child => this.serializeNodeForClient(child));
+    }
+    
+    if (behaviorTree.child) {
+      cleanTree.child = this.serializeNodeForClient(behaviorTree.child);
+    }
+    
+    return cleanTree;
+  }
+  
+  /**
+   * Serialize a behavior tree node for client consumption
+   */
+  serializeNodeForClient(node) {
+    if (!node) return null;
+    
+    const cleanNode = {
+      type: node.type,
+      id: node.id,
+      description: node.description
+    };
+    
+    // Handle tool field - always serialize Tool objects to strings
+    if (node.tool) {
+      if (typeof node.tool === 'object' && node.tool.serialize) {
+        cleanNode.tool = node.tool.serialize();
+      } else if (typeof node.tool === 'string') {
+        cleanNode.tool = node.tool;
+      } else if (typeof node.tool === 'object' && node.tool.name) {
+        // Fallback: create a simple string representation
+        cleanNode.tool = `Tool: ${node.tool.name} - ${node.tool.description || 'No description'}`;
+      } else {
+        cleanNode.tool = 'Unknown tool';
+      }
+    }
+    
+    // ALWAYS include inputs and outputs, even if empty
+    cleanNode.inputs = {};
+    cleanNode.outputs = {};
+    
+    // Copy inputs as simple JSON objects to avoid circular references
+    if (node.inputs) {
+      try {
+        cleanNode.inputs = JSON.parse(JSON.stringify(node.inputs));
+      } catch (error) {
+        // If inputs can't be serialized, show what we can
+        console.warn(`Failed to serialize inputs for node ${node.id}:`, error.message);
+        cleanNode.inputs = {
+          error: `Serialization failed: ${error.message}`,
+          keys: typeof node.inputs === 'object' ? Object.keys(node.inputs) : 'not an object',
+          type: typeof node.inputs
+        };
+      }
+    }
+    
+    // Copy outputs as simple JSON objects to avoid circular references  
+    if (node.outputs) {
+      try {
+        cleanNode.outputs = JSON.parse(JSON.stringify(node.outputs));
+      } catch (error) {
+        // If outputs can't be serialized, show what we can
+        console.warn(`Failed to serialize outputs for node ${node.id}:`, error.message);
+        cleanNode.outputs = {
+          error: `Serialization failed: ${error.message}`,
+          keys: typeof node.outputs === 'object' ? Object.keys(node.outputs) : 'not an object',
+          type: typeof node.outputs
+        };
+      }
+    }
+    
+    // Handle parameters if present
+    if (node.parameters) {
+      try {
+        cleanNode.parameters = JSON.parse(JSON.stringify(node.parameters));
+      } catch (error) {
+        console.warn(`Failed to serialize parameters for node ${node.id}:`, error.message);
+        cleanNode.parameters = {
+          error: `Serialization failed: ${error.message}`,
+          keys: typeof node.parameters === 'object' ? Object.keys(node.parameters) : 'not an object'
+        };
+      }
+    }
+    
+    // Handle children recursively
+    if (node.children) {
+      cleanNode.children = node.children.map(child => this.serializeNodeForClient(child));
+    }
+    
+    if (node.child) {
+      cleanNode.child = this.serializeNodeForClient(node.child);
+    }
+    
+    return cleanNode;
   }
 
   async enrichBehaviorTreeWithToolIds(behaviorTree) {
