@@ -198,15 +198,9 @@ export class Perspectives {
       }));
       
       // Generate embeddings for perspectives (unless disabled)
+      // NO FALLBACKS - FAIL FAST if embedding generation fails!
       if (options.generateEmbeddings !== false) {
-        try {
-          await this._generateEmbeddingsForPerspectives(perspectiveDocs);
-        } catch (error) {
-          if (this.options.verbose) {
-            this.logger.warn(`Embedding generation failed, continuing without embeddings: ${error.message}`);
-          }
-          // Continue with null embeddings rather than failing the entire operation
-        }
+        await this._generateEmbeddingsForPerspectives(perspectiveDocs);
       }
       
       // Save all perspectives in batch (with or without embeddings)

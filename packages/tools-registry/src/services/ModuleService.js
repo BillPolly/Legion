@@ -119,8 +119,13 @@ export class ModuleService {
       discoveryResult = results;
     }
     
-    // Process validated modules: save to database with complete information
-    const modulesWithIds = [];
+    // CRITICAL: Discovery process - ONLY writes to module-registry collection
+    // DO NOT CONFUSE: 
+    // - module-registry collection = discovered modules (written HERE during discovery)
+    // - modules collection = loaded/active modules (written during LOAD process only)
+    // - tools collection = actual tool instances (written during LOAD process only)
+    
+    const discoveredModules = []; // Renamed to avoid confusion with loaded modules
     for (const moduleResult of [...discoveryResult.validated, ...discoveryResult.invalid]) {
       try {
         // Create module document with validation results and tool count
@@ -137,9 +142,11 @@ export class ModuleService {
           status: 'discovered'
         };
         
-        // Save to module-registry which returns the document with _id
+        // WRITES TO: module-registry collection (tracks discovered modules)
+        // DOES NOT WRITE TO: modules collection (that's for loaded modules)
+        // DOES NOT WRITE TO: tools collection (that's for loaded tools)
         const savedModule = await this.databaseService.saveDiscoveredModule(moduleDoc);
-        modulesWithIds.push({
+        discoveredModules.push({
           ...moduleResult,
           _id: savedModule._id,
           toolsCount: moduleDoc.toolsCount
@@ -147,27 +154,28 @@ export class ModuleService {
       } catch (error) {
         console.log(`[ModuleService] Failed to save discovered module ${moduleResult.name}:`, error.message);
         // Still include the module even if save fails, but without _id
-        modulesWithIds.push(moduleResult);
+        discoveredModules.push(moduleResult);
         errors.push({ module: moduleResult.name, error: error.message });
       }
     }
     
-    // Store discovered modules with their database _id and MODULE objects for later use
-    this.discoveredModules = modulesWithIds;
+    // Store discovered modules with their database _id and MODULE objects for later loading
+    // These are stored in memory for the load process to use later
+    this.discoveredModules = discoveredModules;
     
-    // Calculate total tools discovered
-    const totalTools = modulesWithIds.reduce((sum, module) => sum + (module.toolsCount || 0), 0);
+    // Calculate total tools discovered (not loaded, just discovered)
+    const totalTools = discoveredModules.reduce((sum, module) => sum + (module.toolsCount || 0), 0);
     
     this.eventBus.emit('modules:discovered', {
-      count: modulesWithIds.length,
+      count: discoveredModules.length,
       tools: totalTools,
-      modules: modulesWithIds
+      modules: discoveredModules
     });
 
     return {
-      discovered: modulesWithIds.length,
+      discovered: discoveredModules.length,
       tools: totalTools,
-      modules: modulesWithIds,
+      modules: discoveredModules,
       valid: discoveryResult.summary?.valid || 0,
       invalid: discoveryResult.summary?.invalid || 0,
       errors: errors
@@ -230,6 +238,16 @@ export class ModuleService {
         await this.moduleCache.set(cacheKey, moduleInstance);
         console.log(`[ModuleService] Cached module with ID '${cacheKey}' (name: ${moduleName})`);
         
+        // CACHE ALL MODULE TOOLS when module is cached
+        const moduleTools = moduleInstance.getTools();
+        if (moduleTools && moduleTools.length > 0 && this.toolService) {
+          console.log(`[ModuleService] Caching ${moduleTools.length} tools from ${moduleName}`);
+          for (const tool of moduleTools) {
+            await this.toolService.cacheToolDirect(tool.name, tool);
+          }
+          console.log(`[ModuleService] Cached all tools from ${moduleName}`);
+        }
+        
         // Immediately test the cache to see if it's working
         const testRetrieve = await this.moduleCache.get(cacheKey);
         console.log(`[ModuleService] Immediate cache test for ID '${cacheKey}': ${testRetrieve ? 'FOUND' : 'NOT FOUND'}`);
@@ -263,6 +281,23 @@ export class ModuleService {
           console.log(`[ModuleService] Updated toolsCount to 0 for ${moduleName}`);
         } catch (error) {
           console.log(`[ModuleService] Failed to update toolsCount for ${moduleName}:`, error.message);
+        }
+      }
+      
+      // PHASE 3: Save loaded module to modules collection (separate from module-registry!)
+      if (moduleId && this.databaseService) {
+        try {
+          const moduleRecord = {
+            name: moduleName,
+            moduleId: moduleId,
+            path: moduleConfig.path || moduleFromDb?.path,
+            toolsCount: moduleInstance.getTools().length
+          };
+          await this.databaseService.saveLoadedModule(moduleRecord);
+          console.log(`[ModuleService] Saved loaded module ${moduleName} to modules collection`);
+        } catch (error) {
+          console.log(`[ModuleService] Failed to save loaded module ${moduleName}:`, error.message);
+          // Don't fail module loading if this save fails
         }
       }
       
@@ -490,27 +525,31 @@ export class ModuleService {
    */
    async getModuleStatistics() {
     try {
-      // Get discovered modules from database using DatabaseStorage methods
+      // CRITICAL: Get counts from CORRECT collections
+      // 1. module-registry collection = discovered modules
       const discoveredModules = await this.databaseService.findDiscoveredModules({});
       const discoveredCount = discoveredModules.length;
       
-      // Calculate total tools discovered from database
+      // Calculate total tools discovered from module-registry
       let totalToolsDiscovered = 0;
       for (const module of discoveredModules) {
         totalToolsDiscovered += module.toolsCount || 0;
       }
       
-      // For status display: show database counts, not memory cache
-      // "totalLoaded" means "modules that have been processed/loaded into database"
-      // This is different from "modules currently in memory cache"
-      const modulesInDatabase = discoveredModules.length;
+      // 2. modules collection = loaded/active modules (NOT module-registry!)
+      const loadedModulesCollection = await this.databaseService.getCollection('modules');
+      const loadedModules = await loadedModulesCollection.find({}).toArray();
+      const loadedCount = loadedModules.length;
       
       return {
+        // From module-registry collection (discovered modules)
         totalDiscovered: discoveredCount,
         totalToolsDiscovered: totalToolsDiscovered,
-        totalLoaded: modulesInDatabase, // Database count, not cache count
-        loadedModules: discoveredModules.map(m => m.name), // All modules in database
-        discoveredModules: discoveredModules.map(m => m.name)
+        discoveredModules: discoveredModules.map(m => m.name),
+        
+        // From modules collection (loaded/active modules)
+        totalLoaded: loadedCount, // Count from modules collection, NOT module-registry
+        loadedModules: loadedModules.map(m => m.name) // Names from modules collection
       };
     } catch (error) {
       throw new Error(`Failed to get module statistics: ${error.message}`);

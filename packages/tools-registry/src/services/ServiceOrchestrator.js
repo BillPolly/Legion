@@ -73,6 +73,9 @@ export class ServiceOrchestrator {
       toolRepository: dependencies.toolRepository, // Database access for tools
       eventBus: dependencies.eventBus
     });
+    
+    // Set toolService reference in moduleService for tool caching
+    this.moduleService.toolService = this.toolService;
 
     // Search service is optional - only initialize if needed
     console.log('[ServiceOrchestrator] enableVectorSearch:', this.options.enableVectorSearch);
@@ -462,7 +465,11 @@ export class ServiceOrchestrator {
     await embeddingService.initialize();
     
     const vectorStore = this.options.enableVectorSearch 
-      ? new VectorStore({ embeddingClient: embeddingService, vectorDatabase: await this._createVectorDatabase() }) 
+      ? new VectorStore({ 
+          embeddingClient: embeddingService, 
+          vectorDatabase: await this._createVectorDatabase(),
+          collectionName: 'tools'  // CRITICAL: Pass collection name to VectorStore!
+        }) 
       : null;
       
     // Set vector store dimensions based on embedding service
@@ -509,7 +516,7 @@ export class ServiceOrchestrator {
     // Create vector database wrapper with actual client
     return new QdrantVectorDatabase(qdrantClient, { 
       dimensions: 768, // Nomic embeddings dimension
-      collectionName: 'tools'
+      collectionName: 'tools'  // Qdrant collection for vectors (different from MongoDB tool_perspectives)
     });
   }
 

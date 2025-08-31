@@ -249,6 +249,15 @@ export class ToolService {
   }
 
   /**
+   * Cache tool directly (used by ModuleService when caching modules)
+   * Single responsibility: Direct tool caching
+   */
+  async cacheToolDirect(toolName, toolInstance) {
+    await this.toolCache.set(toolName, toolInstance);
+    console.log(`[ToolService] Directly cached tool: ${toolName}`);
+  }
+
+  /**
    * Clear tool from cache
    * Single responsibility: Tool cleanup
    */

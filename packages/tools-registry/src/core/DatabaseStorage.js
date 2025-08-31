@@ -297,6 +297,56 @@ export class DatabaseStorage {
   }
   
   /**
+   * Save loaded module to modules collection
+   * CRITICAL: This is separate from module-registry!
+   * - module-registry = discovered modules (discovery phase)
+   * - modules = loaded/active modules (loading phase)
+   * @param {Object} moduleRecord - Module record for loaded modules
+   */
+  async saveLoadedModule(moduleRecord) {
+    try {
+      if (!moduleRecord.name) {
+        throw new ValidationError(
+          'Module name is required for loaded module',
+          'VALIDATION_ERROR',
+          { moduleRecord }
+        );
+      }
+      
+      const collection = this.getCollection('modules');
+      
+      const loadedModuleDoc = {
+        name: moduleRecord.name,
+        moduleId: moduleRecord.moduleId, // Reference to module-registry _id
+        path: moduleRecord.path,
+        loadedAt: new Date().toISOString(),
+        toolsCount: moduleRecord.toolsCount || 0,
+        status: 'loaded'
+      };
+      
+      // Use upsert to avoid duplicates
+      const result = await collection.replaceOne(
+        { name: moduleRecord.name },
+        loadedModuleDoc,
+        { upsert: true }
+      );
+      
+      return { 
+        _id: result.upsertedId || moduleRecord.moduleId,
+        ...loadedModuleDoc 
+      };
+      
+    } catch (error) {
+      throw new DatabaseError(
+        `Failed to save loaded module: ${error.message}`,
+        'saveLoadedModule',
+        'modules',
+        error
+      );
+    }
+  }
+
+  /**
    * Update toolsCount for a discovered module after it's been loaded
    * @param {string} moduleId - Module _id from module-registry
    * @param {number} toolsCount - Number of tools found in the loaded module
@@ -1151,7 +1201,12 @@ export class DatabaseStorage {
     try {
       const collection = this.getCollection('tool_perspectives');
       const filter = {
-        embedding: { $exists: true, $ne: null }
+        embedding: { 
+          $exists: true, 
+          $ne: null, 
+          $ne: [],  // Exclude empty arrays
+          $size: 768  // MUST be 768 dimensions - NO FALLBACKS!
+        }
       };
       
       return await collection.find(filter).toArray();

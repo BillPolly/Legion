@@ -355,10 +355,11 @@ export class SearchService {
       const batch = perspectivesWithEmbeddings.slice(i, i + batchSize);
       
       try {
-        await this.vectorStore.indexBatch(batch.map(p => ({
-          id: p._id || p.id,
+        await this.vectorStore.indexBatch(batch.map((p, index) => ({
+          id: i + index + 1, // Use numeric IDs starting from 1 (NOT ObjectId strings!)
           vector: p.embedding,
           metadata: {
+            perspectiveId: p._id?.toString() || p.id, // Store ObjectId as metadata
             toolName: p.tool_name || p.toolName,
             toolId: p.tool_id,
             perspective: p.perspective_type_name || p.perspective,

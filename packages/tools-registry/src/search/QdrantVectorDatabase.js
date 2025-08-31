@@ -345,10 +345,12 @@ export class QdrantVectorDatabase {
         const info = await this.getStatistics(collectionName);
         const vectorCount = info.vectors_count || 0;
 
-        // Delete all points
+        // Delete all points - use proper filter structure for Qdrant
         await this.client.delete(collectionName, {
           wait: true,
-          filter: {} // Empty filter = all points
+          filter: {
+            must: [] // Empty must condition matches all points
+          }
         });
 
         return { deletedCount: vectorCount };
