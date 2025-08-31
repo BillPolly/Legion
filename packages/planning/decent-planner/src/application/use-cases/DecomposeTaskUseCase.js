@@ -4,7 +4,6 @@
  */
 
 import { Task } from '../../domain/entities/Task.js';
-import { TaskComplexity } from '../../domain/value-objects/TaskComplexity.js';
 import { TaskHierarchyService } from '../../domain/services/TaskHierarchyService.js';
 
 export class DecomposeTaskUseCase {
@@ -28,7 +27,7 @@ export class DecomposeTaskUseCase {
 
   async execute({ task, context = {}, progressCallback = null }) {
     this.logger.info('Starting task decomposition', { 
-      taskId: task.id.toString(),
+      taskId: task.id,
       description: task.description 
     });
     
@@ -53,7 +52,7 @@ export class DecomposeTaskUseCase {
       await this.saveHierarchy(decomposedTask);
       
       this.logger.info('Task decomposition completed', { 
-        taskId: task.id.toString(),
+        taskId: task.id,
         statistics 
       });
       
@@ -83,10 +82,10 @@ export class DecomposeTaskUseCase {
     // Check depth limit
     if (depth >= this.maxDepth) {
       this.logger.warn('Maximum depth reached, marking as SIMPLE', {
-        taskId: task.id.toString(),
+        taskId: task.id,
         depth
       });
-      task.complexity = TaskComplexity.simple();
+      task.complexity = 'SIMPLE';
       return task;
     }
     
@@ -101,11 +100,11 @@ export class DecomposeTaskUseCase {
       context
     );
     
-    task.complexity = new TaskComplexity(classification.complexity);
+    task.complexity = classification.complexity;
     task.reasoning = classification.reasoning;
     
     // If SIMPLE, no need to decompose further
-    if (task.isSimple()) {
+    if (task.complexity === 'SIMPLE') {
       this.logger.debug('Task classified as SIMPLE', { 
         taskId: task.id.toString() 
       });
@@ -137,7 +136,7 @@ export class DecomposeTaskUseCase {
     
     if (decomposition.subtasks.length > this.maxSubtasks) {
       this.logger.warn('Too many subtasks, limiting to maximum', {
-        taskId: task.id.toString(),
+        taskId: task.id,
         count: decomposition.subtasks.length,
         max: this.maxSubtasks
       });

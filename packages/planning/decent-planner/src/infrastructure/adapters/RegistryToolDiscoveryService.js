@@ -38,7 +38,7 @@ export class RegistryToolDiscoveryService extends ToolDiscoveryService {
     // Use LLM to rank tools by relevance
     const prompt = this.generateRankingPrompt(taskDescription, allTools);
     const response = await this.llmClient.complete(prompt);
-    const rankings = this.parseRankingResponse(response);
+    const rankings = this.parseRankingResponse(response, allTools);
     
     // Filter and sort by confidence
     const relevantTools = rankings
@@ -116,7 +116,7 @@ Only include tools with confidence >= 0.5.
 Return ONLY the JSON object.`;
   }
 
-  parseRankingResponse(response) {
+  parseRankingResponse(response, allTools) {
     try {
       const cleaned = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       const parsed = JSON.parse(cleaned);
@@ -125,11 +125,14 @@ Return ONLY the JSON object.`;
         throw new Error('Response must contain a rankings array');
       }
       
-      return parsed.rankings.map(r => ({
-        tool: this.toolRegistry.getTool(r.name),
-        confidence: r.confidence || 0,
-        reasoning: r.reasoning || ''
-      }));
+      return parsed.rankings.map(r => {
+        const tool = allTools.find(t => t.name === r.name);
+        return {
+          tool: tool || { name: r.name, description: `Tool: ${r.name}`, available: false },
+          confidence: r.confidence || 0,
+          reasoning: r.reasoning || ''
+        };
+      });
     } catch (error) {
       throw new Error(`Failed to parse ranking response: ${error.message}`);
     }

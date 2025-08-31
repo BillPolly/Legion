@@ -5,8 +5,8 @@ import { SimpleToolHandler } from './handlers/SimpleToolHandler.js';
 import { findAvailablePortSync } from './utils/portFinder.js';
 import FileLogger from './logger.js';
 import { getResourceManager } from '../../resource-manager/src/index.js';
-import MongoQueryModule from '../../mongo-query/src/index.js';
-import { PictureAnalysisModule } from '../../picture-analysis/src/index.js';
+import MongoQueryModule from '../mongo-query/src/index.js';
+import { PictureAnalysisModule } from '../../modules/picture-analysis/src/index.js';
 
 class MCPServer {
   constructor() {

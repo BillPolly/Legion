@@ -40,12 +40,15 @@ export class DefaultResourceProvider extends ResourceProvider {
         });
 
       case '/client.js':
+        console.log('[DEBUG] /client.js requested, clientActorFile:', this.config.clientActorFile);
         if (this.config.clientActorFile) {
           return new ResourceResponse({
             type: 'application/javascript',
             file: this.config.clientActorFile,
             cache: false
           });
+        } else {
+          console.log('[DEBUG] No clientActorFile configured');
         }
         break;
 

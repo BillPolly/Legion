@@ -158,9 +158,36 @@ export class FormalPlanningComponent {
     
     resultsContent.appendChild(summaryDiv);
     
+    // Add complete plan JSON display
+    if (result.success && result.plan) {
+      const planJsonDiv = document.createElement('div');
+      planJsonDiv.className = 'formal-plan-json';
+      planJsonDiv.style.marginBottom = '20px';
+      
+      const planJsonTitle = document.createElement('h4');
+      planJsonTitle.textContent = '🗺️ Complete Formal Plan (JSON)';
+      planJsonTitle.style.marginBottom = '8px';
+      planJsonDiv.appendChild(planJsonTitle);
+      
+      const planJsonPre = document.createElement('pre');
+      planJsonPre.style.backgroundColor = '#f8f9fa';
+      planJsonPre.style.border = '1px solid #e9ecef';
+      planJsonPre.style.borderRadius = '4px';
+      planJsonPre.style.padding = '12px';
+      planJsonPre.style.overflow = 'auto';
+      planJsonPre.style.fontSize = '12px';
+      planJsonPre.style.maxHeight = '400px';
+      planJsonPre.textContent = JSON.stringify(result.plan, null, 2);
+      planJsonDiv.appendChild(planJsonPre);
+      
+      resultsContent.appendChild(planJsonDiv);
+    }
+
     // Results details
     if (result.success && result.formal) {
       this.renderFormalDetails(resultsContent, result.formal);
+    } else if (result.success) {
+      this.renderFormalDetails(resultsContent, result);
     } else if (!result.success) {
       this.renderFailureDetails(resultsContent, result);
     }
@@ -182,7 +209,7 @@ export class FormalPlanningComponent {
     const behaviorTreesContent = document.createElement('div');
     behaviorTreesContent.className = 'behavior-trees-content';
     
-    if (formal.behaviorTrees && formal.behaviorTrees.length > 0) {
+    if (formal.behaviorTrees && Array.isArray(formal.behaviorTrees) && formal.behaviorTrees.length > 0) {
       const treeCount = document.createElement('p');
       treeCount.textContent = `Generated ${formal.behaviorTrees.length} behavior tree(s)`;
       treeCount.style.marginBottom = '16px';

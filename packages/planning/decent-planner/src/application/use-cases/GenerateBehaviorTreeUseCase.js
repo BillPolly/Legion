@@ -99,13 +99,70 @@ export class GenerateBehaviorTreeUseCase {
     );
     
     if (planResult && planResult.success && planResult.data && planResult.data.plan) {
-      return {
+      const behaviorTree = {
         id: task.id.toString(),
         taskDescription: task.description,
         ...planResult.data.plan
       };
+      
+      // CRITICAL: Replace tool name strings with actual tool objects
+      this.attachToolObjectsToBehaviorTree(behaviorTree, task.tools);
+      
+      return behaviorTree;
     }
     
     return null;
+  }
+
+  /**
+   * Replace tool name strings with actual tool objects in behavior tree
+   */
+  attachToolObjectsToBehaviorTree(behaviorTree, taskTools) {
+    this.logger.debug('Attaching actual tool objects to behavior tree', {
+      taskToolsCount: taskTools.length,
+      taskToolNames: taskTools.map(t => t.name)
+    });
+
+    // Create tool name -> tool object mapping
+    const toolMap = new Map();
+    taskTools.forEach(tool => {
+      if (tool.name) {
+        toolMap.set(tool.name, tool);
+      }
+    });
+
+    // Recursively walk the behavior tree and replace tool strings
+    this.replaceToolStringsWithObjects(behaviorTree, toolMap);
+  }
+
+  /**
+   * Recursively walk nodes and replace tool strings with objects
+   */
+  replaceToolStringsWithObjects(node, toolMap) {
+    if (!node) return;
+
+    // If this is an action node with a tool string, replace it
+    if (node.type === 'action' && node.tool && typeof node.tool === 'string') {
+      const toolObject = toolMap.get(node.tool);
+      if (toolObject) {
+        this.logger.debug('Replacing tool string with object', {
+          nodeId: node.id,
+          toolName: node.tool,
+          hasExecute: !!toolObject.execute
+        });
+        node.tool = toolObject;
+      } else {
+        this.logger.error('Tool object not found for action node', {
+          nodeId: node.id,
+          toolName: node.tool,
+          availableTools: Array.from(toolMap.keys())
+        });
+      }
+    }
+
+    // Recursively process children
+    if (node.children && Array.isArray(node.children)) {
+      node.children.forEach(child => this.replaceToolStringsWithObjects(child, toolMap));
+    }
   }
 }

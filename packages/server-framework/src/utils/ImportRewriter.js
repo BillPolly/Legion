@@ -48,6 +48,20 @@ export class ImportRewriter {
         replacement: (match, prefix, quote, packageName, path) => {
           return `${prefix}${quote}/legion/${packageName}/${path}${quote}`;
         }
+      },
+      // Local relative imports within same directory: './Component.js'
+      {
+        regex: /(\bimport\s+(?:{[^}]+}|\*\s+as\s+\w+|\w+)\s+from\s+)(['"]).\/([^'"]+)\2/g,
+        replacement: (match, prefix, quote, path, offset, string) => {
+          return `${prefix}${quote}${this.rewriteLocalRelative('./' + path, this.currentContext)}${quote}`;
+        }
+      },
+      // Local relative imports to parent directories: '../components/Component.js'
+      {
+        regex: /(\bimport\s+(?:{[^}]+}|\*\s+as\s+\w+|\w+)\s+from\s+)(['"])\.\.\/([^'"]+)\2/g,
+        replacement: (match, prefix, quote, path, offset, string) => {
+          return `${prefix}${quote}${this.rewriteLocalRelative('../' + path, this.currentContext)}${quote}`;
+        }
       }
     ];
   }
@@ -55,13 +69,16 @@ export class ImportRewriter {
   /**
    * Rewrite all @legion/* imports in the given content
    * @param {string} content - JavaScript content to rewrite
+   * @param {Object} context - Context for rewriting (e.g., current package info)
    * @returns {string} Content with rewritten imports
    */
-  rewrite(content) {
+  rewrite(content, context = {}) {
     if (!content) {
       return content;
     }
 
+    // Store context for pattern replacements
+    this.currentContext = context;
     let result = content;
     
     // Apply each pattern
@@ -70,6 +87,40 @@ export class ImportRewriter {
     }
     
     return result;
+  }
+
+  /**
+   * Convert local relative imports to static route paths
+   * @param {string} relativePath - Relative path like './Component.js' or '../components/Component.js'
+   * @param {Object} context - Context information (legionPackage, etc.)
+   * @returns {string} Absolute path using appropriate route
+   */
+  rewriteLocalRelative(relativePath, context = {}) {
+    // If we're in a Legion package context, resolve relative to the request URL
+    if (context.baseUrl && context.requestPath) {
+      const currentDir = context.requestPath.substring(0, context.requestPath.lastIndexOf('/'));
+      
+      if (relativePath.startsWith('./')) {
+        // Same directory: ./Channel.js -> /legion/actors/Channel.js
+        const cleanPath = relativePath.replace(/^\.\//, '');
+        return `${context.baseUrl}${currentDir}/${cleanPath}`;
+      } else if (relativePath.startsWith('../')) {
+        // Parent directory: resolve properly using URL resolution
+        const cleanPath = relativePath.replace(/^\.\.\//, '');
+        const parentDir = currentDir.substring(0, currentDir.lastIndexOf('/'));
+        return `${context.baseUrl}${parentDir}/${cleanPath}`;
+      }
+    } else {
+      // Regular app files - use static route
+      const cleanPath = relativePath.replace(/^\.\//, '').replace(/^\.\.\//, '');
+      if (relativePath.startsWith('./')) {
+        return `/src/actors/${cleanPath}`;
+      } else if (relativePath.startsWith('../')) {
+        return `/src/${cleanPath}`;
+      }
+    }
+    
+    return relativePath;
   }
 
   /**

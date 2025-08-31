@@ -293,6 +293,129 @@ export class DecentPlanner {
   }
 
   /**
+   * Step 1: Only task decomposition (no tool discovery)
+   * Stores plan in state for subsequent steps
+   */
+  async planTaskDecompositionOnly(goal, context = {}, progressCallback = null) {
+    await this.initialize();
+    this.resetCancellation();
+    
+    const startTime = Date.now();
+    
+    try {
+      // Step 1: Create plan
+      if (progressCallback) progressCallback('Creating plan...');
+      this.checkCancellation();
+      
+      const planResult = await this.useCases.createPlan.execute({ goal, context });
+      if (!planResult.success) {
+        throw new Error(planResult.error);
+      }
+      
+      const plan = planResult.data;
+      
+      // Step 2: Decompose task
+      if (progressCallback) progressCallback('Decomposing tasks...');
+      this.checkCancellation();
+      
+      const decomposeResult = await this.useCases.decomposeTask.execute({
+        task: plan.rootTask,
+        context,
+        progressCallback: (msg) => {
+          this.checkCancellation();
+          if (progressCallback) progressCallback(msg);
+        }
+      });
+      
+      if (!decomposeResult.success) {
+        throw new Error(decomposeResult.error);
+      }
+      
+      // Store plan for subsequent steps
+      this.currentPlan = plan;
+      // Plan is already in DRAFT status from creation - no need to update
+      await this.dependencies.planRepository.update(plan);
+      
+      const duration = Date.now() - startTime;
+      
+      return {
+        success: true,
+        data: plan,
+        processingTime: duration,
+        stage: 'informal_only'
+      };
+      
+    } catch (error) {
+      if (error.message === 'Operation cancelled') {
+        return {
+          success: false,
+          error: 'Planning was cancelled',
+          cancelled: true
+        };
+      }
+      
+      this.dependencies.logger.error('Informal planning failed', { error: error.message });
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Step 2: Tool discovery on existing plan
+   */
+  async discoverToolsForCurrentPlan(progressCallback = null) {
+    if (!this.currentPlan) {
+      throw new Error('No current plan - run task decomposition first');
+    }
+    
+    try {
+      if (progressCallback) progressCallback('Discovering tools...');
+      this.checkCancellation();
+      
+      const toolsResult = await this.useCases.discoverTools.execute({
+        plan: this.currentPlan,
+        progressCallback: (msg) => {
+          this.checkCancellation();
+          if (progressCallback) progressCallback(msg);
+        }
+      });
+      
+      if (!toolsResult.success) {
+        throw new Error(toolsResult.error);
+      }
+      
+      this.currentPlan.updateStatistics({
+        toolDiscovery: toolsResult.data
+      });
+      
+      this.currentPlan.updateStatus('VALIDATED');
+      await this.dependencies.planRepository.update(this.currentPlan);
+      
+      return {
+        success: true,
+        data: this.currentPlan,
+        stage: 'tools_discovered'
+      };
+      
+    } catch (error) {
+      if (error.message === 'Operation cancelled') {
+        return {
+          success: false,
+          error: 'Tool discovery was cancelled',
+          cancelled: true
+        };
+      }
+      
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
    * Generate report for a plan
    */
   generateReport(plan) {

@@ -3,22 +3,23 @@
  * Pure domain logic with no external dependencies
  */
 
-import { Task } from '../entities/Task.js';
-import { TaskComplexity } from '../value-objects/TaskComplexity.js';
+// No longer using Task entities - working with plain data objects
 
 export class TaskHierarchyService {
   /**
    * Traverse a task hierarchy depth-first
    */
   static traverse(rootTask, callback) {
-    if (!(rootTask instanceof Task)) {
-      throw new Error('Root task must be a Task instance');
+    if (!rootTask || typeof rootTask !== 'object') {
+      throw new Error('Root task must be an object');
     }
     
     callback(rootTask);
     
-    for (const subtask of rootTask.subtasks) {
-      this.traverse(subtask, callback);
+    if (rootTask.subtasks && Array.isArray(rootTask.subtasks)) {
+      for (const subtask of rootTask.subtasks) {
+        this.traverse(subtask, callback);
+      }
     }
   }
 
@@ -26,14 +27,16 @@ export class TaskHierarchyService {
    * Traverse a task hierarchy asynchronously
    */
   static async traverseAsync(rootTask, asyncCallback) {
-    if (!(rootTask instanceof Task)) {
-      throw new Error('Root task must be a Task instance');
+    if (!rootTask || typeof rootTask !== 'object') {
+      throw new Error('Root task must be an object');
     }
     
     await asyncCallback(rootTask);
     
-    for (const subtask of rootTask.subtasks) {
-      await this.traverseAsync(subtask, asyncCallback);
+    if (rootTask.subtasks && Array.isArray(rootTask.subtasks)) {
+      for (const subtask of rootTask.subtasks) {
+        await this.traverseAsync(subtask, asyncCallback);
+      }
     }
   }
 
@@ -55,15 +58,38 @@ export class TaskHierarchyService {
   /**
    * Get all SIMPLE tasks in the hierarchy
    */
-  static getSimpleTasks(rootTask) {
+  static getSimpleTasks(planOrTask) {
     const simpleTasks = [];
     
-    this.traverse(rootTask, (task) => {
-      if (task.isSimple()) {
-        simpleTasks.push(task);
-      }
-    });
+    // Debug logging
+    console.log('[DEBUG] getSimpleTasks received:', typeof planOrTask, planOrTask ? Object.keys(planOrTask) : 'null');
     
+    // Handle both plan object and direct task object
+    const rootTask = planOrTask.rootTask || planOrTask;
+    
+    console.log('[DEBUG] rootTask:', typeof rootTask, rootTask ? Object.keys(rootTask) : 'null');
+    console.log('[DEBUG] rootTask.complexity:', rootTask?.complexity);
+    
+    // Include root task if it's SIMPLE (handle both string and value object)
+    const complexity = rootTask?.complexity?.value || rootTask?.complexity;
+    if (rootTask && complexity === 'SIMPLE') {
+      simpleTasks.push(rootTask);
+      console.log('[DEBUG] Added SIMPLE root task to simpleTasks array');
+    } else {
+      console.log('[DEBUG] Root task not SIMPLE or undefined:', rootTask?.complexity);
+    }
+    
+    // Also traverse subtasks
+    if (rootTask && rootTask.subtasks && Array.isArray(rootTask.subtasks)) {
+      this.traverse(rootTask, (task) => {
+        const taskComplexity = task?.complexity?.value || task?.complexity;
+        if (task !== rootTask && taskComplexity === 'SIMPLE') {
+          simpleTasks.push(task);
+        }
+      });
+    }
+    
+    console.log('[DEBUG] getSimpleTasks returning:', simpleTasks.length, 'tasks');
     return simpleTasks;
   }
 
@@ -74,7 +100,8 @@ export class TaskHierarchyService {
     const complexTasks = [];
     
     this.traverse(rootTask, (task) => {
-      if (task.isComplex()) {
+      const complexity = task?.complexity?.value || task?.complexity;
+      if (complexity === 'COMPLEX') {
         complexTasks.push(task);
       }
     });

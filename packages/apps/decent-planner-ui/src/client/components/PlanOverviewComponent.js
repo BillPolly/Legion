@@ -134,7 +134,7 @@ export class PlanOverviewComponent {
       const toolsComponent = new ToolsListComponent(toolsContainer, { 
         showConfidence: this.options.showConfidence,
         collapsible: true,
-        defaultExpanded: false,
+        defaultExpanded: true,
         columns: 2
       });
       toolsComponent.setTools(nodeTools, `Tools (${nodeTools.length})`);

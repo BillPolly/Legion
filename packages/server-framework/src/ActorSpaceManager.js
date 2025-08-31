@@ -38,14 +38,14 @@ export class ActorSpaceManager {
     this.connections.set(ws, connectionInfo);
     
     // Set up message handler to handle handshake protocol
-    ws.on('message', (data) => {
+    ws.on('message', async (data) => {
       try {
         const message = JSON.parse(data.toString());
         
         // Handle actor handshake
         if (message.type === 'actor_handshake') {
           console.log('[SERVER] Received actor handshake:', message);
-          this.handleHandshake(ws, message);
+          await this.handleHandshake(ws, message);
         } else {
           // Let ActorSpace handle other messages
           console.log('[SERVER] Received non-handshake message:', message.type);
@@ -74,7 +74,7 @@ export class ActorSpaceManager {
    * @param {WebSocket} ws - WebSocket connection
    * @param {Object} message - Handshake message
    */
-  handleHandshake(ws, message) {
+  async handleHandshake(ws, message) {
     const { clientRootActor, route } = message;
     
     // Validate handshake
@@ -138,7 +138,7 @@ export class ActorSpaceManager {
       if (typeof serverActor.setRemoteActor === 'function') {
         console.log('[SERVER] Setting remote actor on server actor...');
         try {
-          serverActor.setRemoteActor(remoteClientActor);
+          await serverActor.setRemoteActor(remoteClientActor);
           console.log('[SERVER] Remote actor set on server actor successfully');
         } catch (error) {
           console.warn('[SERVER] Error setting remote actor on server actor:', error);

@@ -167,7 +167,7 @@ export class Planner {
       ...(options.llmOptions || {})
     };
     
-    const response = await this.llmClient.complete(prompt, llmOptions);
+    const response = await this.llmClient.complete(prompt, llmOptions.maxTokens);
     
     // Save response to file for debugging
     if (options.saveDebugFiles) {
@@ -213,7 +213,7 @@ export class Planner {
       ...(options.llmOptions || {})
     };
     
-    const response = await this.llmClient.complete(prompt, llmOptions);
+    const response = await this.llmClient.complete(prompt, llmOptions.maxTokens);
     
     if (options.debugResponse) {
       console.log('[Planner] Fix response:', response.substring(0, 500) + '...');

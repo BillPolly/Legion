@@ -25,6 +25,17 @@ export class ActorSerializer {
         return value;
       }
 
+      // --- Object Self-Serialization ---
+      // Check if object has a serialize method and delegate to it
+      if (typeof value.serialize === 'function') {
+        try {
+          return value.serialize();
+        } catch (error) {
+          console.warn(`ActorSerializer: Object serialize() method failed for key "${key}":`, error.message);
+          // Fall through to default handling
+        }
+      }
+
       // --- Actor Handling ---
       if (value?.isActor === true) {
         // Is it an actor *already known* to this space?

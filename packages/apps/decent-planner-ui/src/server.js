@@ -14,8 +14,8 @@ async function startServer() {
     routes: [
       {
         path: '/planner',
-        serverActor: './src/actors/ServerPlannerActor.js',
-        clientActor: './src/actors/ClientPlannerActor.js',
+        serverActor: './src/server/actors/ServerPlannerActor.js',
+        clientActor: './src/client/actors/ClientPlannerActor.js',
         title: '🧠 Decent Planner'
       }
     ],
@@ -24,7 +24,9 @@ async function startServer() {
     }
   };
   
+  console.lot("about to start");
   try {
+  
     const server = await createConfigurableServer(config);
     await server.start(); // IMPORTANT: Actually start the server!
     

@@ -5,7 +5,6 @@
 
 import { Plan } from '../../domain/entities/Plan.js';
 import { Task } from '../../domain/entities/Task.js';
-import { PlanStatus } from '../../domain/value-objects/PlanStatus.js';
 
 export class CreatePlanUseCase {
   constructor({
@@ -43,7 +42,7 @@ export class CreatePlanUseCase {
       const plan = new Plan({
         goal: goal.trim(),
         rootTask,
-        status: PlanStatus.draft(),
+        status: 'DRAFT',
         context
       });
       
@@ -51,7 +50,7 @@ export class CreatePlanUseCase {
       const savedPlan = await this.planRepository.save(plan);
       
       this.logger.info('Plan created successfully', { 
-        planId: savedPlan.id.toString() 
+        planId: savedPlan.id 
       });
       
       return {

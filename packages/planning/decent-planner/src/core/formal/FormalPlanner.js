@@ -162,16 +162,54 @@ export class FormalPlanner {
    * Build root BT using synthetic tools from children
    */
   async buildRootBT(hierarchy, syntheticTools) {
+    console.log('[FormalPlanner] ========= buildRootBT called =========');
+    console.log('[FormalPlanner] hierarchy:', hierarchy);
+    
     // If root is SIMPLE, just plan it directly
     if (hierarchy.complexity === 'SIMPLE') {
+      console.log('[FormalPlanner] Processing SIMPLE root task');
+      console.log(`[FormalPlanner] Root task tools:`, hierarchy.tools);
+      
       const realTools = await this.toolRegistry.searchTools('') || [];
       const allTools = this.levelProcessor.gatherTools(realTools, syntheticTools);
+      
+      console.log(`[FormalPlanner] All tools for planning:`, allTools.map(t => ({name: t.name, type: typeof t})));
       
       const planResult = await this.levelProcessor.planTask(hierarchy, allTools);
       
       if (!planResult.success) {
         throw new Error(`Failed to plan root task: ${planResult.error || 'Unknown error'}`);
       }
+      
+      console.log('[FormalPlanner] Plan result received, behavior tree generated');
+      
+      // Use the tools that were discovered for this specific task (hierarchy.tools)
+      // These are the actual tool instances that should be attached
+      const taskTools = hierarchy.tools || [];
+      console.log(`[FormalPlanner] Task-specific tools to attach:`, taskTools.length);
+      taskTools.forEach((t, i) => {
+        console.log(`[FormalPlanner] Tool ${i}: name="${t.name}", type=${typeof t}, keys=[${Object.keys(t).join(',')}]`);
+      });
+      
+      // Get behavior tree action tool names
+      const btToolNames = new Set();
+      this.findBTToolNames(planResult.behaviorTree, btToolNames);
+      console.log(`[FormalPlanner] BT uses tools:`, Array.from(btToolNames));
+      
+      // Verify all BT tools are available in task tools
+      const taskToolNames = new Set(taskTools.map(t => t.name));
+      console.log(`[FormalPlanner] Available task tools:`, Array.from(taskToolNames));
+      
+      for (const btTool of btToolNames) {
+        if (!taskToolNames.has(btTool)) {
+          console.log(`[FormalPlanner] ❌ ERROR: BT tool "${btTool}" not found in task tools!`);
+        } else {
+          console.log(`[FormalPlanner] ✅ BT tool "${btTool}" found in task tools`);
+        }
+      }
+      
+      // Attach actual tool instances to the behavior tree
+      this.attachActualToolsToTree(planResult.behaviorTree, taskTools);
       
       return planResult.behaviorTree;
     }
@@ -286,6 +324,96 @@ export class FormalPlanner {
     } catch (error) {
       console.error('[FormalPlanner] ❌ Failed to enrich behavior tree with tool IDs:', error);
       // Don't throw - this is a non-critical enhancement
+    }
+  }
+
+  /**
+   * Find all tool names used in behavior tree action nodes
+   */
+  findBTToolNames(node, toolNames) {
+    if (!node) return;
+    
+    if (node.type === 'action' && node.tool) {
+      toolNames.add(node.tool);
+    }
+    
+    if (node.children && Array.isArray(node.children)) {
+      node.children.forEach(child => this.findBTToolNames(child, toolNames));
+    }
+  }
+
+  /**
+   * Attach actual tool instances to action nodes in behavior tree
+   */
+  attachActualToolsToTree(behaviorTree, tools) {
+    if (!behaviorTree || !tools) {
+      console.log('[FormalPlanner] ❌ Cannot attach tools: behaviorTree or tools is null');
+      return;
+    }
+    
+    console.log('[FormalPlanner] Attaching actual tools to behavior tree...');
+    console.log(`[FormalPlanner] BehaviorTree structure:`, JSON.stringify(behaviorTree, null, 2));
+    console.log(`[FormalPlanner] Available tools:`, tools.map(t => ({name: t.name, type: typeof t, hasExecute: !!t.execute})));
+    
+    // Create tool name -> tool instance mapping
+    const toolNameToInstance = new Map();
+    for (const tool of tools) {
+      if (tool.name) {
+        toolNameToInstance.set(tool.name, tool);
+        console.log(`[FormalPlanner] Mapped tool: ${tool.name} -> ${typeof tool} (execute: ${!!tool.execute})`);
+      }
+    }
+    
+    console.log(`[FormalPlanner] Found ${toolNameToInstance.size} tools to attach`);
+    
+    // Recursively attach tools to action nodes
+    this.attachToolsToNode(behaviorTree, toolNameToInstance);
+    
+    console.log('[FormalPlanner] Tool attachment complete. Final BT:');
+    console.log(JSON.stringify(behaviorTree, null, 2));
+  }
+  
+  /**
+   * Recursively attach tools to a node and its children
+   */
+  attachToolsToNode(node, toolNameToInstance) {
+    if (!node) {
+      console.log(`[FormalPlanner] attachToolsToNode: node is null`);
+      return;
+    }
+
+    console.log(`[FormalPlanner] Processing node: id="${node.id}", type="${node.type}", tool="${node.tool}"`);
+
+    // If this is an action node with a tool name, replace it with the actual tool object
+    if (node.type === 'action' && node.tool) {
+      const originalTool = node.tool;
+      console.log(`[FormalPlanner] Found action node "${node.id}" with tool "${originalTool}" (type: ${typeof originalTool})`);
+      
+      if (typeof originalTool === 'string') {
+        const toolInstance = toolNameToInstance.get(originalTool);
+        if (toolInstance) {
+          // Replace the tool name string with the actual tool object
+          node.tool = toolInstance;
+          console.log(`[FormalPlanner] ✅ REPLACED tool name "${originalTool}" with tool object for node '${node.id}'`);
+          console.log(`[FormalPlanner] Tool object has execute method: ${!!toolInstance.execute}`);
+        } else {
+          console.log(`[FormalPlanner] ❌ Tool instance not found for: ${originalTool}`);
+          console.log(`[FormalPlanner] Available tools in map:`, Array.from(toolNameToInstance.keys()));
+        }
+      } else {
+        console.log(`[FormalPlanner] Tool is already an object for node "${node.id}"`);
+      }
+    }
+
+    // Recursively process children
+    if (node.children && Array.isArray(node.children)) {
+      console.log(`[FormalPlanner] Processing ${node.children.length} children of node "${node.id}"`);
+      node.children.forEach((child, i) => {
+        console.log(`[FormalPlanner] Processing child ${i} of "${node.id}"`);
+        this.attachToolsToNode(child, toolNameToInstance);
+      });
+    } else {
+      console.log(`[FormalPlanner] Node "${node.id}" has no children`);
     }
   }
 

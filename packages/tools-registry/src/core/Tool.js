@@ -304,4 +304,27 @@ export class Tool extends SimpleEmitter {
       outputSchema: this.outputSchema
     };
   }
+  
+  /**
+   * Serialize tool for actor space message serialization
+   * Returns a clean representation without circular references
+   * @returns {Object} Clean tool representation for serialization
+   */
+  serialize() {
+    // Return only the safe, non-circular properties for serialization
+    const metadata = this.getMetadata();
+    
+    return {
+      name: this.name,
+      description: this.description,
+      category: this.category,
+      moduleName: this.module?.name || null,
+      tags: this.tags,
+      // Include additional metadata if available
+      inputSchema: metadata.inputSchema,
+      outputSchema: metadata.outputSchema,
+      // Mark as serialized tool for identification
+      $type: 'Tool'
+    };
+  }
 }

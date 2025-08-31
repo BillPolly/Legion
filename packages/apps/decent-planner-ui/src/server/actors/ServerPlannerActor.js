@@ -38,9 +38,17 @@ export default class ServerPlannerActor {
       
       this.isReady = true;
     } catch (error) {
-      console.error('Failed to initialize planner:', error);
+      console.error('Failed to initialize planner - FULL ERROR:', error);
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      console.error('Error keys:', Object.keys(error));
+      console.error('Error JSON:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+      
       this.remoteActor.receive('error', {
-        message: error.message
+        message: error.message || 'Unknown error during planner initialization',
+        name: error.name,
+        stack: error.stack
       });
     }
   }
@@ -174,8 +182,8 @@ export default class ServerPlannerActor {
         timestamp: new Date().toISOString()
       });
       
-      // Execute informal planning only
-      const result = await this.decentPlanner.planInformalOnly(goal, {}, (message) => {
+      // Execute task decomposition only
+      const result = await this.decentPlanner.planTaskDecompositionOnly(goal, {}, (message) => {
         // Send progress update to client
         this.remoteActor.receive('informalPlanProgress', {
           goal,
@@ -195,7 +203,7 @@ export default class ServerPlannerActor {
             success: true,
             goal,
             informal: {
-              hierarchy: result.data.rootTask,
+              hierarchy: result.data,  // Send the complete plan object
               statistics: result.data.statistics
             },
             duration: result.duration
@@ -258,6 +266,7 @@ export default class ServerPlannerActor {
           goal: this.currentPlan.goal,
           result: {
             success: true,
+            plan: result.data,  // Include complete plan data
             behaviorTrees: result.data.behaviorTrees,
             validation: result.data.validation,
             duration: result.duration
@@ -290,16 +299,13 @@ export default class ServerPlannerActor {
         timestamp: new Date().toISOString()
       });
       
-      // Execute tool discovery
+      // Execute tool discovery using the new method
       console.log('🔍 [SERVER] Starting tool discovery...');
-      const result = await this.decentPlanner.useCases.discoverTools.execute({
-        rootTask: this.currentPlan.rootTask,
-        progressCallback: (message) => {
-          this.remoteActor.receive('toolsDiscoveryProgress', {
-            message,
-            timestamp: new Date().toISOString()
-          });
-        }
+      const result = await this.decentPlanner.discoverToolsForCurrentPlan((message) => {
+        this.remoteActor.receive('toolsDiscoveryProgress', {
+          message,
+          timestamp: new Date().toISOString()
+        });
       });
       
       if (result.success) {
@@ -389,9 +395,13 @@ export default class ServerPlannerActor {
       });
       
     } catch (error) {
-      console.error('Failed to list tools:', error);
+      console.error('Failed to list tools - FULL ERROR:', error);
+      console.error('Error message:', error.message);  
+      console.error('Error stack:', error.stack);
+      console.error('Error JSON:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+      
       this.remoteActor.receive('toolsListError', {
-        error: error.message
+        error: error.message || 'Tool registry not initialized'
       });
     }
   }
@@ -471,9 +481,13 @@ export default class ServerPlannerActor {
       this.remoteActor.receive('registryStatsComplete', stats);
       
     } catch (error) {
-      console.error('Failed to get registry stats:', error);
+      console.error('Failed to get registry stats - FULL ERROR:', error);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      console.error('Error JSON:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+      
       this.remoteActor.receive('registryStatsError', {
-        error: error.message
+        error: error.message || 'Tool registry not initialized'
       });
     }
   }
@@ -497,21 +511,18 @@ export default class ServerPlannerActor {
         throw new Error('Execution actor not initialized');
       }
       
-      if (!this.toolRegistry) {
-        throw new Error('Tool registry not initialized');
+      // Use the behavior tree stored on the server (which has actual tool objects)
+      // instead of the serialized tree from the client
+      if (!this.currentPlan || !this.currentPlan.behaviorTrees || this.currentPlan.behaviorTrees.length === 0) {
+        throw new Error('No behavior tree available from current plan');
       }
       
-      const { tree } = data;
-      if (!tree) {
-        throw new Error('No behavior tree provided');
-      }
+      const serverBehaviorTree = this.currentPlan.behaviorTrees[0];
+      console.log('[SERVER] Using server-side behavior tree with tool objects');
+      console.log('[SERVER] First action tool type:', typeof serverBehaviorTree.children?.[0]?.tool);
       
-      // Enrich tree with tool IDs
-      const enrichedTree = JSON.parse(JSON.stringify(tree));
-      await this.enrichBehaviorTreeWithToolIds(enrichedTree);
-      
-      // Forward to execution actor
-      this.executionActor.receive('load-tree', { tree: enrichedTree }, this.remoteActor);
+      // Forward the server's tree (with actual tool objects) to execution actor
+      this.executionActor.receive('load-tree', { tree: serverBehaviorTree }, this.remoteActor);
       
     } catch (error) {
       console.error('Failed to load execution tree:', error);

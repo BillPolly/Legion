@@ -42,35 +42,9 @@ export class ToolService {
         throw new Error(`Tool not found in database: ${toolName}`);
       }
 
-      console.log(`[ToolService] Found tool ${toolName} in database with moduleName: ${toolMetadata.moduleName}, moduleId: ${toolMetadata.moduleId || 'NO_MODULE_ID'}`);
+      console.log(`[ToolService] Found tool ${toolName} in database with moduleName: ${toolMetadata.moduleName}, moduleId: ${toolMetadata.moduleId}`);
       
-      // Handle legacy tools that might not have moduleId
-      if (!toolMetadata.moduleId && toolMetadata.moduleName) {
-        console.log(`[ToolService] WARNING: Tool ${toolName} has no moduleId, falling back to moduleName lookup`);
-        // Try to find the module by name in discovered modules to get its _id
-        const moduleInstance = await this.moduleService.getModule(toolMetadata.moduleName);
-        const moduleTools = moduleInstance.getTools();
-        const executableTool = moduleTools.find(t => t.name === toolName);
-        
-        if (!executableTool) {
-          throw new Error(`Tool ${toolName} found in database but not in module ${toolMetadata.moduleName}`);
-        }
-        
-        // Cache the executable tool
-        await this.toolCache.set(toolName, executableTool);
-        
-        this.eventBus.emit('tool:retrieved', {
-          name: toolName,
-          moduleName: toolMetadata.moduleName,
-          moduleId: null,
-          cached: false
-        });
-        
-        return executableTool;
-      }
-
-      // Phase 2: Get module instance - this will auto-load from module-registry if needed
-      // Modules MUST be retrieved by their _id, not by name
+      // Tools MUST have valid moduleId - no fallbacks allowed
       if (!toolMetadata.moduleId) {
         throw new Error(`Tool ${toolName} has no moduleId - database integrity error`);
       }

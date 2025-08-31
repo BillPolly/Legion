@@ -428,64 +428,38 @@ export class ModuleService {
   }
 
   /**
-   * DEPRECATED: Get module by name - use getModuleById instead
-   * Only kept for backwards compatibility during migration
+   * Get module by name - loads from database only, NO DISCOVERY, NO FALLBACKS
    */
   async getModule(moduleNameOrId) {
-    // Try cache first - check both as name and as ID
+    // Try cache first
     const cachedModule = await this.moduleCache.get(moduleNameOrId);
     if (cachedModule) {
       return cachedModule;
     }
 
-    // Module not cached - need to load it
-    // First check if it's in our discovered modules by name OR by _id
-    let discoveredModule = this.discoveredModules.find(m => 
-      m.name === moduleNameOrId || m._id === moduleNameOrId
-    );
+    // Check loaded modules collection in database
+    let moduleRecord = await this.databaseService.findModuleByName(moduleNameOrId);
     
-    // If we found it by _id, we need to use the module's name for loading
-    if (discoveredModule) {
-      const moduleName = discoveredModule.name;
-      console.log(`[ModuleService] Found module in discovered modules: name=${moduleName}, _id=${discoveredModule._id}`);
-      
-      // Load it with the discovered module config
-      const result = await this.loadModule(moduleName, discoveredModule);
-      if (result.success) {
-        return result.module;
-      }
+    // If not in loaded modules, check module-registry collection  
+    if (!moduleRecord) {
+      moduleRecord = await this.databaseService.findDiscoveredModule(moduleNameOrId);
     }
     
-    // If not found in discovered modules, try loading from module-registry database
-    // This handles the case where modules are discovered but not yet in memory
-    if (this.databaseService) {
-      try {
-        // Try to find in module-registry by _id or name
-        const moduleFromDb = await this.databaseService.findDiscoveredModule(moduleNameOrId);
-        if (moduleFromDb) {
-          console.log(`[ModuleService] Found module in module-registry: name=${moduleFromDb.name}, _id=${moduleFromDb._id}`);
-          
-          // Add to discovered modules for future reference
-          this.discoveredModules.push(moduleFromDb);
-          
-          // Load it with the database module config
-          const result = await this.loadModule(moduleFromDb.name, moduleFromDb);
-          if (result.success) {
-            return result.module;
-          }
-        }
-      } catch (error) {
-        console.log(`[ModuleService] Database lookup failed for ${moduleNameOrId}: ${error.message}`);
-      }
-    }
-    
-    // Last resort: try to load without config (will look up from discovered modules internally)
-    const result = await this.loadModule(moduleNameOrId);
-    if (result.success) {
-      return result.module;
+    // If not found in database, FAIL IMMEDIATELY - no discovery, no fallbacks
+    if (!moduleRecord) {
+      throw new Error(`Module not found in database: ${moduleNameOrId}`);
     }
 
-    throw new Error(`Module not found: ${moduleNameOrId}`);
+    // Load the module class instance from filesystem using database record
+    const result = await this.loadModule(moduleRecord.name, moduleRecord);
+    if (!result.success) {
+      throw new Error(`Failed to load module ${moduleRecord.name}: ${result.error}`);
+    }
+
+    // Cache the loaded module instance
+    await this.moduleCache.set(moduleNameOrId, result.module);
+    
+    return result.module;
   }
 
   /**

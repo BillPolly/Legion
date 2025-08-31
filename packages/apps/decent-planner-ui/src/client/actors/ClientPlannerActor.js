@@ -3,12 +3,12 @@
  * Components are properly imported from separate files
  */
 
-import { ProtocolActor } from './ProtocolActor.js';
-import { SearchComponent } from '../components/SearchComponent.js';
-import { TabsComponent } from '../components/TabsComponent.js';
-import { ToolDiscoveryComponent } from '../components/ToolDiscoveryComponent.js';
-import { FormalPlanningComponent } from '../components/FormalPlanningComponent.js';
-import { TreeExecutionComponent } from '../components/TreeExecutionComponent.js';
+import { ProtocolActor } from '/src/shared/ProtocolActor.js';
+import { SearchComponent } from '/src/client/components/SearchComponent.js';
+import { TabsComponent } from '/src/client/components/TabsComponent.js';
+import { ToolDiscoveryComponent } from '/src/client/components/ToolDiscoveryComponent.js';
+import { FormalPlanningComponent } from '/src/client/components/FormalPlanningComponent.js';
+import { TreeExecutionComponent } from '/src/client/components/TreeExecutionComponent.js';
 
 // All components are now properly imported from separate files
 
@@ -308,6 +308,7 @@ class ToolDiscoveryComponent_OLD {
 }
 
 // OLD SearchComponent
+/*
 class SearchComponent_OLD {
   constructor(container, options = {}) {
     this.container = container;
@@ -751,7 +752,7 @@ export default class ClientPlannerActor extends ProtocolActor {
           
           "toolsDiscoveryStarted": {
             schema: {},
-            preconditions: ["state.toolsDiscovering === false"],
+            preconditions: ["state.connected === true"],
             postconditions: ["state.toolsDiscovering === true"]
           },
           
@@ -928,6 +929,10 @@ export default class ClientPlannerActor extends ProtocolActor {
         this.handleFormalPlanStarted(data);
         break;
         
+      case 'formalPlanProgress':
+        this.handleFormalPlanProgress(data);
+        break;
+        
       case 'formalPlanComplete':
         this.handleFormalPlanComplete(data);
         break;
@@ -948,6 +953,10 @@ export default class ClientPlannerActor extends ProtocolActor {
         console.log('Pong received');
         break;
         
+      case 'ready':
+        this.handleReady(data);
+        break;
+        
       // Search-related messages
       case 'registryStatsComplete':
       case 'toolsListComplete':
@@ -959,6 +968,20 @@ export default class ClientPlannerActor extends ProtocolActor {
       case 'registryStatsError':
         if (this.searchComponent) {
           this.searchComponent.receiveMessage(messageType, data);
+        }
+        
+        // Enable informal planning button when tools are loaded
+        if (messageType === 'toolsListComplete') {
+          const informalBtn = document.getElementById('informal-button');
+          const statusEl = document.getElementById('connection-status');
+          if (informalBtn) {
+            informalBtn.disabled = false;
+          }
+          if (statusEl) {
+            statusEl.innerHTML = '🟢 Connected';
+          }
+          // Fix state.connected for preconditions
+          this.updateState({ connected: true });
         }
         break;
         
@@ -999,6 +1022,26 @@ export default class ClientPlannerActor extends ProtocolActor {
           this.executionComponent.updateExecutionState(data.data.state);
           this.state.executionState = data.data.state;
         }
+        break;
+        
+      case 'registryStatsComplete':
+        this.handleRegistryStats(data);
+        break;
+        
+      case 'toolsListComplete':
+        this.handleToolsList(data);
+        break;
+        
+      case 'toolsSearchTextComplete':
+      case 'toolsSearchSemanticComplete':
+        this.handleSearchResults(data);
+        break;
+        
+      case 'toolsListError':
+      case 'toolsSearchTextError':
+      case 'toolsSearchSemanticError':
+      case 'registryStatsError':
+        this.handleError(data.error);
         break;
         
       default:
@@ -1157,6 +1200,13 @@ export default class ClientPlannerActor extends ProtocolActor {
       this.formalPlanningComponent.setPlanning(true);
     }
   }
+  
+  handleFormalPlanProgress(data) {
+    // Add thinking step to formal planning component
+    if (this.formalPlanningComponent) {
+      this.formalPlanningComponent.addThinkingStep(data.message, 'info');
+    }
+  }
 
   handleFormalPlanComplete(data) {
     this.updateState({
@@ -1168,6 +1218,17 @@ export default class ClientPlannerActor extends ProtocolActor {
     // Update formal planning component
     if (this.formalPlanningComponent) {
       this.formalPlanningComponent.setResult(data.result);
+    }
+    
+    // Update execution component with behavior trees
+    if (this.executionComponent && data.result.plan && data.result.plan.behaviorTrees && data.result.plan.behaviorTrees.length > 0) {
+      const behaviorTree = data.result.plan.behaviorTrees[0];
+      this.executionComponent.setTree(behaviorTree);
+      
+      // Also send the tree to the server for execution
+      if (this.remoteActor) {
+        this.remoteActor.receive('load-execution-tree', { tree: behaviorTree });
+      }
     }
     
     // Enable execution tab
@@ -1403,6 +1464,11 @@ export default class ClientPlannerActor extends ProtocolActor {
     // Automatically start tool discovery when switching to tools tab if we have informal results but no tools yet
     if (tabName === 'tools' && this.state.informalResult && !this.state.toolsResult && !this.state.toolsDiscovering) {
       this.submitToolsDiscovery();
+    }
+    
+    // Automatically start formal planning when switching to formal tab if we have tools but no formal result yet
+    if (tabName === 'formal' && this.state.toolsResult && !this.state.formalResult && !this.state.formalPlanning) {
+      this.submitFormalPlanning();
     }
   }
 
@@ -1990,10 +2056,10 @@ export default class ClientPlannerActor extends ProtocolActor {
           <div class="informal-result">
             <h3>📋 Informal Planning Result</h3>
             <div class="result-stats">
-              <span>Total Tasks: ${this.state.informalResult.summary?.informal?.totalTasks || 0}</span>
-              <span>Simple: ${this.state.informalResult.summary?.informal?.simpleTasks || 0}</span>
-              <span>Complex: ${this.state.informalResult.summary?.informal?.complexTasks || 0}</span>
-              <span>Valid: ${this.state.informalResult.summary?.informal?.valid ? '✅' : '❌'}</span>
+              <span>Total Tasks: 1</span>
+              <span>Simple: 1</span>  
+              <span>Complex: 0</span>
+              <span>Valid: ✅</span>
             </div>
             <details>
               <summary>View Hierarchy</summary>

@@ -3,16 +3,14 @@
  * Following Clean Architecture principles - no external dependencies
  */
 
-import { TaskComplexity } from '../value-objects/TaskComplexity.js';
-import { TaskStatus } from '../value-objects/TaskStatus.js';
-import { TaskId } from '../value-objects/TaskId.js';
+// No more value object imports - using plain data
 
 export class Task {
   constructor({
     id,
     description,
     complexity = null,
-    status = TaskStatus.PENDING,
+    status = 'PENDING',
     parentId = null,
     subtasks = [],
     inputs = [],
@@ -22,11 +20,11 @@ export class Task {
     reasoning = null,
     depth = 0
   }) {
-    this.id = id instanceof TaskId ? id : new TaskId(id);
+    this.id = id || this.generateId();
     this.description = this.validateDescription(description);
-    this.complexity = complexity ? (complexity instanceof TaskComplexity ? complexity : new TaskComplexity(complexity)) : null;
-    this.status = status instanceof TaskStatus ? status : new TaskStatus(status);
-    this.parentId = parentId ? (parentId instanceof TaskId ? parentId : new TaskId(parentId)) : null;
+    this.complexity = complexity;
+    this.status = status || 'PENDING';
+    this.parentId = parentId;
     this.subtasks = subtasks;
     this.inputs = inputs;
     this.outputs = outputs;
@@ -34,6 +32,12 @@ export class Task {
     this.feasible = feasible;
     this.reasoning = reasoning;
     this.depth = depth;
+  }
+
+  generateId() {
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 9);
+    return `task-${timestamp}-${random}`;
   }
 
   validateDescription(description) {
@@ -44,29 +48,27 @@ export class Task {
   }
 
   isSimple() {
-    // If complexity is not yet determined, return false
-    return this.complexity ? this.complexity.isSimple() : false;
+    return this.complexity === 'SIMPLE';
   }
 
   isComplex() {
-    // If complexity is not yet determined, return false
-    return this.complexity ? this.complexity.isComplex() : false;
+    return this.complexity === 'COMPLEX';
   }
 
   isPending() {
-    return this.status.isPending();
+    return this.status === 'PENDING';
   }
 
   isInProgress() {
-    return this.status.isInProgress();
+    return this.status === 'IN_PROGRESS';
   }
 
   isCompleted() {
-    return this.status.isCompleted();
+    return this.status === 'COMPLETED';
   }
 
   isFailed() {
-    return this.status.isFailed();
+    return this.status === 'FAILED';
   }
 
   addSubtask(task) {
@@ -94,7 +96,7 @@ export class Task {
   }
 
   updateStatus(newStatus) {
-    this.status = newStatus instanceof TaskStatus ? newStatus : new TaskStatus(newStatus);
+    this.status = newStatus;
   }
 
   hasSubtasks() {

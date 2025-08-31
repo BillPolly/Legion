@@ -3,8 +3,6 @@
  * Following Clean Architecture principles - no external dependencies
  */
 
-import { PlanId } from '../value-objects/PlanId.js';
-import { PlanStatus } from '../value-objects/PlanStatus.js';
 import { Task } from './Task.js';
 
 export class Plan {
@@ -13,23 +11,29 @@ export class Plan {
     goal,
     rootTask,
     behaviorTrees = [],
-    status = PlanStatus.DRAFT,
+    status = 'DRAFT',
     createdAt = new Date(),
     completedAt = null,
     context = {},
     validation = null,
     statistics = {}
   }) {
-    this.id = id instanceof PlanId ? id : new PlanId(id);
+    this.id = id || this.generateId();
     this.goal = this.validateGoal(goal);
     this.rootTask = rootTask;
     this.behaviorTrees = behaviorTrees;
-    this.status = status instanceof PlanStatus ? status : new PlanStatus(status);
+    this.status = status || 'DRAFT';
     this.createdAt = createdAt instanceof Date ? createdAt : new Date(createdAt);
     this.completedAt = completedAt ? (completedAt instanceof Date ? completedAt : new Date(completedAt)) : null;
     this.context = context;
     this.validation = validation;
     this.statistics = statistics;
+  }
+
+  generateId() {
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 9);
+    return `plan-${timestamp}-${random}`;
   }
 
   validateGoal(goal) {
@@ -44,15 +48,10 @@ export class Plan {
   }
 
   updateStatus(newStatus) {
-    const statusObj = newStatus instanceof PlanStatus ? newStatus : new PlanStatus(newStatus);
+    // Simple status update with plain strings
+    this.status = newStatus;
     
-    if (!this.status.canTransitionTo(statusObj)) {
-      throw new Error(`Cannot transition from ${this.status} to ${statusObj}`);
-    }
-    
-    this.status = statusObj;
-    
-    if (this.status.isCompleted() || this.status.isFailed()) {
+    if (this.status === 'COMPLETED' || this.status === 'FAILED') {
       this.completedAt = new Date();
     }
   }

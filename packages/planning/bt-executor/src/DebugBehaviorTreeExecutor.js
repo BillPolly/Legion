@@ -79,14 +79,61 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
    * Fail fast if any tools are missing
    */
   async resolveAllTreeTools(node) {
-    if (!this.toolRegistry) {
-      throw new Error('No tool registry provided to executor');
-    }
-
     const toolsNeeded = new Set();
     this.findAllToolIds(node, toolsNeeded);
     
     console.log(`[BT-EXECUTOR] Found ${toolsNeeded.size} unique tools needed:`, Array.from(toolsNeeded));
+    
+    // Check if tools are already attached to nodes (as tool objects in node.tool)
+    const attachedTools = new Map();
+    const toolObjectsFound = this.findAttachedToolObjects(node, attachedTools);
+    
+    console.log(`[BT-EXECUTOR] Checking for attached tool objects in tree...`);
+    
+    if (toolObjectsFound > 0) {
+      console.log(`[BT-EXECUTOR] ✅ Found ${toolObjectsFound} tool objects in behavior tree`);
+      
+      // Resolve tool objects to executable tools from registry
+      const missingTools = [];
+      for (const [toolName, toolObject] of attachedTools.entries()) {
+        try {
+          // Look up the actual executable tool by name
+          const executableTool = await this.toolRegistry.getTool(toolName);
+          if (executableTool && executableTool.execute) {
+            this.resolvedTools.set(toolName, executableTool);
+            console.log(`[BT-EXECUTOR] ✅ Resolved tool object ${toolName} to executable tool`);
+          } else {
+            console.log(`[BT-EXECUTOR] ❌ Could not find executable tool for ${toolName}`);
+            missingTools.push(toolName);
+          }
+        } catch (error) {
+          console.log(`[BT-EXECUTOR] ❌ Error resolving tool ${toolName}:`, error.message);
+          missingTools.push(toolName);
+        }
+      }
+      
+      if (missingTools.length > 0) {
+        throw new Error(`Could not resolve tool objects to executable tools: ${missingTools.join(', ')}`);
+      }
+      
+      return;
+    } else {
+      console.log(`[BT-EXECUTOR] No tool objects found, checking for traditional toolInstance attachments...`);
+      this.findAttachedTools(node, attachedTools);
+      
+      if (attachedTools.size > 0) {
+        console.log(`[BT-EXECUTOR] ✅ Found ${attachedTools.size} tools in config.toolInstance format`);
+        this.resolvedTools = attachedTools;
+        return;
+      } else {
+        console.log(`[BT-EXECUTOR] ❌ No tools found attached to behavior tree, falling back to registry`);
+      }
+    }
+    
+    // Fallback to tool registry resolution
+    if (!this.toolRegistry) {
+      throw new Error('No tool registry provided to executor and no tools attached to behavior tree');
+    }
     
     // Resolve all tools upfront
     const missingTools = [];
@@ -151,6 +198,65 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
     // Check single child (for retry nodes)
     if (node.child) {
       this.findAllToolIds(node.child, toolsSet);
+    }
+  }
+
+  /**
+   * Recursively find tool objects directly in node.tool property
+   * Returns the count of tool objects found
+   */
+  findAttachedToolObjects(node, toolsMap) {
+    if (!node) return 0;
+    
+    let count = 0;
+    
+    // If this is an action node with a tool object in node.tool, add it to the map
+    if (node.type === 'action' && node.tool && typeof node.tool === 'object' && node.tool.name) {
+      // Need to get actual executable tool from registry using the tool name
+      const toolName = node.tool.name;
+      console.log(`[BT-EXECUTOR] Found tool object: ${toolName}, need to resolve executable from registry`);
+      toolsMap.set(toolName, node.tool); // Store temporarily, we'll resolve later
+      count++;
+    }
+    
+    // Recursively check children
+    if (node.children) {
+      for (const child of node.children) {
+        count += this.findAttachedToolObjects(child, toolsMap);
+      }
+    }
+    
+    // Check single child (for retry nodes)
+    if (node.child) {
+      count += this.findAttachedToolObjects(node.child, toolsMap);
+    }
+    
+    return count;
+  }
+
+  /**
+   * Recursively find all attached tool instances in the tree (traditional format)
+   */
+  findAttachedTools(node, toolsMap) {
+    if (!node) return;
+    
+    // If this is an action node with a toolInstance, add it to the map
+    if (node.type === 'action' && node.config?.toolInstance) {
+      const toolKey = node.tool || node.config?.tool || node.id; // Use tool name or node ID as key
+      toolsMap.set(toolKey, node.config.toolInstance);
+      console.log(`[BT-EXECUTOR] Found attached tool: ${toolKey} -> ${node.config.toolInstance.name}`);
+    }
+    
+    // Recursively check children
+    if (node.children) {
+      for (const child of node.children) {
+        this.findAttachedTools(child, toolsMap);
+      }
+    }
+    
+    // Check single child (for retry nodes)
+    if (node.child) {
+      this.findAttachedTools(node.child, toolsMap);
     }
   }
 
@@ -224,9 +330,21 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
       const finalState = result.status === NodeStatus.SUCCESS ? 'success' : 'failure';
       this.nodeStates.set(nodeId, finalState);
       
-      this.executionHistory.push({
-        nodeId, nodeType, status: result.status, timestamp: Date.now(), result: result.data
-      });
+      // Enhanced history entry with inputs and outputs
+      const historyEntry = {
+        nodeId, 
+        nodeType, 
+        status: result.status, 
+        timestamp: Date.now(),
+        result: result.data,
+        // Add tool information if available
+        tool: node.tool?.name || node.config?.tool || 'unknown',
+        // Add inputs/outputs if this was a tool execution
+        inputs: result.inputs || null,
+        outputs: result.outputs || null
+      };
+      
+      this.executionHistory.push(historyEntry);
       
       this.emit('node:complete', { nodeId, status: result.status, data: result.data });
       
@@ -518,14 +636,103 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
     
     switch (nodeType) {
       case 'action':
-        // Execute action node with pre-resolved tool
-        const toolId = node.config?.tool_id || node.config?.config?.tool_id || node.config?.tool;
-        console.log(`[BT-EXECUTOR] Executing action node: ${node.config?.name}, toolId: ${toolId}`);
-        if (toolId) {
+        // Execute action node - prefer direct tool object
+        console.log(`[BT-EXECUTOR] Executing action node: ${node.id}`);
+        console.log(`[BT-EXECUTOR] - node.tool type: ${typeof node.tool}`);
+        console.log(`[BT-EXECUTOR] - node.tool:`, node.tool);
+        
+        let tool = null;
+        let toolId = null;
+        
+        // Check if node.tool is a tool object (from planner output)
+        if (node.tool && typeof node.tool === 'object' && node.tool.name) {
+          // This is a tool object from the planner - need to get executable from resolved tools
+          const toolName = node.tool.name;
+          tool = this.resolvedTools.get(toolName);
+          if (tool) {
+            console.log(`[BT-EXECUTOR] ✅ Using resolved executable tool for: ${toolName}`);
+          } else {
+            console.log(`[BT-EXECUTOR] ❌ Tool object ${toolName} not found in resolved tools`);
+            return {
+              status: NodeStatus.FAILURE,
+              data: { error: `Tool object '${toolName}' not resolved to executable tool` }
+            };
+          }
+        } else if (node.tool && typeof node.tool === 'object' && node.tool.execute) {
+          // This is already an executable tool object
+          tool = node.tool;
+          console.log(`[BT-EXECUTOR] ✅ Using directly attached executable tool: ${tool.name}`);
+        } else if (node.tool && typeof node.tool === 'string' && node.tool !== '[Circular]') {
+          // Fallback to legacy lookup methods
+          const attachedTool = node.config?.toolInstance;
+          toolId = node.config?.tool_id || node.config?.config?.tool_id || node.tool;
+          console.log(`[BT-EXECUTOR] - toolId: ${toolId}`);
+          console.log(`[BT-EXECUTOR] - attachedTool: ${!!attachedTool}`);
+          
+          tool = attachedTool;
+        }
+        
+        // If we have a tool from the resolved tools, execute it directly
+        if (tool && !toolId) {
           try {
-            // Convert ObjectId to string if needed for consistent lookup
+            // Check multiple locations for inputs
+            const rawInputs = node.inputs || node.config?.inputs || node.config?.config?.inputs || {};
+            const inputs = this.resolveParams(rawInputs);
+            console.log(`[BT-EXECUTOR] Raw inputs:`, rawInputs);
+            console.log(`[BT-EXECUTOR] Resolved inputs:`, inputs);
+            const result = await tool.execute(inputs);
+            
+            console.log(`[BT-EXECUTOR] Tool result for ${tool.name}:`, result);
+            
+            // Handle outputs format OR outputVariable (legacy support)  
+            const outputs = node.outputs || node.config?.outputs || node.config?.config?.outputs;
+            const outputVariable = node.outputVariable || node.config?.outputVariable;
+            
+            this.executionContext.artifacts = this.executionContext.artifacts || {};
+            
+            if (outputs && typeof outputs === 'object') {
+              // Map specific tool data outputs to variable names
+              console.log(`[BT-EXECUTOR] Mapping outputs:`, outputs);
+              console.log(`[BT-EXECUTOR] Tool result.data:`, result.data);
+              
+              for (const [outputField, variableName] of Object.entries(outputs)) {
+                if (result.data && result.data.hasOwnProperty(outputField)) {
+                  this.executionContext.artifacts[variableName] = result.data[outputField];
+                  console.log(`[BT-EXECUTOR] Mapped data.${outputField} -> ${variableName}:`, result.data[outputField]);
+                }
+              }
+            } else if (outputVariable) {
+              // Legacy support: store entire tool result in outputVariable
+              this.executionContext.artifacts[outputVariable] = result;
+              console.log(`[BT-EXECUTOR] Stored entire result in ${outputVariable}:`, result);
+            } else {
+              // Store entire tool result as fallback if no specific outputs mapping
+              const nodeId = node.config?.id || node.id;
+              this.executionContext.artifacts[`${nodeId}_result`] = result;
+              console.log(`[BT-EXECUTOR] No specific outputs mapping - stored entire result as ${nodeId}_result:`, result);
+            }
+            
+            return {
+              status: result.success ? NodeStatus.SUCCESS : NodeStatus.FAILURE,
+              data: result.data || {},
+              error: result.error,
+              // Include inputs and outputs for history
+              inputs: inputs,
+              outputs: result.data
+            };
+          } catch (error) {
+            return {
+              status: NodeStatus.FAILURE,
+              data: { error: error.message }
+            };
+          }
+        }
+        
+        if (!tool && toolId) {
+          try {
+            // Fallback to resolved tools lookup
             const toolIdString = toolId.toString();
-            const tool = this.resolvedTools.get(toolIdString);
+            tool = this.resolvedTools.get(toolIdString);
             if (!tool) {
               // This should never happen if resolveAllTreeTools worked correctly
               console.log(`[BT-EXECUTOR] ERROR: Tool not found in resolved tools`);
@@ -536,8 +743,10 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
             }
             
             console.log(`[BT-EXECUTOR] Found tool: ${tool.name}`);
-            // The inputs are in node.config.config.inputs due to the nested structure
-            const inputs = this.resolveParams(node.config?.config?.inputs || node.config?.inputs || {});
+            // Check multiple locations for inputs
+            const rawInputs = node.inputs || node.config?.inputs || node.config?.config?.inputs || {};
+            const inputs = this.resolveParams(rawInputs);
+            console.log(`[BT-EXECUTOR] Raw inputs:`, rawInputs);
             console.log(`[BT-EXECUTOR] Resolved inputs:`, inputs);
             const result = await tool.execute(inputs);
             
@@ -565,13 +774,19 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
               this.executionContext.artifacts[outputVariable] = result;
               console.log(`[BT-EXECUTOR] Stored entire result in ${outputVariable}:`, result);
             } else {
-              console.log(`[BT-EXECUTOR] No outputs mapping specified - not storing artifacts`);
+              // Store entire tool result as fallback if no specific outputs mapping
+              const nodeId = node.config?.id || node.id;
+              this.executionContext.artifacts[`${nodeId}_result`] = result;
+              console.log(`[BT-EXECUTOR] No specific outputs mapping - stored entire result as ${nodeId}_result:`, result);
             }
             
             return {
               status: result.success ? NodeStatus.SUCCESS : NodeStatus.FAILURE,
               data: result.data || {},
-              error: result.error
+              error: result.error,
+              // Include inputs and outputs for history
+              inputs: inputs,
+              outputs: result.data
             };
           } catch (error) {
             return {

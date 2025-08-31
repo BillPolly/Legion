@@ -418,7 +418,32 @@ export class BaseServer {
           // Send response
           if (resource.file) {
             // Serve from file
-            res.sendFile(path.resolve(resource.file));
+            const resolvedPath = path.resolve(resource.file);
+            console.log('[DEBUG] Serving file:', resource.file, '-> resolved:', resolvedPath);
+            
+            // For JavaScript files, apply import rewriting
+            if (resolvedPath.endsWith('.js') || resolvedPath.endsWith('.mjs')) {
+              try {
+                const fs = await import('fs');
+                const content = await fs.promises.readFile(resolvedPath, 'utf8');
+                const rewrittenContent = this.importRewriter.rewrite(content);
+                
+                res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+                res.send(rewrittenContent);
+                console.log('[DEBUG] Applied import rewriting to JS file');
+              } catch (error) {
+                console.log('[DEBUG] Import rewriting failed:', error.message);
+                res.status(404).send('File not found');
+              }
+            } else {
+              // Non-JS files, serve directly
+              res.sendFile(resolvedPath, (err) => {
+                if (err) {
+                  console.log('[DEBUG] sendFile error:', err.message);
+                  res.status(404).send('File not found');
+                }
+              });
+            }
           } else if (resource.content) {
             // Send content directly
             res.send(resource.content);
@@ -518,8 +543,12 @@ export class BaseServer {
               fs.promises.readFile(filePath, 'utf8')
             );
             
-            // Rewrite @legion imports
-            const rewritten = this.importRewriter.rewrite(content);
+            // Rewrite @legion imports with full context
+            const rewritten = this.importRewriter.rewrite(content, { 
+              legionPackage: cleanName,
+              requestPath: req.path,
+              baseUrl: `/legion/${cleanName}`
+            });
             
             res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
             res.send(rewritten);

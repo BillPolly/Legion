@@ -104,12 +104,13 @@ export class ToolDiscoveryComponent {
     const result = this.model.discoveryResult;
     if (!result) return;
     
-    const stats = result.statistics || {};
-    const toolDiscovery = result.toolDiscovery || [];
+    const stats = result.statistics?.toolDiscovery || {};
+    const toolDiscovery = result.statistics?.toolDiscovery?.taskResults || [];
     
-    // Check if results already exist
-    if (this.container.querySelector('.tool-discovery-results')) {
-      return; // Already rendered
+    // Check if results already exist - remove old results first
+    const existingResults = this.container.querySelector('.tool-discovery-results');
+    if (existingResults) {
+      existingResults.remove();
     }
     
     // Create main results container (no collapsible wrapper at this level)
@@ -138,10 +139,10 @@ export class ToolDiscoveryComponent {
     statsDiv.className = 'tool-discovery-stats';
     
     const statItems = [
-      { icon: '📊', value: stats.totalSimpleTasks || 0, label: 'SIMPLE tasks' },
+      { icon: '📊', value: stats.totalTasks || 0, label: 'SIMPLE tasks' },
       { icon: '✅', value: stats.feasibleTasks || 0, label: 'feasible' },
       { icon: '❌', value: stats.infeasibleTasks || 0, label: 'infeasible' },
-      { icon: '🔧', value: stats.uniqueToolsCount || 0, label: 'tools found' },
+      { icon: '🔧', value: stats.totalTools || 0, label: 'tools found' },
       { icon: '⏱️', value: result.processingTime || 0, label: 'ms' }
     ];
     
@@ -154,8 +155,9 @@ export class ToolDiscoveryComponent {
     
     header.appendChild(statsDiv);
     
-    // Add found tools section using ToolsListComponent with columns and collapse
-    if (stats.uniqueTools && stats.uniqueTools.length > 0) {
+    // Add found tools section using ToolsListComponent 
+    const rootTaskTools = result.rootTask?.tools || [];
+    if (rootTaskTools.length > 0) {
       const toolsContainer = document.createElement('div');
       const toolsListComponent = new ToolsListComponent(toolsContainer, { 
         showConfidence: true,
@@ -164,14 +166,8 @@ export class ToolDiscoveryComponent {
         columns: 4
       });
       
-      // Get tools with confidence scores from all tasks' debug data
-      let allMergedTools = [];
-      toolDiscovery.forEach(task => {
-        const mergedTools = task?.discoveryResult?.debug?.step3_merged || [];
-        if (Array.isArray(mergedTools)) {
-          allMergedTools.push(...mergedTools);
-        }
-      });
+      // Use tools directly from rootTask
+      let allMergedTools = rootTaskTools;
       
       // Remove duplicates by tool name, keeping highest confidence
       const uniqueToolsMap = new Map();
@@ -201,7 +197,7 @@ export class ToolDiscoveryComponent {
     const planOverview = new PlanOverviewComponent(planOverviewContainer, { 
       showConfidence: true 
     });
-    planOverview.setPlanData(result.hierarchy, toolDiscovery);
+    planOverview.setPlanData(result.rootTask, toolDiscovery);
     resultsContent.appendChild(planOverviewContainer);
     
     // Tasks section with collapsible wrapper
@@ -216,6 +212,29 @@ export class ToolDiscoveryComponent {
     const tasksContent = document.createElement('div');
     tasksContent.className = 'tool-discovery-tasks-content';
     
+    // Add JSON plan display
+    const jsonPlanDiv = document.createElement('div');
+    jsonPlanDiv.className = 'json-plan-display';
+    jsonPlanDiv.style.marginBottom = '20px';
+    
+    const jsonTitle = document.createElement('h4');
+    jsonTitle.textContent = '📋 Plan Structure with Tools (JSON)';
+    jsonTitle.style.marginBottom = '8px';
+    jsonPlanDiv.appendChild(jsonTitle);
+    
+    const jsonPre = document.createElement('pre');
+    jsonPre.style.backgroundColor = '#f8f9fa';
+    jsonPre.style.border = '1px solid #e9ecef';
+    jsonPre.style.borderRadius = '4px';
+    jsonPre.style.padding = '12px';
+    jsonPre.style.overflow = 'auto';
+    jsonPre.style.fontSize = '12px';
+    jsonPre.style.maxHeight = '400px';
+    jsonPre.textContent = JSON.stringify(result, null, 2);
+    jsonPlanDiv.appendChild(jsonPre);
+    
+    tasksContent.appendChild(jsonPlanDiv);
+
     // Add task items
     toolDiscovery.forEach((item, index) => {
       const taskElement = this.renderTaskItem(item, index);
@@ -238,7 +257,7 @@ export class ToolDiscoveryComponent {
   
   renderTaskItem(item, index) {
     const isExpanded = this.model.expandedTasks.has(index);
-    const feasible = item.discoveryResult?.feasible;
+    const feasible = item.feasible;
     
     const taskItem = document.createElement('div');
     taskItem.className = `task-item ${feasible ? 'feasible' : 'infeasible'}`;
@@ -254,7 +273,7 @@ export class ToolDiscoveryComponent {
     
     const description = document.createElement('span');
     description.className = 'task-description';
-    description.textContent = item.taskDescription;
+    description.textContent = item.description;
     
     const status = document.createElement('span');
     status.className = 'task-status';
@@ -269,7 +288,7 @@ export class ToolDiscoveryComponent {
     if (isExpanded) {
       const details = document.createElement('div');
       details.className = 'task-details';
-      const debugInfo = this.renderTaskDebugInfo(item.discoveryResult?.debug);
+      const debugInfo = this.renderTaskDebugInfo(item.debug);
       details.appendChild(debugInfo);
       taskItem.appendChild(details);
     }
