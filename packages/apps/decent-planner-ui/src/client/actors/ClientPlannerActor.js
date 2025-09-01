@@ -11,6 +11,7 @@ import { FormalPlanningComponent } from '/src/client/components/FormalPlanningCo
 import { TreeExecutionComponent } from '/src/client/components/TreeExecutionComponent.js';
 import { PlansTabComponent } from '/src/client/components/PlansTabComponent.js';
 import { PlanningTabComponent } from '/src/client/components/PlanningTabComponent.js';
+import { LLMDebugTabComponent } from '/src/client/components/LLMDebugTabComponent.js';
 
 // All components are now properly imported from separate files
 
@@ -29,6 +30,7 @@ export default class ClientPlannerActor extends ProtocolActor {
     this.formalPlanningComponent = null;
     this.searchComponent = null;
     this.executionComponent = null;
+    this.llmDebugTabComponent = null;
     
     // Merge additional state properties with the protocol-initialized state
     // Don't override the entire state object - just add additional properties
@@ -1507,29 +1509,14 @@ export default class ClientPlannerActor extends ProtocolActor {
     const container = this.tabsComponent.getContentContainer('llm');
     if (!container) return;
     
-    // Initial render of LLM debug content
-    this.renderLLMDebugContent();
+    // Create LLM debug tab component
+    this.llmDebugTabComponent = new LLMDebugTabComponent(container);
+    
+    // Initialize with current interactions
+    this.llmDebugTabComponent.setInteractions(this.state.llmInteractions);
   }
   
-  renderLLMDebugContent() {
-    const container = this.tabsComponent.getContentContainer('llm');
-    if (!container) return;
-    
-    container.innerHTML = this.renderLLMDebugTab();
-    
-    // Add global toggle function for interactions
-    if (!window.toggleInteraction) {
-      window.toggleInteraction = (interactionId) => {
-        const interactions = [...this.state.llmInteractions];
-        const interaction = interactions.find(i => i.id === interactionId);
-        if (interaction) {
-          interaction.collapsed = !interaction.collapsed;
-          this.updateState({ llmInteractions: interactions });
-          this.renderLLMDebugContent(); // Re-render the tab
-        }
-      };
-    }
-  }
+  // LLM Debug tab now handled by LLMDebugTabComponent
   
   handleTabChange(tabId) {
     // Auto-start tool discovery when switching to tools tab
@@ -3040,7 +3027,9 @@ export default class ClientPlannerActor extends ProtocolActor {
     
     this.updateState({ llmInteractions: interactions });
     
-    // Always re-render LLM debug content when interactions are updated
-    this.renderLLMDebugContent();
+    // Update LLM debug tab component
+    if (this.llmDebugTabComponent) {
+      this.llmDebugTabComponent.setInteractions(interactions);
+    }
   }
 }
