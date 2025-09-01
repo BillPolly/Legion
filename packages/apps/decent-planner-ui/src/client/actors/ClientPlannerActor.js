@@ -386,7 +386,7 @@ export default class ClientPlannerActor extends ProtocolActor {
             informalBtn.disabled = false;
           }
           if (statusEl) {
-            statusEl.innerHTML = '🟢 Connected';
+            statusEl.textContent = '🟢 Connected';
           }
           // Fix state.connected for preconditions
           this.updateState({ connected: true });
@@ -471,7 +471,7 @@ export default class ClientPlannerActor extends ProtocolActor {
     // Update connection status display
     const statusEl = document.getElementById('connection-status');
     if (statusEl) {
-      statusEl.innerHTML = '🟢 Connected';
+      statusEl.textContent = '🟢 Connected';
     }
     
     // Enable the informal button
