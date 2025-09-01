@@ -4,6 +4,11 @@
  */
 
 import { createConfigurableServer } from '@legion/server-framework';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 async function startServer() {
   console.log('🚀 Starting Decent Planner UI Server...');
@@ -14,13 +19,13 @@ async function startServer() {
     routes: [
       {
         path: '/planner',
-        serverActor: './src/server/actors/ServerPlannerActor.js',
-        clientActor: './src/client/actors/ClientPlannerActor.js',
+        serverActor: join(__dirname, 'server/actors/ServerPlannerActor.js'),
+        clientActor: join(__dirname, 'client/actors/ClientPlannerActor.js'),
         title: '🧠 Decent Planner'
       }
     ],
     static: {
-      '/src': './src'
+      '/src': __dirname
     }
   };
   

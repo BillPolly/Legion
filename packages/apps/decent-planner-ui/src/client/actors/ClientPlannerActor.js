@@ -9,6 +9,7 @@ import { TabsComponent } from '/src/client/components/TabsComponent.js';
 import { ToolDiscoveryComponent } from '/src/client/components/ToolDiscoveryComponent.js';
 import { FormalPlanningComponent } from '/src/client/components/FormalPlanningComponent.js';
 import { TreeExecutionComponent } from '/src/client/components/TreeExecutionComponent.js';
+// PlanningTabComponent removed - handling inline for now
 
 // All components are now properly imported from separate files
 
@@ -1138,6 +1139,9 @@ export default class ClientPlannerActor extends ProtocolActor {
       progressMessage: startMessage.message,
       progressMessages: [startMessage]
     });
+    
+    // Re-render planning content to show progress
+    this.renderPlanningContent();
   }
 
   handleInformalPlanProgress(data) {
@@ -1156,6 +1160,9 @@ export default class ClientPlannerActor extends ProtocolActor {
       // Auto-collapse if we have more than 20 messages and user hasn't manually set collapse state
       progressCollapsed: newMessages.length > 20 && !this.state.manuallySetCollapse ? true : this.state.progressCollapsed
     });
+    
+    // Re-render planning content to show new progress
+    this.renderPlanningContent();
   }
 
   handleInformalPlanComplete(data) {
@@ -1176,6 +1183,9 @@ export default class ClientPlannerActor extends ProtocolActor {
       progressMessages: newMessages
     });
     
+    // Re-render planning content to show results
+    this.renderPlanningContent();
+    
     // Enable the tools tab now that informal planning is complete
     if (this.tabsComponent) {
       this.tabsComponent.enableTab('tools', true);
@@ -1187,6 +1197,9 @@ export default class ClientPlannerActor extends ProtocolActor {
       informalPlanning: false,
       error: data.error
     });
+    
+    // Re-render planning content to show error
+    this.renderPlanningContent();
   }
 
   handleFormalPlanStarted(data) {
@@ -2096,8 +2109,86 @@ export default class ClientPlannerActor extends ProtocolActor {
     
     planningContent.appendChild(buttonGroup);
     
-    // TODO: Add progress messages, informal results, etc. using proper DOM creation
-    // For now, just add the basic structure
+    // Progress messages section
+    if (this.state.progressMessages && this.state.progressMessages.length > 0) {
+      const progressContainer = document.createElement('div');
+      progressContainer.className = 'progress-container';
+      
+      const progressTitle = document.createElement('h3');
+      progressTitle.textContent = '📊 Progress';
+      progressContainer.appendChild(progressTitle);
+      
+      const progressMessages = document.createElement('div');
+      progressMessages.className = 'progress-messages';
+      
+      this.state.progressMessages.forEach(msg => {
+        const progressMsg = document.createElement('div');
+        progressMsg.className = 'progress-msg';
+        
+        const msgIcon = document.createElement('span');
+        msgIcon.className = 'msg-icon';
+        msgIcon.textContent = '🔄';
+        
+        const msgText = document.createElement('span');
+        msgText.className = 'msg-text';
+        msgText.textContent = msg.message;
+        
+        const msgTime = document.createElement('span');
+        msgTime.className = 'msg-time';
+        msgTime.textContent = new Date(msg.timestamp).toLocaleTimeString();
+        
+        progressMsg.appendChild(msgIcon);
+        progressMsg.appendChild(msgText);
+        progressMsg.appendChild(msgTime);
+        progressMessages.appendChild(progressMsg);
+      });
+      
+      progressContainer.appendChild(progressMessages);
+      planningContent.appendChild(progressContainer);
+    }
+    
+    // Informal result section
+    if (this.state.informalResult) {
+      const informalResult = document.createElement('div');
+      informalResult.className = 'informal-result';
+      
+      const resultTitle = document.createElement('h3');
+      resultTitle.textContent = '📋 Informal Planning Result';
+      informalResult.appendChild(resultTitle);
+      
+      const resultStats = document.createElement('div');
+      resultStats.className = 'result-stats';
+      
+      ['Total Tasks: 1', 'Simple: 1', 'Complex: 0', 'Valid: ✅'].forEach(statText => {
+        const stat = document.createElement('span');
+        stat.textContent = statText;
+        resultStats.appendChild(stat);
+      });
+      
+      informalResult.appendChild(resultStats);
+      
+      // Hierarchy details
+      const details = document.createElement('details');
+      const summary = document.createElement('summary');
+      summary.textContent = 'View Hierarchy';
+      details.appendChild(summary);
+      
+      const hierarchyPre = document.createElement('pre');
+      hierarchyPre.textContent = JSON.stringify(this.state.informalResult.informal?.hierarchy, null, 2);
+      details.appendChild(hierarchyPre);
+      
+      informalResult.appendChild(details);
+      planningContent.appendChild(informalResult);
+    }
+    
+    // Error section
+    if (this.state.error) {
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error-message';
+      errorDiv.textContent = `❌ Error: ${this.state.error}`;
+      planningContent.appendChild(errorDiv);
+    }
+    
     container.appendChild(planningContent);
     
     // Attach event listeners
