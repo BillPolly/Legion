@@ -10,6 +10,7 @@ import { ToolDiscoveryComponent } from '/src/client/components/ToolDiscoveryComp
 import { FormalPlanningComponent } from '/src/client/components/FormalPlanningComponent.js';
 import { TreeExecutionComponent } from '/src/client/components/TreeExecutionComponent.js';
 import { PlansTabComponent } from '/src/client/components/PlansTabComponent.js';
+import { PlanningTabComponent } from '/src/client/components/PlanningTabComponent.js';
 
 // All components are now properly imported from separate files
 
@@ -23,6 +24,7 @@ export default class ClientPlannerActor extends ProtocolActor {
     // Component instances
     this.tabsComponent = null;
     this.plansTabComponent = null;
+    this.planningTabComponent = null;
     this.toolDiscoveryComponent = null;
     this.formalPlanningComponent = null;
     this.searchComponent = null;
@@ -548,8 +550,12 @@ export default class ClientPlannerActor extends ProtocolActor {
       progressMessages: [startMessage]
     });
     
-    // Re-render planning content to show progress
-    this.renderPlanningContent();
+    // Update planning tab component with new state
+    if (this.planningTabComponent) {
+      this.planningTabComponent.setPlanning(true, false);
+      this.planningTabComponent.setProgressMessages([startMessage]);
+      this.planningTabComponent.setError(null);
+    }
   }
 
   handleInformalPlanProgress(data) {
@@ -569,8 +575,10 @@ export default class ClientPlannerActor extends ProtocolActor {
       progressCollapsed: newMessages.length > 20 && !this.state.manuallySetCollapse ? true : this.state.progressCollapsed
     });
     
-    // Re-render planning content to show new progress
-    this.renderPlanningContent();
+    // Update planning tab component with new progress
+    if (this.planningTabComponent) {
+      this.planningTabComponent.setProgressMessages(newMessages);
+    }
   }
 
   handleInformalPlanComplete(data) {
@@ -591,8 +599,13 @@ export default class ClientPlannerActor extends ProtocolActor {
       progressMessages: newMessages
     });
     
-    // Re-render planning content to show results
-    this.renderPlanningContent();
+    // Update planning tab component with results
+    if (this.planningTabComponent) {
+      this.planningTabComponent.setPlanning(false, false);
+      this.planningTabComponent.setProgressMessages(newMessages);
+      this.planningTabComponent.setInformalResult(data.result);
+      this.planningTabComponent.setError(null);
+    }
     
     // Enable the tools tab now that informal planning is complete
     if (this.tabsComponent) {
@@ -606,8 +619,11 @@ export default class ClientPlannerActor extends ProtocolActor {
       error: data.error
     });
     
-    // Re-render planning content to show error
-    this.renderPlanningContent();
+    // Update planning tab component with error
+    if (this.planningTabComponent) {
+      this.planningTabComponent.setPlanning(false, false);
+      this.planningTabComponent.setError(data.error);
+    }
   }
 
   handleFormalPlanStarted(data) {
@@ -761,7 +777,14 @@ export default class ClientPlannerActor extends ProtocolActor {
                         updates.cancelling !== undefined;
     
     if (needsRerender && (!this.state.activeTab || this.state.activeTab === 'planning')) {
-      this.renderPlanningContent();
+      // Update planning tab component if it exists
+      if (this.planningTabComponent) {
+        this.planningTabComponent.setPlanning(this.state.informalPlanning, this.state.cancelling);
+        this.planningTabComponent.setProgressMessages(this.state.progressMessages);
+        this.planningTabComponent.setInformalResult(this.state.informalResult);
+        this.planningTabComponent.setError(this.state.error);
+        this.planningTabComponent.setConnected(this.state.connected);
+      }
     }
     
     // Auto-scroll to bottom if new progress messages were added
@@ -1421,161 +1444,19 @@ export default class ClientPlannerActor extends ProtocolActor {
     const container = this.tabsComponent.getContentContainer('planning');
     if (!container) return;
     
-    this.renderPlanningContent();
+    // Create planning tab component
+    this.planningTabComponent = new PlanningTabComponent(container, {
+      onSubmitPlan: (goal) => this.submitInformalPlan(goal),
+      onCancelPlan: () => this.cancelPlanning(),
+      onGoalChange: (goal) => { this.state.goal = goal; }
+    });
+    
+    // Initialize component state
+    this.planningTabComponent.setGoal(this.state.goal);
+    this.planningTabComponent.setConnected(this.state.connected);
   }
   
-  renderPlanningContent() {
-    const container = this.tabsComponent.getContentContainer('planning');
-    if (!container) return;
-    
-    // Clear container
-    container.innerHTML = '';
-    
-    // Create planning content
-    const planningContent = document.createElement('div');
-    planningContent.className = 'planning-content';
-    
-    // Label
-    const label = document.createElement('label');
-    label.setAttribute('for', 'goal-input');
-    label.textContent = 'Planning Goal:';
-    planningContent.appendChild(label);
-    
-    // Textarea
-    const textarea = document.createElement('textarea');
-    textarea.id = 'goal-input';
-    textarea.placeholder = 'Enter your planning goal...';
-    textarea.disabled = this.state.informalPlanning;
-    textarea.value = this.state.goal || '';
-    planningContent.appendChild(textarea);
-    
-    // Button group
-    const buttonGroup = document.createElement('div');
-    buttonGroup.className = 'button-group';
-    
-    // Start informal planning button
-    const informalButton = document.createElement('button');
-    informalButton.id = 'informal-button';
-    informalButton.disabled = this.state.informalPlanning || !this.state.connected;
-    informalButton.textContent = this.state.informalPlanning ? 
-      '⏳ Running Informal Planning...' : 
-      '🔍 Start Informal Planning';
-    buttonGroup.appendChild(informalButton);
-    
-    // Cancel button (only if planning is running)
-    if (this.state.informalPlanning) {
-      const cancelButton = document.createElement('button');
-      cancelButton.id = 'cancel-button';
-      cancelButton.className = 'cancel-btn';
-      cancelButton.disabled = this.state.cancelling;
-      cancelButton.textContent = this.state.cancelling ? 
-        '⏳ Cancellation pending' : 
-        '❌ Cancel';
-      buttonGroup.appendChild(cancelButton);
-    }
-    
-    planningContent.appendChild(buttonGroup);
-    
-    // Progress messages section
-    if (this.state.progressMessages && this.state.progressMessages.length > 0) {
-      const progressContainer = document.createElement('div');
-      progressContainer.className = 'progress-container';
-      
-      const progressTitle = document.createElement('h3');
-      progressTitle.textContent = '📊 Progress';
-      progressContainer.appendChild(progressTitle);
-      
-      const progressMessages = document.createElement('div');
-      progressMessages.className = 'progress-messages';
-      
-      this.state.progressMessages.forEach(msg => {
-        const progressMsg = document.createElement('div');
-        progressMsg.className = 'progress-msg';
-        
-        const msgIcon = document.createElement('span');
-        msgIcon.className = 'msg-icon';
-        msgIcon.textContent = '🔄';
-        
-        const msgText = document.createElement('span');
-        msgText.className = 'msg-text';
-        msgText.textContent = msg.message;
-        
-        const msgTime = document.createElement('span');
-        msgTime.className = 'msg-time';
-        msgTime.textContent = new Date(msg.timestamp).toLocaleTimeString();
-        
-        progressMsg.appendChild(msgIcon);
-        progressMsg.appendChild(msgText);
-        progressMsg.appendChild(msgTime);
-        progressMessages.appendChild(progressMsg);
-      });
-      
-      progressContainer.appendChild(progressMessages);
-      planningContent.appendChild(progressContainer);
-    }
-    
-    // Informal result section
-    if (this.state.informalResult) {
-      const informalResult = document.createElement('div');
-      informalResult.className = 'informal-result';
-      
-      const resultTitle = document.createElement('h3');
-      resultTitle.textContent = '📋 Informal Planning Result';
-      informalResult.appendChild(resultTitle);
-      
-      const resultStats = document.createElement('div');
-      resultStats.className = 'result-stats';
-      
-      ['Total Tasks: 1', 'Simple: 1', 'Complex: 0', 'Valid: ✅'].forEach(statText => {
-        const stat = document.createElement('span');
-        stat.textContent = statText;
-        resultStats.appendChild(stat);
-      });
-      
-      informalResult.appendChild(resultStats);
-      
-      // Hierarchy details
-      const details = document.createElement('details');
-      const summary = document.createElement('summary');
-      summary.textContent = 'View Hierarchy';
-      details.appendChild(summary);
-      
-      const hierarchyPre = document.createElement('pre');
-      hierarchyPre.textContent = JSON.stringify(this.state.informalResult.informal?.hierarchy, null, 2);
-      details.appendChild(hierarchyPre);
-      
-      informalResult.appendChild(details);
-      planningContent.appendChild(informalResult);
-    }
-    
-    // Error section
-    if (this.state.error) {
-      const errorDiv = document.createElement('div');
-      errorDiv.className = 'error-message';
-      errorDiv.textContent = `❌ Error: ${this.state.error}`;
-      planningContent.appendChild(errorDiv);
-    }
-    
-    container.appendChild(planningContent);
-    
-    // Attach event listeners
-    textarea.addEventListener('input', (e) => {
-      this.state.goal = e.target.value;
-    });
-    
-    informalButton.addEventListener('click', () => {
-      this.submitInformalPlan(this.state.goal);
-    });
-    
-    if (this.state.informalPlanning) {
-      const cancelButton = container.querySelector('#cancel-button');
-      if (cancelButton) {
-        cancelButton.addEventListener('click', () => {
-          this.cancelPlanning();
-        });
-      }
-    }
-  }
+  // Planning tab now handled by PlanningTabComponent
   
   initializeToolsTab() {
     const container = this.tabsComponent.getContentContainer('tools');
@@ -3106,7 +2987,10 @@ export default class ClientPlannerActor extends ProtocolActor {
     }
     
     // Update UI components
-    this.renderPlanningContent();
+    if (this.planningTabComponent) {
+      this.planningTabComponent.setGoal(planData.goal);
+      this.planningTabComponent.setInformalResult(planData.informalResult);
+    }
     if (this.plansTabComponent) {
       this.plansTabComponent.setCurrentPlan(planData);
     }
