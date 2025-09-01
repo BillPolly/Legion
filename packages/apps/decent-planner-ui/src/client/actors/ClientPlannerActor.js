@@ -1778,18 +1778,12 @@ export default class ClientPlannerActor extends ProtocolActor {
     const interactions = this.state.llmInteractions || [];
     
     if (interactions.length === 0) {
-      const placeholder = document.createElement('div');
-      placeholder.className = 'llm-debug-placeholder';
-      
-      const h2 = document.createElement('h2');
-      h2.textContent = '🧠 LLM Debug';
-      placeholder.appendChild(h2);
-      
-      const p = document.createElement('p');
-      p.textContent = 'No LLM interactions yet. Start planning to see prompts and responses.';
-      placeholder.appendChild(p);
-      
-      return placeholder;
+      return `
+        <div class="llm-debug-placeholder">
+          <h2>🧠 LLM Debug</h2>
+          <p>No LLM interactions yet. Start planning to see prompts and responses.</p>
+        </div>
+      `;
     }
     
     return `
@@ -1970,12 +1964,11 @@ export default class ClientPlannerActor extends ProtocolActor {
     const currentPlanDisplay = document.createElement('div');
     currentPlanDisplay.id = 'current-plan-display';
     
-    if (this.state.formalResult) {
-      currentPlanDisplay.innerHTML = this.renderCurrentPlan(); // TODO: Fix this innerHTML later
+    const planContent = this.renderCurrentPlan();
+    if (typeof planContent === 'string') {
+      currentPlanDisplay.innerHTML = planContent;
     } else {
-      const noPlan = document.createElement('p');
-      noPlan.textContent = 'No plan loaded. Create a plan using the Planning tab.';
-      currentPlanDisplay.appendChild(noPlan);
+      currentPlanDisplay.appendChild(planContent);
     }
     
     plansContent.appendChild(currentPlanDisplay);
@@ -2010,35 +2003,75 @@ export default class ClientPlannerActor extends ProtocolActor {
   
   renderCurrentPlan() {
     if (!this.state.formalResult) {
-      return '<p>No plan loaded.</p>';
+      const p = document.createElement('p');
+      p.textContent = 'No plan loaded.';
+      return p;
     }
     
     const behaviorTrees = this.state.formalResult.formal?.behaviorTrees || [];
     const firstTree = behaviorTrees[0];
     
     if (!firstTree) {
-      return '<p>No behavior tree found in plan.</p>';
+      const p = document.createElement('p');
+      p.textContent = 'No behavior tree found in plan.';
+      return p;
     }
     
-    return `
-      <div class="current-plan">
-        <h3>📋 Current Plan: ${firstTree.id || 'Unnamed'}</h3>
-        <div class="plan-description">
-          <strong>Description:</strong> ${firstTree.description || 'No description'}
-        </div>
-        <div class="plan-details">
-          <div class="plan-stats">
-            <span class="stat">🌳 ${behaviorTrees.length} behavior tree(s)</span>
-            <span class="stat">📊 ${this.countPlanNodes(firstTree)} nodes</span>
-            <span class="stat">🎯 Goal: "${this.state.goal}"</span>
-          </div>
-          <details>
-            <summary>View Tree Structure</summary>
-            <pre class="plan-tree">${JSON.stringify(firstTree, null, 2)}</pre>
-          </details>
-        </div>
-      </div>
-    `;
+    const currentPlan = document.createElement('div');
+    currentPlan.className = 'current-plan';
+    
+    // Title
+    const title = document.createElement('h3');
+    title.textContent = `📋 Current Plan: ${firstTree.id || 'Unnamed'}`;
+    currentPlan.appendChild(title);
+    
+    // Description
+    const descDiv = document.createElement('div');
+    descDiv.className = 'plan-description';
+    const descStrong = document.createElement('strong');
+    descStrong.textContent = 'Description:';
+    descDiv.appendChild(descStrong);
+    descDiv.appendChild(document.createTextNode(` ${firstTree.description || 'No description'}`));
+    currentPlan.appendChild(descDiv);
+    
+    // Details
+    const detailsDiv = document.createElement('div');
+    detailsDiv.className = 'plan-details';
+    
+    // Stats
+    const statsDiv = document.createElement('div');
+    statsDiv.className = 'plan-stats';
+    
+    const statItems = [
+      `🌳 ${behaviorTrees.length} behavior tree(s)`,
+      `📊 ${this.countPlanNodes(firstTree)} nodes`,
+      `🎯 Goal: "${this.state.goal}"`
+    ];
+    
+    statItems.forEach(statText => {
+      const stat = document.createElement('span');
+      stat.className = 'stat';
+      stat.textContent = statText;
+      statsDiv.appendChild(stat);
+    });
+    
+    detailsDiv.appendChild(statsDiv);
+    
+    // Tree structure details
+    const details = document.createElement('details');
+    const summary = document.createElement('summary');
+    summary.textContent = 'View Tree Structure';
+    details.appendChild(summary);
+    
+    const pre = document.createElement('pre');
+    pre.className = 'plan-tree';
+    pre.textContent = JSON.stringify(firstTree, null, 2);
+    details.appendChild(pre);
+    
+    detailsDiv.appendChild(details);
+    currentPlan.appendChild(detailsDiv);
+    
+    return currentPlan;
   }
   
   countPlanNodes(tree) {
@@ -2273,13 +2306,7 @@ export default class ClientPlannerActor extends ProtocolActor {
     const container = this.tabsComponent.getContentContainer('llm');
     if (!container) return;
     
-    const content = this.renderLLMDebugTab();
-    if (typeof content === 'string') {
-      container.innerHTML = content; // Fallback for complex content
-    } else {
-      container.innerHTML = '';
-      container.appendChild(content); // Use DOM element
-    }
+    container.innerHTML = this.renderLLMDebugTab();
     
     // Add global toggle function for interactions
     if (!window.toggleInteraction) {
