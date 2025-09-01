@@ -9,7 +9,7 @@ import { TabsComponent } from '/src/client/components/TabsComponent.js';
 import { ToolDiscoveryComponent } from '/src/client/components/ToolDiscoveryComponent.js';
 import { FormalPlanningComponent } from '/src/client/components/FormalPlanningComponent.js';
 import { TreeExecutionComponent } from '/src/client/components/TreeExecutionComponent.js';
-// PlanningTabComponent removed - handling inline for now
+import { PlansTabComponent } from '/src/client/components/PlansTabComponent.js';
 
 // All components are now properly imported from separate files
 
@@ -22,6 +22,7 @@ export default class ClientPlannerActor extends ProtocolActor {
     
     // Component instances
     this.tabsComponent = null;
+    this.plansTabComponent = null;
     this.toolDiscoveryComponent = null;
     this.formalPlanningComponent = null;
     this.searchComponent = null;
@@ -657,7 +658,9 @@ export default class ClientPlannerActor extends ProtocolActor {
     }
     
     // Refresh plans tab to show current plan
-    this.renderPlansContent();
+    if (this.plansTabComponent) {
+      this.plansTabComponent.setCurrentPlan(data.result);
+    }
     
     // Load tree into execution component whenever formal planning completes
     if (this.executionComponent && data.result?.formal?.behaviorTrees?.[0]) {
@@ -1316,97 +1319,15 @@ export default class ClientPlannerActor extends ProtocolActor {
     const container = this.tabsComponent.getContentContainer('plans');
     if (!container) return;
     
-    this.renderPlansContent();
+    // Create plans tab component
+    this.plansTabComponent = new PlansTabComponent(container, {
+      onLoadPlan: (filename) => this.handleLoadPlan(filename),
+      onRefreshPlans: () => this.refreshSavedPlans(),
+      renderCurrentPlan: () => this.renderCurrentPlan()
+    });
   }
   
-  renderPlansContent() {
-    const container = this.tabsComponent.getContentContainer('plans');
-    if (!container) return;
-    
-    // Clear container first
-    container.innerHTML = '';
-    
-    // Create plans content div
-    const plansContent = document.createElement('div');
-    plansContent.className = 'plans-content';
-    
-    // Title
-    const title = document.createElement('h2');
-    title.textContent = '📁 Saved Plans';
-    plansContent.appendChild(title);
-    
-    // Load section
-    const loadSection = document.createElement('div');
-    loadSection.className = 'load-section';
-    
-    const loadControls = document.createElement('div');
-    loadControls.className = 'load-controls';
-    
-    // Select dropdown
-    const select = document.createElement('select');
-    select.id = 'load-plan-select';
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = 'Choose a saved plan to load...';
-    select.appendChild(defaultOption);
-    
-    // Load button
-    const loadButton = document.createElement('button');
-    loadButton.id = 'load-plan-button';
-    loadButton.textContent = '📂 Load Plan';
-    loadButton.disabled = true;
-    
-    // Refresh button
-    const refreshButton = document.createElement('button');
-    refreshButton.id = 'refresh-plans-button';
-    refreshButton.textContent = '🔄 Refresh';
-    
-    loadControls.appendChild(select);
-    loadControls.appendChild(loadButton);
-    loadControls.appendChild(refreshButton);
-    loadSection.appendChild(loadControls);
-    plansContent.appendChild(loadSection);
-    
-    // Current plan display
-    const currentPlanDisplay = document.createElement('div');
-    currentPlanDisplay.id = 'current-plan-display';
-    
-    const planContent = this.renderCurrentPlan();
-    if (typeof planContent === 'string') {
-      currentPlanDisplay.innerHTML = planContent;
-    } else {
-      currentPlanDisplay.appendChild(planContent);
-    }
-    
-    plansContent.appendChild(currentPlanDisplay);
-    container.appendChild(plansContent);
-    
-    // Attach event listeners
-    const loadPlanSelect = document.getElementById('load-plan-select');
-    const loadPlanButton = document.getElementById('load-plan-button');
-    const refreshPlansButton = document.getElementById('refresh-plans-button');
-    
-    if (loadPlanSelect) {
-      loadPlanSelect.addEventListener('change', (e) => {
-        loadPlanButton.disabled = !e.target.value;
-      });
-    }
-    
-    if (loadPlanButton) {
-      loadPlanButton.addEventListener('click', () => {
-        this.handleLoadPlan();
-      });
-    }
-    
-    if (refreshPlansButton) {
-      refreshPlansButton.addEventListener('click', () => {
-        this.refreshSavedPlans();
-      });
-    }
-    
-    // Load available plans on render
-    this.refreshSavedPlans();
-  }
+  // Plans tab now handled by PlansTabComponent
   
   renderCurrentPlan() {
     if (!this.state.formalResult) {
@@ -3121,11 +3042,10 @@ export default class ClientPlannerActor extends ProtocolActor {
     this.remoteActor.receive('list-saved-plans', {});
   }
   
-  handleLoadPlan() {
-    const select = document.getElementById('load-plan-select');
-    if (!select || !select.value || !this.remoteActor) return;
+  handleLoadPlan(filename) {
+    if (!filename || !this.remoteActor) return;
     
-    this.remoteActor.receive('load-plan', { filename: select.value });
+    this.remoteActor.receive('load-plan', { filename });
   }
   
   handleSavePlan() {
@@ -3187,7 +3107,9 @@ export default class ClientPlannerActor extends ProtocolActor {
     
     // Update UI components
     this.renderPlanningContent();
-    this.renderPlansContent();
+    if (this.plansTabComponent) {
+      this.plansTabComponent.setCurrentPlan(planData);
+    }
     
     // Load tree into execution if available
     if (planData.formalResult?.formal?.behaviorTrees?.[0] && this.executionComponent) {
@@ -3203,17 +3125,8 @@ export default class ClientPlannerActor extends ProtocolActor {
   }
   
   handlePlanListComplete(data) {
-    const select = document.getElementById('load-plan-select');
-    if (select) {
-      // Keep the first default option
-      select.innerHTML = '<option value="">Choose a saved plan...</option>';
-      
-      data.plans.forEach(plan => {
-        const option = document.createElement('option');
-        option.value = plan.filename;
-        option.textContent = `${plan.name} (${new Date(plan.savedAt).toLocaleDateString()})`;
-        select.appendChild(option);
-      });
+    if (this.plansTabComponent) {
+      this.plansTabComponent.setSavedPlans(data.plans);
     }
   }
   
