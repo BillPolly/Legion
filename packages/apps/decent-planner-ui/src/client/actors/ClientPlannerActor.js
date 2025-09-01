@@ -1778,12 +1778,18 @@ export default class ClientPlannerActor extends ProtocolActor {
     const interactions = this.state.llmInteractions || [];
     
     if (interactions.length === 0) {
-      return `
-        <div class="llm-debug-placeholder">
-          <h2>🧠 LLM Debug</h2>
-          <p>No LLM interactions yet. Start planning to see prompts and responses.</p>
-        </div>
-      `;
+      const placeholder = document.createElement('div');
+      placeholder.className = 'llm-debug-placeholder';
+      
+      const h2 = document.createElement('h2');
+      h2.textContent = '🧠 LLM Debug';
+      placeholder.appendChild(h2);
+      
+      const p = document.createElement('p');
+      p.textContent = 'No LLM interactions yet. Start planning to see prompts and responses.';
+      placeholder.appendChild(p);
+      
+      return placeholder;
     }
     
     return `
@@ -2267,7 +2273,13 @@ export default class ClientPlannerActor extends ProtocolActor {
     const container = this.tabsComponent.getContentContainer('llm');
     if (!container) return;
     
-    container.innerHTML = this.renderLLMDebugTab();
+    const content = this.renderLLMDebugTab();
+    if (typeof content === 'string') {
+      container.innerHTML = content; // Fallback for complex content
+    } else {
+      container.innerHTML = '';
+      container.appendChild(content); // Use DOM element
+    }
     
     // Add global toggle function for interactions
     if (!window.toggleInteraction) {
