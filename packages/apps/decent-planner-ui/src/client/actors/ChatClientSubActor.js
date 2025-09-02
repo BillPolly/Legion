@@ -3,7 +3,7 @@
  * Simple echo chat implementation as sub-actor
  */
 
-import { ChatComponent } from '/src/client/components/ChatComponent.js';
+import { EnhancedChatComponent } from '/src/client/components/EnhancedChatComponent.js';
 
 export default class ChatClientSubActor {
   constructor() {
@@ -33,7 +33,7 @@ export default class ChatClientSubActor {
   }
 
   setupUI(container) {
-    this.chatComponent = new ChatComponent(container, {
+    this.chatComponent = new EnhancedChatComponent(container, {
       messages: this.state.messages,
       inputText: this.state.inputText,
       connected: this.state.connected,
@@ -42,6 +42,12 @@ export default class ChatClientSubActor {
       },
       onInputChange: (text) => {
         this.state.inputText = text;
+      },
+      onClearContext: () => {
+        this.requestClearContext();
+      },
+      onDebugTabChange: (tabId) => {
+        console.log(`Debug tab changed to: ${tabId}`);
       }
     });
   }
@@ -136,6 +142,27 @@ export default class ChatClientSubActor {
           this.chatComponent.addContextCleared(data);
         }
         break;
+
+      case 'agent-llm-interaction':
+        // LLM interaction event from tool agent
+        if (this.chatComponent && this.chatComponent.addLLMInteraction) {
+          this.chatComponent.addLLMInteraction(data);
+        }
+        break;
+
+      case 'context-state-update':
+        // Context state update from tool agent
+        if (this.chatComponent && this.chatComponent.updateContext) {
+          this.chatComponent.updateContext(data.contextState);
+        }
+        break;
+
+      case 'tool-operation':
+        // Tool operation executed
+        if (this.chatComponent && this.chatComponent.addOperation) {
+          this.chatComponent.addOperation(data.operation);
+        }
+        break;
         
       case 'error':
         console.error('Chat error:', data);
@@ -148,10 +175,36 @@ export default class ChatClientSubActor {
     }
   }
 
+  /**
+   * Request context clearing from server
+   */
+  requestClearContext() {
+    if (this.parentActor) {
+      this.parentActor.sendToSubActor('chat', 'clear-context', {
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+
+  /**
+   * Request current context state from server
+   */
+  requestContextState() {
+    if (this.parentActor) {
+      this.parentActor.sendToSubActor('chat', 'get-context-state', {
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+
   onTabActivated() {
     // Called when this tab becomes active
     console.log('Chat tab activated');
-    // Could focus input or perform other activation tasks
+    
+    // Request latest context state when tab activates
+    this.requestContextState();
+    
+    // Focus input
     if (this.chatComponent) {
       this.chatComponent.focusInput();
     }

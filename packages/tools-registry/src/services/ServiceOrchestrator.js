@@ -378,7 +378,17 @@ export class ServiceOrchestrator {
       }))
     };
     
-    return enrichedResults;
+    // Transform to expected format for ToolManager/manage.js compatibility
+    const transformedResults = {
+      success: enrichedResults.errors?.length === 0,
+      queriesRun: enrichedResults.totalQueries || enrichedResults.results?.length || 0,
+      totalQueries: enrichedResults.totalQueries,
+      successfulQueries: enrichedResults.successfulQueries,
+      results: enrichedResults.results,
+      errors: enrichedResults.errors
+    };
+    
+    return transformedResults;
   }
 
   /**

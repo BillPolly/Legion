@@ -238,9 +238,16 @@ export class QdrantVectorDatabase {
           return null;
         }
         
+        // Fix: Validate score and handle NaN/undefined values
+        let score = result.score;
+        if (typeof score !== 'number' || isNaN(score) || score < 0) {
+          console.warn(`[QdrantVectorDatabase] Invalid score at index ${idx}: ${score}, defaulting to 0.0`);
+          score = 0.0;
+        }
+        
         return {
           id: result.id,
-          score: result.score,
+          score: score,
           metadata: result.payload || {},
           vector: result.vector || null
         };

@@ -20,43 +20,14 @@ export class ToolUsingChatAgent {
       artifacts: {} // Named variables from tool outputs
     };
     this.chatHistory = [];
-    this.resolvedTools = new Map(); // Tool name → executable tool
     
     // Agent-specific state
     this.currentOperation = null;
     this.operationHistory = [];
     this.llmInteractions = []; // Track all LLM calls for observability
-    
-    // Initialize tools
-    this.initializeTools();
+    this.currentSearchResults = []; // Store search results during request processing
   }
 
-  /**
-   * Initialize tool registry and cache resolved tools
-   * Adapted from BT Executor's tool resolution pattern
-   */
-  async initializeTools() {
-    try {
-      // Get all available tools from registry
-      const allToolsResponse = await this.toolRegistry.getAllTools();
-      const allTools = allToolsResponse.tools || allToolsResponse || [];
-      
-      console.log(`[ToolAgent] Initializing with ${allTools.length} available tools`);
-      
-      for (const tool of allTools) {
-        if (tool.name && typeof tool.execute === 'function') {
-          this.resolvedTools.set(tool.name, tool);
-          console.log(`[ToolAgent] ✅ Cached executable tool: ${tool.name}`);
-        } else if (tool.name) {
-          console.log(`[ToolAgent] ❌ Tool ${tool.name} has no execute method`);
-        }
-      }
-      
-      console.log(`[ToolAgent] Successfully cached ${this.resolvedTools.size} executable tools`);
-    } catch (error) {
-      console.error('[ToolAgent] Error initializing tools:', error.message);
-    }
-  }
 
   /**
    * Main pipeline entry point - process user message through complete workflow
@@ -91,18 +62,18 @@ export class ToolUsingChatAgent {
         };
       }
 
-      // Stage 2: Search for relevant tools
-      const searchResults = await this.searchForTools(userInput);
-      console.log(`[ToolAgent] Found ${searchResults.length} tools in search`);
+      // Stage 2: Search for relevant tools using semantic search
+      this.currentSearchResults = await this.searchForTools(userInput);
+      console.log(`[ToolAgent] Found ${this.currentSearchResults.length} tools in search`);
 
-      if (searchResults.length === 0) {
+      if (this.currentSearchResults.length === 0) {
         const explanation = await this.explainNoToolsFound(userInput);
         this.addAgentMessage(explanation.userResponse);
         return explanation;
       }
 
       // Stage 3: Select tool sequence (single or multiple tools)
-      const toolPlan = await this.selectToolSequence(searchResults, userInput);
+      const toolPlan = await this.selectToolSequence(this.currentSearchResults, userInput);
       console.log(`[ToolAgent] Tool plan:`, toolPlan);
 
       if (toolPlan.type === 'none') {
@@ -408,10 +379,15 @@ Generate a helpful response to the user explaining what was accomplished and any
     console.log(`[ToolAgent] Executing tool: ${selectedTool} (attempt ${retryAttempt + 1})`);
     console.log(`[ToolAgent] Parameters:`, parameters);
 
-    // 1. Get resolved tool (using BT's pattern)
-    const tool = this.resolvedTools.get(selectedTool);
-    if (!tool) {
-      throw new Error(`Tool ${selectedTool} not found in resolved tools`);
+    // 1. Get tool from search results (results are records with .tool property)
+    const searchResult = this.currentSearchResults.find(r => r.name === selectedTool);
+    if (!searchResult || !searchResult.tool) {
+      throw new Error(`Tool ${selectedTool} not found in search results`);
+    }
+    
+    const tool = searchResult.tool; // Access the actual tool object
+    if (typeof tool.execute !== 'function') {
+      throw new Error(`Tool ${selectedTool} has no execute method`);
     }
 
     // 2. Resolve parameters with context substitution (BT's resolveParams)
@@ -949,7 +925,7 @@ Be helpful and specific.
       artifacts: this.executionContext.artifacts,
       chatHistoryLength: this.chatHistory.length,
       operationCount: this.operationHistory.length,
-      resolvedToolsCount: this.resolvedTools.size
+      currentSearchResultsCount: this.currentSearchResults.length
     };
   }
 

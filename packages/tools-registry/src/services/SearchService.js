@@ -115,6 +115,7 @@ export class SearchService {
                   perspectiveText: result.metadata?.content || '',
                   perspectiveType: result.metadata?.perspectiveType || '',
                   confidence: result.score,
+                  similarity: result.score, // Add similarity property for compatibility
                   name: tool.name
                 });
               }
@@ -539,6 +540,7 @@ export class SearchService {
       results: [],
       errors: []
     };
+    
 
     for (const query of testQueries) {
       try {

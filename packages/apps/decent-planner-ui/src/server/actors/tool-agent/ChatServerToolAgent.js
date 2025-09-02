@@ -54,10 +54,17 @@ export default class ChatServerToolAgent {
     try {
       console.log('[ChatServerToolAgent] Initializing tool agent...');
       
-      // Get dependencies from services
-      const toolRegistry = this.services.toolRegistry;
+      // Get toolRegistry from services (should be singleton from DecentPlanner)
+      let toolRegistry = this.services.toolRegistry;
+      
+      // If not in services, try to get from sibling planner actor
+      if (!toolRegistry && this.parentActor?.plannerSubActor?.toolRegistry) {
+        toolRegistry = this.parentActor.plannerSubActor.toolRegistry;
+        console.log('[ChatServerToolAgent] Got toolRegistry from planner sub-actor');
+      }
+      
       if (!toolRegistry) {
-        throw new Error('Tool registry not available in services');
+        throw new Error('Tool registry not available - planner may not be initialized yet');
       }
 
       // Get LLM client from ResourceManager
@@ -67,9 +74,12 @@ export default class ChatServerToolAgent {
         throw new Error('LLM client not available from ResourceManager');
       }
 
-      // Create tool agent
-      this.toolAgent = new ToolUsingChatAgent(toolRegistry, llmClient);
-      await this.toolAgent.initializeTools();
+      // Create tool agent with event callback for observability
+      this.toolAgent = new ToolUsingChatAgent(
+        toolRegistry, 
+        llmClient,
+        (eventType, data) => this.forwardAgentEvent(eventType, data)
+      );
       
       this.state.agentInitialized = true;
       console.log('[ChatServerToolAgent] ✅ Tool agent initialized successfully');
@@ -141,6 +151,9 @@ export default class ChatServerToolAgent {
         originalMessage: text,
         originalTimestamp: timestamp
       });
+      
+      // Send context state update
+      this.sendContextUpdate();
       
     } catch (error) {
       console.error('[ChatServerToolAgent] Error processing message:', error);
@@ -229,6 +242,50 @@ export default class ChatServerToolAgent {
   }
 
   /**
+   * Forward agent events to client for observability
+   */
+  forwardAgentEvent(eventType, data) {
+    console.log(`[ChatServerToolAgent] Forwarding event: ${eventType}`);
+    
+    if (this.parentActor) {
+      this.parentActor.sendToSubActor('chat', `agent-${eventType}`, {
+        ...data,
+        serverTimestamp: new Date().toISOString()
+      });
+    }
+  }
+
+  /**
+   * Send context state update to client
+   */
+  sendContextUpdate() {
+    if (!this.toolAgent || !this.parentActor) return;
+    
+    const contextState = this.toolAgent.getContextState();
+    
+    this.parentActor.sendToSubActor('chat', 'context-state-update', {
+      contextState: {
+        artifacts: this.toolAgent.executionContext.artifacts,
+        operationHistory: this.toolAgent.operationHistory,
+        statistics: contextState
+      },
+      timestamp: new Date().toLocaleTimeString()
+    });
+  }
+
+  /**
+   * Send operation update to client
+   */
+  sendOperationUpdate(operation) {
+    if (this.parentActor) {
+      this.parentActor.sendToSubActor('chat', 'tool-operation', {
+        operation,
+        timestamp: new Date().toLocaleTimeString()
+      });
+    }
+  }
+
+  /**
    * Get agent status for debugging
    */
   getStatus() {
@@ -237,7 +294,8 @@ export default class ChatServerToolAgent {
       agentInitialized: this.state.agentInitialized,
       messageCount: this.state.messageCount,
       contextVariables: this.toolAgent ? Object.keys(this.toolAgent.executionContext.artifacts).length : 0,
-      resolvedTools: this.toolAgent ? this.toolAgent.resolvedTools.size : 0
+      resolvedTools: this.toolAgent ? this.toolAgent.resolvedTools.size : 0,
+      llmInteractions: this.toolAgent ? this.toolAgent.llmInteractions.length : 0
     };
   }
 }
