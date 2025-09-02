@@ -123,6 +123,13 @@ export class ActorSpaceManager {
       connectionInfo.serverActor = serverActor;
       console.log('[SERVER] Server actor registered successfully');
       
+      // Give ActorSpace reference to server actor if it needs it
+      if (typeof serverActor.setActorSpace === 'function') {
+        console.log('[SERVER] Setting ActorSpace on server actor...');
+        serverActor.setActorSpace(connectionInfo.actorSpace);
+        console.log('[SERVER] ActorSpace set on server actor successfully');
+      }
+      
       // Set up channel for WebSocket
       console.log('[SERVER] Setting up WebSocket channel...');
       const channel = connectionInfo.actorSpace.addChannel(ws);

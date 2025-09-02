@@ -16,11 +16,13 @@ import { LLMDebugTabComponent } from '/src/client/components/LLMDebugTabComponen
 // All components are now properly imported from separate files
 
 
-export default class ClientPlannerActor extends ProtocolActor {
+export default class PlannerClientSubActor extends ProtocolActor {
   constructor() {
     super(); // This initializes state from protocol.state.initial
     this.remoteActor = null;
     this.plannerComponent = null;
+    this.parentActor = null;
+    this.container = null;
     
     // Component instances
     this.tabsComponent = null;
@@ -57,7 +59,7 @@ export default class ClientPlannerActor extends ProtocolActor {
       formalResult: null,
       
       // UI state
-      activeTab: 'planning', // 'planning', 'tools', 'formal', 'execution', or 'search'
+      activeTab: 'plans', // 'plans', 'planning', 'tools', 'formal', 'execution', or 'search'
       
       // Execution state
       executionTree: null,
@@ -66,9 +68,713 @@ export default class ClientPlannerActor extends ProtocolActor {
     });
   }
 
+  setParentActor(parentActor) {
+    this.parentActor = parentActor;
+  }
+
+  async setRemoteActor(remoteActor) {
+    this.remoteActor = remoteActor;
+    console.log('🎭 Planner client sub-actor connected');
+    
+    // Update connection state
+    this.state.connected = true;
+  }
+
+  receive(messageType, data) {
+    console.log('📨 Client handling:', messageType);
+    
+    switch (messageType) {
+      case 'ready':
+        this.state.connected = true;
+        break;
+        
+      case 'informalPlanStarted':
+        this.handleInformalPlanStarted(data);
+        break;
+        
+      case 'informalPlanProgress':
+        this.handleInformalPlanProgress(data);
+        break;
+        
+      case 'informalPlanComplete':
+        this.handleInformalPlanComplete(data);
+        break;
+        
+      case 'informalPlanError':
+        this.handleInformalPlanError(data);
+        break;
+        
+      case 'formalPlanStarted':
+        this.handleFormalPlanStarted(data);
+        break;
+        
+      case 'formalPlanProgress':
+        this.handleFormalPlanProgress(data);
+        break;
+        
+      case 'formalPlanComplete':
+        this.handleFormalPlanComplete(data);
+        break;
+        
+      case 'formalPlanError':
+        this.handleFormalPlanError(data);
+        break;
+        
+      case 'execution-event':
+        this.handleExecutionEvent(data);
+        break;
+        
+      case 'llm-interaction':
+        this.handleLLMInteraction(data);
+        break;
+        
+      case 'planListComplete':
+        this.handlePlanListComplete(data);
+        break;
+        
+      case 'registryStatsComplete':
+        this.handleRegistryStatsComplete(data);
+        break;
+        
+      case 'toolsListComplete':
+        this.handleToolsListComplete(data);
+        break;
+        
+      case 'toolsDiscoveryStarted':
+        this.handleToolsDiscoveryStarted(data);
+        break;
+        
+      case 'toolsDiscoveryProgress':
+        this.handleToolsDiscoveryProgress(data);
+        break;
+        
+      case 'toolsDiscoveryComplete':
+        this.handleToolsDiscoveryComplete(data);
+        break;
+        
+      case 'toolsDiscoveryError':
+        this.handleToolsDiscoveryError(data);
+        break;
+        
+      case 'load-tree-response':
+        this.handleLoadTreeResponse(data);
+        break;
+        
+      default:
+        console.warn('Unknown message type in planner sub-actor:', messageType);
+        break;
+    }
+  }
+
+  setupUI(container) {
+    this.container = container;
+    
+    // Inject styles first
+    this.injectStyles();
+    
+    // Initialize with existing render system but within the provided container
+    if (container) {
+      this.render = () => {
+        this.renderToContainer(container);
+      };
+      
+      this.render(); // Initial render
+    }
+  }
+
+  injectStyles() {
+    if (document.getElementById('planner-styles')) return;
+    
+    const style = document.createElement('style');
+    style.id = 'planner-styles';
+    style.textContent = `
+      .planner-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      
+      .planner-tab-nav {
+        display: flex;
+        background: #f8f9fa;
+        border-radius: 4px;
+        margin-bottom: 16px;
+        overflow: hidden;
+      }
+      
+      .planner-tab-btn {
+        flex: 1;
+        padding: 12px 16px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        transition: background 0.2s ease;
+        font-size: 14px;
+      }
+      
+      .planner-tab-btn:hover:not(:disabled) {
+        background: #e9ecef;
+      }
+      
+      .planner-tab-btn.active {
+        background: #28a745;
+        color: white;
+      }
+      
+      .planner-tab-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      
+      .planner-tab-content {
+        background: white;
+        border-radius: 4px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      }
+      
+      .planner-tab-content.hidden {
+        display: none;
+      }
+      
+      .button-group {
+        margin: 10px 0;
+      }
+      
+      button {
+        padding: 10px 20px;
+        margin: 5px;
+        border: none;
+        border-radius: 5px;
+        background: #007bff;
+        color: white;
+        cursor: pointer;
+      }
+      
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      
+      button:hover:not(:disabled) {
+        background: #0056b3;
+      }
+      
+      textarea {
+        width: 100%;
+        min-height: 100px;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-family: inherit;
+      }
+      
+      textarea:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        outline: none;
+      }
+      
+      label {
+        font-weight: 500;
+        margin-bottom: 8px;
+        display: block;
+      }
+      
+      .planning-content {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      
+      .progress-container {
+        margin: 20px 0;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 15px;
+        background: #f9f9f9;
+      }
+      
+      .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 4px;
+        border: 1px solid #f5c6cb;
+        margin: 10px 0;
+      }
+      
+      .informal-result {
+        margin: 20px 0;
+        padding: 15px;
+        background: #f0f8ff;
+        border-radius: 5px;
+        border: 1px solid #b0d4ff;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  renderToContainer(container) {
+    container.innerHTML = `
+      <div class="planner-container">
+        <!-- Planner Sub-Tab Navigation -->
+        <div class="planner-tab-nav">
+          <button 
+            class="planner-tab-btn ${this.state.activeTab === 'plans' ? 'active' : ''}" 
+            id="plans-tab-btn"
+          >
+            📁 Plans
+          </button>
+          <button 
+            class="planner-tab-btn ${this.state.activeTab === 'planning' ? 'active' : ''}" 
+            id="planning-tab-btn"
+          >
+            📋 Planning
+          </button>
+          <button 
+            class="planner-tab-btn ${this.state.activeTab === 'tools' ? 'active' : ''}" 
+            id="tools-tab-btn"
+            ${!this.state.informalResult ? 'disabled' : ''}
+          >
+            🔧 Tool Discovery
+          </button>
+          <button 
+            class="planner-tab-btn ${this.state.activeTab === 'formal' ? 'active' : ''}" 
+            id="formal-tab-btn"
+            ${!this.state.toolsResult ? 'disabled' : ''}
+          >
+            🎯 Formal Planning
+          </button>
+          <button 
+            class="planner-tab-btn ${this.state.activeTab === 'execution' ? 'active' : ''}" 
+            id="execution-tab-btn"
+            ${!this.state.formalResult ? 'disabled' : ''}
+          >
+            🚀 Execution
+          </button>
+          <button 
+            class="planner-tab-btn ${this.state.activeTab === 'llm' ? 'active' : ''}" 
+            id="llm-tab-btn"
+          >
+            🧠 LLM Debug
+          </button>
+        </div>
+        
+        <!-- Plans Tab Content -->
+        <div class="planner-tab-content ${this.state.activeTab === 'plans' ? 'active' : 'hidden'}" id="plans-tab">
+          <div id="plans-tab-container"></div>
+        </div>
+        
+        <!-- Planning Tab Content -->
+        <div class="planner-tab-content ${this.state.activeTab === 'planning' ? 'active' : 'hidden'}" id="planning-tab">
+          <div id="planning-tab-container"></div>
+        </div>
+        
+        <!-- Tool Discovery Tab Content -->
+        <div class="planner-tab-content ${this.state.activeTab === 'tools' ? 'active' : 'hidden'}" id="tools-tab">
+          <div id="tools-tab-container"></div>
+        </div>
+        
+        <!-- Formal Planning Tab Content -->
+        <div class="planner-tab-content ${this.state.activeTab === 'formal' ? 'active' : 'hidden'}" id="formal-tab">
+          <div id="formal-tab-container"></div>
+        </div>
+        
+        <!-- Execution Tab Content -->
+        <div class="planner-tab-content ${this.state.activeTab === 'execution' ? 'active' : 'hidden'}" id="execution-tab">
+          <div id="execution-tab-container"></div>
+        </div>
+        
+        <!-- LLM Debug Tab Content -->
+        <div class="planner-tab-content ${this.state.activeTab === 'llm' ? 'active' : 'hidden'}" id="llm-tab">
+          <div id="llm-tab-container"></div>
+        </div>
+      </div>
+    `;
+    
+    // Set up event listeners for sub-tabs
+    this.setupPlannerTabEvents(container);
+    
+    // Initialize sub-components
+    this.initializePlannerComponents(container);
+  }
+
+  handleInformalPlanning(goal) {
+    this.submitInformalPlan(goal);
+  }
+
+  submitInformalPlan(goal) {
+    if (!goal || goal.trim() === '') {
+      this.state.error = 'Goal is required';
+      return;
+    }
+    
+    if (!this.remoteActor) {
+      this.state.error = 'Not connected to server';
+      return;
+    }
+    
+    // Clear previous results and start planning
+    this.state.informalPlanning = true;
+    this.state.informalResult = null;
+    this.state.formalResult = null;
+    this.state.toolsResult = null;
+    this.state.error = null;
+    this.state.progressMessages = [];
+    this.state.progressCollapsed = false;
+    this.state.manuallySetCollapse = false;
+    this.render();
+    
+    this.remoteActor.receive('plan-informal', { goal });
+  }
+
+  handleInformalPlanComplete(data) {
+    console.log('📋 Informal planning completed:', data);
+    
+    // Update state directly
+    this.state.informalPlanning = false;
+    this.state.informalResult = data.result;
+    this.state.error = null;
+    
+    console.log('🔧 State updated, informalResult exists:', !!this.state.informalResult);
+    
+    // Re-render to enable tools tab
+    if (this.render) {
+      console.log('🔄 Re-rendering to enable tools tab...');
+      this.render();
+    }
+    
+    // Update planning tab component
+    if (this.planningTabComponent) {
+      this.planningTabComponent.setPlanning(false, false);
+      this.planningTabComponent.setInformalResult(data.result);
+      this.planningTabComponent.setError(null);
+    }
+  }
+
+  handleInformalPlanError(data) {
+    this.state.informalPlanning = false;
+    this.state.error = data.error;
+    
+    // Update planning tab component with error
+    if (this.planningTabComponent) {
+      this.planningTabComponent.setPlanning(false, false);
+      this.planningTabComponent.setError(data.error);
+    }
+  }
+
+  handleCancel() {
+    if (this.parentActor) {
+      this.parentActor.sendToSubActor('planner', 'cancel', {});
+    }
+    this.state.informalPlanning = false;
+    this.state.formalPlanning = false;
+    this.state.cancelling = true;
+    this.render();
+  }
+
+  handleSavePlan(planName) {
+    if (!this.state.informalResult && !this.state.formalResult) {
+      this.state.error = 'No plan to save';
+      return;
+    }
+    
+    if (this.parentActor) {
+      this.parentActor.sendToSubActor('planner', 'save-plan', { 
+        planName,
+        plan: this.state.formalResult || this.state.informalResult
+      });
+    }
+  }
+
+  handleDeletePlan(planName) {
+    if (this.parentActor) {
+      this.parentActor.sendToSubActor('planner', 'delete-plan', { planName });
+    }
+  }
+
+  submitToolsDiscovery() {
+    if (!this.state.informalResult) {
+      this.state.error = 'Informal result is required for tool discovery';
+      return;
+    }
+    
+    if (!this.remoteActor) {
+      this.state.error = 'Not connected to server';
+      return;
+    }
+    
+    this.state.toolsDiscovering = true;
+    this.state.toolsResult = null;
+    this.state.error = null;
+    this.render();
+    
+    this.remoteActor.receive('discover-tools', { 
+      informalResult: this.state.informalResult 
+    });
+  }
+
+  handleToolExpand(toolId) {
+    const expanded = this.state.expandedToolsMetadata;
+    if (expanded.has(toolId)) {
+      expanded.delete(toolId);
+    } else {
+      expanded.add(toolId);
+    }
+    this.state.expandedToolsMetadata = expanded;
+    this.render();
+  }
+
+  submitFormalPlan() {
+    if (!this.state.toolsResult) {
+      this.state.error = 'Tools result is required for formal planning';
+      return;
+    }
+    
+    if (!this.remoteActor) {
+      this.state.error = 'Not connected to server';
+      return;
+    }
+    
+    this.state.formalPlanning = true;
+    this.state.formalResult = null;
+    this.state.error = null;
+    this.state.activeTab = 'formal';
+    this.render();
+    
+    this.remoteActor.receive('plan-formal', {});
+  }
+
+  handleInformalPlanStarted(data) {
+    this.state.informalPlanning = true;
+    this.state.error = null;
+    this.render();
+  }
+
+  handleInformalPlanProgress(data) {
+    const progressMessage = {
+      id: Date.now(),
+      message: data.message,
+      timestamp: data.timestamp || new Date().toISOString(),
+      type: 'progress'
+    };
+    
+    const newMessages = [...this.state.progressMessages, progressMessage];
+    
+    this.state.progressMessages = newMessages;
+    this.render();
+  }
+
+  handleExecutionStep() {
+    if (!this.remoteActor) return;
+    this.remoteActor.receive('execution-step', {});
+  }
+  
+  handleExecutionRun() {
+    if (!this.remoteActor) return;
+    this.remoteActor.receive('execution-run', {});
+  }
+  
+  handleExecutionPause() {
+    if (!this.remoteActor) return;
+    this.remoteActor.receive('execution-pause', {});
+  }
+  
+  handleExecutionReset() {
+    if (!this.remoteActor) return;
+    this.remoteActor.receive('execution-reset', {});
+  }
+  
+  handleBreakpoint(nodeId, enabled) {
+    if (!this.remoteActor) return;
+    const messageType = enabled ? 'execution-set-breakpoint' : 'execution-remove-breakpoint';
+    this.remoteActor.receive(messageType, { nodeId });
+  }
+
+  onTabActivated() {
+    // Called when the planner tab becomes active in the main tabs
+    console.log('Planner tab activated');
+    // Re-render if needed
+    if (this.container && this.render) {
+      this.render();
+    }
+  }
+
+  handlePlanListComplete(data) {
+    console.log('📁 Plan list loaded:', data);
+    if (this.plansTabComponent) {
+      this.plansTabComponent.updatePlansList(data.plans);
+    }
+  }
+
+  handleRegistryStatsComplete(data) {
+    console.log('📊 Registry stats loaded:', data);
+  }
+
+  handleToolsListComplete(data) {
+    console.log('🔧 Tools list loaded:', data.tools.length, 'tools');
+    if (this.searchComponent) {
+      this.searchComponent.handleToolsList(data);
+    }
+  }
+
+  handleLLMInteraction(data) {
+    console.log('🧠 LLM Interaction:', data.type, data.id);
+    this.state.llmInteractions = this.state.llmInteractions || [];
+    this.state.llmInteractions.push(data);
+    
+    if (this.llmDebugTabComponent) {
+      this.llmDebugTabComponent.updateInteractions(this.state.llmInteractions);
+    }
+  }
+
+
+  setupPlannerTabEvents(container) {
+    // Set up event listeners for planner sub-tabs
+    const plansBtn = container.querySelector('#plans-tab-btn');
+    const planningBtn = container.querySelector('#planning-tab-btn');
+    const toolsBtn = container.querySelector('#tools-tab-btn');
+    const formalBtn = container.querySelector('#formal-tab-btn');
+    const executionBtn = container.querySelector('#execution-tab-btn');
+    const llmBtn = container.querySelector('#llm-tab-btn');
+    
+    if (plansBtn) {
+      plansBtn.addEventListener('click', () => {
+        this.state.activeTab = 'plans';
+        this.render();
+      });
+    }
+    
+    if (planningBtn) {
+      planningBtn.addEventListener('click', () => {
+        this.state.activeTab = 'planning';
+        this.render();
+      });
+    }
+    
+    if (toolsBtn) {
+      toolsBtn.addEventListener('click', () => {
+        if (!this.state.informalResult) return;
+        console.log('🔧 Tools tab clicked, switching to tools');
+        this.switchTab('tools');
+      });
+    }
+    
+    if (formalBtn) {
+      formalBtn.addEventListener('click', () => {
+        if (!this.state.toolsResult) return;
+        console.log('🎯 Formal tab clicked, switching to formal');
+        this.switchTab('formal');
+      });
+    }
+    
+    if (executionBtn) {
+      executionBtn.addEventListener('click', () => {
+        if (!this.state.formalResult) return;
+        this.state.activeTab = 'execution';
+        this.render();
+      });
+    }
+    
+    if (llmBtn) {
+      llmBtn.addEventListener('click', () => {
+        this.state.activeTab = 'llm';
+        this.render();
+      });
+    }
+  }
+
+  initializePlannerComponents(container) {
+    // Initialize the planner tab components within the container
+    const plansContainer = container.querySelector('#plans-tab-container');
+    const planningContainer = container.querySelector('#planning-tab-container');
+    const toolsContainer = container.querySelector('#tools-tab-container');
+    const llmContainer = container.querySelector('#llm-tab-container');
+    
+    if (plansContainer) {
+      this.plansTabComponent = new PlansTabComponent(plansContainer, {
+        onLoadPlan: (planData) => this.handleLoadPlan(planData),
+        onSavePlan: (planName) => this.handleSavePlan(planName),
+        onDeletePlan: (planName) => this.handleDeletePlan(planName)
+      });
+    }
+    
+    if (planningContainer) {
+      this.planningTabComponent = new PlanningTabComponent(planningContainer, {
+        goal: this.state.goal,
+        isPlanning: this.state.informalPlanning,
+        isCancelling: this.state.cancelling,
+        connected: this.state.connected,
+        progressMessages: this.state.progressMessages,
+        informalResult: this.state.informalResult,
+        error: this.state.error,
+        onSubmitPlan: (goal) => this.handleInformalPlanning(goal),
+        onCancelPlan: () => this.handleCancel(),
+        onGoalChange: (goal) => { this.state.goal = goal; }
+      });
+    }
+    
+    if (toolsContainer) {
+      // Initialize tools components - they handle their own state
+      this.initializeToolsComponents(toolsContainer);
+    }
+    
+    // Initialize formal planning container
+    const formalContainer = container.querySelector('#formal-tab-container');
+    if (formalContainer) {
+      this.formalPlanningComponent = new FormalPlanningComponent(formalContainer, {
+        toolsResult: this.state.toolsResult,
+        formalResult: this.state.formalResult,
+        formalPlanning: this.state.formalPlanning,
+        onSubmitFormal: () => this.submitFormalPlan(),
+        onCancelFormal: () => this.handleCancel()
+      });
+    }
+    
+    // Initialize execution container
+    const executionContainer = container.querySelector('#execution-tab-container');
+    if (executionContainer) {
+      this.executionComponent = new TreeExecutionComponent(executionContainer, {
+        onStep: () => this.handleExecutionStep(),
+        onRun: () => this.handleExecutionRun(),
+        onPause: () => this.handleExecutionPause(),
+        onReset: () => this.handleExecutionReset(),
+        onBreakpoint: (nodeId, enabled) => this.handleBreakpoint(nodeId, enabled),
+        remoteActor: this.remoteActor
+      });
+    }
+    
+    if (llmContainer) {
+      this.llmDebugTabComponent = new LLMDebugTabComponent(llmContainer, {
+        interactions: this.state.llmInteractions,
+        onClearInteractions: () => {
+          this.state.llmInteractions = [];
+          if (this.llmDebugTabComponent) {
+            this.llmDebugTabComponent.updateInteractions([]);
+          }
+        }
+      });
+    }
+  }
+
+  initializeToolsComponents(container) {
+    // Initialize tools-related components
+    this.toolDiscoveryComponent = new ToolDiscoveryComponent(container, {
+      informalResult: this.state.informalResult,
+      toolsResult: this.state.toolsResult,
+      toolsDiscovering: this.state.toolsDiscovering,
+      onDiscoverTools: () => this.submitToolsDiscovery(),
+      onToolExpand: (toolId) => this.handleToolExpand(toolId),
+      remoteActor: this.remoteActor
+    });
+  }
+
   getProtocol() {
     return {
-      name: "ClientPlannerActor",
+      name: "PlannerClientSubActor",
       version: "1.0.0",
       
       state: {
@@ -394,7 +1100,8 @@ export default class ClientPlannerActor extends ProtocolActor {
             statusEl.textContent = '🟢 Connected';
           }
           // Fix state.connected for preconditions
-          this.updateState({ connected: true });
+          this.state.connected = true;
+          this.render();
         }
         break;
         
@@ -463,14 +1170,15 @@ export default class ClientPlannerActor extends ProtocolActor {
   }
 
   doSend(messageType, data) {
-    if (this.remoteActor) {
-      return this.remoteActor.receive(messageType, data);
+    if (this.parentActor) {
+      return this.parentActor.sendToSubActor('planner', messageType, data);
     }
-    throw new Error('No remote actor connected');
+    throw new Error('No parent actor connected');
   }
 
   handleReady(data) {
-    this.updateState({ connected: true });
+    this.state.connected = true;
+    this.render();
     console.log('✅ Server is ready');
     
     // Update connection status display
@@ -487,25 +1195,22 @@ export default class ClientPlannerActor extends ProtocolActor {
   }
 
   handlePlanStarted(data) {
-    this.updateState({ 
-      planning: true,
-      error: null
-    });
+    this.state.planning = true;
+    this.state.error = null;
+    this.render();
   }
 
   handlePlanComplete(data) {
-    this.updateState({
-      planning: false,
-      result: data.result,
-      error: null
-    });
+    this.state.planning = false;
+    this.state.result = data.result;
+    this.state.error = null;
+    this.render();
   }
 
   handlePlanError(data) {
-    this.updateState({
-      planning: false,
-      error: data.error
-    });
+    this.state.planning = false;
+    this.state.error = data.error;
+    this.render();
   }
 
   handlePlanCancelled(data) {
@@ -521,44 +1226,20 @@ export default class ClientPlannerActor extends ProtocolActor {
     
     const newMessages = [...this.state.progressMessages, successMessage];
     
-    this.updateState({
-      informalPlanning: false,
-      formalPlanning: false,
-      cancelling: false,
-      error: null, // Clear any existing error
-      progressMessages: newMessages
-    });
+    this.state.informalPlanning = false;
+    this.state.formalPlanning = false;
+    this.state.cancelling = false;
+    this.state.error = null; // Clear any existing error
+    this.state.progressMessages = newMessages;
+    this.render();
   }
 
   handleError(data) {
-    this.updateState({
-      connected: false,
-      error: data.message
-    });
+    this.state.connected = false;
+    this.state.error = data.message;
+    this.render();
   }
 
-  handleInformalPlanStarted(data) {
-    const startMessage = {
-      id: Date.now(),
-      message: 'Starting informal planning...',
-      timestamp: new Date().toISOString(),
-      type: 'start'
-    };
-    
-    this.updateState({ 
-      informalPlanning: true,
-      error: null,
-      progressMessage: startMessage.message,
-      progressMessages: [startMessage]
-    });
-    
-    // Update planning tab component with new state
-    if (this.planningTabComponent) {
-      this.planningTabComponent.setPlanning(true, false);
-      this.planningTabComponent.setProgressMessages([startMessage]);
-      this.planningTabComponent.setError(null);
-    }
-  }
 
   handleInformalPlanProgress(data) {
     const progressMessage = {
@@ -570,12 +1251,11 @@ export default class ClientPlannerActor extends ProtocolActor {
     
     const newMessages = [...this.state.progressMessages, progressMessage];
     
-    this.updateState({
-      progressMessage: data.message,
-      progressMessages: newMessages,
-      // Auto-collapse if we have more than 20 messages and user hasn't manually set collapse state
-      progressCollapsed: newMessages.length > 20 && !this.state.manuallySetCollapse ? true : this.state.progressCollapsed
-    });
+    this.state.progressMessage = data.message;
+    this.state.progressMessages = newMessages;
+    // Auto-collapse if we have more than 20 messages and user hasn't manually set collapse state
+    this.state.progressCollapsed = newMessages.length > 20 && !this.state.manuallySetCollapse ? true : this.state.progressCollapsed;
+    this.render();
     
     // Update planning tab component with new progress
     if (this.planningTabComponent) {
@@ -593,14 +1273,13 @@ export default class ClientPlannerActor extends ProtocolActor {
     
     const newMessages = [...this.state.progressMessages, completeMessage];
     
-    this.updateState({
-      informalPlanning: false,
-      formalPlanning: false,  // Fix: Ensure formal planning state is reset
-      informalResult: data.result,
-      error: null,
-      progressMessage: null,
-      progressMessages: newMessages
-    });
+    this.state.informalPlanning = false;
+    this.state.formalPlanning = false;  // Fix: Ensure formal planning state is reset
+    this.state.informalResult = data.result;
+    this.state.error = null;
+    this.state.progressMessage = null;
+    this.state.progressMessages = newMessages;
+    this.render();
     
     // Update planning tab component with results
     if (this.planningTabComponent) {
@@ -610,17 +1289,14 @@ export default class ClientPlannerActor extends ProtocolActor {
       this.planningTabComponent.setError(null);
     }
     
-    // Enable the tools tab now that informal planning is complete
-    if (this.tabsComponent) {
-      this.tabsComponent.enableTab('tools', true);
-    }
+    // Tools tab is automatically enabled when informalResult is set
+    // The HTML template uses ${!this.state.informalResult ? 'disabled' : ''} to control this
+    console.log('🔧 Informal planning complete, tools tab should now be enabled');
   }
 
   handleInformalPlanError(data) {
-    this.updateState({
-      informalPlanning: false,
-      error: data.error
-    });
+    this.state.informalPlanning = false;
+    this.state.error = data.error;
     
     // Update planning tab component with error
     if (this.planningTabComponent) {
@@ -630,10 +1306,9 @@ export default class ClientPlannerActor extends ProtocolActor {
   }
 
   handleFormalPlanStarted(data) {
-    this.updateState({ 
-      formalPlanning: true,
-      error: null
-    });
+    this.state.formalPlanning = true;
+    this.state.error = null;
+    this.render();
     
     // Update formal planning component
     if (this.formalPlanningComponent) {
@@ -649,15 +1324,19 @@ export default class ClientPlannerActor extends ProtocolActor {
   }
 
   handleFormalPlanComplete(data) {
-    this.updateState({
-      formalPlanning: false,
-      formalResult: data.result,
-      error: null
-    });
+    console.log('🎯 handleFormalPlanComplete called with data:', data);
+    this.state.formalPlanning = false;
+    this.state.formalResult = data.result;
+    this.state.error = null;
+    console.log('🎯 State updated - formalResult:', !!this.state.formalResult, 'formalPlanning:', this.state.formalPlanning);
+    this.render();
     
     // Update formal planning component
     if (this.formalPlanningComponent) {
+      console.log('🎯 Updating formal planning component with result');
       this.formalPlanningComponent.setResult(data.result);
+    } else {
+      console.log('❌ formalPlanningComponent is null!');
     }
     
     // Update execution component with behavior trees
@@ -671,10 +1350,9 @@ export default class ClientPlannerActor extends ProtocolActor {
       }
     }
     
-    // Enable execution tab
-    if (this.tabsComponent) {
-      this.tabsComponent.enableTab('execution', true);
-    }
+    // Execution tab is automatically enabled when formalResult is set
+    // The HTML template uses ${!this.state.formalResult ? 'disabled' : ''} to control this
+    console.log('🚀 Formal planning complete, execution tab should now be enabled');
     
     // Refresh plans tab to show current plan
     if (this.plansTabComponent) {
@@ -682,21 +1360,17 @@ export default class ClientPlannerActor extends ProtocolActor {
     }
     
     // Load tree into execution component whenever formal planning completes
-    if (this.executionComponent && data.result?.formal?.behaviorTrees?.[0]) {
-      this.loadExecutionTree(data.result.formal.behaviorTrees[0]);
+    if (this.executionComponent && data.result?.plan?.behaviorTrees?.[0]) {
+      this.loadExecutionTree(data.result.plan.behaviorTrees[0]);
     }
     
-    // Enable further tabs if needed
-    if (this.tabsComponent) {
-      // Future: enable execution tab if we add one
-    }
+    // Tab enablement is handled automatically through state and HTML template rendering
   }
 
   handleFormalPlanError(data) {
-    this.updateState({
-      formalPlanning: false,
-      error: data.error
-    });
+    this.state.formalPlanning = false;
+    this.state.error = data.error;
+    this.render();
     
     // Update formal planning component
     if (this.formalPlanningComponent) {
@@ -705,11 +1379,10 @@ export default class ClientPlannerActor extends ProtocolActor {
   }
 
   handleToolsDiscoveryStarted(data) {
-    this.updateState({ 
-      toolsDiscovering: true,
-      error: null,
-      activeTab: 'tools' // Switch to tools tab when discovery starts
-    });
+    this.state.toolsDiscovering = true;
+    this.state.error = null;
+    this.state.activeTab = 'tools'; // Switch to tools tab when discovery starts
+    this.render();
     
     // Update the tool discovery component
     if (this.toolDiscoveryComponent) {
@@ -732,39 +1405,64 @@ export default class ClientPlannerActor extends ProtocolActor {
       this.toolDiscoveryComponent.addThinkingStep(data.message, 'info');
     }
     
-    this.updateState({
-      progressMessage: data.message,
-      progressMessages: newMessages
-    });
+    this.state.progressMessage = data.message;
+    this.state.progressMessages = newMessages;
+    this.render();
   }
 
   handleToolsDiscoveryComplete(data) {
-    this.updateState({
-      toolsDiscovering: false,
-      toolsResult: data.result,
-      error: null
-    });
+    console.log('🎯 handleToolsDiscoveryComplete called with data:', data);
+    this.state.toolsDiscovering = false;
+    this.state.toolsResult = data.result;
+    this.state.error = null;
+    console.log('🎯 State updated - toolsResult:', !!this.state.toolsResult, 'toolsDiscovering:', this.state.toolsDiscovering);
+    this.render();
+    console.log('🎯 Render called - formal planning tab should now be enabled');
     
     // Update the tool discovery component
     if (this.toolDiscoveryComponent) {
       this.toolDiscoveryComponent.setResult(data.result);
     }
     
-    // Enable formal planning tab
-    if (this.tabsComponent) {
-      this.tabsComponent.enableTab('formal', true);
+    // Update the formal planning component with tools result
+    if (this.formalPlanningComponent) {
+      this.formalPlanningComponent.setToolsResult(data.result);
     }
   }
 
   handleToolsDiscoveryError(data) {
-    this.updateState({
-      toolsDiscovering: false,
-      error: data.error
-    });
+    this.state.toolsDiscovering = false;
+    this.state.error = data.error;
+    this.render();
     
     // Update the tool discovery component
     if (this.toolDiscoveryComponent) {
       this.toolDiscoveryComponent.setError(data.error);
+    }
+  }
+
+  handleLoadTreeResponse(data) {
+    console.log('🌳 Load tree response received:', data);
+    if (data.success && data.data) {
+      // Update state with execution tree data
+      this.state.executionTree = data.data;
+      this.state.executionState = data.data.state;
+      console.log('🌳 State updated with execution tree and state');
+      
+      // Update the execution component with the tree and execution state
+      if (this.executionComponent) {
+        // Set the behavior tree if it exists in state
+        if (this.state.formalResult?.plan?.behaviorTrees?.[0]) {
+          this.executionComponent.setTree(this.state.formalResult.plan.behaviorTrees[0]);
+        }
+        
+        // Update execution state
+        if (data.data.state) {
+          this.executionComponent.updateExecutionState(data.data.state);
+        }
+      }
+      
+      this.render(); // This will notify all components including execution tab
     }
   }
 
@@ -804,79 +1502,77 @@ export default class ClientPlannerActor extends ProtocolActor {
   // Public API for UI component
   submitPlan(goal) {
     if (!goal || goal.trim() === '') {
-      this.updateState({ error: 'Goal is required' });
+      this.state.error = 'Goal is required';
       return;
     }
     
     if (!this.remoteActor) {
-      this.updateState({ error: 'Not connected to server' });
+      this.state.error = 'Not connected to server';
       return;
     }
     
-    this.updateState({ goal });
+    this.state.goal = goal;
+    this.render();
     this.remoteActor.receive('plan', { goal });
   }
 
   submitInformalPlan(goal) {
     if (!goal || goal.trim() === '') {
-      this.updateState({ error: 'Goal is required' });
+      this.state.error = 'Goal is required';
       return;
     }
     
     if (!this.remoteActor) {
-      this.updateState({ error: 'Not connected to server' });
+      this.state.error = 'Not connected to server';
       return;
     }
     
     // Reset previous results and clear progress messages
-    this.updateState({ 
-      goal, 
-      informalResult: null,
-      formalResult: null,
-      error: null,
-      progressMessages: [],
-      progressCollapsed: false,
-      manuallySetCollapse: false
-    });
+    this.state.goal = goal;
+    this.state.informalResult = null;
+    this.state.formalResult = null;
+    this.state.error = null;
+    this.state.progressMessages = [];
+    this.state.progressCollapsed = false;
+    this.state.manuallySetCollapse = false;
     this.remoteActor.receive('plan-informal', { goal });
   }
 
   submitFormalPlan() {
     if (!this.state.informalResult) {
-      this.updateState({ error: 'Informal result is required for formal planning' });
+      this.state.error = 'Informal result is required for formal planning';
       return;
     }
     
     if (!this.remoteActor) {
-      this.updateState({ error: 'Not connected to server' });
+      this.state.error = 'Not connected to server';
       return;
     }
     
-    this.updateState({ error: null });
+    this.state.error = null;
     // Just send command - server has the data!
     this.remoteActor.receive('plan-formal', {});
   }
 
   submitToolsDiscovery() {
     if (!this.state.informalResult) {
-      this.updateState({ error: 'Informal result is required for tool discovery' });
+      this.state.error = 'Informal result is required for tool discovery';
       return;
     }
     
     if (!this.remoteActor) {
-      this.updateState({ error: 'Not connected to server' });
+      this.state.error = 'Not connected to server';
       return;
     }
     
     // Reset previous results and clear progress messages
-    this.updateState({ 
-      toolsResult: null,
-      toolsDiscovering: true,
-      error: null,
-      progressMessages: [],
-      progressCollapsed: false,
-      activeTab: 'tools' // Switch to tools tab when starting discovery
-    });
+    this.state.toolsResult = null;
+    this.state.toolsDiscovering = true;
+    this.state.error = null;
+    this.state.progressMessages = [];
+    this.state.progressCollapsed = false;
+    this.state.activeTab = 'tools'; // Switch to tools tab when starting discovery
+    this.render();
     
     // Just send command - server has the data!
     this.remoteActor.receive('discover-tools', {});
@@ -884,59 +1580,63 @@ export default class ClientPlannerActor extends ProtocolActor {
 
   submitFormalPlanning() {
     if (!this.state.toolsResult) {
-      this.updateState({ error: 'Tool discovery result is required for formal planning' });
+      this.state.error = 'Tool discovery result is required for formal planning';
       return;
     }
     
     if (!this.remoteActor) {
-      this.updateState({ error: 'Not connected to server' });
+      this.state.error = 'Not connected to server';
       return;
     }
     
     // Reset previous results - DON'T set formalPlanning true yet!
-    this.updateState({ 
-      formalResult: null,
-      // formalPlanning will be set to true by handleFormalPlanStarted
-      error: null,
-      activeTab: 'formal' // Switch to formal tab when starting planning
-    });
+    this.state.formalResult = null;
+    // formalPlanning will be set to true by handleFormalPlanStarted
+    this.state.error = null;
+    this.state.activeTab = 'formal'; // Switch to formal tab when starting planning
+    this.render();
     
     // Just send command - server has the data!
     this.remoteActor.receive('plan-formal', {});
   }
 
+  handleTabChange(tabName) {
+    console.log('🔄 Tab change requested:', tabName);
+    this.switchTab(tabName);
+  }
+
   switchTab(tabName) {
-    this.updateState({ 
-      activeTab: tabName 
-    });
+    console.log('🔄 Switching to tab:', tabName);
+    this.state.activeTab = tabName;
+    this.render();
     
     // Automatically start tool discovery when switching to tools tab if we have informal results but no tools yet
     if (tabName === 'tools' && this.state.informalResult && !this.state.toolsResult && !this.state.toolsDiscovering) {
+      console.log('🔧 Auto-starting tool discovery for tools tab');
       this.submitToolsDiscovery();
     }
     
     // Automatically start formal planning when switching to formal tab if we have tools but no formal result yet
     if (tabName === 'formal' && this.state.toolsResult && !this.state.formalResult && !this.state.formalPlanning) {
+      console.log('🎯 Auto-starting formal planning for formal tab');
       this.submitFormalPlanning();
     }
   }
 
   toggleProgressCollapse() {
-    this.updateState({
-      progressCollapsed: !this.state.progressCollapsed,
-      manuallySetCollapse: true // Mark that user manually toggled
-    });
+    this.state.progressCollapsed = !this.state.progressCollapsed;
+    this.state.manuallySetCollapse = true; // Mark that user manually toggled
+    this.render();
   }
 
   cancelPlanning() {
     console.log('🛑🛑🛑 CLIENT CANCEL PLANNING CALLED 🛑🛑🛑');
     
     // Change button text to show cancellation in progress
-    this.updateState({
-      informalPlanning: false,
-      formalPlanning: false,
-      cancelling: true
-    });
+    this.state.informalPlanning = false;
+    this.state.formalPlanning = false;
+    this.state.cancelling = true;
+    this.render();
     
     // Notify server if connected
     console.log('🔍 Checking remote actor:', this.remoteActor);
@@ -1362,7 +2062,7 @@ export default class ClientPlannerActor extends ProtocolActor {
       return p;
     }
     
-    const behaviorTrees = this.state.formalResult.formal?.behaviorTrees || [];
+    const behaviorTrees = this.state.formalResult.plan?.behaviorTrees || [];
     const firstTree = behaviorTrees[0];
     
     if (!firstTree) {
@@ -1474,7 +2174,11 @@ export default class ClientPlannerActor extends ProtocolActor {
     if (!container) return;
     
     // Create formal planning component
-    this.formalPlanningComponent = new FormalPlanningComponent(container);
+    this.formalPlanningComponent = new FormalPlanningComponent(container, {
+      toolsResult: this.state.toolsResult,
+      formalResult: this.state.formalResult,
+      isPlanning: this.state.formalPlanning
+    });
   }
   
   initializeExecutionTab() {
@@ -1492,8 +2196,8 @@ export default class ClientPlannerActor extends ProtocolActor {
     });
     
     // Check if there's already a formal result available and load it
-    if (this.state.formalResult?.formal?.behaviorTrees?.[0]) {
-      this.loadExecutionTree(this.state.formalResult.formal.behaviorTrees[0]);
+    if (this.state.formalResult?.plan?.behaviorTrees?.[0]) {
+      this.loadExecutionTree(this.state.formalResult.plan.behaviorTrees[0]);
     }
   }
   
@@ -2349,8 +3053,8 @@ export default class ClientPlannerActor extends ProtocolActor {
                   <h3>Behavior Trees</h3>
                   <p><strong>Status:</strong> ${this.state.formalResult.formal.status}</p>
                   <p><strong>Count:</strong> ${this.state.formalResult.formal.count || 0}</p>
-                  ${this.state.formalResult.formal.behaviorTrees && this.state.formalResult.formal.behaviorTrees.length > 0 ? `
-                    <pre>${JSON.stringify(this.state.formalResult.formal.behaviorTrees, null, 2)}</pre>
+                  ${this.state.formalResult.plan.behaviorTrees && this.state.formalResult.plan.behaviorTrees.length > 0 ? `
+                    <pre>${JSON.stringify(this.state.formalResult.plan.behaviorTrees, null, 2)}</pre>
                   ` : '<p>No behavior trees generated</p>'}
                 </div>
               ` : `
@@ -2745,7 +3449,8 @@ export default class ClientPlannerActor extends ProtocolActor {
           const interaction = interactions.find(i => i.id === interactionId);
           if (interaction) {
             interaction.collapsed = !interaction.collapsed;
-            this.updateState({ llmInteractions: interactions });
+            this.state.llmInteractions = interactions;
+            this.render();
           }
         };
       }
@@ -2831,7 +3536,8 @@ export default class ClientPlannerActor extends ProtocolActor {
             expandedTools.add(toolKey);
           }
           
-          this.updateState({ expandedToolsMetadata: expandedTools });
+          this.state.expandedToolsMetadata = expandedTools;
+          this.render();
         }
       });
     };
@@ -2945,30 +3651,21 @@ export default class ClientPlannerActor extends ProtocolActor {
   
   handlePlanSaveError(data) {
     console.error('Failed to save plan:', data.error);
-    this.updateState({ error: `Failed to save plan: ${data.error}` });
+    this.state.error = `Failed to save plan: ${data.error}`;
   }
   
   handlePlanLoadComplete(data) {
     const planData = data.planData;
     
     // Load the plan data into current state
-    this.updateState({
-      goal: planData.informalResult?.informal?.goal || '',
-      informalResult: planData.informalResult,
-      formalResult: planData.formalResult,
-      toolsResult: planData.informalResult // Tool results are part of informal result
-    });
+    this.state.goal = planData.informalResult?.informal?.goal || '';
+    this.state.informalResult = planData.informalResult;
+    this.state.formalResult = planData.formalResult;
+    this.state.toolsResult = planData.informalResult; // Tool results are part of informal result
+    this.render();
     
-    // Enable appropriate tabs
-    if (this.tabsComponent) {
-      if (planData.informalResult) {
-        this.tabsComponent.enableTab('tools', true);
-      }
-      if (planData.formalResult) {
-        this.tabsComponent.enableTab('formal', true);
-        this.tabsComponent.enableTab('execution', true);
-      }
-    }
+    // Tab enablement is handled automatically through state and HTML template rendering
+    // Tools tab enabled by informalResult, formal tab enabled by toolsResult, execution tab enabled by formalResult
     
     // Update formal planning component with loaded result
     if (planData.formalResult && this.formalPlanningComponent) {
@@ -2985,8 +3682,8 @@ export default class ClientPlannerActor extends ProtocolActor {
     }
     
     // Load tree into execution if available
-    if (planData.formalResult?.formal?.behaviorTrees?.[0] && this.executionComponent) {
-      this.loadExecutionTree(planData.formalResult.formal.behaviorTrees[0]);
+    if (planData.formalResult?.plan?.behaviorTrees?.[0] && this.executionComponent) {
+      this.loadExecutionTree(planData.formalResult.plan.behaviorTrees[0]);
     }
     
     console.log(`✅ ${data.message}`);
@@ -2994,7 +3691,7 @@ export default class ClientPlannerActor extends ProtocolActor {
   
   handlePlanLoadError(data) {
     console.error('Failed to load plan:', data.error);
-    this.updateState({ error: `Failed to load plan: ${data.error}` });
+    this.state.error = `Failed to load plan: ${data.error}`;
   }
   
   handlePlanListComplete(data) {
@@ -3027,7 +3724,8 @@ export default class ClientPlannerActor extends ProtocolActor {
       });
     }
     
-    this.updateState({ llmInteractions: interactions });
+    this.state.llmInteractions = interactions;
+    this.render();
     
     // Update LLM debug tab component
     if (this.llmDebugTabComponent) {

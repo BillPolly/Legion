@@ -19,8 +19,8 @@ async function startServer() {
     routes: [
       {
         path: '/planner',
-        serverActor: join(__dirname, 'server/actors/ServerPlannerActor.js'),
-        clientActor: join(__dirname, 'client/actors/ClientPlannerActor.js'),
+        serverActor: join(__dirname, 'server/actors/RootServerActor.js'),
+        clientActor: join(__dirname, 'client/actors/RootClientActor.js'),
         title: '🧠 Decent Planner'
       }
     ],

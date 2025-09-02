@@ -8,15 +8,20 @@ import { ResourceManager } from '@legion/resource-manager';
 import { ServerExecutionActor } from './ServerExecutionActor.js';
 import PlanFileService from '../services/PlanFileService.js';
 
-export default class ServerPlannerActor {
+export default class PlannerServerSubActor {
   constructor(services) {
     this.services = services;
     this.remoteActor = null;
+    this.parentActor = null;
     this.decentPlanner = null;
     this.toolRegistry = null;
     this.isReady = false;
     this.currentPlan = null;  // Store the plan entity
     this.executionActor = null;
+  }
+
+  setParentActor(parentActor) {
+    this.parentActor = parentActor;
   }
 
   async setRemoteActor(remoteActor) {

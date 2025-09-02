@@ -12,10 +12,11 @@ export class FormalPlanningComponent {
     
     // Model
     this.model = {
-      formalResult: null,
-      isPlanning: false,
+      formalResult: options.formalResult || null,
+      isPlanning: options.isPlanning || false,
       error: null,
-      thinkingSteps: []
+      thinkingSteps: [],
+      toolsResult: options.toolsResult || null
     };
     
     // View elements
@@ -59,6 +60,11 @@ export class FormalPlanningComponent {
     this.render();
   }
   
+  setToolsResult(toolsResult) {
+    this.model.toolsResult = toolsResult;
+    this.render();
+  }
+  
   setError(error) {
     this.model.error = error;
     this.model.isPlanning = false;
@@ -86,7 +92,13 @@ export class FormalPlanningComponent {
   renderEmpty() {
     const emptyDiv = document.createElement('div');
     emptyDiv.className = 'formal-planning-empty';
-    emptyDiv.innerHTML = '<p>Complete tool discovery first to enable formal planning.</p>';
+    
+    if (!this.model.toolsResult) {
+      emptyDiv.innerHTML = '<p>Complete tool discovery first to enable formal planning.</p>';
+    } else {
+      emptyDiv.innerHTML = '<p>Tools discovered. Click "Start Formal Planning" to begin.</p>';
+    }
+    
     this.container.appendChild(emptyDiv);
   }
   
