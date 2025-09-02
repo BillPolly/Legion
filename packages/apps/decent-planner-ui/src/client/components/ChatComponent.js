@@ -167,7 +167,7 @@ export class ChatComponent {
     
     const senderElement = document.createElement('span');
     senderElement.className = 'chat-message-sender';
-    senderElement.textContent = message.sender === 'user' ? 'You' : 'Server';
+    senderElement.textContent = message.sender === 'user' ? 'You' : (message.sender === 'agent' ? 'Tool Agent' : 'Server');
     
     const textElement = document.createElement('div');
     textElement.className = 'chat-message-text';
@@ -177,7 +177,72 @@ export class ChatComponent {
     messageElement.appendChild(senderElement);
     messageElement.appendChild(textElement);
     
+    // Add enhanced elements for agent messages
+    if (message.sender === 'agent') {
+      this.addAgentMessageEnhancements(messageElement, message);
+    }
+    
     return messageElement;
+  }
+
+  /**
+   * Add enhancements for agent messages (tools used, context updates, etc.)
+   */
+  addAgentMessageEnhancements(messageElement, message) {
+    // Add tools used indicator
+    if (message.toolsUsed && message.toolsUsed.length > 0) {
+      const toolsDiv = document.createElement('div');
+      toolsDiv.className = 'chat-tools-used';
+      toolsDiv.innerHTML = `🛠️ Tools used: ${message.toolsUsed.join(', ')}`;
+      messageElement.appendChild(toolsDiv);
+    }
+    
+    // Add context updates indicator
+    if (message.contextUpdated && message.contextUpdated.length > 0) {
+      const contextDiv = document.createElement('div');
+      contextDiv.className = 'chat-context-updated';
+      contextDiv.innerHTML = `📝 Stored: ${message.contextUpdated.join(', ')}`;
+      messageElement.appendChild(contextDiv);
+    }
+    
+    // Add reasoning (collapsible)
+    if (message.reasoning) {
+      const reasoningDiv = document.createElement('div');
+      reasoningDiv.className = 'chat-reasoning';
+      
+      const reasoningToggle = document.createElement('button');
+      reasoningToggle.className = 'reasoning-toggle';
+      reasoningToggle.textContent = '🤔 Show reasoning';
+      reasoningToggle.onclick = () => this.toggleReasoning(reasoningDiv, reasoningToggle);
+      
+      const reasoningContent = document.createElement('div');
+      reasoningContent.className = 'reasoning-content';
+      reasoningContent.style.display = 'none';
+      reasoningContent.textContent = message.reasoning;
+      
+      reasoningDiv.appendChild(reasoningToggle);
+      reasoningDiv.appendChild(reasoningContent);
+      messageElement.appendChild(reasoningDiv);
+    }
+    
+    // Add operation count
+    if (message.operationCount !== undefined) {
+      const opsDiv = document.createElement('div');
+      opsDiv.className = 'chat-operations';
+      opsDiv.innerHTML = `⚙️ Operations: ${message.operationCount}`;
+      messageElement.appendChild(opsDiv);
+    }
+  }
+
+  /**
+   * Toggle reasoning visibility
+   */
+  toggleReasoning(reasoningDiv, toggleButton) {
+    const content = reasoningDiv.querySelector('.reasoning-content');
+    const isVisible = content.style.display !== 'none';
+    
+    content.style.display = isVisible ? 'none' : 'block';
+    toggleButton.textContent = isVisible ? '🤔 Show reasoning' : '🤔 Hide reasoning';
   }
   
   updateMessageElement(element, message) {
@@ -220,5 +285,86 @@ export class ChatComponent {
   addMessage(message) {
     this.model.messages.push(message);
     this.updateMessages(this.model.messages);
+  }
+
+  /**
+   * Handle agent response message (enhanced format)
+   */
+  addAgentMessage(responseData) {
+    const agentMessage = {
+      id: `agent-${Date.now()}-${Math.random()}`,
+      sender: 'agent',
+      text: responseData.text,
+      timestamp: responseData.timestamp,
+      toolsUsed: responseData.toolsUsed || [],
+      contextUpdated: responseData.contextUpdated || [],
+      reasoning: responseData.reasoning,
+      operationCount: responseData.operationCount || 0
+    };
+
+    this.addMessage(agentMessage);
+  }
+
+  /**
+   * Handle agent error message
+   */
+  addAgentError(errorData) {
+    const errorMessage = {
+      id: `error-${Date.now()}-${Math.random()}`,
+      sender: 'agent',
+      text: errorData.text || `Error: ${errorData.error}`,
+      timestamp: errorData.timestamp,
+      isError: true,
+      error: errorData.error,
+      originalMessage: errorData.originalMessage
+    };
+
+    this.addMessage(errorMessage);
+  }
+
+  /**
+   * Handle agent thinking message (progress indicator)
+   */
+  addAgentThinking(thinkingData) {
+    const thinkingMessage = {
+      id: `thinking-${Date.now()}-${Math.random()}`,
+      sender: 'agent',
+      text: thinkingData.message || 'Thinking...',
+      timestamp: thinkingData.timestamp,
+      isThinking: true,
+      step: thinkingData.step
+    };
+
+    this.addMessage(thinkingMessage);
+  }
+
+  /**
+   * Add context state display message
+   */
+  addContextState(contextData) {
+    const contextMessage = {
+      id: `context-${Date.now()}-${Math.random()}`,
+      sender: 'system',
+      text: 'Current context state:',
+      timestamp: contextData.timestamp,
+      contextState: contextData.contextState
+    };
+
+    this.addMessage(contextMessage);
+  }
+
+  /**
+   * Add context cleared confirmation
+   */
+  addContextCleared(data) {
+    const clearedMessage = {
+      id: `cleared-${Date.now()}-${Math.random()}`,
+      sender: 'system', 
+      text: data.message || 'Context cleared',
+      timestamp: data.timestamp,
+      isSystemMessage: true
+    };
+
+    this.addMessage(clearedMessage);
   }
 }

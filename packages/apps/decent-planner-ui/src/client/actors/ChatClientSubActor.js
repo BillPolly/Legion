@@ -87,7 +87,7 @@ export default class ChatClientSubActor {
         break;
         
       case 'message-response':
-        // Server echoed back the message
+        // Server echoed back the message (legacy)
         const serverMessage = {
           id: Date.now() + Math.random(),
           text: data.text,
@@ -99,6 +99,41 @@ export default class ChatClientSubActor {
         
         if (this.chatComponent) {
           this.chatComponent.updateMessages(this.state.messages);
+        }
+        break;
+
+      case 'agent-response':
+        // Tool agent response (enhanced format)
+        if (this.chatComponent) {
+          this.chatComponent.addAgentMessage(data);
+        }
+        break;
+
+      case 'agent-error':
+        // Tool agent error
+        if (this.chatComponent) {
+          this.chatComponent.addAgentError(data);
+        }
+        break;
+
+      case 'agent-thinking':
+        // Tool agent thinking/progress
+        if (this.chatComponent) {
+          this.chatComponent.addAgentThinking(data);
+        }
+        break;
+
+      case 'context-state-response':
+        // Context state information
+        if (this.chatComponent) {
+          this.chatComponent.addContextState(data);
+        }
+        break;
+
+      case 'context-cleared':
+        // Context cleared confirmation
+        if (this.chatComponent) {
+          this.chatComponent.addContextCleared(data);
         }
         break;
         

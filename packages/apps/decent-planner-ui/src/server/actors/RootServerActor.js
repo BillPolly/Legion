@@ -4,7 +4,7 @@
  */
 
 import PlannerServerSubActor from './PlannerServerSubActor.js';
-import ChatServerSubActor from './ChatServerSubActor.js';
+import ChatServerToolAgent from './tool-agent/ChatServerToolAgent.js';
 
 export default class RootServerActor {
   constructor(services) {
@@ -60,7 +60,7 @@ export default class RootServerActor {
     
     // Initialize sub-actors
     this.plannerSubActor = new PlannerServerSubActor(this.services);
-    this.chatSubActor = new ChatServerSubActor(this.services);
+    this.chatSubActor = new ChatServerToolAgent(this.services);
     
     // Set parent references
     this.plannerSubActor.setParentActor(this);
