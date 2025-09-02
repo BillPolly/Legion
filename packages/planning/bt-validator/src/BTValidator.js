@@ -430,7 +430,21 @@ export class BTValidator {
             variablesWritten.set(variableName, node.id);
           }
         }
-        // Note: Actions without outputs are stored in context[node.id] but NOT in artifacts
+        
+        // ENHANCED: Check for @varName usage in action inputs
+        if (node.inputs && typeof node.inputs === 'object') {
+          for (const [inputName, inputValue] of Object.entries(node.inputs)) {
+            if (typeof inputValue === 'string' && inputValue.startsWith('@')) {
+              const variableName = inputValue.substring(1); // Remove @ prefix
+              variableReads.push({
+                nodeId: node.id,
+                variable: variableName,
+                expression: inputValue,
+                inputField: inputName
+              });
+            }
+          }
+        }
       }
       
       // Check for condition nodes that read variables
@@ -505,16 +519,17 @@ export class BTValidator {
       }
     });
     
-    // Also warn about unused variable writes
+    // ENHANCED: Reject plans with unused variable writes (changed from warning to error)
     variablesWritten.forEach((writerId, variable) => {
       const isUsed = variableReads.some(read => read.variable === variable);
       if (!isUsed) {
-        result.addWarning(
+        result.addError(  // CHANGED: Now an ERROR, not warning
           'UNUSED_VARIABLE',
-          `Variable '${variable}' is written by '${writerId}' but never read`,
+          `Variable '${variable}' is stored by action '${writerId}' but never used. Remove unused output or reference it with @${variable}`,
           writerId,
           {
-            variable: variable
+            variable: variable,
+            suggestion: `Use @${variable} in a subsequent action input or remove the output`
           }
         );
       }
