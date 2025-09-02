@@ -160,6 +160,14 @@ export default class PlannerClientSubActor extends ProtocolActor {
         this.handleLoadTreeResponse(data);
         break;
         
+      case 'step-response':
+        this.handleStepResponse(data);
+        break;
+        
+      case 'execution-event':
+        this.handleExecutionEvent(data);
+        break;
+        
       default:
         console.warn('Unknown message type in planner sub-actor:', messageType);
         break;
@@ -738,6 +746,7 @@ export default class PlannerClientSubActor extends ProtocolActor {
     const executionContainer = container.querySelector('#execution-tab-container');
     if (executionContainer) {
       this.executionComponent = new TreeExecutionComponent(executionContainer, {
+        state: this.state,  // Pass global state reference for MVVM
         onStep: () => this.handleExecutionStep(),
         onRun: () => this.handleExecutionRun(),
         onPause: () => this.handleExecutionPause(),
@@ -1339,12 +1348,11 @@ export default class PlannerClientSubActor extends ProtocolActor {
       console.log('❌ formalPlanningComponent is null!');
     }
     
-    // Update execution component with behavior trees
-    if (this.executionComponent && data.result.plan && data.result.plan.behaviorTrees && data.result.plan.behaviorTrees.length > 0) {
+    // Send behavior tree to server for execution (if available)
+    if (data.result.plan && data.result.plan.behaviorTrees && data.result.plan.behaviorTrees.length > 0) {
       const behaviorTree = data.result.plan.behaviorTrees[0];
-      this.executionComponent.setTree(behaviorTree);
       
-      // Also send the tree to the server for execution
+      // Send the tree to the server for execution
       if (this.remoteActor) {
         this.remoteActor.receive('load-execution-tree', { tree: behaviorTree });
       }
@@ -1365,6 +1373,11 @@ export default class PlannerClientSubActor extends ProtocolActor {
     }
     
     // Tab enablement is handled automatically through state and HTML template rendering
+    
+    // Trigger re-render of execution component to show tree from updated state (MVVM)
+    if (this.executionComponent) {
+      this.executionComponent.render();
+    }
   }
 
   handleFormalPlanError(data) {
@@ -1449,20 +1462,29 @@ export default class PlannerClientSubActor extends ProtocolActor {
       this.state.executionState = data.data.state;
       console.log('🌳 State updated with execution tree and state');
       
-      // Update the execution component with the tree and execution state
-      if (this.executionComponent) {
-        // Set the behavior tree if it exists in state
-        if (this.state.formalResult?.plan?.behaviorTrees?.[0]) {
-          this.executionComponent.setTree(this.state.formalResult.plan.behaviorTrees[0]);
-        }
-        
-        // Update execution state
-        if (data.data.state) {
-          this.executionComponent.updateExecutionState(data.data.state);
-        }
+      // Update execution state in component (tree comes from global state via MVVM)
+      if (this.executionComponent && data.data.state) {
+        this.executionComponent.updateExecutionState(data.data.state);
       }
       
       this.render(); // This will notify all components including execution tab
+      
+      // Trigger re-render of execution component to show updated tree from state
+      if (this.executionComponent) {
+        this.executionComponent.render();
+      }
+    }
+  }
+
+  handleStepResponse(data) {
+    console.log('🎯 Step response received:', data);
+    if (data.success && data.data?.state) {
+      this.state.executionState = data.data.state;
+      
+      // Update execution component with new state
+      if (this.executionComponent) {
+        this.executionComponent.updateExecutionState(data.data.state);
+      }
     }
   }
 
@@ -2185,8 +2207,9 @@ export default class PlannerClientSubActor extends ProtocolActor {
     const container = this.tabsComponent.getContentContainer('execution');
     if (!container) return;
     
-    // Create execution component
+    // Create execution component with state reference (MVVM pattern)
     this.executionComponent = new TreeExecutionComponent(container, {
+      state: this.state,  // Pass global state reference for MVVM
       onStep: () => this.handleExecutionStep(),
       onRun: () => this.handleExecutionRun(),
       onPause: () => this.handleExecutionPause(),
@@ -2194,11 +2217,6 @@ export default class PlannerClientSubActor extends ProtocolActor {
       onBreakpoint: (nodeId, enabled) => this.handleBreakpoint(nodeId, enabled),
       remoteActor: this.remoteActor  // ADDED: Pass remoteActor for inspection requests
     });
-    
-    // Check if there's already a formal result available and load it
-    if (this.state.formalResult?.plan?.behaviorTrees?.[0]) {
-      this.loadExecutionTree(this.state.formalResult.plan.behaviorTrees[0]);
-    }
   }
   
   initializeSearchTab() {
@@ -3548,15 +3566,12 @@ export default class PlannerClientSubActor extends ProtocolActor {
   
   // Execution methods
   loadExecutionTree(tree) {
-    if (!this.executionComponent) return;
-    
-    // Send tree to server
+    // Send tree to server (component gets tree from global state via MVVM)
     if (this.remoteActor) {
       this.remoteActor.receive('load-execution-tree', { tree });
     }
     
-    // Update component
-    this.executionComponent.setTree(tree);
+    // Store tree in state for MVVM
     this.state.executionTree = tree;
   }
   

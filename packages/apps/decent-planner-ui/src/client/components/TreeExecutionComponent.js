@@ -8,10 +8,10 @@ import { CollapsibleSectionComponent } from './CollapsibleSectionComponent.js';
 export class TreeExecutionComponent {
   constructor(container, options = {}) {
     this.container = container;
+    this.options = options;
     
     // Model
     this.model = {
-      tree: null,
       executionState: null,
       nodeStates: {},
       currentNode: null,
@@ -317,6 +317,18 @@ export class TreeExecutionComponent {
   render() {
     this.container.innerHTML = '';
     
+    // Get tree from global state (MVVM pattern)
+    const tree = this.options.state?.formalResult?.plan?.behaviorTrees?.[0];
+    console.log('🌳 [TreeExecutionComponent] render() called');
+    console.log('🌳 [TreeExecutionComponent] this.options.state:', !!this.options.state);
+    console.log('🌳 [TreeExecutionComponent] formalResult:', !!this.options.state?.formalResult);
+    console.log('🌳 [TreeExecutionComponent] plan:', !!this.options.state?.formalResult?.plan);
+    console.log('🌳 [TreeExecutionComponent] behaviorTrees:', this.options.state?.formalResult?.plan?.behaviorTrees?.length);
+    console.log('🌳 [TreeExecutionComponent] tree found:', !!tree);
+    if (tree) {
+      console.log('🌳 [TreeExecutionComponent] tree structure:', { id: tree.id, type: tree.type, childrenCount: tree.children?.length });
+    }
+    
     // Main container
     const mainDiv = document.createElement('div');
     mainDiv.className = 'tree-execution-container';
@@ -326,16 +338,16 @@ export class TreeExecutionComponent {
     controlsDiv.className = 'execution-controls';
     controlsDiv.innerHTML = `
       <div class="control-buttons">
-        <button id="step-btn" class="control-btn" ${!this.model.tree || this.model.isExecuting ? 'disabled' : ''}>
+        <button id="step-btn" class="control-btn" ${!tree || this.model.isExecuting ? 'disabled' : ''}>
           ⏭️ Step
         </button>
-        <button id="run-btn" class="control-btn" ${!this.model.tree || this.model.isExecuting ? 'disabled' : ''}>
+        <button id="run-btn" class="control-btn" ${!tree || this.model.isExecuting ? 'disabled' : ''}>
           ▶️ Run
         </button>
         <button id="pause-btn" class="control-btn" ${!this.model.isExecuting ? 'disabled' : ''}>
           ⏸️ Pause
         </button>
-        <button id="reset-btn" class="control-btn" ${!this.model.tree ? 'disabled' : ''}>
+        <button id="reset-btn" class="control-btn" ${!tree ? 'disabled' : ''}>
           🔄 Reset
         </button>
       </div>
@@ -353,7 +365,7 @@ export class TreeExecutionComponent {
     const treeSection = document.createElement('div');
     treeSection.className = 'tree-visualization-section';
     
-    if (this.model.tree) {
+    if (tree) {
       const treeContainer = document.createElement('div');
       const treeCollapsible = new CollapsibleSectionComponent(treeContainer, {
         title: 'Behavior Tree',
@@ -363,7 +375,7 @@ export class TreeExecutionComponent {
       
       const treeContent = document.createElement('div');
       treeContent.className = 'tree-content';
-      treeContent.appendChild(this.renderTreeNode(this.model.tree));
+      treeContent.appendChild(this.renderTreeNode(tree));
       
       treeCollapsible.setContent(treeContent);
       treeSection.appendChild(treeContainer);
