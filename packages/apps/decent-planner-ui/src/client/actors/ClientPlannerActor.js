@@ -1487,7 +1487,8 @@ export default class ClientPlannerActor extends ProtocolActor {
       onRun: () => this.handleExecutionRun(),
       onPause: () => this.handleExecutionPause(),
       onReset: () => this.handleExecutionReset(),
-      onBreakpoint: (nodeId, enabled) => this.handleBreakpoint(nodeId, enabled)
+      onBreakpoint: (nodeId, enabled) => this.handleBreakpoint(nodeId, enabled),
+      remoteActor: this.remoteActor  // ADDED: Pass remoteActor for inspection requests
     });
     
     // Check if there's already a formal result available and load it

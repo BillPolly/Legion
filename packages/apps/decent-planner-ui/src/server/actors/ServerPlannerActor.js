@@ -261,6 +261,19 @@ export default class ServerPlannerActor {
         // Update stored plan
         this.currentPlan = result.data;
         
+        // FIXED: Initialize BT executor with the REAL behavior tree (has tool objects)
+        if (result.data.behaviorTrees && result.data.behaviorTrees.length > 0) {
+          const realBehaviorTree = result.data.behaviorTrees[0]; // Get the real BT with tool objects
+          console.log('🔧 Initializing BT executor with real behavior tree...');
+          
+          try {
+            await this.executionActor.handleLoadTree({ tree: realBehaviorTree });
+            console.log('✅ BT executor initialized with real behavior tree');
+          } catch (error) {
+            console.error('❌ Failed to initialize BT executor:', error.message);
+          }
+        }
+        
         // Send result with cleaned behavior trees to avoid circular references
         const cleanBehaviorTrees = result.data.behaviorTrees ? 
           result.data.behaviorTrees.map(tree => this.serializeBehaviorTreeForClient(tree)) : [];

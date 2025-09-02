@@ -24,7 +24,8 @@ export class ServerExecutionActor {
       'reset': this.handleReset.bind(this),
       'set-breakpoint': this.handleSetBreakpoint.bind(this),
       'remove-breakpoint': this.handleRemoveBreakpoint.bind(this),
-      'get-state': this.handleGetState.bind(this)
+      'get-state': this.handleGetState.bind(this),
+      'get-execution-details': this.handleGetExecutionDetails.bind(this)
     };
   }
   
@@ -408,5 +409,54 @@ export class ServerExecutionActor {
       // Forward other methods to real registry
       getToolById: (id) => originalRegistry.getToolById(id)
     };
+  }
+  
+  async handleGetExecutionDetails(payload) {
+    const { type, index, key } = payload;
+    
+    console.log(`[ServerExecutionActor] Inspection request: ${type}, index: ${index}, key: ${key}`);
+    
+    if (!this.executor) {
+      throw new Error('Executor not initialized');
+    }
+    
+    switch (type) {
+      case 'history-inputs':
+        if (index >= 0 && index < this.executor.executionHistory?.length) {
+          const historyItem = this.executor.executionHistory[index];
+          return {
+            nodeId: historyItem.nodeId,
+            inputs: historyItem.inputs || {},
+            timestamp: historyItem.timestamp
+          };
+        }
+        throw new Error(`Invalid history index: ${index}`);
+        
+      case 'history-outputs':
+        if (index >= 0 && index < this.executor.executionHistory?.length) {
+          const historyItem = this.executor.executionHistory[index];
+          return {
+            nodeId: historyItem.nodeId,
+            outputs: historyItem.outputs || {},
+            result: historyItem.result || {},
+            timestamp: historyItem.timestamp
+          };
+        }
+        throw new Error(`Invalid history index: ${index}`);
+        
+      case 'artifact-value':
+        const executionState = this.executor.getExecutionState();
+        if (executionState.context?.artifacts?.hasOwnProperty(key)) {
+          return {
+            key: key,
+            value: executionState.context.artifacts[key],
+            type: typeof executionState.context.artifacts[key]
+          };
+        }
+        throw new Error(`Artifact '${key}' not found`);
+        
+      default:
+        throw new Error(`Unknown inspection type: ${type}`);
+    }
   }
 }

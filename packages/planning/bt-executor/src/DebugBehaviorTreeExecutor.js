@@ -143,8 +143,8 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
         // Convert ObjectId to string if needed
         const toolIdString = toolId.toString();
         
-        // Get the actual executable tool from registry using ID
-        const tool = await this.toolRegistry.getToolById(toolIdString);
+        // Get the actual executable tool from registry using name
+        const tool = await this.toolRegistry.getTool(toolIdString);
         
         if (tool && tool.execute) {
           this.resolvedTools.set(toolIdString, tool);
@@ -178,13 +178,25 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
   findAllToolIds(node, toolsSet) {
     if (!node) return;
     
-    // If this is an action node with a tool_id or tool, add it to the set
+    // If this is an action node with a tool_id or tool, validate and add to set
     if (node.type === 'action') {
       // Check both node.tool_id and node.config.tool_id
       const toolId = node.tool_id || node.config?.tool_id || node.tool || node.config?.tool;
       if (toolId) {
-        // Convert ObjectId to string if needed for consistent handling
-        toolsSet.add(toolId.toString());
+        if (typeof toolId === 'string') {
+          // Handle both clean tool names and full descriptions
+          let cleanToolName = toolId;
+          if (toolId.startsWith('Tool: ')) {
+            // Extract clean name from "Tool: name - description" format
+            cleanToolName = toolId.split('Tool: ')[1].split(' - ')[0].trim();
+          }
+          toolsSet.add(cleanToolName);
+        } else if (typeof toolId === 'object') {
+          // Tool objects will be validated in findAttachedToolObjects
+          toolsSet.add(`[Tool Object: ${toolId.name || 'unnamed'}]`);
+        } else {
+          throw new Error(`Invalid tool type in node '${node.id}'. Tool must be string (modulename.toolname) or Tool instance object`);
+        }
       }
     }
     
@@ -210,12 +222,17 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
     
     let count = 0;
     
-    // If this is an action node with a tool object in node.tool, add it to the map
+    // If this is an action node with a tool object in node.tool, validate it strictly
     if (node.type === 'action' && node.tool && typeof node.tool === 'object' && node.tool.name) {
-      // Need to get actual executable tool from registry using the tool name
       const toolName = node.tool.name;
-      console.log(`[BT-EXECUTOR] Found tool object: ${toolName}, need to resolve executable from registry`);
-      toolsMap.set(toolName, node.tool); // Store temporarily, we'll resolve later
+      
+      // CRITICAL: Tool object MUST have execute method - NO FALLBACKS
+      if (typeof node.tool.execute !== 'function') {
+        throw new Error(`Tool '${toolName}' in node '${node.id}' is not a proper Tool instance. Tool objects must have execute method.`);
+      }
+      
+      console.log(`[BT-EXECUTOR] ✅ Validated executable Tool instance: ${toolName}`);
+      toolsMap.set(toolName, node.tool); // Use the validated Tool instance directly
       count++;
     }
     
@@ -336,12 +353,12 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
         nodeType, 
         status: result.status, 
         timestamp: Date.now(),
-        result: result.data,
+        result: result.data ? JSON.parse(JSON.stringify(result.data)) : null,  // Fix circular refs in result too
         // Add tool information if available
         tool: node.tool?.name || node.config?.tool || 'unknown',
-        // Add inputs/outputs if this was a tool execution
-        inputs: result.inputs || null,
-        outputs: result.outputs || null
+        // FIXED: Store actual inputs and outputs from execution (avoid circular references)
+        inputs: result.inputs || node.config?.inputs || null,
+        outputs: result.data ? JSON.parse(JSON.stringify(result.data)) : null  // Serialize to avoid circular refs
       };
       
       this.executionHistory.push(historyEntry);
@@ -638,16 +655,16 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
       case 'action':
         // Execute action node - prefer direct tool object
         console.log(`[BT-EXECUTOR] Executing action node: ${node.id}`);
-        console.log(`[BT-EXECUTOR] - node.tool type: ${typeof node.tool}`);
-        console.log(`[BT-EXECUTOR] - node.tool:`, node.tool);
+        console.log(`[BT-EXECUTOR] - node.config.tool type: ${typeof node.config?.tool}`);
+        console.log(`[BT-EXECUTOR] - node.config.tool:`, node.config?.tool);
         
         let tool = null;
         let toolId = null;
         
-        // Check if node.tool is a tool object (from planner output)
-        if (node.tool && typeof node.tool === 'object' && node.tool.name) {
-          // This is a tool object from the planner - need to get executable from resolved tools
-          const toolName = node.tool.name;
+        // FIXED: Check node.config.tool (where tools are actually stored)
+        if (node.config?.tool && typeof node.config.tool === 'object' && node.config.tool.name) {
+          // FIXED: Use node.config.tool instead of node.tool
+          const toolName = node.config.tool.name;
           tool = this.resolvedTools.get(toolName);
           if (tool) {
             console.log(`[BT-EXECUTOR] ✅ Using resolved executable tool for: ${toolName}`);
@@ -658,11 +675,11 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
               data: { error: `Tool object '${toolName}' not resolved to executable tool` }
             };
           }
-        } else if (node.tool && typeof node.tool === 'object' && node.tool.execute) {
-          // This is already an executable tool object
-          tool = node.tool;
+        } else if (node.config?.tool && typeof node.config.tool === 'object' && node.config.tool.execute) {
+          // FIXED: This is already an executable tool object in config
+          tool = node.config.tool;
           console.log(`[BT-EXECUTOR] ✅ Using directly attached executable tool: ${tool.name}`);
-        } else if (node.tool && typeof node.tool === 'string' && node.tool !== '[Circular]') {
+        } else if (node.config?.tool && typeof node.config.tool === 'string' && node.config.tool !== '[Circular]') {
           // Fallback to legacy lookup methods
           const attachedTool = node.config?.toolInstance;
           toolId = node.config?.tool_id || node.config?.config?.tool_id || node.tool;
@@ -860,11 +877,15 @@ export class DebugBehaviorTreeExecutor extends EventEmitter {
    * Resolve parameters with context substitution
    */
   resolveParams(params) {
-    // Simple parameter resolution - could be enhanced
     const resolved = {};
     for (const [key, value] of Object.entries(params)) {
-      if (typeof value === 'string' && value.startsWith('${') && value.endsWith('}')) {
-        // Context variable reference
+      if (typeof value === 'string' && value.startsWith('@')) {
+        // FIXED: @varName syntax - resolve to artifacts
+        const varName = value.substring(1); // Remove @ prefix
+        resolved[key] = this.executionContext.artifacts ? this.executionContext.artifacts[varName] : undefined;
+        console.log(`[BT-EXECUTOR] Resolved @${varName} -> ${resolved[key]}`);
+      } else if (typeof value === 'string' && value.startsWith('${') && value.endsWith('}')) {
+        // Legacy ${varName} syntax
         const varPath = value.slice(2, -1);
         resolved[key] = this.getContextValue(varPath);
       } else {

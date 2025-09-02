@@ -19,7 +19,16 @@ export class TreeExecutionComponent {
       breakpoints: new Set(),
       mode: 'step', // 'step' or 'run'
       isPaused: false,
-      isExecuting: false
+      isExecuting: false,
+      
+      // Inspection state
+      selectedHistoryItem: null,
+      selectedArtifact: null,
+      inspectionData: null,
+      showInspectionModal: false,
+      inspectionType: null, // 'history-inputs', 'history-outputs', 'artifact-value'
+      contextArtifacts: {}, // Key-value pairs with previews for context.artifacts
+      isLoadingInspection: false
     };
     
     // View elements
@@ -32,7 +41,277 @@ export class TreeExecutionComponent {
     this.onReset = options.onReset || (() => {});
     this.onBreakpoint = options.onBreakpoint || (() => {});
     
+    // Remote actor for inspection requests
+    this.remoteActor = options.remoteActor || null;
+    
     this.render();
+  }
+  
+  // ViewModel methods for inspection
+  async inspectHistoryInputs(index) {
+    console.log(`🔍 inspectHistoryInputs called: index=${index}, remoteActor=${!!this.remoteActor}`);
+    
+    if (!this.remoteActor) {
+      console.error('❌ No remoteActor available for inspection');
+      return;
+    }
+    
+    this.model.isLoadingInspection = true;
+    this.model.selectedHistoryItem = index;
+    this.model.inspectionType = 'history-inputs';
+    this.updateInspectionLoadingState();
+    
+    try {
+      const details = await this.remoteActor.receive('get-execution-details', {
+        type: 'history-inputs',
+        index: index
+      });
+      
+      this.model.inspectionData = details;
+      this.model.showInspectionModal = true;
+      this.model.isLoadingInspection = false;
+      this.renderInspectionModal();
+    } catch (error) {
+      console.error('Failed to fetch execution details:', error);
+      this.model.isLoadingInspection = false;
+      this.updateInspectionLoadingState();
+    }
+  }
+  
+  async inspectHistoryOutputs(index) {
+    if (!this.remoteActor) return;
+    
+    this.model.isLoadingInspection = true;
+    this.model.selectedHistoryItem = index;
+    this.model.inspectionType = 'history-outputs';
+    this.updateInspectionLoadingState();
+    
+    try {
+      const details = await this.remoteActor.receive('get-execution-details', {
+        type: 'history-outputs',
+        index: index
+      });
+      
+      this.model.inspectionData = details;
+      this.model.showInspectionModal = true;
+      this.model.isLoadingInspection = false;
+      this.renderInspectionModal();
+    } catch (error) {
+      console.error('Failed to fetch output details:', error);
+      this.model.isLoadingInspection = false;
+      this.updateInspectionLoadingState();
+    }
+  }
+  
+  async inspectArtifact(artifactKey) {
+    if (!this.remoteActor) return;
+    
+    this.model.isLoadingInspection = true;
+    this.model.selectedArtifact = artifactKey;
+    this.model.inspectionType = 'artifact-value';
+    this.updateInspectionLoadingState();
+    
+    try {
+      const details = await this.remoteActor.receive('get-execution-details', {
+        type: 'artifact-value',
+        key: artifactKey
+      });
+      
+      this.model.inspectionData = details;
+      this.model.showInspectionModal = true;
+      this.model.isLoadingInspection = false;
+      this.renderInspectionModal();
+    } catch (error) {
+      console.error('Failed to fetch artifact details:', error);
+      this.model.isLoadingInspection = false;
+      this.updateInspectionLoadingState();
+    }
+  }
+  
+  closeInspectionModal() {
+    this.model.showInspectionModal = false;
+    this.model.inspectionData = null;
+    this.model.selectedHistoryItem = null;
+    this.model.selectedArtifact = null;
+    this.model.inspectionType = null;
+    this.hideInspectionModal();
+  }
+  
+  // View creation methods - proper MVVM DOM element creation
+  createHistoryItemElement(entry, index) {
+    const item = document.createElement('li');
+    item.className = `history-item ${entry.status.toLowerCase()}`;
+    
+    // Node info
+    const indexSpan = document.createElement('span');
+    indexSpan.className = 'history-index';
+    indexSpan.textContent = `${index + 1}`;
+    
+    const nodeSpan = document.createElement('span');
+    nodeSpan.className = 'history-node';
+    nodeSpan.textContent = entry.nodeId;
+    
+    const statusSpan = document.createElement('span');
+    statusSpan.className = 'history-status';
+    statusSpan.textContent = entry.status;
+    
+    // Clickable inputs button
+    const inputsBtn = document.createElement('button');
+    inputsBtn.className = 'inspect-btn inputs-btn';
+    const inputCount = entry.inputs ? Object.keys(entry.inputs).length : 0;
+    inputsBtn.textContent = `📥 Inputs (${inputCount})`;
+    inputsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      console.log(`🖱️ Inputs button clicked for history item ${index}`);
+      this.inspectHistoryInputs(index);
+    });
+    
+    // Clickable outputs button  
+    const outputsBtn = document.createElement('button');
+    outputsBtn.className = 'inspect-btn outputs-btn';
+    const outputCount = entry.outputs ? Object.keys(entry.outputs).length : 0;
+    outputsBtn.textContent = `📤 Outputs (${outputCount})`;
+    outputsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      console.log(`🖱️ Outputs button clicked for history item ${index}`);
+      this.inspectHistoryOutputs(index);
+    });
+    
+    // Assemble the item
+    item.appendChild(indexSpan);
+    item.appendChild(nodeSpan);
+    item.appendChild(statusSpan);
+    item.appendChild(inputsBtn);
+    item.appendChild(outputsBtn);
+    
+    return item;
+  }
+  
+  createArtifactItemElement(key, value) {
+    const item = document.createElement('div');
+    item.className = 'artifact-item';
+    
+    const keySpan = document.createElement('span');
+    keySpan.className = 'artifact-key';
+    keySpan.textContent = key;
+    
+    const valuePreview = document.createElement('span');
+    valuePreview.className = 'artifact-preview';
+    valuePreview.textContent = this.getValuePreview(value);
+    
+    const inspectBtn = document.createElement('button');
+    inspectBtn.className = 'inspect-btn artifact-btn';
+    inspectBtn.textContent = '🔍 Inspect';
+    inspectBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.inspectArtifact(key);
+    });
+    
+    item.appendChild(keySpan);
+    item.appendChild(valuePreview);
+    item.appendChild(inspectBtn);
+    
+    return item;
+  }
+  
+  getValuePreview(value) {
+    if (value === null) return 'null';
+    if (value === undefined) return 'undefined';
+    
+    const type = typeof value;
+    switch (type) {
+      case 'string':
+        return value.length > 50 ? `"${value.substring(0, 47)}..."` : `"${value}"`;
+      case 'number':
+      case 'boolean':
+        return String(value);
+      case 'object':
+        if (Array.isArray(value)) {
+          return `Array(${value.length})`;
+        } else {
+          const keys = Object.keys(value);
+          return `Object(${keys.length} keys)`;
+        }
+      default:
+        return `${type}`;
+    }
+  }
+  
+  // Loading state updates
+  updateInspectionLoadingState() {
+    // Update UI to show loading state if needed
+    // This would update existing buttons to show spinners etc.
+  }
+  
+  // Inspection modal rendering
+  renderInspectionModal() {
+    if (!this.model.showInspectionModal || !this.model.inspectionData) return;
+    
+    // Create modal overlay
+    let modal = document.getElementById('inspection-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'inspection-modal';
+      modal.className = 'modal-overlay';
+      document.body.appendChild(modal);
+    }
+    
+    // Clear and create modal content
+    modal.innerHTML = '';
+    
+    const modalContent = document.createElement('div');
+    modalContent.className = 'modal-content';
+    
+    // Modal header
+    const header = document.createElement('div');
+    header.className = 'modal-header';
+    
+    const title = document.createElement('h3');
+    title.textContent = this.getInspectionTitle();
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-close';
+    closeBtn.textContent = '✕';
+    closeBtn.addEventListener('click', () => this.closeInspectionModal());
+    
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+    
+    // Modal body with JSON viewer
+    const body = document.createElement('div');
+    body.className = 'modal-body';
+    
+    const jsonViewer = document.createElement('pre');
+    jsonViewer.className = 'json-viewer';
+    jsonViewer.textContent = JSON.stringify(this.model.inspectionData, null, 2);
+    
+    body.appendChild(jsonViewer);
+    
+    modalContent.appendChild(header);
+    modalContent.appendChild(body);
+    modal.appendChild(modalContent);
+    
+    modal.style.display = 'flex';
+  }
+  
+  hideInspectionModal() {
+    const modal = document.getElementById('inspection-modal');
+    if (modal) {
+      modal.style.display = 'none';
+    }
+  }
+  
+  getInspectionTitle() {
+    switch (this.model.inspectionType) {
+      case 'history-inputs':
+        return `History Item ${this.model.selectedHistoryItem + 1} - Inputs`;
+      case 'history-outputs':
+        return `History Item ${this.model.selectedHistoryItem + 1} - Outputs`;
+      case 'artifact-value':
+        return `Artifact: ${this.model.selectedArtifact}`;
+      default:
+        return 'Inspection';
+    }
   }
   
   render() {
@@ -110,19 +389,16 @@ export class TreeExecutionComponent {
       historyList.className = 'history-list';
       
       this.model.history.forEach((entry, index) => {
-        const item = document.createElement('li');
-        item.className = `history-item ${entry.status}`;
-        item.innerHTML = `
-          <span class="history-index">${index + 1}</span>
-          <span class="history-node">${entry.nodeId}</span>
-          <span class="history-status">${entry.status}</span>
-        `;
+        const item = this.createHistoryItemElement(entry, index);
         historyList.appendChild(item);
       });
       
       historyContent.appendChild(historyList);
     } else {
-      historyContent.innerHTML = '<p class="no-history">No execution history yet</p>';
+      const noHistory = document.createElement('p');
+      noHistory.className = 'no-history';
+      noHistory.textContent = 'No execution history yet';
+      historyContent.appendChild(noHistory);
     }
     
     historyCollapsible.setContent(historyContent);
@@ -139,12 +415,31 @@ export class TreeExecutionComponent {
     const contextContent = document.createElement('div');
     contextContent.className = 'execution-context';
     
-    if (this.model.executionState?.context) {
-      const contextPre = document.createElement('pre');
-      contextPre.textContent = JSON.stringify(this.model.executionState.context, null, 2);
-      contextContent.appendChild(contextPre);
+    if (this.model.executionState?.context?.artifacts) {
+      const artifacts = this.model.executionState.context.artifacts;
+      const artifactKeys = Object.keys(artifacts);
+      
+      if (artifactKeys.length > 0) {
+        const artifactsList = document.createElement('div');
+        artifactsList.className = 'artifacts-list';
+        
+        artifactKeys.forEach(key => {
+          const artifactItem = this.createArtifactItemElement(key, artifacts[key]);
+          artifactsList.appendChild(artifactItem);
+        });
+        
+        contextContent.appendChild(artifactsList);
+      } else {
+        const noArtifacts = document.createElement('p');
+        noArtifacts.className = 'no-artifacts';
+        noArtifacts.textContent = 'No artifacts stored yet';
+        contextContent.appendChild(noArtifacts);
+      }
     } else {
-      contextContent.innerHTML = '<p class="no-context">No context available</p>';
+      const noContext = document.createElement('p');
+      noContext.className = 'no-context';
+      noContext.textContent = 'No context available';
+      contextContent.appendChild(noContext);
     }
     
     contextCollapsible.setContent(contextContent);

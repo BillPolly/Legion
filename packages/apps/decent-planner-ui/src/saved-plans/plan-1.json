@@ -1,0 +1,228 @@
+{
+  "name": "plan 1",
+  "savedAt": "2025-09-02T12:00:33.831Z",
+  "informalResult": {
+    "success": true,
+    "goal": "please write a hello world program in node js",
+    "informal": {
+      "hierarchy": {
+        "id": "plan-1756814356317-edoxacr",
+        "goal": "please write a hello world program in node js",
+        "rootTask": {
+          "id": "task-1756814356317-edf9x5v",
+          "description": "please write a hello world program in node js",
+          "complexity": "SIMPLE",
+          "status": "PENDING",
+          "parentId": null,
+          "subtasks": [],
+          "inputs": [],
+          "outputs": [],
+          "tools": [],
+          "feasible": null,
+          "reasoning": "Writing a Hello World program in Node.js requires only 2-3 basic steps: creating a new .js file, writing a single console.log statement, and running it with the node command. It's a straightforward task with minimal complexity.",
+          "depth": 0
+        },
+        "behaviorTrees": [],
+        "status": "DRAFT",
+        "createdAt": "2025-09-02T11:59:16.317Z",
+        "completedAt": null,
+        "context": {},
+        "validation": null,
+        "statistics": {}
+      },
+      "statistics": {}
+    }
+  },
+  "formalResult": {
+    "success": true,
+    "plan": {
+      "id": "plan-1756814410486-kpiuzom",
+      "goal": "please write a hello world program in node js",
+      "rootTask": {
+        "id": "task-1756814410486-yqtsjx1",
+        "description": "please write a hello world program in node js",
+        "complexity": "SIMPLE",
+        "status": "PENDING",
+        "parentId": null,
+        "subtasks": [],
+        "inputs": [],
+        "outputs": [],
+        "tools": [
+          "Tool: run_node - Run Node.js scripts and applications with session management",
+          "Tool: list_sessions - List and filter run sessions with optional statistics and sorting",
+          "Tool: server_health - Check health status of running processes, servers, and system resources",
+          "Tool: generate_javascript - Generate JavaScript functions, classes, and modules",
+          "Tool: search_logs - Search across all captured logs using keyword, semantic, or regex search with comprehensive filtering options",
+          "Tool: generate_api_endpoint - Generate Express.js API endpoint handler with validation and error handling",
+          "Tool: stop_node - Stop running Node.js processes by process ID, session ID, or all processes with configurable termination behavior",
+          "Tool: Write - Write new files to the filesystem",
+          "Tool: file_write - Writes content to a file in the file system"
+        ],
+        "feasible": true,
+        "reasoning": "Writing a Hello World program in Node.js requires only 2-3 basic steps: creating a .js file, writing a single console.log statement, and running it with the node command. The scope is very clear and straightforward with minimal components involved.",
+        "depth": 0
+      },
+      "behaviorTrees": [
+        {
+          "id": "root",
+          "taskDescription": "please write a hello world program in node js",
+          "type": "sequence",
+          "description": "Create and run a hello world Node.js program",
+          "children": [
+            {
+              "type": "action",
+              "id": "generate-hello-world",
+              "tool": "Tool: generate_javascript - Generate JavaScript functions, classes, and modules",
+              "description": "Generate hello world code",
+              "inputs": {
+                "type": "function",
+                "name": "helloWorld"
+              },
+              "outputs": {
+                "code": "hello_code"
+              }
+            },
+            {
+              "type": "action",
+              "id": "write-file",
+              "tool": "Tool: file_write - Writes content to a file in the file system",
+              "description": "Write hello world script to file",
+              "inputs": {
+                "filePath": "hello.js",
+                "content": "@hello_code"
+              },
+              "outputs": {
+                "filePath": "script_path"
+              }
+            },
+            {
+              "type": "action",
+              "id": "execute-script",
+              "tool": "Tool: run_node - Run Node.js scripts and applications with session management",
+              "description": "Execute the hello world script",
+              "inputs": {
+                "script": "@script_path",
+                "sessionName": "hello-world"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "VALIDATED",
+      "createdAt": "2025-09-02T12:00:10.486Z",
+      "completedAt": null,
+      "context": {},
+      "validation": {
+        "structure": {
+          "valid": true,
+          "errors": [],
+          "warnings": []
+        },
+        "behaviorTrees": {
+          "allValid": false,
+          "results": [
+            {
+              "id": "root",
+              "valid": false,
+              "errors": [
+                {
+                  "type": "CIRCULAR_REFERENCE",
+                  "message": "BT structure contains circular references",
+                  "nodeId": null,
+                  "details": {},
+                  "severity": "error"
+                }
+              ]
+            }
+          ]
+        },
+        "completeness": {
+          "valid": true,
+          "issues": [],
+          "statistics": {
+            "totalTasks": 1,
+            "simpleTasks": 1,
+            "complexTasks": 0,
+            "feasibleTasks": 1,
+            "infeasibleTasks": 0,
+            "maxDepth": 0,
+            "averageSubtasks": 0,
+            "totalTools": 9
+          }
+        },
+        "overall": false
+      },
+      "statistics": {
+        "totalTasks": 1,
+        "simpleTasks": 1,
+        "complexTasks": 0,
+        "feasibleTasks": 0,
+        "infeasibleTasks": 0,
+        "maxDepth": 0,
+        "averageSubtasks": 0,
+        "totalTools": 0,
+        "toolDiscovery": {
+          "totalTasks": 1,
+          "feasibleTasks": 1,
+          "infeasibleTasks": 0,
+          "totalTools": 9,
+          "uniqueToolsCount": 9
+        }
+      }
+    },
+    "behaviorTrees": [
+      {
+        "id": "root",
+        "taskDescription": "please write a hello world program in node js",
+        "type": "sequence",
+        "description": "Create and run a hello world Node.js program",
+        "children": [
+          {
+            "type": "action",
+            "id": "generate-hello-world",
+            "description": "Generate hello world code",
+            "tool": "Tool: generate_javascript - Generate JavaScript functions, classes, and modules",
+            "inputs": {
+              "type": "function",
+              "name": "helloWorld"
+            },
+            "outputs": {
+              "code": "hello_code"
+            }
+          },
+          {
+            "type": "action",
+            "id": "write-file",
+            "description": "Write hello world script to file",
+            "tool": "Tool: file_write - Writes content to a file in the file system",
+            "inputs": {
+              "filePath": "hello.js",
+              "content": "@hello_code"
+            },
+            "outputs": {
+              "filePath": "script_path"
+            }
+          },
+          {
+            "type": "action",
+            "id": "execute-script",
+            "description": "Execute the hello world script",
+            "tool": "Tool: run_node - Run Node.js scripts and applications with session management",
+            "inputs": {
+              "script": "@script_path",
+              "sessionName": "hello-world"
+            },
+            "outputs": {}
+          }
+        ]
+      }
+    ],
+    "validation": "[Circular]",
+    "duration": 10803
+  },
+  "toolsUsed": [
+    "Tool: generate_javascript - Generate JavaScript functions, classes, and modules",
+    "Tool: file_write - Writes content to a file in the file system",
+    "Tool: run_node - Run Node.js scripts and applications with session management"
+  ]
+}
