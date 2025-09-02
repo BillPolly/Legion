@@ -1,6 +1,14 @@
 /**
  * DecentPlanner - Thin orchestrator following Clean Architecture
  * Coordinates use cases and manages dependencies
+ * 
+ * ⚠️  LEGION EVENT PATTERN:
+ * Legion uses a SIMPLE EMITTER pattern, NOT Node.js EventEmitter!
+ * - All events/progress notifications go through a single callback function
+ * - NO .on() method - use progressCallback parameter in plan() method
+ * - Events include: progress updates, LLM notifications, completion status
+ * - Pattern: plan(goal, context, progressCallback) where callback receives all events
+ * - This is cleaner and more consistent than EventEmitter pattern
  */
 
 import { CreatePlanUseCase } from './application/use-cases/CreatePlanUseCase.js';

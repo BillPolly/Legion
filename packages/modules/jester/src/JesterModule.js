@@ -137,37 +137,10 @@ const runJestTestsToolOutputSchema = {
 };
 
 class RunJestTestsTool extends Tool {
-  constructor(jestWrapper) {
-    
-    super({
-      name: 'run_jest_tests',
-      description: `Execute Jest tests with intelligent session management and persistence.
-
-This tool runs tests and stores results in a persistent database for later analysis. Each test run creates a session that can be queried, compared, and analyzed.
-
-WHEN TO USE:
-• After making code changes to verify functionality
-• Starting a TDD cycle (write test → see it fail → implement → see it pass)
-• Creating a baseline before refactoring
-• Running specific test suites during development
-• Verifying bug fixes with targeted tests
-
-EXAMPLES:
-• Run all tests: {}
-• Run specific pattern: {pattern: "src/**/*.test.js"}
-• Named session for tracking: {testRunId: "fix-auth-bug"}  
-• Fresh start with clean data: {clearPrevious: true}
-• Run with coverage: {config: {collectCoverage: true}}
-• Quick fail on first error: {config: {bail: true}}
-
-WORKFLOW TIP: After running tests, use query_jest_results to analyze failures, generate reports, or compare with previous runs.`,
-      schema: {
-        input: runJestTestsToolInputSchema,
-        output: runJestTestsToolOutputSchema
-      }
-    });
-    
-    this.jestWrapper = jestWrapper;
+  constructor(module, toolName) {
+    // FIXED: Use new Tool pattern  
+    super(module, toolName);
+    this.jestWrapper = module.jestWrapper;
   }
 
   async _execute(args) {
@@ -356,40 +329,10 @@ const queryJestResultsToolOutputSchema = {
 };
 
 class QueryJestResultsTool extends Tool {
-  constructor(jestWrapper) {
-    
-    super({
-      name: 'query_jest_results',
-      description: `Query, analyze, and report on Jest test results from any session.
-
-This versatile tool provides comprehensive analysis of test results including failure analysis, report generation, session comparison, and trend tracking. It automatically uses the latest session unless you specify otherwise.
-
-WHEN TO USE:
-• After test failures to understand what went wrong (queryType: "failures")
-• Generate reports for documentation or PRs (queryType: "report")  
-• Compare test results before/after changes (queryType: "comparison")
-• Track test stability over time (queryType: "trends")
-• Debug test issues with log search (queryType: "logs")
-• Find performance bottlenecks (queryType: "performance")
-• Review all test sessions (queryType: "sessions")
-
-EXAMPLES:
-• Analyze latest failures: {queryType: "failures"}
-• Generate markdown report: {queryType: "report", format: "markdown"}
-• Compare two runs: {queryType: "comparison", sessionIds: ["main-branch", "pr-123"]}
-• Find flaky tests: {queryType: "trends", testName: "auth.test.js"}
-• Search error logs: {queryType: "logs", searchQuery: "timeout"}
-• List all sessions: {queryType: "sessions", limit: 20}
-• Find slow tests: {queryType: "performance", limit: 5}
-
-WORKFLOW TIP: Use this after run_jest_tests to understand failures, or periodically to track test health and performance trends.`,
-      schema: {
-        input: queryJestResultsToolInputSchema,
-        output: queryJestResultsToolOutputSchema
-      }
-    });
-    
-    this.jestWrapper = jestWrapper;
+  constructor(module, toolName) {
+    // FIXED: Use new Tool pattern
+    super(module, toolName);
+    this.jestWrapper = module.jestWrapper;
   }
 
   async _execute(args) {
@@ -731,57 +674,21 @@ class JesterModule extends Module {
   }
 
   /**
-   * Get all tools provided by this module
+   * Get all tools provided by this module - FIXED to create proper Tool instances
    */
   getTools() {
     if (!this.initialized) {
       throw new Error('JesterModule must be initialized before getting tools');
     }
 
-    // Try metadata-driven tool creation first
-    if (this.metadata && this.metadata.tools) {
-      try {
-        const tools = [];
-        for (const [toolKey, toolMeta] of Object.entries(this.metadata.tools)) {
-          tools.push(this.createMetadataTool(toolMeta));
-        }
-        return tools;
-      } catch (error) {
-        console.warn(`Jester module metadata tool creation failed: ${error.message}, falling back to legacy`);
-      }
-    }
-
-    // Fallback to legacy approach
+    // FIXED: Use proper Tool class constructors with new pattern
     return [
-      new RunJestTestsTool(this.jestWrapper),
-      new QueryJestResultsTool(this.jestWrapper)
+      new RunJestTestsTool(this, 'run_jest_tests'),
+      new QueryJestResultsTool(this, 'query_jest_results')
     ];
   }
 
-  createMetadataTool(toolMeta) {
-    // Create a tool proxy that routes to legacy implementations
-    return {
-      name: toolMeta.name,
-      description: toolMeta.description,
-      schema: {
-        input: toolMeta.inputSchema,
-        output: toolMeta.outputSchema
-      },
-      execute: async (args) => {
-        // Route to appropriate legacy tool based on name
-        switch (toolMeta.name) {
-          case 'run_jest_tests':
-            const runTool = new RunJestTestsTool(this.jestWrapper);
-            return await runTool._execute(args);
-          case 'query_jest_results':
-            const queryTool = new QueryJestResultsTool(this.jestWrapper);
-            return await queryTool._execute(args);
-          default:
-            throw new Error(`Unknown Jester tool: ${toolMeta.name}`);
-        }
-      }
-    };
-  }
+  // REMOVED: Broken createMetadataTool method - now using proper Tool classes
 
   /**
    * Get tool by name

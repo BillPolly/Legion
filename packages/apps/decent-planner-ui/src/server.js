@@ -25,7 +25,8 @@ async function startServer() {
       }
     ],
     static: {
-      '/src': __dirname
+      '/src': __dirname,
+      '/': join(__dirname, '../public')  // Serve favicon and other public assets
     }
   };
   

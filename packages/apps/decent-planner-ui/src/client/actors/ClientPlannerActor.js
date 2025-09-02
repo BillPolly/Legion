@@ -595,6 +595,7 @@ export default class ClientPlannerActor extends ProtocolActor {
     
     this.updateState({
       informalPlanning: false,
+      formalPlanning: false,  // Fix: Ensure formal planning state is reset
       informalResult: data.result,
       error: null,
       progressMessage: null,
@@ -892,10 +893,10 @@ export default class ClientPlannerActor extends ProtocolActor {
       return;
     }
     
-    // Reset previous results
+    // Reset previous results - DON'T set formalPlanning true yet!
     this.updateState({ 
       formalResult: null,
-      formalPlanning: true,
+      // formalPlanning will be set to true by handleFormalPlanStarted
       error: null,
       activeTab: 'formal' // Switch to formal tab when starting planning
     });

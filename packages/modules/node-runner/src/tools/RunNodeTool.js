@@ -7,66 +7,10 @@ import { jsonSchemaToZod } from '@legion/schema';
 import { existsSync } from 'fs';
 
 export class RunNodeTool extends Tool {
-  constructor(module) {
-    super({
-      name: 'run_node',
-      description: 'Execute Node.js process with comprehensive logging, capturing both backend and frontend logs, with automatic session management and optional dependency installation',
-      schema: {
-        input: {
-        type: 'object',
-        properties: {
-          projectPath: {
-            type: 'string',
-            description: 'Path to the Node.js project directory',
-            minLength: 1
-          },
-          command: {
-            type: 'string',
-            description: 'Command to execute (e.g., "npm start", "node server.js")',
-            minLength: 1
-          },
-          args: {
-            type: 'array',
-            items: {
-              type: 'string'
-            },
-            description: 'Additional command line arguments',
-            default: []
-          },
-          description: {
-            type: 'string',
-            description: 'Optional description for this execution session',
-            default: ''
-          },
-          installDependencies: {
-            type: 'boolean',
-            description: 'Whether to run npm/yarn install before execution',
-            default: false
-          },
-          env: {
-            type: 'object',
-            additionalProperties: {
-              type: 'string'
-            },
-            description: 'Environment variables to set for the process',
-            default: {}
-          },
-          timeout: {
-            type: 'number',
-            description: 'Maximum execution time in milliseconds',
-            minimum: 1000,
-            maximum: 600000,
-            default: 300000
-          }
-        },
-        required: ['projectPath', 'command'],
-        additionalProperties: false
-        }
-      }
-    });
-    
+  constructor(module, toolName) {
+    // FIXED: Use new Tool pattern
+    super(module, toolName);
     this.module = module;
-    this.validator = jsonSchemaToZod(this.inputSchema);
   }
 
   async _execute(args) {

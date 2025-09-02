@@ -1,17 +1,32 @@
 /**
- * Integration test for refactored decent-planner-ui with DecentPlanner
+ * Integration test for refactored decent-planner-ui with REAL DecentPlanner
+ * NO MOCKS - Uses real DecentPlanner with real LLM client
  */
 
-import { MockDecentPlannerAdapter } from '../mocks/MockDecentPlannerAdapter.js';
-import { PlanningSession } from '../../src/domain/entities/PlanningSession.js';
-import { PlanningOrchestrationService } from '../../src/domain/services/PlanningOrchestrationService.js';
+import { DecentPlannerAdapter } from '../../src/server/infrastructure/adapters/DecentPlannerAdapter.js';
+import { PlanningSession } from '../../src/server/domain/entities/PlanningSession.js';
+import { PlanningOrchestrationService } from '../../src/server/domain/services/PlanningOrchestrationService.js';
+import { ResourceManager } from '@legion/resource-manager';
 
 describe('Refactored Decent Planner UI Integration', () => {
   let plannerAdapter;
+  let resourceManager;
+  
+  beforeAll(async () => {
+    // Get ResourceManager - fail fast if not available
+    resourceManager = await ResourceManager.getInstance();
+    
+    // Verify LLM client is available - fail fast if not
+    const llmClient = await resourceManager.get('llmClient');
+    if (!llmClient) {
+      throw new Error('LLM client required for integration test - no fallbacks');
+    }
+    console.log('✅ LLM client available for integration test');
+  });
   
   beforeEach(async () => {
-    // Create mock planner adapter for each test
-    plannerAdapter = new MockDecentPlannerAdapter();
+    // Create REAL planner adapter for each test
+    plannerAdapter = new DecentPlannerAdapter();
     await plannerAdapter.initialize();
   });
   
@@ -68,22 +83,48 @@ describe('Refactored Decent Planner UI Integration', () => {
       expect(plannerAdapter.planner).not.toBeNull();
     });
     
-    test('should perform informal planning', async () => {
+    test('should perform informal planning with REAL LLM and capture progress notifications', async () => {
+      console.log('\n🎯 Testing REAL LLM notifications during planning process');
+      
       const goal = 'Write Hello World to a file';
       let progressUpdates = [];
+      
+      console.log(`📋 Goal: "${goal}"`);
+      console.log('🚀 Starting informal planning with REAL DecentPlanner...');
       
       const result = await plannerAdapter.planInformal(
         goal,
         {},
-        (message) => progressUpdates.push(message)
+        (message) => {
+          console.log(`📢 LLM Progress: ${message}`);
+          progressUpdates.push(message);
+        }
       );
       
+      console.log(`✅ Planning completed in ${result.duration}ms`);
+      console.log(`📊 Captured ${progressUpdates.length} progress notifications`);
+      
+      // Verify planning succeeded
       expect(result.success).toBe(true);
       expect(result.goal).toBe(goal);
       expect(result.informal).toBeDefined();
       expect(result.informal.hierarchy).toBeDefined();
+      
+      // Verify REAL LLM progress notifications were captured
       expect(progressUpdates.length).toBeGreaterThan(0);
-    }, 60000);
+      
+      // Log all captured messages for verification
+      console.log('\n📋 All captured progress messages:');
+      progressUpdates.forEach((msg, idx) => {
+        console.log(`   ${idx + 1}. ${msg}`);
+      });
+      
+      // Verify hierarchy structure
+      expect(result.informal.hierarchy.description || result.informal.hierarchy.name).toBeDefined();
+      console.log(`🌳 Root task: ${result.informal.hierarchy.description || result.informal.hierarchy.name}`);
+      
+      console.log('🎉 REAL LLM integration test PASSED!');
+    }, 120000);
     
     test('should list all tools', async () => {
       const tools = await plannerAdapter.listAllTools();
@@ -158,28 +199,51 @@ describe('Refactored Decent Planner UI Integration', () => {
     });
   });
   
-  describe('End-to-End Planning Flow', () => {
-    test('should complete full planning workflow', async () => {
+  describe('End-to-End Planning Flow with REAL Components', () => {
+    test('should complete full planning workflow with REAL LLM progress tracking', async () => {
+      console.log('\n🎯 Testing complete E2E workflow with REAL DecentPlanner');
+      
       const goal = 'Create a simple calculator function';
       const session = new PlanningSession(goal);
+      console.log(`📋 Goal: "${goal}"`);
       
-      // Step 1: Informal planning
+      let allProgressUpdates = [];
+      const progressTracker = (phase) => (message) => {
+        const logMessage = `[${phase}] ${message}`;
+        console.log(`📢 ${logMessage}`);
+        allProgressUpdates.push(logMessage);
+      };
+      
+      // Step 1: Informal planning with REAL LLM
+      console.log('\n🚀 Step 1: Starting informal planning...');
       session.startInformalPlanning();
-      const informalResult = await plannerAdapter.planInformal(goal);
+      
+      const informalResult = await plannerAdapter.planInformal(
+        goal, 
+        {},
+        progressTracker('INFORMAL')
+      );
+      
       expect(informalResult.success).toBe(true);
       session.completeInformalPlanning(informalResult);
+      console.log(`✅ Informal planning completed in ${informalResult.duration}ms`);
       
-      // Step 2: Tool discovery (if hierarchy available)
+      // Step 2: Tool discovery with progress tracking
       if (informalResult.informal?.hierarchy) {
+        console.log('\n🔍 Step 2: Starting tool discovery...');
         session.startToolDiscovery();
+        
         const toolsResult = await plannerAdapter.discoverTools(
-          informalResult.informal.hierarchy
+          informalResult.informal.hierarchy,
+          progressTracker('TOOLS')
         );
+        
         expect(toolsResult).toBeDefined();
         session.completeToolDiscovery(toolsResult);
+        console.log(`✅ Tool discovery completed - found ${toolsResult.tools?.length || 0} tools`);
       }
       
-      // Verify final state
+      // Verify session state progression
       expect(session.isComplete()).toBe(false); // Not complete until formal planning
       expect(session.canStartFormalPlanning()).toBe(true);
       
@@ -187,6 +251,17 @@ describe('Refactored Decent Planner UI Integration', () => {
       const tabs = PlanningOrchestrationService.getEnabledTabs(session);
       expect(tabs.toolDiscovery).toBe(true);
       expect(tabs.formalPlanning).toBe(true);
-    }, 90000);
+      
+      // Verify we captured progress updates from REAL LLM
+      expect(allProgressUpdates.length).toBeGreaterThan(0);
+      console.log(`\n📊 Total progress notifications captured: ${allProgressUpdates.length}`);
+      
+      console.log('\n📋 All E2E progress messages:');
+      allProgressUpdates.forEach((msg, idx) => {
+        console.log(`   ${idx + 1}. ${msg}`);
+      });
+      
+      console.log('🎉 Complete E2E workflow with REAL LLM PASSED!');
+    }, 180000); // 3 minutes for complete workflow
   });
 });

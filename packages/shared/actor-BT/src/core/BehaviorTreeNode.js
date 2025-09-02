@@ -352,16 +352,25 @@ export class BehaviorTreeNode extends Actor {
     const resolved = {};
     
     for (const [key, value] of Object.entries(params)) {
-      if (typeof value === 'string' && value.includes('{{')) {
-        // Simple template substitution
+      if (typeof value === 'string' && value.startsWith('@')) {
+        // NEW: @varName syntax - clean variable reference
+        const varName = value.substring(1); // Remove @ prefix
+        resolved[key] = context.artifacts ? context.artifacts[varName] : undefined;
+      } else if (typeof value === 'string' && value.includes('{{')) {
+        // Template substitution (for complex expressions)
         resolved[key] = this.substitutePlaceholders(value, context);
       } else if (Array.isArray(value)) {
-        // Handle arrays with potential placeholders
-        resolved[key] = value.map(item => 
-          typeof item === 'string' && item.includes('{{') 
-            ? this.substitutePlaceholders(item, context)
-            : item
-        );
+        // Handle arrays with potential variables
+        resolved[key] = value.map(item => {
+          if (typeof item === 'string' && item.startsWith('@')) {
+            const varName = item.substring(1);
+            return context.artifacts ? context.artifacts[varName] : undefined;
+          } else if (typeof item === 'string' && item.includes('{{')) {
+            return this.substitutePlaceholders(item, context);
+          } else {
+            return item;
+          }
+        });
       } else if (typeof value === 'object' && value !== null) {
         resolved[key] = this.resolveParams(value, context);
       } else {

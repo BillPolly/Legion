@@ -226,12 +226,25 @@ export class QdrantVectorDatabase {
 
       const searchResult = await this.client.search(collectionName, searchParams);
 
-      return searchResult.map(result => ({
-        id: result.id,
-        score: result.score,
-        metadata: result.payload || {},
-        vector: result.vector || null
-      }));
+      // Fix: Handle undefined searchResult or invalid results
+      if (!searchResult || !Array.isArray(searchResult)) {
+        console.warn(`[QdrantVectorDatabase] Invalid search result: ${typeof searchResult}`);
+        return [];
+      }
+
+      return searchResult.map((result, idx) => {
+        if (!result) {
+          console.warn(`[QdrantVectorDatabase] Undefined result at index ${idx}`);
+          return null;
+        }
+        
+        return {
+          id: result.id,
+          score: result.score,
+          metadata: result.payload || {},
+          vector: result.vector || null
+        };
+      }).filter(result => result !== null);
 
     } catch (error) {
       throw new VectorDatabaseError(
@@ -379,8 +392,8 @@ export class QdrantVectorDatabase {
         dimensions: this.options.dimensions,
         indexType: this.options.indexType,
         distance: this.options.distance,
-        status: info.status,
-        optimizer_status: info.optimizer_status
+        status: info.status || 'unknown',  // Fix: Handle undefined status
+        optimizer_status: info.optimizer_status || 'unknown'  // Fix: Handle undefined optimizer_status
       };
 
     } catch (error) {

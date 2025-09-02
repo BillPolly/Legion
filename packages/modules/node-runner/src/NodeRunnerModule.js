@@ -107,65 +107,22 @@ class NodeRunnerModule extends Module {
   }
 
   initializeTools() {
-    // Try metadata-driven tool creation first
-    if (this.metadata && this.metadata.tools) {
-      try {
-        for (const [toolKey, toolMeta] of Object.entries(this.metadata.tools)) {
-          this.registerTool(toolMeta.name, this.createMetadataTool(toolMeta));
-        }
-        return;
-      } catch (error) {
-        console.warn(`NodeRunner module metadata tool creation failed: ${error.message}, falling back to legacy`);
-      }
-    }
-    
-    // Fallback to legacy approach
+    // FIXED: Always use proper Tool class constructors with new pattern
     const tools = [
-      new RunNodeTool(this),
-      new StopNodeTool(this),
-      new SearchLogsTool(this),
-      new ListSessionsTool(this),
-      new ServerHealthTool(this)
+      new RunNodeTool(this, 'run_node'),
+      new StopNodeTool(this, 'stop_node'),
+      new SearchLogsTool(this, 'search_logs'),
+      new ListSessionsTool(this, 'list_sessions'),
+      new ServerHealthTool(this, 'server_health')
     ];
     
     for (const tool of tools) {
       this.registerTool(tool.name, tool);
+      console.log(`✅ Created proper Tool instance: ${tool.name}`);
     }
   }
 
-  createMetadataTool(toolMeta) {
-    // Create a tool proxy that routes to legacy implementations
-    return {
-      name: toolMeta.name,
-      description: toolMeta.description,
-      schema: {
-        input: toolMeta.inputSchema,
-        output: toolMeta.outputSchema
-      },
-      execute: async (args) => {
-        // Route to appropriate legacy tool based on name
-        switch (toolMeta.name) {
-          case 'run_node':
-            const runTool = new RunNodeTool(this);
-            return await runTool.execute(args);
-          case 'stop_node':
-            const stopTool = new StopNodeTool(this);
-            return await stopTool.execute(args);
-          case 'list_sessions':
-            const listTool = new ListSessionsTool(this);
-            return await listTool.execute(args);
-          case 'search_logs':
-            const searchTool = new SearchLogsTool(this);
-            return await searchTool.execute(args);
-          case 'server_health':
-            const healthTool = new ServerHealthTool(this);
-            return await healthTool.execute(args);
-          default:
-            throw new Error(`Unknown NodeRunner tool: ${toolMeta.name}`);
-        }
-      }
-    };
-  }
+  // REMOVED: Broken createMetadataTool method - now using proper Tool classes
 }
 
 export default NodeRunnerModule;

@@ -1,6 +1,12 @@
 /**
  * MockDecentPlannerAdapter - Mock implementation for testing
  * Returns predictable responses without needing real DecentPlanner
+ * 
+ * ⚠️  WARNING: This mock MUST NOT be used in integration tests unless the 
+ * functionality being mocked is very peripheral to the functionality under test.
+ * Integration tests should use real DecentPlanner with real LLM clients.
+ * This mock is ONLY appropriate for unit tests where the planner behavior
+ * is not the primary focus of the test.
  */
 
 import { PlannerService } from '../../src/application/ports/PlannerService.js';
