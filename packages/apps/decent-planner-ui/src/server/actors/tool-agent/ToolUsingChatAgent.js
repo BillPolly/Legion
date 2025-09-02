@@ -130,15 +130,22 @@ ${this.formatChatHistory()}
 Available context variables:
 ${this.formatContextVariables()}
 
-Question: Can this request be satisfied with existing context data, 
-or do we need to use tools to get additional information/perform actions?
+Question: Should I use tools to fulfill this request?
+
+**IMPORTANT**: Be helpful by DOING things, not just explaining them.
 
 Consider:
-- Does the user want information I already have stored?
-- Are they asking me to perform an action that requires tools?
-- Can I combine existing context data to answer their question?
+- Does the user want information I already have stored? → needsTools: false
+- Are they asking me to CREATE, WRITE, BUILD, RUN, or EXECUTE something? → needsTools: true (be helpful!)
+- Are they asking me to ANALYZE, CALCULATE, or PROCESS data? → needsTools: true (use appropriate tools!)
+- Can I combine existing context data to answer their question? → needsTools: false
 
-Respond with JSON: {"needsTools": true/false, "reasoning": "..."}
+**Be Action-Oriented**: When users ask you to DO something (create files, run programs, analyze data), use tools to actually DO it rather than just giving instructions.
+
+**JSON only**: Return ONLY valid JSON. No markdown, no code blocks, no comments, no explanations, no trailing commas.
+
+Return this exact format:
+{"needsTools": true/false, "reasoning": "..."}
     `;
 
     const response = await this.trackLLMInteraction(prompt, 'tool-need-analysis');
@@ -193,12 +200,12 @@ You are an expert tool orchestrator. Analyze the user request and create an exec
 ${userInput}
 
 ## Available Tools (ONLY tools you may use)
-${searchResults.map(tool => `
-### ${tool.name}
-Description: ${tool.description}
+${searchResults.map(result => `
+### ${result.name}
+Description: ${result.tool.description || result.description || 'No description'}
 Inputs:
-${this.formatToolInputSchema(tool.inputSchema)}
-Outputs: ${this.formatToolOutputSchema(tool.outputSchema)}
+${this.formatToolInputSchema(result.tool.inputSchema)}
+Outputs: ${this.formatToolOutputSchema(result.tool.outputSchema)}
 `).join('\n')}
 
 ## Available Context Variables
@@ -257,7 +264,9 @@ Create a tool execution sequence that fulfills the user's request. You can:
   "reasoning": "Why no tools are needed or suitable"
 }
 
-Generate the plan now:`;
+**JSON only**: Return ONLY valid JSON. No markdown, no code blocks, no comments, no explanations, no trailing commas.
+
+Generate the JSON now:`;
 
     const response = await this.trackLLMInteraction(prompt, 'tool-sequence-planning');
 
@@ -291,7 +300,8 @@ Generate the plan now:`;
         const toolSelection = {
           selectedTool: toolPlan.tool,
           parameters: toolPlan.inputs,
-          outputVariable: Object.values(toolPlan.outputs || {})[0] // Get first output variable
+          outputs: toolPlan.outputs, // Pass the full outputs mapping
+          outputVariable: Object.values(toolPlan.outputs || {})[0] // Get first output variable for fallback
         };
         
         const result = await this.executeTool(toolSelection);
@@ -311,7 +321,8 @@ Generate the plan now:`;
           const toolSelection = {
             selectedTool: step.tool,
             parameters: step.inputs,
-            outputVariable: Object.values(step.outputs || {})[0] // Get first output variable
+            outputs: step.outputs, // Pass the full outputs mapping
+            outputVariable: Object.values(step.outputs || {})[0] // Get first output variable for fallback
           };
           
           const result = await this.executeTool(toolSelection);
@@ -363,10 +374,23 @@ ${i + 1}. ${executionResults.toolsExecuted[i]}: ${result.success ? 'Success' : '
 Current context:
 ${this.formatContextVariables()}
 
-Generate a helpful response to the user explaining what was accomplished and any relevant results.
+**JSON only**: Return ONLY valid JSON. No markdown, no code blocks, no comments, no explanations, no trailing commas.
+
+Respond with this exact format:
+{
+  "response": "Clear message to user about what was accomplished and results"
+}
     `;
 
-    return await this.trackLLMInteraction(prompt, 'user-response-generation');
+    const jsonResponse = await this.trackLLMInteraction(prompt, 'user-response-generation');
+    
+    try {
+      const parsed = extractJSON(jsonResponse);
+      return parsed.response || jsonResponse;
+    } catch (error) {
+      console.log('[ToolAgent] Failed to parse user response JSON, using raw:', jsonResponse);
+      return jsonResponse;
+    }
   }
 
   /**
@@ -402,10 +426,19 @@ Generate a helpful response to the user explaining what was accomplished and any
       const result = await tool.execute(resolvedInputs);
       console.log(`[ToolAgent] Tool execution result:`, { success: result.success, hasData: !!result.data });
 
-      // 5. Store result in context with named variable (BT's pattern)
-      if (outputVariable && result.success && result.data !== undefined) {
+      // 5. Store result in context with proper field extraction (BT Executor's pattern)
+      if (result.success && result.data !== undefined && toolSelection.outputs) {
+        // Map specific tool output fields to variable names (like BT Executor)
+        for (const [outputField, variableName] of Object.entries(toolSelection.outputs)) {
+          if (result.data && result.data.hasOwnProperty(outputField)) {
+            this.executionContext.artifacts[variableName] = result.data[outputField];
+            console.log(`[ToolAgent] Mapped ${outputField} → ${variableName}:`, result.data[outputField]);
+          }
+        }
+      } else if (outputVariable && result.success && result.data !== undefined) {
+        // Fallback: store entire result if no specific output mapping
         this.executionContext.artifacts[outputVariable] = result.data;
-        console.log(`[ToolAgent] Stored result in context as: ${outputVariable}`);
+        console.log(`[ToolAgent] Stored entire result in context as: ${outputVariable}`);
       }
 
       // 6. Record execution in operation history
@@ -482,7 +515,9 @@ Analyze the error and decide what to do:
 2. Should I try a different tool?
 3. Is this a user error that should be explained?
 
-Respond with JSON:
+**JSON only**: Return ONLY valid JSON. No markdown, no code blocks, no comments, no explanations, no trailing commas.
+
+Return this exact format:
 {
   "shouldRetry": true/false,
   "newApproach": "description of what to try",
@@ -560,10 +595,12 @@ Questions:
 2. If not, what specific additional information or actions do we need?
 3. What should I tell the user about what was accomplished?
 
-Respond with JSON:
+**JSON only**: Return ONLY valid JSON. No markdown, no code blocks, no comments, no explanations, no trailing commas.
+
+Return this exact format:
 {
   "complete": true/false,
-  "userResponse": "what to tell the user about results",
+  "userResponse": "what to tell the user about results", 
   "nextAction": "description of what we still need to do" or null
 }
     `;
@@ -770,14 +807,15 @@ Be helpful and specific.
       return '  No parameters';
     }
 
-    const entries = Object.entries(inputSchema);
-    if (entries.length === 0) {
+    const properties = inputSchema.properties || inputSchema;
+    if (!properties || Object.keys(properties).length === 0) {
       return '  No parameters';
     }
 
-    return entries.map(([param, type]) => {
-      const typeStr = typeof type === 'object' ? JSON.stringify(type) : String(type);
-      return `  - ${param} (${typeStr}): ${this.getParameterDescription(param)}`;
+    return Object.entries(properties).map(([param, schema]) => {
+      const type = schema.type || typeof schema === 'string' ? schema : 'string';
+      const required = inputSchema.required?.includes(param) ? '*' : '';
+      return `  - ${param}${required} (${type}): ${schema.description || this.getParameterDescription(param)}`;
     }).join('\n');
   }
 
@@ -789,12 +827,15 @@ Be helpful and specific.
       return 'No return data';
     }
 
-    const entries = Object.entries(outputSchema);
-    if (entries.length === 0) {
+    const properties = outputSchema.properties || outputSchema;
+    if (!properties || Object.keys(properties).length === 0) {
       return 'No return data';
     }
 
-    return entries.map(([field, type]) => field).join(', ');
+    return Object.entries(properties).map(([field, schema]) => {
+      const type = schema.type || typeof schema === 'string' ? schema : 'string';
+      return `${field} (${type})`;
+    }).join(', ');
   }
 
   /**
@@ -820,6 +861,11 @@ Be helpful and specific.
   async trackLLMInteraction(prompt, purpose) {
     const interactionId = `llm-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
+    // Log full prompt for debugging
+    console.log(`\n🧠 [LLM REQUEST] ${purpose}`);
+    console.log(`Full prompt:\n${prompt}`);
+    console.log('=' .repeat(80));
+
     // Emit start event
     this.emitEvent('llm-interaction', {
       id: interactionId,
@@ -832,6 +878,11 @@ Be helpful and specific.
 
     try {
       const response = await this.llmClient.complete(prompt);
+      
+      // Log full response for debugging
+      console.log(`\n💬 [LLM RESPONSE] ${purpose}`);
+      console.log(`Full response:\n${response}`);
+      console.log('=' .repeat(80));
       
       // Track successful interaction
       const interaction = {

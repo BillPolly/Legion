@@ -22,7 +22,7 @@
     "embeddings": "NODE_OPTIONS=--experimental-vm-modules node scripts/manage.js embeddings",
     "vectors": "NODE_OPTIONS=--experimental-vm-modules node scripts/manage.js vectors",
     "vectors:load": "NODE_OPTIONS=--experimental-vm-modules node scripts/manage.js vectors:load",
-    "search": "NODE_OPTIONS=--experimental-vm-modules node scripts/manage.js search",
+    "search": "NODE_OPTIONS=--experimental-vm-modules node scripts/search-tools.js",
     "verify": "NODE_OPTIONS=--experimental-vm-modules node scripts/manage.js verify",
     "pipeline": "NODE_OPTIONS=--experimental-vm-modules node scripts/manage.js pipeline",
     "clear": "NODE_OPTIONS=--experimental-vm-modules node scripts/manage.js clear",

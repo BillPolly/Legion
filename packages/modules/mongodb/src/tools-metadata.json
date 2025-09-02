@@ -1,0 +1,254 @@
+{
+  "module": {
+    "name": "mongodb",
+    "description": "MongoDB integration module for database operations",
+    "version": "1.0.0",
+    "author": "Legion Team",
+    "category": "database",
+    "tags": ["mongodb", "database", "nosql", "query", "update"]
+  },
+  "tools": {
+    "mongo_query": {
+      "name": "mongo_query",
+      "description": "Execute MongoDB database operations including queries, updates, inserts, deletes, and administrative commands",
+      "category": "database",
+      "tags": ["mongodb", "query", "database", "crud", "aggregation"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "database": {
+            "type": "string",
+            "description": "Database name (optional, defaults to configured default database)"
+          },
+          "collection": {
+            "type": "string",
+            "description": "Collection name to operate on"
+          },
+          "command": {
+            "type": "string",
+            "enum": [
+              "find", "findOne", "countDocuments", "distinct", "aggregate",
+              "insertOne", "insertMany", "updateOne", "updateMany", 
+              "deleteOne", "deleteMany", "createIndex", "dropCollection", "listCollections"
+            ],
+            "description": "MongoDB operation to perform"
+          },
+          "params": {
+            "type": "object",
+            "description": "Parameters for the MongoDB operation",
+            "properties": {
+              "query": {
+                "type": "object",
+                "description": "Query filter for find, update, delete operations (e.g., {active: true, age: {$gte: 18}})"
+              },
+              "options": {
+                "type": "object",
+                "description": "Options for the operation (e.g., {limit: 10, sort: {name: 1}})"
+              },
+              "update": {
+                "type": "object",
+                "description": "Update document for update operations (e.g., {$set: {status: 'active'}})"
+              },
+              "document": {
+                "type": "object",
+                "description": "Document to insert for insertOne operation"
+              },
+              "documents": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                },
+                "description": "Array of documents to insert for insertMany operation"
+              },
+              "pipeline": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                },
+                "description": "Aggregation pipeline for aggregate operations"
+              },
+              "field": {
+                "type": "string",
+                "description": "Field name for distinct operation"
+              },
+              "keys": {
+                "type": "object",
+                "description": "Index specification for createIndex operation (e.g., {name: 1, email: -1})"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "required": ["collection", "command"],
+        "additionalProperties": false,
+        "examples": [
+          {
+            "description": "Find all active users",
+            "value": {
+              "collection": "users",
+              "command": "find",
+              "params": {
+                "query": {"active": true},
+                "options": {"limit": 10}
+              }
+            }
+          },
+          {
+            "description": "Insert a new user",
+            "value": {
+              "collection": "users",
+              "command": "insertOne",
+              "params": {
+                "document": {
+                  "name": "John Doe",
+                  "email": "john@example.com",
+                  "active": true,
+                  "createdAt": "2024-01-01T00:00:00Z"
+                }
+              }
+            }
+          },
+          {
+            "description": "Update user status",
+            "value": {
+              "collection": "users",
+              "command": "updateMany",
+              "params": {
+                "query": {"status": "pending"},
+                "update": {"$set": {"status": "active"}}
+              }
+            }
+          },
+          {
+            "description": "Get user count by status",
+            "value": {
+              "collection": "users",
+              "command": "aggregate",
+              "params": {
+                "pipeline": [
+                  {"$group": {"_id": "$status", "count": {"$sum": 1}}},
+                  {"$sort": {"count": -1}}
+                ]
+              }
+            }
+          },
+          {
+            "description": "Create an index",
+            "value": {
+              "collection": "users", 
+              "command": "createIndex",
+              "params": {
+                "keys": {"email": 1},
+                "options": {"unique": true}
+              }
+            }
+          }
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "The executed command"
+          },
+          "collection": {
+            "type": "string",
+            "description": "The collection operated on"
+          },
+          "database": {
+            "type": "string",
+            "description": "The database used"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of the operation"
+          },
+          "documents": {
+            "type": "array",
+            "items": {"type": "object"},
+            "description": "Returned documents (for find, aggregate operations)"
+          },
+          "document": {
+            "type": "object",
+            "description": "Single returned document (for findOne operation)"
+          },
+          "count": {
+            "type": "number",
+            "description": "Count of documents (for count, find operations)"
+          },
+          "found": {
+            "type": "boolean",
+            "description": "Whether document was found (for findOne operation)"
+          },
+          "values": {
+            "type": "array",
+            "description": "Distinct values (for distinct operation)"
+          },
+          "insertedId": {
+            "type": ["string", "object"],
+            "description": "ID of inserted document (for insertOne operation)"
+          },
+          "insertedIds": {
+            "type": "array",
+            "description": "IDs of inserted documents (for insertMany operation)"
+          },
+          "insertedCount": {
+            "type": "number",
+            "description": "Number of inserted documents (for insertMany operation)"
+          },
+          "matchedCount": {
+            "type": "number",
+            "description": "Number of matched documents (for update operations)"
+          },
+          "modifiedCount": {
+            "type": "number",
+            "description": "Number of modified documents (for update operations)"
+          },
+          "upsertedCount": {
+            "type": "number",
+            "description": "Number of upserted documents (for update operations)"
+          },
+          "upsertedId": {
+            "type": ["string", "object"],
+            "description": "ID of upserted document (for update operations)"
+          },
+          "deletedCount": {
+            "type": "number",
+            "description": "Number of deleted documents (for delete operations)"
+          },
+          "acknowledged": {
+            "type": "boolean",
+            "description": "Whether the operation was acknowledged by MongoDB"
+          },
+          "indexName": {
+            "type": "string",
+            "description": "Name of created index (for createIndex operation)"
+          },
+          "created": {
+            "type": "boolean",
+            "description": "Whether index was created (for createIndex operation)"
+          },
+          "dropped": {
+            "type": "boolean",
+            "description": "Whether collection was dropped (for dropCollection operation)"
+          },
+          "collections": {
+            "type": "array",
+            "items": {"type": "object"},
+            "description": "List of collections (for listCollections operation)"
+          },
+          "result": {
+            "description": "Raw result for operations not explicitly handled"
+          },
+          "resultType": {
+            "type": "string",
+            "description": "Type of the raw result"
+          }
+        },
+        "required": ["command", "collection", "database", "timestamp"]
+      }
+    }
+  }
+}
