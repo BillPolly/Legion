@@ -80,6 +80,22 @@ export class SlashCommandProcessor {
       ],
       category: 'session'
     });
+    
+    this.commands.set('show', {
+      name: 'show',
+      description: 'Open a resource (file, image, directory) in appropriate viewer',
+      usage: '/show <path>',
+      args: [
+        { name: 'path', type: 'string', required: true, description: 'Path to the resource to display' }
+      ],
+      category: 'resources',
+      examples: [
+        '/show myfile.txt',
+        '/show image.png', 
+        '/show /path/to/directory',
+        '/show script.js'
+      ]
+    });
   }
 
   /**

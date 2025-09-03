@@ -8,6 +8,8 @@ import { TabsComponent } from '/src/client/components/TabsComponent.js';
 import PlannerClientSubActor from '/src/client/actors/PlannerClientSubActor.js';
 import ChatClientSubActor from '/src/client/actors/ChatClientSubActor.js';
 import ToolRegistryClientSubActor from '/src/client/actors/ToolRegistryClientSubActor.js';
+import { ResourceClientSubActor } from '/src/client/actors/ResourceClientSubActor.js';
+import { ResourceWindowManager } from '/src/client/components/ResourceWindowManager.js';
 
 export default class RootClientActor extends ProtocolActor {
   constructor() {
@@ -21,6 +23,9 @@ export default class RootClientActor extends ProtocolActor {
     
     // Main tabs component
     this.tabsComponent = null;
+    
+    // Resource window manager for /show commands
+    this.resourceWindowManager = null;
     
     // Merge additional state properties with the protocol-initialized state
     Object.assign(this.state, {
@@ -90,28 +95,36 @@ export default class RootClientActor extends ProtocolActor {
     this.plannerSubActor = new PlannerClientSubActor();
     this.chatSubActor = new ChatClientSubActor();
     this.toolRegistrySubActor = new ToolRegistryClientSubActor();
+    this.resourceSubActor = new ResourceClientSubActor();
     
     // Register sub-actors in the ActorSpace for direct communication
     if (this.actorSpace) {
       this.actorSpace.register(this.plannerSubActor, 'planner-client-sub');
       this.actorSpace.register(this.chatSubActor, 'chat-client-sub');
       this.actorSpace.register(this.toolRegistrySubActor, 'tool-registry-client-sub');
+      this.actorSpace.register(this.resourceSubActor, 'resource-client-sub');
       
       // Create remote references for sub-actors to communicate directly
       const remotePlannerServer = this.actorSpace.makeRemote('planner-server-sub');
       const remoteChatServer = this.actorSpace.makeRemote('chat-server-sub');
       const remoteToolRegistryServer = this.actorSpace.makeRemote('tool-registry-server-sub');
+      const remoteResourceServer = this.actorSpace.makeRemote('resource-server-sub');
       
       // Set remote actors on sub-actors for direct communication
       await this.plannerSubActor.setRemoteActor(remotePlannerServer);
       await this.chatSubActor.setRemoteActor(remoteChatServer);
-      await this.toolRegistrySubActor.setRemoteActor(remoteToolRegistryServer); // Direct connection to tool registry server
+      await this.toolRegistrySubActor.setRemoteActor(remoteToolRegistryServer);
+      await this.resourceSubActor.setRemoteActor(remoteResourceServer);
     }
     
     // Set parent references
     this.plannerSubActor.setParentActor(this);
     this.chatSubActor.setParentActor(this);
     this.toolRegistrySubActor.setParentActor(this);
+    this.resourceSubActor.setParentActor(this);
+    
+    // Initialize resource window manager
+    this.resourceWindowManager = new ResourceWindowManager(document.body);
     
     // Set up the UI
     this.setupUI();
@@ -477,6 +490,11 @@ export default class RootClientActor extends ProtocolActor {
           this.chatSubActor.receive(messageType.replace('chat-', ''), data);
         } else if (messageType.startsWith('tool-registry-') && this.toolRegistrySubActor) {
           this.toolRegistrySubActor.receive(messageType.replace('tool-registry-', ''), data);
+        } else if (messageType.startsWith('resource-') && this.resourceSubActor) {
+          this.resourceSubActor.receive(messageType.replace('resource-', ''), data);
+        } else if (messageType === 'resource:ready' && this.resourceWindowManager) {
+          // Handle resource ready events to create windows
+          this.resourceWindowManager.handleResourceReady(data);
         } else {
           // Default to active tab
           const activeSubActor = this.state.activeMainTab === 'planner' ? this.plannerSubActor : this.chatSubActor;

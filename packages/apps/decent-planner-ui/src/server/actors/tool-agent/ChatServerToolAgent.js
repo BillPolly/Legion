@@ -125,6 +125,12 @@ export default class ChatServerToolAgent {
         (eventType, data) => this.forwardAgentEvent(eventType, data)
       );
       
+      // Set resource actor reference for /show commands
+      if (this.parentActor?.resourceSubActor) {
+        this.slashCommandAgent.setResourceActor(this.parentActor.resourceSubActor);
+        console.log('[ChatServerToolAgent] Resource actor wired to slash command agent');
+      }
+      
       this.state.slashCommandInitialized = true;
       console.log('[ChatServerToolAgent] ✅ Slash command agent initialized successfully');
       

@@ -20,12 +20,21 @@ export class SlashCommandAgent {
     this.toolRegistry = toolRegistry;
     this.llmClient = llmClient;
     this.eventCallback = eventCallback;
+    this.resourceActor = null; // Will be set by parent actor
     
     // Command processor
     this.processor = new SlashCommandProcessor();
     
     // Sessions storage (simple file-based for now)
     this.sessionsDir = path.join(process.cwd(), 'saved-sessions');
+  }
+  
+  /**
+   * Set resource actor reference for /show commands
+   * @param {Object} resourceActor - ResourceServerSubActor instance
+   */
+  setResourceActor(resourceActor) {
+    this.resourceActor = resourceActor;
   }
 
   /**
@@ -98,6 +107,8 @@ export class SlashCommandAgent {
         return await this.handleSave(args, chatAgent);
       case 'load':
         return await this.handleLoad(args, chatAgent);
+      case 'show':
+        return await this.handleShow(args, chatAgent);
       default:
         throw new Error(`Unknown command: /${command}`);
     }
@@ -478,6 +489,55 @@ export class SlashCommandAgent {
         .map(file => path.basename(file, '.json'));
     } catch {
       return [];
+    }
+  }
+
+  /**
+   * Handle /show command - open resource in appropriate viewer
+   * @param {Array} args - Command arguments
+   * @param {Object} chatAgent - Chat agent context  
+   * @returns {string} Result message
+   */
+  async handleShow(args, chatAgent) {
+    if (!this.resourceActor) {
+      throw new Error('/show command requires resource actor - not available');
+    }
+    
+    if (!args.path) {
+      throw new Error('/show command requires a file path. Usage: /show <path>');
+    }
+    
+    const resourcePath = args.path;
+    console.log(`[SlashCommandAgent] Processing /show for: ${resourcePath}`);
+    console.log(`[SlashCommandAgent] Args received:`, args);
+    
+    try {
+      // Request resource through resource actor
+      // The resource actor will handle the complete flow:
+      // 1. Create resource handle
+      // 2. Send to client
+      // 3. Client creates window with appropriate viewer
+      
+      // Determine resource type
+      let resourceType = 'file';
+      if (resourcePath === '/' || !path.extname(resourcePath)) {
+        resourceType = 'directory'; 
+      } else if (['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'].includes(path.extname(resourcePath).toLowerCase())) {
+        resourceType = 'image';
+      }
+      
+      // Trigger resource creation (this will flow to client and create window)
+      await this.resourceActor.receive('resource:request', {
+        path: resourcePath,
+        type: resourceType
+      });
+      
+      // Return immediate response to chat
+      const fileName = path.basename(resourcePath) || resourcePath;
+      return `📂 Opening ${fileName} in ${resourceType} viewer...`;
+      
+    } catch (error) {
+      throw new Error(`Failed to open resource: ${error.message}`);
     }
   }
 

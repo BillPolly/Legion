@@ -96,24 +96,42 @@ export class ActorSerializer {
    */
   deserialize(str, channel) {
     const reviver = (key, value) => {
-      if (typeof value === 'object' && value !== null && value.hasOwnProperty('#actorGuid')) {
-        const guid = value['#actorGuid'];
-        const existingObj = this.actorSpace.guidToObject.get(guid);
-
-        if (existingObj) {
-          // Known GUID. Return the existing local actor or remote placeholder
-          return existingObj;
-        } else {
-          // Unknown GUID, this must be a remote actor new to this space.
-          // The channel is crucial here to correctly associate the remote actor.
-          if (!channel) {
-            console.error(`ActorSerializer (for ${this.actorSpace.spaceId}): Deserialization of new remote actor GUID ${guid} failed. Source channel not provided.`);
-            // Potentially return a generic placeholder or throw, depending on desired strictness.
-            // For now, let's assume makeRemote can handle a null/undefined channel if it's a general policy.
-            // However, the original ActorSpace.decode always expected a channel for this case.
-            // This indicates that 'channel' should ideally not be optional if new remote actors are possible.
+      if (typeof value === 'object' && value !== null) {
+        // Handle resource handle reconstruction
+        if (value.__type === 'ResourceHandle') {
+          if (!value.handleId || !value.resourceType || !value.methodSignatures) {
+            throw new Error('Invalid resource handle data: missing required fields');
           }
-          return this.actorSpace.makeRemote(guid, channel);
+          
+          // Get the resource client actor to create the proxy
+          const resourceClient = this.actorSpace.guidToObject.get('resource-client-sub');
+          if (!resourceClient) {
+            throw new Error('ResourceClientSubActor not found for handle reconstruction');
+          }
+          
+          return resourceClient.createProxyFromData(value);
+        }
+        
+        // Handle actor GUID reconstruction (existing logic)
+        if (value.hasOwnProperty('#actorGuid')) {
+          const guid = value['#actorGuid'];
+          const existingObj = this.actorSpace.guidToObject.get(guid);
+
+          if (existingObj) {
+            // Known GUID. Return the existing local actor or remote placeholder
+            return existingObj;
+          } else {
+            // Unknown GUID, this must be a remote actor new to this space.
+            // The channel is crucial here to correctly associate the remote actor.
+            if (!channel) {
+              console.error(`ActorSerializer (for ${this.actorSpace.spaceId}): Deserialization of new remote actor GUID ${guid} failed. Source channel not provided.`);
+              // Potentially return a generic placeholder or throw, depending on desired strictness.
+              // For now, let's assume makeRemote can handle a null/undefined channel if it's a general policy.
+              // However, the original ActorSpace.decode always expected a channel for this case.
+              // This indicates that 'channel' should ideally not be optional if new remote actors are possible.
+            }
+            return this.actorSpace.makeRemote(guid, channel);
+          }
         }
       }
       return value;
