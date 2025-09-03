@@ -23,7 +23,7 @@ export class SearchService {
     this.moduleService = dependencies.moduleService;
     this.toolService = dependencies.toolService; // Access to ToolService for getting Tool objects
     this.eventBus = dependencies.eventBus;
-    this.logger = dependencies.logger || { verbose: () => {} }; // Add logger with fallback
+    this.logger = dependencies.logger; // Logger must be provided - no fallbacks!
   }
 
   /**

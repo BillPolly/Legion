@@ -187,6 +187,7 @@ export class Perspectives {
       const perspectiveDocs = generatedPerspectives.map((perspective, index) => ({
         tool_name: toolName,
         tool_id: tool._id,
+        module_name: tool.moduleName || 'unknown', // Add module name from tool
         perspective_type_name: perspectiveTypes[index].name,
         perspective_type_id: perspectiveTypes[index]._id,
         content: perspective.content,

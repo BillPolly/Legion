@@ -424,7 +424,7 @@ export class DatabaseStorage {
         keywords: tool.keywords || [],
         examples: tool.examples || [],
         moduleName,
-        moduleId: moduleId || moduleName, // Use moduleId if provided, fallback to moduleName for backwards compatibility
+        moduleId: moduleId, // Use moduleId - MUST be provided, no fallbacks!
         savedAt: new Date().toISOString(),
         _id: `${moduleName}:${tool.name}` // Composite key for uniqueness
       }));

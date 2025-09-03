@@ -282,6 +282,51 @@ export class VectorStore {
       );
     }
   }
+
+  /**
+   * Upsert vectors (update if exists, insert if not)
+   * @param {Array} vectors - Vector objects with id, vector, and metadata
+   * @returns {Object} Upsert result
+   */
+  async upsert(vectors) {
+    try {
+      if (!Array.isArray(vectors) || vectors.length === 0) {
+        return { indexed: 0, failed: 0 };
+      }
+      
+      // Check if database is connected
+      if (!this.vectorDatabase.isConnected) {
+        throw new VectorStoreError(
+          'Vector database not connected',
+          'CONNECTION_ERROR'
+        );
+      }
+      
+      // Use the batch insert method which does upserts in Qdrant
+      const documents = vectors.map(vector => ({
+        id: vector.id,
+        vector: vector.vector,
+        metadata: {
+          tool_name: vector.metadata.tool_name,
+          module_name: vector.metadata.module_name,
+          perspective_type: vector.metadata.perspective_type,
+          content: vector.metadata.content,
+          indexedAt: new Date().toISOString()
+        }
+      }));
+      
+      await this.vectorDatabase.insertBatch(this.options.collectionName, documents);
+      
+      return { indexed: vectors.length, failed: 0 };
+      
+    } catch (error) {
+      throw new VectorStoreError(
+        `Failed to upsert vectors: ${error.message}`,
+        'UPSERT_ERROR',
+        { count: vectors.length, originalError: error }
+      );
+    }
+  }
   
   /**
    * Search for similar tools

@@ -63,7 +63,7 @@ export class ModuleService {
           moduleIndex++;
           
           // TEMPORARY: Skip problematic modules that cause hangs during initialization
-          const skipModules = ['RailwayModule']; // ConanTheDeployerModule circular dependency fixed
+          const skipModules = ['RailwayModule', 'ConanTheDeployerModule']; // These modules hang during loading
           if (skipModules.includes(module.name)) {
             console.log(`[ModuleService] SKIPPING ${module.name} (problematic initialization)`);
             results.invalid.push({
@@ -397,9 +397,16 @@ export class ModuleService {
       modules: []
     };
 
-    for (const moduleRecord of discoveredModules) {
+    for (let i = 0; i < discoveredModules.length; i++) {
+      const moduleRecord = discoveredModules[i];
+      console.log(`[ModuleService] Loading module ${i + 1}/${discoveredModules.length}: ${moduleRecord.name}`);
+      const startTime = Date.now();
+      
       // Load the actual module using its path from the database record
       const result = await this.loadModule(moduleRecord.name, moduleRecord);
+      const loadTime = Date.now() - startTime;
+      
+      console.log(`[ModuleService] Completed ${moduleRecord.name} in ${loadTime}ms - Success: ${result.success}`);
       
       if (result.success) {
         results.loaded++;
