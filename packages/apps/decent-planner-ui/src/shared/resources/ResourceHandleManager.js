@@ -95,10 +95,14 @@ export class ResourceHandleManager {
       },
       
       async getUrl() {
-        const data = await fileSystem.readFile(imagePath);
+        // Read as buffer for binary data
+        const data = await fileSystem.readFile(imagePath, null); // null = return Buffer
         const extension = imagePath.split('.').pop().toLowerCase();
         const mimeType = manager._getMimeType(extension);
-        return `data:${mimeType};base64,${data.toString('base64')}`;
+        
+        // Ensure we have a Buffer for proper base64 conversion
+        const buffer = Buffer.isBuffer(data) ? data : Buffer.from(data, 'binary');
+        return `data:${mimeType};base64,${buffer.toString('base64')}`;
       },
       
       async resize(width, height) {

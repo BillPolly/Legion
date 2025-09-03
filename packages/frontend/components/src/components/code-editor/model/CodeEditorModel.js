@@ -4,7 +4,7 @@
  * Handles document content, history, validation, and provides controlled
  * access to editor operations. Maintains immutable state patterns.
  */
-import { UmbilicalError } from '../../../umbilical/index.js';
+import { UmbilicalError } from '/legion/components/src/umbilical/index.js';
 
 export class CodeEditorModel {
   constructor(initialContent = '', config = {}) {

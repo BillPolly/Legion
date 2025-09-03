@@ -237,10 +237,12 @@ export class BaseServer {
     
     // Set up Legion package serving
     try {
+      console.log(`Setting up Legion package routes for ${this.legionPackages.size} packages...`);
       this.setupLegionPackageRoutes(app);
+      console.log('✅ Legion package routes setup completed');
     } catch (error) {
-      console.warn(`Failed to setup Legion package routes:`, error);
-      // Continue anyway as this is not critical for basic functionality
+      console.error(`❌ Failed to setup Legion package routes:`, error);
+      throw error; // NO FALLBACKS - fail fast
     }
     
     // Set up static routes
@@ -514,10 +516,14 @@ export class BaseServer {
    * @private
    */
   setupLegionPackageRoutes(app) {
+    console.log('📦 Setting up Legion package routes...');
+    
     // Serve each discovered Legion package
     for (const [packageName, packageInfo] of this.legionPackages) {
       const cleanName = packageInfo.cleanName;
       const routePath = `/legion/${cleanName}`;
+      
+      console.log(`📦 Setting up route: ${routePath} -> ${packageInfo.path}`);
       
       // Serve package files with import rewriting for JS files
       app.use(routePath, async (req, res, next) => {

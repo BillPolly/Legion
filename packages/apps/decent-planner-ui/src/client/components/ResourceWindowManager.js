@@ -10,57 +10,66 @@
 
 import { ResourceTypeRegistry } from '../../shared/resources/ResourceTypeRegistry.js';
 
-// Import UI components from frontend components package
-// Note: These should be loaded via script tags in production
+// Import UI components from Legion frontend components package
 async function loadUIComponents() {
   try {
-    // Try to access global components first (loaded via script tags)
-    if (typeof global !== 'undefined' && global.Window && global.CodeEditor && global.ImageViewer) {
-      return {
-        Window: global.Window,
-        CodeEditor: global.CodeEditor,
-        ImageViewer: global.ImageViewer
-      };
-    }
+    console.log('🔄 Loading Legion UI components...');
     
-    // In browser environment, components should be pre-loaded
-    // For now, return placeholders that log the attempts
-    return {
-      Window: {
-        create: (umbilical) => {
-          console.log('🚨 Window component not available - would create window:', umbilical.title);
-          return {
-            contentElement: document.createElement('div'),
-            setTitle: () => {},
-            show: () => {},
-            close: () => {},
-            destroy: () => {}
-          };
-        }
-      },
-      CodeEditor: {
-        create: (umbilical) => {
-          console.log('🚨 CodeEditor component not available - would create editor for:', umbilical.content?.substring(0, 50));
-          return {
-            setContent: () => {},
-            getContent: () => umbilical.content || '',
-            destroy: () => {}
-          };
-        }
-      },
-      ImageViewer: {
-        create: (umbilical) => {
-          console.log('🚨 ImageViewer component not available - would show image:', umbilical.imageData?.substring(0, 50));
-          return {
-            loadImage: () => {},
-            destroy: () => {}
-          };
-        }
+    // Import only Window and ImageViewer components (CodeEditor has complex dependencies)
+    const [WindowModule, ImageViewerModule] = await Promise.all([
+      import('/legion/components/src/components/window/index.js'),
+      import('/legion/components/src/components/image-viewer/index.js')
+    ]);
+    
+    console.log('✅ Successfully loaded Legion Window and ImageViewer components');
+    
+    // Create simplified CodeEditor for MVP
+    const SimpleCodeEditor = {
+      create: (umbilical) => {
+        console.log('✅ Creating simplified CodeEditor for MVP');
+        
+        // Create textarea-based editor
+        const textarea = document.createElement('textarea');
+        textarea.style.cssText = `
+          width: 100%;
+          height: 100%;
+          border: none;
+          font-family: 'Courier New', monospace;
+          font-size: 14px;
+          padding: 16px;
+          resize: none;
+          outline: none;
+          background: #fafafa;
+          border-radius: 4px;
+        `;
+        textarea.value = umbilical.content || '';
+        
+        // Handle content changes with transparent handle integration
+        textarea.addEventListener('input', () => {
+          if (umbilical.onContentChange) {
+            umbilical.onContentChange(textarea.value);
+          }
+        });
+        
+        umbilical.dom.appendChild(textarea);
+        
+        return {
+          setContent: (content) => textarea.value = content,
+          getContent: () => textarea.value,
+          destroy: () => textarea.remove()
+        };
       }
     };
+    
+    return {
+      Window: WindowModule.Window,
+      CodeEditor: SimpleCodeEditor,
+      ImageViewer: ImageViewerModule.ImageViewer
+    };
+    
   } catch (error) {
-    console.error('Failed to load UI components:', error);
-    throw error;
+    console.error('❌ Failed to load Legion UI components:', error);
+    throw new Error(`UI components not available: ${error.message}. Legion components must be properly served on /legion/ routes.`);
   }
 }
 
@@ -160,24 +169,24 @@ export class ResourceWindowManager {
    * @param {Element} container - Container element for the viewer
    * @returns {Object} Viewer instance
    */
-  async createViewer(type, extension, handle, container) {
+  async createViewer(type, extension, handle, container, components) {
     switch (type) {
       case 'file':
-        return await this.createFileViewer(extension, handle, container);
+        return await this.createFileViewer(extension, handle, container, components);
       case 'image':
-        return await this.createImageViewer(handle, container);
+        return await this.createImageViewer(handle, container, components);
       case 'directory':
-        return await this.createDirectoryViewer(handle, container);
+        return await this.createDirectoryViewer(handle, container, components);
       default:
         // Default to file viewer
-        return await this.createFileViewer(extension, handle, container);
+        return await this.createFileViewer(extension, handle, container, components);
     }
   }
   
   /**
    * Create CodeEditor for file resources
    */
-  async createFileViewer(extension, handle, container) {
+  async createFileViewer(extension, handle, container, components) {
     // Read file content through transparent handle
     const content = await handle.read();
     
@@ -185,7 +194,7 @@ export class ResourceWindowManager {
     const language = this.typeRegistry.getLanguageForExtension(extension);
     
     // Create CodeEditor with transparent handle integration
-    const editor = global.CodeEditor.create({
+    const editor = components.CodeEditor.create({
       dom: container,
       content: content,
       language: language,
@@ -208,12 +217,12 @@ export class ResourceWindowManager {
   /**
    * Create ImageViewer for image resources
    */
-  async createImageViewer(handle, container) {
+  async createImageViewer(handle, container, components) {
     // Get image URL through transparent handle
     const imageUrl = await handle.getUrl();
     
     // Create ImageViewer
-    const viewer = global.ImageViewer.create({
+    const viewer = components.ImageViewer.create({
       dom: container,
       imageData: imageUrl,
       showControls: true,
@@ -226,7 +235,7 @@ export class ResourceWindowManager {
   /**
    * Create DirectoryBrowser for directory resources (MVP: placeholder)
    */
-  async createDirectoryViewer(handle, container) {
+  async createDirectoryViewer(handle, container, components) {
     // For MVP - create simple directory listing
     const contents = await handle.list();
     

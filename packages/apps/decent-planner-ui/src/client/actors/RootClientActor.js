@@ -146,14 +146,19 @@ export default class RootClientActor extends ProtocolActor {
         padding: 0 !important;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
         background: #f5f5f5 !important;
-        min-height: 100vh !important;
+        height: 100vh !important;
+        overflow: hidden !important;
       }
       
       /* Root container styles */
       .root-container {
         margin: 0 !important;
         padding: 20px !important;
-        min-height: 100vh !important;
+        height: 100vh !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
       }
       
       /* Connection status */
@@ -177,6 +182,10 @@ export default class RootClientActor extends ProtocolActor {
         box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
         overflow: hidden !important;
         margin-bottom: 0 !important;
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: 0 !important;
       }
       
       .tabs-nav {
@@ -215,6 +224,11 @@ export default class RootClientActor extends ProtocolActor {
       
       .tab-panel {
         padding: 24px;
+        flex: 1;
+        overflow: hidden;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
       }
       
       .tab-panel.hidden {
@@ -266,6 +280,18 @@ export default class RootClientActor extends ProtocolActor {
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       }
       
+      /* Chat specific panel styling */
+      .tab-panel[data-panel-id="chat"] {
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .tab-panel[data-panel-id="chat"] > div {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      
       .planner-tab-content.hidden {
         display: none;
       }
@@ -274,7 +300,7 @@ export default class RootClientActor extends ProtocolActor {
       .chat-container {
         display: flex;
         flex-direction: column;
-        height: 400px;
+        flex: 1;
         border: 1px solid #e9ecef;
         border-radius: 8px;
         overflow: hidden;

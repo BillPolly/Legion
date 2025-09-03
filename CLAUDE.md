@@ -124,3 +124,5 @@ ALL TESTS MUST PASS. no execuses like timing, or that it doesnt matter. if the t
 NEVER Under any circumstances add mocks to implementation code, you do it all the time and it makes NO SENSE WHATSOEVER! there are no circumstances where it is justified.
 
 THERE MUST be no fallbacks, FAIL FAST
+
+NO INLINE CSS style under ANY circustances, use classes and css-variables

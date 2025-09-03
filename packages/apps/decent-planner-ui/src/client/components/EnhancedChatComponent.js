@@ -46,8 +46,7 @@ export class EnhancedChatComponent {
     this.elements.mainContainer = document.createElement('div');
     this.elements.mainContainer.className = 'enhanced-chat-container';
     this.elements.mainContainer.style.display = 'flex';
-    this.elements.mainContainer.style.height = '100vh';
-    this.elements.mainContainer.style.minHeight = '100vh';
+    this.elements.mainContainer.style.height = '100%';
     this.elements.mainContainer.style.position = 'relative';
     
     // Left pane for chat

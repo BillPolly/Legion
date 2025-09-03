@@ -52,6 +52,10 @@ export default class ResourceServerSubActor {
   createFileSystemWrapper() {
     return {
       readFile: async (filePath, encoding = 'utf8') => {
+        if (encoding === null) {
+          // Return Buffer for binary data
+          return await fs.readFile(filePath);
+        }
         return await fs.readFile(filePath, encoding);
       },
       

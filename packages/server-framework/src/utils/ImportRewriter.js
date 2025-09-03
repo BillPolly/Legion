@@ -105,10 +105,19 @@ export class ImportRewriter {
         const cleanPath = relativePath.replace(/^\.\//, '');
         return `${context.baseUrl}${currentDir}/${cleanPath}`;
       } else if (relativePath.startsWith('../')) {
-        // Parent directory: resolve properly using URL resolution
-        const cleanPath = relativePath.replace(/^\.\.\//, '');
-        const parentDir = currentDir.substring(0, currentDir.lastIndexOf('/'));
-        return `${context.baseUrl}${parentDir}/${cleanPath}`;
+        // Parent directory: properly handle multiple ../
+        let path = relativePath;
+        let dir = currentDir;
+        
+        // Process each ../ step
+        while (path.startsWith('../')) {
+          path = path.substring(3); // Remove ../
+          dir = dir.substring(0, dir.lastIndexOf('/'));
+        }
+        
+        const result = `${context.baseUrl}${dir}/${path}`;
+        console.log(`ImportRewriter: ${relativePath} from ${currentDir} -> ${result}`);
+        return result;
       }
     } else {
       // Regular app files - use static route
