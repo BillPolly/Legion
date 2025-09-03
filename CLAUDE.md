@@ -126,3 +126,5 @@ NEVER Under any circumstances add mocks to implementation code, you do it all th
 THERE MUST be no fallbacks, FAIL FAST
 
 NO INLINE CSS style under ANY circustances, use classes and css-variables
+
+WE ALWAYS NEED 100% pass rate

@@ -157,7 +157,8 @@ export class ResourceClientSubActor extends ProtocolActor {
       handleId,
       resourceType, 
       methodSignatures,
-      this // Pass this actor as the channel
+      this, // Pass this actor as the channel
+      metadata // Pass metadata for path access
     );
     
     // Store proxy
@@ -235,13 +236,14 @@ export class ResourceClientSubActor extends ProtocolActor {
    * @returns {TransparentResourceProxy} Proxy object
    */
   createProxyFromData(handleData) {
-    const { handleId, resourceType, methodSignatures } = handleData;
+    const { handleId, resourceType, methodSignatures, metadata } = handleData;
     
     const proxy = new TransparentResourceProxy(
       handleId,
       resourceType,
       methodSignatures,
-      this
+      this,
+      metadata
     );
     
     this.proxies.set(handleId, proxy);

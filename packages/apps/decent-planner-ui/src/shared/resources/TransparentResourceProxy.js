@@ -13,7 +13,7 @@ export class TransparentResourceProxy {
    * @param {Array<string>} methodSignatures - Available method names
    * @param {Object} actorChannel - Actor channel for remote communication
    */
-  constructor(handleId, resourceType, methodSignatures, actorChannel) {
+  constructor(handleId, resourceType, methodSignatures, actorChannel, metadata = {}) {
     if (!actorChannel) {
       throw new Error('Actor channel is required for resource proxy');
     }
@@ -24,12 +24,13 @@ export class TransparentResourceProxy {
     this.__methodSignatures = methodSignatures;
     this.__actorChannel = actorChannel;
     this.__isResourceHandle = true;
+    this.path = metadata.path || handleId; // Use actual path from metadata
     
     // Return a Proxy that intercepts all property access
     return new Proxy(this, {
       get(target, prop) {
-        // Return metadata properties directly
-        if (prop.startsWith('__') || prop === 'getSerializationData') {
+        // Return metadata properties and path directly
+        if (prop.startsWith('__') || prop === 'getSerializationData' || prop === 'path') {
           return target[prop];
         }
         
