@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
-import SemanticSearchModule from '../src/SemanticSearchModule.js';
+import RAGModule from '../src/RAGModule.js';
 import { ResourceManager } from '@legion/resource-manager';
 import { MongoClient } from 'mongodb';
 import { promises as fs } from 'fs';
@@ -264,7 +264,7 @@ The API uses standard HTTP status codes:
   });
 
   beforeEach(async () => {
-    semanticSearchModule = await SemanticSearchModule.create(resourceManager);
+    semanticSearchModule = await RAGModule.create(resourceManager);
     
     // Configure for e2e testing
     semanticSearchModule.config.mongodb = {

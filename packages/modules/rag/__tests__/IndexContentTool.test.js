@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, beforeAll, afterEach } from '@jest/globals';
 import IndexContentTool from '../src/tools/IndexContentTool.js';
-import SemanticSearchModule from '../src/SemanticSearchModule.js';
+import RAGModule from '../src/RAGModule.js';
 import { ResourceManager } from '@legion/resource-manager';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -65,7 +65,7 @@ Use API keys for authentication.`);
   });
 
   beforeEach(async () => {
-    semanticSearchModule = await SemanticSearchModule.create(resourceManager);
+    semanticSearchModule = await RAGModule.create(resourceManager);
     indexContentTool = semanticSearchModule.getTool('index_content');
     
     // Use unique database for workspace testing to avoid constraint issues

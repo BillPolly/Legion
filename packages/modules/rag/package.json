@@ -1,18 +1,26 @@
 {
-  "name": "@legion/semantic-search",
+  "name": "@legion/rag",
   "version": "1.0.0",
-  "description": "RAG-based semantic search module for indexing and searching content",
+  "description": "RAG (Retrieval-Augmented Generation) module for indexing and searching content",
   "type": "module",
   "main": "src/index.js",
   "scripts": {
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
-    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
+    "rag": "node scripts/rag-cli.js",
+    "index": "node scripts/rag-cli.js index",
+    "search": "node scripts/rag-cli.js search",
+    "query": "node scripts/rag-cli.js query",
+    "manage": "node scripts/rag-cli.js manage",
+    "workspaces": "node scripts/rag-cli.js manage --action list-workspaces",
+    "workspace:info": "node scripts/rag-cli.js manage --action workspace-info",
+    "workspace:delete": "node scripts/rag-cli.js manage --action delete-workspace"
   },
   "keywords": [
     "legion",
-    "semantic-search",
     "rag",
+    "retrieval-augmented-generation",
     "vector-search",
     "embeddings",
     "qdrant",

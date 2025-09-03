@@ -243,11 +243,10 @@ export class ToolRegistryTabComponent {
   setConnected(connected) {
     this.model.connected = connected;
     
-    if (this.components.modules) {
-      this.components.modules.setConnected(connected);
-    }
+    // Note: ModuleBrowserPanel doesn't have setConnected method
+    // Connection status is handled through data flow
     
-    if (this.components.tools) {
+    if (this.components.tools && this.components.tools.setConnected) {
       this.components.tools.setConnected(connected);
     }
   }

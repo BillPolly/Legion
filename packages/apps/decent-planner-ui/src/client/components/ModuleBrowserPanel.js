@@ -7,6 +7,41 @@
 // Note: Using simplified component pattern for decent-planner-ui
 // No external umbilical dependencies
 
+/**
+ * Generic module name formatting - works for any module
+ * ConanTheDeployerModule → "Conan The Deployer"
+ * AIGenerationModule → "AI Generation"
+ * JSGeneratorModule → "JS Generator"
+ */
+function formatModuleName(rawName) {
+  if (!rawName) return 'Unknown Module';
+  
+  // Remove "Module" suffix
+  let name = rawName.replace(/Module$/, '');
+  
+  // Handle special acronyms that should stay uppercase
+  const acronyms = ['AI', 'API', 'JS', 'CSS', 'HTML', 'JSON', 'XML', 'HTTP', 'URL', 'UI', 'DB', 'SQL'];
+  
+  // Split camelCase into words
+  let formatted = name.replace(/([a-z])([A-Z])/g, '$1 $2');
+  
+  // Handle multiple uppercase letters (e.g., "AI" in "AIGeneration")
+  formatted = formatted.replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2');
+  
+  // Split into words and process each
+  const words = formatted.split(/\s+/);
+  const processedWords = words.map(word => {
+    // Keep acronyms uppercase
+    if (acronyms.includes(word.toUpperCase())) {
+      return word.toUpperCase();
+    }
+    // Capitalize first letter of regular words
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  });
+  
+  return processedWords.join(' ');
+}
+
 class ModuleBrowserPanelModel {
   constructor(options = {}) {
     this.state = {
@@ -101,16 +136,15 @@ class ModuleBrowserPanelView {
   generateCSS() {
     return `
       .module-browser-panel {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
         display: flex;
         flex-direction: column;
-        padding: 0.5rem;
-        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        padding: 0.75rem;
         box-sizing: border-box;
+        background: var(--surface-primary, #ffffff);
+        color: var(--text-primary, #1f2937);
+        overflow: auto;
       }
       
       
@@ -200,8 +234,8 @@ class ModuleBrowserPanelView {
       
       .modules-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(clamp(15rem, 25vw, 20rem), 1fr));
-        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
         padding: 0;
       }
       
@@ -212,19 +246,22 @@ class ModuleBrowserPanelView {
       }
       
       .module-card {
-        background: var(--surface-primary);
-        border: 1px solid var(--border-subtle);
-        border-radius: 0.5rem;
-        padding: 1.5rem;
+        background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+        border: 1px solid var(--border-subtle, #e5e7eb);
+        border-radius: 12px;
+        padding: 1rem;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
       }
       
       .module-card:hover {
-        border-color: var(--color-primary);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
-        transform: translateY(-2px);
+        border-color: var(--color-primary, #3b82f6);
+        box-shadow: 0 12px 32px rgba(59, 130, 246, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08);
+        transform: translateY(-3px) scale(1.02);
+        background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
       }
       
       .module-card.selected {
@@ -236,14 +273,15 @@ class ModuleBrowserPanelView {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        margin-bottom: 1rem;
+        margin-bottom: 0.75rem;
       }
       
       .module-name {
-        font-size: clamp(1.125rem, 3vw, 1.5rem);
+        font-size: 1.25rem;
         font-weight: 600;
-        color: var(--text-primary);
+        color: var(--text-primary, #1f2937);
         margin: 0;
+        line-height: 1.3;
       }
       
       .module-status {
@@ -254,9 +292,15 @@ class ModuleBrowserPanelView {
         text-transform: uppercase;
       }
       
-      .module-status.active {
-        background: rgba(16, 185, 129, 0.1);
-        color: var(--color-success);
+      .module-tool-count-badge {
+        background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+        color: #059669;
+        border: 1px solid #a7f3d0;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: lowercase;
       }
       
       .module-status.inactive {
@@ -270,18 +314,25 @@ class ModuleBrowserPanelView {
       }
       
       .module-description {
-        color: var(--text-secondary);
-        font-size: clamp(0.875rem, 2vw, 1rem);
-        line-height: 1.5;
-        margin-bottom: 1rem;
+        color: var(--text-secondary, #6b7280);
+        font-size: 0.8125rem;
+        line-height: 1.4;
+        margin-bottom: 0.75rem;
+        max-height: 2.5rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
       }
       
       .module-stats {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: clamp(0.75rem, 1.5vw, 0.875rem);
-        color: var(--text-tertiary);
+        font-size: 0.75rem;
+        color: var(--text-tertiary, #9ca3af);
+        margin-top: 0.5rem;
       }
       
       .module-tool-count {
@@ -293,34 +344,38 @@ class ModuleBrowserPanelView {
       }
       
       .module-tools-section {
-        margin-top: 1rem;
-        padding-top: 1rem;
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
         border-top: 1px solid var(--border-subtle);
       }
       
       .module-tools-header {
         display: flex;
-        justify-content: space-between;
+        justify-content: center;
         align-items: center;
-        margin-bottom: 0.5rem;
-        font-size: 0.875rem;
+        margin-bottom: 0.25rem;
+        font-size: 0.8125rem;
         font-weight: 500;
         color: var(--text-secondary);
       }
       
       .module-tools-toggle {
-        background: none;
-        border: none;
-        color: var(--color-primary);
+        background: linear-gradient(135deg, #eff6ff, #dbeafe);
+        border: 1px solid #93c5fd;
+        color: #1d4ed8;
         cursor: pointer;
         font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-        transition: background 0.2s;
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        transition: all 0.2s;
+        font-weight: 500;
       }
       
       .module-tools-toggle:hover {
-        background: rgba(59, 130, 246, 0.1);
+        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+        border-color: #60a5fa;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15);
       }
       
       .module-tools-list {
@@ -522,11 +577,13 @@ class ModuleBrowserPanelView {
     
     const name = document.createElement('h3');
     name.className = 'module-name';
-    name.textContent = module.name;
+    name.textContent = formatModuleName(module.name);
     
     const status = document.createElement('span');
-    status.className = `module-status ${module.status || 'active'}`;
-    status.textContent = module.status || 'loaded';
+    status.className = 'module-tool-count-badge';
+    const tools = module.tools || [];
+    const toolCountText = tools.length === 1 ? '1 tool' : `${tools.length} tools`;
+    status.textContent = toolCountText;
     
     header.appendChild(name);
     header.appendChild(status);
@@ -535,24 +592,10 @@ class ModuleBrowserPanelView {
     description.className = 'module-description';
     description.textContent = module.description || 'No description available';
     
-    const stats = document.createElement('div');
-    stats.className = 'module-stats';
-    
-    const toolCount = document.createElement('span');
-    toolCount.className = 'module-tool-count';
-    const tools = module.tools || [];
-    toolCount.textContent = `${tools.length} tools`;
-    
-    const lastUsed = document.createElement('span');
-    lastUsed.className = 'module-last-used';
-    lastUsed.textContent = module.lastUsed || 'Recently loaded';
-    
-    stats.appendChild(toolCount);
-    stats.appendChild(lastUsed);
+    // Remove redundant stats section - tool count now in header
     
     card.appendChild(header);
     card.appendChild(description);
-    card.appendChild(stats);
     
     // Add tools section if tools exist (driven by Model state)
     if (tools.length > 0) {
@@ -571,16 +614,14 @@ class ModuleBrowserPanelView {
     const toolsHeader = document.createElement('div');
     toolsHeader.className = 'module-tools-header';
     
-    const toolsLabel = document.createElement('span');
-    toolsLabel.textContent = `Tools (${tools.length})`;
-    
     const toggleButton = document.createElement('button');
     toggleButton.className = 'module-tools-toggle';
     toggleButton.textContent = isExpanded ? 'Hide Tools' : 'Show Tools';
     toggleButton.dataset.moduleName = module.name;
     toggleButton.dataset.action = 'toggle-tools';
+    toggleButton.style.width = '100%';
+    toggleButton.style.textAlign = 'center';
     
-    toolsHeader.appendChild(toolsLabel);
     toolsHeader.appendChild(toggleButton);
     
     const toolsList = document.createElement('div');
@@ -592,14 +633,24 @@ class ModuleBrowserPanelView {
       
       const toolName = document.createElement('div');
       toolName.className = 'module-tool-name';
-      toolName.textContent = tool.name || tool;
       
-      const toolDesc = document.createElement('div');
-      toolDesc.className = 'module-tool-description';
-      toolDesc.textContent = tool.description || 'No description available';
+      // Handle both string and object tool formats
+      const toolDisplayName = tool.name || tool;
+      const toolDescription = tool.description || this.getToolDescription(toolDisplayName);
       
-      toolItem.appendChild(toolName);
-      toolItem.appendChild(toolDesc);
+      toolName.textContent = toolDisplayName;
+      
+      if (toolDescription) {
+        const toolDesc = document.createElement('div');
+        toolDesc.className = 'module-tool-description';
+        toolDesc.textContent = toolDescription;
+        
+        toolItem.appendChild(toolName);
+        toolItem.appendChild(toolDesc);
+      } else {
+        toolItem.appendChild(toolName);
+      }
+      
       toolsList.appendChild(toolItem);
     });
     
@@ -607,6 +658,16 @@ class ModuleBrowserPanelView {
     toolsSection.appendChild(toolsList);
     
     return toolsSection;
+  }
+  
+  /**
+   * Get tool description from global tools list if available
+   */
+  getToolDescription(toolName) {
+    // Try to get description from the parent component's tools data
+    const allTools = window.toolRegistryApp?.getTools?.() || [];
+    const foundTool = allTools.find(t => t.name === toolName);
+    return foundTool?.description || null;
   }
   
   createNoModules() {

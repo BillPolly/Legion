@@ -5,6 +5,7 @@
 
 import PlannerServerSubActor from './PlannerServerSubActor.js';
 import ChatServerToolAgent from './tool-agent/ChatServerToolAgent.js';
+import ToolRegistryServerSubActor from './ToolRegistryServerSubActor.js';
 
 export default class RootServerActor {
   constructor(services) {
@@ -15,6 +16,7 @@ export default class RootServerActor {
     // Sub-actors
     this.plannerSubActor = null;
     this.chatSubActor = null;
+    this.toolRegistrySubActor = null;
     
     this.isReady = false;
   }
@@ -61,28 +63,34 @@ export default class RootServerActor {
     // Initialize sub-actors
     this.plannerSubActor = new PlannerServerSubActor(this.services);
     this.chatSubActor = new ChatServerToolAgent(this.services);
+    this.toolRegistrySubActor = new ToolRegistryServerSubActor(this.services);
     
     // Set parent references
     this.plannerSubActor.setParentActor(this);
     this.chatSubActor.setParentActor(this);
+    this.toolRegistrySubActor.setParentActor(this);
     
     // Register sub-actors in the ActorSpace if we have it
     if (this.actorSpace) {
       this.actorSpace.register(this.plannerSubActor, 'planner-server-sub');
       this.actorSpace.register(this.chatSubActor, 'chat-server-sub');
+      this.actorSpace.register(this.toolRegistrySubActor, 'tool-registry-server-sub');
       
       // Create remote references for direct communication
       const remotePlannerClient = this.actorSpace.makeRemote('planner-client-sub');
       const remoteChatClient = this.actorSpace.makeRemote('chat-client-sub');
+      const remoteToolRegistryClient = this.actorSpace.makeRemote('tool-registry-client-sub');
       
       // Set remote actors for direct communication
       await this.plannerSubActor.setRemoteActor(remotePlannerClient);
       await this.chatSubActor.setRemoteActor(remoteChatClient);
+      await this.toolRegistrySubActor.setRemoteActor(remoteToolRegistryClient);
     } else {
       console.warn('No ActorSpace reference available for sub-actor registration');
       // Fallback to parent-mediated communication
       await this.plannerSubActor.setRemoteActor(this.remoteActor);
       await this.chatSubActor.setRemoteActor(this.remoteActor);
+      await this.toolRegistrySubActor.setRemoteActor(this.remoteActor);
     }
     
     console.log('✅ Sub-actors initialized');
@@ -102,6 +110,8 @@ export default class RootServerActor {
           this.plannerSubActor.receive(messageType.replace('planner-', ''), data);
         } else if (messageType.startsWith('chat-') && this.chatSubActor) {
           this.chatSubActor.receive(messageType.replace('chat-', ''), data);
+        } else if (messageType.startsWith('tool-registry-') && this.toolRegistrySubActor) {
+          this.toolRegistrySubActor.receive(messageType.replace('tool-registry-', ''), data);
         } else {
           // Default routing - try planner first for backward compatibility
           if (this.plannerSubActor) {

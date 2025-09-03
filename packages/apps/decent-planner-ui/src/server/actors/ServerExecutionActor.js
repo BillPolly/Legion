@@ -71,8 +71,11 @@ export class ServerExecutionActor {
     }
     
     try {
-      // Create a wrapper around the tool registry to handle missing tools
-      const wrappedToolRegistry = this.createWrappedToolRegistry(this.toolRegistry);
+      // NO MOCKS - use real tool registry or fail
+      const wrappedToolRegistry = this.toolRegistry;
+      if (!wrappedToolRegistry) {
+        throw new Error('Tool registry not available - FAIL FAST per CLAUDE.md');
+      }
       
       // Create new executor
       this.executor = new DebugBehaviorTreeExecutor(wrappedToolRegistry);
@@ -297,7 +300,8 @@ export class ServerExecutionActor {
   /**
    * Create a wrapped tool registry that provides mock tools for missing modules
    */
-  createWrappedToolRegistry(originalRegistry) {
+  // DELETED: Mock tool registry violates CLAUDE.md - NO fallbacks! FAIL FAST!
+  createWrappedToolRegistryDELETED(originalRegistry) {
     return {
       getTool: async (toolName) => {
         console.log(`[WRAPPED-REGISTRY] Requested tool: ${toolName}`);

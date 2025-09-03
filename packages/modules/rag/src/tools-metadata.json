@@ -1,11 +1,11 @@
 {
   "module": {
-    "name": "semantic-search",
-    "description": "RAG-based semantic search module for indexing and searching content",
+    "name": "rag",
+    "description": "RAG (Retrieval-Augmented Generation) module for indexing and searching content",
     "version": "1.0.0",
     "author": "Legion Team",
-    "category": "search",
-    "tags": ["semantic-search", "rag", "vector-search", "embeddings", "content-indexing"]
+    "category": "rag",
+    "tags": ["rag", "retrieval-augmented-generation", "vector-search", "embeddings", "content-indexing"]
   },
   "tools": {
     "index_content": {
@@ -299,7 +299,7 @@
           },
           "action": {
             "type": "string",
-            "enum": ["list", "clear", "update", "status"],
+            "enum": ["list", "clear", "update", "status", "list-workspaces", "delete-workspace", "workspace-info"],
             "description": "Management action to perform"
           },
           "options": {
@@ -323,7 +323,7 @@
             "additionalProperties": false
           }
         },
-        "required": ["workspace", "action"],
+        "required": ["action"],
         "additionalProperties": false
       },
       "outputSchema": {

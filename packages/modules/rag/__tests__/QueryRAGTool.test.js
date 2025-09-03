@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, beforeAll, afterEach, jest } from '@jest/globals';
 import QueryRAGTool from '../src/tools/QueryRAGTool.js';
-import SemanticSearchModule from '../src/SemanticSearchModule.js';
+import RAGModule from '../src/RAGModule.js';
 import DocumentIndexer from '../src/indexers/DocumentIndexer.js';
 import ContentProcessor from '../src/processors/ContentProcessor.js';
 import DatabaseSchema from '../src/database/DatabaseSchema.js';
@@ -179,7 +179,7 @@ function authenticateToken(req, res, next) {
   });
 
   beforeEach(async () => {
-    semanticSearchModule = await SemanticSearchModule.create(resourceManager);
+    semanticSearchModule = await RAGModule.create(resourceManager);
     queryRAGTool = semanticSearchModule.getTool('query_rag');
     
     // Override database configuration for testing

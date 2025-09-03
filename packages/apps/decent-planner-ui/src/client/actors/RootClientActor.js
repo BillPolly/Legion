@@ -100,11 +100,12 @@ export default class RootClientActor extends ProtocolActor {
       // Create remote references for sub-actors to communicate directly
       const remotePlannerServer = this.actorSpace.makeRemote('planner-server-sub');
       const remoteChatServer = this.actorSpace.makeRemote('chat-server-sub');
+      const remoteToolRegistryServer = this.actorSpace.makeRemote('tool-registry-server-sub');
       
       // Set remote actors on sub-actors for direct communication
       await this.plannerSubActor.setRemoteActor(remotePlannerServer);
       await this.chatSubActor.setRemoteActor(remoteChatServer);
-      await this.toolRegistrySubActor.setRemoteActor(remotePlannerServer); // Use planner server for tool registry
+      await this.toolRegistrySubActor.setRemoteActor(remoteToolRegistryServer); // Direct connection to tool registry server
     }
     
     // Set parent references

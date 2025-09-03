@@ -28,7 +28,7 @@ const __dirname = dirname(__filename);
 /**
  * CodeAgentModule - Main Legion module using metadata-driven architecture
  */
-export class CodeAgentModule extends Module {
+class CodeAgentModule extends Module {
   constructor() {
     super();
     this.name = 'code-agent';

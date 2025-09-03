@@ -26,8 +26,10 @@ export default class ManageIndexTool extends Tool {
     // Extract workspace as first parameter for clean API
     const { workspace, action, options = {} } = params;
     
-    if (!workspace) {
-      throw new Error('Workspace parameter is required');
+    // Some actions don't require workspace (list-workspaces is global)
+    const globalActions = ['list-workspaces'];
+    if (!workspace && !globalActions.includes(action)) {
+      throw new Error('Workspace parameter is required for this action');
     }
     
     this.progress(`Executing index management action: ${action} for workspace: ${workspace}`, 10, {
@@ -69,12 +71,22 @@ export default class ManageIndexTool extends Tool {
         case 'update':
           result = await this._updateIndex(databaseSchema, workspace, options);
           break;
+        case 'list-workspaces':
+          result = await this._listAllWorkspaces(databaseSchema, config, options);
+          break;
+        case 'delete-workspace':
+          result = await this._deleteWorkspace(databaseSchema, config, workspace, options);
+          break;
+        case 'workspace-info':
+          result = await this._getWorkspaceInfo(databaseSchema, workspace, options);
+          break;
         default:
           throw new Error(`Unknown management action: ${action}`);
       }
 
-      // Get workspace-specific statistics if requested
-      if (options.includeStats !== false) {
+      // Get workspace-specific statistics if requested (not for global actions)
+      const globalActions = ['list-workspaces'];
+      if (options.includeStats !== false && !globalActions.includes(action)) {
         statistics = await this._getStatistics(databaseSchema, config, workspace);
       }
 
@@ -231,6 +243,110 @@ export default class ManageIndexTool extends Tool {
       indexSize: dbStats.totalChunks * 768 * 4, // Rough size estimate (768 dimensions * 4 bytes per float)
       collections: dbStats.collections,
       qdrantCollection: workspaceCollectionName  // Workspace-specific collection name
+    };
+  }
+
+  /**
+   * List all available workspaces with statistics
+   */
+  async _listAllWorkspaces(databaseSchema, config, options) {
+    const workspaces = await databaseSchema.getWorkspaces();
+    
+    // Enhance with Qdrant collection information
+    const enhancedWorkspaces = [];
+    for (const workspace of workspaces) {
+      const sanitizedName = workspace.name.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+      const qdrantCollectionName = `semantic_content_${sanitizedName}`;
+      
+      enhancedWorkspaces.push({
+        ...workspace,
+        qdrantCollection: qdrantCollectionName,
+        status: workspace.documentCount > 0 ? 'active' : 'empty'
+      });
+    }
+    
+    return {
+      workspaces: enhancedWorkspaces,
+      totalWorkspaces: enhancedWorkspaces.length,
+      totalDocuments: enhancedWorkspaces.reduce((sum, ws) => sum + ws.documentCount, 0),
+      totalChunks: enhancedWorkspaces.reduce((sum, ws) => sum + ws.chunkCount, 0)
+    };
+  }
+
+  /**
+   * Completely delete workspace including Qdrant collection
+   */
+  async _deleteWorkspace(databaseSchema, config, workspace, options) {
+    // Verify workspace exists
+    const exists = await databaseSchema.workspaceExists(workspace);
+    if (!exists) {
+      throw new Error(`Workspace '${workspace}' does not exist`);
+    }
+    
+    // Delete MongoDB data
+    const dbResult = await databaseSchema.deleteWorkspace(workspace);
+    
+    // Delete Qdrant collection
+    const sanitizedWorkspace = workspace.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+    const qdrantCollectionName = `semantic_content_${sanitizedWorkspace}`;
+    
+    let qdrantResult = { deleted: false, error: null };
+    try {
+      // Initialize Qdrant client to delete collection
+      const { QdrantClient } = await import('@qdrant/js-client-rest');
+      const resourceManager = this.semanticSearchModule.resourceManager;
+      const qdrantUrl = resourceManager.get('env.QDRANT_URL') || 'http://localhost:6333';
+      const qdrantClient = new QdrantClient({ url: qdrantUrl });
+      
+      // Delete the entire collection
+      await qdrantClient.deleteCollection(qdrantCollectionName);
+      qdrantResult.deleted = true;
+      
+      console.log(`[ManageIndexTool] Deleted Qdrant collection: ${qdrantCollectionName}`);
+    } catch (error) {
+      qdrantResult.error = error.message;
+      console.warn(`[ManageIndexTool] Failed to delete Qdrant collection ${qdrantCollectionName}: ${error.message}`);
+    }
+    
+    return {
+      workspace,
+      deleted: true,
+      mongodb: {
+        documentsDeleted: dbResult.documentsDeleted,
+        chunksDeleted: dbResult.chunksDeleted
+      },
+      qdrant: {
+        collection: qdrantCollectionName,
+        deleted: qdrantResult.deleted,
+        error: qdrantResult.error
+      },
+      deletedAt: dbResult.deletedAt
+    };
+  }
+
+  /**
+   * Get detailed workspace information
+   */
+  async _getWorkspaceInfo(databaseSchema, workspace, options) {
+    // Check if workspace exists first
+    const exists = await databaseSchema.workspaceExists(workspace);
+    if (!exists) {
+      throw new Error(`Workspace '${workspace}' does not exist`);
+    }
+    
+    const info = await databaseSchema.getWorkspaceInfo(workspace);
+    
+    // Add Qdrant collection information
+    const sanitizedWorkspace = workspace.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+    const qdrantCollectionName = `semantic_content_${sanitizedWorkspace}`;
+    
+    return {
+      ...info,
+      qdrant: {
+        collection: qdrantCollectionName,
+        vectorCount: info.statistics.totalChunks,
+        estimatedSize: info.statistics.totalChunks * 768 * 4 // 768 dimensions * 4 bytes per float
+      }
     };
   }
 }

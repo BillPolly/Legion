@@ -102,6 +102,13 @@ export default class ToolRegistryClientSubActor {
    * Handle incoming messages from server
    */
   receive(messageType, data) {
+    // Handle different calling conventions
+    if (typeof messageType === 'object' && messageType.type) {
+      // Protocol actor format: receive({type, data})
+      data = messageType.data;
+      messageType = messageType.type;
+    }
+    
     console.log('📨 Tool Registry client received:', messageType);
     
     switch (messageType) {
@@ -121,8 +128,15 @@ export default class ToolRegistryClientSubActor {
         this.handleToolExecuted(data);
         break;
 
+      case 'modules:searchError':
+      case 'tools:searchError':
+      case 'registry:statsError':
       case 'error':
         this.handleError(data);
+        break;
+        
+      case 'ready':
+        console.log('📦 Tool registry server ready');
         break;
         
       default:

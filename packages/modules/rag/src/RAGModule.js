@@ -80,11 +80,11 @@ const semanticSearchConfigSchema = {
 
 const SemanticSearchConfigValidator = createValidator(semanticSearchConfigSchema);
 
-class SemanticSearchModule extends Module {
+class RAGModule extends Module {
   constructor() {
     super();
-    this.name = 'semantic-search';
-    this.description = 'RAG-based semantic search module for indexing and searching content';
+    this.name = 'rag';
+    this.description = 'RAG (Retrieval-Augmented Generation) module for indexing and searching content';
     this.version = '1.0.0';
     
     // Set metadata path for automatic loading
@@ -105,7 +105,7 @@ class SemanticSearchModule extends Module {
    * Static async factory method following the standard interface
    */
   static async create(resourceManager) {
-    const module = new SemanticSearchModule();
+    const module = new RAGModule();
     module.resourceManager = resourceManager;
     await module.initialize();
     return module;
@@ -250,4 +250,4 @@ class SemanticSearchModule extends Module {
   }
 }
 
-export default SemanticSearchModule;
+export default RAGModule;

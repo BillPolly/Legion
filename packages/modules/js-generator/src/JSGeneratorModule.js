@@ -107,21 +107,8 @@ class JSGeneratorModule extends Module {
         }
       }
     } else {
-      // FALLBACK: Old approach for backwards compatibility
-      const tools = [
-        new GenerateJavaScriptModuleTool(),
-        new GenerateJavaScriptFunctionTool(),
-        new GenerateJavaScriptClassTool(),
-        new GenerateApiEndpointTool(),
-        new GenerateEventHandlerTool(),
-        new GenerateUnitTestsTool(),
-        new ValidateJavaScriptSyntaxTool(),
-        new GenerateHTMLPageTool()
-      ];
-
-      for (const tool of tools) {
-        this.registerTool(tool.name, tool);
-      }
+      // NO FALLBACKS - FAIL FAST per CLAUDE.md
+      throw new Error('Metadata not found - failing fast per CLAUDE.md NO fallbacks policy');
     }
   }
 

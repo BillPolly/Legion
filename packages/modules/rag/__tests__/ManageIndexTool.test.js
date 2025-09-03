@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, beforeAll, afterEach } from '@jest/globals';
 import ManageIndexTool from '../src/tools/ManageIndexTool.js';
-import SemanticSearchModule from '../src/SemanticSearchModule.js';
+import RAGModule from '../src/RAGModule.js';
 import { ResourceManager } from '@legion/resource-manager';
 import { MongoClient } from 'mongodb';
 
@@ -36,7 +36,7 @@ describe('ManageIndexTool', () => {
   });
 
   beforeEach(async () => {
-    semanticSearchModule = await SemanticSearchModule.create(resourceManager);
+    semanticSearchModule = await RAGModule.create(resourceManager);
     manageIndexTool = semanticSearchModule.getTool('manage_index');
     
     // Override database configuration for testing

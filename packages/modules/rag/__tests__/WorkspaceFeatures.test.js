@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from '@jest/globals';
-import SemanticSearchModule from '../src/SemanticSearchModule.js';
+import RAGModule from '../src/RAGModule.js';
 import { ResourceManager } from '@legion/resource-manager';
 import { MongoClient } from 'mongodb';
 import { promises as fs } from 'fs';
@@ -68,7 +68,7 @@ It describes REST endpoints and data structures.`);
   });
 
   beforeEach(async () => {
-    semanticSearchModule = await SemanticSearchModule.create(resourceManager);
+    semanticSearchModule = await RAGModule.create(resourceManager);
     
     // Configure for workspace testing
     semanticSearchModule.config.mongodb = {
@@ -322,8 +322,8 @@ It describes REST endpoints and data structures.`);
   });
 
   describe('Workspace API Validation', () => {
-    it('should require workspace parameter for all tools', () => {
-      const tools = ['index_content', 'search_content', 'query_rag', 'manage_index'];
+    it('should require workspace parameter for most tools', () => {
+      const tools = ['index_content', 'search_content', 'query_rag'];
       
       tools.forEach(toolName => {
         const tool = semanticSearchModule.getTool(toolName);
@@ -331,9 +331,13 @@ It describes REST endpoints and data structures.`);
         
         expect(metadata.inputSchema.required).toContain('workspace');
         expect(metadata.inputSchema.properties.workspace).toBeDefined();
-        // Workspace is now required (no default) in new workspace-first design
-        expect(metadata.inputSchema.properties.workspace).toBeDefined();
       });
+      
+      // manage_index has workspace optional since list-workspaces is global
+      const manageTool = semanticSearchModule.getTool('manage_index');
+      const manageMetadata = manageTool.getMetadata();
+      expect(manageMetadata.inputSchema.properties.workspace).toBeDefined();
+      expect(manageMetadata.inputSchema.required).toContain('action'); // action is required, workspace is optional
     });
 
     it('should validate workspace parameter in search tool', () => {
@@ -368,8 +372,8 @@ It describes REST endpoints and data structures.`);
       };
       
       expect(manageTool.validateInput(validInput).valid).toBe(true);
-      // Workspace is now required (no default) in new workspace-first design  
-      expect(manageTool.validateInput(inputWithoutWorkspace).valid).toBe(false);
+      // For manage tool, workspace is optional since list-workspaces is global
+      expect(manageTool.validateInput(inputWithoutWorkspace).valid).toBe(true);
     });
   });
 });

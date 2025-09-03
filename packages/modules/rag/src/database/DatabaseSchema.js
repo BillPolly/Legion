@@ -304,6 +304,137 @@ export default class DatabaseSchema {
   }
 
   /**
+   * Get all distinct workspaces from documents collection
+   */
+  async getWorkspaces() {
+    await this.initializeCollections();
+    
+    const docsCollection = this.db.collection(this.config.collections.documents);
+    
+    // Get distinct workspace values and filter out null/undefined
+    const workspaces = await docsCollection.distinct('workspace');
+    const validWorkspaces = workspaces.filter(ws => ws && typeof ws === 'string' && ws.trim().length > 0);
+    
+    // Get statistics for each workspace
+    const workspaceStats = [];
+    for (const workspace of validWorkspaces) {
+      const stats = await this.getStatistics(workspace);
+      workspaceStats.push({
+        name: workspace,
+        documentCount: stats.totalDocuments,
+        chunkCount: stats.totalChunks,
+        lastIndexed: await this._getLastIndexedDate(workspace)
+      });
+    }
+    
+    return workspaceStats.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  /**
+   * Check if workspace exists and has content
+   */
+  async workspaceExists(workspace) {
+    await this.initializeCollections();
+    
+    const docsCollection = this.db.collection(this.config.collections.documents);
+    const count = await docsCollection.countDocuments({ workspace });
+    
+    return count > 0;
+  }
+
+  /**
+   * Delete entire workspace (all documents and chunks)
+   */
+  async deleteWorkspace(workspace) {
+    await this.initializeCollections();
+    
+    if (!workspace || workspace === '') {
+      throw new Error('Workspace name is required for deletion');
+    }
+    
+    const docsCollection = this.db.collection(this.config.collections.documents);
+    const chunksCollection = this.db.collection(this.config.collections.chunks);
+    
+    // Delete all documents and chunks for workspace
+    const docsResult = await docsCollection.deleteMany({ workspace });
+    const chunksResult = await chunksCollection.deleteMany({ workspace });
+    
+    return {
+      workspace,
+      documentsDeleted: docsResult.deletedCount,
+      chunksDeleted: chunksResult.deletedCount,
+      deletedAt: new Date()
+    };
+  }
+
+  /**
+   * Get detailed workspace information
+   */
+  async getWorkspaceInfo(workspace) {
+    await this.initializeCollections();
+    
+    if (!workspace || workspace === '') {
+      throw new Error('Workspace name is required');
+    }
+    
+    const docsCollection = this.db.collection(this.config.collections.documents);
+    const chunksCollection = this.db.collection(this.config.collections.chunks);
+    
+    // Get basic statistics
+    const stats = await this.getStatistics(workspace);
+    
+    // Get workspace documents with details
+    const documents = await docsCollection
+      .find({ workspace })
+      .sort({ indexedAt: -1 })
+      .limit(10)
+      .toArray();
+    
+    // Get content type breakdown
+    const contentTypes = await docsCollection.aggregate([
+      { $match: { workspace } },
+      { $group: { _id: '$contentType', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]).toArray();
+    
+    // Get recent activity
+    const recentDocs = await docsCollection
+      .find({ workspace })
+      .sort({ indexedAt: -1 })
+      .limit(5)
+      .toArray();
+    
+    return {
+      workspace,
+      statistics: stats,
+      contentTypes: contentTypes.map(ct => ({ type: ct._id, count: ct.count })),
+      recentDocuments: recentDocs.map(doc => ({
+        title: doc.title,
+        source: doc.source,
+        contentType: doc.contentType,
+        totalChunks: doc.totalChunks,
+        indexedAt: doc.indexedAt
+      })),
+      lastActivity: recentDocs.length > 0 ? recentDocs[0].indexedAt : null
+    };
+  }
+
+  /**
+   * Get last indexed date for workspace
+   */
+  async _getLastIndexedDate(workspace) {
+    const docsCollection = this.db.collection(this.config.collections.documents);
+    
+    const lastDoc = await docsCollection
+      .findOne(
+        { workspace },
+        { sort: { indexedAt: -1 } }
+      );
+    
+    return lastDoc ? lastDoc.indexedAt : null;
+  }
+
+  /**
    * Generate content hash for deduplication
    */
   static generateContentHash(content) {

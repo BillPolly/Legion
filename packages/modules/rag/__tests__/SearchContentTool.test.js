@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, beforeAll, afterEach } from '@jest/globals';
 import SearchContentTool from '../src/tools/SearchContentTool.js';
-import SemanticSearchModule from '../src/SemanticSearchModule.js';
+import RAGModule from '../src/RAGModule.js';
 import DocumentIndexer from '../src/indexers/DocumentIndexer.js';
 import ContentProcessor from '../src/processors/ContentProcessor.js';
 import DatabaseSchema from '../src/database/DatabaseSchema.js';
@@ -127,7 +127,7 @@ API documentation includes endpoint specifications and examples.`,
   });
 
   beforeEach(async () => {
-    semanticSearchModule = await SemanticSearchModule.create(resourceManager);
+    semanticSearchModule = await RAGModule.create(resourceManager);
     searchContentTool = semanticSearchModule.getTool('search_content');
     
     // Override database configuration for testing

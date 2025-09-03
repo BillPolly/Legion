@@ -114,22 +114,13 @@ export default class PlannerServerSubActor {
         this.handleDiscoverToolsRequest(data);
         break;
         
-      case 'list-all-tools':
-      case 'tools:search':
-        this.handleToolsSearchRequest(data);
-        break;
-        
+      // NOTE: Tool registry messages now handled by ToolRegistryServerSubActor
       case 'search-tools-text':
         this.handleSearchToolsTextRequest(data);
         break;
         
       case 'search-tools-semantic':
         this.handleSearchToolsSemanticRequest(data);
-        break;
-        
-      case 'get-registry-stats':
-      case 'registry:stats':
-        this.handleGetRegistryStatsRequest();
         break;
         
       case 'ping':
@@ -167,10 +158,7 @@ export default class PlannerServerSubActor {
         this.handleListSavedPlansRequest();
         break;
 
-      case 'list-all-modules':
-      case 'modules:search':
-        this.handleModulesSearchRequest(data);
-        break;
+      // NOTE: Module search now handled by ToolRegistryServerSubActor
 
       case 'database-query':
         this.handleDatabaseQueryRequest(data);
@@ -529,98 +517,7 @@ export default class PlannerServerSubActor {
     }
   }
   
-  // NEW PROTOCOL HANDLERS
-  
-  async handleToolsSearchRequest(data) {
-    try {
-      const { query = '', options = {} } = data || {};
-      
-      if (!this.toolRegistry) {
-        throw new Error('Tool registry not initialized');
-      }
-      
-      console.log(`🔍 Tools search: "${query}"`);
-      
-      // Use tool registry search with proper options
-      const tools = query === '' 
-        ? await this.toolRegistry.listTools({ limit: options.limit || 1000 })
-        : await this.toolRegistry.searchTools(query, { limit: options.limit || 1000 });
-      
-      this.remoteActor.receive('tools:searchResult', {
-        query,
-        tools,
-        count: tools.length
-      });
-      
-    } catch (error) {
-      console.error('Failed to search tools:', error);
-      this.remoteActor.receive('tools:searchError', {
-        query: data?.query || '',
-        error: error.message
-      });
-    }
-  }
-  
-  async handleModulesSearchRequest(data) {
-    try {
-      const { query = '', options = {} } = data || {};
-      
-      if (!this.toolRegistry) {
-        throw new Error('Tool registry not initialized');
-      }
-      
-      console.log(`🔍 Modules search: "${query}"`);
-      
-      // Get all tools and group by modules
-      const allTools = await this.toolRegistry.listTools();
-      const moduleMap = new Map();
-      
-      // Group tools by module
-      allTools.forEach(tool => {
-        const moduleName = tool.moduleName || 'Unknown';
-        if (!moduleMap.has(moduleName)) {
-          moduleMap.set(moduleName, {
-            name: moduleName,
-            description: tool.moduleDescription || `Module containing ${moduleName} tools`,
-            tools: [],
-            status: 'loaded'
-          });
-        }
-        moduleMap.get(moduleName).tools.push(tool.name);
-      });
-      
-      // Convert to array and filter by search query if provided
-      let modules = Array.from(moduleMap.values());
-      
-      if (query) {
-        const queryLower = query.toLowerCase();
-        modules = modules.filter(module => {
-          const nameMatch = module.name.toLowerCase().includes(queryLower);
-          const descMatch = module.description.toLowerCase().includes(queryLower);
-          const toolsMatch = module.tools.some(tool => tool.toLowerCase().includes(queryLower));
-          return nameMatch || descMatch || toolsMatch;
-        });
-      }
-      
-      // Apply limit
-      if (options.limit && options.limit > 0) {
-        modules = modules.slice(0, options.limit);
-      }
-      
-      this.remoteActor.receive('modules:searchResult', {
-        query,
-        modules,
-        count: modules.length
-      });
-      
-    } catch (error) {
-      console.error('Failed to search modules:', error);
-      this.remoteActor.receive('modules:searchError', {
-        query: data?.query || '',
-        error: error.message
-      });
-    }
-  }
+  // NOTE: Tool registry handlers moved to ToolRegistryServerSubActor
 
   cancelPlanning() {
     console.log('🛑 Cancelling planning operation');

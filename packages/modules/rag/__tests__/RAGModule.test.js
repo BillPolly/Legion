@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, jest } from '@jest/globals';
-import SemanticSearchModule from '../src/SemanticSearchModule.js';
+import RAGModule from '../src/RAGModule.js';
 import { ResourceManager } from '@legion/resource-manager';
 
-describe('SemanticSearchModule', () => {
-  let semanticSearchModule;
+describe('RAGModule', () => {
+  let ragModule;
   let resourceManager;
 
   beforeAll(async () => {
@@ -11,30 +11,30 @@ describe('SemanticSearchModule', () => {
   });
 
   beforeEach(() => {
-    semanticSearchModule = new SemanticSearchModule();
-    semanticSearchModule.resourceManager = resourceManager;
+    ragModule = new RAGModule();
+    ragModule.resourceManager = resourceManager;
   });
 
   afterEach(async () => {
-    if (semanticSearchModule) {
-      await semanticSearchModule.cleanup();
+    if (ragModule) {
+      await ragModule.cleanup();
     }
   });
 
   describe('constructor', () => {
     it('should create instance with correct properties', () => {
-      expect(semanticSearchModule.name).toBe('semantic-search');
-      expect(semanticSearchModule.description).toContain('RAG-based semantic search');
-      expect(semanticSearchModule.version).toBe('1.0.0');
-      expect(semanticSearchModule.metadataPath).toBe('./tools-metadata.json');
+      expect(ragModule.name).toBe('rag');
+      expect(ragModule.description).toContain('RAG');
+      expect(ragModule.version).toBe('1.0.0');
+      expect(ragModule.metadataPath).toBe('./tools-metadata.json');
     });
   });
 
   describe('static create method', () => {
     it('should create and initialize module', async () => {
-      const module = await SemanticSearchModule.create(resourceManager);
+      const module = await RAGModule.create(resourceManager);
       
-      expect(module).toBeInstanceOf(SemanticSearchModule);
+      expect(module).toBeInstanceOf(RAGModule);
       expect(module.resourceManager).toBe(resourceManager);
       expect(module.config).toBeDefined();
       expect(module.initialized).toBe(true);
@@ -45,7 +45,7 @@ describe('SemanticSearchModule', () => {
 
   describe('configuration loading', () => {
     it('should load config from environment variables', () => {
-      const config = semanticSearchModule.loadConfig({});
+      const config = ragModule.loadConfig({});
       
       expect(config).toBeDefined();
       expect(config.mongodb).toBeDefined();
@@ -62,14 +62,14 @@ describe('SemanticSearchModule', () => {
         processing: { defaultChunkSize: 1000 }
       };
       
-      const config = semanticSearchModule.loadConfig(customConfig);
+      const config = ragModule.loadConfig(customConfig);
       expect(config.mongodb.database).toBe('custom-semantic');
       expect(config.processing.defaultChunkSize).toBe(1000);
     });
 
     it('should validate config and throw on invalid data', () => {
       expect(() => {
-        semanticSearchModule.loadConfig({
+        ragModule.loadConfig({
           mongodb: { database: null }  // Invalid
         });
       }).toThrow('Semantic search configuration validation failed');
@@ -78,41 +78,41 @@ describe('SemanticSearchModule', () => {
 
   describe('initialization', () => {
     it('should initialize successfully with valid config', async () => {
-      const result = await semanticSearchModule.initialize();
+      const result = await ragModule.initialize();
       
       expect(result).toBe(true);
-      expect(semanticSearchModule.initialized).toBe(true);
-      expect(semanticSearchModule.config).toBeDefined();
+      expect(ragModule.initialized).toBe(true);
+      expect(ragModule.config).toBeDefined();
     });
 
     it('should handle missing dependencies gracefully', async () => {
       const emptyResourceManager = {
         get: jest.fn().mockReturnValue(null)
       };
-      semanticSearchModule.resourceManager = emptyResourceManager;
+      ragModule.resourceManager = emptyResourceManager;
 
-      const result = await semanticSearchModule.initialize();
+      const result = await ragModule.initialize();
       expect(result).toBe(true);
     });
   });
 
   describe('tool registration', () => {
     beforeEach(async () => {
-      await semanticSearchModule.initialize();
+      await ragModule.initialize();
     });
 
     it('should register all semantic search tools', () => {
       const expectedTools = ['index_content', 'search_content', 'query_rag', 'manage_index'];
       
       for (const toolName of expectedTools) {
-        const tool = semanticSearchModule.getTool(toolName);
+        const tool = ragModule.getTool(toolName);
         expect(tool).toBeDefined();
         expect(tool.name).toBe(toolName);
       }
     });
 
     it('should return all tools via getTools method', () => {
-      const tools = semanticSearchModule.getTools();
+      const tools = ragModule.getTools();
       expect(Array.isArray(tools)).toBe(true);
       expect(tools.length).toBe(4);
       
@@ -126,11 +126,11 @@ describe('SemanticSearchModule', () => {
 
   describe('getConfig', () => {
     beforeEach(async () => {
-      await semanticSearchModule.initialize();
+      await ragModule.initialize();
     });
 
     it('should return config without sensitive data', () => {
-      const config = semanticSearchModule.getConfig();
+      const config = ragModule.getConfig();
       
       expect(config).toBeDefined();
       expect(config.mongodb).toBeDefined();
@@ -141,11 +141,11 @@ describe('SemanticSearchModule', () => {
 
   describe('cleanup', () => {
     it('should cleanup resources properly', async () => {
-      await semanticSearchModule.initialize();
+      await ragModule.initialize();
       
-      await semanticSearchModule.cleanup();
+      await ragModule.cleanup();
       
-      expect(semanticSearchModule.initialized).toBe(false);
+      expect(ragModule.initialized).toBe(false);
     });
   });
 });

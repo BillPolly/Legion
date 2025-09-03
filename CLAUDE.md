@@ -118,3 +118,9 @@ ALL ways use the fullstack tool to debug a server front end and back end
 when we make changes THERE MUST NEVER BE ANY CODE FOR BACKWARDS COMPATIBILIT! there must only ever be one way of doing anything, and we will fix everything to use it
 
 We do not use APIs in legion, all communications to frontend is done with websockets
+
+ALL TESTS MUST PASS. no execuses like timing, or that it doesnt matter. if the tests dont matter they should not be there!
+
+NEVER Under any circumstances add mocks to implementation code, you do it all the time and it makes NO SENSE WHATSOEVER! there are no circumstances where it is justified.
+
+THERE MUST be no fallbacks, FAIL FAST
