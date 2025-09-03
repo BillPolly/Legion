@@ -6,6 +6,7 @@
  */
 
 import { ToolUsingChatAgent } from './ToolUsingChatAgent.js';
+import { SlashCommandAgent } from './SlashCommandAgent.js';
 import { ResourceManager } from '@legion/resource-manager';
 
 export default class ChatServerToolAgent {
@@ -19,11 +20,13 @@ export default class ChatServerToolAgent {
     this.state = {
       connected: false,
       messageCount: 0,
-      agentInitialized: false
+      agentInitialized: false,
+      slashCommandInitialized: false
     };
     
     // Tool agent will be initialized when needed
     this.toolAgent = null;
+    this.slashCommandAgent = null;
   }
 
   setParentActor(parentActor) {
@@ -35,13 +38,15 @@ export default class ChatServerToolAgent {
     this.state.connected = true;
     console.log('🎭 Tool chat server sub-actor connected');
     
-    // Initialize tool agent
+    // Initialize agents
     await this.initializeAgent();
+    await this.initializeSlashCommandAgent();
     
     // Send ready signal to client via parent
     if (this.parentActor) {
       this.parentActor.sendToSubActor('chat', 'ready', {
         agentReady: this.state.agentInitialized,
+        slashCommandReady: this.state.slashCommandInitialized,
         timestamp: new Date().toISOString()
       });
     }
@@ -90,6 +95,45 @@ export default class ChatServerToolAgent {
     }
   }
 
+  /**
+   * Initialize the slash command agent
+   */
+  async initializeSlashCommandAgent() {
+    try {
+      console.log('[ChatServerToolAgent] Initializing slash command agent...');
+      
+      // Get LLM client from ResourceManager
+      const resourceManager = await ResourceManager.getInstance();
+      const llmClient = await resourceManager.get('llmClient');
+      if (!llmClient) {
+        throw new Error('LLM client not available from ResourceManager');
+      }
+
+      // Get toolRegistry (same as main agent)
+      let toolRegistry = this.services.toolRegistry;
+      if (!toolRegistry && this.parentActor?.plannerSubActor?.toolRegistry) {
+        toolRegistry = this.parentActor.plannerSubActor.toolRegistry;
+      }
+      if (!toolRegistry) {
+        throw new Error('Tool registry not available for slash command agent');
+      }
+
+      // Create slash command agent with event callback for observability
+      this.slashCommandAgent = new SlashCommandAgent(
+        toolRegistry,
+        llmClient,
+        (eventType, data) => this.forwardAgentEvent(eventType, data)
+      );
+      
+      this.state.slashCommandInitialized = true;
+      console.log('[ChatServerToolAgent] ✅ Slash command agent initialized successfully');
+      
+    } catch (error) {
+      console.error('[ChatServerToolAgent] ❌ Failed to initialize slash command agent:', error);
+      this.state.slashCommandInitialized = false;
+    }
+  }
+
   receive(messageType, data) {
     console.log('📨 Tool chat server sub-actor received:', messageType);
     
@@ -110,7 +154,8 @@ export default class ChatServerToolAgent {
         if (this.remoteActor) {
           this.remoteActor.receive('pong', { 
             timestamp: Date.now(),
-            agentReady: this.state.agentInitialized
+            agentReady: this.state.agentInitialized,
+            slashCommandReady: this.state.slashCommandInitialized
           });
         }
         break;
@@ -122,7 +167,7 @@ export default class ChatServerToolAgent {
   }
 
   /**
-   * Handle user message through tool agent pipeline
+   * Handle user message - pre-process slash commands, then tool agent pipeline
    */
   async handleSendMessage(data) {
     const { text, timestamp } = data;
@@ -130,8 +175,14 @@ export default class ChatServerToolAgent {
     console.log(`[ChatServerToolAgent] Processing message: "${text}"`);
     this.state.messageCount++;
     
+    // Check if this is a slash command first
+    if (this.isSlashCommand(text)) {
+      await this.handleSlashCommand(text, timestamp);
+      return;
+    }
+    
+    // Regular message processing through tool agent pipeline
     if (!this.state.agentInitialized) {
-      // Fallback if agent not initialized
       this.sendError('Tool agent not initialized. Please wait and try again.');
       return;
     }
@@ -159,6 +210,55 @@ export default class ChatServerToolAgent {
       console.error('[ChatServerToolAgent] Error processing message:', error);
       this.sendError(error.message, text);
     }
+  }
+
+  /**
+   * Handle slash command processing
+   */
+  async handleSlashCommand(text, timestamp) {
+    console.log(`[ChatServerToolAgent] Processing slash command: "${text}"`);
+    
+    if (!this.state.slashCommandInitialized || !this.slashCommandAgent) {
+      this.sendCommandError('Slash command agent not initialized. Please wait and try again.', text);
+      return;
+    }
+
+    if (!this.state.agentInitialized || !this.toolAgent) {
+      this.sendCommandError('Tool agent context not available. Slash commands require tool agent to be initialized.', text);
+      return;
+    }
+
+    try {
+      // Process slash command with tool agent context access
+      const result = await this.slashCommandAgent.processSlashCommand(text, this.toolAgent);
+      
+      if (result.success) {
+        // Send successful command response
+        this.sendCommandResponse({
+          text: result.text,
+          command: result.command,
+          originalMessage: text,
+          originalTimestamp: timestamp
+        });
+        
+        // Send context update in case command modified context (like /clear or /load)
+        this.sendContextUpdate();
+      } else {
+        // Send command error response
+        this.sendCommandError(result.text, text, result.usage);
+      }
+      
+    } catch (error) {
+      console.error('[ChatServerToolAgent] Error processing slash command:', error);
+      this.sendCommandError(`Error executing slash command: ${error.message}`, text);
+    }
+  }
+
+  /**
+   * Check if message is a slash command
+   */
+  isSlashCommand(text) {
+    return typeof text === 'string' && text.trim().startsWith('/');
   }
 
   /**
@@ -228,6 +328,37 @@ export default class ChatServerToolAgent {
   }
 
   /**
+   * Send command response to client
+   */
+  sendCommandResponse(responseData) {
+    if (this.parentActor) {
+      this.parentActor.sendToSubActor('chat', 'command-response', {
+        ...responseData,
+        messageNumber: this.state.messageCount,
+        timestamp: new Date().toLocaleTimeString(),
+        isSlashCommand: true
+      });
+    }
+  }
+
+  /**
+   * Send command error response to client
+   */
+  sendCommandError(errorMessage, originalMessage = null, usage = null) {
+    if (this.parentActor) {
+      this.parentActor.sendToSubActor('chat', 'command-error', {
+        text: errorMessage,
+        error: errorMessage,
+        originalMessage,
+        usage,
+        messageNumber: this.state.messageCount,
+        timestamp: new Date().toLocaleTimeString(),
+        isSlashCommand: true
+      });
+    }
+  }
+
+  /**
    * Send thinking/progress message to client (for transparency)
    */
   sendThinking(step, message, data = {}) {
@@ -292,6 +423,7 @@ export default class ChatServerToolAgent {
     return {
       connected: this.state.connected,
       agentInitialized: this.state.agentInitialized,
+      slashCommandInitialized: this.state.slashCommandInitialized,
       messageCount: this.state.messageCount,
       contextVariables: this.toolAgent ? Object.keys(this.toolAgent.executionContext.artifacts).length : 0,
       resolvedTools: this.toolAgent ? this.toolAgent.resolvedTools.size : 0,

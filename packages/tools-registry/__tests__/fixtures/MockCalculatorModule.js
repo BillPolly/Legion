@@ -10,7 +10,7 @@ import { Module } from '../../src/core/Module.js';
 export default class MockCalculatorModule extends Module {
   constructor() {
     super();
-    this.name = 'MockCalculator';
+    this.name = 'mock-calculator-module';
     this.version = '1.0.0';
     this.description = 'A simple calculator module for testing';
   }

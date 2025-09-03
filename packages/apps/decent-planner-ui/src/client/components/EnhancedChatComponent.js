@@ -46,7 +46,8 @@ export class EnhancedChatComponent {
     this.elements.mainContainer = document.createElement('div');
     this.elements.mainContainer.className = 'enhanced-chat-container';
     this.elements.mainContainer.style.display = 'flex';
-    this.elements.mainContainer.style.height = '100%';
+    this.elements.mainContainer.style.height = '100vh';
+    this.elements.mainContainer.style.minHeight = '100vh';
     this.elements.mainContainer.style.position = 'relative';
     
     // Left pane for chat
@@ -283,6 +284,24 @@ export class EnhancedChatComponent {
   addAgentThinking(thinkingData) {
     if (this.components.chat) {
       this.components.chat.addAgentThinking(thinkingData);
+    }
+  }
+
+  /**
+   * Add command response message (delegate to ChatComponent)
+   */
+  addCommandResponse(responseData) {
+    if (this.components.chat) {
+      this.components.chat.addCommandResponse(responseData);
+    }
+  }
+
+  /**
+   * Add command error message (delegate to ChatComponent)
+   */
+  addCommandError(errorData) {
+    if (this.components.chat) {
+      this.components.chat.addCommandError(errorData);
     }
   }
 

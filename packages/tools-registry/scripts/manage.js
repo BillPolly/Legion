@@ -107,6 +107,10 @@ async function main() {
         await handleVerify(toolManager, args.slice(1));
         break;
         
+      case 'add':
+        await handleAdd(toolManager, args.slice(1));
+        break;
+        
       default:
         console.error(`❌ Unknown command: ${command}`);
         console.error('Run "node scripts/manage.js --help" for available commands');
@@ -432,6 +436,98 @@ async function handleVerify(toolManager, args) {
   }
 }
 
+async function handleAdd(toolManager, args) {
+  const verbose = args.includes('--verbose') || args.includes('-v');
+  const complete = args.includes('--complete') || args.includes('-c');
+  const modulePath = args.find(arg => !arg.startsWith('--'));
+  
+  if (!modulePath) {
+    console.error('❌ Module path required');
+    console.error('Usage: node scripts/manage.js add <module-path> [--complete] [--verbose]');
+    process.exit(1);
+  }
+  
+  try {
+    // Get ToolRegistry singleton for addModule methods
+    const { getToolRegistry } = await import('../src/index.js');
+    const toolRegistry = await getToolRegistry();
+    
+    if (complete) {
+      console.log(`🔄 Adding module with complete pipeline: ${modulePath}`);
+      
+      const result = await toolRegistry.addModuleComplete(modulePath, {
+        generatePerspectives: true,
+        generateEmbeddings: true,
+        indexVectors: true,
+        verbose
+      });
+      
+      if (result.success) {
+        console.log(`✅ Module added successfully: ${result.module.moduleName}`);
+        console.log(`   Tools: ${result.module.toolCount}`);
+        
+        if (result.perspectives) {
+          console.log(`   Perspectives: ${result.perspectives.generated} generated`);
+        }
+        
+        if (result.embeddings) {
+          console.log(`   Embeddings: ${result.embeddings.embedded} embedded`);
+        }
+        
+        if (result.vectors) {
+          console.log(`   Vectors: ${result.vectors.indexed} indexed`);
+        }
+        
+        console.log('\n📊 Pipeline Steps:');
+        result.steps.forEach(step => {
+          const status = step.success ? '✅' : '❌';
+          console.log(`   ${status} ${step.name}`);
+        });
+        
+      } else {
+        console.error(`❌ Module addition failed`);
+        if (result.errors?.length > 0) {
+          console.error('Errors:');
+          result.errors.forEach(error => {
+            console.error(`  - ${error}`);
+          });
+        }
+        process.exit(1);
+      }
+      
+    } else {
+      console.log(`🔄 Adding module: ${modulePath}`);
+      
+      const result = await toolRegistry.addModule(modulePath, { verbose });
+      
+      if (result.success) {
+        console.log(`✅ Module added: ${result.moduleName}`);
+        console.log(`   Tools: ${result.toolCount}`);
+        console.log(`   Module ID: ${result.moduleId}`);
+        
+        if (result.alreadyExists) {
+          console.log('   Status: Already existed in database');
+        } else {
+          console.log('   Status: Newly discovered and added');
+        }
+        
+        console.log('\n💡 To add perspectives, embeddings, and vectors, use --complete flag');
+        
+      } else {
+        console.error(`❌ Module addition failed: ${result.error}`);
+        process.exit(1);
+      }
+    }
+    
+  } catch (error) {
+    console.error(`❌ Error adding module: ${error.message}`);
+    if (verbose) {
+      console.error(error.stack);
+    }
+    process.exit(1);
+  }
+}
+
 async function testSemanticSearchFunctionality(toolManager, verbose = false) {
   try {
     // Get the ToolRegistry to access database operations
@@ -628,6 +724,7 @@ Commands:
   discover [--path <path>]     Discover modules with validation
   clear [--all] [--force]      Clear tools/perspectives (--all includes registry)
   load [--module <name>]       Load all modules or specific module
+  add <module-path> [--complete] Add single module incrementally
   perspectives [--verbose]     Generate perspectives for tools
   embeddings [--verbose]       Generate embeddings for perspectives
   vectors [--verbose]          Index vectors in vector store
@@ -641,6 +738,7 @@ Options:
   --force                     Skip confirmation prompts
   --path <path>               Custom search path for discovery
   --module <name>             Specific module name for loading
+  --complete, -c              Run complete pipeline for add command
   --all                       Include registry in clear operations
   --limit <N>                 Limit search results (default: 5)
 
@@ -649,6 +747,8 @@ Examples:
   node scripts/manage.js discover --verbose
   node scripts/manage.js clear --all
   node scripts/manage.js load --module Calculator
+  node scripts/manage.js add ./packages/modules/new-module/NewModule.js
+  node scripts/manage.js add ./packages/modules/new-module/NewModule.js --complete
   node scripts/manage.js search "file operations" --limit 3
   node scripts/manage.js pipeline
   `);

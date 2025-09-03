@@ -1,0 +1,25 @@
+{
+  "name": "test-context-update-1756888937908",
+  "timestamp": "2025-09-03T08:42:17.908Z",
+  "chatHistory": [
+    {
+      "role": "user",
+      "content": "Calculate 10 + 5",
+      "timestamp": 1756888932950
+    },
+    {
+      "role": "agent",
+      "content": "The sum of 10 + 5 = 15",
+      "timestamp": 1756888937908
+    }
+  ],
+  "executionContext": {
+    "artifacts": {}
+  },
+  "operationHistory": [],
+  "metadata": {
+    "messageCount": 2,
+    "variableCount": 0,
+    "operationCount": 0
+  }
+}

@@ -568,6 +568,28 @@ export class ToolRegistry {
   // === PRIVATE HELPER METHODS ===
 
   /**
+   * Add a single module to the registry incrementally
+   * @param {string} modulePath - Absolute or relative path to module file
+   * @param {Object} options - Addition options
+   * @returns {Promise<Object>} Addition result
+   */
+  async addModule(modulePath, options = {}) {
+    await this._ensureInitialized();
+    return await this.serviceOrchestrator.addSingleModule(modulePath, options);
+  }
+
+  /**
+   * Add a module with complete pipeline (perspectives + embeddings + vectors)
+   * @param {string} modulePath - Absolute or relative path to module file  
+   * @param {Object} options - Pipeline options
+   * @returns {Promise<Object>} Complete addition result
+   */
+  async addModuleComplete(modulePath, options = {}) {
+    await this._ensureInitialized();
+    return await this.serviceOrchestrator.addModuleComplete(modulePath, options);
+  }
+
+  /**
    * Ensure the service orchestrator is initialized
    */
   async _ensureInitialized() {

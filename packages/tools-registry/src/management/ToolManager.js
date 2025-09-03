@@ -569,6 +569,81 @@ export class ToolManager {
   }
 
   /**
+   * Add a single module incrementally 
+   * Administrative operation for incremental module management
+   * 
+   * @param {string} modulePath - Path to module file
+   * @param {Object} options - Addition options
+   * @returns {Promise<Object>} Addition result
+   */
+  async addModule(modulePath, options = {}) {
+    await this._ensureInitialized();
+    
+    if (!modulePath || typeof modulePath !== 'string') {
+      throw new Error('Module path must be a non-empty string');
+    }
+
+    this.logger.info(`Adding module incrementally: ${modulePath}`, { options });
+    
+    try {
+      const result = await this.toolRegistry.addModule(modulePath, options);
+      
+      if (result.success) {
+        this.logger.info(`Module added successfully: ${result.moduleName}`, {
+          moduleId: result.moduleId,
+          toolCount: result.toolCount,
+          alreadyExists: result.alreadyExists
+        });
+      } else {
+        this.logger.warn(`Module addition failed: ${modulePath}`, { error: result.error });
+      }
+      
+      return result;
+    } catch (error) {
+      this.logger.error(`Module addition error: ${modulePath}`, { error: error.message });
+      throw error;
+    }
+  }
+
+  /**
+   * Add a module with complete pipeline
+   * Administrative operation for full incremental setup
+   * 
+   * @param {string} modulePath - Path to module file
+   * @param {Object} options - Pipeline options
+   * @returns {Promise<Object>} Complete addition result
+   */
+  async addModuleComplete(modulePath, options = {}) {
+    await this._ensureInitialized();
+    
+    if (!modulePath || typeof modulePath !== 'string') {
+      throw new Error('Module path must be a non-empty string');
+    }
+
+    this.logger.info(`Adding module with complete pipeline: ${modulePath}`, { options });
+    
+    try {
+      const result = await this.toolRegistry.addModuleComplete(modulePath, options);
+      
+      if (result.success) {
+        this.logger.info(`Module pipeline completed successfully: ${result.module?.moduleName}`, {
+          steps: result.steps?.length || 0,
+          errors: result.errors?.length || 0
+        });
+      } else {
+        this.logger.warn(`Module pipeline failed: ${modulePath}`, { 
+          errors: result.errors 
+        });
+      }
+      
+      return result;
+    } catch (error) {
+      this.logger.error(`Module pipeline error: ${modulePath}`, { error: error.message });
+      throw error;
+    }
+  }
+
+  /**
    * Cleanup resources
    */
   async cleanup() {

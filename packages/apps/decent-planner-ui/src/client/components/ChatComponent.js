@@ -39,6 +39,9 @@ export class ChatComponent {
   createView() {
     this.elements.root = document.createElement('div');
     this.elements.root.className = 'chat-container';
+    this.elements.root.style.height = '100%';
+    this.elements.root.style.display = 'flex';
+    this.elements.root.style.flexDirection = 'column';
     
     // Connection status
     this.elements.connectionStatus = document.createElement('div');
@@ -48,6 +51,9 @@ export class ChatComponent {
     // Messages container
     this.elements.messagesContainer = document.createElement('div');
     this.elements.messagesContainer.className = 'chat-messages-container';
+    this.elements.messagesContainer.style.flex = '1';
+    this.elements.messagesContainer.style.overflow = 'auto';
+    this.elements.messagesContainer.style.padding = '10px';
     
     this.elements.messagesList = document.createElement('div');
     this.elements.messagesList.className = 'chat-messages-list';
@@ -58,16 +64,30 @@ export class ChatComponent {
     // Input container
     this.elements.inputContainer = document.createElement('div');
     this.elements.inputContainer.className = 'chat-input-container';
+    this.elements.inputContainer.style.padding = '10px';
+    this.elements.inputContainer.style.borderTop = '1px solid #ddd';
+    this.elements.inputContainer.style.display = 'flex';
+    this.elements.inputContainer.style.gap = '10px';
     
     this.elements.inputField = document.createElement('input');
     this.elements.inputField.type = 'text';
     this.elements.inputField.className = 'chat-input';
-    this.elements.inputField.placeholder = 'Type a message...';
+    this.elements.inputField.placeholder = 'Type a message or /help for commands...';
+    this.elements.inputField.style.flex = '1';
+    this.elements.inputField.style.padding = '8px';
+    this.elements.inputField.style.border = '1px solid #ccc';
+    this.elements.inputField.style.borderRadius = '4px';
     this.elements.inputContainer.appendChild(this.elements.inputField);
     
     this.elements.sendButton = document.createElement('button');
     this.elements.sendButton.className = 'chat-send-button';
     this.elements.sendButton.textContent = '📤 Send';
+    this.elements.sendButton.style.padding = '8px 16px';
+    this.elements.sendButton.style.border = 'none';
+    this.elements.sendButton.style.borderRadius = '4px';
+    this.elements.sendButton.style.backgroundColor = '#3b82f6';
+    this.elements.sendButton.style.color = 'white';
+    this.elements.sendButton.style.cursor = 'pointer';
     this.elements.inputContainer.appendChild(this.elements.sendButton);
     
     this.elements.root.appendChild(this.elements.inputContainer);
@@ -83,6 +103,7 @@ export class ChatComponent {
       this.model.inputText = e.target.value;
       this.model.onInputChange(this.model.inputText);
       this.updateSendButtonState();
+      this.updateSlashCommandIndicator();
     });
     
     this.elements.inputField.addEventListener('keypress', (e) => {
@@ -167,11 +188,27 @@ export class ChatComponent {
     
     const senderElement = document.createElement('span');
     senderElement.className = 'chat-message-sender';
-    senderElement.textContent = message.sender === 'user' ? 'You' : (message.sender === 'agent' ? 'Tool Agent' : 'Server');
+    let senderText;
+    if (message.sender === 'user') {
+      senderText = 'You';
+    } else if (message.sender === 'agent') {
+      senderText = 'Tool Agent';
+    } else if (message.sender === 'command') {
+      senderText = message.isCommandError ? 'Command Error' : 'Command';
+    } else {
+      senderText = 'Server';
+    }
+    senderElement.textContent = senderText;
     
     const textElement = document.createElement('div');
     textElement.className = 'chat-message-text';
-    textElement.textContent = message.text;
+    
+    // Handle markdown formatting for slash command responses
+    if (message.isSlashCommand && message.text.includes('**')) {
+      textElement.innerHTML = this.formatMarkdownText(message.text);
+    } else {
+      textElement.textContent = message.text;
+    }
     
     messageElement.appendChild(timestampElement);
     messageElement.appendChild(senderElement);
@@ -180,6 +217,11 @@ export class ChatComponent {
     // Add enhanced elements for agent messages
     if (message.sender === 'agent') {
       this.addAgentMessageEnhancements(messageElement, message);
+    }
+    
+    // Add slash command specific enhancements
+    if (message.isSlashCommand) {
+      this.addSlashCommandEnhancements(messageElement, message);
     }
     
     return messageElement;
@@ -244,6 +286,44 @@ export class ChatComponent {
     content.style.display = isVisible ? 'none' : 'block';
     toggleButton.textContent = isVisible ? '🤔 Show reasoning' : '🤔 Hide reasoning';
   }
+
+  /**
+   * Add enhancements for slash command messages
+   */
+  addSlashCommandEnhancements(messageElement, message) {
+    // Add command indicator
+    const commandIndicator = document.createElement('div');
+    commandIndicator.className = 'chat-command-indicator';
+    commandIndicator.innerHTML = message.isCommandError ? 
+      '⚠️ Slash Command Error' : 
+      '⚡ Slash Command';
+    messageElement.appendChild(commandIndicator);
+    
+    // Add usage information for command errors
+    if (message.isCommandError && message.usage) {
+      const usageDiv = document.createElement('div');
+      usageDiv.className = 'chat-command-usage';
+      usageDiv.innerHTML = `<strong>Usage:</strong> ${message.usage}`;
+      messageElement.appendChild(usageDiv);
+    }
+    
+    // Add command name if available
+    if (message.command && !message.isCommandError) {
+      const commandDiv = document.createElement('div');
+      commandDiv.className = 'chat-command-name';
+      commandDiv.innerHTML = `Command: /${message.command}`;
+      messageElement.appendChild(commandDiv);
+    }
+  }
+
+  /**
+   * Format basic markdown text (bold only)
+   */
+  formatMarkdownText(text) {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>');
+  }
   
   updateMessageElement(element, message) {
     // Update text content if changed (for message editing scenarios)
@@ -263,6 +343,19 @@ export class ChatComponent {
     const canSend = this.model.connected && this.model.inputText.trim().length > 0;
     this.elements.sendButton.disabled = !canSend;
     this.elements.inputField.disabled = !this.model.connected;
+  }
+
+  updateSlashCommandIndicator() {
+    const text = this.model.inputText.trim();
+    const isSlashCommand = text.startsWith('/');
+    
+    if (isSlashCommand) {
+      this.elements.inputField.style.borderColor = '#3b82f6';
+      this.elements.inputField.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.1)';
+    } else {
+      this.elements.inputField.style.borderColor = '';
+      this.elements.inputField.style.boxShadow = '';
+    }
   }
   
   scrollToBottom() {
@@ -366,5 +459,40 @@ export class ChatComponent {
     };
 
     this.addMessage(clearedMessage);
+  }
+
+  /**
+   * Add slash command response message
+   */
+  addCommandResponse(data) {
+    const commandMessage = {
+      id: `command-${Date.now()}-${Math.random()}`,
+      sender: 'command',
+      text: data.text,
+      timestamp: data.timestamp,
+      command: data.command,
+      isSlashCommand: true,
+      isCommandSuccess: true
+    };
+
+    this.addMessage(commandMessage);
+  }
+
+  /**
+   * Add slash command error message
+   */
+  addCommandError(data) {
+    const errorMessage = {
+      id: `command-error-${Date.now()}-${Math.random()}`,
+      sender: 'command',
+      text: data.text,
+      timestamp: data.timestamp,
+      error: data.error,
+      usage: data.usage,
+      isSlashCommand: true,
+      isCommandError: true
+    };
+
+    this.addMessage(errorMessage);
   }
 }

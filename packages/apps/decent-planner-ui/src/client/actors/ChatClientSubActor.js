@@ -163,6 +163,20 @@ export default class ChatClientSubActor {
           this.chatComponent.addOperation(data.operation);
         }
         break;
+
+      case 'command-response':
+        // Slash command successful response
+        if (this.chatComponent) {
+          this.chatComponent.addCommandResponse(data);
+        }
+        break;
+
+      case 'command-error':
+        // Slash command error response
+        if (this.chatComponent) {
+          this.chatComponent.addCommandError(data);
+        }
+        break;
         
       case 'error':
         console.error('Chat error:', data);

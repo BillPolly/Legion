@@ -473,7 +473,7 @@ export class ModuleService {
     }
 
     // Check loaded modules collection in database
-    let moduleRecord = await this.databaseService.findModuleByName(moduleNameOrId);
+    let moduleRecord = await this.databaseService.findModule(moduleNameOrId);
     
     // If not in loaded modules, check module-registry collection  
     if (!moduleRecord) {
@@ -553,6 +553,120 @@ export class ModuleService {
       };
     } catch (error) {
       throw new Error(`Failed to get module statistics: ${error.message}`);
+    }
+  }
+
+  /**
+   * Add a single module incrementally to the registry
+   * Discovers, validates, saves to database, loads, and caches module
+   * @param {string} modulePath - Absolute or relative path to module file
+   * @param {Object} options - Addition options
+   * @returns {Promise<Object>} Addition result with module details
+   */
+  async addSingleModule(modulePath, options = {}) {
+    const { verbose = false } = options;
+    
+    console.log(`[ModuleService] Adding single module: ${modulePath}`);
+    
+    const result = {
+      modulePath,
+      moduleName: null,
+      moduleId: null,
+      toolCount: 0,
+      success: false,
+      error: null,
+      cached: false,
+      alreadyExists: false
+    };
+
+    try {
+      // Step 1: Get module info from path
+      const moduleInfo = this.moduleDiscovery.getModuleInfo(modulePath);
+      result.moduleName = moduleInfo.name;
+      
+      console.log(`[ModuleService] Module name extracted: ${moduleInfo.name}`);
+
+      // Step 2: Load module to get actual name for database check
+      const moduleInstance = await this.moduleLoader.loadModule(modulePath);
+      const actualModuleName = moduleInstance.name || moduleInstance.getName?.() || moduleInfo.name;
+      result.moduleName = actualModuleName;
+
+      // Check if module already exists in database using actual module name
+      const existingModule = await this.databaseService.findDiscoveredModule(actualModuleName);
+      if (existingModule) {
+        console.log(`[ModuleService] Module ${actualModuleName} already exists in database`);
+        result.alreadyExists = true;
+        result.moduleId = existingModule._id;
+        
+        // Load if not already loaded
+        const loadResult = await this.loadModule(actualModuleName, existingModule);
+        result.success = loadResult.success;
+        result.cached = loadResult.cached;
+        result.toolCount = loadResult.toolCount;
+        result.error = loadResult.error;
+        
+        return result;
+      }
+
+      // Step 3: Validate the already-loaded module
+      const validation = await this.moduleDiscovery.validateModule(moduleInstance);
+      
+      if (!validation.valid) {
+        const errorMessages = Array.isArray(validation.errors) 
+          ? validation.errors.join(', ')
+          : JSON.stringify(validation.errors);
+        result.error = `Module validation failed: ${errorMessages}`;
+        return result;
+      }
+      
+      result.toolCount = validation.toolsCount;
+      console.log(`[ModuleService] Module validated: ${actualModuleName} with ${validation.toolsCount} tools`);
+
+      // Step 4: Save to module-registry collection
+      const moduleDoc = {
+        ...moduleInfo,
+        name: actualModuleName, // Use actual module name, not filename
+        toolsCount: validation.toolsCount,
+        valid: validation.valid,
+        score: validation.score || 100,
+        lastUpdated: new Date().toISOString(),
+        status: 'discovered'
+      };
+      
+      const savedModule = await this.databaseService.saveDiscoveredModule(moduleDoc);
+      result.moduleId = savedModule._id;
+      console.log(`[ModuleService] Saved to module-registry with ID: ${savedModule._id}`);
+
+      // Step 5: Load the module (will cache tools and save to collections)
+      const loadResult = await this.loadModule(actualModuleName, savedModule);
+      result.success = loadResult.success;
+      result.cached = loadResult.cached;
+      result.toolCount = loadResult.toolCount;
+      result.error = loadResult.error;
+
+      if (verbose) {
+        console.log(`[ModuleService] Module addition complete:`, {
+          name: result.moduleName,
+          id: result.moduleId,
+          tools: result.toolCount,
+          success: result.success
+        });
+      }
+
+      this.eventBus.emit('module:added', {
+        name: result.moduleName,
+        moduleId: result.moduleId,
+        toolCount: result.toolCount,
+        path: modulePath
+      });
+
+      return result;
+
+    } catch (error) {
+      console.error(`[ModuleService] Error adding module ${modulePath}:`, error.message);
+      result.error = error.message;
+      result.success = false;
+      return result;
     }
   }
 

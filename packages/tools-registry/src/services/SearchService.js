@@ -598,4 +598,244 @@ export class SearchService {
       throw new Error(`Failed to clear vectors: ${error.message}`);
     }
   }
+
+  /**
+   * Generate perspectives for tools in a specific module only
+   * @param {string} moduleName - Name of module to process
+   * @param {Object} options - Generation options
+   * @returns {Promise<Object>} Generation result
+   */
+  async generatePerspectivesForModule(moduleName, options = {}) {
+    const { verbose = false, forceRegenerate = false } = options;
+    
+    console.log(`[SearchService] Generating perspectives for module: ${moduleName}`);
+    
+    const result = {
+      moduleName,
+      processed: 0,
+      generated: 0,
+      skipped: 0,
+      errors: [],
+      success: false
+    };
+
+    try {
+      // Get tools for the specific module from database (more reliable than module instance)
+      const tools = await this.toolRepository.findTools({ moduleName });
+      
+      console.log(`[SearchService] Found ${tools.length} tools in module ${moduleName}`);
+      result.processed = tools.length;
+
+      for (const tool of tools) {
+        try {
+          console.log(`[SearchService] Processing tool: ${tool.name}`);
+
+          // Check if perspectives already exist for this tool
+          const existingPerspectives = await this.toolRepository.getPerspectivesByTool(tool.name);
+          if (!forceRegenerate && existingPerspectives?.length > 0) {
+            console.log(`[SearchService] Skipping ${tool.name} - already has ${existingPerspectives.length} perspectives`);
+            result.skipped++;
+            continue;
+          }
+
+          const perspectives = await this.perspectiveService.generatePerspectivesForTool(tool.name, {
+            forceRegenerate: true
+          });
+          
+          console.log(`[SearchService] Generated ${perspectives?.length || 0} perspectives for ${tool.name}`);
+
+          if (perspectives && perspectives.length > 0) {
+            await this.toolRepository.saveToolPerspectives(perspectives);
+            result.generated += perspectives.length;
+            console.log(`[SearchService] Saved ${perspectives.length} perspectives for ${tool.name}`);
+          }
+
+        } catch (error) {
+          result.errors.push({
+            toolName: tool.name,
+            error: error.message
+          });
+        }
+      }
+
+      result.success = result.errors.length === 0;
+      
+      this.eventBus.emit('perspectives:module-generated', {
+        moduleName,
+        generated: result.generated,
+        errors: result.errors.length
+      });
+
+      return result;
+
+    } catch (error) {
+      console.error(`[SearchService] Error generating perspectives for module ${moduleName}:`, error.message);
+      result.errors.push({ moduleName, error: error.message });
+      result.success = false;
+      return result;
+    }
+  }
+
+  /**
+   * Generate embeddings for perspectives of a specific module
+   * @param {string} moduleName - Name of module to process
+   * @param {Object} options - Embedding options
+   * @returns {Promise<Object>} Embedding result
+   */
+  async generateEmbeddingsForModule(moduleName, options = {}) {
+    const { verbose = false, batchSize = 10 } = options;
+    
+    console.log(`[SearchService] Generating embeddings for module: ${moduleName}`);
+    
+    const result = {
+      moduleName,
+      processed: 0,
+      embedded: 0,
+      failed: 0,
+      errors: [],
+      success: false
+    };
+
+    try {
+      // Get perspectives for tools in this module
+      const perspectives = await this.toolRepository.getPerspectivesByModule(moduleName);
+      
+      if (!perspectives || perspectives.length === 0) {
+        console.log(`[SearchService] No perspectives found for module ${moduleName}`);
+        result.success = true;
+        return result;
+      }
+
+      console.log(`[SearchService] Found ${perspectives.length} perspectives for module ${moduleName}`);
+      result.processed = perspectives.length;
+
+      // Process in batches
+      for (let i = 0; i < perspectives.length; i += batchSize) {
+        const batch = perspectives.slice(i, i + batchSize);
+        
+        try {
+          const embeddings = await this.embeddingService.generateBatch(batch.map(p => p.content));
+          
+          for (let j = 0; j < batch.length; j++) {
+            const perspective = batch[j];
+            const embedding = embeddings[j];
+            
+            if (embedding && embedding.length > 0) {
+              await this.toolRepository.savePerspectiveEmbedding(perspective._id, embedding);
+              result.embedded++;
+            } else {
+              result.failed++;
+              result.errors.push({
+                perspectiveId: perspective._id,
+                error: 'Empty embedding generated'
+              });
+            }
+          }
+          
+        } catch (error) {
+          result.failed += batch.length;
+          result.errors.push({
+            batch: i / batchSize + 1,
+            error: error.message
+          });
+        }
+      }
+
+      result.success = result.embedded > 0;
+      
+      this.eventBus.emit('embeddings:module-generated', {
+        moduleName,
+        embedded: result.embedded,
+        errors: result.errors.length
+      });
+
+      return result;
+
+    } catch (error) {
+      console.error(`[SearchService] Error generating embeddings for module ${moduleName}:`, error.message);
+      result.errors.push({ moduleName, error: error.message });
+      result.success = false;
+      return result;
+    }
+  }
+
+  /**
+   * Index vectors for a specific module in the vector store
+   * @param {string} moduleName - Name of module to process
+   * @param {Object} options - Indexing options
+   * @returns {Promise<Object>} Indexing result
+   */
+  async indexVectorsForModule(moduleName, options = {}) {
+    const { verbose = false } = options;
+    
+    console.log(`[SearchService] Indexing vectors for module: ${moduleName}`);
+    
+    const result = {
+      moduleName,
+      indexed: 0,
+      failed: 0,
+      errors: [],
+      success: false
+    };
+
+    try {
+      // Get perspectives with embeddings for this module
+      const perspectivesWithEmbeddings = await this.toolRepository.getPerspectivesWithEmbeddingsByModule(moduleName);
+      
+      if (!perspectivesWithEmbeddings || perspectivesWithEmbeddings.length === 0) {
+        console.log(`[SearchService] No perspectives with embeddings found for module ${moduleName}`);
+        result.success = true;
+        return result;
+      }
+
+      console.log(`[SearchService] Found ${perspectivesWithEmbeddings.length} perspectives with embeddings for module ${moduleName}`);
+
+      // Index each perspective in the vector store
+      for (const perspective of perspectivesWithEmbeddings) {
+        try {
+          const vector = {
+            id: perspective._id.toString(),
+            vector: perspective.embedding,
+            metadata: {
+              tool_name: perspective.tool_name,
+              module_name: moduleName,
+              perspective_type: perspective.perspective_type,
+              content: perspective.content
+            }
+          };
+          
+          await this.vectorStore.upsert([vector]);
+          result.indexed++;
+          
+          if (verbose) {
+            console.log(`[SearchService] Indexed perspective for tool: ${perspective.tool_name}`);
+          }
+          
+        } catch (error) {
+          result.failed++;
+          result.errors.push({
+            perspectiveId: perspective._id,
+            toolName: perspective.tool_name,
+            error: error.message
+          });
+        }
+      }
+
+      result.success = result.indexed > 0;
+      
+      this.eventBus.emit('vectors:module-indexed', {
+        moduleName,
+        indexed: result.indexed,
+        errors: result.errors.length
+      });
+
+      return result;
+
+    } catch (error) {
+      console.error(`[SearchService] Error indexing vectors for module ${moduleName}:`, error.message);
+      result.errors.push({ moduleName, error: error.message });
+      result.success = false;
+      return result;
+    }
+  }
 }

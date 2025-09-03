@@ -1476,4 +1476,60 @@ export class DatabaseStorage {
       return [];
     }
   }
+
+  /**
+   * Get perspectives for tools in a specific module
+   * @param {string} moduleName - Module name to filter by
+   * @returns {Array} Array of perspective documents
+   */
+  async getPerspectivesByModule(moduleName) {
+    try {
+      const collection = this.getCollection('tool_perspectives');
+      const filter = { module_name: moduleName };
+      
+      const result = await collection.find(filter).toArray();
+      
+      console.log(`[DatabaseStorage] Found ${result.length} perspectives for module ${moduleName}`);
+      return result;
+    } catch (error) {
+      throw new DatabaseError(
+        `Failed to get perspectives for module ${moduleName}: ${error.message}`,
+        'getPerspectivesByModule',
+        'tool_perspectives',
+        error
+      );
+    }
+  }
+
+  /**
+   * Get perspectives with embeddings for tools in a specific module
+   * @param {string} moduleName - Module name to filter by
+   * @returns {Array} Array of perspective documents with embeddings
+   */
+  async getPerspectivesWithEmbeddingsByModule(moduleName) {
+    try {
+      const collection = this.getCollection('tool_perspectives');
+      const filter = {
+        module_name: moduleName,
+        embedding: { 
+          $exists: true, 
+          $ne: null, 
+          $ne: [],
+          $size: 768
+        }
+      };
+      
+      const result = await collection.find(filter).toArray();
+      
+      console.log(`[DatabaseStorage] Found ${result.length} perspectives with embeddings for module ${moduleName}`);
+      return result;
+    } catch (error) {
+      throw new DatabaseError(
+        `Failed to get perspectives with embeddings for module ${moduleName}: ${error.message}`,
+        'getPerspectivesWithEmbeddingsByModule',
+        'tool_perspectives',
+        error
+      );
+    }
+  }
 }

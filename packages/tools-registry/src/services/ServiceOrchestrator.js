@@ -439,6 +439,102 @@ export class ServiceOrchestrator {
     return await this.verifySystemIntegrity();
   }
 
+  /**
+   * Add a single module incrementally without clearing existing data
+   * @param {string} modulePath - Path to module file
+   * @param {Object} options - Addition options
+   * @returns {Promise<Object>} Addition result
+   */
+  async addSingleModule(modulePath, options = {}) {
+    return await this.moduleService.addSingleModule(modulePath, options);
+  }
+
+  /**
+   * Add a module with complete pipeline (perspectives + embeddings + vectors)
+   * @param {string} modulePath - Path to module file
+   * @param {Object} options - Pipeline options
+   * @returns {Promise<Object>} Complete addition result
+   */
+  async addModuleComplete(modulePath, options = {}) {
+    const {
+      generatePerspectives = true,
+      generateEmbeddings = true,
+      indexVectors = true,
+      verbose = false
+    } = options;
+
+    const result = {
+      modulePath,
+      module: null,
+      perspectives: null,
+      embeddings: null,
+      vectors: null,
+      success: false,
+      steps: [],
+      errors: []
+    };
+
+    try {
+      // Step 1: Add the module
+      console.log(`[ServiceOrchestrator] Step 1: Adding module ${modulePath}`);
+      const moduleResult = await this.addSingleModule(modulePath, { verbose });
+      result.module = moduleResult;
+      result.steps.push({ name: 'add-module', success: moduleResult.success });
+      
+      if (!moduleResult.success) {
+        result.errors.push(`Module addition failed: ${moduleResult.error}`);
+        return result;
+      }
+
+      const moduleName = moduleResult.moduleName;
+      console.log(`[ServiceOrchestrator] Module added: ${moduleName}`);
+
+      // Step 2: Generate perspectives for module tools
+      if (generatePerspectives && this.searchService) {
+        console.log(`[ServiceOrchestrator] Step 2: Generating perspectives for ${moduleName}`);
+        const perspectiveResult = await this.searchService.generatePerspectivesForModule(moduleName, { verbose });
+        result.perspectives = perspectiveResult;
+        result.steps.push({ name: 'generate-perspectives', success: perspectiveResult.success });
+        
+        if (!perspectiveResult.success) {
+          result.errors.push(`Perspective generation failed: ${perspectiveResult.error}`);
+        }
+      }
+
+      // Step 3: Generate embeddings for new perspectives
+      if (generateEmbeddings && this.searchService) {
+        console.log(`[ServiceOrchestrator] Step 3: Generating embeddings for ${moduleName}`);
+        const embeddingResult = await this.searchService.generateEmbeddingsForModule(moduleName, { verbose });
+        result.embeddings = embeddingResult;
+        result.steps.push({ name: 'generate-embeddings', success: embeddingResult.success });
+        
+        if (!embeddingResult.success) {
+          result.errors.push(`Embedding generation failed: ${embeddingResult.error}`);
+        }
+      }
+
+      // Step 4: Index new vectors  
+      if (indexVectors && this.searchService) {
+        console.log(`[ServiceOrchestrator] Step 4: Indexing vectors for ${moduleName}`);
+        const vectorResult = await this.searchService.indexVectorsForModule(moduleName, { verbose });
+        result.vectors = vectorResult;
+        result.steps.push({ name: 'index-vectors', success: vectorResult.success });
+        
+        if (!vectorResult.success) {
+          result.errors.push(`Vector indexing failed: ${vectorResult.error}`);
+        }
+      }
+
+      result.success = result.errors.length === 0;
+      return result;
+
+    } catch (error) {
+      result.errors.push(`Pipeline failed: ${error.message}`);
+      result.success = false;
+      return result;
+    }
+  }
+
   // === PRIVATE HELPER METHODS ===
 
   /**
