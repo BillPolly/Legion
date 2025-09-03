@@ -116,3 +116,5 @@ ALL temporary scripts must go in tmp/ directories
 ALL ways use the fullstack tool to debug a server front end and back end
 
 when we make changes THERE MUST NEVER BE ANY CODE FOR BACKWARDS COMPATIBILIT! there must only ever be one way of doing anything, and we will fix everything to use it
+
+We do not use APIs in legion, all communications to frontend is done with websockets

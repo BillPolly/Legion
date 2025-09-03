@@ -27,9 +27,15 @@ export default class IndexContentTool extends Tool {
       throw new Error('Semantic search module not provided to IndexContentTool');
     }
 
-    const { source, sourceType, options = {} } = params;
+    // Extract workspace as first parameter for clean API  
+    const { workspace, source, sourceType, options = {} } = params;
     
-    this.progress(`Starting indexing of ${sourceType}: ${source}`, 5, {
+    if (!workspace) {
+      throw new Error('Workspace parameter is required');
+    }
+    
+    this.progress(`Starting indexing of ${sourceType}: ${source} in workspace: ${workspace}`, 5, {
+      workspace,
       source,
       sourceType,
       options
@@ -58,13 +64,14 @@ export default class IndexContentTool extends Tool {
         supportedFileTypes: config.processing.supportedFileTypes
       });
 
-      // Create document indexer
+      // Create document indexer with workspace-aware configuration
+      // Each workspace will get its own Qdrant collection for optimal performance
       const documentIndexer = new DocumentIndexer({
         databaseSchema,
         contentProcessor,
         resourceManager: this.semanticSearchModule.resourceManager,
         options: {
-          qdrantCollection: config.qdrant.collection
+          qdrantCollection: config.qdrant.collection  // Base collection name for workspace generation
         }
       });
 
@@ -75,13 +82,13 @@ export default class IndexContentTool extends Tool {
       
       switch (sourceType) {
         case 'file':
-          indexingResults = await this._indexFile(source, options, documentIndexer);
+          indexingResults = await this._indexFile(source, options, documentIndexer, workspace);
           break;
         case 'directory':
-          indexingResults = await this._indexDirectory(source, options, documentIndexer, contentProcessor);
+          indexingResults = await this._indexDirectory(source, options, documentIndexer, contentProcessor, workspace);
           break;
         case 'url':
-          indexingResults = await this._indexUrl(source, options, documentIndexer);
+          indexingResults = await this._indexUrl(source, options, documentIndexer, workspace);
           break;
         default:
           throw new Error(`Unsupported source type: ${sourceType}`);
@@ -124,10 +131,11 @@ export default class IndexContentTool extends Tool {
   }
 
   /**
-   * Index a single file
+   * Index a single file into specific workspace
+   * Creates workspace-specific Qdrant collection automatically
    */
-  async _indexFile(filePath, options, documentIndexer) {
-    this.progress(`Reading file: ${filePath}`, 30);
+  async _indexFile(filePath, options, documentIndexer, workspace) {
+    this.progress(`Reading file: ${filePath} for workspace: ${workspace}`, 30);
     
     try {
       const fileProcessor = new FileProcessor({
@@ -138,8 +146,9 @@ export default class IndexContentTool extends Tool {
 
       const fileResult = await fileProcessor.processFile(filePath);
       
-      this.progress(`Indexing file content`, 60);
+      this.progress(`Indexing file content in workspace: ${workspace}`, 60);
       
+      // Pass workspace to indexDocument for proper workspace-specific indexing
       const indexResult = await documentIndexer.indexDocument(
         fileResult.content,
         fileResult.contentType,
@@ -147,7 +156,10 @@ export default class IndexContentTool extends Tool {
           source: `file://${filePath}`,
           ...fileResult.metadata
         },
-        options
+        {
+          ...options,
+          workspace: workspace  // Ensure workspace is passed to indexing
+        }
       );
 
       return {
@@ -165,10 +177,11 @@ export default class IndexContentTool extends Tool {
   }
 
   /**
-   * Index all files in a directory
+   * Index all files in a directory into specific workspace
+   * All files in directory go into same workspace for logical grouping
    */
-  async _indexDirectory(dirPath, options, documentIndexer, contentProcessor) {
-    this.progress(`Scanning directory: ${dirPath}`, 20);
+  async _indexDirectory(dirPath, options, documentIndexer, contentProcessor, workspace) {
+    this.progress(`Scanning directory: ${dirPath} for workspace: ${workspace}`, 20);
     
     try {
       const fileProcessor = new FileProcessor({
@@ -203,7 +216,7 @@ export default class IndexContentTool extends Tool {
 
       this.progress(`Processed ${successfulFiles.length} files, indexing content`, 50);
 
-      // Index successful files
+      // Index successful files into workspace
       const documents = successfulFiles.map(fileResult => ({
         content: fileResult.content,
         contentType: fileResult.contentType,
@@ -213,7 +226,11 @@ export default class IndexContentTool extends Tool {
         }
       }));
 
-      const indexResults = await documentIndexer.indexDocuments(documents, options);
+      // Pass workspace to indexDocuments for workspace-specific indexing
+      const indexResults = await documentIndexer.indexDocuments(documents, {
+        ...options,
+        workspace: workspace
+      });
 
       this.progress(`Indexed ${indexResults.successfulDocuments} documents`, 90);
 
@@ -239,10 +256,10 @@ export default class IndexContentTool extends Tool {
   }
 
   /**
-   * Index content from a URL
+   * Index content from a URL into specific workspace
    */
-  async _indexUrl(url, options, documentIndexer) {
-    this.progress(`Fetching URL: ${url}`, 30);
+  async _indexUrl(url, options, documentIndexer, workspace) {
+    this.progress(`Fetching URL: ${url} for workspace: ${workspace}`, 30);
     
     try {
       const webProcessor = new WebProcessor({
@@ -255,6 +272,7 @@ export default class IndexContentTool extends Tool {
       
       this.progress(`Processing URL content`, 60);
 
+      // Index URL content into workspace
       const indexResult = await documentIndexer.indexDocument(
         urlResult.content,
         urlResult.contentType,
@@ -263,7 +281,10 @@ export default class IndexContentTool extends Tool {
           title: urlResult.title,
           ...urlResult.metadata
         },
-        options
+        {
+          ...options,
+          workspace: workspace
+        }
       );
 
       return {

@@ -76,24 +76,43 @@ export default class DocumentIndexer {
   }
 
   /**
-   * Ensure Qdrant collection exists with proper configuration
+   * Ensure Qdrant collection exists for specific workspace
+   * Creates separate collections per workspace for optimal performance and isolation
+   * Collection naming pattern: semantic_content_{workspace_name}
    */
-  async ensureQdrantCollection() {
+  async ensureQdrantCollection(workspace = 'default') {
     try {
+      // Generate workspace-specific collection name
+      const workspaceCollectionName = this.getWorkspaceCollectionName(workspace);
+      
       const collections = await this.qdrantClient.getCollections();
-      const collectionExists = collections.collections.some(c => c.name === this.options.qdrantCollection);
+      const collectionExists = collections.collections.some(c => c.name === workspaceCollectionName);
       
       if (!collectionExists) {
-        await this.qdrantClient.createCollection(this.options.qdrantCollection, {
+        console.log(`[DocumentIndexer] Creating Qdrant collection for workspace: ${workspace} -> ${workspaceCollectionName}`);
+        await this.qdrantClient.createCollection(workspaceCollectionName, {
           vectors: {
             size: 768, // Nomic dimensions
             distance: 'Cosine'
           }
         });
       }
+      
+      return workspaceCollectionName;
     } catch (error) {
-      throw new Error(`Failed to ensure Qdrant collection: ${error.message}`);
+      throw new Error(`Failed to ensure Qdrant collection for workspace ${workspace}: ${error.message}`);
     }
+  }
+
+  /**
+   * Generate Qdrant collection name for workspace
+   * Pattern: semantic_content_{workspace_name}
+   * Ensures clean, predictable collection naming
+   */
+  getWorkspaceCollectionName(workspace) {
+    // Sanitize workspace name for collection naming
+    const sanitizedWorkspace = workspace.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+    return `semantic_content_${sanitizedWorkspace}`;
   }
 
   /**
@@ -102,13 +121,17 @@ export default class DocumentIndexer {
   async indexDocument(content, contentType, metadata, options = {}) {
     await this.initialize();
     
+    const workspace = options.workspace;
+    if (!workspace) {
+      throw new Error('Workspace is required for document indexing');
+    }
     const startTime = Date.now();
     
     try {
       // Check for existing document if not updating
       if (!options.updateExisting) {
         const contentHash = crypto.createHash('sha256').update(content).digest('hex');
-        const existing = await this.databaseSchema.searchDocuments({ contentHash });
+        const existing = await this.databaseSchema.searchDocuments({ contentHash }, workspace);
         
         if (existing.length > 0) {
           return {
@@ -126,7 +149,7 @@ export default class DocumentIndexer {
       const processed = await this.contentProcessor.processContent(content, contentType, metadata, options);
       
       // Store document in MongoDB
-      const documentId = await this.databaseSchema.insertDocument(processed.document);
+      const documentId = await this.databaseSchema.insertDocument(processed.document, workspace);
       
       // Generate embeddings for chunks
       const embeddingStartTime = Date.now();
@@ -140,13 +163,13 @@ export default class DocumentIndexer {
         chunk.documentId = documentId;
         chunk.embedding = embeddings[i];
         
-        const chunkId = await this.databaseSchema.insertChunk(chunk);
+        const chunkId = await this.databaseSchema.insertChunk(chunk, workspace);
         chunkIds.push(chunkId);
       }
       
       // Index vectors in Qdrant
       const vectorStartTime = Date.now();
-      const vectorIds = await this.indexVectors(processed.chunks, documentId);
+      const vectorIds = await this.indexVectors(processed.chunks, documentId, workspace);
       const vectorTime = Date.now() - vectorStartTime;
       
       // Update chunks with Qdrant IDs
@@ -274,14 +297,21 @@ export default class DocumentIndexer {
   }
 
   /**
-   * Index vectors in Qdrant
+   * Index vectors in Qdrant using workspace-specific collection
+   * Each workspace gets its own Qdrant collection for optimal performance and isolation
+   * Collection naming: semantic_content_{workspace_name}
    */
-  async indexVectors(chunks, documentId) {
+  async indexVectors(chunks, documentId, workspace = 'default') {
     if (!this.options.indexVectors) {
       return chunks.map(() => null);
     }
 
     try {
+      // Ensure workspace-specific Qdrant collection exists
+      const workspaceCollectionName = await this.ensureQdrantCollection(workspace);
+      
+      console.log(`[DocumentIndexer] Indexing ${chunks.length} vectors in workspace collection: ${workspaceCollectionName}`);
+
       const points = chunks.map((chunk, index) => {
         if (!chunk.embedding) {
           throw new Error(`Chunk ${index} missing embedding`);
@@ -295,6 +325,8 @@ export default class DocumentIndexer {
           id: numericId,
           vector: chunk.embedding,
           payload: {
+            // Store workspace in payload for filtering (though collection is already workspace-specific)
+            workspace: workspace,
             documentId: documentId.toString(),
             chunkIndex: chunk.chunkIndex,
             source: chunk.metadata?.source || 'unknown',
@@ -309,14 +341,16 @@ export default class DocumentIndexer {
         };
       });
 
-      await this.qdrantClient.upsert(this.options.qdrantCollection, {
+      // Index into workspace-specific collection
+      await this.qdrantClient.upsert(workspaceCollectionName, {
         wait: true,
         points: points
       });
 
+      console.log(`[DocumentIndexer] Successfully indexed ${points.length} vectors in ${workspaceCollectionName}`);
       return points.map(point => point.payload.stringId);
     } catch (error) {
-      throw new Error(`Vector indexing failed: ${error.message}`);
+      throw new Error(`Vector indexing failed for workspace ${workspace}: ${error.message}`);
     }
   }
 

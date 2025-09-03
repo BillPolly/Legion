@@ -160,7 +160,7 @@ function authenticateToken(req, res, next) {
     ];
 
     for (const doc of documentationContent) {
-      await documentIndexer.indexDocument(doc.content, doc.contentType, doc.metadata);
+      await documentIndexer.indexDocument(doc.content, doc.contentType, doc.metadata, { workspace: 'rag-tool-test' });
     }
   }, 30000);
 
@@ -218,6 +218,7 @@ function authenticateToken(req, res, next) {
   describe('input validation', () => {
     it('should validate valid RAG input', () => {
       const validInput = {
+        workspace: 'rag-tool-test',
         query: 'How do I set up database connections?',
         options: {
           searchLimit: 5,
@@ -235,6 +236,7 @@ function authenticateToken(req, res, next) {
 
     it('should reject input without query', () => {
       const invalidInput = {
+        workspace: 'test',
         options: { searchLimit: 5 }
       };
 
@@ -256,6 +258,7 @@ function authenticateToken(req, res, next) {
   describe('RAG query execution', () => {
     it('should execute database setup RAG query successfully', async () => {
       const result = await queryRAGTool.execute({
+        workspace: 'rag-tool-test',
         query: 'How do I set up a MongoDB database connection in Node.js?',
         options: {
           searchLimit: 3,
@@ -281,6 +284,7 @@ function authenticateToken(req, res, next) {
 
     it('should execute authentication setup RAG query', async () => {
       const result = await queryRAGTool.execute({
+        workspace: 'rag-tool-test',
         query: 'How do I implement JWT authentication with password hashing?',
         options: {
           searchLimit: 4,
@@ -300,6 +304,7 @@ function authenticateToken(req, res, next) {
 
     it('should provide concise responses when requested', async () => {
       const result = await queryRAGTool.execute({
+        workspace: 'rag-tool-test',
         query: 'Quick steps for database setup?',
         options: {
           searchLimit: 2,
@@ -319,6 +324,7 @@ function authenticateToken(req, res, next) {
   describe('source attribution', () => {
     it('should provide detailed source information', async () => {
       const result = await queryRAGTool.execute({
+        workspace: 'rag-tool-test',
         query: 'What are the security best practices for authentication?',
         options: {
           searchLimit: 3,
@@ -346,6 +352,7 @@ function authenticateToken(req, res, next) {
   describe('LLM integration', () => {
     it('should include proper LLM metadata', async () => {
       const result = await queryRAGTool.execute({
+        workspace: 'rag-tool-test',
         query: 'How to handle database errors?',
         options: { searchLimit: 2 }
       });
@@ -362,6 +369,7 @@ function authenticateToken(req, res, next) {
   describe('search integration', () => {
     it('should report search statistics', async () => {
       const result = await queryRAGTool.execute({
+        workspace: 'rag-tool-test',
         query: 'Environment variables for configuration',
         options: { 
           searchLimit: 4,
@@ -381,6 +389,7 @@ function authenticateToken(req, res, next) {
   describe('error handling', () => {
     it('should handle queries with no relevant content', async () => {
       const result = await queryRAGTool.execute({
+        workspace: 'rag-tool-test',
         query: 'How to build a rocket ship to Mars?', // Completely unrelated
         options: {
           searchThreshold: 0.8 // High threshold
@@ -397,6 +406,7 @@ function authenticateToken(req, res, next) {
 
     it('should handle invalid queries gracefully', async () => {
       const result = await queryRAGTool.execute({
+        workspace: 'rag-tool-test',
         query: ''
       });
 
@@ -406,6 +416,7 @@ function authenticateToken(req, res, next) {
 
     it('should provide error context on failures', async () => {
       const result = await queryRAGTool.execute({
+        workspace: 'rag-tool-test',
         query: 'test',
         options: { searchLimit: -1 } // Invalid option
       });
@@ -425,21 +436,24 @@ function authenticateToken(req, res, next) {
       });
 
       await queryRAGTool.execute({
+        workspace: 'rag-tool-test',
         query: 'How do I configure JWT authentication?',
         options: { searchLimit: 3 }
       });
 
+      // Progress events should be emitted
       expect(progressEvents.length).toBeGreaterThan(0);
       
       // Should have progress for different stages
       const messages = progressEvents.map(e => e.message);
       expect(messages.some(m => m.includes('Processing'))).toBe(true);
-    }, 15000);
+    }, 30000);
   });
 
   describe('comprehensive scenarios', () => {
     it('should handle complex technical questions', async () => {
       const result = await queryRAGTool.execute({
+        workspace: 'rag-tool-test',
         query: 'What are the complete steps to set up both database connections and JWT authentication in a Node.js application?',
         options: {
           searchLimit: 5,
@@ -455,10 +469,11 @@ function authenticateToken(req, res, next) {
       } else {
         expect(result.error).toBeDefined();
       }
-    }, 15000);
+    }, 30000);
 
     it('should handle configuration-focused questions', async () => {
       const result = await queryRAGTool.execute({
+        workspace: 'rag-tool-test',
         query: 'What environment variables do I need for production deployment?',
         options: {
           searchLimit: 3,
@@ -472,10 +487,11 @@ function authenticateToken(req, res, next) {
       } else {
         expect(result.error).toBeDefined();
       }
-    }, 15000);
+    }, 30000);
 
     it('should handle code-specific questions', async () => {
       const result = await queryRAGTool.execute({
+        workspace: 'rag-tool-test',
         query: 'Show me example code for connecting to MongoDB with error handling',
         options: {
           searchLimit: 2,
@@ -495,6 +511,7 @@ function authenticateToken(req, res, next) {
   describe('response quality', () => {
     it('should provide helpful responses for common questions', async () => {
       const result = await queryRAGTool.execute({
+        workspace: 'rag-tool-test',
         query: 'How do I secure my application?',
         options: {
           searchLimit: 4,

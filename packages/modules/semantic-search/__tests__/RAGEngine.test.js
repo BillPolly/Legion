@@ -120,7 +120,7 @@ Performance optimization:
     ];
 
     for (const doc of testContent) {
-      await documentIndexer.indexDocument(doc.content, doc.contentType, doc.metadata);
+      await documentIndexer.indexDocument(doc.content, doc.contentType, doc.metadata, { workspace: 'rag-engine-test' });
     }
   });
 
@@ -304,6 +304,7 @@ Performance optimization:
 [Source: database-setup.md] provides detailed configuration steps.`);
 
       const result = await ragEngine.query('How do I set up database connections?', {
+        workspace: 'rag-engine-test',
         searchLimit: 3,
         searchThreshold: 0.3,
         responseStyle: 'detailed',
@@ -328,6 +329,7 @@ Performance optimization:
       mockLLMClient.complete.mockResolvedValue('I don\'t have specific information about that topic in the available documentation.');
 
       const result = await ragEngine.query('completely unrelated random topic', {
+        workspace: 'rag-engine-test',
         searchLimit: 5,
         searchThreshold: 0.9 // Very high threshold
       });
@@ -347,6 +349,7 @@ Performance optimization:
 Based on the authentication guide documentation.`);
 
       const result = await ragEngine.query('How do I implement user authentication?', {
+        workspace: 'rag-engine-test',
         searchLimit: 2,
         includeCitations: true
       });
@@ -444,10 +447,12 @@ End of response.   `;
         .mockResolvedValueOnce('Brief answer.');
 
       const detailedResult = await ragEngine.query('test query', {
+        workspace: 'rag-engine-test',
         responseStyle: 'detailed'
       });
 
       const conciseResult = await ragEngine.query('test query', {
+        workspace: 'rag-engine-test',
         responseStyle: 'concise'
       });
 
@@ -465,6 +470,7 @@ End of response.   `;
       mockLLMClient.complete.mockResolvedValue('Test response');
 
       await ragEngine.query('configuration help', {
+        workspace: 'rag-engine-test',
         searchLimit: 2
       });
 
@@ -507,6 +513,7 @@ Authentication Setup:
 Both topics are covered in the documentation sources.`);
 
       const result = await ragEngine.query('How do I set up both database and authentication?', {
+        workspace: 'rag-engine-test',
         searchLimit: 4,
         searchThreshold: 0.25
       });

@@ -1,7 +1,10 @@
 /**
  * Tool Registry Server
- * WebSocket server with actor-based communication for tool registry management
- * Uses singleton ToolRegistry instance
+ * WebSocket-only server with actor-based communication for tool registry management
+ * 
+ * IMPORTANT: Legion does NOT use REST APIs - only WebSocket actors!
+ * All communication between frontend and backend is through WebSocket actor protocol.
+ * Uses singleton ToolRegistry instance for all operations.
  */
 
 import express from 'express';
@@ -24,8 +27,7 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { loggingMiddleware } from './middleware/logging.js';
 
 // Import routes
-import { healthRoutes } from './routes/health.js';
-import { apiRoutes } from './routes/api.js';
+// NOTE: Legion does NOT use REST APIs - only static file serving
 import { staticRoutes } from './routes/static.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -43,8 +45,7 @@ app.use(corsMiddleware);
 app.use(express.json());
 
 // Apply routes
-app.use('/health', healthRoutes);
-app.use('/api', apiRoutes);
+// NOTE: Legion uses WebSocket actors only - no REST APIs!
 app.use('/', staticRoutes);
 
 // Error handling middleware (must be last)
@@ -118,12 +119,11 @@ async function startServer() {
     
     console.log('');
     console.log('═══════════════════════════════════════════════════');
-    console.log('   🚀 Tool Registry Server                        ');
+    console.log('   🚀 Tool Registry Server - WebSocket Only          ');
     console.log('═══════════════════════════════════════════════════');
-    console.log(`   HTTP:      http://${HOST}:${PORT}`);
+    console.log(`   Static:    http://${HOST}:${PORT}`);
     console.log(`   WebSocket: ws://${HOST}:${PORT}/ws`);
-    console.log(`   Health:    http://${HOST}:${PORT}/health`);
-    console.log(`   API:       http://${HOST}:${PORT}/api/stats`);
+    console.log('   NOTE: No REST APIs - Legion uses WebSocket actors only');
     console.log('═══════════════════════════════════════════════════');
     console.log('');
     

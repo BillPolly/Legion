@@ -43,34 +43,15 @@ describe('ToolRegistryService', () => {
     beforeEach(() => {
       // Spy on the singleton to test delegation
       mockRegistry = {
-        initialize: jest.fn(),
-        getLoader: jest.fn(),
         getTool: jest.fn(),
-        listTools: jest.fn(),
         searchTools: jest.fn(),
-        getUsageStats: jest.fn()
+        searchModules: jest.fn(),
+        getStatistics: jest.fn(),
+        generatePerspectives: jest.fn()
       };
       
       // Replace the registry reference
       service.registry = mockRegistry;
-    });
-    
-    it('should delegate initialize to registry', async () => {
-      mockRegistry.initialize.mockResolvedValue(undefined);
-      
-      await service.initialize();
-      
-      expect(mockRegistry.initialize).toHaveBeenCalledTimes(1);
-    });
-    
-    it('should delegate getLoader to registry', async () => {
-      const mockLoader = { loadModules: jest.fn() };
-      mockRegistry.getLoader.mockResolvedValue(mockLoader);
-      
-      const loader = await service.getLoader();
-      
-      expect(loader).toBe(mockLoader);
-      expect(mockRegistry.getLoader).toHaveBeenCalledTimes(1);
     });
     
     it('should delegate getTool to registry', async () => {
@@ -83,16 +64,6 @@ describe('ToolRegistryService', () => {
       expect(mockRegistry.getTool).toHaveBeenCalledWith('test_tool');
     });
     
-    it('should delegate listTools to registry', async () => {
-      const mockTools = [{ name: 'tool1' }, { name: 'tool2' }];
-      mockRegistry.listTools.mockResolvedValue(mockTools);
-      
-      const tools = await service.listTools({ limit: 10 });
-      
-      expect(tools).toEqual(mockTools);
-      expect(mockRegistry.listTools).toHaveBeenCalledWith({ limit: 10 });
-    });
-    
     it('should delegate searchTools to registry', async () => {
       const mockResults = [{ name: 'calculator', score: 0.9 }];
       mockRegistry.searchTools.mockResolvedValue(mockResults);
@@ -103,30 +74,24 @@ describe('ToolRegistryService', () => {
       expect(mockRegistry.searchTools).toHaveBeenCalledWith('calc', { limit: 5 });
     });
     
+    it('should delegate searchModules to registry', async () => {
+      const mockModules = [{ name: 'file-module', type: 'class' }];
+      mockRegistry.searchModules.mockResolvedValue(mockModules);
+      
+      const modules = await service.searchModules('file', { limit: 10 });
+      
+      expect(modules).toEqual(mockModules);
+      expect(mockRegistry.searchModules).toHaveBeenCalledWith('file', { limit: 10 });
+    });
+    
     it('should delegate getStats to registry', async () => {
       const mockStats = { toolsRegistered: 10 };
-      mockRegistry.getUsageStats.mockResolvedValue(mockStats);
+      mockRegistry.getStatistics.mockResolvedValue(mockStats);
       
       const stats = await service.getStats();
       
       expect(stats).toEqual(mockStats);
-      expect(mockRegistry.getUsageStats).toHaveBeenCalledTimes(1);
-    });
-    
-    it('should handle loadAllModulesFromFileSystem', async () => {
-      const mockLoader = {
-        loadModules: jest.fn().mockResolvedValue({
-          loaded: [],
-          failed: [],
-          summary: { total: 5, loaded: 5, failed: 0 }
-        })
-      };
-      mockRegistry.getLoader.mockResolvedValue(mockLoader);
-      
-      const result = await service.loadAllModulesFromFileSystem();
-      
-      expect(mockLoader.loadModules).toHaveBeenCalledTimes(1);
-      expect(result.summary.total).toBe(5);
+      expect(mockRegistry.getStatistics).toHaveBeenCalledTimes(1);
     });
     
     it('should handle executeTool', async () => {

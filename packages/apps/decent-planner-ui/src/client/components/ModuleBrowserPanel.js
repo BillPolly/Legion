@@ -4,7 +4,8 @@
  * Following the design document specification
  */
 
-import { UmbilicalUtils } from '/legion/frontend-components/src/umbilical/index.js';
+// Note: Using simplified component pattern for decent-planner-ui
+// No external umbilical dependencies
 
 class ModuleBrowserPanelModel {
   constructor(options = {}) {
@@ -790,36 +791,38 @@ class ModuleBrowserPanelViewModel {
   }
 }
 
-export const ModuleBrowserPanel = {
-  create(umbilical) {
-    // 1. Introspection Mode
-    if (umbilical.describe) {
-      const requirements = UmbilicalUtils.createRequirements();
-      requirements.add('dom', 'HTMLElement', 'Container element');
-      requirements.add('modules', 'array', 'Array of available modules (optional)', false);
-      requirements.add('onSearch', 'function', 'Search callback (optional)', false);
-      requirements.add('onModuleSelect', 'function', 'Module selection callback (optional)', false);
-      requirements.add('onMount', 'function', 'Mount callback (optional)', false);
-      requirements.add('onDestroy', 'function', 'Destroy callback (optional)', false);
-      umbilical.describe(requirements);
-      return;
-    }
-    
-    // 2. Validation Mode
-    if (umbilical.validate) {
-      return umbilical.validate({
-        hasDomElement: umbilical.dom && umbilical.dom.nodeType === Node.ELEMENT_NODE,
-        hasValidModules: !umbilical.modules || Array.isArray(umbilical.modules)
-      });
-    }
-    
-    // 3. Instance Creation Mode
-    UmbilicalUtils.validateCapabilities(umbilical, ['dom'], 'ModuleBrowserPanel');
+export class ModuleBrowserPanel {
+  constructor(container, options = {}) {
+    const umbilical = {
+      dom: container,
+      modules: options.modules || [],
+      onSearchModules: options.onSearchModules,
+      onModuleSelect: options.onModuleSelect,
+      onMount: options.onMount,
+      onDestroy: options.onDestroy
+    };
     
     const model = new ModuleBrowserPanelModel(umbilical);
     const view = new ModuleBrowserPanelView(umbilical.dom);
-    const viewModel = new ModuleBrowserPanelViewModel(model, view, umbilical);
+    this.viewModel = new ModuleBrowserPanelViewModel(model, view, umbilical);
     
-    return viewModel.initialize();
+    return this.viewModel.initialize();
   }
-};
+  
+  // Delegate methods to viewModel
+  setModules(modules) {
+    return this.viewModel.setModules(modules);
+  }
+  
+  search(query) {
+    return this.viewModel.search(query);
+  }
+  
+  getSelectedModule() {
+    return this.viewModel.getSelectedModule();
+  }
+  
+  destroy() {
+    return this.viewModel.destroy();
+  }
+}

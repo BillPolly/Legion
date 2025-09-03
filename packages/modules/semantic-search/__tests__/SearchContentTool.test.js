@@ -108,7 +108,7 @@ API documentation includes endpoint specifications and examples.`,
     ];
 
     for (const doc of testContent) {
-      await documentIndexer.indexDocument(doc.content, doc.contentType, doc.metadata);
+      await documentIndexer.indexDocument(doc.content, doc.contentType, doc.metadata, { workspace: 'search-test-data' });
     }
   });
 
@@ -165,6 +165,7 @@ API documentation includes endpoint specifications and examples.`,
   describe('input validation', () => {
     it('should validate valid search input', () => {
       const validInput = {
+        workspace: 'test-search',
         query: 'database configuration',
         options: {
           limit: 5,
@@ -180,6 +181,7 @@ API documentation includes endpoint specifications and examples.`,
 
     it('should reject input without query', () => {
       const invalidInput = {
+        workspace: 'test',
         options: { limit: 5 }
       };
 
@@ -189,6 +191,7 @@ API documentation includes endpoint specifications and examples.`,
 
     it('should reject invalid limit values', () => {
       const invalidInput = {
+        workspace: 'test',
         query: 'test',
         options: { limit: -1 }
       };
@@ -201,6 +204,7 @@ API documentation includes endpoint specifications and examples.`,
   describe('semantic search execution', () => {
     it('should execute database-related searches successfully', async () => {
       const result = await searchContentTool.execute({
+        workspace: 'search-test-data',
         query: 'database connection MongoDB',
         options: {
           limit: 5,
@@ -232,6 +236,7 @@ API documentation includes endpoint specifications and examples.`,
 
     it('should execute authentication-related searches', async () => {
       const result = await searchContentTool.execute({
+        workspace: 'search-test-data',
         query: 'user authentication JWT security',
         options: {
           limit: 3,
@@ -254,6 +259,7 @@ API documentation includes endpoint specifications and examples.`,
 
     it('should include proper result metadata', async () => {
       const result = await searchContentTool.execute({
+        workspace: 'search-test-data',
         query: 'API endpoints',
         options: { limit: 2 }
       });
@@ -275,11 +281,13 @@ API documentation includes endpoint specifications and examples.`,
   describe('search options', () => {
     it('should respect custom limit settings', async () => {
       const smallLimit = await searchContentTool.execute({
+        workspace: 'search-test-data',
         query: 'configuration',
         options: { limit: 2 }
       });
 
       const largeLimit = await searchContentTool.execute({
+        workspace: 'search-test-data',
         query: 'configuration', 
         options: { limit: 10 }
       });
@@ -292,11 +300,13 @@ API documentation includes endpoint specifications and examples.`,
 
     it('should apply threshold filtering', async () => {
       const highThreshold = await searchContentTool.execute({
+        workspace: 'search-test-data',
         query: 'database',
         options: { threshold: 0.8 }
       });
 
       const lowThreshold = await searchContentTool.execute({
+        workspace: 'search-test-data',
         query: 'database',
         options: { threshold: 0.2 }
       });
@@ -311,6 +321,7 @@ API documentation includes endpoint specifications and examples.`,
 
     it('should include context when requested', async () => {
       const result = await searchContentTool.execute({
+        workspace: 'search-test-data',
         query: 'MongoDB connection',
         options: {
           limit: 3,
@@ -331,6 +342,7 @@ API documentation includes endpoint specifications and examples.`,
   describe('filtering capabilities', () => {
     it('should filter by source pattern', async () => {
       const result = await searchContentTool.execute({
+        workspace: 'search-test-data',
         query: 'configuration',
         options: {
           sourceFilter: 'database-setup.md',
@@ -348,6 +360,7 @@ API documentation includes endpoint specifications and examples.`,
 
     it('should filter by content type', async () => {
       const result = await searchContentTool.execute({
+        workspace: 'search-test-data',
         query: 'configuration',
         options: {
           contentTypeFilter: ['application/json'],
@@ -367,6 +380,7 @@ API documentation includes endpoint specifications and examples.`,
   describe('error handling', () => {
     it('should handle empty query gracefully', async () => {
       const result = await searchContentTool.execute({
+        workspace: 'test',
         query: ''
       });
 
@@ -376,6 +390,7 @@ API documentation includes endpoint specifications and examples.`,
 
     it('should handle invalid threshold values', async () => {
       const result = await searchContentTool.execute({
+        workspace: 'test',
         query: 'test query',
         options: { threshold: 1.5 } // Invalid threshold
       });
@@ -386,6 +401,7 @@ API documentation includes endpoint specifications and examples.`,
 
     it('should provide meaningful error messages', async () => {
       const result = await searchContentTool.execute({
+        workspace: 'test',
         query: 'test',
         options: { limit: -5 }
       });
@@ -399,6 +415,7 @@ API documentation includes endpoint specifications and examples.`,
   describe('search performance and metrics', () => {
     it('should provide search timing information', async () => {
       const result = await searchContentTool.execute({
+        workspace: 'search-test-data',
         query: 'authentication security',
         options: { limit: 5 }
       });
@@ -411,6 +428,7 @@ API documentation includes endpoint specifications and examples.`,
 
     it('should handle queries with no results gracefully', async () => {
       const result = await searchContentTool.execute({
+        workspace: 'search-test-data',
         query: 'completely unrelated topic that definitely does not exist',
         options: { threshold: 0.9 }
       });
@@ -431,6 +449,7 @@ API documentation includes endpoint specifications and examples.`,
       });
 
       await searchContentTool.execute({
+        workspace: 'search-test-data',
         query: 'database configuration setup',
         options: { limit: 5 }
       });
@@ -446,6 +465,7 @@ API documentation includes endpoint specifications and examples.`,
   describe('comprehensive search scenarios', () => {
     it('should find configuration-related content', async () => {
       const result = await searchContentTool.execute({
+        workspace: 'search-test-data',
         query: 'server configuration port settings',
         options: { 
           limit: 5,
@@ -472,6 +492,7 @@ API documentation includes endpoint specifications and examples.`,
 
     it('should find API documentation content', async () => {
       const result = await searchContentTool.execute({
+        workspace: 'search-test-data',
         query: 'REST API GET POST endpoints',
         options: { 
           limit: 3,
@@ -493,6 +514,7 @@ API documentation includes endpoint specifications and examples.`,
 
     it('should handle multi-term queries effectively', async () => {
       const result = await searchContentTool.execute({
+        workspace: 'search-test-data',
         query: 'database authentication security configuration',
         options: { 
           limit: 8,

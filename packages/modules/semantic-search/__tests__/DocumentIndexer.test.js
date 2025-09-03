@@ -81,7 +81,7 @@ describe('DocumentIndexer', () => {
       
       const result = await documentIndexer.indexDocument(content, 'text/plain', {
         source: 'file:///test.txt'
-      });
+      }, { workspace: 'test-indexer' });
       
       expect(result.success).toBe(true);
       expect(result.documentId).toBeDefined();
@@ -110,8 +110,8 @@ describe('DocumentIndexer', () => {
       const content = 'Duplicate content for testing deduplication.';
       const metadata = { source: 'file:///duplicate.txt' };
       
-      const firstResult = await documentIndexer.indexDocument(content, 'text/plain', metadata);
-      const secondResult = await documentIndexer.indexDocument(content, 'text/plain', metadata);
+      const firstResult = await documentIndexer.indexDocument(content, 'text/plain', metadata, { workspace: 'test-duplicates' });
+      const secondResult = await documentIndexer.indexDocument(content, 'text/plain', metadata, { workspace: 'test-duplicates' });
       
       expect(firstResult.documentId.toString()).toBe(secondResult.documentId.toString());
       expect(secondResult.alreadyExists).toBe(true);
@@ -122,7 +122,7 @@ describe('DocumentIndexer', () => {
       await expect(
         documentIndexer.indexDocument('', 'text/plain', {
           source: 'file:///empty.txt'
-        })
+        }, { workspace: 'test-errors' })
       ).rejects.toThrow('Content cannot be empty');
     });
   });
@@ -147,7 +147,7 @@ describe('DocumentIndexer', () => {
         }
       ];
 
-      const results = await documentIndexer.indexDocuments(documents);
+      const results = await documentIndexer.indexDocuments(documents, { workspace: 'test-batch' });
       
       expect(results.totalDocuments).toBe(3);
       expect(results.successfulDocuments).toBe(3);
@@ -184,7 +184,7 @@ describe('DocumentIndexer', () => {
         }
       ];
 
-      const results = await documentIndexer.indexDocuments(documents);
+      const results = await documentIndexer.indexDocuments(documents, { workspace: 'test-batch' });
       
       expect(results.totalDocuments).toBe(3);
       expect(results.successfulDocuments).toBe(2);
@@ -200,7 +200,7 @@ describe('DocumentIndexer', () => {
       
       const result = await documentIndexer.indexDocument(content, 'text/plain', {
         source: 'file:///embedding-test.txt'
-      });
+      }, { workspace: 'test-embeddings' });
       
       expect(result.success).toBe(true);
       
@@ -227,7 +227,7 @@ describe('DocumentIndexer', () => {
       
       const result = await documentIndexer.indexDocument(content, 'text/plain', {
         source: 'file:///vector-test.txt'
-      });
+      }, { workspace: 'test-vectors' });
       
       expect(result.success).toBe(true);
       expect(result.vectorsIndexed).toBe(result.chunksIndexed);
@@ -250,12 +250,12 @@ describe('DocumentIndexer', () => {
       
       // Index original
       const originalResult = await documentIndexer.indexDocument(
-        originalContent, 'text/plain', metadata
+        originalContent, 'text/plain', metadata, { workspace: 'test-updates' }
       );
       
       // Update with new content
       const updateResult = await documentIndexer.indexDocument(
-        updatedContent, 'text/plain', metadata, { updateExisting: true }
+        updatedContent, 'text/plain', metadata, { updateExisting: true, workspace: 'test-updates' }
       );
       
       expect(updateResult.success).toBe(true);
@@ -282,7 +282,7 @@ describe('DocumentIndexer', () => {
         }
       ];
 
-      const results = await documentIndexer.indexDocuments(documents);
+      const results = await documentIndexer.indexDocuments(documents, { workspace: 'test-batch' });
       
       expect(results.statistics).toBeDefined();
       expect(results.statistics.avgChunksPerDocument).toBeGreaterThan(0);

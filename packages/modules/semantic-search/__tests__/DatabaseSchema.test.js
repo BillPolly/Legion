@@ -77,15 +77,15 @@ describe('DatabaseSchema', () => {
       const docIndexes = await db.collection('test_documents').indexes();
       const docIndexNames = docIndexes.map(idx => Object.keys(idx.key)[0]);
       
-      expect(docIndexNames).toContain('source');
-      expect(docIndexNames).toContain('contentHash');
+      expect(docIndexNames).toContain('workspace');  // Updated for workspace-first design
+      expect(docIndexNames.filter(name => name === 'workspace')).toContain('workspace');
       
       // Check chunks collection indexes
       const chunkIndexes = await db.collection('test_document_chunks').indexes();
       const chunkIndexNames = chunkIndexes.map(idx => Object.keys(idx.key)[0]);
       
-      expect(chunkIndexNames).toContain('documentId');
-      expect(chunkIndexNames).toContain('contentHash');
+      expect(chunkIndexNames).toContain('workspace');  // Updated for workspace-first design
+      expect(chunkIndexNames.filter(name => name === 'workspace')).toContain('workspace');
     });
   });
 
@@ -105,13 +105,14 @@ describe('DatabaseSchema', () => {
         contentType: 'text/plain'
       };
 
-      const insertedId = await databaseSchema.insertDocument(testDoc);
+      const insertedId = await databaseSchema.insertDocument(testDoc, 'test-workspace');
       expect(insertedId).toBeDefined();
       
       const retrieved = await databaseSchema.getDocument(insertedId);
       expect(retrieved).toBeDefined();
       expect(retrieved.source).toBe(testDoc.source);
       expect(retrieved.title).toBe(testDoc.title);
+      expect(retrieved.workspace).toBe('test-workspace');
       expect(retrieved.indexedAt).toBeDefined();
     });
 
@@ -123,11 +124,11 @@ describe('DatabaseSchema', () => {
         contentHash: 'duplicate123'
       };
 
-      const firstId = await databaseSchema.insertDocument(testDoc);
+      const firstId = await databaseSchema.insertDocument(testDoc, 'test-workspace');
       expect(firstId).toBeDefined();
       
-      // Attempt to insert duplicate
-      const secondId = await databaseSchema.insertDocument(testDoc);
+      // Attempt to insert duplicate in same workspace
+      const secondId = await databaseSchema.insertDocument(testDoc, 'test-workspace');
       expect(secondId.toString()).toBe(firstId.toString()); // Should return existing ID
     });
   });
@@ -145,7 +146,7 @@ describe('DatabaseSchema', () => {
         contentHash: 'doc123'
       };
       
-      documentId = await databaseSchema.insertDocument(testDoc);
+      documentId = await databaseSchema.insertDocument(testDoc, 'test-workspace');
     });
 
     it('should insert and retrieve chunks', async () => {
@@ -159,7 +160,7 @@ describe('DatabaseSchema', () => {
         tokenCount: 10
       };
 
-      const insertedId = await databaseSchema.insertChunk(testChunk);
+      const insertedId = await databaseSchema.insertChunk(testChunk, 'test-workspace');
       expect(insertedId).toBeDefined();
       
       const retrieved = await databaseSchema.getChunk(insertedId);
@@ -189,7 +190,7 @@ describe('DatabaseSchema', () => {
       ];
 
       for (const chunk of chunks) {
-        await databaseSchema.insertChunk(chunk);
+        await databaseSchema.insertChunk(chunk, 'test-workspace');
       }
       
       const retrievedChunks = await databaseSchema.getChunksByDocument(documentId);
@@ -206,11 +207,11 @@ describe('DatabaseSchema', () => {
         contentHash: 'duplicate_chunk_123'
       };
 
-      const firstId = await databaseSchema.insertChunk(testChunk);
+      const firstId = await databaseSchema.insertChunk(testChunk, 'test-workspace');
       expect(firstId).toBeDefined();
       
       // Attempt to insert duplicate
-      const secondId = await databaseSchema.insertChunk(testChunk);
+      const secondId = await databaseSchema.insertChunk(testChunk, 'test-workspace');
       expect(secondId.toString()).toBe(firstId.toString()); // Should return existing ID
     });
   });
@@ -237,7 +238,7 @@ describe('DatabaseSchema', () => {
       ];
 
       for (const doc of docs) {
-        await databaseSchema.insertDocument(doc);
+        await databaseSchema.insertDocument(doc, 'test-workspace');
       }
       
       const results = await databaseSchema.searchDocuments({ source: /docs/ });
@@ -252,7 +253,7 @@ describe('DatabaseSchema', () => {
         title: 'Test',
         contentHash: 'test123'
       };
-      const docId = await databaseSchema.insertDocument(testDoc);
+      const docId = await databaseSchema.insertDocument(testDoc, 'test-workspace');
 
       const chunks = [
         {
@@ -270,7 +271,7 @@ describe('DatabaseSchema', () => {
       ];
 
       for (const chunk of chunks) {
-        await databaseSchema.insertChunk(chunk);
+        await databaseSchema.insertChunk(chunk, 'test-workspace');
       }
       
       const results = await databaseSchema.searchChunks({ content: /database/ });
@@ -291,14 +292,14 @@ describe('DatabaseSchema', () => {
         title: 'Test',
         contentHash: 'test123'
       };
-      const docId = await databaseSchema.insertDocument(testDoc);
+      const docId = await databaseSchema.insertDocument(testDoc, 'test-workspace');
       
       await databaseSchema.insertChunk({
         documentId: docId,
         chunkIndex: 0,
         content: 'Test content',
         contentHash: 'chunk123'
-      });
+      }, 'test-workspace');
 
       const clearResult = await databaseSchema.clearAll();
       expect(clearResult.documentsDeleted).toBeGreaterThan(0);
@@ -325,14 +326,14 @@ describe('DatabaseSchema', () => {
         title: 'Test',
         contentHash: 'test123'
       };
-      const docId = await databaseSchema.insertDocument(testDoc);
+      const docId = await databaseSchema.insertDocument(testDoc, 'test-workspace');
       
       await databaseSchema.insertChunk({
         documentId: docId,
         chunkIndex: 0,
         content: 'Test content',
         contentHash: 'chunk123'
-      });
+      }, 'test-workspace');
 
       const stats = await databaseSchema.getStatistics();
       expect(stats.totalDocuments).toBe(1);

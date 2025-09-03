@@ -8,7 +8,7 @@
  */
 
 import { TabsComponent } from './TabsComponent.js';
-import { ModulesManagementComponent } from './ModulesManagementComponent.js';
+import { ModuleBrowserPanel } from './ModuleBrowserPanel.js';
 import { ToolsBrowserComponent } from './ToolsBrowserComponent.js';
 
 export class ToolRegistryTabComponent {
@@ -102,12 +102,17 @@ export class ToolRegistryTabComponent {
       onTabChange: (tabId) => this.handleSubTabChange(tabId)
     });
     
-    // Initialize modules management component
+    // Initialize new module browser panel
     const modulesContainer = this.components.tabs.getContentContainer('modules');
     if (modulesContainer) {
-      this.components.modules = new ModulesManagementComponent(modulesContainer, {
-        onModuleAction: (action, moduleName) => this.handleModuleAction(action, moduleName),
-        onRefresh: () => this.refreshModules()
+      this.components.modules = new ModuleBrowserPanel(modulesContainer, {
+        modules: this.model.modules,
+        onSearchModules: (query) => this.handleModuleSearch(query),
+        onModuleSelect: (module) => this.handleModuleSelect(module),
+        onMount: (api) => {
+          console.log('📦 ModuleBrowserPanel mounted in decent planner');
+          this.modulesBrowserAPI = api;
+        }
       });
     }
     
@@ -136,13 +141,24 @@ export class ToolRegistryTabComponent {
   }
 
   /**
-   * Handle module actions (load, unload, refresh)
+   * Handle module search (new backend search)
    */
-  handleModuleAction(action, moduleName) {
-    console.log(`Tool Registry: ${action} module ${moduleName}`);
+  handleModuleSearch(query) {
+    console.log(`Tool Registry: Module search requested: "${query}"`);
     
-    if (this.options.onModuleAction) {
-      this.options.onModuleAction(action, moduleName);
+    if (this.options.onModuleSearch) {
+      this.options.onModuleSearch(query);
+    }
+  }
+  
+  /**
+   * Handle module selection
+   */
+  handleModuleSelect(module) {
+    console.log(`Tool Registry: Module selected:`, module.name);
+    
+    if (this.options.onModuleSelect) {
+      this.options.onModuleSelect(module);
     }
   }
 
@@ -178,14 +194,11 @@ export class ToolRegistryTabComponent {
   }
 
   /**
-   * Refresh modules list
+   * Refresh modules list (trigger search for all)
    */
   refreshModules() {
-    console.log('Tool Registry: Refreshing modules list');
-    
-    if (this.options.onRefreshModules) {
-      this.options.onRefreshModules();
-    }
+    console.log('Tool Registry: Refreshing modules list via search');
+    this.handleModuleSearch(''); // Search for all modules
   }
 
   /**
@@ -203,13 +216,13 @@ export class ToolRegistryTabComponent {
   }
 
   /**
-   * Update modules list
+   * Update modules list (new API)
    */
   updateModules(modules) {
     this.model.modules = modules;
     
-    if (this.components.modules) {
-      this.components.modules.updateModules(modules);
+    if (this.components.modules && this.components.modules.setModules) {
+      this.components.modules.setModules(modules);
     }
   }
 

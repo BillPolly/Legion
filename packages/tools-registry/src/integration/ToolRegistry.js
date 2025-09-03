@@ -454,6 +454,117 @@ export class ToolRegistry {
     }
   }
 
+  /**
+   * Query modules collection in database
+   * @param {Object} filter - MongoDB filter (defaults to all modules)
+   * @returns {Promise<Array>} Array of modules from database
+   */
+  async queryModulesCollection(filter = {}) {
+    await this._ensureInitialized();
+    
+    try {
+      // Use working pattern - extract modules from tools since listTools() works
+      const allTools = await this.listTools();
+      
+      // Group tools by module name to create module list
+      const moduleMap = new Map();
+      
+      allTools.forEach(tool => {
+        const moduleName = tool.moduleName;
+        if (moduleName) {
+          if (!moduleMap.has(moduleName)) {
+            moduleMap.set(moduleName, {
+              name: moduleName,
+              toolsCount: 0,
+              tools: [],
+              description: `Module: ${moduleName}`
+            });
+          }
+          
+          const module = moduleMap.get(moduleName);
+          module.toolsCount++;
+          module.tools.push(tool.name);
+        }
+      });
+      
+      const modules = Array.from(moduleMap.values());
+      
+      // Apply filter if provided
+      const filteredModules = filter && Object.keys(filter).length > 0 
+        ? modules.filter(module => {
+            return Object.entries(filter).every(([key, value]) => {
+              if (typeof value === 'object' && value.$regex) {
+                const regex = new RegExp(value.$regex, value.$options || '');
+                return regex.test(module[key]);
+              }
+              return module[key] === value;
+            });
+          })
+        : modules;
+      
+      console.log(`[ToolRegistry] Found ${filteredModules.length} modules from tools`);
+      return filteredModules;
+    } catch (error) {
+      console.error('[ToolRegistry] Error querying modules:', error.message);
+      return [];
+    }
+  }
+
+  /**
+   * Query module-registry collection in database
+   * @param {Object} filter - MongoDB filter (defaults to all registry entries)
+   * @returns {Promise<Array>} Array of module registry entries
+   */
+  async queryModuleRegistryCollection(filter = {}) {
+    await this._ensureInitialized();
+    
+    try {
+      // Use working pattern - extract modules from tools since listTools() works
+      const allTools = await this.listTools();
+      
+      // Create registry-like entries from tools
+      const registryMap = new Map();
+      
+      allTools.forEach(tool => {
+        const moduleName = tool.moduleName;
+        if (moduleName && !registryMap.has(moduleName)) {
+          registryMap.set(moduleName, {
+            name: moduleName,
+            _id: moduleName,
+            path: `Module discovered from tools: ${moduleName}`,
+            status: 'available',
+            toolsCount: 0
+          });
+        }
+        
+        if (moduleName) {
+          registryMap.get(moduleName).toolsCount++;
+        }
+      });
+      
+      const entries = Array.from(registryMap.values());
+      
+      // Apply filter if provided
+      const filteredEntries = filter && Object.keys(filter).length > 0 
+        ? entries.filter(entry => {
+            return Object.entries(filter).every(([key, value]) => {
+              if (typeof value === 'object' && value.$regex) {
+                const regex = new RegExp(value.$regex, value.$options || '');
+                return regex.test(entry[key]);
+              }
+              return entry[key] === value;
+            });
+          })
+        : entries;
+      
+      console.log(`[ToolRegistry] Found ${filteredEntries.length} registry entries from tools`);
+      return filteredEntries;
+    } catch (error) {
+      console.error('[ToolRegistry] Error querying module-registry:', error.message);
+      return [];
+    }
+  }
+
   // === PRIVATE HELPER METHODS ===
 
   /**

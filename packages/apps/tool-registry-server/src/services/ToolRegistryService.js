@@ -52,42 +52,6 @@ export class ToolRegistryService {
   }
   
   /**
-   * Get the loader instance
-   */
-  async getLoader() {
-    if (!this.loader) {
-      this.loader = await this.registry.getLoader();
-    }
-    return this.loader;
-  }
-  
-  /**
-   * Get registry provider
-   */
-  getProvider() {
-    return this.registry.provider;
-  }
-  
-  /**
-   * Load all tools from database
-   */
-  async loadTools(options = {}) {
-    const tools = await this.registry.listTools(options);
-    return tools;
-  }
-  
-  /**
-   * Load all modules from database
-   */
-  async loadModules(options = {}) {
-    const provider = this.getProvider();
-    if (!provider || !provider.listModules) {
-      throw new Error('Provider does not support module listing');
-    }
-    return await provider.listModules(options);
-  }
-  
-  /**
    * Execute a tool
    */
   async executeTool(toolName, params) {
@@ -101,63 +65,10 @@ export class ToolRegistryService {
   }
   
   /**
-   * Load all modules from filesystem
-   */
-  async loadAllModulesFromFileSystem() {
-    const loader = await this.getLoader();
-    const result = await loader.loadAllModules();
-    return result;
-  }
-  
-  /**
-   * Clear all data from database
-   */
-  async clearDatabase() {
-    const loader = await this.getLoader();
-    await loader.clearAll();
-  }
-  
-  /**
-   * Get registry statistics
-   */
-  async getRegistryStats() {
-    const stats = await this.registry.getStatistics();
-    
-    // Get counts from provider (if available)
-    const provider = this.getProvider();
-    let counts = {
-      modules: 0,
-      tools: 0,
-      perspectives: 0
-    };
-    
-    if (provider) {
-      try {
-        const tools = await this.registry.listTools({ limit: 1 });
-        counts.tools = tools?.length || 0;
-      } catch (error) {
-        console.error('Error getting counts:', error);
-      }
-    }
-    
-    return {
-      ...stats,
-      counts
-    };
-  }
-  
-  /**
    * Get a specific tool
    */
   async getTool(toolName) {
     return await this.registry.getTool(toolName);
-  }
-  
-  /**
-   * List tools from registry
-   */
-  async listTools(options = {}) {
-    return await this.registry.listTools(options);
   }
   
   /**
@@ -168,7 +79,7 @@ export class ToolRegistryService {
   }
   
   /**
-   * Get registry usage stats (alias for getRegistryStats)
+   * Get registry statistics (includes all counts)
    */
   async getStats() {
     return await this.registry.getStatistics();
@@ -183,26 +94,10 @@ export class ToolRegistryService {
   }
   
   /**
-   * Get perspectives for a specific tool
+   * Search modules and return actual module objects
    */
-  async getToolPerspectives(toolName) {
-    const provider = this.getProvider();
-    
-    if (!provider || !provider.db) {
-      return [];
-    }
-    
-    try {
-      const perspectives = await provider.db.collection('tool_perspectives')
-        .find({ toolName })
-        .limit(100)
-        .toArray();
-      
-      return perspectives;
-    } catch (error) {
-      console.error(`Failed to get perspectives for ${toolName}:`, error);
-      return [];
-    }
+  async searchModules(query, options = {}) {
+    return await this.registry.searchModules(query, options);
   }
   
   /**

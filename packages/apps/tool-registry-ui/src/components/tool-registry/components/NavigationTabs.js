@@ -939,6 +939,13 @@ class NavigationTabsViewModel {
             this.umbilical.onModuleSelect(module);
           }
         };
+        
+        // Provide module search callback
+        umbilicalConfig.onSearchModules = (query) => {
+          if (this.umbilical.onSearchModules) {
+            this.umbilical.onSearchModules(query);
+          }
+        };
       }
       
       const componentInstance = ComponentClass.create(umbilicalConfig);

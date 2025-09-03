@@ -244,6 +244,12 @@ class ToolRegistryViewModel {
             console.log('📦 Module selected from panel:', module.name);
             this.model.updateState('selectedModule', module);
           },
+          onSearchModules: (query) => {
+            console.log('🔍 Module search requested:', query);
+            if (this.actorManager) {
+              this.actorManager.searchModules(query);
+            }
+          },
           onToolExecute: (tool) => {
             console.log('🚀 Tool execution requested:', tool.name);
             if (this.umbilical.onToolExecute) {

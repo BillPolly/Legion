@@ -1,67 +1,165 @@
 /**
- * ClientToolRegistryActor - Client-side actor for tool registry operations
- * Communicates with ServerToolRegistryActor via WebSocket
+ * ClientToolRegistryActor - Protocol-enhanced client-side actor for tool registry operations
+ * Communicates with ServerToolRegistryActor via WebSocket with full protocol validation
  */
 
-import { Actor } from '/legion/shared/actors/src/index.js';
+import { ProtocolActor } from '../shared/ProtocolActor.js';
 
-export class ClientToolRegistryActor extends Actor {
+export class ClientToolRegistryActor extends ProtocolActor {
   constructor(toolRegistryBrowser) {
     super();
     this.toolRegistryBrowser = toolRegistryBrowser;
     this.remoteActor = null;
+  }
+  
+  getProtocol() {
+    return {
+      name: "ClientToolRegistryActor",
+      version: "1.0.0",
+      
+      state: {
+        schema: {
+          connected: { type: 'boolean', required: true },
+          loading: { type: 'boolean', required: true },
+          toolsLoaded: { type: 'boolean', required: true },
+          modulesLoaded: { type: 'boolean', required: true },
+          error: { type: 'string' },
+          toolsCount: { type: 'number', minimum: 0 },
+          modulesCount: { type: 'number', minimum: 0 }
+        },
+        initial: {
+          connected: false,
+          loading: false,
+          toolsLoaded: false,
+          modulesLoaded: false,
+          error: null,
+          toolsCount: 0,
+          modulesCount: 0
+        }
+      },
+      
+      messages: {
+        receives: {
+          // Tools browsing
+          "tools:searchResult": {
+            schema: {
+              query: { type: 'string', required: true },
+              tools: { type: 'array', required: true },
+              count: { type: 'number', minimum: 0 }
+            },
+            preconditions: ["state.connected === true"],
+            postconditions: ["state.toolsCount >= 0"],
+            sideEffects: ["ui.updateToolsList(data.tools)"]
+          },
+          
+          // Modules browsing  
+          "modules:searchResult": {
+            schema: {
+              query: { type: 'string', required: true },
+              modules: { type: 'array', required: true },
+              count: { type: 'number', minimum: 0 }
+            },
+            preconditions: ["state.connected === true"],
+            postconditions: ["state.modulesCount >= 0"],
+            sideEffects: ["ui.updateModulesList(data.modules)"]
+          },
+          
+          // Registry info
+          "registry:stats": {
+            schema: {
+              timestamp: { type: 'string', required: true }
+            },
+            preconditions: ["state.connected === true"]
+          },
+          
+          // Tool execution results
+          "tool:executed": {
+            schema: {
+              toolName: { type: 'string', required: true },
+              result: { type: 'object' },
+              error: { type: 'string' }
+            },
+            preconditions: ["state.connected === true"]
+          }
+        },
+        
+        sends: {
+          // Browsing and search operations only
+          "tools:search": {
+            schema: {
+              query: { type: 'string', required: true },
+              options: { type: 'object' }
+            },
+            preconditions: ["state.connected === true"]
+          },
+          
+          "modules:search": {
+            schema: {
+              query: { type: 'string', required: true },
+              options: { type: 'object' }
+            },
+            preconditions: ["state.connected === true"]
+          },
+          
+          "registry:stats": {
+            schema: {},
+            preconditions: ["state.connected === true"]
+          },
+          
+          "tool:execute": {
+            schema: {
+              toolName: { type: 'string', required: true },
+              params: { type: 'object', required: true }
+            },
+            preconditions: ["state.connected === true"]
+          }
+        }
+      }
+    };
   }
 
   setRemoteActor(remoteActor) {
     this.remoteActor = remoteActor;
     console.log('🔗 ClientToolRegistryActor connected to server');
     
+    // Update protocol state
+    this.state.connected = true;
+    
     // Immediately request tools and modules
     this.loadTools();
     this.loadModules();
   }
 
+  // Override to handle the protocol validation
   async receive(message) {
     console.log('🎯 ClientToolRegistryActor.receive() called with:', message.type);
-    const { type, data } = message;
+    
+    // Use ProtocolActor's enhanced receive for validation
+    return super.receive(message.type, message.data || message);
+  }
+  
+  // Implement ProtocolActor's abstract method
+  handleMessage(messageType, data) {
+    console.log(`📝 Processing ${messageType} message...`);
     
     try {
-      switch (type) {
-        case 'tools:list':
-          console.log('📝 Processing tools:list message...');
-          await this.handleToolsList(data.tools);
-          console.log('✅ Finished processing tools:list message');
+      switch (messageType) {
+        case 'tools:searchResult':
+          console.log(`🔍 Tool search results: "${data.query}" found ${data.count} tools`);
+          this.handleToolsList(data.tools);
+          this.state.toolsLoaded = true;
+          this.state.toolsCount = data.tools?.length || 0;
           break;
           
-        case 'modules:list':
-          console.log('📝 Processing modules:list message...');
-          await this.handleModulesList(data.modules);
-          console.log('✅ Finished processing modules:list message');
-          break;
-          
-        case 'registry:loadAllComplete':
-          console.log('✅ Registry load all complete:', data);
-          // Check both locations for the callback
-          const loadCompleteCallback = this.toolRegistryBrowser.onRegistryLoadComplete || 
-                                       window.toolRegistryApp?.onRegistryLoadComplete;
-          if (loadCompleteCallback) {
-            loadCompleteCallback(data);
-          }
-          break;
-          
-        case 'registry:loadAllFailed':
-          console.error('❌ Registry load all failed:', data.error);
-          // Check both locations for the callback
-          const loadFailedCallback = this.toolRegistryBrowser.onRegistryLoadFailed || 
-                                     window.toolRegistryApp?.onRegistryLoadFailed;
-          if (loadFailedCallback) {
-            loadFailedCallback(data.error);
-          }
+        case 'modules:searchResult':
+          console.log(`🔍 Module search results: "${data.query}" found ${data.count} modules`);
+          this.handleModulesList(data.modules);
+          this.state.modulesLoaded = true;
+          this.state.modulesCount = data.modules?.length || 0;
           break;
           
         case 'registry:stats':
           console.log('📊 Registry stats:', data);
-          // Check both locations for the callback
           const statsCallback = this.toolRegistryBrowser.onRegistryStats || 
                                window.toolRegistryApp?.onRegistryStats;
           if (statsCallback) {
@@ -69,90 +167,35 @@ export class ClientToolRegistryActor extends Actor {
           }
           break;
           
-        case 'registry:clearComplete':
-          console.log('✅ Database cleared:', data);
-          const clearCompleteCallback = this.toolRegistryBrowser.onRegistryClearComplete || 
-                                       window.toolRegistryApp?.onRegistryClearComplete;
-          if (clearCompleteCallback) {
-            clearCompleteCallback(data);
+        case 'tool:executed':
+          console.log('✅ Tool execution result:', data);
+          if (this.toolRegistryBrowser.onToolExecuted) {
+            this.toolRegistryBrowser.onToolExecuted(data);
           }
-          break;
-          
-        case 'registry:clearFailed':
-          console.error('❌ Database clear failed:', data.error);
-          const clearFailedCallback = this.toolRegistryBrowser.onRegistryClearFailed || 
-                                     window.toolRegistryApp?.onRegistryClearFailed;
-          if (clearFailedCallback) {
-            clearFailedCallback(data.error);
-          }
-          break;
-          
-        case 'module:loadComplete':
-          console.log('✅ Module loaded:', data);
-          const moduleLoadCompleteCallback = this.toolRegistryBrowser.onModuleLoadComplete || 
-                                            window.toolRegistryApp?.onModuleLoadComplete;
-          if (moduleLoadCompleteCallback) {
-            moduleLoadCompleteCallback(data);
-          }
-          break;
-          
-        case 'module:loadFailed':
-          console.error('❌ Module load failed:', data);
-          const moduleLoadFailedCallback = this.toolRegistryBrowser.onModuleLoadFailed || 
-                                          window.toolRegistryApp?.onModuleLoadFailed;
-          if (moduleLoadFailedCallback) {
-            moduleLoadFailedCallback(data);
-          }
-          break;
-          
-        case 'registry:perspectivesProgress':
-          console.log('🔄 Perspectives generation progress:', data.status, `${data.percentage}%`);
-          const progressCallback = this.toolRegistryBrowser.onPerspectivesProgress || 
-                                 window.toolRegistryApp?.onPerspectivesProgress;
-          if (progressCallback) {
-            progressCallback(data);
-          }
-          break;
-          
-        case 'registry:perspectivesComplete':
-          console.log('✅ Perspectives generated:', data);
-          const perspectivesCompleteCallback = this.toolRegistryBrowser.onPerspectivesComplete || 
-                                             window.toolRegistryApp?.onPerspectivesComplete;
-          if (perspectivesCompleteCallback) {
-            perspectivesCompleteCallback(data);
-          }
-          break;
-          
-        case 'registry:perspectivesFailed':
-          console.error('❌ Perspective generation failed:', data.error);
-          console.error('Error details:', data.stack);
-          const perspectivesFailedCallback = this.toolRegistryBrowser.onPerspectivesFailed || 
-                                           window.toolRegistryApp?.onPerspectivesFailed;
-          if (perspectivesFailedCallback) {
-            perspectivesFailedCallback(data);
-          }
-          break;
-          
-        case 'tool:execute:result':
-          await this.handleToolExecutionResult(data);
-          break;
-          
-        case 'tool:perspectives':
-          await this.handleToolPerspectives(data);
-          break;
-          
-        case 'error':
-          console.error('Server error:', data.error);
           break;
           
         default:
-          console.log('Unknown message from server:', type, data);
+          console.log('Unknown message from server:', messageType, data);
       }
+      console.log(`✅ Finished processing ${messageType} message`);
     } catch (error) {
-      console.error('❌ Error in ClientToolRegistryActor.receive():', error);
-      console.error('Error stack:', error.stack);
+      console.error(`❌ Error processing ${messageType}:`, error);
+      this.state.error = error.message;
       throw error;
     }
+  }
+  
+  // Implement ProtocolActor's abstract doSend method
+  doSend(messageType, data) {
+    if (!this.remoteActor) {
+      throw new Error('No remote actor connection available');
+    }
+    
+    console.log(`📡 Sending ${messageType} to server:`, data);
+    this.remoteActor.receive({
+      type: messageType,
+      data: data
+    });
   }
 
   // Request tools from server
@@ -165,88 +208,39 @@ export class ClientToolRegistryActor extends Actor {
     }
   }
 
-  // Request modules from server
+  // Search modules from server (empty query = list all)
+  searchModules(query = '', options = {}) {
+    this.send('modules:search', { query, options });
+  }
+  
+  // Backward compatibility: loadModules now uses search
   loadModules() {
-    if (this.remoteActor) {
-      console.log('📡 Requesting modules from server...');
-      this.remoteActor.receive({
-        type: 'modules:load'
-      });
-    }
+    console.log('📡 Loading all modules (via search)...');
+    this.searchModules(''); // Empty query = list all
   }
 
   // Execute tool on server
   executeTool(toolName, params) {
-    if (this.remoteActor) {
-      console.log('🚀 Executing tool on server:', toolName, params);
-      this.remoteActor.receive({
-        type: 'tool:execute',
-        data: { toolName, params }
-      });
-    }
+    this.send('tool:execute', { toolName, params });
   }
 
-  // Get tool perspectives from server
+  // Get tool perspectives from server (deprecated - not in protocol)
   getToolPerspectives(toolName) {
-    if (this.remoteActor) {
-      console.log('🔍 Getting tool perspectives from server:', toolName);
-      this.remoteActor.receive({
-        type: 'tool:get-perspectives',
-        data: { toolName }
-      });
-    }
-  }
-
-  // Load all modules from file system
-  loadAllModules() {
-    if (this.remoteActor) {
-      console.log('🔧 Requesting server to load all modules from file system...');
-      this.remoteActor.receive({
-        type: 'registry:loadAll'
-      });
-    }
+    console.warn('⚠️ getToolPerspectives is deprecated - tool perspectives removed from protocol');
   }
 
   // Get registry statistics
   getRegistryStats() {
-    if (this.remoteActor) {
-      console.log('📊 Requesting registry statistics...');
-      this.remoteActor.receive({
-        type: 'registry:stats'
-      });
-    }
+    this.send('registry:stats', {});
   }
 
-  // Clear database
-  clearDatabase() {
-    if (this.remoteActor) {
-      console.log('🗑️ Requesting to clear database...');
-      this.remoteActor.receive({
-        type: 'registry:clear'
-      });
-    }
-  }
-
-  // Load single module
+  // Load single module (deprecated - use searchModules instead)
   loadSingleModule(moduleName) {
-    if (this.remoteActor) {
-      console.log(`📦 Requesting to load module: ${moduleName}`);
-      this.remoteActor.receive({
-        type: 'module:load',
-        data: { moduleName }
-      });
-    }
+    console.warn('⚠️ loadSingleModule is deprecated - use searchModules instead');
+    this.searchModules(moduleName); // Search for specific module
   }
 
-  // Generate perspectives
-  generatePerspectives() {
-    if (this.remoteActor) {
-      console.log('🔮 Requesting to generate perspectives...');
-      this.remoteActor.receive({
-        type: 'registry:generatePerspectives'
-      });
-    }
-  }
+  // NOTE: Admin operations removed - this is a browsing UI only
 
   // Handle tools list from server
   async handleToolsList(tools) {

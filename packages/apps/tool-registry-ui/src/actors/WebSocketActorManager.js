@@ -239,7 +239,13 @@ export class WebSocketActorManager {
 
   loadModules() {
     if (this.actors.tools) {
-      this.actors.tools.loadModules();
+      this.actors.tools.loadModules(); // Now uses searchModules('') internally
+    }
+  }
+  
+  searchModules(query = '', options = {}) {
+    if (this.actors.tools) {
+      this.actors.tools.searchModules(query, options);
     }
   }
 

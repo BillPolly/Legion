@@ -67,6 +67,9 @@ Use API keys for authentication.`);
   beforeEach(async () => {
     semanticSearchModule = await SemanticSearchModule.create(resourceManager);
     indexContentTool = semanticSearchModule.getTool('index_content');
+    
+    // Use unique database for workspace testing to avoid constraint issues
+    semanticSearchModule.config.mongodb.database = 'semantic-index-tool-workspace-test';
   });
 
   afterEach(async () => {
@@ -96,6 +99,7 @@ Use API keys for authentication.`);
   describe('input validation', () => {
     it('should validate valid input', () => {
       const validInput = {
+        workspace: 'test-docs',
         source: 'file:///test/directory',
         sourceType: 'directory',
         options: {
@@ -109,8 +113,9 @@ Use API keys for authentication.`);
       expect(validation.errors).toHaveLength(0);
     });
 
-    it('should reject input without source', () => {
+    it('should reject input without workspace', () => {
       const invalidInput = {
+        source: 'file:///test',
         sourceType: 'directory'
       };
 
@@ -121,6 +126,7 @@ Use API keys for authentication.`);
 
     it('should reject invalid sourceType', () => {
       const invalidInput = {
+        workspace: 'test',
         source: '/test/path',
         sourceType: 'invalid-type'
       };
@@ -133,6 +139,7 @@ Use API keys for authentication.`);
   describe('single file indexing', () => {
     it('should index a single markdown file', async () => {
       const result = await indexContentTool.execute({
+        workspace: 'test-docs',
         source: path.join(testDir, 'guide.md'),
         sourceType: 'file'
       });
@@ -147,6 +154,7 @@ Use API keys for authentication.`);
 
     it('should index a JSON file', async () => {
       const result = await indexContentTool.execute({
+        workspace: 'test-json',
         source: path.join(testDir, 'config.json'),
         sourceType: 'file'
       });
@@ -160,6 +168,7 @@ Use API keys for authentication.`);
   describe('directory indexing', () => {
     it('should index all files in a directory', async () => {
       const result = await indexContentTool.execute({
+        workspace: 'test-directory',
         source: testDir,
         sourceType: 'directory',
         options: {
@@ -177,6 +186,7 @@ Use API keys for authentication.`);
 
     it('should filter files by type', async () => {
       const result = await indexContentTool.execute({
+        workspace: 'test-filter',
         source: testDir,
         sourceType: 'directory',
         options: {
@@ -192,6 +202,7 @@ Use API keys for authentication.`);
 
     it('should handle custom chunking options', async () => {
       const smallChunkResult = await indexContentTool.execute({
+        workspace: 'test-small',
         source: path.join(testDir, 'guide.md'),
         sourceType: 'file',
         options: {
@@ -201,6 +212,7 @@ Use API keys for authentication.`);
       });
 
       const largeChunkResult = await indexContentTool.execute({
+        workspace: 'test-large',
         source: path.join(testDir, 'api.md'),
         sourceType: 'file',
         options: {
@@ -222,6 +234,7 @@ Use API keys for authentication.`);
     it('should handle URL indexing attempt', async () => {
       // For MVP, we can test that it attempts URL processing
       const result = await indexContentTool.execute({
+        workspace: 'test-web',
         source: 'https://httpbin.org/html',
         sourceType: 'url'
       });
@@ -239,13 +252,15 @@ Use API keys for authentication.`);
 
   describe('duplicate handling', () => {
     it('should detect and handle duplicate content', async () => {
-      // Index the same file twice
+      // Index the same file twice in same workspace
       const firstResult = await indexContentTool.execute({
+        workspace: 'test-duplicates',
         source: path.join(testDir, 'guide.md'),
         sourceType: 'file'
       });
 
       const secondResult = await indexContentTool.execute({
+        workspace: 'test-duplicates',
         source: path.join(testDir, 'guide.md'),
         sourceType: 'file'
       });
@@ -261,12 +276,14 @@ Use API keys for authentication.`);
     it('should update existing content when requested', async () => {
       // First indexing
       await indexContentTool.execute({
+        workspace: 'test-updates',
         source: path.join(testDir, 'guide.md'),
         sourceType: 'file'
       });
 
       // Update with updateExisting flag
       const updateResult = await indexContentTool.execute({
+        workspace: 'test-updates',
         source: path.join(testDir, 'guide.md'),
         sourceType: 'file',
         options: {
@@ -282,6 +299,7 @@ Use API keys for authentication.`);
   describe('error handling', () => {
     it('should handle missing source gracefully', async () => {
       const result = await indexContentTool.execute({
+        workspace: 'test-errors',
         source: '/nonexistent/path',
         sourceType: 'file'
       });
@@ -293,6 +311,7 @@ Use API keys for authentication.`);
 
     it('should handle invalid directory gracefully', async () => {
       const result = await indexContentTool.execute({
+        workspace: 'test-errors',
         source: '/nonexistent/directory',
         sourceType: 'directory'
       });
@@ -303,6 +322,7 @@ Use API keys for authentication.`);
 
     it('should provide detailed error information', async () => {
       const result = await indexContentTool.execute({
+        workspace: 'test-errors',
         source: '/dev/null',
         sourceType: 'file'
       });
@@ -322,6 +342,7 @@ Use API keys for authentication.`);
       });
 
       await indexContentTool.execute({
+        workspace: 'test-progress',
         source: testDir,
         sourceType: 'directory',
         options: {
@@ -340,6 +361,7 @@ Use API keys for authentication.`);
   describe('indexing statistics', () => {
     it('should provide comprehensive indexing statistics', async () => {
       const result = await indexContentTool.execute({
+        workspace: 'test-stats',
         source: testDir,
         sourceType: 'directory',
         options: {

@@ -25,9 +25,15 @@ export default class QueryRAGTool extends Tool {
       throw new Error('Semantic search module not provided to QueryRAGTool');
     }
 
-    const { query, options = {} } = params;
+    // Extract workspace as first parameter for clean API
+    const { workspace, query, options = {} } = params;
     
-    this.progress(`Processing RAG query: ${query}`, 5, {
+    if (!workspace) {
+      throw new Error('Workspace parameter is required');
+    }
+    
+    this.progress(`Processing RAG query: ${query} in workspace: ${workspace}`, 5, {
+      workspace,
       query,
       options
     });
@@ -85,8 +91,10 @@ export default class QueryRAGTool extends Tool {
 
       this.progress(`Executing RAG query`, 30);
 
-      // Execute RAG query
+      // Execute RAG query within specific workspace
+      // This will search the workspace-specific content for context
       const ragResult = await ragEngine.query(query, {
+        workspace: workspace,  // Pass workspace for context search
         searchLimit: options.searchLimit || 5,
         searchThreshold: options.searchThreshold || 0.3,
         responseStyle: options.responseStyle || 'detailed',

@@ -5,7 +5,6 @@
 
 import { ActorSpace } from '@legion/actors';
 import { ServerToolRegistryActor } from '../actors/ServerToolRegistryActor.js';
-import { ServerDatabaseActor } from '../actors/ServerDatabaseActor.js';
 import { ServerSemanticSearchActor } from '../actors/ServerSemanticSearchActor.js';
 
 export class ActorSpaceManager {
@@ -26,13 +25,11 @@ export class ActorSpaceManager {
     
     // Create actors with unique GUIDs
     const registryActor = new ServerToolRegistryActor(this.registryService);
-    const databaseActor = new ServerDatabaseActor(this.registryService);
     const searchActor = new ServerSemanticSearchActor(this.registryService);
     
     // Register actors with consistent naming
     const actorPrefix = `server-${connectionId}`;
     actorSpace.register(registryActor, `${actorPrefix}-registry`);
-    actorSpace.register(databaseActor, `${actorPrefix}-database`);
     actorSpace.register(searchActor, `${actorPrefix}-search`);
     
     // Store actor space
@@ -40,15 +37,14 @@ export class ActorSpaceManager {
       space: actorSpace,
       actors: {
         registry: registryActor,
-        database: databaseActor,
         search: searchActor
       },
       createdAt: new Date()
     });
     
-    this.actorCount += 3;
+    this.actorCount += 2;
     
-    console.log(`  ✅ Created 3 actors for ${connectionId}`);
+    console.log(`  ✅ Created 2 actors for ${connectionId}`);
     console.log(`  📊 Total actors: ${this.actorCount}`);
     
     return actorSpace;
@@ -72,10 +68,6 @@ export class ActorSpaceManager {
     // Connect server actors to their remote counterparts
     if (remoteActors.registry && spaceInfo.actors.registry) {
       spaceInfo.actors.registry.setRemoteActor(remoteActors.registry);
-    }
-    
-    if (remoteActors.database && spaceInfo.actors.database) {
-      spaceInfo.actors.database.setRemoteActor(remoteActors.database);
     }
     
     if (remoteActors.search && spaceInfo.actors.search) {
@@ -139,9 +131,9 @@ export class ActorSpaceManager {
     
     // Remove from map
     this.actorSpaces.delete(connectionId);
-    this.actorCount -= 3;
+    this.actorCount -= 2;
     
-    console.log(`  ✅ Cleaned up 3 actors`);
+    console.log(`  ✅ Cleaned up 2 actors`);
     console.log(`  📊 Remaining actors: ${this.actorCount}`);
   }
   

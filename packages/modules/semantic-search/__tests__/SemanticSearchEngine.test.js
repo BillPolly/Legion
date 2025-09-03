@@ -21,7 +21,7 @@ describe('SemanticSearchEngine', () => {
     const mongoUrl = resourceManager.get('env.MONGODB_URL') || 'mongodb://localhost:27017';
     mongoClient = new MongoClient(mongoUrl);
     await mongoClient.connect();
-    db = mongoClient.db('semantic-search-engine-test');
+    db = mongoClient.db('semantic-search-engine-workspace-test');
     
     databaseSchema = new DatabaseSchema(db, {
       collections: {
@@ -78,7 +78,7 @@ POST /users creates new user accounts with validation.`,
     ];
 
     for (const doc of testDocs) {
-      await documentIndexer.indexDocument(doc.content, doc.contentType, doc.metadata);
+      await documentIndexer.indexDocument(doc.content, doc.contentType, doc.metadata, { workspace: 'search-engine-test' });
     }
   });
 
@@ -123,6 +123,7 @@ POST /users creates new user accounts with validation.`,
   describe('semantic search', () => {
     it('should find relevant content for database queries', async () => {
       const results = await searchEngine.search('database connection configuration', {
+        workspace: 'search-engine-test',
         limit: 5,
         threshold: 0.3
       });
@@ -145,6 +146,7 @@ POST /users creates new user accounts with validation.`,
 
     it('should find relevant content for authentication queries', async () => {
       const results = await searchEngine.search('user authentication JWT tokens', {
+        workspace: 'search-engine-test',
         limit: 5,
         threshold: 0.2
       });
@@ -164,6 +166,7 @@ POST /users creates new user accounts with validation.`,
 
     it('should return empty results for unrelated queries', async () => {
       const results = await searchEngine.search('unrelated topic that does not exist in docs', {
+        workspace: 'search-engine-test',
         limit: 5,
         threshold: 0.5  // High threshold
       });
@@ -178,10 +181,12 @@ POST /users creates new user accounts with validation.`,
 
     it('should respect similarity threshold', async () => {
       const highThresholdResults = await searchEngine.search('database', {
+        workspace: 'search-engine-test',
         threshold: 0.8  // Very high threshold
       });
       
       const lowThresholdResults = await searchEngine.search('database', {
+        workspace: 'search-engine-test',
         threshold: 0.2  // Low threshold
       });
 
@@ -195,6 +200,7 @@ POST /users creates new user accounts with validation.`,
 
     it('should respect result limit', async () => {
       const limitedResults = await searchEngine.search('configuration', {
+        workspace: 'search-engine-test',
         limit: 2,
         threshold: 0.1
       });
@@ -206,6 +212,7 @@ POST /users creates new user accounts with validation.`,
   describe('search with context', () => {
     it('should include context chunks when requested', async () => {
       const results = await searchEngine.search('database connection', {
+        workspace: 'search-engine-test',
         limit: 3,
         includeContext: true
       });
@@ -223,6 +230,7 @@ POST /users creates new user accounts with validation.`,
   describe('filtering', () => {
     it('should filter results by source pattern', async () => {
       const results = await searchEngine.search('configuration', {
+        workspace: 'search-engine-test',
         sourceFilter: 'database.md',
         limit: 10
       });
@@ -235,6 +243,7 @@ POST /users creates new user accounts with validation.`,
 
     it('should filter results by content type', async () => {
       const results = await searchEngine.search('authentication', {
+        workspace: 'search-engine-test',
         contentTypeFilter: ['text/markdown'],
         limit: 10
       });
@@ -248,6 +257,7 @@ POST /users creates new user accounts with validation.`,
   describe('result ranking', () => {
     it('should return results sorted by similarity score', async () => {
       const results = await searchEngine.search('database MongoDB connection', {
+        workspace: 'search-engine-test',
         limit: 5,
         threshold: 0.1
       });
@@ -262,6 +272,7 @@ POST /users creates new user accounts with validation.`,
 
     it('should provide relevance scoring', async () => {
       const results = await searchEngine.search('database configuration setup', {
+        workspace: 'search-engine-test',
         limit: 3,
         includeRelevanceScore: true
       });
@@ -280,6 +291,7 @@ POST /users creates new user accounts with validation.`,
       const startTime = Date.now();
       
       await searchEngine.search('database authentication API', {
+        workspace: 'search-engine-test',
         limit: 10
       });
       
@@ -297,7 +309,10 @@ POST /users creates new user accounts with validation.`,
 
     it('should handle invalid search options', async () => {
       await expect(
-        searchEngine.search('test query', { limit: -1 })
+        searchEngine.search('test query', { 
+          workspace: 'search-engine-test',
+          limit: -1 
+        })
       ).rejects.toThrow('Limit must be positive');
     });
   });

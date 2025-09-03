@@ -23,9 +23,15 @@ export default class SearchContentTool extends Tool {
       throw new Error('Semantic search module not provided to SearchContentTool');
     }
 
-    const { query, options = {} } = params;
+    // Extract workspace as first parameter for clean API
+    const { workspace, query, options = {} } = params;
     
-    this.progress(`Searching for: ${query}`, 10, {
+    if (!workspace) {
+      throw new Error('Workspace parameter is required');
+    }
+    
+    this.progress(`Searching for: ${query} in workspace: ${workspace}`, 10, {
+      workspace,
       query,
       options
     });
@@ -60,8 +66,10 @@ export default class SearchContentTool extends Tool {
 
       this.progress(`Executing semantic search`, 50);
 
-      // Execute search
+      // Execute search within specific workspace
+      // This will automatically search the workspace-specific Qdrant collection
       const searchResults = await searchEngine.search(query, {
+        workspace: workspace,  // Search within specific workspace
         limit: options.limit,
         threshold: options.threshold,
         sourceFilter: options.sourceFilter,

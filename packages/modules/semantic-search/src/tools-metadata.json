@@ -16,6 +16,10 @@
       "inputSchema": {
         "type": "object",
         "properties": {
+          "workspace": {
+            "type": "string",
+            "description": "Workspace name to organize indexed content (e.g., 'docs', 'projects')"
+          },
           "source": {
             "type": "string",
             "description": "File path, directory path, or URL to index"
@@ -68,7 +72,7 @@
             "additionalProperties": false
           }
         },
-        "required": ["source", "sourceType"],
+        "required": ["workspace", "source", "sourceType"],
         "additionalProperties": false
       },
       "outputSchema": {
@@ -115,6 +119,10 @@
       "inputSchema": {
         "type": "object",
         "properties": {
+          "workspace": {
+            "type": "string",
+            "description": "Workspace name to search within"
+          },
           "query": {
             "type": "string",
             "minLength": 1,
@@ -155,7 +163,7 @@
             "additionalProperties": false
           }
         },
-        "required": ["query"],
+        "required": ["workspace", "query"],
         "additionalProperties": false
       },
       "outputSchema": {
@@ -198,6 +206,10 @@
       "inputSchema": {
         "type": "object",
         "properties": {
+          "workspace": {
+            "type": "string",
+            "description": "Workspace name to search within for RAG context"
+          },
           "query": {
             "type": "string",
             "minLength": 1,
@@ -240,7 +252,7 @@
             "additionalProperties": false
           }
         },
-        "required": ["query"],
+        "required": ["workspace", "query"],
         "additionalProperties": false
       },
       "outputSchema": {
@@ -281,6 +293,10 @@
       "inputSchema": {
         "type": "object",
         "properties": {
+          "workspace": {
+            "type": "string",
+            "description": "Workspace name to manage"
+          },
           "action": {
             "type": "string",
             "enum": ["list", "clear", "update", "status"],
@@ -307,7 +323,7 @@
             "additionalProperties": false
           }
         },
-        "required": ["action"],
+        "required": ["workspace", "action"],
         "additionalProperties": false
       },
       "outputSchema": {

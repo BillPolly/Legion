@@ -71,8 +71,9 @@ export default class RAGEngine {
     const startTime = Date.now();
 
     try {
-      // Step 1: Execute semantic search
+      // Step 1: Execute semantic search within specific workspace
       const searchOptions = {
+        workspace: options.workspace || 'default',  // Search within specific workspace
         limit: options.searchLimit || this.options.searchLimit,
         threshold: options.searchThreshold || this.options.searchThreshold,
         includeContext: true,

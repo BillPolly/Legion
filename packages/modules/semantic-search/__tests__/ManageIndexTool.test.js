@@ -76,6 +76,7 @@ describe('ManageIndexTool', () => {
   describe('input validation', () => {
     it('should validate valid management input', () => {
       const validInput = {
+        workspace: 'test-manage',
         action: 'status',
         options: {
           includeStats: true
@@ -89,6 +90,7 @@ describe('ManageIndexTool', () => {
 
     it('should reject input without action', () => {
       const invalidInput = {
+        workspace: 'test',
         options: { includeStats: true }
       };
 
@@ -98,6 +100,7 @@ describe('ManageIndexTool', () => {
 
     it('should reject invalid action values', () => {
       const invalidInput = {
+        workspace: 'test',
         action: 'invalid-action'
       };
 
@@ -109,6 +112,7 @@ describe('ManageIndexTool', () => {
   describe('status action', () => {
     it('should execute status action successfully', async () => {
       const result = await manageIndexTool.execute({
+        workspace: 'test-status',
         action: 'status',
         options: {
           includeStats: true
@@ -129,6 +133,7 @@ describe('ManageIndexTool', () => {
   describe('list action', () => {
     it('should list documents when action is list', async () => {
       const result = await manageIndexTool.execute({
+        workspace: 'test-list',
         action: 'list',
         options: {
           includeStats: true
@@ -147,6 +152,7 @@ describe('ManageIndexTool', () => {
   describe('clear action', () => {
     it('should execute clear action successfully', async () => {
       const result = await manageIndexTool.execute({
+        workspace: 'test-clear',
         action: 'clear',
         options: {
           includeStats: true
@@ -165,6 +171,7 @@ describe('ManageIndexTool', () => {
   describe('error handling', () => {
     it('should handle invalid action gracefully', async () => {
       const result = await manageIndexTool.execute({
+        workspace: 'test',
         action: 'invalid'
       });
 
@@ -182,6 +189,7 @@ describe('ManageIndexTool', () => {
       });
 
       await manageIndexTool.execute({
+        workspace: 'test-progress',
         action: 'status'
       });
 

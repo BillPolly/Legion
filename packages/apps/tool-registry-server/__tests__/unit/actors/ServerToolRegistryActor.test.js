@@ -13,97 +13,87 @@ describe('ServerToolRegistryActor', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     
-    // Create mock registry service with all required methods
+    // Create mock registry service with required methods
     mockRegistryService = {
-      loadAllModulesFromFileSystem: jest.fn(),
       getTool: jest.fn(),
-      listTools: jest.fn(),
-      loadTools: jest.fn().mockResolvedValue([]), // Return empty array for tools
-      loadModules: jest.fn().mockResolvedValue([]), // Return empty array for modules
       executeTool: jest.fn(),
       searchTools: jest.fn(),
+      searchModules: jest.fn().mockResolvedValue([]),
       getStats: jest.fn(),
-      getRegistryStats: jest.fn(), // Add this method
-      generatePerspectives: jest.fn(), // Add this method
-      clearDatabase: jest.fn(), // Add this method
-      getToolPerspectives: jest.fn(), // Add this method
-      getProvider: jest.fn(), // Add this method for database counts
-      getLoader: jest.fn(), // Add this method
+      generatePerspectives: jest.fn(),
       getRegistry: jest.fn().mockReturnValue({
-        // Mock registry object
         generatePerspectives: jest.fn(),
-        clearDatabase: jest.fn(),
-        getLoader: jest.fn().mockResolvedValue({
-          clearAll: jest.fn(),
-          loadModule: jest.fn(),
-          loadModuleByName: jest.fn()
-        })
+        loadAllModules: jest.fn(),
+        clearAll: jest.fn()
       })
     };
+    
+    // Set up the actor's registry property to point to the mock
+    actor = new ServerToolRegistryActor(mockRegistryService);
+    actor.registry = mockRegistryService.getRegistry();
     
     // Create mock remote actor
     mockRemoteActor = {
       receive: jest.fn()
     };
     
-    // Create actor instance
-    actor = new ServerToolRegistryActor(mockRegistryService);
+    // Actor instance created above with proper mock registry
     actor.setRemoteActor(mockRemoteActor);
   });
   
   describe('receive method', () => {
-    it('should handle tools:load message', async () => {
+    it('should handle tools:search message', async () => {
       const mockTools = [
         { name: 'tool1', description: 'Tool 1' },
         { name: 'tool2', description: 'Tool 2' }
       ];
-      mockRegistryService.loadTools.mockResolvedValue(mockTools);
+      mockRegistryService.searchTools.mockResolvedValue(mockTools);
       
-      await actor.receive({ type: 'tools:load' });
+      await actor.receive({ 
+        type: 'tools:search',
+        data: { query: 'calculator', options: { limit: 10 } }
+      });
       
-      expect(mockRegistryService.loadTools).toHaveBeenCalledWith({ limit: 1000 });
+      expect(mockRegistryService.searchTools).toHaveBeenCalledWith('calculator', { limit: 10 });
       expect(mockRemoteActor.receive).toHaveBeenCalledWith({
-        type: 'tools:list',
-        data: { tools: mockTools }
+        type: 'tools:searchResult',
+        data: { query: 'calculator', tools: mockTools, count: 2 }
       });
     });
     
-    it('should handle modules:load message', async () => {
+    it('should handle modules:search message', async () => {
       const mockModules = [
         { name: 'module1', type: 'class' },
         { name: 'module2', type: 'function' }
       ];
-      mockRegistryService.loadModules.mockResolvedValue(mockModules);
+      mockRegistryService.searchModules.mockResolvedValue(mockModules);
       
-      await actor.receive({ type: 'modules:load' });
+      await actor.receive({ 
+        type: 'modules:search',
+        data: { query: 'file', options: { limit: 50 } }
+      });
       
-      expect(mockRegistryService.loadModules).toHaveBeenCalledWith({ limit: 100 });
+      expect(mockRegistryService.searchModules).toHaveBeenCalledWith('file', { limit: 50 });
       expect(mockRemoteActor.receive).toHaveBeenCalledWith({
-        type: 'modules:list',
-        data: { modules: mockModules }
+        type: 'modules:searchResult',
+        data: { query: 'file', modules: mockModules, count: 2 }
       });
     });
     
     it('should handle registry:loadAll message', async () => {
       const mockResult = {
-        loaded: [
-          { 
-            config: { name: 'module1' },
-            instance: { getTools: () => [{ name: 'tool1' }] }
-          },
-          { 
-            config: { name: 'module2' },
-            instance: { getTools: () => [{ name: 'tool2' }, { name: 'tool3' }] }
-          }
-        ],
-        failed: [],
-        summary: { total: 2, loaded: 2, failed: 0 }
+        loaded: 2,
+        failed: 0,
+        total: 2,
+        modules: ['module1', 'module2']
       };
-      mockRegistryService.loadAllModulesFromFileSystem.mockResolvedValue(mockResult);
+      
+      // Set up the mock directly on the actor's registry
+      actor.registry.loadAllModules.mockResolvedValue(mockResult);
       
       await actor.receive({ type: 'registry:loadAll' });
       
-      expect(mockRegistryService.loadAllModulesFromFileSystem).toHaveBeenCalled();
+      expect(actor.registry.loadAllModules).toHaveBeenCalled();
       expect(mockRemoteActor.receive).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'registry:loadAllComplete'
@@ -117,28 +107,16 @@ describe('ServerToolRegistryActor', () => {
         modulesLoaded: 5,
         executionCount: 100
       };
-      const mockProvider = {
-        db: {
-          collection: jest.fn().mockReturnValue({
-            countDocuments: jest.fn().mockResolvedValue(10)
-          })
-        }
-      };
       
-      mockRegistryService.getRegistryStats.mockResolvedValue(mockStats);
-      mockRegistryService.getProvider.mockReturnValue(mockProvider);
+      mockRegistryService.getStats.mockResolvedValue(mockStats);
       
       await actor.receive({ type: 'registry:stats' });
       
-      expect(mockRegistryService.getRegistryStats).toHaveBeenCalled();
-      expect(mockRegistryService.getProvider).toHaveBeenCalled();
+      expect(mockRegistryService.getStats).toHaveBeenCalled();
       expect(mockRemoteActor.receive).toHaveBeenCalledWith({
         type: 'registry:stats',
         data: expect.objectContaining({
           ...mockStats,
-          modules: 10,
-          tools: 10,
-          perspectives: 10,
           timestamp: expect.any(String)
         })
       });
@@ -208,12 +186,12 @@ describe('ServerToolRegistryActor', () => {
     });
     
     it('should handle registry:clear message', async () => {
-      mockRegistryService.clearDatabase.mockResolvedValue(undefined);
+      // Use the already set up mock registry on the actor
+      actor.registry.clearAll.mockResolvedValue(undefined);
       
       await actor.receive({ type: 'registry:clear' });
       
-      expect(mockRegistryService.clearDatabase).toHaveBeenCalled();
-      // The clearDatabase method sends multiple messages: started, complete, and then calls other methods
+      expect(actor.registry.clearAll).toHaveBeenCalled();
       expect(mockRemoteActor.receive).toHaveBeenCalledWith({
         type: 'registry:clearStarted',
         data: {}
@@ -224,56 +202,9 @@ describe('ServerToolRegistryActor', () => {
       });
     });
     
-    it('should handle module:load message', async () => {
-      const mockResult = {
-        name: 'test-module',
-        tools: ['tool1', 'tool2']
-      };
-      
-      // Mock the loader.loadModuleByName method
-      const mockLoader = {
-        loadModuleByName: jest.fn().mockResolvedValue(mockResult)
-      };
-      mockRegistryService.getLoader.mockResolvedValue(mockLoader);
-      
-      await actor.receive({
-        type: 'module:load',
-        data: { moduleName: 'test-module' }
-      });
-      
-      expect(mockLoader.loadModuleByName).toHaveBeenCalledWith('test-module');
-      expect(mockRemoteActor.receive).toHaveBeenCalledWith({
-        type: 'module:loaded',
-        data: {
-          moduleName: 'test-module',
-          success: true,
-          result: mockResult
-        }
-      });
-    });
+    // NOTE: module:load test removed - single module loading not supported
     
-    it('should handle tool:get-perspectives message', async () => {
-      const mockPerspectives = [
-        { type: 'usage', content: 'How to use calculator' },
-        { type: 'example', content: 'Example: 2 + 2' }
-      ];
-      
-      mockRegistryService.getToolPerspectives.mockResolvedValue(mockPerspectives);
-      
-      await actor.receive({
-        type: 'tool:get-perspectives',
-        data: { toolName: 'calculator' }
-      });
-      
-      expect(mockRegistryService.getToolPerspectives).toHaveBeenCalledWith('calculator');
-      expect(mockRemoteActor.receive).toHaveBeenCalledWith({
-        type: 'tool:perspectives',
-        data: {
-          toolName: 'calculator',
-          perspectives: mockPerspectives
-        }
-      });
-    });
+    // NOTE: tool perspectives test removed - not applicable to modules
     
     it('should log unknown message types', async () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
@@ -290,12 +221,15 @@ describe('ServerToolRegistryActor', () => {
     });
     
     it('should handle errors and send error response', async () => {
-      const error = new Error('Database connection failed');
-      mockRegistryService.loadTools.mockRejectedValue(error);
+      const error = new Error('Search failed');
+      mockRegistryService.searchTools.mockRejectedValue(error);
       
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
       
-      await actor.receive({ type: 'tools:load' });
+      await actor.receive({ 
+        type: 'tools:search',
+        data: { query: 'test' }
+      });
       
       expect(consoleSpy).toHaveBeenCalledWith(
         'Error handling message:',
@@ -304,9 +238,9 @@ describe('ServerToolRegistryActor', () => {
       expect(mockRemoteActor.receive).toHaveBeenCalledWith({
         type: 'error',
         data: {
-          error: 'Database connection failed',
+          error: 'Search failed',
           stack: error.stack,
-          originalType: 'tools:load'
+          originalType: 'tools:search'
         }
       });
       

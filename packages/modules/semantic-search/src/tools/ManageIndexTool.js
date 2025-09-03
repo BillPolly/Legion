@@ -23,9 +23,15 @@ export default class ManageIndexTool extends Tool {
       throw new Error('Semantic search module not provided to ManageIndexTool');
     }
 
-    const { action, options = {} } = params;
+    // Extract workspace as first parameter for clean API
+    const { workspace, action, options = {} } = params;
     
-    this.progress(`Executing index management action: ${action}`, 10, {
+    if (!workspace) {
+      throw new Error('Workspace parameter is required');
+    }
+    
+    this.progress(`Executing index management action: ${action} for workspace: ${workspace}`, 10, {
+      workspace,
       action,
       options
     });
@@ -49,26 +55,27 @@ export default class ManageIndexTool extends Tool {
       let result;
       let statistics;
 
+      // Execute workspace-specific management operations
       switch (action) {
         case 'status':
-          result = await this._getIndexStatus(databaseSchema, config, options);
+          result = await this._getIndexStatus(databaseSchema, config, workspace, options);
           break;
         case 'list':
-          result = await this._listDocuments(databaseSchema, options);
+          result = await this._listDocuments(databaseSchema, workspace, options);
           break;
         case 'clear':
-          result = await this._clearIndex(databaseSchema, config, options);
+          result = await this._clearIndex(databaseSchema, config, workspace, options);
           break;
         case 'update':
-          result = await this._updateIndex(databaseSchema, options);
+          result = await this._updateIndex(databaseSchema, workspace, options);
           break;
         default:
           throw new Error(`Unknown management action: ${action}`);
       }
 
-      // Get statistics if requested
+      // Get workspace-specific statistics if requested
       if (options.includeStats !== false) {
-        statistics = await this._getStatistics(databaseSchema, config);
+        statistics = await this._getStatistics(databaseSchema, config, workspace);
       }
 
       this.progress('Management action completed', 100, { action });
@@ -95,37 +102,47 @@ export default class ManageIndexTool extends Tool {
   }
 
   /**
-   * Get comprehensive index status
+   * Get comprehensive index status for specific workspace
+   * Shows both MongoDB and workspace-specific Qdrant collection status
    */
-  async _getIndexStatus(databaseSchema, config, options) {
-    const stats = await databaseSchema.getStatistics();
+  async _getIndexStatus(databaseSchema, config, workspace, options) {
+    // Get workspace-specific statistics from MongoDB
+    const stats = await databaseSchema.getStatistics(workspace);
+    
+    // Generate workspace-specific Qdrant collection name
+    const sanitizedWorkspace = workspace.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+    const workspaceCollectionName = `semantic_content_${sanitizedWorkspace}`;
     
     return {
+      workspace: workspace,
       indexHealth: 'healthy',
       collections: {
         documents: {
           name: config.mongodb.collections.documents,
           count: stats.totalDocuments,
+          workspace: workspace,
           initialized: stats.collectionsInitialized
         },
         chunks: {
           name: config.mongodb.collections.chunks,
           count: stats.totalChunks,
+          workspace: workspace,
           initialized: stats.collectionsInitialized
         }
       },
       qdrant: {
-        collection: config.qdrant.collection,
-        status: 'connected'
+        collection: workspaceCollectionName,  // Workspace-specific collection name
+        status: 'connected',
+        workspace: workspace
       },
-      summary: `${stats.totalDocuments} documents with ${stats.totalChunks} chunks indexed`
+      summary: `Workspace '${workspace}': ${stats.totalDocuments} documents with ${stats.totalChunks} chunks indexed`
     };
   }
 
   /**
-   * List indexed documents
+   * List indexed documents in specific workspace
    */
-  async _listDocuments(databaseSchema, options) {
+  async _listDocuments(databaseSchema, workspace, options) {
     const filter = {};
     
     if (options.sourceFilter) {
@@ -136,7 +153,8 @@ export default class ManageIndexTool extends Tool {
       filter.contentType = { $in: options.contentTypeFilter };
     }
 
-    const documents = await databaseSchema.searchDocuments(filter);
+    // Search documents within specific workspace
+    const documents = await databaseSchema.searchDocuments(filter, workspace);
     
     return {
       documents: documents.map(doc => ({
@@ -149,28 +167,34 @@ export default class ManageIndexTool extends Tool {
         indexedAt: doc.indexedAt
       })),
       totalCount: documents.length,
+      workspace: workspace,
       filter: options.sourceFilter || options.contentTypeFilter ? filter : null
     };
   }
 
   /**
-   * Clear index with optional filtering
+   * Clear index for specific workspace with optional filtering
+   * Clears both MongoDB data and workspace-specific Qdrant collection
    */
-  async _clearIndex(databaseSchema, config, options) {
+  async _clearIndex(databaseSchema, config, workspace, options) {
     if (options.sourceFilter) {
+      // Clear by source filter within workspace (MongoDB only - Qdrant cleared separately)
       const clearResult = await databaseSchema.clearBySource(
         new RegExp(options.sourceFilter, 'i')
       );
       return {
+        workspace: workspace,
         cleared: 'filtered',
         documentsRemoved: clearResult.documentsDeleted,
         chunksRemoved: clearResult.chunksDeleted,
         filter: options.sourceFilter
       };
     } else {
-      const clearResult = await databaseSchema.clearAll();
+      // Clear entire workspace (both MongoDB and Qdrant)
+      const clearResult = await databaseSchema.clearAll(workspace);
       return {
-        cleared: 'all',
+        workspace: workspace,
+        cleared: 'workspace',
         documentsRemoved: clearResult.documentsDeleted,
         chunksRemoved: clearResult.chunksDeleted
       };
@@ -180,26 +204,33 @@ export default class ManageIndexTool extends Tool {
   /**
    * Update index (placeholder for incremental updates)
    */
-  async _updateIndex(databaseSchema, options) {
+  async _updateIndex(databaseSchema, workspace, options) {
     return {
+      workspace: workspace,
       updated: 'incremental updates not yet implemented',
       message: 'Use clear and re-index workflow for now'
     };
   }
 
   /**
-   * Get comprehensive statistics
+   * Get comprehensive statistics for specific workspace
    */
-  async _getStatistics(databaseSchema, config) {
-    const dbStats = await databaseSchema.getStatistics();
+  async _getStatistics(databaseSchema, config, workspace) {
+    // Get workspace-specific statistics
+    const dbStats = await databaseSchema.getStatistics(workspace);
+    
+    // Generate workspace-specific Qdrant collection name for reference
+    const sanitizedWorkspace = workspace.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+    const workspaceCollectionName = `semantic_content_${sanitizedWorkspace}`;
     
     return {
+      workspace: workspace,
       totalDocuments: dbStats.totalDocuments,
       totalChunks: dbStats.totalChunks,
       vectorCount: dbStats.totalChunks, // Assuming 1:1 chunk to vector mapping
       indexSize: dbStats.totalChunks * 768 * 4, // Rough size estimate (768 dimensions * 4 bytes per float)
       collections: dbStats.collections,
-      qdrantCollection: config.qdrant.collection
+      qdrantCollection: workspaceCollectionName  // Workspace-specific collection name
     };
   }
 }

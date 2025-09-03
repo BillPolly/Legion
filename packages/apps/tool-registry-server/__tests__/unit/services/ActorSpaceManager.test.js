@@ -31,14 +31,13 @@ describe('ActorSpaceManager', () => {
       expect(actorSpace).toBeDefined();
       expect(actorSpace.spaceId).toBe(`server-${connectionId}`);
       
-      // Verify actors were registered
-      expect(actorSpace.guidToObject.size).toBe(3);
+      // Verify actors were registered (no database actor)
+      expect(actorSpace.guidToObject.size).toBe(2);
       expect(actorSpace.guidToObject.has(`server-${connectionId}-registry`)).toBe(true);
-      expect(actorSpace.guidToObject.has(`server-${connectionId}-database`)).toBe(true);
       expect(actorSpace.guidToObject.has(`server-${connectionId}-search`)).toBe(true);
       
       // Verify actor count
-      expect(manager.actorCount).toBe(3);
+      expect(manager.actorCount).toBe(2);
     });
     
     it('should store actor space with metadata', async () => {
@@ -50,8 +49,8 @@ describe('ActorSpaceManager', () => {
       expect(spaceInfo).toBeDefined();
       expect(spaceInfo.space).toBeDefined();
       expect(spaceInfo.actors).toHaveProperty('registry');
-      expect(spaceInfo.actors).toHaveProperty('database');
       expect(spaceInfo.actors).toHaveProperty('search');
+      // NOTE: database actor removed
       expect(spaceInfo.createdAt).toBeInstanceOf(Date);
     });
   });
@@ -67,7 +66,6 @@ describe('ActorSpaceManager', () => {
       };
       const clientActors = {
         registry: 'client-registry-guid',
-        database: 'client-database-guid',
         search: 'client-search-guid'
       };
       
@@ -78,15 +76,14 @@ describe('ActorSpaceManager', () => {
       // Setup remote actors
       const remoteActors = manager.setupRemoteActors(connectionId, mockChannel, clientActors);
       
-      expect(mockChannel.makeRemote).toHaveBeenCalledTimes(3);
+      expect(mockChannel.makeRemote).toHaveBeenCalledTimes(2);
       expect(mockChannel.makeRemote).toHaveBeenCalledWith('client-registry-guid');
-      expect(mockChannel.makeRemote).toHaveBeenCalledWith('client-database-guid');
       expect(mockChannel.makeRemote).toHaveBeenCalledWith('client-search-guid');
       
       // Verify actors have setRemoteActor method called
       expect(spaceInfo.actors.registry.remoteActor).toBeDefined();
-      expect(spaceInfo.actors.database.remoteActor).toBeDefined();
       expect(spaceInfo.actors.search.remoteActor).toBeDefined();
+      // NOTE: database actor removed
     });
     
     it('should throw error if actor space not found', () => {
@@ -126,7 +123,6 @@ describe('ActorSpaceManager', () => {
       
       expect(guids).toEqual({
         registry: `server-${connectionId}-registry`,
-        database: `server-${connectionId}-database`,
         search: `server-${connectionId}-search`
       });
     });
@@ -143,7 +139,7 @@ describe('ActorSpaceManager', () => {
       const connectionId = 'test-connection-cleanup';
       
       await manager.createActorSpace(connectionId);
-      expect(manager.actorCount).toBe(3);
+      expect(manager.actorCount).toBe(2);
       
       await manager.cleanupActorSpace(connectionId);
       
@@ -165,11 +161,11 @@ describe('ActorSpaceManager', () => {
       const stats = manager.getStats();
       
       expect(stats.totalSpaces).toBe(2);
-      expect(stats.totalActors).toBe(6);
+      expect(stats.totalActors).toBe(4);
       expect(stats.spaces).toHaveLength(2);
       expect(stats.spaces[0]).toHaveProperty('createdAt');
       expect(stats.spaces[0]).toHaveProperty('duration');
-      expect(stats.spaces[0].actors).toEqual(['registry', 'database', 'search']);
+      expect(stats.spaces[0].actors).toEqual(['registry', 'search']);
     });
   });
   
@@ -179,7 +175,7 @@ describe('ActorSpaceManager', () => {
       await manager.createActorSpace('conn-2');
       await manager.createActorSpace('conn-3');
       
-      expect(manager.actorCount).toBe(9);
+      expect(manager.actorCount).toBe(6);
       
       await manager.cleanup();
       

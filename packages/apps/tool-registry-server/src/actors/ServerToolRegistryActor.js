@@ -1,162 +1,202 @@
 /**
  * ServerToolRegistryActor
- * Server-side actor for tool registry operations
- * Uses singleton ToolRegistry and its loader
+ * Protocol-enhanced server-side actor for tool registry browsing operations
+ * Uses singleton ToolRegistry for searching and querying
  */
 
-export class ServerToolRegistryActor {
+import { ProtocolActor } from '../shared/ProtocolActor.js';
+
+export class ServerToolRegistryActor extends ProtocolActor {
   constructor(registryService) {
+    super();
     this.registryService = registryService;
     this.registry = registryService.getRegistry();
     this.remoteActor = null;
   }
+  
+  getProtocol() {
+    return {
+      name: "ServerToolRegistryActor", 
+      version: "1.0.0",
+      
+      state: {
+        schema: {
+          connected: { type: 'boolean', required: true },
+          processing: { type: 'boolean', required: true },
+          lastSearchQuery: { type: 'string' },
+          error: { type: 'string' }
+        },
+        initial: {
+          connected: false,
+          processing: false,
+          lastSearchQuery: '',
+          error: null
+        }
+      },
+      
+      messages: {
+        receives: {
+          "tools:search": {
+            schema: {
+              query: { type: 'string', required: true },
+              options: { type: 'object' }
+            },
+            preconditions: ["state.connected === true"],
+            postconditions: ["state.lastSearchQuery !== null"]
+          },
+          
+          "modules:search": {
+            schema: {
+              query: { type: 'string', required: true },
+              options: { type: 'object' }
+            },
+            preconditions: ["state.connected === true"],
+            postconditions: ["state.lastSearchQuery !== null"]
+          },
+          
+          "registry:stats": {
+            schema: {},
+            preconditions: ["state.connected === true"]
+          },
+          
+          "tool:execute": {
+            schema: {
+              toolName: { type: 'string', required: true },
+              params: { type: 'object', required: true }
+            },
+            preconditions: ["state.connected === true"]
+          }
+        },
+        
+        sends: {
+          "tools:searchResult": {
+            schema: {
+              query: { type: 'string', required: true },
+              tools: { type: 'array', required: true },
+              count: { type: 'number', minimum: 0 }
+            }
+          },
+          
+          "modules:searchResult": {
+            schema: {
+              query: { type: 'string', required: true },
+              modules: { type: 'array', required: true },
+              count: { type: 'number', minimum: 0 }
+            }
+          },
+          
+          "registry:stats": {
+            schema: {
+              timestamp: { type: 'string', required: true }
+            }
+          },
+          
+          "tool:executed": {
+            schema: {
+              toolName: { type: 'string', required: true },
+              result: { type: 'object' },
+              error: { type: 'string' }
+            }
+          }
+        }
+      }
+    };
+  }
 
   setRemoteActor(remoteActor) {
     this.remoteActor = remoteActor;
+    this.state.connected = true;
   }
 
+  // Override to handle protocol validation
   async receive(message) {
-    const { type, data } = message;
+    console.log('🎯 ServerToolRegistryActor.receive() called with:', message.type);
+    
+    // Use ProtocolActor's enhanced receive for validation
+    return super.receive(message.type, message.data || message);
+  }
+  
+  // Implement ProtocolActor's abstract method
+  handleMessage(messageType, data) {
+    console.log(`📝 Server processing ${messageType} message...`);
+    
+    this.state.processing = true;
+    this.state.lastSearchQuery = data.query || '';
     
     try {
-      switch (type) {
-        case 'tools:load':
-          await this.loadTools();
-          break;
+      switch (messageType) {
+        case 'tools:search':
+          return this.searchTools(data.query || '', data.options || {});
           
-        case 'modules:load':
-          await this.loadModules();
-          break;
-          
-        case 'registry:loadAll':
-          await this.loadAllModulesFromFileSystem();
-          break;
+        case 'modules:search':
+          return this.searchModules(data.query || '', data.options || {});
           
         case 'registry:stats':
-          await this.getRegistryStats();
-          break;
-          
-        case 'registry:generatePerspectives':
-          await this.generatePerspectives();
-          break;
-          
-        case 'registry:clear':
-          await this.clearDatabase();
-          break;
-          
-        case 'module:load':
-          await this.loadSingleModule(data.moduleName);
-          break;
+          return this.getStats();
           
         case 'tool:execute':
-          await this.executeTool(data.toolName, data.params);
-          break;
-          
-        case 'tool:get-perspectives':
-          await this.getToolPerspectives(data.toolName);
-          break;
+          return this.executeTool(data.toolName, data.params);
           
         default:
-          console.log('Unknown tool registry message:', type);
+          console.log('Unknown message:', messageType);
       }
     } catch (error) {
       console.error('Error handling message:', error);
-      if (this.remoteActor) {
-        this.remoteActor.receive({
-          type: 'error',
-          data: { 
-            error: error.message,
-            stack: error.stack,
-            originalType: type
-          }
-        });
-      }
+      this.state.error = error.message;
+      throw error;
+    } finally {
+      this.state.processing = false;
     }
   }
+  
+  // Implement ProtocolActor's abstract doSend method
+  doSend(messageType, data) {
+    if (!this.remoteActor) {
+      throw new Error('No remote actor connection available');
+    }
+    
+    console.log(`📤 Sending ${messageType} to client:`, data);
+    this.remoteActor.receive({
+      type: messageType,
+      data: data
+    });
+  }
 
-  async loadTools() {
+  async searchTools(query = '', options = {}) {
     try {
-      console.log('Loading tools from database...');
+      console.log(`Searching tools: "${query}"`);
       
-      // Use registry service to load tools
-      const tools = await this.registryService.loadTools({ limit: 1000 });
+      // Use registry service to search tools
+      const tools = await this.registryService.searchTools(query, { limit: 1000, ...options });
       
-      console.log(`Loaded ${tools.length} tools`);
+      console.log(`Found ${tools.length} tools`);
       
-      // Send tools to client
-      if (this.remoteActor) {
-        this.remoteActor.receive({
-          type: 'tools:list',
-          data: { tools }
-        });
-      }
+      // Send tools to client using protocol
+      this.send('tools:searchResult', { query, tools, count: tools.length });
     } catch (error) {
-      console.error('Failed to load tools:', error);
+      console.error('Failed to search tools:', error);
       throw error;
     }
   }
 
-  async loadModules() {
+  async searchModules(query = '', options = {}) {
     try {
-      console.log('Loading modules from database...');
+      console.log(`Searching modules: "${query}"`);
       
-      // Use registry service to load modules
-      const modules = await this.registryService.loadModules({ limit: 100 });
+      // Use registry service to search modules
+      const modules = await this.registryService.searchModules(query, { limit: 100, ...options });
       
-      console.log(`Loaded ${modules.length} modules`);
+      console.log(`Found ${modules.length} modules`);
       
-      // Send modules to client
-      if (this.remoteActor) {
-        this.remoteActor.receive({
-          type: 'modules:list',
-          data: { modules }
-        });
-      }
+      // Send modules to client using protocol
+      this.send('modules:searchResult', { query, modules, count: modules.length });
     } catch (error) {
-      console.error('Failed to load modules:', error);
+      console.error('Failed to search modules:', error);
       throw error;
     }
   }
 
-  async loadSingleModule(moduleName) {
-    try {
-      console.log(`Loading module: ${moduleName}`);
-      
-      // Use the loader to load a specific module
-      const loader = await this.registryService.getLoader();
-      
-      // The loader's loadModuleByName method if available
-      if (loader.loadModuleByName) {
-        const result = await loader.loadModuleByName(moduleName);
-        
-        if (this.remoteActor) {
-          this.remoteActor.receive({
-            type: 'module:loaded',
-            data: {
-              moduleName,
-              success: true,
-              result
-            }
-          });
-        }
-      } else {
-        throw new Error('Module loading not supported');
-      }
-    } catch (error) {
-      console.error(`Failed to load module ${moduleName}:`, error);
-      
-      if (this.remoteActor) {
-        this.remoteActor.receive({
-          type: 'module:loaded',
-          data: {
-            moduleName,
-            success: false,
-            error: error.message
-          }
-        });
-      }
-    }
-  }
+  // NOTE: Single module loading removed - use registry.loadAllModules() instead
 
   async executeTool(toolName, params) {
     try {
@@ -165,276 +205,50 @@ export class ServerToolRegistryActor {
       // Use registry service to execute tool
       const result = await this.registryService.executeTool(toolName, params);
       
-      // Send result to client
-      if (this.remoteActor) {
-        this.remoteActor.receive({
-          type: 'tool:executed',
-          data: {
-            toolName,
-            params,
-            result
-          }
-        });
-      }
+      // Send result to client using protocol
+      this.send('tool:executed', {
+        toolName,
+        params, 
+        result
+      });
     } catch (error) {
       console.error('Tool execution failed:', error);
       
-      if (this.remoteActor) {
-        this.remoteActor.receive({
-          type: 'tool:executed',
-          data: {
-            toolName,
-            params,
-            error: error.message,
-            success: false
-          }
-        });
-      }
+      // Send error result using protocol
+      this.send('tool:executed', {
+        toolName,
+        params,
+        error: error.message,
+        success: false
+      });
     }
   }
 
-  async getToolPerspectives(toolName) {
-    try {
-      console.log(`Getting perspectives for tool: ${toolName}`);
-      
-      // Use registry service to get perspectives
-      const perspectives = await this.registryService.getToolPerspectives(toolName);
-      
-      // Send perspectives to client
-      if (this.remoteActor) {
-        this.remoteActor.receive({
-          type: 'tool:perspectives',
-          data: {
-            toolName,
-            perspectives
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Failed to get tool perspectives:', error);
-      
-      // Return empty array on error
-      if (this.remoteActor) {
-        this.remoteActor.receive({
-          type: 'tool:perspectives',
-          data: {
-            toolName,
-            perspectives: []
-          }
-        });
-      }
-    }
-  }
+  // NOTE: Tool perspectives removed - not needed for browsing UI
 
-  async loadAllModulesFromFileSystem() {
-    try {
-      console.log('🔧 Loading all modules from file system...');
-      
-      // Send loading started event
-      if (this.remoteActor) {
-        this.remoteActor.receive({
-          type: 'registry:loadAllStarted',
-          data: {}
-        });
-      }
-      
-      // Use registry service to load all modules
-      const result = await this.registryService.loadAllModulesFromFileSystem();
-      
-      console.log(`📊 Module loading complete: ${result.summary.loaded} loaded, ${result.summary.failed} failed`);
-      
-      // Send completion event with results
-      if (this.remoteActor) {
-        this.remoteActor.receive({
-          type: 'registry:loadAllProgress',
-          data: {
-            message: `Loaded ${result.summary.loaded} modules, ${result.summary.failed} failed`,
-            loaded: result.summary.loaded,
-            failed: result.summary.failed,
-            total: result.summary.total
-          }
-        });
-        
-        this.remoteActor.receive({
-          type: 'registry:loadAllComplete',
-          data: {
-            loaded: result.summary.loaded,
-            failed: result.summary.failed,
-            total: result.summary.total,
-            results: [
-              ...result.loaded.map(m => {
-                let toolCount = 0;
-                try {
-                  const tools = m.instance.getTools ? m.instance.getTools() : [];
-                  toolCount = Array.isArray(tools) ? tools.length : 0;
-                } catch (e) {
-                  toolCount = 0;
-                }
-                return {
-                  module: m.config.name,
-                  status: 'success',
-                  tools: toolCount
-                };
-              }),
-              ...result.failed.map(m => ({
-                module: m.config.name,
-                status: 'failed',
-                error: m.error
-              }))
-            ]
-          }
-        });
-      }
-      
-      // Reload lists to send updated data to client
-      await this.loadTools();
-      await this.loadModules();
-      
-    } catch (error) {
-      console.error('Failed to load all modules:', error);
-      
-      if (this.remoteActor) {
-        this.remoteActor.receive({
-          type: 'registry:loadAllFailed',
-          data: { error: error.message }
-        });
-      }
-    }
-  }
+  // NOTE: Module loading removed - browsing UI only queries existing modules
 
-  async getRegistryStats() {
+  async getStats() {
     try {
       console.log('Getting registry statistics...');
       
-      // Use registry service to get stats
-      const stats = await this.registryService.getRegistryStats();
-      
-      // Get counts from provider
-      const provider = this.registryService.getProvider();
-      let counts = {
-        modules: 0,
-        tools: 0,
-        perspectives: 0
-      };
-      
-      if (provider && provider.db) {
-        try {
-          const [moduleCount, toolCount, perspectiveCount] = await Promise.all([
-            provider.db.collection('modules').countDocuments(),
-            provider.db.collection('tools').countDocuments(),
-            provider.db.collection('tool_perspectives').countDocuments()
-          ]);
-          
-          counts = {
-            modules: moduleCount,
-            tools: toolCount,
-            perspectives: perspectiveCount
-          };
-        } catch (error) {
-          console.error('Error getting database counts:', error);
-        }
-      }
+      // Use registry singleton for all stats (includes counts)
+      const stats = await this.registryService.getStats();
       
       const fullStats = {
         ...stats,
-        ...counts,
         timestamp: new Date().toISOString()
       };
       
       console.log('Registry stats:', fullStats);
       
-      // Send stats to client
-      if (this.remoteActor) {
-        this.remoteActor.receive({
-          type: 'registry:stats',
-          data: fullStats
-        });
-      }
+      // Send stats to client using protocol
+      this.send('registry:stats', fullStats);
     } catch (error) {
       console.error('Failed to get registry stats:', error);
       throw error;
     }
   }
 
-  async generatePerspectives() {
-    try {
-      console.log('Generating perspectives for tools...');
-      
-      // Send start event
-      if (this.remoteActor) {
-        this.remoteActor.receive({
-          type: 'registry:perspectivesStarted',
-          data: {}
-        });
-      }
-      
-      // Use registry service to generate perspectives
-      const result = await this.registryService.generatePerspectives();
-      
-      console.log('Perspectives generated:', result);
-      
-      // Send completion event
-      if (this.remoteActor) {
-        this.remoteActor.receive({
-          type: 'registry:perspectivesComplete',
-          data: result
-        });
-      }
-      
-      // Reload stats to show new perspective count
-      await this.getRegistryStats();
-      
-    } catch (error) {
-      console.error('Failed to generate perspectives:', error);
-      
-      if (this.remoteActor) {
-        this.remoteActor.receive({
-          type: 'registry:perspectivesFailed',
-          data: { error: error.message }
-        });
-      }
-    }
-  }
-
-  async clearDatabase() {
-    try {
-      console.log('Clearing database...');
-      
-      // Send clearing started event
-      if (this.remoteActor) {
-        this.remoteActor.receive({
-          type: 'registry:clearStarted',
-          data: {}
-        });
-      }
-      
-      // Use registry service to clear database
-      await this.registryService.clearDatabase();
-      
-      console.log('Database cleared');
-      
-      // Send completion event
-      if (this.remoteActor) {
-        this.remoteActor.receive({
-          type: 'registry:clearComplete',
-          data: {}
-        });
-      }
-      
-      // Reload empty lists
-      await this.loadTools();
-      await this.loadModules();
-      await this.getRegistryStats();
-      
-    } catch (error) {
-      console.error('Failed to clear database:', error);
-      
-      if (this.remoteActor) {
-        this.remoteActor.receive({
-          type: 'registry:clearFailed',
-          data: { error: error.message }
-        });
-      }
-    }
-  }
+  // NOTE: Admin operations removed - this is a browsing-only UI actor
 }

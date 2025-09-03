@@ -37,6 +37,17 @@ export default class SemanticSearchEngine {
   }
 
   /**
+   * Generate Qdrant collection name for workspace
+   * Pattern: semantic_content_{workspace_name}  
+   * Must match DocumentIndexer naming for consistency
+   */
+  getWorkspaceCollectionName(workspace) {
+    // Sanitize workspace name for collection naming (same logic as DocumentIndexer)
+    const sanitizedWorkspace = workspace.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+    return `semantic_content_${sanitizedWorkspace}`;
+  }
+
+  /**
    * Initialize search services
    */
   async initialize() {
@@ -69,6 +80,7 @@ export default class SemanticSearchEngine {
     }
 
     const searchOptions = {
+      workspace: options.workspace,
       limit: options.limit || this.options.defaultLimit,
       threshold: options.threshold !== undefined ? options.threshold : this.options.defaultThreshold,
       sourceFilter: options.sourceFilter,
@@ -78,6 +90,10 @@ export default class SemanticSearchEngine {
     };
 
     // Validate options
+    if (!searchOptions.workspace) {
+      throw new Error('Workspace is required for search');
+    }
+    
     if (searchOptions.limit <= 0) {
       throw new Error('Limit must be positive');
     }
@@ -90,8 +106,15 @@ export default class SemanticSearchEngine {
       // Generate query embedding
       const queryEmbedding = await this.nomicEmbeddings.embed(query);
       
-      // Search vectors in Qdrant
-      const vectorResults = await this.qdrantClient.search(this.options.qdrantCollection, {
+      // Generate workspace-specific Qdrant collection name
+      // Each workspace has its own collection for optimal performance and isolation
+      const workspaceCollectionName = this.getWorkspaceCollectionName(searchOptions.workspace);
+      
+      console.log(`[SemanticSearchEngine] Searching in workspace collection: ${workspaceCollectionName}`);
+
+      // Search vectors in workspace-specific Qdrant collection
+      // No additional filtering needed since collection is already workspace-specific
+      const vectorResults = await this.qdrantClient.search(workspaceCollectionName, {
         vector: queryEmbedding,
         limit: Math.min(searchOptions.limit, this.options.maxResults),
         score_threshold: searchOptions.threshold,
@@ -337,30 +360,61 @@ export default class SemanticSearchEngine {
   }
 
   /**
-   * Clear search index
+   * Clear search index for specific workspace or all workspaces
+   * Handles both MongoDB collections and workspace-specific Qdrant collections
    */
-  async clearIndex() {
+  async clearIndex(workspace = null) {
     await this.initialize();
     
     try {
-      // Clear MongoDB collections
-      const dbResult = await this.databaseSchema.clearAll();
+      // Clear MongoDB collections (workspace-filtered)
+      const dbResult = await this.databaseSchema.clearAll(workspace);
       
-      // Clear Qdrant collection
-      await this.qdrantClient.delete(this.options.qdrantCollection, {
-        filter: {
-          must: [] // Clear all points
+      if (workspace) {
+        // Clear specific workspace Qdrant collection
+        const workspaceCollectionName = this.getWorkspaceCollectionName(workspace);
+        console.log(`[SemanticSearchEngine] Clearing workspace collection: ${workspaceCollectionName}`);
+        
+        try {
+          // Delete all points in workspace collection
+          await this.qdrantClient.delete(workspaceCollectionName, {
+            filter: {
+              must: [] // Clear all points
+            }
+          });
+        } catch (error) {
+          // Collection might not exist, which is fine
+          console.log(`[SemanticSearchEngine] Workspace collection ${workspaceCollectionName} might not exist: ${error.message}`);
         }
-      });
+      } else {
+        // Clear all workspace collections (requires listing them)
+        const collections = await this.qdrantClient.getCollections();
+        const workspaceCollections = collections.collections.filter(c => 
+          c.name.startsWith('semantic_content_')
+        );
+        
+        console.log(`[SemanticSearchEngine] Clearing ${workspaceCollections.length} workspace collections`);
+        
+        for (const collection of workspaceCollections) {
+          try {
+            await this.qdrantClient.delete(collection.name, {
+              filter: { must: [] }
+            });
+          } catch (error) {
+            console.warn(`Failed to clear collection ${collection.name}: ${error.message}`);
+          }
+        }
+      }
       
       return {
         documentsCleared: dbResult.documentsDeleted,
         chunksCleared: dbResult.chunksDeleted,
-        vectorsCleared: true
+        vectorsCleared: true,
+        workspace: workspace || 'all'
       };
       
     } catch (error) {
-      throw new Error(`Failed to clear search index: ${error.message}`);
+      throw new Error(`Failed to clear search index for workspace ${workspace || 'all'}: ${error.message}`);
     }
   }
 

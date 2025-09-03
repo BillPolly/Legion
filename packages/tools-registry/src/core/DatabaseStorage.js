@@ -1440,4 +1440,40 @@ export class DatabaseStorage {
       this.logger.warn(`Failed to create indexes: ${error.message}`);
     }
   }
+
+  /**
+   * Find modules in modules collection
+   * @param {Object} filter - MongoDB filter
+   * @returns {Promise<Array>} Array of modules
+   */
+  async findModules(filter = {}) {
+    try {
+      const collection = this.getCollection('modules');
+      const result = await collection.find(filter).toArray();
+      
+      console.log(`[DatabaseStorage] Found ${result.length} modules in collection`);
+      return result;
+    } catch (error) {
+      console.error('[DatabaseStorage] Error finding modules:', error.message);
+      return [];
+    }
+  }
+
+  /**
+   * Find entries in module-registry collection  
+   * @param {Object} filter - MongoDB filter
+   * @returns {Promise<Array>} Array of module registry entries
+   */
+  async findModuleRegistry(filter = {}) {
+    try {
+      const collection = this.getCollection('module-registry');
+      const result = await collection.find(filter).toArray();
+      
+      console.log(`[DatabaseStorage] Found ${result.length} entries in module-registry collection`);
+      return result;
+    } catch (error) {
+      console.error('[DatabaseStorage] Error finding module registry:', error.message);
+      return [];
+    }
+  }
 }

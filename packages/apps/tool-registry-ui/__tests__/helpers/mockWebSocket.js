@@ -132,16 +132,18 @@ export class MockWebSocket {
           }
         }
       };
-    } else if (payload.type === 'modules:load') {
+    } else if (payload.type === 'modules:search') {
       response = {
         targetGuid: clientGuid,
         payload: {
-          type: 'modules:list',
+          type: 'modules:searchResult',
           data: {
+            query: payload.data?.query || '',
             modules: [
-              { name: 'file', tools: ['file_write', 'file_read'] },
-              { name: 'calculator', tools: ['calculator'] }
-            ]
+              { name: 'file', tools: ['file_write', 'file_read'], description: 'File operations module' },
+              { name: 'calculator', tools: ['calculator'], description: 'Math calculation module' }
+            ],
+            count: 2
           }
         }
       };

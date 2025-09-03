@@ -8,7 +8,7 @@
  * - Registry statistics
  */
 
-import { ToolRegistryTabComponent } from '/src/client/components/ToolRegistryTabComponent.js';
+import { ToolRegistryTabComponent } from '../components/ToolRegistryTabComponent.js';
 
 export default class ToolRegistryClientSubActor {
   constructor() {
@@ -37,9 +37,9 @@ export default class ToolRegistryClientSubActor {
 
   setupUI(container) {
     this.toolRegistryComponent = new ToolRegistryTabComponent(container, {
-      onModuleAction: (action, moduleName) => this.handleModuleAction(action, moduleName),
+      onModuleSearch: (query) => this.handleModuleSearch(query),
+      onModuleSelect: (module) => this.handleModuleSelect(module),
       onToolSearch: (query, type) => this.handleToolSearch(query, type),
-      onDatabaseQuery: (collection, command, params) => this.handleDatabaseQuery(collection, command, params),
       onLoadData: () => this.loadRegistryData()
     });
     
@@ -48,16 +48,25 @@ export default class ToolRegistryClientSubActor {
   }
 
   /**
-   * Handle module actions (load, unload, refresh)
+   * Handle module search requests (new backend search)
    */
-  handleModuleAction(action, moduleName) {
-    console.log(`Tool Registry: ${action} module ${moduleName}`);
+  handleModuleSearch(query) {
+    console.log(`Tool Registry: Module search requested: "${query}"`);
     
     if (this.remoteActor) {
-      this.remoteActor.receive(`module-${action}`, { 
-        moduleName: moduleName || 'all' 
+      this.remoteActor.receive('modules:search', { 
+        query: query || '',
+        options: { limit: 100 }
       });
     }
+  }
+  
+  /**
+   * Handle module selection
+   */
+  handleModuleSelect(module) {
+    console.log(`Tool Registry: Module selected:`, module.name);
+    // Could show module details or switch to tools view filtered by module
   }
 
   /**
@@ -74,31 +83,18 @@ export default class ToolRegistryClientSubActor {
     }
   }
 
-  /**
-   * Handle database query requests
-   */
-  handleDatabaseQuery(collection, command, params) {
-    console.log(`Tool Registry: Database query ${command} on ${collection}`);
-    
-    if (this.remoteActor) {
-      this.remoteActor.receive('database-query', {
-        collection,
-        command, 
-        params
-      });
-    }
-  }
+  // NOTE: Database query removed - now using search-based backend
 
   /**
-   * Load initial registry data
+   * Load initial registry data using new search-based approach
    */
   loadRegistryData() {
-    console.log('Tool Registry: Loading registry data...');
+    console.log('Tool Registry: Loading registry data via search...');
     
     if (this.remoteActor) {
-      this.remoteActor.receive('get-registry-stats', {});
-      this.remoteActor.receive('list-all-modules', {});
-      this.remoteActor.receive('list-all-tools', {});
+      this.remoteActor.receive('registry:stats', {});
+      this.remoteActor.receive('modules:search', { query: '', options: { limit: 100 } }); // List all modules
+      this.remoteActor.receive('tools:search', { query: '', options: { limit: 1000 } }); // List all tools
     }
   }
 
@@ -109,30 +105,20 @@ export default class ToolRegistryClientSubActor {
     console.log('📨 Tool Registry client received:', messageType);
     
     switch (messageType) {
-      case 'modulesListComplete':
-        this.handleModulesListComplete(data);
+      case 'modules:searchResult':
+        this.handleModulesSearchResult(data);
         break;
 
-      case 'databaseQueryComplete':
-        this.handleDatabaseQueryComplete(data);
+      case 'tools:searchResult':
+        this.handleToolsSearchResult(data);
         break;
 
-      case 'registryStatsComplete':
-        this.handleRegistryStatsComplete(data);
+      case 'registry:stats':
+        this.handleRegistryStats(data);
         break;
 
-      case 'toolsListComplete':
-        this.handleToolsListComplete(data);
-        break;
-
-      case 'toolsSearchTextComplete':
-      case 'toolsSearchSemanticComplete':
-        this.handleToolSearchComplete(data);
-        break;
-
-      case 'moduleLoadComplete':
-      case 'moduleUnloadComplete':
-        this.handleModuleActionComplete(data);
+      case 'tool:executed':
+        this.handleToolExecuted(data);
         break;
 
       case 'error':
@@ -146,10 +132,10 @@ export default class ToolRegistryClientSubActor {
   }
 
   /**
-   * Handle modules list response
+   * Handle module search results (new format)
    */
-  handleModulesListComplete(data) {
-    console.log('📦 Modules list received:', data.totalModules, 'modules');
+  handleModulesSearchResult(data) {
+    console.log('📦 Module search results:', `"${data.query}" found ${data.count} modules`);
     
     this.state.modules = data.modules || [];
     
@@ -158,26 +144,12 @@ export default class ToolRegistryClientSubActor {
     }
   }
 
-  /**
-   * Handle database query response
-   */
-  handleDatabaseQueryComplete(data) {
-    console.log('🗄️ Database query result:', data.collection, data.count, 'records');
-    
-    if (this.toolRegistryComponent) {
-      this.toolRegistryComponent.handleDbQueryResult({
-        collection: data.collection,
-        command: data.command,
-        results: data.result,
-        count: data.count
-      });
-    }
-  }
+  // NOTE: Database query handling removed - using search results instead
 
   /**
-   * Handle registry statistics
+   * Handle registry statistics (new format)
    */
-  handleRegistryStatsComplete(data) {
+  handleRegistryStats(data) {
     console.log('📊 Registry stats received:', data);
     
     this.state.registryStats = data;
@@ -188,10 +160,10 @@ export default class ToolRegistryClientSubActor {
   }
 
   /**
-   * Handle tools list response
+   * Handle tool search results (new format)
    */
-  handleToolsListComplete(data) {
-    console.log('🔧 Tools list received:', data.tools?.length || 0, 'tools');
+  handleToolsSearchResult(data) {
+    console.log('🔧 Tool search results:', `"${data.query}" found ${data.count} tools`);
     
     this.state.tools = data.tools || [];
     
@@ -201,24 +173,14 @@ export default class ToolRegistryClientSubActor {
   }
 
   /**
-   * Handle tool search results
+   * Handle tool execution results
    */
-  handleToolSearchComplete(data) {
-    console.log('🔍 Tool search results:', data.results?.length || 0, 'results');
+  handleToolExecuted(data) {
+    console.log('🚀 Tool execution result:', data.toolName, data.result?.success ? 'success' : 'failed');
     
     if (this.toolRegistryComponent) {
-      this.toolRegistryComponent.handleSearchResults(data);
+      this.toolRegistryComponent.handleToolExecuted(data);
     }
-  }
-
-  /**
-   * Handle module action completion
-   */
-  handleModuleActionComplete(data) {
-    console.log('⚙️ Module action complete:', data.moduleName, data.message);
-    
-    // Refresh modules list after action
-    this.loadRegistryData();
   }
 
   /**

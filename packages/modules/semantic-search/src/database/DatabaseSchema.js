@@ -38,20 +38,23 @@ export default class DatabaseSchema {
       // Create documents collection with indexes
       const documentsCollection = this.db.collection(this.config.collections.documents);
       
-      // Documents indexes
-      await documentsCollection.createIndex({ source: 1 }, { unique: true, background: true });
-      await documentsCollection.createIndex({ contentHash: 1 }, { background: true });
-      await documentsCollection.createIndex({ sourceType: 1 }, { background: true });
-      await documentsCollection.createIndex({ indexedAt: -1 }, { background: true });
+      // Documents indexes - workspace-first design
+      // IMPORTANT: workspace + source must be unique (same source can exist in different workspaces)
+      await documentsCollection.createIndex({ workspace: 1, source: 1 }, { unique: true, background: true });
+      await documentsCollection.createIndex({ workspace: 1, contentHash: 1 }, { background: true });
+      await documentsCollection.createIndex({ workspace: 1, sourceType: 1 }, { background: true });
+      await documentsCollection.createIndex({ workspace: 1, indexedAt: -1 }, { background: true });
+      await documentsCollection.createIndex({ workspace: 1 }, { background: true }); // Workspace-only index
       
       // Create chunks collection with indexes
       const chunksCollection = this.db.collection(this.config.collections.chunks);
       
-      // Chunks indexes
-      await chunksCollection.createIndex({ documentId: 1 }, { background: true });
-      await chunksCollection.createIndex({ contentHash: 1 }, { unique: true, background: true });
-      await chunksCollection.createIndex({ documentId: 1, chunkIndex: 1 }, { background: true });
-      await chunksCollection.createIndex({ qdrantId: 1 }, { sparse: true, background: true });
+      // Chunks indexes - include workspace for efficient filtering  
+      await chunksCollection.createIndex({ workspace: 1, documentId: 1 }, { background: true });
+      await chunksCollection.createIndex({ workspace: 1, contentHash: 1 }, { unique: true, background: true });
+      await chunksCollection.createIndex({ workspace: 1, documentId: 1, chunkIndex: 1 }, { background: true });
+      await chunksCollection.createIndex({ workspace: 1, qdrantId: 1 }, { sparse: true, background: true });
+      await chunksCollection.createIndex({ workspace: 1 }, { background: true }); // Workspace-only index
       
       // Create text index for content search
       await chunksCollection.createIndex({ content: 'text' }, { background: true });
@@ -65,26 +68,36 @@ export default class DatabaseSchema {
   /**
    * Insert a new document
    */
-  async insertDocument(documentData) {
+  async insertDocument(documentData, workspace) {
+    if (!workspace) {
+      throw new Error('Workspace is required for document insertion');
+    }
     await this.initializeCollections();
     
     const collection = this.db.collection(this.config.collections.documents);
     
-    // Check for existing document by content hash
+    // Check for existing document by content hash and workspace
     if (documentData.contentHash) {
-      const existing = await collection.findOne({ contentHash: documentData.contentHash });
+      const existing = await collection.findOne({ 
+        contentHash: documentData.contentHash,
+        workspace: workspace
+      });
       if (existing) {
         return existing._id;
       }
     }
     
-    // Check for existing document by source
-    const existingBySource = await collection.findOne({ source: documentData.source });
+    // Check for existing document by source and workspace
+    const existingBySource = await collection.findOne({ 
+      source: documentData.source,
+      workspace: workspace
+    });
     if (existingBySource) {
       return existingBySource._id;
     }
     
     const document = {
+      workspace: workspace,
       ...documentData,
       indexedAt: new Date(),
       _id: new ObjectId()
@@ -107,30 +120,41 @@ export default class DatabaseSchema {
   /**
    * Search documents by criteria
    */
-  async searchDocuments(criteria) {
+  async searchDocuments(criteria, workspace = null) {
     await this.initializeCollections();
     
     const collection = this.db.collection(this.config.collections.documents);
-    return await collection.find(criteria).toArray();
+    
+    // Add workspace filter if specified
+    const searchCriteria = workspace ? { ...criteria, workspace } : criteria;
+    
+    return await collection.find(searchCriteria).toArray();
   }
 
   /**
-   * Insert a new chunk
+   * Insert a new chunk  
    */
-  async insertChunk(chunkData) {
+  async insertChunk(chunkData, workspace) {
+    if (!workspace) {
+      throw new Error('Workspace is required for chunk insertion');
+    }
     await this.initializeCollections();
     
     const collection = this.db.collection(this.config.collections.chunks);
     
-    // Check for existing chunk by content hash
+    // Check for existing chunk by content hash and workspace
     if (chunkData.contentHash) {
-      const existing = await collection.findOne({ contentHash: chunkData.contentHash });
+      const existing = await collection.findOne({ 
+        contentHash: chunkData.contentHash,
+        workspace: workspace
+      });
       if (existing) {
         return existing._id;
       }
     }
     
     const chunk = {
+      workspace: workspace,
       ...chunkData,
       documentId: new ObjectId(chunkData.documentId),
       createdAt: new Date(),
@@ -166,11 +190,15 @@ export default class DatabaseSchema {
   /**
    * Search chunks by criteria
    */
-  async searchChunks(criteria) {
+  async searchChunks(criteria, workspace = null) {
     await this.initializeCollections();
     
     const collection = this.db.collection(this.config.collections.chunks);
-    return await collection.find(criteria).toArray();
+    
+    // Add workspace filter if specified
+    const searchCriteria = workspace ? { ...criteria, workspace } : criteria;
+    
+    return await collection.find(searchCriteria).toArray();
   }
 
   /**
@@ -201,14 +229,17 @@ export default class DatabaseSchema {
   /**
    * Clear all documents and chunks
    */
-  async clearAll() {
+  async clearAll(workspace = null) {
     await this.initializeCollections();
     
     const docsCollection = this.db.collection(this.config.collections.documents);
     const chunksCollection = this.db.collection(this.config.collections.chunks);
     
-    const docsResult = await docsCollection.deleteMany({});
-    const chunksResult = await chunksCollection.deleteMany({});
+    // Clear specific workspace or all
+    const filter = workspace ? { workspace } : {};
+    
+    const docsResult = await docsCollection.deleteMany(filter);
+    const chunksResult = await chunksCollection.deleteMany(filter);
     
     return {
       documentsDeleted: docsResult.deletedCount,
@@ -246,18 +277,22 @@ export default class DatabaseSchema {
   /**
    * Get database statistics
    */
-  async getStatistics() {
+  async getStatistics(workspace = null) {
     await this.initializeCollections();
     
     const docsCollection = this.db.collection(this.config.collections.documents);
     const chunksCollection = this.db.collection(this.config.collections.chunks);
     
+    // Count documents and chunks for specific workspace or all
+    const filter = workspace ? { workspace } : {};
+    
     const [totalDocuments, totalChunks] = await Promise.all([
-      docsCollection.countDocuments(),
-      chunksCollection.countDocuments()
+      docsCollection.countDocuments(filter),
+      chunksCollection.countDocuments(filter)
     ]);
     
     return {
+      workspace: workspace || 'all',
       totalDocuments,
       totalChunks,
       collectionsInitialized: this.initialized,

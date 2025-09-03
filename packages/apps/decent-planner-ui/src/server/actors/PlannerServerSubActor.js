@@ -115,7 +115,8 @@ export default class PlannerServerSubActor {
         break;
         
       case 'list-all-tools':
-        this.handleListAllToolsRequest();
+      case 'tools:search':
+        this.handleToolsSearchRequest(data);
         break;
         
       case 'search-tools-text':
@@ -127,6 +128,7 @@ export default class PlannerServerSubActor {
         break;
         
       case 'get-registry-stats':
+      case 'registry:stats':
         this.handleGetRegistryStatsRequest();
         break;
         
@@ -166,7 +168,8 @@ export default class PlannerServerSubActor {
         break;
 
       case 'list-all-modules':
-        this.handleListAllModulesRequest(data);
+      case 'modules:search':
+        this.handleModulesSearchRequest(data);
         break;
 
       case 'database-query':
@@ -525,6 +528,99 @@ export default class PlannerServerSubActor {
       });
     }
   }
+  
+  // NEW PROTOCOL HANDLERS
+  
+  async handleToolsSearchRequest(data) {
+    try {
+      const { query = '', options = {} } = data || {};
+      
+      if (!this.toolRegistry) {
+        throw new Error('Tool registry not initialized');
+      }
+      
+      console.log(`🔍 Tools search: "${query}"`);
+      
+      // Use tool registry search with proper options
+      const tools = query === '' 
+        ? await this.toolRegistry.listTools({ limit: options.limit || 1000 })
+        : await this.toolRegistry.searchTools(query, { limit: options.limit || 1000 });
+      
+      this.remoteActor.receive('tools:searchResult', {
+        query,
+        tools,
+        count: tools.length
+      });
+      
+    } catch (error) {
+      console.error('Failed to search tools:', error);
+      this.remoteActor.receive('tools:searchError', {
+        query: data?.query || '',
+        error: error.message
+      });
+    }
+  }
+  
+  async handleModulesSearchRequest(data) {
+    try {
+      const { query = '', options = {} } = data || {};
+      
+      if (!this.toolRegistry) {
+        throw new Error('Tool registry not initialized');
+      }
+      
+      console.log(`🔍 Modules search: "${query}"`);
+      
+      // Get all tools and group by modules
+      const allTools = await this.toolRegistry.listTools();
+      const moduleMap = new Map();
+      
+      // Group tools by module
+      allTools.forEach(tool => {
+        const moduleName = tool.moduleName || 'Unknown';
+        if (!moduleMap.has(moduleName)) {
+          moduleMap.set(moduleName, {
+            name: moduleName,
+            description: tool.moduleDescription || `Module containing ${moduleName} tools`,
+            tools: [],
+            status: 'loaded'
+          });
+        }
+        moduleMap.get(moduleName).tools.push(tool.name);
+      });
+      
+      // Convert to array and filter by search query if provided
+      let modules = Array.from(moduleMap.values());
+      
+      if (query) {
+        const queryLower = query.toLowerCase();
+        modules = modules.filter(module => {
+          const nameMatch = module.name.toLowerCase().includes(queryLower);
+          const descMatch = module.description.toLowerCase().includes(queryLower);
+          const toolsMatch = module.tools.some(tool => tool.toLowerCase().includes(queryLower));
+          return nameMatch || descMatch || toolsMatch;
+        });
+      }
+      
+      // Apply limit
+      if (options.limit && options.limit > 0) {
+        modules = modules.slice(0, options.limit);
+      }
+      
+      this.remoteActor.receive('modules:searchResult', {
+        query,
+        modules,
+        count: modules.length
+      });
+      
+    } catch (error) {
+      console.error('Failed to search modules:', error);
+      this.remoteActor.receive('modules:searchError', {
+        query: data?.query || '',
+        error: error.message
+      });
+    }
+  }
 
   cancelPlanning() {
     console.log('🛑 Cancelling planning operation');
@@ -799,21 +895,20 @@ export default class PlannerServerSubActor {
         throw new Error('Tool registry not initialized');
       }
 
-      // Get all tools and extract unique module names
-      const allTools = await this.toolRegistry.listTools();
-      const moduleNames = [...new Set(allTools.map(tool => tool.moduleName).filter(Boolean))];
+      // Use tool registry singleton to get modules (it should access the 31 modules in database)
+      console.log(`[PlannerServer] Querying tool registry for modules...`);
+      const databaseModules = await this.toolRegistry.queryModulesCollection();
+      console.log(`[PlannerServer] Tool registry returned ${databaseModules.length} modules from database`);
       
-      // Create module list with tool counts
-      const modules = moduleNames.map(moduleName => {
-        const toolsForModule = allTools.filter(tool => tool.moduleName === moduleName);
-        return {
-          name: moduleName,
-          status: 'available',
-          toolCount: toolsForModule.length,
-          description: `Module with ${toolsForModule.length} tools`,
-          tools: toolsForModule.map(t => t.name)
-        };
-      });
+      // Format modules for UI display
+      const modules = databaseModules.map(module => ({
+        name: module.name || module._id,
+        status: 'database',
+        toolCount: module.toolsCount || 0,
+        description: module.description || `Database module: ${module.name}`,
+        version: module.version,
+        path: module.path
+      }));
 
       // Send to tool registry sub-actor, not planner sub-actor
       if (this.parentActor && this.parentActor.remoteActor) {
