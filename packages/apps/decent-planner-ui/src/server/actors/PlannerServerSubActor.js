@@ -164,6 +164,22 @@ export default class PlannerServerSubActor {
       case 'list-saved-plans':
         this.handleListSavedPlansRequest();
         break;
+
+      case 'list-all-modules':
+        this.handleListAllModulesRequest(data);
+        break;
+
+      case 'database-query':
+        this.handleDatabaseQueryRequest(data);
+        break;
+
+      case 'module-load':
+        this.handleModuleLoadRequest(data);
+        break;
+
+      case 'module-unload':
+        this.handleModuleUnloadRequest(data);
+        break;
         
       default:
         console.warn('Unknown message type:', messageType);
@@ -770,6 +786,153 @@ export default class PlannerServerSubActor {
       console.error('Failed to list saved plans:', error);
       this.remoteActor.receive('planListError', {
         error: error.message
+      });
+    }
+  }
+
+  /**
+   * Handle list all modules request
+   */
+  async handleListAllModulesRequest(data) {
+    try {
+      if (!this.toolRegistry) {
+        throw new Error('Tool registry not initialized');
+      }
+
+      // Get all tools and extract unique module names
+      const allTools = await this.toolRegistry.listTools();
+      const moduleNames = [...new Set(allTools.map(tool => tool.moduleName).filter(Boolean))];
+      
+      // Create module list with tool counts
+      const modules = moduleNames.map(moduleName => {
+        const toolsForModule = allTools.filter(tool => tool.moduleName === moduleName);
+        return {
+          name: moduleName,
+          status: 'available',
+          toolCount: toolsForModule.length,
+          description: `Module with ${toolsForModule.length} tools`,
+          tools: toolsForModule.map(t => t.name)
+        };
+      });
+
+      // Send to tool registry sub-actor, not planner sub-actor
+      if (this.parentActor && this.parentActor.remoteActor) {
+        this.parentActor.remoteActor.receive('tool-registry-modulesListComplete', {
+          success: true,
+          modules,
+          totalModules: modules.length,
+          availableCount: modules.length
+        });
+      }
+
+    } catch (error) {
+      console.error('Failed to list modules:', error);
+      this.remoteActor.receive('modulesListError', {
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Handle database query request
+   */
+  async handleDatabaseQueryRequest(data) {
+    try {
+      const { collection, command, params } = data;
+      
+      if (!this.toolRegistry) {
+        throw new Error('Tool registry not initialized');
+      }
+
+      // Execute database query through tool registry
+      let result;
+      if (collection === 'tools') {
+        const allTools = await this.toolRegistry.listTools();
+        result = allTools.filter(tool => {
+          if (!params.query) return true;
+          return Object.entries(params.query).every(([key, value]) => {
+            if (typeof value === 'object' && value.$regex) {
+              const regex = new RegExp(value.$regex, value.$options || '');
+              return regex.test(tool[key]);
+            }
+            return tool[key] === value;
+          });
+        });
+      } else if (collection === 'modules') {
+        const moduleStats = await this.toolRegistry.getModuleStatistics?.() || {};
+        result = (moduleStats.loadedModules || []).map(name => ({ name, status: 'loaded' }));
+      } else {
+        throw new Error(`Unsupported collection: ${collection}`);
+      }
+
+      this.remoteActor.receive('databaseQueryComplete', {
+        success: true,
+        collection,
+        command,
+        result,
+        count: result.length
+      });
+
+    } catch (error) {
+      console.error('Failed to execute database query:', error);
+      this.remoteActor.receive('databaseQueryError', {
+        error: error.message,
+        collection: data.collection,
+        command: data.command
+      });
+    }
+  }
+
+  /**
+   * Handle module load request
+   */
+  async handleModuleLoadRequest(data) {
+    try {
+      const { moduleName } = data;
+      
+      if (!this.toolRegistry) {
+        throw new Error('Tool registry not initialized');
+      }
+
+      // Attempt to load module
+      console.log(`Attempting to load module: ${moduleName}`);
+      
+      // For now, send success response (actual loading would need tool registry enhancement)
+      this.remoteActor.receive('moduleLoadComplete', {
+        success: true,
+        moduleName,
+        message: `Module ${moduleName} load requested`
+      });
+
+    } catch (error) {
+      console.error('Failed to load module:', error);
+      this.remoteActor.receive('moduleLoadError', {
+        error: error.message,
+        moduleName: data.moduleName
+      });
+    }
+  }
+
+  /**
+   * Handle module unload request  
+   */
+  async handleModuleUnloadRequest(data) {
+    try {
+      const { moduleName } = data;
+      
+      console.log(`Attempting to unload module: ${moduleName}`);
+      
+      this.remoteActor.receive('moduleUnloadComplete', {
+        success: true,
+        moduleName,
+        message: `Module ${moduleName} unload requested`
+      });
+
+    } catch (error) {
+      console.error('Failed to unload module:', error);
+      this.remoteActor.receive('moduleUnloadError', {
+        error: error.message,
+        moduleName: data.moduleName
       });
     }
   }

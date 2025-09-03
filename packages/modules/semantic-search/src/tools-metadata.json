@@ -1,0 +1,332 @@
+{
+  "module": {
+    "name": "semantic-search",
+    "description": "RAG-based semantic search module for indexing and searching content",
+    "version": "1.0.0",
+    "author": "Legion Team",
+    "category": "search",
+    "tags": ["semantic-search", "rag", "vector-search", "embeddings", "content-indexing"]
+  },
+  "tools": {
+    "index_content": {
+      "name": "index_content",
+      "description": "Index content from directories or URLs for semantic search",
+      "category": "indexing",
+      "tags": ["indexing", "content", "directory", "url", "embeddings"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "description": "File path, directory path, or URL to index"
+          },
+          "sourceType": {
+            "type": "string",
+            "enum": ["file", "url", "directory"],
+            "description": "Type of source to index"
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "recursive": {
+                "type": "boolean",
+                "default": true,
+                "description": "Recursively process directories"
+              },
+              "fileTypes": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "File extensions to include (e.g., ['.md', '.txt'])"
+              },
+              "chunkSize": {
+                "type": "number",
+                "minimum": 100,
+                "maximum": 2000,
+                "default": 800,
+                "description": "Target size of text chunks in characters"
+              },
+              "overlap": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 0.5,
+                "default": 0.2,
+                "description": "Overlap ratio between chunks (0.0-0.5)"
+              },
+              "crawlDepth": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 5,
+                "default": 1,
+                "description": "Maximum depth for URL crawling"
+              },
+              "updateExisting": {
+                "type": "boolean",
+                "default": false,
+                "description": "Whether to reindex existing content"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": ["source", "sourceType"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "documentsIndexed": {
+            "type": "number",
+            "description": "Number of documents indexed"
+          },
+          "chunksCreated": {
+            "type": "number",
+            "description": "Number of text chunks created"
+          },
+          "vectorsIndexed": {
+            "type": "number", 
+            "description": "Number of vectors indexed in Qdrant"
+          },
+          "processingTime": {
+            "type": "number",
+            "description": "Total processing time in milliseconds"
+          },
+          "errors": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Processing errors encountered"
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "totalFiles": {"type": "number"},
+              "totalSize": {"type": "number"},
+              "avgChunksPerDoc": {"type": "number"}
+            }
+          }
+        },
+        "required": ["documentsIndexed", "chunksCreated", "vectorsIndexed"]
+      }
+    },
+    "search_content": {
+      "name": "search_content",
+      "description": "Perform semantic search over indexed content",
+      "category": "search",
+      "tags": ["search", "semantic", "vector", "similarity"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Search query text"
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 10,
+                "description": "Maximum number of results"
+              },
+              "threshold": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0.3,
+                "description": "Minimum similarity threshold"
+              },
+              "sourceFilter": {
+                "type": "string",
+                "description": "Filter results by source path/URL"
+              },
+              "contentTypeFilter": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Filter by content types"
+              },
+              "includeContext": {
+                "type": "boolean",
+                "default": true,
+                "description": "Include surrounding chunks for context"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": ["query"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {"type": "string"},
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "content": {"type": "string"},
+                "similarity": {"type": "number"},
+                "source": {"type": "string"},
+                "title": {"type": "string"},
+                "chunkIndex": {"type": "number"},
+                "context": {
+                  "type": "object",
+                  "properties": {
+                    "previousChunk": {"type": "string"},
+                    "nextChunk": {"type": "string"},
+                    "headings": {"type": "array", "items": {"type": "string"}}
+                  }
+                },
+                "metadata": {"type": "object"}
+              }
+            }
+          },
+          "totalResults": {"type": "number"},
+          "searchTime": {"type": "number"}
+        },
+        "required": ["query", "results", "totalResults"]
+      }
+    },
+    "query_rag": {
+      "name": "query_rag",
+      "description": "Execute RAG queries combining semantic search with LLM response generation",
+      "category": "rag",
+      "tags": ["rag", "llm", "query", "response", "citations"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Query for RAG response"
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "searchLimit": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 20,
+                "default": 5,
+                "description": "Maximum search results to use for context"
+              },
+              "searchThreshold": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0.3,
+                "description": "Minimum similarity for search results"
+              },
+              "llmModel": {
+                "type": "string",
+                "default": "claude-3-5-sonnet",
+                "description": "LLM model to use for response generation"
+              },
+              "includeSourceCitations": {
+                "type": "boolean",
+                "default": true,
+                "description": "Include source citations in response"
+              },
+              "responseStyle": {
+                "type": "string",
+                "enum": ["detailed", "concise"],
+                "default": "detailed",
+                "description": "Style of response generation"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": ["query"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {"type": "string"},
+          "response": {"type": "string"},
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "content": {"type": "string"},
+                "source": {"type": "string"},
+                "similarity": {"type": "number"},
+                "usedInResponse": {"type": "boolean"}
+              }
+            }
+          },
+          "llmMetadata": {
+            "type": "object",
+            "properties": {
+              "model": {"type": "string"},
+              "tokensUsed": {"type": "number"},
+              "responseTime": {"type": "number"}
+            }
+          },
+          "searchResults": {"type": "number"}
+        },
+        "required": ["query", "response", "sources"]
+      }
+    },
+    "manage_index": {
+      "name": "manage_index",
+      "description": "Manage document indexes (list, clear, update, status)",
+      "category": "management",
+      "tags": ["management", "index", "maintenance", "status"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": ["list", "clear", "update", "status"],
+            "description": "Management action to perform"
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "sourceFilter": {
+                "type": "string",
+                "description": "Filter by source path/URL"
+              },
+              "contentTypeFilter": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Filter by content types"
+              },
+              "includeStats": {
+                "type": "boolean",
+                "default": true,
+                "description": "Include detailed statistics"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": ["action"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {"type": "string"},
+          "result": {"type": "object"},
+          "statistics": {
+            "type": "object",
+            "properties": {
+              "totalDocuments": {"type": "number"},
+              "totalChunks": {"type": "number"},
+              "vectorCount": {"type": "number"},
+              "indexSize": {"type": "number"}
+            }
+          }
+        },
+        "required": ["action", "result"]
+      }
+    }
+  }
+}

@@ -7,6 +7,7 @@ import { ProtocolActor } from '/src/shared/ProtocolActor.js';
 import { TabsComponent } from '/src/client/components/TabsComponent.js';
 import PlannerClientSubActor from '/src/client/actors/PlannerClientSubActor.js';
 import ChatClientSubActor from '/src/client/actors/ChatClientSubActor.js';
+import ToolRegistryClientSubActor from '/src/client/actors/ToolRegistryClientSubActor.js';
 
 export default class RootClientActor extends ProtocolActor {
   constructor() {
@@ -88,11 +89,13 @@ export default class RootClientActor extends ProtocolActor {
     // Initialize sub-actors
     this.plannerSubActor = new PlannerClientSubActor();
     this.chatSubActor = new ChatClientSubActor();
+    this.toolRegistrySubActor = new ToolRegistryClientSubActor();
     
     // Register sub-actors in the ActorSpace for direct communication
     if (this.actorSpace) {
       this.actorSpace.register(this.plannerSubActor, 'planner-client-sub');
       this.actorSpace.register(this.chatSubActor, 'chat-client-sub');
+      this.actorSpace.register(this.toolRegistrySubActor, 'tool-registry-client-sub');
       
       // Create remote references for sub-actors to communicate directly
       const remotePlannerServer = this.actorSpace.makeRemote('planner-server-sub');
@@ -101,11 +104,13 @@ export default class RootClientActor extends ProtocolActor {
       // Set remote actors on sub-actors for direct communication
       await this.plannerSubActor.setRemoteActor(remotePlannerServer);
       await this.chatSubActor.setRemoteActor(remoteChatServer);
+      await this.toolRegistrySubActor.setRemoteActor(remotePlannerServer); // Use planner server for tool registry
     }
     
     // Set parent references
     this.plannerSubActor.setParentActor(this);
     this.chatSubActor.setParentActor(this);
+    this.toolRegistrySubActor.setParentActor(this);
     
     // Set up the UI
     this.setupUI();
@@ -389,6 +394,11 @@ export default class RootClientActor extends ProtocolActor {
           id: 'chat',
           label: '💬 Chat',
           icon: ''
+        },
+        {
+          id: 'tool-registry',
+          label: '🛠️ Tool Registry',
+          icon: ''
         }
       ],
       activeTab: this.state.activeMainTab,
@@ -405,6 +415,7 @@ export default class RootClientActor extends ProtocolActor {
     // Get content containers for each tab
     const plannerContainer = this.tabsComponent.getContentContainer('planner');
     const chatContainer = this.tabsComponent.getContentContainer('chat');
+    const toolRegistryContainer = this.tabsComponent.getContentContainer('tool-registry');
     
     // Initialize planner sub-actor UI
     if (this.plannerSubActor && plannerContainer) {
@@ -414,6 +425,11 @@ export default class RootClientActor extends ProtocolActor {
     // Initialize chat sub-actor UI  
     if (this.chatSubActor && chatContainer) {
       this.chatSubActor.setupUI(chatContainer);
+    }
+    
+    // Initialize tool registry UI
+    if (this.toolRegistrySubActor && toolRegistryContainer) {
+      this.toolRegistrySubActor.setupUI(toolRegistryContainer);
     }
   }
 
@@ -425,8 +441,11 @@ export default class RootClientActor extends ProtocolActor {
       this.plannerSubActor.onTabActivated();
     } else if (tabId === 'chat' && this.chatSubActor) {
       this.chatSubActor.onTabActivated();
+    } else if (tabId === 'tool-registry' && this.toolRegistrySubActor) {
+      this.toolRegistrySubActor.onTabActivated();
     }
   }
+
 
   receive(messageType, data) {
     console.log('📨 Root client received:', messageType);
@@ -455,6 +474,8 @@ export default class RootClientActor extends ProtocolActor {
           this.plannerSubActor.receive(messageType.replace('planner-', ''), data);
         } else if (messageType.startsWith('chat-') && this.chatSubActor) {
           this.chatSubActor.receive(messageType.replace('chat-', ''), data);
+        } else if (messageType.startsWith('tool-registry-') && this.toolRegistrySubActor) {
+          this.toolRegistrySubActor.receive(messageType.replace('tool-registry-', ''), data);
         } else {
           // Default to active tab
           const activeSubActor = this.state.activeMainTab === 'planner' ? this.plannerSubActor : this.chatSubActor;

@@ -167,6 +167,14 @@ export default class PlannerClientSubActor extends ProtocolActor {
       case 'execution-event':
         this.handleExecutionEvent(data);
         break;
+
+      case 'modulesListComplete':
+        this.handleModulesListComplete(data);
+        break;
+
+      case 'databaseQueryComplete':
+        this.handleDatabaseQueryComplete(data);
+        break;
         
       default:
         console.warn('Unknown message type in planner sub-actor:', messageType);
@@ -3707,6 +3715,39 @@ export default class PlannerClientSubActor extends ProtocolActor {
   handlePlanLoadError(data) {
     console.error('Failed to load plan:', data.error);
     this.state.error = `Failed to load plan: ${data.error}`;
+  }
+
+  /**
+   * Handle modules list response for Tool Registry
+   */
+  handleModulesListComplete(data) {
+    console.log('📦 Modules list received:', data.totalModules, 'modules');
+    
+    // Forward to Tool Registry component if it exists
+    if (this.parentActor && this.parentActor.toolRegistryComponent) {
+      this.parentActor.toolRegistryComponent.updateModules(data.modules);
+      this.parentActor.toolRegistryComponent.updateStats({
+        totalModules: data.totalModules,
+        availableModules: data.availableCount
+      });
+    }
+  }
+
+  /**
+   * Handle database query response for Tool Registry
+   */
+  handleDatabaseQueryComplete(data) {
+    console.log('🗄️ Database query result:', data.collection, data.count, 'records');
+    
+    // Forward to Tool Registry component
+    if (this.parentActor && this.parentActor.toolRegistryComponent) {
+      this.parentActor.toolRegistryComponent.handleDbQueryResult({
+        collection: data.collection,
+        command: data.command,
+        results: data.result,
+        count: data.count
+      });
+    }
   }
   
   handlePlanListComplete(data) {

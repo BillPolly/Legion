@@ -1,0 +1,41 @@
+{
+  "name": "@legion/semantic-search",
+  "version": "1.0.0",
+  "description": "RAG-based semantic search module for indexing and searching content",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+  },
+  "keywords": [
+    "legion",
+    "semantic-search",
+    "rag",
+    "vector-search",
+    "embeddings",
+    "qdrant",
+    "nomic",
+    "ai",
+    "agents"
+  ],
+  "author": "Legion Team",
+  "license": "MIT",
+  "dependencies": {
+    "@legion/tools-registry": "*",
+    "@legion/resource-manager": "*",
+    "@legion/schema": "*",
+    "@legion/nomic": "*",
+    "@legion/llm": "*",
+    "axios": "^1.7.0",
+    "cheerio": "^1.0.0",
+    "crypto": "^1.0.1",
+    "mime-types": "^2.1.35"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "@jest/globals": "^29.7.0",
+    "eslint": "^8.57.0"
+  }
+}
