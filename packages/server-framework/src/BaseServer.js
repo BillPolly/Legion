@@ -156,6 +156,48 @@ export class BaseServer {
   }
 
   /**
+   * Kill any existing processes using the specified ports
+   * @param {number[]} ports - Array of port numbers to clean up
+   */
+  async cleanupPorts(ports) {
+    const { exec } = await import('child_process');
+    const { promisify } = await import('util');
+    const execAsync = promisify(exec);
+    
+    for (const port of ports) {
+      try {
+        console.log(`🧹 Checking port ${port}...`);
+        
+        // Find process using the port
+        const { stdout } = await execAsync(`lsof -ti:${port}`);
+        const pids = stdout.trim().split('\n').filter(pid => pid);
+        
+        if (pids.length > 0) {
+          console.log(`🔫 Killing ${pids.length} process(es) on port ${port}: ${pids.join(', ')}`);
+          
+          // Kill each process
+          for (const pid of pids) {
+            try {
+              await execAsync(`kill -9 ${pid}`);
+              console.log(`✅ Killed process ${pid}`);
+            } catch (error) {
+              console.warn(`⚠️ Could not kill process ${pid}:`, error.message);
+            }
+          }
+          
+          // Wait a moment for cleanup
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } else {
+          console.log(`✅ Port ${port} is free`);
+        }
+      } catch (error) {
+        // No processes found on port, or lsof command failed
+        console.log(`✅ Port ${port} is free (${error.message})`);
+      }
+    }
+  }
+
+  /**
    * Start the server(s)
    * Creates separate Express instances for each unique port
    */
@@ -172,6 +214,10 @@ export class BaseServer {
       }
       routesByPort.get(config.port).push({ route, ...config });
     }
+
+    // Clear any existing processes on our ports
+    console.log('🧹 Cleaning up ports...');
+    await this.cleanupPorts(Array.from(routesByPort.keys()));
 
     // Start a server for each port
     const startupErrors = [];
