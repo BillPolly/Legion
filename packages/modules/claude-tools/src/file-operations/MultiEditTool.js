@@ -89,7 +89,7 @@ export class MultiEditTool extends Tool {
     });
   }
 
-  async execute(input) {
+  async _execute(input) {
     return await this.multiEditFile(input);
   }
 
@@ -220,14 +220,11 @@ export class MultiEditTool extends Tool {
       }
 
       return {
-        success: true,
-        data: {
           file_path,
           total_edits: edits.length,
           successful_edits: edits.length,
           edit_summary: editSummary
-        }
-      };
+        };
 
     } catch (error) {
       return {

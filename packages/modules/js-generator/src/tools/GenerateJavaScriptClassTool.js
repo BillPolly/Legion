@@ -199,7 +199,7 @@ export class GenerateJavaScriptClassTool extends Tool {
   }
 
 
-  async execute(args) {
+  async _execute(args) {
     try {
       this.progress('Generating class structure...', 10);
 

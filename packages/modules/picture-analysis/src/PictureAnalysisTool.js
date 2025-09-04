@@ -116,27 +116,7 @@ export class PictureAnalysisTool extends Tool {
     });
   }
 
-  async execute(input) {
-    try {
-      const result = await this._executeInternal(input);
-      return {
-        success: true,
-        data: result
-      };
-    } catch (error) {
-      const errorCode = error.cause?.errorCode || 'EXECUTION_ERROR';
-      return {
-        success: false,
-        data: {
-          errorCode: errorCode,
-          errorMessage: error.message,
-          file_path: error.cause?.file_path || input?.file_path
-        }
-      };
-    }
-  }
-
-  async _executeInternal(input) {
+  async _execute(input) {
     const startTime = Date.now();
     
     try {

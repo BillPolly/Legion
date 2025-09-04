@@ -81,7 +81,7 @@ export class TranscribeAudioTool extends Tool {
     this.provider = provider;
   }
   
-  async execute(params) {
+  async _execute(params) {
     try {
       this.progress('Starting transcription...', 0, {
         status: 'Starting transcription...'

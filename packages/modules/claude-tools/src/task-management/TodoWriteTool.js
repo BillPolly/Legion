@@ -108,7 +108,7 @@ export class TodoWriteTool extends Tool {
     this.todoList = new Map();
   }
 
-  async execute(input) {
+  async _execute(input) {
     return await this.manageTodos(input);
   }
 
@@ -123,14 +123,9 @@ export class TodoWriteTool extends Tool {
       const validStatuses = ['pending', 'in_progress', 'completed'];
       for (const todo of todos) {
         if (!todo.content || todo.content.trim().length === 0) {
-          return {
-            success: false,
-            error: {
-              code: 'VALIDATION_ERROR',
-              message: 'Todo content cannot be empty',
-              field: 'content'
-            }
-          };
+          const error = new Error('Todo content cannot be empty');
+          error.code = 'VALIDATION_ERROR';
+          throw error;
         }
         
         if (!validStatuses.includes(todo.status)) {
@@ -184,14 +179,11 @@ export class TodoWriteTool extends Tool {
       }
 
       return {
-        success: true,
-        data: {
           todos: processedTodos,
           summary: summary,
           message: statusMessage,
           timestamp: new Date().toISOString()
-        }
-      };
+        };
 
     } catch (error) {
       return {

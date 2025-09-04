@@ -13,7 +13,7 @@ export class Tool extends EventEmitter {
     this.inputSchema = config.inputSchema || {};
   }
 
-  async execute(args) {
+  async _execute(args) {
     throw new Error('execute method must be implemented by subclass');
   }
 }

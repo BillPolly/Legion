@@ -173,7 +173,7 @@ export class AggregateDesignTool extends Tool {
     this.resourceManager = dependencies.resourceManager;
   }
 
-  async execute(args) {
+  async _execute(args) {
     const { entities, valueObjects = [], boundedContexts, projectId } = args;
     
     try {

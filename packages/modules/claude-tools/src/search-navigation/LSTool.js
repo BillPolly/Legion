@@ -86,7 +86,7 @@ export class LSTool extends Tool {
     });
   }
 
-  async execute(input) {
+  async _execute(input) {
     return await this.listDirectory(input);
   }
 
@@ -193,13 +193,10 @@ export class LSTool extends Tool {
       });
 
       return {
-        success: true,
-        data: {
           path: absolutePath,
           entries,
           total_entries: entries.length
-        }
-      };
+        };
 
     } catch (error) {
       return {

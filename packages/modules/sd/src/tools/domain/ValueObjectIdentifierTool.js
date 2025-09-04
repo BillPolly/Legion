@@ -136,7 +136,7 @@ export class ValueObjectIdentifierTool extends Tool {
     this.resourceManager = dependencies.resourceManager;
   }
 
-  async execute(args) {
+  async _execute(args) {
     const { entities, boundedContexts, projectId } = args;
     
     try {

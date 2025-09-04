@@ -9,7 +9,7 @@ export class GenerateHtmlTool extends Tool {
     super(module, toolName);
   }
 
-  async execute(params) {
+  async _execute(params) {
     const { HTMLGenerator } = this.module.generators;
     const generator = new HTMLGenerator();
     

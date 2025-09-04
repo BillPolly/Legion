@@ -52,67 +52,30 @@ export class WriteTool extends Tool {
   /**
    * Execute the Write tool
    */
-  async execute(input) {
-    return await this.writeFile(input);
-  }
-
   /**
-   * Write a file to the filesystem
+   * Write a file to the filesystem - base class will wrap result
    */
-  async writeFile(input) {
+  async _execute(input) {
     try {
       const { file_path, content } = input;
       
-      // Validate required inputs
-      if (!file_path) {
-        return {
-          success: false,
-          error: {
-            code: 'EXECUTION_ERROR',
-            message: 'file_path is required',
-            errorMessage: 'file_path is required',
-            field: 'file_path'
-          }
-        };
-      }
-      
-      if (content === undefined || content === null) {
-        return {
-          success: false,
-          error: {
-            code: 'EXECUTION_ERROR',
-            message: 'content is required',
-            errorMessage: 'content is required',
-            field: 'content'
-          }
-        };
-      }
+      // Base class handles input validation based on schema
 
       // Check if path is a directory
       try {
         const stats = await fs.stat(file_path);
         if (stats.isDirectory()) {
-          return {
-            success: false,
-            error: {
-              code: 'INVALID_PARAMETER',
-              message: `Path is a directory, not a file: ${file_path}`,
-              path: file_path
-            }
-          };
+          const error = new Error(`Path is a directory, not a file: ${file_path}`);
+          error.code = 'INVALID_PARAMETER';
+          throw error;
         }
       } catch (error) {
         // File doesn't exist, which is fine for writing
         if (error.code !== 'ENOENT') {
           if (error.code === 'EACCES') {
-            return {
-              success: false,
-              error: {
-                code: 'PERMISSION_DENIED',
-                message: `Permission denied: ${file_path}`,
-                path: file_path
-              }
-            };
+            const newError = new Error(`Permission denied: ${file_path}`);
+            newError.code = 'PERMISSION_DENIED';
+            throw newError;
           }
           // Other errors, re-throw
           if (error.code !== 'ENOENT') {
@@ -136,69 +99,44 @@ export class WriteTool extends Tool {
         await fs.mkdir(dir, { recursive: true });
       } catch (error) {
         if (error.code === 'EACCES') {
-          return {
-            success: false,
-            error: {
-              code: 'PERMISSION_DENIED',
-              message: `Permission denied creating directory: ${dir}`,
-              path: dir
-            }
-          };
+          const newError = new Error(`Permission denied creating directory: ${dir}`);
+          newError.code = 'PERMISSION_DENIED';
+          throw newError;
         }
         throw error;
       }
 
-      // Write the file
-      let bytesWritten;
-      if (Buffer.isBuffer(content)) {
-        await fs.writeFile(file_path, content);
-        bytesWritten = content.length;
-      } else {
-        // String content
-        await fs.writeFile(file_path, content, 'utf8');
-        bytesWritten = Buffer.byteLength(content, 'utf8');
-      }
+      // Write the file (string content only)
+      await fs.writeFile(file_path, content, 'utf8');
+      const bytesWritten = Buffer.byteLength(content, 'utf8');
 
       return {
-        success: true,
-        data: {
-          file_path,
-          bytes_written: bytesWritten,
-          created: !fileExists
-        }
+        file_path,
+        bytes_written: bytesWritten,
+        created: !fileExists
       };
 
     } catch (error) {
       // Handle write errors
       if (error.code === 'EACCES') {
-        return {
-          success: false,
-          error: {
-            code: 'PERMISSION_DENIED',
-            message: `Permission denied writing file: ${input.file_path}`,
-            details: error.message
-          }
-        };
+        const newError = new Error(`Permission denied writing file: ${input.file_path}`);
+        newError.code = 'PERMISSION_DENIED';
+        throw newError;
       }
       if (error.code === 'ENOSPC') {
-        return {
-          success: false,
-          error: {
-            code: 'RESOURCE_ERROR',
-            message: `No space left on device: ${input.file_path}`,
-            details: error.message
-          }
-        };
+        const newError = new Error(`No space left on device: ${input.file_path}`);
+        newError.code = 'RESOURCE_ERROR';
+        throw newError;
       }
       
-      return {
-        success: false,
-        error: {
-          code: 'EXECUTION_ERROR',
-          message: `Failed to write file: ${error.message}`,
-          details: error.stack
-        }
-      };
+      // Re-throw with code or add generic code
+      if (error.code) {
+        throw error;
+      } else {
+        const newError = new Error(`Failed to write file: ${error.message}`);
+        newError.code = 'EXECUTION_ERROR';
+        throw newError;
+      }
     }
   }
 

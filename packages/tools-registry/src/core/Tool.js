@@ -188,7 +188,9 @@ export class Tool extends SimpleEmitter {
       // VALIDATE INPUT - This is the ONLY place input validation happens
       const validation = this.validateInput(params);
       if (!validation.valid) {
-        throw new Error(`Input validation failed: ${validation.errors.join(', ')}`);
+        const error = new Error(`Input validation failed: ${validation.errors.join(', ')}`);
+        error.code = 'EXECUTION_ERROR';
+        throw error;
       }
 
       // Call the tool-specific implementation method
@@ -207,10 +209,11 @@ export class Tool extends SimpleEmitter {
       throw new Error(`Tool ${this.name} must implement _execute() method`);
       
     } catch (error) {
-      // Standardize error format
+      // Standardize error format - preserve error code as separate property
       return {
         success: false,
         error: error.message,
+        errorCode: error.code,
         data: error.cause || {}
       };
     }

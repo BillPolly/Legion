@@ -100,7 +100,7 @@ export class WebSearchTool extends Tool {
     });
   }
 
-  async execute(input) {
+  async _execute(input) {
     return await this.searchWeb(input);
   }
 
@@ -156,16 +156,13 @@ export class WebSearchTool extends Tool {
       });
 
       return {
-        success: true,
-        data: {
           query,
           results: filteredResults,
           search_metadata: {
             total_results: filteredResults.length,
             search_time_ms: 100,
             search_engine: 'mock'
-          }
-        }
+          };
       };
 
     } catch (error) {

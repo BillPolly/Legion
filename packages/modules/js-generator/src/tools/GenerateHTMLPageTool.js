@@ -175,7 +175,7 @@ export class GenerateHTMLPageTool extends Tool {
     });
   }
 
-  async execute(args) {
+  async _execute(args) {
     try {
       const {
         title,

@@ -88,7 +88,7 @@ export class BashTool extends Tool {
     });
   }
 
-  async execute(input) {
+  async _execute(input) {
     return await this.executeCommand(input);
   }
 
@@ -116,14 +116,9 @@ export class BashTool extends Tool {
 
       for (const pattern of dangerousPatterns) {
         if (pattern.test(command)) {
-          return {
-            success: false,
-            error: {
-              code: 'SECURITY_ERROR',
-              message: 'Command blocked for security reasons',
-              command: command
-            }
-          };
+          const error = new Error('Command blocked for security reasons');
+          error.code = 'SECURITY_ERROR';
+          throw error;
         }
       }
 

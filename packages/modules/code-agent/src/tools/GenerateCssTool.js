@@ -9,7 +9,7 @@ export class GenerateCssTool extends Tool {
     super(module, toolName);
   }
 
-  async execute(params) {
+  async _execute(params) {
     const { CSSGenerator } = this.module.generators;
     const generator = new CSSGenerator();
     

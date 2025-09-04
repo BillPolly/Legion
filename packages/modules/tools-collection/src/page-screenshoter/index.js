@@ -91,7 +91,7 @@ class PageScreenshot extends Tool {
   /**
    * Execute the screenshot tool with validated parameters
    */
-  async execute(params) {
+  async _execute(params) {
     const { url, fullPage, width, height, waitForSelector } = params;
     
     // Emit progress event

@@ -65,7 +65,7 @@ export class DatabaseConnectionTool extends Tool {
     this.db = null;
   }
 
-  async execute(args) {
+  async _execute(args) {
     try {
       this.emit('progress', { percentage: 0, status: 'Connecting to database...' });
       

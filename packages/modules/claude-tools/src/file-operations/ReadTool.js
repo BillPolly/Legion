@@ -73,57 +73,13 @@ export class ReadTool extends Tool {
   }
 
   /**
-   * Execute the Read tool
+   * Execute the Read tool - base class will wrap result
    */
-  async execute(input) {
-    return await this.readFile(input);
-  }
-
-  /**
-   * Read a file from the filesystem
-   */
-  async readFile(input) {
+  async _execute(input) {
     try {
       const { file_path, limit, offset = 0 } = input;
       
-      // Validate required inputs
-      if (!file_path) {
-        return {
-          success: false,
-          error: {
-            code: 'EXECUTION_ERROR',
-            message: 'file_path is required',
-            errorMessage: 'file_path is required',
-            field: 'file_path'
-          }
-        };
-      }
-      
-      // Validate offset
-      if (offset < 0) {
-        return {
-          success: false,
-          error: {
-            code: 'EXECUTION_ERROR',
-            message: 'offset must be greater than or equal to 0',
-            errorMessage: 'offset must be greater than or equal to 0',
-            field: 'offset'
-          }
-        };
-      }
-      
-      // Validate limit
-      if (limit !== undefined && limit <= 0) {
-        return {
-          success: false,
-          error: {
-            code: 'EXECUTION_ERROR',
-            message: 'limit must be greater than 0',
-            errorMessage: 'limit must be greater than 0',
-            field: 'limit'
-          }
-        };
-      }
+      // Base class handles validation based on inputSchema
 
       // Check if file exists
       try {
@@ -131,35 +87,20 @@ export class ReadTool extends Tool {
         
         // Check if it's a directory
         if (stats.isDirectory()) {
-          return {
-            success: false,
-            error: {
-              code: 'INVALID_PARAMETER',
-              message: `Path is a directory, not a file: ${file_path}`,
-              path: file_path
-            }
-          };
+          const error = new Error(`Path is a directory, not a file: ${file_path}`);
+          error.code = 'INVALID_PARAMETER';
+          throw error;
         }
       } catch (error) {
         if (error.code === 'ENOENT') {
-          return {
-            success: false,
-            error: {
-              code: 'RESOURCE_NOT_FOUND',
-              message: `File not found: ${file_path}`,
-              path: file_path
-            }
-          };
+          const newError = new Error(`File not found: ${file_path}`);
+          newError.code = 'RESOURCE_NOT_FOUND';
+          throw newError;
         }
         if (error.code === 'EACCES') {
-          return {
-            success: false,
-            error: {
-              code: 'PERMISSION_DENIED',
-              message: `Permission denied: ${file_path}`,
-              path: file_path
-            }
-          };
+          const newError = new Error(`Permission denied: ${file_path}`);
+          newError.code = 'PERMISSION_DENIED';
+          throw newError;
         }
         throw error;
       }
@@ -203,25 +144,22 @@ export class ReadTool extends Tool {
       const stats = await fs.stat(file_path);
 
       return {
-        success: true,
-        data: {
-          content,
-          file_path,
-          size: isBinary ? stats.size : content.length,
-          encoding,
-          metadata
-        }
+        content,
+        file_path,
+        size: isBinary ? stats.size : content.length,
+        encoding,
+        metadata
       };
 
     } catch (error) {
-      return {
-        success: false,
-        error: {
-          code: 'EXECUTION_ERROR',
-          message: `Failed to read file: ${error.message}`,
-          details: error.stack
-        }
-      };
+      // Re-throw original error to preserve codes, or wrap if it has no code
+      if (error.code) {
+        throw error;
+      } else {
+        const newError = new Error(`Failed to read file: ${error.message}`);
+        newError.code = 'EXECUTION_ERROR';
+        throw newError;
+      }
     }
   }
 

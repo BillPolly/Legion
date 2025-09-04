@@ -68,7 +68,7 @@ export class NotebookEditTool extends Tool {
     });
   }
 
-  async execute(input) {
+  async _execute(input) {
     return await this.editNotebook(input);
   }
 
@@ -127,14 +127,9 @@ export class NotebookEditTool extends Tool {
 
       // Validate notebook structure
       if (!notebook.cells || !Array.isArray(notebook.cells)) {
-        return {
-          success: false,
-          error: {
-            code: 'INVALID_FORMAT',
-            message: 'Invalid notebook structure: missing cells array',
-            path: notebook_path
-          }
-        };
+        const error = new Error('Invalid notebook structure: missing cells array');
+        error.code = 'INVALID_FORMAT';
+        throw error;
       }
 
       let modifiedCellId;
@@ -143,13 +138,8 @@ export class NotebookEditTool extends Tool {
       if (edit_mode === 'delete') {
         // Delete a cell
         if (!cell_id) {
-          return {
-            success: false,
-            error: {
-              code: 'MISSING_PARAMETER',
-              message: 'cell_id is required for delete operation'
-            }
-          };
+          const error = new Error('cell_id is required for delete operation'
+            ); error.code = 'MISSING_PARAMETER'; throw error;
         }
 
         const cellIndex = this.findCellIndex(notebook.cells, cell_id);
@@ -197,13 +187,8 @@ export class NotebookEditTool extends Tool {
         if (!cell_id) {
           // If no cell_id, replace the first cell
           if (notebook.cells.length === 0) {
-            return {
-              success: false,
-              error: {
-                code: 'NOT_FOUND',
-                message: 'No cells in notebook to replace'
-              }
-            };
+            const error = new Error('No cells in notebook to replace'
+              ); error.code = 'NOT_FOUND'; throw error;
           }
           
           const cell = notebook.cells[0];
@@ -260,14 +245,11 @@ export class NotebookEditTool extends Tool {
       }
 
       return {
-        success: true,
-        data: {
           notebook_path,
           cell_modified: modifiedCellId,
           operation: operation,
           notebook_metadata: notebook.metadata
-        }
-      };
+        };
 
     } catch (error) {
       return {

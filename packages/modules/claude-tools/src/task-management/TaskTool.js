@@ -99,7 +99,7 @@ export class TaskTool extends Tool {
     });
   }
 
-  async execute(input) {
+  async _execute(input) {
     return await this.executeTask(input);
   }
 
@@ -112,25 +112,15 @@ export class TaskTool extends Tool {
       
       // Validate input
       if (!description || description.length < 3) {
-        return {
-          success: false,
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'Description must be at least 3 characters long',
-            field: 'description'
-          }
-        };
+        const error = new Error('Description must be at least 3 characters long');
+        error.code = 'VALIDATION_ERROR';
+        throw error;
       }
       
       if (!['general-purpose', 'context-fetcher', 'file-creator', 'git-workflow', 'test-runner'].includes(subagent_type)) {
-        return {
-          success: false,
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'Invalid subagent_type. Must be one of: general-purpose, context-fetcher, file-creator, git-workflow, test-runner',
-            field: 'subagent_type'
-          }
-        };
+        const error = new Error('Invalid subagent_type. Must be one of: general-purpose, context-fetcher, file-creator, git-workflow, test-runner');
+        error.code = 'VALIDATION_ERROR';
+        throw error;
       }
 
       // Generate task ID
@@ -203,15 +193,12 @@ export class TaskTool extends Tool {
       metadata.execution_time_ms = 100; // Simulated
 
       return {
-        success: true,
-        data: {
           task_id: taskId,
           description: description,
           agent_type: subagent_type,
           result: result,
           metadata: metadata
-        }
-      };
+        };
 
     } catch (error) {
       return {

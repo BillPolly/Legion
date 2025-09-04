@@ -242,7 +242,7 @@ export class GenerateEventHandlerTool extends Tool {
     }
   }
 
-  async execute(args) {
+  async _execute(args) {
     // Generate handler name
     const handlerName = args.handlerName || 
       this._generateHandlerName(args.event, args.element);

@@ -60,27 +60,18 @@ export class EditTool extends Tool {
   /**
    * Execute the Edit tool
    */
-  async execute(input) {
-    return await this.editFile(input);
-  }
-
   /**
-   * Edit a file by replacing strings
+   * Edit a file by replacing strings - base class will wrap result
    */
-  async editFile(input) {
+  async _execute(input) {
     try {
       const { file_path, old_string, new_string, replace_all = false } = input;
 
       // Check if old_string and new_string are the same
       if (old_string === new_string) {
-        return {
-          success: false,
-          error: {
-            code: 'INVALID_PARAMETER',
-            message: 'old_string and new_string cannot be the same',
-            details: { old_string, new_string }
-          }
-        };
+        const error = new Error('old_string and new_string cannot be the same');
+        error.code = 'INVALID_PARAMETER';
+        throw error;
       }
 
       // Read the file
@@ -89,14 +80,9 @@ export class EditTool extends Tool {
         content = await fs.readFile(file_path, 'utf8');
       } catch (error) {
         if (error.code === 'ENOENT') {
-          return {
-            success: false,
-            error: {
-              code: 'RESOURCE_NOT_FOUND',
-              message: `File not found: ${file_path}`,
-              path: file_path
-            }
-          };
+          const newError = new Error(`File not found: ${file_path}`);
+          newError.code = 'RESOURCE_NOT_FOUND';
+          throw newError;
         }
         if (error.code === 'EACCES') {
           return {
@@ -172,23 +158,20 @@ export class EditTool extends Tool {
       const preview = this.generatePreview(content, newContent, old_string, new_string);
 
       return {
-        success: true,
-        data: {
           file_path,
           replacements_made: replacementsMade,
           preview
-        }
-      };
+        };
 
     } catch (error) {
-      return {
-        success: false,
-        error: {
-          code: 'EXECUTION_ERROR',
-          message: `Failed to edit file: ${error.message}`,
-          details: error.stack
-        }
-      };
+      // Re-throw with code or add generic code
+      if (error.code) {
+        throw error;
+      } else {
+        const newError = new Error(`Failed to edit file: ${error.message}`);
+        newError.code = 'EXECUTION_ERROR';
+        throw newError;
+      }
     }
   }
 

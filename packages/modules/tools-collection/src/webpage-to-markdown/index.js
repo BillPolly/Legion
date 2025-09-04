@@ -49,9 +49,9 @@ class WebPageToMarkdown extends Tool {
 
   /**
    * Execute the tool with the given parameters
-   * This is the main entry point for single-function tools
+   * This is the implementation method called by base Tool.execute()
    */
-  async execute(args) {
+  async _execute(args) {
     // Validate required parameters
     if (!args.url) {
       throw new Error('Missing required parameter: url', {

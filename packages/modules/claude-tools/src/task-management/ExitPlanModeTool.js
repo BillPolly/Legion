@@ -65,7 +65,7 @@ export class ExitPlanModeTool extends Tool {
     this.isInPlanMode = false;
   }
 
-  async execute(input) {
+  async _execute(input) {
     return await this.exitPlanMode(input);
   }
 
@@ -78,14 +78,9 @@ export class ExitPlanModeTool extends Tool {
 
       // Validate plan is not empty
       if (!plan || plan.trim().length === 0) {
-        return {
-          success: false,
-          error: {
-            code: 'INVALID_INPUT',
-            message: 'Plan cannot be empty',
-            field: 'plan'
-          }
-        };
+        const error = new Error('Plan cannot be empty');
+        error.code = 'INVALID_INPUT';
+        throw error;
       }
 
       // Format the plan
@@ -95,8 +90,6 @@ export class ExitPlanModeTool extends Tool {
       this.isInPlanMode = false;
 
       return {
-        success: true,
-        data: {
           plan: formattedPlan,
           message: 'Plan mode exited. Plan presented for user approval.',
           timestamp: new Date().toISOString(),
@@ -105,7 +98,6 @@ export class ExitPlanModeTool extends Tool {
             line_count: plan.split('\n').length,
             has_markdown: plan.includes('#') || plan.includes('*') || plan.includes('-')
           }
-        }
       };
 
     } catch (error) {

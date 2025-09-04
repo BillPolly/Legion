@@ -82,7 +82,7 @@ export class GlobTool extends Tool {
     });
   }
 
-  async execute(input) {
+  async _execute(input) {
     return await this.findFiles(input);
   }
 
@@ -150,14 +150,11 @@ export class GlobTool extends Tool {
       const searchTime = Date.now() - startTime;
 
       return {
-        success: true,
-        data: {
           pattern,
           matches: results,
           total_matches: results.length,
           search_time_ms: searchTime
-        }
-      };
+        };
 
     } catch (error) {
       return {

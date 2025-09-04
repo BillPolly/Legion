@@ -79,7 +79,7 @@ export class UserStoryGeneratorTool extends Tool {
     this.designDatabase = dependencies.designDatabase;
   }
 
-  async execute(args) {
+  async _execute(args) {
     const { parsedRequirements, projectId } = args;
     
     try {

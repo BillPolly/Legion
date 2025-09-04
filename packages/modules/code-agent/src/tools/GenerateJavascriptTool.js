@@ -9,7 +9,7 @@ export class GenerateJavascriptTool extends Tool {
     super(module, toolName);
   }
 
-  async execute(params) {
+  async _execute(params) {
     const { JSGenerator } = this.module.generators;
     const generator = new JSGenerator();
     

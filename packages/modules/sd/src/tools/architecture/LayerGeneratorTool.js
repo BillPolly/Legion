@@ -61,7 +61,7 @@ export class LayerGeneratorTool extends Tool {
     this.llmClient = dependencies.llmClient;
   }
 
-  async execute(args) {
+  async _execute(args) {
     try {
       this.emit('progress', { percentage: 0, status: 'Designing layers...' });
       

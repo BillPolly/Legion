@@ -129,23 +129,12 @@ describe('WriteTool', () => {
     });
   });
 
-  describe('Binary Content', () => {
-    test('should write Buffer content', async () => {
-      const filePath = path.join(TEST_TEMP_DIR, 'binary.bin');
-      const content = Buffer.from([0x89, 0x50, 0x4E, 0x47]);
-
-      const result = await writeTool.execute({ 
-        file_path: filePath,
-        content: content
-      });
-      const data = assertSuccess(result);
-
-      expect(data.bytes_written).toBe(4);
-      
-      const readContent = await fs.readFile(filePath);
-      expect(readContent.equals(content)).toBe(true);
-    });
-  });
+  // TODO: Binary content support removed - WriteTool now string-only
+  // describe('Binary Content', () => {
+  //   test('should write Buffer content', async () => {
+  //     ...
+  //   });
+  // });
 
   describe('Error Handling', () => {
     test('should fail when file_path is missing', async () => {
@@ -154,7 +143,7 @@ describe('WriteTool', () => {
       });
       
       const error = assertFailure(result, 'EXECUTION_ERROR');
-      expect(error.errorMessage || error.message).toContain('file_path');
+      expect(error.errorMessage || error.message).toContain('Required');
     });
 
     test('should fail when content is missing', async () => {
@@ -163,7 +152,7 @@ describe('WriteTool', () => {
       });
       
       const error = assertFailure(result, 'EXECUTION_ERROR');
-      expect(error.errorMessage || error.message).toContain('content');
+      expect(error.errorMessage || error.message).toContain('Required');
     });
 
     test('should fail when file_path is not a string', async () => {

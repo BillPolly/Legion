@@ -125,7 +125,7 @@ export class GenerateJavaScriptFunctionTool extends Tool {
     };
   }
 
-  async execute(args) {
+  async _execute(args) {
     try {
       this.progress('Generating function...', 20);
 

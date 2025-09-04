@@ -1,0 +1,53 @@
+{
+  "name": "@legion/node-debugger",
+  "version": "1.0.0",
+  "description": "Node.js process debugging and introspection with handle projection for Legion AI agents",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --passWithNoTests",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+  },
+  "keywords": [
+    "legion",
+    "node",
+    "debugger",
+    "inspector",
+    "tree-sitter", 
+    "handles",
+    "projection",
+    "ai",
+    "agents"
+  ],
+  "author": "Legion Framework Contributors",
+  "license": "MIT",
+  "dependencies": {
+    "@legion/schema": "*",
+    "@legion/node-runner": "*",
+    "@legion/tools-registry": "*",
+    "node-inspect": "^2.0.0",
+    "tree-sitter": "^0.21.0",
+    "tree-sitter-javascript": "^0.21.0",
+    "tree-sitter-typescript": "^0.21.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "@jest/globals": "^29.7.0",
+    "eslint": "^8.57.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "transform": {},
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/**/*.test.js"
+    ]
+  }
+}

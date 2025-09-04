@@ -338,16 +338,13 @@ class MonitorDeploymentTool extends Tool {
     
     if (result.success) {
       return {
-        success: true,
-        data: {
           monitoring: {
             id: result.monitoringId,
             status: 'active',
             interval: config.interval,
             persistent: config.persistent,
             realtime: config.realtime
-          }
-        },
+          };,
         summary: `Started monitoring for "${deployment.name}" with ${config.interval}ms interval${config.persistent ? ' (persistent)' : ''}`
       };
     } else {
@@ -366,12 +363,9 @@ class MonitorDeploymentTool extends Tool {
     
     if (result.success) {
       return {
-        success: true,
-        data: {
           monitoring: {
             status: 'stopped'
-          }
-        },
+          };,
         summary: `Stopped monitoring for "${deployment.name}"`
       };
     } else {
@@ -388,14 +382,11 @@ class MonitorDeploymentTool extends Tool {
   async getMonitoringStatus(args, deployment, monitoringSystem) {
     // This would get the current monitoring status
     return {
-      success: true,
-      data: {
         monitoring: {
           status: 'active', // This would come from the monitoring system
           interval: 30000,
           persistent: false
-        }
-      },
+        };,
       summary: `Monitoring status for "${deployment.name}"`
     };
   }

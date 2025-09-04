@@ -114,12 +114,8 @@ export class CommandExecutor extends Tool {
         });
       });
     } catch (error) {
-      return {
-        success: false,
-        command: command,
-        errorType: 'execution_error',
-        error: error.message
-      };
+      // Let base Tool class handle error wrapping
+      throw error;
     }
   }
 

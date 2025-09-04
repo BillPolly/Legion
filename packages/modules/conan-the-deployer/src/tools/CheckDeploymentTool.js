@@ -54,7 +54,7 @@ class CheckDeploymentTool extends Tool {
     };
   }
 
-  async execute(params) {
+  async _execute(params) {
     const {
       url,
       endpoints = ['/', '/status', '/health'],

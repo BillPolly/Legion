@@ -61,7 +61,7 @@ export class ValidateJavaScriptSyntaxTool extends Tool {
     });
   }
 
-  async execute(args) {
+  async _execute(args) {
     try {
       this.emit('progress', { percentage: 20, status: 'Preparing code validation...' });
 

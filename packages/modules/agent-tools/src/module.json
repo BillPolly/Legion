@@ -1,0 +1,153 @@
+{
+  "module": {
+    "name": "agent-tools-module",
+    "description": "UI tools for agent planning that integrate with transparent resource handle system",
+    "version": "1.0.0",
+    "author": "Legion Framework",
+    "category": "ui"
+  },
+  "tools": {
+    "display_resource": {
+      "name": "display_resource",
+      "shortName": "display",
+      "description": "Display any resource handle in appropriate viewer. Agent guidance: remember the windowId if you plan to update content multiple times.",
+      "category": "other",
+      "tags": ["ui", "display", "window", "resource", "agent"],
+      "version": "1.0.0",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "context": {
+            "type": "object",
+            "description": "Agent execution context"
+          },
+          "resourceHandle": {
+            "description": "Resource handle from previous tool operation"
+          },
+          "options": {
+            "type": "object",
+            "description": "Display options: {viewerType, windowId}",
+            "default": {}
+          }
+        },
+        "required": ["context", "resourceHandle"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "windowId": {
+            "type": "string",
+            "description": "Unique window identifier for future operations"
+          },
+          "viewerType": {
+            "type": "string",
+            "description": "Type of viewer created (editor, image, directory)"
+          },
+          "resourcePath": {
+            "type": "string",
+            "description": "Path to the displayed resource"
+          }
+        },
+        "required": ["windowId"]
+      },
+      "security": {
+        "dangerousKeywords": [],
+        "evaluation": "safe"
+      }
+    },
+    "notify_user": {
+      "name": "notify_user",
+      "shortName": "notify",
+      "description": "Show notifications, progress updates, or user queries to the user",
+      "category": "other",
+      "tags": ["ui", "notification", "message", "agent"],
+      "version": "1.0.0",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "context": {
+            "type": "object",
+            "description": "Agent execution context"
+          },
+          "message": {
+            "type": "string",
+            "description": "Text message to display to user"
+          },
+          "type": {
+            "type": "string",
+            "description": "Notification type: info, success, error, progress, query",
+            "default": "info"
+          },
+          "duration": {
+            "type": "number",
+            "description": "Display duration in milliseconds (0 = persistent)",
+            "default": 3000
+          }
+        },
+        "required": ["context", "message"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "notificationId": {
+            "type": "string",
+            "description": "Unique notification identifier"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of notification shown"
+          },
+          "message": {
+            "type": "string",
+            "description": "Message that was displayed"
+          }
+        },
+        "required": ["notificationId"]
+      },
+      "security": {
+        "dangerousKeywords": [],
+        "evaluation": "safe"
+      }
+    },
+    "close_window": {
+      "name": "close_window",
+      "shortName": "close",
+      "description": "Close floating windows programmatically by window ID",
+      "category": "other",
+      "tags": ["ui", "window", "close", "management", "agent"],
+      "version": "1.0.0",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "context": {
+            "type": "object",
+            "description": "Agent execution context"
+          },
+          "windowId": {
+            "type": "string",
+            "description": "Window identifier to close"
+          }
+        },
+        "required": ["context", "windowId"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "windowId": {
+            "type": "string",
+            "description": "ID of the closed window"
+          },
+          "closed": {
+            "type": "boolean",
+            "description": "Whether window was successfully closed"
+          }
+        },
+        "required": ["closed"]
+      },
+      "security": {
+        "dangerousKeywords": [],
+        "evaluation": "safe"
+      }
+    }
+  }
+}

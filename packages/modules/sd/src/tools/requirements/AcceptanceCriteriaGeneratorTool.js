@@ -70,7 +70,7 @@ export class AcceptanceCriteriaGeneratorTool extends Tool {
     this.llmClient = dependencies.llmClient;
   }
 
-  async execute(args) {
+  async _execute(args) {
     const { userStories } = args;
     
     try {

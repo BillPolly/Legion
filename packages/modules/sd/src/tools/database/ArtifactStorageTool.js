@@ -67,7 +67,7 @@ export class ArtifactStorageTool extends Tool {
     this.designDatabase = dependencies.designDatabase;
   }
 
-  async execute(args) {
+  async _execute(args) {
     const { artifact, projectId } = args;
     
     try {

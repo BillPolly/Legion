@@ -94,58 +94,55 @@ class RailwayDeployTool extends Tool {
     });
     
     this.resourceManager = resourceManager;
+  }
+  
+  async _execute(input) {
+    // Get provider from resourceManager
+    let provider;
+    if (this.resourceManager) {
+      if (typeof this.resourceManager.get === 'function') {
+        provider = this.resourceManager.get('railwayProvider');
+      } else {
+        provider = this.resourceManager.railwayProvider;
+      }
+    }
     
-    // Set the execute function
-    this._execute = async (input) => {
-        // Get provider from resourceManager
-        let provider;
-        if (this.resourceManager) {
-          if (typeof this.resourceManager.get === 'function') {
-            provider = this.resourceManager.get('railwayProvider');
-          } else {
-            provider = this.resourceManager.railwayProvider;
-          }
-        }
-        
-        if (!provider) {
-          throw new Error('Railway provider not initialized');
-        }
+    if (!provider) {
+      throw new Error('Railway provider not initialized');
+    }
 
-        // Prepare deployment configuration with defaults
-        const config = {
-          name: input.projectName,
-          serviceName: input.serviceName || 'app',
-          environment: input.environmentVariables || {}
-        };
+    // Prepare deployment configuration with defaults
+    const config = {
+      name: input.projectName,
+      serviceName: input.serviceName || 'app',
+      environment: input.environmentVariables || {}
+    };
 
-        // Configure source based on type
-        if (input.source.type === 'github') {
-          config.source = 'github';
-          config.repo = input.source.repository;
-          config.branch = input.source.branch;
-        } else if (input.source.type === 'docker') {
-          config.image = input.source.repository;
-        }
+    // Configure source based on type
+    if (input.source.type === 'github') {
+      config.source = 'github';
+      config.repo = input.source.repository;
+      config.branch = input.source.branch;
+    } else if (input.source.type === 'docker') {
+      config.image = input.source.repository;
+    }
 
-        // Deploy with domain generation
-        const result = await provider.deployWithDomain(config);
-        
-        if (!result.success) {
-          throw new Error(result.error || 'Deployment failed');
-        }
+    // Deploy with domain generation
+    const result = await provider.deployWithDomain(config);
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Deployment failed');
+    }
 
-        return {
-          deploymentId: result.deploymentId,
-          projectId: result.projectId,
-          serviceId: result.serviceId,
-          deploymentUrl: result.url || `Deployment ${result.deploymentId} created`,
-          status: result.status,
-          message: `Successfully deployed ${input.projectName} to Railway`
-        };
+    return {
+      deploymentId: result.deploymentId,
+      projectId: result.projectId,
+      serviceId: result.serviceId,
+      deploymentUrl: result.url || `Deployment ${result.deploymentId} created`,
+      status: result.status,
+      message: `Successfully deployed ${input.projectName} to Railway`
     };
   }
-
-  // Remove old execute method since it's now in constructor
 }
 
 export default RailwayDeployTool;

@@ -111,7 +111,7 @@ export class GenerateVoiceTool extends Tool {
     this.provider = provider;
   }
   
-  async execute(params) {
+  async _execute(params) {
     try {
       this.progress('Starting text-to-speech generation...', 0, {
         status: 'Starting text-to-speech generation...'

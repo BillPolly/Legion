@@ -63,17 +63,22 @@ export function assertFailure(result, expectedErrorCode = null) {
   validateToolResult(result);
   expect(result.success).toBe(false);
   
-  // Handle both error formats (data.errorMessage or error.message)
+  // Handle both error formats (string or object)
   const error = result.error || result.data;
   expect(error).toBeDefined();
   
   if (expectedErrorCode) {
-    // Check for code in either format
-    const code = error.code || error.errorCode;
+    // Check for code in either format - handle string errors and result-level errorCode
+    const code = error.code || error.errorCode || result.errorCode;
     expect(code).toBe(expectedErrorCode);
   }
   
-  return error;
+  // Return error object that works with both string and object formats
+  return {
+    message: typeof error === 'string' ? error : (error.message || error.errorMessage),
+    errorMessage: typeof error === 'string' ? error : (error.errorMessage || error.message),
+    code: error.code || error.errorCode || result.errorCode
+  };
 }
 
 /**

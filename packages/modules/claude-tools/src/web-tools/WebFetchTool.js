@@ -87,7 +87,7 @@ export class WebFetchTool extends Tool {
     });
   }
 
-  async execute(input) {
+  async _execute(input) {
     return await this.fetchAndProcess(input);
   }
 
@@ -105,25 +105,15 @@ export class WebFetchTool extends Tool {
       
       // Validate input
       if (!prompt || prompt.trim().length === 0) {
-        return {
-          success: false,
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'Prompt is required and cannot be empty',
-            field: 'prompt'
-          }
-        };
+        const error = new Error('Prompt is required and cannot be empty');
+        error.code = 'VALIDATION_ERROR';
+        throw error;
       }
       
       if (timeout > 60000) {
-        return {
-          success: false,
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'Timeout must be less than or equal to 60000ms',
-            field: 'timeout'
-          }
-        };
+        const error = new Error('Timeout must be less than or equal to 60000ms');
+        error.code = 'VALIDATION_ERROR';
+        throw error;
       }
 
       // Fetch the content

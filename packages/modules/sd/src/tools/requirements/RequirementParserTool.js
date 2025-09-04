@@ -92,7 +92,7 @@ export class RequirementParserTool extends Tool {
    * @param {Object} args - Tool arguments
    * @returns {ToolResult} Parsing result
    */
-  async execute(args) {
+  async _execute(args) {
     const { requirementsText, projectId, analysisDepth } = args;
     
     try {

@@ -122,7 +122,7 @@ describe('ReadTool', () => {
       const result = await readTool.execute({});
       
       const error = assertFailure(result, 'EXECUTION_ERROR');
-      expect(error.errorMessage || error.message).toContain('file_path');
+      expect(error.errorMessage || error.message).toContain('Required');
     });
 
     test('should fail when trying to read a directory', async () => {
@@ -155,7 +155,7 @@ describe('ReadTool', () => {
       });
       
       const error = assertFailure(result, 'EXECUTION_ERROR');
-      expect(error.errorMessage || error.message).toContain('greater than 0');
+      expect(error.errorMessage || error.message).toContain('greater than or equal to 1');
     });
   });
 

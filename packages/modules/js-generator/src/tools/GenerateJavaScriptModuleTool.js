@@ -191,7 +191,7 @@ export class GenerateJavaScriptModuleTool extends Tool {
     };
   }
 
-  async execute(args) {
+  async _execute(args) {
     try {
       this.emit('progress', { percentage: 10, status: 'Validating module specification...' });
       

@@ -155,7 +155,7 @@ export class EntityModelingTool extends Tool {
     this.resourceManager = dependencies.resourceManager;
   }
 
-  async execute(args) {
+  async _execute(args) {
     const { boundedContexts, requirementsContext, projectId } = args;
     
     try {

@@ -4,6 +4,7 @@
  * Provides tools for deploying, monitoring, and managing applications across multiple providers.
  */
 
+import { Module } from '@legion/tools-registry';
 import DeployApplicationTool from './tools/DeployApplicationTool.js';
 import CheckDeploymentTool from './tools/CheckDeploymentTool.js';
 import ListDeploymentsTool from './tools/ListDeploymentsTool.js';
@@ -20,13 +21,12 @@ const __dirname = dirname(__filename);
 /**
  * ConanTheDeployerModule - Provides deployment management tools using metadata-driven architecture
  */
-export default class ConanTheDeployerModule {
+export default class ConanTheDeployerModule extends Module {
   constructor() {
+    super();
     this.name = 'conan-the-deployer';
     this.description = 'Comprehensive deployment management tools for deploying and monitoring applications';
     this.version = '1.0.0';
-    this.tools = {};
-    this.initialized = false;
     
     // NEW: Set metadata path for automatic loading
     this.metadataPath = './tools-metadata.json';

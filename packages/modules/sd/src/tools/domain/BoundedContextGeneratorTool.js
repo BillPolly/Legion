@@ -137,7 +137,7 @@ export class BoundedContextGeneratorTool extends Tool {
     this.resourceManager = dependencies.resourceManager;
   }
 
-  async execute(args) {
+  async _execute(args) {
     const { requirementsContext, projectId, strategy } = args;
     
     try {

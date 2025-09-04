@@ -5,36 +5,53 @@
  * associated resources and handles.
  */
 
-export class CloseWindowTool {
+import { Tool } from '@legion/tools-registry';
+
+export class CloseWindowTool extends Tool {
   constructor() {
-    this.name = 'close_window';
-    this.description = 'Close floating windows programmatically by window ID';
-    this.category = 'ui';
-    
-    // Context-first parameter schema
-    this.parameterSchema = [
-      {
-        name: 'context',
+    super({
+      name: 'close_window',
+      description: 'Close floating windows programmatically by window ID',
+      inputSchema: {
         type: 'object',
-        required: true,
-        description: 'Agent execution context'
+        properties: {
+          context: {
+            type: 'object',
+            description: 'Agent execution context'
+          },
+          windowId: {
+            type: 'string',
+            description: 'Window identifier to close'
+          }
+        },
+        required: ['context', 'windowId']
       },
-      {
-        name: 'windowId',
-        type: 'string',
-        required: true,
-        description: 'Window identifier to close'
+      outputSchema: {
+        type: 'object',
+        properties: {
+          windowId: {
+            type: 'string',
+            description: 'Window ID that was closed'
+          },
+          closed: {
+            type: 'boolean',
+            description: 'Whether window was successfully closed'
+          }
+        },
+        required: ['windowId', 'closed']
       }
-    ];
+    });
+    
+    this.category = 'ui';
   }
   
   /**
    * Execute close window tool
-   * @param {Object} context - Agent execution context (ALWAYS FIRST)
-   * @param {string} windowId - Window ID to close
+   * @param {Object} params - Parameters containing context and windowId
    * @returns {Object} Close operation result
    */
-  async execute(context, windowId) {
+  async _execute(params) {
+    const { context, windowId } = params;
     // Validate context (fail fast)
     if (!context) {
       throw new Error('Context is required as first parameter');
@@ -69,18 +86,5 @@ export class CloseWindowTool {
       console.error('CloseWindowTool failed:', error);
       throw error; // NO FALLBACKS - fail fast
     }
-  }
-  
-  /**
-   * Get tool metadata for tool registry
-   * @returns {Object} Tool metadata
-   */
-  getMetadata() {
-    return {
-      name: this.name,
-      description: this.description,
-      category: this.category,
-      parameters: this.parameterSchema
-    };
   }
 }

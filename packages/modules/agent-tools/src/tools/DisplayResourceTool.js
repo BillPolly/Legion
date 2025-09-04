@@ -5,44 +5,62 @@
  * viewers (CodeEditor, ImageViewer, etc.) using the transparent resource handle system.
  */
 
-export class DisplayResourceTool {
+import { Tool } from '@legion/tools-registry';
+
+export class DisplayResourceTool extends Tool {
   constructor() {
-    this.name = 'display_resource';
-    this.description = 'Display any resource handle in appropriate viewer. Agent guidance: remember the windowId if you plan to update content multiple times.';
-    this.category = 'ui';
-    
-    // Context-first parameter schema
-    this.parameterSchema = [
-      {
-        name: 'context',
+    super({
+      name: 'display_resource',
+      description: 'Display any resource handle in appropriate viewer. Agent guidance: remember the windowId if you plan to update content multiple times.',
+      inputSchema: {
         type: 'object',
-        required: true,
-        description: 'Agent execution context'
+        properties: {
+          context: {
+            type: 'object',
+            description: 'Agent execution context'
+          },
+          resourceHandle: {
+            type: 'object',
+            description: 'Resource handle from previous tool operation'
+          },
+          options: {
+            type: 'object',
+            description: 'Display options: {viewerType, windowId}',
+            default: {}
+          }
+        },
+        required: ['context', 'resourceHandle']
       },
-      {
-        name: 'resourceHandle',
-        type: 'object', 
-        required: true,
-        description: 'Resource handle from previous tool operation'
-      },
-      {
-        name: 'options',
+      outputSchema: {
         type: 'object',
-        required: false,
-        description: 'Display options: {viewerType, windowId}',
-        default: {}
+        properties: {
+          windowId: {
+            type: 'string',
+            description: 'ID of the display window'
+          },
+          viewerType: {
+            type: 'string',
+            description: 'Type of viewer used'
+          },
+          resourcePath: {
+            type: 'string',
+            description: 'Path of the displayed resource'
+          }
+        },
+        required: ['windowId', 'viewerType', 'resourcePath']
       }
-    ];
+    });
+    
+    this.category = 'ui';
   }
   
   /**
    * Execute display resource tool
-   * @param {Object} context - Agent execution context (ALWAYS FIRST)
-   * @param {Object} resourceHandle - Resource handle to display
-   * @param {Object} options - Display options
+   * @param {Object} params - Parameters containing context, resourceHandle, options
    * @returns {Object} Window information for agent planning
    */
-  async execute(context, resourceHandle, options = {}) {
+  async _execute(params) {
+    const { context, resourceHandle, options = {} } = params;
     // Validate context (fail fast)
     if (!context) {
       throw new Error('Context is required as first parameter');
@@ -78,18 +96,5 @@ export class DisplayResourceTool {
       console.error('DisplayResourceTool failed:', error);
       throw error; // NO FALLBACKS - fail fast
     }
-  }
-  
-  /**
-   * Get tool metadata for tool registry
-   * @returns {Object} Tool metadata
-   */
-  getMetadata() {
-    return {
-      name: this.name,
-      description: this.description,
-      category: this.category,
-      parameters: this.parameterSchema
-    };
   }
 }

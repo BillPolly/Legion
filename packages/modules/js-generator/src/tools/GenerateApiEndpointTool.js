@@ -229,7 +229,7 @@ export class GenerateApiEndpointTool extends Tool {
     return this.execute(args);
   }
 
-  async execute(args) {
+  async _execute(args) {
     try {
       this.emit('progress', { percentage: 10, status: 'Generating endpoint structure...' });
 

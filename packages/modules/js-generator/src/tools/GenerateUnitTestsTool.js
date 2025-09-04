@@ -278,7 +278,7 @@ export class GenerateUnitTestsTool extends Tool {
     }
   }
 
-  async execute(args) {
+  async _execute(args) {
     // Extract module name
     const moduleName = args.module_name || 
       this._extractModuleName(args.target_file);
