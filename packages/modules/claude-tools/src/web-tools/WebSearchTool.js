@@ -162,7 +162,7 @@ export class WebSearchTool extends Tool {
             total_results: filteredResults.length,
             search_time_ms: 100,
             search_engine: 'mock'
-          };
+          }
       };
 
     } catch (error) {

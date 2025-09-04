@@ -344,7 +344,7 @@ class MonitorDeploymentTool extends Tool {
             interval: config.interval,
             persistent: config.persistent,
             realtime: config.realtime
-          };,
+          },
         summary: `Started monitoring for "${deployment.name}" with ${config.interval}ms interval${config.persistent ? ' (persistent)' : ''}`
       };
     } else {
@@ -365,7 +365,7 @@ class MonitorDeploymentTool extends Tool {
       return {
           monitoring: {
             status: 'stopped'
-          };,
+          },
         summary: `Stopped monitoring for "${deployment.name}"`
       };
     } else {
@@ -386,7 +386,7 @@ class MonitorDeploymentTool extends Tool {
           status: 'active', // This would come from the monitoring system
           interval: 30000,
           persistent: false
-        };,
+        },
       summary: `Monitoring status for "${deployment.name}"`
     };
   }

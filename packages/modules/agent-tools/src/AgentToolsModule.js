@@ -10,7 +10,7 @@ import { DisplayResourceTool } from './tools/DisplayResourceTool.js';
 import { NotifyUserTool } from './tools/NotifyUserTool.js';
 import { CloseWindowTool } from './tools/CloseWindowTool.js';
 
-export class AgentToolsModule extends Module {
+class AgentToolsModule extends Module {
   constructor() {
     super();
     this.name = 'agent-tools';
@@ -27,11 +27,30 @@ export class AgentToolsModule extends Module {
   
   /**
    * Static factory method for module creation
-   * @param {Object} config - Module configuration
-   * @returns {AgentToolsModule} Module instance
+   * @param {Object} resourceManager - Resource manager instance
+   * @returns {Promise<AgentToolsModule>} Module instance
    */
-  static async create(config = {}) {
-    return new AgentToolsModule();
+  static async create(resourceManager) {
+    const module = new AgentToolsModule();
+    module.resourceManager = resourceManager;
+    await module.initialize();
+    return module;
+  }
+
+  /**
+   * Initialize the module
+   */
+  async initialize() {
+    // Module is already initialized in constructor
+    // This method is here for compatibility with the interface
+  }
+
+  /**
+   * Get all tools provided by this module
+   * @returns {Array} Array of tool instances
+   */
+  getTools() {
+    return this.tools;
   }
   
   /**
@@ -124,3 +143,5 @@ export class AgentToolsModule extends Module {
     return results;
   }
 }
+
+export default AgentToolsModule;

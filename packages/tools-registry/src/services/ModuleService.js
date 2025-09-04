@@ -62,17 +62,6 @@ export class ModuleService {
         try {
           moduleIndex++;
           
-          // TEMPORARY: Skip problematic modules that cause hangs during initialization
-          const skipModules = ['RailwayModule', 'ConanTheDeployerModule']; // These modules hang during loading
-          if (skipModules.includes(module.name)) {
-            console.log(`[ModuleService] SKIPPING ${module.name} (problematic initialization)`);
-            results.invalid.push({
-              ...module,
-              validation: { valid: false, errors: ['Module causes hang during initialization'], toolsCount: 0 }
-            });
-            results.summary.invalid++;
-            continue;
-          }
           
           console.log(`[ModuleService] Loading module ${moduleIndex}/${allModules.length}: ${module.name}...`);
           const loadStart = Date.now();

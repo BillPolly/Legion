@@ -5,7 +5,7 @@
  * TODO: Integrate with full MCP infrastructure when available.
  */
 
-import { Module } from '@legion/tools-registry/src/modules/Module.js';
+import { Module } from '@legion/tools-registry/src/core/Module.js';
 
 export default class MCPModule extends Module {
   constructor(dependencies = {}) {
