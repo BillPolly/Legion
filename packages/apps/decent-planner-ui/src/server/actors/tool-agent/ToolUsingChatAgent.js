@@ -10,10 +10,11 @@
 import { extractJSON } from '@legion/planner';
 
 export class ToolUsingChatAgent {
-  constructor(toolRegistry, llmClient, eventCallback = null) {
+  constructor(toolRegistry, llmClient, eventCallback = null, resourceActor = null) {
     this.toolRegistry = toolRegistry;
     this.llmClient = llmClient;
     this.eventCallback = eventCallback; // For UI observability
+    this.resourceActor = resourceActor; // For AgentTools like display_resource
     
     // Reuse BT Executor's proven context pattern
     this.executionContext = { 
@@ -435,7 +436,27 @@ Respond with this exact format:
 
     try {
       // 4. Execute tool
-      const result = await tool.execute(resolvedInputs);
+      let result;
+      
+      // Check if this is an AgentTool (UI category) that needs context as first parameter
+      if (tool.category === 'ui' && this.resourceActor) {
+        console.log(`[ToolAgent] Executing AgentTool with context: ${selectedTool}`);
+        
+        // Create context for AgentTools (same pattern as /show command)
+        const agentContext = {
+          resourceActor: this.resourceActor,
+          toolRegistry: this.toolRegistry,
+          llmClient: this.llmClient,
+          artifacts: this.executionContext.artifacts
+        };
+        
+        // AgentTools expect context as first parameter, then other resolved inputs
+        result = await tool.execute({ context: agentContext, ...resolvedInputs });
+      } else {
+        // Regular tools get just the resolved inputs
+        result = await tool.execute(resolvedInputs);
+      }
+      
       console.log(`[ToolAgent] Tool execution result:`, { success: result.success, hasData: !!result.data });
 
       // 5. Store result in context with proper field extraction (BT Executor's pattern)

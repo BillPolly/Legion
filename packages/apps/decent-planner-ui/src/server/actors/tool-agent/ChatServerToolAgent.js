@@ -72,11 +72,15 @@ export default class ChatServerToolAgent {
         throw new Error('LLM client not available from ResourceManager');
       }
 
-      // Create tool agent with event callback for observability
+      // Get resourceActor for AgentTools (same one used by SlashCommandAgent)
+      const resourceActor = this.parentActor?.resourceSubActor || null;
+      
+      // Create tool agent with event callback for observability and resourceActor for AgentTools
       this.toolAgent = new ToolUsingChatAgent(
         toolRegistry, 
         llmClient,
-        (eventType, data) => this.forwardAgentEvent(eventType, data)
+        (eventType, data) => this.forwardAgentEvent(eventType, data),
+        resourceActor
       );
       
       this.state.agentInitialized = true;

@@ -6,6 +6,7 @@
  */
 
 import { Tool } from '@legion/tools-registry';
+import path from 'path';
 
 export class DisplayResourceTool extends Tool {
   constructor() {
@@ -20,8 +21,8 @@ export class DisplayResourceTool extends Tool {
             description: 'Agent execution context'
           },
           resourceHandle: {
-            type: 'object',
-            description: 'Resource handle from previous tool operation'
+            type: ['object', 'string'],
+            description: 'Resource handle object with path property OR file path string'
           },
           options: {
             type: 'object',
@@ -61,40 +62,81 @@ export class DisplayResourceTool extends Tool {
    */
   async _execute(params) {
     const { context, resourceHandle, options = {} } = params;
+    
     // Validate context (fail fast)
     if (!context) {
       throw new Error('Context is required as first parameter');
     }
     
-    if (!context.resourceService) {
-      throw new Error('resourceService not available in context');
+    if (!context.resourceActor) {
+      throw new Error('resourceActor not available in context');
     }
     
-    // Validate resource handle (fail fast)
+    // Validate resource handle or path (fail fast)
     if (!resourceHandle) {
-      throw new Error('Resource handle is required');
+      throw new Error('Resource handle or path is required');
     }
     
-    if (!resourceHandle.path || !resourceHandle.__isResourceHandle) {
-      throw new Error('Invalid resource handle - must have path and __isResourceHandle properties');
-    }
+    let resourcePath;
     
-    console.log(`DisplayResourceTool: Displaying resource ${resourceHandle.path}`);
+    // Handle both resource handle objects and plain file paths
+    if (typeof resourceHandle === 'string') {
+      // It's a file path string
+      resourcePath = resourceHandle;
+      console.log(`DisplayResourceTool: Displaying file path ${resourcePath}`);
+    } else if (resourceHandle && resourceHandle.path) {
+      // It's a resource handle object (with or without __isResourceHandle marker)
+      resourcePath = resourceHandle.path;
+      console.log(`DisplayResourceTool: Displaying resource handle ${resourcePath}`);
+    } else {
+      throw new Error('Resource handle must be a file path string or object with path property');
+    }
     
     try {
-      // Use context.resourceService to display the resource
-      const result = await context.resourceService.displayResource(resourceHandle, options);
+      
+      // Determine resource type (same logic as /show command)
+      const resourceType = this._detectResourceType(resourcePath);
+      
+      // Use EXACT same pattern as /show command - call resourceActor directly
+      await context.resourceActor.receive('resource:request', {
+        path: resourcePath,
+        type: resourceType
+      });
       
       // Return window information for agent planning
       return {
-        windowId: result.windowId,
-        viewerType: result.viewerType || 'auto',
-        resourcePath: resourceHandle.path
+        windowId: resourcePath, // Use path as window identifier
+        viewerType: resourceType,
+        resourcePath: resourcePath
       };
       
     } catch (error) {
       console.error('DisplayResourceTool failed:', error);
       throw error; // NO FALLBACKS - fail fast
     }
+  }
+  
+  /**
+   * Detect resource type from path (same logic as SlashCommandAgent.handleShow)
+   * @param {string} resourcePath - Path to the resource
+   * @returns {string} Resource type: 'file', 'image', or 'directory'
+   * @private
+   */
+  _detectResourceType(resourcePath) {
+    // Check if it's a directory (no extension or ends with /)
+    if (resourcePath === '/' || resourcePath.endsWith('/') || !path.extname(resourcePath)) {
+      return 'directory';
+    }
+    
+    // Check if it's an image file
+    const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'];
+    const extension = path.extname(resourcePath).toLowerCase();
+    
+    if (imageExtensions.includes(extension)) {
+      return 'image';
+    }
+    
+    // Default to file
+    return 'file';
   }
 }
