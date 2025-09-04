@@ -120,6 +120,7 @@ export class ToolRegistryTabComponent {
     const toolsContainer = this.components.tabs.getContentContainer('tools');
     if (toolsContainer) {
       this.components.tools = new ToolsBrowserComponent(toolsContainer, {
+        remoteActor: this.options.remoteActor,
         onToolTest: (toolName, params) => this.handleToolTest(toolName, params),
         onSearch: (query, type) => this.handleToolSearch(query, type)
       });
@@ -248,6 +249,18 @@ export class ToolRegistryTabComponent {
     
     if (this.components.tools && this.components.tools.setConnected) {
       this.components.tools.setConnected(connected);
+    }
+  }
+
+  /**
+   * Set remote actor for communication
+   * @param {Object} remoteActor - Remote actor instance
+   */
+  setRemoteActor(remoteActor) {
+    this.options.remoteActor = remoteActor;
+    
+    if (this.components.tools && this.components.tools.setRemoteActor) {
+      this.components.tools.setRemoteActor(remoteActor);
     }
   }
 

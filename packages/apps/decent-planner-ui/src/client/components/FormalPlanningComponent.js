@@ -151,6 +151,13 @@ export class FormalPlanningComponent {
     const resultsContent = document.createElement('div');
     resultsContent.className = 'formal-planning-results-content';
     
+    // Add scrollbar styling
+    resultsContent.style.maxHeight = '60vh';
+    resultsContent.style.overflowY = 'auto';
+    resultsContent.style.overflowX = 'hidden';
+    resultsContent.style.scrollbarWidth = 'thin';
+    resultsContent.style.scrollbarColor = '#888 #f1f1f1';
+    
     // Summary section
     const summaryDiv = document.createElement('div');
     summaryDiv.className = 'formal-planning-summary';

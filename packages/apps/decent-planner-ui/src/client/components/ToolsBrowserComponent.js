@@ -87,6 +87,7 @@ export class ToolsBrowserComponent {
   initializeComponents() {
     // Initialize search component (reuse existing)
     this.components.search = new SearchComponent(this.elements.contentContainer, {
+      remoteActor: this.options.remoteActor,
       onSearch: (query, type) => this.handleSearch(query, type),
       onToolSelect: (tool) => this.handleToolSelect(tool)
     });
@@ -340,6 +341,18 @@ export class ToolsBrowserComponent {
     
     if (this.components.search) {
       this.components.search.setConnected(connected);
+    }
+  }
+
+  /**
+   * Set remote actor for communication
+   * @param {Object} remoteActor - Remote actor instance for backend communication
+   */
+  setRemoteActor(remoteActor) {
+    this.options.remoteActor = remoteActor;
+    
+    if (this.components.search) {
+      this.components.search.setRemoteActor(remoteActor);
     }
   }
 

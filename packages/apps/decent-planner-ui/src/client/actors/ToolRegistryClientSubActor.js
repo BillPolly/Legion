@@ -33,10 +33,16 @@ export default class ToolRegistryClientSubActor {
     this.remoteActor = remoteActor;
     this.state.connected = true;
     console.log('🎭 Tool Registry client sub-actor connected');
+    
+    // If UI is already set up, update the remoteActor
+    if (this.toolRegistryComponent && this.toolRegistryComponent.setRemoteActor) {
+      this.toolRegistryComponent.setRemoteActor(remoteActor);
+    }
   }
 
   setupUI(container) {
     this.toolRegistryComponent = new ToolRegistryTabComponent(container, {
+      remoteActor: this.remoteActor,
       onModuleSearch: (query) => this.handleModuleSearch(query),
       onModuleSelect: (module) => this.handleModuleSelect(module),
       onToolSearch: (query, type) => this.handleToolSearch(query, type),
