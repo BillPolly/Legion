@@ -359,7 +359,7 @@ export class ContextDisplayComponent {
     const type = typeof value;
     switch (type) {
       case 'string':
-        return value.length > 80 ? `"${value.substring(0, 77)}..."` : `"${value}"`;
+        return value.length > 160 ? `"${value.substring(0, 157)}..."` : `"${value}"`;
       case 'number':
       case 'boolean':
         return String(value);

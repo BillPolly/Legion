@@ -489,6 +489,7 @@ export default class RootClientActor extends ProtocolActor {
 
   receive(messageType, data) {
     console.log('📨 Root client received:', messageType);
+    console.log('🔍 ROOT CLIENT DATA DEBUG:', messageType, 'data type:', typeof data, 'is array:', Array.isArray(data), 'data keys/length:', Array.isArray(data) ? data.length : Object.keys(data || {}));
     
     switch (messageType) {
       case 'ready':
@@ -513,7 +514,9 @@ export default class RootClientActor extends ProtocolActor {
         if (messageType.startsWith('planner-') && this.plannerSubActor) {
           this.plannerSubActor.receive(messageType.replace('planner-', ''), data);
         } else if (messageType.startsWith('chat-') && this.chatSubActor) {
-          this.chatSubActor.receive(messageType.replace('chat-', ''), data);
+          const strippedMessageType = messageType.replace('chat-', '');
+          console.log('🔍 ROOT CLIENT FORWARDING TO CHAT:', strippedMessageType, 'data type:', typeof data, 'is array:', Array.isArray(data));
+          this.chatSubActor.receive(strippedMessageType, data);
         } else if (messageType.startsWith('tool-registry-') && this.toolRegistrySubActor) {
           this.toolRegistrySubActor.receive(messageType.replace('tool-registry-', ''), data);
         } else if (messageType.startsWith('resource-') && this.resourceSubActor) {

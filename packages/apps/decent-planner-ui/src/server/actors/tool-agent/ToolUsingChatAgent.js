@@ -17,7 +17,12 @@ export class ToolUsingChatAgent {
     
     // Reuse BT Executor's proven context pattern
     this.executionContext = { 
-      artifacts: {} // Named variables from tool outputs
+      artifacts: {
+        output_directory: {
+          value: './tmp',
+          description: 'Default directory for saving generated files and outputs. When using tools with path parameters, use this directory path with specific filenames (e.g., "./tmp/image.png", "./tmp/document.txt").'
+        }
+      }
     };
     this.chatHistory = [];
     
@@ -217,21 +222,28 @@ Create a tool execution sequence that fulfills the user's request. You can:
 1. **Single Tool**: If one tool can handle the request completely
 2. **Tool Sequence**: If multiple tools need to be chained together
 
-## Variable Rules
+## Variable Rules  
 - Store outputs with unique variable names: \`"outputs": {"toolField": "unique_var_name"}\`
 - Reference stored variables: \`"@varName"\`
+- **IMPORTANT**: Use actual values (like file paths, content) in inputs when you have them, not variable names
+- Use @varName syntax only when you need data from a previous tool's output
 - Only store outputs that will be used later
 - Use exact parameter names from tool specifications
+
+## File Storage Guidelines
+- **ALWAYS use the output_directory context variable for file storage when tools have path/directory parameters**
+- For tools with path parameters, use the output_directory value (e.g., "path": "@output_directory")
+- This ensures all generated files are organized in the designated output location
 
 ## Response Format
 
 **Single Tool Response:**
 {
   "type": "single",
-  "tool": "tool_name",
+  "tool": "tool_name",  
   "description": "What this accomplishes",
   "inputs": {
-    "paramName": "literal_value_or_@varName"
+    "paramName": "use_literal_values_when_you_know_them_or_@varName_when_referencing_previous_outputs"
   },
   "outputs": {
     "toolOutputField": "unique_variable_name"
@@ -368,7 +380,7 @@ Variables stored: ${executionResults.variablesStored.join(', ')}
 Execution results:
 ${executionResults.results.map((result, i) => `
 ${i + 1}. ${executionResults.toolsExecuted[i]}: ${result.success ? 'Success' : 'Failed'}
-   ${result.success ? JSON.stringify(result.data) : `Error: ${result.error}`}
+   ${result.success ? this.summarizeToolResult(result.data) : `Error: ${result.error}`}
 `).join('')}
 
 Current context:
@@ -763,39 +775,140 @@ Be helpful and specific.
 
     return keys.map(key => {
       const value = artifacts[key];
+      
+      // Handle new format with value/description structure
+      if (value && typeof value === 'object' && value.hasOwnProperty('value') && value.hasOwnProperty('description')) {
+        return `- ${key}: "${value.value}" (${value.description})`;
+      }
+      
+      // Handle legacy simple value format
       const preview = this.getDetailedVariablePreview(value);
       return `- ${key}: ${preview}`;
     }).join('\n');
   }
 
   /**
-   * Get detailed variable preview that shows actual data for LLM context
+   * Check if a string appears to be base64 encoded data
    */
-  getDetailedVariablePreview(value) {
+  isBase64String(str) {
+    if (typeof str !== 'string' || str.length < 100) return false;
+    
+    // Handle data URLs (data:image/png;base64,...)
+    if (str.startsWith('data:')) {
+      const base64Part = str.split(',')[1];
+      if (base64Part) {
+        str = base64Part;
+      }
+    }
+    
+    // Base64 pattern: letters, numbers, +, /, = (padding)
+    const base64Pattern = /^[A-Za-z0-9+/]*={0,2}$/;
+    if (!base64Pattern.test(str)) return false;
+    
+    // Additional heuristics for base64 data
+    const hasBase64Chars = /[+/]/.test(str) || str.length > 1000; // Very long strings likely base64
+    const properPadding = str.match(/=*$/)?.[0].length <= 2;
+    const lengthMultipleOf4 = str.length % 4 === 0;
+    
+    return hasBase64Chars && properPadding && lengthMultipleOf4;
+  }
+
+  /**
+   * Get smart summary of data type and size without exposing large content
+   */
+  getDataTypeSummary(value) {
     if (value === null) return 'null';
     if (value === undefined) return 'undefined';
     
     const type = typeof value;
-    switch (type) {
-      case 'string':
-        return value.length > 100 ? `"${value.substring(0, 97)}..."` : `"${value}"`;
-      case 'number':
-      case 'boolean':
-        return String(value);
-      case 'object':
-        if (Array.isArray(value)) {
-          return value.length < 5 ? JSON.stringify(value) : `Array(${value.length})`;
-        } else {
-          // Show actual object content if small
-          try {
-            const jsonStr = JSON.stringify(value);
-            return jsonStr.length < 200 ? jsonStr : `Object(${Object.keys(value).length} keys)`;
-          } catch (error) {
-            return `Object(${Object.keys(value).length} keys)`;
-          }
-        }
-      default:
-        return `${type}`;
+    
+    if (type === 'string') {
+      // Handle data URLs specifically
+      if (value.startsWith('data:')) {
+        const [mimeInfo] = value.split(',');
+        const sizeKB = Math.round(value.length / 1024);
+        return `[DATA_URL: ${mimeInfo.split(';')[0].split(':')[1] || 'unknown'}, ~${sizeKB}KB]`;
+      }
+      
+      if (this.isBase64String(value)) {
+        const sizeKB = Math.round(value.length * 0.75 / 1024); // Approximate decoded size
+        return `[BASE64_DATA: ~${sizeKB}KB]`;
+      }
+      
+      if (value.length > 1000) {
+        return `[LARGE_TEXT: ${value.length} chars]`;
+      }
+      
+      if (value.length > 100) {
+        return `"${value.substring(0, 47)}...${value.substring(value.length - 20)}"`;
+      }
+      
+      return `"${value}"`;
+    }
+    
+    if (type === 'object') {
+      if (Array.isArray(value)) {
+        return `Array(${value.length} items)`;
+      }
+      
+      const keys = Object.keys(value);
+      if (keys.length === 0) return '{}';
+      
+      // Check if object contains large string values
+      const hasLargeStrings = keys.some(key => 
+        typeof value[key] === 'string' && value[key].length > 1000
+      );
+      
+      if (hasLargeStrings) {
+        return `Object(${keys.length} keys, contains large data)`;
+      }
+      
+      // For small objects, try to show actual content
+      try {
+        const jsonStr = JSON.stringify(value);
+        return jsonStr.length < 200 ? jsonStr : `Object(${keys.length} keys)`;
+      } catch (error) {
+        return `Object(${keys.length} keys)`;
+      }
+    }
+    
+    return String(value);
+  }
+
+  /**
+   * Get detailed variable preview that shows actual data for LLM context
+   * Now with intelligent handling of large strings and base64 data
+   */
+  getDetailedVariablePreview(value) {
+    return this.getDataTypeSummary(value);
+  }
+
+  /**
+   * Summarize tool result data for LLM prompts without including large content
+   */
+  summarizeToolResult(data) {
+    if (!data || typeof data !== 'object') {
+      return this.getDataTypeSummary(data);
+    }
+
+    // For objects, create a summary showing structure without large content
+    const summary = {};
+    for (const [key, value] of Object.entries(data)) {
+      if (typeof value === 'string' && value.length > 100) {
+        // Use the same smart summarization as context variables
+        summary[key] = this.getDataTypeSummary(value);
+      } else if (typeof value === 'object' && value !== null) {
+        summary[key] = `[OBJECT: ${Object.keys(value).length} keys]`;
+      } else {
+        summary[key] = value;
+      }
+    }
+
+    try {
+      const jsonStr = JSON.stringify(summary);
+      return jsonStr.length < 300 ? jsonStr : `Object(${Object.keys(data).length} keys with summarized large content)`;
+    } catch (error) {
+      return `Object(${Object.keys(data).length} keys)`;
     }
   }
 
@@ -813,9 +926,10 @@ Be helpful and specific.
     }
 
     return Object.entries(properties).map(([param, schema]) => {
-      const type = schema.type || typeof schema === 'string' ? schema : 'string';
-      const required = inputSchema.required?.includes(param) ? '*' : '';
-      return `  - ${param}${required} (${type}): ${schema.description || this.getParameterDescription(param)}`;
+      const type = schema.type || (typeof schema === 'string' ? schema : 'string');
+      const isRequired = inputSchema.required?.includes(param);
+      const requiredLabel = isRequired ? '(required)' : '(optional)';
+      return `  - ${param} ${requiredLabel} (${type}): ${schema.description || this.getParameterDescription(param)}`;
     }).join('\n');
   }
 

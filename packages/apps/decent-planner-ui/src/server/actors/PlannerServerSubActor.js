@@ -87,6 +87,12 @@ export default class PlannerServerSubActor {
     if (this.executionActor && this.toolRegistry) {
       this.executionActor.setToolRegistry(this.toolRegistry);
     }
+
+    // CRITICAL: Inject toolRegistry into shared services for chat agent
+    if (this.toolRegistry && this.parentActor && this.parentActor.services) {
+      this.parentActor.services.toolRegistry = this.toolRegistry;
+      console.log('[PlannerServerSubActor] ✅ Injected toolRegistry into shared services');
+    }
     
     // Load all modules for the tool registry
     if (this.toolRegistry) {

@@ -83,7 +83,7 @@ export default class ChatClientSubActor {
 
   receive(messageType, data) {
     console.log('📨 Chat client sub-actor received:', messageType);
-    console.error('🧠 CHAT CLIENT RECEIVE:', messageType, 'data keys:', Object.keys(data || {}));
+    console.log('🧠 CHAT CLIENT RECEIVE:', messageType, 'data keys:', Object.keys(data || {}));
     
     switch (messageType) {
       case 'ready':

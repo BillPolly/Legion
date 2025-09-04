@@ -90,8 +90,12 @@
   "dependencies": {
     "@qdrant/js-client-rest": "^1.15.1",
     "ajv-formats": "^3.0.1",
+    "axios": "^1.11.0",
     "fast-content-type-parse": "^3.0.0",
     "jest-mock": "^30.0.5",
-    "universal-github-app-jwt": "^2.2.2"
+    "side-channel": "^1.1.0",
+    "source-map": "^0.7.6",
+    "universal-github-app-jwt": "^2.2.2",
+    "yargs": "^18.0.0"
   }
 }

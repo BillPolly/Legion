@@ -88,6 +88,7 @@ export default class AIGenerationModule extends Module {
    * @param {string} params.quality - Image quality (standard, hd)
    * @param {string} params.style - Image style (vivid, natural)
    * @param {string} params.response_format - Response format (b64_json, url)
+   * @param {string} params.path - Optional custom directory path to save the image
    * @returns {Promise<Object>} Generated image data and metadata
    */
   async generateImage(params) {
@@ -97,7 +98,8 @@ export default class AIGenerationModule extends Module {
       size = '1024x1024',
       quality = 'standard',
       style = 'vivid',
-      response_format = 'b64_json'
+      response_format = 'b64_json',
+      path: customPath
     } = params;
 
     console.log('[AIGenerationModule] generateImage called with:', {
@@ -135,7 +137,14 @@ export default class AIGenerationModule extends Module {
       });
 
       console.log('[AIGenerationModule] Received response from LLMClient');
-      console.log('[AIGenerationModule] Raw response:', JSON.stringify(response, null, 2));
+      // Log response structure without the large base64 data
+      const responseStructure = {
+        created: response.created,
+        dataCount: response.data ? response.data.length : 0,
+        firstItemKeys: response.data && response.data[0] ? Object.keys(response.data[0]) : [],
+        b64JsonLength: response.data && response.data[0] && response.data[0].b64_json ? response.data[0].b64_json.length : 0
+      };
+      console.log('[AIGenerationModule] Response structure:', JSON.stringify(responseStructure, null, 2));
       
       // Extract the generated image data - OpenAI returns {created: ..., data: [...]}
       let imageData;
@@ -183,7 +192,7 @@ export default class AIGenerationModule extends Module {
         console.log('[AIGenerationModule] Final imageData first 50 chars:', dataUrl.substring(0, 50));
         
         // Save the image to file for verification
-        const savedPath = await this.saveImageToFile(imageData.b64_json, filename);
+        const savedPath = await this.saveImageToFile(imageData.b64_json, filename, customPath);
         
         result = {
           success: true,
@@ -253,20 +262,41 @@ export default class AIGenerationModule extends Module {
    * Save base64 image to file for verification
    * @param {string} base64Data - Raw base64 data (without data: prefix)
    * @param {string} filename - Filename to save as
+   * @param {string} customPath - Optional custom directory path to save to
    * @returns {Promise<string>} Full path to the saved file
    */
-  async saveImageToFile(base64Data, filename) {
+  async saveImageToFile(base64Data, filename, customPath = null) {
     try {
       const fs = await import('fs/promises');
       const path = await import('path');
       const os = await import('os');
       
-      // Create a temp directory for generated images
-      const tempDir = path.join(os.tmpdir(), 'legion-generated-images');
-      await fs.mkdir(tempDir, { recursive: true });
+      // Use custom path if provided, otherwise use temp directory
+      let saveDir;
+      if (customPath) {
+        saveDir = path.resolve(customPath);
+        console.log(`[AIGenerationModule] Using custom path: ${saveDir}`);
+      } else {
+        saveDir = path.join(os.tmpdir(), 'legion-generated-images');
+        console.log(`[AIGenerationModule] Using default temp path: ${saveDir}`);
+      }
+      
+      // Check if the path exists and handle conflicts
+      try {
+        const stats = await fs.stat(saveDir);
+        if (stats.isFile()) {
+          // Path exists as a file, not a directory - use temp directory instead
+          console.log(`[AIGenerationModule] WARNING: ${saveDir} exists as a file, using temp directory instead`);
+          saveDir = path.join(os.tmpdir(), 'legion-generated-images');
+        }
+      } catch (error) {
+        // Path doesn't exist, which is fine
+      }
+      
+      await fs.mkdir(saveDir, { recursive: true });
       
       // Full path for the file
-      const filePath = path.join(tempDir, filename);
+      const filePath = path.join(saveDir, filename);
       
       // Convert base64 to buffer
       const imageBuffer = Buffer.from(base64Data, 'base64');
@@ -278,7 +308,7 @@ export default class AIGenerationModule extends Module {
       console.log(`[AIGenerationModule] File size: ${(imageBuffer.length / 1024).toFixed(2)} KB`);
       
       // Also save a small text file with the first 100 chars of base64 for debugging
-      const debugPath = path.join(tempDir, `${filename}.base64-preview.txt`);
+      const debugPath = path.join(saveDir, `${filename}.base64-preview.txt`);
       await fs.writeFile(debugPath, base64Data.substring(0, 500) + '...');
       console.log(`[AIGenerationModule] Debug preview saved to: ${debugPath}`);
       

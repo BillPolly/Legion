@@ -8,7 +8,7 @@
     "generate_image": {
       "name": "generate_image",
       "shortName": "imagen",
-      "description": "Generate an image using DALL-E 3 AI model. Returns base64 encoded image data by default.",
+      "description": "Generate an image using DALL-E 3 AI model. Automatically saves image to PNG file and returns both base64 data and file path.",
       "category": "ai",
       "tags": ["ai", "image", "generation", "dall-e", "openai"],
       "version": "1.0.0",
@@ -42,6 +42,10 @@
             "enum": ["b64_json", "url"],
             "default": "b64_json",
             "description": "Format for the generated image (b64_json for base64, url for hosted URL)"
+          },
+          "path": {
+            "type": "string", 
+            "description": "Directory path where the image should be saved. Tool will generate filename automatically with timestamp and .png extension (e.g., './tmp' saves to './tmp/dalle3-timestamp.png')"
           }
         },
         "required": ["prompt"]
