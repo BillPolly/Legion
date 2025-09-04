@@ -46,7 +46,7 @@ export class EnhancedChatComponent {
     this.elements.mainContainer = document.createElement('div');
     this.elements.mainContainer.className = 'enhanced-chat-container';
     this.elements.mainContainer.style.display = 'flex';
-    this.elements.mainContainer.style.height = '100%';
+    this.elements.mainContainer.style.height = 'calc(100vh - 140px)';
     this.elements.mainContainer.style.position = 'relative';
     
     // Left pane for chat
@@ -57,6 +57,7 @@ export class EnhancedChatComponent {
     this.elements.leftPane.style.display = 'flex';
     this.elements.leftPane.style.flexDirection = 'column';
     this.elements.leftPane.style.overflow = 'hidden';
+    this.elements.leftPane.style.height = '100%';
     
     // Draggable divider
     this.elements.divider = document.createElement('div');
@@ -87,6 +88,7 @@ export class EnhancedChatComponent {
     this.elements.rightPane.style.maxWidth = '50%';
     this.elements.rightPane.style.borderLeft = '1px solid #ddd';
     this.elements.rightPane.style.overflow = 'hidden';
+    this.elements.rightPane.style.height = '100%';
     this.elements.rightPane.style.display = 'flex';
     this.elements.rightPane.style.flexDirection = 'column';
     
@@ -317,8 +319,14 @@ export class EnhancedChatComponent {
    * Add LLM interaction to debug panel
    */
   addLLMInteraction(interaction) {
+    console.error('🧠 ENHANCED CHAT: Adding LLM interaction - purpose:', interaction?.purpose);
+    console.error('🧠 ENHANCED CHAT: llmDebug component exists:', !!this.components.llmDebug);
     if (this.components.llmDebug) {
+      console.error('🧠 ENHANCED CHAT: About to call addInteraction');
       this.components.llmDebug.addInteraction(interaction);
+      console.error('🧠 ENHANCED CHAT: addInteraction completed');
+    } else {
+      console.error('❌ ENHANCED CHAT: No llmDebug component available');
     }
   }
 
@@ -390,6 +398,18 @@ export class EnhancedChatComponent {
   /**
    * Destroy component and cleanup
    */
+  /**
+   * Add context state (delegate to context display component)
+   * @param {Object} contextData - Context state data to display
+   */
+  addContextState(contextData) {
+    if (this.components.context && this.components.context.addContextState) {
+      this.components.context.addContextState(contextData);
+    } else {
+      console.warn('Context display component not available for addContextState');
+    }
+  }
+
   destroy() {
     // Remove document event listeners
     document.removeEventListener('mousemove', this.handleMouseMove);

@@ -82,7 +82,7 @@ export class LLMDebugComponent {
     // Interactions list container
     this.elements.interactionsList = document.createElement('div');
     this.elements.interactionsList.className = 'llm-interactions-list';
-    this.elements.interactionsList.style.maxHeight = 'calc(100vh - 200px)';
+    this.elements.interactionsList.style.maxHeight = '800px';
     this.elements.interactionsList.style.overflowY = 'auto';
     this.elements.interactionsList.style.marginTop = '16px';
     

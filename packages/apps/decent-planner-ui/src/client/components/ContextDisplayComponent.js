@@ -329,6 +329,13 @@ export class ContextDisplayComponent {
   }
 
   /**
+   * Update artifacts display
+   */
+  updateArtifacts() {
+    this.renderVariables();
+  }
+
+  /**
    * Get variable type for display
    */
   getVariableType(value) {
@@ -487,6 +494,27 @@ export class ContextDisplayComponent {
    */
   setClearContextCallback(callback) {
     this.onClearContext = callback;
+  }
+
+  /**
+   * Add context state data
+   * @param {Object} contextData - Context state data to add and display
+   */
+  addContextState(contextData) {
+    console.log('📝 ContextDisplayComponent: Adding context state:', contextData);
+    
+    // Update model with new context data
+    this.model.contextState = contextData;
+    this.model.artifacts = contextData.artifacts || {};
+    this.model.statistics = {
+      variableCount: Object.keys(this.model.artifacts).length,
+      operationCount: contextData.operationCount || 0,
+      lastUpdated: new Date().toLocaleTimeString()
+    };
+    
+    // Re-render the display
+    this.updateStats();
+    this.updateArtifacts();
   }
 
   /**

@@ -605,7 +605,7 @@ Return this exact format:
 }
     `;
 
-    const response = await this.llmClient.complete(prompt);
+    const response = await this.trackLLMInteraction(prompt, 'completion-decision');
 
     try {
       return extractJSON(response);
@@ -677,7 +677,7 @@ Explain to the user:
 Be helpful and specific.
     `;
 
-    const explanation = await this.llmClient.complete(prompt);
+    const explanation = await this.trackLLMInteraction(prompt, 'no-suitable-tools');
 
     return {
       success: false,

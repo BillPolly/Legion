@@ -275,13 +275,14 @@ export class GenerateJavaScriptModuleTool extends Tool {
       };
 
       // Handle file writing if requested
-      if (args.writeToFile && args.projectPath) {
+      if (args.writeToFile) {
         this.emit('progress', { percentage: 98, status: 'Writing file to disk...' });
         
         try {
-          // Determine output path
-          const outputPath = args.outputPath || `src/${filename}`;
-          const fullPath = path.join(args.projectPath, outputPath);
+          // Determine output path with sensible defaults
+          const outputPath = args.outputPath || filename;
+          const projectPath = args.projectPath || process.cwd();
+          const fullPath = path.join(projectPath, outputPath);
           
           // Ensure directory exists
           const dir = path.dirname(fullPath);
