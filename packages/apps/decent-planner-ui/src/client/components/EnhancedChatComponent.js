@@ -319,14 +319,8 @@ export class EnhancedChatComponent {
    * Add LLM interaction to debug panel
    */
   addLLMInteraction(interaction) {
-    console.error('🧠 ENHANCED CHAT: Adding LLM interaction - purpose:', interaction?.purpose);
-    console.error('🧠 ENHANCED CHAT: llmDebug component exists:', !!this.components.llmDebug);
     if (this.components.llmDebug) {
-      console.error('🧠 ENHANCED CHAT: About to call addInteraction');
       this.components.llmDebug.addInteraction(interaction);
-      console.error('🧠 ENHANCED CHAT: addInteraction completed');
-    } else {
-      console.error('❌ ENHANCED CHAT: No llmDebug component available');
     }
   }
 

@@ -59,17 +59,10 @@ export default class ChatServerToolAgent {
     try {
       console.log('[ChatServerToolAgent] Initializing tool agent...');
       
-      // Get toolRegistry from services (should be singleton from DecentPlanner)
-      let toolRegistry = this.services.toolRegistry;
-      
-      // If not in services, try to get from sibling planner actor
-      if (!toolRegistry && this.parentActor?.plannerSubActor?.toolRegistry) {
-        toolRegistry = this.parentActor.plannerSubActor.toolRegistry;
-        console.log('[ChatServerToolAgent] Got toolRegistry from planner sub-actor');
-      }
-      
+      // FAIL FAST: toolRegistry must be in services - no fallbacks
+      const toolRegistry = this.services.toolRegistry;
       if (!toolRegistry) {
-        throw new Error('Tool registry not available - planner may not be initialized yet');
+        throw new Error('Tool registry not available in services - initialization failed');
       }
 
       // Get LLM client from ResourceManager
@@ -109,13 +102,10 @@ export default class ChatServerToolAgent {
         throw new Error('LLM client not available from ResourceManager');
       }
 
-      // Get toolRegistry (same as main agent)
-      let toolRegistry = this.services.toolRegistry;
-      if (!toolRegistry && this.parentActor?.plannerSubActor?.toolRegistry) {
-        toolRegistry = this.parentActor.plannerSubActor.toolRegistry;
-      }
+      // FAIL FAST: toolRegistry must be in services - no fallbacks
+      const toolRegistry = this.services.toolRegistry;
       if (!toolRegistry) {
-        throw new Error('Tool registry not available for slash command agent');
+        throw new Error('Tool registry not available in services for slash command agent');
       }
 
       // Create slash command agent with event callback for observability

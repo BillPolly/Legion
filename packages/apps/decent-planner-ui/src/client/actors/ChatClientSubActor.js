@@ -146,11 +146,7 @@ export default class ChatClientSubActor {
 
       case 'agent-llm-interaction':
         // LLM interaction event from tool agent
-        console.error('🧠 CHAT SUB ACTOR: Received agent-llm-interaction');
-        console.error('🧠 CHAT SUB ACTOR: chatComponent exists:', !!this.chatComponent);
-        console.error('🧠 CHAT SUB ACTOR: addLLMInteraction method exists:', !!this.chatComponent?.addLLMInteraction);
         if (this.chatComponent && this.chatComponent.addLLMInteraction) {
-          console.error('🧠 CHAT SUB ACTOR: Calling addLLMInteraction');
           this.chatComponent.addLLMInteraction(data);
         } else {
           console.error('❌ CHAT SUB ACTOR: Cannot forward LLM interaction');

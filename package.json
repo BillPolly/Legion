@@ -90,6 +90,8 @@
   "dependencies": {
     "@qdrant/js-client-rest": "^1.15.1",
     "ajv-formats": "^3.0.1",
-    "jest-mock": "^30.0.5"
+    "fast-content-type-parse": "^3.0.0",
+    "jest-mock": "^30.0.5",
+    "universal-github-app-jwt": "^2.2.2"
   }
 }

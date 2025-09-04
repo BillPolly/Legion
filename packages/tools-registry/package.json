@@ -64,7 +64,8 @@
     "@legion/resource-manager": "*",
     "@legion/schema": "*",
     "@legion/storage": "*",
-    "@qdrant/js-client-rest": "^1.15.1"
+    "@qdrant/js-client-rest": "^1.15.1",
+    "universal-github-app-jwt": "2.2.2"
   },
   "engines": {
     "node": ">=18.0.0"

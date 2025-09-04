@@ -38,29 +38,12 @@ async function main() {
     const isStatusCommand = command.toLowerCase() === 'status';
     const isVerbose = args.includes('--verbose') || args.includes('-v');
     
-    if (isStatusCommand && !isVerbose) {
-      // Suppress ALL console output during ToolManager initialization
-      originalLog = console.log;
-      originalInfo = console.info;
-      originalWarn = console.warn;
-      originalError = console.error;
-      
-      console.log = () => {};
-      console.info = () => {};
-      console.warn = () => {};
-      console.error = () => {};
-    }
+    // REMOVED: No console suppression - let errors show through
     
     // Get ToolManager singleton - this handles all administrative operations
     const toolManager = await getToolManager();
     
-    // Restore console methods if they were suppressed
-    if (isStatusCommand && !isVerbose) {
-      console.log = originalLog;
-      console.info = originalInfo;
-      console.warn = originalWarn;
-      console.error = originalError;
-    }
+    // REMOVED: Console suppression removed
     
     switch (command.toLowerCase()) {
       case 'status':
