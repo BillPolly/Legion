@@ -1,0 +1,34 @@
+{
+  "name": "@legion/output-schema",
+  "version": "1.0.0",
+  "description": "Multi-format LLM response specification and processing using extended JSON Schema",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "node --experimental-vm-modules ../../../node_modules/.bin/jest",
+    "test:watch": "node --experimental-vm-modules ../../../node_modules/.bin/jest --watch",
+    "test:coverage": "node --experimental-vm-modules ../../../node_modules/.bin/jest --coverage"
+  },
+  "keywords": [
+    "llm",
+    "json-schema", 
+    "response-parsing",
+    "multi-format",
+    "validation"
+  ],
+  "author": "Legion Framework",
+  "license": "MIT",
+  "dependencies": {
+    "@legion/schema": "workspace:*",
+    "json5": "^2.2.3"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
