@@ -59,8 +59,8 @@ export class ContextOptimizer {
     console.log('[ContextOptimizer] Starting intelligent context optimization...');
     
     try {
-      // Create deep copy to avoid mutating original
-      const optimized = JSON.parse(JSON.stringify(contextSnapshot));
+      // Create deep copy to avoid mutating original, excluding circular references
+      const optimized = this.safeDeepCopy(contextSnapshot);
       
       // Parallel optimization for performance - but handle the case where artifacts are under the threshold
       const artifactCount = Object.keys(optimized.executionContext?.artifacts || {}).length;
@@ -442,5 +442,51 @@ export class ContextOptimizer {
         throw new Error(`Infrastructure field '${field}' was lost during optimization`);
       }
     }
+  }
+
+  /**
+   * Create a deep copy of an object, excluding circular references and problematic objects
+   * @param {Object} obj - Object to copy
+   * @returns {Object} Safe deep copy
+   * @private
+   */
+  safeDeepCopy(obj) {
+    const seen = new WeakSet();
+    const excludeKeys = new Set(['llmClient', 'toolRegistry', 'resourceActor', 'eventCallback']);
+    
+    function copy(source) {
+      if (source === null || typeof source !== 'object') {
+        return source;
+      }
+      
+      if (seen.has(source)) {
+        return '[CIRCULAR]';
+      }
+      
+      seen.add(source);
+      
+      if (Array.isArray(source)) {
+        const result = source.map(item => copy(item));
+        seen.delete(source);
+        return result;
+      }
+      
+      const result = {};
+      for (const key in source) {
+        if (source.hasOwnProperty(key)) {
+          if (excludeKeys.has(key)) {
+            // Keep infrastructure references but don't deep copy them
+            result[key] = source[key];
+          } else {
+            result[key] = copy(source[key]);
+          }
+        }
+      }
+      
+      seen.delete(source);
+      return result;
+    }
+    
+    return copy(obj);
   }
 }

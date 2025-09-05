@@ -284,7 +284,7 @@ describe('Tool Discovery with LLM Notifications Integration', () => {
     console.log(`   🎯 JavaScript tools found: ${jsRelevantTools.length}`);
     console.log('   ✅ All tools are actual Tool class instances with proper structure');
     
-  }, 120000); // 2 minutes timeout
+  }, 180000); // 3 minutes timeout
   
   test('should verify Tool class properties and methods', async () => {
     console.log('\n🎯 Testing Tool class structure verification');

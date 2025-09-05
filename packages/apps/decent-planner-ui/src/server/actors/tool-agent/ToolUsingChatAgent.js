@@ -26,6 +26,15 @@ export class ToolUsingChatAgent {
         output_directory: {
           value: './tmp',
           description: 'Default directory for saving generated files and outputs. When using tools with path parameters, use this directory path with specific filenames (e.g., "./tmp/image.png", "./tmp/document.txt").'
+        },
+        agent_context: {
+          value: {
+            resourceActor: this.resourceActor,
+            toolRegistry: this.toolRegistry,
+            llmClient: this.llmClient,
+            artifacts: null // Will be set dynamically
+          },
+          description: 'Agent execution context for AgentTools (UI category tools). Use @agent_context for context parameter.'
         }
       }
     };
@@ -232,8 +241,9 @@ ${userInput}
 ${searchResults.map(result => `
 ### ${result.name}
 Description: ${result.tool.description || result.description || 'No description'}
+${result.tool.category === 'ui' ? '**AgentTool**: Context provided automatically - do not specify context parameter' : ''}
 Inputs:
-${this.formatToolInputSchema(result.tool.inputSchema)}
+${this.formatToolInputSchema(result.tool.inputSchema, result.tool.category === 'ui')}
 Outputs: ${this.formatToolOutputSchema(result.tool.outputSchema)}
 `).join('\n')}
 
@@ -794,15 +804,46 @@ Be helpful and specific.
 
   /**
    * Format chat history for LLM prompts
+   * Filters out large content like base64 data to prevent prompt pollution
    */
   formatChatHistory() {
     if (this.chatHistory.length === 0) {
       return 'No previous chat history.';
     }
 
-    return this.chatHistory.slice(-5).map(msg => 
-      `${msg.role === 'user' ? 'User' : 'Agent'}: ${msg.content}`
-    ).join('\n');
+    return this.chatHistory.slice(-5).map(msg => {
+      const role = msg.role === 'user' ? 'User' : 'Agent';
+      const content = this.sanitizeContentForPrompt(msg.content);
+      return `${role}: ${content}`;
+    }).join('\n');
+  }
+
+  /**
+   * Sanitize content for LLM prompts by removing/summarizing large data
+   */
+  sanitizeContentForPrompt(content) {
+    if (!content || typeof content !== 'string') {
+      return content;
+    }
+
+    // Check if content contains base64 data URLs
+    if (content.includes('data:image/') && content.includes('base64,')) {
+      // Replace base64 data with summary
+      return content.replace(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]{100,}/g, '[IMAGE_DATA_REMOVED]');
+    }
+
+    // Check for other large base64 strings
+    if (content.length > 1000 && /[A-Za-z0-9+/]{500,}={0,2}/.test(content)) {
+      // Likely contains large base64 data, truncate and summarize
+      return content.substring(0, 200) + '... [LARGE_DATA_TRUNCATED] ...' + content.substring(content.length - 50);
+    }
+
+    // Normal content, just limit length for sanity
+    if (content.length > 2000) {
+      return content.substring(0, 1000) + '... [CONTENT_TRUNCATED] ...' + content.substring(content.length - 200);
+    }
+
+    return content;
   }
 
   /**

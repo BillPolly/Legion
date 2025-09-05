@@ -18,7 +18,7 @@ export class DisplayResourceTool extends Tool {
         properties: {
           context: {
             type: 'object',
-            description: 'Agent execution context'
+            description: 'Agent execution context (use @agent_context variable)'
           },
           resourceHandle: {
             type: ['object', 'string'],

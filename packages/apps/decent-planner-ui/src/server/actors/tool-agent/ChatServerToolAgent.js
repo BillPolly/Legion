@@ -73,7 +73,9 @@ export default class ChatServerToolAgent {
       }
 
       // Get resourceActor for AgentTools (same one used by SlashCommandAgent)
-      const resourceActor = this.parentActor?.resourceSubActor || null;
+      // First try from services (for tests), then from parent actor (for production)
+      const resourceActor = this.services.resourceActor || this.parentActor?.resourceSubActor || null;
+      console.log('[ChatServerToolAgent] ResourceActor available:', !!resourceActor);
       
       // Create tool agent with event callback for observability and resourceActor for AgentTools
       this.toolAgent = new ToolUsingChatAgent(
