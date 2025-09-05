@@ -83,7 +83,7 @@ export class SchemaExtensions {
    * @returns {string} Generated instructions
    */
   static generateInstructions(schema, format) {
-    const supportedFormats = ['json', 'xml', 'delimited', 'tagged', 'markdown'];
+    const supportedFormats = ['json', 'xml', 'delimited', 'tagged', 'markdown', 'yaml'];
     
     if (!supportedFormats.includes(format)) {
       throw new Error(`Unsupported format: ${format}`);
@@ -100,6 +100,8 @@ export class SchemaExtensions {
         return this._generateTaggedInstructions(schema);
       case 'markdown':
         return this._generateMarkdownInstructions(schema);
+      case 'yaml':
+        return this._generateYAMLInstructions(schema);
       default:
         throw new Error(`Unsupported format: ${format}`);
     }
@@ -207,6 +209,10 @@ export class SchemaExtensions {
 
   static _generateMarkdownInstructions(schema) {
     return 'RESPONSE FORMAT REQUIRED:\n\nReturn your response as structured markdown:\n\n## Field\nvalue';
+  }
+
+  static _generateYAMLInstructions(schema) {
+    return 'RESPONSE FORMAT REQUIRED:\n\nReturn your response as valid YAML:\n\nfield: value';
   }
 
   /**

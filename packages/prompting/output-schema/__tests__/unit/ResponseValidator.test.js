@@ -195,7 +195,7 @@ describe('ResponseValidator', () => {
       const result = validator.process(unknownResponse);
       
       expect(result.success).toBe(false);
-      expect(result.errors[0].type).toMatch(/parsing|format/);
+      expect(result.errors[0].type).toMatch(/parsing|format|validation/);
     });
   });
 

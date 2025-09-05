@@ -21,6 +21,7 @@ export { XMLParser } from './parsers/XMLParser.js';
 export { DelimitedParser } from './parsers/DelimitedParser.js';
 export { TaggedParser } from './parsers/TaggedParser.js';
 export { MarkdownParser } from './parsers/MarkdownParser.js';
+export { YAMLParser } from './parsers/YAMLParser.js';
 
 // Default export - the most common use case
 export { ResponseValidator as default } from './ResponseValidator.js';

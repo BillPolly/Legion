@@ -57,7 +57,8 @@ export class MarkdownParser {
       if (headerMatch) {
         // Save previous section
         if (currentSection) {
-          result[currentSection] = currentContent.join('\n').trim();
+          const content = currentContent.join('\n').trim();
+          result[currentSection] = this._parseMarkdownContent(content);
         }
         
         // Start new section
@@ -70,9 +71,45 @@ export class MarkdownParser {
 
     // Save final section
     if (currentSection) {
-      result[currentSection] = currentContent.join('\n').trim();
+      const content = currentContent.join('\n').trim();
+      result[currentSection] = this._parseMarkdownContent(content);
     }
 
     return result;
+  }
+
+  /**
+   * Parse markdown content to handle lists and special structures
+   * @private
+   */
+  _parseMarkdownContent(content) {
+    if (!content) return content;
+    
+    const lines = content.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    
+    // Check if it's a list
+    const listItems = [];
+    let isList = true;
+    
+    for (const line of lines) {
+      if (line.startsWith('- ') || line.startsWith('* ')) {
+        listItems.push(line.substring(2).trim());
+      } else if (/^\d+\.\s/.test(line)) {
+        listItems.push(line.replace(/^\d+\.\s+/, '').trim());
+      } else if (line.startsWith('  - ') || line.startsWith('  * ')) {
+        // Nested list item
+        listItems.push(line.substring(4).trim());
+      } else {
+        isList = false;
+        break;
+      }
+    }
+    
+    if (isList && listItems.length > 0) {
+      return listItems;
+    }
+    
+    // Return as string if not a clear list
+    return content;
   }
 }

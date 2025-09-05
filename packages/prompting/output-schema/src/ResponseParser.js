@@ -9,6 +9,7 @@ import { XMLParser } from './parsers/XMLParser.js';
 import { DelimitedParser } from './parsers/DelimitedParser.js';
 import { TaggedParser } from './parsers/TaggedParser.js';
 import { MarkdownParser } from './parsers/MarkdownParser.js';
+import { YAMLParser } from './parsers/YAMLParser.js';
 
 export class ResponseParser {
   /**
@@ -26,7 +27,8 @@ export class ResponseParser {
       xml: new XMLParser(schema, options.xml || {}),
       delimited: new DelimitedParser(schema, options.delimited || {}),
       tagged: new TaggedParser(schema, options.tagged || {}),
-      markdown: new MarkdownParser(schema, options.markdown || {})
+      markdown: new MarkdownParser(schema, options.markdown || {}),
+      yaml: new YAMLParser(schema, options.yaml || {})
     };
   }
 

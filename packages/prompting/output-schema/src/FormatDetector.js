@@ -23,7 +23,7 @@ export class FormatDetector {
       ...config
     };
     
-    this.supportedFormats = ['json', 'xml', 'delimited', 'tagged', 'markdown'];
+    this.supportedFormats = ['json', 'xml', 'delimited', 'tagged', 'markdown', 'yaml'];
   }
 
   /**
@@ -38,14 +38,19 @@ export class FormatDetector {
     
     const scores = this.getConfidenceScores(responseText);
     
-    // Find format with highest confidence
+    // Find format with highest confidence, with priority handling for similar scores
     let bestFormat = 'unknown';
     let bestConfidence = 0;
     
+    // Format priority for tie-breaking (tagged over xml for simple structures)
+    const formatPriority = { tagged: 0.1, delimited: 0.05, json: 0.03, xml: 0.02, yaml: 0.01, markdown: 0.0 };
+    
     for (const [format, confidence] of Object.entries(scores)) {
-      if (confidence > bestConfidence) {
+      const adjustedConfidence = confidence + (formatPriority[format] || 0);
+      
+      if (adjustedConfidence > bestConfidence) {
         bestFormat = format;
-        bestConfidence = confidence;
+        bestConfidence = confidence; // Use original confidence for reporting
       }
     }
     
@@ -74,7 +79,8 @@ export class FormatDetector {
       xml: this._detectXML(trimmed),
       delimited: this._detectDelimited(trimmed),
       tagged: this._detectTagged(trimmed),
-      markdown: this._detectMarkdown(trimmed)
+      markdown: this._detectMarkdown(trimmed),
+      yaml: this._detectYAML(trimmed)
     };
   }
 
@@ -258,33 +264,44 @@ export class FormatDetector {
   _detectTagged(text) {
     let score = 0;
     
-    // Look for simple tag patterns (not full XML)
-    const tagPattern = /<([A-Z_][A-Z0-9_]*)>([^<]*)<\/\1>/g;
-    const matches = text.match(tagPattern) || [];
+    // Look for simple, flat tag patterns (key characteristic of tagged format)
+    const simpleTagPattern = /<([A-Z_][A-Z0-9_]*)>([^<]*)<\/\1>/g;
+    const simpleMatches = text.match(simpleTagPattern) || [];
     
-    if (matches.length >= 2) {
-      score += 0.5; // Multiple tagged fields
-    } else if (matches.length === 1) {
-      score += 0.3; // Single tagged field
+    if (simpleMatches.length >= 2) {
+      score += 0.6; // Multiple simple tagged fields
+    } else if (simpleMatches.length === 1) {
+      score += 0.4; // Single simple tagged field
     }
     
-    // Look for uppercase tag names (common in tagged format)
+    // Look for uppercase tag names (strong indicator of tagged format)
     const uppercaseTags = (text.match(/<[A-Z_][A-Z0-9_]*>/g) || []).length;
-    if (uppercaseTags > 0) {
+    if (uppercaseTags >= 2) {
       score += 0.3;
     }
     
-    // Penalize complex XML structure
-    const complexXmlPatterns = [
+    // Check for flat structure (no nesting, no attributes)
+    const isFlat = !text.match(/<[^>]*\s+[^>]*=/) && // No attributes
+                   !text.match(/<[a-z]/i) && // No lowercase tags
+                   !text.match(/<[^>]*>\s*<[^>]*>/); // No nested tags
+    
+    if (isFlat && uppercaseTags > 0) {
+      score += 0.2; // Bonus for simple flat structure
+    }
+    
+    // Penalize XML-like complexity
+    const xmlComplexityPatterns = [
       /<[^>]+\s+[^>]*=/, // attributes
-      /<[a-z]/, // lowercase tags (more XML-like)
-      /<[^>]*>[^<]*<[^>]*>[^<]*</, // nested structure
+      /<[a-z][^>]*>/, // lowercase tags
+      /<[^>]*>\s*<[^>]*>[^<]*<\/[^>]*>\s*</, // nested structure
+      /<\?xml/, // XML declaration
+      /xmlns/, // namespaces
     ];
     
     let complexityPenalty = 0;
-    for (const pattern of complexXmlPatterns) {
+    for (const pattern of xmlComplexityPatterns) {
       if (pattern.test(text)) {
-        complexityPenalty += 0.1;
+        complexityPenalty += 0.15; // Higher penalty for XML features
       }
     }
     
@@ -347,6 +364,48 @@ export class FormatDetector {
   }
 
   /**
+   * Detect YAML format
+   * @private
+   */
+  _detectYAML(text) {
+    let score = 0;
+    
+    // Look for YAML key-value patterns
+    const yamlPatterns = [
+      /^[a-zA-Z_][a-zA-Z0-9_]*:\s*.+$/gm, // key: value
+      /^[a-zA-Z_][a-zA-Z0-9_]*:$/gm, // key: (for objects/arrays)
+      /^\s*-\s+.+$/gm, // - item (list items)
+      /^\s+[a-zA-Z_][a-zA-Z0-9_]*:\s*.+$/gm, // indented key: value
+    ];
+    
+    let patternMatches = 0;
+    for (const pattern of yamlPatterns) {
+      const matches = text.match(pattern) || [];
+      if (matches.length > 0) {
+        patternMatches++;
+      }
+    }
+    
+    if (patternMatches >= 2) {
+      score += 0.6; // Multiple YAML patterns found
+    } else if (patternMatches === 1) {
+      score += 0.3; // Single pattern
+    }
+    
+    // Look for YAML structure indicators
+    if (text.includes(':') && !text.includes('{') && !text.includes('<')) {
+      score += 0.2; // Colon-based without JSON/XML brackets
+    }
+    
+    // Penalty for JSON/XML indicators
+    if (text.includes('{') || text.includes('<')) {
+      score *= 0.7;
+    }
+    
+    return Math.min(score, 1);
+  }
+
+  /**
    * Create empty confidence scores object
    * @private
    */
@@ -356,7 +415,8 @@ export class FormatDetector {
       xml: 0,
       delimited: 0,
       tagged: 0,
-      markdown: 0
+      markdown: 0,
+      yaml: 0
     };
   }
 }

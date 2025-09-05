@@ -149,11 +149,12 @@ John
       expect(detector.isFormatSupported('delimited')).toBe(true);
       expect(detector.isFormatSupported('tagged')).toBe(true);
       expect(detector.isFormatSupported('markdown')).toBe(true);
+      expect(detector.isFormatSupported('yaml')).toBe(true);
     });
 
     test('should return false for unsupported formats', () => {
-      expect(detector.isFormatSupported('yaml')).toBe(false);
       expect(detector.isFormatSupported('csv')).toBe(false);
+      expect(detector.isFormatSupported('toml')).toBe(false);
       expect(detector.isFormatSupported('unknown')).toBe(false);
     });
   });

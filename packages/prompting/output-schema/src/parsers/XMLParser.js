@@ -125,13 +125,13 @@ export class XMLParser {
 
     const result = {};
     
-    // Simplified element extraction using basic regex
-    const elementPattern = /<([^\/\s>!?]+)(?:[^>]*)?>([^<]*)<\/\1>|<([^\/\s>!?]+)(?:[^>]*)?\/>/g;
+    // Improved element extraction that handles nested structures better
+    const elementPattern = /<([^\/\s>!?]+)(?:[^>]*)?>([^<]*(?:<[^>]*>[^<]*<\/[^>]*>[^<]*)*)<\/\1>|<([^\/\s>!?]+)(?:[^>]*)?\/>/g;
     let match;
     
     while ((match = elementPattern.exec(content)) !== null) {
-      const tagName = match[1] || match[3]; // Opening tag or self-closing tag
-      let tagContent = match[2] || ''; // Content (empty for self-closing)
+      const tagName = match[1] || match[3];
+      let tagContent = match[2] || '';
       
       if (!tagName) continue;
       
@@ -143,9 +143,25 @@ export class XMLParser {
         }
       }
       
-      // Simple trimming unless preserving whitespace
-      if (!this.options.preserveWhitespace) {
-        tagContent = tagContent.trim();
+      // Check for nested elements (like <item> within <tags>)
+      if (tagContent.includes('<')) {
+        const nestedItems = this._extractNestedItems(tagContent);
+        if (nestedItems.length > 0) {
+          tagContent = nestedItems; // Convert to array
+        } else {
+          // Recursive parsing for other nested content
+          const nestedResult = this.extractElements(`<temp>${tagContent}</temp>`, 'temp');
+          if (Object.keys(nestedResult).length > 0) {
+            tagContent = nestedResult;
+          } else {
+            tagContent = tagContent.trim();
+          }
+        }
+      } else {
+        // Simple text content
+        if (!this.options.preserveWhitespace) {
+          tagContent = tagContent.trim();
+        }
       }
       
       // Handle repeated elements (arrays)
@@ -274,6 +290,22 @@ export class XMLParser {
     }
     
     return attributes;
+  }
+
+  /**
+   * Extract nested items (like <item> elements within a container)
+   * @private
+   */
+  _extractNestedItems(content) {
+    const itemPattern = /<item[^>]*>([^<]*)<\/item>/gi;
+    const items = [];
+    let match;
+    
+    while ((match = itemPattern.exec(content)) !== null) {
+      items.push(match[1].trim());
+    }
+    
+    return items;
   }
 
   /**
