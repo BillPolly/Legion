@@ -8,6 +8,7 @@
  */
 
 import { extractJSON } from '@legion/planner';
+import { ContextOptimizer } from './ContextOptimizer.js';
 
 export class ToolUsingChatAgent {
   constructor(toolRegistry, llmClient, eventCallback = null, resourceActor = null) {
@@ -15,6 +16,9 @@ export class ToolUsingChatAgent {
     this.llmClient = llmClient;
     this.eventCallback = eventCallback; // For UI observability
     this.resourceActor = resourceActor; // For AgentTools like display_resource
+    
+    // Initialize intelligent context optimization
+    this.contextOptimizer = new ContextOptimizer(llmClient);
     
     // Reuse BT Executor's proven context pattern
     this.executionContext = { 
@@ -59,12 +63,17 @@ export class ToolUsingChatAgent {
         // Can answer with existing context
         const response = await this.respondWithContext(userInput);
         this.addAgentMessage(response);
+        
+        // Automatic intelligent context optimization after completion
+        await this.optimizeContextIntelligently();
+        
         return {
           userResponse: response,
           toolsUsed: [],
           contextUpdated: [],
           reasoning: toolNeedAnalysis.reasoning,
-          operationCount: 0
+          operationCount: 0,
+          complete: true
         };
       }
 
@@ -75,7 +84,11 @@ export class ToolUsingChatAgent {
       if (this.currentSearchResults.length === 0) {
         const explanation = await this.explainNoToolsFound(userInput);
         this.addAgentMessage(explanation.userResponse);
-        return explanation;
+        
+        // Automatic intelligent context optimization after completion
+        await this.optimizeContextIntelligently();
+        
+        return { ...explanation, complete: true };
       }
 
       // Stage 3: Select tool sequence (single or multiple tools)
@@ -85,7 +98,11 @@ export class ToolUsingChatAgent {
       if (toolPlan.type === 'none') {
         const explanation = await this.explainNoSuitableTools(userInput, searchResults);
         this.addAgentMessage(explanation.userResponse);
-        return explanation;
+        
+        // Automatic intelligent context optimization after completion
+        await this.optimizeContextIntelligently();
+        
+        return { ...explanation, complete: true };
       }
 
       // Stage 4: Execute tool plan (single tool or sequence)
@@ -96,6 +113,9 @@ export class ToolUsingChatAgent {
       const userResponse = await this.generateUserResponse(userInput, executionResults, toolPlan);
 
       this.addAgentMessage(userResponse);
+
+      // Automatic intelligent context optimization after successful completion
+      await this.optimizeContextIntelligently();
 
       return {
         userResponse: userResponse,
@@ -110,6 +130,9 @@ export class ToolUsingChatAgent {
       console.error('[ToolAgent] Error processing message:', error);
       const errorResponse = `Sorry, I encountered an error while processing your request: ${error.message}`;
       this.addAgentMessage(errorResponse);
+      
+      // Optimize context even after errors to clean up any partial state
+      await this.optimizeContextIntelligently();
       
       return {
         userResponse: errorResponse,
@@ -1118,10 +1141,94 @@ Be helpful and specific.
   /**
    * Clear context (for testing or reset)
    */
+  /**
+   * Intelligent context optimization using LLM-driven decisions
+   * Replaces the old clearContext() with smart optimization that preserves infrastructure
+   */
+  async optimizeContextIntelligently() {
+    try {
+      console.log('[ToolAgent] Starting automatic context optimization...');
+      
+      // Create context snapshot (preserves infrastructure variables)
+      const contextSnapshot = this.getContextSnapshot();
+      
+      // Use ContextOptimizer for intelligent optimization
+      const optimizedContext = await this.contextOptimizer.optimizeContext(contextSnapshot);
+      
+      // Apply optimizations while preserving infrastructure
+      this.applyOptimizedContext(optimizedContext);
+      
+      console.log('[ToolAgent] ✅ Context optimization complete');
+    } catch (error) {
+      console.error('[ToolAgent] Context optimization failed (continuing with current context):', error.message);
+      // Don't throw - optimization failure shouldn't break the user workflow
+    }
+  }
+  
+  /**
+   * Legacy clearContext method - DEPRECATED
+   * Use optimizeContextIntelligently() instead
+   */
   clearContext() {
+    console.warn('[ToolAgent] ⚠️  clearContext() is deprecated - use optimizeContextIntelligently() instead');
     this.executionContext.artifacts = {};
     this.chatHistory = [];
     this.operationHistory = [];
     this.currentOperation = null;
+    // Note: Infrastructure variables (resourceActor, toolRegistry, etc.) are preserved
+  }
+  
+  /**
+   * Get complete context snapshot for optimization
+   * @returns {Object} Context snapshot with all state
+   */
+  getContextSnapshot() {
+    return {
+      chatHistory: this.chatHistory,
+      executionContext: this.executionContext,
+      operationHistory: this.operationHistory,
+      llmInteractions: this.llmInteractions,
+      currentOperation: this.currentOperation,
+      // Infrastructure variables that must be preserved
+      resourceActor: this.resourceActor,
+      toolRegistry: this.toolRegistry,
+      llmClient: this.llmClient,
+      eventCallback: this.eventCallback
+    };
+  }
+  
+  /**
+   * Apply optimized context while preserving infrastructure
+   * @param {Object} optimizedContext - Context returned by ContextOptimizer
+   */
+  applyOptimizedContext(optimizedContext) {
+    // Apply user data optimizations
+    this.chatHistory = optimizedContext.chatHistory || [];
+    this.executionContext = optimizedContext.executionContext || { artifacts: {} };
+    this.operationHistory = optimizedContext.operationHistory || [];
+    this.llmInteractions = optimizedContext.llmInteractions || [];
+    this.currentOperation = optimizedContext.currentOperation || null;
+    
+    // Ensure infrastructure variables are always preserved (even if optimization failed)
+    if (!this.resourceActor && optimizedContext.resourceActor) {
+      this.resourceActor = optimizedContext.resourceActor;
+    }
+    if (!this.toolRegistry && optimizedContext.toolRegistry) {
+      this.toolRegistry = optimizedContext.toolRegistry;
+    }
+    if (!this.llmClient && optimizedContext.llmClient) {
+      this.llmClient = optimizedContext.llmClient;
+    }
+    if (!this.eventCallback && optimizedContext.eventCallback) {
+      this.eventCallback = optimizedContext.eventCallback;
+    }
+    
+    // Always ensure output_directory exists
+    if (!this.executionContext.artifacts.output_directory) {
+      this.executionContext.artifacts.output_directory = {
+        value: './tmp',
+        description: 'Default directory for saving generated files and outputs.'
+      };
+    }
   }
 }
