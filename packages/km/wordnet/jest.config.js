@@ -7,7 +7,7 @@ export default {
   
   // Test file patterns
   testMatch: [
-    '<rootDir>/test/**/*.test.js'
+    '<rootDir>/__tests__/**/*.test.js'
   ],
   
   // Coverage settings
@@ -49,5 +49,5 @@ export default {
   resetModules: true,
   
   // Setup files
-  setupFilesAfterEnv: ['<rootDir>/test/setup.js']
+  setupFilesAfterEnv: ['<rootDir>/__tests__/setup.js']
 };
