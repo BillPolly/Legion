@@ -10,7 +10,8 @@ export { TextPreprocessor };
 // LLM Integration
 import { LLMClient } from './llm-integration/LLMClient.js';
 import { MockLLMClient } from './llm-integration/MockLLMClient.js';
-export { LLMClient, MockLLMClient };
+import { RealLLMClient } from './llm-integration/RealLLMClient.js';
+export { LLMClient, MockLLMClient, RealLLMClient };
 
 // Ontology Pipeline
 import { OntologyExtractor } from './ontology-pipeline/OntologyExtractor.js';
@@ -33,7 +34,29 @@ export class NLPSystem {
     this.textPreprocessor = new TextPreprocessor();
     this.ontologyExtractor = new OntologyExtractor(this.options.kgEngine);
     this.tripleGenerator = new TripleGenerator();
-    this.llmClient = this.options.llmClient || new MockLLMClient();
+    
+    // Use provided LLM client or create real one (NO FALLBACK TO MOCK)
+    this.llmClient = this.options.llmClient || null;
+    this.initialized = false;
+  }
+
+  /**
+   * Initialize the NLP system with real LLM client
+   * Must be called before processing text
+   * @returns {Promise<void>}
+   */
+  async initialize() {
+    if (this.initialized) {
+      return;
+    }
+
+    // If no LLM client provided, create real one
+    if (!this.llmClient) {
+      this.llmClient = new RealLLMClient();
+      await this.llmClient.initialize();
+    }
+    
+    this.initialized = true;
   }
 
   /**
@@ -42,6 +65,9 @@ export class NLPSystem {
    * @returns {Promise<Object>} - Processing results
    */
   async processText(text) {
+    // Ensure system is initialized
+    await this.initialize();
+    
     const startTime = Date.now();
     
     try {
