@@ -96,6 +96,85 @@ export class SlashCommandProcessor {
         '/show script.js'
       ]
     });
+
+    this.commands.set('show_all', {
+      name: 'show_all',
+      description: 'Display any object with intelligent type detection (handles, objects, primitives)',
+      usage: '/show_all <object|@variable|filepath> [--introspection] [--format=<format>]',
+      args: [
+        { name: 'object', type: 'string', required: true, description: 'File path, @variable from context, or object name' },
+        { name: 'introspection', type: 'flag', optional: true, description: 'Include method and attribute introspection for handles' },
+        { name: 'format', type: 'string', optional: true, description: 'Display format (default, json, detailed)' }
+      ],
+      category: 'resources',
+      examples: [
+        '/show_all package.json',
+        '/show_all @myFileHandle --introspection',
+        '/show_all @userSession --format=detailed',
+        '/show_all /path/to/file.txt'
+      ]
+    });
+
+    this.commands.set('ls', {
+      name: 'ls',
+      description: 'List files and directories in current or specified path',
+      usage: '/ls [path] [--detailed] [--type=<type>]',
+      args: [
+        { name: 'path', type: 'string', optional: true, description: 'Directory path to list (default: current directory)' },
+        { name: 'detailed', type: 'flag', optional: true, description: 'Show detailed information (size, modified date, etc.)' },
+        { name: 'type', type: 'string', optional: true, description: 'Filter by type (file, directory, image, etc.)' }
+      ],
+      category: 'filesystem',
+      examples: [
+        '/ls',
+        '/ls /path/to/directory',
+        '/ls --detailed',
+        '/ls /images --type=image',
+        '/ls . --detailed --type=file'
+      ]
+    });
+
+    this.commands.set('cd', {
+      name: 'cd',
+      description: 'Change current working directory',
+      usage: '/cd <path>',
+      args: [
+        { name: 'path', type: 'string', required: true, description: 'Directory path to change to' }
+      ],
+      category: 'filesystem',
+      examples: [
+        '/cd /path/to/directory',
+        '/cd ..',
+        '/cd ~',
+        '/cd /home/user/projects'
+      ]
+    });
+
+    this.commands.set('pwd', {
+      name: 'pwd',
+      description: 'Print current working directory',
+      usage: '/pwd',
+      args: [],
+      category: 'filesystem',
+      examples: ['/pwd']
+    });
+
+    this.commands.set('vars', {
+      name: 'vars',
+      description: 'List all variables in execution context (use @varName to reference)',
+      usage: '/vars [--detailed] [--type=<type>]',
+      args: [
+        { name: 'detailed', type: 'flag', optional: true, description: 'Show variable values and metadata' },
+        { name: 'type', type: 'string', optional: true, description: 'Filter by type (handle, object, primitive)' }
+      ],
+      category: 'context',
+      examples: [
+        '/vars',
+        '/vars --detailed',
+        '/vars --type=handle',
+        '/vars --type=object'
+      ]
+    });
   }
 
   /**

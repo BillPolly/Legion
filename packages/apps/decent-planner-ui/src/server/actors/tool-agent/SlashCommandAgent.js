@@ -109,6 +109,16 @@ export class SlashCommandAgent {
         return await this.handleLoad(args, chatAgent);
       case 'show':
         return await this.handleShow(args, chatAgent);
+      case 'show_all':
+        return await this.handleShowAll(args, chatAgent);
+      case 'ls':
+        return await this.handleLs(args, chatAgent);
+      case 'cd':
+        return await this.handleCd(args, chatAgent);
+      case 'pwd':
+        return await this.handlePwd(args, chatAgent);
+      case 'vars':
+        return await this.handleVars(args, chatAgent);
       default:
         throw new Error(`Unknown command: /${command}`);
     }
@@ -539,6 +549,373 @@ export class SlashCommandAgent {
     } catch (error) {
       throw new Error(`Failed to open resource: ${error.message}`);
     }
+  }
+
+  /**
+   * Handle /show_all command - display any object with intelligent type detection
+   * @param {Object} args - Command arguments
+   * @param {Object} chatAgent - ToolUsingChatAgent instance
+   * @returns {Object} Command result
+   */
+  async handleShowAll(args, chatAgent) {
+    if (!this.resourceActor) {
+      throw new Error('/show_all command requires resource actor - not available');
+    }
+    
+    if (!args.object && !args.directHandle) {
+      throw new Error('show_all command requires object parameter');
+    }
+    
+    console.log(`[SlashCommandAgent] Processing /show_all for:`, args);
+    
+    try {
+      let targetObject;
+      let objectRef = args.object || args.directHandle;
+      
+      // Handle direct object vs context reference vs file path
+      if (typeof objectRef === 'string') {
+        if (objectRef.startsWith('@')) {
+          // Variable reference - strip @ and look in context
+          const varName = objectRef.substring(1);
+          targetObject = chatAgent.executionContext.artifacts[varName];
+          if (!targetObject) {
+            throw new Error(`Variable @${varName} not found in execution context`);
+          }
+        } else if (objectRef.includes('/') || objectRef.includes('.')) {
+          // File path - treat as file path to display
+          const fs = await import('fs/promises');
+          try {
+            await fs.access(objectRef);
+            targetObject = objectRef; // Pass file path as-is for file display
+          } catch (error) {
+            throw new Error(`File not found: ${objectRef}`);
+          }
+        } else {
+          // Object name in context (legacy support)
+          targetObject = chatAgent.executionContext.artifacts[objectRef];
+          if (!targetObject) {
+            throw new Error(`Object ${objectRef} not found in execution context. Use @${objectRef} for variables or provide a file path.`);
+          }
+        }
+      } else {
+        // Direct object passed
+        targetObject = objectRef;
+      }
+      
+      // Detect object type and prepare for transmission
+      const objectInfo = this._analyzeObject(targetObject);
+      console.log(`[SlashCommandAgent] Object analysis:`, objectInfo);
+      
+      // Prepare data for resource actor
+      const requestData = {
+        objectType: objectInfo.type,
+        displayOptions: {
+          includeIntrospection: args.includeIntrospection || false,
+          format: args.format || 'default'
+        }
+      };
+      
+      // Add appropriate data based on object type
+      if (objectInfo.type === 'handle') {
+        requestData.handleData = targetObject.serialize();
+        
+        if (args.includeIntrospection) {
+          requestData.introspectionData = {
+            methods: targetObject.type?.listMethods() || [],
+            attributes: targetObject.type?.listAttributes() || [],
+            typeName: targetObject.type?.name || 'Unknown'
+          };
+        }
+      } else {
+        requestData.objectData = targetObject;
+      }
+      
+      // Send to resource actor for display
+      const result = await this.resourceActor.receive('show-all-request', requestData);
+      
+      const response = {
+        success: true,
+        objectType: objectInfo.type,
+        handleType: objectInfo.type === 'handle' ? targetObject.handleType : undefined,
+        ...result
+      };
+      
+      console.log(`[SlashCommandAgent] show_all result:`, response);
+      return response;
+      
+    } catch (error) {
+      console.error(`[SlashCommandAgent] show_all error:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Analyze object to determine type and display strategy
+   * @private
+   * @param {any} obj - Object to analyze
+   * @returns {Object} Analysis result with type and metadata
+   */
+  _analyzeObject(obj) {
+    // Check if it's a handle (extends BaseHandle/Actor)
+    if (obj && obj.isActor && obj.handleType && typeof obj.serialize === 'function') {
+      return {
+        type: 'handle',
+        handleType: obj.handleType,
+        hasIntrospection: !!obj.type,
+        methods: obj.type?.listMethods() || [],
+        attributes: obj.type?.listAttributes() || []
+      };
+    }
+    
+    // Check if it's a complex object (arrays, custom classes, etc.) first
+    if (obj && typeof obj === 'object') {
+      // Check if it's a simple plain object (for serialization)
+      if (obj.constructor === Object) {
+        return {
+          type: 'serializable',
+          keys: Object.keys(obj),
+          size: Object.keys(obj).length
+        };
+      }
+      
+      // Everything else is complex
+      return {
+        type: 'complex',
+        constructor: obj.constructor.name,
+        isArray: Array.isArray(obj),
+        keys: Object.keys(obj)
+      };
+    }
+    
+    // Primitive values
+    return {
+      type: 'primitive',
+      valueType: typeof obj,
+      value: obj
+    };
+  }
+
+  /**
+   * Parse show_all command arguments
+   * @param {string} input - Full command input
+   * @returns {Object} Parsed arguments
+   */
+  parseShowAllCommand(input) {
+    const parts = input.trim().split(/\s+/);
+    
+    if (parts.length < 2) {
+      throw new Error('show_all command requires an object reference');
+    }
+    
+    const objectRef = parts[1];
+    const args = { object: objectRef };
+    
+    // Parse flags
+    for (let i = 2; i < parts.length; i++) {
+      const part = parts[i];
+      
+      if (part === '--introspection') {
+        args.includeIntrospection = true;
+      } else if (part.startsWith('--format=')) {
+        args.format = part.split('=')[1];
+      }
+    }
+    
+    return args;
+  }
+
+  /**
+   * Handle /ls command - list files and directories
+   * @param {Object} args - Command arguments
+   * @param {Object} chatAgent - ToolUsingChatAgent instance
+   * @returns {string} Directory listing
+   */
+  async handleLs(args, chatAgent) {
+    const fs = await import('fs/promises');
+    const path = await import('path');
+    
+    try {
+      const targetPath = args.path || process.cwd();
+      const showDetailed = args.detailed || false;
+      const filterType = args.type;
+      
+      console.log(`[SlashCommandAgent] Listing directory: ${targetPath}`);
+      
+      const entries = await fs.readdir(targetPath, { withFileTypes: true });
+      let result = `**Directory: ${targetPath}**\n\n`;
+      
+      const filteredEntries = entries.filter(entry => {
+        if (!filterType) return true;
+        
+        if (filterType === 'file' && entry.isFile()) return true;
+        if (filterType === 'directory' && entry.isDirectory()) return true;
+        if (filterType === 'image' && entry.isFile()) {
+          const ext = path.extname(entry.name).toLowerCase();
+          return ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'].includes(ext);
+        }
+        return false;
+      });
+      
+      if (filteredEntries.length === 0) {
+        result += '*(empty directory)*';
+        return result;
+      }
+      
+      for (const entry of filteredEntries) {
+        const icon = entry.isDirectory() ? '📁' : '📄';
+        let line = `${icon} ${entry.name}`;
+        
+        if (showDetailed) {
+          const fullPath = path.join(targetPath, entry.name);
+          const stats = await fs.stat(fullPath);
+          const size = entry.isFile() ? `${Math.round(stats.size / 1024)}KB` : '-';
+          const modified = stats.mtime.toISOString().split('T')[0];
+          line += ` (${size}, ${modified})`;
+        }
+        
+        result += line + '\n';
+      }
+      
+      return result;
+      
+    } catch (error) {
+      throw new Error(`Failed to list directory: ${error.message}`);
+    }
+  }
+
+  /**
+   * Handle /cd command - change directory
+   * @param {Object} args - Command arguments  
+   * @param {Object} chatAgent - ToolUsingChatAgent instance
+   * @returns {string} Directory change result
+   */
+  async handleCd(args, chatAgent) {
+    const fs = await import('fs/promises');
+    
+    if (!args.path) {
+      throw new Error('/cd command requires a path. Usage: /cd <path>');
+    }
+    
+    try {
+      const targetPath = args.path === '~' ? require('os').homedir() : args.path;
+      
+      // Verify directory exists
+      const stats = await fs.stat(targetPath);
+      if (!stats.isDirectory()) {
+        throw new Error(`${targetPath} is not a directory`);
+      }
+      
+      // Change directory
+      process.chdir(targetPath);
+      const newDir = process.cwd();
+      
+      console.log(`[SlashCommandAgent] Changed directory to: ${newDir}`);
+      
+      // Store in context for future commands
+      chatAgent.executionContext.artifacts.current_directory = {
+        value: newDir,
+        description: 'Current working directory'
+      };
+      
+      return `**Directory changed to:** ${newDir}`;
+      
+    } catch (error) {
+      throw new Error(`Failed to change directory: ${error.message}`);
+    }
+  }
+
+  /**
+   * Handle /pwd command - print working directory
+   * @param {Object} args - Command arguments
+   * @param {Object} chatAgent - ToolUsingChatAgent instance  
+   * @returns {string} Current directory
+   */
+  async handlePwd(args, chatAgent) {
+    const currentDir = process.cwd();
+    
+    console.log(`[SlashCommandAgent] Current directory: ${currentDir}`);
+    
+    // Store in context
+    chatAgent.executionContext.artifacts.current_directory = {
+      value: currentDir,
+      description: 'Current working directory'
+    };
+    
+    return `**Current directory:** ${currentDir}`;
+  }
+
+  /**
+   * Handle /vars command - list execution context variables
+   * @param {Object} args - Command arguments
+   * @param {Object} chatAgent - ToolUsingChatAgent instance
+   * @returns {string} Variable listing
+   */
+  async handleVars(args, chatAgent) {
+    const showDetailed = args.detailed || false;
+    const filterType = args.type;
+    
+    const artifacts = chatAgent.executionContext.artifacts || {};
+    const varNames = Object.keys(artifacts);
+    
+    if (varNames.length === 0) {
+      return '**No variables in execution context**\n\nUse tools or commands to create variables.';
+    }
+    
+    let result = '**Execution Context Variables:**\n\n';
+    result += `*Use @varName to reference variables in commands*\n\n`;
+    
+    const filteredVars = varNames.filter(name => {
+      if (!filterType) return true;
+      
+      const value = artifacts[name];
+      const analysis = this._analyzeObject(value);
+      
+      return analysis.type === filterType;
+    });
+    
+    if (filteredVars.length === 0) {
+      result += `*No variables of type "${filterType}" found*`;
+      return result;
+    }
+    
+    for (const varName of filteredVars) {
+      const value = artifacts[varName];
+      const analysis = this._analyzeObject(value);
+      
+      let icon = '📄';
+      if (analysis.type === 'handle') icon = '🎭';
+      else if (analysis.type === 'complex') icon = '📦';
+      else if (analysis.type === 'primitive') icon = '🔸';
+      
+      let line = `${icon} **@${varName}** (${analysis.type})`;
+      
+      if (showDetailed) {
+        if (analysis.type === 'handle') {
+          line += `\n   - Handle Type: ${analysis.handleType}`;
+          if (analysis.methods.length > 0) {
+            line += `\n   - Methods: ${analysis.methods.join(', ')}`;
+          }
+          if (analysis.attributes.length > 0) {
+            line += `\n   - Attributes: ${analysis.attributes.join(', ')}`;
+          }
+        } else if (analysis.type === 'serializable') {
+          line += `\n   - Keys: ${analysis.keys.join(', ')}`;
+        } else if (analysis.type === 'primitive') {
+          line += `\n   - Value: ${JSON.stringify(analysis.value).substring(0, 50)}`;
+        } else if (analysis.type === 'complex') {
+          line += `\n   - Constructor: ${analysis.constructor}`;
+          if (analysis.isArray) {
+            line += ` (Array)`;
+          }
+        }
+      }
+      
+      result += line + '\n\n';
+    }
+    
+    result += `\n*Total: ${filteredVars.length} variables*`;
+    
+    return result;
   }
 
   /**

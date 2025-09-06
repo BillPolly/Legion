@@ -110,6 +110,10 @@ export default class ResourceServerSubActor {
         this.handleResourceRelease(data);
         break;
         
+      case 'show-all-request':
+        this.handleShowAllRequest(data);
+        break;
+        
       default:
         console.warn(`ResourceServerSubActor: Unknown message type: ${messageType}`);
     }
@@ -207,6 +211,61 @@ export default class ResourceServerSubActor {
     
     // Acknowledge release
     this.remoteActor.receive('resource:released', { handleId });
+  }
+
+  /**
+   * Handle show-all-request from show_all command
+   * @param {Object} data - Request data with object type and data
+   */
+  async handleShowAllRequest(data) {
+    console.log('📊 Processing show-all request:', data.objectType);
+    
+    try {
+      const windowId = `show-all-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+      
+      // Create appropriate viewer based on object type
+      let viewerType = 'ObjectViewer';
+      let displayData = data.objectData || data.handleData;
+      
+      if (data.objectType === 'handle') {
+        viewerType = 'HandleViewer';
+        console.log(`📱 Creating handle viewer for: ${data.handleData?.handleType}`);
+      } else {
+        console.log(`📱 Creating object viewer for: ${data.objectType}`);
+      }
+      
+      // Send display request to client
+      this.remoteActor.receive('display-object', {
+        windowId,
+        viewerType,
+        objectType: data.objectType,
+        data: displayData,
+        introspection: data.introspectionData,
+        options: data.displayOptions,
+        timestamp: new Date().toISOString()
+      });
+      
+      return {
+        success: true,
+        windowId,
+        viewerType,
+        objectType: data.objectType,
+        message: `${data.objectType} object queued for display`
+      };
+      
+    } catch (error) {
+      console.error('Error handling show-all request:', error);
+      
+      this.remoteActor.receive('show-all-error', {
+        objectType: data.objectType,
+        error: error.message
+      });
+      
+      return {
+        success: false,
+        error: error.message
+      };
+    }
   }
 
   // Get actor metadata for debugging
