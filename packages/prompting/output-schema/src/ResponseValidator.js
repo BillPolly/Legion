@@ -10,6 +10,7 @@ import { FormatDetector } from './FormatDetector.js';
 import { ResponseParser } from './ResponseParser.js';
 import { InstructionGenerator } from './InstructionGenerator.js';
 import { SchemaExtensions } from './SchemaExtensions.js';
+import { ResponseCleaner } from './ResponseCleaner.js';
 
 export class ResponseValidator {
   /**
@@ -45,6 +46,14 @@ export class ResponseValidator {
     this.responseParser = new ResponseParser(schema, {
       strict: this.options.strictMode,
       autoRepair: this.options.autoRepair
+    });
+
+    this.responseCleaner = new ResponseCleaner({
+      cleaningRules: {
+        removeExplanations: true,
+        stripConversational: true,
+        aggressiveMode: this.options.strictMode ? false : true
+      }
     });
   }
 
@@ -91,8 +100,11 @@ export class ResponseValidator {
       };
     }
 
-    // 1. Auto-detect format
-    const detection = this.formatDetector.detect(responseText);
+    // 0. Clean response to improve parsing success
+    const cleanedResponse = this.responseCleaner.cleanResponse(responseText);
+    
+    // 1. Auto-detect format (on cleaned response)
+    const detection = this.formatDetector.detect(cleanedResponse);
     
     if (detection.format === 'unknown') {
       return {
@@ -108,8 +120,8 @@ export class ResponseValidator {
       };
     }
 
-    // 2. Parse using detected format
-    const parseResult = this.responseParser.parse(responseText, detection.format);
+    // 2. Parse using detected format (on cleaned response)
+    const parseResult = this.responseParser.parse(cleanedResponse, detection.format);
     
     if (!parseResult.success) {
       return {

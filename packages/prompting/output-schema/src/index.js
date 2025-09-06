@@ -14,6 +14,7 @@ export { SchemaExtensions } from './SchemaExtensions.js';
 export { SchemaAnalyzer } from './SchemaAnalyzer.js';
 export { InstructionGenerator } from './InstructionGenerator.js';
 export { BaseValidator } from './BaseValidator.js';
+export { ResponseCleaner } from './ResponseCleaner.js';
 
 // Parser exports
 export { JSONParser } from './parsers/JSONParser.js';
