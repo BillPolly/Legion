@@ -1,16 +1,20 @@
-import { NLPSystem, MockLLMClient } from '../../src/index.js';
+import { NLPSystem, RealLLMClient } from '../../src/index.js';
+import { ResourceManager } from '../../../../resource-manager/src/index.js';
 
 describe('NLPSystem Integration Tests', () => {
   let nlpSystem;
+  let resourceManager;
 
-  beforeEach(() => {
-    nlpSystem = new NLPSystem({
-      llmClient: new MockLLMClient({
-        entityDetectionRate: 0.9,
-        relationshipDetectionRate: 0.8,
-        confidenceRange: [0.7, 0.95]
-      })
-    });
+  beforeAll(async () => {
+    // Get ResourceManager singleton for real LLM
+    resourceManager = await ResourceManager.getInstance();
+    console.log('✅ Initialized ResourceManager for integration tests');
+  }, 30000);
+
+  beforeEach(async () => {
+    // Use real LLM for integration tests
+    nlpSystem = new NLPSystem();
+    await nlpSystem.initialize();
   });
 
   describe('constructor', () => {
@@ -22,8 +26,9 @@ describe('NLPSystem Integration Tests', () => {
       expect(nlpSystem.llmClient).toBeDefined();
     });
 
-    test('should use custom LLM client when provided', () => {
-      const customClient = new MockLLMClient({ responseDelay: 100 });
+    test('should use custom LLM client when provided', async () => {
+      const customClient = new RealLLMClient();
+      await customClient.initialize();
       const customSystem = new NLPSystem({ llmClient: customClient });
       expect(customSystem.llmClient).toBe(customClient);
     });
@@ -87,7 +92,7 @@ describe('NLPSystem Integration Tests', () => {
       const hasTypeTriple = triples.some(t => t[1] === 'rdf:type');
       
       expect(hasTypeTriple).toBe(true);
-      // Note: Relationship detection depends on MockLLMClient's random behavior
+      // Relationship detection depends on LLM's actual response
       // so we don't strictly require it for this test
     });
   });
@@ -174,8 +179,11 @@ describe('NLPSystem Integration Tests', () => {
 
   describe('processText - Error Handling', () => {
     test('should handle processing errors gracefully', async () => {
-      // Create a system with a mock that throws errors
-      const errorClient = new MockLLMClient();
+      // Create a system with a client that throws errors
+      const errorClient = new RealLLMClient();
+      await errorClient.initialize();
+      
+      // Override method to simulate error
       errorClient.extractEntities = async () => {
         // Add a small delay to ensure processing time > 0
         await new Promise(resolve => setTimeout(resolve, 1));
@@ -201,8 +209,8 @@ describe('NLPSystem Integration Tests', () => {
       const endTime = Date.now();
       
       expect(result.success).toBe(true);
-      expect(endTime - startTime).toBeLessThan(1000); // Should complete within 1 second
-      expect(result.processingTime).toBeLessThan(1000);
+      expect(endTime - startTime).toBeLessThan(30000); // Should complete within 30 seconds for real LLM
+      expect(result.processingTime).toBeLessThan(30000);
     });
 
     test('should handle longer text efficiently', async () => {

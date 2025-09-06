@@ -9,9 +9,8 @@ export { TextPreprocessor };
 
 // LLM Integration
 import { LLMClient } from './llm-integration/LLMClient.js';
-import { MockLLMClient } from './llm-integration/MockLLMClient.js';
 import { RealLLMClient } from './llm-integration/RealLLMClient.js';
-export { LLMClient, MockLLMClient, RealLLMClient };
+export { LLMClient, RealLLMClient };
 
 // Ontology Pipeline
 import { OntologyExtractor } from './ontology-pipeline/OntologyExtractor.js';
@@ -168,7 +167,7 @@ export class NLPSystem {
         textPreprocessor: 'active',
         ontologyExtractor: 'active',
         tripleGenerator: 'active',
-        llmClient: this.llmClient.constructor.name
+        llmClient: this.llmClient ? this.llmClient.constructor.name : 'not initialized'
       },
       capabilities: [
         'text_preprocessing',

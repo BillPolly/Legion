@@ -10,5 +10,6 @@ export default {
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
-  verbose: true
+  verbose: true,
+  testTimeout: 60000 // 60 second timeout for tests using real LLM
 };

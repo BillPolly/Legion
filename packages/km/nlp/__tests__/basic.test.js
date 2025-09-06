@@ -1,4 +1,4 @@
-import { NLPSystem, TextPreprocessor, OntologyExtractor, TripleGenerator, MockLLMClient } from '../src/index.js';
+import { NLPSystem, TextPreprocessor, OntologyExtractor, TripleGenerator } from '../src/index.js';
 
 describe('NLP System - Basic Integration', () => {
   test('should pass basic sanity check', () => {
@@ -13,11 +13,12 @@ describe('NLP System - Basic Integration', () => {
 
   test('should process simple text', async () => {
     const nlpSystem = new NLPSystem();
+    await nlpSystem.initialize(); // Initialize with real LLM
     const result = await nlpSystem.processText('Pump P101 is part of System S300.');
     
     expect(result.success).toBe(true);
     expect(result.schema.domain).toBe('industrial');
     expect(result.extractions.entities).toBeGreaterThan(0);
     expect(result.triples.count).toBeGreaterThan(0);
-  });
+  }, 30000); // 30 second timeout for real LLM
 });

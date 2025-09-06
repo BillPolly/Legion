@@ -1,4 +1,4 @@
-import { LLMClient } from './LLMClient.js';
+import { LLMClient } from '../../src/llm-integration/LLMClient.js';
 
 /**
  * MockLLMClient - Mock implementation for testing and development

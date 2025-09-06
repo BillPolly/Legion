@@ -1,5 +1,5 @@
 import { LLMClient } from '../../../src/llm-integration/LLMClient.js';
-import { MockLLMClient } from '../../../src/llm-integration/MockLLMClient.js';
+import { MockLLMClient } from '../../mocks/MockLLMClient.js';
 
 describe('LLMClient Interface', () => {
   describe('LLMClient base class', () => {
