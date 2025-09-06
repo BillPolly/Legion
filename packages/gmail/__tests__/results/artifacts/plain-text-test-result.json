@@ -1,0 +1,16 @@
+{
+  "test": "plain-text-email",
+  "timestamp": "2025-08-17T14:34:31.767Z",
+  "sentEmail": {
+    "messageId": "<0aaf8f58-dd07-1535-05cf-5cd2cf4629c0@gmail.com>",
+    "subject": "Legion Test 1755441269256 - Plain Text Test",
+    "body": "This is a test email sent by the Legion Gmail module integration test."
+  },
+  "receivedEmail": {
+    "seqno": 5127,
+    "subject": "Legion Test 1755441269256 - Plain Text Test",
+    "from": "williammpearson@gmail.com",
+    "date": "Sun, 17 Aug 2025 14:34:29 +0000",
+    "contentPreview": "This is a test email sent by the Legion Gmail module integration test.\n"
+  }
+}

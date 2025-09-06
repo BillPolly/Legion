@@ -12,6 +12,7 @@
     "packages/shared/*",
     "packages/mcps/*",
     "packages/modules/*",
+    "packages/prompting/*",
     "packages/data/*"
   ],
   "scripts": {

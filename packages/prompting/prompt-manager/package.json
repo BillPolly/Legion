@@ -1,0 +1,36 @@
+{
+  "name": "@legion/prompting-manager",
+  "version": "1.0.0",
+  "description": "Complete LLM interaction orchestrator integrating object-query, prompt-builder, and output-schema",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "node --experimental-vm-modules ../../../node_modules/.bin/jest",
+    "test:watch": "node --experimental-vm-modules ../../../node_modules/.bin/jest --watch",
+    "test:coverage": "node --experimental-vm-modules ../../../node_modules/.bin/jest --coverage"
+  },
+  "keywords": [
+    "llm",
+    "prompt-orchestration",
+    "pipeline-management",
+    "retry-logic",
+    "intelligent-prompting"
+  ],
+  "author": "Legion Framework",
+  "license": "MIT",
+  "dependencies": {
+    "@legion/object-query": "file:../object-query",
+    "@legion/prompt-builder": "file:../prompt-builder", 
+    "@legion/output-schema": "file:../output-schema",
+    "@legion/resource-manager": "file:../../resource-manager"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
