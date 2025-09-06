@@ -4,7 +4,7 @@ import { GellishParser } from './GellishParser.js';
 import { GellishQueryParser } from './GellishQueryParser.js';
 import { GellishGenerator } from './GellishGenerator.js';
 import { GellishValidator } from './GellishValidator.js';
-import { PatternQuery, LogicalQuery } from '../query/index.js';
+import { PatternQuery, LogicalQuery } from '@legion/kg';
 
 /**
  * GellishSystem - Main interface integrating all components

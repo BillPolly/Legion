@@ -1,0 +1,24 @@
+{
+  "name": "@legion/kg-examples",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Examples for Legion Knowledge Graph",
+  "main": "src/index.js",
+  "scripts": {
+    "demo": "node src/demo.js",
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest"
+  },
+  "keywords": ["knowledge-graph", "examples"],
+  "author": "Legion Team",
+  "license": "MIT",
+  "dependencies": {
+    "@legion/kg": "*"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,9 +1,7 @@
-import { ITripleStore } from './ITripleStore.js';
-import { StorageError, ValidationError } from './StorageError.js';
+import { ITripleStore, StorageError, ValidationError } from '@legion/kg-storage-core';
 import fs from 'fs/promises';
 import path from 'path';
-import { RDFSerializer } from '../rdf/RDFSerializer.js';
-import { RDFParser } from '../rdf/RDFParser.js';
+import { RDFSerializer, RDFParser } from '@legion/kg-rdf';
 
 /**
  * File system-based triple store implementation

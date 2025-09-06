@@ -1,37 +1,27 @@
 /**
- * Storage module exports
- * Provides pluggable storage abstraction for the Knowledge Graph
+ * Storage module exports - now using extracted packages
+ * This file now acts as a facade for the extracted storage packages
  */
 
-// Core interfaces and base classes
-export { ITripleStore, ITransaction } from './ITripleStore.js';
+// Re-export core interfaces from extracted package
+export * from '@legion/kg-storage-core';
 
-// Error classes
-export { 
-  StorageError, 
-  ConnectionError, 
-  TransactionError, 
-  ValidationError, 
-  CapacityError, 
-  AuthenticationError, 
-  NetworkError,
-  isRetryableError 
-} from './StorageError.js';
+// Re-export storage implementations from extracted packages
+export { InMemoryTripleStore } from '@legion/kg-storage-memory';
+export { FileSystemTripleStore } from '@legion/kg-storage-file';
 
-// Storage implementations
-export { InMemoryTripleStore } from './InMemoryTripleStore.js';
-export { FileSystemTripleStore } from './FileSystemTripleStore.js';
+// Keep these in main package for now (will extract in later phase)
 export { GitHubTripleStore } from './GitHubTripleStore.js';
 export { SQLTripleStore } from './SQLTripleStore.js';
 export { MongoTripleStore } from './MongoTripleStore.js';
 export { GraphDBTripleStore } from './GraphDBTripleStore.js';
 export { RemoteTripleStore } from './RemoteTripleStore.js';
 
-// GitHub storage components
+// GitHub storage components (keep for now)
 export { GitHubClient } from './GitHubClient.js';
 export { ConflictResolver, ConflictUtils } from './ConflictResolver.js';
 
-// Performance optimization components
+// Performance optimization components (keep for now)
 export { LRUCache, CacheLayer, withCache } from './CacheLayer.js';
 export { QueryOptimizer, withOptimization } from './QueryOptimizer.js';
 

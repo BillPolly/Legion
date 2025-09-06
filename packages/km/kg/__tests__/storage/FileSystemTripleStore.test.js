@@ -1,5 +1,5 @@
-import { FileSystemTripleStore } from '../../src/storage/FileSystemTripleStore.js';
-import { StorageError, ValidationError } from '../../src/storage/StorageError.js';
+import { FileSystemTripleStore } from '@legion/kg-storage-file';
+import { StorageError, ValidationError } from '@legion/kg-storage-core';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';

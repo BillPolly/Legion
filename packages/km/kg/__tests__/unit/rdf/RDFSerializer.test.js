@@ -1,6 +1,5 @@
-import { RDFSerializer } from '../../../src/rdf/RDFSerializer.js';
+import { RDFSerializer, NamespaceManager } from '@legion/kg-rdf';
 import { KGEngine } from '../../../src/core/KGEngine.js';
-import { NamespaceManager } from '../../../src/rdf/NamespaceManager.js';
 
 describe('RDFSerializer', () => {
   let kgEngine, namespaceManager, serializer;

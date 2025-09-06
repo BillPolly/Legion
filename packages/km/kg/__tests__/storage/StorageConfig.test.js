@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach, afterAll } from '@jest/globals';
 import { StorageConfig } from '../../src/storage/StorageConfig.js';
-import { InMemoryTripleStore } from '../../src/storage/InMemoryTripleStore.js';
-import { ValidationError } from '../../src/storage/StorageError.js';
+import { InMemoryTripleStore } from '@legion/kg-storage-memory';
+import { ValidationError } from '@legion/kg-storage-core';
 
 describe('StorageConfig', () => {
   describe('createStore', () => {

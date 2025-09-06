@@ -1,5 +1,4 @@
-import { ITripleStore } from './ITripleStore.js';
-import { StorageError, ConnectionError, TransactionError, ValidationError } from './StorageError.js';
+import { ITripleStore, StorageError, ConnectionError, TransactionError, ValidationError } from '@legion/kg-storage-core';
 
 /**
  * SQL-based triple store implementation

@@ -1,4 +1,4 @@
-import { InMemoryTripleStore } from '../../src/storage/InMemoryTripleStore.js';
+import { InMemoryTripleStore } from '@legion/kg-storage-memory';
 
 describe('InMemoryTripleStore', () => {
   let store;

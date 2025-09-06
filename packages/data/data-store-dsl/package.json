@@ -9,7 +9,7 @@
     "test:watch": "npm test -- --watch"
   },
   "dependencies": {
-    "@legion/data-store": "workspace:*"
+    "@legion/data-store": "*"
   },
   "keywords": [
     "dsl",

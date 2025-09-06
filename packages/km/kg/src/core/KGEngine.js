@@ -1,4 +1,4 @@
-import { InMemoryTripleStore } from '../storage/InMemoryTripleStore.js';
+import { InMemoryTripleStore } from '@legion/kg-storage-memory';
 
 /**
  * Core Knowledge Graph Engine

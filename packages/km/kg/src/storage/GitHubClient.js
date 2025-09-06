@@ -1,4 +1,4 @@
-import { NetworkError, AuthenticationError, ValidationError } from './StorageError.js';
+import { NetworkError, AuthenticationError, ValidationError } from '@legion/kg-storage-core';
 
 /**
  * GitHub API client for repository operations

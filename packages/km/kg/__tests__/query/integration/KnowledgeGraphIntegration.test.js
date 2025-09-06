@@ -4,7 +4,7 @@ import { AggregationQuery } from '../../../src/query/types/AggregationQuery.js';
 import { TriplePattern } from '../../../src/query/core/TriplePattern.js';
 import { QueryVariable } from '../../../src/query/core/QueryVariable.js';
 import { KGEngine } from '../../../src/core/KGEngine.js';
-import { InMemoryTripleStore } from '../../../src/storage/InMemoryTripleStore.js';
+import { InMemoryTripleStore } from '@legion/kg-storage-memory';
 
 describe('Phase 10.1: Knowledge Graph Integration', () => {
   let kg;

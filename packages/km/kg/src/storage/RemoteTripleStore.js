@@ -1,5 +1,4 @@
-import { ITripleStore } from './ITripleStore.js';
-import { StorageError, ConnectionError, NetworkError, AuthenticationError, ValidationError } from './StorageError.js';
+import { ITripleStore, StorageError, ConnectionError, NetworkError, AuthenticationError, ValidationError } from '@legion/kg-storage-core';
 
 /**
  * Remote HTTP API triple store implementation

@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach } from '@jest/globals';
 import { KGEngine } from '../../../src/core/KGEngine.js';
-import { GellishDictionary, EntityRecognizer, GellishParser } from '../../../src/gellish/index.js';
+import { GellishDictionary, EntityRecognizer, GellishParser } from '@legion/kg-gellish';
 
 describe('Gellish KG Integration', () => {
   let kg;

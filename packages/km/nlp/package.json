@@ -21,9 +21,9 @@
   "author": "Legion Team",
   "license": "MIT",
   "dependencies": {
-    "@legion/kg": "workspace:*",
-    "@legion/llm": "workspace:*",
-    "@legion/resource-manager": "workspace:*"
+    "@legion/kg": "*",
+    "@legion/llm": "*",
+    "@legion/resource-manager": "*"
   },
   "devDependencies": {
     "jest": "^29.7.0"

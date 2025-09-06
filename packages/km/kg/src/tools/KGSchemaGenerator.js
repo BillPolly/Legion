@@ -1,7 +1,8 @@
 /**
- * Generates JSON schemas for LLM function calling
+ * Generates JSON schemas for LLM function calling from KG data
+ * Note: This is different from @legion/schema which converts JSON schemas to Zod
  */
-export class SchemaGenerator {
+export class KGSchemaGenerator {
   constructor(kgEngine) {
     this.kg = kgEngine;
   }

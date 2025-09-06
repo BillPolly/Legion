@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach } from '@jest/globals';
-import { GellishDictionary, EntityRecognizer, GellishQueryParser } from '../../../src/gellish/index.js';
+import { GellishDictionary, EntityRecognizer, GellishQueryParser } from '@legion/kg-gellish';
 
 describe('GellishQueryParser', () => {
   let dictionary;

@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach } from '@jest/globals';
-import { GellishDictionary } from '../../../src/gellish/index.js';
+import { GellishDictionary } from '@legion/kg-gellish';
 
 describe('GellishDictionary', () => {
   let dictionary;

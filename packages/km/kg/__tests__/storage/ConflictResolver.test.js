@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach } from '@jest/globals';
 import { ConflictResolver, ConflictUtils } from '../../src/storage/ConflictResolver.js';
-import { ValidationError, StorageError } from '../../src/storage/StorageError.js';
+import { ValidationError, StorageError } from '@legion/kg-storage-core';
 
 describe('ConflictResolver', () => {
   let resolver;

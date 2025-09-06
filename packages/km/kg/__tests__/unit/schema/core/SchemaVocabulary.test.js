@@ -3,7 +3,7 @@
  */
 
 import { SchemaVocabulary } from '../../../../src/schema/core/SchemaVocabulary.js';
-import { InMemoryTripleStore } from '../../../../src/storage/InMemoryTripleStore.js';
+import { InMemoryTripleStore } from '@legion/kg-storage-memory';
 import { KGEngine } from '../../../../src/core/KGEngine.js';
 
 describe('SchemaVocabulary', () => {

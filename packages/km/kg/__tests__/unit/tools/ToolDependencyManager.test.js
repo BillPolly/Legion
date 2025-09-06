@@ -1,6 +1,6 @@
 import { ToolDependencyManager } from '../../../src/tools/ToolDependencyManager.js';
 import { KGEngine } from '../../../src/core/KGEngine.js';
-import { WeatherTool } from '../../../src/examples/WeatherTool.js';
+import { WeatherTool } from '@legion/kg-examples';
 import '../../../src/serialization/ObjectExtensions.js';
 
 describe('ToolDependencyManager', () => {

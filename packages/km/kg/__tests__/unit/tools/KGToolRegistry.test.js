@@ -1,14 +1,14 @@
-import { ToolRegistry } from '../../../src/tools/ToolRegistry.js';
+import { KGToolRegistry } from '../../../src/tools/KGToolRegistry.js';
 import { KGEngine } from '../../../src/core/KGEngine.js';
-import { WeatherTool } from '../../../src/examples/WeatherTool.js';
+import { WeatherTool } from '@legion/kg-examples';
 import '../../../src/serialization/ObjectExtensions.js';
 
-describe('ToolRegistry', () => {
+describe('KGToolRegistry', () => {
   let kgEngine, registry;
 
   beforeEach(() => {
     kgEngine = new KGEngine();
-    registry = new ToolRegistry(kgEngine);
+    registry = new KGToolRegistry(kgEngine);
   });
 
   describe('Constructor', () => {
@@ -337,7 +337,7 @@ describe('ToolRegistry', () => {
     });
 
     test('should handle finding tools when no tools are registered', () => {
-      const newRegistry = new ToolRegistry(new KGEngine());
+      const newRegistry = new KGToolRegistry(new KGEngine());
       
       expect(newRegistry.findToolsByCapability('weather')).toHaveLength(0);
       expect(newRegistry.findToolsByGoal('get_weather')).toHaveLength(0);

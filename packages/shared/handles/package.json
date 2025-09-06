@@ -10,8 +10,8 @@
     "./HandleRegistry": "./src/HandleRegistry.js"
   },
   "dependencies": {
-    "@legion/actors": "workspace:*",
-    "@legion/utils": "workspace:*"
+    "@legion/actors": "*",
+    "@legion/utils": "*"
   },
   "devDependencies": {
     "jest": "^29.0.0"

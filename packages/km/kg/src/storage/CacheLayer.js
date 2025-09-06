@@ -1,4 +1,4 @@
-import { StorageError } from './StorageError.js';
+import { StorageError } from '@legion/kg-storage-core';
 
 /**
  * LRU Cache with TTL support for storage optimization

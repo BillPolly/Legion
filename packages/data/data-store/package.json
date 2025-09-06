@@ -10,7 +10,7 @@
     "examples": "node examples/basic-proxy.js"
   },
   "dependencies": {
-    "@legion/datascript": "workspace:*"
+    "@legion/datascript": "*"
   },
   "keywords": [
     "reactive",

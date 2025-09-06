@@ -1,4 +1,4 @@
-import { ValidationError, StorageError } from './StorageError.js';
+import { ValidationError, StorageError } from '@legion/kg-storage-core';
 
 /**
  * Conflict resolution strategies for GitHub storage

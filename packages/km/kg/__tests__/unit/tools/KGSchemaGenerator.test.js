@@ -1,14 +1,14 @@
-import { SchemaGenerator } from '../../../src/tools/SchemaGenerator.js';
+import { KGSchemaGenerator } from '../../../src/tools/KGSchemaGenerator.js';
 import { KGEngine } from '../../../src/core/KGEngine.js';
-import { WeatherTool } from '../../../src/examples/WeatherTool.js';
+import { WeatherTool } from '@legion/kg-examples';
 import '../../../src/serialization/ObjectExtensions.js';
 
-describe('SchemaGenerator', () => {
+describe('KGSchemaGenerator', () => {
   let kgEngine, schemaGenerator;
 
   beforeEach(() => {
     kgEngine = new KGEngine();
-    schemaGenerator = new SchemaGenerator(kgEngine);
+    schemaGenerator = new KGSchemaGenerator(kgEngine);
   });
 
   describe('Constructor', () => {
@@ -377,7 +377,7 @@ describe('SchemaGenerator', () => {
     });
 
     test('should return empty array when no tools are registered', () => {
-      const emptyGenerator = new SchemaGenerator(new KGEngine());
+      const emptyGenerator = new KGSchemaGenerator(new KGEngine());
       const schemas = emptyGenerator.generateAllToolSchemas();
 
       expect(schemas).toHaveLength(0);

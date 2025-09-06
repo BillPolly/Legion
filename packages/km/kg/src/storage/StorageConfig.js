@@ -1,11 +1,11 @@
-import { InMemoryTripleStore } from './InMemoryTripleStore.js';
-import { FileSystemTripleStore } from './FileSystemTripleStore.js';
+import { InMemoryTripleStore } from '@legion/kg-storage-memory';
+import { FileSystemTripleStore } from '@legion/kg-storage-file';
 import { GitHubTripleStore } from './GitHubTripleStore.js';
 import { SQLTripleStore } from './SQLTripleStore.js';
 import { MongoTripleStore } from './MongoTripleStore.js';
 import { GraphDBTripleStore } from './GraphDBTripleStore.js';
 import { RemoteTripleStore } from './RemoteTripleStore.js';
-import { ValidationError } from './StorageError.js';
+import { ValidationError } from '@legion/kg-storage-core';
 
 /**
  * Factory for creating storage providers based on configuration

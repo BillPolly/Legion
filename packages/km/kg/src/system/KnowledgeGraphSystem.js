@@ -1,12 +1,10 @@
 import { KGEngine } from '../core/KGEngine.js';
 import { QueryBuilder } from '../core/QueryBuilder.js';
 import { idManager } from '../core/IDManager.js';
-import { NamespaceManager } from '../rdf/NamespaceManager.js';
-import { RDFSerializer } from '../rdf/RDFSerializer.js';
-import { RDFParser } from '../rdf/RDFParser.js';
+import { NamespaceManager, RDFSerializer, RDFParser } from '@legion/kg-rdf';
 import { ObjectReconstructor } from '../reconstruction/ObjectReconstructor.js';
-import { ToolRegistry } from '../tools/ToolRegistry.js';
-import { SchemaGenerator } from '../tools/SchemaGenerator.js';
+import { KGToolRegistry } from '../tools/KGToolRegistry.js';
+import { KGSchemaGenerator } from '../tools/KGSchemaGenerator.js';
 import { ToolDependencyManager } from '../tools/ToolDependencyManager.js';
 import { JSONSchemaGenerator } from '../export/JSONSchemaGenerator.js';
 import { PropertyGraphExporter } from '../export/PropertyGraphExporter.js';
@@ -21,8 +19,8 @@ export class KnowledgeGraphSystem {
     this.rdfSerializer = new RDFSerializer(this.engine, this.namespaceManager);
     this.rdfParser = new RDFParser(this.engine, this.namespaceManager);
     this.objectReconstructor = new ObjectReconstructor(this.engine, this.namespaceManager);
-    this.toolRegistry = new ToolRegistry(this.engine);
-    this.schemaGenerator = new SchemaGenerator(this.engine);
+    this.toolRegistry = new KGToolRegistry(this.engine);
+    this.schemaGenerator = new KGSchemaGenerator(this.engine);
     this.jsonSchemaGenerator = new JSONSchemaGenerator(this.engine);
     this.toolDependencyManager = new ToolDependencyManager(this.engine);
     this.propertyGraphExporter = new PropertyGraphExporter(this.engine);

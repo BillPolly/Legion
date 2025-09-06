@@ -1,10 +1,10 @@
 import crypto from 'crypto';
-import { KnowledgeGraphSystem } from '../system/KnowledgeGraphSystem.js';
-import { Relationship } from '../relationships/Relationship.js';
-import { KnowsRelationship } from '../relationships/KnowsRelationship.js';
-import { WorksWithRelationship } from '../relationships/WorksWithRelationship.js';
-import { Belief } from '../beliefs/Belief.js';
-import { MethodExecution } from '../beliefs/MethodExecution.js';
+import { KnowledgeGraphSystem } from '@legion/kg';
+import { Relationship } from '@legion/kg';
+import { KnowsRelationship } from '@legion/kg';
+import { WorksWithRelationship } from '@legion/kg';
+import { Belief } from '@legion/kg';
+import { MethodExecution } from '@legion/kg';
 import { WeatherTool } from './WeatherTool.js';
 
 // Example usage with full RDF round-trip

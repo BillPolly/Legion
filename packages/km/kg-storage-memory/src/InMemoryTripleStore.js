@@ -1,4 +1,4 @@
-import { ITripleStore } from './ITripleStore.js';
+import { ITripleStore } from '@legion/kg-storage-core';
 
 /**
  * In-memory triple store implementation

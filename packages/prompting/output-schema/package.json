@@ -22,7 +22,7 @@
   "author": "Legion Framework",
   "license": "MIT",
   "dependencies": {
-    "@legion/schema": "workspace:*",
+    "@legion/schema": "*",
     "json5": "^2.2.3"
   },
   "devDependencies": {

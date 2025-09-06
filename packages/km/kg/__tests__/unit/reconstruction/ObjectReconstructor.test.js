@@ -1,6 +1,6 @@
 import { ObjectReconstructor } from '../../../src/reconstruction/ObjectReconstructor.js';
 import { KGEngine } from '../../../src/core/KGEngine.js';
-import { NamespaceManager } from '../../../src/rdf/NamespaceManager.js';
+import { NamespaceManager } from '@legion/kg-rdf';
 import '../../../src/serialization/ObjectExtensions.js';
 
 describe('ObjectReconstructor', () => {

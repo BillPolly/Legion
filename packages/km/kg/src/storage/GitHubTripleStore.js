@@ -1,5 +1,4 @@
-import { ITripleStore } from './ITripleStore.js';
-import { StorageError, ValidationError, NetworkError, AuthenticationError } from './StorageError.js';
+import { ITripleStore, StorageError, ValidationError, NetworkError, AuthenticationError } from '@legion/kg-storage-core';
 import { GitHubClient } from './GitHubClient.js';
 import { ConflictResolver } from './ConflictResolver.js';
 

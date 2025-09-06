@@ -1036,6 +1036,630 @@ async function multiAgentDebugging(codebase) {
 }
 ```
 
+### Scenario 5: Collaborative Research (BT-Based)
+
+Using behavior trees for the same collaborative research scenario:
+
+```javascript
+import { BlackboardActorSpace } from './blackboard/BlackboardActorSpace.js';
+import { AgentFactory } from './agents/AgentFactory.js';
+
+async function btCollaborativeResearch(topic) {
+  const blackboardSpace = new BlackboardActorSpace(
+    'bt-research-space',
+    { actorPairs: [] },
+    { llmClient, toolRegistry }
+  );
+  
+  await blackboardSpace.setupActors('backend');
+  const blackboard = blackboardSpace.getActor('blackboard');
+  
+  // Define research workflow as behavior tree
+  const researchWorkflow = {
+    type: 'agent',
+    agentType: 'ResearchCoordinator',
+    id: 'research-coordinator',
+    behaviorTree: {
+      type: 'sequence',
+      name: 'research-pipeline',
+      children: [
+        {
+          type: 'parallel',
+          name: 'gather-sources',
+          successThreshold: 0.8,
+          children: [
+            {
+              type: 'agent',
+              agentType: 'LiteratureReviewAgent',
+              behaviorTree: {
+                type: 'retry',
+                maxAttempts: 3,
+                child: {
+                  type: 'action',
+                  tool: 'search_literature',
+                  params: { topic: topic },
+                  outputVariable: 'papers'
+                }
+              }
+            },
+            {
+              type: 'agent',
+              agentType: 'WebSearchAgent',
+              behaviorTree: {
+                type: 'action',
+                tool: 'search_web',
+                params: { query: topic },
+                outputVariable: 'web_sources'
+              }
+            },
+            {
+              type: 'agent',
+              agentType: 'PatentSearchAgent',
+              behaviorTree: {
+                type: 'action',
+                tool: 'search_patents',
+                params: { domain: topic },
+                outputVariable: 'patents'
+              }
+            }
+          ]
+        },
+        {
+          type: 'sequence',
+          name: 'analyze-sources',
+          children: [
+            {
+              type: 'agent',
+              agentType: 'NLPAgent',
+              behaviorTree: {
+                type: 'parallel',
+                children: [
+                  {
+                    type: 'action',
+                    tool: 'extract_concepts',
+                    params: { sources: '@papers' },
+                    outputVariable: 'concepts'
+                  },
+                  {
+                    type: 'action',
+                    tool: 'extract_entities',
+                    params: { sources: '@papers' },
+                    outputVariable: 'entities'
+                  },
+                  {
+                    type: 'action',
+                    tool: 'extract_relationships',
+                    params: { sources: '@papers' },
+                    outputVariable: 'relationships'
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          type: 'agent',
+          agentType: 'ReasoningAgent',
+          behaviorTree: {
+            type: 'selector',
+            name: 'reasoning-strategy',
+            children: [
+              {
+                type: 'sequence',
+                children: [
+                  {
+                    type: 'condition',
+                    condition: 'context.concepts.length > 10',
+                    child: {
+                      type: 'action',
+                      tool: 'hierarchical_reasoning',
+                      params: { 
+                        concepts: '@concepts',
+                        relationships: '@relationships'
+                      },
+                      outputVariable: 'reasoning_result'
+                    }
+                  }
+                ]
+              },
+              {
+                type: 'action',
+                tool: 'simple_reasoning',
+                params: { concepts: '@concepts' },
+                outputVariable: 'reasoning_result'
+              }
+            ]
+          }
+        },
+        {
+          type: 'agent',
+          agentType: 'ValidationAgent',
+          behaviorTree: {
+            type: 'parallel',
+            children: [
+              {
+                type: 'action',
+                tool: 'fact_check',
+                params: { claims: '@reasoning_result.claims' }
+              },
+              {
+                type: 'action',
+                tool: 'cross_reference',
+                params: { 
+                  findings: '@reasoning_result.findings',
+                  sources: '@papers'
+                }
+              }
+            ]
+          }
+        },
+        {
+          type: 'agent',
+          agentType: 'SynthesisAgent',
+          behaviorTree: {
+            type: 'action',
+            tool: 'generate_report',
+            params: {
+              concepts: '@concepts',
+              reasoning: '@reasoning_result',
+              validation: '@validation_results'
+            },
+            outputVariable: 'final_report'
+          }
+        }
+      ]
+    }
+  };
+  
+  // Create and execute the research coordinator
+  const coordinator = await AgentFactory.createFromJSON(
+    researchWorkflow,
+    toolRegistry,
+    blackboard
+  );
+  
+  const result = await coordinator.execute({ 
+    topic,
+    maxTime: 3600000,
+    minConfidence: 0.8
+  });
+  
+  return result.data.final_report;
+}
+```
+
+### Scenario 6: Self-Organizing Tool Discovery Network (BT-Based)
+
+```javascript
+async function btToolDiscoveryNetwork() {
+  const blackboardSpace = new BlackboardActorSpace(
+    'bt-tool-space',
+    { actorPairs: [] },
+    { toolRegistry }
+  );
+  
+  await blackboardSpace.setupActors('backend');
+  const blackboard = blackboardSpace.getActor('blackboard');
+  
+  // Self-organizing tool discovery team
+  const toolDiscoveryTeam = {
+    type: 'agent',
+    agentType: 'ToolDiscoveryCoordinator',
+    behaviorTree: {
+      type: 'sequence',
+      children: [
+        {
+          type: 'action',
+          tool: 'analyze_tool_requirements',
+          outputVariable: 'requirements'
+        },
+        {
+          type: 'action',
+          tool: 'determine_search_categories',
+          params: { requirements: '@requirements' },
+          outputVariable: 'categories'
+        },
+        {
+          type: 'parallel',
+          name: 'spawn-discovery-agents',
+          children: '@categories.map(cat => ({ ' +
+            'type: "agent", ' +
+            'agentType: "ToolDiscoveryAgent", ' +
+            'behaviorTree: { ' +
+              'type: "retry", ' +
+              'maxAttempts: 5, ' +
+              'backoffMs: 2000, ' +
+              'child: { ' +
+                'type: "sequence", ' +
+                'children: [ ' +
+                  '{ type: "action", tool: "search_tools", params: { category: cat } }, ' +
+                  '{ type: "action", tool: "test_tools", params: { tools: "@found_tools" } }, ' +
+                  '{ type: "action", tool: "publish_discoveries", params: { validated: "@tested_tools" } } ' +
+                '] ' +
+              '} ' +
+            '} ' +
+          '}))'
+        },
+        {
+          type: 'agent',
+          agentType: 'ToolValidatorAgent',
+          behaviorTree: {
+            type: 'sequence',
+            children: [
+              {
+                type: 'action',
+                tool: 'subscribe_to_discoveries',
+                outputVariable: 'discoveries'
+              },
+              {
+                type: 'selector',
+                children: [
+                  {
+                    type: 'action',
+                    tool: 'validate_with_tests',
+                    params: { tools: '@discoveries' }
+                  },
+                  {
+                    type: 'action',
+                    tool: 'validate_with_llm',
+                    params: { tools: '@discoveries' }
+                  }
+                ]
+              },
+              {
+                type: 'action',
+                tool: 'update_tool_registry',
+                params: { validated_tools: '@validated' }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  };
+  
+  const coordinator = await AgentFactory.createFromJSON(
+    toolDiscoveryTeam,
+    toolRegistry,
+    blackboard
+  );
+  
+  // Execute continuously with monitoring
+  const monitor = {
+    type: 'retry',
+    condition: 'context.continuous',
+    delay: 60000,
+    child: coordinator
+  };
+  
+  return coordinator.execute({ continuous: true });
+}
+```
+
+### Scenario 7: Adaptive Problem Solving (BT-Based)
+
+```javascript
+async function btAdaptiveProblemSolving(userQuery) {
+  const blackboardSpace = new BlackboardActorSpace(
+    'bt-adaptive-space',
+    { actorPairs: [] },
+    { llmClient, toolRegistry }
+  );
+  
+  await blackboardSpace.setupActors('backend');
+  const blackboard = blackboardSpace.getActor('blackboard');
+  
+  // Adaptive problem-solving behavior tree
+  const adaptiveSolver = {
+    type: 'agent',
+    agentType: 'AdaptiveSolver',
+    behaviorTree: {
+      type: 'sequence',
+      children: [
+        {
+          type: 'action',
+          tool: 'understand_query',
+          params: { query: userQuery },
+          outputVariable: 'understanding'
+        },
+        {
+          type: 'selector',
+          name: 'select-strategy',
+          children: [
+            {
+              type: 'sequence',
+              name: 'simple-direct-solution',
+              children: [
+                {
+                  type: 'condition',
+                  condition: 'context.understanding.complexity === "simple"',
+                  child: {
+                    type: 'action',
+                    tool: 'direct_solve',
+                    params: { problem: '@understanding' },
+                    outputVariable: 'solution'
+                  }
+                }
+              ]
+            },
+            {
+              type: 'sequence',
+              name: 'multi-agent-solution',
+              children: [
+                {
+                  type: 'condition',
+                  condition: 'context.understanding.complexity === "complex"',
+                  child: {
+                    type: 'sequence',
+                    children: [
+                      {
+                        type: 'action',
+                        tool: 'decompose_problem',
+                        params: { problem: '@understanding' },
+                        outputVariable: 'subproblems'
+                      },
+                      {
+                        type: 'action',
+                        tool: 'determine_required_expertise',
+                        params: { subproblems: '@subproblems' },
+                        outputVariable: 'required_agents'
+                      },
+                      {
+                        type: 'action',
+                        tool: 'spawn_specialist_agents',
+                        params: { specifications: '@required_agents' },
+                        outputVariable: 'specialists'
+                      },
+                      {
+                        type: 'parallel',
+                        name: 'execute-specialists',
+                        successThreshold: 0.9,
+                        children: '@specialists.map(spec => ({ ' +
+                          'type: "agent", ' +
+                          'id: spec.id, ' +
+                          'agentType: spec.type, ' +
+                          'behaviorTree: spec.behaviorTree ' +
+                        '}))'
+                      },
+                      {
+                        type: 'action',
+                        tool: 'integrate_solutions',
+                        params: { 
+                          partial_solutions: '@specialist_results',
+                          original_problem: '@understanding'
+                        },
+                        outputVariable: 'solution'
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              type: 'sequence',
+              name: 'llm-fallback',
+              children: [
+                {
+                  type: 'retry',
+                  maxAttempts: 3,
+                  child: {
+                    type: 'action',
+                    tool: 'llm_solve',
+                    params: { 
+                      problem: '@understanding',
+                      context: '@context'
+                    },
+                    outputVariable: 'solution'
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          type: 'action',
+          tool: 'validate_solution',
+          params: { 
+            solution: '@solution',
+            original_query: userQuery
+          },
+          outputVariable: 'validated_solution'
+        },
+        {
+          type: 'action',
+          tool: 'learn_from_solution',
+          params: {
+            query: userQuery,
+            understanding: '@understanding',
+            solution: '@validated_solution',
+            strategy_used: '@selected_strategy'
+          }
+        }
+      ]
+    }
+  };
+  
+  const solver = await AgentFactory.createFromJSON(
+    adaptiveSolver,
+    toolRegistry,
+    blackboard
+  );
+  
+  return await solver.execute({ userQuery });
+}
+```
+
+### Scenario 8: Consensus-Based Debugging (BT-Based)
+
+```javascript
+async function btConsensusDebugging(codebase) {
+  const blackboardSpace = new BlackboardActorSpace(
+    'bt-debug-space',
+    { actorPairs: [] },
+    { codebase, toolRegistry }
+  );
+  
+  await blackboardSpace.setupActors('backend');
+  const blackboard = blackboardSpace.getActor('blackboard');
+  
+  // Consensus-based debugging workflow
+  const debugWorkflow = {
+    type: 'agent',
+    agentType: 'DebugCoordinator',
+    behaviorTree: {
+      type: 'sequence',
+      children: [
+        {
+          type: 'parallel',
+          name: 'analysis-phase',
+          children: [
+            {
+              type: 'agent',
+              agentType: 'StaticAnalyzer',
+              behaviorTree: {
+                type: 'sequence',
+                children: [
+                  { type: 'action', tool: 'analyze_code_smells', outputVariable: 'smells' },
+                  { type: 'action', tool: 'analyze_complexity', outputVariable: 'complexity' },
+                  { type: 'action', tool: 'analyze_dependencies', outputVariable: 'deps' },
+                  {
+                    type: 'action',
+                    tool: 'post_to_blackboard',
+                    params: { 
+                      key: 'static-analysis',
+                      value: { smells: '@smells', complexity: '@complexity', deps: '@deps' }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              type: 'agent',
+              agentType: 'RuntimeMonitor',
+              behaviorTree: {
+                type: 'retry',
+                maxAttempts: 3,
+                child: {
+                  type: 'sequence',
+                  children: [
+                    { type: 'action', tool: 'start_monitoring', outputVariable: 'monitor_id' },
+                    { type: 'action', tool: 'run_scenarios', outputVariable: 'runtime_errors' },
+                    { type: 'action', tool: 'collect_traces', outputVariable: 'traces' },
+                    {
+                      type: 'action',
+                      tool: 'post_to_blackboard',
+                      params: { 
+                        key: 'runtime-analysis',
+                        value: { errors: '@runtime_errors', traces: '@traces' }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              type: 'agent',
+              agentType: 'TestRunner',
+              behaviorTree: {
+                type: 'sequence',
+                children: [
+                  { type: 'action', tool: 'run_unit_tests', outputVariable: 'unit_results' },
+                  { type: 'action', tool: 'run_integration_tests', outputVariable: 'integration_results' },
+                  { type: 'action', tool: 'analyze_coverage', outputVariable: 'coverage' },
+                  {
+                    type: 'action',
+                    tool: 'post_to_blackboard',
+                    params: { 
+                      key: 'test-analysis',
+                      value: { 
+                        unit: '@unit_results',
+                        integration: '@integration_results',
+                        coverage: '@coverage'
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          type: 'agent',
+          agentType: 'ConsensusBuilder',
+          behaviorTree: {
+            type: 'sequence',
+            children: [
+              {
+                type: 'action',
+                tool: 'query_blackboard',
+                params: { 
+                  keys: ['static-analysis', 'runtime-analysis', 'test-analysis']
+                },
+                outputVariable: 'all_findings'
+              },
+              {
+                type: 'action',
+                tool: 'correlate_issues',
+                params: { findings: '@all_findings' },
+                outputVariable: 'correlated_issues'
+              },
+              {
+                type: 'action',
+                tool: 'build_consensus',
+                params: { 
+                  issues: '@correlated_issues',
+                  threshold: 0.8
+                },
+                outputVariable: 'critical_issues'
+              },
+              {
+                type: 'action',
+                tool: 'prioritize_issues',
+                params: { issues: '@critical_issues' },
+                outputVariable: 'prioritized_issues'
+              }
+            ]
+          }
+        },
+        {
+          type: 'parallel',
+          name: 'fix-generation',
+          children: '@prioritized_issues.slice(0, 5).map(issue => ({ ' +
+            'type: "agent", ' +
+            'agentType: "FixGenerator", ' +
+            'behaviorTree: { ' +
+              'type: "selector", ' +
+              'children: [ ' +
+                '{ type: "action", tool: "generate_automated_fix", params: { issue: issue } }, ' +
+                '{ type: "action", tool: "generate_llm_fix", params: { issue: issue } }, ' +
+                '{ type: "action", tool: "suggest_manual_fix", params: { issue: issue } } ' +
+              '] ' +
+            '} ' +
+          '}))'
+        },
+        {
+          type: 'action',
+          tool: 'apply_fixes',
+          params: { 
+            fixes: '@generated_fixes',
+            validation: true
+          },
+          outputVariable: 'fix_results'
+        }
+      ]
+    }
+  };
+  
+  const debugCoordinator = await AgentFactory.createFromJSON(
+    debugWorkflow,
+    toolRegistry,
+    blackboard
+  );
+  
+  return await debugCoordinator.execute({ codebase });
+}
+```
+
 ## Advanced Features
 
 ### Self-Improving Agents
@@ -1555,13 +2179,772 @@ channel.on('beliefUpdate', update =>
 - Use NLP system for semantic similarity in beliefs
 - Neural tool selection based on past performance
 
+## Behavior Tree Based Agents
+
+### Overview
+
+Building on the actor-based foundation, agents can be implemented as specialized Behavior Trees (BTs), providing a powerful coordination language for complex agent behaviors. Since `BehaviorTreeNode` already extends `Actor`, BT-based agents naturally integrate with the actor system while adding sophisticated decision-making capabilities.
+
+**Key Insight**: Agents don't just *use* behavior trees or *contain* behavior trees - agents *ARE* behavior trees. This means an agent is simultaneously:
+- An **Actor**: Can send/receive messages, be distributed, serialized
+- A **BehaviorTreeNode**: Can be executed, composed into larger trees, coordinated
+- An **Agent**: Has beliefs, goals, plans, and domain expertise
+
+### Why Behavior Trees for Agents?
+
+Behavior Trees offer significant advantages for agent implementation:
+
+1. **Hierarchical Decision Making**: BTs naturally model the hierarchical nature of agent reasoning
+2. **Composable Behaviors**: Complex behaviors built from simple, reusable nodes
+3. **Visual Debugging**: Tree structure makes agent logic transparent and debuggable
+4. **Dynamic Reconfiguration**: JSON-based configuration allows runtime behavior changes
+5. **Built-in Coordination**: Native support for sequences, fallbacks, and parallel execution
+6. **Message-Passing Integration**: Inherits actor messaging for blackboard communication
+7. **Dual Nature**: Agents ARE behavior trees AND actors simultaneously, not just using them
+
+### Agent Architecture with Behavior Trees
+
+#### Class Hierarchy
+
+The agent architecture leverages a powerful inheritance chain:
+
+```
+Actor (base class from @legion/actors)
+  ↓ extends
+BehaviorTreeNode (from @legion/actor-BT)
+  ↓ extends
+BaseAgentBT (our agent base class)
+  ↓ extends
+Specialized Agents (PlannerAgentBT, ValidatorAgentBT, etc.)
+```
+
+This hierarchy provides:
+- **From Actor**: Location transparency, message passing, serialization, GUID addressing, actor space participation
+- **From BehaviorTreeNode**: Tree execution, parent/child relationships, tool integration, coordination patterns
+- **From BaseAgentBT**: Agent-specific features like beliefs, goals, blackboard integration
+- **From Specialized Agents**: Domain expertise, specialized behaviors, tool preferences
+
+#### Benefits of the Layered Approach
+
+1. **Unified Communication**: All levels use the same actor messaging system
+2. **Composability**: Agents can be composed into larger agent trees
+3. **Tool Compatibility**: Agents have the same interface as tools (execute/getMetadata)
+4. **Orchestration**: Agents can be orchestrated by higher-level coordinators
+5. **Distribution**: Agents inherit location transparency from actors
+6. **Coordination**: Built-in support for sequences, selectors, parallel execution
+7. **Introspection**: Each layer adds metadata for debugging and monitoring
+
+#### Practical Implications
+
+The inheritance chain (Actor → BehaviorTreeNode → BaseAgentBT) has important practical implications:
+
+1. **Agent as Tool**: Since agents implement the tool interface (execute/getMetadata), they can be used anywhere a tool is expected
+2. **Agent as Node**: Agents can be children of other BT nodes, enabling hierarchical agent organizations
+3. **Agent as Actor**: Agents can be distributed across actor spaces, enabling scalable multi-agent systems
+4. **Unified Execution**: The same BehaviorTreeExecutor can execute both agents and regular BT nodes
+5. **Message Routing**: Messages flow through the same channels whether between agents, nodes, or actors
+
+Example of an agent being used as a BT node:
+```javascript
+// An agent can be a child in a larger behavior tree
+const systemTree = {
+  type: 'sequence',
+  children: [
+    {
+      type: 'agent',  // PlannerAgentBT
+      config: { domain: 'planning' }
+    },
+    {
+      type: 'selector',
+      children: [
+        {
+          type: 'agent',  // ValidatorAgentBT
+          config: { domain: 'validation' }
+        },
+        {
+          type: 'agent',  // FallbackAgentBT
+          config: { domain: 'error-recovery' }
+        }
+      ]
+    }
+  ]
+};
+```
+
+#### BaseAgentBT Class
+
+```javascript
+import { BehaviorTreeNode, NodeStatus } from '@legion/actor-BT';
+import { BehaviorTreeExecutor } from '@legion/actor-BT';
+
+/**
+ * BaseAgentBT - Foundation for all behavior tree based agents
+ * 
+ * Inheritance chain: Actor → BehaviorTreeNode → BaseAgentBT
+ * 
+ * This class extends BehaviorTreeNode (which extends Actor), providing:
+ * - Actor messaging and distribution capabilities (from Actor)
+ * - Behavior tree coordination and execution (from BehaviorTreeNode)
+ * - Agent-specific cognitive features (added by BaseAgentBT)
+ * 
+ * The agent IS a behavior tree node, not just using one.
+ * This means it can be executed like any other BT node and
+ * can be composed into larger behavior trees.
+ */
+export class BaseAgentBT extends BehaviorTreeNode {
+  constructor(config, toolRegistry, blackboard) {
+    // Create executor for this agent's sub-trees
+    const executor = new BehaviorTreeExecutor(toolRegistry);
+    
+    // Call BehaviorTreeNode constructor, which calls Actor constructor
+    super(config, toolRegistry, executor);
+    
+    this.blackboard = blackboard;
+    this.agentId = config.agentId || this.generateId();
+    this.domain = config.domain;
+    this.capabilities = config.capabilities || [];
+    
+    // Agent state managed through BT context
+    this.beliefs = new Map();
+    this.goals = [];
+    this.plans = [];
+    
+    // Subscribe to blackboard events via actor messaging
+    // Uses Actor's message passing inherited through BehaviorTreeNode
+    this.setupBlackboardSubscriptions();
+  }
+  
+  static getTypeName() {
+    return 'agent';
+  }
+  
+  /**
+   * Override Actor's receive method to handle agent-specific messages
+   * This demonstrates the inheritance chain - we're overriding a method
+   * that comes from Actor through BehaviorTreeNode
+   */
+  receive(message) {
+    // Handle agent-specific messages
+    if (message.type === 'BLACKBOARD_UPDATE') {
+      this.handleBlackboardUpdate(message);
+    } else if (message.type === 'AGENT_QUERY') {
+      this.handleAgentQuery(message);
+    } else {
+      // Delegate to BehaviorTreeNode's receive (which delegates to Actor)
+      super.receive(message);
+    }
+  }
+  
+  setupBlackboardSubscriptions() {
+    // Use actor messaging to subscribe to blackboard events
+    this.blackboard.subscribe('knowledge-updated', (event) => {
+      this.handleKnowledgeUpdate(event);
+    });
+    
+    this.blackboard.subscribe('task-posted', (event) => {
+      if (this.canHandleTask(event.task)) {
+        this.handleNewTask(event.task);
+      }
+    });
+  }
+  
+  async executeNode(context) {
+    // Agent main execution loop as a behavior tree
+    const agentContext = {
+      ...context,
+      agent: this,
+      beliefs: this.beliefs,
+      goals: this.goals,
+      blackboard: this.blackboard
+    };
+    
+    // Execute the agent's behavior tree
+    if (this.children.length > 0) {
+      // Agent behavior defined by child nodes
+      const result = await this.executeAllChildren(agentContext);
+      return this.processResults(result);
+    }
+    
+    // Default behavior if no children defined
+    return await this.defaultBehavior(agentContext);
+  }
+  
+  async defaultBehavior(context) {
+    // Perceive → Reason → Act cycle
+    const perception = await this.perceive(context);
+    const reasoning = await this.reason(perception, context);
+    const action = await this.act(reasoning, context);
+    
+    return {
+      status: action.success ? NodeStatus.SUCCESS : NodeStatus.FAILURE,
+      data: {
+        perception,
+        reasoning,
+        action,
+        agentId: this.agentId
+      }
+    };
+  }
+  
+  // Agent-specific methods (beyond what BehaviorTreeNode provides)
+  async perceive(context) {
+    // Query blackboard for relevant information
+    return await this.blackboard.query({
+      domain: this.domain,
+      timestamp: { $gte: context.lastPerception || 0 }
+    });
+  }
+  
+  async reason(perception, context) {
+    // Use BT nodes for reasoning logic
+    // This could be a sub-tree of condition and selector nodes
+    return {
+      beliefs: this.updateBeliefs(perception),
+      goals: this.generateGoals(perception, context),
+      plan: this.selectPlan(context)
+    };
+  }
+  
+  async act(reasoning, context) {
+    // Execute selected plan using action nodes
+    if (reasoning.plan) {
+      return await this.executePlan(reasoning.plan, context);
+    }
+    return { success: false, message: 'No plan available' };
+  }
+  
+  // Override Actor's receive method for agent-specific messaging
+  receive(message, data) {
+    // First check if it's a BT execution request
+    if (message === 'execute') {
+      return this.execute(data);
+    }
+    
+    // Handle agent-specific messages
+    if (message === 'updateBeliefs') {
+      return this.updateBeliefs(data);
+    }
+    
+    if (message === 'setGoal') {
+      this.goals.push(data);
+      return { success: true, goalId: data.id };
+    }
+    
+    // Fall back to BehaviorTreeNode's receive (which falls back to Actor's)
+    return super.receive(message, data);
+  }
+}
+```
+
+#### Specialized Agent Types
+
+```javascript
+// Planner Agent using BT patterns
+export class PlannerAgentBT extends BaseAgentBT {
+  static getTypeName() {
+    return 'planner-agent';
+  }
+  
+  constructor(config, toolRegistry, blackboard) {
+    super(config, toolRegistry, blackboard);
+    
+    // Initialize with planning-specific behavior tree
+    this.initializePlanningBehavior();
+  }
+  
+  initializePlanningBehavior() {
+    // Create a behavior tree for planning
+    const planningTree = {
+      type: 'sequence',
+      children: [
+        {
+          type: 'action',
+          tool: 'analyze_requirements',
+          outputVariable: 'requirements'
+        },
+        {
+          type: 'selector',  // Try multiple planning strategies
+          children: [
+            {
+              type: 'sequence',
+              children: [
+                {
+                  type: 'condition',
+                  condition: 'context.complexity === "simple"',
+                  child: {
+                    type: 'action',
+                    tool: 'simple_planner',
+                    params: { requirements: '@requirements' }
+                  }
+                }
+              ]
+            },
+            {
+              type: 'sequence',
+              children: [
+                {
+                  type: 'condition',
+                  condition: 'context.complexity === "complex"',
+                  child: {
+                    type: 'action',
+                    tool: 'hierarchical_planner',
+                    params: { requirements: '@requirements' }
+                  }
+                }
+              ]
+            },
+            {
+              type: 'retry',
+              maxAttempts: 3,
+              child: {
+                type: 'action',
+                tool: 'llm_planner',
+                params: { requirements: '@requirements' }
+              }
+            }
+          ]
+        },
+        {
+          type: 'action',
+          tool: 'validate_plan',
+          params: { plan: '@plan' }
+        },
+        {
+          type: 'action',
+          tool: 'publish_to_blackboard',
+          params: { 
+            data: '@validated_plan',
+            topic: 'plan-ready'
+          }
+        }
+      ]
+    };
+    
+    // Convert to BT nodes and set as children
+    this.initializeChildren([planningTree]);
+  }
+}
+
+// Executor Agent with error handling
+export class ExecutorAgentBT extends BaseAgentBT {
+  static getTypeName() {
+    return 'executor-agent';
+  }
+  
+  initializeExecutionBehavior() {
+    const executionTree = {
+      type: 'sequence',
+      children: [
+        {
+          type: 'action',
+          tool: 'subscribe_to_plans',
+          outputVariable: 'plan'
+        },
+        {
+          type: 'retry',
+          maxAttempts: 3,
+          backoffMs: 1000,
+          child: {
+            type: 'sequence',
+            children: [
+              {
+                type: 'action',
+                tool: 'setup_execution_environment',
+                params: { plan: '@plan' }
+              },
+              {
+                type: 'parallel',  // Execute independent steps in parallel
+                successThreshold: 0.8,  // Allow some failures
+                children: '@plan.parallelSteps'  // Dynamic children from plan
+              },
+              {
+                type: 'action',
+                tool: 'cleanup_environment'
+              }
+            ]
+          }
+        },
+        {
+          type: 'action',
+          tool: 'report_results',
+          params: { results: '@execution_results' }
+        }
+      ]
+    };
+    
+    this.initializeChildren([executionTree]);
+  }
+}
+```
+
+### Agent Coordination Patterns
+
+Behavior Trees provide powerful coordination patterns for multi-agent systems:
+
+#### Sequential Coordination
+```javascript
+// Agents work in sequence, each building on previous results
+const sequentialCoordination = {
+  type: 'sequence',
+  children: [
+    { type: 'agent', agentType: 'analyzer', outputVariable: 'analysis' },
+    { type: 'agent', agentType: 'planner', params: { input: '@analysis' }, outputVariable: 'plan' },
+    { type: 'agent', agentType: 'executor', params: { plan: '@plan' } }
+  ]
+};
+```
+
+#### Parallel Processing
+```javascript
+// Multiple agents work simultaneously on different aspects
+const parallelProcessing = {
+  type: 'parallel',
+  successThreshold: 1.0,  // All must succeed
+  children: [
+    { type: 'agent', agentType: 'security_checker' },
+    { type: 'agent', agentType: 'performance_analyzer' },
+    { type: 'agent', agentType: 'documentation_generator' }
+  ]
+};
+```
+
+#### Fallback Strategies
+```javascript
+// Try different agents until one succeeds
+const fallbackStrategy = {
+  type: 'selector',
+  children: [
+    { type: 'agent', agentType: 'expert_system' },
+    { type: 'agent', agentType: 'llm_agent' },
+    { type: 'agent', agentType: 'human_in_loop' }
+  ]
+};
+```
+
+### Blackboard Integration
+
+BT-based agents integrate seamlessly with the blackboard through actor messaging:
+
+```javascript
+export class BlackboardIntegratedAgent extends BaseAgentBT {
+  async postToBlackboard(key, value) {
+    // Use actor messaging to post to blackboard
+    await this.blackboard.receive({
+      type: 'post',
+      key: key,
+      value: value,
+      agentId: this.agentId,
+      timestamp: Date.now()
+    });
+  }
+  
+  async queryBlackboard(pattern) {
+    // Query blackboard via actor protocol
+    const result = await this.blackboard.receive({
+      type: 'query',
+      pattern: pattern,
+      agentId: this.agentId
+    });
+    
+    return result;
+  }
+  
+  subscribeToBlackboard(eventType, handler) {
+    // Subscribe using actor event system
+    this.blackboard.on(eventType, (event) => {
+      // Handle event in BT context
+      this.handleBlackboardEvent(event, handler);
+    });
+  }
+  
+  handleBlackboardEvent(event, handler) {
+    // Create a temporary BT node to handle the event
+    const eventNode = {
+      type: 'sequence',
+      children: [
+        {
+          type: 'action',
+          execute: async () => handler(event)
+        },
+        {
+          type: 'action',
+          tool: 'update_agent_state',
+          params: { event: event }
+        }
+      ]
+    };
+    
+    // Execute event handler in agent context
+    this.executor.executeTree(eventNode, { event, agent: this });
+  }
+}
+```
+
+### JSON Configuration for BT Agents
+
+Agents can be fully configured in JSON, enabling dynamic agent creation:
+
+```json
+{
+  "type": "agent",
+  "agentType": "ResearchAgent",
+  "id": "research-agent-001",
+  "domain": "scientific-research",
+  "capabilities": ["literature-review", "hypothesis-generation", "experiment-design"],
+  "behaviorTree": {
+    "type": "sequence",
+    "children": [
+      {
+        "type": "parallel",
+        "children": [
+          {
+            "type": "action",
+            "tool": "subscribe_to_research_topics",
+            "outputVariable": "topics"
+          },
+          {
+            "type": "action",
+            "tool": "monitor_arxiv",
+            "params": { "categories": ["cs.AI", "cs.LG"] }
+          }
+        ]
+      },
+      {
+        "type": "selector",
+        "name": "research-strategy",
+        "children": [
+          {
+            "type": "sequence",
+            "name": "literature-based",
+            "children": [
+              {
+                "type": "condition",
+                "condition": "context.topics.length > 0",
+                "child": {
+                  "type": "action",
+                  "tool": "semantic_search",
+                  "params": { "query": "@topics[0]" },
+                  "outputVariable": "papers"
+                }
+              },
+              {
+                "type": "action",
+                "tool": "extract_key_concepts",
+                "params": { "papers": "@papers" },
+                "outputVariable": "concepts"
+              }
+            ]
+          },
+          {
+            "type": "sequence",
+            "name": "hypothesis-driven",
+            "children": [
+              {
+                "type": "action",
+                "tool": "generate_hypothesis",
+                "params": { "domain": "@domain" },
+                "outputVariable": "hypothesis"
+              },
+              {
+                "type": "action",
+                "tool": "design_experiment",
+                "params": { "hypothesis": "@hypothesis" }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "action",
+        "tool": "publish_findings",
+        "params": {
+          "findings": "@research_output",
+          "blackboard_key": "research_results"
+        }
+      }
+    ]
+  }
+}
+```
+
+### Dynamic Agent Creation
+
+```javascript
+export class AgentFactory {
+  static async createFromJSON(config, toolRegistry, blackboard) {
+    // Parse agent configuration
+    const agentConfig = typeof config === 'string' ? JSON.parse(config) : config;
+    
+    // Determine agent class
+    const AgentClass = this.getAgentClass(agentConfig.agentType);
+    
+    // Create agent instance
+    const agent = new AgentClass(agentConfig, toolRegistry, blackboard);
+    
+    // Initialize behavior tree if provided
+    if (agentConfig.behaviorTree) {
+      await agent.initializeChildren([agentConfig.behaviorTree]);
+    }
+    
+    // Register with blackboard
+    await blackboard.registerAgent(agent);
+    
+    return agent;
+  }
+  
+  static getAgentClass(agentType) {
+    const agentClasses = {
+      'planner': PlannerAgentBT,
+      'executor': ExecutorAgentBT,
+      'monitor': MonitorAgentBT,
+      'research': ResearchAgentBT,
+      'default': BaseAgentBT
+    };
+    
+    return agentClasses[agentType] || agentClasses.default;
+  }
+}
+
+// Usage
+const researchAgent = await AgentFactory.createFromJSON(
+  researchAgentConfig,
+  toolRegistry,
+  blackboard
+);
+
+await researchAgent.execute(initialContext);
+```
+
+### Migration Path from Traditional Agents
+
+Converting existing agents to BT-based implementation:
+
+#### Before (Traditional Agent)
+```javascript
+class TraditionalAgent {
+  async run() {
+    while (this.active) {
+      const perception = await this.perceive();
+      const plan = await this.reason(perception);
+      const result = await this.execute(plan);
+      await this.learn(result);
+    }
+  }
+}
+```
+
+#### After (BT-Based Agent)
+```javascript
+const btAgent = {
+  type: 'agent',
+  agentType: 'TraditionalMigrated',
+  behaviorTree: {
+    type: 'retry',
+    condition: 'context.active',
+    child: {
+      type: 'sequence',
+      children: [
+        { type: 'action', tool: 'perceive', outputVariable: 'perception' },
+        { type: 'action', tool: 'reason', params: { input: '@perception' }, outputVariable: 'plan' },
+        { type: 'action', tool: 'execute', params: { plan: '@plan' }, outputVariable: 'result' },
+        { type: 'action', tool: 'learn', params: { result: '@result' } }
+      ]
+    }
+  }
+};
+```
+
+### Best Practices for BT Agents
+
+1. **Keep Agent Trees Shallow**: Deep nesting makes debugging difficult
+2. **Use Named Nodes**: Always provide meaningful names for nodes
+3. **Leverage Selectors for Robustness**: Use fallback strategies for critical operations
+4. **Parallelize When Possible**: Use parallel nodes for independent operations
+5. **Handle Failures Gracefully**: Use retry nodes with appropriate backoff
+6. **Maintain Clear Contracts**: Define clear input/output schemas for agent interactions
+7. **Use Conditions Wisely**: Keep condition logic simple and testable
+8. **Monitor Performance**: Use BT events for observability
+
+### Advanced Patterns
+
+#### Negotiation Between Agents
+```javascript
+const negotiationPattern = {
+  type: 'sequence',
+  children: [
+    {
+      type: 'parallel',
+      children: [
+        { type: 'agent', id: 'buyer', action: 'make_offer' },
+        { type: 'agent', id: 'seller', action: 'evaluate_offer' }
+      ]
+    },
+    {
+      type: 'retry',
+      maxAttempts: 5,
+      child: {
+        type: 'selector',
+        children: [
+          {
+            type: 'condition',
+            condition: 'context.agreement_reached',
+            child: { type: 'action', tool: 'finalize_deal' }
+          },
+          {
+            type: 'sequence',
+            children: [
+              { type: 'action', tool: 'adjust_terms' },
+              { type: 'action', tool: 'continue_negotiation' }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+};
+```
+
+#### Self-Organizing Agent Teams
+```javascript
+const selfOrganizingTeam = {
+  type: 'sequence',
+  children: [
+    {
+      type: 'action',
+      tool: 'discover_available_agents',
+      outputVariable: 'available_agents'
+    },
+    {
+      type: 'action',
+      tool: 'analyze_task_requirements',
+      outputVariable: 'requirements'
+    },
+    {
+      type: 'action',
+      tool: 'form_optimal_team',
+      params: {
+        agents: '@available_agents',
+        requirements: '@requirements'
+      },
+      outputVariable: 'team'
+    },
+    {
+      type: 'parallel',
+      children: '@team.map(agent => ({ type: "agent", id: agent.id, role: agent.role }))'
+    }
+  ]
+};
+```
+
 ## Conclusion
 
-This architecture provides a powerful, flexible framework for building sophisticated multi-agent AI systems. By combining Legion's knowledge graph, NLP, and prompting systems with a blackboard architecture, we enable:
+This architecture provides a powerful, flexible framework for building sophisticated multi-agent AI systems. By combining Legion's knowledge graph, NLP, and prompting systems with a blackboard architecture, and implementing agents as behavior trees built on the actor system, we enable:
 
 - Dynamic agent creation and specialization
 - Rich semantic knowledge sharing
 - Autonomous tool discovery and learning
 - Emergent collective intelligence
+- Sophisticated coordination patterns through behavior trees
+- Location-transparent distributed agent systems
 
 The system is designed to scale from simple two-agent collaborations to complex networks of hundreds of specialized agents, all coordinating through the semantic blackboard to solve increasingly complex problems.

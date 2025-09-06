@@ -1,4 +1,4 @@
-import { NamespaceManager } from '../../../src/rdf/NamespaceManager.js';
+import { NamespaceManager } from '@legion/kg-rdf';
 
 describe('NamespaceManager', () => {
   let namespaceManager;

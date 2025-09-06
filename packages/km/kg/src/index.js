@@ -18,15 +18,13 @@ export { MethodExecution } from './beliefs/MethodExecution.js';
 // Serialization exports
 export { ClassSerializer } from './serialization/ClassSerializer.js';
 
-// Tool system exports
-export { ToolRegistry } from './tools/ToolRegistry.js';
+// Tool system exports (KG-specific, not duplicating @legion/tools-registry)
+export { KGToolRegistry } from './tools/KGToolRegistry.js';
 export { ToolDependencyManager } from './tools/ToolDependencyManager.js';
-export { SchemaGenerator } from './tools/SchemaGenerator.js';
+export { KGSchemaGenerator } from './tools/KGSchemaGenerator.js';
 
-// RDF exports
-export { NamespaceManager } from './rdf/NamespaceManager.js';
-export { RDFSerializer } from './rdf/RDFSerializer.js';
-export { RDFParser } from './rdf/RDFParser.js';
+// RDF exports - now from extracted package
+export { NamespaceManager, RDFSerializer, RDFParser } from '@legion/kg-rdf';
 
 // Reconstruction exports
 export { ObjectReconstructor } from './reconstruction/ObjectReconstructor.js';
@@ -38,21 +36,17 @@ export { PropertyGraphExporter } from './export/PropertyGraphExporter.js';
 // Storage exports
 export * from './storage/index.js';
 
-// Gellish CNL exports
-export * from './gellish/index.js';
+// Query exports
+export * from './query/index.js';
+
+// Gellish CNL exports - now from extracted package (optional dependency)
+// export * from '@legion/kg-gellish';
 
 // Main system export
 export { KnowledgeGraphSystem } from './system/KnowledgeGraphSystem.js';
 
-// Example exports
-export { WeatherTool } from './examples/WeatherTool.js';
-export {
-  fullRoundTripExample,
-  testRDFParsing,
-  comprehensiveExample,
-  relationshipReificationExample,
-  beliefSystemExample
-} from './examples/usage-examples.js';
+// Example exports - moved to @legion/kg-examples package
+// Users should import examples from @legion/kg-examples instead
 
 // Import for default export
 import { KnowledgeGraphSystem } from './system/KnowledgeGraphSystem.js';

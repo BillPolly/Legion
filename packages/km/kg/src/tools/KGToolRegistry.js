@@ -3,8 +3,9 @@ import { idManager } from '../core/IDManager.js';
 
 /**
  * Registry for agent tools with KG-based discovery
+ * Note: This is different from @legion/tools-registry - this provides KG-based tool discovery
  */
-export class ToolRegistry {
+export class KGToolRegistry {
   constructor(kgEngine) {
     this.kg = kgEngine;
     this.serializer = new ClassSerializer(idManager);
