@@ -27,7 +27,6 @@
     "test:aiur": "npm run test --workspace=@legion/aiur",
     "test:actor-bt": "npm run test --workspace=@legion/actor-bt",
     "test:tool-core": "npm run test --workspace=@legion/tools-registry",
-    "test:kg": "npm run test --workspace=@legion/kg",
     "test:components": "npm run test --workspace=@legion/components",
     "test:aiur-ui": "npm run test --workspace=@legion/aiur-ui",
     "test:planning-integration": "npm run test --workspace=@legion/planning-integration-tests",
