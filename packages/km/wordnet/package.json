@@ -1,0 +1,36 @@
+{
+  "name": "@legion/wordnet",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "WordNet Foundational Ontology Loader for Knowledge Graph System",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest",
+    "test-basic": "node src/scripts/test-basic.js",
+    "load": "node src/index.js",
+    "load-test": "node src/index.js --test",
+    "validate": "node src/scripts/validate-ontology.js"
+  },
+  "keywords": ["wordnet", "ontology", "knowledge-graph", "nlp", "semantic"],
+  "author": "Legion Team",
+  "license": "MIT",
+  "dependencies": {
+    "@legion/kg": "workspace:*",
+    "@legion/resource-manager": "workspace:*",
+    "@legion/storage": "workspace:*",
+    "natural": "^6.0.0",
+    "mongodb": "^6.0.0",
+    "inquirer": "^9.0.0",
+    "chalk": "^5.0.0",
+    "open": "^8.0.0",
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "@legion/kg",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "JavaScript Knowledge Graph System",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest",
+    "demo": "node scripts/simple-demo-runner.js",
+    "test-examples": "node scripts/test-examples.js"
+  },
+  "keywords": ["knowledge-graph", "kg", "triples", "rdf", "gellish"],
+  "author": "Legion Team",
+  "license": "MIT",
+  "dependencies": {
+    "@legion/resource-manager": "workspace:*",
+    "@legion/storage": "workspace:*",
+    "chalk": "^5.0.0",
+    "dotenv": "^16.0.0",
+    "inquirer": "^9.0.0",
+    "mongodb": "^6.17.0",
+    "open": "^8.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

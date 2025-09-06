@@ -13,7 +13,8 @@
     "packages/mcps/*",
     "packages/modules/*",
     "packages/prompting/*",
-    "packages/data/*"
+    "packages/data/*",
+    "packages/km/*"
   ],
   "scripts": {
     "test": "npm run test --workspaces",
@@ -35,6 +36,9 @@
     "test:code-analysis": "npm run test --workspace=@legion/code-analysis",
     "test:js-generator": "npm run test --workspace=@legion/js-generator",
     "test:code-agent": "npm run test --workspace=@legion/code-agent",
+    "test:kg": "npm run test --workspace=@legion/kg",
+    "test:nlp": "npm run test --workspace=@legion/nlp",
+    "test:wordnet": "npm run test --workspace=@legion/wordnet",
     "test:watch": "npm run test:watch --workspaces",
     "test:coverage": "npm run test:coverage --workspaces",
     "lint": "eslint packages/*/src/**/*.js",

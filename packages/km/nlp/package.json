@@ -1,0 +1,31 @@
+{
+  "name": "@legion/nlp",
+  "version": "1.0.0",
+  "description": "NLP-to-KG Processing System - Transforms natural language text into structured knowledge graph representations",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest",
+    "test:watch": "NODE_OPTIONS=\"--experimental-vm-modules\" jest --watch",
+    "test:coverage": "NODE_OPTIONS=\"--experimental-vm-modules\" jest --coverage"
+  },
+  "keywords": [
+    "nlp",
+    "knowledge-graph",
+    "llm",
+    "entity-extraction",
+    "relationship-extraction",
+    "gellish",
+    "ontology"
+  ],
+  "author": "Legion Team",
+  "license": "MIT",
+  "dependencies": {
+    "@legion/kg": "workspace:*",
+    "@legion/llm": "workspace:*",
+    "@legion/resource-manager": "workspace:*"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
