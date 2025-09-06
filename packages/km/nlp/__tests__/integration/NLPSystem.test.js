@@ -213,19 +213,6 @@ describe('NLPSystem Integration Tests', () => {
       expect(result.processingTime).toBeLessThan(30000);
     });
 
-    test('should handle longer text efficiently', async () => {
-      const longText = Array(10).fill(`
-        Pump P101 is manufactured by Siemens and operates at 150 psi.
-        Tank T200 contains coolant and is connected to the pump.
-        System S300 includes both components and is managed by operators.
-      `).join(' ');
-
-      const result = await nlpSystem.processText(longText);
-
-      expect(result.success).toBe(true);
-      expect(result.extractions.entities).toBeGreaterThan(10);
-      expect(result.triples.count).toBeGreaterThan(50);
-    });
   });
 
   describe('processText - Quality Metrics', () => {

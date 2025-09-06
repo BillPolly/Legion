@@ -1,0 +1,32 @@
+{
+  "name": "@legion/kg-object-query",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "KG-powered object query system for intelligent data extraction",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest",
+    "test:watch": "NODE_OPTIONS=\"--experimental-vm-modules\" jest --watch",
+    "test:coverage": "NODE_OPTIONS=\"--experimental-vm-modules\" jest --coverage"
+  },
+  "keywords": [
+    "knowledge-graph",
+    "object-query", 
+    "data-extraction",
+    "intelligent-querying",
+    "prompting"
+  ],
+  "author": "Legion Framework",
+  "license": "MIT",
+  "dependencies": {
+    "@legion/kg": "*",
+    "@legion/kg-storage-memory": "*"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

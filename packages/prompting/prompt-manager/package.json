@@ -22,7 +22,7 @@
   "author": "Legion Framework",
   "license": "MIT",
   "dependencies": {
-    "@legion/object-query": "file:../object-query",
+    "@legion/kg-object-query": "file:../../km/kg-object-query",
     "@legion/prompt-builder": "file:../prompt-builder", 
     "@legion/output-schema": "file:../output-schema",
     "@legion/resource-manager": "file:../../resource-manager"

@@ -5,7 +5,7 @@
  * with intelligent retry logic and error handling
  */
 
-import { ObjectQuery } from '@legion/object-query';
+import { ObjectQuery } from '@legion/kg-object-query';
 import { PromptBuilder } from '@legion/prompt-builder';
 import { ResponseValidator } from '@legion/output-schema';
 import { RetryHandler } from './RetryHandler.js';

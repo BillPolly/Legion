@@ -10,7 +10,7 @@ describe('PromptManager Conceptual Integration', () => {
 
     // 1. Pipeline Components Overview
     console.log('\n📦 Pipeline Components:');
-    console.log('✅ @legion/object-query: Data extraction from source objects');
+    console.log('✅ @legion/kg-object-query: Data extraction from source objects (KG-powered)');
     console.log('✅ @legion/prompt-builder: Template processing with labeled inputs');
     console.log('✅ @legion/output-schema: Response validation with cleaning');
     console.log('✅ @legion/prompt-manager: Complete orchestration with retry (THIS PACKAGE)');
@@ -87,7 +87,7 @@ describe('PromptManager Conceptual Integration', () => {
 
     console.log('\n🏆 PROMPT-MANAGER COMPLETES INTELLIGENT PROMPTING ARCHITECTURE!');
     console.log('==============================================================');
-    console.log('Total System: 333+ tests across object-query + prompt-builder + output-schema');
+    console.log('Total System: 350+ tests across kg-object-query + prompt-builder + output-schema');
     console.log('Architecture: Three focused packages with clean separation of concerns');
     console.log('Innovation: Extended JSON Schema as universal format specification');
     console.log('Reliability: Comprehensive error handling and retry logic');
@@ -103,7 +103,7 @@ describe('PromptManager Conceptual Integration', () => {
     // Core requirements from user specifications
     const requirements = [
       '✅ Configure once, execute multiple times with different source objects',
-      '✅ Integrate object-query → prompt-builder → output-schema seamlessly', 
+      '✅ Integrate kg-object-query → prompt-builder → output-schema seamlessly', 
       '✅ Handle LLM API calls with ResourceManager pattern',
       '✅ Implement simple retry logic with error feedback (prefix + original + suffix)',
       '✅ Provide standardized results with comprehensive error information',

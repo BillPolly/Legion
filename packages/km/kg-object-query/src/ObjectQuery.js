@@ -1,15 +1,15 @@
 /**
- * ObjectQuery - Main interface for intelligent data extraction
+ * ObjectQuery - Main API class providing backward compatibility
  * 
- * Coordinates path traversal, data transformation, and binding generation
- * to extract labeled inputs from complex root objects
+ * Maintains identical interface to original ObjectQuery while using
+ * KG-powered implementation under the hood for enhanced capabilities
  */
 
-import { QueryProcessor } from './QueryProcessor.js';
+import { KGQueryProcessor } from './KGQueryProcessor.js';
 
 export class ObjectQuery {
   /**
-   * Create an object query processor
+   * Create an object query processor (backward compatible)
    * @param {Object} querySpecification - Query specification
    */
   constructor(querySpecification) {
@@ -18,11 +18,12 @@ export class ObjectQuery {
     }
 
     this.querySpec = querySpecification;
-    this.processor = new QueryProcessor(querySpecification);
+    this.processor = new KGQueryProcessor(querySpecification);
   }
 
   /**
    * Execute query on root object to generate labeled inputs
+   * EXACT same API as original ObjectQuery
    * @param {Object} rootObject - Root object to extract data from
    * @param {Object} options - Execution options
    * @returns {Object} Labeled inputs ready for prompt-builder
@@ -34,7 +35,7 @@ export class ObjectQuery {
 
     const labeledInputs = {};
 
-    // Process all bindings
+    // Process all bindings using KG processor
     if (this.querySpec.bindings) {
       for (const [bindingName, bindingDef] of Object.entries(this.querySpec.bindings)) {
         try {
@@ -46,13 +47,13 @@ export class ObjectQuery {
           if (options.strict) {
             throw error;
           }
-          // Skip failed bindings in non-strict mode
+          // Skip failed bindings in non-strict mode (same as original)
           console.warn(`Failed to process binding ${bindingName}: ${error.message}`);
         }
       }
     }
 
-    // Process context variables
+    // Process context variables using KG processor
     if (this.querySpec.contextVariables) {
       for (const [varName, varDef] of Object.entries(this.querySpec.contextVariables)) {
         try {
@@ -73,7 +74,7 @@ export class ObjectQuery {
   }
 
   /**
-   * Validate the query specification
+   * Validate the query specification (backward compatible)
    * @throws {Error} If query is invalid
    */
   validateQuery() {
@@ -81,7 +82,7 @@ export class ObjectQuery {
   }
 
   /**
-   * Analyze root object structure
+   * Analyze root object structure (backward compatible)
    * @param {Object} rootObject - Object to analyze
    * @returns {Object} Structure analysis
    */
@@ -96,7 +97,7 @@ export class ObjectQuery {
   }
 
   /**
-   * Get all paths referenced in query
+   * Get all paths referenced in query (backward compatible)
    * @returns {string[]} Array of paths
    */
   getRequiredPaths() {
@@ -127,7 +128,22 @@ export class ObjectQuery {
   }
 
   /**
-   * Calculate object depth
+   * Get KG-specific statistics (NEW - enhanced functionality)
+   * @returns {Object} Query processor statistics
+   */
+  getStats() {
+    return this.processor.getStats();
+  }
+
+  /**
+   * Clean up resources (NEW - enhanced functionality)
+   */
+  cleanup() {
+    this.processor.cleanup();
+  }
+
+  /**
+   * Calculate object depth (backward compatible)
    * @private
    */
   _calculateDepth(obj, currentDepth = 0) {
@@ -148,7 +164,7 @@ export class ObjectQuery {
   }
 
   /**
-   * Estimate object size
+   * Estimate object size (backward compatible)
    * @private
    */
   _estimateSize(obj) {

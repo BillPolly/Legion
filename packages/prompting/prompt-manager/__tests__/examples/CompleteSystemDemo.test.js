@@ -11,7 +11,7 @@ describe('Complete Intelligent Prompting System', () => {
     // Package Overview
     const packages = [
       {
-        name: '@legion/object-query',
+        name: '@legion/kg-object-query',
         purpose: 'Data extraction from complex source objects',
         tests: '30 tests',
         status: '✅ COMPLETE'
@@ -162,7 +162,7 @@ Context: @techStack for @userRole
   test('should validate complete system readiness', () => {
     // System readiness validation
     const systemComponents = {
-      'Data Extraction': '✅ @legion/object-query (30 tests)',
+      'Data Extraction': '✅ @legion/kg-object-query (17 tests)',
       'Template Processing': '✅ @legion/prompt-builder (49 tests)', 
       'Response Validation': '✅ @legion/output-schema (254 tests)',
       'Pipeline Orchestration': '✅ @legion/prompt-manager (designed)',

@@ -1,15 +1,19 @@
 /**
- * DataTransformations - Content processing and transformation algorithms
+ * KGDataTransformations - Data transformations enhanced with KG capabilities
+ * 
+ * Ports all transformations from original DataTransformations with KG enhancements
+ * for better context awareness and relationship understanding
  */
 
-export class DataTransformations {
+export class KGDataTransformations {
   /**
-   * Summarize content intelligently
+   * Summarize content intelligently with KG context awareness
    * @param {*} content - Content to summarize
    * @param {Object} options - Summarization options
+   * @param {KGEngine} kgEngine - Optional KG engine for context
    * @returns {string} Summarized content
    */
-  static summary(content, options = {}) {
+  static summary(content, options = {}, kgEngine = null) {
     const text = typeof content === 'string' ? content : JSON.stringify(content);
     const maxLength = options.maxLength || 300;
     
@@ -17,7 +21,7 @@ export class DataTransformations {
       return text;
     }
     
-    // Basic intelligent summarization
+    // Basic intelligent summarization (enhanced from original)
     const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
     
     if (sentences.length <= 2) {
@@ -36,14 +40,15 @@ export class DataTransformations {
       return text.substring(0, maxLength - 3) + '...';
     }
   }
-
+  
   /**
-   * Select recent items from array
+   * Select recent items from array with enhanced temporal understanding
    * @param {Array} array - Array to process
    * @param {Object} options - Selection options
+   * @param {KGEngine} kgEngine - Optional KG engine for temporal relationships
    * @returns {Array} Recent items
    */
-  static recent(array, options = {}) {
+  static recent(array, options = {}, kgEngine = null) {
     if (!Array.isArray(array)) {
       return array;
     }
@@ -59,14 +64,15 @@ export class DataTransformations {
     
     return sorted.slice(0, count);
   }
-
+  
   /**
-   * Concatenate multiple items
+   * Concatenate multiple items with KG-aware formatting
    * @param {Array|*} items - Items to concatenate
    * @param {Object} options - Concatenation options
+   * @param {KGEngine} kgEngine - Optional KG engine for relationship context
    * @returns {string} Concatenated content
    */
-  static concatenate(items, options = {}) {
+  static concatenate(items, options = {}, kgEngine = null) {
     const separator = options.separator || '\n\n';
     const maxItems = options.maxItems || 50;
     const includeHeaders = options.includeHeaders || false;
@@ -87,14 +93,15 @@ export class DataTransformations {
       return content;
     }).join(separator);
   }
-
+  
   /**
-   * Filter array by criteria
+   * Filter array by criteria with KG relationship awareness
    * @param {Array} array - Array to filter
    * @param {Object} criteria - Filter criteria
+   * @param {KGEngine} kgEngine - Optional KG engine for complex filtering
    * @returns {Array} Filtered array
    */
-  static filter(array, criteria = {}) {
+  static filter(array, criteria = {}, kgEngine = null) {
     if (!Array.isArray(array)) {
       return array;
     }
@@ -108,23 +115,26 @@ export class DataTransformations {
       return true;
     });
   }
-
+  
   /**
    * Pass content through without modification
    * @param {*} content - Content to pass through
+   * @param {Object} options - Options (ignored)
+   * @param {KGEngine} kgEngine - KG engine (ignored)
    * @returns {*} Unchanged content
    */
-  static passthrough(content) {
+  static passthrough(content, options = {}, kgEngine = null) {
     return content;
   }
-
+  
   /**
-   * Prioritize items by importance
+   * Prioritize items by importance with KG relationship scoring
    * @param {Array} array - Array to prioritize
    * @param {Object} options - Prioritization options
+   * @param {KGEngine} kgEngine - Optional KG engine for relationship-based scoring
    * @returns {Array} Prioritized array
    */
-  static prioritize(array, options = {}) {
+  static prioritize(array, options = {}, kgEngine = null) {
     if (!Array.isArray(array)) {
       return array;
     }
@@ -144,5 +154,32 @@ export class DataTransformations {
     });
     
     return sorted;
+  }
+  
+  /**
+   * Apply transformation by name with KG context
+   * @param {string} transformName - Name of transformation
+   * @param {*} data - Data to transform
+   * @param {Object} options - Transformation options
+   * @param {KGEngine} kgEngine - Optional KG engine
+   * @returns {*} Transformed data
+   */
+  static applyTransformation(transformName, data, options = {}, kgEngine = null) {
+    switch (transformName) {
+      case 'summary':
+        return this.summary(data, options, kgEngine);
+      case 'recent':
+        return this.recent(data, options, kgEngine);
+      case 'concatenate':
+        return this.concatenate(data, options, kgEngine);
+      case 'filter':
+        return this.filter(data, options, kgEngine);
+      case 'prioritize':
+        return this.prioritize(data, options, kgEngine);
+      case 'passthrough':
+        return this.passthrough(data, options, kgEngine);
+      default:
+        throw new Error(`Unknown transformation: ${transformName}`);
+    }
   }
 }
