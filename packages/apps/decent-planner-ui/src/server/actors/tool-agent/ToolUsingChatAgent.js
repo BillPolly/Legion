@@ -8,6 +8,7 @@
  */
 
 import { extractJSON } from '@legion/planner';
+import { ContextOptimizer } from './ContextOptimizer.js';
 
 export class ToolUsingChatAgent {
   constructor(toolRegistry, llmClient, eventCallback = null, resourceActor = null) {
@@ -16,12 +17,24 @@ export class ToolUsingChatAgent {
     this.eventCallback = eventCallback; // For UI observability
     this.resourceActor = resourceActor; // For AgentTools like display_resource
     
+    // Initialize intelligent context optimization
+    this.contextOptimizer = new ContextOptimizer(llmClient);
+    
     // Reuse BT Executor's proven context pattern
     this.executionContext = { 
       artifacts: {
         output_directory: {
           value: './tmp',
           description: 'Default directory for saving generated files and outputs. When using tools with path parameters, use this directory path with specific filenames (e.g., "./tmp/image.png", "./tmp/document.txt").'
+        },
+        agent_context: {
+          value: {
+            resourceActor: this.resourceActor,
+            toolRegistry: this.toolRegistry,
+            llmClient: this.llmClient,
+            artifacts: null // Will be set dynamically
+          },
+          description: 'Agent execution context for AgentTools (UI category tools). Use @agent_context for context parameter.'
         }
       }
     };
@@ -59,12 +72,17 @@ export class ToolUsingChatAgent {
         // Can answer with existing context
         const response = await this.respondWithContext(userInput);
         this.addAgentMessage(response);
+        
+        // Automatic intelligent context optimization after completion
+        await this.optimizeContextIntelligently();
+        
         return {
           userResponse: response,
           toolsUsed: [],
           contextUpdated: [],
           reasoning: toolNeedAnalysis.reasoning,
-          operationCount: 0
+          operationCount: 0,
+          complete: true
         };
       }
 
@@ -75,7 +93,11 @@ export class ToolUsingChatAgent {
       if (this.currentSearchResults.length === 0) {
         const explanation = await this.explainNoToolsFound(userInput);
         this.addAgentMessage(explanation.userResponse);
-        return explanation;
+        
+        // Automatic intelligent context optimization after completion
+        await this.optimizeContextIntelligently();
+        
+        return { ...explanation, complete: true };
       }
 
       // Stage 3: Select tool sequence (single or multiple tools)
@@ -85,7 +107,11 @@ export class ToolUsingChatAgent {
       if (toolPlan.type === 'none') {
         const explanation = await this.explainNoSuitableTools(userInput, searchResults);
         this.addAgentMessage(explanation.userResponse);
-        return explanation;
+        
+        // Automatic intelligent context optimization after completion
+        await this.optimizeContextIntelligently();
+        
+        return { ...explanation, complete: true };
       }
 
       // Stage 4: Execute tool plan (single tool or sequence)
@@ -96,6 +122,9 @@ export class ToolUsingChatAgent {
       const userResponse = await this.generateUserResponse(userInput, executionResults, toolPlan);
 
       this.addAgentMessage(userResponse);
+
+      // Automatic intelligent context optimization after successful completion
+      await this.optimizeContextIntelligently();
 
       return {
         userResponse: userResponse,
@@ -110,6 +139,9 @@ export class ToolUsingChatAgent {
       console.error('[ToolAgent] Error processing message:', error);
       const errorResponse = `Sorry, I encountered an error while processing your request: ${error.message}`;
       this.addAgentMessage(errorResponse);
+      
+      // Optimize context even after errors to clean up any partial state
+      await this.optimizeContextIntelligently();
       
       return {
         userResponse: errorResponse,
@@ -209,8 +241,9 @@ ${userInput}
 ${searchResults.map(result => `
 ### ${result.name}
 Description: ${result.tool.description || result.description || 'No description'}
+${result.tool.category === 'ui' ? '**AgentTool**: Context provided automatically - do not specify context parameter' : ''}
 Inputs:
-${this.formatToolInputSchema(result.tool.inputSchema)}
+${this.formatToolInputSchema(result.tool.inputSchema, result.tool.category === 'ui')}
 Outputs: ${this.formatToolOutputSchema(result.tool.outputSchema)}
 `).join('\n')}
 
@@ -771,15 +804,46 @@ Be helpful and specific.
 
   /**
    * Format chat history for LLM prompts
+   * Filters out large content like base64 data to prevent prompt pollution
    */
   formatChatHistory() {
     if (this.chatHistory.length === 0) {
       return 'No previous chat history.';
     }
 
-    return this.chatHistory.slice(-5).map(msg => 
-      `${msg.role === 'user' ? 'User' : 'Agent'}: ${msg.content}`
-    ).join('\n');
+    return this.chatHistory.slice(-5).map(msg => {
+      const role = msg.role === 'user' ? 'User' : 'Agent';
+      const content = this.sanitizeContentForPrompt(msg.content);
+      return `${role}: ${content}`;
+    }).join('\n');
+  }
+
+  /**
+   * Sanitize content for LLM prompts by removing/summarizing large data
+   */
+  sanitizeContentForPrompt(content) {
+    if (!content || typeof content !== 'string') {
+      return content;
+    }
+
+    // Check if content contains base64 data URLs
+    if (content.includes('data:image/') && content.includes('base64,')) {
+      // Replace base64 data with summary
+      return content.replace(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]{100,}/g, '[IMAGE_DATA_REMOVED]');
+    }
+
+    // Check for other large base64 strings
+    if (content.length > 1000 && /[A-Za-z0-9+/]{500,}={0,2}/.test(content)) {
+      // Likely contains large base64 data, truncate and summarize
+      return content.substring(0, 200) + '... [LARGE_DATA_TRUNCATED] ...' + content.substring(content.length - 50);
+    }
+
+    // Normal content, just limit length for sanity
+    if (content.length > 2000) {
+      return content.substring(0, 1000) + '... [CONTENT_TRUNCATED] ...' + content.substring(content.length - 200);
+    }
+
+    return content;
   }
 
   /**
@@ -1118,10 +1182,94 @@ Be helpful and specific.
   /**
    * Clear context (for testing or reset)
    */
+  /**
+   * Intelligent context optimization using LLM-driven decisions
+   * Replaces the old clearContext() with smart optimization that preserves infrastructure
+   */
+  async optimizeContextIntelligently() {
+    try {
+      console.log('[ToolAgent] Starting automatic context optimization...');
+      
+      // Create context snapshot (preserves infrastructure variables)
+      const contextSnapshot = this.getContextSnapshot();
+      
+      // Use ContextOptimizer for intelligent optimization
+      const optimizedContext = await this.contextOptimizer.optimizeContext(contextSnapshot);
+      
+      // Apply optimizations while preserving infrastructure
+      this.applyOptimizedContext(optimizedContext);
+      
+      console.log('[ToolAgent] ✅ Context optimization complete');
+    } catch (error) {
+      console.error('[ToolAgent] Context optimization failed (continuing with current context):', error.message);
+      // Don't throw - optimization failure shouldn't break the user workflow
+    }
+  }
+  
+  /**
+   * Legacy clearContext method - DEPRECATED
+   * Use optimizeContextIntelligently() instead
+   */
   clearContext() {
+    console.warn('[ToolAgent] ⚠️  clearContext() is deprecated - use optimizeContextIntelligently() instead');
     this.executionContext.artifacts = {};
     this.chatHistory = [];
     this.operationHistory = [];
     this.currentOperation = null;
+    // Note: Infrastructure variables (resourceActor, toolRegistry, etc.) are preserved
+  }
+  
+  /**
+   * Get complete context snapshot for optimization
+   * @returns {Object} Context snapshot with all state
+   */
+  getContextSnapshot() {
+    return {
+      chatHistory: this.chatHistory,
+      executionContext: this.executionContext,
+      operationHistory: this.operationHistory,
+      llmInteractions: this.llmInteractions,
+      currentOperation: this.currentOperation,
+      // Infrastructure variables that must be preserved
+      resourceActor: this.resourceActor,
+      toolRegistry: this.toolRegistry,
+      llmClient: this.llmClient,
+      eventCallback: this.eventCallback
+    };
+  }
+  
+  /**
+   * Apply optimized context while preserving infrastructure
+   * @param {Object} optimizedContext - Context returned by ContextOptimizer
+   */
+  applyOptimizedContext(optimizedContext) {
+    // Apply user data optimizations
+    this.chatHistory = optimizedContext.chatHistory || [];
+    this.executionContext = optimizedContext.executionContext || { artifacts: {} };
+    this.operationHistory = optimizedContext.operationHistory || [];
+    this.llmInteractions = optimizedContext.llmInteractions || [];
+    this.currentOperation = optimizedContext.currentOperation || null;
+    
+    // Ensure infrastructure variables are always preserved (even if optimization failed)
+    if (!this.resourceActor && optimizedContext.resourceActor) {
+      this.resourceActor = optimizedContext.resourceActor;
+    }
+    if (!this.toolRegistry && optimizedContext.toolRegistry) {
+      this.toolRegistry = optimizedContext.toolRegistry;
+    }
+    if (!this.llmClient && optimizedContext.llmClient) {
+      this.llmClient = optimizedContext.llmClient;
+    }
+    if (!this.eventCallback && optimizedContext.eventCallback) {
+      this.eventCallback = optimizedContext.eventCallback;
+    }
+    
+    // Always ensure output_directory exists
+    if (!this.executionContext.artifacts.output_directory) {
+      this.executionContext.artifacts.output_directory = {
+        value: './tmp',
+        description: 'Default directory for saving generated files and outputs.'
+      };
+    }
   }
 }

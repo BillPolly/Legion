@@ -1,0 +1,30 @@
+{
+  "name": "@legion/handles",
+  "version": "1.0.0",
+  "description": "Shared handle system with actor-based remote transparency and Smalltalk-style introspection",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js",
+    "./BaseHandle": "./src/BaseHandle.js",
+    "./TypeHandle": "./src/TypeHandle.js",
+    "./HandleRegistry": "./src/HandleRegistry.js"
+  },
+  "dependencies": {
+    "@legion/actors": "workspace:*",
+    "@legion/utils": "workspace:*"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "npm test -- --watch"
+  },
+  "keywords": [
+    "legion",
+    "handles",
+    "actor-system",
+    "remote-objects",
+    "introspection"
+  ]
+}

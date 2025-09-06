@@ -35,6 +35,13 @@ describe('Cat Image Generation Debug Test', () => {
       console.log('    Description:', generateTool.description);
     }
     
+    // Import real ResourceServerSubActor (same as working test)
+    const ResourceServerSubActor = (await import('../../src/server/actors/ResourceServerSubActor.js')).default;
+    
+    // Create real resource actor (same as /show uses)
+    const resourceServerActor = new ResourceServerSubActor({ fileSystem: null });
+    console.log('  ResourceServerSubActor created:', !!resourceServerActor);
+    
     // Create services object like the real server
     const services = {
       resourceManager,
@@ -43,6 +50,15 @@ describe('Cat Image Generation Debug Test', () => {
     
     // Create the actual ChatServerToolAgent
     chatAgent = new ChatServerToolAgent(services);
+    
+    // Set up proper parent actor with resourceSubActor (like production)
+    chatAgent.setParentActor({
+      resourceSubActor: resourceServerActor,
+      sendToSubActor: function(target, messageType, data) {
+        console.log(`📨 Parent actor would send: ${target} -> ${messageType}`);
+      }
+    });
+    console.log('  Parent actor with resourceSubActor set up');
     
     // Create mock remote actor to capture ALL messages with detailed logging
     capturedMessages = [];
@@ -99,12 +115,37 @@ describe('Cat Image Generation Debug Test', () => {
     // Clear captured messages
     capturedMessages.length = 0;
     
+    // Create a promise to wait for the final agent response
+    let resolveCompletion;
+    const completionPromise = new Promise(resolve => {
+      resolveCompletion = resolve;
+    });
+    
+    // Wrap the mock to detect completion
+    const originalReceive = mockRemoteActor.receive;
+    mockRemoteActor.receive = jest.fn((messageType, data) => {
+      const result = originalReceive(messageType, data);
+      
+      // Check if this is the final response
+      if (messageType === 'chat-agent-response' && data.complete) {
+        console.log('🎯 Final agent response detected, resolving completion promise');
+        setTimeout(() => resolveCompletion(), 100); // Small delay to ensure all messages are captured
+      }
+      
+      return result;
+    });
+    
     // Send the message exactly like the UI does
     await chatAgent.receive('send-message', {
       text: userMessage,
       timestamp: Date.now(),
       messageId: 'test-cat-message-1'
     });
+    
+    // Wait for the agent to complete processing
+    console.log('⏳ Waiting for agent to complete processing...');
+    await completionPromise;
+    console.log('✅ Agent processing completed');
     
     console.log('\n📊 Complete Message Flow Analysis:');
     console.log('==================================');

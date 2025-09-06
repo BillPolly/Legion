@@ -111,3 +111,7 @@ temp/
 *.gguf
 **/models/
 models/
+
+# Generated images
+images/
+/images/
