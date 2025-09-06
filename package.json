@@ -11,7 +11,8 @@
     "packages/planning/*",
     "packages/shared/*",
     "packages/mcps/*",
-    "packages/modules/*"
+    "packages/modules/*",
+    "packages/data/*"
   ],
   "scripts": {
     "test": "npm run test --workspaces",

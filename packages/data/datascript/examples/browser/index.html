@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DataScript JS - Browser Demo</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .demo-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .demo-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            border: 1px solid #ddd;
+        }
+        .result {
+            background: #e8f5e8;
+            border-color: #4caf50;
+        }
+        .controls {
+            margin: 15px 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .query-input {
+            width: 100%;
+            height: 100px;
+            margin: 10px 0;
+            padding: 10px;
+            font-family: monospace;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #output {
+            min-height: 100px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            background: white;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 DataScript JS - Interactive Browser Demo</h1>
+    <p>This demo showcases DataScript JS running entirely in your browser with zero dependencies.</p>
+    
+    <div class="demo-section">
+        <h3>📊 Database Statistics</h3>
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="datom-count">0</div>
+                <div>Datoms</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="entity-count">0</div>
+                <div>Entities</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="attribute-count">0</div>
+                <div>Attributes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="storage-size">0 KB</div>
+                <div>Storage Size</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h3>💾 Database Operations</h3>
+        <div class="controls">
+            <button onclick="initializeData()">Initialize Sample Data</button>
+            <button onclick="addRandomPerson()">Add Random Person</button>
+            <button onclick="saveToStorage()">Save to LocalStorage</button>
+            <button onclick="loadFromStorage()">Load from LocalStorage</button>
+            <button onclick="clearDatabase()">Clear Database</button>
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h3>🔍 Interactive Queries</h3>
+        <p>Try these example queries or write your own:</p>
+        <div class="controls">
+            <button onclick="setExampleQuery('all-people')">All People</button>
+            <button onclick="setExampleQuery('adults')">Adults (25+)</button>
+            <button onclick="setExampleQuery('friendships')">Friendships</button>
+            <button onclick="setExampleQuery('aggregates')">Statistics</button>
+        </div>
+        <textarea 
+            id="query-input" 
+            class="query-input" 
+            placeholder="Enter Datalog query here...">{
+  find: ['?name', '?age'],
+  where: [
+    ['?e', ':person/name', '?name'],
+    ['?e', ':person/age', '?age']
+  ]
+}</textarea>
+        <div class="controls">
+            <button onclick="runQuery()">Run Query</button>
+            <button onclick="runEDNQuery()">Run as EDN Query</button>
+        </div>
+        <pre id="query-result" class="result">Query results will appear here...</pre>
+    </div>
+
+    <div class="demo-section">
+        <h3>🎯 Pull API Demo</h3>
+        <div class="controls">
+            <button onclick="pullExample('basic')">Basic Pull</button>
+            <button onclick="pullExample('nested')">Nested Relationships</button>
+            <button onclick="pullExample('wildcard')">Wildcard Pattern</button>
+            <button onclick="pullExample('reverse')">Reverse References</button>
+        </div>
+        <pre id="pull-result" class="result">Pull results will appear here...</pre>
+    </div>
+
+    <div class="demo-section">
+        <h3>📋 Transaction Log</h3>
+        <pre id="tx-log">Transaction history will appear here...</pre>
+        <div class="controls">
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { DB, q, qEDN, pull, pullMany, createConn, saveDBToFile, loadDBFromFile } from '../../index.js';
+        
+        // Global state
+        window.currentDB = DB.empty();
+        window.transactionLog = [];
+        
+        // Schema definition
+        const schema = {
+            ':person/name': { unique: 'identity' },
+            ':person/email': { unique: 'value' },
+            ':person/friends': { card: 'many', valueType: 'ref' },
+            ':person/age': { valueType: 'number' },
+            ':person/department': {},
+            ':person/skills': { card: 'many' },
+            ':company/name': { unique: 'identity' },
+            ':company/employees': { card: 'many', valueType: 'ref' }
+        };
+
+        // Utility functions
+        function log(...args) {
+            const timestamp = new Date().toLocaleTimeString();
+            const message = args.join(' ');
+            window.transactionLog.push(`[${timestamp}] ${message}`);
+            updateTransactionLog();
+            console.log(...args);
+        }
+
+        function updateStats() {
+            const datoms = window.currentDB.datoms(':eavt');
+            const entities = new Set(datoms.map(d => d.e));
+            const attributes = new Set(datoms.map(d => d.a));
+            
+            document.getElementById('datom-count').textContent = datoms.length;
+            document.getElementById('entity-count').textContent = entities.size;
+            document.getElementById('attribute-count').textContent = attributes.size;
+            
+            // Estimate storage size
+            const serialized = JSON.stringify(window.currentDB.serialize());
+            document.getElementById('storage-size').textContent = 
+                `${(serialized.length / 1024).toFixed(1)} KB`;
+        }
+
+        function updateTransactionLog() {
+            document.getElementById('tx-log').textContent = 
+                window.transactionLog.slice(-10).join('\\n');
+        }
+
+        // Demo functions exposed to global scope
+        window.initializeData = function() {
+            const conn = createConn(schema);
+            const { dbAfter } = conn.transact([
+                // People
+                { ':db/id': -1, ':person/name': 'Alice', ':person/email': 'alice@example.com', ':person/age': 30, ':person/department': 'Engineering' },
+                { ':db/id': -2, ':person/name': 'Bob', ':person/email': 'bob@example.com', ':person/age': 25, ':person/department': 'Engineering' },
+                { ':db/id': -3, ':person/name': 'Charlie', ':person/email': 'charlie@example.com', ':person/age': 35, ':person/department': 'Design' },
+                { ':db/id': -4, ':person/name': 'Diana', ':person/email': 'diana@example.com', ':person/age': 28, ':person/department': 'Marketing' },
+                { ':db/id': -5, ':person/name': 'Eve', ':person/email': 'eve@example.com', ':person/age': 32, ':person/department': 'Sales' },
+                
+                // Company
+                { ':db/id': -100, ':company/name': 'Acme Corp' },
+                
+                // Skills
+                ['+', -1, ':person/skills', 'JavaScript'],
+                ['+', -1, ':person/skills', 'React'],
+                ['+', -1, ':person/skills', 'Node.js'],
+                ['+', -2, ':person/skills', 'Python'],
+                ['+', -2, ':person/skills', 'Machine Learning'],
+                ['+', -3, ':person/skills', 'UI/UX'],
+                ['+', -3, ':person/skills', 'Figma'],
+                ['+', -4, ':person/skills', 'Marketing'],
+                ['+', -4, ':person/skills', 'Analytics'],
+                ['+', -5, ':person/skills', 'Sales'],
+                
+                // Friendships
+                ['+', -1, ':person/friends', -2],
+                ['+', -2, ':person/friends', -1],
+                ['+', -1, ':person/friends', -4],
+                ['+', -4, ':person/friends', -1],
+                ['+', -2, ':person/friends', -3],
+                ['+', -3, ':person/friends', -2],
+                
+                // Employment
+                ['+', -100, ':company/employees', -1],
+                ['+', -100, ':company/employees', -2],
+                ['+', -100, ':company/employees', -3],
+                ['+', -100, ':company/employees', -4],
+                ['+', -100, ':company/employees', -5],
+            ]);
+            
+            window.currentDB = dbAfter;
+            log('✓ Initialized sample data');
+            updateStats();
+        };
+
+        window.addRandomPerson = function() {
+            const names = ['Frank', 'Grace', 'Henry', 'Iris', 'Jack', 'Kate', 'Liam', 'Maya'];
+            const departments = ['Engineering', 'Design', 'Marketing', 'Sales', 'HR'];
+            const skills = ['JavaScript', 'Python', 'React', 'Vue', 'Angular', 'Node.js', 'Design', 'Marketing'];
+            
+            const name = names[Math.floor(Math.random() * names.length)];
+            const age = Math.floor(Math.random() * 30) + 25;
+            const dept = departments[Math.floor(Math.random() * departments.length)];
+            const randomSkills = skills.filter(() => Math.random() > 0.7);
+            
+            const tx = [
+                { 
+                    ':db/id': -Date.now(),
+                    ':person/name': `${name}-${Date.now()}`,
+                    ':person/email': `${name.toLowerCase()}${Date.now()}@example.com`,
+                    ':person/age': age,
+                    ':person/department': dept
+                }
+            ];
+            
+            // Add skills
+            randomSkills.forEach(skill => {
+                tx.push(['+', -Date.now(), ':person/skills', skill]);
+            });
+            
+            const { db } = window.currentDB.withTx(tx);
+            window.currentDB = db;
+            log(`✓ Added ${name} (${age}, ${dept}) with ${randomSkills.length} skills`);
+            updateStats();
+        };
+
+        window.saveToStorage = async function() {
+            try {
+                await saveDBToFile(window.currentDB, 'datascript-demo-db');
+                log('✓ Database saved to localStorage');
+            } catch (e) {
+                log('✗ Save failed:', e.message);
+            }
+        };
+
+        window.loadFromStorage = async function() {
+            try {
+                window.currentDB = await loadDBFromFile('datascript-demo-db');
+                log('✓ Database loaded from localStorage');
+                updateStats();
+            } catch (e) {
+                log('✗ Load failed:', e.message);
+            }
+        };
+
+        window.clearDatabase = function() {
+            window.currentDB = DB.empty(schema);
+            log('✓ Database cleared');
+            updateStats();
+        };
+
+        // Query examples
+        const queryExamples = {
+            'all-people': {
+                find: ['?name', '?age', '?dept'],
+                where: [
+                    ['?e', ':person/name', '?name'],
+                    ['?e', ':person/age', '?age'],
+                    ['?e', ':person/department', '?dept']
+                ]
+            },
+            'adults': {
+                find: ['?name', '?age'],
+                where: [
+                    ['?e', ':person/name', '?name'],
+                    ['?e', ':person/age', '?age'],
+                    [age => age >= 30, '?age']
+                ]
+            },
+            'friendships': {
+                find: ['?name1', '?name2'],
+                where: [
+                    ['?e1', ':person/name', '?name1'],
+                    ['?e1', ':person/friends', '?e2'],
+                    ['?e2', ':person/name', '?name2']
+                ]
+            },
+            'aggregates': {
+                find: [['(count ?e)', '(avg ?age)', '(min ?age)', '(max ?age)']],
+                where: [
+                    ['?e', ':person/age', '?age']
+                ]
+            }
+        };
+
+        window.setExampleQuery = function(type) {
+            const query = queryExamples[type];
+            document.getElementById('query-input').value = JSON.stringify(query, null, 2);
+        };
+
+        window.runQuery = function() {
+            const queryText = document.getElementById('query-input').value;
+            try {
+                const query = JSON.parse(queryText);
+                const results = q(query, window.currentDB);
+                
+                document.getElementById('query-result').textContent = 
+                    `Query Results (${results.length} rows):\\n\\n` +
+                    JSON.stringify(results, null, 2);
+                    
+                log(`✓ Query executed, ${results.length} results`);
+            } catch (e) {
+                document.getElementById('query-result').textContent = 
+                    `Query Error:\\n${e.message}\\n\\nStack:\\n${e.stack}`;
+                log('✗ Query failed:', e.message);
+            }
+        };
+
+        window.runEDNQuery = function() {
+            const queryText = document.getElementById('query-input').value;
+            try {
+                // Convert JSON to EDN-like string format
+                const query = JSON.parse(queryText);
+                const ednQuery = \`[:find \${query.find.map(f => Array.isArray(f) ? \`(\${f.join(' ')})\` : f).join(' ')}
+   :where \${query.where.map(clause => \`[\${clause.map(c => typeof c === 'function' ? c.toString() : c).join(' ')}]\`).join('\\n          ')}]\`;
+                
+                const results = qEDN(ednQuery, window.currentDB);
+                
+                document.getElementById('query-result').textContent = 
+                    \`EDN Query:\\n\${ednQuery}\\n\\nResults (\${results.length} rows):\\n\\n\` +
+                    JSON.stringify(results, null, 2);
+                    
+                log(\`✓ EDN query executed, \${results.length} results\`);
+            } catch (e) {
+                document.getElementById('query-result').textContent = 
+                    \`EDN Query Error:\\n\${e.message}\\n\\nStack:\\n\${e.stack}\`;
+                log('✗ EDN query failed:', e.message);
+            }
+        };
+
+        // Pull API examples
+        window.pullExample = function(type) {
+            try {
+                // Get first person
+                const people = q({
+                    find: ['?e', '?name'],
+                    where: [['?e', ':person/name', '?name']]
+                }, window.currentDB);
+                
+                if (people.length === 0) {
+                    document.getElementById('pull-result').textContent = 'No data available. Initialize sample data first.';
+                    return;
+                }
+                
+                const [entityId, name] = people[0];
+                
+                let pattern, result;
+                
+                switch (type) {
+                    case 'basic':
+                        pattern = [':person/name', ':person/age', ':person/department'];
+                        result = pull(window.currentDB, pattern, entityId);
+                        break;
+                        
+                    case 'nested':
+                        pattern = [
+                            ':person/name',
+                            { ':person/friends': [':person/name', ':person/age'] }
+                        ];
+                        result = pull(window.currentDB, pattern, entityId);
+                        break;
+                        
+                    case 'wildcard':
+                        pattern = ['*'];
+                        result = pull(window.currentDB, pattern, entityId);
+                        break;
+                        
+                    case 'reverse':
+                        // Find companies and their employees
+                        const companies = q({
+                            find: ['?e'],
+                            where: [['?e', ':company/name', '?name']]
+                        }, window.currentDB);
+                        
+                        if (companies.length > 0) {
+                            pattern = [
+                                ':company/name',
+                                { ':company/employees': [':person/name', ':person/department'] }
+                            ];
+                            result = pull(window.currentDB, pattern, companies[0][0]);
+                        } else {
+                            result = { error: 'No companies in database' };
+                        }
+                        break;
+                }
+                
+                document.getElementById('pull-result').textContent = 
+                    \`Pull Pattern:\\n\${JSON.stringify(pattern, null, 2)}\\n\\nResult:\\n\${JSON.stringify(result, null, 2)}\`;
+                    
+                log(\`✓ Pull executed with \${type} pattern\`);
+            } catch (e) {
+                document.getElementById('pull-result').textContent = 
+                    \`Pull Error:\\n\${e.message}\\n\\nStack:\\n\${e.stack}\`;
+                log('✗ Pull failed:', e.message);
+            }
+        };
+
+        window.clearLog = function() {
+            window.transactionLog = [];
+            updateTransactionLog();
+        };
+
+        // Initialize
+        window.addEventListener('load', function() {
+            log('🚀 DataScript JS browser demo loaded');
+            updateStats();
+            
+            // Set default query
+            document.getElementById('query-input').value = JSON.stringify(queryExamples['all-people'], null, 2);
+            
+            // Auto-initialize with sample data
+            setTimeout(() => {
+                initializeData();
+            }, 500);
+        });
+
+        // Expose main classes for console access
+        window.DataScript = { DB, q, qEDN, pull, pullMany, createConn, saveDBToFile, loadDBFromFile };
+        
+        console.log('DataScript JS classes available as window.DataScript');
+        console.log('Current database available as window.currentDB');
+        console.log('Try: DataScript.q({ find: ["?name"], where: [["?e", ":person/name", "?name"]] }, window.currentDB)');
+    </script>
+</body>
+</html>
