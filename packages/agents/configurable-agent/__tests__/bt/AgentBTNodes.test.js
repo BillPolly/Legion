@@ -45,7 +45,7 @@ describe('Agent Behavior Tree Nodes', () => {
         },
         "capabilities": [
           {
-            "module": "calculator",
+            "module": "mock-calculator-module",
             "tools": ["add", "subtract", "multiply", "divide"]
           }
         ],

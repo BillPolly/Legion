@@ -3,7 +3,7 @@
  */
 
 import { getResourceManager } from '../utils/ResourceAccess.js';
-import path from 'path';
+import { getToolRegistry } from '@legion/tools-registry';
 
 /**
  * Manages loading and execution of tools and modules for the agent
@@ -46,15 +46,10 @@ export class CapabilityManager {
 
     this.resourceManager = resourceManager;
     
-    // Get tool registry from ResourceManager
-    try {
-      this.toolRegistry = await this.resourceManager.get('toolRegistry');
-    } catch (error) {
-      // Tool registry might not be available yet
-      console.log('Tool registry not available from ResourceManager, will load tools directly');
-    }
+    // Get tool registry singleton - this is the ONLY source of tools
+    this.toolRegistry = await getToolRegistry();
 
-    // Load configured modules and tools
+    // Load configured modules and tools - everything goes through ToolRegistry
     await this.loadModules();
     await this.loadTools();
 
@@ -62,7 +57,7 @@ export class CapabilityManager {
   }
 
   /**
-   * Load configured modules
+   * Load configured modules - all tools come from ToolRegistry
    */
   async loadModules() {
     if (!this.config.modules || this.config.modules.length === 0) {
@@ -70,80 +65,62 @@ export class CapabilityManager {
     }
 
     for (const moduleName of this.config.modules) {
-      await this._loadModule(moduleName);
+      await this._loadModuleFromToolRegistry(moduleName);
     }
   }
 
   /**
-   * Load a single module
+   * Load a module using ONLY ToolRegistry
    */
-  async _loadModule(moduleName) {
+  async _loadModuleFromToolRegistry(moduleName) {
+    if (!this.toolRegistry) {
+      throw new Error('ToolRegistry not available');
+    }
+
     try {
-      // Check if we're in test environment and use mock modules
-      const isTest = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID;
+      // Get all tools for this module from ToolRegistry
+      const toolMetadataList = await this.toolRegistry.listTools();
+      const moduleToolsMetadata = toolMetadataList.filter(tool => 
+        tool.moduleName === moduleName || 
+        tool.module === moduleName
+      );
       
-      const moduleImportPaths = isTest ? [
-        // For tests, use mock modules
-        `../../__tests__/mocks/${moduleName.charAt(0).toUpperCase() + moduleName.slice(1)}Module.js`
-      ] : [
-        // For production, try real modules
-        `@legion/tools`,
-        `@legion/tool-${moduleName}`,
-        `../../../tools/src/${moduleName}/index.js`
-      ];
-
-      let module = null;
-      let moduleClass = null;
-
-      for (const importPath of moduleImportPaths) {
-        try {
-          const imported = await import(importPath);
-          
-          // Check if it has the module as a named export
-          const moduleClassName = moduleName.charAt(0).toUpperCase() + moduleName.slice(1) + 'Module';
-          if (imported[moduleClassName]) {
-            moduleClass = imported[moduleClassName];
-            module = new moduleClass();
-            break;
-          }
-          
-          // Check for default export
-          if (imported.default) {
-            moduleClass = imported.default;
-            module = new moduleClass();
-            break;
-          }
-        } catch (error) {
-          // Try next import path
-          continue;
-        }
+      if (moduleToolsMetadata.length === 0) {
+        throw new Error(`No tools found for module: ${moduleName}`);
       }
 
-      if (!module) {
-        throw new Error(`Module not found: ${moduleName}`);
-      }
-
-      this.modules[moduleName] = module;
-
-      // Extract tools from module
-      if (typeof module.getTools === 'function') {
-        const tools = module.getTools();
-        for (const tool of tools) {
-          this.tools[tool.name] = tool;
-        }
-      } else if (module.tools) {
-        // Module might have tools as a property
-        for (const [toolName, tool] of Object.entries(module.tools)) {
-          this.tools[toolName] = tool;
+      // Get actual executable tools using getTool()
+      const executableTools = [];
+      for (const toolMeta of moduleToolsMetadata) {
+        const executableTool = await this.toolRegistry.getTool(toolMeta.name);
+        if (executableTool && typeof executableTool.execute === 'function') {
+          executableTools.push(executableTool);
         }
       }
+      
+      if (executableTools.length === 0) {
+        throw new Error(`No executable tools found for module: ${moduleName}`);
+      }
+
+      // Create a pseudo-module with the executable tools
+      const pseudoModule = {
+        name: moduleName,
+        getTools: () => executableTools
+      };
+      this.modules[moduleName] = pseudoModule;
+      
+      // Add executable tools to our tools map
+      for (const tool of executableTools) {
+        this.tools[tool.name] = tool;
+      }
+      
     } catch (error) {
       throw new Error(`Module not found: ${moduleName}`);
     }
   }
 
   /**
-   * Load individual tools
+   * Load individual tools - all from ToolRegistry
    */
   async loadTools() {
     if (!this.config.tools || this.config.tools.length === 0) {
@@ -151,117 +128,32 @@ export class CapabilityManager {
     }
 
     for (const toolName of this.config.tools) {
-      await this._loadTool(toolName);
+      await this._loadToolFromToolRegistry(toolName);
     }
   }
 
   /**
-   * Load a single tool
+   * Load a single tool using ONLY ToolRegistry
    */
-  async _loadTool(toolName) {
+  async _loadToolFromToolRegistry(toolName) {
     // Skip if already loaded
     if (this.tools[toolName]) {
       return;
     }
 
-    // Try to get from tool registry first
-    if (this.toolRegistry) {
-      try {
-        const tool = await this.toolRegistry.getTool(toolName);
-        if (tool) {
-          this.tools[toolName] = tool;
-          return;
-        }
-      } catch (error) {
-        // Fall back to direct loading
-      }
+    if (!this.toolRegistry) {
+      throw new Error('ToolRegistry not available');
     }
 
-    // Map common tool names to their modules
-    const toolModuleMap = {
-      'file_read': 'file',
-      'file_write': 'file',
-      'file_delete': 'file',
-      'directory_list': 'file',
-      'directory_create': 'file',
-      'directory_delete': 'file',
-      'read': 'file',
-      'write': 'file',
-      'calculator': 'calculator',
-      'add': 'calculator',
-      'subtract': 'calculator',
-      'multiply': 'calculator',
-      'divide': 'calculator',
-      'json_parse': 'json',
-      'json_stringify': 'json',
-      'json_validate': 'json'
-    };
-
-    const moduleName = toolModuleMap[toolName];
-    if (!moduleName) {
-      throw new Error(`Tool not found: ${toolName}`);
-    }
-
-    // Temporarily load the module to get the specific tool
-    // We don't store the module in this.modules to avoid loading all its tools
-    const tempModule = await this._loadModuleForTool(moduleName);
-    
-    // Get the specific tool from the module
-    if (tempModule && typeof tempModule.getTools === 'function') {
-      const tools = tempModule.getTools();
-      const tool = tools.find(t => t.name === toolName);
-      if (tool) {
+    try {
+      const tool = await this.toolRegistry.getTool(toolName);
+      if (tool && typeof tool.execute === 'function') {
         this.tools[toolName] = tool;
         return;
       }
-    }
-
-    throw new Error(`Tool not found: ${toolName}`);
-  }
-
-  /**
-   * Load a module temporarily just to extract a specific tool
-   */
-  async _loadModuleForTool(moduleName) {
-    try {
-      // Check if we're in test environment and use mock modules
-      const isTest = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID;
-      
-      const moduleImportPaths = isTest ? [
-        // For tests, use mock modules
-        `../../__tests__/mocks/${moduleName.charAt(0).toUpperCase() + moduleName.slice(1)}Module.js`
-      ] : [
-        // For production, try real modules
-        `@legion/tools`,
-        `@legion/tool-${moduleName}`,
-        `../../../tools/src/${moduleName}/index.js`
-      ];
-
-      for (const importPath of moduleImportPaths) {
-        try {
-          const imported = await import(importPath);
-          
-          // Check if it has the module as a named export
-          const moduleClassName = moduleName.charAt(0).toUpperCase() + moduleName.slice(1) + 'Module';
-          if (imported[moduleClassName]) {
-            const moduleClass = imported[moduleClassName];
-            return new moduleClass();
-          }
-          
-          // Check for default export
-          if (imported.default) {
-            const moduleClass = imported.default;
-            return new moduleClass();
-          }
-        } catch (error) {
-          // Try next import path
-          continue;
-        }
-      }
-
-      return null;
+      throw new Error(`Tool not found or not executable: ${toolName}`);
     } catch (error) {
-      return null;
+      throw new Error(`Tool not found: ${toolName}`);
     }
   }
 

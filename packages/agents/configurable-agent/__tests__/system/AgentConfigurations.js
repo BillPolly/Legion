@@ -18,7 +18,7 @@ export function createCustomerServiceAgentConfig() {
       
       capabilities: [
         {
-          module: 'calculator',
+          module: 'mock-calculator-module',
           tools: ['add', 'subtract', 'multiply', 'divide'],
           permissions: { read: true, write: true, execute: true }
         }
@@ -114,7 +114,7 @@ export function createResearchAssistantConfig() {
       
       capabilities: [
         {
-          module: 'calculator',
+          module: 'mock-calculator-module',
           tools: ['add', 'subtract', 'multiply', 'divide'],
           permissions: { read: true, write: true, execute: true }
         }
@@ -210,7 +210,7 @@ export function createPersonalAssistantConfig() {
       
       capabilities: [
         {
-          module: 'calculator',
+          module: 'mock-calculator-module',
           tools: ['add', 'subtract', 'multiply', 'divide'],
           permissions: { read: true, write: true, execute: true }
         }
@@ -307,7 +307,7 @@ export function createEducationalTutorConfig() {
       
       capabilities: [
         {
-          module: 'calculator',
+          module: 'mock-calculator-module',
           tools: ['add', 'subtract', 'multiply', 'divide'],
           permissions: { read: true, write: true, execute: true }
         }
@@ -411,7 +411,7 @@ export function createTechnicalSupportConfig() {
       
       capabilities: [
         {
-          module: 'calculator',
+          module: 'mock-calculator-module',
           tools: ['add', 'subtract', 'multiply', 'divide'],
           permissions: { read: true, write: true, execute: true }
         }

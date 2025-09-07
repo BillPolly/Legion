@@ -101,7 +101,7 @@ describe('System Integration Tests', () => {
       const calculationResponse = await agent.receive({
         type: 'tool_request',
         from: 'system-test',
-        tool: 'calculator',
+        tool: 'subtract',
         operation: 'subtract',
         params: { a: 150.00, b: 25.00 },
         sessionId
@@ -248,7 +248,7 @@ describe('System Integration Tests', () => {
       const mathResponse = await agent.receive({
         type: 'tool_request',
         from: 'student',
-        tool: 'calculator',
+        tool: 'multiply',
         operation: 'multiply',
         params: { a: 15, b: 8 },
         sessionId

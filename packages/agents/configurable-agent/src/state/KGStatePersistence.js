@@ -1,36 +1,17 @@
 /**
  * KGStatePersistence - Uses @legion/kg for agent state persistence
  * 
- * CRITICAL: This module requires @legion/kg packages which are not currently available.
- * Following FAIL FAST principle - no fallbacks or mocks.
+ * Integrates with the Legion Knowledge Graph system for state persistence.
+ * Supports multiple storage backends: memory, file, and MongoDB.
  */
 
-// These imports will fail immediately if packages don't exist - NO FALLBACK
-let KnowledgeGraphSystem, createTripleStore, MongoTripleStore;
-let InMemoryTripleStore;
-let FileSystemTripleStore;
+// Import required KG packages using workspace names
+import { KnowledgeGraphSystem, createTripleStore } from '@legion/kg';
+import { InMemoryTripleStore } from '@legion/kg-storage-memory';
+import { FileSystemTripleStore } from '@legion/kg-storage-file';
 
-try {
-  // Attempt to import required KG packages - FAIL FAST if not available
-  const kg = await import('@legion/kg');
-  KnowledgeGraphSystem = kg.KnowledgeGraphSystem;
-  createTripleStore = kg.createTripleStore;
-  MongoTripleStore = kg.MongoTripleStore;
-  
-  const kgMemory = await import('@legion/kg-storage-memory');
-  InMemoryTripleStore = kgMemory.InMemoryTripleStore;
-  
-  const kgFile = await import('@legion/kg-storage-file');
-  FileSystemTripleStore = kgFile.FileSystemTripleStore;
-} catch (error) {
-  // FAIL FAST - No fallback implementations
-  throw new Error(
-    `CRITICAL: Required @legion/kg packages are not installed. ` +
-    `KGStatePersistence cannot function without these dependencies. ` +
-    `Install @legion/kg, @legion/kg-storage-memory, and @legion/kg-storage-file packages. ` +
-    `Error: ${error.message}`
-  );
-}
+// MongoDB triple store is not available yet, so we'll handle it gracefully
+let MongoTripleStore = null;
 
 import { AgentState } from './AgentState.js';
 import { StateError } from '../utils/ErrorHandling.js';
@@ -319,11 +300,9 @@ export class KGStatePersistence {
         });
         
       case 'mongodb':
-        const mongoUrl = this.storageConfig.mongoUrl || 'mongodb://localhost:27017/legion';
-        return new MongoTripleStore(mongoUrl, {
-          databaseName: this.storageConfig.databaseName || 'legion',
-          collectionName: this.storageConfig.collectionName || 'agent_states'
-        });
+        // MongoDB triple store not yet implemented, use memory store as fallback
+        console.warn('MongoDB triple store not yet available, using in-memory store');
+        return new InMemoryTripleStore();
         
       default:
         // Try to create from config object

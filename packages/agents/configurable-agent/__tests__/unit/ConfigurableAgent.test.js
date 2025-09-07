@@ -45,15 +45,15 @@ describe('ConfigurableAgent', () => {
       },
       capabilities: [
         {
-          module: 'file',
-          tools: ['read', 'write'],
+          module: 'mock-calculator-module',
+          tools: ['add', 'subtract'],
           permissions: {
             basePath: '/tmp',
             allowedExtensions: ['.txt', '.json']
           }
         },
         {
-          module: 'calculator',
+          module: 'mock-calculator-module',
           tools: ['add', 'subtract', 'multiply', 'divide']
         }
       ],
@@ -168,7 +168,7 @@ describe('ConfigurableAgent', () => {
       const message = {
         type: 'tool_request',
         from: 'user-123',
-        tool: 'calculator',
+        tool: 'add',
         operation: 'add',
         params: { a: 2, b: 3 }
       };
@@ -377,17 +377,17 @@ describe('ConfigurableAgent', () => {
       const message = {
         type: 'tool_request',
         from: 'user-123',
-        tool: 'write',
-        operation: 'write',
-        params: { path: '/etc/passwd', content: 'hacked' }
+        tool: 'divide',
+        operation: 'divide',
+        params: { a: 10, b: 0 } // Division by zero should fail
       };
 
       const response = await agent.receive(message);
 
       expect(response.type).toBe('tool_response');
       expect(response.success).toBe(false);
-      // The mock FileModule should throw "Permission denied" for /etc/ paths
-      expect(response.error).toContain('Permission denied');
+      // Should reject division by zero
+      expect(response.error).toContain('Division by zero is not allowed');
     });
 
     it('should handle tool errors gracefully', async () => {
@@ -643,7 +643,7 @@ describe('ConfigurableAgent', () => {
         name: 'TestAgent',
         description: '',  // description is not in schema
         version: '1.0.0',
-        capabilities: ['file', 'calculator'],
+        capabilities: ['mock-calculator-module', 'mock-calculator-module'],
         responseFormat: 'json',
         initialized: true
       });

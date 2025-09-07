@@ -37,7 +37,7 @@ describe('Behavior Tree Orchestration Scenarios', () => {
         version: '1.0.0',
         capabilities: [
           {
-            module: 'calculator',
+            module: 'mock-calculator-module',
             tools: ['add', 'subtract', 'multiply', 'divide'],
             permissions: { read: true, write: true, execute: true }
           }
@@ -142,8 +142,8 @@ describe('Behavior Tree Orchestration Scenarios', () => {
       
       const taskExecution = createTaskExecutionConfig({
         sessionId,
-        toolName: 'calculator',
-        operation: 'add',
+        toolName: 'add',
+        operation: 'execute',
         params: { a: 15, b: 27 },
         chatAfterExecution: true
       });
@@ -162,8 +162,8 @@ describe('Behavior Tree Orchestration Scenarios', () => {
       
       // Verify task completion was recorded in state
       const stateUpdate = result.artifacts.stateUpdate;
-      expect(stateUpdate.lastTask).toBe('calculator');
-      expect(stateUpdate.lastOperation).toBe('add');
+      expect(stateUpdate.lastTask).toBe('add');
+      expect(stateUpdate.lastOperation).toBe('execute');
       expect(stateUpdate.taskCompleted).toBe(true);
     }, 30000);
 
@@ -172,8 +172,8 @@ describe('Behavior Tree Orchestration Scenarios', () => {
       
       const taskExecution = createTaskExecutionConfig({
         sessionId,
-        toolName: 'calculator',
-        operation: 'multiply',
+        toolName: 'multiply',
+        operation: 'execute',
         params: { a: 8, b: 9 },
         chatAfterExecution: false
       });
@@ -205,14 +205,14 @@ describe('Behavior Tree Orchestration Scenarios', () => {
         {
           type: 'tool',
           name: 'First Calculation',
-          tool: 'calculator',
+          tool: 'add',
           operation: 'add',
           params: { a: 10, b: 5 }
         },
         {
           type: 'tool', 
           name: 'Second Calculation',
-          tool: 'calculator',
+          tool: 'multiply',
           operation: 'multiply',
           params: { a: 15, b: 2 }
         },
@@ -276,7 +276,7 @@ describe('Behavior Tree Orchestration Scenarios', () => {
         {
           type: 'tool',
           name: 'Valid Calculation',
-          tool: 'calculator',
+          tool: 'add',
           operation: 'add',
           params: { a: 5, b: 10 }
         }
@@ -329,7 +329,7 @@ describe('Behavior Tree Orchestration Scenarios', () => {
       
       const toolNodeConfig = createAgentToolNodeConfig({
         sessionId,
-        tool: 'calculator',
+        tool: 'subtract',
         operation: 'subtract',
         params: { a: 100, b: 42 },
         outputVariable: 'calculationResult'
@@ -436,7 +436,7 @@ describe('Behavior Tree Orchestration Scenarios', () => {
       expect(chatResult.artifacts).toBeDefined();
       expect(chatResult.artifacts.chatResponse).toBeDefined();
 
-      const toolResult = await agent.executeAgentTool('calculator', 'divide', { a: 84, b: 12 }, {
+      const toolResult = await agent.executeAgentTool('divide', 'divide', { a: 84, b: 12 }, {
         sessionId: 'direct-tool-test'
       });
 

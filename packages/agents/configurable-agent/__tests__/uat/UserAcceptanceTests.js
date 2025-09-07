@@ -108,7 +108,7 @@ describe('User Acceptance Tests', () => {
       const calculation = await agent.receive({
         type: 'tool_request',
         from: 'customer-service-rep',
-        tool: 'calculator',
+        tool: 'subtract',
         operation: 'subtract',
         params: { a: 150, b: 120 },
         sessionId: customerSession
@@ -218,7 +218,7 @@ describe('User Acceptance Tests', () => {
       const dataAnalysis = await agent.receive({
         type: 'tool_request',
         from: 'researcher',
-        tool: 'calculator',
+        tool: 'multiply',
         operation: 'multiply',
         params: { a: 0.40, b: 100 }, // Convert improvement percentage
         sessionId: researchSession
@@ -318,7 +318,7 @@ describe('User Acceptance Tests', () => {
       const verification = await agent.receive({
         type: 'tool_request',
         from: 'student',
-        tool: 'calculator',
+        tool: 'multiply',
         operation: 'multiply',
         params: { a: 2, b: 3 }, // Verify solution x=2, x=3
         sessionId: tutoringSession
@@ -432,7 +432,7 @@ describe('User Acceptance Tests', () => {
       const timeCalculation = await agent.receive({
         type: 'tool_request',
         from: 'user',
-        tool: 'calculator',
+        tool: 'subtract',
         operation: 'subtract',
         params: { a: 17, b: 9 }, // Working hours calculation
         sessionId: assistantSession
@@ -563,7 +563,7 @@ describe('User Acceptance Tests', () => {
       const diagnostic = await techAgent.receive({
         type: 'tool_request',
         from: 'technician',
-        tool: 'calculator',
+        tool: 'multiply',
         operation: 'multiply',
         params: { a: 24, b: 7 }, // Calculate downtime impact (24 hours * 7 days)
         sessionId
@@ -716,8 +716,8 @@ describe('User Acceptance Tests', () => {
           test: () => agent.receive({
             type: 'tool_request',
             from: 'feature-test',
-            tool: 'calculator',
-            operation: 'add',
+            tool: 'add',
+        operation: 'add',
             params: { a: 5, b: 10 },
             sessionId
           })

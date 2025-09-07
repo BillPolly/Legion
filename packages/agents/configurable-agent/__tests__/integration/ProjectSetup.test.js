@@ -38,8 +38,8 @@ describe('Project Setup Integration', () => {
       config.agent.llm.temperature = 0.5;
       config.agent.capabilities = [
         {
-          module: 'calculator',
-          tools: ['calculator', 'add', 'subtract'],
+          module: 'mock-calculator-module',
+          tools: ['add', 'add', 'subtract'],
           permissions: {}
         }
       ];

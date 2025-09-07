@@ -46,7 +46,7 @@ describe('ConfigurationSchema', () => {
           },
           capabilities: [
             {
-              module: 'file',
+              module: 'mock-calculator-module',
               tools: ['file_read', 'file_write'],
               permissions: {
                 basePath: '/workspace',
@@ -290,7 +290,7 @@ describe('ConfigurationSchema', () => {
           },
           capabilities: [
             {
-              module: 'file',
+              module: 'mock-calculator-module',
               tools: ['*'],
               permissions: {
                 basePath: '/workspace',
@@ -299,8 +299,8 @@ describe('ConfigurationSchema', () => {
               }
             },
             {
-              module: 'calculator',
-              tools: ['calculator', 'add', 'subtract'],
+              module: 'mock-calculator-module',
+              tools: ['add', 'add', 'subtract'],
               permissions: {}
             }
           ]

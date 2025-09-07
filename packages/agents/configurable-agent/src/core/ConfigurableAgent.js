@@ -69,8 +69,8 @@ export class ConfigurableAgent {
     try {
       // Initialize state management
       this.state = new AgentState({
-        maxHistorySize: this.config.state?.maxHistorySize || 100,
-        pruneStrategy: this.config.state?.pruneStrategy || 'sliding'
+        maxMessages: this.config.state?.maxHistorySize || 100,
+        pruningStrategy: this.config.state?.pruneStrategy || 'sliding-window'
       });
       await this.state.initialize();
 

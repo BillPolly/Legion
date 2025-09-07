@@ -113,8 +113,8 @@ describe('Resource Management Load Tests', () => {
               agent.receive({
                 type: 'tool_request',
                 from: 'load-test',
-                tool: 'calculator',
-                operation: 'add',
+                tool: 'add',
+        operation: 'add',
                 params: { a: opIndex, b: agentIndex },
                 sessionId
               })

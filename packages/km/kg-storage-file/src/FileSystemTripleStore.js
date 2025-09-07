@@ -189,7 +189,16 @@ export class FileSystemTripleStore extends ITripleStore {
       
       // Ensure directory exists
       const dir = path.dirname(this.filePath);
-      await fs.mkdir(dir, { recursive: true });
+      
+      // Try to create directory - this might fail if we don't have permissions
+      try {
+        await fs.mkdir(dir, { recursive: true });
+      } catch (mkdirError) {
+        // If we can't create the directory, we can't save
+        // This is expected for invalid paths like /invalid/...
+        this.saving = false;
+        throw new StorageError(`Cannot create directory: ${mkdirError.message}`, 'SAVE_ERROR', mkdirError);
+      }
       
       // Get all triples
       const triples = Array.from(this.tripleData.values());
@@ -216,6 +225,9 @@ export class FileSystemTripleStore extends ITripleStore {
       await fs.rename(tempPath, this.filePath);
       
       this.dirty = false;
+    } catch (error) {
+      this.saving = false;
+      throw error;
     } finally {
       this.saving = false;
     }
@@ -270,6 +282,13 @@ export class FileSystemTripleStore extends ITripleStore {
     } catch (error) {
       if (error.code === 'ENOENT') {
         // File doesn't exist, start with empty store
+        // Make sure the data structures are initialized (they should be from constructor but just in case)
+        if (!this.triples) this.triples = new Map();
+        if (!this.tripleData) this.tripleData = new Map();
+        if (!this.spo) this.spo = new Map();
+        if (!this.pos) this.pos = new Map();
+        if (!this.osp) this.osp = new Map();
+        
         this.loaded = true;
         this.dirty = false;
       } else {
@@ -339,32 +358,142 @@ export class FileSystemTripleStore extends ITripleStore {
    * Serialize triples to Turtle format
    */
   _serializeToTurtle(triples) {
-    const serializer = new RDFSerializer();
-    return serializer.serializeToTurtle(triples);
+    // Simple Turtle serialization without namespaces
+    let turtle = '';
+    for (const [s, p, o] of triples) {
+      // Format subject
+      const subject = s.startsWith('http') ? `<${s}>` : s;
+      // Format predicate
+      const predicate = p.startsWith('http') ? `<${p}>` : p;
+      // Format object - if it's a literal (doesn't start with http and doesn't contain ':')
+      let object;
+      if (typeof o === 'string' && !o.startsWith('http') && !o.includes(':')) {
+        // Escape quotes in string literals
+        object = `"${o.replace(/"/g, '\\"')}"`;
+      } else if (typeof o === 'number') {
+        object = `"${o}"^^xsd:integer`;
+      } else if (typeof o === 'boolean') {
+        object = `"${o}"^^xsd:boolean`;
+      } else {
+        object = o.startsWith('http') ? `<${o}>` : o;
+      }
+      turtle += `${subject} ${predicate} ${object} .\n`;
+    }
+    return turtle;
   }
 
   /**
    * Serialize triples to N-Triples format
    */
   _serializeToNTriples(triples) {
-    const serializer = new RDFSerializer();
-    return serializer.serializeToNTriples(triples);
+    // N-Triples format - all URIs in angle brackets
+    let ntriples = '';
+    for (const [s, p, o] of triples) {
+      // Format subject (always a URI)
+      const subject = `<${s}>`;
+      // Format predicate (always a URI)
+      const predicate = `<${p}>`;
+      // Format object
+      let object;
+      if (typeof o === 'string' && !o.startsWith('http') && !o.includes(':')) {
+        // String literal
+        object = `"${o.replace(/"/g, '\\"')}"`;
+      } else if (typeof o === 'number') {
+        object = `"${o}"^^<http://www.w3.org/2001/XMLSchema#integer>`;
+      } else if (typeof o === 'boolean') {
+        object = `"${o}"^^<http://www.w3.org/2001/XMLSchema#boolean>`;
+      } else {
+        // URI
+        object = `<${o}>`;
+      }
+      ntriples += `${subject} ${predicate} ${object} .\n`;
+    }
+    return ntriples;
   }
 
   /**
    * Parse triples from Turtle format
    */
   _parseFromTurtle(content) {
-    const parser = new RDFParser();
-    return parser.parseFromTurtle(content);
+    // Simple Turtle parser - handles basic triple format
+    const triples = [];
+    const lines = content.split('\n');
+    
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('@')) continue;
+      
+      // Basic triple pattern: subject predicate object .
+      const match = trimmed.match(/^(.+?)\s+(.+?)\s+(.+?)\s*\.\s*$/);
+      if (match) {
+        let [, subject, predicate, object] = match;
+        
+        // Remove angle brackets if present
+        subject = subject.replace(/^<|>$/g, '');
+        predicate = predicate.replace(/^<|>$/g, '');
+        
+        // Parse object - could be URI or literal
+        if (object.startsWith('"')) {
+          // String literal - extract value, handling escaped quotes
+          const literalMatch = object.match(/^"((?:[^"\\]|\\.)*)"/);
+          if (literalMatch) {
+            // Unescape the quotes and backslashes
+            object = literalMatch[1]
+              .replace(/\\"/g, '"')
+              .replace(/\\\\/g, '\\');
+          }
+        } else {
+          // Remove angle brackets if present
+          object = object.replace(/^<|>$/g, '');
+        }
+        
+        triples.push([subject, predicate, object]);
+      }
+    }
+    
+    return triples;
   }
 
   /**
    * Parse triples from N-Triples format
    */
   _parseFromNTriples(content) {
-    const parser = new RDFParser();
-    return parser.parseFromNTriples(content);
+    // N-Triples parser - simpler format than Turtle
+    const triples = [];
+    const lines = content.split('\n');
+    
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      
+      // N-Triples pattern: <subject> <predicate> <object> .
+      const match = trimmed.match(/^<([^>]+)>\s+<([^>]+)>\s+(.+?)\s*\.\s*$/);
+      if (match) {
+        const [, subject, predicate, objectPart] = match;
+        let object;
+        
+        // Parse object - could be URI or literal
+        if (objectPart.startsWith('<')) {
+          // URI
+          const uriMatch = objectPart.match(/^<([^>]+)>$/);
+          if (uriMatch) {
+            object = uriMatch[1];
+          }
+        } else if (objectPart.startsWith('"')) {
+          // Literal
+          const literalMatch = objectPart.match(/^"([^"]*)"(?:\^\^.*)?$/);
+          if (literalMatch) {
+            object = literalMatch[1].replace(/\\"/g, '"');
+          }
+        }
+        
+        if (subject && predicate && object !== undefined) {
+          triples.push([subject, predicate, object]);
+        }
+      }
+    }
+    
+    return triples;
   }
 
   // Private indexing methods (same as InMemoryTripleStore)
@@ -449,7 +578,12 @@ export class FileSystemTripleStore extends ITripleStore {
   async close() {
     this._stopWatching();
     if (this.dirty) {
-      await this.save();
+      try {
+        await this.save();
+      } catch (error) {
+        // Log error but don't throw - close should always succeed
+        console.error(`Failed to save on close: ${error.message}`);
+      }
     }
   }
 }

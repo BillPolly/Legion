@@ -222,9 +222,9 @@ describe('Comprehensive E2E Integration Tests', () => {
       const toolResponse = await agent.receive({
         type: 'tool_request',
         from: 'integration-test',
-        tool: 'calculator',
-        operation: 'add',
-        params: { expression: '10 + 15' }, // Calculator tool expects 'expression' parameter
+        tool: 'add',
+        operation: 'execute',
+        params: { a: 10, b: 15 }, // Add tool expects 'a' and 'b' parameters
         sessionId: 'integration-session'
       });
       expect(toolResponse.success).toBe(true);
@@ -399,7 +399,7 @@ describe('Comprehensive E2E Integration Tests', () => {
         "version": "1.0.0",
         "capabilities": [
           {
-            "module": "calculator",
+            "module": "mock-calculator-module",
             "tools": ["add", "subtract", "multiply", "divide"],
             "permissions": { "read": true, "write": true, "execute": true }
           }

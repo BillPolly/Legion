@@ -96,8 +96,8 @@ describe('Complex Behavior Tree Workflows', () => {
           {
             type: 'tool',
             name: 'Calculate Response Time',
-            tool: 'calculator',
-            operation: 'multiply',
+            tool: 'multiply',
+        operation: 'multiply',
             params: { a: 15, b: 4 }, // 15 min base * priority multiplier
             outputVariable: 'estimatedTime'
           },
@@ -198,16 +198,16 @@ describe('Complex Behavior Tree Workflows', () => {
           {
             type: 'tool',
             name: 'Calculate Correct Answer',
-            tool: 'calculator',
-            operation: 'subtract',
+            tool: 'subtract',
+        operation: 'subtract',
             params: { a: 13, b: 5 }, // Should get 8, then divide by 2 to get x = 4
             outputVariable: 'calculatedStep1'
           },
           {
             type: 'tool',
             name: 'Complete Calculation',
-            tool: 'calculator', 
-            operation: 'divide',
+            tool: 'divide',
+        operation: 'divide',
             params: { a: 8, b: 2 }, // x = 4
             outputVariable: 'correctAnswer'
           },
@@ -417,8 +417,8 @@ describe('Complex Behavior Tree Workflows', () => {
           {
             type: 'tool',
             name: 'Valid Calculation',
-            tool: 'calculator',
-            operation: 'add',
+            tool: 'add',
+        operation: 'add',
             params: { a: 10, b: 5 },
             outputVariable: 'validCalculation'
           },
@@ -519,8 +519,8 @@ describe('Complex Behavior Tree Workflows', () => {
           {
             type: 'tool',
             name: 'Demonstrate Calculation',
-            tool: 'calculator',
-            operation: 'multiply', 
+            tool: 'multiply',
+        operation: 'multiply', 
             params: { a: 3, b: 7 },
             outputVariable: 'demonstrationCalc'
           }

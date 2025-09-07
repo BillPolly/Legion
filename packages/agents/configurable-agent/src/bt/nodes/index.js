@@ -76,7 +76,7 @@ export function createAgentBTTemplate(sessionId = 'bt-session', options = {}) {
   const {
     chatMessage = 'Hello, how can you help?',
     queryType = 'capabilities',
-    toolName = 'calculator',
+    toolName = 'add',
     toolOperation = 'add',
     toolParams = { a: 5, b: 3 },
     stateUpdates = { lastInteraction: 'bt-interaction' }

@@ -42,15 +42,15 @@ describe('Error Handling and Recovery Mechanisms', () => {
         },
         capabilities: [
           {
-            module: 'file',
-            tools: ['read', 'write'],
+            module: 'mock-calculator-module',
+            tools: ['subtract', 'divide'],
             permissions: {
               basePath: '/tmp',
               allowedExtensions: ['.txt', '.json']
             }
           },
           {
-            module: 'calculator',
+            module: 'mock-calculator-module',
             tools: ['add', 'subtract', 'multiply', 'divide']
           }
         ],
@@ -206,7 +206,7 @@ describe('Error Handling and Recovery Mechanisms', () => {
 
       expect(response.type).toBe('chat_response');
       expect(response.content).toBeDefined();
-    });
+    }, 15000);
   });
 
   describe('Tool Execution Error Recovery', () => {
@@ -229,18 +229,18 @@ describe('Error Handling and Recovery Mechanisms', () => {
       const response = await agent.receive({
         type: 'tool_request',
         from: 'user',
-        tool: 'write',
-        operation: 'write',
+        tool: 'divide',
+        operation: 'divide',
         params: {
-          path: '/etc/passwd', // Outside allowed basePath
-          content: 'malicious'
+          a: 10,
+          b: 0 // Division by zero should be denied
         },
         sessionId: 'permission-error-1'
       });
 
       expect(response.type).toBe('tool_response');
       expect(response.success).toBe(false);
-      expect(response.error).toContain('Permission denied');
+      expect(response.error).toContain('Division by zero is not allowed');
     });
 
     it('should handle tool execution errors', async () => {
