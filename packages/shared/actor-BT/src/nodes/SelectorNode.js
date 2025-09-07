@@ -27,7 +27,7 @@ export class SelectorNode extends BehaviorTreeNode {
     // Determine execution order
     const executionOrder = this.getExecutionOrder(context);
     
-    if (this.config.debugMode) {
+    if (this.config && this.config.debugMode) {
       console.log(`[SelectorNode:${this.id}] Trying ${this.children.length} options in order:`, executionOrder);
     }
 
@@ -37,13 +37,13 @@ export class SelectorNode extends BehaviorTreeNode {
       const child = this.children[childIndex];
       
       try {
-        if (this.config.debugMode) {
+        if (this.config && this.config.debugMode) {
           console.log(`[SelectorNode:${this.id}] Trying option ${i + 1}/${executionOrder.length} (child ${childIndex})`);
         }
 
         // Check if this option should be skipped
         if (this.shouldSkipOption(context, childIndex)) {
-          if (this.config.debugMode) {
+          if (this.config && this.config.debugMode) {
             console.log(`[SelectorNode:${this.id}] Skipping option ${childIndex} due to conditions`);
           }
           continue;
@@ -83,7 +83,8 @@ export class SelectorNode extends BehaviorTreeNode {
               ...selectorData,
               selectedResult: result.data,
               results
-            }
+            },
+            nodeResults: context.nodeResults  // Pass accumulated nodeResults
           };
         } else if (result.status === NodeStatus.RUNNING) {
           // Child is still running, selector is running
@@ -93,11 +94,12 @@ export class SelectorNode extends BehaviorTreeNode {
               ...selectorData,
               currentOption: childIndex,
               results
-            }
+            },
+            nodeResults: context.nodeResults  // Pass accumulated nodeResults
           };
         } else if (result.status === NodeStatus.FAILURE) {
           // Child failed, try next option
-          if (this.config.debugMode) {
+          if (this.config && this.config.debugMode) {
             console.log(`[SelectorNode:${this.id}] Option ${childIndex} failed, trying next`);
           }
           
@@ -144,7 +146,8 @@ export class SelectorNode extends BehaviorTreeNode {
         allOptionsFailed: true,
         failureReason: 'All selector options failed',
         results
-      }
+      },
+      nodeResults: context.nodeResults  // Pass accumulated nodeResults
     };
   }
 

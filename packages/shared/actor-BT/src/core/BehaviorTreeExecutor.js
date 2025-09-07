@@ -53,25 +53,26 @@ export class BehaviorTreeExecutor extends EventEmitter {
       const rootNode = await this.createNode(treeConfig);
       console.log('[BT] Root node created successfully:', rootNode.constructor.name);
       
-      // DEBUG: Check if children were created
-      console.log('[BT] Root node children count:', rootNode.children.length);
-      if (rootNode.children.length > 0) {
+      // DEBUG: Check node structure
+      if (rootNode.children && rootNode.children.length > 0) {
+        console.log('[BT] Root node children count:', rootNode.children.length);
         console.log('[BT] First child:', {
           type: rootNode.children[0].constructor.name,
           id: rootNode.children[0].id,
-          hasChildren: rootNode.children[0].children.length
+          hasChildren: rootNode.children[0].children ? rootNode.children[0].children.length : 0
         });
-      } else {
-        console.error('[BT] ❌ ROOT NODE HAS NO CHILDREN! This is why execution reports 0 nodes!');
-        console.error('[BT] Config children:', treeConfig.children ? `Array with ${treeConfig.children.length} items` : 'UNDEFINED');
+      } else if (!rootNode.children || rootNode.children.length === 0) {
+        // This is fine - leaf nodes don't have children
+        console.log('[BT] Root is a leaf node:', rootNode.constructor.name);
       }
       
-      // Set up execution context
+      // Set up execution context with nodeResults tracking
       const executionContext = {
         ...context,
         startTime,
         treeConfig,
-        artifacts: context.artifacts || {}
+        artifacts: context.artifacts || {},
+        nodeResults: {}  // Initialize nodeResults tracking
       };
 
       // If we have an observability context, add node execution tracking
@@ -82,11 +83,19 @@ export class BehaviorTreeExecutor extends EventEmitter {
       // Execute the tree
       console.log('[BT] Starting tree execution...');
       const result = await rootNode.execute(executionContext);
+      
+      // Merge nodeResults from context (accumulated during execution)
+      const mergedNodeResults = {
+        ...executionContext.nodeResults,
+        ...(result.nodeResults || {})
+      };
+      
       console.log('[BT] Tree execution completed. Result:', {
         status: result.status,
         hasData: !!result.data,
         dataKeys: result.data ? Object.keys(result.data) : [],
-        hasNodeResults: !!result.nodeResults
+        hasNodeResults: !!mergedNodeResults,
+        nodeResultsCount: Object.keys(mergedNodeResults).length
       });
       
       const executionTime = Date.now() - startTime;
@@ -97,16 +106,17 @@ export class BehaviorTreeExecutor extends EventEmitter {
         success: result.status === NodeStatus.SUCCESS,
         status: result.status,
         executionTime,
-        nodeResults: result.nodeResults || {}
+        nodeResults: mergedNodeResults
       });
       
       const finalResult = {
         success: result.status === NodeStatus.SUCCESS,
         status: result.status,
         data: result.data,
+        artifacts: executionContext.artifacts || {},  // Include artifacts directly in result
         context: executionContext,
         executionTime,
-        nodeResults: result.nodeResults || {}
+        nodeResults: mergedNodeResults
       };
       
       // Propagate error field if present

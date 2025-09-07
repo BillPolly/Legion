@@ -30,7 +30,7 @@ export class SequenceNode extends BehaviorTreeNode {
       const child = this.children[i];
       
       try {
-        if (this.config.debugMode) {
+        if (this.config && this.config.debugMode) {
           console.log(`[SequenceNode:${this.id}] Executing step ${i + 1}/${this.children.length}`);
         }
 
@@ -42,7 +42,8 @@ export class SequenceNode extends BehaviorTreeNode {
               ...sequenceData,
               earlyTermination: true,
               terminatedAt: i
-            }
+            },
+            nodeResults: context.nodeResults  // Pass accumulated nodeResults
           };
         }
 
@@ -75,7 +76,8 @@ export class SequenceNode extends BehaviorTreeNode {
               failedAt: i,
               failureReason: result.error || 'Child execution failed',
               results
-            }
+            },
+            nodeResults: context.nodeResults  // Pass accumulated nodeResults
           };
         } else if (result.status === NodeStatus.RUNNING) {
           // If child is still running, sequence is running
@@ -86,7 +88,8 @@ export class SequenceNode extends BehaviorTreeNode {
               completedSteps: i,
               currentStep: i,
               results
-            }
+            },
+            nodeResults: context.nodeResults  // Pass accumulated nodeResults
           };
         } else if (result.status === NodeStatus.SUCCESS) {
           // Child succeeded, continue to next
@@ -116,7 +119,8 @@ export class SequenceNode extends BehaviorTreeNode {
             error: error.message,
             stackTrace: error.stack,
             results
-          }
+          },
+          nodeResults: context.nodeResults  // Pass accumulated nodeResults
         };
       }
     }
@@ -129,7 +133,8 @@ export class SequenceNode extends BehaviorTreeNode {
         completedSteps: this.children.length,
         results,
         sequenceComplete: true
-      }
+      },
+      nodeResults: context.nodeResults  // Pass accumulated nodeResults
     };
   }
 

@@ -47,10 +47,22 @@ export class ZodValidator {
       };
     } catch (error) {
       if (error instanceof z.ZodError) {
+        // Filter out actor framework property errors
+        const filteredErrors = this.filterActorFrameworkErrors(error);
+        
+        if (filteredErrors.length === 0) {
+          // If only actor framework errors, treat as valid
+          return {
+            valid: true,
+            data: data,
+            errors: null
+          };
+        }
+        
         return {
           valid: false,
           data: null,
-          errors: this.formatZodErrors(error)
+          errors: this.formatZodErrors({ errors: filteredErrors })
         };
       }
       // Re-throw non-validation errors
@@ -73,10 +85,22 @@ export class ZodValidator {
       };
     } catch (error) {
       if (error instanceof z.ZodError) {
+        // Filter out actor framework property errors
+        const filteredErrors = this.filterActorFrameworkErrors(error);
+        
+        if (filteredErrors.length === 0) {
+          // If only actor framework errors, treat as valid
+          return {
+            valid: true,
+            data: data,
+            errors: null
+          };
+        }
+        
         return {
           valid: false,
           data: null,
-          errors: this.formatZodErrors(error)
+          errors: this.formatZodErrors({ errors: filteredErrors })
         };
       }
       throw error;
@@ -98,10 +122,22 @@ export class ZodValidator {
         errors: null
       };
     } else {
+      // Filter out actor framework property errors
+      const filteredErrors = this.filterActorFrameworkErrors(result.error);
+      
+      if (filteredErrors.length === 0) {
+        // If only actor framework errors, treat as valid
+        return {
+          valid: true,
+          data: data,
+          errors: null
+        };
+      }
+      
       return {
         valid: false,
         data: null,
-        errors: this.formatZodErrors(result.error)
+        errors: this.formatZodErrors({ errors: filteredErrors })
       };
     }
   }
@@ -112,7 +148,47 @@ export class ZodValidator {
    * @returns {boolean} True if valid
    */
   isValid(data) {
-    return this.zodSchema.safeParse(data).success;
+    const result = this.zodSchema.safeParse(data);
+    if (result.success) {
+      return true;
+    }
+    
+    // Check if errors are only about actor framework properties
+    const filteredErrors = this.filterActorFrameworkErrors(result.error);
+    return filteredErrors.length === 0;
+  }
+
+  /**
+   * Filter out actor framework property errors from validation errors
+   * @private
+   * @param {z.ZodError} zodError - Zod error object
+   * @returns {Array} Filtered error array
+   */
+  filterActorFrameworkErrors(zodError) {
+    return zodError.errors.filter(err => {
+      const errorMessage = err.message.toLowerCase();
+      const errorPath = err.path ? err.path.join('.') : '';
+      
+      // Skip errors that are about the actor framework properties
+      if (errorMessage.includes('unrecognized key') && 
+          (errorMessage.includes("'receive'") || errorMessage.includes("'create'"))) {
+        return false;
+      }
+      
+      // Skip errors where the path ends with receive or CREATE
+      if (errorPath.endsWith('receive') || errorPath.endsWith('CREATE')) {
+        return false;
+      }
+      
+      // Skip errors about expected object/string but received function (for receive/CREATE)
+      if ((errorMessage.includes('expected object') || errorMessage.includes('expected string')) && 
+          errorMessage.includes('received function') &&
+          (errorPath.includes('receive') || errorPath.includes('CREATE'))) {
+        return false;
+      }
+      
+      return true;
+    });
   }
 
   /**

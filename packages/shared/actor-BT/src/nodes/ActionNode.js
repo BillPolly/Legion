@@ -62,7 +62,7 @@ export class ActionNode extends BehaviorTreeNode {
       // Transform BT context to tool-specific parameters
       const toolParams = this.transformContextToToolParams(context, toolMeta.input);
       
-      if (this.config.debugMode) {
+      if (this.config && this.config.debugMode) {
         console.log(`[ActionNode:${this.id}] Executing tool '${this.toolName}' with params:`, toolParams);
       }
 
@@ -93,7 +93,7 @@ export class ActionNode extends BehaviorTreeNode {
           timestamp: Date.now()
         };
         
-        if (this.config.debugMode) {
+        if (this.config && this.config.debugMode) {
           console.log(`[ActionNode:${this.id}] Stored result to artifacts['${this.config.outputVariable}']`);
         }
       }

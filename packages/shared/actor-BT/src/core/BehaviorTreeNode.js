@@ -23,7 +23,7 @@ export class BehaviorTreeNode extends Actor {
     this.config = config;
     this.toolRegistry = toolRegistry;
     this.executor = executor;
-    this.messageBus = executor.messageBus;
+    this.messageBus = executor?.messageBus || null;
     
     // Tree structure
     this.parent = null;
@@ -54,9 +54,29 @@ export class BehaviorTreeNode extends Actor {
         this.isRunning = false;
       }
       
+      // Track this node's execution result in context if available
+      if (input && input.nodeResults && this.id) {
+        input.nodeResults[this.id] = {
+          type: this.constructor.getTypeName(),
+          status: result.status,
+          data: result.data,
+          error: result.error
+        };
+      }
+      
       return result;
     } catch (error) {
       this.isRunning = false;
+      
+      // Track error in nodeResults if available
+      if (input && input.nodeResults && this.id) {
+        input.nodeResults[this.id] = {
+          type: this.constructor.getTypeName(),
+          status: NodeStatus.FAILURE,
+          error: error.message
+        };
+      }
+      
       return {
         status: NodeStatus.FAILURE,
         error: error.message,
@@ -109,7 +129,14 @@ export class BehaviorTreeNode extends Actor {
    * @param {Object} message - Message payload
    */
   send(to, message) {
-    this.messageBus.sendMessage(this, to, message);
+    if (this.messageBus) {
+      this.messageBus.sendMessage(this, to, message);
+    } else {
+      // Fallback: direct message delivery when no message bus
+      if (to && typeof to.receive === 'function') {
+        to.receive({ from: this, message });
+      }
+    }
   }
 
   /**
@@ -167,7 +194,7 @@ export class BehaviorTreeNode extends Actor {
    */
   handleParentMessage(message) {
     // Default implementation - log for debugging
-    if (this.config.debugMode) {
+    if (this.config && this.config.debugMode) {
       console.log(`[${this.id}] Received parent message:`, message);
     }
   }
@@ -179,7 +206,7 @@ export class BehaviorTreeNode extends Actor {
    */
   handleChildMessage(child, message) {
     // Default implementation - log for debugging
-    if (this.config.debugMode) {
+    if (this.config && this.config.debugMode) {
       console.log(`[${this.id}] Received child message from ${child.id}:`, message);
     }
   }
@@ -191,7 +218,7 @@ export class BehaviorTreeNode extends Actor {
    */
   handlePeerMessage(peer, message) {
     // Default implementation - log for debugging
-    if (this.config.debugMode) {
+    if (this.config && this.config.debugMode) {
       console.log(`[${this.id}] Received peer message from ${peer.id}:`, message);
     }
   }
@@ -217,6 +244,9 @@ export class BehaviorTreeNode extends Actor {
    * @returns {Promise<BehaviorTreeNode>} Created child node
    */
   async createChild(config) {
+    if (!this.executor) {
+      throw new Error('Cannot create child node: no executor available');
+    }
     const child = await this.executor.createNode(config);
     child.parent = this;
     return child;
@@ -385,9 +415,19 @@ export class BehaviorTreeNode extends Actor {
    * Simple placeholder substitution
    * @param {string} template - Template string with {{placeholder}} syntax
    * @param {Object} context - Context for substitution
-   * @returns {string} Resolved string
+   * @returns {*} Resolved value with original type if entire string is a single placeholder, otherwise string
    */
   substitutePlaceholders(template, context) {
+    // Check if the entire template is just a single placeholder
+    const singlePlaceholderMatch = template.match(/^\{\{([^}]+)\}\}$/);
+    if (singlePlaceholderMatch) {
+      // Return the actual value with its original type
+      const path = singlePlaceholderMatch[1].trim();
+      const value = this.getNestedValue(context, path);
+      return value !== undefined ? value : template;
+    }
+    
+    // Otherwise, do string replacement
     return template.replace(/\{\{([^}]+)\}\}/g, (match, path) => {
       const value = this.getNestedValue(context, path.trim());
       return value !== undefined ? value : match;

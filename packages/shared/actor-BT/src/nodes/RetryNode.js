@@ -47,7 +47,7 @@ export class RetryNode extends BehaviorTreeNode {
     let currentDelay = this.retryDelay;
     
     for (let attempt = 1; attempt <= this.maxAttempts; attempt++) {
-      if (this.config.debugMode) {
+      if (this.config && this.config.debugMode) {
         console.log(`[RetryNode:${this.id}] Attempt ${attempt}/${this.maxAttempts}`);
       }
 
@@ -70,7 +70,7 @@ export class RetryNode extends BehaviorTreeNode {
         retryData.succeeded = true;
         retryData.finalResult = result;
         
-        if (this.config.debugMode) {
+        if (this.config && this.config.debugMode) {
           console.log(`[RetryNode:${this.id}] Succeeded on attempt ${attempt}`);
         }
 
@@ -94,7 +94,7 @@ export class RetryNode extends BehaviorTreeNode {
       if (attempt < this.maxAttempts) {
         // Wait before retrying if delay is configured
         if (currentDelay > 0) {
-          if (this.config.debugMode) {
+          if (this.config && this.config.debugMode) {
             console.log(`[RetryNode:${this.id}] Waiting ${currentDelay}ms before retry`);
           }
           await this.sleep(currentDelay);
@@ -116,7 +116,7 @@ export class RetryNode extends BehaviorTreeNode {
     // All attempts exhausted
     retryData.finalResult = retryData.attempts[retryData.attempts.length - 1];
     
-    if (this.config.debugMode) {
+    if (this.config && this.config.debugMode) {
       console.log(`[RetryNode:${this.id}] Failed after ${this.maxAttempts} attempts`);
     }
 
