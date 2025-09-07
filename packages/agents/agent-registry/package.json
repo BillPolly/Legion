@@ -1,0 +1,39 @@
+{
+  "name": "@legion/agent-registry",
+  "version": "1.0.0",
+  "description": "Agent registry and repository for managing configurable agents",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
+    "example": "NODE_OPTIONS='--experimental-vm-modules' node examples/simple-usage.js",
+    "example:simple": "NODE_OPTIONS='--experimental-vm-modules' node examples/simple-usage.js",
+    "example:comprehensive": "NODE_OPTIONS='--experimental-vm-modules' node examples/agent-builder-example.js"
+  },
+  "dependencies": {
+    "@legion/resource-manager": "*",
+    "@legion/schema": "*",
+    "@legion/storage": "*",
+    "mongodb": "^6.1.0"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/index.js"
+    ]
+  }
+}

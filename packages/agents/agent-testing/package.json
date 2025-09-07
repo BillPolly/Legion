@@ -1,0 +1,33 @@
+{
+  "name": "@legion/agent-testing",
+  "version": "1.0.0",
+  "description": "Comprehensive testing framework for configurable agents",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest"
+  },
+  "dependencies": {
+    "@legion/resource-manager": "^1.0.0",
+    "@legion/llm": "^1.0.0",
+    "@legion/configurable-agent": "^1.0.0",
+    "@legion/prompt-engineering": "^1.0.0"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "moduleNameMapper": {
+      "^@legion/(.*)$": "<rootDir>/../../$1/src/index.js"
+    },
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js"
+    ]
+  }
+}

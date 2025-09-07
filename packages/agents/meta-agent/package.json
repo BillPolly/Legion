@@ -1,0 +1,42 @@
+{
+  "name": "@legion/meta-agent",
+  "version": "1.0.0",
+  "description": "Meta-agent that can plan, design, and test other configurable agents",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest"
+  },
+  "dependencies": {
+    "@legion/resource-manager": "^1.0.0",
+    "@legion/llm": "^1.0.0",
+    "@legion/configurable-agent": "^1.0.0",
+    "@legion/agent-registry": "^1.0.0",
+    "@legion/agent-designer": "^1.0.0",
+    "@legion/prompt-engineering": "^1.0.0",
+    "@legion/agent-testing": "^1.0.0"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "moduleNameMapper": {
+      "^@legion/resource-manager$": "<rootDir>/../../resource-manager/src/index.js",
+      "^@legion/llm$": "<rootDir>/../../llm/src/index.js",
+      "^@legion/configurable-agent$": "<rootDir>/../configurable-agent/src/index.js",
+      "^@legion/agent-registry$": "<rootDir>/../agent-registry/src/index.js",
+      "^@legion/agent-designer$": "<rootDir>/../agent-designer/src/index.js",
+      "^@legion/prompt-engineering$": "<rootDir>/../prompt-engineering/src/index.js",
+      "^@legion/agent-testing$": "<rootDir>/../agent-testing/src/index.js"
+    },
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js"
+    ]
+  }
+}
