@@ -7,6 +7,8 @@ import { ConfigurableAgent } from '../../configurable-agent/src/index.js';
 import { AgentRegistry } from '../../agent-registry/src/index.js';
 import { TestRunner } from '../../agent-testing/src/index.js';
 import { PromptTester } from '../../prompt-engineering/src/index.js';
+import { InformalPlanner, ToolFeasibilityChecker } from '../../../planning/decent-planner/src/index.js';
+import { getToolRegistry } from '@legion/tools-registry';
 
 /**
  * AgentConfigBuilder - Builder pattern for creating agent configurations
@@ -121,6 +123,11 @@ export class AgentCreator {
     this.testRunner = null;
     this.promptTester = null;
     
+    // Planning components for complex agents
+    this.informalPlanner = null;
+    this.toolRegistry = null;
+    this.toolFeasibilityChecker = null;
+    
     // Track created agents
     this.createdAgents = new Map();
     this.testResults = new Map();
@@ -179,6 +186,15 @@ export class AgentCreator {
     
     this.promptTester = new PromptTester(this.resourceManager);
     await this.promptTester.initialize();
+    
+    // Initialize planning components for complex agents
+    try {
+      this.toolRegistry = await getToolRegistry();
+      this.informalPlanner = new InformalPlanner(this.llmClient, this.toolRegistry);
+      this.toolFeasibilityChecker = new ToolFeasibilityChecker(this.toolRegistry, this.llmClient);
+    } catch (error) {
+      console.warn('Planning components not available, complex agent creation disabled:', error.message);
+    }
     
     this.initialized = true;
   }
@@ -292,6 +308,376 @@ export class AgentCreator {
       };
       console.error('❌ Agent creation failed:', error.message);
       return workflow.result;
+    }
+  }
+
+  /**
+   * Create a complex agent with task decomposition and semantic tool discovery
+   */
+  async createComplexAgent(requirements) {
+    if (!this.initialized) {
+      await this.initialize();
+    }
+
+    if (!this.informalPlanner || !this.toolFeasibilityChecker) {
+      console.warn('Planning components not available, falling back to simple agent creation');
+      return this.createAgent(requirements);
+    }
+
+    const workflow = {
+      id: `complex-workflow-${Date.now()}`,
+      requirements,
+      startTime: Date.now(),
+      steps: [],
+      result: null
+    };
+
+    try {
+      // Step 1: Decompose the task
+      console.log('🌳 Step 1: Decomposing task into subtasks...');
+      const decomposition = await this.decomposeRequirements(requirements);
+      workflow.steps.push({ 
+        step: 'decompose', 
+        success: true,
+        taskHierarchy: decomposition.hierarchy
+      });
+
+      // Step 2: Discover tools using semantic search
+      console.log('🔍 Step 2: Discovering tools for subtasks...');
+      const tools = await this.discoverToolsForHierarchy(decomposition.hierarchy);
+      workflow.steps.push({ 
+        step: 'discover_tools', 
+        success: true,
+        tools: tools
+      });
+
+      // Step 3: Generate enhanced configuration
+      console.log('🎨 Step 3: Generating enhanced agent configuration...');
+      const agentConfig = await this.designComplexAgent(requirements, decomposition, tools);
+      workflow.steps.push({ 
+        step: 'design', 
+        success: true,
+        config: agentConfig 
+      });
+
+      // Step 4: Generate behavior tree if applicable
+      if (decomposition.hierarchy.complexity === 'COMPLEX') {
+        console.log('🌲 Step 4: Generating behavior tree...');
+        const behaviorTree = this.generateBehaviorTree(decomposition.hierarchy);
+        agentConfig.behaviorTree = behaviorTree;
+        workflow.steps.push({ 
+          step: 'generate_bt', 
+          success: true,
+          behaviorTree: behaviorTree
+        });
+      }
+
+      // Step 5: Create and test the agent
+      console.log('🤖 Step 5: Creating agent instance...');
+      const agent = new ConfigurableAgent(agentConfig, this.resourceManager);
+      await agent.initialize();
+      workflow.steps.push({ 
+        step: 'create', 
+        success: true,
+        agentId: agent.id 
+      });
+
+      // Step 6: Test the agent
+      console.log('🧪 Step 6: Testing agent...');
+      const testResults = await this.testAgent(agent, requirements);
+      workflow.steps.push({ 
+        step: 'test', 
+        success: testResults.passed,
+        results: testResults 
+      });
+
+      const testsPassed = testResults.passed;
+
+      // Step 7: Register the agent
+      console.log('📝 Step 7: Registering agent...');
+      const registration = await this.agentRegistry.registerAgent(agentConfig);
+      workflow.steps.push({ 
+        step: 'register', 
+        success: true,
+        registrationId: registration.id 
+      });
+
+      // Store the created agent
+      this.createdAgents.set(agent.id, {
+        agent,
+        config: agentConfig,
+        testsPassed,
+        registrationId: registration.id,
+        taskHierarchy: decomposition.hierarchy,
+        behaviorTree: agentConfig.behaviorTree
+      });
+
+      workflow.result = {
+        success: true,
+        agent,
+        agentId: agent.id,
+        agentName: agent.name,
+        testsPassed,
+        registrationId: registration.id,
+        taskHierarchy: decomposition.hierarchy,
+        behaviorTree: agentConfig.behaviorTree,
+        tools: tools
+      };
+
+      console.log(`✅ Complex agent "${agent.name}" created successfully!`);
+      return workflow.result;
+
+    } catch (error) {
+      workflow.result = {
+        success: false,
+        error: error.message
+      };
+      console.error('❌ Complex agent creation failed:', error.message);
+      return workflow.result;
+    }
+  }
+
+  /**
+   * Decompose requirements into a task hierarchy
+   */
+  async decomposeRequirements(requirements) {
+    if (!this.informalPlanner) {
+      throw new Error('InformalPlanner not initialized');
+    }
+
+    // Convert requirements to a goal description
+    const goal = requirements.purpose || requirements.description;
+    if (!goal) {
+      throw new Error('Agent purpose or description is required for decomposition');
+    }
+
+    // Add context from capabilities
+    const context = {
+      domain: requirements.domain,
+      capabilities: requirements.capabilities,
+      constraints: requirements.constraints
+    };
+
+    // Plan the task decomposition
+    const planResult = await this.informalPlanner.plan(goal, context);
+
+    return {
+      success: true,
+      hierarchy: planResult.hierarchy,
+      validation: planResult.validation,
+      statistics: planResult.statistics
+    };
+  }
+
+  /**
+   * Discover tools for a task hierarchy using semantic search
+   */
+  async discoverToolsForHierarchy(hierarchy) {
+    const allTools = new Set();
+    const toolsByTask = new Map();
+
+    // Traverse hierarchy and discover tools for each SIMPLE task
+    await this.traverseAndDiscoverTools(hierarchy, allTools, toolsByTask);
+
+    return {
+      allTools: Array.from(allTools),
+      toolsByTask: Object.fromEntries(toolsByTask)
+    };
+  }
+
+  /**
+   * Helper: Traverse hierarchy and discover tools
+   */
+  async traverseAndDiscoverTools(node, allTools, toolsByTask) {
+    if (node.complexity === 'SIMPLE') {
+      // Generate tool descriptions for this task
+      const descriptions = await this.toolFeasibilityChecker.generateToolDescriptions(node.description);
+      
+      // Discover tools using semantic search
+      const tools = await this.toolFeasibilityChecker.discoverToolsFromDescriptions(descriptions);
+      
+      // Store tools for this task
+      toolsByTask.set(node.id || node.description, tools.map(t => t.name));
+      
+      // Add to global set
+      tools.forEach(tool => allTools.add(tool.name));
+    }
+
+    // Recurse for subtasks
+    if (node.subtasks && node.subtasks.length > 0) {
+      for (const subtask of node.subtasks) {
+        await this.traverseAndDiscoverTools(subtask, allTools, toolsByTask);
+      }
+    }
+  }
+
+  /**
+   * Design a complex agent with enhanced prompt from decomposition
+   */
+  async designComplexAgent(requirements, decomposition, tools) {
+    // Start with basic design
+    const baseConfig = await this.designAgent(requirements);
+
+    // Enhance with decomposition insights
+    const enhancedConfig = { ...baseConfig };
+
+    // Generate enhanced system prompt from task hierarchy
+    enhancedConfig.agent.prompts.system = this.generateEnhancedSystemPrompt(
+      requirements,
+      decomposition.hierarchy,
+      tools
+    );
+
+    // Use discovered tools instead of keyword-based ones
+    if (!enhancedConfig.capabilities) {
+      enhancedConfig.capabilities = {};
+    }
+    enhancedConfig.capabilities.tools = tools.allTools;
+
+    // Add task hierarchy to config
+    enhancedConfig.taskHierarchy = decomposition.hierarchy;
+
+    // Add data flow if available
+    enhancedConfig.dataFlow = this.extractDataFlow(decomposition.hierarchy);
+    
+    // Generate behavior tree for complex hierarchies
+    if (decomposition.hierarchy.complexity === 'COMPLEX') {
+      enhancedConfig.behaviorTree = this.generateBehaviorTree(decomposition.hierarchy);
+    }
+
+    return enhancedConfig;
+  }
+
+  /**
+   * Generate enhanced system prompt from task decomposition
+   */
+  generateEnhancedSystemPrompt(requirements, hierarchy, tools) {
+    const agentType = this.determineAgentType(requirements);
+    let prompt = `You are a ${agentType} AI agent. Your purpose is to ${requirements.purpose}.`;
+
+    // Add step-by-step instructions from hierarchy
+    if (hierarchy.subtasks && hierarchy.subtasks.length > 0) {
+      prompt += '\n\nTo accomplish this, you will:';
+      prompt += this.buildHierarchyPrompt(hierarchy, 0);
+    }
+
+    // Add tool usage guidance
+    if (tools.allTools && tools.allTools.length > 0) {
+      prompt += `\n\nYou have access to the following tools: ${tools.allTools.join(', ')}.`;
+      prompt += ' Use these tools strategically to complete each subtask.';
+    }
+
+    // Add data flow awareness
+    const dataFlow = this.extractDataFlow(hierarchy);
+    if (dataFlow.size > 0) {
+      prompt += '\n\nData flow:';
+      dataFlow.forEach((flow, step) => {
+        prompt += `\n- ${step}: ${flow.from} → ${flow.to}`;
+      });
+    }
+
+    // Add personality based on type
+    switch (agentType) {
+      case 'conversational':
+        prompt += '\n\nBe friendly, helpful, and engaging while guiding users through each step.';
+        break;
+      case 'analytical':
+        prompt += '\n\nBe thorough and precise, analyzing each component systematically.';
+        break;
+      case 'creative':
+        prompt += '\n\nBe creative and innovative while maintaining structured progress.';
+        break;
+      case 'task':
+        prompt += '\n\nBe efficient and focused, completing each step methodically.';
+        break;
+    }
+
+    return prompt;
+  }
+
+  /**
+   * Helper: Build hierarchy prompt string
+   */
+  buildHierarchyPrompt(node, depth) {
+    let promptPart = '';
+    const indent = '  '.repeat(depth);
+    
+    if (node.subtasks && node.subtasks.length > 0) {
+      node.subtasks.forEach((subtask, index) => {
+        promptPart += `\n${indent}${index + 1}. ${subtask.description}`;
+        if (subtask.subtasks && subtask.subtasks.length > 0) {
+          promptPart += this.buildHierarchyPrompt(subtask, depth + 1);
+        }
+      });
+    }
+    
+    return promptPart;
+  }
+
+  /**
+   * Extract data flow from task hierarchy
+   */
+  extractDataFlow(hierarchy) {
+    const dataFlow = new Map();
+    this.extractDataFlowRecursive(hierarchy, dataFlow);
+    return dataFlow;
+  }
+
+  /**
+   * Helper: Recursively extract data flow
+   */
+  extractDataFlowRecursive(node, dataFlow) {
+    // Only process SIMPLE tasks with inputs and outputs
+    if (node.complexity === 'SIMPLE' || !node.subtasks) {
+      if (node.suggestedInputs && node.suggestedOutputs) {
+        const from = node.suggestedInputs.join(', ');
+        const to = node.suggestedOutputs.join(', ');
+        dataFlow.set(node.description, { from, to });
+      }
+    }
+
+    // Recursively process subtasks
+    if (node.subtasks && node.subtasks.length > 0) {
+      for (let i = 0; i < node.subtasks.length; i++) {
+        const subtask = node.subtasks[i];
+        this.extractDataFlowRecursive(subtask, dataFlow);
+        
+      }
+    }
+  }
+
+  /**
+   * Generate behavior tree configuration from task hierarchy
+   */
+  generateBehaviorTree(hierarchy) {
+    return this.convertNodeToBT(hierarchy);
+  }
+
+  /**
+   * Helper: Convert task node to behavior tree node
+   */
+  convertNodeToBT(node) {
+    if (node.complexity === 'SIMPLE') {
+      // Simple task becomes an action node
+      return {
+        type: 'agent_tool',
+        id: node.id || `action-${Date.now()}`,
+        name: node.description,
+        tool: node.tools && node.tools[0] ? node.tools[0].name : 'generic_action',
+        params: {
+          description: node.description,
+          inputs: node.suggestedInputs || [],
+          outputs: node.suggestedOutputs || []
+        }
+      };
+    } else {
+      // Complex task becomes a sequence node
+      return {
+        type: 'sequence',
+        id: node.id || `sequence-${Date.now()}`,
+        name: node.description,
+        children: node.subtasks ? node.subtasks.map(subtask => this.convertNodeToBT(subtask)) : []
+      };
     }
   }
 

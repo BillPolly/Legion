@@ -40,6 +40,7 @@ You can help users:
 
 Available commands:
 - /create-agent {requirements} - Create a new agent
+- /create-complex-agent {requirements} - Create a complex agent with task decomposition
 - /list-agents - List all created agents
 - /test-agent [agent-id] - Test an agent
 - /analyze-agent [agent-id] - Analyze agent configuration
@@ -101,6 +102,19 @@ When users describe what kind of agent they need, help them formulate proper req
   }
 
   /**
+   * Main message handler - override ConfigurableAgent's receive method
+   */
+  async receive(message) {
+    // Handle our custom message processing first
+    if (message.type === 'message' && message.content) {
+      return await this.processMessage(message);
+    }
+    
+    // Delegate other message types to parent
+    return await super.receive(message);
+  }
+
+  /**
    * Process messages - handle both commands and natural language
    */
   async processMessage(message) {
@@ -127,6 +141,9 @@ When users describe what kind of agent they need, help them formulate proper req
       switch (command) {
         case '/create-agent':
           return await this.handleCreateAgent(argString);
+        
+        case '/create-complex-agent':
+          return await this.handleCreateComplexAgent(argString);
         
         case '/list-agents':
           return await this.handleListAgents();
@@ -177,7 +194,7 @@ When users describe what kind of agent they need, help them formulate proper req
    */
   async handleNaturalLanguage(message) {
     // Analyze the user's intent
-    const intent = await this.analyzeIntent(message.content);
+    const intent = this.analyzeIntent(message.content);
     
     if (intent.action === 'create') {
       return await this.guidedAgentCreation(intent.requirements);
@@ -185,14 +202,14 @@ When users describe what kind of agent they need, help them formulate proper req
       return await this.handleHelp();
     } else {
       // Default conversational response
-      return await super.processMessage(message);
+      return await super.receive(message);
     }
   }
 
   /**
    * Analyze user intent from natural language
    */
-  async analyzeIntent(content) {
+  analyzeIntent(content) {
     const lowerContent = content.toLowerCase();
     
     // Simple intent detection (could be enhanced with LLM)
@@ -206,7 +223,7 @@ When users describe what kind of agent they need, help them formulate proper req
       return { action: 'create', requirements };
     }
     
-    if (lowerContent.includes('help') || lowerContent.includes('what can you')) {
+    if (lowerContent.includes('help') || lowerContent.includes('what can you') || lowerContent.includes('how do i')) {
       return { action: 'help' };
     }
     
@@ -231,18 +248,48 @@ When users describe what kind of agent they need, help them formulate proper req
   }
 
   /**
+   * Detect if a complex agent with task decomposition is needed
+   */
+  detectComplexityNeeded(purpose) {
+    const lower = purpose.toLowerCase();
+    
+    // Keywords that suggest complex multi-step tasks
+    const complexKeywords = [
+      'workflow', 'pipeline', 'multi-step', 'multiple steps',
+      'orchestrate', 'coordinate', 'integrate', 'end-to-end',
+      'full stack', 'complete system', 'entire process',
+      'automate', 'build and deploy', 'analyze and report',
+      'extract and transform', 'fetch and process',
+      'multiple', 'several', 'various', 'comprehensive'
+    ];
+    
+    // Check for complex patterns
+    const hasMultipleAnd = (lower.match(/\band\b/g) || []).length >= 2;
+    const hasMultipleThen = lower.includes('then') || lower.includes('after that');
+    const hasSteps = lower.includes('step') || lower.includes('phase');
+    const hasComplexKeyword = complexKeywords.some(keyword => lower.includes(keyword));
+    
+    return hasMultipleAnd || hasMultipleThen || hasSteps || hasComplexKeyword;
+  }
+
+  /**
    * Guide user through agent creation
    */
   async guidedAgentCreation(initialRequirements) {
+    // Determine if this needs a complex agent based on keywords
+    const needsComplexAgent = this.detectComplexityNeeded(initialRequirements.purpose);
+    
     const response = `I'll help you create an agent. Based on your request, I understand you want an agent to: ${initialRequirements.purpose}
 
-Let me create this as a ${initialRequirements.taskType} agent.
+Let me create this as a ${needsComplexAgent ? 'complex' : 'standard'} ${initialRequirements.taskType} agent${needsComplexAgent ? ' with task decomposition' : ''}.
 
 Creating agent now...`;
 
     // Create the agent using AgentCreator
     try {
-      const result = await this.agentCreator.createAgent(initialRequirements);
+      const result = needsComplexAgent 
+        ? await this.agentCreator.createComplexAgent(initialRequirements)
+        : await this.agentCreator.createAgent(initialRequirements);
       
       return {
         type: 'agent_created',
@@ -298,6 +345,76 @@ You can now:
       return {
         type: 'error',
         content: `Failed to create agent: ${error.message}`
+      };
+    }
+  }
+
+  async handleCreateComplexAgent(requirementsString) {
+    try {
+      const requirements = JSON.parse(requirementsString);
+      
+      // Provide feedback during the process
+      this.lastComplexAgentStatus = 'Starting complex agent creation...';
+      
+      const result = await this.agentCreator.createComplexAgent(requirements);
+      
+      // Build detailed response about the complex agent
+      let content = `✅ Complex Agent created successfully!
+- Name: ${result.agentName}
+- ID: ${result.agentId}
+- Type: Complex (with task decomposition)
+- Tests Passed: ${result.testsPassed ? 'Yes' : 'No'}
+- Registration ID: ${result.registrationId}`;
+
+      // Add task hierarchy information if available
+      if (result.decomposition && result.decomposition.hierarchy) {
+        const hierarchy = result.decomposition.hierarchy;
+        content += `\n\n📋 Task Decomposition:
+- Complexity: ${hierarchy.complexity}
+- Total Steps: ${hierarchy.subtasks ? hierarchy.subtasks.length : 0}`;
+        
+        if (hierarchy.subtasks && hierarchy.subtasks.length > 0) {
+          content += '\n- Main Steps:';
+          hierarchy.subtasks.forEach((subtask, index) => {
+            content += `\n  ${index + 1}. ${subtask.description}`;
+          });
+        }
+      }
+
+      // Add behavior tree information if available
+      if (result.behaviorTree) {
+        content += `\n\n🌳 Behavior Tree:
+- Type: ${result.behaviorTree.type}
+- Nodes: ${result.behaviorTree.children ? result.behaviorTree.children.length : 0}`;
+      }
+
+      // Add tools information if available
+      if (result.tools && result.tools.size > 0) {
+        content += `\n\n🔧 Discovered Tools: ${result.tools.size}`;
+        const toolList = Array.from(result.tools).slice(0, 5);
+        toolList.forEach(tool => {
+          content += `\n  - ${tool}`;
+        });
+        if (result.tools.size > 5) {
+          content += `\n  ... and ${result.tools.size - 5} more`;
+        }
+      }
+
+      return {
+        type: 'complex_agent_created',
+        content,
+        data: result
+      };
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        return {
+          type: 'error',
+          content: 'Invalid JSON format. Usage: /create-complex-agent {"purpose": "...", "taskType": "..."}'
+        };
+      }
+      return {
+        type: 'error',
+        content: `Failed to create complex agent: ${error.message}`
       };
     }
   }
@@ -571,7 +688,8 @@ ${results.errors.map((e, i) => `${i + 1}. ❌ Error: ${e.error}`).join('\n')}`,
 **Available Commands:**
 
 📝 **Creation**
-- /create-agent {requirements} - Create a new agent
+- /create-agent {requirements} - Create a standard agent
+- /create-complex-agent {requirements} - Create a complex agent with task decomposition
 - /use-template [name] {vars} - Create from template
 - /batch-create [{req1}, {req2}] - Create multiple agents
 
@@ -592,9 +710,12 @@ ${results.errors.map((e, i) => `${i + 1}. ❌ Error: ${e.error}`).join('\n')}`,
 You can also describe what kind of agent you need in plain English, and I'll help you create it.
 
 Examples:
-- "Create a customer support agent"
-- "I need an agent that can review code"
-- "Build me a creative writing assistant"`
+- "Create a customer support agent" (standard)
+- "I need an agent that can review code" (standard)
+- "Build me a creative writing assistant" (standard)
+- "Create an agent that fetches data, analyzes it, and generates reports" (complex)
+- "I need a workflow agent to orchestrate multiple steps" (complex)
+- "Build an end-to-end data processing pipeline agent" (complex)`
     };
   }
 }
