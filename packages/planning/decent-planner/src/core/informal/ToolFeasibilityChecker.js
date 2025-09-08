@@ -171,25 +171,53 @@ IMPORTANT: Include descriptions for BOTH code/file generation AND specific opera
         
         // Load full tool instances to get execute functions
         const fullTools = await Promise.all(
-          tools.map(async (tool) => {
+          tools.map(async (searchResult) => {
             try {
-              const fullTool = await this.toolRegistry.getTool(tool.name);
+              // SearchService returns objects with a 'tool' property
+              const actualTool = searchResult.tool || searchResult;
+              const toolName = actualTool.name || searchResult.name;
+              
+              // Debug logging
+              if (description.includes('image generation')) {
+                console.log(`[DEBUG] Processing search result for "${description}":`, {
+                  searchResultName: searchResult.name,
+                  hasToolProperty: !!searchResult.tool,
+                  actualToolName: toolName,
+                  hasExecute: typeof actualTool.execute === 'function'
+                });
+              }
+              
+              // Get the full tool if we don't already have it
+              let fullTool = actualTool;
+              if (!actualTool.execute || typeof actualTool.execute !== 'function') {
+                fullTool = await this.toolRegistry.getTool(toolName);
+              }
+              
               if (fullTool) {
-                return {
-                  ...tool,
+                const result = {
                   ...fullTool,
-                  confidence: tool.score || tool.confidence || 0.5,
+                  confidence: searchResult.score || searchResult.confidence || 0.5,
                   available: true,
                   executable: typeof fullTool.execute === 'function'
                 };
+                
+                // Debug logging
+                if (description.includes('image generation')) {
+                  console.log(`[DEBUG] Returning tool:`, {
+                    name: result.name,
+                    executable: result.executable
+                  });
+                }
+                
+                return result;
               }
             } catch (error) {
-              console.warn(`Failed to load tool ${tool.name}:`, error.message);
+              console.warn(`Failed to load tool ${searchResult.name}:`, error.message);
             }
             // Return original tool if loading fails
             return {
-              ...tool,
-              confidence: tool.score || tool.confidence || 0.5,
+              ...(searchResult.tool || searchResult),
+              confidence: searchResult.score || searchResult.confidence || 0.5,
               available: false,
               executable: false
             };
@@ -212,7 +240,8 @@ IMPORTANT: Include descriptions for BOTH code/file generation AND specific opera
         
         // Add found tools to the collection
         for (const toolResult of searchResult.tools) {
-          const toolId = toolResult._id || toolResult.id;
+          // Use tool name as the unique key - tools are unique by name
+          const toolId = toolResult.name || toolResult._id || toolResult.id;
           
           // Only include executable tools
           if (!toolResult.available || !toolResult.executable) {

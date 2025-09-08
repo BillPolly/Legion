@@ -300,9 +300,12 @@ export class KGStatePersistence {
         });
         
       case 'mongodb':
-        // MongoDB triple store not yet implemented, use memory store as fallback
-        console.warn('MongoDB triple store not yet available, using in-memory store');
-        return new InMemoryTripleStore();
+        // FAIL FAST - MongoDB triple store not yet implemented
+        throw new Error(
+          'MongoDB triple store is not yet implemented. ' +
+          'Please use "memory" or "file" storage type instead. ' +
+          'NO FALLBACK - failing fast as per project requirements.'
+        );
         
       default:
         // Try to create from config object
@@ -311,31 +314,33 @@ export class KGStatePersistence {
   }
 
   async _addTriple(subject, predicate, object) {
-    if (this.tripleStore.addTriple) {
-      return await this.tripleStore.addTriple(subject, predicate, object);
-    } else {
-      // Fallback for sync stores
-      return this.kgSystem.engine.addTriple(subject, predicate, object);
+    if (!this.tripleStore || !this.tripleStore.addTriple) {
+      throw new Error(
+        'Triple store does not support addTriple method. ' +
+        'NO FALLBACK - failing fast as per project requirements.'
+      );
     }
+    return await this.tripleStore.addTriple(subject, predicate, object);
   }
 
   async _query(subject, predicate, object) {
-    if (this.tripleStore.query) {
-      return await this.tripleStore.query(subject, predicate, object);
-    } else {
-      // Fallback for sync stores
-      return this.kgSystem.engine.query(subject, predicate, object);
+    if (!this.tripleStore || !this.tripleStore.query) {
+      throw new Error(
+        'Triple store does not support query method. ' +
+        'NO FALLBACK - failing fast as per project requirements.'
+      );
     }
+    return await this.tripleStore.query(subject, predicate, object);
   }
 
   async _exists(subject, predicate, object) {
-    if (this.tripleStore.exists) {
-      return await this.tripleStore.exists(subject, predicate, object);
-    } else {
-      // Fallback using query
-      const results = await this._query(subject, predicate, object);
-      return results.length > 0;
+    if (!this.tripleStore || !this.tripleStore.exists) {
+      throw new Error(
+        'Triple store does not support exists method. ' +
+        'NO FALLBACK - failing fast as per project requirements.'
+      );
     }
+    return await this.tripleStore.exists(subject, predicate, object);
   }
 
   async _getValue(subject, predicate) {

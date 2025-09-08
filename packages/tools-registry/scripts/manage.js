@@ -138,13 +138,13 @@ async function handleStatus(toolManager, args) {
     const collections = await client.getCollections();
     qdrantStatus = '✅ Connected';
     
-    // Check if tools collection exists and get count  
-    const hasToolsCollection = collections.collections.some(c => c.name === 'tools');
-    if (hasToolsCollection) {
-      const info = await client.getCollection('tools');
+    // Check if tool_vectors collection exists and get count  
+    const hasToolVectorsCollection = collections.collections.some(c => c.name === 'tool_vectors');
+    if (hasToolVectorsCollection) {
+      const info = await client.getCollection('tool_vectors');
       vectorCount = info.points_count || 0;
     } else {
-      throw new Error('Expected tools collection not found in Qdrant');
+      throw new Error('Expected tool_vectors collection not found in Qdrant');
     }
   } catch (e) {
     qdrantStatus = '❌ Disconnected (not reachable)';

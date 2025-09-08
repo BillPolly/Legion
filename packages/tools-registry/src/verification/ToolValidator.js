@@ -227,9 +227,10 @@ export class ToolValidator {
   /**
    * Complete validation of a tool
    * @param {Object} tool - Tool to validate
+   * @param {Object} options - Validation options
    * @returns {Object} Complete validation result
    */
-  async validateComplete(tool) {
+  async validateComplete(tool, options = {}) {
     const result = {
       interface: this.validateInterface(tool),
       metadata: null,
@@ -247,8 +248,8 @@ export class ToolValidator {
       }
     }
     
-    // Test execution with basic input
-    if (result.interface.valid) {
+    // Test execution with basic input - ONLY if not skipped
+    if (result.interface.valid && !options.skipExecution) {
       try {
         result.execution = await this.validateExecution(tool, {});
       } catch (error) {
@@ -257,6 +258,13 @@ export class ToolValidator {
           errors: [error.message]
         };
       }
+    } else if (options.skipExecution) {
+      // Mark execution as skipped
+      result.execution = {
+        valid: true,
+        skipped: true,
+        message: 'Execution validation skipped'
+      };
     }
     
     // Calculate combined score

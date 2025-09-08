@@ -51,28 +51,25 @@ export class PromptEvaluator {
       Format: {"score": 0.X, "reasoning": "explanation"}
     `;
 
-    try {
-      const fullPrompt = `System: You are an expert evaluator. Provide JSON responses.\n\nUser: ${evaluationPrompt}\n\nAssistant:`;
-      const evaluation = await this.llmClient.complete(fullPrompt, 150);
-      const result = this.parseEvaluation(evaluation.content || evaluation.text || evaluation || '');
-      const score = result.score || this.calculateSimpleRelevance(prompt, response);
-      
-      this.metrics.scores.push(score);
-
-      return {
-        score,
-        relevant: score > 0.7,
-        reasoning: result.reasoning || 'Evaluated based on keyword matching'
-      };
-    } catch (error) {
-      // Fallback to simple evaluation
-      const score = this.calculateSimpleRelevance(prompt, response);
-      return {
-        score,
-        relevant: score > 0.7,
-        reasoning: 'Simple keyword-based evaluation'
-      };
+    const fullPrompt = `System: You are an expert evaluator. Provide JSON responses.\n\nUser: ${evaluationPrompt}\n\nAssistant:`;
+    const evaluation = await this.llmClient.complete(fullPrompt, 150);
+    const result = this.parseEvaluation(evaluation.content || evaluation.text || evaluation || '');
+    
+    if (!result.score) {
+      throw new Error(
+        'Failed to get evaluation score from LLM. ' +
+        'NO FALLBACK - failing fast as per project requirements.'
+      );
     }
+    
+    const score = result.score;
+    this.metrics.scores.push(score);
+
+    return {
+      score,
+      relevant: score > 0.7,
+      reasoning: result.reasoning || 'LLM-based evaluation'
+    };
   }
 
   calculateSimpleRelevance(prompt, response) {
@@ -86,14 +83,7 @@ export class PromptEvaluator {
       }
     }
 
-    // Give higher score if key words match
-    if (prompt.toLowerCase().includes('capital') && response.toLowerCase().includes('paris')) {
-      return 0.9;
-    }
-    if (prompt.toLowerCase().includes('france') && response.toLowerCase().includes('paris')) {
-      return 0.95;
-    }
-
+    // NO HARDCODED VALUES - calculate score purely based on word matches
     return Math.min(matches / Math.max(promptWords.length, 1), 1);
   }
 
@@ -145,10 +135,11 @@ export class PromptEvaluator {
   extractKeyAspects(prompt) {
     const aspects = [];
     
+    // Generic keyword extraction based on prompt type - NO HARDCODED DOMAIN-SPECIFIC TERMS
     if (prompt.includes('explain')) aspects.push('because', 'reason');
     if (prompt.includes('list')) aspects.push('first', 'second');
     if (prompt.includes('compare')) aspects.push('difference', 'similar');
-    if (prompt.includes('water cycle')) aspects.push('evaporation', 'condensation', 'precipitation');
+    // NO HARDCODED DOMAIN-SPECIFIC TERMS like water cycle - removed
     
     return aspects;
   }
@@ -156,24 +147,30 @@ export class PromptEvaluator {
   async evaluateAccuracy(prompt, response) {
     this.metrics.totalEvaluations++;
     
-    // Check for known facts
-    const knownFacts = {
-      '2 + 2': '4',
-      'capital of France': 'Paris',
-      'water formula': 'H2O'
-    };
-
-    let accurate = true;
-    for (const [question, answer] of Object.entries(knownFacts)) {
-      if (prompt.toLowerCase().includes(question.toLowerCase())) {
-        accurate = response.toLowerCase().includes(answer.toLowerCase());
-        break;
-      }
+    // NO HARDCODED FACTS - use LLM to evaluate factual accuracy
+    const evaluationPrompt = `
+      Evaluate if the response is factually accurate for the given prompt.
+      Prompt: "${prompt}"
+      Response: "${response}"
+      
+      Rate accuracy from 0 to 1 and explain why.
+      Format: {"score": 0.X, "reasoning": "explanation"}
+    `;
+    
+    const fullPrompt = `System: You are an expert fact-checker. Provide JSON responses.\n\nUser: ${evaluationPrompt}\n\nAssistant:`;
+    const evaluation = await this.llmClient.complete(fullPrompt, 150);
+    const result = this.parseEvaluation(evaluation.content || evaluation.text || evaluation || '');
+    
+    if (!result.score) {
+      throw new Error(
+        'Failed to get accuracy score from LLM. ' +
+        'NO FALLBACK - failing fast as per project requirements.'
+      );
     }
 
     return {
-      accurate,
-      score: accurate ? 1.0 : 0.0
+      accurate: result.score > 0.7,
+      score: result.score
     };
   }
 

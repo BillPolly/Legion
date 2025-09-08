@@ -723,10 +723,30 @@ export class AgentCreator {
       builder.withCapabilities(requirements.capabilities);
     }
 
-    // Add tools if specified
-    const tools = this.determineTools(requirements);
-    if (tools.length > 0) {
-      builder.withTools(tools);
+    // Discover tools dynamically using the planner
+    if (this.toolFeasibilityChecker) {
+      try {
+        console.log('🔍 Discovering tools dynamically for:', requirements.purpose);
+        
+        // Generate tool descriptions from the purpose and capabilities
+        const taskDescription = requirements.purpose + 
+          (requirements.capabilities ? ' with capabilities: ' + requirements.capabilities.join(', ') : '');
+        
+        const toolDescriptions = await this.toolFeasibilityChecker.generateToolDescriptions(taskDescription);
+        const discoveredTools = await this.toolFeasibilityChecker.discoverToolsFromDescriptions(toolDescriptions);
+        
+        if (discoveredTools && discoveredTools.length > 0) {
+          const toolNames = discoveredTools.map(t => t.name);
+          console.log('   ✅ Discovered tools:', toolNames);
+          builder.withTools(toolNames);
+        } else {
+          console.log('   ⚠️ No tools discovered for this agent');
+        }
+      } catch (error) {
+        console.warn('Tool discovery failed, continuing without tools:', error.message);
+      }
+    } else {
+      console.warn('ToolFeasibilityChecker not available, skipping tool discovery');
     }
 
     return builder.build();

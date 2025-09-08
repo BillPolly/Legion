@@ -574,8 +574,8 @@ export class ServiceOrchestrator {
     const vectorStore = this.options.enableVectorSearch 
       ? new VectorStore({ 
           embeddingClient: embeddingService, 
-          vectorDatabase: await this._createVectorDatabase(),
-          collectionName: 'tools'  // CRITICAL: Pass collection name to VectorStore!
+          vectorDatabase: await this._createVectorDatabase()
+          // Use VectorStore default collection name: 'tool_vectors'
         }) 
       : null;
       
@@ -622,8 +622,8 @@ export class ServiceOrchestrator {
     
     // Create vector database wrapper with actual client
     return new QdrantVectorDatabase(qdrantClient, { 
-      dimensions: 768, // Nomic embeddings dimension
-      collectionName: 'tools'  // Qdrant collection for vectors (different from MongoDB tool_perspectives)
+      dimensions: 768 // Nomic embeddings dimension
+      // Collection name will be determined by VectorStore (defaults to 'tool_vectors')
     });
   }
 

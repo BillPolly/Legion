@@ -115,3 +115,6 @@ models/
 # Generated images
 images/
 /images/
+
+# Artifacts directory for generated images and files
+artifacts/

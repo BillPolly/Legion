@@ -27,6 +27,7 @@ export class ModuleLoader {
     this.options = {
       validateMetadata: true,
       validateTools: true,
+      executeValidation: false,  // CRITICAL: Do NOT execute tools during validation - just check structure
       strictMode: false,  // When true, fail on any validation warning
       verbose: false,
       ...options
@@ -565,7 +566,9 @@ export class ModuleLoader {
         
         for (const tool of tools) {
           // Validate tool interface and metadata
-          const toolValidation = await this.toolValidator.validateComplete(tool);
+          const toolValidation = await this.toolValidator.validateComplete(tool, {
+            skipExecution: !this.options.executeValidation  // Skip execution if executeValidation is false
+          });
           validationResults.tools.push({
             name: tool.name,
             validation: toolValidation
