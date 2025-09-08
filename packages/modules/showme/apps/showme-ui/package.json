@@ -1,0 +1,18 @@
+{
+  "name": "@legion/showme-ui",
+  "version": "1.0.0",
+  "description": "UI application for ShowMe asset display",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@legion/components": "workspace:*",
+    "@legion/actor-framework": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
