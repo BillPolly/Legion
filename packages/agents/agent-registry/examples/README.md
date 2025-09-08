@@ -18,10 +18,14 @@ npm run example
 # Or run specific examples
 npm run example:simple                  # Basic operations
 npm run example:comprehensive           # Full feature demonstration
+npm run example:live                    # Live agent execution
+npm run example:scificat                # Sci-fi cat image generator
 
 # Or run directly with Node
 NODE_OPTIONS='--experimental-vm-modules' node examples/simple-usage.js
 NODE_OPTIONS='--experimental-vm-modules' node examples/agent-builder-example.js
+NODE_OPTIONS='--experimental-vm-modules' node examples/live-agent-runner.js
+NODE_OPTIONS='--experimental-vm-modules' node examples/scificat-agent.js
 ```
 
 ## Examples Included
@@ -77,6 +81,67 @@ A comprehensive demonstration showing:
 - Export agent configurations
 - Backup and migration support
 - Cross-environment deployment
+
+### 3. Live Agent Runner Example (`live-agent-runner.js`)
+
+**🎯 The complete solution that actually builds and runs live agents!**
+
+This example demonstrates the full agent lifecycle from configuration to execution:
+
+#### 🚀 **Live Agent Execution**
+- **Agent Configuration**: Store agent config in MongoDB
+- **Live Agent Building**: Convert configuration into executable agent instance
+- **Real Task Execution**: Process actual user requests and commands
+- **Tool Integration**: Execute real tools (FAQ search, ticket creation, email sending)
+- **Performance Tracking**: Monitor execution times and success rates
+
+#### 🛠️ **Tool Demonstration**
+- **Conversational Tools**: Intelligent response generation with context awareness
+- **Support Tools**: FAQ search, product information lookup
+- **Action Tools**: Ticket creation, email sending (mocked but realistic)
+- **Data Tools**: Context maintenance, user session tracking
+
+#### 📊 **Complete Metrics**
+- **Execution Metrics**: Response times, success rates, token usage
+- **Business Metrics**: Task completion, user satisfaction tracking
+- **System Metrics**: Resource usage, deployment status
+
+#### 🔄 **Agent Lifecycle Management**
+- **Registration**: Store agent configuration in database
+- **Initialization**: Build live agent with tools and capabilities  
+- **Execution**: Run tasks and process user requests
+- **Monitoring**: Track performance and collect metrics
+- **Deployment Tracking**: Record deployment status and resources
+
+### 4. Sci-Fi Cat Image Generator (`scificat-agent.js`)
+
+**🎨 A creative AI agent that generates sci-fi themed cat images!**
+
+This example showcases a specialized creative agent with file system integration:
+
+#### 🚀 **Creative Image Generation**
+- **Theme-based Generation**: Cyberpunk, Space, Steampunk, and Alien themes
+- **Detailed Prompts**: Creative, descriptive prompts for high-quality imagery
+- **Multiple Formats**: Ready for real image generation APIs (DALL-E, Midjourney, etc.)
+- **Fallback Demo**: ASCII art demonstration when image APIs unavailable
+
+#### 📁 **File System Operations**  
+- **Directory Creation**: Automatically creates `/images` directory
+- **File Management**: Saves generated images and metadata
+- **Organized Storage**: Timestamp-based filenames and JSON metadata
+- **File Listing**: Tools to browse and manage generated content
+
+#### 🎯 **Specialized Agent Capabilities**
+- **Creative Prompts**: Generates detailed, artistic image descriptions
+- **Metadata Generation**: Rich metadata with tags, themes, and technical specs
+- **Multi-theme Support**: 4 different sci-fi themes with unique characteristics
+- **Performance Tracking**: Specialized metrics for creative generation tasks
+
+#### 🖼️ **Generated Content**
+Each image generation creates:
+- **Image File**: ASCII art (demo) or actual image data
+- **Metadata File**: JSON with prompt, theme, tags, and technical details
+- **Performance Metrics**: Success rates, generation times, theme distribution
 
 ## Example Agent Configurations
 

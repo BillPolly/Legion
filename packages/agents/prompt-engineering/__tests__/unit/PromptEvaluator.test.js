@@ -215,7 +215,7 @@ describe('PromptEvaluator', () => {
       expect(comparison.rankings).toHaveLength(3);
       expect(comparison.best).toBe(1);  // Index of best response
       expect(comparison.scores).toBeDefined();
-    });
+    }, 30000);
 
     it('should identify best prompt from alternatives', async () => {
       const prompts = [

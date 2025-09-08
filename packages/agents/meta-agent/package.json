@@ -12,7 +12,6 @@
     "@legion/llm": "^1.0.0",
     "@legion/configurable-agent": "^1.0.0",
     "@legion/agent-registry": "^1.0.0",
-    "@legion/agent-designer": "^1.0.0",
     "@legion/prompt-engineering": "^1.0.0",
     "@legion/agent-testing": "^1.0.0"
   },
@@ -28,7 +27,6 @@
       "^@legion/llm$": "<rootDir>/../../llm/src/index.js",
       "^@legion/configurable-agent$": "<rootDir>/../configurable-agent/src/index.js",
       "^@legion/agent-registry$": "<rootDir>/../agent-registry/src/index.js",
-      "^@legion/agent-designer$": "<rootDir>/../agent-designer/src/index.js",
       "^@legion/prompt-engineering$": "<rootDir>/../prompt-engineering/src/index.js",
       "^@legion/agent-testing$": "<rootDir>/../agent-testing/src/index.js"
     },

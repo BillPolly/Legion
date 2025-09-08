@@ -10,7 +10,9 @@
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
     "example": "NODE_OPTIONS='--experimental-vm-modules' node examples/simple-usage.js",
     "example:simple": "NODE_OPTIONS='--experimental-vm-modules' node examples/simple-usage.js",
-    "example:comprehensive": "NODE_OPTIONS='--experimental-vm-modules' node examples/agent-builder-example.js"
+    "example:comprehensive": "NODE_OPTIONS='--experimental-vm-modules' node examples/agent-builder-example.js",
+    "example:live": "NODE_OPTIONS='--experimental-vm-modules' node examples/live-agent-runner.js",
+    "example:scificat": "NODE_OPTIONS='--experimental-vm-modules' node examples/scificat-agent.js"
   },
   "dependencies": {
     "@legion/resource-manager": "*",

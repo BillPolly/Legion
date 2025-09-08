@@ -1,6 +1,7 @@
 /**
  * Meta-Agent Package
- * Exports the MetaAgent that can plan, design, test, and deploy other agents
+ * Single entry point for creating, testing, and deploying configurable agents
  */
 
-export { MetaAgent } from './MetaAgent.js';
+export { AgentCreator } from './AgentCreator.js';
+export { MetaAgent } from './MetaAgent.js'; // Kept for backwards compatibility

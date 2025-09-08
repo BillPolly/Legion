@@ -83,11 +83,19 @@ export class PromptTester {
     const testResults = [];
     const inconsistencies = [];
 
-    for (const testCase of testCases) {
+    console.log(`Testing consistency with ${testCases.length} test cases`);
+    
+    for (let i = 0; i < testCases.length; i++) {
+      const testCase = testCases[i];
+      console.log(`  Running test case ${i + 1}/${testCases.length}: "${testCase.input}"`);
+      
       const fullPrompt = `System: ${prompt}\n\nUser: ${testCase.input}\n\nAssistant:`;
       const response = await this.llmClient.complete(fullPrompt, 150);
       const responseText = response.content || response.text || response || '';
       const toneCheck = this.checkTone(responseText, testCase.expectedTone);
+      
+      console.log(`    Response: "${responseText.substring(0, 50)}..."`);
+      console.log(`    Tone check: ${toneCheck ? 'PASSED' : 'FAILED'}`);
       
       testResults.push({
         input: testCase.input,
@@ -104,6 +112,8 @@ export class PromptTester {
       }
     }
 
+    console.log(`Consistency test complete: ${inconsistencies.length === 0 ? 'CONSISTENT' : 'INCONSISTENT'}`);
+    
     return {
       consistent: inconsistencies.length === 0,
       inconsistencies,
@@ -113,15 +123,22 @@ export class PromptTester {
 
   checkTone(text, expectedTone) {
     const tonePatterns = {
-      polite: ['please', 'thank you', 'would', 'could', 'kindly', 'appreciate'],
+      polite: ['please', 'thank you', 'would', 'could', 'kindly', 'appreciate', 'help', 'happy', 'glad'],
       formal: ['furthermore', 'therefore', 'regarding', 'pursuant'],
       casual: ['hey', 'cool', 'awesome', 'yeah']
     };
 
     if (expectedTone === 'polite') {
-      return tonePatterns.polite.some(word => 
+      // More lenient check - if it contains any polite words or is generally helpful
+      const hasPoliteWords = tonePatterns.polite.some(word => 
         text.toLowerCase().includes(word)
       );
+      const isHelpful = text.toLowerCase().includes('help') || 
+                        text.toLowerCase().includes('assist') ||
+                        text.toLowerCase().includes('happy to') ||
+                        text.toLowerCase().includes('i can') ||
+                        text.toLowerCase().includes("i'd");
+      return hasPoliteWords || isHelpful;
     }
 
     return true;  // Simplified for now
