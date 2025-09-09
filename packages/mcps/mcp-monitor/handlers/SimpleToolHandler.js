@@ -1,14 +1,8 @@
 export class SimpleToolHandler {
-  constructor(sessionManager, logger = null, mongoTool = null) {
+  constructor(sessionManager, logger = null) {
     this.sessionManager = sessionManager;
     this.logger = logger || console;  // Use provided logger or console
-    this.mongoTool = mongoTool;  // Legion MongoDB query tool
     this.pictureAnalysisTool = null;  // Legion Picture Analysis tool
-  }
-  
-  setMongoTool(mongoTool) {
-    this.logger.info('Setting MongoDB tool in handler', { hasMongoTool: !!mongoTool });
-    this.mongoTool = mongoTool;
   }
   
   setPictureAnalysisTool(pictureAnalysisTool) {
@@ -149,54 +143,6 @@ Examples:
       }
     });
     
-    // Always add MongoDB tool - availability is checked at execution time
-    tools.push({
-        name: 'db_query',
-        description: `Execute MongoDB database operations with native JSON syntax for data inspection, debugging, and manipulation. 
-
-This tool provides direct access to MongoDB with all standard operations:
-• QUERY: find, findOne, countDocuments, distinct, aggregate - for data retrieval and analysis
-• WRITE: insertOne, insertMany, updateOne, updateMany, deleteOne, deleteMany - for data manipulation  
-• ADMIN: createIndex, dropCollection, listCollections - for collection management
-
-The tool accepts MongoDB commands exactly as you would write them in the MongoDB shell, just split into command and parameters. Perfect for debugging application data, verifying database state, running ad-hoc queries, and performing data maintenance tasks.
-
-Examples:
-- Find users: command="find", params={query: {active: true}, options: {limit: 10}}
-- Update status: command="updateMany", params={filter: {status: "pending"}, update: {$set: {status: "active"}}}
-- Aggregate stats: command="aggregate", params={pipeline: [{$group: {_id: "$type", count: {$sum: 1}}}]}
-
-Database defaults to environment configuration but can be overridden per operation.`,
-        inputSchema: {
-          type: 'object',
-          properties: {
-            database: { 
-              type: 'string', 
-              description: 'MongoDB database name (optional, defaults to environment configuration)' 
-            },
-            collection: { 
-              type: 'string', 
-              description: 'Collection name to operate on' 
-            },
-            command: { 
-              type: 'string',
-              enum: [
-                'find', 'findOne', 'insertOne', 'insertMany',
-                'updateOne', 'updateMany', 'deleteOne', 'deleteMany',
-                'aggregate', 'countDocuments', 'distinct',
-                'createIndex', 'dropCollection', 'listCollections'
-              ],
-              description: 'MongoDB command to execute' 
-            },
-            params: { 
-              type: 'object', 
-              description: 'Command parameters in MongoDB JSON format (e.g., {query: {...}, options: {...}} for find)' 
-            }
-          },
-          required: ['collection', 'command', 'params']
-        }
-      });
-    
     return tools;
   }
   
@@ -279,55 +225,6 @@ Database defaults to environment configuration but can be overridden per operati
             }
             
             return { content: [{ type: 'text', text: responseText }] };
-          }
-          
-        case 'db_query':
-          // Execute MongoDB query using Legion tool
-          if (!this.mongoTool) {
-            throw new Error('MongoDB query tool not available - check database connection');
-          }
-          
-          const mongoResult = await this.mongoTool.execute({
-            database: args.database,
-            collection: args.collection,
-            command: args.command,
-            params: args.params
-          });
-          
-          // Format result for MCP response
-          if (mongoResult.success) {
-            // Format the result based on the command type
-            let responseText;
-            const { command, result, collection, database } = mongoResult.data;
-            
-            if (Array.isArray(result)) {
-              // For queries that return arrays (find, aggregate, etc.)
-              responseText = `✅ ${command} on ${database || 'default'}.${collection}\n`;
-              responseText += `Found ${result.length} document(s):\n`;
-              responseText += JSON.stringify(result, null, 2);
-            } else if (typeof result === 'number') {
-              // For count operations
-              responseText = `✅ ${command} on ${database || 'default'}.${collection}\n`;
-              responseText += `Result: ${result}`;
-            } else if (typeof result === 'object' && result !== null) {
-              // For single document results or operation results
-              responseText = `✅ ${command} on ${database || 'default'}.${collection}\n`;
-              responseText += JSON.stringify(result, null, 2);
-            } else {
-              // For other results (boolean, null, etc.)
-              responseText = `✅ ${command} on ${database || 'default'}.${collection}\n`;
-              responseText += `Result: ${result}`;
-            }
-            
-            return { content: [{ type: 'text', text: responseText }] };
-          } else {
-            // Handle errors
-            return { 
-              content: [{ 
-                type: 'text', 
-                text: `❌ MongoDB operation failed: ${mongoResult.data.errorMessage}` 
-              }] 
-            };
           }
           
         default:

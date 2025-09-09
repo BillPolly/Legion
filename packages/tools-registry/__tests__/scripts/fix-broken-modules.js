@@ -22,8 +22,7 @@ const brokenModules = [
   '/Users/maxximus/Documents/max/pocs/Legion/packages/mongo-query/src/MongoQueryModule.js',
   '/Users/maxximus/Documents/max/pocs/Legion/packages/code-gen/js-generator/src/JSGeneratorModule.js',
   '/Users/maxximus/Documents/max/pocs/Legion/packages/code-gen/jester/src/JesterModule.js',
-  '/Users/maxximus/Documents/max/pocs/Legion/packages/code-gen/code-analysis/src/CodeAnalysisModule.js',
-  '/Users/maxximus/Documents/max/pocs/Legion/packages/aiur/src/modules/MCPModule.js'
+  '/Users/maxximus/Documents/max/pocs/Legion/packages/code-gen/code-analysis/src/CodeAnalysisModule.js'
 ];
 
 async function fixModule(filePath) {

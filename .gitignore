@@ -10,9 +10,7 @@ packages/response-parser/__tests__/testdata/
 packages/model-providers/__tests__/testdata/
 packages/agent/__tests__/testdata/
 
-# Aiur test files
-packages/aiur/__tests__/integration/fixtures/test-file.txt
-packages/aiur/__tests__/integration/fixtures/test-dir/
+# Test files
 **/test-file.txt
 **/test-dir/
 

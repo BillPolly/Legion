@@ -14,7 +14,6 @@ const __dirname = path.dirname(__filename);
 
 // List of modules that are failing
 const failingModules = [
-  'MCPModule',
   'MongoQueryModule', 
   'PictureAnalysisModule',
   'SDModule',
@@ -28,7 +27,6 @@ const failingModules = [
 
 // Map module names to their package paths
 const modulePackageMap = {
-  'MCPModule': '@legion/mcp',
   'MongoQueryModule': '@legion/mongo-query',
   'PictureAnalysisModule': '@legion/picture-analysis',
   'SDModule': '@legion/sd',
