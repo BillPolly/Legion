@@ -5,7 +5,7 @@
  * Uses ShowMeClientActor for handle-based asset display communication
  */
 
-import { ShowMeClientActor } from '../../../src/client/actors/ShowMeClientActor.js';
+import { BrowserShowMeClientActor } from './client/BrowserShowMeClientActor.js';
 import { AssetDisplayManager } from './services/AssetDisplayManager.js';
 import { WebSocketService } from './services/WebSocketService.js';
 import { AssetRenderer } from './components/AssetRenderer.js';
@@ -52,8 +52,9 @@ export class ShowMeApp {
     });
     
     // Create client actor with display manager
-    this.clientActor = new ShowMeClientActor(null, {
-      displayManager: this.displayManager
+    this.clientActor = new BrowserShowMeClientActor({
+      displayManager: this.displayManager,
+      serverUrl: this.config.serverUrl
     });
     
     await this.clientActor.initialize();

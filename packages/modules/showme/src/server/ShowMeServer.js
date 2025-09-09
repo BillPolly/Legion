@@ -27,7 +27,10 @@ export class ShowMeServer extends ConfigurableActorServer {
       ],
       static: {
         '/legion/components': '@legion/components/src',
-        '/assets': path.join(__dirname, '../../assets')
+        '/assets': path.join(__dirname, '../../assets'),
+        '/': path.join(__dirname, '../../apps/showme-ui'),
+        '/src': path.join(__dirname, '../../apps/showme-ui/src'),
+        '/showme-src': path.join(__dirname, '..')  // Serve the ShowMe module src directory
       },
       services: {
         'assetStorage': './services/AssetStorageService.js'

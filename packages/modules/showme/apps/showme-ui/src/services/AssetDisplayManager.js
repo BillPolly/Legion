@@ -5,7 +5,7 @@
  * Connects the ShowMe module's WindowManager to the client UI
  */
 
-import { WindowManager } from '../../../../src/ui/WindowManager.js';
+import { WindowManager } from '/showme-src/ui/WindowManager.js';
 
 export class AssetDisplayManager {
   constructor(config = {}) {

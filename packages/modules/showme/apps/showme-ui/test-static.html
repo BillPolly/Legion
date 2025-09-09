@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Static Serving</title>
+</head>
+<body>
+    <h1>ShowMe Static File Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        async function testStaticFiles() {
+            const results = document.getElementById('results');
+            
+            try {
+                // Test 1: Fetch main.js directly
+                console.log('Testing main.js fetch...');
+                const response = await fetch('/src/main.js');
+                const contentType = response.headers.get('content-type');
+                const text = await response.text();
+                
+                results.innerHTML += `
+                    <h3>main.js fetch test:</h3>
+                    <p>Status: ${response.status}</p>
+                    <p>Content-Type: ${contentType}</p>
+                    <p>Content preview: ${text.substring(0, 100)}...</p>
+                `;
+                
+                // Test 2: Try to import as module
+                console.log('Testing ES module import...');
+                try {
+                    const module = await import('/src/main.js');
+                    results.innerHTML += `<p>✅ ES module import: SUCCESS</p>`;
+                } catch (importError) {
+                    results.innerHTML += `<p>❌ ES module import: ${importError.message}</p>`;
+                }
+                
+            } catch (error) {
+                results.innerHTML += `<p>❌ Error: ${error.message}</p>`;
+                console.error('Test error:', error);
+            }
+        }
+        
+        // Run tests when page loads
+        document.addEventListener('DOMContentLoaded', testStaticFiles);
+    </script>
+</body>
+</html>
