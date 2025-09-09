@@ -22,14 +22,10 @@
   "author": "Legion Framework",
   "license": "MIT",
   "dependencies": {
-    "@legion/actors": "workspace:*",
-    "@legion/prompting-manager": "workspace:*",
-    "@legion/kg": "workspace:*",
-    "@legion/actor-BT": "workspace:*",
-    "@legion/resource-manager": "workspace:*",
-    "@legion/llm": "workspace:*",
-    "@legion/schema": "workspace:*",
-    "@legion/tools-registry": "workspace:*"
+    "@legion/resource-manager": "file:../../resource-manager",
+    "@legion/llm": "file:../../llm",
+    "@legion/schema": "file:../../schema",
+    "@legion/tools-registry": "file:../../tools-registry"
   },
   "devDependencies": {
     "jest": "^29.7.0"

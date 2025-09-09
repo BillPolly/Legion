@@ -1,0 +1,26 @@
+{
+  "name": "@legion/gemini-compatible-agent",
+  "version": "1.0.0",
+  "description": "Gemini-compatible agent built with Legion framework patterns",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "dependencies": {
+    "@legion/configurable-agent": "file:../configurable-agent",
+    "@legion/resource-manager": "file:../../resource-manager",
+    "@legion/schema": "file:../../schema",
+    "@legion/tools-registry": "file:../../tools-registry",
+    "@legion/llm": "file:../../llm",
+    "@legion/gemini-tools": "file:../../modules/gemini-tools",
+    "@legion/output-schema": "file:../../prompting/output-schema",
+    "express": "^4.18.2",
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  }
+}

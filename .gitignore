@@ -116,3 +116,6 @@ images/
 
 # Artifacts directory for generated images and files
 artifacts/
+
+# Cloned repositories
+gem/

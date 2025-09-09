@@ -1,0 +1,441 @@
+{
+  "module": {
+    "name": "gemini-tools",
+    "description": "Gemini CLI tools ported to Legion framework patterns",
+    "version": "1.0.0"
+  },
+  "tools": {
+    "read_file": {
+      "name": "read_file",
+      "description": "Reads and returns the content of a specified file (ported from Gemini CLI)",
+      "category": "file",
+      "tags": ["file", "read", "gemini", "filesystem"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "absolute_path": {
+            "type": "string",
+            "description": "The absolute path to the file to read"
+          },
+          "offset": {
+            "type": "number",
+            "description": "The line number to start reading from (optional)"
+          },
+          "limit": {
+            "type": "number",
+            "description": "The number of lines to read (optional)"
+          }
+        },
+        "required": ["absolute_path"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The contents of the file"
+          },
+          "path": {
+            "type": "string",
+            "description": "The resolved path of the file"
+          },
+          "lines": {
+            "type": "number", 
+            "description": "Number of lines in the file"
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "Whether the content was truncated"
+          }
+        },
+        "required": ["content", "path"]
+      }
+    },
+    "write_file": {
+      "name": "write_file",
+      "description": "Writes content to a file (ported from Gemini CLI)",
+      "category": "file",
+      "tags": ["file", "write", "gemini", "filesystem"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "absolute_path": {
+            "type": "string",
+            "description": "The absolute path to the file to write"
+          },
+          "content": {
+            "type": "string",
+            "description": "The content to write to the file"
+          },
+          "encoding": {
+            "type": "string",
+            "description": "File encoding (default: utf8)",
+            "default": "utf8"
+          }
+        },
+        "required": ["absolute_path", "content"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "The resolved path where the file was written"
+          },
+          "bytesWritten": {
+            "type": "number",
+            "description": "Number of bytes written"
+          }
+        },
+        "required": ["path", "bytesWritten"]
+      }
+    },
+    "list_files": {
+      "name": "list_files",
+      "description": "Lists files and directories in a specified path (ported from Gemini CLI ls.ts)",
+      "category": "file",
+      "tags": ["file", "list", "directory", "gemini"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "The directory path to list"
+          },
+          "recursive": {
+            "type": "boolean",
+            "description": "Whether to list recursively",
+            "default": false
+          }
+        },
+        "required": ["path"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "The directory that was listed"
+          },
+          "entries": {
+            "type": "array",
+            "description": "Directory entries",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {"type": "string"},
+                "type": {"type": "string"},
+                "path": {"type": "string"}
+              }
+            }
+          }
+        },
+        "required": ["path", "entries"]
+      }
+    },
+    "grep_search": {
+      "name": "grep_search",
+      "description": "Searches for patterns in file contents (ported from Gemini CLI grep.ts)",
+      "category": "search",
+      "tags": ["search", "grep", "pattern", "gemini"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pattern": {
+            "type": "string",
+            "description": "The regular expression pattern to search for"
+          },
+          "path": {
+            "type": "string",
+            "description": "The directory to search in (optional)",
+            "default": "."
+          },
+          "include": {
+            "type": "string",
+            "description": "File pattern to include (e.g. '*.js', '*.{ts,tsx}')"
+          }
+        },
+        "required": ["pattern"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "matches": {
+            "type": "array",
+            "description": "Search matches found",
+            "items": {
+              "type": "object",
+              "properties": {
+                "filePath": {"type": "string"},
+                "lineNumber": {"type": "number"},
+                "line": {"type": "string"}
+              }
+            }
+          },
+          "totalMatches": {
+            "type": "number",
+            "description": "Total number of matches found"
+          }
+        },
+        "required": ["matches", "totalMatches"]
+      }
+    },
+    "edit_file": {
+      "name": "edit_file", 
+      "description": "Edits files with search and replace (ported from Gemini CLI edit.ts)",
+      "category": "file",
+      "tags": ["file", "edit", "replace", "gemini"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "absolute_path": {
+            "type": "string",
+            "description": "The absolute path to the file to edit"
+          },
+          "old_string": {
+            "type": "string",
+            "description": "The text to replace"
+          },
+          "new_string": {
+            "type": "string",
+            "description": "The replacement text"
+          },
+          "replace_all": {
+            "type": "boolean",
+            "description": "Replace all occurrences (default: false)",
+            "default": false
+          }
+        },
+        "required": ["absolute_path", "old_string", "new_string"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "The path of the edited file"
+          },
+          "replacements": {
+            "type": "number",
+            "description": "Number of replacements made"
+          },
+          "backup_path": {
+            "type": "string",
+            "description": "Path to backup file (if created)"
+          }
+        },
+        "required": ["path", "replacements"]
+      }
+    },
+    "shell_command": {
+      "name": "shell_command",
+      "description": "Executes shell commands (ported from Gemini CLI shell.ts)",
+      "category": "system",
+      "tags": ["shell", "command", "execute", "gemini"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "The shell command to execute"
+          },
+          "working_directory": {
+            "type": "string",
+            "description": "Working directory for command execution (optional)"
+          },
+          "timeout": {
+            "type": "number",
+            "description": "Command timeout in milliseconds (default: 30000)",
+            "default": 30000
+          }
+        },
+        "required": ["command"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "stdout": {
+            "type": "string",
+            "description": "Standard output from the command"
+          },
+          "stderr": {
+            "type": "string", 
+            "description": "Standard error from the command"
+          },
+          "exit_code": {
+            "type": "number",
+            "description": "Exit code of the command"
+          },
+          "command": {
+            "type": "string",
+            "description": "The command that was executed"
+          }
+        },
+        "required": ["stdout", "stderr", "exit_code", "command"]
+      }
+    },
+    "glob_pattern": {
+      "name": "glob_pattern",
+      "description": "Fast file pattern matching with glob patterns",
+      "category": "search",
+      "tags": ["glob", "pattern", "files"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pattern": {"type": "string", "description": "Glob pattern"},
+          "path": {"type": "string", "description": "Search path", "default": "."}
+        },
+        "required": ["pattern"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "files": {"type": "array"},
+          "totalFiles": {"type": "number"}
+        },
+        "required": ["files", "totalFiles"]
+      }
+    },
+    "read_many_files": {
+      "name": "read_many_files",
+      "description": "Read multiple files efficiently with glob patterns",
+      "category": "file",
+      "tags": ["file", "read", "batch"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "paths": {"type": "array", "items": {"type": "string"}},
+          "include": {"type": "array", "items": {"type": "string"}},
+          "exclude": {"type": "array", "items": {"type": "string"}},
+          "recursive": {"type": "boolean", "default": true}
+        },
+        "required": ["paths"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "files": {"type": "array"},
+          "totalFiles": {"type": "number"}
+        },
+        "required": ["files", "totalFiles"]
+      }
+    },
+    "save_memory": {
+      "name": "save_memory",
+      "description": "Save facts to long-term memory",
+      "category": "memory",
+      "tags": ["memory", "save", "facts"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "fact": {"type": "string", "description": "The fact to remember"}
+        },
+        "required": ["fact"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "saved": {"type": "boolean"},
+          "memoryPath": {"type": "string"},
+          "fact": {"type": "string"}
+        },
+        "required": ["saved", "memoryPath", "fact"]
+      }
+    },
+    "smart_edit": {
+      "name": "smart_edit", 
+      "description": "Intelligent file editing with validation",
+      "category": "file",
+      "tags": ["edit", "smart", "validation"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "absolute_path": {"type": "string"},
+          "old_string": {"type": "string"},
+          "new_string": {"type": "string"},
+          "create_backup": {"type": "boolean", "default": true}
+        },
+        "required": ["absolute_path", "old_string", "new_string"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {"type": "string"},
+          "changes_made": {"type": "boolean"},
+          "validation_passed": {"type": "boolean"}
+        },
+        "required": ["path", "changes_made", "validation_passed"]
+      }
+    },
+    "web_fetch": {
+      "name": "web_fetch",
+      "description": "Fetch and process web content with HTML conversion",
+      "category": "web",
+      "tags": ["web", "fetch", "http", "html"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {"type": "string", "description": "The URL to fetch content from"},
+          "prompt": {"type": "string", "description": "Optional prompt to process the content with"}
+        },
+        "required": ["url"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {"type": "string", "description": "The fetched and processed content"},
+          "url": {"type": "string", "description": "The URL that was fetched"},
+          "title": {"type": "string", "description": "Page title if available"}
+        },
+        "required": ["content", "url"]
+      }
+    },
+    "web_search": {
+      "name": "web_search",
+      "description": "Perform web searches with grounding support",
+      "category": "web", 
+      "tags": ["web", "search", "query"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {"type": "string", "description": "The search query"}
+        },
+        "required": ["query"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {"type": "string", "description": "Search results content"},
+          "sources": {"type": "array", "description": "Source information"},
+          "query": {"type": "string", "description": "The search query that was executed"}
+        },
+        "required": ["content", "query"]
+      }
+    },
+    "ripgrep_search": {
+      "name": "ripgrep_search",
+      "description": "Fast text search with file type filtering",
+      "category": "search",
+      "tags": ["search", "ripgrep", "fast", "filter"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pattern": {"type": "string", "description": "The search pattern (regex supported)"},
+          "path": {"type": "string", "description": "The directory to search in", "default": "."},
+          "file_type": {"type": "string", "description": "File type filter (e.g., 'js', 'ts', 'py')"},
+          "ignore_case": {"type": "boolean", "description": "Ignore case in search", "default": false}
+        },
+        "required": ["pattern"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "matches": {"type": "array", "description": "Search matches found"},
+          "totalMatches": {"type": "number", "description": "Total number of matches"},
+          "searchedFiles": {"type": "number", "description": "Number of files searched"}
+        },
+        "required": ["matches", "totalMatches"]
+      }
+    }
+  }
+}

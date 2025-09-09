@@ -1,0 +1,34 @@
+{
+  "name": "@legion/gemini-tools",
+  "version": "1.0.0",
+  "description": "Gemini CLI tools ported to Legion framework patterns",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch"
+  },
+  "dependencies": {
+    "@legion/tools-registry": "file:../../tools-registry",
+    "@legion/resource-manager": "file:../../resource-manager", 
+    "@legion/schema": "file:../../schema"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "testMatch": [
+      "**/__tests__/**/*.test.js",
+      "src/**/__tests__/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/**/index.js",
+      "!src/**/__tests__/**"
+    ],
+    "verbose": true,
+    "testTimeout": 30000
+  }
+}
