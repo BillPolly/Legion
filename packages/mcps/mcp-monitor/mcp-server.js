@@ -1,5 +1,12 @@
 #!/usr/bin/env node
 
+// Ensure we're always running from the Legion repo root
+const LEGION_ROOT = '/Users/williampearson/Documents/p/agents/Legion';
+if (process.cwd() !== LEGION_ROOT) {
+  console.error(`[MCP Server] Changing directory from ${process.cwd()} to ${LEGION_ROOT}`);
+  process.chdir(LEGION_ROOT);
+}
+
 import { SimpleSessionManager } from './handlers/SimpleSessionManager.js';
 import { SimpleToolHandler } from './handlers/SimpleToolHandler.js';
 import { findAvailablePortSync } from './utils/portFinder.js';
@@ -23,6 +30,7 @@ class MCPServer {
     
     // Log startup info
     this.logger.info(`MCP Server starting with WebSocket port: ${this.wsAgentPort}`);
+    this.logger.info(`Current working directory: ${process.cwd()}`);
     
     // Track if tools are initialized
     this.pictureAnalysisInitialized = false;

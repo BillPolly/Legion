@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "legion-monitor": {
+      "command": "node",
+      "args": ["packages/mcps/mcp-monitor/mcp-server.js"],
+      "cwd": "/Users/williampearson/Documents/p/agents/Legion",
+      "env": {
+        "MCP_SERVER_NAME": "legion-monitor",
+        "MCP_SERVER_VERSION": "1.0.0",
+        "MONOREPO_ROOT": "/Users/williampearson/Documents/p/agents/Legion"
+      }
+    }
+  }
+}
