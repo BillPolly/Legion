@@ -10,7 +10,7 @@ describe('ShowMeModule', () => {
   let module;
 
   beforeEach(() => {
-    module = new ShowMeModule();
+    module = new ShowMeModule({ testMode: true });
   });
 
   describe('constructor', () => {

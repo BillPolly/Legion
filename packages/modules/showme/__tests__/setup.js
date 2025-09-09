@@ -3,6 +3,11 @@
  * Configures jsdom environment and global utilities for testing
  */
 
+// Add TextEncoder/TextDecoder polyfills for JSDOM
+import { TextEncoder, TextDecoder } from 'util';
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
+
 // Mock console methods to reduce noise during tests (but preserve errors)
 const originalError = console.error;
 const originalWarn = console.warn;

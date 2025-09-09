@@ -44,8 +44,20 @@ export class ConfigurableActorServer extends BaseServer {
    * Initialize server with configuration
    */
   async initialize() {
+    // Set flag before parent initialization to skip discovery
+    if (this.config.skipLegionPackages) {
+      this.skipLegionPackageDiscovery = true;
+    }
+    
     // Call parent initialization
     await super.initialize();
+    
+    // Override monorepoRoot if skipLegionPackages is set
+    if (this.config.skipLegionPackages) {
+      this.monorepoRoot = null;
+      this.legionPackages.clear();
+      console.log('Skipping Legion package discovery (test mode)');
+    }
     
     // Validate configuration
     this.validateConfig();

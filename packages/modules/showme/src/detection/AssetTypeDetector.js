@@ -100,7 +100,8 @@ export class AssetTypeDetector {
       case 'web':
         return this.isWebContent(asset);
       case 'code':
-        return this.isCodeFile(asset);
+        // Allow code hint for any string content (user override)
+        return typeof asset === 'string';
       case 'text':
         return true; // Text can handle any content
       default:
@@ -138,10 +139,16 @@ export class AssetTypeDetector {
       }
     }
     
-    // Check for file path with image extension
+    // Check for string-based image data
     if (typeof asset === 'string') {
       const lower = asset.toLowerCase();
-      // Only check extensions, not URL content
+      
+      // Check for base64 data URLs
+      if (lower.startsWith('data:image/')) {
+        return true;
+      }
+      
+      // Check for file path with image extension
       if (this.imageExtensions.some(ext => lower.endsWith(ext))) {
         return true;
       }

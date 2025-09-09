@@ -10,15 +10,17 @@ import { ShowMeServerActor } from '../../src/server/actors/ShowMeServerActor.js'
 import { ShowMeClientActor } from '../../src/client/actors/ShowMeClientActor.js';
 import WebSocket from 'ws';
 import fetch from 'node-fetch';
+import { getRandomTestPort, waitForServer } from '../helpers/testUtils.js';
 
 describe('Server Actor Communication Integration', () => {
   let server;
   let serverActor;
   let clientActor;
   let ws;
-  const testPort = 3795;
+  let testPort;
 
   beforeAll(async () => {
+    testPort = getRandomTestPort();
     // Start real server with actor support
     server = new ShowMeServer({ 
       port: testPort,
@@ -28,7 +30,7 @@ describe('Server Actor Communication Integration', () => {
     await server.start();
     
     // Wait for server to be ready
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await waitForServer(500);
   }, 30000);
 
   afterAll(async () => {
@@ -42,7 +44,7 @@ describe('Server Actor Communication Integration', () => {
 
   describe('WebSocket connection', () => {
     test('should establish WebSocket connection to server', async () => {
-      ws = new WebSocket(`ws://localhost:${testPort}/showme`);
+      ws = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       
       await new Promise((resolve, reject) => {
         ws.on('open', resolve);
@@ -54,7 +56,7 @@ describe('Server Actor Communication Integration', () => {
     });
 
     test('should handle WebSocket handshake protocol', async () => {
-      const ws = new WebSocket(`ws://localhost:${testPort}/showme`);
+      const ws = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       
       const handshakeReceived = new Promise((resolve) => {
         ws.on('message', (data) => {
@@ -87,7 +89,7 @@ describe('Server Actor Communication Integration', () => {
     let ws;
 
     beforeEach(async () => {
-      ws = new WebSocket(`ws://localhost:${testPort}/showme`);
+      ws = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       await new Promise((resolve) => {
         ws.on('open', resolve);
       });
@@ -236,7 +238,7 @@ describe('Server Actor Communication Integration', () => {
     let ws;
 
     beforeEach(async () => {
-      ws = new WebSocket(`ws://localhost:${testPort}/showme`);
+      ws = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       await new Promise((resolve) => {
         ws.on('open', resolve);
       });
@@ -331,7 +333,7 @@ describe('Server Actor Communication Integration', () => {
     let ws;
 
     beforeEach(async () => {
-      ws = new WebSocket(`ws://localhost:${testPort}/showme`);
+      ws = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       await new Promise((resolve) => {
         ws.on('open', resolve);
       });
@@ -359,7 +361,7 @@ describe('Server Actor Communication Integration', () => {
       }
       
       // Wait for responses
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await waitForServer(500);
       
       // Should have received some responses
       expect(messages.length).toBeGreaterThanOrEqual(0);
@@ -382,11 +384,11 @@ describe('Server Actor Communication Integration', () => {
           id: i,
           data: `Message ${i}`
         }));
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await waitForServer(500);
       }
       
       // Wait for all responses
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Check if responses maintain order (if echo is implemented)
       if (responses.length > 0) {
@@ -400,17 +402,17 @@ describe('Server Actor Communication Integration', () => {
   describe('error recovery', () => {
     test('should handle client reconnection', async () => {
       // First connection
-      let ws1 = new WebSocket(`ws://localhost:${testPort}/showme`);
+      let ws1 = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       await new Promise((resolve) => {
         ws1.on('open', resolve);
       });
       
       // Close first connection
       ws1.close();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await waitForServer(500);
       
       // Second connection should work
-      let ws2 = new WebSocket(`ws://localhost:${testPort}/showme`);
+      let ws2 = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       await new Promise((resolve, reject) => {
         ws2.on('open', resolve);
         ws2.on('error', reject);
@@ -426,7 +428,7 @@ describe('Server Actor Communication Integration', () => {
       
       // Create multiple connections
       for (let i = 0; i < 3; i++) {
-        const ws = new WebSocket(`ws://localhost:${testPort}/showme`);
+        const ws = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
         await new Promise((resolve) => {
           ws.on('open', resolve);
         });
@@ -443,7 +445,7 @@ describe('Server Actor Communication Integration', () => {
     });
 
     test('should handle connection drops gracefully', async () => {
-      const ws = new WebSocket(`ws://localhost:${testPort}/showme`);
+      const ws = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       
       await new Promise((resolve) => {
         ws.on('open', resolve);
@@ -453,10 +455,10 @@ describe('Server Actor Communication Integration', () => {
       ws.terminate();
       
       // Server should continue running
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await waitForServer(500);
       
       // New connection should still work
-      const ws2 = new WebSocket(`ws://localhost:${testPort}/showme`);
+      const ws2 = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       await new Promise((resolve, reject) => {
         ws2.on('open', resolve);
         ws2.on('error', reject);

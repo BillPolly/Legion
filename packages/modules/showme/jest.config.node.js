@@ -37,5 +37,11 @@ export default {
   clearMocks: true,
   
   // Verbose output for TDD workflow
-  verbose: true
+  verbose: true,
+  
+  // Test timeout
+  testTimeout: 30000,
+  
+  // Force exit after tests complete
+  forceExit: true
 };

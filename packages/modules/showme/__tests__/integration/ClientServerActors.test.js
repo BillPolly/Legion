@@ -8,12 +8,14 @@
 import { ShowMeServer } from '../../src/server/ShowMeServer.js';
 import WebSocket from 'ws';
 import fetch from 'node-fetch';
+import { getRandomTestPort, waitForServer } from '../helpers/testUtils.js';
 
 describe('Client-Server Actor Communication Integration', () => {
   let server;
-  const testPort = 3793;
+  let testPort;
   
   beforeAll(async () => {
+    testPort = getRandomTestPort();
     server = new ShowMeServer({ 
       port: testPort,
       skipLegionPackages: true 
@@ -22,7 +24,7 @@ describe('Client-Server Actor Communication Integration', () => {
     await server.start();
     
     // Wait for server to be ready
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await waitForServer(500);
   }, 30000);
 
   afterAll(async () => {
@@ -33,7 +35,7 @@ describe('Client-Server Actor Communication Integration', () => {
 
   describe('client actor connection lifecycle', () => {
     test('should establish client actor connection', async () => {
-      const ws = new WebSocket(`ws://localhost:${testPort}/showme`);
+      const ws = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       
       const connected = await new Promise((resolve) => {
         ws.on('open', () => resolve(true));
@@ -48,7 +50,7 @@ describe('Client-Server Actor Communication Integration', () => {
     });
 
     test('should handle client actor identification', async () => {
-      const ws = new WebSocket(`ws://localhost:${testPort}/showme`);
+      const ws = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       
       await new Promise((resolve) => {
         ws.on('open', resolve);
@@ -85,7 +87,7 @@ describe('Client-Server Actor Communication Integration', () => {
     });
 
     test('should handle client disconnection gracefully', async () => {
-      const ws1 = new WebSocket(`ws://localhost:${testPort}/showme`);
+      const ws1 = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       
       await new Promise((resolve) => {
         ws1.on('open', resolve);
@@ -101,9 +103,9 @@ describe('Client-Server Actor Communication Integration', () => {
       ws1.close();
       
       // Server should handle disconnection and allow reconnection
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
-      const ws2 = new WebSocket(`ws://localhost:${testPort}/showme`);
+      const ws2 = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       
       const reconnected = await new Promise((resolve) => {
         ws2.on('open', () => resolve(true));
@@ -121,7 +123,7 @@ describe('Client-Server Actor Communication Integration', () => {
     let clientWs;
     
     beforeEach(async () => {
-      clientWs = new WebSocket(`ws://localhost:${testPort}/showme`);
+      clientWs = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       await new Promise((resolve) => {
         clientWs.on('open', resolve);
       });
@@ -133,7 +135,7 @@ describe('Client-Server Actor Communication Integration', () => {
         clientType: 'showme-client'
       }));
       
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await waitForServer(500);
     });
     
     afterEach(() => {
@@ -237,7 +239,7 @@ describe('Client-Server Actor Communication Integration', () => {
       }
       
       // Server should handle all window events
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Connection should remain stable
       expect(clientWs.readyState).toBe(WebSocket.OPEN);
@@ -248,7 +250,7 @@ describe('Client-Server Actor Communication Integration', () => {
     let clientWs;
     
     beforeEach(async () => {
-      clientWs = new WebSocket(`ws://localhost:${testPort}/showme`);
+      clientWs = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       await new Promise((resolve) => {
         clientWs.on('open', resolve);
       });
@@ -332,7 +334,7 @@ describe('Client-Server Actor Communication Integration', () => {
         });
       }
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await waitForServer(500);
       
       // Should have received responses
       expect(responses.length).toBeGreaterThan(0);
@@ -355,10 +357,10 @@ describe('Client-Server Actor Communication Integration', () => {
           sequence: i,
           data: `Message ${i}`
         }));
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await waitForServer(500);
       }
       
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Check if any sequenced responses maintain order
       if (receivedMessages.length > 1) {
@@ -373,7 +375,7 @@ describe('Client-Server Actor Communication Integration', () => {
 
   describe('state synchronization', () => {
     test('should synchronize asset state between server and client', async () => {
-      const clientWs = new WebSocket(`ws://localhost:${testPort}/showme`);
+      const clientWs = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       
       await new Promise((resolve) => {
         clientWs.on('open', resolve);
@@ -419,7 +421,7 @@ describe('Client-Server Actor Communication Integration', () => {
     });
 
     test('should handle window state updates', async () => {
-      const clientWs = new WebSocket(`ws://localhost:${testPort}/showme`);
+      const clientWs = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       
       await new Promise((resolve) => {
         clientWs.on('open', resolve);
@@ -465,7 +467,7 @@ describe('Client-Server Actor Communication Integration', () => {
 
   describe('error handling in actor communication', () => {
     test('should handle client errors gracefully', async () => {
-      const clientWs = new WebSocket(`ws://localhost:${testPort}/showme`);
+      const clientWs = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       
       await new Promise((resolve) => {
         clientWs.on('open', resolve);
@@ -482,7 +484,7 @@ describe('Client-Server Actor Communication Integration', () => {
       }));
       
       // Server should handle error without closing connection
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       expect(clientWs.readyState).toBe(WebSocket.OPEN);
       
@@ -490,7 +492,7 @@ describe('Client-Server Actor Communication Integration', () => {
     });
 
     test('should recover from communication errors', async () => {
-      const clientWs = new WebSocket(`ws://localhost:${testPort}/showme`);
+      const clientWs = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       
       await new Promise((resolve) => {
         clientWs.on('open', resolve);
@@ -503,11 +505,11 @@ describe('Client-Server Actor Communication Integration', () => {
         // Might throw
       }
       
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await waitForServer(500);
       
       // Connection might close, but should be able to reconnect
       if (clientWs.readyState === WebSocket.CLOSED) {
-        const newWs = new WebSocket(`ws://localhost:${testPort}/showme`);
+        const newWs = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
         
         const reconnected = await new Promise((resolve) => {
           newWs.on('open', () => resolve(true));
@@ -525,7 +527,7 @@ describe('Client-Server Actor Communication Integration', () => {
     });
 
     test('should handle actor timeout scenarios', async () => {
-      const clientWs = new WebSocket(`ws://localhost:${testPort}/showme`);
+      const clientWs = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       
       await new Promise((resolve) => {
         clientWs.on('open', resolve);

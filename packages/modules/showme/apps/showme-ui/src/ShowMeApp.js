@@ -2,9 +2,10 @@
  * ShowMeApp
  * 
  * Main application class for ShowMe UI
- * Manages WebSocket connection, asset display, and window management
+ * Uses ShowMeClientActor for handle-based asset display communication
  */
 
+import { ShowMeClientActor } from '../../../src/client/actors/ShowMeClientActor.js';
 import { AssetDisplayManager } from './services/AssetDisplayManager.js';
 import { WebSocketService } from './services/WebSocketService.js';
 import { AssetRenderer } from './components/AssetRenderer.js';
@@ -23,11 +24,11 @@ export class ShowMeApp {
     this.wsService = null;
     this.displayManager = null;
     this.renderer = null;
+    this.clientActor = null;
     
     // State
     this.connected = false;
     this.assets = new Map();
-    this.windows = new Map();
   }
   
   /**
@@ -49,6 +50,13 @@ export class ShowMeApp {
       reconnectInterval: this.config.reconnectInterval,
       maxReconnectAttempts: this.config.maxReconnectAttempts
     });
+    
+    // Create client actor with display manager
+    this.clientActor = new ShowMeClientActor(null, {
+      displayManager: this.displayManager
+    });
+    
+    await this.clientActor.initialize();
     
     // Set up WebSocket event handlers
     this.setupWebSocketHandlers();
@@ -81,17 +89,13 @@ export class ShowMeApp {
    */
   setupWebSocketHandlers() {
     // Connection events
-    this.wsService.on('connected', () => {
+    this.wsService.on('connected', async () => {
       console.log('Connected to ShowMe server');
       this.connected = true;
       this.updateConnectionStatus(true);
       
-      // Send client identification
-      this.wsService.send({
-        type: 'client-connect',
-        clientId: this.generateClientId(),
-        capabilities: ['display', 'interactive']
-      });
+      // Client actor will handle connection automatically
+      await this.clientActor.connectToServer();
     });
     
     this.wsService.on('disconnected', () => {
@@ -104,17 +108,21 @@ export class ShowMeApp {
       console.error('WebSocket error:', error);
     });
     
-    // Asset events
+    // Asset events - delegate to client actor
     this.wsService.on('asset-ready', (data) => {
-      this.handleAssetReady(data);
+      this.clientActor.handleAssetReady(data);
     });
     
-    this.wsService.on('asset-updated', (data) => {
-      this.handleAssetUpdated(data);
+    this.wsService.on('asset-data', (data) => {
+      this.clientActor.handleAssetData(data);
     });
     
-    this.wsService.on('asset-removed', (data) => {
-      this.handleAssetRemoved(data);
+    this.wsService.on('asset-deleted', (data) => {
+      this.clientActor.handleAssetDeleted(data);
+    });
+    
+    this.wsService.on('server-status', (data) => {
+      this.clientActor.handleServerStatus(data);
     });
     
     // Window events
@@ -194,27 +202,13 @@ export class ShowMeApp {
       return;
     }
     
-    // Create window for asset
-    const window = this.displayManager.createWindow({
-      id: assetId,
-      title: assetData.title,
-      type: assetData.type
+    // Delegate to client actor which handles rendering and display
+    this.clientActor.handleAssetData({
+      assetId: assetData.id,
+      asset: assetData.asset,
+      assetType: assetData.type,
+      title: assetData.title
     });
-    
-    // Render asset content
-    const renderedContent = this.renderer.render(
-      assetData.asset,
-      assetData.type
-    );
-    
-    // Set window content
-    window.setContent(renderedContent);
-    
-    // Store window reference
-    this.windows.set(assetId, window);
-    
-    // Show window
-    window.show();
   }
   
   /**
@@ -230,14 +224,14 @@ export class ShowMeApp {
       assetData.metadata = { ...assetData.metadata, ...metadata };
       assetData.timestamp = Date.now();
       
-      // Update window content if exists
-      const window = this.windows.get(assetId);
-      if (window) {
-        const renderedContent = this.renderer.render(
-          asset,
-          assetData.type
-        );
-        window.setContent(renderedContent);
+      // Update window content if exists via client actor
+      if (this.displayManager.getWindow(assetId)) {
+        this.clientActor.handleAssetData({
+          assetId: assetId,
+          asset: asset,
+          assetType: assetData.type,
+          title: assetData.title
+        });
       }
       
       // Update asset list
@@ -255,11 +249,7 @@ export class ShowMeApp {
     this.assets.delete(assetId);
     
     // Close window if exists
-    const window = this.windows.get(assetId);
-    if (window) {
-      window.close();
-      this.windows.delete(assetId);
-    }
+    this.displayManager.closeWindow(assetId);
     
     // Update asset list
     this.updateAssetList();
@@ -270,10 +260,7 @@ export class ShowMeApp {
    */
   handleWindowFocus(data) {
     const { windowId } = data;
-    const window = this.windows.get(windowId);
-    if (window) {
-      window.focus();
-    }
+    this.displayManager.focusWindow(windowId);
   }
   
   /**
@@ -281,11 +268,7 @@ export class ShowMeApp {
    */
   handleWindowClose(data) {
     const { windowId } = data;
-    const window = this.windows.get(windowId);
-    if (window) {
-      window.close();
-      this.windows.delete(windowId);
-    }
+    this.displayManager.closeWindow(windowId);
   }
   
   /**
@@ -481,11 +464,10 @@ export class ShowMeApp {
    * Cleanup and destroy app
    */
   destroy() {
-    // Close all windows
-    for (const window of this.windows.values()) {
-      window.close();
+    // Close all windows via display manager
+    if (this.displayManager) {
+      this.displayManager.closeAllWindows();
     }
-    this.windows.clear();
     
     // Clear assets
     this.assets.clear();

@@ -172,18 +172,25 @@ export class ShowMeClientActor extends Actor {
     }
     
     // Display asset using display manager
-    if (this.displayManager && this.displayManager.displayAsset) {
+    if (this.displayManager && this.displayManager.createWindow) {
       try {
-        const windowInfo = await this.displayManager.displayAsset({
-          assetId,
-          asset,
-          assetType,
-          title
+        // Create window with asset content
+        const window = this.displayManager.createWindow({
+          id: assetId,
+          title: title,
+          type: assetType
         });
+        
+        // Render asset content based on type
+        const renderedContent = this.renderAssetContent(asset, assetType);
+        window.setContent(renderedContent);
+        
+        // Show the window
+        window.show();
         
         // Track open window
         this.openWindows.set(assetId, {
-          windowId: windowInfo.windowId,
+          windowId: window.id,
           assetType,
           title,
           openedAt: Date.now()
@@ -193,18 +200,55 @@ export class ShowMeClientActor extends Actor {
           windowsOpen: this.openWindows.size
         });
         
-        // Set up window close handler
-        if (windowInfo.window && windowInfo.window.onClose) {
-          windowInfo.window.onClose(() => {
-            this.handleWindowClosed(windowInfo.windowId, assetId);
-          });
-        }
-        
       } catch (error) {
         console.error(`Failed to display asset ${assetId}:`, error);
       }
     } else {
-      console.warn('Display manager not available');
+      console.warn('Display manager not available or missing createWindow method');
+    }
+  }
+
+  /**
+   * Render asset content based on type
+   */
+  renderAssetContent(asset, assetType) {
+    switch (assetType) {
+      case 'json':
+        return `<pre style="margin:0; font-family: monospace; white-space: pre-wrap;">${JSON.stringify(asset, null, 2)}</pre>`;
+      
+      case 'image':
+        if (typeof asset === 'string' && (asset.startsWith('http') || asset.startsWith('data:'))) {
+          return `<img src="${asset}" style="max-width: 100%; height: auto;" alt="Asset Image">`;
+        }
+        return '<div>Image data (unsupported format)</div>';
+      
+      case 'code':
+        return `<pre style="margin:0; font-family: monospace; white-space: pre-wrap; background: #f5f5f5; padding: 10px;">${asset}</pre>`;
+      
+      case 'data':
+        if (Array.isArray(asset) && asset.length > 0) {
+          // Simple table rendering
+          const headers = Object.keys(asset[0]);
+          let tableHtml = '<table style="width:100%; border-collapse: collapse;">';
+          tableHtml += '<thead><tr>' + headers.map(h => `<th style="border:1px solid #ddd; padding:8px; background:#f5f5f5;">${h}</th>`).join('') + '</tr></thead>';
+          tableHtml += '<tbody>';
+          for (const row of asset.slice(0, 100)) { // Limit to 100 rows
+            tableHtml += '<tr>' + headers.map(h => `<td style="border:1px solid #ddd; padding:8px;">${row[h] || ''}</td>`).join('') + '</tr>';
+          }
+          tableHtml += '</tbody></table>';
+          return tableHtml;
+        }
+        return `<pre style="margin:0; font-family: monospace;">${JSON.stringify(asset, null, 2)}</pre>`;
+      
+      case 'web':
+        if (typeof asset === 'string' && asset.startsWith('http')) {
+          return `<iframe src="${asset}" style="width:100%; height:400px; border:none;" title="Web Content"></iframe>`;
+        }
+        return `<div style="padding:10px;">${asset}</div>`;
+      
+      case 'text':
+      default:
+        return `<div style="padding:10px; font-family: system-ui, sans-serif; white-space: pre-wrap;">${asset}</div>`;
     }
   }
 

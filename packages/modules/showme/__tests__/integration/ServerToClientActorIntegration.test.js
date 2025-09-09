@@ -10,15 +10,17 @@ import { ShowMeClientActor } from '../../src/client/actors/ShowMeClientActor.js'
 import { ResourceManager } from '@legion/resource-manager';
 import WebSocket from 'ws';
 import fetch from 'node-fetch';
+import { getRandomTestPort, waitForServer } from '../helpers/testUtils.js';
 
 describe('Server → Client Actor Communication Integration', () => {
   let server;
   let clientActor;
   let ws;
   let resourceManager;
-  const testPort = 3788;
+  let testPort;
 
   beforeAll(async () => {
+    testPort = getRandomTestPort();
     // Initialize ResourceManager singleton
     resourceManager = await ResourceManager.getInstance();
     
@@ -31,7 +33,7 @@ describe('Server → Client Actor Communication Integration', () => {
     await server.start();
     
     // Wait for server to be ready
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await waitForServer(500);
   }, 30000);
 
   afterAll(async () => {
@@ -52,7 +54,7 @@ describe('Server → Client Actor Communication Integration', () => {
 
     beforeEach(async () => {
       messages = [];
-      clientWs = new WebSocket(`ws://localhost:${testPort}/showme`);
+      clientWs = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       
       await new Promise((resolve) => {
         clientWs.on('open', resolve);
@@ -69,7 +71,7 @@ describe('Server → Client Actor Communication Integration', () => {
         capabilities: ['display', 'window-management']
       }));
       
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await waitForServer(500);
     });
 
     afterEach(() => {
@@ -93,7 +95,7 @@ describe('Server → Client Actor Communication Integration', () => {
       const { assetId } = await response.json();
       
       // Wait for notification
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Check for asset-created notification
       const notification = messages.find(m => 
@@ -107,7 +109,7 @@ describe('Server → Client Actor Communication Integration', () => {
 
     test('should broadcast display commands to all connected clients', async () => {
       // Connect multiple clients
-      const client2 = new WebSocket(`ws://localhost:${testPort}/showme`);
+      const client2 = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       const client2Messages = [];
       
       await new Promise((resolve) => {
@@ -141,7 +143,7 @@ describe('Server → Client Actor Communication Integration', () => {
         })
       });
       
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Both clients should receive notification
       const client1Display = messages.find(m => 
@@ -188,7 +190,7 @@ describe('Server → Client Actor Communication Integration', () => {
         })
       });
       
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Check for update notification
       const updateNotification = messages.find(m => 
@@ -210,7 +212,7 @@ describe('Server → Client Actor Communication Integration', () => {
       
       // Create client actor
       clientActor = new ShowMeClientActor({
-        serverUrl: `ws://localhost:${testPort}/showme`,
+        serverUrl: `ws://localhost:${testPort}/ws?route=/showme`,
         onMessage: (message) => {
           actorMessages.push(message);
         }
@@ -220,7 +222,7 @@ describe('Server → Client Actor Communication Integration', () => {
       await clientActor.connect();
       
       // Wait for connection
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
     });
 
     afterEach(async () => {
@@ -250,7 +252,7 @@ describe('Server → Client Actor Communication Integration', () => {
         height: 768
       });
       
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Check if actor received confirmation
       const displayConfirmation = actorMessages.find(m => 
@@ -283,7 +285,7 @@ describe('Server → Client Actor Communication Integration', () => {
       // Request window state
       await clientActor.requestWindowState();
       
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Check for state response
       const stateMessage = actorMessages.find(m => 
@@ -299,7 +301,7 @@ describe('Server → Client Actor Communication Integration', () => {
       // Request non-existent asset
       await clientActor.requestAsset('non-existent-id');
       
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Check for error message
       const errorMessage = actorMessages.find(m => 
@@ -321,7 +323,7 @@ describe('Server → Client Actor Communication Integration', () => {
       
       // Create client actor with message tracking
       clientActor = new ShowMeClientActor({
-        serverUrl: `ws://localhost:${testPort}/showme`
+        serverUrl: `ws://localhost:${testPort}/ws?route=/showme`
       });
       
       await clientActor.initialize();
@@ -332,7 +334,7 @@ describe('Server → Client Actor Communication Integration', () => {
         serverMessages.push(msg);
       });
       
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
     });
 
     afterEach(async () => {
@@ -365,7 +367,7 @@ describe('Server → Client Actor Communication Integration', () => {
         assetId: assetId
       });
       
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Check for correlated response
       const correlatedResponse = serverMessages.find(m => 
@@ -387,10 +389,10 @@ describe('Server → Client Actor Communication Integration', () => {
       
       // Trigger state changes
       await clientActor.disconnect();
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await waitForServer(500);
       
       await clientActor.connect();
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await waitForServer(500);
       
       // Should have state transitions
       expect(states.length).toBeGreaterThan(0);
@@ -421,7 +423,7 @@ describe('Server → Client Actor Communication Integration', () => {
       
       // Reconnect
       await clientActor.connect();
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Queued message should be sent
       const queuedResponse = serverMessages.find(m => 
@@ -440,7 +442,7 @@ describe('Server → Client Actor Communication Integration', () => {
 
     beforeEach(async () => {
       events = [];
-      clientWs = new WebSocket(`ws://localhost:${testPort}/showme`);
+      clientWs = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       
       await new Promise((resolve) => {
         clientWs.on('open', resolve);
@@ -458,7 +460,7 @@ describe('Server → Client Actor Communication Integration', () => {
         type: 'subscribe-all'
       }));
       
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await waitForServer(500);
     });
 
     afterEach(() => {
@@ -486,7 +488,7 @@ describe('Server → Client Actor Communication Integration', () => {
         method: 'DELETE'
       });
       
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Check for lifecycle events
       const createEvent = events.find(e => 
@@ -520,7 +522,7 @@ describe('Server → Client Actor Communication Integration', () => {
         })
       });
       
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Check for performance events
       const perfEvent = events.find(e => 
@@ -539,7 +541,7 @@ describe('Server → Client Actor Communication Integration', () => {
       
       // Rapidly create and close connections
       for (let i = 0; i < 10; i++) {
-        const ws = new WebSocket(`ws://localhost:${testPort}/showme`);
+        const ws = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
         
         await new Promise((resolve) => {
           ws.on('open', resolve);
@@ -551,11 +553,11 @@ describe('Server → Client Actor Communication Integration', () => {
         
         // Close immediately
         ws.close();
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await waitForServer(500);
       }
       
       // Server should remain stable
-      const testWs = new WebSocket(`ws://localhost:${testPort}/showme`);
+      const testWs = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       
       const connected = await new Promise((resolve) => {
         testWs.on('open', () => resolve(true));
@@ -568,7 +570,7 @@ describe('Server → Client Actor Communication Integration', () => {
     });
 
     test('should recover from malformed messages', async () => {
-      const ws = new WebSocket(`ws://localhost:${testPort}/showme`);
+      const ws = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       
       await new Promise((resolve) => {
         ws.on('open', resolve);
@@ -580,7 +582,7 @@ describe('Server → Client Actor Communication Integration', () => {
       ws.send(JSON.stringify({ no_type_field: true }));
       ws.send(JSON.stringify({ type: 123 })); // Wrong type
       
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Connection should remain open
       expect(ws.readyState).toBe(WebSocket.OPEN);
@@ -610,7 +612,7 @@ describe('Server → Client Actor Communication Integration', () => {
     });
 
     test('should handle message flooding gracefully', async () => {
-      const ws = new WebSocket(`ws://localhost:${testPort}/showme`);
+      const ws = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       
       await new Promise((resolve) => {
         ws.on('open', resolve);
@@ -625,7 +627,7 @@ describe('Server → Client Actor Communication Integration', () => {
         }));
       }
       
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await waitForServer(500);
       
       // Connection should survive
       expect([WebSocket.OPEN, WebSocket.CLOSING]).toContain(ws.readyState);

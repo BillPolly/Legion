@@ -8,12 +8,14 @@
 import { ShowMeServer } from '../../src/server/ShowMeServer.js';
 import WebSocket from 'ws';
 import fetch from 'node-fetch';
+import { getRandomTestPort, waitForServer } from '../helpers/testUtils.js';
 
 describe('Protocol Validation Integration', () => {
   let server;
-  const testPort = 3794;
+  let testPort;
   
   beforeAll(async () => {
+    testPort = getRandomTestPort();
     server = new ShowMeServer({ 
       port: testPort,
       skipLegionPackages: true 
@@ -22,7 +24,7 @@ describe('Protocol Validation Integration', () => {
     await server.start();
     
     // Wait for server to be ready
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await waitForServer(500);
   }, 30000);
 
   afterAll(async () => {
@@ -35,7 +37,7 @@ describe('Protocol Validation Integration', () => {
     let ws;
 
     beforeEach(async () => {
-      ws = new WebSocket(`ws://localhost:${testPort}/showme`);
+      ws = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       await new Promise((resolve) => {
         ws.on('open', resolve);
       });
@@ -60,7 +62,7 @@ describe('Protocol Validation Integration', () => {
         id: '123'
       }));
       
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Should either receive error or message should be ignored
       const errorResponse = responses.find(r => r.type === 'error' || r.error);
@@ -82,7 +84,7 @@ describe('Protocol Validation Integration', () => {
         data: 'test'
       }));
       
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Should receive error or ignore message
       const errorResponse = responses.find(r => r.type === 'error' || r.error);
@@ -108,7 +110,7 @@ describe('Protocol Validation Integration', () => {
       // Send invalid JSON
       ws.send('{ invalid json }');
       
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Connection might close or receive error
       expect(ws.readyState === WebSocket.CLOSED || errorReceived).toBeTruthy();
@@ -119,7 +121,7 @@ describe('Protocol Validation Integration', () => {
     let ws;
 
     beforeEach(async () => {
-      ws = new WebSocket(`ws://localhost:${testPort}/showme`);
+      ws = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       await new Promise((resolve) => {
         ws.on('open', resolve);
       });
@@ -251,7 +253,7 @@ describe('Protocol Validation Integration', () => {
     let ws;
 
     beforeEach(async () => {
-      ws = new WebSocket(`ws://localhost:${testPort}/showme`);
+      ws = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       await new Promise((resolve) => {
         ws.on('open', resolve);
       });
@@ -302,7 +304,7 @@ describe('Protocol Validation Integration', () => {
         windowOptions: 'invalid-should-be-object'
       }));
       
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Should receive error or handle gracefully
       const errorResponse = responses.find(r => r.error || r.type === 'error');
@@ -325,7 +327,7 @@ describe('Protocol Validation Integration', () => {
         assetType: 'invalid-type' // Should be one of: image, code, json, data, web, text
       }));
       
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Should handle invalid enum value
       const response = responses[responses.length - 1];
@@ -337,7 +339,7 @@ describe('Protocol Validation Integration', () => {
 
   describe('protocol versioning', () => {
     test('should handle version negotiation', async () => {
-      const ws = new WebSocket(`ws://localhost:${testPort}/showme`);
+      const ws = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       
       await new Promise((resolve) => {
         ws.on('open', resolve);
@@ -370,7 +372,7 @@ describe('Protocol Validation Integration', () => {
     });
 
     test('should handle incompatible version gracefully', async () => {
-      const ws = new WebSocket(`ws://localhost:${testPort}/showme`);
+      const ws = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       
       await new Promise((resolve) => {
         ws.on('open', resolve);
@@ -388,7 +390,7 @@ describe('Protocol Validation Integration', () => {
         clientId: 'test'
       }));
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await waitForServer(500);
       
       // Should either accept or send compatibility warning
       if (responses.length > 0) {
@@ -402,7 +404,7 @@ describe('Protocol Validation Integration', () => {
 
   describe('security validation', () => {
     test('should sanitize message content', async () => {
-      const ws = new WebSocket(`ws://localhost:${testPort}/showme`);
+      const ws = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       
       await new Promise((resolve) => {
         ws.on('open', resolve);
@@ -421,7 +423,7 @@ describe('Protocol Validation Integration', () => {
         title: '<script>alert("xss")</script>' // XSS attempt
       }));
       
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Should handle dangerous input safely
       expect(ws.readyState).toBeLessThanOrEqual(WebSocket.OPEN);
@@ -430,7 +432,7 @@ describe('Protocol Validation Integration', () => {
     });
 
     test('should limit message size', async () => {
-      const ws = new WebSocket(`ws://localhost:${testPort}/showme`);
+      const ws = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       
       await new Promise((resolve) => {
         ws.on('open', resolve);
@@ -454,7 +456,7 @@ describe('Protocol Validation Integration', () => {
         // Message might be too large to send
       }
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await waitForServer(500);
       
       // Connection might close or handle gracefully
       expect(ws.readyState === WebSocket.CLOSED || !connectionClosed).toBeTruthy();
@@ -465,7 +467,7 @@ describe('Protocol Validation Integration', () => {
     });
 
     test('should validate message rate limiting', async () => {
-      const ws = new WebSocket(`ws://localhost:${testPort}/showme`);
+      const ws = new WebSocket(`ws://localhost:${testPort}/ws?route=/showme`);
       
       await new Promise((resolve) => {
         ws.on('open', resolve);
@@ -488,7 +490,7 @@ describe('Protocol Validation Integration', () => {
         }));
       }
       
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await waitForServer(500);
       
       // Server may implement rate limiting
       // Connection should still be open or error received

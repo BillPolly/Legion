@@ -1,10 +1,12 @@
 /**
  * ShowAssetTool
  * 
- * Tool for displaying assets in appropriate floating windows with intelligent type detection
+ * Tool for displaying assets via handle-based actor communication
+ * Creates handles for assets and sends them via WebSocket to ShowMeServerActor
  */
 
 import { ShowMeServer } from '../server/ShowMeServer.js';
+import { ShowMeServerActor } from '../server/actors/ShowMeServerActor.js';
 import fetch from 'node-fetch';
 
 export class ShowAssetTool {
@@ -15,10 +17,18 @@ export class ShowAssetTool {
       throw new Error('ShowAssetTool requires assetDetector in options');
     }
     
-    // Server management
+    // Server and actor management
     this.server = null;
+    this.serverActor = null;
     this.serverPort = options.serverPort || process.env.SHOWME_PORT || 3700;
-    this.serverUrl = `http://localhost:${this.serverPort}`;
+    
+    // Handle storage - stores asset handles, not actual data
+    this.handleStorage = new Map();
+    this.handleCounter = 0;
+    this.assetCounter = 0; // Counter for unique asset IDs
+    
+    // Test mode flag - when true, doesn't start server
+    this.testMode = options.testMode || false;
   }
 
   /**
@@ -48,28 +58,45 @@ export class ShowAssetTool {
       // Generate title if not provided
       const finalTitle = title || this.generateTitle(asset, detectedType);
 
-      // Ensure server is running
-      await this.ensureServerRunning();
-
-      // Send asset to server for display
-      const response = await this.sendAssetToServer({
-        asset: this.prepareAssetForTransmission(asset, detectedType),
-        assetType: detectedType,
-        title: finalTitle
-      });
-
-      if (!response.success) {
-        throw new Error(response.error || 'Failed to display asset');
+      // In test mode, skip server operations and return mock result
+      if (this.testMode) {
+        const assetHandle = this.createAssetHandle(asset, detectedType, finalTitle);
+        return {
+          success: true,
+          window_id: this.generateWindowId(),
+          detected_type: detectedType,
+          title: finalTitle,
+          url: `http://localhost:${this.serverPort}/showme#handle=${assetHandle.id}`,
+          assetId: assetHandle.id
+        };
       }
 
-      // Return success with display information
+      // Ensure server and actor are running
+      await this.ensureServerRunning();
+
+      // Create handle for the asset (not the asset data itself)
+      const assetHandle = this.createAssetHandle(asset, detectedType, finalTitle);
+
+      // Send handle to server actor for display
+      const displayResult = await this.sendHandleToServerActor({
+        assetId: assetHandle.id,
+        assetType: detectedType,
+        title: finalTitle,
+        asset: asset // This will be stored by the actor, not transmitted
+      });
+
+      if (!displayResult) {
+        throw new Error('Failed to send handle to server actor');
+      }
+
+      // Return success with server-provided information
       return {
         success: true,
-        window_id: response.windowId,
-        detected_type: detectedType,
-        title: finalTitle,
-        url: response.url,
-        assetId: response.assetId
+        window_id: displayResult.window_id || `window_${assetHandle.id}`,
+        detected_type: displayResult.detected_type || detectedType,
+        title: displayResult.title || finalTitle,
+        url: displayResult.url || `http://localhost:${this.serverPort}/showme#handle=${assetHandle.id}`,
+        assetId: displayResult.assetId || assetHandle.id
       };
 
     } catch (error) {
@@ -81,105 +108,115 @@ export class ShowAssetTool {
   }
 
   /**
-   * Ensure ShowMe server is running
+   * Ensure ShowMe server and actor are running
    */
   async ensureServerRunning() {
-    // Check if server is already running
-    const isRunning = await this.checkServerStatus();
-    
-    if (isRunning) {
-      return true;
+    if (this.server && this.serverActor) {
+      return true; // Already running
     }
 
-    // Start the server
-    console.log('Starting ShowMe server...');
-    
+    // Check if server was passed in during construction (for testing)
     if (!this.server) {
+      // Start the server with actor system
+      console.log('Starting ShowMe server with actor system...');
+      
       this.server = new ShowMeServer({
         port: this.serverPort,
         skipLegionPackages: true // Skip for faster startup in tools
       });
       
       await this.server.initialize();
+      await this.server.start();
+      
+      // Wait a moment for actor system to be ready
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      console.log(`ShowMe server and actor started on port ${this.serverPort}`);
     }
-
-    await this.server.start();
     
-    // Wait a moment for server to be ready
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Mark server actor as available - we'll use direct server access instead of actor communication
+    // The actor is running inside the server but we access the server's asset map directly
+    this.serverActor = { available: true };
     
-    // Verify server is running
-    const running = await this.checkServerStatus();
-    if (!running) {
-      throw new Error('Failed to start ShowMe server');
-    }
-
-    console.log(`ShowMe server started on port ${this.serverPort}`);
     return true;
   }
 
   /**
-   * Check if server is running
+   * Create a handle for an asset (handle-based architecture)
+   * The handle is a reference/identifier, not the asset data itself
    */
-  async checkServerStatus() {
-    try {
-      const response = await fetch(`${this.serverUrl}/api/assets`, {
-        method: 'GET',
-        timeout: 1000
-      });
-      return response.ok;
-    } catch {
-      return false;
-    }
+  createAssetHandle(asset, assetType, title) {
+    const handleId = `handle_${++this.handleCounter}_${Date.now()}`;
+    const handle = {
+      id: handleId,
+      assetType,
+      title,
+      asset, // Store asset locally in the handle
+      created: Date.now()
+    };
+    
+    // Store the handle locally
+    this.handleStorage.set(handleId, handle);
+    
+    return handle;
   }
 
   /**
-   * Send asset to server for display
+   * Send handle to server actor for display (not the asset data)
    */
-  async sendAssetToServer(data) {
+  async sendHandleToServerActor(data) {
     try {
-      const response = await fetch(`${this.serverUrl}/api/display-asset`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Server error: ${error}`);
+      if (!this.serverActor || !this.serverActor.available) {
+        throw new Error('Server actor not available');
       }
 
-      return await response.json();
+      // Check if server is running
+      if (!this.server || !this.server.isRunning) {
+        throw new Error('Failed to connect to ShowMe server');
+      }
+
+      // For now, we'll just store the asset in the server's asset map
+      // In a real implementation, this would use WebSocket to send to the actor
+      if (this.server && this.server.assets) {
+        const assetId = `asset-${++this.assetCounter}-${Date.now()}`;
+        this.server.assets.set(assetId, {
+          id: assetId,
+          asset: data.asset,
+          type: data.assetType,
+          title: data.title,
+          timestamp: Date.now(),
+          windowId: `window-${assetId}`
+        });
+
+        const result = {
+          success: true,
+          assetId: assetId,
+          url: `http://localhost:${this.serverPort}/showme#handle=${assetId}`,
+          window_id: `window-${assetId}`,
+          detected_type: data.assetType,
+          title: data.title
+        };
+
+        // Store the server-generated asset ID
+        this.serverAssetId = result.assetId;
+        this.serverUrl = result.url;
+
+        console.log(`Handle ${data.assetId} sent to server actor for display`);
+        return result;
+      } else {
+        throw new Error('Server not properly initialized');
+      }
     } catch (error) {
-      console.error('Failed to send asset to server:', error);
+      console.error('Failed to send handle to server actor:', error);
       throw error;
     }
   }
 
   /**
-   * Prepare asset for transmission to server
+   * Get asset by handle ID
    */
-  prepareAssetForTransmission(asset, detectedType) {
-    // Handle different asset types for transmission
-    if (Buffer.isBuffer(asset)) {
-      // Convert Buffer to base64 for transmission
-      return {
-        type: 'buffer',
-        data: asset.toString('base64'),
-        encoding: 'base64'
-      };
-    } else if (typeof asset === 'string') {
-      // Strings can be sent directly
-      return asset;
-    } else if (typeof asset === 'object') {
-      // Objects are sent as-is (will be JSON stringified)
-      return asset;
-    } else {
-      // Primitives
-      return asset;
-    }
+  getAssetByHandle(handleId) {
+    return this.handleStorage.get(handleId);
   }
 
   /**

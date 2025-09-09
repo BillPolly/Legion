@@ -8,19 +8,23 @@
 import { ShowAssetTool } from '../../src/tools/ShowAssetTool.js';
 import { ShowMeServer } from '../../src/server/ShowMeServer.js';
 import { AssetTypeDetector } from '../../src/detection/AssetTypeDetector.js';
+import { getRandomTestPort, waitForServer } from '../helpers/testUtils.js';
 import fetch from 'node-fetch';
 
 describe('Error Propagation Integration', () => {
   let tool;
   let server;
   let assetDetector;
-  const testPort = 3796;
+  let testPort;
 
   beforeAll(async () => {
     assetDetector = new AssetTypeDetector();
   });
 
   beforeEach(async () => {
+    // Get random port for this test
+    testPort = getRandomTestPort();
+    
     // Start fresh server for each test
     server = new ShowMeServer({ 
       port: testPort,
@@ -30,7 +34,7 @@ describe('Error Propagation Integration', () => {
     await server.start();
     
     // Wait for server to be ready
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await waitForServer(500);
     
     // Create tool
     tool = new ShowAssetTool({

@@ -1,9 +1,11 @@
 /**
  * AssetDisplayManager
  * 
- * Manages floating windows for asset display
- * Extends ResourceWindowManager for window management capabilities
+ * Manages asset display using the ShowMe WindowManager
+ * Connects the ShowMe module's WindowManager to the client UI
  */
+
+import { WindowManager } from '../../../../src/ui/WindowManager.js';
 
 export class AssetDisplayManager {
   constructor(config = {}) {
@@ -16,10 +18,15 @@ export class AssetDisplayManager {
       ...config
     };
     
-    // Window management
-    this.windows = new Map();
-    this.activeWindow = null;
-    this.nextZIndex = 1000;
+    // Use ShowMe WindowManager instead of custom window management
+    this.windowManager = new WindowManager({
+      defaultWidth: this.config.defaultWidth,
+      defaultHeight: this.config.defaultHeight,
+      zIndexBase: 1000,
+      positionOffset: 30,
+      defaultX: 50,
+      defaultY: 50
+    });
     
     // Window area
     this.windowArea = null;
@@ -46,104 +53,323 @@ export class AssetDisplayManager {
   }
   
   /**
+   * Get the underlying WindowManager
+   */
+  getWindowManager() {
+    return this.windowManager;
+  }
+  
+  /**
    * Create a new window for asset display
    */
   createWindow(options = {}) {
     const windowId = options.id || this.generateWindowId();
     
-    // Create window instance
-    const window = new AssetWindow({
+    // Create asset display window using WindowManager
+    const windowConfig = {
       id: windowId,
       title: options.title || 'Asset Viewer',
-      type: options.type || 'default',
+      content: '<div class="asset-content">Loading...</div>', // Initial content
       width: options.width || this.config.defaultWidth,
       height: options.height || this.config.defaultHeight,
-      minWidth: this.config.minWidth,
-      minHeight: this.config.minHeight,
-      x: options.x || this.calculateNextPosition().x,
-      y: options.y || this.calculateNextPosition().y,
-      zIndex: this.nextZIndex++,
-      manager: this
-    });
+      x: options.x,
+      y: options.y,
+      resizable: options.resizable !== false,
+      closable: options.closable !== false
+    };
     
-    // Store window
-    this.windows.set(windowId, window);
+    // Create window via WindowManager
+    const window = this.windowManager.createWindow(windowConfig);
     
-    // Append to window area
-    if (this.windowArea) {
-      this.windowArea.appendChild(window.element);
+    // If assetId provided, render the asset content
+    if (options.assetId && this.server) {
+      this.renderAssetInWindow(window, options.assetId, options);
     }
     
-    return window;
+    // Wrap with asset-specific methods
+    const assetWindow = this.wrapWindowWithAssetMethods(window, options);
+    
+    return assetWindow;
+  }
+
+  /**
+   * Set the server reference for asset fetching
+   */
+  setServer(server) {
+    this.server = server;
+  }
+
+  /**
+   * Render asset content in window
+   */
+  async renderAssetInWindow(window, assetId, options = {}) {
+    try {
+      if (!this.server || !this.server.assets) {
+        throw new Error('Server not available for asset fetching');
+      }
+
+      // Get asset from server state
+      const assetData = this.server.assets.get(assetId);
+      if (!assetData) {
+        throw new Error(`Asset not found: ${assetId}`);
+      }
+
+      // Get appropriate renderer based on asset type
+      const renderer = this.getRendererForType(assetData.type);
+      if (!renderer) {
+        throw new Error(`No renderer available for type: ${assetData.type}`);
+      }
+
+      // Render the asset
+      const renderResult = renderer.render(assetData.asset);
+      
+      // Update window content
+      const contentElement = window.element.querySelector('.showme-window-content');
+      if (contentElement && renderResult.element) {
+        contentElement.innerHTML = '';
+        contentElement.appendChild(renderResult.element);
+      }
+
+    } catch (error) {
+      console.error('Failed to render asset in window:', error);
+      // Show error in window
+      const contentElement = window.element.querySelector('.showme-window-content');
+      if (contentElement) {
+        contentElement.innerHTML = `<div class="error-message">Failed to load asset: ${error.message}</div>`;
+      }
+    }
+  }
+
+  /**
+   * Get renderer for asset type
+   */
+  getRendererForType(assetType) {
+    if (!this.renderers) {
+      this.initializeRenderers();
+    }
+    return this.renderers[assetType];
+  }
+
+  /**
+   * Initialize renderers
+   */
+  initializeRenderers() {
+    // Import renderers dynamically in a real implementation
+    // For now, create mock renderers for testing
+    this.renderers = {
+      image: {
+        render: (asset) => {
+          const element = document.createElement('div');
+          element.className = 'image-viewer';
+          const img = document.createElement('img');
+          img.src = asset;
+          img.style.maxWidth = '100%';
+          img.style.maxHeight = '100%';
+          element.appendChild(img);
+          return { element };
+        }
+      },
+      json: {
+        render: (asset) => {
+          const element = document.createElement('div');
+          element.className = 'json-viewer';
+          const pre = document.createElement('pre');
+          pre.style.cssText = 'margin: 0; padding: 16px; background: #f5f5f5; border-radius: 4px; overflow: auto;';
+          pre.textContent = typeof asset === 'string' ? asset : JSON.stringify(asset, null, 2);
+          element.appendChild(pre);
+          return { element };
+        }
+      },
+      data: {
+        render: (asset) => {
+          const element = document.createElement('div');
+          element.className = 'table-viewer';
+          if (Array.isArray(asset) && asset.length > 0) {
+            const table = document.createElement('table');
+            table.style.cssText = 'width: 100%; border-collapse: collapse;';
+            
+            // Headers
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            const headers = Object.keys(asset[0]);
+            headers.forEach(header => {
+              const th = document.createElement('th');
+              th.textContent = header;
+              th.style.cssText = 'border: 1px solid #ddd; padding: 8px; background: #f9f9f9;';
+              headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+            
+            // Body
+            const tbody = document.createElement('tbody');
+            asset.forEach(row => {
+              const tr = document.createElement('tr');
+              headers.forEach(header => {
+                const td = document.createElement('td');
+                td.textContent = row[header];
+                td.style.cssText = 'border: 1px solid #ddd; padding: 8px;';
+                tr.appendChild(td);
+              });
+              tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            element.appendChild(table);
+          }
+          return { element };
+        }
+      },
+      table: {
+        render: (asset) => {
+          // Same as data renderer
+          const element = document.createElement('div');
+          element.className = 'table-viewer';
+          if (Array.isArray(asset) && asset.length > 0) {
+            const table = document.createElement('table');
+            table.style.cssText = 'width: 100%; border-collapse: collapse;';
+            
+            // Headers
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            const headers = Object.keys(asset[0]);
+            headers.forEach(header => {
+              const th = document.createElement('th');
+              th.textContent = header;
+              th.style.cssText = 'border: 1px solid #ddd; padding: 8px; background: #f9f9f9;';
+              headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+            
+            // Body
+            const tbody = document.createElement('tbody');
+            asset.forEach(row => {
+              const tr = document.createElement('tr');
+              headers.forEach(header => {
+                const td = document.createElement('td');
+                td.textContent = row[header];
+                td.style.cssText = 'border: 1px solid #ddd; padding: 8px;';
+                tr.appendChild(td);
+              });
+              tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            element.appendChild(table);
+          }
+          return { element };
+        }
+      },
+      csv: {
+        render: (asset) => {
+          const element = document.createElement('div');
+          element.className = 'table-viewer';
+          
+          // Parse CSV string
+          if (typeof asset === 'string') {
+            const lines = asset.trim().split('\n');
+            if (lines.length > 0) {
+              const table = document.createElement('table');
+              table.style.cssText = 'width: 100%; border-collapse: collapse;';
+              
+              // Headers (first line)
+              const thead = document.createElement('thead');
+              const headerRow = document.createElement('tr');
+              const headers = lines[0].split(',').map(h => h.trim());
+              headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                th.style.cssText = 'border: 1px solid #ddd; padding: 8px; background: #f9f9f9;';
+                headerRow.appendChild(th);
+              });
+              thead.appendChild(headerRow);
+              table.appendChild(thead);
+              
+              // Body (remaining lines)
+              const tbody = document.createElement('tbody');
+              for (let i = 1; i < lines.length; i++) {
+                const cells = lines[i].split(',').map(c => c.trim());
+                const tr = document.createElement('tr');
+                cells.forEach(cell => {
+                  const td = document.createElement('td');
+                  td.textContent = cell;
+                  td.style.cssText = 'border: 1px solid #ddd; padding: 8px;';
+                  tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+              }
+              table.appendChild(tbody);
+              element.appendChild(table);
+            }
+          }
+          return { element };
+        }
+      }
+    };
   }
   
   /**
    * Get window by ID
    */
   getWindow(windowId) {
-    return this.windows.get(windowId);
+    return this.windowManager.getWindow(windowId);
   }
   
   /**
    * Focus a window
    */
   focusWindow(windowId) {
-    const window = this.windows.get(windowId);
-    if (window) {
-      // Bring to front
-      window.setZIndex(this.nextZIndex++);
-      
-      // Set as active
-      if (this.activeWindow && this.activeWindow !== window) {
-        this.activeWindow.setActive(false);
-      }
-      window.setActive(true);
-      this.activeWindow = window;
-    }
+    return this.windowManager.focusWindow(windowId);
   }
   
   /**
    * Close a window
    */
   closeWindow(windowId) {
-    const window = this.windows.get(windowId);
-    if (window) {
-      window.destroy();
-      this.windows.delete(windowId);
-      
-      if (this.activeWindow === window) {
-        this.activeWindow = null;
-      }
-    }
+    return this.windowManager.closeWindow(windowId);
   }
   
   /**
    * Close all windows
    */
   closeAllWindows() {
-    for (const window of this.windows.values()) {
-      window.destroy();
-    }
-    this.windows.clear();
-    this.activeWindow = null;
+    this.windowManager.closeAllWindows();
   }
   
   /**
-   * Calculate next window position (cascade)
+   * Wrap WindowManager window with asset-specific methods
    */
-  calculateNextPosition() {
-    const offset = 30;
-    const count = this.windows.size;
-    const x = 50 + (count * offset);
-    const y = 50 + (count * offset);
+  wrapWindowWithAssetMethods(window, options) {
+    // Add asset-specific methods to the window
+    window.setContent = (content) => {
+      const contentElement = window.element.querySelector('.showme-window-content');
+      if (contentElement) {
+        if (typeof content === 'string') {
+          contentElement.innerHTML = content;
+        } else if (content instanceof HTMLElement) {
+          contentElement.innerHTML = '';
+          contentElement.appendChild(content);
+        }
+      }
+    };
     
-    // Reset if too far
-    const maxOffset = 300;
-    if (x > maxOffset || y > maxOffset) {
-      return { x: 50, y: 50 };
-    }
+    window.show = () => {
+      window.element.style.display = 'block';
+      this.windowManager.focusWindow(window.id);
+    };
     
-    return { x, y };
+    window.hide = () => {
+      window.element.style.display = 'none';
+    };
+    
+    window.close = () => {
+      this.windowManager.closeWindow(window.id);
+    };
+    
+    window.focus = () => {
+      this.windowManager.focusWindow(window.id);
+    };
+    
+    return window;
   }
   
   /**
@@ -248,321 +474,9 @@ export class AssetDisplayManager {
   destroy() {
     this.closeAllWindows();
     this.windowArea = null;
+    this.windowManager = null;
   }
 }
 
-/**
- * AssetWindow class representing a single window
- */
-class AssetWindow {
-  constructor(config) {
-    this.id = config.id;
-    this.title = config.title;
-    this.type = config.type;
-    this.manager = config.manager;
-    
-    // Dimensions and position
-    this.width = config.width;
-    this.height = config.height;
-    this.minWidth = config.minWidth;
-    this.minHeight = config.minHeight;
-    this.x = config.x;
-    this.y = config.y;
-    this.zIndex = config.zIndex;
-    
-    // State
-    this.isActive = false;
-    this.isDragging = false;
-    this.isResizing = false;
-    this.isMinimized = false;
-    this.isMaximized = false;
-    
-    // Create DOM element
-    this.createElement();
-    
-    // Set up event handlers
-    this.setupEventHandlers();
-  }
-  
-  /**
-   * Create the window DOM element
-   */
-  createElement() {
-    this.element = document.createElement('div');
-    this.element.className = 'asset-window';
-    this.element.style.width = `${this.width}px`;
-    this.element.style.height = `${this.height}px`;
-    this.element.style.left = `${this.x}px`;
-    this.element.style.top = `${this.y}px`;
-    this.element.style.zIndex = this.zIndex;
-    
-    // Header
-    const header = document.createElement('div');
-    header.className = 'asset-window-header';
-    
-    const title = document.createElement('div');
-    title.className = 'asset-window-title';
-    title.textContent = this.title;
-    
-    const controls = document.createElement('div');
-    controls.className = 'asset-window-controls';
-    
-    // Minimize button
-    const minimizeBtn = document.createElement('button');
-    minimizeBtn.className = 'asset-window-control minimize';
-    minimizeBtn.textContent = '−';
-    minimizeBtn.onclick = () => this.minimize();
-    
-    // Maximize button
-    const maximizeBtn = document.createElement('button');
-    maximizeBtn.className = 'asset-window-control maximize';
-    maximizeBtn.textContent = '□';
-    maximizeBtn.onclick = () => this.maximize();
-    
-    // Close button
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'asset-window-control close';
-    closeBtn.textContent = '×';
-    closeBtn.onclick = () => this.close();
-    
-    controls.appendChild(minimizeBtn);
-    controls.appendChild(maximizeBtn);
-    controls.appendChild(closeBtn);
-    
-    header.appendChild(title);
-    header.appendChild(controls);
-    
-    // Content area
-    const content = document.createElement('div');
-    content.className = 'asset-window-content';
-    
-    // Resize handles
-    const resizeHandles = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
-    resizeHandles.forEach(handle => {
-      const resizeHandle = document.createElement('div');
-      resizeHandle.className = `asset-window-resize-handle resize-handle-${handle}`;
-      resizeHandle.dataset.handle = handle;
-      this.element.appendChild(resizeHandle);
-    });
-    
-    this.element.appendChild(header);
-    this.element.appendChild(content);
-    
-    this.header = header;
-    this.content = content;
-  }
-  
-  /**
-   * Set up event handlers for dragging and resizing
-   */
-  setupEventHandlers() {
-    // Dragging
-    this.header.addEventListener('mousedown', (e) => this.startDrag(e));
-    
-    // Resizing
-    const resizeHandles = this.element.querySelectorAll('.asset-window-resize-handle');
-    resizeHandles.forEach(handle => {
-      handle.addEventListener('mousedown', (e) => this.startResize(e, handle.dataset.handle));
-    });
-    
-    // Focus on click
-    this.element.addEventListener('mousedown', () => {
-      this.manager.focusWindow(this.id);
-    });
-  }
-  
-  /**
-   * Start dragging the window
-   */
-  startDrag(e) {
-    if (e.target.classList.contains('asset-window-control')) return;
-    
-    this.isDragging = true;
-    this.dragStartX = e.clientX - this.x;
-    this.dragStartY = e.clientY - this.y;
-    
-    const handleMouseMove = (e) => {
-      if (!this.isDragging) return;
-      
-      this.x = e.clientX - this.dragStartX;
-      this.y = e.clientY - this.dragStartY;
-      
-      this.element.style.left = `${this.x}px`;
-      this.element.style.top = `${this.y}px`;
-    };
-    
-    const handleMouseUp = () => {
-      this.isDragging = false;
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-    
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  }
-  
-  /**
-   * Start resizing the window
-   */
-  startResize(e, handle) {
-    e.preventDefault();
-    this.isResizing = true;
-    this.resizeHandle = handle;
-    this.resizeStartX = e.clientX;
-    this.resizeStartY = e.clientY;
-    this.resizeStartWidth = this.width;
-    this.resizeStartHeight = this.height;
-    this.resizeStartLeft = this.x;
-    this.resizeStartTop = this.y;
-    
-    const handleMouseMove = (e) => {
-      if (!this.isResizing) return;
-      
-      const dx = e.clientX - this.resizeStartX;
-      const dy = e.clientY - this.resizeStartY;
-      
-      // Handle different resize directions
-      if (handle.includes('e')) {
-        this.width = Math.max(this.minWidth, this.resizeStartWidth + dx);
-      }
-      if (handle.includes('w')) {
-        this.width = Math.max(this.minWidth, this.resizeStartWidth - dx);
-        this.x = this.resizeStartLeft + dx;
-      }
-      if (handle.includes('s')) {
-        this.height = Math.max(this.minHeight, this.resizeStartHeight + dy);
-      }
-      if (handle.includes('n')) {
-        this.height = Math.max(this.minHeight, this.resizeStartHeight - dy);
-        this.y = this.resizeStartTop + dy;
-      }
-      
-      this.element.style.width = `${this.width}px`;
-      this.element.style.height = `${this.height}px`;
-      this.element.style.left = `${this.x}px`;
-      this.element.style.top = `${this.y}px`;
-    };
-    
-    const handleMouseUp = () => {
-      this.isResizing = false;
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-    
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  }
-  
-  /**
-   * Set window content
-   */
-  setContent(content) {
-    if (typeof content === 'string') {
-      this.content.innerHTML = content;
-    } else if (content instanceof HTMLElement) {
-      this.content.innerHTML = '';
-      this.content.appendChild(content);
-    }
-  }
-  
-  /**
-   * Show the window
-   */
-  show() {
-    this.element.style.display = 'flex';
-    this.manager.focusWindow(this.id);
-  }
-  
-  /**
-   * Hide the window
-   */
-  hide() {
-    this.element.style.display = 'none';
-  }
-  
-  /**
-   * Minimize the window
-   */
-  minimize() {
-    if (this.isMinimized) {
-      this.element.style.display = 'flex';
-      this.isMinimized = false;
-    } else {
-      this.element.style.display = 'none';
-      this.isMinimized = true;
-    }
-  }
-  
-  /**
-   * Maximize the window
-   */
-  maximize() {
-    if (this.isMaximized) {
-      // Restore
-      this.element.style.width = `${this.width}px`;
-      this.element.style.height = `${this.height}px`;
-      this.element.style.left = `${this.x}px`;
-      this.element.style.top = `${this.y}px`;
-      this.isMaximized = false;
-    } else {
-      // Save current state
-      this.restoreWidth = this.width;
-      this.restoreHeight = this.height;
-      this.restoreX = this.x;
-      this.restoreY = this.y;
-      
-      // Maximize
-      this.element.style.width = '100%';
-      this.element.style.height = '100%';
-      this.element.style.left = '0';
-      this.element.style.top = '0';
-      this.isMaximized = true;
-    }
-  }
-  
-  /**
-   * Focus the window
-   */
-  focus() {
-    this.manager.focusWindow(this.id);
-  }
-  
-  /**
-   * Close the window
-   */
-  close() {
-    this.manager.closeWindow(this.id);
-  }
-  
-  /**
-   * Set active state
-   */
-  setActive(active) {
-    this.isActive = active;
-    if (active) {
-      this.element.classList.add('active');
-    } else {
-      this.element.classList.remove('active');
-    }
-  }
-  
-  /**
-   * Set z-index
-   */
-  setZIndex(zIndex) {
-    this.zIndex = zIndex;
-    this.element.style.zIndex = zIndex;
-  }
-  
-  /**
-   * Destroy the window
-   */
-  destroy() {
-    if (this.element && this.element.parentNode) {
-      this.element.parentNode.removeChild(this.element);
-    }
-    this.element = null;
-    this.header = null;
-    this.content = null;
-  }
-}
+// AssetWindow class is now replaced by WindowManager with asset-specific methods
+// The wrapWindowWithAssetMethods() function above provides the necessary asset display functionality

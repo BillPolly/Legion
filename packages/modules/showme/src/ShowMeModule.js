@@ -17,6 +17,7 @@ export class ShowMeModule {
     // Store configuration
     this.config = {
       serverPort: options.serverPort || process.env.SHOWME_PORT || 3700,
+      testMode: options.testMode || false,
       ...options
     };
     
@@ -70,7 +71,8 @@ export class ShowMeModule {
     // Create ShowAssetTool
     const showAssetTool = new ShowAssetTool({
       assetDetector: this.assetDetector,
-      serverPort: this.config.serverPort
+      serverPort: this.config.serverPort,
+      testMode: this.config.testMode
     });
 
     tools.push({

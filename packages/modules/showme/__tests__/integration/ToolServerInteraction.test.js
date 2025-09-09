@@ -9,14 +9,16 @@ import { ShowAssetTool } from '../../src/tools/ShowAssetTool.js';
 import { ShowMeServer } from '../../src/server/ShowMeServer.js';
 import { AssetTypeDetector } from '../../src/detection/AssetTypeDetector.js';
 import fetch from 'node-fetch';
+import { getRandomTestPort, waitForServer } from '../helpers/testUtils.js';
 
 describe('Tool-Server Interaction Integration', () => {
   let tool;
   let server;
   let assetDetector;
-  const testPort = 3798;
+  let testPort;
 
   beforeAll(async () => {
+    testPort = getRandomTestPort();
     // Start real server
     server = new ShowMeServer({ 
       port: testPort,
@@ -26,7 +28,7 @@ describe('Tool-Server Interaction Integration', () => {
     await server.start();
     
     // Wait for server to be ready
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await waitForServer(500);
     
     // Create tool with real dependencies
     assetDetector = new AssetTypeDetector();

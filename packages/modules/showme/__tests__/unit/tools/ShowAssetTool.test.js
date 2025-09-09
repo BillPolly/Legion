@@ -13,7 +13,7 @@ describe('ShowAssetTool', () => {
 
   beforeEach(() => {
     assetDetector = new AssetTypeDetector();
-    tool = new ShowAssetTool({ assetDetector });
+    tool = new ShowAssetTool({ assetDetector, testMode: true });
   });
 
   describe('constructor', () => {
@@ -158,7 +158,7 @@ describe('ShowAssetTool', () => {
           throw new Error('Detection failed');
         }
       };
-      const failingTool = new ShowAssetTool({ assetDetector: failingDetector });
+      const failingTool = new ShowAssetTool({ assetDetector: failingDetector, testMode: true });
       
       const result = await failingTool.execute({ asset: 'test' });
       

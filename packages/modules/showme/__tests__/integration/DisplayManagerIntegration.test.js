@@ -5,19 +5,21 @@
  * NO MOCKS - Tests real window management and viewer creation
  */
 
-import { AssetDisplayManager } from '../../src/client/AssetDisplayManager.js';
+import { AssetDisplayManager } from '../../apps/showme-ui/src/services/AssetDisplayManager.js';
 import { ShowMeServer } from '../../src/server/ShowMeServer.js';
 import { ResourceManager } from '@legion/resource-manager';
 import fetch from 'node-fetch';
 import WebSocket from 'ws';
+import { getRandomTestPort, waitForServer } from '../helpers/testUtils.js';
 
 describe('Display Manager Integration with Real Legion Components', () => {
   let displayManager;
   let server;
   let resourceManager;
-  const testPort = 3791;
+  let testPort;
 
   beforeAll(async () => {
+    testPort = getRandomTestPort();
     // Start real server
     server = new ShowMeServer({ 
       port: testPort,
@@ -30,7 +32,7 @@ describe('Display Manager Integration with Real Legion Components', () => {
     resourceManager = await ResourceManager.getInstance();
     
     // Wait for server to be ready
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await waitForServer(500);
   }, 30000);
 
   afterAll(async () => {
@@ -46,7 +48,7 @@ describe('Display Manager Integration with Real Legion Components', () => {
     test('should initialize display manager with Legion ResourceWindowManager', async () => {
       displayManager = new AssetDisplayManager({
         serverUrl: `http://localhost:${testPort}`,
-        wsUrl: `ws://localhost:${testPort}/showme`
+        wsUrl: `ws://localhost:${testPort}/ws?route=/showme`
       });
       
       await displayManager.initialize();
@@ -59,7 +61,7 @@ describe('Display Manager Integration with Real Legion Components', () => {
     test('should connect to WebSocket server on initialization', async () => {
       const dm = new AssetDisplayManager({
         serverUrl: `http://localhost:${testPort}`,
-        wsUrl: `ws://localhost:${testPort}/showme`
+        wsUrl: `ws://localhost:${testPort}/ws?route=/showme`
       });
       
       await dm.initialize();
@@ -73,7 +75,7 @@ describe('Display Manager Integration with Real Legion Components', () => {
     test('should handle initialization errors gracefully', async () => {
       const dm = new AssetDisplayManager({
         serverUrl: 'http://localhost:99999', // Invalid port
-        wsUrl: 'ws://localhost:99999/showme'
+        wsUrl: 'ws://localhost:99999/ws?route=/showme'
       });
       
       try {
@@ -90,7 +92,7 @@ describe('Display Manager Integration with Real Legion Components', () => {
     beforeEach(async () => {
       displayManager = new AssetDisplayManager({
         serverUrl: `http://localhost:${testPort}`,
-        wsUrl: `ws://localhost:${testPort}/showme`
+        wsUrl: `ws://localhost:${testPort}/ws?route=/showme`
       });
       await displayManager.initialize();
     });
@@ -248,7 +250,7 @@ function hello() {
     beforeEach(async () => {
       displayManager = new AssetDisplayManager({
         serverUrl: `http://localhost:${testPort}`,
-        wsUrl: `ws://localhost:${testPort}/showme`
+        wsUrl: `ws://localhost:${testPort}/ws?route=/showme`
       });
       await displayManager.initialize();
     });
@@ -403,7 +405,7 @@ function hello() {
     beforeEach(async () => {
       displayManager = new AssetDisplayManager({
         serverUrl: `http://localhost:${testPort}`,
-        wsUrl: `ws://localhost:${testPort}/showme`
+        wsUrl: `ws://localhost:${testPort}/ws?route=/showme`
       });
       await displayManager.initialize();
     });
@@ -470,7 +472,7 @@ function hello() {
       displayManager.ws.close();
       
       // Should handle gracefully
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await waitForServer(500);
       
       // Window should still be tracked
       expect(displayManager.windows.has(windowId)).toBe(true);
@@ -487,7 +489,7 @@ function hello() {
     beforeEach(async () => {
       displayManager = new AssetDisplayManager({
         serverUrl: `http://localhost:${testPort}`,
-        wsUrl: `ws://localhost:${testPort}/showme`
+        wsUrl: `ws://localhost:${testPort}/ws?route=/showme`
       });
       await displayManager.initialize();
     });
@@ -524,7 +526,7 @@ function hello() {
     test('should handle network errors gracefully', async () => {
       // Close WebSocket to simulate network error
       displayManager.ws.close();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await waitForServer(500);
       
       const response = await fetch(`${displayManager.serverUrl}/api/display-asset`, {
         method: 'POST',

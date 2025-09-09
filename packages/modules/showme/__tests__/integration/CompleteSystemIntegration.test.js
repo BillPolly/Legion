@@ -8,11 +8,12 @@
 import { ShowAssetTool } from '../../src/tools/ShowAssetTool.js';
 import { ShowMeServer } from '../../src/server/ShowMeServer.js';
 import { ShowMeClientActor } from '../../src/client/actors/ShowMeClientActor.js';
-import { AssetDisplayManager } from '../../src/client/AssetDisplayManager.js';
+import { AssetDisplayManager } from '../../apps/showme-ui/src/services/AssetDisplayManager.js';
 import { AssetTypeDetector } from '../../src/detection/AssetTypeDetector.js';
 import { ResourceManager } from '@legion/resource-manager';
 import { JSDOM } from 'jsdom';
 import fetch from 'node-fetch';
+import { getRandomTestPort, waitForServer } from '../helpers/testUtils.js';
 
 describe('Complete System Integration - All Components Working Together', () => {
   let tool;
@@ -24,9 +25,10 @@ describe('Complete System Integration - All Components Working Together', () => 
   let dom;
   let document;
   let window;
-  const testPort = 3791;
+  let testPort;
 
   beforeAll(async () => {
+    testPort = getRandomTestPort();
     // Set up virtual DOM
     dom = new JSDOM('<!DOCTYPE html><html><body><div id="app"></div></body></html>', {
       url: 'http://localhost',
@@ -64,21 +66,21 @@ describe('Complete System Integration - All Components Working Together', () => 
     // Initialize display manager
     displayManager = new AssetDisplayManager({
       serverUrl: `http://localhost:${testPort}`,
-      wsUrl: `ws://localhost:${testPort}/showme`,
+      wsUrl: `ws://localhost:${testPort}/ws?route=/showme`,
       container: document.getElementById('app')
     });
     await displayManager.initialize();
     
     // Initialize client actor
     clientActor = new ShowMeClientActor({
-      serverUrl: `ws://localhost:${testPort}/showme`,
+      serverUrl: `ws://localhost:${testPort}/ws?route=/showme`,
       displayManager: displayManager
     });
     await clientActor.initialize();
     await clientActor.connect();
     
     // Wait for all connections to be established
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await waitForServer(500);
   }, 45000);
 
   afterAll(async () => {
@@ -142,7 +144,7 @@ describe('Complete System Integration - All Components Working Together', () => 
       console.log('✅ Display request sent');
 
       // Wait for UI update
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await waitForServer(500);
 
       // Step 4: Verify UI elements created (Client → UI)
       console.log('Step 4: Verifying UI creation...');
@@ -213,7 +215,7 @@ describe('Complete System Integration - All Components Working Together', () => 
         height: 200
       });
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
 
       // Verify UI
       const imageWindow = document.querySelector(`[data-asset-id="${toolResult.assetId}"]`);
@@ -261,7 +263,7 @@ console.log(\`Fibonacci(10) = \${result}\`);`;
         height: 400
       });
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
 
       // Verify UI
       const codeWindow = document.querySelector(`[data-asset-id="${toolResult.assetId}"]`);
@@ -303,7 +305,7 @@ console.log(\`Fibonacci(10) = \${result}\`);`;
         height: 300
       });
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
 
       // Verify UI
       const tableWindow = document.querySelector(`[data-asset-id="${toolResult.assetId}"]`);
@@ -362,7 +364,7 @@ console.log(\`Fibonacci(10) = \${result}\`);`;
         height: 500
       });
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
 
       // Verify UI
       const webWindow = document.querySelector(`[data-asset-id="${toolResult.assetId}"]`);
@@ -405,7 +407,7 @@ console.log(\`Fibonacci(10) = \${result}\`);`;
         });
       }
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await waitForServer(500);
 
       // Verify all windows created
       const windows = document.querySelectorAll('.showme-window');
@@ -435,11 +437,11 @@ console.log(\`Fibonacci(10) = \${result}\`);`;
 
       // Restart server
       await server.start();
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await waitForServer(500);
 
       // Reconnect client actor
       await clientActor.connect();
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
 
       // Should work again
       const result2 = await tool.execute({
@@ -481,7 +483,7 @@ console.log(\`Fibonacci(10) = \${result}\`);`;
 
       // Display asset
       await clientActor.displayAsset(result.assetId);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
 
       // Verify initial display
       const window = document.querySelector(`[data-asset-id="${result.assetId}"]`);
@@ -499,7 +501,7 @@ console.log(\`Fibonacci(10) = \${result}\`);`;
       expect(updateResponse.ok).toBe(true);
 
       // Wait for update propagation
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await waitForServer(500);
 
       // Verify the window still exists (content might be updated)
       const updatedWindow = document.querySelector(`[data-asset-id="${result.assetId}"]`);
@@ -544,7 +546,7 @@ console.log(\`Fibonacci(10) = \${result}\`);`;
       expect(endTime - startTime).toBeLessThan(10000); // 10 seconds
 
       // Wait for UI updates
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await waitForServer(500);
 
       // Verify windows created
       const windows = document.querySelectorAll('.showme-window');

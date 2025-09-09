@@ -54,8 +54,8 @@ export class BaseServer {
     // Apply basic middleware
     this.setupMiddleware();
     
-    // Discover Legion packages
-    if (this.monorepoRoot) {
+    // Discover Legion packages (unless overridden by subclass)
+    if (this.monorepoRoot && !this.skipLegionPackageDiscovery) {
       await this.discoverLegionPackages();
     }
   }
@@ -164,21 +164,36 @@ export class BaseServer {
     const { promisify } = await import('util');
     const execAsync = promisify(exec);
     
+    // Skip cleanup in test environment to avoid hanging
+    if (process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID) {
+      console.log('🧹 Skipping port cleanup in test environment');
+      return;
+    }
+    
     for (const port of ports) {
       try {
         console.log(`🧹 Checking port ${port}...`);
         
-        // Find process using the port
-        const { stdout } = await execAsync(`lsof -ti:${port}`);
+        // Find process using the port with timeout
+        const { stdout } = await Promise.race([
+          execAsync(`lsof -ti:${port}`),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('lsof timeout')), 2000)
+          )
+        ]);
+        
         const pids = stdout.trim().split('\n').filter(pid => pid);
         
         if (pids.length > 0) {
           console.log(`🔫 Killing ${pids.length} process(es) on port ${port}: ${pids.join(', ')}`);
           
-          // Kill each process
+          // Kill each process with timeout
           for (const pid of pids) {
             try {
-              await execAsync(`kill -9 ${pid}`);
+              await Promise.race([
+                execAsync(`kill -9 ${pid}`),
+                new Promise(resolve => setTimeout(resolve, 1000))
+              ]);
               console.log(`✅ Killed process ${pid}`);
             } catch (error) {
               console.warn(`⚠️ Could not kill process ${pid}:`, error.message);
@@ -186,13 +201,13 @@ export class BaseServer {
           }
           
           // Wait a moment for cleanup
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 500));
         } else {
           console.log(`✅ Port ${port} is free`);
         }
       } catch (error) {
-        // No processes found on port, or lsof command failed
-        console.log(`✅ Port ${port} is free (${error.message})`);
+        // No processes found on port, or lsof command failed/timed out
+        console.log(`✅ Port ${port} is free or check timed out`);
       }
     }
   }

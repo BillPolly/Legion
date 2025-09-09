@@ -5,12 +5,13 @@
  * NO MOCKS - Tests real UI rendering and DOM manipulation
  */
 
-import { AssetDisplayManager } from '../../src/client/AssetDisplayManager.js';
+import { AssetDisplayManager } from '../../apps/showme-ui/src/services/AssetDisplayManager.js';
 import { ShowMeClientActor } from '../../src/client/actors/ShowMeClientActor.js';
 import { ShowMeServer } from '../../src/server/ShowMeServer.js';
 import { ResourceManager } from '@legion/resource-manager';
 import { JSDOM } from 'jsdom';
 import fetch from 'node-fetch';
+import { getRandomTestPort, waitForServer } from '../helpers/testUtils.js';
 
 describe('Client → UI Component Flow Integration', () => {
   let server;
@@ -20,9 +21,10 @@ describe('Client → UI Component Flow Integration', () => {
   let dom;
   let document;
   let window;
-  const testPort = 3787;
+  let testPort;
 
   beforeAll(async () => {
+    testPort = getRandomTestPort();
     // Set up virtual DOM
     dom = new JSDOM('<!DOCTYPE html><html><body><div id="app"></div></body></html>', {
       url: 'http://localhost',
@@ -51,21 +53,21 @@ describe('Client → UI Component Flow Integration', () => {
     // Initialize display manager
     displayManager = new AssetDisplayManager({
       serverUrl: `http://localhost:${testPort}`,
-      wsUrl: `ws://localhost:${testPort}/showme`,
+      wsUrl: `ws://localhost:${testPort}/ws?route=/showme`,
       container: document.getElementById('app')
     });
     await displayManager.initialize();
     
     // Initialize client actor
     clientActor = new ShowMeClientActor({
-      serverUrl: `ws://localhost:${testPort}/showme`,
+      serverUrl: `ws://localhost:${testPort}/ws?route=/showme`,
       displayManager: displayManager
     });
     await clientActor.initialize();
     await clientActor.connect();
     
     // Wait for everything to be ready
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await waitForServer(500);
   }, 30000);
 
   afterAll(async () => {
@@ -108,7 +110,7 @@ describe('Client → UI Component Flow Integration', () => {
       });
       
       // Wait for DOM update
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Check DOM for window element
       const windowElements = document.querySelectorAll('.showme-window');
@@ -135,7 +137,7 @@ describe('Client → UI Component Flow Integration', () => {
       const { assetId } = await response.json();
       
       await clientActor.displayAsset(assetId);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Find window header
       const windowElement = document.querySelector(`[data-asset-id="${assetId}"]`);
@@ -184,7 +186,7 @@ describe('Client → UI Component Flow Integration', () => {
         await clientActor.displayAsset(id);
       }
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await waitForServer(500);
       
       // Verify CSS classes
       for (const { id, type } of assetIds) {
@@ -217,7 +219,7 @@ describe('Client → UI Component Flow Integration', () => {
       const { assetId } = await response.json();
       
       await clientActor.displayAsset(assetId);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Find content area
       const windowElement = document.querySelector(`[data-asset-id="${assetId}"]`);
@@ -257,7 +259,7 @@ describe('Client → UI Component Flow Integration', () => {
       await clientActor.displayAsset(assetId, {
         language: 'javascript'
       });
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       const windowElement = document.querySelector(`[data-asset-id="${assetId}"]`);
       const codeArea = windowElement?.querySelector('.showme-window-content');
@@ -295,7 +297,7 @@ describe('Client → UI Component Flow Integration', () => {
       const { assetId } = await response.json();
       
       await clientActor.displayAsset(assetId);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       const windowElement = document.querySelector(`[data-asset-id="${assetId}"]`);
       const tableContainer = windowElement?.querySelector('.showme-window-content');
@@ -336,7 +338,7 @@ describe('Client → UI Component Flow Integration', () => {
         height: 300,
         maintainAspectRatio: true
       });
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       const windowElement = document.querySelector(`[data-asset-id="${assetId}"]`);
       const imageContainer = windowElement?.querySelector('.showme-window-content');
@@ -369,7 +371,7 @@ describe('Client → UI Component Flow Integration', () => {
       const { assetId } = await response.json();
       
       await clientActor.displayAsset(assetId);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       const windowElement = document.querySelector(`[data-asset-id="${assetId}"]`);
       const closeButton = windowElement?.querySelector('.showme-window-close');
@@ -379,7 +381,7 @@ describe('Client → UI Component Flow Integration', () => {
       if (closeButton) {
         // Click close button
         closeButton.click();
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await waitForServer(500);
         
         // Window should be removed from DOM
         const removedWindow = document.querySelector(`[data-asset-id="${assetId}"]`);
@@ -401,7 +403,7 @@ describe('Client → UI Component Flow Integration', () => {
       const { assetId } = await response.json();
       
       await clientActor.displayAsset(assetId);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       const windowElement = document.querySelector(`[data-asset-id="${assetId}"]`);
       const minimizeButton = windowElement?.querySelector('.showme-window-minimize');
@@ -410,7 +412,7 @@ describe('Client → UI Component Flow Integration', () => {
       if (minimizeButton) {
         // Minimize window
         minimizeButton.click();
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await waitForServer(500);
         
         expect(windowElement.classList.contains('minimized')).toBe(true);
       }
@@ -418,7 +420,7 @@ describe('Client → UI Component Flow Integration', () => {
       if (maximizeButton) {
         // Maximize window
         maximizeButton.click();
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await waitForServer(500);
         
         expect(windowElement.classList.contains('maximized')).toBe(true);
       }
@@ -441,7 +443,7 @@ describe('Client → UI Component Flow Integration', () => {
         x: 100,
         y: 100
       });
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       const windowElement = document.querySelector(`[data-asset-id="${assetId}"]`);
       const header = windowElement?.querySelector('.showme-window-header');
@@ -470,7 +472,7 @@ describe('Client → UI Component Flow Integration', () => {
         });
         document.dispatchEvent(mouseUp);
         
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await waitForServer(500);
         
         // Window should have moved
         const newX = parseInt(windowElement.style.left) || 0;
@@ -500,7 +502,7 @@ describe('Client → UI Component Flow Integration', () => {
         height: 300,
         resizable: true
       });
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       const windowElement = document.querySelector(`[data-asset-id="${assetId}"]`);
       const resizeHandle = windowElement?.querySelector('.showme-window-resize');
@@ -529,7 +531,7 @@ describe('Client → UI Component Flow Integration', () => {
         });
         document.dispatchEvent(mouseUp);
         
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await waitForServer(500);
         
         // Window size might have changed
         const newWidth = parseInt(windowElement.style.width) || 0;
@@ -556,7 +558,7 @@ describe('Client → UI Component Flow Integration', () => {
       const { assetId } = await response.json();
       
       await clientActor.displayAsset(assetId);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Find initial content
       const windowElement = document.querySelector(`[data-asset-id="${assetId}"]`);
@@ -572,7 +574,7 @@ describe('Client → UI Component Flow Integration', () => {
         })
       });
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await waitForServer(500);
       
       // Content should be updated
       const updatedContent = contentArea?.textContent;
@@ -601,13 +603,13 @@ describe('Client → UI Component Flow Integration', () => {
         x: 150,
         y: 150
       });
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Disconnect and reconnect
       await clientActor.disconnect();
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       await clientActor.connect();
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Window should still exist with same properties
       const windowElement = document.querySelector(`[data-asset-id="${assetId}"]`);
@@ -624,7 +626,7 @@ describe('Client → UI Component Flow Integration', () => {
     test('should display error message for invalid assets', async () => {
       // Try to display non-existent asset
       await clientActor.displayAsset('non-existent-id');
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Should show error UI
       const errorElement = document.querySelector('.showme-error');
@@ -648,7 +650,7 @@ describe('Client → UI Component Flow Integration', () => {
       const { assetId } = await response.json();
       
       await clientActor.displayAsset(assetId);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Should display fallback or error
       const windowElement = document.querySelector(`[data-asset-id="${assetId}"]`);
@@ -722,11 +724,11 @@ describe('Client → UI Component Flow Integration', () => {
       const { assetId } = await response.json();
       
       await clientActor.displayAsset(assetId);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // Close window
       await displayManager.closeWindow(assetId);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await waitForServer(500);
       
       // DOM should be cleaned up
       const finalChildCount = document.getElementById('app').children.length;
