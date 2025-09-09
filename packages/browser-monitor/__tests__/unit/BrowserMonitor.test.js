@@ -76,7 +76,19 @@ describe('BrowserMonitor', () => {
       expect(mockDriver.launches.length).toBe(1);
       expect(mockDriver.launches[0]).toEqual({
         headless: false,
-        devtools: true
+        devtools: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-web-security',
+          '--disable-features=IsolateOrigins',
+          '--disable-site-isolation-trials',
+        ],
+        defaultViewport: {
+          width: 1280,
+          height: 720
+        },
+        slowMo: 0
       });
     });
 
@@ -305,7 +317,11 @@ describe('BrowserMonitor', () => {
         activePages: 1,
         browserConnected: true,
         totalPagesCreated: 1,
-        totalSessionsCreated: 1
+        totalSessionsCreated: 1,
+        totalConsoleMessages: 0,
+        totalErrors: 0,
+        totalNetworkRequests: 0,
+        uptime: 0
       });
     });
 
