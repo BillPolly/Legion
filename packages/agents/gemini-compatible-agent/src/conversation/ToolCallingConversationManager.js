@@ -10,6 +10,10 @@ import ConversationCompressionService from '../services/ConversationCompressionS
 import GeminiPromptManager from '../prompts/GeminiPromptManager.js';
 import LoopDetectionService from '../services/LoopDetectionService.js';
 import AdvancedToolOrchestrationService from '../services/AdvancedToolOrchestrationService.js';
+import GitService from '../services/GitService.js';
+import ShellExecutionService from '../services/ShellExecutionService.js';
+import EnhancedChat from '../core/EnhancedChat.js';
+import ChatRecordingService from '../services/ChatRecordingService.js';
 
 /**
  * Conversation manager with proper tool calling using Legion patterns
@@ -20,13 +24,20 @@ export class ToolCallingConversationManager {
     this.conversationHistory = [];
     this.turnCounter = 0;
     
-    // Initialize all core services (ported from Gemini CLI)
+    // Initialize all core services (complete Gemini CLI service suite)
     this._initializeToolsModule();
     this.projectContextService = new ProjectContextService(resourceManager, null);
     this.compressionService = new ConversationCompressionService(resourceManager);
     this.promptManager = new GeminiPromptManager(resourceManager);
     this.loopDetectionService = new LoopDetectionService(resourceManager);
     this.orchestrationService = null; // Will be initialized after tools module
+    this.gitService = new GitService(resourceManager);
+    this.shellExecutionService = new ShellExecutionService(resourceManager);
+    this.chatRecordingService = new ChatRecordingService(resourceManager);
+    this.enhancedChat = new EnhancedChat(resourceManager, this.chatRecordingService);
+    
+    // Initialize services
+    this._initializeAllServices();
     
     // Initialize multi-tool workflow schema (supports both single and multiple tools)
     this.toolCallSchema = {
@@ -61,6 +72,23 @@ export class ToolCallingConversationManager {
     };
     
     this.responseValidator = new ResponseValidator(this.toolCallSchema);
+  }
+
+  /**
+   * Initialize all services (ported from Gemini CLI)
+   */
+  async _initializeAllServices() {
+    try {
+      // Initialize Git service with credentials
+      await this.gitService.initialize();
+      
+      // Initialize enhanced chat
+      await this.enhancedChat.initialize();
+      
+      console.log('✅ All core services initialized');
+    } catch (error) {
+      console.warn('Service initialization warning:', error.message);
+    }
   }
 
   /**
