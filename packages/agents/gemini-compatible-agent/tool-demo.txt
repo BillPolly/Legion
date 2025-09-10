@@ -1,4 +1,0 @@
-This is a demonstration file.
-It contains multiple lines.
-We will search for the word 'demonstration' later.
-The file shows tool orchestration capabilities.

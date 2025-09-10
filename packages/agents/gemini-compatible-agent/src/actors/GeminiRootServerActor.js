@@ -9,13 +9,24 @@ import ToolCallingConversationManager from '../conversation/ToolCallingConversat
  * Root server actor for Gemini agent (wraps existing functionality)
  */
 export default class GeminiRootServerActor {
-  constructor(services) {
+  constructor(services = {}) {
     this.services = services;
     this.remoteActor = null;
     this.conversationManager = null;
     this.isReady = false;
     
-    console.log('🎭 GeminiRootServerActor created');
+    // Initialize ResourceManager from services or create one
+    this.resourceManager = services.resourceManager || this._createResourceManager();
+    
+    console.log('🎭 GeminiRootServerActor created with services:', Object.keys(services));
+  }
+
+  /**
+   * Create ResourceManager if not provided in services
+   */
+  async _createResourceManager() {
+    const { ResourceManager } = await import('@legion/resource-manager');
+    return await ResourceManager.getInstance();
   }
 
   /**
@@ -27,8 +38,15 @@ export default class GeminiRootServerActor {
     console.log('🎭 Gemini server actor connected to client');
     
     try {
+      // Ensure ResourceManager is ready
+      if (!this.resourceManager.getInstance) {
+        this.resourceManager = await this._createResourceManager();
+      }
+      
+      console.log('🎭 Creating ToolCallingConversationManager with ResourceManager...');
+      
       // Initialize existing conversation manager (no changes to it)
-      this.conversationManager = new ToolCallingConversationManager(this.services.resourceManager);
+      this.conversationManager = new ToolCallingConversationManager(this.resourceManager);
       
       // Wait for conversation manager to initialize
       await new Promise(resolve => setTimeout(resolve, 3000));
@@ -51,6 +69,7 @@ export default class GeminiRootServerActor {
       
     } catch (error) {
       console.error('❌ Gemini actor initialization failed:', error.message);
+      console.error('❌ Full error stack:', error.stack);
       
       this.remoteActor.receive('error', {
         message: error.message,
@@ -103,6 +122,28 @@ export default class GeminiRootServerActor {
    * @param {Object} data - Chat message data
    */
   async _handleChatMessage(data) {
+    const message = data.content.trim();
+    
+    // Check if this is a slash command
+    if (message.startsWith('/')) {
+      console.log('⚡ [ACTOR] Processing slash command directly');
+      const parts = message.substring(1).split(' ');
+      const command = parts[0];
+      const args = parts.slice(1);
+      
+      // Handle slash command directly (not through LLM)
+      const response = await this._handleSlashCommandLegacy(command, args);
+      
+      // Send response through actor framework
+      this.remoteActor.receive('slash_response', {
+        type: 'response',
+        content: response,
+        isSlashCommand: true
+      });
+      
+      return;
+    }
+    
     console.log('💬 [ACTOR] Processing chat message through existing conversation manager');
     
     // Use existing working conversation manager (no changes needed)
