@@ -16,6 +16,10 @@ export default class GeminiRootClientActor extends ProtocolActor {
       tools: 0
     });
     
+    // Project dashboard state
+    this.dashboardInstance = null;
+    this.currentProjectId = null;
+    
     console.log('🎭 GeminiRootClientActor created (server framework pattern)');
     
     // Initialize interface immediately like server framework
@@ -142,6 +146,16 @@ export default class GeminiRootClientActor extends ProtocolActor {
         console.log('⚡ [CLIENT] Slash response received');
         this._handleSlashResponse(data);
         break;
+
+      case 'project_response':
+        console.log('🎯 [CLIENT] Project response received');
+        this._handleProjectResponse(data);
+        break;
+
+      case 'project_update':
+        console.log('📡 [CLIENT] Project update received');
+        this._handleProjectUpdate(data);
+        break;
         
       default:
         console.log('⚠️ [CLIENT] Unknown message type:', messageType);
@@ -243,5 +257,39 @@ export default class GeminiRootClientActor extends ProtocolActor {
     console.log('⚡ [CLIENT] Displaying slash response');
     this.messagesElement.innerHTML += `<div style="margin: 10px 0; background: #f8f9fa; padding: 10px; border-radius: 5px;"><strong>⚡ Command:</strong><br>${data.content}</div>`;
     this.messagesElement.scrollTop = this.messagesElement.scrollHeight;
+  }
+
+  /**
+   * Handle project response from server
+   */
+  _handleProjectResponse(data) {
+    console.log('🎯 [CLIENT] Displaying project response');
+    this.messagesElement.innerHTML += `<div style="margin: 10px 0; background: #e3f2fd; padding: 15px; border-radius: 5px; border-left: 4px solid #2196f3;"><strong>🎯 Project:</strong><br>${data.content}</div>`;
+    this.messagesElement.scrollTop = this.messagesElement.scrollHeight;
+  }
+
+  /**
+   * Handle project update from server
+   */
+  _handleProjectUpdate(data) {
+    console.log('📡 [CLIENT] Displaying project update');
+    const updateType = data.type || 'update';
+    const updateIcon = this._getUpdateIcon(updateType);
+    this.messagesElement.innerHTML += `<div style="margin: 10px 0; background: #f3e5f5; padding: 10px; border-radius: 5px; border-left: 3px solid #9c27b0;"><strong>${updateIcon} Project Update:</strong> ${updateType}<br>Project: ${data.projectId || 'Unknown'}</div>`;
+    this.messagesElement.scrollTop = this.messagesElement.scrollHeight;
+  }
+
+  /**
+   * Get icon for update type
+   */
+  _getUpdateIcon(updateType) {
+    switch (updateType) {
+      case 'project_created': return '🎯';
+      case 'phase_transition': return '🔄';
+      case 'deliverable_completed': return '✅';
+      case 'deliverable_progress': return '📊';
+      case 'agent_activity': return '🤖';
+      default: return '📡';
+    }
   }
 }
