@@ -6,6 +6,8 @@
 import { ResponseValidator } from '@legion/output-schema';
 import GeminiToolsModule from '../../../../modules/gemini-tools/src/GeminiToolsModule.js';
 import ProjectContextService from '../services/ProjectContextService.js';
+import ConversationCompressionService from '../services/ConversationCompressionService.js';
+import GeminiPromptManager from '../prompts/GeminiPromptManager.js';
 
 /**
  * Conversation manager with proper tool calling using Legion patterns
@@ -16,9 +18,11 @@ export class ToolCallingConversationManager {
     this.conversationHistory = [];
     this.turnCounter = 0;
     
-    // Initialize tools module and context service
+    // Initialize tools module, context service, and compression service
     this._initializeToolsModule();
     this.projectContextService = new ProjectContextService(resourceManager, null);
+    this.compressionService = new ConversationCompressionService(resourceManager);
+    this.promptManager = new GeminiPromptManager(resourceManager);
     
     // Initialize multi-tool workflow schema (supports both single and multiple tools)
     this.toolCallSchema = {
@@ -92,6 +96,8 @@ export class ToolCallingConversationManager {
     // Try to parse as tool call first using Legion's output-schema
     const validationResult = this.responseValidator.process(llmResponse);
     
+    let finalResponse;
+    
     if (validationResult.success && (validationResult.data.use_tool || validationResult.data.use_tools)) {
       // Handle both single tool and multi-tool workflows
       const toolCalls = validationResult.data.use_tools || [validationResult.data.use_tool];
@@ -119,6 +125,17 @@ export class ToolCallingConversationManager {
             this.projectContextService.trackFileAccess(toolCall.args.absolute_path, toolCall.name.split('_')[0]);
           }
           
+          // Handle MCP tool discovery and registration (fix integration)
+          if (toolCall.name === 'mcp_client_manager' && toolResult.success && toolResult.data?.discoveredTools) {
+            const mcpTool = this.toolsModule.getTool('mcp_tool');
+            if (mcpTool) {
+              for (const externalTool of toolResult.data.discoveredTools) {
+                mcpTool.registerExternalTool(externalTool);
+                console.log(`🔗 Registered external tool: ${externalTool.name}`);
+              }
+            }
+          }
+          
           toolOutput += `\\n\\nTool ${toolCall.name} executed successfully: ${JSON.stringify(toolResult)}`;
           
         } catch (toolError) {
@@ -135,28 +152,56 @@ export class ToolCallingConversationManager {
       }
       
       // Create response with all tool executions
-      const response = {
+      finalResponse = {
         id: `turn_${this.turnCounter}_assistant`,
         type: 'assistant',
         content: `${validationResult.data.response}${toolOutput}`,
         tools: executedTools,
         timestamp: new Date().toISOString()
       };
-      
-      this.conversationHistory.push(response);
-      return response;
     } else {
       // Regular conversation response
-      const response = {
+      finalResponse = {
         id: `turn_${this.turnCounter}_assistant`,
         type: 'assistant',
         content: llmResponse,
         tools: [],
         timestamp: new Date().toISOString()
       };
-      
-      this.conversationHistory.push(response);
-      return response;
+    }
+    
+    // Add response to history
+    this.conversationHistory.push(finalResponse);
+    
+    // SINGLE place for compression check - after any response is added
+    await this._checkAndCompress(llmClient);
+    
+    return finalResponse;
+  }
+
+  /**
+   * Check if compression is needed and compress if so (ported from Gemini CLI)
+   * @param {Object} llmClient - LLM client for compression
+   */
+  async _checkAndCompress(llmClient) {
+    if (this.compressionService.needsCompression(this.conversationHistory)) {
+      try {
+        console.log('🗜️ Compressing conversation (token limit approaching)...');
+        
+        const compressionPrompt = this.promptManager.getCompressionPrompt();
+        const compressionResult = await this.compressionService.compressConversation(
+          this.conversationHistory,
+          llmClient,
+          compressionPrompt
+        );
+        
+        if (compressionResult.compressionStatus === 'compressed') {
+          this.conversationHistory = compressionResult.compressedHistory;
+          console.log(`✅ Conversation compressed: ${compressionResult.originalTokenCount} → ${compressionResult.newTokenCount} tokens`);
+        }
+      } catch (compressionError) {
+        console.warn('⚠️ Compression failed:', compressionError.message);
+      }
     }
   }
 
@@ -213,6 +258,11 @@ When requested to perform tasks like fixing bugs, adding features, refactoring, 
 ## System & Memory
 - shell_command(command, working_directory?, timeout?): Execute shell commands with security controls
 - save_memory(fact): Save facts to long-term memory for future sessions
+
+## Integration & External Tools
+- mcp_client(action='connect|disconnect|list|status', server_url?, server_name?): Connect to and manage MCP servers
+- mcp_client_manager(action='discover_all|stop_all|get_discovered_tools|get_discovery_state'): Manage multiple MCP clients and discover external tools
+- mcp_tool(external_tool_name, tool_params): Execute external tools discovered through MCP protocol
 
 # Examples
 <example>

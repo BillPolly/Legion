@@ -436,6 +436,90 @@
         },
         "required": ["matches", "totalMatches"]
       }
+    },
+    "mcp_client": {
+      "name": "mcp_client",
+      "description": "Connect to and manage MCP servers",
+      "category": "integration",
+      "tags": ["mcp", "server", "external", "integration"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": ["connect", "disconnect", "list", "status"],
+            "description": "MCP client action to perform"
+          },
+          "server_url": {
+            "type": "string", 
+            "description": "MCP server URL (required for connect)"
+          },
+          "server_name": {
+            "type": "string",
+            "description": "Server name/identifier"
+          }
+        },
+        "required": ["action"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "status": {"type": "string"}, 
+          "servers": {"type": "array"},
+          "message": {"type": "string"}
+        },
+        "required": ["success"]
+      }
+    },
+    "mcp_client_manager": {
+      "name": "mcp_client_manager",
+      "description": "Manage lifecycle of multiple MCP clients and discover tools",
+      "category": "integration", 
+      "tags": ["mcp", "manager", "discovery", "lifecycle"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": ["discover_all", "stop_all", "get_discovered_tools", "get_discovery_state"],
+            "description": "MCP manager action to perform"
+          }
+        },
+        "required": ["action"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "discoveredTools": {"type": "array"},
+          "connectedClients": {"type": "number"}
+        },
+        "required": ["success"]
+      }
+    },
+    "mcp_tool": {
+      "name": "mcp_tool",
+      "description": "Execute external tools through MCP protocol",
+      "category": "integration",
+      "tags": ["mcp", "external", "execute"],
+      "inputSchema": {
+        "type": "object", 
+        "properties": {
+          "external_tool_name": {"type": "string"},
+          "tool_params": {"type": "object"}
+        },
+        "required": ["external_tool_name", "tool_params"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "result": {"type": "object"},
+          "toolName": {"type": "string"}
+        },
+        "required": ["success", "toolName"]
+      }
     }
   }
 }

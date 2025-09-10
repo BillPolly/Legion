@@ -17,6 +17,9 @@ import WebSearchTool from './tools/WebSearchTool.js';
 import MemoryTool from './tools/MemoryTool.js';
 import SmartEditTool from './tools/SmartEditTool.js';
 import RipGrepTool from './tools/RipGrepTool.js';
+import McpClientTool from './tools/McpClientTool.js';
+import McpClientManagerTool from './tools/McpClientManagerTool.js';
+import McpTool from './tools/McpTool.js';
 import { fileURLToPath } from 'url';
 
 /**
@@ -63,7 +66,7 @@ class GeminiToolsModule extends Module {
   async initialize() {
     await super.initialize(); // This will load metadata automatically
     
-    // Create all 13 tools that have metadata defined
+    // Create all 16 tools that have metadata defined (100% Gemini CLI tool compatibility!)
     const tools = [
       { key: 'read_file', class: ReadFileTool },
       { key: 'write_file', class: WriteFileTool },
@@ -77,7 +80,10 @@ class GeminiToolsModule extends Module {
       { key: 'smart_edit', class: SmartEditTool },
       { key: 'web_fetch', class: WebFetchTool },
       { key: 'web_search', class: WebSearchTool },
-      { key: 'ripgrep_search', class: RipGrepTool }
+      { key: 'ripgrep_search', class: RipGrepTool },
+      { key: 'mcp_client', class: McpClientTool },
+      { key: 'mcp_client_manager', class: McpClientManagerTool },
+      { key: 'mcp_tool', class: McpTool }
     ];
 
     for (const { key, class: ToolClass } of tools) {
@@ -118,7 +124,7 @@ class GeminiToolsModule extends Module {
    */
   getStatistics() {
     return {
-      toolCount: 13,
+      toolCount: 16,
       basePath: this.config.basePath,
       encoding: this.config.encoding,
       tools: [
@@ -134,7 +140,10 @@ class GeminiToolsModule extends Module {
         'smart_edit',
         'web_fetch',
         'web_search',
-        'ripgrep_search'
+        'ripgrep_search',
+        'mcp_client',
+        'mcp_client_manager',
+        'mcp_tool'
       ]
     };
   }

@@ -1,0 +1,57 @@
+{
+  "name": "@legion/configurable-agent",
+  "version": "1.0.0",
+  "description": "JSON-configured agent runtime for the Legion framework",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/unit",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/integration"
+  },
+  "keywords": [
+    "agent",
+    "configurable",
+    "json-config",
+    "actor",
+    "legion",
+    "llm"
+  ],
+  "author": "Legion Framework",
+  "license": "MIT",
+  "dependencies": {
+    "@legion/actors": "workspace:*",
+    "@legion/prompting-manager": "workspace:*",
+    "@legion/kg": "workspace:*",
+    "@legion/actor-BT": "workspace:*",
+    "@legion/resource-manager": "workspace:*",
+    "@legion/llm": "workspace:*",
+    "@legion/schema": "workspace:*",
+    "@legion/tools-registry": "workspace:*"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/**/*.test.js"
+    ],
+    "coverageDirectory": "__tests__/coverage",
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    }
+  }
+}
