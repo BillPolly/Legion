@@ -20,7 +20,7 @@ export { HandleSubscriptions } from './HandleSubscriptions.js';
 export { FileHandle } from './handles/FileHandle.js';
 
 // Convenience exports  
-export const createGlobalRegistry = () => {
+export const createGlobalRegistry = async () => {
   const { TypeHandleRegistry } = await import('./TypeHandleRegistry.js');
   return TypeHandleRegistry.getGlobalRegistry();
 };
