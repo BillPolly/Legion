@@ -11,7 +11,8 @@
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch"
   },
   "dependencies": {
-    "@legion/resource-manager": "^1.0.0"
+    "@legion/resource-manager": "^1.0.0",
+    "@legion/handles": "*"
   },
   "devDependencies": {
     "jest": "^29.0.0"
