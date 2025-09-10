@@ -8,6 +8,8 @@ import GeminiToolsModule from '../../../../modules/gemini-tools/src/GeminiToolsM
 import ProjectContextService from '../services/ProjectContextService.js';
 import ConversationCompressionService from '../services/ConversationCompressionService.js';
 import GeminiPromptManager from '../prompts/GeminiPromptManager.js';
+import LoopDetectionService from '../services/LoopDetectionService.js';
+import AdvancedToolOrchestrationService from '../services/AdvancedToolOrchestrationService.js';
 
 /**
  * Conversation manager with proper tool calling using Legion patterns
@@ -18,11 +20,13 @@ export class ToolCallingConversationManager {
     this.conversationHistory = [];
     this.turnCounter = 0;
     
-    // Initialize tools module, context service, and compression service
+    // Initialize all core services (ported from Gemini CLI)
     this._initializeToolsModule();
     this.projectContextService = new ProjectContextService(resourceManager, null);
     this.compressionService = new ConversationCompressionService(resourceManager);
     this.promptManager = new GeminiPromptManager(resourceManager);
+    this.loopDetectionService = new LoopDetectionService(resourceManager);
+    this.orchestrationService = null; // Will be initialized after tools module
     
     // Initialize multi-tool workflow schema (supports both single and multiple tools)
     this.toolCallSchema = {
@@ -66,6 +70,13 @@ export class ToolCallingConversationManager {
     try {
       this.toolsModule = await GeminiToolsModule.create(this.resourceManager);
       console.log('✅ GeminiToolsModule initialized with', this.toolsModule.getStatistics().toolCount, 'tools');
+      
+      // Initialize orchestration service after tools are ready
+      this.orchestrationService = new AdvancedToolOrchestrationService(
+        this.resourceManager, 
+        this.toolsModule
+      );
+      console.log('✅ Advanced orchestration service initialized');
     } catch (error) {
       console.error('❌ Failed to initialize tools module:', error.message);
     }
@@ -104,13 +115,35 @@ export class ToolCallingConversationManager {
       const executedTools = [];
       let toolOutput = '';
       
-      // Execute all tools in sequence
+      // Execute all tools in sequence with advanced orchestration
       for (const toolCall of toolCalls) {
         try {
+          // Check for tool call loops (Gemini CLI safety)
+          const loopDetected = this.loopDetectionService.checkToolCallLoop(toolCall.name, toolCall.args);
+          if (loopDetected) {
+            throw new Error(`Tool call loop detected for ${toolCall.name}. Execution stopped for safety.`);
+          }
+          
           console.log('🔧 Executing tool:', toolCall.name, toolCall.args);
           
-          // Use Legion pattern: module.invoke() -> tool.execute(args)
-          const toolResult = await this.toolsModule.invoke(toolCall.name, toolCall.args);
+          // Use advanced orchestration if available, otherwise direct execution
+          let toolResult;
+          if (this.orchestrationService) {
+            const orchestrationResult = await this.orchestrationService.scheduleToolCall({
+              toolName: toolCall.name,
+              args: toolCall.args,
+              promptId: `turn_${this.turnCounter}`
+            });
+            
+            if (orchestrationResult.success) {
+              toolResult = orchestrationResult.result;
+            } else {
+              throw new Error(orchestrationResult.error);
+            }
+          } else {
+            // Fallback to direct execution
+            toolResult = await this.toolsModule.invoke(toolCall.name, toolCall.args);
+          }
           
           console.log('✅ Tool result:', toolResult);
           
