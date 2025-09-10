@@ -1,0 +1,536 @@
+{
+  "module": {
+    "name": "sd",
+    "description": "Software Development autonomous agent system with Legion DecentPlanner integration",
+    "version": "1.0.0",
+    "author": "Legion Team", 
+    "category": "development"
+  },
+  "tools": {
+    "parse_requirements": {
+      "name": "parse_requirements",
+      "description": "Parse and analyze software requirements from natural language descriptions",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "requirements": {
+            "type": "string",
+            "description": "Natural language requirements description"
+          },
+          "context": {
+            "type": "string",
+            "description": "Additional context about the project"
+          }
+        },
+        "required": ["requirements"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "parsed": {
+            "type": "object",
+            "description": "Parsed requirements structure"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Whether parsing was successful"
+          }
+        },
+        "required": ["parsed", "success"]
+      },
+      "category": "requirements",
+      "tags": ["requirements", "parsing", "analysis", "nlp"]
+    },
+    "user_story_generator": {
+      "name": "user_story_generator", 
+      "description": "Generate user stories from requirements and acceptance criteria",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "requirements": {
+            "type": "string",
+            "description": "Requirements to generate user stories from"
+          },
+          "persona": {
+            "type": "string",
+            "description": "User persona or role"
+          }
+        },
+        "required": ["requirements"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "userStories": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {"type": "string"},
+                "description": {"type": "string"},
+                "acceptanceCriteria": {"type": "array", "items": {"type": "string"}}
+              }
+            },
+            "description": "Generated user stories"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Whether generation was successful"
+          }
+        },
+        "required": ["userStories", "success"]
+      },
+      "category": "requirements",
+      "tags": ["user-stories", "requirements", "agile", "generation"]
+    },
+    "acceptance_criteria_generator": {
+      "name": "acceptance_criteria_generator",
+      "description": "Generate detailed acceptance criteria for user stories and requirements",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "userStory": {
+            "type": "string", 
+            "description": "User story to generate criteria for"
+          },
+          "context": {
+            "type": "string",
+            "description": "Additional context"
+          }
+        },
+        "required": ["userStory"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "criteria": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Generated acceptance criteria"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Whether generation was successful"
+          }
+        },
+        "required": ["criteria", "success"]
+      },
+      "category": "requirements",
+      "tags": ["acceptance-criteria", "user-stories", "testing", "validation"]
+    },
+    "bounded_context_generator": {
+      "name": "bounded_context_generator",
+      "description": "Generate bounded contexts for domain-driven design",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Domain description"
+          },
+          "requirements": {
+            "type": "string", 
+            "description": "Requirements context"
+          }
+        },
+        "required": ["domain"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "boundedContexts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {"type": "string"},
+                "description": {"type": "string"},
+                "responsibilities": {"type": "array", "items": {"type": "string"}}
+              }
+            },
+            "description": "Generated bounded contexts"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Whether generation was successful"
+          }
+        },
+        "required": ["boundedContexts", "success"] 
+      },
+      "category": "domain",
+      "tags": ["ddd", "bounded-context", "domain", "architecture"]
+    },
+    "entity_modeling": {
+      "name": "entity_modeling",
+      "description": "Model domain entities and their relationships",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Domain context"
+          },
+          "entities": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Entity names to model"
+          }
+        },
+        "required": ["domain"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "entityModel": {
+            "type": "object",
+            "description": "Generated entity model"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Whether modeling was successful"
+          }
+        },
+        "required": ["entityModel", "success"]
+      },
+      "category": "domain",
+      "tags": ["entities", "modeling", "ddd", "domain"]
+    },
+    "aggregate_design": {
+      "name": "aggregate_design",
+      "description": "Design domain aggregates following DDD patterns",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "entities": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Entities to group into aggregates"
+          },
+          "rules": {
+            "type": "string",
+            "description": "Business rules"
+          }
+        },
+        "required": ["entities"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "aggregates": {
+            "type": "array",
+            "items": {
+              "type": "object", 
+              "properties": {
+                "name": {"type": "string"},
+                "root": {"type": "string"},
+                "entities": {"type": "array", "items": {"type": "string"}}
+              }
+            },
+            "description": "Designed aggregates"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Whether design was successful"
+          }
+        },
+        "required": ["aggregates", "success"]
+      },
+      "category": "domain",
+      "tags": ["aggregates", "ddd", "design", "domain"]
+    },
+    "domain_event_extractor": {
+      "name": "domain_event_extractor",
+      "description": "Extract and define domain events from business processes",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "process": {
+            "type": "string",
+            "description": "Business process description"
+          },
+          "context": {
+            "type": "string",
+            "description": "Domain context"
+          }
+        },
+        "required": ["process"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "domainEvents": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {"type": "string"},
+                "description": {"type": "string"},
+                "data": {"type": "object"}
+              }
+            },
+            "description": "Extracted domain events"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Whether extraction was successful"
+          }
+        },
+        "required": ["domainEvents", "success"]
+      },
+      "category": "domain",
+      "tags": ["events", "ddd", "domain", "extraction"]
+    },
+    "layer_generator": {
+      "name": "layer_generator",
+      "description": "Generate architectural layers following clean architecture principles",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "architecture": {
+            "type": "string",
+            "description": "Architecture pattern (clean, hexagonal, layered)"
+          },
+          "domain": {
+            "type": "string",
+            "description": "Domain context"
+          }
+        },
+        "required": ["architecture"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "layers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {"type": "string"},
+                "responsibilities": {"type": "array", "items": {"type": "string"}},
+                "dependencies": {"type": "array", "items": {"type": "string"}}
+              }
+            },
+            "description": "Generated architectural layers"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Whether generation was successful"
+          }
+        },
+        "required": ["layers", "success"]
+      },
+      "category": "architecture",
+      "tags": ["architecture", "layers", "clean-architecture", "design"]
+    },
+    "use_case_generator": {
+      "name": "use_case_generator",
+      "description": "Generate use cases from requirements and user stories",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "requirements": {
+            "type": "string",
+            "description": "Requirements to generate use cases from"
+          },
+          "actors": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "System actors"
+          }
+        },
+        "required": ["requirements"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "useCases": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {"type": "string"},
+                "actor": {"type": "string"},
+                "description": {"type": "string"},
+                "steps": {"type": "array", "items": {"type": "string"}}
+              }
+            },
+            "description": "Generated use cases"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Whether generation was successful"
+          }
+        },
+        "required": ["useCases", "success"]
+      },
+      "category": "architecture",
+      "tags": ["use-cases", "requirements", "actors", "design"]
+    },
+    "interface_design": {
+      "name": "interface_design",
+      "description": "Design interfaces and contracts between system components",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "components": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "System components"
+          },
+          "interactions": {
+            "type": "string",
+            "description": "Component interaction requirements"
+          }
+        },
+        "required": ["components"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "interfaces": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {"type": "string"},
+                "methods": {"type": "array", "items": {"type": "object"}},
+                "contracts": {"type": "object"}
+              }
+            },
+            "description": "Designed interfaces"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Whether design was successful"
+          }
+        },
+        "required": ["interfaces", "success"]
+      },
+      "category": "architecture",
+      "tags": ["interfaces", "contracts", "design", "components"]
+    },
+    "database_connection": {
+      "name": "database_connection",
+      "description": "Manage database connections and operations for design artifacts",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": ["connect", "disconnect", "test"],
+            "description": "Database operation"
+          },
+          "config": {
+            "type": "object",
+            "description": "Database configuration"
+          }
+        },
+        "required": ["operation"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "connected": {
+            "type": "boolean",
+            "description": "Connection status"
+          },
+          "message": {
+            "type": "string",
+            "description": "Operation result message"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Whether operation was successful"
+          }
+        },
+        "required": ["connected", "success"]
+      },
+      "category": "database",
+      "tags": ["database", "connection", "mongodb", "storage"]
+    },
+    "artifact_storage": {
+      "name": "artifact_storage",
+      "description": "Store and retrieve design artifacts in the database",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": ["store", "retrieve", "update", "delete"],
+            "description": "Storage operation"
+          },
+          "artifact": {
+            "type": "object",
+            "description": "Design artifact data"
+          },
+          "id": {
+            "type": "string",
+            "description": "Artifact ID (for retrieve/update/delete)"
+          }
+        },
+        "required": ["operation"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "artifact": {
+            "type": "object",
+            "description": "Artifact data"
+          },
+          "id": {
+            "type": "string",
+            "description": "Artifact ID"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Whether operation was successful"
+          }
+        },
+        "required": ["success"]
+      },
+      "category": "database",
+      "tags": ["storage", "artifacts", "database", "persistence"]
+    },
+    "context_retrieval": {
+      "name": "context_retrieval",
+      "description": "Retrieve relevant design context and artifacts from storage",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Context query or search terms"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["requirements", "domain", "architecture", "all"],
+            "default": "all",
+            "description": "Type of context to retrieve"
+          }
+        },
+        "required": ["query"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "context": {
+            "type": "array",
+            "items": {"type": "object"},
+            "description": "Retrieved context artifacts"
+          },
+          "relevanceScore": {
+            "type": "number",
+            "description": "Relevance score for the context"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Whether retrieval was successful"
+          }
+        },
+        "required": ["context", "success"]
+      },
+      "category": "database",
+      "tags": ["context", "retrieval", "search", "artifacts"]
+    }
+  }
+}

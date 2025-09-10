@@ -1,0 +1,69 @@
+{
+  "name": "@legion/sd",
+  "version": "1.0.0",
+  "description": "Software Design Methodology - Database-centric DDD + Clean Architecture + Immutable Design + Flux + TDD + Clean Code",
+  "type": "module",
+  "main": "src/index.js",
+  "keywords": [
+    "software-design",
+    "domain-driven-design",
+    "clean-architecture", 
+    "immutable-design",
+    "flux-architecture",
+    "test-driven-development",
+    "clean-code",
+    "ai-assisted-development"
+  ],
+  "author": "Legion Team",
+  "license": "MIT",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/unit",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/integration",
+    "test:live": "NODE_ENV=live NODE_OPTIONS='--experimental-vm-modules' jest __tests__/live --verbose",
+    "test:e2e": "NODE_OPTIONS='--experimental-vm-modules' jest __tests__/e2e",
+    "lint": "eslint src/ __tests__/",
+    "lint:fix": "eslint src/ __tests__/ --fix",
+    "build:docs": "node scripts/build-docs.js",
+    "workflow:demo": "node examples/workflow-demo.js",
+    "generate:example": "node src/generators/ExampleGenerator.js"
+  },
+  "dependencies": {
+    "@legion/tools-registry": "file:../../tools-registry",
+    "@legion/resource-manager": "file:../../resource-manager",
+    "@legion/llm": "file:../../llm",
+    "@legion/schema": "file:../../schema",
+    "@legion/storage": "file:../../storage",
+    "mongodb": "^6.0.0",
+    "mongoose": "^8.0.0",
+    "zod": "^3.22.0",
+    "lodash": "^4.17.21",
+    "chalk": "^5.3.0",
+    "inquirer": "^9.2.0",
+    "uuid": "^9.0.0",
+    "debug": "^4.3.4"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.2.0",
+    "mongodb-memory-server": "^9.1.0",
+    "supertest": "^6.3.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/legion-framework/legion.git",
+    "directory": "packages/sd"
+  },
+  "bugs": {
+    "url": "https://github.com/legion-framework/legion/issues"
+  },
+  "homepage": "https://github.com/legion-framework/legion/tree/main/packages/sd#readme"
+}

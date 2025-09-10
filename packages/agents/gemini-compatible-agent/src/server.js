@@ -442,9 +442,12 @@ app.get('/', (req, res) => {
   `);
 });
 
-// WebSocket handling for our agent
+// WebSocket handling for our agent with observability
 wss.on('connection', (ws) => {
   console.log('🌐 UAT client connected to Gemini-Compatible Agent');
+  
+  // Connect client to observability service for real-time monitoring
+  conversationManager.observabilityService.addWebSocketClient(ws);
   
   ws.on('message', async (message) => {
     try {
