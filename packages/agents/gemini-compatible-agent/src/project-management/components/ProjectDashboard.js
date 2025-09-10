@@ -8,6 +8,8 @@
 import { UmbilicalUtils, UmbilicalError } from '/legion/components/src/umbilical/index.js';
 import { Window } from '/legion/components/src/components/window/index.js';
 import { ProjectDashboardModel } from './model/ProjectDashboardModel.js';
+import { ProjectDashboardView } from './view/ProjectDashboardView.js';
+import { ProjectDashboardViewModel } from './viewmodel/ProjectDashboardViewModel.js';
 
 export const ProjectDashboard = {
   /**
@@ -42,7 +44,7 @@ export const ProjectDashboard = {
     // Instance creation mode
     UmbilicalUtils.validateCapabilities(umbilical, ['dom', 'projectManager'], 'ProjectDashboard');
 
-    // Create model layer
+    // Create MVVM layers
     const model = new ProjectDashboardModel({
       projectManager: umbilical.projectManager,
       observabilityService: umbilical.observabilityService
@@ -64,6 +66,25 @@ export const ProjectDashboard = {
         }
       }
     });
+
+    // Create view layer with window content element
+    const view = new ProjectDashboardView(windowInstance.contentElement, {
+      theme: umbilical.theme || 'light'
+    });
+
+    // Create ViewModel layer to coordinate Model and View
+    const viewModel = new ProjectDashboardViewModel(model, view, {
+      projectManager: umbilical.projectManager,
+      theme: umbilical.theme || 'light'
+    });
+
+    // Set up ViewModel callbacks
+    viewModel.onPhaseClick = umbilical.onPhaseClick;
+    viewModel.onDeliverableClick = umbilical.onDeliverableClick;
+    viewModel.onProjectChange = umbilical.onProjectChange;
+
+    // Initialize ViewModel
+    viewModel.initialize();
 
     // Create dashboard content
     let contentContainer = null;
@@ -209,7 +230,7 @@ export const ProjectDashboard = {
       }
     });
 
-    // Create instance interface
+    // Create instance interface (umbilical protocol)
     const instance = {
       // Window access
       get window() {
@@ -220,23 +241,30 @@ export const ProjectDashboard = {
         return windowInstance;
       },
 
-      // Model access
+      // MVVM layer access
       get model() {
         return model;
       },
 
-      // Dashboard operations
+      get view() {
+        return view;
+      },
+
+      get viewModel() {
+        return viewModel;
+      },
+
+      // Dashboard operations (delegated to ViewModel)
       async loadProject(projectId) {
-        const result = await model.loadProject(projectId);
+        const result = await viewModel.loadProject(projectId);
         if (result.success) {
           windowInstance.setTitle(`🎯 Project: ${model.projectData.name}`);
-          renderDashboard();
         }
         return result;
       },
 
       async refreshData() {
-        return await model.refreshData();
+        return await viewModel.refreshData();
       },
 
       startAutoRefresh(intervalMs) {
@@ -245,6 +273,15 @@ export const ProjectDashboard = {
 
       stopAutoRefresh() {
         return model.stopAutoRefresh();
+      },
+
+      // External updates (from actor framework)
+      updateDeliverable(deliverableId, updates) {
+        return viewModel.updateDeliverable(deliverableId, updates);
+      },
+
+      updateProjectData(updates) {
+        viewModel.updateProjectData(updates);
       },
 
       // Window control
@@ -277,9 +314,15 @@ export const ProjectDashboard = {
         return model.phases;
       },
 
+      // Theme control
+      setTheme(theme) {
+        viewModel.setTheme(theme);
+        windowInstance.setTheme(theme);
+      },
+
       // Cleanup
       destroy() {
-        model.destroy();
+        viewModel.destroy(); // This will destroy model and view too
         windowInstance.destroy();
         
         if (umbilical.onDestroy) {
@@ -288,8 +331,10 @@ export const ProjectDashboard = {
       }
     };
 
-    // Initial render
-    renderDashboard();
+    // Load initial project if provided
+    if (umbilical.projectId) {
+      instance.loadProject(umbilical.projectId);
+    }
 
     // Lifecycle callback
     if (umbilical.onMount) {

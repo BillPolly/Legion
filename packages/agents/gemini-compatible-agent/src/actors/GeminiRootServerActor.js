@@ -8,6 +8,8 @@ import { ProjectManagerAgent } from '../project-management/agents/ProjectManager
 import { DeliverableLifecycleManager } from '../project-management/services/DeliverableLifecycleManager.js';
 import { AgentCoordinationMonitor } from '../project-management/services/AgentCoordinationMonitor.js';
 import { ProjectEventBroadcaster } from '../project-management/services/ProjectEventBroadcaster.js';
+import { ProjectState } from '../project-management/models/ProjectState.js';
+import { Deliverable } from '../project-management/models/Deliverable.js';
 
 /**
  * Root server actor for Gemini agent (wraps existing functionality)
@@ -97,6 +99,13 @@ export default class GeminiRootServerActor {
       // Initialize project management components
       await this._initializeProjectManagement();
       
+      // Connect project manager as sub-agent - it should connect DIRECTLY to dashboard
+      if (this.projectManager) {
+        this.projectManager.setParentActor(this);
+        // ProjectManager will connect directly to dashboard when dashboard connects
+        console.log('🔗 [ACTOR] ProjectManager ready for direct dashboard connection');
+      }
+      
       // Wait for conversation manager to initialize
       await new Promise(resolve => setTimeout(resolve, 3000));
       
@@ -150,6 +159,14 @@ export default class GeminiRootServerActor {
           
         case 'observability_request':
           await this._handleObservabilityRequest(data);
+          break;
+
+        case 'get_project_data':
+          await this._handleGetProjectData(data);
+          break;
+
+        case 'get_deliverable_details':
+          await this._handleGetDeliverableDetails(data);
           break;
           
         default:
@@ -258,6 +275,46 @@ export default class GeminiRootServerActor {
   }
 
   /**
+   * Handle get project data request
+   * @param {Object} data - Project data request
+   */
+  async _handleGetProjectData(data) {
+    if (!this.projectManager) {
+      console.warn('⚠️ Project manager not available');
+      return;
+    }
+
+    try {
+      const projectId = data.projectId;
+      const summary = await this.projectManager.generateProjectSummary(projectId);
+      const deliverables = await this.projectManager.getDeliverables(projectId);
+
+      // Send complete project data back to client
+      this.remoteActor.receive('project_data_response', {
+        projectId: projectId,
+        summary: summary,
+        deliverables: deliverables.map(d => ({
+          id: d.id,
+          name: d.name,
+          phase: d.phase,
+          status: d.status,
+          completion: d.completion,
+          assignedAgent: d.assignedAgent
+        }))
+      });
+
+      console.log(`📊 [ACTOR] Sent project data for: ${projectId}`);
+
+    } catch (error) {
+      console.error('❌ Failed to get project data:', error.message);
+      this.remoteActor.receive('project_data_error', {
+        projectId: data.projectId,
+        error: error.message
+      });
+    }
+  }
+
+  /**
    * Legacy slash command handling (preserve existing functionality)
    * @param {string} command - Slash command
    * @param {Array} args - Command arguments
@@ -332,6 +389,8 @@ Use \`/show <parameter>\` where parameter is:
 🔄 **/project phase** - Show current phase and transition readiness
 📈 **/project list** - List all projects
 🎯 **/project switch <project-id>** - Switch to different project
+🚀 **/project start** - Start agents working on current project
+⏸️ **/project pause** - Pause current project work
 
 Current project: ${this.projectManager.currentProject || 'None'}`;
     }
@@ -355,6 +414,15 @@ Current project: ${this.projectManager.currentProject || 'None'}`;
 
         case 'switch':
           return await this._handleProjectSwitch(args.slice(1));
+
+        case 'start':
+          return await this._handleProjectStart(args.slice(1));
+
+        case 'load':
+          return await this._handleProjectLoad(args.slice(1));
+
+        case 'pause':
+          return await this._handleProjectPause(args.slice(1));
 
         default:
           return `❌ **Unknown Project Command:** /project ${subCommand}`;
@@ -535,13 +603,30 @@ ${this._renderPhaseIndicator(project.phase)}`;
   }
 
   /**
-   * Handle /project list command
+   * Handle /project list command - show projects from database
    */
   async _handleProjectList() {
     try {
-      const projects = await this.projectManager.getProjectList();
+      // Get projects from both memory and database
+      const memoryProjects = await this.projectManager.getProjectList();
       
-      if (projects.length === 0) {
+      let databaseProjects = [];
+      if (this.projectManager.databaseService) {
+        const dbArtifacts = await this.projectManager.databaseService.mongoProvider
+          .find('sd_artifacts', { type: 'project_state' });
+        
+        databaseProjects = dbArtifacts.map(artifact => ({
+          id: artifact.projectId,
+          name: artifact.content.name,
+          phase: artifact.content.phase,
+          status: artifact.content.status,
+          createdAt: artifact.content.createdAt
+        }));
+      }
+      
+      const totalProjects = memoryProjects.length + databaseProjects.length;
+      
+      if (totalProjects === 0) {
         return `**📁 No Projects Found**
 
 Use \`/project plan <goal>\` to create your first project!
@@ -549,16 +634,33 @@ Use \`/project plan <goal>\` to create your first project!
 **Example:** \`/project plan Build a user authentication system\``;
       }
 
-      let response = `**📁 All Projects (${projects.length})**\n\n`;
-      
-      projects.forEach(project => {
-        const current = project.id === this.projectManager.currentProject ? '👉 ' : '   ';
-        const progress = project.getProgressSummary();
-        response += `${current}**${project.name}** (${project.id})\n`;
-        response += `   🔄 Phase: ${project.phase}\n`;
-        response += `   📊 Progress: ${progress.progressPercentage}%\n`;
-        response += `   📈 Status: ${project.status}\n\n`;
-      });
+      let response = `**📁 All Projects (${totalProjects})**\n\n`;
+
+      // Show memory projects
+      if (memoryProjects.length > 0) {
+        response += `**💾 Current Session (${memoryProjects.length}):**\n`;
+        memoryProjects.forEach(project => {
+          const current = project.id === this.projectManager.currentProject ? '👉 ' : '   ';
+          const progress = project.getProgressSummary();
+          response += `${current}**${project.name}** (${project.id})\n`;
+          response += `   🔄 Phase: ${project.phase}\n`;
+          response += `   📊 Progress: ${progress.progressPercentage}%\n`;
+          response += `   📈 Status: ${project.status}\n\n`;
+        });
+      }
+
+      // Show database projects
+      if (databaseProjects.length > 0) {
+        response += `**🗄️ Database Projects (${databaseProjects.length}):**\n`;
+        databaseProjects.forEach(project => {
+          response += `   **${project.name}** (${project.id})\n`;
+          response += `   🔄 Phase: ${project.phase}\n`;
+          response += `   📈 Status: ${project.status}\n`;
+          response += `   📅 Created: ${new Date(project.createdAt).toLocaleDateString()}\n\n`;
+        });
+        
+        response += `💡 **Tip:** Use \`/project load <project-id>\` to load a database project.`;
+      }
 
       return response;
 
@@ -590,6 +692,199 @@ Use \`/project status\` for detailed information.`;
 
     } catch (error) {
       return `❌ **Error:** ${error.message}`;
+    }
+  }
+
+  /**
+   * Handle /project start command
+   */
+  async _handleProjectStart(args) {
+    const projectId = args[0] || this.projectManager.currentProject;
+    if (!projectId) {
+      return `❌ **No Project Selected:** Use \`/project list\` to see projects.`;
+    }
+
+    try {
+      const result = await this.projectManager.startWorkingOnCurrentProject();
+      
+      // Broadcast project start
+      if (this.eventBroadcaster) {
+        await this.eventBroadcaster.broadcastUpdate({
+          type: 'project_work_started',
+          projectId: projectId,
+          deliverablesStarted: result.deliverablesStarted,
+          phase: result.phase
+        });
+      }
+
+      return `**🚀 Project Work Started!**
+
+📊 **Project:** ${projectId}
+🔄 **Phase:** ${result.phase}
+🤖 **Deliverables Started:** ${result.deliverablesStarted}
+
+Agents are now working on deliverables. Use \`/project status\` to monitor progress!
+Real-time updates will show in the project dashboard as agents complete work.`;
+
+    } catch (error) {
+      return `❌ **Error Starting Project Work:** ${error.message}`;
+    }
+  }
+
+  /**
+   * Handle /project pause command
+   */
+  async _handleProjectPause(args) {
+    const projectId = args[0] || this.projectManager.currentProject;
+    if (!projectId) {
+      return `❌ **No Project Selected:** Use \`/project list\` to see projects.`;
+    }
+
+    try {
+      const project = await this.projectManager.getProjectStatus(projectId);
+      await this.projectManager.updateProject(projectId, { status: 'paused' });
+
+      return `**⏸️ Project Work Paused**
+
+📊 **Project:** ${project.name}
+🔄 **Phase:** ${project.phase}
+
+Project work has been paused. Use \`/project start\` to resume.`;
+
+    } catch (error) {
+      return `❌ **Error Pausing Project:** ${error.message}`;
+    }
+  }
+
+  /**
+   * Handle /project load command to load project from database
+   */
+  async _handleProjectLoad(args) {
+    const projectId = args[0];
+    if (!projectId) {
+      return `❌ **Project ID Required:** Use \`/project load <project-id>\`
+
+Use \`/project list\` to see available projects in database.`;
+    }
+
+    try {
+      // Load project from database
+      if (this.projectManager.databaseService) {
+        // Query database for project using mongoProvider
+        const projectArtifacts = await this.projectManager.databaseService.mongoProvider
+          .find('sd_artifacts', { type: 'project_state', projectId: projectId });
+
+        if (projectArtifacts.length === 0) {
+          return `❌ **Project Not Found:** No project with ID ${projectId} found in database.`;
+        }
+
+        const projectData = projectArtifacts[0].content;
+        
+        // Recreate project in ProjectManager
+        const projectState = ProjectState.fromJSON(projectData);
+        
+        // Recreate deliverables from database completions
+        const deliverableArtifacts = await this.projectManager.databaseService.mongoProvider
+          .find('sd_artifacts', { type: 'deliverable_completion', projectId: projectId });
+
+        // Add completed deliverables to project
+        for (const delArtifact of deliverableArtifacts) {
+          const deliverable = new Deliverable({
+            id: delArtifact.deliverableId,
+            name: delArtifact.content.name,
+            description: `Restored from database - ${delArtifact.content.name}`,
+            phase: delArtifact.metadata.phase,
+            status: delArtifact.content.status,
+            completion: delArtifact.content.completion,
+            assignedAgent: delArtifact.metadata.agent,
+            completedAt: delArtifact.content.completedAt
+          });
+          
+          projectState.addDeliverable(delArtifact.deliverableId, deliverable);
+        }
+
+        // Also recreate any missing standard deliverables for current phase
+        await this.projectManager._createStandardDeliverables(projectId, projectState.phase);
+        
+        this.projectManager.projects.set(projectId, projectState);
+        await this.projectManager.setCurrentProject(projectId);
+
+        let completedDeliverables = deliverableArtifacts.length;
+
+        return `**📂 Project Loaded from Database**
+
+📝 **Project:** ${projectData.name}
+📊 **ID:** ${projectId}
+🔄 **Phase:** ${projectData.phase}
+📈 **Status:** ${projectData.status}
+✅ **Completed Deliverables:** ${completedDeliverables}
+
+**Database Records Found:**
+- Project state record ✅
+- ${completedDeliverables} deliverable completion records
+
+Use \`/project status\` to see current details or \`/project start\` to continue work.`;
+
+      } else {
+        return `❌ **Database Not Available:** Cannot load projects from database.`;
+      }
+
+    } catch (error) {
+      return `❌ **Load Error:** ${error.message}`;
+    }
+  }
+
+  /**
+   * Handle get deliverable details request
+   */
+  async _handleGetDeliverableDetails(data) {
+    try {
+      const projectId = data.projectId;
+      const deliverableId = data.deliverableId;
+
+      // Get deliverable from database
+      const deliverableArtifacts = await this.projectManager.databaseService.mongoProvider
+        .find('sd_artifacts', { 
+          type: 'deliverable_completion', 
+          projectId: projectId, 
+          deliverableId: deliverableId 
+        });
+
+      if (deliverableArtifacts.length === 0) {
+        this.remoteActor.receive('deliverable_details_response', {
+          deliverableId: deliverableId,
+          error: 'Deliverable not found in database',
+          found: false
+        });
+        return;
+      }
+
+      const deliverableData = deliverableArtifacts[0];
+      
+      // Send detailed deliverable information
+      this.remoteActor.receive('deliverable_details_response', {
+        deliverableId: deliverableId,
+        deliverableName: deliverableData.content.name,
+        status: deliverableData.content.status,
+        completion: deliverableData.content.completion,
+        result: deliverableData.content.result,
+        artifacts: deliverableData.content.artifacts,
+        completedAt: deliverableData.content.completedAt,
+        agent: deliverableData.metadata.agent,
+        phase: deliverableData.metadata.phase,
+        executionTime: deliverableData.metadata.executionTime,
+        found: true
+      });
+
+      console.log(`🔍 [ACTOR] Sent deliverable details for: ${deliverableId}`);
+
+    } catch (error) {
+      console.error('❌ Failed to get deliverable details:', error.message);
+      this.remoteActor.receive('deliverable_details_response', {
+        deliverableId: data.deliverableId,
+        error: error.message,
+        found: false
+      });
     }
   }
 
