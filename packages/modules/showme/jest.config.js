@@ -1,7 +1,7 @@
 export default {
   // ES6 module support
   preset: null,
-  testEnvironment: 'jsdom',
+  testEnvironment: 'node',
   
   // Test environment options
   testEnvironmentOptions: {
@@ -19,12 +19,17 @@ export default {
     '^@legion/(.+)$': '<rootDir>/../../$1/src'
   },
   
-  // Test file patterns - exclude server and tool tests that need Node environment
+  // Test file patterns - non-DOM tests only
   testMatch: [
     '**/__tests__/**/*.test.js',
+    // Exclude server/tool tests (handled by jest.config.node.js)
     '!**/__tests__/unit/tools/*.test.js',
     '!**/__tests__/unit/ShowMeModule.test.js',
-    '!**/__tests__/integration/**/*.test.js'
+    '!**/__tests__/integration/**/*.test.js',
+    // Exclude DOM-based tests (handled by jest.config.dom.js)
+    '!**/__tests__/unit/components/**/*.test.js',
+    '!**/__tests__/renderers/**/*.test.js',
+    '!**/__tests__/unit/renderers/**/*.test.js'
   ],
   
   // Setup files
@@ -45,5 +50,17 @@ export default {
   automock: false,
   
   // Verbose output for TDD workflow
-  verbose: true
+  verbose: true,
+  
+  // Run tests sequentially to prevent hanging
+  maxWorkers: 1,
+  
+  // Force exit after tests complete
+  forceExit: true,
+  
+  // Detect open handles
+  detectOpenHandles: false,
+  
+  // Timeout for tests
+  testTimeout: 30000
 };

@@ -5,7 +5,8 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "test": "npm run test:ui && npm run test:node",
+    "test": "npm run test:dom && npm run test:ui && npm run test:node",
+    "test:dom": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.config.dom.js",
     "test:ui": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.config.js",
     "test:node": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.config.node.js",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
