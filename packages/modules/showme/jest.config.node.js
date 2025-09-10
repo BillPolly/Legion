@@ -43,5 +43,11 @@ export default {
   testTimeout: 30000,
   
   // Force exit after tests complete
-  forceExit: true
+  forceExit: true,
+  
+  // Run tests sequentially to prevent hanging
+  maxWorkers: 1,
+  
+  // Detect open handles
+  detectOpenHandles: false
 };

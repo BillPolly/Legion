@@ -4,6 +4,11 @@ import { datom } from './datom.js';
 let nextEid = 1;
 let nextTx = Date.now();
 
+// Reset global entity ID counter (for test isolation)
+export function resetEntityIdCounter() {
+  nextEid = 1;
+}
+
 const ORDER = {
   eavt: ['e','a','v','tx','added'],
   aevt: ['a','e','v','tx','added'],

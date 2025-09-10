@@ -3,6 +3,8 @@
  * 
  * Tests the core window lifecycle management system for floating windows
  * NO MOCKS - Tests real window management functionality
+ * 
+ * @jest-environment jsdom
  */
 
 import { WindowManager } from '../../../src/ui/WindowManager.js';
@@ -11,12 +13,15 @@ describe('WindowManager', () => {
   let windowManager;
 
   beforeEach(() => {
+    // Setup DOM environment for tests
+    document.body.innerHTML = '';
     windowManager = new WindowManager();
   });
 
   afterEach(() => {
     // Clean up all windows after each test
     windowManager.closeAllWindows();
+    document.body.innerHTML = '';
   });
 
   describe('constructor', () => {

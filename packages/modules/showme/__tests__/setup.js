@@ -3,6 +3,9 @@
  * Configures jsdom environment and global utilities for testing
  */
 
+// Import jest for mocking
+import { jest } from '@jest/globals';
+
 // Add TextEncoder/TextDecoder polyfills for JSDOM
 import { TextEncoder, TextDecoder } from 'util';
 global.TextEncoder = TextEncoder;
@@ -28,46 +31,54 @@ afterAll(() => {
   console.warn = originalWarn;
 });
 
-// Mock browser APIs that jsdom doesn't provide
-Object.defineProperty(window, 'getBoundingClientRect', {
-  value: () => ({
-    width: 800,
-    height: 600,
-    top: 0,
-    left: 0,
-    right: 800,
-    bottom: 600,
-    x: 0,
-    y: 0
-  })
-});
+// Mock browser APIs if running in jsdom environment
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'getBoundingClientRect', {
+    value: () => ({
+      width: 800,
+      height: 600,
+      top: 0,
+      left: 0,
+      right: 800,
+      bottom: 600,
+      x: 0,
+      y: 0
+    })
+  });
+
+  // Set default window size for tests
+  Object.defineProperty(window, 'innerWidth', {
+    writable: true,
+    configurable: true,
+    value: 1024
+  });
+
+  Object.defineProperty(window, 'innerHeight', {
+    writable: true,
+    configurable: true,
+    value: 768
+  });
+}
 
 // Mock HTMLElement.getBoundingClientRect for drag/resize testing
-HTMLElement.prototype.getBoundingClientRect = function() {
-  return {
-    width: this.offsetWidth || 100,
-    height: this.offsetHeight || 100,
-    top: 0,
-    left: 0,
-    right: this.offsetWidth || 100,
-    bottom: this.offsetHeight || 100,
-    x: 0,
-    y: 0
+if (typeof HTMLElement !== 'undefined') {
+  HTMLElement.prototype.getBoundingClientRect = function() {
+    return {
+      width: this.offsetWidth || 100,
+      height: this.offsetHeight || 100,
+      top: 0,
+      left: 0,
+      right: this.offsetWidth || 100,
+      bottom: this.offsetHeight || 100,
+      x: 0,
+      y: 0
+    };
   };
-};
+}
 
-// Set default window size for tests
-Object.defineProperty(window, 'innerWidth', {
-  writable: true,
-  configurable: true,
-  value: 1024
-});
-
-Object.defineProperty(window, 'innerHeight', {
-  writable: true,
-  configurable: true,
-  value: 768
-});
+// Mock performance.now for unit tests
+global.performance = global.performance || {};
+global.performance.now = jest.fn(() => Date.now());
 
 // Add any global test utilities here
 global.createMockResourceManager = () => {
