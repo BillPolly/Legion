@@ -7,7 +7,6 @@
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import { ResponseValidator } from '../../src/ResponseValidator.js';
 import { ResourceManager } from '@legion/resource-manager';
-import { Anthropic } from '@anthropic-ai/sdk';
 
 describe('Basic LLM Response Testing', () => {
   let anthropicClient;
@@ -24,20 +23,8 @@ describe('Basic LLM Response Testing', () => {
       throw new Error('ANTHROPIC_API_KEY not found in .env - required for LLM testing');
     }
     
-    // Create LLM client wrapper
-    anthropicClient = new Anthropic({ apiKey });
-    llmClient = {
-      complete: async (prompt, options = {}) => {
-        const response = await anthropicClient.messages.create({
-          model: options.model || 'claude-3-5-sonnet-20241022',
-          max_tokens: options.maxTokens || 2000,
-          temperature: options.temperature || 0.1,
-          system: options.system || '',
-          messages: [{ role: 'user', content: prompt }]
-        });
-        return response.content[0].text;
-      }
-    };
+    // Use ResourceManager to get LLM client
+    llmClient = await resourceManager.get('llmClient');
 
     console.log('✅ LLM client initialized for real API testing');
   });

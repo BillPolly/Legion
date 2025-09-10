@@ -4,9 +4,13 @@ import { Anthropic } from '@anthropic-ai/sdk';
  * Anthropic provider implementation
  */
 export class AnthropicProvider {
-  constructor(apiKey) {
+  constructor(apiKey, baseURL = undefined) {
     this.apiKey = apiKey;
-    this.client = new Anthropic({ apiKey });
+    const clientConfig = { apiKey };
+    if (baseURL) {
+      clientConfig.baseURL = baseURL;
+    }
+    this.client = new Anthropic(clientConfig);
   }
 
   async getAvailableModels() {

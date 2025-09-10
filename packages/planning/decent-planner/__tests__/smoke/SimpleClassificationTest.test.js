@@ -23,8 +23,9 @@ describe('Simple Classification Test', () => {
       throw new Error('No ANTHROPIC_API_KEY found');
     }
     
-    const { Anthropic } = await import('@anthropic-ai/sdk');
-    anthropic = new Anthropic({ apiKey: anthropicKey });
+    // Use ResourceManager to get LLM client
+    const llmClient = await resourceManager.get('llmClient');
+    anthropic = llmClient;
   });
 
   it('should classify a simple task', async () => {
@@ -54,13 +55,7 @@ Return ONLY a JSON object with this format:
   "reasoning": "Brief explanation"
 }`;
 
-    const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 200,
-      messages: [{ role: 'user', content: prompt }]
-    });
-    
-    const text = response.content[0].text;
+    const text = await anthropic.complete(prompt);
     console.log('Raw response:', text);
     
     // Parse the JSON
@@ -97,13 +92,7 @@ Return ONLY a JSON object with this format:
   "reasoning": "Brief explanation"
 }`;
 
-    const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 200,
-      messages: [{ role: 'user', content: prompt }]
-    });
-    
-    const text = response.content[0].text;
+    const text = await anthropic.complete(prompt);
     console.log('Raw response:', text);
     
     const result = JSON.parse(text);

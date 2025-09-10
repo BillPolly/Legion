@@ -13,7 +13,6 @@
 import { ResourceManager } from '@legion/resource-manager';
 import { getToolRegistry } from '@legion/tools-registry';
 import { ToolFeasibilityChecker } from '../src/core/informal/ToolFeasibilityChecker.js';
-import { Anthropic } from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
 import fs from 'fs/promises';
 import path from 'path';
@@ -52,32 +51,16 @@ async function processTaskWithJudgment(taskDescription) {
         
         if (anthropicKey) {
             console.log('  Using Anthropic Claude 3.5 Sonnet');
-            const anthropic = new Anthropic({ apiKey: anthropicKey });
-            llmClient = {
-                complete: async (prompt) => {
-                    const response = await anthropic.messages.create({
-                        model: 'claude-3-5-sonnet-20241022',
-                        max_tokens: 2000,
-                        temperature: 0.2,
-                        messages: [{ role: 'user', content: prompt }]
-                    });
-                    return response.content[0].text;
-                }
-            };
+            // Use ResourceManager to create LLM client
+            llmClient = await resourceManager.get('llmClient');
         } else if (openaiKey) {
             console.log('  Using OpenAI GPT-4');
-            const openai = new OpenAI({ apiKey: openaiKey });
-            llmClient = {
-                complete: async (prompt) => {
-                    const response = await openai.chat.completions.create({
-                        model: 'gpt-4-turbo-preview',
-                        messages: [{ role: 'user', content: prompt }],
-                        temperature: 0.2,
-                        max_tokens: 2000
-                    });
-                    return response.choices[0].message.content;
-                }
-            };
+            llmClient = await resourceManager.createLLMClient({
+                provider: 'openai',
+                model: 'gpt-4',
+                maxTokens: 2000,
+                temperature: 0.2
+            });
         } else {
             throw new Error('No API key found. Set ANTHROPIC_API_KEY or OPENAI_API_KEY in .env');
         }

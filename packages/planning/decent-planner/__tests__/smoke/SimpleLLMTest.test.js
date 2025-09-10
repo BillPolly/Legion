@@ -27,25 +27,16 @@ describe('Simple LLM Test', () => {
       return;
     }
     
-    // Step 2: Import and create Anthropic client
-    const { Anthropic } = await import('@anthropic-ai/sdk');
-    const anthropic = new Anthropic({ apiKey: anthropicKey });
+    // Step 2: Use ResourceManager to get LLM client
+    const llmClient = await resourceManager.get('llmClient');
     
     // Step 3: Send a simple message
     console.log('Sending test message to Claude...');
-    const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 100,
-      messages: [{ 
-        role: 'user', 
-        content: 'Say "Hello from test" and nothing else' 
-      }]
-    });
+    const response = await llmClient.complete('Say "Hello from test" and nothing else');
     
-    const text = response.content[0].text;
-    console.log('Response:', text);
+    console.log('Response:', response);
     
-    expect(text).toBeTruthy();
-    expect(text.toLowerCase()).toContain('hello');
+    expect(response).toBeTruthy();
+    expect(response.toLowerCase()).toContain('hello');
   }, 30000);
 });

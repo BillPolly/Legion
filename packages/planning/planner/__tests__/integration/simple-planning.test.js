@@ -5,7 +5,6 @@
 import { describe, it, expect, beforeAll } from '@jest/globals';
 import { Planner } from '../../src/core/Planner.js';
 import { ResourceManager } from '@legion/resource-manager';
-import { Anthropic } from '@anthropic-ai/sdk';
 
 describe('Planner Integration', () => {
   let planner;
@@ -21,20 +20,9 @@ describe('Planner Integration', () => {
       throw new Error('ANTHROPIC_API_KEY not found in .env');
     }
     
-    // Create a simple LLM client wrapper
-    const anthropic = new Anthropic({ apiKey });
-    const llmClient = {
-      complete: async (prompt, options = {}) => {
-        const response = await anthropic.messages.create({
-          model: options.model || 'claude-3-5-sonnet-20241022',
-          max_tokens: options.maxTokens || 4000,
-          temperature: options.temperature || 0.2,
-          system: options.system || '',
-          messages: [{ role: 'user', content: prompt }]
-        });
-        return response.content[0].text;
-      }
-    };
+    // Use ResourceManager to create LLM client
+    const resourceManager = await ResourceManager.getInstance();
+    const llmClient = await resourceManager.get('llmClient');
     
     // Get tools from ToolRegistry singleton - check what's available
     const { getToolRegistry } = await import('@legion/tools-registry');

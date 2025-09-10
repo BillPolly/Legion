@@ -10,7 +10,6 @@ import { PlannerAdapter } from '../../PlannerAdapter.js';
 import { Planner } from '@legion/planner';
 import { BTValidator } from '@legion/bt-validator';
 import { ResourceManager } from '@legion/resource-manager';
-import { Anthropic } from '@anthropic-ai/sdk';
 
 describe('FormalPlanner Integration', () => {
   let formalPlanner;
@@ -28,18 +27,8 @@ describe('FormalPlanner Integration', () => {
       return;
     }
     
-    const anthropic = new Anthropic({ apiKey: anthropicKey });
-    llmClient = {
-      complete: async (prompt) => {
-        const response = await anthropic.messages.create({
-          model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 2000,
-          temperature: 0.2,
-          messages: [{ role: 'user', content: prompt }]
-        });
-        return response.content[0].text;
-      }
-    };
+    // Use ResourceManager to create LLM client
+    llmClient = await resourceManager.get('llmClient');
     
     // Initialize real components
     const realPlanner = new Planner({ llmClient });

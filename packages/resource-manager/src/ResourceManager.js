@@ -404,8 +404,10 @@ export class ResourceManager {
    * @returns {Promise<Object>} LLM client instance
    */
   async createLLMClient(config = {}) {
-    // Get API key from environment
+    // Get API key, base URL, and model from environment
     const anthropicKey = this.get('env.ANTHROPIC_API_KEY');
+    const anthropicBaseURL = this.get('env.ANTHROPIC_BASE_URL');
+    const anthropicModel = this.get('env.ANTHROPIC_MODEL');
     
     if (!anthropicKey) {
       throw new Error('ANTHROPIC_API_KEY not found in environment variables. Please set it in your .env file.');
@@ -417,7 +419,8 @@ export class ResourceManager {
     const llmClient = new LLMClient({
       provider: config.provider || 'anthropic',
       apiKey: anthropicKey,
-      model: config.model || 'claude-3-5-sonnet-20241022',
+      baseURL: anthropicBaseURL,
+      model: config.model || anthropicModel || 'claude-3-5-sonnet-20241022',
       maxTokens: config.maxTokens || 1000,
       temperature: config.temperature || 0.7,
       ...config

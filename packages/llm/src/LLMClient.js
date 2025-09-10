@@ -69,7 +69,7 @@ export class LLMClient extends EventEmitter {
         if (!config.apiKey) {
           throw new Error('API key is required for Anthropic provider');
         }
-        this.provider = new AnthropicProvider(config.apiKey);
+        this.provider = new AnthropicProvider(config.apiKey, config.baseURL);
         break;
       case 'openai':
         if (!config.apiKey) {

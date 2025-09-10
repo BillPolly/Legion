@@ -6,7 +6,6 @@
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import { ResponseValidator } from '../../src/ResponseValidator.js';
 import { ResourceManager } from '@legion/resource-manager';
-import { Anthropic } from '@anthropic-ai/sdk';
 
 describe('Comprehensive Format Testing with Real LLMs', () => {
   let llmClient;
@@ -19,18 +18,8 @@ describe('Comprehensive Format Testing with Real LLMs', () => {
       throw new Error('ANTHROPIC_API_KEY required');
     }
     
-    const anthropicClient = new Anthropic({ apiKey });
-    llmClient = {
-      complete: async (prompt, options = {}) => {
-        const response = await anthropicClient.messages.create({
-          model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 3000,
-          temperature: 0.1,
-          messages: [{ role: 'user', content: prompt }]
-        });
-        return response.content[0].text;
-      }
-    };
+    // Use ResourceManager to get LLM client
+    llmClient = await resourceManager.get('llmClient');
   });
 
   describe('Multi-Language Code Generation Test', () => {
