@@ -6,7 +6,7 @@
 import LoopDetectionService, { LoopType } from '../../src/services/LoopDetectionService.js';
 import AdvancedToolOrchestrationService, { ToolCallStatus, ToolConfirmationOutcome } from '../../src/services/AdvancedToolOrchestrationService.js';
 import { ResourceManager } from '@legion/resource-manager';
-import GeminiToolsModule from '../../../modules/gemini-tools/src/GeminiToolsModule.js';
+import GeminiToolsModule from '../../../../modules/gemini-tools/src/GeminiToolsModule.js';
 
 describe('Advanced Services Integration', () => {
   let loopDetectionService;

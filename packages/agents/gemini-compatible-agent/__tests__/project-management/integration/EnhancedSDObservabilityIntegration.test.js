@@ -90,7 +90,7 @@ describe('Enhanced SDObservabilityService Integration Tests', () => {
       expect(report.projectId).toBe(testProjectId);
       expect(report.reportType).toBe('detailed');
       expect(report.projectSummary.projectName).toBe('Observability Integration Test Project');
-      expect(report.projectSummary.totalDeliverables).toBe(1);
+      expect(report.projectSummary.totalDeliverables).toBe(4); // 3 auto-generated + 1 test
       expect(report.projectSummary.completedDeliverables).toBe(1);
       expect(report.eventSummary.totalEvents).toBe(2); // deliverable_created + deliverable_completed
       expect(report.allEvents).toHaveLength(2);

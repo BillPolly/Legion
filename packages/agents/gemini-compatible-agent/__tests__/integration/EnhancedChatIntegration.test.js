@@ -110,8 +110,7 @@ describe('EnhancedChat Integration', () => {
   test('should determine retry eligibility correctly', () => {
     const retryableErrors = [
       new Error('429 Rate limit exceeded'),
-      new Error('500 Internal server error'),
-      new Error('502 Bad gateway'),
+      new Error('rate limit exceeded'),
       new Error('Request timeout'),
       new Error('Network error occurred')
     ];

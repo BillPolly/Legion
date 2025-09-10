@@ -152,7 +152,7 @@ export class MultimodalFileProcessor {
    */
   async _processTextFile(filePath, offset, limit) {
     const content = await fs.readFile(filePath, 'utf-8');
-    const lines = content.split('\\n');
+    const lines = content.split('\n');
     
     let processedContent = content;
     let isTruncated = false;
@@ -166,7 +166,7 @@ export class MultimodalFileProcessor {
         isTruncated = true;
       }
       
-      processedContent = lines.slice(startLine, endLine).join('\\n');
+      processedContent = lines.slice(startLine, endLine).join('\n');
       linesShown = [startLine + 1, Math.min(endLine, lines.length)];
     }
     

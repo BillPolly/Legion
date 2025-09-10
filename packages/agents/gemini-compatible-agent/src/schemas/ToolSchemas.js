@@ -2,7 +2,48 @@
  * Tool schemas ported from Gemini CLI to Legion's schema system
  */
 
-import { SchemaValidator } from '@legion/schema';
+// Simple schema validator - replaces missing @legion/schema dependency
+class SimpleSchemaValidator {
+  constructor(schema) {
+    this.schema = schema;
+  }
+
+  validate(data) {
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid data: must be an object');
+    }
+
+    // Check required fields
+    if (this.schema.required) {
+      for (const field of this.schema.required) {
+        if (!(field in data)) {
+          throw new Error(`Missing required field: ${field}`);
+        }
+      }
+    }
+
+    // Basic type checking for properties
+    if (this.schema.properties) {
+      for (const [key, propSchema] of Object.entries(this.schema.properties)) {
+        if (key in data) {
+          const value = data[key];
+          if (propSchema.type === 'string' && typeof value !== 'string') {
+            throw new Error(`Invalid type for ${key}: expected string, got ${typeof value}`);
+          }
+          if (propSchema.type === 'number' && typeof value !== 'number') {
+            throw new Error(`Invalid type for ${key}: expected number, got ${typeof value}`);
+          }
+        }
+      }
+    }
+
+    return true;
+  }
+}
+
+const SchemaValidator = {
+  createValidator: (schema) => new SimpleSchemaValidator(schema)
+};
 
 // ReadFile tool schema (ported from read-file.ts)
 export const ReadFileToolSchema = {

@@ -16,8 +16,46 @@ export class FileDiscoveryService {
     this.geminiignorePatterns = [];
     this.isGitRepo = false;
     
+    // Add default gitignore patterns
+    this._addDefaultGitIgnorePatterns();
+    
     // Initialize ignore patterns
     this._loadIgnorePatterns();
+  }
+
+  /**
+   * Add default gitignore patterns that should always be ignored
+   * @private
+   */
+  _addDefaultGitIgnorePatterns() {
+    const defaultPatterns = [
+      'node_modules',
+      '*.log',
+      '.DS_Store',
+      'Thumbs.db',
+      '*.tmp',
+      '*.temp'
+    ];
+    
+    for (const pattern of defaultPatterns) {
+      // Convert gitignore patterns to regex
+      let regexPattern = pattern
+        .replace(/\./g, '\\.')
+        .replace(/\*/g, '.*')
+        .replace(/\?/g, '.');
+      
+      // Handle directory patterns
+      if (pattern.endsWith('/')) {
+        regexPattern = regexPattern + '.*';
+      } else if (!pattern.includes('.')) {
+        // If no extension, match both files and directories
+        regexPattern = `(^|/)${regexPattern}(/.*)?$`;
+      } else {
+        regexPattern = `(^|/)${regexPattern}$`;
+      }
+      
+      this.gitignorePatterns.push(new RegExp(regexPattern));
+    }
   }
 
   /**

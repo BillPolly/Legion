@@ -2,7 +2,7 @@
  * Unit tests for GeminiPromptManager (ported prompt functionality)
  */
 
-import GeminiPromptManager from '../../src/prompts/GeminiPromptManager.js';
+import { GeminiPromptManager } from '../../src/prompts/GeminiPromptManager.js';
 
 describe('GeminiPromptManager', () => {
   let promptManager;

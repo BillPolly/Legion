@@ -52,6 +52,9 @@ export class LoopDetectionService {
    */
   checkToolCallLoop(toolName, toolArgs) {
     try {
+      // Increment turn counter for tracking
+      this.turnsInCurrentPrompt++;
+      
       // Create unique key for this tool call (ported from Gemini CLI)
       const toolCallKey = this._createToolCallKey(toolName, toolArgs);
       
@@ -96,6 +99,9 @@ export class LoopDetectionService {
    */
   checkContentLoop(content) {
     try {
+      // Increment turn counter for tracking
+      this.turnsInCurrentPrompt++;
+      
       if (!content || typeof content !== 'string') {
         return false;
       }

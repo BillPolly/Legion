@@ -71,7 +71,7 @@ describe('Multi-Tool Workflow Test', () => {
     expect(result.data.use_tools[1].name).toBe('write_file');
     expect(result.data.use_tools[0].args.content).toBe('First file');
     
-    console.log('✅ Array tool schema parsing works');
+    // console.log('✅ Array tool schema parsing works');
   });
 
   test('should generate instructions for multi-tool workflow', () => {
@@ -92,12 +92,12 @@ describe('Multi-Tool Workflow Test', () => {
     const instructions = responseValidator.generateInstructions(exampleData);
     
     expect(instructions).toContain('use_tools');
-    expect(instructions).toContain('array');
+    expect(instructions).toContain('Array of tools');
     expect(instructions).toContain('write_file');
     expect(instructions).toContain('read_file');
     
-    console.log('✅ Multi-tool instructions generated');
-    console.log('Instructions preview:', instructions.substring(0, 300));
+    // console.log('✅ Multi-tool instructions generated');
+    // console.log('Instructions preview:', instructions.substring(0, 300));
   });
 
   test('should request multi-tool workflow from real LLM', async () => {
@@ -125,18 +125,18 @@ Respond with JSON in this exact format:
     expect(typeof response).toBe('string');
     expect(response.length).toBeGreaterThan(0);
     
-    console.log('LLM multi-tool response:', response);
+    // console.log('LLM multi-tool response:', response);
     
     // Try to parse the response
     const parseResult = responseValidator.process(response);
     
     if (parseResult.success) {
-      console.log('✅ LLM generated valid multi-tool workflow');
+      // console.log('✅ LLM generated valid multi-tool workflow');
       expect(parseResult.data.use_tools).toHaveLength(2);
       expect(parseResult.data.use_tools[0].name).toBe('write_file');
       expect(parseResult.data.use_tools[1].name).toBe('read_file');
     } else {
-      console.log('❌ LLM response parsing failed:', parseResult.errors);
+      // console.log('❌ LLM response parsing failed:', parseResult.errors);
       // Even if parsing fails, the LLM should attempt multi-tool format
       expect(response).toMatch(/write_file.*read_file|use_tools|array/);
     }
@@ -157,11 +157,11 @@ Respond with JSON array of tools:
 
     const response = await llmClient.complete(complexPrompt);
     
-    console.log('Complex multi-tool response:', response);
+    // console.log('Complex multi-tool response:', response);
     
     // Should contain multiple tools
     expect(response).toMatch(/glob_pattern|grep_search|write_file/);
     
-    console.log('✅ LLM can handle complex multi-tool requests');
+    // console.log('✅ LLM can handle complex multi-tool requests');
   }, 60000);
 });

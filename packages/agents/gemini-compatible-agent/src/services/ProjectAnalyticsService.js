@@ -1,0 +1,45 @@
+/**
+ * Service for handling project analytics and metrics
+ */
+import EventEmitterService from './EventEmitterService.js';
+import { analyticsConfig } from '../config/analytics-config.js';
+
+export class ProjectAnalyticsService extends EventEmitterService {
+  constructor() {
+    super();
+    this.metrics = new Map();
+    this.metricsHistory = [];
+    this.storageLimit = analyticsConfig.metrics.storageLimit;
+  }
+
+  /**
+   * Record a new metric
+   * @param {string} key - Metric identifier
+   * @param {number} value - Metric value
+   */
+  recordMetric(key, value, timestamp = Date.now()) {
+    if (this.metricsHistory.length >= this.storageLimit) {
+      this.metricsHistory.shift();
+    }
+    
+    this.metrics.set(key, value);
+    this.metricsHistory.push({ key, value, timestamp });
+    this.emit('metricRecorded', { key, value, timestamp });
+  }
+
+  /**
+   * Get recorded metric
+   * @param {string} key - Metric identifier
+   * @returns {number|null} The metric value or null if not found
+   */
+  getMetric(key) {
+    return this.metrics.get(key) ?? null;
+  }
+
+  /**
+   * Clear all metrics
+   */
+  clearMetrics() {
+    this.metrics.clear();
+  }
+}

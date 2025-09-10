@@ -8,7 +8,7 @@ import GeminiToolsModule from '../../../../modules/gemini-tools/src/GeminiToolsM
 import path from 'path';
 import ProjectContextService from '../services/ProjectContextService.js';
 import ConversationCompressionService from '../services/ConversationCompressionService.js';
-import GeminiPromptManager from '../prompts/GeminiPromptManager.js';
+import { GeminiPromptManager } from '../prompts/GeminiPromptManager.js';
 import LoopDetectionService from '../services/LoopDetectionService.js';
 import AdvancedToolOrchestrationService from '../services/AdvancedToolOrchestrationService.js';
 import GitService from '../services/GitService.js';

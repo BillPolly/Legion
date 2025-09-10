@@ -144,14 +144,17 @@ describe('Enhanced ProjectContextService Integration', () => {
   });
 
   test('should provide time-based file access information', async () => {
+    // Create a fresh service to avoid interference from previous test
+    const freshService = new ProjectContextService();
+    
     const timeFile = path.join(testDir, 'time-test.js');
     
     // Track with small delays to test time formatting
-    service.trackFileAccess(timeFile, 'write');
+    freshService.trackFileAccess(timeFile, 'write');
     
-    const context = service.getRecentFilesContext();
+    const context = freshService.getRecentFilesContext();
     
-    expect(context).toContain('time-test.js');
+    expect(context).toContain(path.basename(timeFile));
     expect(context).toMatch(/just now|\d+[mh] ago/);
     
     console.log('Time-based tracking:', context);

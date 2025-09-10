@@ -261,9 +261,9 @@ describe('ProjectManagerAgent', () => {
       expect(summary.projectId).toBe('test-project-001');
       expect(summary.projectName).toBe('Test Project');
       expect(summary.currentPhase).toBe('requirements');
-      expect(summary.totalDeliverables).toBe(1);
-      expect(summary.completedDeliverables).toBe(1);
-      expect(summary.progressPercentage).toBe(100);
+      expect(summary.totalDeliverables).toBe(4);  // 3 standard + 1 added
+      expect(summary.completedDeliverables).toBe(1);  // Only the manually added one is completed
+      expect(summary.progressPercentage).toBe(25);  // 1 completed out of 4 total = 25%
     });
   });
 });

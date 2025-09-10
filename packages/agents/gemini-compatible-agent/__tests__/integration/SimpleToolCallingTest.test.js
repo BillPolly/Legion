@@ -58,11 +58,30 @@ The file has been created successfully.`;
 
     // Test the parsing logic directly
     const toolCalls = [];
-    const jsonMatches = mockResponse.match(/\{[\s\S]*?"use_tool"[\s\S]*?\}/g) || [];
     
-    for (const match of jsonMatches) {
+    // Find JSON blocks that contain use_tool
+    const jsonBlocks = [];
+    let braceCount = 0;
+    let start = -1;
+    
+    for (let i = 0; i < mockResponse.length; i++) {
+      if (mockResponse[i] === '{') {
+        if (braceCount === 0) start = i;
+        braceCount++;
+      } else if (mockResponse[i] === '}') {
+        braceCount--;
+        if (braceCount === 0 && start >= 0) {
+          const block = mockResponse.substring(start, i + 1);
+          if (block.includes('use_tool')) {
+            jsonBlocks.push(block);
+          }
+        }
+      }
+    }
+    
+    for (const block of jsonBlocks) {
       try {
-        const parsed = JSON.parse(match);
+        const parsed = JSON.parse(block);
         if (parsed.use_tool && parsed.use_tool.name && parsed.use_tool.args) {
           toolCalls.push({
             name: parsed.use_tool.name,

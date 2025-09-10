@@ -1,4 +1,8 @@
 /**
+ * @jest-environment jsdom
+ */
+
+/**
  * ProjectDashboardViewModel Tests  
  * Unit tests for project dashboard MVVM ViewModel layer
  */
@@ -143,13 +147,23 @@ describe('ProjectDashboardViewModel', () => {
 
   describe('refreshData', () => {
     test('should refresh project data from model', async () => {
+      // Need to set a current project first
+      viewModel.currentProjectId = 'test-project';
+      
       let viewRenderCalled = false;
+      let modelRefreshCalled = false;
+      
       mockView.render = () => { viewRenderCalled = true; };
+      mockModel.refreshData = () => { 
+        modelRefreshCalled = true; 
+        return Promise.resolve(); 
+      };
 
       const result = await viewModel.refreshData();
       
       expect(result.success).toBe(true);
       expect(viewRenderCalled).toBe(true);
+      expect(modelRefreshCalled).toBe(true);
     });
   });
 

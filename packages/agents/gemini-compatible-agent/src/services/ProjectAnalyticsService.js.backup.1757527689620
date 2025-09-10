@@ -1,0 +1,33 @@
+/**
+ * Service for handling project analytics and metrics
+ */
+export class ProjectAnalyticsService {
+  constructor() {
+    this.metrics = new Map();
+  }
+
+  /**
+   * Record a new metric
+   * @param {string} key - Metric identifier
+   * @param {number} value - Metric value
+   */
+  recordMetric(key, value) {
+    this.metrics.set(key, value);
+  }
+
+  /**
+   * Get recorded metric
+   * @param {string} key - Metric identifier
+   * @returns {number|null} The metric value or null if not found
+   */
+  getMetric(key) {
+    return this.metrics.get(key) ?? null;
+  }
+
+  /**
+   * Clear all metrics
+   */
+  clearMetrics() {
+    this.metrics.clear();
+  }
+}

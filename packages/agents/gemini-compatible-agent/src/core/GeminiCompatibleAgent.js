@@ -1,131 +1,89 @@
-/**
- * GeminiCompatibleAgent - Main agent class that replicates Gemini CLI functionality
- * Built using Legion framework patterns with ported Gemini CLI code
- */
-
 import { ConfigurableAgent } from '@legion/configurable-agent';
-import { validateAgentConfig } from '../schemas/ToolSchemas.js';
-import ConversationManager from '../conversation/ConversationManager.js';
-// Note: Will import GeminiToolsModule when packages are properly linked
+import { ResourceManager } from '@legion/resource-manager';
+import { ConversationManager } from '../conversation/ConversationManager.js';
+import { GeminiPromptManager } from '../prompts/GeminiPromptManager.js';
 
-/**
- * Gemini-compatible agent that extends Legion's ConfigurableAgent
- * Provides the same functionality as Gemini CLI using ported code
- */
 export class GeminiCompatibleAgent extends ConfigurableAgent {
-  constructor(config = {}, resourceManager) {
-    // Configure agent to use GeminiToolsModule with proper Legion patterns
-    const agentConfig = {
-      agent: {
-        id: 'gemini-compatible-agent',
-        name: 'Gemini Compatible Agent',
-        description: 'AI coding assistant with complete Gemini CLI capabilities',
-        type: 'task',
-        version: '1.0.0',
-        capabilities: [
-          {
-            module: 'gemini-tools',
-            tools: [
-              'read_file', 'write_file', 'edit_file', 'list_files', 
-              'grep_search', 'shell_command', 'save_memory', 'smart_edit',
-              'read_many_files', 'glob_pattern', 'web_fetch', 'web_search', 
-              'ripgrep_search'
-            ],
-            permissions: { read: true, write: true, execute: true }
-          }
-        ],
-        llm: {
-          provider: 'anthropic', 
-          model: 'claude-3-5-sonnet-20241022',
-          temperature: 0.1,
-          maxTokens: 100000,
-          systemPrompt: 'You are a Gemini-compatible AI coding assistant with access to file operations, search tools, and shell commands.'
-        },
-        prompts: {
-          templates: {},
-          responseFormats: {
-            default: {
-              type: 'json',
-              includeMetadata: true
-            }
-          }
-        },
-        state: {
-          conversationHistory: {
-            maxMessages: 100,
-            pruningStrategy: 'sliding-window'
-          },
-          contextVariables: {}
-        },
-        ...config
-      }
-    };
-
-    // Call parent constructor with proper Legion config
-    super(agentConfig, resourceManager);
+  constructor(config = {}, resourceManager = null) {
+    super(config, resourceManager);
+    this.conversationManager = null;
+    this.promptManager = null;
   }
 
-  /**
-   * Initialize the agent using ConfigurableAgent's patterns
-   */
   async initialize() {
-    // Call parent initialization - this handles everything!
+    const resourceManager = await ResourceManager.getInstance();
+    this.promptManager = new GeminiPromptManager(resourceManager);
+    this.conversationManager = new ConversationManager({
+      promptManager: this.promptManager,
+      resourceManager
+    });
+
     await super.initialize();
-
-    console.log(`✅ GeminiCompatibleAgent initialized: ${this.name}`);
-    console.log(`🔧 Available tools: ${Object.keys(this.capabilityManager?.tools || {}).length}`);
-    return this;
   }
 
-  /**
-   * Process user chat message using ConfigurableAgent patterns
-   * @param {string} userInput - User's message
-   * @param {Object} options - Additional options  
-   * @returns {Promise<Object>} Response
-   */
-  async processMessage(userInput, options = {}) {
-    const sessionId = options.sessionId || 'gemini-session';
-    
-    // Use ConfigurableAgent's receive method for chat
-    const chatMessage = {
-      type: 'chat',
-      from: 'user',
-      content: userInput,
-      sessionId
-    };
+  async processMessage(userInput) {
+    try {
+      if (!userInput || typeof userInput !== 'string') {
+        throw new Error('Invalid input: userInput must be a non-empty string');
+      }
+      const response = await this.conversationManager.handleUserInput(userInput);
+      return this.streamResponse(response);
+    } catch (error) {
+      console.error('Error processing message:', error);
+      throw error;
+    }
+  }
 
-    const response = await this.receive(chatMessage);
+  async streamResponse(response) {
+    // Implement streaming response handling
     return response;
   }
 
-  /**
-   * Execute tool using ConfigurableAgent patterns
-   * @param {string} toolName - Tool to execute
-   * @param {Object} params - Tool parameters
-   * @param {Object} options - Additional options
-   * @returns {Promise<Object>} Tool result
-   */
-  async executeTool(toolName, params, options = {}) {
-    const sessionId = options.sessionId || 'gemini-session';
-    
-    // Use ConfigurableAgent's receive method for tool requests
-    const toolMessage = {
-      type: 'tool_request',
-      from: 'user',
-      tool: toolName,
-      operation: 'execute', // Standard operation
-      params,
-      sessionId
-    };
-
-    const response = await this.receive(toolMessage);
-    return response;
+  async executeTools(toolRequests) {
+    // Implement tool execution with proper permissions
+    return await super.executeTools(toolRequests);
   }
 
-  /**
-   * Get conversation history from ConfigurableAgent state
-   */
-  getConversationHistory() {
-    return this.state?.getConversationHistory() || [];
+  async executeTool(toolName, toolArgs) {
+    // Single tool execution method for compatibility
+    try {
+      const toolRequest = {
+        name: toolName,
+        arguments: toolArgs,
+        id: `tool_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      };
+      
+      const results = await this.executeTools([toolRequest]);
+      
+      if (results && results.length > 0) {
+        return {
+          type: 'tool_response',
+          success: true,
+          result: results[0].result,
+          toolName: toolName,
+          arguments: toolArgs
+        };
+      } else {
+        return {
+          type: 'tool_response',
+          success: false,
+          error: 'Tool execution failed',
+          toolName: toolName,
+          arguments: toolArgs
+        };
+      }
+    } catch (error) {
+      return {
+        type: 'tool_response',
+        success: false,
+        error: error.message,
+        toolName: toolName,
+        arguments: toolArgs
+      };
+    }
+  }
+
+  async compressContext() {
+    return await this.conversationManager.compressHistory();
   }
 }

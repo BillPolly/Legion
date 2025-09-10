@@ -112,7 +112,7 @@ describe('ProjectContextService Integration', () => {
     
     expect(context).toContain('Current Working Directory');
     expect(context).toContain('/nonexistent/directory');
-    expect(context).toContain('Unable to read directory structure');
+    expect(context).toContain('❌ Cannot access directory');
   });
 
   test('should limit directory traversal depth', async () => {
