@@ -1,185 +1,211 @@
-# Data-Store Implementation Plan
+# Unified Proxy Architecture - Implementation Plan
 
 ## Overview
 
-This implementation plan follows a **Test-Driven Development (TDD)** approach without the refactor step - we aim to get the implementation right on the first attempt based on the comprehensive design document. The implementation will be built in phases with each step thoroughly tested before moving to the next.
+Implement the unified proxy architecture as defined in `unified-proxy-architecture.md` using Test-Driven Development (TDD) approach without refactoring phase. Get implementation right on first attempt through comprehensive testing.
 
-## Approach and Rules
+## Implementation Approach
 
-### Testing Strategy
-- **Unit Tests**: Test individual components in isolation using mocks where appropriate
-- **Integration Tests**: Test component interactions with **NO MOCKS** - use real DataScript instances
-- **End-to-End Tests**: Test complete user workflows from API to database
-- All tests must pass before proceeding to the next step
+### Architectural Decision: DataStoreProxy Wrapper Pattern
+**Decision**: Use a DataStoreProxy wrapper class instead of modifying DataStore directly
+- **Rationale**: Maintains separation of concerns, preserves backward compatibility
+- **Benefits**: DataStore remains focused on storage logic, proxy functionality isolated
+- **Pattern**: DataStoreProxy wraps DataStore and intercepts queries to return proxy objects
 
-### Implementation Rules
-- **No Mocks in Implementation**: Production code must not contain any mock objects or fallback mechanisms
-- **No Fallbacks**: All errors must be raised explicitly - no silent failures or default behaviors
-- **No Mocks in Integration Tests**: Integration tests must use real DataScript instances and actual component interactions
-- **Functional Correctness Only**: Focus on MVP functionality - no performance optimization, security, or migration concerns
-- **Local Testing Only**: No deployment, publishing, or production concerns
+### TDD Methodology
+1. **Write Tests First**: All functionality driven by tests written before implementation
+2. **No Refactor Phase**: Aim to get implementation correct on first attempt  
+3. **Comprehensive Coverage**: Both unit tests and integration tests for all components
+4. **Fail Fast**: No fallbacks or graceful degradation - raise clear errors
 
-### Development Workflow
-1. **Write Test First**: Define expected behavior through tests
-2. **Implement to Pass**: Write minimal code to make tests pass
-3. **Verify Completeness**: Ensure all edge cases are covered
-4. **Move to Next Step**: Only proceed when all tests pass
+### Core Rules
+- **No Mocks in Integration Tests**: Use real DataStore, EntityProxy, and DataScript instances
+- **No Mocks in Implementation**: No mock objects or fallback implementations in production code
+- **No Fallbacks**: If something fails, throw descriptive error - no silent failures
+- **MVP Focus**: Functional correctness only - no NFR concerns (performance, security, migration)
+- **Local/UAT Only**: No publishing, deployment, or production concerns
+
+### Success Criteria
+- All existing functionality preserved with new proxy-based API
+- Complete test coverage for new proxy types (CollectionProxy, StreamProxy)  
+- All property access returns appropriate proxy objects
+- All query methods return appropriate proxy objects
+- Reactive subscriptions work across all proxy types
+- Zero breaking changes to core DataStore/EntityProxy contracts (except return types)
 
 ## Implementation Phases
 
-### Phase 1: Foundation Infrastructure
-**Goal**: Establish core DataStore and basic proxy infrastructure
+### Phase 1: Core Proxy Infrastructure
+**Goal**: Create new proxy classes and type detection logic
 
-#### Step 1.1: Basic DataStore Creation
-- [x] **Unit Tests**: DataStore constructor, schema validation, empty store creation
-- [x] **Integration Tests**: DataStore with real DataScript connection
-- [x] **Implementation**: DataStore class with schema management and connection wrapper
+#### Step 1.1: Create StreamProxy Class ✅ COMPLETED
+- [x] Write unit tests for StreamProxy constructor and basic methods
+- [x] Write unit tests for StreamProxy.value() method
+- [x] Write unit tests for StreamProxy.query() method  
+- [x] Write unit tests for StreamProxy.subscribe() method
+- [x] Implement StreamProxy class to pass all tests
+- [x] Write integration tests with DataStore
+- [x] **Results**: 19 unit tests + 21 integration tests = 40/40 tests passing
 
-#### Step 1.2: Proxy Registry System
-- [x] **Unit Tests**: Proxy registration, lookup, singleton pattern enforcement
-- [x] **Integration Tests**: Registry with multiple proxy creations and DataScript interactions
-- [x] **Implementation**: Map-based proxy registry with lifecycle management
+#### Step 1.2: Create CollectionProxy Class ✅ COMPLETED
+- [x] Write unit tests for CollectionProxy constructor and basic methods
+- [x] Write unit tests for CollectionProxy.value() method
+- [x] Write unit tests for CollectionProxy.query() method
+- [x] Write unit tests for CollectionProxy.subscribe() method
+- [x] Write unit tests for array-like interface (iteration, length, map, filter)
+- [x] Implement CollectionProxy class to pass all tests
+- [x] Write integration tests with DataStore
+- [x] **Results**: 41 unit tests + 22 integration tests = 63/63 tests passing
+- [x] **Key Achievement**: Implemented synchronous proxy creation with continuation pattern for circular imports
 
-#### Step 1.3: Basic Entity Creation
-- [x] **Unit Tests**: Entity creation through DataStore API
-- [x] **Integration Tests**: Entity creation with DataScript transactions and schema validation
-- [x] **Implementation**: Entity creation methods with transaction generation
+#### Step 1.3: Query Result Type Detection ✅ COMPLETED
+- [x] Write comprehensive unit tests for QueryTypeDetector class
+- [x] Write unit tests for aggregate function detection (count, sum, avg, min, max, count-distinct)
+- [x] Write unit tests for entity variable detection and analysis  
+- [x] Write unit tests for scalar query detection and multi-variable query patterns
+- [x] Write unit tests for complex query pattern analysis (joins, filters, complexity)
+- [x] Write unit tests for schema-based type inference and error handling
+- [x] **Results**: 45 comprehensive unit tests covering all detection scenarios
+- [x] Implement QueryTypeDetector class to pass all 45 unit tests
+- [x] Write integration tests with various query patterns and real DataStore instances
+- [x] **Results**: 20 integration tests with real DataStore queries and aggregate functions
+- [x] **Key Achievement**: Support for both legacy string-based and modern array-based DataScript aggregate syntax
 
-### Phase 2: Entity Proxy Objects
-**Goal**: Implement reactive proxy objects with property access
+#### Step 1.4: Property Type Detection ✅ COMPLETED
+- [x] Write comprehensive unit tests for PropertyTypeDetector class covering schema-based type analysis
+- [x] Write unit tests for scalar attribute detection (valueType: string, number, boolean, instant)
+- [x] Write unit tests for reference attribute detection (single and many cardinality)
+- [x] Write unit tests for edge cases: unknown attributes, missing schema, complex nested references
+- [x] Implement PropertyTypeDetector class to pass all unit tests
+- [x] Write integration tests with various schema configurations (e-commerce, social media patterns)
+- [x] **Results**: 53 unit tests + 12 integration tests = 65/65 tests passing
+- [x] **Key Achievement**: Complete property type analysis system with comprehensive schema support
 
-#### Step 2.1: Proxy Object Structure
-- [x] **Unit Tests**: EntityProxy constructor, entity ID binding, validity checks
-- [x] **Integration Tests**: Proxy creation from DataStore with real entities
-- [x] **Implementation**: EntityProxy class with entity reference and store connection
+### Phase 2: EntityProxy Integration
+**Goal**: Modify EntityProxy to return proxy objects from all access methods
 
-#### Step 2.2: Reactive Property Access
-- [x] **Unit Tests**: Property getters for simple attributes, error handling for missing entities
-- [x] **Integration Tests**: Property access with live DataScript queries and database state changes
-- [x] **Implementation**: Dynamic property getters using DataScript pull operations
+#### Step 2.1: Enhanced Dynamic Property Access ✅ COMPLETED
+- [x] Write unit tests for property getters returning StreamProxy for scalars
+- [x] Write unit tests for property getters returning EntityProxy for single refs  
+- [x] Write unit tests for property getters returning CollectionProxy for many refs
+- [x] Modify EntityProxy._setupDynamicProperties() to return proxies
+- [x] Write integration tests for property access across various schemas
+- [x] **Results**: 26 comprehensive unit tests covering all property access patterns
+- [x] **Key Achievement**: Complete unified proxy architecture where property access returns appropriate proxy types
 
-#### Step 2.3: Reference Property Conversion
-- [x] **Unit Tests**: Ref attribute conversion to proxy objects, collection handling
-- [x] **Integration Tests**: Reference resolution with multiple entity types and relationships
-- [x] **Implementation**: Automatic proxy object creation for ref attributes
+#### Step 2.2: Enhanced EntityProxy.query() Method ✅ COMPLETED
+- [x] Write unit tests for query method returning appropriate proxy types
+- [x] Write unit tests for entity-rooted queries with ?this binding
+- [x] Write unit tests for query composition (query().query())
+- [x] Modify EntityProxy.query() to return proxy objects instead of arrays
+- [x] Write integration tests for various query patterns
+- [x] **Results**: 19 comprehensive unit tests covering all query patterns
+- [x] **Key Achievement**: Schema-based type determination, proper proxy chaining, ?this binding support
 
-#### Step 2.4: Proxy Updates
-- [x] **Unit Tests**: Update method parameter validation, transaction generation
-- [x] **Integration Tests**: Updates propagating to DataScript database with schema constraints
-- [x] **Implementation**: Update forwarding with DataScript transaction creation
+#### Step 2.3: EntityProxy.value() Method ✅ COMPLETED
+- [x] Write unit tests for EntityProxy.value() returning JavaScript object
+- [x] Write unit tests for nested value extraction (refs converted to plain objects)
+- [x] Implement EntityProxy.value() method
+- [x] Write integration tests for value extraction
+- [x] **Results**: 15 comprehensive unit tests covering all value extraction patterns
+- [x] **Key Achievement**: Full reference expansion with circular reference detection, depth limiting, includeRefs option
 
-### Phase 3: Change Detection and Reactivity
-**Goal**: Implement reactive engine for subscription management
+### Phase 3: DataStoreProxy Wrapper Implementation ✅ COMPLETED
+**Goal**: Create DataStoreProxy wrapper that returns proxy objects from query methods while keeping DataStore unchanged
 
-#### Step 3.1: Transaction Analysis
-- [x] **Unit Tests**: Transaction parsing, entity/attribute change detection
-- [x] **Integration Tests**: Change analysis with real DataScript transaction reports
-- [x] **Implementation**: Transaction analyzer identifying affected entities and attributes
+#### Step 3.1: Create DataStoreProxy Class ✅ COMPLETED
+- [x] Write unit tests for DataStoreProxy constructor and initialization
+- [x] Write unit tests for DataStoreProxy.query() returning appropriate proxy types
+- [x] Write unit tests for pass-through methods (createEntity, createEntities, db)
+- [x] Implement DataStoreProxy class with proper delegation to DataStore
+- [x] Write integration tests for DataStoreProxy with real DataStore instances
+- [x] **Results**: Full DataStoreProxy implementation with comprehensive test coverage
 
-#### Step 3.2: Subscription Registry
-- [x] **Unit Tests**: Subscription creation, storage, removal
-- [x] **Integration Tests**: Subscription management with concurrent operations
-- [x] **Implementation**: Subscription storage and lifecycle management
+#### Step 3.2: Proxy Creation Factory Methods ✅ COMPLETED
+- [x] Write unit tests for DataStoreProxy._createProxy() factory method
+- [x] Write unit tests for proxy type determination and instantiation
+- [x] Write unit tests for createStreamProxy(), createEntityProxy(), createCollectionProxy() factory methods
+- [x] Implement proxy creation logic in DataStoreProxy
+- [x] Write integration tests for proxy creation with various query types
+- [x] **Results**: 42 unit tests + 12 integration tests = 54/54 tests passing
+- [x] **Key Achievement**: Complete factory method API with default querySpec handling and querySpec getters
 
-#### Step 3.3: Change Propagation
-- [x] **Unit Tests**: Subscription matching algorithm, notification batching
-- [x] **Integration Tests**: End-to-end change propagation from transaction to callback
-- [x] **Implementation**: Reactive engine connecting transactions to subscription updates
+#### Step 3.3: DataStoreProxy Integration ✅ COMPLETED  
+- [x] Write unit tests for DataStoreProxy.getProxy() method (EntityProxy retrieval)
+- [x] Write integration tests for global queries (no entity binding)
+- [x] Write integration tests for mixed usage (DataStore for storage, DataStoreProxy for queries)
+- [x] Validate backward compatibility (existing DataStore code still works)
+- [x] **Results**: Singleton EntityProxy pattern, comprehensive query chaining, full backward compatibility
 
-### Phase 4: Query System
-**Goal**: Implement entity-rooted queries and subscriptions
+### Phase 4: Reactive System Integration
+**Goal**: Ensure subscriptions work across all proxy types with proper event propagation
 
-#### Step 4.1: Entity-Rooted Query Execution
-- [x] **Unit Tests**: Query parsing, ?this variable binding, result processing
-- [x] **Integration Tests**: Queries executing against live DataScript database
-- [x] **Implementation**: Query execution with entity binding and result conversion
+#### Step 4.1: StreamProxy Subscriptions ✅ COMPLETED
+- [x] Write unit tests for StreamProxy reactive updates
+- [x] Write unit tests for subscription cleanup and memory management
+- [x] Implement subscription integration for StreamProxy
+- [x] Write integration tests for reactive scalar property changes
+- [x] **Results**: 21/21 comprehensive unit tests covering all StreamProxy subscription scenarios
+- [x] **Key Achievement**: Complete subscription infrastructure with multi-subscriber support, error handling, and memory cleanup
 
-#### Step 4.2: Query Subscriptions
-- [x] **Unit Tests**: Query subscription creation, change detection logic
-- [x] **Integration Tests**: Query re-execution triggered by relevant data changes
-- [x] **Implementation**: Subscription system for query results with change tracking
+#### Step 4.2: CollectionProxy Subscriptions ✅ COMPLETED
+- [x] Write unit tests for CollectionProxy reactive updates
+- [x] Write unit tests for collection change detection (add/remove items)
+- [x] Implement subscription integration for CollectionProxy
+- [x] Write integration tests for reactive collection changes
+- [x] **Results**: 26/26 comprehensive unit tests covering all CollectionProxy subscription scenarios
+- [x] **Key Achievement**: Complete collection change detection with null/empty handling, array-like interface preservation, large collection efficiency
 
-#### Step 4.3: Computed Properties
-- [x] **Unit Tests**: Computed property definition, caching, invalidation
-- [x] **Integration Tests**: Computed properties updating with database changes
-- [x] **Implementation**: Cached reactive query results with automatic updates
+#### Step 4.3: Subscription Forwarding ✅ COMPLETED
+- [x] Write unit tests for subscription forwarding between proxy layers
+- [x] Write unit tests for cascade update propagation  
+- [x] Implement subscription forwarding logic
+- [x] Write integration tests for multi-level reactive updates
+- [x] **Results**: 14/14 comprehensive unit tests passing covering all subscription forwarding scenarios
+- [x] **Key Achievement**: Complete subscription independence, EntityProxy dual subscription patterns, cross-proxy notification system
 
-### Phase 5: Advanced Proxy Features
-**Goal**: Complete proxy functionality with relationships and lifecycle
+### Phase 5: Comprehensive Testing & Validation
+**Goal**: Ensure complete system works correctly with comprehensive test coverage
 
-#### Step 5.1: Relationship Management
-- [x] **Unit Tests**: addRelation/removeRelation methods, parameter validation
-- [x] **Integration Tests**: Relationship updates with referential integrity
-- [x] **Implementation**: Convenience methods for relationship manipulation
+#### Step 5.1: End-to-End Integration Tests
+- [ ] Write integration tests for complete user scenarios (CRUD + queries)
+- [ ] Write integration tests for complex relationship management
+- [ ] Write integration tests for reactive updates across proxy chains
+- [ ] Write integration tests for error handling and edge cases
+- [ ] Validate all integration tests pass
 
-#### Step 5.2: Proxy Lifecycle Events
-- [x] **Unit Tests**: onChange/onDelete event registration, callback management
-- [x] **Integration Tests**: Events triggered by actual database changes
-- [x] **Implementation**: Event system for proxy state changes
+#### Step 5.2: Migration of Existing Tests
+- [ ] Update all existing EntityProxy tests to use .value() pattern
+- [ ] Update all existing DataStore tests to use .value() pattern  
+- [ ] Update all subscription tests to work with new proxy types
+- [ ] Ensure all existing functionality preserved
+- [ ] Validate complete test suite passes
 
-#### Step 5.3: Proxy Deletion and Cleanup
-- [x] **Unit Tests**: Proxy invalidation, subscription cleanup, memory management
-- [x] **Integration Tests**: Complete cleanup workflow with entity deletion
-- [x] **Implementation**: Proxy deletion with automatic resource cleanup
-
-### Phase 6: Integration and End-to-End Testing
-**Goal**: Comprehensive system testing and validation
-
-#### Step 6.1: Multi-Entity Scenarios
-- [x] **Integration Tests**: Complex scenarios with multiple entities, relationships, and subscriptions
-- [x] **Validation**: Real-world usage patterns work correctly
-
-#### Step 6.2: Error Handling Validation
-- [x] **Integration Tests**: Error propagation, constraint violations, invalid operations
-- [x] **Validation**: All error cases raise appropriate exceptions
-
-#### Step 6.3: Performance Baseline
-- [x] **Integration Tests**: Basic performance characteristics under normal load
-- [x] **Validation**: System remains functional with reasonable entity and subscription counts
-
-#### Step 6.4: API Completeness
-- [x] **Integration Tests**: All documented API methods work as specified
-- [x] **Validation**: Complete API coverage as defined in design document
-
-## Test Coverage Requirements
-
-### Unit Test Coverage
-- All public methods and properties
-- Error conditions and edge cases
-- Parameter validation
-- State transitions
-
-### Integration Test Coverage  
-- Component interactions without mocks
-- DataScript integration
-- Real database state changes
-- Transaction flows
-- Subscription triggering
-
-### End-to-End Test Scenarios
-- Complete user workflows
-- Multi-step operations
-- Cross-entity relationships
-- Reactive updates
+#### Step 5.3: System Validation
+- [ ] Run complete test suite and achieve 100% pass rate
+- [ ] Validate memory management (no leaks from proxy objects)
+- [ ] Validate reactive system performance with proxy chains
+- [ ] Validate error handling produces clear, actionable messages
+- [ ] Document any discovered edge cases or limitations
 
 ## Completion Criteria
 
-Each step is complete when:
-- [x] All unit tests pass
-- [x] All integration tests pass  
-- [x] Code coverage meets requirements
-- [x] No error cases are unhandled
-- [x] Implementation matches design document specification
+### Functional Requirements
+- [ ] All property access returns appropriate proxy objects
+- [ ] All query methods return appropriate proxy objects  
+- [ ] All proxy objects support .value(), .query(), and .subscribe() methods
+- [ ] Reactive updates propagate correctly through proxy chains
+- [ ] Complete backward compatibility for core contracts (minus return types)
 
-## Success Metrics
+### Testing Requirements  
+- [ ] 100% unit test coverage for all new proxy classes
+- [ ] Comprehensive integration tests using real DataStore instances
+- [ ] All existing tests migrated to new .value() pattern
+- [ ] Complete test suite achieves 100% pass rate
+- [ ] No mocks used in integration tests or implementation code
 
-The MVP is complete when:
-- [x] All checkboxes above are marked ✅
-- [x] Complete API functionality as specified in design document
-- [x] Comprehensive test suite with no critical failing tests
-- [x] Functional correctness validated through integration testing
-- [x] Ready for local usage and User Acceptance Testing (UAT)
-
----
-
-**Note**: This plan prioritizes functional correctness over performance, security, or other non-functional requirements. The goal is a fully working MVP ready for local development and testing.
+### Quality Requirements
+- [ ] Clear error messages for all failure scenarios
+- [ ] No fallback mechanisms - fail fast with descriptive errors
+- [ ] Memory management validated (no proxy-related leaks)
+- [ ] System works correctly for local development and UAT scenarios
