@@ -254,16 +254,16 @@ export default class PictureAnalysisModule extends Module {
         throw new Error(`ANTHROPIC_API_KEY environment variable is required for picture analysis`);
       }
       
-      // Import and create LLM client
-      const { LLMClient } = await import('@legion/llm-client);
-      this.llmClient = new LLMClient({
+      // Import and create SimplePromptClient for better UX
+      const { SimplePromptClient } = await import('@legion/llm-client');
+      this.simpleClient = new SimplePromptClient({
         provider: provider,
         apiKey: apiKey,
         model: model
       });
       
       // Store for reuse
-      this.resourceManager.set('llmClient', this.llmClient);
+      this.resourceManager.set('simplePromptClient', this.simpleClient);
     }
 
     // Verify vision support if client has the method
