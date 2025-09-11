@@ -1,5 +1,5 @@
 /**
- * @legion/gemini-compatible-agent - Main exports
+ * @legion/gemini-agent - Main exports
  * 
  * Gemini-compatible agent built with Legion framework patterns
  */

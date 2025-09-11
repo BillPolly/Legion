@@ -1,0 +1,16 @@
+{
+  "name": "@legion/mongo-query",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "MongoDB query module for Legion MCP monitor",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "dependencies": {
+    "mongodb": "^6.0.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

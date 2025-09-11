@@ -1,5 +1,5 @@
 {
-  "name": "@legion/gemini-compatible-agent",
+  "name": "@legion/gemini-agent",
   "version": "1.0.0",
   "description": "Gemini-compatible agent built with Legion framework patterns",
   "type": "module",

@@ -6,7 +6,7 @@
 import { Tool } from '@legion/tools-registry';
 import { promises as fs } from 'fs';
 import path from 'path';
-import MultimodalFileProcessor from '../../../../agents/gemini-compatible-agent/src/utils/MultimodalFileProcessor.js';
+import MultimodalFileProcessor from '../../../../agents/gemini-agent/src/utils/MultimodalFileProcessor.js';
 
 /**
  * Tool for reading files (ported from Gemini CLI's read-file.ts)

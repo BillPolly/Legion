@@ -9,7 +9,7 @@ class ContextExample {
   getContextInfo() {
     return {
       projectType: 'Node.js',
-      packageName: '@legion/gemini-compatible-agent',
+      packageName: '@legion/gemini-agent',
       environment: process.env.NODE_ENV || 'development'
     };
   }

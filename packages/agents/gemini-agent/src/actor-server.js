@@ -19,8 +19,8 @@ async function startActorServer() {
     routes: [
       {
         path: '/gemini',
-        serverActor: join(__dirname, 'actors/GeminiRootServerActor.js'),
-        clientActor: join(__dirname, 'actors/GeminiRootClientActor.js'),
+        serverActor: join(__dirname, 'actors/server/GeminiRootServerActor.js'),
+        clientActor: join(__dirname, 'actors/client/GeminiRootClientActor.js'),
         title: '🤖 Gemini Compatible Agent - Actor Framework'
       }
     ],
