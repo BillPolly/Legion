@@ -1,7 +1,7 @@
 /**
  * RealLLMClient - Production LLM client implementation for NLP system
  * 
- * Uses the real LLM client from @legion/llm-clientvia ResourceManager.
+ * Uses the real LLM client from @legion/llm-client'via ResourceManager.
  * NO MOCKS, NO FALLBACKS - requires real LLM to function.
  */
 

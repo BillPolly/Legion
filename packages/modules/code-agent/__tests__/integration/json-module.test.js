@@ -16,7 +16,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Mock LLM responses for predictable testing
-jest.mock('@legion/llm-client, () => ({
+jest.mock('@legion/llm-client', () => ({
   LLMClient: jest.fn().mockImplementation(() => ({
     generateResponse: jest.fn().mockResolvedValue({
       choices: [{

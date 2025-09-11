@@ -83,7 +83,7 @@ describe('Package Integration Tests', () => {
       
       // Verify dependencies
       expect(packageJson.dependencies).toBeDefined();
-      expect(packageJson.dependencies['@legion/llm-client]).toBeDefined();
+      expect(packageJson.dependencies['@legion/llm-client']).toBeDefined();
       expect(packageJson.dependencies['@legion/resource-manager']).toBeDefined();
       expect(packageJson.dependencies['@legion/tools-registry']).toBeDefined();
       expect(packageJson.dependencies['zod']).toBeDefined();
