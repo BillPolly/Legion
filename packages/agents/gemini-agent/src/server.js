@@ -7,7 +7,7 @@ import express from 'express';
 import { WebSocketServer } from 'ws';
 import http from 'http';
 import { ResourceManager } from '@legion/resource-manager';
-import ConversationManager from './conversation/ToolCallingConversationManager.js';
+import ConversationManager from './conversation/ConversationManager.js';
 import { handleSlashCommand } from './services/SlashCommandService.js';
 import path from 'path';
 import { fileURLToPath } from 'url';

@@ -86,8 +86,8 @@ export class LLMClient extends EventEmitter {
 
     this.model = config.model || 'claude-3-sonnet-20240229';
     this.maxRetries = config.maxRetries !== undefined ? config.maxRetries : 3;
-    this.baseDelay = config.baseDelay || 1000;
-    this.serverErrorDelay = config.serverErrorDelay || 5000;
+    this.baseDelay = config.baseDelay || 2000; // Increased for slower API
+    this.serverErrorDelay = config.serverErrorDelay || 8000; // Increased for rate limiting
   }
 
   /**

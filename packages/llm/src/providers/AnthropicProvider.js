@@ -6,7 +6,11 @@ import { Anthropic } from '@anthropic-ai/sdk';
 export class AnthropicProvider {
   constructor(apiKey, baseURL = undefined) {
     this.apiKey = apiKey;
-    const clientConfig = { apiKey };
+    const clientConfig = { 
+      apiKey,
+      timeout: 180000, // 3 minutes timeout
+      maxRetries: 3
+    };
     if (baseURL) {
       clientConfig.baseURL = baseURL;
     }

@@ -3,7 +3,7 @@
  * NO MOCKS - uses real LLM, real tools, real file system
  */
 
-import ConversationManager from '../../src/conversation/ToolCallingConversationManager.js';
+import ConversationManager from '../../src/conversation/ConversationManager.js';
 import { ResourceManager } from '@legion/resource-manager';
 import { promises as fs } from 'fs';
 import path from 'path';

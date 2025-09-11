@@ -1,16 +1,11 @@
 /**
- * ToolCallingConversationManager - Uses Legion's output-schema for tool calling
+ * ConversationManager - Uses Legion's output-schema for tool calling
  * Integrates with GeminiToolsModule using proper Legion patterns
  */
 
 import { ResponseValidator } from '@legion/output-schema';
 import { ResourceManager } from '@legion/resource-manager';
 import GeminiToolsModule from '../../../../modules/gemini-tools/src/GeminiToolsModule.js';
-import path from 'path';
-import { GeminiPromptManager } from '../prompts/GeminiPromptManager.js';
-import GitService from '../services/GitService.js';
-import ShellExecutionService from '../services/ShellExecutionService.js';
-import ChatRecordingService from '../services/ChatRecordingService.js';
 
 /**
  * Conversation manager with proper tool calling using Legion patterns
@@ -23,10 +18,6 @@ export class ConversationManager {
     
     // Initialize core services only
     this._initializeToolsModule();
-    this.promptManager = new GeminiPromptManager(resourceManager);
-    this.gitService = new GitService(resourceManager);
-    this.shellExecutionService = new ShellExecutionService(resourceManager);
-    this.chatRecordingService = new ChatRecordingService(resourceManager);
     
     // Initialize services
     this._initializeAllServices();
@@ -73,9 +64,6 @@ export class ConversationManager {
    */
   async _initializeAllServices() {
     try {
-      // Initialize Git service with credentials
-      await this.gitService.initialize();
-      
       console.log('✅ All core services initialized');
     } catch (error) {
       console.warn('Service initialization warning:', error.message);

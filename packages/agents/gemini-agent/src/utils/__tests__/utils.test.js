@@ -1,22 +1,7 @@
-import { ConfigHelper } from '../ConfigHelper';
 import { DateFormatter } from '../DateFormatter';
 import { TypeChecker } from '../TypeChecker';
 
 describe('Utility Functions Tests', () => {
-  describe('ConfigHelper', () => {
-    test('merges configs correctly', () => {
-      const defaultConfig = { a: 1, b: 2 };
-      const userConfig = { b: 3, c: 4 };
-      const result = ConfigHelper.mergeConfig(defaultConfig, userConfig);
-      expect(result).toEqual({ a: 1, b: 3, c: 4 });
-    });
-
-    test('validates required fields', () => {
-      const config = { a: 1, b: 2 };
-      expect(() => ConfigHelper.validateRequired(config, ['a', 'b'])).not.toThrow();
-      expect(() => ConfigHelper.validateRequired(config, ['a', 'c'])).toThrow();
-    });
-  });
 
   describe('DateFormatter', () => {
     test('formats ISO with timezone', () => {

@@ -4,7 +4,7 @@ export default {
     '**/__tests__/**/*.test.js'
   ],
   verbose: true,
-  testTimeout: 10000,
+  testTimeout: 200000, // 200 seconds for LLM integration tests
   transform: {},
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1'

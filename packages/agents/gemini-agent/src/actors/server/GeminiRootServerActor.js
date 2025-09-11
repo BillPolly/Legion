@@ -1,9 +1,9 @@
 /**
  * GeminiRootServerActor - Top-level server actor wrapping existing functionality
- * Minimal wrapper around ToolCallingConversationManager with actor framework integration
+ * Minimal wrapper around ConversationManager with actor framework integration
  */
 
-import ConversationManager from '../../conversation/ToolCallingConversationManager.js';
+import ConversationManager from '../../conversation/ConversationManager.js';
 import { handleSlashCommand } from '../../services/SlashCommandService.js';
 
 /**
@@ -45,7 +45,7 @@ export default class GeminiRootServerActor {
         this.resourceManager = await this._createResourceManager();
       }
       
-      console.log('🎭 Creating ToolCallingConversationManager with ResourceManager...');
+      console.log('🎭 Creating ConversationManager with ResourceManager...');
       
       // Initialize existing conversation manager (no changes to it)
       this.conversationManager = new ConversationManager(this.resourceManager);
